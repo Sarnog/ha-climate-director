@@ -28,10 +28,16 @@ precies de correctie daarop.
 ### Overzicht
 
 ```
+config_flow.py         wizard; schrijft één dict in entry.options
+      │
+      ▼
+engine/serialise.py    dict → dataclasses (puur, vergevingsgezind)
+      │
+      ▼
 Home Assistant (entiteitstoestanden, klokgebeurtenissen)
       │
       ▼
-  coordinator          verzamelt toestanden, ontdubbelt, serialiseert   [nog te bouwen]
+  coordinator          verzamelt toestanden, ontdubbelt, serialiseert
       │
       ▼
   world.WorldState     momentopname: één dataobject, verder niets
@@ -56,13 +62,15 @@ Home Assistant (entiteitstoestanden, klokgebeurtenissen)
 │  models.py      configuratie (Zone, Source, Circuit, …)          │
 │  families.py    hvac_mode → compressorbedrijf                    │
 │  plan.py        uitvoer (UnitCommand, ZoneDecision, Reason, …)   │
+│  diff.py        Plan vs werkelijkheid → wat er echt moet         │
+│  serialise.py   dict ↔ dataclasses                               │
 └──────────────────────────────────────────────────────────────────┘
       │
       ▼
-  applier              vergelijkt Plan met werkelijkheid, roept aan   [nog te bouwen]
+  applier              voert het verschil uit, of in schaduwmodus niet
       │
       ▼
-  entiteiten + event   climate/sensor/switch/number/select/button     [nog te bouwen]
+  entiteiten + event   sensor / binary_sensor / switch / diagnostics
 ```
 
 ### families.py — modusfamilies
@@ -184,12 +192,84 @@ Assistant-laag ze kan vertalen en gebruikers erop kunnen filteren in hun eigen
 automatiseringen. Een `Deferral` vertelt de coordinator wanneer er opnieuw beslist moet
 worden, zodat een plan dat op een timer wacht vanzelf hervat.
 
+### serialise.py — opslag
+
+De enige plek waar het JSON-achtige formaat van een config entry naar dataclasses vertaald
+wordt, en terug. Lezen is bewust vergevingsgezind: onbekende sleutels worden genegeerd,
+ontbrekende sleutels vallen terug op hun standaard, en rommel in een lijst wordt
+overgeslagen. Een entry overleeft zo een versie waarin een veld bijkomt of verdwijnt, in
+plaats van bij het opstarten om te vallen. Wat structureel niet klopt komt uit
+`validate()`, niet uit een exception hier.
+
+Booleans worden expliciet níét als getal gelezen: `True` is in Python een `int`, en een
+prioriteit van `True` zou stilletjes 1 worden.
+
+### diff.py — wat moet er echt gebeuren
+
+Het plan beschrijft eindtoestanden; deze pure functie bepaalt welke daarvan nog niet
+kloppen. Een plan dat overeenkomt met de werkelijkheid levert nul service calls op — dat is
+wat de director ervan weerhoudt bij elke toestandswijziging van elke gevolgde entiteit
+dezelfde aanroep opnieuw te doen. Een unit die uitgezet wordt krijgt nooit een setpoint
+mee: die behoudt gewoon wat hij had, en een aanroep die niets zichtbaars verandert is
+ruis.
+
+### coordinator.py — de koppeling
+
+Doet precies drie dingen: entiteiten uitlezen tot één `WorldState`, `decide()` daar een
+`Plan` van laten maken, en zorgen dat er opnieuw besloten wordt zodra dat zin heeft. Bevat
+zelf geen besliskunde; staat er ooit een `if` over temperaturen in dat bestand, dan hoort
+die in `engine/`.
+
+Drie dingen zijn er subtiel aan:
+
+- **Alles in lokale, tijdzonebewuste tijd.** Roostervensters worden in lokale tijd gelezen,
+  terwijl tijdstempels van entiteiten in UTC binnenkomen. Die twee mengen zou de leeftijd
+  van een openstaande deur uren verschuiven.
+- **Circuitgeschiedenis komt uit waarnemingen, niet uit het vorige plan.** Een unit die
+  iemand met de afstandsbediening omzet verandert de taak van een circuit net zo goed als
+  de director, en de minimale-looptijdtimer hoort dat te respecteren.
+- **Eén event per zone, en alleen bij verandering.** Er wordt herrekend bij elke
+  toestandswijziging van elke gevolgde entiteit; elke keer vuren zou elke automatisering
+  die erop luistert verzuipen.
+
+### applier.py — uitvoeren
+
+Beslist niets. Vraagt `diff.py` wat er moet gebeuren en zet dat om in service calls, of
+logt het alleen in schaduwmodus. `climate.set_temperature` draagt de `hvac_mode` mee, zodat
+een unit die zowel een stand als een setpoint nodig heeft met één aanroep klaar is — twee
+aanroepen zouden hem kort op de nieuwe stand met het oude setpoint laten draaien.
+
+Faalt een aanroep, dan hangt de reactie af van wat er faalde. Een mislukte **stop** breekt
+de aanname waar de rest van het plan op rust: de starts erachteraan zouden landen bovenop
+een apparaat dat had moeten stoppen, precies de combinatie die dit ontwerp onbereikbaar
+hoort te maken. Dan wordt de rest van het plan afgebroken. Een mislukte **start** is
+onschuldig — er gebeurt alleen minder dan gepland — en de rest gaat gewoon door.
+
+### config_flow.py — de wizard
+
+Bevat geen kennis van klimaatregels, alleen van formulieren. De installatie wordt in een
+lokale kopie opgebouwd en pas bij "Opslaan en sluiten" weggeschreven. Halverwege opslaan
+zou de entry herladen terwijl de gebruiker nog aan het bewerken is, en de grond wegtrekken
+onder de flow waar hij in staat.
+
+Een verlopen cursor (bijvoorbeeld naar een zone die net verwijderd is) stuurt terug naar
+het menu in plaats van een uitzondering te gooien: een config flow die crasht laat een half
+opgebouwde installatie achter zonder weg terug.
+
+### Entiteiten
+
+Eén device per installatie. De sensoren zijn bewust uitgebreid: in schaduwmodus zijn zij de
+enige zichtbare uitkomst, en het hele punt van die modus is kunnen zien wat er gebeurd zou
+zijn. De schakelaars zijn bedieningstoestand, geen configuratie — ze herstellen zichzelf na
+een herstart en schrijven hun stand terug naar de coordinator. De platforms worden vóór de
+eerste beslissing opgezet, zodat een uitgeschakelde hoofdschakelaar niet één ronde lang aan
+lijkt te staan.
+
 ### Nog te bouwen
 
-De koppelingslaag: `config_flow.py` (wizard: zones → bronnen → circuits → poorten →
-drempels), `coordinator.py` (toestanden volgen, ontdubbelen, serialiseren, `Deferral`s
-inplannen), `applier.py` (Plan vergelijken met de werkelijkheid en alleen het verschil
-uitvoeren) en de entiteiten. Ideeën staan in [`ROADMAP.md`](ROADMAP.md).
+Een virtuele `climate`-entiteit per zone als bedieningspunt, `number`-entiteiten voor de
+drempels, en de acties (`evaluate`, `set_override`). Ideeën staan in
+[`ROADMAP.md`](ROADMAP.md).
 
 ### Uitbreidbaarheid
 
@@ -225,10 +305,16 @@ this separation is precisely the correction for that.
 ### Overview
 
 ```
+config_flow.py         wizard; writes one dict into entry.options
+      │
+      ▼
+engine/serialise.py    dict → dataclasses (pure, forgiving)
+      │
+      ▼
 Home Assistant (entity states, clock events)
       │
       ▼
-  coordinator          gathers states, debounces, serialises        [to be built]
+  coordinator          gathers states, debounces, serialises
       │
       ▼
   world.WorldState     snapshot: one data object, nothing more
@@ -253,13 +339,15 @@ Home Assistant (entity states, clock events)
 │  models.py      configuration (Zone, Source, Circuit, …)         │
 │  families.py    hvac_mode → compressor duty                      │
 │  plan.py        output (UnitCommand, ZoneDecision, Reason, …)    │
+│  diff.py        Plan vs reality → what actually has to happen    │
+│  serialise.py   dict ↔ dataclasses                               │
 └──────────────────────────────────────────────────────────────────┘
       │
       ▼
-  applier              compares Plan to reality, calls services     [to be built]
+  applier              executes the difference, or in shadow mode does not
       │
       ▼
-  entities + event     climate/sensor/switch/number/select/button   [to be built]
+  entities + event     sensor / binary_sensor / switch / diagnostics
 ```
 
 ### families.py — mode families
@@ -376,12 +464,79 @@ nothing to do".
 translate them and users can filter on them in their own automations. A `Deferral` tells
 the coordinator when to decide again, so a plan held back by a timer resumes on its own.
 
+### serialise.py — storage
+
+The only place the JSON-like format of a config entry is translated into dataclasses, and
+back. Reading is deliberately forgiving: unknown keys are ignored, missing keys fall back on
+their default, and junk in a list is skipped. An entry therefore survives a version that
+adds or drops a field, instead of falling over at startup. What is structurally wrong comes
+out of `validate()`, not out of an exception here.
+
+Booleans are explicitly *not* read as numbers: `True` is an `int` in Python, and a priority
+of `True` would silently become 1.
+
+### diff.py — what actually has to happen
+
+The plan describes end states; this pure function works out which of them do not hold yet.
+A plan matching reality produces zero service calls — that is what stops the director
+re-issuing the same call on every state change of every tracked entity. A unit being
+switched off never gets a setpoint: it simply keeps the one it had, and a call that changes
+nothing visible is noise.
+
+### coordinator.py — the binding
+
+Does exactly three things: read entities into one `WorldState`, have `decide()` turn that
+into a `Plan`, and make sure a fresh decision happens whenever that is worthwhile. Holds no
+decision logic itself; if an `if` about temperatures ever appears in that file, it belongs
+in `engine/`.
+
+Three things about it are subtle:
+
+- **Everything in local, timezone-aware time.** Schedule windows are read in local time,
+  while entity timestamps arrive in UTC. Mixing the two would put an open door's age hours
+  out.
+- **Circuit history comes from observation, not from the previous plan.** A unit somebody
+  switches by remote changes a circuit's duty just as effectively as the director does, and
+  the minimum-run timer has to respect that.
+- **One event per zone, and only on change.** A decision is recomputed on every state change
+  of every tracked entity; firing each time would drown any automation listening for it.
+
+### applier.py — execution
+
+Decides nothing. Asks `diff.py` what has to happen and turns that into service calls, or in
+shadow mode only logs it. `climate.set_temperature` carries the `hvac_mode` too, so a unit
+needing both a mode and a setpoint is served by a single call — two calls would briefly
+leave it running the new mode on the old setpoint.
+
+When a call fails, the response depends on what failed. A failed **stop** breaks the
+assumption the rest of the plan rests on: the starts behind it would land on top of an
+appliance that should have stopped, exactly the combination this design is meant to make
+unreachable. The rest of the plan is then abandoned. A failed **start** is harmless — only
+less happens than planned — and the rest carries on.
+
+### config_flow.py — the wizard
+
+Holds no knowledge of climate rules, only of forms. The installation is built up in a local
+copy and written out only on "Save and close". Saving halfway would reload the entry while
+the user is still editing, pulling the ground out from under the flow they are standing in.
+
+A stale cursor (to a zone just deleted, say) sends the user back to the menu rather than
+raising: a config flow that crashes leaves a half-built installation behind with no way back
+into it.
+
+### Entities
+
+One device per installation. The sensors are deliberately detailed: in shadow mode they are
+the only visible output, and the whole point of that mode is being able to see what would
+have happened. The switches are control state, not configuration — they restore themselves
+after a restart and write their state back to the coordinator. The platforms are set up
+before the first decision, so a master switch left off does not appear on for one round.
+
 ### Still to build
 
-The binding layer: `config_flow.py` (wizard: zones → sources → circuits → gates →
-thresholds), `coordinator.py` (tracking states, debouncing, serialising, scheduling
-`Deferral`s), `applier.py` (comparing the Plan against reality and executing only the
-difference) and the entities. Ideas live in [`ROADMAP.md`](ROADMAP.md).
+A virtual `climate` entity per zone as the control point, `number` entities for the
+thresholds, and the actions (`evaluate`, `set_override`). Ideas live in
+[`ROADMAP.md`](ROADMAP.md).
 
 ### Extensibility
 

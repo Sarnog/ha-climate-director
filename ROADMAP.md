@@ -15,32 +15,24 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
 
 ## Should have
 
-- **Applier** — `Plan` vergelijken met de werkelijke entiteitstoestanden en alleen het
-  verschil uitvoeren, zodat opnieuw beslissen op hetzelfde moment nul service calls
-  oplevert.
-- **Coordinator** — toestandswijzigingen volgen van elke betrokken entiteit, ontdubbelen
-  met een korte debounce, beslissingen serialiseren met een lock, en `Deferral`s inplannen
-  zodat een plan dat op een timer wacht vanzelf hervat.
-- **Schaduwmodus** — de integratie draait volledig mee, berekent elke beslissing en
-  publiceert die, maar voert niets uit. Bedoeld om een bestaande set automatiseringen
-  weken naast de engine te laten lopen en elk verschil te onderzoeken vóór de overname.
-  Dit is de belangrijkste veiligheidsmaatregel van het hele project.
-- **Config flow en options flow** — wizard: zones → bronnen → circuits → poorten →
-  drempels. Inclusief een suggestie voor circuitgroepering op basis van gedeeld `device` /
-  `via_device` / fabrikant, uitdrukkelijk als voorstel en niet als feit, omdat de meeste
-  klimaatintegraties de buitenunit-relatie niet blootgeven.
-- **Entiteiten** — een virtuele `climate` per zone als bedieningspunt, plus
-  `sensor` (actieve bron met reden), `binary_sensor` (geblokkeerd), `number` per drempel,
-  `switch` (hoofdschakelaar, vakantiemodus, override per zone), `select` (seizoen) en
-  `button` (uit, opnieuw beslissen).
-- **`climate_director_decision`-event** — na elke beslissing, met zone, bron, stand,
-  temperatuur en reden, zodat notificaties buiten de integratie blijven.
-- **Vertalingen** — `strings.json` plus `nl.json` en `en.json`, met elke `Reason` als
-  `translation_key`.
-- **Diagnostics** — downloadbare export van configuratie, laatste `WorldState` en laatste
-  `Plan`, zodat een meldingsrapport meteen reproduceerbaar is.
+- **Virtuele `climate` per zone** — één bedieningsentiteit per ruimte, waarmee de gewenste
+  temperatuur en stand rechtstreeks op een gewone thermostaatkaart te bedienen zijn. De
+  director kiest daar dan de bron bij.
+- **`number`-entiteiten voor de drempels** — aan- en uitpunten en dode banden op een
+  dashboard te verschuiven zonder de options flow te openen.
+- **Acties** — `climate_director.evaluate` (forceer een herberekening),
+  `climate_director.set_override` (met een duur of tot de volgende gebeurtenis) en
+  `climate_director.clear_override`, plus knoppen die die acties aanroepen.
+- **`select` voor het seizoen** — het seizoen met de hand omzetten zonder de options flow.
 - **Poortinstellingen per zone** — nu gelden `GateSettings` voor de hele installatie. Een
   slaapkamer wil andere aanwezigheids- en slaapregels dan een woonkamer.
+- **Roostervensters in de UI** — de tijdvensters per bewoner zijn wel gemodelleerd en
+  getest, maar nog niet in de options flow te bewerken.
+- **Suggestie voor circuitgroepering** — voorstellen welke binnenunits een buitenunit delen
+  op basis van gedeeld `device` / `via_device` / fabrikant, uitdrukkelijk als voorstel en
+  niet als feit, omdat de meeste klimaatintegraties die relatie niet blootgeven.
+- **Reparatiemelding bij een gebrekkige configuratie** — wat `validate()` vindt zichtbaar
+  maken in Home Assistant zelf, in plaats van alleen in de diagnose.
 
 ## Could have
 
@@ -87,30 +79,24 @@ The history of what has already been built and changed is **not** here but in th
 
 ## Should have
 
-- **Applier** — compare the `Plan` against actual entity states and execute only the
-  difference, so deciding again at the same moment produces zero service calls.
-- **Coordinator** — track state changes of every entity involved, debounce briefly,
-  serialise decisions with a lock, and schedule `Deferral`s so a plan held back by a timer
-  resumes on its own.
-- **Shadow mode** — the integration runs alongside, computes every decision and publishes
-  it, but executes nothing. Meant for running an existing set of automations next to the
-  engine for weeks and investigating every difference before handover. This is the single
-  most important safety measure of the whole project.
-- **Config flow and options flow** — wizard: zones → sources → circuits → gates →
-  thresholds. Including a suggested circuit grouping based on shared `device` /
-  `via_device` / manufacturer, explicitly as a proposal rather than a fact, since most
-  climate integrations do not expose the outdoor-unit relationship.
-- **Entities** — a virtual `climate` per zone as the control point, plus `sensor` (active
-  source with reason), `binary_sensor` (blocked), `number` per threshold, `switch` (master,
-  holiday mode, per-zone override), `select` (season) and `button` (off, re-evaluate).
-- **`climate_director_decision` event** — after every decision, carrying zone, source,
-  mode, temperature and reason, so notifications stay outside the integration.
-- **Translations** — `strings.json` plus `nl.json` and `en.json`, with every `Reason` as a
-  `translation_key`.
-- **Diagnostics** — downloadable export of the configuration, the last `WorldState` and
-  the last `Plan`, so a bug report is reproducible straight away.
+- **A virtual `climate` per zone** — one control entity per room, so the target temperature
+  and mode can be set straight from an ordinary thermostat card. The director then picks the
+  source to match.
+- **`number` entities for the thresholds** — switch-on/off points and dead bands adjustable
+  from a dashboard without opening the options flow.
+- **Actions** — `climate_director.evaluate` (force a re-evaluation),
+  `climate_director.set_override` (with a duration or until the next event) and
+  `climate_director.clear_override`, plus buttons calling them.
+- **A `select` for the season** — flipping the season by hand without the options flow.
 - **Per-zone gate settings** — `GateSettings` currently applies to the whole installation.
   A bedroom wants different presence and sleep rules from a living room.
+- **Schedule windows in the UI** — the per-resident time windows are modelled and tested,
+  but not yet editable in the options flow.
+- **Suggested circuit grouping** — propose which indoor units share an outdoor unit based on
+  shared `device` / `via_device` / manufacturer, explicitly as a proposal rather than a
+  fact, since most climate integrations do not expose that relationship.
+- **A repair issue for a flawed configuration** — surface what `validate()` finds in Home
+  Assistant itself, rather than only in the diagnostics.
 
 ## Could have
 

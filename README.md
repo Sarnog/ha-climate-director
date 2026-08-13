@@ -15,9 +15,10 @@
 Een integratie voor Home Assistant die bestaande klimaatapparaten aanstuurt: hij beslist
 welke warmte- of koudebron in welke ruimte, in welke stand en op welke temperatuur draait.
 
-**Status:** de beslislaag (`custom_components/climate_director/engine/`) is af en volledig
-getest. De koppeling met Home Assistant — config flow, coordinator en entiteiten — is nog
-niet gebouwd, dus de integratie is nog niet te installeren.
+**Schaduwmodus staat standaard aan.** De integratie berekent dan elke beslissing en laat
+zien wat ze gedaan zou hebben, maar stuurt geen enkele service call. Je kunt haar dus
+naast je bestaande automatiseringen laten meedraaien zolang je wilt, en pas overstappen
+als de twee het weken achtereen met elkaar eens zijn.
 
 ### Wat doet dit
 
@@ -133,12 +134,50 @@ Redenen zijn stabiele identifiers (`circuit_conflict_lost`, `everyone_asleep`,
 `short_cycle_protection`, …), zodat ze te vertalen zijn en je er in je eigen
 automatiseringen op kunt filteren.
 
+### Wat je in Home Assistant krijgt
+
+Eén device per installatie, met daaronder:
+
+| Entiteit | Waarvoor |
+|---|---|
+| `sensor.*_laatste_beslissing` | Hoeveel zones bediend worden, met het volledige plan als attributen: elk commando, elk circuit, elke uitgestelde actie, en welke apparaten er aangestuurd zouden zijn |
+| `sensor.*_bron_<zone>` | Welke bron deze zone bedient, met wat de zone wilde, wat hij kreeg en waarom |
+| `binary_sensor.*_<zone>_geblokkeerd` | Aan als een zone minder kreeg dan hij vroeg, met de reden als attribuut |
+| `switch.*_director` | Hoofdschakelaar; uit betekent dat er niets geregeld wordt |
+| `switch.*_vakantiemodus` | Slaat het rooster over, houdt aanwezigheid en slaap wél aan |
+| `switch.*_override_<zone>` | Geeft één zone terug aan de gebruiker tot je hem weer uitzet |
+
+Daarnaast is er een downloadbare diagnose met de configuratie, de laatst gelezen
+momentopname en het laatste plan. Met die drie is elke beslissing exact na te spelen.
+
 ### Installatie
 
-Nog niet van toepassing: de Home Assistant-laag is nog niet gebouwd. Zodra die er is, komt
-hier de HACS-knop.
+**Via HACS:** voeg deze repository toe als **custom repository** (HACS > drie puntjes >
+Aangepaste repositories > deze GitHub-URL, categorie "Integratie"), installeer, en
+herstart Home Assistant.
 
-De beslislaag is los te draaien en te testen zonder Home Assistant:
+**Handmatig:** kopieer de map `custom_components/climate_director` naar de
+`custom_components`-map van je Home Assistant-configuratie en herstart.
+
+Daarna: **Instellingen > Apparaten en diensten > Integratie toevoegen > Climate Director**.
+Je geeft een naam en laat schaduwmodus aan. Alles verder — zones, bronnen, koelcircuits,
+bewoners en openingen — bouw je op via **Configureren** bij de integratie. Er wordt niets
+opgeslagen tot je in dat menu "Opslaan en sluiten" kiest.
+
+Een verstandige volgorde:
+
+1. **Algemene instellingen** — buitentemperatuursensor, herkomst van het seizoen, en welke
+   poorten je wilt (aanwezigheid, wakker, rooster).
+2. **Zones en bronnen** — per ruimte de binnentemperatuursensor en de aan-/uitpunten,
+   daarna de apparaten die die ruimte kunnen bedienen. Geef een cv-ketel en een warmtepomp
+   aansluitende buitenvensters, dan wisselen ze elkaar naadloos af.
+3. **Koelcircuits** — alleen nodig als binnenunits een buitenunit delen. Laat leeg als elke
+   unit zijn eigen buitenunit heeft.
+4. **Bewoners** en **Deuren en ramen** — optioneel.
+
+### Los draaien en testen
+
+De beslislaag draait en test zonder Home Assistant:
 
 ```bash
 pip install -r requirements_test.txt
@@ -176,9 +215,10 @@ en de commits komend. Volledig vrijblijvend natuurlijk!
 A Home Assistant integration that steers existing climate appliances: it decides which heat
 or cold source runs in which room, in which mode and at which temperature.
 
-**Status:** the decision layer (`custom_components/climate_director/engine/`) is finished and
-fully tested. The Home Assistant binding — config flow, coordinator and entities — has not
-been built yet, so the integration cannot be installed.
+**Shadow mode is on by default.** The integration then computes every decision and shows
+what it would have done, but issues no service call at all. You can let it run alongside
+your existing automations for as long as you like, and only switch over once the two have
+agreed with each other for weeks.
 
 ### What this does
 
@@ -293,12 +333,50 @@ Reasons are stable identifiers (`circuit_conflict_lost`, `everyone_asleep`,
 `short_cycle_protection`, …), so they can be translated and filtered on in your own
 automations.
 
+### What you get in Home Assistant
+
+One device per installation, holding:
+
+| Entity | For |
+|---|---|
+| `sensor.*_last_decision` | How many zones are being served, with the full plan as attributes: every command, every circuit, every deferred action, and which appliances would have been steered |
+| `sensor.*_<zone>_source` | Which source serves this zone, with what the zone wanted, what it got and why |
+| `binary_sensor.*_<zone>_blocked` | On when a zone got less than it asked for, with the reason as an attribute |
+| `switch.*_director` | Master switch; off means nothing is regulated |
+| `switch.*_holiday_mode` | Skips the schedule, keeps presence and sleep |
+| `switch.*_<zone>_override` | Hands one zone back to the user until you turn it off again |
+
+There is also a downloadable diagnostics export holding the configuration, the last
+snapshot read and the last plan. With those three, any decision is exactly reproducible.
+
 ### Installation
 
-Not applicable yet: the Home Assistant layer has not been built. The HACS button will appear
-here once it has.
+**Through HACS:** add this repository as a **custom repository** (HACS > three dots >
+Custom repositories > this GitHub URL, category "Integration"), install it, and restart
+Home Assistant.
 
-The decision layer runs and tests on its own, without Home Assistant:
+**Manually:** copy the `custom_components/climate_director` folder into your Home Assistant
+configuration's `custom_components` folder and restart.
+
+Then: **Settings > Devices & services > Add integration > Climate Director**. You give it a
+name and leave shadow mode on. Everything else — zones, sources, refrigerant circuits,
+residents and openings — is built up under **Configure** on the integration. Nothing is
+stored until you choose "Save and close" in that menu.
+
+A sensible order:
+
+1. **General settings** — outdoor temperature sensor, where the season comes from, and
+   which gates you want (occupancy, awake, schedule).
+2. **Zones and sources** — per room the indoor sensor and the switch-on/off points, then
+   the appliances able to serve that room. Give a boiler and a heat pump adjacent outdoor
+   windows and they hand over to each other seamlessly.
+3. **Refrigerant circuits** — only needed when indoor units share an outdoor unit. Leave
+   empty when every unit has its own.
+4. **Residents** and **Doors and windows** — optional.
+
+### Running and testing on its own
+
+The decision layer runs and tests without Home Assistant:
 
 ```bash
 pip install -r requirements_test.txt
