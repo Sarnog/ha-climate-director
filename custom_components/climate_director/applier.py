@@ -24,23 +24,23 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 
-from .engine import MODE_FAN_ONLY, MODE_OFF, Plan, WorldState
-from .engine.diff import Change, changes
+from .engine import MODE_FAN_ONLY, MODE_OFF
+from .engine.diff import Change
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def apply(
-    hass: HomeAssistant, plan: Plan, world: WorldState, *, shadow: bool
+    hass: HomeAssistant, pending: tuple[Change, ...], *, shadow: bool
 ) -> tuple[Change, ...]:
-    """Bring the installation in line with `plan` and return what was changed.
+    """Carry out `pending` and return what was actually changed.
 
-    In shadow mode the changes are computed and logged but never executed, so
+    Works out nothing itself: which changes are needed is `engine.diff`'s job,
+    and the caller keeps that list so it can be reported whether or not it was
+    executed. In shadow mode the changes are logged and never carried out, so
     the director can run alongside an existing set of automations for as long
-    as it takes to trust it. The return value is the same either way, which is
-    what makes the two modes comparable.
+    as it takes to trust it.
     """
-    pending = changes(plan, world)
     if not pending:
         return ()
 
@@ -53,7 +53,7 @@ async def apply(
                 (f" at {change.command.temperature}" if change.set_temperature else ""),
                 change.command.reason.value,
             )
-        return pending
+        return ()
 
     applied: list[Change] = []
     for change in pending:

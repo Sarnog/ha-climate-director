@@ -46,6 +46,7 @@ async def async_get_config_entry_diagnostics(
         "world": _world(coordinator.world),
         "plan": _plan(coordinator.data),
         "would_change": [change.entity_id for change in coordinator.last_changes],
+        "did_change": [change.entity_id for change in coordinator.last_applied],
     }
 
 

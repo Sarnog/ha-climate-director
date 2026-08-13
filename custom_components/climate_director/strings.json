@@ -181,6 +181,12 @@
       },
       "zone_source": {
         "name": "{zone} source"
+      },
+      "would_command": {
+        "name": "Would command {entity}"
+      },
+      "mismatch": {
+        "name": "Mismatch"
       }
     },
     "binary_sensor": {

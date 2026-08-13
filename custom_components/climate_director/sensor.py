@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -28,11 +28,16 @@ async def async_setup_entry(
     entry: ClimateDirectorEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up one summary sensor plus one sensor per zone."""
+    """Set up the summary sensors, one per zone, and one per steered appliance."""
     coordinator = entry.runtime_data
-    entities: list[SensorEntity] = [DecisionSensor(coordinator)]
+    entities: list[SensorEntity] = [DecisionSensor(coordinator), MismatchSensor(coordinator)]
     entities.extend(
         ZoneSourceSensor(coordinator, zone.zone_id) for zone in coordinator.config.zones
+    )
+    entities.extend(
+        CommandSensor(coordinator, source.entity_id)
+        for _, source in coordinator.config.sources()
+        if source.entity_id
     )
     async_add_entities(entities)
 
@@ -91,6 +96,106 @@ class DecisionSensor(ClimateDirectorEntity, SensorEntity):
                     "reason": deferral.reason.value,
                 }
                 for deferral in plan.deferrals
+            ],
+        }
+
+
+class CommandSensor(ClimateDirectorEntity, SensorEntity):
+    """The mode the director would put one appliance in.
+
+    Deliberately a plain state rather than an attribute: Home Assistant records
+    state history, which is what makes a shadow run comparable afterwards. Line
+    this sensor's history up against the climate entity it names and every
+    moment the director and the existing automations disagreed stands out.
+    """
+
+    _attr_translation_key = "would_command"
+    _attr_icon = "mdi:script-text-outline"
+
+    def __init__(self, coordinator: ClimateDirectorCoordinator, entity_id: str) -> None:
+        """Set up the sensor for one steered appliance."""
+        super().__init__(coordinator, f"command_{entity_id}")
+        self._target = entity_id
+        self._attr_translation_placeholders = {"entity": entity_id}
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the commanded hvac mode, or `unmanaged` when there is none."""
+        plan = self.coordinator.data
+        if plan is None:
+            return None
+        command = plan.command_for(self._target)
+        return command.hvac_mode if command else "unmanaged"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the setpoint, the reason, and what the appliance is doing now."""
+        plan = self.coordinator.data
+        world = self.coordinator.world
+        if plan is None:
+            return {}
+        command = plan.command_for(self._target)
+        actual = world.climate(self._target) if world else None
+        return {
+            "target_entity": self._target,
+            "temperature": command.temperature if command else None,
+            "zone_id": command.zone_id if command else None,
+            "reason": command.reason.value if command else None,
+            "actual_hvac_mode": actual.hvac_mode if actual and actual.available else None,
+            "actual_temperature": actual.target_temperature if actual else None,
+            "agrees": (
+                None
+                if command is None or actual is None or not actual.available
+                else actual.hvac_mode == command.hvac_mode
+            ),
+        }
+
+
+class MismatchSensor(ClimateDirectorEntity, SensorEntity):
+    """How many appliances sit somewhere other than where the plan wants them.
+
+    In shadow mode this is the headline number of the whole exercise: zero means
+    the director and whatever is actually steering the house agree. A brief
+    non-zero reading is normal - one side acts a moment before the other - but a
+    reading that stays up is a real disagreement worth looking into.
+    """
+
+    _attr_translation_key = "mismatch"
+    _attr_icon = "mdi:not-equal-variant"
+    _attr_native_unit_of_measurement = "appliances"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, coordinator: ClimateDirectorCoordinator) -> None:
+        """Set up the mismatch sensor."""
+        super().__init__(coordinator, "mismatch")
+
+    @property
+    def native_value(self) -> int | None:
+        """Return how many appliances would be changed right now."""
+        if self.coordinator.data is None:
+            return None
+        return len(self.coordinator.last_changes)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return exactly which appliances differ, and how."""
+        world = self.coordinator.world
+        return {
+            "shadow_mode": self.coordinator.shadow,
+            "differences": [
+                {
+                    "entity_id": change.entity_id,
+                    "wanted_hvac_mode": change.command.hvac_mode,
+                    "wanted_temperature": change.command.temperature,
+                    "actual_hvac_mode": (
+                        world.climate(change.entity_id).hvac_mode if world else None
+                    ),
+                    "actual_temperature": (
+                        world.climate(change.entity_id).target_temperature if world else None
+                    ),
+                    "reason": change.command.reason.value,
+                }
+                for change in self.coordinator.last_changes
             ],
         }
 

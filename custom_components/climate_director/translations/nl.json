@@ -181,6 +181,12 @@
       },
       "zone_source": {
         "name": "Bron {zone}"
+      },
+      "would_command": {
+        "name": "Zou {entity} aansturen"
+      },
+      "mismatch": {
+        "name": "Afwijkingen"
       }
     },
     "binary_sensor": {

@@ -52,6 +52,7 @@ from .engine import (
     decide,
 )
 from .engine.constraints import active_family
+from .engine.diff import Change, changes
 from .engine.models import SeasonSource
 from .engine.serialise import config_from_dict
 
@@ -121,7 +122,11 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self.zone_overrides: dict[str, bool] = {}
 
         self.world: WorldState | None = None
-        self.last_changes: tuple[Any, ...] = ()
+        self.last_changes: tuple[Change, ...] = ()
+        """What the plan wants changed, whether or not it was carried out."""
+
+        self.last_applied: tuple[Change, ...] = ()
+        """What was actually carried out; always empty in shadow mode."""
 
         self._lock = asyncio.Lock()
         self._family_since: dict[str, datetime | None] = {}
@@ -211,11 +216,22 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             plan = decide(self.config, world)
             self.world = world
 
+            # De verschillenlijst wordt hier bewaard, niet wat de applier
+            # ervan uitgevoerd kreeg. In schaduwmodus is dit precies "wat de
+            # director gedaan zou hebben terwijl iets anders het huis stuurt" -
+            # het getal waar de hele meeloopfase om draait.
+            #
+            # The difference list is kept here, not what the applier managed to
+            # execute. In shadow mode this is exactly "what the director would
+            # have done while something else steers the house" - the number the
+            # whole shadow phase is about.
+            self.last_changes = changes(plan, world)
+            self.last_applied = ()
+
             try:
-                self.last_changes = await apply(self.hass, plan, world, shadow=self.shadow)
+                self.last_applied = await apply(self.hass, self.last_changes, shadow=self.shadow)
             except Exception:  # noqa: BLE001 - one bad call must not stop the loop
                 _LOGGER.exception("Applying the climate plan failed")
-                self.last_changes = ()
 
             self._fire_events(plan)
             self._schedule_deferral(plan)

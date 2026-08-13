@@ -141,6 +141,8 @@ Eén device per installatie, met daaronder:
 | Entiteit | Waarvoor |
 |---|---|
 | `sensor.*_laatste_beslissing` | Hoeveel zones bediend worden, met het volledige plan als attributen: elk commando, elk circuit, elke uitgestelde actie, en welke apparaten er aangestuurd zouden zijn |
+| `sensor.*_zou_<entiteit>_aansturen` | De stand waarin de director dit apparaat zou zetten — één sensor per aangestuurd apparaat |
+| `sensor.*_afwijkingen` | Hoeveel apparaten er nú anders staan dan het plan wil. Nul betekent dat de director het eens is met wat het huis op dit moment stuurt |
 | `sensor.*_bron_<zone>` | Welke bron deze zone bedient, met wat de zone wilde, wat hij kreeg en waarom |
 | `binary_sensor.*_<zone>_geblokkeerd` | Aan als een zone minder kreeg dan hij vroeg, met de reden als attribuut |
 | `switch.*_director` | Hoofdschakelaar; uit betekent dat er niets geregeld wordt |
@@ -149,6 +151,26 @@ Eén device per installatie, met daaronder:
 
 Daarnaast is er een downloadbare diagnose met de configuratie, de laatst gelezen
 momentopname en het laatste plan. Met die drie is elke beslissing exact na te spelen.
+
+### Een schaduwrun beoordelen
+
+De drie sensoren hierboven zijn bewust *toestanden* en geen attributen: Home Assistant
+bewaart toestandsgeschiedenis, en dat is wat een schaduwrun achteraf beoordeelbaar maakt.
+
+- **`sensor.*_afwijkingen`** is het kerngetal. Nul betekent dat de director het eens is met
+  wat er op dat moment daadwerkelijk draait. Een korte piek is normaal — de ene kant handelt
+  even eerder dan de andere — maar een waarde die blíjft staan is een echt meningsverschil.
+  Zet deze sensor in een geschiedenisgrafiek en je ziet in één oogopslag wanneer het misging.
+- **`sensor.*_zou_<entiteit>_aansturen`** leg je naast de geschiedenis van de
+  `climate`-entiteit met dezelfde naam. Twee lijnen die elkaar volgen betekenen dat de
+  director hetzelfde besloot als je automatiseringen; elk moment waarop ze uiteenlopen is
+  een geval om na te kijken.
+- **`sensor.*_bron_<zone>`** en **`binary_sensor.*_<zone>_geblokkeerd`** vertellen daarna
+  *waarom*: welke bron gekozen werd, en welke poort een zone tegenhield.
+
+Elke sensor draagt de reden als attribuut (`circuit_conflict_lost`, `everyone_asleep`,
+`short_cycle_protection`, …), dus een verschil is altijd te herleiden tot één regel in het
+ontwerp in plaats van tot een vermoeden.
 
 ### Installatie
 
@@ -340,6 +362,8 @@ One device per installation, holding:
 | Entity | For |
 |---|---|
 | `sensor.*_last_decision` | How many zones are being served, with the full plan as attributes: every command, every circuit, every deferred action, and which appliances would have been steered |
+| `sensor.*_would_command_<entity>` | The mode the director would put this appliance in — one sensor per steered appliance |
+| `sensor.*_mismatch` | How many appliances currently sit somewhere other than where the plan wants them. Zero means the director agrees with whatever is steering the house right now |
 | `sensor.*_<zone>_source` | Which source serves this zone, with what the zone wanted, what it got and why |
 | `binary_sensor.*_<zone>_blocked` | On when a zone got less than it asked for, with the reason as an attribute |
 | `switch.*_director` | Master switch; off means nothing is regulated |
@@ -348,6 +372,25 @@ One device per installation, holding:
 
 There is also a downloadable diagnostics export holding the configuration, the last
 snapshot read and the last plan. With those three, any decision is exactly reproducible.
+
+### Judging a shadow run
+
+The three sensors above are deliberately *states* rather than attributes: Home Assistant
+records state history, and that is what makes a shadow run judgeable afterwards.
+
+- **`sensor.*_mismatch`** is the headline number. Zero means the director agrees with
+  whatever is actually running at that moment. A brief spike is normal — one side acts a
+  moment before the other — but a reading that stays up is a real disagreement. Put this
+  sensor in a history graph and every moment things went apart stands out at a glance.
+- **`sensor.*_would_command_<entity>`** goes next to the history of the `climate` entity it
+  names. Two lines following each other mean the director decided the same thing your
+  automations did; every moment they diverge is a case to look into.
+- **`sensor.*_<zone>_source`** and **`binary_sensor.*_<zone>_blocked`** then tell you *why*:
+  which source was chosen, and which gate held a zone back.
+
+Every sensor carries the reason as an attribute (`circuit_conflict_lost`,
+`everyone_asleep`, `short_cycle_protection`, …), so a difference always traces back to one
+rule in the design rather than to a hunch.
 
 ### Installation
 
