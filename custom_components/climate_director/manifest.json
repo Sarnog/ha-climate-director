@@ -1,0 +1,11 @@
+{
+  "domain": "climate_director",
+  "name": "Climate Director",
+  "codeowners": ["@Sarnog"],
+  "documentation": "https://github.com/Sarnog/ha-climate-director",
+  "integration_type": "helper",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/Sarnog/ha-climate-director/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

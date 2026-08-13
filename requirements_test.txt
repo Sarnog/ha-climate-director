@@ -1,0 +1,10 @@
+# Dev-dependencies om custom_components/climate_director te linten en testen.
+# Installeer met: pip install -r requirements_test.txt
+#
+# De engine (custom_components/climate_director/engine/) importeert geen Home
+# Assistant en is dus zonder HA te testen; homeassistant staat hier voor de
+# latere integratielaag (config flow, coordinator, entiteiten).
+homeassistant
+pytest
+pytest-asyncio
+ruff

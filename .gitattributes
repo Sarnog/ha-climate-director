@@ -1,0 +1,9 @@
+# Normalize all text files to LF, regardless of each contributor's local
+# core.autocrlf setting. This integration targets Home Assistant on
+# Debian, and a consistent line ending avoids noisy whitespace-only diffs.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
