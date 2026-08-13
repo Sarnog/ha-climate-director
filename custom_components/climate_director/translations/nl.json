@@ -1,0 +1,203 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Climate Director",
+        "description": "Maak een installatie aan. Zones, bronnen en koelcircuits voeg je daarna toe via Configureren.",
+        "data": {
+          "name": "Naam",
+          "shadow_mode": "Schaduwmodus"
+        },
+        "data_description": {
+          "shadow_mode": "Berekent elke beslissing maar voert niets uit, zodat de director naast je bestaande automatiseringen kan meedraaien tot je hem vertrouwt."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Climate Director",
+        "description": "Stel de installatie samen. Er wordt niets bewaard tot je Opslaan en sluiten kiest.",
+        "menu_options": {
+          "settings": "Algemene instellingen",
+          "zones": "Zones en bronnen",
+          "circuits": "Koelcircuits",
+          "residents": "Bewoners",
+          "openings": "Deuren en ramen",
+          "save": "Opslaan en sluiten"
+        }
+      },
+      "settings": {
+        "title": "Algemene instellingen",
+        "data": {
+          "outdoor_sensor": "Buitentemperatuur",
+          "season_source": "Herkomst seizoen",
+          "season_entity": "Seizoensentiteit",
+          "require_occupancy": "Er moet iemand thuis zijn",
+          "require_awake": "Iemand die thuis is moet wakker zijn",
+          "require_schedule": "Het rooster van een bewoner moet openstaan",
+          "holiday_bypasses_schedule": "Vakantiemodus slaat het rooster over",
+          "shadow_mode": "Schaduwmodus"
+        },
+        "data_description": {
+          "season_source": "Leid het seizoen af uit de maand, lees het uit een entiteit, of zet het met de hand vast.",
+          "season_entity": "Wordt alleen gebruikt als de herkomst op entiteit staat. Zomer, winter en hun Engelse namen worden herkend.",
+          "shadow_mode": "Berekent elke beslissing maar voert niets uit."
+        }
+      },
+      "zones": {
+        "title": "Zones",
+        "description": "Kies een zone om aan te passen, of voeg er een toe.",
+        "data": {
+          "zone": "Zone"
+        }
+      },
+      "zone": {
+        "title": "Zone",
+        "description": "Een zone beschrijft wat je in één ruimte wilt. Verwarmen start op het aanpunt en stopt één dode band daarboven; koelen start op het aanpunt en stopt één dode band daaronder.",
+        "data": {
+          "name": "Naam",
+          "indoor_sensor": "Binnentemperatuur",
+          "priority": "Prioriteit",
+          "enable_heat": "Deze zone mag verwarmen",
+          "heat_target": "Setpoint verwarmen",
+          "heat_start_at": "Begin met verwarmen bij",
+          "heat_hysteresis": "Dode band verwarmen",
+          "heat_outdoor_max": "Alleen verwarmen onder deze buitentemperatuur",
+          "enable_cool": "Deze zone mag koelen",
+          "cool_target": "Setpoint koelen",
+          "cool_start_at": "Begin met koelen bij",
+          "cool_hysteresis": "Dode band koelen",
+          "cool_outdoor_min": "Alleen koelen boven deze buitentemperatuur",
+          "cool_summer_only": "Alleen koelen in de zomer",
+          "delete": "Deze zone verwijderen"
+        },
+        "data_description": {
+          "indoor_sensor": "Een temperatuursensor, of een climate-entiteit die de ruimte al meet.",
+          "priority": "Lager wint als twee zones ruziën om één buitenunit.",
+          "heat_hysteresis": "Nul laat de zone pendelen op één enkele temperatuur. Eén graad is een verstandig beginpunt.",
+          "delete": "Verwijdert de zone en zijn bronnen."
+        }
+      },
+      "sources": {
+        "title": "Bronnen voor {zone}",
+        "description": "Een bron is een apparaat dat deze zone kan bedienen. Kies er een om aan te passen, of voeg er een toe.",
+        "data": {
+          "source": "Bron"
+        }
+      },
+      "source": {
+        "title": "Bron",
+        "description": "Het buitenvenster is wat een cv-ketel van een warmtepomp scheidt. Twee aangrenzende vensters sluiten precies op elkaar aan, dus er valt geen buitentemperatuur tussenuit.",
+        "data": {
+          "entity_id": "Climate-entiteit",
+          "role": "Rol",
+          "priority": "Voorkeur",
+          "outdoor_min": "Gebruiken vanaf deze buitentemperatuur",
+          "outdoor_max": "Gebruiken tot deze buitentemperatuur",
+          "delete": "Deze bron verwijderen"
+        },
+        "data_description": {
+          "priority": "Lager wint als meerdere bronnen dezelfde taak kunnen leveren.",
+          "outdoor_min": "Valt binnen het bereik.",
+          "outdoor_max": "Valt buiten het bereik."
+        }
+      },
+      "circuits": {
+        "title": "Koelcircuits",
+        "description": "Een circuit is één buitenunit met de binnenunits die eraan hangen. Laat dit leeg als elke unit een eigen buitenunit heeft.",
+        "data": {
+          "circuit": "Circuit"
+        }
+      },
+      "circuit": {
+        "title": "Koelcircuit",
+        "description": "Binnenunits die één buitenunit delen kunnen normaal gesproken niet tegelijk verwarmen en koelen. Zet ze hier bij elkaar, zodat de director ertussen kan kiezen.",
+        "data": {
+          "name": "Naam",
+          "units": "Binnenunits",
+          "simultaneous_heat_cool": "Kan tegelijk verwarmen en koelen",
+          "conflict_policy": "Conflictbeleid",
+          "allow_fan_only_during_conflict": "Een zone die verliest mag lucht blijven circuleren",
+          "family_switch_delay": "Pauze bij het wisselen van taak (seconden)",
+          "min_family_switch_interval": "Minimale looptijd voor een taakwissel (seconden)",
+          "min_cycle_time": "Rusttijd voordat een unit opnieuw mag starten (seconden)",
+          "max_concurrent_units": "Maximaal aantal units tegelijk aan",
+          "delete": "Dit circuit verwijderen"
+        },
+        "data_description": {
+          "units": "Neem ook units op die de director niet aanstuurt: die claimen de compressor evengoed.",
+          "simultaneous_heat_cool": "Uit voor een gewone multi-split. Aan voor een losse splitunit, of voor driepijps-VRF met warmteterugwinning.",
+          "min_cycle_time": "Vertraagt alleen starten, nooit stoppen."
+        }
+      },
+      "residents": {
+        "title": "Bewoners",
+        "description": "Laat dit leeg voor een pand waar niemand gevolgd wordt; de aanwezigheidspoorten worden dan overgeslagen in plaats van eeuwig te blokkeren.",
+        "data": {
+          "resident": "Bewoner"
+        }
+      },
+      "resident": {
+        "title": "Bewoner",
+        "data": {
+          "name": "Naam",
+          "presence_entity": "Aanwezigheid",
+          "sleep_entity": "Slaap",
+          "sleep_state": "Toestand die slapen betekent",
+          "delete": "Deze bewoner verwijderen"
+        },
+        "data_description": {
+          "sleep_entity": "Laat leeg als de slaap van deze persoon niet gevolgd wordt.",
+          "sleep_state": "Een bedsensor meldt on, een sensor voor het opladertype van een telefoon meldt wireless."
+        }
+      },
+      "openings": {
+        "title": "Deuren en ramen",
+        "description": "Een opening die lang genoeg openstaat schort de zones op waar hij bij hoort.",
+        "data": {
+          "opening": "Opening"
+        }
+      },
+      "opening": {
+        "title": "Opening",
+        "data": {
+          "entity_id": "Sensor",
+          "zone_ids": "Zones die dit raakt",
+          "delay": "Zo lang open voordat er opgeschort wordt (seconden)",
+          "delete": "Deze opening verwijderen"
+        },
+        "data_description": {
+          "zone_ids": "Laat leeg om de hele installatie op te schorten."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "last_decision": {
+        "name": "Laatste beslissing"
+      },
+      "zone_source": {
+        "name": "Bron {zone}"
+      }
+    },
+    "binary_sensor": {
+      "zone_blocked": {
+        "name": "{zone} geblokkeerd"
+      }
+    },
+    "switch": {
+      "master": {
+        "name": "Director"
+      },
+      "holiday": {
+        "name": "Vakantiemodus"
+      },
+      "zone_override": {
+        "name": "Override {zone}"
+      }
+    }
+  }
+}

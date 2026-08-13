@@ -1,0 +1,203 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Climate Director",
+        "description": "Create an installation. Zones, sources and refrigerant circuits are added afterwards, under Configure.",
+        "data": {
+          "name": "Name",
+          "shadow_mode": "Shadow mode"
+        },
+        "data_description": {
+          "shadow_mode": "Compute every decision but execute nothing, so the director can run alongside your existing automations until you trust it."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Climate Director",
+        "description": "Build the installation. Nothing is stored until you choose Save and close.",
+        "menu_options": {
+          "settings": "General settings",
+          "zones": "Zones and sources",
+          "circuits": "Refrigerant circuits",
+          "residents": "Residents",
+          "openings": "Doors and windows",
+          "save": "Save and close"
+        }
+      },
+      "settings": {
+        "title": "General settings",
+        "data": {
+          "outdoor_sensor": "Outdoor temperature",
+          "season_source": "Season source",
+          "season_entity": "Season entity",
+          "require_occupancy": "Somebody must be home",
+          "require_awake": "Somebody home must be awake",
+          "require_schedule": "A resident's schedule must be open",
+          "holiday_bypasses_schedule": "Holiday mode skips the schedule",
+          "shadow_mode": "Shadow mode"
+        },
+        "data_description": {
+          "season_source": "Derive the season from the month, read it from an entity, or pin it by hand.",
+          "season_entity": "Only used when the source is set to entity. Summer, winter and their Dutch equivalents are recognised.",
+          "shadow_mode": "Compute every decision but execute nothing."
+        }
+      },
+      "zones": {
+        "title": "Zones",
+        "description": "Pick a zone to edit, or add one.",
+        "data": {
+          "zone": "Zone"
+        }
+      },
+      "zone": {
+        "title": "Zone",
+        "description": "A zone describes what you want in one room. Heating starts at its switch-on point and stops one dead band above it; cooling starts at its switch-on point and stops one dead band below it.",
+        "data": {
+          "name": "Name",
+          "indoor_sensor": "Indoor temperature",
+          "priority": "Priority",
+          "enable_heat": "This zone may heat",
+          "heat_target": "Heating setpoint",
+          "heat_start_at": "Start heating at",
+          "heat_hysteresis": "Heating dead band",
+          "heat_outdoor_max": "Only heat below this outdoor temperature",
+          "enable_cool": "This zone may cool",
+          "cool_target": "Cooling setpoint",
+          "cool_start_at": "Start cooling at",
+          "cool_hysteresis": "Cooling dead band",
+          "cool_outdoor_min": "Only cool above this outdoor temperature",
+          "cool_summer_only": "Only cool in summer",
+          "delete": "Delete this zone"
+        },
+        "data_description": {
+          "indoor_sensor": "A temperature sensor, or a climate entity that already measures the room.",
+          "priority": "Lower wins when two zones fight over one outdoor unit.",
+          "heat_hysteresis": "Zero lets the zone chatter on a single temperature. One degree is a sensible starting point.",
+          "delete": "Removes the zone and its sources."
+        }
+      },
+      "sources": {
+        "title": "Sources for {zone}",
+        "description": "A source is an appliance able to serve this zone. Pick one to edit, or add one.",
+        "data": {
+          "source": "Source"
+        }
+      },
+      "source": {
+        "title": "Source",
+        "description": "The outdoor window is what separates a boiler from a heat pump. Two adjacent windows meet exactly, so no outdoor temperature falls between them.",
+        "data": {
+          "entity_id": "Climate entity",
+          "role": "Role",
+          "priority": "Preference",
+          "outdoor_min": "Use from this outdoor temperature",
+          "outdoor_max": "Use up to this outdoor temperature",
+          "delete": "Delete this source"
+        },
+        "data_description": {
+          "priority": "Lower wins when several sources could serve the same duty.",
+          "outdoor_min": "Included in the range.",
+          "outdoor_max": "Excluded from the range."
+        }
+      },
+      "circuits": {
+        "title": "Refrigerant circuits",
+        "description": "A circuit is one outdoor unit and the indoor units on it. Leave this empty if every unit has its own outdoor unit.",
+        "data": {
+          "circuit": "Circuit"
+        }
+      },
+      "circuit": {
+        "title": "Refrigerant circuit",
+        "description": "Indoor units sharing one outdoor unit normally cannot heat and cool at the same time. List them here so the director can arbitrate between them.",
+        "data": {
+          "name": "Name",
+          "units": "Indoor units",
+          "simultaneous_heat_cool": "Can heat and cool at the same time",
+          "conflict_policy": "Conflict policy",
+          "allow_fan_only_during_conflict": "A zone that loses may circulate air",
+          "family_switch_delay": "Pause when swapping duty (seconds)",
+          "min_family_switch_interval": "Minimum run before swapping duty (seconds)",
+          "min_cycle_time": "Rest before a unit may restart (seconds)",
+          "max_concurrent_units": "Maximum units running at once",
+          "delete": "Delete this circuit"
+        },
+        "data_description": {
+          "units": "Include units the director does not manage: they still claim the compressor.",
+          "simultaneous_heat_cool": "Off for an ordinary multi-split. On for a single split, or for three-pipe VRF with heat recovery.",
+          "min_cycle_time": "Only ever delays starting, never stopping."
+        }
+      },
+      "residents": {
+        "title": "Residents",
+        "description": "Leave this empty for a building nobody is tracked in; the presence gates are then skipped instead of blocking forever.",
+        "data": {
+          "resident": "Resident"
+        }
+      },
+      "resident": {
+        "title": "Resident",
+        "data": {
+          "name": "Name",
+          "presence_entity": "Presence",
+          "sleep_entity": "Sleep",
+          "sleep_state": "State meaning asleep",
+          "delete": "Delete this resident"
+        },
+        "data_description": {
+          "sleep_entity": "Leave empty if this person's sleep is not tracked.",
+          "sleep_state": "A bed sensor reports on, a phone charger-type sensor reports wireless."
+        }
+      },
+      "openings": {
+        "title": "Doors and windows",
+        "description": "An opening standing open long enough suspends the zones it affects.",
+        "data": {
+          "opening": "Opening"
+        }
+      },
+      "opening": {
+        "title": "Opening",
+        "data": {
+          "entity_id": "Sensor",
+          "zone_ids": "Zones affected",
+          "delay": "Open for this long before suspending (seconds)",
+          "delete": "Delete this opening"
+        },
+        "data_description": {
+          "zone_ids": "Leave empty to suspend the whole installation."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "last_decision": {
+        "name": "Last decision"
+      },
+      "zone_source": {
+        "name": "{zone} source"
+      }
+    },
+    "binary_sensor": {
+      "zone_blocked": {
+        "name": "{zone} blocked"
+      }
+    },
+    "switch": {
+      "master": {
+        "name": "Director"
+      },
+      "holiday": {
+        "name": "Holiday mode"
+      },
+      "zone_override": {
+        "name": "{zone} override"
+      }
+    }
+  }
+}
