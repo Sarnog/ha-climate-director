@@ -24,7 +24,12 @@ from custom_components.climate_director.config_flow import (
     _unique_id,
     _zone_from_form,
 )
-from custom_components.climate_director.coordinator import _as_float, _event_data, season_from_state
+from custom_components.climate_director.coordinator import (
+    _as_float,
+    _event_data,
+    season_from_state,
+    temperature_from_state,
+)
 from custom_components.climate_director.engine import (
     MODE_COOL,
     MODE_FAN_ONLY,
@@ -62,6 +67,30 @@ class TestSeasonFromState:
     @pytest.mark.parametrize("raw", [None, "", "unavailable", "banaan"])
     def test_anything_else_is_unknown(self, raw: str | None) -> None:
         assert season_from_state(raw) is Season.UNKNOWN
+
+
+class TestTemperatureFromState:
+    def test_a_plain_sensor_reads_its_state(self) -> None:
+        assert temperature_from_state("sensor.woonkamer", "21.4", {}) == 21.4
+
+    def test_a_climate_entity_reads_its_measurement(self) -> None:
+        """Its own state is the hvac mode, so the measurement is an attribute."""
+        attributes = {"current_temperature": 21.4, "temperature": 23.0}
+        assert temperature_from_state("climate.huiskamer", "heat", attributes) == 21.4
+
+    def test_a_climate_setpoint_is_never_mistaken_for_the_room(self) -> None:
+        """Reading the setpoint would make every zone think it had arrived."""
+        assert temperature_from_state("climate.huiskamer", "heat", {"temperature": 23.0}) is None
+
+    def test_a_weather_entity_reads_its_temperature_attribute(self) -> None:
+        """Its state is the forecast condition, not a number."""
+        assert temperature_from_state("weather.buienradar", "cloudy", {"temperature": 8.5}) == 8.5
+
+    def test_an_unavailable_sensor_reports_nothing(self) -> None:
+        assert temperature_from_state("sensor.woonkamer", "unavailable", {}) is None
+
+    def test_an_entity_reporting_nothing_usable(self) -> None:
+        assert temperature_from_state("sensor.woonkamer", "unknown", {}) is None
 
 
 class TestAsFloat:

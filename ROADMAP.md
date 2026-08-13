@@ -36,6 +36,10 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
 
 ## Could have
 
+- **Meerdere binnensensoren per zone** — nu wijst een zone één entiteit aan. Meerdere
+  sensoren met een keuze uit gemiddelde, laagste, hoogste of "de eerste die een waarde
+  geeft" scheelt een handgemaakte template- of min/max-helper voor wie meerdere meters in
+  één ruimte heeft.
 - **Openingen met herstel per zone** — nu schort een opening een zone op; een expliciete
   momentopname-en-herstel-route zou ook handmatig ingestelde standen kunnen teruggeven.
 - **Conflictdetector** — signaleren dat units zich gedragen alsof ze een buitenunit delen
@@ -100,6 +104,9 @@ The history of what has already been built and changed is **not** here but in th
 
 ## Could have
 
+- **Several indoor sensors per zone** — a zone currently names one entity. Several sensors
+  with a choice of average, lowest, highest or "the first one reporting a value" saves a
+  hand-built template or min/max helper for anyone with more than one meter in a room.
 - **Openings with per-zone restore** — an opening currently suspends a zone; an explicit
   snapshot-and-restore path could also give manually set modes back.
 - **Conflict detector** — spot units behaving as though they share an outdoor unit

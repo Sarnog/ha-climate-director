@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 
@@ -81,6 +82,32 @@ _SEASON_NAMES: dict[str, Season] = {
     "fall": Season.WINTER,
     "herfst": Season.WINTER,
 }
+
+
+def temperature_from_state(
+    entity_id: str, state: str, attributes: Mapping[str, Any]
+) -> float | None:
+    """Return the temperature an entity reports, or `None` when it reports none.
+
+    Three shapes are read, in this order:
+
+    * a plain numeric state, which is what a `sensor` gives;
+    * `temperature` on a `weather` entity, whose own state is the forecast
+      condition rather than a number;
+    * `current_temperature` on anything else, so a zone can point straight at
+      the indoor unit already measuring the room instead of needing a separate
+      template sensor for it.
+
+    The domain check matters: on a `climate` entity the `temperature` attribute
+    is the *setpoint*, not the measurement. Reading that as the room temperature
+    would make every zone believe it had already reached its target.
+    """
+    value = _as_float(state)
+    if value is not None:
+        return value
+    if entity_id.startswith("weather."):
+        return _as_float(attributes.get("temperature"))
+    return _as_float(attributes.get("current_temperature"))
 
 
 def season_from_state(raw: str | None) -> Season:
@@ -293,21 +320,13 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         )
 
     def _temperature(self, entity_id: str) -> float | None:
-        """Return a temperature from a sensor, or from a climate entity.
-
-        Falls back on `current_temperature` so a zone can point straight at the
-        indoor unit that already measures the room, without needing a separate
-        template sensor for it.
-        """
+        """Return the temperature an entity reports, whatever shape it takes."""
         if not entity_id:
             return None
         state = self.hass.states.get(entity_id)
         if state is None:
             return None
-        value = _as_float(state.state)
-        if value is not None:
-            return value
-        return _as_float(state.attributes.get("current_temperature"))
+        return temperature_from_state(entity_id, state.state, state.attributes)
 
     def _resident(self, presence: str, sleep: str, asleep_state: str) -> ResidentState:
         home = False
