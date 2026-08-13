@@ -182,9 +182,12 @@ herstart Home Assistant.
 `custom_components`-map van je Home Assistant-configuratie en herstart.
 
 Daarna: **Instellingen > Apparaten en diensten > Integratie toevoegen > Climate Director**.
-Je geeft een naam en laat schaduwmodus aan. Alles verder — zones, bronnen, koelcircuits,
-bewoners en openingen — bouw je op via **Configureren** bij de integratie. Er wordt niets
-opgeslagen tot je in dat menu "Opslaan en sluiten" kiest.
+Je geeft een naam en laat schaduwmodus aan. De installatie verschijnt vervolgens op het
+tabblad **Integraties**.
+
+Alles verder — zones, bronnen, koelcircuits, bewoners en openingen — bouw je op via
+**Configureren** bij die integratie. Er wordt niets opgeslagen tot je in dat menu
+"Opslaan en sluiten" kiest.
 
 Een verstandige volgorde:
 
@@ -402,9 +405,11 @@ Home Assistant.
 configuration's `custom_components` folder and restart.
 
 Then: **Settings > Devices & services > Add integration > Climate Director**. You give it a
-name and leave shadow mode on. Everything else — zones, sources, refrigerant circuits,
-residents and openings — is built up under **Configure** on the integration. Nothing is
-stored until you choose "Save and close" in that menu.
+name and leave shadow mode on. The installation then appears on the **Integrations** tab.
+
+Everything else — zones, sources, refrigerant circuits, residents and openings — is built up
+under **Configure** on that integration. Nothing is stored until you choose "Save and close"
+in that menu.
 
 A sensible order:
 
