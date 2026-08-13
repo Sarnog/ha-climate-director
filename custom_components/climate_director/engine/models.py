@@ -268,6 +268,21 @@ class Resident:
     windows: tuple[TimeWindow, ...] = ()
     """Times this resident wants climate control. Empty means always."""
 
+    presence_entity: str = ""
+    """Entity saying whether this person is home, usually a `person`."""
+
+    sleep_entity: str = ""
+    """Entity saying whether this person is asleep. Empty means never asleep."""
+
+    sleep_state: str = "on"
+    """The `sleep_entity` state that means asleep.
+
+    Deliberately free text rather than a fixed `on`: a bed sensor reports `on`,
+    a phone's charger-type sensor reports `wireless`, a sleep-tracker may report
+    `asleep`. The engine never resolves these - they are opaque strings the
+    binding layer reads entities with, exactly like `Zone.indoor_sensor`.
+    """
+
     def wants_climate_at(self, moment: time, weekday: int) -> bool:
         """Return whether this resident's schedule is open at that moment."""
         if not self.windows:
@@ -308,6 +323,34 @@ class GateSettings:
     """Holiday mode ignores the schedule gate, keeping presence and sleep."""
 
 
+class SeasonSource(StrEnum):
+    """Where the coarse season comes from."""
+
+    AUTO = "auto"
+    """Derived from the month."""
+
+    ENTITY = "entity"
+    """Read from an entity, so an existing helper keeps working."""
+
+    SUMMER = "summer"
+    WINTER = "winter"
+    """Pinned by hand."""
+
+
+@dataclass(frozen=True, slots=True)
+class SeasonSettings:
+    """How to resolve the season the zones are gated on."""
+
+    source: SeasonSource = SeasonSource.AUTO
+    entity_id: str = ""
+    summer_months: frozenset[int] = frozenset({4, 5, 6, 7, 8, 9})
+    """Month numbers counting as summer when `source` is `AUTO`."""
+
+    def for_month(self, month: int) -> Season:
+        """Return the season `AUTO` would pick for this month."""
+        return Season.SUMMER if month in self.summer_months else Season.WINTER
+
+
 @dataclass(frozen=True, slots=True)
 class DirectorConfig:
     """A whole installation."""
@@ -320,6 +363,10 @@ class DirectorConfig:
     """Source-id groups of which at most one member may run at a time."""
 
     gates: GateSettings = field(default_factory=GateSettings)
+    seasons: SeasonSettings = field(default_factory=SeasonSettings)
+
+    outdoor_sensor: str = ""
+    """Entity carrying the outdoor temperature. Empty leaves it unknown."""
 
     def zone(self, zone_id: str) -> Zone | None:
         """Return the zone with this id, if it exists."""
