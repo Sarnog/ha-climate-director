@@ -437,6 +437,17 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
             else:
                 seen_units[unit] = circuit.circuit_id
 
+    # Een begrensd buitenvenster kan zonder buitentemperatuur nooit voldaan
+    # worden, dus alles wat er een heeft valt stil. Dat is de stilste manier
+    # waarop een installatie kan blijven staan: elke zone besluit netjes "niets
+    # te doen", en nergens staat waarom. Daarom is het een eigen melding.
+    #
+    # A bounded outdoor window can never be satisfied without an outdoor
+    # temperature, so anything carrying one falls still. That is the quietest
+    # way an installation can seize up: every zone decides "nothing to do", and
+    # nowhere does it say why. Hence a problem of its own.
+    outdoor_known = bool(config.outdoor_sensor)
+
     for zone in config.zones:
         if not zone.sources:
             problems.append(f"zone {zone.zone_id} has no sources")
@@ -444,6 +455,11 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
             if source.outdoor.empty:
                 problems.append(
                     f"source {source.source_id} has an outdoor window that admits nothing"
+                )
+            elif not outdoor_known and not source.outdoor.unbounded:
+                problems.append(
+                    f"source {source.source_id} is limited by outdoor temperature, "
+                    "but no outdoor sensor is set"
                 )
         for family in (ModeFamily.HEAT, ModeFamily.COOL):
             settings = zone.settings_for(family)
@@ -454,6 +470,11 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
             if settings.outdoor.empty:
                 problems.append(
                     f"zone {zone.zone_id} has a {family.value} outdoor window that admits nothing"
+                )
+            elif not outdoor_known and not settings.outdoor.unbounded:
+                problems.append(
+                    f"zone {zone.zone_id} limits {family.value} by outdoor temperature, "
+                    "but no outdoor sensor is set"
                 )
             if not any(source.supports(family) for source in zone.sources):
                 problems.append(

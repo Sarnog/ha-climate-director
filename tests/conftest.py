@@ -243,6 +243,16 @@ def house() -> DirectorConfig:
         ),
         openings=(Opening(entity_id=BACK_DOOR, delay=timedelta(seconds=30)),),
         gates=GateSettings(require_occupancy=True, require_awake=True),
+        # De engine leest deze entiteit nooit zelf - de koppelingslaag doet dat
+        # en zet het resultaat in `WorldState`. Hij hoort hier omdat elk
+        # begrensd buitenvenster in deze opstelling zonder buitentemperatuur
+        # nooit voldaan kan worden, en `validate()` daar terecht over klaagt.
+        #
+        # The engine never reads this entity itself - the binding layer does and
+        # puts the result in `WorldState`. It belongs here because every bounded
+        # outdoor window in this setup can never be satisfied without an outdoor
+        # temperature, which `validate()` rightly complains about.
+        outdoor_sensor="sensor.buienradar_temperature",
     )
 
 

@@ -226,6 +226,52 @@ class TestValidate:
         assert any("source s has an outdoor window" in problem for problem in problems)
         assert any("heat outdoor window" in problem for problem in problems)
 
+    def test_outdoor_limits_without_an_outdoor_sensor(self) -> None:
+        """The quietest way to seize up: every zone decides "nothing to do"."""
+        config = DirectorConfig(
+            zones=(
+                Zone(
+                    "a",
+                    "A",
+                    "sensor.a",
+                    sources=(Source("s", "climate.x", outdoor=OutdoorWindow(minimum=3.0)),),
+                    heat=ModeSettings(21.0, 20.0, outdoor=OutdoorWindow(maximum=19.0)),
+                ),
+            )
+        )
+        problems = validate(config)
+        assert any("source s is limited by outdoor temperature" in item for item in problems)
+        assert any("zone a limits heat by outdoor temperature" in item for item in problems)
+
+    def test_the_same_setup_with_an_outdoor_sensor_is_fine(self) -> None:
+        config = DirectorConfig(
+            zones=(
+                Zone(
+                    "a",
+                    "A",
+                    "sensor.a",
+                    sources=(Source("s", "climate.x", outdoor=OutdoorWindow(minimum=3.0)),),
+                    heat=ModeSettings(21.0, 20.0, outdoor=OutdoorWindow(maximum=19.0)),
+                ),
+            ),
+            outdoor_sensor="sensor.buiten",
+        )
+        assert not any("outdoor sensor" in item for item in validate(config))
+
+    def test_unbounded_windows_need_no_outdoor_sensor(self) -> None:
+        config = DirectorConfig(
+            zones=(
+                Zone(
+                    "a",
+                    "A",
+                    "sensor.a",
+                    sources=(Source("s", "climate.x"),),
+                    heat=ModeSettings(21.0, 20.0),
+                ),
+            )
+        )
+        assert validate(config) == ()
+
     def test_exclusive_group_naming_an_unknown_source(self) -> None:
         config = DirectorConfig(exclusive_groups=(frozenset({"ghost"}),))
         assert any("unknown source ghost" in problem for problem in validate(config))
