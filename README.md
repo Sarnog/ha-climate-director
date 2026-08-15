@@ -152,6 +152,23 @@ Eén device per installatie, met daaronder:
 Daarnaast is er een downloadbare diagnose met de configuratie, de laatst gelezen
 momentopname en het laatste plan. Met die drie is elke beslissing exact na te spelen.
 
+### Actie
+
+`climate_director.evaluate` laat de director nu opnieuw beslissen, in plaats van te wachten
+tot een gevolgde entiteit uit zichzelf verandert. Handig tijdens het inrichten en bij het
+napluizen van een afwijking. In schaduwmodus voert die actie nog steeds niets uit — hij
+herberekent alleen. Zonder `entry_id` worden alle installaties herberekend.
+
+### Configuratiecontrole
+
+Klopt er iets structureel niet — een zone zonder bruikbare bron, twee bronnen op dezelfde
+entiteit, een buitenvenster dat niets toelaat — dan verschijnt dat als reparatiemelding in
+Home Assistant. De zones die wél kloppen worden ondertussen gewoon geregeld; één stukke
+zone legt de installatie niet stil. De volledige lijst staat in de diagnose.
+
+Dat onderscheid is er met opzet: een fout in de configuratie ziet er van buiten hetzelfde
+uit als "de director besluit niets", en dan zoek je een bug die eigenlijk een typefout is.
+
 ### Een schaduwrun beoordelen
 
 De drie sensoren hierboven zijn bewust *toestanden* en geen attributen: Home Assistant
@@ -375,6 +392,23 @@ One device per installation, holding:
 
 There is also a downloadable diagnostics export holding the configuration, the last
 snapshot read and the last plan. With those three, any decision is exactly reproducible.
+
+### Action
+
+`climate_director.evaluate` makes the director decide again right now, instead of waiting
+for a tracked entity to change of its own accord. Useful while setting up and while chasing
+down a difference. In shadow mode that action still executes nothing — it only recomputes.
+Without an `entry_id`, every installation is recomputed.
+
+### Configuration check
+
+If something is structurally wrong — a zone with no usable source, two sources on the same
+entity, an outdoor window that admits nothing — it shows up as a repair notice in Home
+Assistant. The zones that are sound carry on being regulated meanwhile; one broken zone does
+not stop the installation. The full list is in the diagnostics.
+
+That distinction is deliberate: a mistake in the configuration looks, from the outside, the
+same as "the director decides nothing", and you end up hunting a bug that is really a typo.
 
 ### Judging a shadow run
 

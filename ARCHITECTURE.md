@@ -265,10 +265,21 @@ een herstart en schrijven hun stand terug naar de coordinator. De platforms word
 eerste beslissing opgezet, zodat een uitgeschakelde hoofdschakelaar niet één ronde lang aan
 lijkt te staan.
 
+### problems.py — configuratiefouten zichtbaar maken
+
+`validate()` vindt structurele fouten, maar die kwamen alleen in de diagnose terecht. Deze
+module zet ze om in een reparatiemelding in Home Assistant zelf, en haalt die weer weg zodra
+de configuratie klopt.
+
+De melding is een waarschuwing, geen fout: `decide()` blijft elke gezonde zone regelen, dus
+een gebrekkige configuratie verslechtert de installatie zonder hem stil te leggen. Dat is
+precies waarom hij zichtbaar moet zijn - van buiten ziet een fout in de configuratie er
+hetzelfde uit als "de director besluit niets".
+
 ### Nog te bouwen
 
 Een virtuele `climate`-entiteit per zone als bedieningspunt, `number`-entiteiten voor de
-drempels, en de acties (`evaluate`, `set_override`). Ideeën staan in
+drempels, en de override-acties. Ideeën staan in
 [`ROADMAP.md`](ROADMAP.md).
 
 ### Uitbreidbaarheid
@@ -532,10 +543,21 @@ have happened. The switches are control state, not configuration — they restor
 after a restart and write their state back to the coordinator. The platforms are set up
 before the first decision, so a master switch left off does not appear on for one round.
 
+### problems.py — surfacing configuration mistakes
+
+`validate()` finds structural mistakes, but those only reached the diagnostics. This module
+turns them into a repair notice in Home Assistant itself, and removes it again as soon as the
+configuration is sound.
+
+The notice is a warning rather than an error: `decide()` carries on regulating every sound
+zone, so a flawed configuration degrades the installation without stopping it. That is
+exactly why it has to be visible - from the outside, a mistake in the configuration looks the
+same as "the director decides nothing".
+
 ### Still to build
 
 A virtual `climate` entity per zone as the control point, `number` entities for the
-thresholds, and the actions (`evaluate`, `set_override`). Ideas live in
+thresholds, and the override actions. Ideas live in
 [`ROADMAP.md`](ROADMAP.md).
 
 ### Extensibility

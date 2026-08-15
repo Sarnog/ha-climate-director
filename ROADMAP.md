@@ -20,17 +20,15 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
   director kiest daar dan de bron bij.
 - **`number`-entiteiten voor de drempels** — aan- en uitpunten en dode banden op een
   dashboard te verschuiven zonder de options flow te openen.
-- **Acties** — `climate_director.evaluate` (forceer een herberekening),
-  `climate_director.set_override` (met een duur of tot de volgende gebeurtenis) en
-  `climate_director.clear_override`, plus knoppen die die acties aanroepen.
+- **Overrides via acties** — `climate_director.set_override` (met een duur of tot de
+  volgende gebeurtenis) en `climate_director.clear_override`, plus knoppen die ze
+  aanroepen. `climate_director.evaluate` bestaat al.
 - **`select` voor het seizoen** — het seizoen met de hand omzetten zonder de options flow.
 - **Poortinstellingen per zone** — nu gelden `GateSettings` voor de hele installatie. Een
   slaapkamer wil andere aanwezigheids- en slaapregels dan een woonkamer.
 - **Suggestie voor circuitgroepering** — voorstellen welke binnenunits een buitenunit delen
   op basis van gedeeld `device` / `via_device` / fabrikant, uitdrukkelijk als voorstel en
   niet als feit, omdat de meeste klimaatintegraties die relatie niet blootgeven.
-- **Reparatiemelding bij een gebrekkige configuratie** — wat `validate()` vindt zichtbaar
-  maken in Home Assistant zelf, in plaats van alleen in de diagnose.
 
 ## Could have
 
@@ -88,17 +86,15 @@ The history of what has already been built and changed is **not** here but in th
   source to match.
 - **`number` entities for the thresholds** — switch-on/off points and dead bands adjustable
   from a dashboard without opening the options flow.
-- **Actions** — `climate_director.evaluate` (force a re-evaluation),
-  `climate_director.set_override` (with a duration or until the next event) and
-  `climate_director.clear_override`, plus buttons calling them.
+- **Overrides through actions** — `climate_director.set_override` (with a duration or
+  until the next event) and `climate_director.clear_override`, plus buttons calling them.
+  `climate_director.evaluate` already exists.
 - **A `select` for the season** — flipping the season by hand without the options flow.
 - **Per-zone gate settings** — `GateSettings` currently applies to the whole installation.
   A bedroom wants different presence and sleep rules from a living room.
 - **Suggested circuit grouping** — propose which indoor units share an outdoor unit based on
   shared `device` / `via_device` / manufacturer, explicitly as a proposal rather than a
   fact, since most climate integrations do not expose that relationship.
-- **A repair issue for a flawed configuration** — surface what `validate()` finds in Home
-  Assistant itself, rather than only in the diagnostics.
 
 ## Could have
 
