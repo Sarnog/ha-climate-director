@@ -49,6 +49,7 @@ from custom_components.climate_director.engine import (
 )
 from custom_components.climate_director.engine.diff import Change
 from custom_components.climate_director.engine.serialise import config_from_dict, config_to_dict
+from custom_components.climate_director.problems import MAX_LISTED, summarise
 
 
 class TestSeasonFromState:
@@ -241,6 +242,29 @@ class TestScheduleWindowsReachTheEngine:
     def test_no_days_means_every_day(self) -> None:
         config = self._config(None)
         assert self._verdict(config, datetime(2026, 8, 15, 9, 0)).allowed
+
+
+class TestProblemSummary:
+    def test_a_short_list_is_shown_in_full(self) -> None:
+        summary = summarise(("first", "second"))
+        assert summary == "- first\n- second"
+        assert "more" not in summary
+
+    def test_exactly_the_cap_needs_no_tail(self) -> None:
+        summary = summarise(tuple(f"problem {index}" for index in range(MAX_LISTED)))
+        assert summary.count("\n") == MAX_LISTED - 1
+        assert "more" not in summary
+
+    def test_one_over_the_cap_counts_the_remainder(self) -> None:
+        summary = summarise(tuple(f"problem {index}" for index in range(MAX_LISTED + 1)))
+        assert summary.endswith("- ... and 1 more")
+
+    def test_a_long_list_counts_correctly(self) -> None:
+        summary = summarise(tuple(f"problem {index}" for index in range(MAX_LISTED + 7)))
+        assert summary.endswith("- ... and 7 more")
+
+    def test_nothing_wrong_produces_nothing(self) -> None:
+        assert summarise(()) == ""
 
 
 class TestDeepCopy:
