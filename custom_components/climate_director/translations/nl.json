@@ -43,7 +43,8 @@
         "data_description": {
           "season_source": "Leid het seizoen af uit de maand, lees het uit een entiteit, of zet het met de hand vast.",
           "season_entity": "Wordt alleen gebruikt als de herkomst op entiteit staat. Zomer, winter en hun Engelse namen worden herkend.",
-          "shadow_mode": "Berekent elke beslissing maar voert niets uit."
+          "shadow_mode": "Berekent elke beslissing maar voert niets uit.",
+          "require_schedule": "Gebruikt de roosters van de bewoners zelf, in te stellen onder Bewoners. Staan er nergens roosters, dan laat deze poort alles door."
         }
       },
       "zones": {
@@ -151,6 +152,27 @@
         "data_description": {
           "sleep_entity": "Laat leeg als de slaap van deze persoon niet gevolgd wordt.",
           "sleep_state": "Een bedsensor meldt on, een sensor voor het opladertype van een telefoon meldt wireless."
+        }
+      },
+      "windows": {
+        "title": "Roosters voor {resident}",
+        "description": "Tijden waarop deze bewoner klimaatregeling wil. Laat de lijst leeg om hem op elk uur mee te laten tellen.",
+        "data": {
+          "window": "Rooster"
+        }
+      },
+      "window": {
+        "title": "Rooster",
+        "description": "Een venster dat over middernacht heen loopt mag; het hoort bij de dag waarop het begint, dus een venster van vrijdag 22:00-02:00 telt zaterdag om 01:00 nog steeds.",
+        "data": {
+          "start": "Van",
+          "end": "Tot",
+          "weekdays": "Dagen",
+          "delete": "Dit rooster verwijderen"
+        },
+        "data_description": {
+          "weekdays": "Laat leeg voor elke dag.",
+          "end": "Valt buiten het venster."
         }
       },
       "openings": {

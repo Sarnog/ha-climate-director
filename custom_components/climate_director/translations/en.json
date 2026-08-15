@@ -43,7 +43,8 @@
         "data_description": {
           "season_source": "Derive the season from the month, read it from an entity, or pin it by hand.",
           "season_entity": "Only used when the source is set to entity. Summer, winter and their Dutch equivalents are recognised.",
-          "shadow_mode": "Compute every decision but execute nothing."
+          "shadow_mode": "Compute every decision but execute nothing.",
+          "require_schedule": "Uses each resident's own schedules, set under Residents. With no schedules anywhere this gate lets everything through."
         }
       },
       "zones": {
@@ -151,6 +152,27 @@
         "data_description": {
           "sleep_entity": "Leave empty if this person's sleep is not tracked.",
           "sleep_state": "A bed sensor reports on, a phone charger-type sensor reports wireless."
+        }
+      },
+      "windows": {
+        "title": "Schedules for {resident}",
+        "description": "Times this resident wants climate control. Leave the list empty to have them count at any hour.",
+        "data": {
+          "window": "Schedule"
+        }
+      },
+      "window": {
+        "title": "Schedule",
+        "description": "A window running past midnight is allowed; it is anchored on the day it starts, so a Friday 22:00-02:00 window still counts at 01:00 on Saturday.",
+        "data": {
+          "start": "From",
+          "end": "Until",
+          "weekdays": "Days",
+          "delete": "Delete this schedule"
+        },
+        "data_description": {
+          "weekdays": "Leave empty for every day.",
+          "end": "Excluded from the window."
         }
       },
       "openings": {

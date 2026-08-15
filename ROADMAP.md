@@ -26,8 +26,6 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
 - **`select` voor het seizoen** — het seizoen met de hand omzetten zonder de options flow.
 - **Poortinstellingen per zone** — nu gelden `GateSettings` voor de hele installatie. Een
   slaapkamer wil andere aanwezigheids- en slaapregels dan een woonkamer.
-- **Roostervensters in de UI** — de tijdvensters per bewoner zijn wel gemodelleerd en
-  getest, maar nog niet in de options flow te bewerken.
 - **Suggestie voor circuitgroepering** — voorstellen welke binnenunits een buitenunit delen
   op basis van gedeeld `device` / `via_device` / fabrikant, uitdrukkelijk als voorstel en
   niet als feit, omdat de meeste klimaatintegraties die relatie niet blootgeven.
@@ -67,7 +65,9 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
   of het voorverwarmen daarop aanpassen.
 - **Balancering over circuits** — bij twee gelijkwaardige bronnen op verschillende
   circuits de belasting verdelen in plaats van altijd dezelfde te kiezen.
-- **Opname in de HACS-standaardlijst** — pas zinvol als de integratie installeerbaar is.
+- **Opname in de HACS-standaardlijst** — zodat de integratie in HACS vindbaar wordt zonder
+  handmatige "custom repository"-toevoeging. Pas indienen als hij zich een tijd in de
+  praktijk bewezen heeft.
 
 ---
 
@@ -94,8 +94,6 @@ The history of what has already been built and changed is **not** here but in th
 - **A `select` for the season** — flipping the season by hand without the options flow.
 - **Per-zone gate settings** — `GateSettings` currently applies to the whole installation.
   A bedroom wants different presence and sleep rules from a living room.
-- **Schedule windows in the UI** — the per-resident time windows are modelled and tested,
-  but not yet editable in the options flow.
 - **Suggested circuit grouping** — propose which indoor units share an outdoor unit based on
   shared `device` / `via_device` / manufacturer, explicitly as a proposal rather than a
   fact, since most climate integrations do not expose that relationship.
@@ -133,5 +131,6 @@ The history of what has already been built and changed is **not** here but in th
   dead band or the pre-heating to it.
 - **Balancing across circuits** — with two equivalent sources on different circuits, share
   the load instead of always picking the same one.
-- **Inclusion in the HACS default list** — only meaningful once the integration is
-  installable.
+- **Inclusion in the HACS default list** — so the integration becomes findable in HACS
+  without adding it as a custom repository by hand. Only worth submitting once it has
+  proven itself in practice for a while.

@@ -29,6 +29,11 @@ from .engine.models import ConflictPolicy, Season, SeasonSource, SourceRole
 CONF_NAME = "name"
 
 _ADD = "__add__"
+_BACK = "__back__"
+
+#: Maandag is 0, gelijk aan `datetime.weekday()`, dat de engine ook gebruikt.
+#: Monday is 0, matching `datetime.weekday()`, which the engine uses too.
+_WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
 _TEMPERATURE = selector.NumberSelector(
     selector.NumberSelectorConfig(min=-20, max=40, step=0.5, mode=selector.NumberSelectorMode.BOX)
@@ -47,6 +52,7 @@ _CLIMATE_MULTI = selector.EntitySelector(
     selector.EntitySelectorConfig(domain="climate", multiple=True)
 )
 _TEXT = selector.TextSelector()
+_TIME = selector.TimeSelector()
 
 
 def _choices(values: list[str]) -> selector.SelectSelector:
@@ -97,8 +103,15 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         """Start with an empty edit cursor."""
         self._installation: dict[str, Any] = {}
         self._shadow_mode: bool | None = None
+        # Elke geneste lijst krijgt een eigen cursor. Eén gedeelde cursor laat
+        # een bewerking in de ene lijst de plek in de andere verzetten.
+        #
+        # Every nested list gets its own cursor. One shared cursor lets an edit
+        # in one list move the position in another.
         self._zone_index: int | None = None
         self._source_index: int | None = None
+        self._resident_index: int | None = None
+        self._window_index: int | None = None
         self._index: int | None = None
 
     # -- ingang / entry point ------------------------------------------------
@@ -295,7 +308,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
 
         if user_input is not None:
             choice = user_input["source"]
-            if choice == "__back__":
+            if choice == _BACK:
                 return await self.async_step_init()
             self._source_index = None if choice == _ADD else int(choice)
             return await self.async_step_source()
@@ -305,7 +318,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for index, source in enumerate(sources)
         ]
         options.append(selector.SelectOptionDict(value=_ADD, label="+ Add source"))
-        options.append(selector.SelectOptionDict(value="__back__", label="< Back to menu"))
+        options.append(selector.SelectOptionDict(value=_BACK, label="< Back to menu"))
         return self.async_show_form(
             step_id="sources",
             data_schema=vol.Schema(
@@ -493,7 +506,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         residents = self._list("residents")
         if user_input is not None:
             choice = user_input["resident"]
-            self._index = None if choice == _ADD else int(choice)
+            self._resident_index = None if choice == _ADD else int(choice)
             return await self.async_step_resident()
 
         options = [
@@ -521,29 +534,37 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Edit one resident."""
         residents = self._list("residents")
-        current = residents[self._index] if self._index is not None else {}
+        current = residents[self._resident_index] if self._resident_index is not None else {}
 
         if user_input is not None:
-            if user_input.get("delete") and self._index is not None:
-                residents.pop(self._index)
+            if user_input.get("delete") and self._resident_index is not None:
+                residents.pop(self._resident_index)
+                self._resident_index = None
+                return await self.async_step_init()
+
+            person = {
+                "resident_id": current.get("resident_id")
+                or _unique_id(
+                    user_input[CONF_NAME],
+                    [item["resident_id"] for item in residents],
+                ),
+                "name": user_input[CONF_NAME],
+                "presence_entity": user_input["presence_entity"],
+                "sleep_entity": user_input.get("sleep_entity", ""),
+                "sleep_state": user_input.get("sleep_state") or "on",
+                # De roosters van deze bewoner blijven staan; die worden in de
+                # volgende stap bewerkt, niet in dit formulier.
+                #
+                # This resident's schedules are kept; they are edited in the
+                # next step, not in this form.
+                "windows": current.get("windows") or [],
+            }
+            if self._resident_index is None:
+                residents.append(person)
+                self._resident_index = len(residents) - 1
             else:
-                person = {
-                    "resident_id": current.get("resident_id")
-                    or _unique_id(
-                        user_input[CONF_NAME],
-                        [item["resident_id"] for item in residents],
-                    ),
-                    "name": user_input[CONF_NAME],
-                    "presence_entity": user_input["presence_entity"],
-                    "sleep_entity": user_input.get("sleep_entity", ""),
-                    "sleep_state": user_input.get("sleep_state") or "on",
-                }
-                if self._index is None:
-                    residents.append(person)
-                else:
-                    residents[self._index] = person
-            self._index = None
-            return await self.async_step_init()
+                residents[self._resident_index] = person
+            return await self.async_step_windows()
 
         return self.async_show_form(
             step_id="resident",
@@ -567,6 +588,104 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         )
                     ),
                     vol.Required("sleep_state", default=current.get("sleep_state", "on")): _TEXT,
+                    vol.Required("delete", default=False): bool,
+                }
+            ),
+        )
+
+    # -- roosters / schedules ------------------------------------------------
+
+    async def async_step_windows(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick a schedule window of the current resident, add one, or go back."""
+        resident = self._current_resident()
+        if resident is None:
+            return await self.async_step_init()
+        windows = resident.setdefault("windows", [])
+
+        if user_input is not None:
+            choice = user_input["window"]
+            if choice == _BACK:
+                return await self.async_step_init()
+            self._window_index = None if choice == _ADD else int(choice)
+            return await self.async_step_window()
+
+        options = [
+            selector.SelectOptionDict(value=str(index), label=_window_label(window))
+            for index, window in enumerate(windows)
+        ]
+        options.append(selector.SelectOptionDict(value=_ADD, label="+ Add schedule"))
+        options.append(selector.SelectOptionDict(value=_BACK, label="< Back to menu"))
+        return self.async_show_form(
+            step_id="windows",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("window", default=_BACK if windows else _ADD): (
+                        selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=options, mode=selector.SelectSelectorMode.LIST
+                            )
+                        )
+                    )
+                }
+            ),
+            description_placeholders={"resident": resident.get("name") or resident["resident_id"]},
+        )
+
+    async def async_step_window(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Edit one schedule window."""
+        resident = self._current_resident()
+        if resident is None:
+            return await self.async_step_init()
+        windows = resident.setdefault("windows", [])
+        current = windows[self._window_index] if self._window_index is not None else {}
+
+        if user_input is not None:
+            if user_input.get("delete") and self._window_index is not None:
+                windows.pop(self._window_index)
+            else:
+                window = {
+                    "start": user_input["start"],
+                    "end": user_input["end"],
+                    # Geen dagen aangevinkt betekent elke dag, niet nooit. Een
+                    # rooster zonder dagen zou de bewoner permanent buitensluiten.
+                    #
+                    # No days ticked means every day, not never. A schedule with
+                    # no days would lock the resident out permanently.
+                    "weekdays": ([int(day) for day in user_input.get("weekdays") or ()] or None),
+                }
+                if self._window_index is None:
+                    windows.append(window)
+                else:
+                    windows[self._window_index] = window
+            self._window_index = None
+            return await self.async_step_windows()
+
+        weekdays = current.get("weekdays")
+        return self.async_show_form(
+            step_id="window",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("start", default=current.get("start", "08:00:00")): _TIME,
+                    vol.Required("end", default=current.get("end", "23:00:00")): _TIME,
+                    vol.Optional(
+                        "weekdays",
+                        description={
+                            "suggested_value": (
+                                None if weekdays is None else [str(day) for day in weekdays]
+                            )
+                        },
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[
+                                selector.SelectOptionDict(value=str(number), label=label)
+                                for number, label in enumerate(_WEEKDAYS)
+                            ],
+                            multiple=True,
+                            mode=selector.SelectSelectorMode.LIST,
+                        )
+                    ),
                     vol.Required("delete", default=False): bool,
                 }
             ),
@@ -659,6 +778,13 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         """Return the editable list stored under `key`, creating it if needed."""
         return self._installation.setdefault(key, [])
 
+    def _current_resident(self) -> dict[str, Any] | None:
+        """Return the resident being edited, or `None` when the cursor is stale."""
+        residents = self._list("residents")
+        if self._resident_index is None or not 0 <= self._resident_index < len(residents):
+            return None
+        return residents[self._resident_index]
+
     def _current_zone(self) -> dict[str, Any] | None:
         """Return the zone being edited, or `None` when the cursor is stale.
 
@@ -705,6 +831,25 @@ def _zone_from_form(user_input: dict[str, Any], current: dict[str, Any]) -> dict
         "heat": heat,
         "cool": cool,
     }
+
+
+def _window_label(window: dict[str, Any]) -> str:
+    """Return a one-line summary of a schedule window for the picker."""
+    start = str(window.get("start", "?"))[:5]
+    end = str(window.get("end", "?"))[:5]
+    # Eerst filteren, dan sorteren. Een opgeslagen lijst met een string ertussen
+    # laat `sorted` omvallen op de vergelijking, nog voordat de filter hem ziet.
+    #
+    # Filter first, then sort. A stored list with a string in it makes `sorted`
+    # fall over on the comparison, before the filter ever sees it.
+    weekdays = [
+        day
+        for day in (window.get("weekdays") or ())
+        if isinstance(day, int) and not isinstance(day, bool) and 0 <= day < 7
+    ]
+    if not weekdays:
+        return f"{start} - {end}, every day"
+    return f"{start} - {end}, {', '.join(_WEEKDAYS[day][:3] for day in sorted(weekdays))}"
 
 
 def _all_source_ids(installation: dict[str, Any]) -> list[str]:

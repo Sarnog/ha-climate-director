@@ -13,6 +13,8 @@ be able to verify real API signatures), but not against a running `hass`. See
 
 from __future__ import annotations
 
+from datetime import datetime
+
 import pytest
 from conftest import house
 
@@ -22,6 +24,7 @@ from custom_components.climate_director.config_flow import (
     _all_source_ids,
     _deep_copy,
     _unique_id,
+    _window_label,
     _zone_from_form,
 )
 from custom_components.climate_director.coordinator import (
@@ -35,11 +38,14 @@ from custom_components.climate_director.engine import (
     MODE_FAN_ONLY,
     MODE_HEAT,
     MODE_OFF,
+    DirectorConfig,
     Plan,
+    Reason,
     Season,
     UnitCommand,
     ZoneDecision,
     decide,
+    gates,
 )
 from custom_components.climate_director.engine.diff import Change
 from custom_components.climate_director.engine.serialise import config_from_dict, config_to_dict
@@ -165,6 +171,76 @@ class TestUniqueId:
     def test_an_empty_name_still_gets_an_id(self) -> None:
         """`slugify("")` really does return an empty string, unlike `slugify("!!!")`."""
         assert _unique_id("", []) == "item"
+
+
+class TestWindowLabel:
+    def test_a_window_without_days_reads_as_every_day(self) -> None:
+        assert _window_label({"start": "08:00:00", "end": "18:00:00"}) == "08:00 - 18:00, every day"
+
+    def test_an_empty_day_list_also_reads_as_every_day(self) -> None:
+        """No days ticked means every day, not never."""
+        label = _window_label({"start": "08:00:00", "end": "18:00:00", "weekdays": []})
+        assert label == "08:00 - 18:00, every day"
+
+    def test_days_are_named_and_sorted(self) -> None:
+        window = {"start": "06:30:00", "end": "12:00:00", "weekdays": [4, 2]}
+        assert _window_label(window) == "06:30 - 12:00, Wed, Fri"
+
+    def test_nonsense_days_do_not_produce_a_dangling_comma(self) -> None:
+        window = {"start": "08:00", "end": "18:00", "weekdays": [99, "maandag"]}
+        assert _window_label(window) == "08:00 - 18:00, every day"
+
+
+class TestScheduleWindowsReachTheEngine:
+    """The form's output has to survive storage and land in the gate."""
+
+    def _config(self, weekdays: list[int] | None) -> DirectorConfig:
+        stored = {
+            "residents": [
+                {
+                    "resident_id": "danny",
+                    "presence_entity": "person.danny",
+                    "windows": [{"start": "08:00:00", "end": "18:00:00", "weekdays": weekdays}],
+                }
+            ],
+            "zones": [
+                {
+                    "zone_id": "z",
+                    "indoor_sensor": "sensor.t",
+                    "sources": [{"source_id": "s", "entity_id": "climate.x"}],
+                    "heat": {"target": 21.0, "start_at": 20.0, "hysteresis": 1.0},
+                }
+            ],
+            "gates": {"require_occupancy": True, "require_awake": False, "require_schedule": True},
+        }
+        return config_from_dict(stored)
+
+    def _verdict(self, config: DirectorConfig, moment: datetime):
+        from conftest import awake, make_world
+
+        zone = config.zone("z")
+        assert zone is not None
+        world = make_world(now=moment, residents={"danny": awake()})
+        return gates.evaluate(config, world, zone)
+
+    def test_inside_the_window(self) -> None:
+        config = self._config([0, 1, 2, 3, 4])
+        assert self._verdict(config, datetime(2026, 8, 10, 9, 0)).allowed
+
+    def test_outside_the_hours(self) -> None:
+        config = self._config([0, 1, 2, 3, 4])
+        verdict = self._verdict(config, datetime(2026, 8, 10, 19, 0))
+        assert verdict.reason is Reason.OUTSIDE_SCHEDULE
+
+    def test_outside_the_days(self) -> None:
+        """The 15th of August 2026 is a Saturday."""
+        config = self._config([0, 1, 2, 3, 4])
+        verdict = self._verdict(config, datetime(2026, 8, 15, 9, 0))
+        assert verdict.reason is Reason.OUTSIDE_SCHEDULE
+
+    def test_no_days_means_every_day(self) -> None:
+        config = self._config(None)
+        assert self._verdict(config, datetime(2026, 8, 15, 9, 0)).allowed
 
 
 class TestDeepCopy:
