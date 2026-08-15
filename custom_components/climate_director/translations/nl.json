@@ -227,5 +227,23 @@
         "name": "Override {zone}"
       }
     }
+  },
+  "issues": {
+    "invalid_config": {
+      "title": "Climate Director: {name} heeft een configuratieprobleem",
+      "description": "Er zijn {count} probleem(en) gevonden in deze installatie. De zones die wél kloppen worden gewoon geregeld; de rest staat stil tot dit opgelost is.\n\n{problems}\n\nOpen de integratie en kies Configureren om ze te corrigeren. De volledige lijst staat in de downloadbare diagnose."
+    }
+  },
+  "services": {
+    "evaluate": {
+      "name": "Opnieuw beslissen",
+      "description": "Berekent het plan nu opnieuw, in plaats van te wachten tot een gevolgde entiteit verandert. Voert in schaduwmodus niets extra's uit.",
+      "fields": {
+        "entry_id": {
+          "name": "Installatie",
+          "description": "Welke installatie opnieuw berekend wordt. Laat leeg voor allemaal."
+        }
+      }
+    }
   }
 }

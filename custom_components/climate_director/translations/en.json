@@ -227,5 +227,23 @@
         "name": "{zone} override"
       }
     }
+  },
+  "issues": {
+    "invalid_config": {
+      "title": "Climate Director: {name} has a configuration problem",
+      "description": "{count} problem(s) were found in this installation. The zones that are sound carry on being regulated; the rest stand down until this is fixed.\n\n{problems}\n\nOpen the integration and choose Configure to correct them. The full list is in the downloadable diagnostics."
+    }
+  },
+  "services": {
+    "evaluate": {
+      "name": "Decide again",
+      "description": "Recompute the plan right now, instead of waiting for a tracked entity to change. Executes nothing extra in shadow mode.",
+      "fields": {
+        "entry_id": {
+          "name": "Installation",
+          "description": "Which installation to recompute. Leave empty for all of them."
+        }
+      }
+    }
   }
 }

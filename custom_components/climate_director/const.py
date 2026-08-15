@@ -22,6 +22,16 @@ PLATFORMS: list[Platform] = [
 # can build their own notification automations.
 EVENT_DECISION = f"{DOMAIN}_decision"
 
+# Actie om nu opnieuw te laten beslissen, zonder te wachten tot een gevolgde
+# entiteit uit zichzelf verandert. Handig bij het inrichten en bij het napluizen
+# van een afwijking.
+#
+# Action to decide again right now, without waiting for a tracked entity to
+# change of its own accord. Useful while setting up and while chasing down a
+# difference.
+SERVICE_EVALUATE = "evaluate"
+ATTR_ENTRY_ID = "entry_id"
+
 # Sleutels in de config entry.
 # Keys in the config entry.
 CONF_INSTALLATION = "installation"

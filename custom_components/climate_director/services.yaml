@@ -1,0 +1,7 @@
+evaluate:
+  fields:
+    entry_id:
+      required: false
+      selector:
+        config_entry:
+          integration: climate_director
