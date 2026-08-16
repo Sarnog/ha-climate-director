@@ -71,6 +71,17 @@ class TestSeasonFromState:
         """Reading them as "no season" would silently disable cooling half the year."""
         assert season_from_state(raw) is Season.WINTER
 
+    @pytest.mark.parametrize("raw", ["Sommer", "été", "Ete", "verano", "صيف", "الصيف"])
+    def test_summer_in_every_offered_language(self, raw: str) -> None:
+        """A season helper reports in the user's own language, not in English."""
+        assert season_from_state(raw) is Season.SUMMER
+
+    @pytest.mark.parametrize(
+        "raw", ["Winter", "hiver", "invierno", "شتاء", "Herbst", "automne", "otoño"]
+    )
+    def test_winter_and_its_shoulders_in_every_offered_language(self, raw: str) -> None:
+        assert season_from_state(raw) is Season.WINTER
+
     @pytest.mark.parametrize("raw", [None, "", "unavailable", "banaan"])
     def test_anything_else_is_unknown(self, raw: str | None) -> None:
         assert season_from_state(raw) is Season.UNKNOWN
