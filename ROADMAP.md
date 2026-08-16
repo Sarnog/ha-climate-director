@@ -18,8 +18,6 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
 - **Virtuele `climate` per zone** — één bedieningsentiteit per ruimte, waarmee de gewenste
   temperatuur en stand rechtstreeks op een gewone thermostaatkaart te bedienen zijn. De
   director kiest daar dan de bron bij.
-- **`number`-entiteiten voor de drempels** — aan- en uitpunten en dode banden op een
-  dashboard te verschuiven zonder de options flow te openen.
 - **Overrides via acties** — `climate_director.set_override` (met een duur of tot de
   volgende gebeurtenis) en `climate_director.clear_override`, plus knoppen die ze
   aanroepen. `climate_director.evaluate` bestaat al.
@@ -84,8 +82,6 @@ The history of what has already been built and changed is **not** here but in th
 - **A virtual `climate` per zone** — one control entity per room, so the target temperature
   and mode can be set straight from an ordinary thermostat card. The director then picks the
   source to match.
-- **`number` entities for the thresholds** — switch-on/off points and dead bands adjustable
-  from a dashboard without opening the options flow.
 - **Overrides through actions** — `climate_director.set_override` (with a duration or
   until the next event) and `climate_director.clear_override`, plus buttons calling them.
   `climate_director.evaluate` already exists.
