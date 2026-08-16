@@ -46,7 +46,7 @@
           "season_source": "Deduce la estación del mes, léela de una entidad, o fíjala a mano.",
           "season_entity": "Solo se usa cuando el origen está en entidad. Verano e invierno se reconocen en inglés, neerlandés, alemán, francés, español y árabe.",
           "shadow_mode": "Calcula cada decisión pero no ejecuta nada.",
-          "require_schedule": "Usa los horarios de los propios residentes, que se definen en Residentes. Sin ningún horario, esta puerta lo deja pasar todo.",
+          "require_schedule": "Usa los horarios de los propios residentes, que se definen en Residentes. Solo participan los residentes que tienen uno: el suyo abre la puerta mientras están levantados, y la mantiene cerrada mientras duermen en casa antes de que se abra su propia franja. Sin ningún horario, no funciona nada.",
           "outdoor_sensor": "Alimenta cada límite exterior, tanto aquí como en cada fuente. Sin este sensor ningún umbral de temperatura exterior puede cumplirse, y toda la instalación se queda parada en silencio.",
           "require_occupancy": "Se aplica a la instalación entera. La presencia en una sola habitación se ajusta en la zona misma.",
           "require_awake": "Alguien en casa pero dormido no cuenta. Qué entidad indica que duerme se ajusta por residente.",

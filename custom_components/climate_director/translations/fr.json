@@ -46,7 +46,7 @@
           "season_source": "Déduisez la saison du mois, lisez-la depuis une entité, ou fixez-la à la main.",
           "season_entity": "Utilisée uniquement si l'origine est réglée sur entité. L'été et l'hiver sont reconnus en anglais, néerlandais, allemand, français, espagnol et arabe.",
           "shadow_mode": "Calcule chaque décision mais n'exécute rien.",
-          "require_schedule": "Utilise les plannings des occupants eux-mêmes, à définir sous Occupants. Sans aucun planning, cette porte laisse tout passer.",
+          "require_schedule": "Utilise les plannings des occupants eux-mêmes, à définir sous Occupants. Seuls les occupants qui en ont un participent : le leur ouvre la porte tant qu'ils sont levés, et la maintient fermée tant qu'ils dorment à la maison avant l'ouverture de leur propre plage. Sans aucun planning, rien ne fonctionne.",
           "outdoor_sensor": "Alimente chaque limite extérieure, ici comme sur chaque source. Sans ce capteur, aucun seuil de température extérieure ne peut être atteint, et toute l'installation reste à l'arrêt.",
           "require_occupancy": "S'applique à l'installation entière. La présence dans une pièce se règle sur la zone elle-même.",
           "require_awake": "Une personne présente mais endormie ne compte pas. L'entité qui indique le sommeil se règle par occupant.",

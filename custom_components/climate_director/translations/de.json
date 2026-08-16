@@ -46,7 +46,7 @@
           "season_source": "Leite die Jahreszeit aus dem Monat ab, lies sie aus einer Entität, oder lege sie von Hand fest.",
           "season_entity": "Wird nur verwendet, wenn die Herkunft auf Entität steht. Sommer und Winter werden auf Englisch, Niederländisch, Deutsch, Französisch, Spanisch und Arabisch erkannt.",
           "shadow_mode": "Berechnet jede Entscheidung, führt aber nichts aus.",
-          "require_schedule": "Nutzt die Zeitpläne der Bewohner selbst, einzustellen unter Bewohner. Gibt es nirgends Zeitpläne, lässt dieses Tor alles durch.",
+          "require_schedule": "Nutzt die Zeitpläne der Bewohner selbst, einzustellen unter Bewohner. Nur Bewohner mit einem Zeitplan machen mit: ihrer öffnet das Tor, solange sie auf sind, und hält es zu, solange sie zu Hause schlafen, bevor ihr eigenes Fenster aufgeht. Hat niemand einen Zeitplan, läuft nichts.",
           "outdoor_sensor": "Speist jede Außengrenze, hier wie auch an jeder Quelle. Ohne diesen Sensor kann keine Schwelle für die Außentemperatur je erfüllt werden, und die gesamte Anlage steht still.",
           "require_occupancy": "Gilt für die Anlage als Ganzes. Anwesenheit in einem einzelnen Raum stellst du an der Zone selbst ein.",
           "require_awake": "Wer zu Hause ist, aber schläft, zählt nicht. Welche Entität sagt, dass jemand schläft, stellst du pro Bewohner ein.",

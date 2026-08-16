@@ -611,6 +611,13 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
         if opening.delay.total_seconds() < 0:
             problems.append(f"opening {opening.entity_id} has a negative delay")
 
+    if config.gates.require_schedule and not any(
+        resident.windows for resident in config.residents
+    ):
+        problems.append(
+            "the schedule gate is on but nobody has a schedule, so nothing can ever run"
+        )
+
     if config.gates.require_occupancy:
         problems += [
             f"resident {resident.resident_id} has no presence entity, so can never be home"

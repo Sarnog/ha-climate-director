@@ -135,15 +135,37 @@ def _any_opening_open(config: DirectorConfig, world: WorldState, zone: Zone) -> 
 
 
 def _schedule_open(config: DirectorConfig, world: WorldState) -> bool:
-    """Return whether anyone the earlier gates kept in play wants heating now."""
+    """Return whether the household's schedules allow regulating right now.
+
+    Only residents who actually have a schedule take part. Someone without one
+    neither opens the gate nor holds it shut: they have said nothing about when
+    they want the house to join in, and silence is not a vote either way.
+
+    A participant does two things. Awake, with their window open, they open the
+    gate. At home and asleep, with their window not yet open, they hold it shut
+    - which is what makes the house wait for the last sleeper on a weekend
+    morning instead of starting the moment the first person is up. Once their
+    own window opens, their sleeping stops counting: the schedule said they
+    meant to be up by then.
+    """
     if world.holiday_mode and config.gates.holiday_bypasses_schedule:
         return True
 
     moment = world.now.time()
     weekday = world.now.weekday()
+
+    participants = [resident for resident in config.residents if resident.windows]
+    if not participants:
+        return False
+
+    for resident in participants:
+        state = world.resident(resident.resident_id)
+        if state.home and state.asleep and not resident.wants_climate_at(moment, weekday):
+            return False
+
     return any(
         resident.wants_climate_at(moment, weekday)
-        for resident in config.residents
+        for resident in participants
         if _counts_towards_schedule(config, world, resident.resident_id)
     )
 
