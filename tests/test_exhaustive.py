@@ -38,6 +38,7 @@ from custom_components.climate_director.engine import (
     SourceRole,
     TimeWindow,
     Zone,
+    ZoneGate,
     decide,
     family_of,
     gates,
@@ -644,3 +645,79 @@ class TestTheCalendarReading:
             holiday_calendars=("calendar.gezin",),
         )
         assert any("no keyword" in item for item in validate(config))
+
+
+class TestPresenceDrivenZonesAcrossEveryWorld:
+    """The same 3072 worlds, judged for a zone that runs on its own sensor."""
+
+    def _config(self) -> DirectorConfig:
+        base = _config(require_schedule=True)
+        zone = base.zones[0]
+        return DirectorConfig(
+            zones=(
+                Zone(
+                    zone.zone_id,
+                    zone.name,
+                    zone.indoor_sensor,
+                    sources=zone.sources,
+                    heat=zone.heat,
+                    gate=ZoneGate.PRESENCE,
+                    presence_entity="binary_sensor.woonkamer",
+                ),
+            ),
+            residents=base.residents,
+            openings=base.openings,
+            gates=base.gates,
+        )
+
+    def test_an_empty_room_is_never_regulated(self) -> None:
+        config = self._config()
+        zone = config.zones[0]
+        for world in _worlds():
+            if not world.presence_of("woonkamer").occupied:
+                assert not gates.evaluate(config, world, zone).allowed
+
+    def test_an_occupied_room_only_yields_to_the_house_itself(self) -> None:
+        """Master, override and an open window; never to a schedule or a bedtime."""
+        config = self._config()
+        zone = config.zones[0]
+        allowed_blocks = {
+            Reason.MASTER_DISABLED,
+            Reason.MANUAL_OVERRIDE,
+            Reason.OPENING_OPEN,
+        }
+        for world in _worlds():
+            if not world.presence_of("woonkamer").occupied:
+                continue
+            verdict = gates.evaluate(config, world, zone)
+            assert verdict.allowed or verdict.reason in allowed_blocks, (verdict, world)
+
+    def test_people_never_enter_into_it(self) -> None:
+        """Two worlds differing only in who is home and awake must agree."""
+        config = self._config()
+        zone = config.zones[0]
+        for world in _worlds():
+            twin = make_world(
+                now=world.now,
+                residents={"danny": _state(False, True), "nancy": _state(False, True)},
+                openings=dict(world.openings),
+                presence=dict(world.presence),
+                master_enabled=world.master_enabled,
+                holiday_mode=world.holiday_mode,
+                guest_mode=world.guest_mode,
+                zone_overrides=dict(world.zone_overrides),
+            )
+            assert (
+                gates.evaluate(config, world, zone).reason
+                == gates.evaluate(config, twin, zone).reason
+            )
+
+    def test_it_is_never_stricter_than_the_household_would_be(self) -> None:
+        """An occupied room may only ever gain permission by running on itself."""
+        household = _config(require_schedule=True)
+        presence_driven = self._config()
+        for world in _worlds():
+            if not world.presence_of("woonkamer").occupied:
+                continue
+            if gates.evaluate(household, world, household.zones[0]).allowed:
+                assert gates.evaluate(presence_driven, world, presence_driven.zones[0]).allowed
