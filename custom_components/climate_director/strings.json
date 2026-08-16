@@ -9,7 +9,8 @@
           "shadow_mode": "Shadow mode"
         },
         "data_description": {
-          "shadow_mode": "Compute every decision but execute nothing, so the director can run alongside your existing automations until you trust it."
+          "shadow_mode": "Compute every decision but execute nothing, so the director can run alongside your existing automations until you trust it.",
+          "name": "Becomes the installation's title and precedes the name of every entity this integration creates."
         }
       }
     }
@@ -44,7 +45,11 @@
           "season_source": "Derive the season from the month, read it from an entity, or pin it by hand.",
           "season_entity": "Only used when the source is set to entity. Summer, winter and their Dutch equivalents are recognised.",
           "shadow_mode": "Compute every decision but execute nothing.",
-          "require_schedule": "Uses each resident's own schedules, set under Residents. With no schedules anywhere this gate lets everything through."
+          "require_schedule": "Uses each resident's own schedules, set under Residents. With no schedules anywhere this gate lets everything through.",
+          "outdoor_sensor": "Feeds every outdoor limit, both here and on each source. Without it no threshold on outdoor temperature can ever be met, and the whole installation quietly stands still.",
+          "require_occupancy": "Applies to the installation as a whole. Presence in a single room is set on the zone itself.",
+          "require_awake": "Somebody home but asleep does not count. Which entity says they are asleep is set per resident.",
+          "holiday_bypasses_schedule": "The holiday switch then ignores the time windows but still honours presence and sleep."
         }
       },
       "zones": {
@@ -52,6 +57,9 @@
         "description": "Pick a zone to edit, or add one.",
         "data": {
           "zone": "Zone"
+        },
+        "data_description": {
+          "zone": "Pick one to change it, or add a new one."
         }
       },
       "zone": {
@@ -84,7 +92,18 @@
           "delete": "Removes the zone and its sources.",
           "presence_entity": "Leave empty to regulate this room whether or not anybody is in it. Somebody being home says nothing about whether they are in the attic.",
           "presence_state": "A presence sensor reports on.",
-          "presence_timeout": "Leave empty or set to zero to react the moment presence drops. Presence sensors flicker, so a few seconds here saves the compressor a pointless stop."
+          "presence_timeout": "Leave empty or set to zero to react the moment presence drops. Presence sensors flicker, so a few seconds here saves the compressor a pointless stop.",
+          "name": "The zone's label throughout. Its internal id is derived once and then stays put, so renaming later is safe.",
+          "enable_heat": "Off means this room is never heated, whatever the thermometer says.",
+          "heat_target": "The setpoint handed to the appliance once heating runs. Not the point at which it starts.",
+          "heat_start_at": "Heating starts at this indoor temperature or below.",
+          "heat_outdoor_max": "Above this outdoor temperature heating stays off. Leave empty for no limit.",
+          "enable_cool": "Off means this room is never cooled, whatever the thermometer says.",
+          "cool_target": "The setpoint handed to the appliance once cooling runs. Not the point at which it starts.",
+          "cool_start_at": "Cooling starts at this indoor temperature or above.",
+          "cool_hysteresis": "Cooling stops one band below the switch-on point. Zero lets the zone chatter on a single temperature.",
+          "cool_outdoor_min": "Below this outdoor temperature cooling stays off. Leave empty for no limit.",
+          "cool_summer_only": "Ties cooling to the season set under General settings."
         }
       },
       "sources": {
@@ -92,6 +111,9 @@
         "description": "A source is an appliance able to serve this zone. Pick one to edit, or add one.",
         "data": {
           "source": "Source"
+        },
+        "data_description": {
+          "source": "Pick one to change it, or add a new one."
         }
       },
       "source": {
@@ -108,7 +130,10 @@
         "data_description": {
           "priority": "Lower wins when several sources could serve the same duty.",
           "outdoor_min": "Included in the range.",
-          "outdoor_max": "Excluded from the range."
+          "outdoor_max": "Excluded from the range.",
+          "entity_id": "The climate entity this source steers.",
+          "role": "Whether this appliance can heat, cool, or both. A boiler is heating only.",
+          "delete": "Removes the source from this zone. The appliance itself is left alone."
         }
       },
       "circuits": {
@@ -116,6 +141,9 @@
         "description": "A circuit is one outdoor unit and the indoor units on it. Leave this empty if every unit has its own outdoor unit.",
         "data": {
           "circuit": "Circuit"
+        },
+        "data_description": {
+          "circuit": "Pick one to change it, or add a new one."
         }
       },
       "circuit": {
@@ -136,7 +164,14 @@
         "data_description": {
           "units": "Include units the director does not manage: they still claim the compressor.",
           "simultaneous_heat_cool": "Off for an ordinary multi-split. On for a single split, or for three-pipe VRF with heat recovery.",
-          "min_cycle_time": "Only ever delays starting, never stopping."
+          "min_cycle_time": "Only ever delays starting, never stopping.",
+          "name": "A label, to tell circuits apart.",
+          "conflict_policy": "Decides which zone gets the circuit when two of them want opposing duties.",
+          "allow_fan_only_during_conflict": "A zone that loses then circulates air instead of switching off altogether.",
+          "family_switch_delay": "Stops the old duty, waits, and only then starts the new one, so the outdoor unit is not reversed abruptly.",
+          "min_family_switch_interval": "Stops one zone dragging the compressor back and forth between heating and cooling.",
+          "max_concurrent_units": "For an outdoor unit that cannot carry all its indoor units at once. Leave empty for no cap.",
+          "delete": "Removes the circuit. The units keep working; they simply stop being tied to one another."
         }
       },
       "residents": {
@@ -144,6 +179,9 @@
         "description": "Leave this empty for a building nobody is tracked in; the presence gates are then skipped instead of blocking forever.",
         "data": {
           "resident": "Resident"
+        },
+        "data_description": {
+          "resident": "Pick one to change it, or add a new one."
         }
       },
       "resident": {
@@ -157,7 +195,10 @@
         },
         "data_description": {
           "sleep_entity": "Leave empty if this person's sleep is not tracked.",
-          "sleep_state": "A bed sensor reports on, a phone charger-type sensor reports wireless."
+          "sleep_state": "A bed sensor reports on, a phone charger-type sensor reports wireless.",
+          "name": "A label, to tell residents apart.",
+          "presence_entity": "Usually a person entity. Says whether this resident is home.",
+          "delete": "Removes the resident along with their schedules."
         }
       },
       "windows": {
@@ -165,6 +206,9 @@
         "description": "Times this resident wants climate control. Leave the list empty to have them count at any hour.",
         "data": {
           "window": "Schedule"
+        },
+        "data_description": {
+          "window": "Pick one to change it, add one, or go back to the menu."
         }
       },
       "window": {
@@ -178,7 +222,9 @@
         },
         "data_description": {
           "weekdays": "Leave empty for every day.",
-          "end": "Excluded from the window."
+          "end": "Excluded from the window.",
+          "start": "Included in the window.",
+          "delete": "Removes this schedule."
         }
       },
       "openings": {
@@ -186,6 +232,9 @@
         "description": "An opening standing open long enough suspends the zones it affects.",
         "data": {
           "opening": "Opening"
+        },
+        "data_description": {
+          "opening": "Pick one to change it, or add a new one."
         }
       },
       "opening": {
@@ -198,7 +247,9 @@
         },
         "data_description": {
           "zone_ids": "Leave empty to suspend the whole installation.",
-          "delay": "Leave empty or set to zero to suspend the moment it opens."
+          "delay": "Leave empty or set to zero to suspend the moment it opens.",
+          "entity_id": "The door or window contact. Open counts as the state 'on'.",
+          "delete": "Removes the opening; it stops suspending anything."
         }
       }
     }

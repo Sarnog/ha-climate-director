@@ -9,7 +9,8 @@
           "shadow_mode": "Schaduwmodus"
         },
         "data_description": {
-          "shadow_mode": "Berekent elke beslissing maar voert niets uit, zodat de director naast je bestaande automatiseringen kan meedraaien tot je hem vertrouwt."
+          "shadow_mode": "Berekent elke beslissing maar voert niets uit, zodat de director naast je bestaande automatiseringen kan meedraaien tot je hem vertrouwt.",
+          "name": "Wordt de titel van de installatie en staat voor de naam van elke entiteit die deze integratie aanmaakt."
         }
       }
     }
@@ -44,7 +45,11 @@
           "season_source": "Leid het seizoen af uit de maand, lees het uit een entiteit, of zet het met de hand vast.",
           "season_entity": "Wordt alleen gebruikt als de herkomst op entiteit staat. Zomer, winter en hun Engelse namen worden herkend.",
           "shadow_mode": "Berekent elke beslissing maar voert niets uit.",
-          "require_schedule": "Gebruikt de roosters van de bewoners zelf, in te stellen onder Bewoners. Staan er nergens roosters, dan laat deze poort alles door."
+          "require_schedule": "Gebruikt de roosters van de bewoners zelf, in te stellen onder Bewoners. Staan er nergens roosters, dan laat deze poort alles door.",
+          "outdoor_sensor": "Voedt elke buitengrens, zowel hier als op elke bron. Zonder deze sensor kan geen enkele drempel op buitentemperatuur ooit voldaan worden, en staat de hele installatie stilletjes stil.",
+          "require_occupancy": "Geldt voor de installatie als geheel. Aanwezigheid in een enkele ruimte stel je bij de zone zelf in.",
+          "require_awake": "Iemand die thuis is maar slaapt telt niet mee. Welke entiteit zegt dat iemand slaapt stel je per bewoner in.",
+          "holiday_bypasses_schedule": "De vakantieschakelaar negeert dan de tijdvensters, maar houdt zich nog wel aan aanwezigheid en slaap."
         }
       },
       "zones": {
@@ -52,6 +57,9 @@
         "description": "Kies een zone om aan te passen, of voeg er een toe.",
         "data": {
           "zone": "Zone"
+        },
+        "data_description": {
+          "zone": "Kies er een om aan te passen, of voeg er een toe."
         }
       },
       "zone": {
@@ -84,7 +92,18 @@
           "delete": "Verwijdert de zone en zijn bronnen.",
           "presence_entity": "Laat leeg om deze ruimte te regelen of er nu iemand is of niet. Iemand thuis zegt niets over of er iemand op zolder zit.",
           "presence_state": "Een aanwezigheidssensor meldt on.",
-          "presence_timeout": "Laat leeg of zet op nul om direct te reageren zodra de aanwezigheid wegvalt. Aanwezigheidssensoren knipperen, dus een paar seconden hier scheelt de compressor een zinloze stop."
+          "presence_timeout": "Laat leeg of zet op nul om direct te reageren zodra de aanwezigheid wegvalt. Aanwezigheidssensoren knipperen, dus een paar seconden hier scheelt de compressor een zinloze stop.",
+          "name": "De naam van de zone overal. Zijn interne id wordt een keer afgeleid en blijft daarna staan, dus later hernoemen kan gerust.",
+          "enable_heat": "Uit betekent dat deze ruimte nooit verwarmd wordt, wat de thermometer ook zegt.",
+          "heat_target": "Het setpoint dat het apparaat krijgt zodra er verwarmd wordt. Niet het punt waarop hij begint.",
+          "heat_start_at": "Verwarmen begint bij deze binnentemperatuur of lager.",
+          "heat_outdoor_max": "Boven deze buitentemperatuur blijft verwarmen uit. Laat leeg voor geen grens.",
+          "enable_cool": "Uit betekent dat deze ruimte nooit gekoeld wordt, wat de thermometer ook zegt.",
+          "cool_target": "Het setpoint dat het apparaat krijgt zodra er gekoeld wordt. Niet het punt waarop hij begint.",
+          "cool_start_at": "Koelen begint bij deze binnentemperatuur of hoger.",
+          "cool_hysteresis": "Koelen stopt een band onder het aanpunt. Nul laat de zone pendelen op een enkele temperatuur.",
+          "cool_outdoor_min": "Onder deze buitentemperatuur blijft koelen uit. Laat leeg voor geen grens.",
+          "cool_summer_only": "Koppelt koelen aan het seizoen dat je bij Algemene instellingen hebt gezet."
         }
       },
       "sources": {
@@ -92,6 +111,9 @@
         "description": "Een bron is een apparaat dat deze zone kan bedienen. Kies er een om aan te passen, of voeg er een toe.",
         "data": {
           "source": "Bron"
+        },
+        "data_description": {
+          "source": "Kies er een om aan te passen, of voeg er een toe."
         }
       },
       "source": {
@@ -108,7 +130,10 @@
         "data_description": {
           "priority": "Lager wint als meerdere bronnen dezelfde taak kunnen leveren.",
           "outdoor_min": "Valt binnen het bereik.",
-          "outdoor_max": "Valt buiten het bereik."
+          "outdoor_max": "Valt buiten het bereik.",
+          "entity_id": "De climate-entiteit die deze bron aanstuurt.",
+          "role": "Of dit apparaat kan verwarmen, koelen, of allebei. Een cv-ketel kan alleen verwarmen.",
+          "delete": "Haalt de bron uit deze zone. Het apparaat zelf blijft ongemoeid."
         }
       },
       "circuits": {
@@ -116,6 +141,9 @@
         "description": "Een circuit is één buitenunit met de binnenunits die eraan hangen. Laat dit leeg als elke unit een eigen buitenunit heeft.",
         "data": {
           "circuit": "Circuit"
+        },
+        "data_description": {
+          "circuit": "Kies er een om aan te passen, of voeg er een toe."
         }
       },
       "circuit": {
@@ -136,7 +164,14 @@
         "data_description": {
           "units": "Neem ook units op die de director niet aanstuurt: die claimen de compressor evengoed.",
           "simultaneous_heat_cool": "Uit voor een gewone multi-split. Aan voor een losse splitunit, of voor driepijps-VRF met warmteterugwinning.",
-          "min_cycle_time": "Vertraagt alleen starten, nooit stoppen."
+          "min_cycle_time": "Vertraagt alleen starten, nooit stoppen.",
+          "name": "Een naam, om circuits uit elkaar te houden.",
+          "conflict_policy": "Bepaalt welke zone het circuit krijgt als er twee tegengestelde taken willen.",
+          "allow_fan_only_during_conflict": "Een zone die verliest circuleert dan lucht in plaats van helemaal uit te gaan.",
+          "family_switch_delay": "Stopt eerst de oude taak, wacht, en start pas dan de nieuwe, zodat de buitenunit niet abrupt omgekeerd wordt.",
+          "min_family_switch_interval": "Voorkomt dat een zone de compressor heen en weer trekt tussen verwarmen en koelen.",
+          "max_concurrent_units": "Voor een buitenunit die niet al zijn binnenunits tegelijk aankan. Laat leeg voor geen grens.",
+          "delete": "Verwijdert het circuit. De units blijven werken; ze zijn alleen niet langer aan elkaar gekoppeld."
         }
       },
       "residents": {
@@ -144,6 +179,9 @@
         "description": "Laat dit leeg voor een pand waar niemand gevolgd wordt; de aanwezigheidspoorten worden dan overgeslagen in plaats van eeuwig te blokkeren.",
         "data": {
           "resident": "Bewoner"
+        },
+        "data_description": {
+          "resident": "Kies er een om aan te passen, of voeg er een toe."
         }
       },
       "resident": {
@@ -157,7 +195,10 @@
         },
         "data_description": {
           "sleep_entity": "Laat leeg als de slaap van deze persoon niet gevolgd wordt.",
-          "sleep_state": "Een bedsensor meldt on, een sensor voor het opladertype van een telefoon meldt wireless."
+          "sleep_state": "Een bedsensor meldt on, een sensor voor het opladertype van een telefoon meldt wireless.",
+          "name": "Een naam, om bewoners uit elkaar te houden.",
+          "presence_entity": "Meestal een person-entiteit. Zegt of deze bewoner thuis is.",
+          "delete": "Verwijdert de bewoner inclusief zijn roosters."
         }
       },
       "windows": {
@@ -165,6 +206,9 @@
         "description": "Tijden waarop deze bewoner klimaatregeling wil. Laat de lijst leeg om hem op elk uur mee te laten tellen.",
         "data": {
           "window": "Rooster"
+        },
+        "data_description": {
+          "window": "Kies er een om aan te passen, voeg er een toe, of ga terug naar het menu."
         }
       },
       "window": {
@@ -178,7 +222,9 @@
         },
         "data_description": {
           "weekdays": "Laat leeg voor elke dag.",
-          "end": "Valt buiten het venster."
+          "end": "Valt buiten het venster.",
+          "start": "Valt binnen het venster.",
+          "delete": "Verwijdert dit rooster."
         }
       },
       "openings": {
@@ -186,6 +232,9 @@
         "description": "Een opening die lang genoeg openstaat schort de zones op waar hij bij hoort.",
         "data": {
           "opening": "Opening"
+        },
+        "data_description": {
+          "opening": "Kies er een om aan te passen, of voeg er een toe."
         }
       },
       "opening": {
@@ -198,7 +247,9 @@
         },
         "data_description": {
           "zone_ids": "Laat leeg om de hele installatie op te schorten.",
-          "delay": "Laat leeg of zet op nul om direct op te schorten zodra hij opengaat."
+          "delay": "Laat leeg of zet op nul om direct op te schorten zodra hij opengaat.",
+          "entity_id": "Het deur- of raamcontact. Open telt als de toestand 'on'.",
+          "delete": "Verwijdert de opening; hij schort dan niets meer op."
         }
       }
     }
