@@ -250,6 +250,38 @@ class Circuit:
 
 
 @dataclass(frozen=True, slots=True)
+class Generator:
+    """A heat source several zones draw on through their own valves.
+
+    A wet system works differently from a multi-split. Radiator valves do not
+    fight over a compressor duty - they all only ever heat - so there is nothing
+    to arbitrate. What they do share is the appliance making the hot water: a
+    valve opening achieves nothing while the boiler is cold, and the boiler
+    running achieves nothing while every valve is shut.
+
+    That is an *and*, not an exclusion, which is why this is not a `Circuit`.
+    Systems that manage their own boiler (Tado, Netatmo and the like) need none
+    of this: their bridge fires the burner the moment a valve asks. Declare a
+    generator only where the appliance is a separate entity somebody has to
+    switch.
+    """
+
+    generator_id: str
+    name: str
+    entity_id: str
+
+    zone_ids: tuple[str, ...] = ()
+    """Zones this generator serves. Empty means every zone."""
+
+    setpoint: float | None = None
+    """Flow setpoint. `None` follows the warmest target among the zones asking."""
+
+    def serves(self, zone_id: str) -> bool:
+        """Return whether this generator supplies `zone_id`."""
+        return not self.zone_ids or zone_id in self.zone_ids
+
+
+@dataclass(frozen=True, slots=True)
 class TimeWindow:
     """A recurring window, optionally limited to certain weekdays."""
 
@@ -382,6 +414,7 @@ class DirectorConfig:
     circuits: tuple[Circuit, ...] = ()
     residents: tuple[Resident, ...] = ()
     openings: tuple[Opening, ...] = ()
+    generators: tuple[Generator, ...] = ()
     exclusive_groups: tuple[frozenset[str], ...] = ()
     """Source-id groups of which at most one member may run at a time."""
 
@@ -503,6 +536,19 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
                 problems.append(
                     f"zone {zone.zone_id} wants {family.value} but has no source for it"
                 )
+
+    source_entities = set(entity_ids)
+    for generator in config.generators:
+        if generator.entity_id in source_entities:
+            problems.append(
+                f"generator {generator.generator_id} uses climate entity "
+                f"{generator.entity_id}, which is already a zone's source"
+            )
+        unknown = [zone_id for zone_id in generator.zone_ids if zone_id not in set(zone_ids)]
+        problems += [
+            f"generator {generator.generator_id} names unknown zone {zone_id}"
+            for zone_id in unknown
+        ]
 
     known_sources = set(source_ids)
     for group in config.exclusive_groups:

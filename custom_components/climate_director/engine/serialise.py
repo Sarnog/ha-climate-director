@@ -33,6 +33,7 @@ from .models import (
     ConflictPolicy,
     DirectorConfig,
     GateSettings,
+    Generator,
     ModeSettings,
     Opening,
     OutdoorWindow,
@@ -54,6 +55,7 @@ def config_from_dict(raw: Mapping[str, Any]) -> DirectorConfig:
         circuits=tuple(_circuit(item) for item in _items(raw, "circuits")),
         residents=tuple(_resident(item) for item in _items(raw, "residents")),
         openings=tuple(_opening(item) for item in _items(raw, "openings")),
+        generators=tuple(_generator(item) for item in _items(raw, "generators")),
         exclusive_groups=tuple(
             frozenset(_strings(group)) for group in raw.get("exclusive_groups") or ()
         ),
@@ -75,6 +77,7 @@ def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
         "circuits": [_circuit_to_dict(circuit) for circuit in config.circuits],
         "residents": [_resident_to_dict(resident) for resident in config.residents],
         "openings": [_opening_to_dict(opening) for opening in config.openings],
+        "generators": [_generator_to_dict(item) for item in config.generators],
         "exclusive_groups": [sorted(group) for group in config.exclusive_groups],
         "gates": {
             "require_occupancy": config.gates.require_occupancy,
@@ -195,6 +198,16 @@ def _opening(raw: Mapping[str, Any]) -> Opening:
     )
 
 
+def _generator(raw: Mapping[str, Any]) -> Generator:
+    return Generator(
+        generator_id=_text(raw.get("generator_id")),
+        name=_text(raw.get("name")),
+        entity_id=_text(raw.get("entity_id")),
+        zone_ids=tuple(_strings(raw.get("zone_ids"))),
+        setpoint=_optional_float(raw.get("setpoint")),
+    )
+
+
 def _gates(raw: Any) -> GateSettings:
     if not isinstance(raw, Mapping):
         return GateSettings()
@@ -301,6 +314,16 @@ def _resident_to_dict(resident: Resident) -> dict[str, Any]:
             }
             for window in resident.windows
         ],
+    }
+
+
+def _generator_to_dict(generator: Generator) -> dict[str, Any]:
+    return {
+        "generator_id": generator.generator_id,
+        "name": generator.name,
+        "entity_id": generator.entity_id,
+        "zone_ids": list(generator.zone_ids),
+        "setpoint": generator.setpoint,
     }
 
 
