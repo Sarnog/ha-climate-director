@@ -202,6 +202,11 @@ ingestelde agenda's een item loopt met het ingestelde trefwoord erin. **Zonder t
 blijven de agenda's helemaal buiten beschouwing** — raden welk agenda-item vakantie
 bedoelde is niet aan de integratie.
 
+Het trefwoord wordt ruim herkend: hoofdletters en schrijfwijze maken niet uit, en het telt
+ook midden in een langer woord. Met `vakantie` als trefwoord worden `Herfstvakantie`,
+`Zomervakantie 2026` en `VAKANTIE Frankrijk` dus allemaal herkend. Een agenda staat immers
+vol met samenstellingen en niet met het kale woord.
+
 #### Gastenmodus
 
 `switch.*_gastenmodus` neemt de poorten over die over afwezigheid gaan: *iemand thuis* en
@@ -718,6 +723,11 @@ Holiday mode goes on with `switch.*_holiday_mode`, or by itself as soon as one o
 configured calendars has an event running that carries the configured keyword. **Without a
 keyword the calendars are ignored entirely** — guessing which event meant a holiday is not
 the integration's call to make.
+
+The keyword is matched generously: spelling and capitals do not matter, and it counts
+inside a longer word too. With `holiday` as the keyword, `Summer holiday`, `holidays` and
+`HOLIDAY in France` all match. A calendar is full of compounds, after all, rather than the
+bare word.
 
 #### Guest mode
 
