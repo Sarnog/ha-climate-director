@@ -32,7 +32,7 @@ def decide(config: DirectorConfig, world: WorldState) -> Plan:
     reasons = _zone_reasons(config, grants, dropped, refusals)
 
     return Plan(
-        commands=_build_commands(config, world, grants, reasons),
+        commands=_build_commands(config, world, grants, reasons, wishes),
         zones=_build_zone_decisions(config, wishes, dropped, grants, refusals),
         circuits=circuit_decisions,
         deferrals=deferrals,
@@ -165,17 +165,21 @@ def _manual_conflict(
     world: WorldState,
     zone: Zone,
     source: Source,
-    grants: dict[str, constraints.Grant],
+    wishes: dict[str, constraints.Request],
 ) -> UnitCommand | None:
     """Return the command standing a manual source down, or `None` to leave it.
 
-    Alleen als hij draait en zijn taak botst met wat het circuit gaat doen. Een
-    apparaat dat uit staat hoeft niet uitgezet te worden, en een apparaat dat
-    hetzelfde doet als de rest zit niemand in de weg.
+    Gekeken wordt naar wat de andere kamers *vragen*, niet naar wat ze *kregen*.
+    Dat scheelt een klem: zolang deze unit draait houdt hij het circuit op zijn
+    taak, dus de ander krijgt niets toegekend - en zou hij daarop wachten, dan
+    wachtten ze allebei tot Sint-Juttemis. Wie in de weg staat gaat opzij, ook
+    als de omschakeling nog een pauze te gaan heeft.
 
-    Only when it is running and its duty clashes with what the circuit is about
-    to do. An appliance that is off needs no switching off, and one doing the
-    same as the rest is in nobody's way.
+    What the other rooms *ask for* is what counts, not what they *got*. That
+    avoids a deadlock: while this unit runs it holds the circuit to its duty, so
+    the other is granted nothing - and were this to wait on that, both would
+    wait forever. Whoever is in the way steps aside, even when the changeover
+    still has a pause to sit out.
     """
     running = family_of(world.climate(source.entity_id).hvac_mode)
     if running is ModeFamily.NEUTRAL:
@@ -186,9 +190,11 @@ def _manual_conflict(
         return None
 
     wanted = {
-        grant.family
-        for zone_id, grant in grants.items()
-        if grant.granted and zone_id != zone.zone_id and _on_circuit(config, circuit, zone_id)
+        request.family
+        for zone_id, request in wishes.items()
+        if zone_id != zone.zone_id
+        and request.family is not ModeFamily.NEUTRAL
+        and _on_circuit(config, circuit, zone_id)
     }
     if not wanted or running in wanted:
         return None
@@ -216,6 +222,7 @@ def _build_commands(
     world: WorldState,
     grants: dict[str, constraints.Grant],
     reasons: dict[str, Reason],
+    wishes: dict[str, constraints.Request],
 ) -> tuple[UnitCommand, ...]:
     """Return the end state for every managed climate entity.
 
@@ -240,7 +247,7 @@ def _build_commands(
         # off "to be safe" would turn off exactly the appliance somebody just
         # switched on by hand.
         if not source.autostart:
-            standing_down = _manual_conflict(config, world, zone, source, grants)
+            standing_down = _manual_conflict(config, world, zone, source, wishes)
             if standing_down is not None:
                 commands.append(standing_down)
             continue
