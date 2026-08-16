@@ -120,12 +120,18 @@ naar temperaturen:
 Een vakantiedag telt als zaterdag, tenzij een bewoner een eigen vakantievenster invult;
 dat venster vervangt dan zijn gewone vensters en negeert de dagen van de week. De
 vakantiemodus gaat aan met de schakelaar, of vanzelf zodra er in een van de ingestelde
-agenda's een item loopt met het ingestelde trefwoord erin.
+agenda's een item loopt met het ingestelde trefwoord erin. Vul je geen trefwoord in, dan
+blijven de agenda's helemaal buiten beschouwing; raden welk item vakantie bedoelde is niet
+aan de integratie.
 
-De gastenmodus zet elke poort over personen opzij — aanwezigheid, slaap en rooster. Er
-logeert dan iemand die niet gevolgd wordt, dus dat het huis leeg lijkt zegt niets, en de
-verwarming of airco hoort daar niet op uit te gaan. De poort over aanwezigheid in de
-ruimte zelf blijft wél gelden: die gaat over de kamer, niet over wie er in huis is.
+De gastenmodus neemt de poorten over die over afwezigheid gaan: aanwezigheid en rooster.
+Er logeert dan iemand die niet gevolgd wordt, dus dat het huis leeg lijkt zegt niets, en
+de verwarming of airco hoort daar niet op uit te gaan. **Slaap blijft wél tellen** — komt
+een bewoner thuis en gaat die naar bed, dan is de dag voorbij en gaat het huis uit. Ook
+buiten het ingestelde gastenvenster (standaard de hele dag) nemen de gewone poorten het
+weer over, zodat een schakelaar die niemand uitzette niet de hele nacht doordraait. De
+poort over aanwezigheid in de ruimte zelf blijft altijd gelden: die gaat over de kamer,
+niet over wie er in huis is.
 
 Een installatie zonder bewoners (kantoor, vakantiehuis, serverruimte) slaat de
 aanwezigheidspoorten over in plaats van permanent op slot te zitten.
@@ -165,7 +171,7 @@ Eén device per installatie, met daaronder:
 | `binary_sensor.*_<zone>_geblokkeerd` | Aan als een zone minder kreeg dan hij vroeg, met de reden als attribuut |
 | `switch.*_director` | Hoofdschakelaar; uit betekent dat er niets geregeld wordt |
 | `switch.*_vakantiemodus` | Laat elke dag als zaterdag tellen, of als het eigen vakantierooster |
-| `switch.*_gastenmodus` | Blijft regelen terwijl de bewoners weg zijn; zet aanwezigheid, slaap en rooster opzij |
+| `switch.*_gastenmodus` | Blijft regelen terwijl de bewoners weg zijn; slaap en het gastenvenster blijven gelden |
 | `switch.*_override_<zone>` | Geeft één zone terug aan de gebruiker tot je hem weer uitzet |
 | `number.*_prioriteit_<zone>` | Hoe sterk deze zone een gedeelde buitenunit claimt; lager wint. Vanuit een automatisering te wijzigen |
 
@@ -229,8 +235,8 @@ Alles verder — zones, bronnen, koelcircuits, bewoners en openingen — bouw je
 Een verstandige volgorde:
 
 1. **Algemene instellingen** — buitentemperatuursensor, herkomst van het seizoen, welke
-   poorten je wilt (wakker, rooster), en welke agenda's een vakantie aankondigen met welk
-   trefwoord.
+   poorten je wilt (wakker, rooster), tussen welke tijden de gastenmodus geldt, en welke
+   agenda's een vakantie aankondigen met welk trefwoord.
 2. **Zones en bronnen** — per ruimte de binnentemperatuursensor en de aan-/uitpunten,
    daarna de apparaten die die ruimte kunnen bedienen. Geef een cv-ketel en een warmtepomp
    aansluitende buitenvensters, dan wisselen ze elkaar naadloos af.
@@ -438,12 +444,16 @@ temperatures:
 A holiday counts as a Saturday, unless a resident fills in a holiday window of their own;
 that window then replaces their ordinary ones and ignores the days of the week. Holiday
 mode goes on with the switch, or by itself as soon as one of the configured calendars has
-an event running that carries the configured keyword.
+an event running that carries the configured keyword. Fill in no keyword and the calendars
+are ignored entirely; guessing which event meant a holiday is not the integration's call.
 
-Guest mode sets every gate about people aside — presence, sleep and schedule. Somebody is
-staying who is not tracked, so the house looking empty says nothing, and the heating or air
-conditioning should not go off over it. The gate about presence in the room itself still
-applies: that one is about the room, not about who is in the house.
+Guest mode takes over the gates that are about absence: presence and schedule. Somebody
+untracked is staying, so the house looking empty says nothing, and the heating or air
+conditioning should not go off over it. **Sleep still counts** — once a resident comes home
+and turns in, the day is over and the house goes off. Outside the configured guest window
+(all day by default) the ordinary gates take over again too, so a switch nobody turned off
+does not run all night. The gate about presence in the room itself always applies: that one
+is about the room, not about who is in the house.
 
 An installation without residents (an office, a holiday home, a server room) skips the
 presence gates rather than staying locked out forever.
@@ -484,7 +494,7 @@ One device per installation, holding:
 | `binary_sensor.*_<zone>_blocked` | On when a zone got less than it asked for, with the reason as an attribute |
 | `switch.*_director` | Master switch; off means nothing is regulated |
 | `switch.*_holiday_mode` | Makes every day count as a Saturday, or as its own holiday schedule |
-| `switch.*_guest_mode` | Keeps regulating while the residents are away; sets presence, sleep and schedule aside |
+| `switch.*_guest_mode` | Keeps regulating while the residents are away; sleep and the guest window still apply |
 | `switch.*_<zone>_override` | Hands one zone back to the user until you turn it off again |
 | `number.*_<zone>_priority` | How strongly this zone claims a shared outdoor unit; lower wins. Settable from an automation |
 
@@ -546,8 +556,8 @@ in that menu.
 A sensible order:
 
 1. **General settings** — outdoor temperature sensor, where the season comes from, which
-   gates you want (awake, schedule), and which calendars announce a holiday with which
-   keyword.
+   gates you want (awake, schedule), between which hours guest mode applies, and which
+   calendars announce a holiday with which keyword.
 2. **Zones and sources** — per room the indoor sensor and the switch-on/off points, then
    the appliances able to serve that room. Give a boiler and a heat pump adjacent outdoor
    windows and they hand over to each other seamlessly.
