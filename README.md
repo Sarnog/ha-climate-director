@@ -312,7 +312,9 @@ configuratiecontrole meldt dat.
 | Roostervensters | begin, eind, dagen van de week, en of het een vakantievenster is |
 
 Een bewoner zonder rooster doet niet mee aan poort 6: die opent hem niet en houdt hem ook
-niet tegen. Een bewoner die thuis is en slaapt terwijl zijn eigen venster nog niet open is,
+niet tegen. Datzelfde geldt **per dag**: wie op dinsdag geen venster heeft, doet dinsdag
+niet mee. Anders zou iemand met alleen weekendvensters het huis elke doordeweekse ochtend
+tegenhouden tot hij wakker wordt, en dat is geen rooster maar een slot. Een bewoner die thuis is en slaapt terwijl zijn eigen venster nog niet open is,
 houdt het huis tegen — dat is wat het huis op zaterdag op de laatste slaper laat wachten.
 
 **Per airco-circuit**
@@ -856,7 +858,9 @@ sources like this, it can never run on its own — and the configuration check s
 | Schedule windows | start, end, days of the week, and whether it is a holiday window |
 
 A resident without a schedule does not take part in gate 6: they neither open it nor hold
-it shut. A resident who is home and asleep while their own window has not opened yet holds
+it shut. The same holds **per day**: somebody with no window on a Tuesday does not take
+part on Tuesday. Otherwise a resident with weekend windows only would hold the house back
+every weekday morning until they woke up, which is not a schedule but a lock. A resident who is home and asleep while their own window has not opened yet holds
 the house back — which is what makes the house wait for the last sleeper on a Saturday.
 
 **Per refrigerant circuit**
