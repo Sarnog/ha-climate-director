@@ -43,6 +43,7 @@ from .models import (
     SourceRole,
     TimeWindow,
     Zone,
+    ZoneGate,
     validate,
 )
 from .plan import CircuitDecision, Deferral, Plan, Reason, UnitCommand, ZoneDecision
@@ -77,6 +78,7 @@ __all__ = [
     "Season",
     "Source",
     "SourceRole",
+    "ZoneGate",
     "TimeWindow",
     "UnitCommand",
     "WorldState",

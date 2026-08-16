@@ -53,6 +53,34 @@ class SourceRole(StrEnum):
     HEAT_COOL = "heat_cool"
 
 
+class ZoneGate(StrEnum):
+    """What decides whether a zone may run at all.
+
+    Niet elke ruimte hoort aan hetzelfde touwtje. Een woonkamer volgt het ritme
+    van het huishouden, een zolderkamer volgt of er iemand zit. Dat verschil is
+    een eigenschap van de ruimte, geen uitzondering in de logica.
+
+    Not every room hangs on the same string. A living room follows the rhythm of
+    the household, an attic room follows whether somebody is sitting in it. That
+    difference is a property of the room, not an exception in the logic.
+    """
+
+    HOUSEHOLD = "household"
+    """The household gates decide: somebody home, awake, inside the schedule.
+
+    A presence sensor on the zone still narrows this further: being home says
+    nothing about whether anybody is in the attic.
+    """
+
+    PRESENCE = "presence"
+    """The room's own presence sensor decides, on its own.
+
+    Somebody sitting in the room is a better answer than any schedule could
+    give, so the household gates step aside entirely. The master switch, a
+    manual override and an open window still apply: those are not about people.
+    """
+
+
 class ConflictPolicy(StrEnum):
     """How a circuit picks a winner when zones want opposing duties."""
 
@@ -181,6 +209,14 @@ class Zone:
 
     heat: ModeSettings | None = None
     cool: ModeSettings | None = None
+
+    gate: ZoneGate = ZoneGate.HOUSEHOLD
+    """What decides whether this zone may run: the household, or the room.
+
+    `PRESENCE` lets an occupied room overrule the schedule, which is what a room
+    somebody only uses now and then needs. It requires a `presence_entity`:
+    without one there is nothing left to decide with.
+    """
 
     presence_entity: str = ""
     """Entity saying whether this room is occupied. Empty means never checked.
@@ -559,6 +595,11 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
             problems.append(f"zone {zone.zone_id} has no indoor temperature sensor")
         if zone.heat is None and zone.cool is None:
             problems.append(f"zone {zone.zone_id} may neither heat nor cool")
+        if zone.gate is ZoneGate.PRESENCE and not zone.presence_entity:
+            problems.append(
+                f"zone {zone.zone_id} runs on room presence but has no presence entity, "
+                f"so it can never run"
+            )
         if zone.presence_timeout.total_seconds() < 0:
             problems.append(f"zone {zone.zone_id} has a negative presence timeout")
         if (

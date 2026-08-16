@@ -24,7 +24,7 @@ from homeassistant.util import slugify
 
 from .const import CONF_INSTALLATION, CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE, DOMAIN
 from .coordinator import ClimateDirectorEntry
-from .engine.models import ConflictPolicy, Season, SeasonSource, SourceRole
+from .engine.models import ConflictPolicy, Season, SeasonSource, SourceRole, ZoneGate
 
 CONF_NAME = "name"
 
@@ -311,6 +311,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         selector.EntitySelectorConfig(domain=["sensor", "climate"])
                     ),
                     vol.Required("priority", default=priority): _RANK,
+                    vol.Required(
+                        "gate", default=current.get("gate", ZoneGate.HOUSEHOLD.value)
+                    ): _choices([item.value for item in ZoneGate]),
                     vol.Optional(
                         "presence_entity",
                         description={"suggested_value": current.get("presence_entity") or None},
@@ -1097,6 +1100,7 @@ def _zone_from_form(user_input: dict[str, Any], current: dict[str, Any]) -> dict
         "sources": current.get("sources") or [],
         "heat": heat,
         "cool": cool,
+        "gate": user_input.get("gate") or ZoneGate.HOUSEHOLD.value,
         "presence_entity": user_input.get("presence_entity") or "",
         "presence_state": user_input.get("presence_state") or "on",
         "presence_timeout": user_input.get("presence_timeout") or 0,

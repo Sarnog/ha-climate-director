@@ -88,7 +88,8 @@
           "delete": "Supprimer cette zone",
           "presence_entity": "Présence dans cette pièce",
           "presence_state": "État signifiant occupée",
-          "presence_timeout": "Continuer à compter comme occupée pendant (secondes)"
+          "presence_timeout": "Continuer à compter comme occupée pendant (secondes)",
+          "gate": "Ce qui décide si cette zone fonctionne"
         },
         "data_description": {
           "indoor_sensor": "Un capteur de température, ou une entité climate qui mesure déjà la pièce.",
@@ -108,7 +109,8 @@
           "cool_start_at": "Le refroidissement démarre à cette température intérieure ou au-dessus.",
           "cool_hysteresis": "Le refroidissement s'arrête une bande sous le point d'enclenchement. Zéro fait osciller la zone sur une seule température.",
           "cool_outdoor_min": "Sous cette température extérieure, le refroidissement reste éteint. Laissez vide pour aucune limite.",
-          "cool_summer_only": "Lie le refroidissement à la saison définie dans les Réglages généraux."
+          "cool_summer_only": "Lie le refroidissement à la saison définie dans les Réglages généraux.",
+          "gate": "'household' suit le planning, le sommeil et la présence de quelqu'un à la maison ; un capteur de présence resserre ensuite. 'presence' laisse la pièce décider seule, si bien qu'une pièce occupée passe outre le planning - ce dont a besoin une pièce utilisée de temps en temps. Ce choix exige un capteur de présence."
         }
       },
       "sources": {

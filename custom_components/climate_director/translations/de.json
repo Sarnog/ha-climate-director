@@ -88,7 +88,8 @@
           "delete": "Diese Zone löschen",
           "presence_entity": "Anwesenheit in diesem Raum",
           "presence_state": "Zustand, der belegt bedeutet",
-          "presence_timeout": "Noch so lange als belegt zählen (Sekunden)"
+          "presence_timeout": "Noch so lange als belegt zählen (Sekunden)",
+          "gate": "Was entscheidet, ob diese Zone läuft"
         },
         "data_description": {
           "indoor_sensor": "Ein Temperatursensor, oder eine Climate-Entität, die den Raum bereits misst.",
@@ -108,7 +109,8 @@
           "cool_start_at": "Kühlen beginnt bei dieser Innentemperatur oder darüber.",
           "cool_hysteresis": "Kühlen stoppt eine Totzone unter dem Einschaltpunkt. Null lässt die Zone auf einer einzigen Temperatur pendeln.",
           "cool_outdoor_min": "Unter dieser Außentemperatur bleibt Kühlen aus. Leer lassen für keine Grenze.",
-          "cool_summer_only": "Bindet das Kühlen an die Jahreszeit aus den Allgemeinen Einstellungen."
+          "cool_summer_only": "Bindet das Kühlen an die Jahreszeit aus den Allgemeinen Einstellungen.",
+          "gate": "'household' folgt dem Zeitplan, dem Schlaf und ob jemand zu Hause ist; ein Anwesenheitssensor engt das danach weiter ein. 'presence' lässt den Raum allein entscheiden, sodass ein belegter Raum den Zeitplan übergeht - was ein gelegentlich genutzter Raum braucht. Dafür ist ein Anwesenheitssensor nötig."
         }
       },
       "sources": {

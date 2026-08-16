@@ -88,7 +88,8 @@
           "delete": "Eliminar esta zona",
           "presence_entity": "Presencia en esta habitación",
           "presence_state": "Estado que significa ocupada",
-          "presence_timeout": "Seguir contando como ocupada durante (segundos)"
+          "presence_timeout": "Seguir contando como ocupada durante (segundos)",
+          "gate": "Qué decide si esta zona funciona"
         },
         "data_description": {
           "indoor_sensor": "Un sensor de temperatura, o una entidad climate que ya mide la habitación.",
@@ -108,7 +109,8 @@
           "cool_start_at": "La refrigeración arranca a esta temperatura interior o por encima.",
           "cool_hysteresis": "La refrigeración para una banda por debajo del punto de encendido. Cero hace que la zona oscile sobre una sola temperatura.",
           "cool_outdoor_min": "Por debajo de esta temperatura exterior la refrigeración sigue apagada. Déjalo vacío para no poner límite.",
-          "cool_summer_only": "Ata la refrigeración a la estación definida en Ajustes generales."
+          "cool_summer_only": "Ata la refrigeración a la estación definida en Ajustes generales.",
+          "gate": "'household' sigue el horario, el sueño y si hay alguien en casa; un sensor de presencia lo estrecha después. 'presence' deja que la habitación decida sola, de modo que una habitación ocupada anula el horario, que es lo que necesita una habitación de uso ocasional. Elegirlo exige un sensor de presencia."
         }
       },
       "sources": {

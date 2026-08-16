@@ -88,7 +88,8 @@
           "delete": "Deze zone verwijderen",
           "presence_entity": "Aanwezigheid in deze ruimte",
           "presence_state": "Toestand die bezet betekent",
-          "presence_timeout": "Nog zo lang als bezet tellen (seconden)"
+          "presence_timeout": "Nog zo lang als bezet tellen (seconden)",
+          "gate": "Wat bepaalt of deze zone draait"
         },
         "data_description": {
           "indoor_sensor": "Een temperatuursensor, of een climate-entiteit die de ruimte al meet.",
@@ -108,7 +109,8 @@
           "cool_start_at": "Koelen begint bij deze binnentemperatuur of hoger.",
           "cool_hysteresis": "Koelen stopt een band onder het aanpunt. Nul laat de zone pendelen op een enkele temperatuur.",
           "cool_outdoor_min": "Onder deze buitentemperatuur blijft koelen uit. Laat leeg voor geen grens.",
-          "cool_summer_only": "Koppelt koelen aan het seizoen dat je bij Algemene instellingen hebt gezet."
+          "cool_summer_only": "Koppelt koelen aan het seizoen dat je bij Algemene instellingen hebt gezet.",
+          "gate": "'household' volgt het rooster, de slaap en of er iemand thuis is; een aanwezigheidssensor knijpt het daarna verder dicht. 'presence' laat de kamer zelf beslissen, zodat een bezette ruimte het rooster overruled - wat een kamer die je af en toe gebruikt nodig heeft. Kiezen hiervoor vereist een aanwezigheidssensor."
         }
       },
       "sources": {

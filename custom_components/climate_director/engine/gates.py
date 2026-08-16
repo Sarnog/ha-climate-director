@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .models import DirectorConfig, Zone
+from .models import DirectorConfig, Zone, ZoneGate
 from .plan import Reason
 from .world import WorldState
 
@@ -73,6 +73,16 @@ def evaluate(config: DirectorConfig, world: WorldState, zone: Zone) -> GateVerdi
     # is staying, so a house that looks empty says nothing and should not shut
     # down. Sleep still counts: once a resident is home and turns in, the day is
     # over and the house is theirs again.
+    # Een zone die op de kamer draait laat het huishouden erbuiten. Wie er zit,
+    # zit er - dat is een beter antwoord dan welk rooster ook kan geven.
+    #
+    # A zone running on the room leaves the household out of it. Whoever is
+    # sitting there is sitting there - a better answer than any schedule gives.
+    if zone.gate is ZoneGate.PRESENCE:
+        if not _room_occupied(world, zone):
+            return GateVerdict.block(Reason.ZONE_UNOCCUPIED)
+        return GateVerdict.allow()
+
     if config.residents:
         if _guests_carry_the_house(config, world):
             # Afwezigheid en rooster zeggen niets meer, slaap wel: zodra iemand

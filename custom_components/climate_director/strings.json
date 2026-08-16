@@ -88,7 +88,8 @@
           "delete": "Delete this zone",
           "presence_entity": "Presence in this room",
           "presence_state": "State meaning occupied",
-          "presence_timeout": "Keep counting as occupied for (seconds)"
+          "presence_timeout": "Keep counting as occupied for (seconds)",
+          "gate": "What decides whether this zone runs"
         },
         "data_description": {
           "indoor_sensor": "A temperature sensor, or a climate entity that already measures the room.",
@@ -108,7 +109,8 @@
           "cool_start_at": "Cooling starts at this indoor temperature or above.",
           "cool_hysteresis": "Cooling stops one band below the switch-on point. Zero lets the zone chatter on a single temperature.",
           "cool_outdoor_min": "Below this outdoor temperature cooling stays off. Leave empty for no limit.",
-          "cool_summer_only": "Ties cooling to the season set under General settings."
+          "cool_summer_only": "Ties cooling to the season set under General settings.",
+          "gate": "'household' follows the schedule, sleep and somebody being home; a presence sensor then narrows it further. 'presence' lets the room decide on its own, so an occupied room overrules the schedule - which is what a room used now and then needs. Choosing it requires a presence sensor."
         }
       },
       "sources": {
