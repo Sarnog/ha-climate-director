@@ -391,6 +391,38 @@
           "description": "Welche Anlage neu berechnet wird. Leer lassen für alle."
         }
       }
+    },
+    "precondition": {
+      "name": "Vorheizen",
+      "description": "Heizt oder kühlt die genannten Räume schon vor der Rückkehr, auch wenn niemand zu Hause ist. Die Anforderung läuft von selbst ab und gilt nur in den eingestellten Zeiten.",
+      "fields": {
+        "entry_id": {
+          "name": "Anlage",
+          "description": "Welche Anlage gemeint ist. Leer lassen gilt für alle."
+        },
+        "zone_ids": {
+          "name": "Räume",
+          "description": "Welche Räume vorbereitet werden, mit ihrer Zonen-ID. Leer lassen gilt für das ganze Haus."
+        },
+        "minutes": {
+          "name": "Minuten",
+          "description": "Wie lange die Anforderung dauert. Mehr als das eingestellte Maximum wird gekürzt; leer lassen ergibt genau dieses Maximum."
+        }
+      }
+    },
+    "cancel_precondition": {
+      "name": "Vorheizen abbrechen",
+      "description": "Bricht eine laufende Vorheiz-Anforderung sofort ab.",
+      "fields": {
+        "entry_id": {
+          "name": "Anlage",
+          "description": "Welche Anlage gemeint ist. Leer lassen gilt für alle."
+        },
+        "zone_ids": {
+          "name": "Räume",
+          "description": "Welche Räume vorbereitet werden, mit ihrer Zonen-ID. Leer lassen gilt für das ganze Haus."
+        }
+      }
     }
   },
   "selector": {

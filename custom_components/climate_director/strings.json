@@ -391,6 +391,38 @@
           "description": "Which installation to recompute. Leave empty for all of them."
         }
       }
+    },
+    "precondition": {
+      "name": "Pre-condition",
+      "description": "Warms or cools the named rooms ahead of somebody's return, even with nobody home. The request expires by itself and only counts inside the configured hours.",
+      "fields": {
+        "entry_id": {
+          "name": "Installation",
+          "description": "Which installation to act on. Leave empty for all of them."
+        },
+        "zone_ids": {
+          "name": "Rooms",
+          "description": "Which rooms to warm up, by their zone id. Leave empty for the whole house."
+        },
+        "minutes": {
+          "name": "Minutes",
+          "description": "How long the request lasts. Asking for longer than the configured maximum shortens it; leaving it empty gives you that maximum."
+        }
+      }
+    },
+    "cancel_precondition": {
+      "name": "Cancel pre-conditioning",
+      "description": "Calls a running pre-conditioning request off straight away.",
+      "fields": {
+        "entry_id": {
+          "name": "Installation",
+          "description": "Which installation to act on. Leave empty for all of them."
+        },
+        "zone_ids": {
+          "name": "Rooms",
+          "description": "Which rooms to warm up, by their zone id. Leave empty for the whole house."
+        }
+      }
     }
   },
   "selector": {

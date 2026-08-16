@@ -391,6 +391,38 @@
           "description": "Welke installatie opnieuw berekend wordt. Laat leeg voor allemaal."
         }
       }
+    },
+    "precondition": {
+      "name": "Vooruit verwarmen",
+      "description": "Verwarmt of koelt de opgegeven ruimtes alvast voor wie onderweg is, ook als er niemand thuis is. Het verzoek verloopt vanzelf en telt alleen binnen de ingestelde tijden.",
+      "fields": {
+        "entry_id": {
+          "name": "Installatie",
+          "description": "Welke installatie het betreft. Leeg laten geldt voor allemaal."
+        },
+        "zone_ids": {
+          "name": "Ruimtes",
+          "description": "Welke ruimtes vast op temperatuur moeten, met hun zone-id. Leeg laten geldt voor het hele huis."
+        },
+        "minutes": {
+          "name": "Minuten",
+          "description": "Hoe lang het verzoek duurt. Vraag je langer dan het ingestelde maximum, dan wordt het ingekort; laat je het leeg, dan krijg je dat maximum."
+        }
+      }
+    },
+    "cancel_precondition": {
+      "name": "Vooruit verwarmen afbreken",
+      "description": "Blaast een lopend vooruitverwarm-verzoek meteen af.",
+      "fields": {
+        "entry_id": {
+          "name": "Installatie",
+          "description": "Welke installatie het betreft. Leeg laten geldt voor allemaal."
+        },
+        "zone_ids": {
+          "name": "Ruimtes",
+          "description": "Welke ruimtes vast op temperatuur moeten, met hun zone-id. Leeg laten geldt voor het hele huis."
+        }
+      }
     }
   },
   "selector": {

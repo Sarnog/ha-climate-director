@@ -391,6 +391,38 @@
           "description": "Qué instalación recalcular. Déjalo vacío para todas."
         }
       }
+    },
+    "precondition": {
+      "name": "Preacondicionar",
+      "description": "Calienta o enfría las habitaciones indicadas antes de que alguien vuelva, aunque no haya nadie en casa. La petición caduca sola y solo cuenta dentro de las horas configuradas.",
+      "fields": {
+        "entry_id": {
+          "name": "Instalación",
+          "description": "A qué instalación se refiere. Dejarlo vacío vale para todas."
+        },
+        "zone_ids": {
+          "name": "Habitaciones",
+          "description": "Qué habitaciones preparar, por su identificador de zona. Dejarlo vacío vale para toda la casa."
+        },
+        "minutes": {
+          "name": "Minutos",
+          "description": "Cuánto dura la petición. Pedir más del máximo configurado la acorta; dejarlo vacío da ese máximo."
+        }
+      }
+    },
+    "cancel_precondition": {
+      "name": "Cancelar el preacondicionamiento",
+      "description": "Interrumpe de inmediato una petición en curso.",
+      "fields": {
+        "entry_id": {
+          "name": "Instalación",
+          "description": "A qué instalación se refiere. Dejarlo vacío vale para todas."
+        },
+        "zone_ids": {
+          "name": "Habitaciones",
+          "description": "Qué habitaciones preparar, por su identificador de zona. Dejarlo vacío vale para toda la casa."
+        }
+      }
     }
   },
   "selector": {

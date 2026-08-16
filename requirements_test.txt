@@ -8,3 +8,7 @@ homeassistant
 pytest
 pytest-asyncio
 ruff
+
+# tests/test_ui_complete.py leest services.yaml uit om elk actieveld na te lopen.
+# tests/test_ui_complete.py reads services.yaml to check every action field.
+pyyaml

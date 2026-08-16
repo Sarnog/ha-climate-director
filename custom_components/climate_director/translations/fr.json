@@ -391,6 +391,38 @@
           "description": "Quelle installation recalculer. Laissez vide pour toutes."
         }
       }
+    },
+    "precondition": {
+      "name": "Préchauffer",
+      "description": "Chauffe ou refroidit les pièces indiquées avant le retour de quelqu'un, même si personne n'est là. La demande expire d'elle-même et ne compte que dans les heures réglées.",
+      "fields": {
+        "entry_id": {
+          "name": "Installation",
+          "description": "L'installation concernée. Laisser vide vaut pour toutes."
+        },
+        "zone_ids": {
+          "name": "Pièces",
+          "description": "Les pièces à préparer, par leur identifiant de zone. Laisser vide vaut pour toute la maison."
+        },
+        "minutes": {
+          "name": "Minutes",
+          "description": "La durée de la demande. Demander plus que le maximum réglé la raccourcit ; laisser vide donne ce maximum."
+        }
+      }
+    },
+    "cancel_precondition": {
+      "name": "Annuler le préchauffage",
+      "description": "Interrompt aussitôt une demande de préchauffage en cours.",
+      "fields": {
+        "entry_id": {
+          "name": "Installation",
+          "description": "L'installation concernée. Laisser vide vaut pour toutes."
+        },
+        "zone_ids": {
+          "name": "Pièces",
+          "description": "Les pièces à préparer, par leur identifiant de zone. Laisser vide vaut pour toute la maison."
+        }
+      }
     }
   },
   "selector": {
