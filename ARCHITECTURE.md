@@ -121,7 +121,9 @@ Kijkt uitsluitend naar omstandigheden, nooit naar temperaturen. Van breed naar s
 geëvalueerd, zodat de gemelde oorzaak degene is die een gebruiker als eerste zou noemen:
 hoofdschakelaar vóór openstaand raam vóór niemand thuis.
 
-Een configuratie zonder bewoners slaat de aanwezigheidspoorten over. Een opening zonder
+Een configuratie zonder bewoners slaat de poorten óver bewoners over - die zouden nooit
+kunnen slagen. De kamerpoort blijft daar wél gelden: die gaat over de ruimte, niet over
+wie er in het huis is. Een opening zonder
 tijdstempel blokkeert direct: opschorten is de onschadelijke richting om fout in te
 zitten, en weigeren te handelen op een onbekende leeftijd zou een openstaande kamer
 blijven verwarmen.
@@ -408,7 +410,9 @@ Looks only at circumstances, never at temperatures. Evaluated broadest to narrow
 the reported cause is the one a user would name first: master switch before open window
 before nobody home.
 
-A configuration without residents skips the presence gates. An opening without a
+A configuration without residents skips the gates about residents - those could never
+pass. The room gate still applies there: it is about the room, not about who is in the
+house. An opening without a
 timestamp blocks immediately: suspending is the harmless direction to be wrong in, and
 refusing to act on an unknown age would keep heating an open room.
 

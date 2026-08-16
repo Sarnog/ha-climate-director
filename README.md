@@ -106,6 +106,9 @@ naar temperaturen:
 - **Handmatige override** — per zone.
 - **Openingen** — een deur of raam dat lang genoeg openstaat schort de zone op.
 - **Aanwezigheid** — er moet iemand thuis zijn.
+- **Aanwezigheid in de ruimte** — per zone een eigen sensor, met een nalooptijd tegen
+  knipperende aanwezigheidsmelders. Iemand thuis zegt niets over of er iemand op zolder
+  zit; een zone zonder zo'n sensor wordt hier nooit op tegengehouden.
 - **Wakker** — iemand die thuis is moet ook uit bed zijn.
 - **Rooster** — per bewoner instelbare tijdvensters, met een vakantiemodus die dat overslaat.
 
@@ -346,6 +349,9 @@ temperatures:
 - **Manual override** — per zone.
 - **Openings** — a door or window standing open long enough suspends the zone.
 - **Occupancy** — somebody must be home.
+- **Room presence** — a sensor per zone, with a grace period against flickering presence
+  detectors. Somebody being home says nothing about whether anybody is in the attic; a
+  zone without such a sensor is never held back on this.
 - **Awake** — somebody home must also be out of bed.
 - **Schedule** — per-resident time windows, with a holiday mode that skips them.
 
