@@ -45,7 +45,8 @@
           "guest_end": "Gästemodus bis",
           "precondition_start": "Vorheizen ab",
           "precondition_end": "Vorheizen bis",
-          "max_precondition": "Vorheizdauer (Minuten)"
+          "max_precondition": "Vorheizdauer (Minuten)",
+          "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
           "season_source": "Leite die Jahreszeit aus dem Monat ab, lies sie aus einer Entität, oder lege sie von Hand fest.",
@@ -60,17 +61,20 @@
           "guest_end": "Der Gästemodus trägt das Haus nur zwischen diesen Zeiten. Beide leer lassen, damit er den ganzen Tag gilt. Außerhalb übernehmen die gewöhnlichen Tore, damit ein vergessener Schalter nicht die ganze Nacht durchläuft.",
           "precondition_start": "Vorheizen ist das Einzige, was ein leeres Haus laufen lassen darf, und bleibt deshalb in diesen Zeiten. Außerhalb zählt eine Anforderung nicht.",
           "precondition_end": "Vorheizen ist das Einzige, was ein leeres Haus laufen lassen darf, und bleibt deshalb in diesen Zeiten. Außerhalb zählt eine Anforderung nicht.",
-          "max_precondition": "Eine Anforderung kann man nicht vergessen, nur vertippen. Diese Obergrenze verhindert, dass ein Tippfehler einen ganzen Nachmittag ein leeres Haus heizt. Wer mehr anfordert, bekommt eine gekürzte statt gar keiner."
+          "max_precondition": "Eine Anforderung kann man nicht vergessen, nur vertippen. Diese Obergrenze verhindert, dass ein Tippfehler einen ganzen Nachmittag ein leeres Haus heizt. Wer mehr anfordert, bekommt eine gekürzte statt gar keiner.",
+          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "zones": {
         "title": "Zonen",
         "description": "Wähle eine Zone zum Bearbeiten, oder füge eine hinzu.",
         "data": {
-          "zone": "Zone"
+          "zone": "Zone",
+          "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
-          "zone": "Wähle eine zum Ändern, oder füge eine neue hinzu."
+          "zone": "Wähle eine zum Ändern, oder füge eine neue hinzu.",
+          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "zone": {
@@ -96,7 +100,7 @@
           "presence_state": "Zustand, der belegt bedeutet",
           "presence_timeout": "Noch so lange als belegt zählen (Sekunden)",
           "gate": "Was entscheidet, ob diese Zone läuft",
-          "discard": "Verwerfen und zurück"
+          "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
           "indoor_sensor": "Ein Temperatursensor, oder eine Climate-Entität, die den Raum bereits misst.",
@@ -118,17 +122,19 @@
           "cool_outdoor_min": "Unter dieser Außentemperatur bleibt Kühlen aus. Leer lassen für keine Grenze.",
           "cool_summer_only": "Bindet das Kühlen an die Jahreszeit aus den Allgemeinen Einstellungen.",
           "gate": "'household' folgt dem Zeitplan, dem Schlaf und ob jemand zu Hause ist; ein Anwesenheitssensor engt das danach weiter ein. 'presence' lässt den Raum allein entscheiden, sodass ein belegter Raum den Zeitplan übergeht - was ein gelegentlich genutzter Raum braucht. Dafür ist ein Anwesenheitssensor nötig.",
-          "discard": "Verlässt diesen Bildschirm, ohne das Geänderte zu behalten."
+          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "sources": {
         "title": "Quellen für {zone}",
         "description": "Eine Quelle ist ein Gerät, das diese Zone bedienen kann. Wähle eine zum Bearbeiten, oder füge eine hinzu.",
         "data": {
-          "source": "Quelle"
+          "source": "Quelle",
+          "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
-          "source": "Wähle eine zum Ändern, oder füge eine neue hinzu."
+          "source": "Wähle eine zum Ändern, oder füge eine neue hinzu.",
+          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "source": {
@@ -142,7 +148,7 @@
           "outdoor_max": "Verwenden bis zu dieser Außentemperatur",
           "delete": "Diese Quelle löschen",
           "autostart": "Dieses Gerät automatisch einschalten",
-          "discard": "Verwerfen und zurück"
+          "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
           "priority": "Niedriger gewinnt, wenn mehrere Quellen dieselbe Aufgabe erfüllen könnten.",
@@ -152,17 +158,19 @@
           "role": "Ob dieses Gerät heizen, kühlen oder beides kann. Ein Heizkessel kann nur heizen.",
           "delete": "Nimmt die Quelle aus dieser Zone. Das Gerät selbst bleibt unangetastet.",
           "autostart": "Aus lässt es in Ruhe: der Director schaltet es nie ein und nur dann aus, wenn es eine Aufgabe fährt, die das gemeinsame Außengerät nicht zulässt. Für ein Gerät, das du selbst einschaltest und so lassen willst.",
-          "discard": "Verlässt diesen Bildschirm, ohne das Geänderte zu behalten."
+          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "circuits": {
         "title": "Klimakreise",
         "description": "Ein Kreis ist ein Außengerät mit den Innengeräten daran. Lass dies leer, wenn jedes Gerät sein eigenes Außengerät hat.",
         "data": {
-          "circuit": "Kreis"
+          "circuit": "Kreis",
+          "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
-          "circuit": "Wähle einen zum Ändern, oder füge einen neuen hinzu."
+          "circuit": "Wähle einen zum Ändern, oder füge einen neuen hinzu.",
+          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "circuit": {
@@ -179,7 +187,7 @@
           "min_cycle_time": "Ruhezeit, bevor ein Gerät neu starten darf (Sekunden)",
           "max_concurrent_units": "Höchstzahl gleichzeitig laufender Geräte",
           "delete": "Diesen Kreis löschen",
-          "discard": "Verwerfen und zurück"
+          "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
           "units": "Nimm auch Geräte auf, die der Director nicht steuert: sie beanspruchen den Verdichter trotzdem.",
@@ -192,36 +200,42 @@
           "min_family_switch_interval": "Verhindert, dass eine Zone den Verdichter zwischen Heizen und Kühlen hin und her zieht.",
           "max_concurrent_units": "Für ein Außengerät, das nicht alle Innengeräte gleichzeitig tragen kann. Leer lassen für keine Grenze.",
           "delete": "Entfernt den Kreis. Die Geräte laufen weiter; sie sind nur nicht länger aneinander gebunden.",
-          "discard": "Verlässt diesen Bildschirm, ohne das Geänderte zu behalten."
+          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "circuit_priorities": {
         "title": "Prioritäten auf {circuit}",
         "description": "Welche Zone auf diesem Außengerät vorgeht. Die niedrigste Zahl gewinnt; die Zonen stehen in der Reihenfolge, in der sie derzeit gewinnen. Das ist dieselbe Einstellung wie bei der Zone selbst.",
         "data": {
-          "zone": "Zone"
+          "zone": "Zone",
+          "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
-          "zone": "Wähle eine, um ihre Priorität zu ändern, oder geh zurück."
+          "zone": "Wähle eine, um ihre Priorität zu ändern, oder geh zurück.",
+          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "circuit_priority": {
         "title": "Priorität für {zone}",
         "data": {
-          "priority": "Priorität"
+          "priority": "Priorität",
+          "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
-          "priority": "Die niedrigste Zahl gewinnt den Kreis. Zonen mit derselben Zahl werden über ihren Namen getrennt."
+          "priority": "Die niedrigste Zahl gewinnt den Kreis. Zonen mit derselben Zahl werden über ihren Namen getrennt.",
+          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "generators": {
         "title": "Gemeinsame Wärmequellen",
         "description": "Ein Kessel oder eine Wärmepumpe, an der mehrere Räume über ihre eigenen Ventile hängen. Lass dies leer, wenn das System seinen Brenner selbst ansteuert, wie Tado und ähnliche es tun.",
         "data": {
-          "generator": "Wärmequelle"
+          "generator": "Wärmequelle",
+          "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
-          "generator": "Wähle eine zum Ändern, oder füge eine neue hinzu."
+          "generator": "Wähle eine zum Ändern, oder füge eine neue hinzu.",
+          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "generator": {
@@ -233,7 +247,7 @@
           "zone_ids": "Versorgte Räume",
           "setpoint": "Fester Sollwert",
           "delete": "Diese Wärmequelle löschen",
-          "discard": "Verwerfen und zurück"
+          "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
           "name": "Ein Name, um Wärmequellen auseinanderzuhalten.",
@@ -241,17 +255,19 @@
           "zone_ids": "Leer lassen für alle Räume.",
           "setpoint": "Leer lassen, um dem wärmsten Ziel der fragenden Räume zu folgen. Das kälteste zu nehmen würde den Raum, der am dringendsten fragt, zu kurz kommen lassen.",
           "delete": "Entfernt die Wärmequelle; die Ventile arbeiten für sich weiter.",
-          "discard": "Verlässt diesen Bildschirm, ohne das Geänderte zu behalten."
+          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "residents": {
         "title": "Bewohner",
         "description": "Lass dies leer für ein Gebäude, in dem niemand erfasst wird; die Anwesenheitstore werden dann übersprungen, statt für immer zu blockieren.",
         "data": {
-          "resident": "Bewohner"
+          "resident": "Bewohner",
+          "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
-          "resident": "Wähle einen zum Ändern, oder füge einen neuen hinzu."
+          "resident": "Wähle einen zum Ändern, oder füge einen neuen hinzu.",
+          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "resident": {
@@ -262,7 +278,7 @@
           "sleep_entity": "Schlaf",
           "sleep_state": "Zustand, der schlafend bedeutet",
           "delete": "Diesen Bewohner löschen",
-          "discard": "Verwerfen und zurück"
+          "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
           "sleep_entity": "Leer lassen, wenn der Schlaf dieser Person nicht erfasst wird.",
@@ -270,17 +286,19 @@
           "name": "Ein Name, um Bewohner auseinanderzuhalten.",
           "presence_entity": "Meist eine person-Entität. Sagt, ob dieser Bewohner zu Hause ist.",
           "delete": "Entfernt den Bewohner samt seinen Zeitplänen.",
-          "discard": "Verlässt diesen Bildschirm, ohne das Geänderte zu behalten."
+          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "windows": {
         "title": "Zeitpläne für {resident}",
         "description": "Zeiten, zu denen dieser Bewohner Klimaregelung will. Lass die Liste leer, damit er zu jeder Stunde zählt.",
         "data": {
-          "window": "Zeitplan"
+          "window": "Zeitplan",
+          "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
-          "window": "Wähle einen zum Ändern, füge einen hinzu, oder geh zurück zum Menü."
+          "window": "Wähle einen zum Ändern, füge einen hinzu, oder geh zurück zum Menü.",
+          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "window": {
@@ -292,7 +310,7 @@
           "weekdays": "Tage",
           "delete": "Diesen Zeitplan löschen",
           "holiday": "Dies ist ein Urlaubsfenster",
-          "discard": "Verwerfen und zurück"
+          "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
           "weekdays": "Leer lassen für jeden Tag.",
@@ -300,17 +318,19 @@
           "start": "Gehört zum Fenster.",
           "delete": "Entfernt diesen Zeitplan.",
           "holiday": "Ein Urlaubsfenster gilt nur bei eingeschaltetem Urlaubsmodus und ersetzt dann die gewöhnlichen Fenster. Seine Wochentage zählen nicht mit. Ohne eines zählt ein Urlaubstag als Samstag.",
-          "discard": "Verlässt diesen Bildschirm, ohne das Geänderte zu behalten."
+          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "openings": {
         "title": "Türen und Fenster",
         "description": "Eine Öffnung, die lange genug offen steht, setzt die betroffenen Zonen aus.",
         "data": {
-          "opening": "Öffnung"
+          "opening": "Öffnung",
+          "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
-          "opening": "Wähle eine zum Ändern, oder füge eine neue hinzu."
+          "opening": "Wähle eine zum Ändern, oder füge eine neue hinzu.",
+          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "opening": {
@@ -320,14 +340,14 @@
           "zone_ids": "Betroffene Zonen",
           "delay": "Verzögerung vor dem Aussetzen (Sekunden)",
           "delete": "Diese Öffnung löschen",
-          "discard": "Verwerfen und zurück"
+          "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
           "zone_ids": "Leer lassen, um die gesamte Anlage auszusetzen.",
           "delay": "Leer lassen oder auf null setzen, um sofort auszusetzen, sobald sie aufgeht.",
           "entity_id": "Der Tür- oder Fensterkontakt. Offen zählt als Zustand 'on'.",
           "delete": "Entfernt die Öffnung; sie setzt dann nichts mehr aus.",
-          "discard": "Verlässt diesen Bildschirm, ohne das Geänderte zu behalten."
+          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       }
     },
@@ -500,6 +520,12 @@
     "circuit_priority_list": {
       "options": {
         "back_to_menu": "< Zurück zu den Kreisen"
+      }
+    },
+    "when_done": {
+      "options": {
+        "keep": "Diese Änderungen behalten und zurück",
+        "discard": "< Verwerfen und zurück"
       }
     }
   }

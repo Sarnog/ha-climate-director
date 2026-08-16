@@ -45,7 +45,8 @@
           "guest_end": "Modo invitados hasta",
           "precondition_start": "Preacondicionamiento desde",
           "precondition_end": "Preacondicionamiento hasta",
-          "max_precondition": "Duración del preacondicionamiento (minutos)"
+          "max_precondition": "Duración del preacondicionamiento (minutos)",
+          "when_done": "Cuando termines aquí"
         },
         "data_description": {
           "season_source": "Deduce la estación del mes, léela de una entidad, o fíjala a mano.",
@@ -60,17 +61,20 @@
           "guest_end": "El modo invitados solo sostiene la casa entre estas horas. Deja ambas vacías para que se aplique todo el día. Fuera de ellas vuelven a mandar las puertas ordinarias, de modo que un interruptor olvidado no funcione toda la noche.",
           "precondition_start": "El preacondicionamiento es lo único que puede hacer funcionar una casa vacía, así que se mantiene en estas horas. Fuera de ellas una petición no cuenta.",
           "precondition_end": "El preacondicionamiento es lo único que puede hacer funcionar una casa vacía, así que se mantiene en estas horas. Fuera de ellas una petición no cuenta.",
-          "max_precondition": "Una petición no se olvida, solo se teclea mal. Este techo evita que una errata caliente una casa vacía toda la tarde. Pedir más tiempo acorta la petición en lugar de rechazarla."
+          "max_precondition": "Una petición no se olvida, solo se teclea mal. Este techo evita que una errata caliente una casa vacía toda la tarde. Pedir más tiempo acorta la petición en lugar de rechazarla.",
+          "when_done": "Home Assistant dibuja un solo botón bajo un formulario, así que en esta fila eliges qué hace. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "zones": {
         "title": "Zonas",
         "description": "Elige una zona para editarla, o añade una.",
         "data": {
-          "zone": "Zona"
+          "zone": "Zona",
+          "when_done": "Cuando termines aquí"
         },
         "data_description": {
-          "zone": "Elige una para cambiarla, o añade una nueva."
+          "zone": "Elige una para cambiarla, o añade una nueva.",
+          "when_done": "Home Assistant dibuja un solo botón bajo un formulario, así que en esta fila eliges qué hace. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "zone": {
@@ -96,7 +100,7 @@
           "presence_state": "Estado que significa ocupada",
           "presence_timeout": "Seguir contando como ocupada durante (segundos)",
           "gate": "Qué decide si esta zona funciona",
-          "discard": "Descartar y volver"
+          "when_done": "Cuando termines aquí"
         },
         "data_description": {
           "indoor_sensor": "Un sensor de temperatura, o una entidad climate que ya mide la habitación.",
@@ -118,17 +122,19 @@
           "cool_outdoor_min": "Por debajo de esta temperatura exterior la refrigeración sigue apagada. Déjalo vacío para no poner límite.",
           "cool_summer_only": "Ata la refrigeración a la estación definida en Ajustes generales.",
           "gate": "'household' sigue el horario, el sueño y si hay alguien en casa; un sensor de presencia lo estrecha después. 'presence' deja que la habitación decida sola, de modo que una habitación ocupada anula el horario, que es lo que necesita una habitación de uso ocasional. Elegirlo exige un sensor de presencia.",
-          "discard": "Sale de esta pantalla sin conservar lo que cambiaste aquí."
+          "when_done": "Home Assistant dibuja un solo botón bajo un formulario, así que en esta fila eliges qué hace. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "sources": {
         "title": "Fuentes de {zone}",
         "description": "Una fuente es un aparato capaz de atender esta zona. Elige una para editarla, o añade una.",
         "data": {
-          "source": "Fuente"
+          "source": "Fuente",
+          "when_done": "Cuando termines aquí"
         },
         "data_description": {
-          "source": "Elige una para cambiarla, o añade una nueva."
+          "source": "Elige una para cambiarla, o añade una nueva.",
+          "when_done": "Home Assistant dibuja un solo botón bajo un formulario, así que en esta fila eliges qué hace. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "source": {
@@ -142,7 +148,7 @@
           "outdoor_max": "Usar hasta esta temperatura exterior",
           "delete": "Eliminar esta fuente",
           "autostart": "Encender este aparato automáticamente",
-          "discard": "Descartar y volver"
+          "when_done": "Cuando termines aquí"
         },
         "data_description": {
           "priority": "El más bajo gana cuando varias fuentes podrían cumplir la misma tarea.",
@@ -152,17 +158,19 @@
           "role": "Si este aparato puede calentar, enfriar, o ambas cosas. Una caldera solo calienta.",
           "delete": "Saca la fuente de esta zona. El aparato en sí queda intacto.",
           "autostart": "Desactivado lo deja en paz: el director nunca lo enciende, y solo lo apaga si realiza una tarea que la unidad exterior compartida no permite. Para un aparato que enciendes tú y quieres dejar como está.",
-          "discard": "Sale de esta pantalla sin conservar lo que cambiaste aquí."
+          "when_done": "Home Assistant dibuja un solo botón bajo un formulario, así que en esta fila eliges qué hace. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "circuits": {
         "title": "Circuitos de climatización",
         "description": "Un circuito es una unidad exterior con las unidades interiores conectadas a ella. Déjalo vacío si cada unidad tiene su propia unidad exterior.",
         "data": {
-          "circuit": "Circuito"
+          "circuit": "Circuito",
+          "when_done": "Cuando termines aquí"
         },
         "data_description": {
-          "circuit": "Elige uno para cambiarlo, o añade uno nuevo."
+          "circuit": "Elige uno para cambiarlo, o añade uno nuevo.",
+          "when_done": "Home Assistant dibuja un solo botón bajo un formulario, así que en esta fila eliges qué hace. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "circuit": {
@@ -179,7 +187,7 @@
           "min_cycle_time": "Descanso antes de que una unidad pueda rearrancar (segundos)",
           "max_concurrent_units": "Número máximo de unidades funcionando a la vez",
           "delete": "Eliminar este circuito",
-          "discard": "Descartar y volver"
+          "when_done": "Cuando termines aquí"
         },
         "data_description": {
           "units": "Incluye también las unidades que el director no gobierna: siguen reclamando el compresor.",
@@ -192,36 +200,42 @@
           "min_family_switch_interval": "Evita que una zona arrastre el compresor de un lado a otro entre calentar y enfriar.",
           "max_concurrent_units": "Para una unidad exterior que no puede con todas sus unidades interiores a la vez. Déjalo vacío para no poner límite.",
           "delete": "Elimina el circuito. Las unidades siguen funcionando; simplemente dejan de estar atadas entre sí.",
-          "discard": "Sale de esta pantalla sin conservar lo que cambiaste aquí."
+          "when_done": "Home Assistant dibuja un solo botón bajo un formulario, así que en esta fila eliges qué hace. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "circuit_priorities": {
         "title": "Prioridades en {circuit}",
         "description": "Qué zona se impone en esta unidad exterior. El número más bajo gana; las zonas aparecen en el orden en que ganan ahora. Es el mismo ajuste que en la zona misma.",
         "data": {
-          "zone": "Zona"
+          "zone": "Zona",
+          "when_done": "Cuando termines aquí"
         },
         "data_description": {
-          "zone": "Elige una para cambiar su prioridad, o vuelve atrás."
+          "zone": "Elige una para cambiar su prioridad, o vuelve atrás.",
+          "when_done": "Home Assistant dibuja un solo botón bajo un formulario, así que en esta fila eliges qué hace. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "circuit_priority": {
         "title": "Prioridad de {zone}",
         "data": {
-          "priority": "Prioridad"
+          "priority": "Prioridad",
+          "when_done": "Cuando termines aquí"
         },
         "data_description": {
-          "priority": "El número más bajo gana el circuito. Las zonas que comparten número se separan por su nombre."
+          "priority": "El número más bajo gana el circuito. Las zonas que comparten número se separan por su nombre.",
+          "when_done": "Home Assistant dibuja un solo botón bajo un formulario, así que en esta fila eliges qué hace. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "generators": {
         "title": "Fuentes de calor compartidas",
         "description": "Una caldera o bomba de calor de la que varias habitaciones tiran mediante sus propias válvulas. Déjalo vacío si el sistema enciende su propio quemador, como hacen Tado y similares.",
         "data": {
-          "generator": "Fuente de calor"
+          "generator": "Fuente de calor",
+          "when_done": "Cuando termines aquí"
         },
         "data_description": {
-          "generator": "Elige una para cambiarla, o añade una nueva."
+          "generator": "Elige una para cambiarla, o añade una nueva.",
+          "when_done": "Home Assistant dibuja un solo botón bajo un formulario, así que en esta fila eliges qué hace. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "generator": {
@@ -233,7 +247,7 @@
           "zone_ids": "Habitaciones a las que sirve",
           "setpoint": "Consigna fija",
           "delete": "Eliminar esta fuente de calor",
-          "discard": "Descartar y volver"
+          "when_done": "Cuando termines aquí"
         },
         "data_description": {
           "name": "Un nombre, para distinguir fuentes de calor.",
@@ -241,17 +255,19 @@
           "zone_ids": "Déjalo vacío para todas las habitaciones.",
           "setpoint": "Déjalo vacío para seguir la consigna más alta entre las habitaciones que piden. Tomar la más baja dejaría corta a la que más pide.",
           "delete": "Elimina la fuente de calor; las válvulas siguen funcionando por su cuenta.",
-          "discard": "Sale de esta pantalla sin conservar lo que cambiaste aquí."
+          "when_done": "Home Assistant dibuja un solo botón bajo un formulario, así que en esta fila eliges qué hace. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "residents": {
         "title": "Residentes",
         "description": "Déjalo vacío para un edificio donde no se sigue a nadie; las puertas de presencia se omiten entonces en lugar de bloquear para siempre.",
         "data": {
-          "resident": "Residente"
+          "resident": "Residente",
+          "when_done": "Cuando termines aquí"
         },
         "data_description": {
-          "resident": "Elige uno para cambiarlo, o añade uno nuevo."
+          "resident": "Elige uno para cambiarlo, o añade uno nuevo.",
+          "when_done": "Home Assistant dibuja un solo botón bajo un formulario, así que en esta fila eliges qué hace. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "resident": {
@@ -262,7 +278,7 @@
           "sleep_entity": "Sueño",
           "sleep_state": "Estado que significa dormido",
           "delete": "Eliminar este residente",
-          "discard": "Descartar y volver"
+          "when_done": "Cuando termines aquí"
         },
         "data_description": {
           "sleep_entity": "Déjalo vacío si no se sigue el sueño de esta persona.",
@@ -270,17 +286,19 @@
           "name": "Un nombre, para distinguir residentes.",
           "presence_entity": "Normalmente una entidad person. Indica si este residente está en casa.",
           "delete": "Elimina al residente junto con sus horarios.",
-          "discard": "Sale de esta pantalla sin conservar lo que cambiaste aquí."
+          "when_done": "Home Assistant dibuja un solo botón bajo un formulario, así que en esta fila eliges qué hace. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "windows": {
         "title": "Horarios de {resident}",
         "description": "Horas en las que este residente quiere climatización. Deja la lista vacía para que cuente a cualquier hora.",
         "data": {
-          "window": "Horario"
+          "window": "Horario",
+          "when_done": "Cuando termines aquí"
         },
         "data_description": {
-          "window": "Elige uno para cambiarlo, añade uno, o vuelve al menú."
+          "window": "Elige uno para cambiarlo, añade uno, o vuelve al menú.",
+          "when_done": "Home Assistant dibuja un solo botón bajo un formulario, así que en esta fila eliges qué hace. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "window": {
@@ -292,7 +310,7 @@
           "weekdays": "Días",
           "delete": "Eliminar este horario",
           "holiday": "Esta es una franja de vacaciones",
-          "discard": "Descartar y volver"
+          "when_done": "Cuando termines aquí"
         },
         "data_description": {
           "weekdays": "Déjalo vacío para todos los días.",
@@ -300,17 +318,19 @@
           "start": "Incluida en la franja.",
           "delete": "Elimina este horario.",
           "holiday": "Una franja de vacaciones solo se aplica con el modo vacaciones activo, y entonces sustituye a las franjas ordinarias. Sus días de la semana no cuentan. Sin ella, un día de vacaciones cuenta como un sábado.",
-          "discard": "Sale de esta pantalla sin conservar lo que cambiaste aquí."
+          "when_done": "Home Assistant dibuja un solo botón bajo un formulario, así que en esta fila eliges qué hace. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "openings": {
         "title": "Puertas y ventanas",
         "description": "Una abertura que permanece abierta el tiempo suficiente suspende las zonas afectadas.",
         "data": {
-          "opening": "Abertura"
+          "opening": "Abertura",
+          "when_done": "Cuando termines aquí"
         },
         "data_description": {
-          "opening": "Elige una para cambiarla, o añade una nueva."
+          "opening": "Elige una para cambiarla, o añade una nueva.",
+          "when_done": "Home Assistant dibuja un solo botón bajo un formulario, así que en esta fila eliges qué hace. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "opening": {
@@ -320,14 +340,14 @@
           "zone_ids": "Zonas afectadas",
           "delay": "Retardo antes de suspender (segundos)",
           "delete": "Eliminar esta abertura",
-          "discard": "Descartar y volver"
+          "when_done": "Cuando termines aquí"
         },
         "data_description": {
           "zone_ids": "Déjalo vacío para suspender toda la instalación.",
           "delay": "Déjalo vacío o ponlo a cero para suspender en cuanto se abre.",
           "entity_id": "El contacto de puerta o ventana. Abierto cuenta como el estado 'on'.",
           "delete": "Elimina la abertura; deja de suspender nada.",
-          "discard": "Sale de esta pantalla sin conservar lo que cambiaste aquí."
+          "when_done": "Home Assistant dibuja un solo botón bajo un formulario, así que en esta fila eliges qué hace. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       }
     },
@@ -500,6 +520,12 @@
     "circuit_priority_list": {
       "options": {
         "back_to_menu": "< Volver a los circuitos"
+      }
+    },
+    "when_done": {
+      "options": {
+        "keep": "Conservar estos cambios y volver",
+        "discard": "< Descartar y volver"
       }
     }
   }

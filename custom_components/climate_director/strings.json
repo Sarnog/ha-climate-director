@@ -45,7 +45,8 @@
           "guest_end": "Guest mode until",
           "precondition_start": "Pre-conditioning from",
           "precondition_end": "Pre-conditioning until",
-          "max_precondition": "Pre-conditioning duration (minutes)"
+          "max_precondition": "Pre-conditioning duration (minutes)",
+          "when_done": "When you are done here"
         },
         "data_description": {
           "season_source": "Derive the season from the month, read it from an entity, or pin it by hand.",
@@ -60,17 +61,20 @@
           "guest_end": "Guest mode only carries the house between these times. Leave both empty to let it apply all day. Outside them the ordinary gates take over, so a switch nobody remembered to turn off does not run all night.",
           "precondition_start": "Pre-conditioning is the only thing allowed to run an empty house, so it is kept to these hours. Outside them a request simply does not count.",
           "precondition_end": "Pre-conditioning is the only thing allowed to run an empty house, so it is kept to these hours. Outside them a request simply does not count.",
-          "max_precondition": "A request cannot be forgotten, only mistyped, so this ceiling is what keeps a slip of the thumb from heating an empty house all afternoon. Asking for longer shortens the request rather than refusing it."
+          "max_precondition": "A request cannot be forgotten, only mistyped, so this ceiling is what keeps a slip of the thumb from heating an empty house all afternoon. Asking for longer shortens the request rather than refusing it.",
+          "when_done": "Home Assistant draws one button under a form, so this row is where you choose what it does. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "zones": {
         "title": "Zones",
         "description": "Pick a zone to edit, or add one.",
         "data": {
-          "zone": "Zone"
+          "zone": "Zone",
+          "when_done": "When you are done here"
         },
         "data_description": {
-          "zone": "Pick one to change it, or add a new one."
+          "zone": "Pick one to change it, or add a new one.",
+          "when_done": "Home Assistant draws one button under a form, so this row is where you choose what it does. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "zone": {
@@ -96,7 +100,7 @@
           "presence_state": "State meaning occupied",
           "presence_timeout": "Keep counting as occupied for (seconds)",
           "gate": "What decides whether this zone runs",
-          "discard": "Discard and go back"
+          "when_done": "When you are done here"
         },
         "data_description": {
           "indoor_sensor": "A temperature sensor, or a climate entity that already measures the room.",
@@ -118,17 +122,19 @@
           "cool_outdoor_min": "Below this outdoor temperature cooling stays off. Leave empty for no limit.",
           "cool_summer_only": "Ties cooling to the season set under General settings.",
           "gate": "'household' follows the schedule, sleep and somebody being home; a presence sensor then narrows it further. 'presence' lets the room decide on its own, so an occupied room overrules the schedule - which is what a room used now and then needs. Choosing it requires a presence sensor.",
-          "discard": "Leaves this screen without keeping what you changed here."
+          "when_done": "Home Assistant draws one button under a form, so this row is where you choose what it does. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "sources": {
         "title": "Sources for {zone}",
         "description": "A source is an appliance able to serve this zone. Pick one to edit, or add one.",
         "data": {
-          "source": "Source"
+          "source": "Source",
+          "when_done": "When you are done here"
         },
         "data_description": {
-          "source": "Pick one to change it, or add a new one."
+          "source": "Pick one to change it, or add a new one.",
+          "when_done": "Home Assistant draws one button under a form, so this row is where you choose what it does. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "source": {
@@ -142,7 +148,7 @@
           "outdoor_max": "Use up to this outdoor temperature",
           "delete": "Delete this source",
           "autostart": "Start this appliance automatically",
-          "discard": "Discard and go back"
+          "when_done": "When you are done here"
         },
         "data_description": {
           "priority": "Lower wins when several sources could serve the same duty.",
@@ -152,17 +158,19 @@
           "role": "Whether this appliance can heat, cool, or both. A boiler is heating only.",
           "delete": "Removes the source from this zone. The appliance itself is left alone.",
           "autostart": "Off leaves it alone: the director never switches it on, and switches it off only when it runs a duty the shared outdoor unit cannot allow. For an appliance you switch on yourself and want left as you left it.",
-          "discard": "Leaves this screen without keeping what you changed here."
+          "when_done": "Home Assistant draws one button under a form, so this row is where you choose what it does. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "circuits": {
         "title": "Air conditioning circuits",
         "description": "A circuit is one outdoor unit and the indoor units on it. Leave this empty if every unit has its own outdoor unit.",
         "data": {
-          "circuit": "Circuit"
+          "circuit": "Circuit",
+          "when_done": "When you are done here"
         },
         "data_description": {
-          "circuit": "Pick one to change it, or add a new one."
+          "circuit": "Pick one to change it, or add a new one.",
+          "when_done": "Home Assistant draws one button under a form, so this row is where you choose what it does. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "circuit": {
@@ -179,7 +187,7 @@
           "min_cycle_time": "Rest before a unit may restart (seconds)",
           "max_concurrent_units": "Maximum units running at once",
           "delete": "Delete this circuit",
-          "discard": "Discard and go back"
+          "when_done": "When you are done here"
         },
         "data_description": {
           "units": "Include units the director does not manage: they still claim the compressor.",
@@ -192,36 +200,42 @@
           "min_family_switch_interval": "Stops one zone dragging the compressor back and forth between heating and cooling.",
           "max_concurrent_units": "For an outdoor unit that cannot carry all its indoor units at once. Leave empty for no cap.",
           "delete": "Removes the circuit. The units keep working; they simply stop being tied to one another.",
-          "discard": "Leaves this screen without keeping what you changed here."
+          "when_done": "Home Assistant draws one button under a form, so this row is where you choose what it does. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "circuit_priorities": {
         "title": "Priorities on {circuit}",
         "description": "Which zone outranks the others on this outdoor unit. The lowest number wins; the zones are listed in the order they currently win in. This is the same setting as under the zone itself.",
         "data": {
-          "zone": "Zone"
+          "zone": "Zone",
+          "when_done": "When you are done here"
         },
         "data_description": {
-          "zone": "Pick one to change its priority, or go back."
+          "zone": "Pick one to change its priority, or go back.",
+          "when_done": "Home Assistant draws one button under a form, so this row is where you choose what it does. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "circuit_priority": {
         "title": "Priority for {zone}",
         "data": {
-          "priority": "Priority"
+          "priority": "Priority",
+          "when_done": "When you are done here"
         },
         "data_description": {
-          "priority": "The lowest number wins the circuit. Zones sharing a number are separated by their name."
+          "priority": "The lowest number wins the circuit. Zones sharing a number are separated by their name.",
+          "when_done": "Home Assistant draws one button under a form, so this row is where you choose what it does. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "generators": {
         "title": "Shared heat sources",
         "description": "A boiler or heat pump several rooms draw on through their own valves. Leave this empty when the system fires its own burner, as Tado and the like do.",
         "data": {
-          "generator": "Heat source"
+          "generator": "Heat source",
+          "when_done": "When you are done here"
         },
         "data_description": {
-          "generator": "Pick one to change it, or add a new one."
+          "generator": "Pick one to change it, or add a new one.",
+          "when_done": "Home Assistant draws one button under a form, so this row is where you choose what it does. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "generator": {
@@ -233,7 +247,7 @@
           "zone_ids": "Rooms it serves",
           "setpoint": "Fixed setpoint",
           "delete": "Delete this heat source",
-          "discard": "Discard and go back"
+          "when_done": "When you are done here"
         },
         "data_description": {
           "name": "A label, to tell heat sources apart.",
@@ -241,17 +255,19 @@
           "zone_ids": "Leave empty for every room.",
           "setpoint": "Leave empty to follow the warmest target among the rooms asking. Taking the coldest would leave the room asking hardest short.",
           "delete": "Removes the heat source; the valves keep working on their own.",
-          "discard": "Leaves this screen without keeping what you changed here."
+          "when_done": "Home Assistant draws one button under a form, so this row is where you choose what it does. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "residents": {
         "title": "Residents",
         "description": "Leave this empty for a building nobody is tracked in; the presence gates are then skipped instead of blocking forever.",
         "data": {
-          "resident": "Resident"
+          "resident": "Resident",
+          "when_done": "When you are done here"
         },
         "data_description": {
-          "resident": "Pick one to change it, or add a new one."
+          "resident": "Pick one to change it, or add a new one.",
+          "when_done": "Home Assistant draws one button under a form, so this row is where you choose what it does. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "resident": {
@@ -262,7 +278,7 @@
           "sleep_entity": "Sleep",
           "sleep_state": "State meaning asleep",
           "delete": "Delete this resident",
-          "discard": "Discard and go back"
+          "when_done": "When you are done here"
         },
         "data_description": {
           "sleep_entity": "Leave empty if this person's sleep is not tracked.",
@@ -270,17 +286,19 @@
           "name": "A label, to tell residents apart.",
           "presence_entity": "Usually a person entity. Says whether this resident is home.",
           "delete": "Removes the resident along with their schedules.",
-          "discard": "Leaves this screen without keeping what you changed here."
+          "when_done": "Home Assistant draws one button under a form, so this row is where you choose what it does. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "windows": {
         "title": "Schedules for {resident}",
         "description": "Times this resident wants climate control. Leave the list empty to have them count at any hour.",
         "data": {
-          "window": "Schedule"
+          "window": "Schedule",
+          "when_done": "When you are done here"
         },
         "data_description": {
-          "window": "Pick one to change it, add one, or go back to the menu."
+          "window": "Pick one to change it, add one, or go back to the menu.",
+          "when_done": "Home Assistant draws one button under a form, so this row is where you choose what it does. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "window": {
@@ -292,7 +310,7 @@
           "weekdays": "Days",
           "delete": "Delete this schedule",
           "holiday": "This is a holiday window",
-          "discard": "Discard and go back"
+          "when_done": "When you are done here"
         },
         "data_description": {
           "weekdays": "Leave empty for every day.",
@@ -300,17 +318,19 @@
           "start": "Included in the window.",
           "delete": "Removes this schedule.",
           "holiday": "A holiday window applies only while holiday mode is on, and then replaces the ordinary windows. Its days of the week are ignored. Without one, a holiday counts as a Saturday.",
-          "discard": "Leaves this screen without keeping what you changed here."
+          "when_done": "Home Assistant draws one button under a form, so this row is where you choose what it does. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "openings": {
         "title": "Doors and windows",
         "description": "An opening standing open long enough suspends the zones it affects.",
         "data": {
-          "opening": "Opening"
+          "opening": "Opening",
+          "when_done": "When you are done here"
         },
         "data_description": {
-          "opening": "Pick one to change it, or add a new one."
+          "opening": "Pick one to change it, or add a new one.",
+          "when_done": "Home Assistant draws one button under a form, so this row is where you choose what it does. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "opening": {
@@ -320,14 +340,14 @@
           "zone_ids": "Zones affected",
           "delay": "Delay before suspending (seconds)",
           "delete": "Delete this opening",
-          "discard": "Discard and go back"
+          "when_done": "When you are done here"
         },
         "data_description": {
           "zone_ids": "Leave empty to suspend the whole installation.",
           "delay": "Leave empty or set to zero to suspend the moment it opens.",
           "entity_id": "The door or window contact. Open counts as the state 'on'.",
           "delete": "Removes the opening; it stops suspending anything.",
-          "discard": "Leaves this screen without keeping what you changed here."
+          "when_done": "Home Assistant draws one button under a form, so this row is where you choose what it does. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       }
     },
@@ -500,6 +520,12 @@
     "circuit_priority_list": {
       "options": {
         "back_to_menu": "< Back to the circuits"
+      }
+    },
+    "when_done": {
+      "options": {
+        "keep": "Keep these changes and go back",
+        "discard": "< Discard and go back"
       }
     }
   }

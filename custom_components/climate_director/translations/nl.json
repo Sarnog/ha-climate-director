@@ -45,7 +45,8 @@
           "guest_end": "Gastenmodus tot",
           "precondition_start": "Vooruit verwarmen vanaf",
           "precondition_end": "Vooruit verwarmen tot",
-          "max_precondition": "Vooruitverwarmingsduur (minuten)"
+          "max_precondition": "Vooruitverwarmingsduur (minuten)",
+          "when_done": "Als je hier klaar bent"
         },
         "data_description": {
           "season_source": "Leid het seizoen af uit de maand, lees het uit een entiteit, of zet het met de hand vast.",
@@ -60,17 +61,20 @@
           "guest_end": "De gastenmodus draagt het huis alleen tussen deze tijden. Laat beide leeg om hem de hele dag te laten gelden. Daarbuiten nemen de gewone poorten het over, zodat een schakelaar die niemand uitzette niet de hele nacht doordraait.",
           "precondition_start": "Vooruit verwarmen is het enige dat een leeg huis mag laten draaien, en blijft daarom binnen deze tijden. Daarbuiten telt een verzoek niet mee.",
           "precondition_end": "Vooruit verwarmen is het enige dat een leeg huis mag laten draaien, en blijft daarom binnen deze tijden. Daarbuiten telt een verzoek niet mee.",
-          "max_precondition": "Een verzoek kun je niet vergeten, alleen verkeerd intikken. Dit plafond voorkomt dat een vertypte tijd een hele middag een leeg huis verwarmt. Vraag je langer, dan wordt het verzoek ingekort in plaats van geweigerd."
+          "max_precondition": "Een verzoek kun je niet vergeten, alleen verkeerd intikken. Dit plafond voorkomt dat een vertypte tijd een hele middag een leeg huis verwarmt. Vraag je langer, dan wordt het verzoek ingekort in plaats van geweigerd.",
+          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "zones": {
         "title": "Zones",
         "description": "Kies een zone om aan te passen, of voeg er een toe.",
         "data": {
-          "zone": "Zone"
+          "zone": "Zone",
+          "when_done": "Als je hier klaar bent"
         },
         "data_description": {
-          "zone": "Kies er een om aan te passen, of voeg er een toe."
+          "zone": "Kies er een om aan te passen, of voeg er een toe.",
+          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "zone": {
@@ -96,7 +100,7 @@
           "presence_state": "Toestand die bezet betekent",
           "presence_timeout": "Nog zo lang als bezet tellen (seconden)",
           "gate": "Wat bepaalt of deze zone draait",
-          "discard": "Verwerpen en teruggaan"
+          "when_done": "Als je hier klaar bent"
         },
         "data_description": {
           "indoor_sensor": "Een temperatuursensor, of een climate-entiteit die de ruimte al meet.",
@@ -118,17 +122,19 @@
           "cool_outdoor_min": "Onder deze buitentemperatuur blijft koelen uit. Laat leeg voor geen grens.",
           "cool_summer_only": "Koppelt koelen aan het seizoen dat je bij Algemene instellingen hebt gezet.",
           "gate": "'household' volgt het rooster, de slaap en of er iemand thuis is; een aanwezigheidssensor knijpt het daarna verder dicht. 'presence' laat de kamer zelf beslissen, zodat een bezette ruimte het rooster overruled - wat een kamer die je af en toe gebruikt nodig heeft. Kiezen hiervoor vereist een aanwezigheidssensor.",
-          "discard": "Verlaat dit scherm zonder te bewaren wat je hier wijzigde."
+          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "sources": {
         "title": "Bronnen voor {zone}",
         "description": "Een bron is een apparaat dat deze zone kan bedienen. Kies er een om aan te passen, of voeg er een toe.",
         "data": {
-          "source": "Bron"
+          "source": "Bron",
+          "when_done": "Als je hier klaar bent"
         },
         "data_description": {
-          "source": "Kies er een om aan te passen, of voeg er een toe."
+          "source": "Kies er een om aan te passen, of voeg er een toe.",
+          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "source": {
@@ -142,7 +148,7 @@
           "outdoor_max": "Gebruiken tot deze buitentemperatuur",
           "delete": "Deze bron verwijderen",
           "autostart": "Dit apparaat automatisch aanzetten",
-          "discard": "Verwerpen en teruggaan"
+          "when_done": "Als je hier klaar bent"
         },
         "data_description": {
           "priority": "Lager wint als meerdere bronnen dezelfde taak kunnen leveren.",
@@ -152,17 +158,19 @@
           "role": "Of dit apparaat kan verwarmen, koelen, of allebei. Een cv-ketel kan alleen verwarmen.",
           "delete": "Haalt de bron uit deze zone. Het apparaat zelf blijft ongemoeid.",
           "autostart": "Uit laat hem met rust: de director zet hem nooit aan, en zet hem alleen uit als hij een taak draait die de gedeelde buitenunit niet toestaat. Voor een apparaat dat je zelf aanzet en zo wilt laten staan.",
-          "discard": "Verlaat dit scherm zonder te bewaren wat je hier wijzigde."
+          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "circuits": {
         "title": "Airco-circuits",
         "description": "Een circuit is één buitenunit met de binnenunits die eraan hangen. Laat dit leeg als elke unit een eigen buitenunit heeft.",
         "data": {
-          "circuit": "Circuit"
+          "circuit": "Circuit",
+          "when_done": "Als je hier klaar bent"
         },
         "data_description": {
-          "circuit": "Kies er een om aan te passen, of voeg er een toe."
+          "circuit": "Kies er een om aan te passen, of voeg er een toe.",
+          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "circuit": {
@@ -179,7 +187,7 @@
           "min_cycle_time": "Rusttijd voordat een unit opnieuw mag starten (seconden)",
           "max_concurrent_units": "Maximaal aantal units tegelijk aan",
           "delete": "Dit circuit verwijderen",
-          "discard": "Verwerpen en teruggaan"
+          "when_done": "Als je hier klaar bent"
         },
         "data_description": {
           "units": "Neem ook units op die de director niet aanstuurt: die claimen de compressor evengoed.",
@@ -192,36 +200,42 @@
           "min_family_switch_interval": "Voorkomt dat een zone de compressor heen en weer trekt tussen verwarmen en koelen.",
           "max_concurrent_units": "Voor een buitenunit die niet al zijn binnenunits tegelijk aankan. Laat leeg voor geen grens.",
           "delete": "Verwijdert het circuit. De units blijven werken; ze zijn alleen niet langer aan elkaar gekoppeld.",
-          "discard": "Verlaat dit scherm zonder te bewaren wat je hier wijzigde."
+          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "circuit_priorities": {
         "title": "Prioriteiten op {circuit}",
         "description": "Welke zone voorgaat op deze buitenunit. Het laagste nummer wint; de zones staan in de volgorde waarin ze nu winnen. Dit is dezelfde instelling als bij de zone zelf.",
         "data": {
-          "zone": "Zone"
+          "zone": "Zone",
+          "when_done": "Als je hier klaar bent"
         },
         "data_description": {
-          "zone": "Kies er een om zijn prioriteit te wijzigen, of ga terug."
+          "zone": "Kies er een om zijn prioriteit te wijzigen, of ga terug.",
+          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "circuit_priority": {
         "title": "Prioriteit voor {zone}",
         "data": {
-          "priority": "Prioriteit"
+          "priority": "Prioriteit",
+          "when_done": "Als je hier klaar bent"
         },
         "data_description": {
-          "priority": "Het laagste nummer wint het circuit. Zones met hetzelfde nummer worden op naam gescheiden."
+          "priority": "Het laagste nummer wint het circuit. Zones met hetzelfde nummer worden op naam gescheiden.",
+          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "generators": {
         "title": "Gedeelde warmtebronnen",
         "description": "Een ketel of warmtepomp waar meerdere kamers via hun eigen kranen op trekken. Laat dit leeg als het systeem zijn eigen brander aanstuurt, zoals Tado en soortgelijke dat doen.",
         "data": {
-          "generator": "Warmtebron"
+          "generator": "Warmtebron",
+          "when_done": "Als je hier klaar bent"
         },
         "data_description": {
-          "generator": "Kies er een om aan te passen, of voeg er een toe."
+          "generator": "Kies er een om aan te passen, of voeg er een toe.",
+          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "generator": {
@@ -233,7 +247,7 @@
           "zone_ids": "Kamers die hij bedient",
           "setpoint": "Vast setpoint",
           "delete": "Deze warmtebron verwijderen",
-          "discard": "Verwerpen en teruggaan"
+          "when_done": "Als je hier klaar bent"
         },
         "data_description": {
           "name": "Een naam, om warmtebronnen uit elkaar te houden.",
@@ -241,17 +255,19 @@
           "zone_ids": "Laat leeg voor alle kamers.",
           "setpoint": "Laat leeg om het warmste doel te volgen van de kamers die vragen. Het koudste nemen zou de kamer die het hardst vraagt tekortdoen.",
           "delete": "Verwijdert de warmtebron; de kranen blijven op zichzelf werken.",
-          "discard": "Verlaat dit scherm zonder te bewaren wat je hier wijzigde."
+          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "residents": {
         "title": "Bewoners",
         "description": "Laat dit leeg voor een pand waar niemand gevolgd wordt; de aanwezigheidspoorten worden dan overgeslagen in plaats van eeuwig te blokkeren.",
         "data": {
-          "resident": "Bewoner"
+          "resident": "Bewoner",
+          "when_done": "Als je hier klaar bent"
         },
         "data_description": {
-          "resident": "Kies er een om aan te passen, of voeg er een toe."
+          "resident": "Kies er een om aan te passen, of voeg er een toe.",
+          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "resident": {
@@ -262,7 +278,7 @@
           "sleep_entity": "Slaap",
           "sleep_state": "Toestand die slapen betekent",
           "delete": "Deze bewoner verwijderen",
-          "discard": "Verwerpen en teruggaan"
+          "when_done": "Als je hier klaar bent"
         },
         "data_description": {
           "sleep_entity": "Laat leeg als de slaap van deze persoon niet gevolgd wordt.",
@@ -270,17 +286,19 @@
           "name": "Een naam, om bewoners uit elkaar te houden.",
           "presence_entity": "Meestal een person-entiteit. Zegt of deze bewoner thuis is.",
           "delete": "Verwijdert de bewoner inclusief zijn roosters.",
-          "discard": "Verlaat dit scherm zonder te bewaren wat je hier wijzigde."
+          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "windows": {
         "title": "Roosters voor {resident}",
         "description": "Tijden waarop deze bewoner klimaatregeling wil. Laat de lijst leeg om hem op elk uur mee te laten tellen.",
         "data": {
-          "window": "Rooster"
+          "window": "Rooster",
+          "when_done": "Als je hier klaar bent"
         },
         "data_description": {
-          "window": "Kies er een om aan te passen, voeg er een toe, of ga terug naar het menu."
+          "window": "Kies er een om aan te passen, voeg er een toe, of ga terug naar het menu.",
+          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "window": {
@@ -292,7 +310,7 @@
           "weekdays": "Dagen",
           "delete": "Dit rooster verwijderen",
           "holiday": "Dit is een vakantievenster",
-          "discard": "Verwerpen en teruggaan"
+          "when_done": "Als je hier klaar bent"
         },
         "data_description": {
           "weekdays": "Laat leeg voor elke dag.",
@@ -300,17 +318,19 @@
           "start": "Valt binnen het venster.",
           "delete": "Verwijdert dit rooster.",
           "holiday": "Een vakantievenster geldt alleen als de vakantiemodus aan staat, en vervangt dan de gewone vensters. De dagen van de week tellen er niet in mee. Zonder vakantievenster telt een vakantiedag als zaterdag.",
-          "discard": "Verlaat dit scherm zonder te bewaren wat je hier wijzigde."
+          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "openings": {
         "title": "Deuren en ramen",
         "description": "Een opening die lang genoeg openstaat schort de zones op waar hij bij hoort.",
         "data": {
-          "opening": "Opening"
+          "opening": "Opening",
+          "when_done": "Als je hier klaar bent"
         },
         "data_description": {
-          "opening": "Kies er een om aan te passen, of voeg er een toe."
+          "opening": "Kies er een om aan te passen, of voeg er een toe.",
+          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "opening": {
@@ -320,14 +340,14 @@
           "zone_ids": "Zones die dit raakt",
           "delay": "Vertraging voordat er opgeschort wordt (seconden)",
           "delete": "Deze opening verwijderen",
-          "discard": "Verwerpen en teruggaan"
+          "when_done": "Als je hier klaar bent"
         },
         "data_description": {
           "zone_ids": "Laat leeg om de hele installatie op te schorten.",
           "delay": "Laat leeg of zet op nul om direct op te schorten zodra hij opengaat.",
           "entity_id": "Het deur- of raamcontact. Open telt als de toestand 'on'.",
           "delete": "Verwijdert de opening; hij schort dan niets meer op.",
-          "discard": "Verlaat dit scherm zonder te bewaren wat je hier wijzigde."
+          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       }
     },
@@ -500,6 +520,12 @@
     "circuit_priority_list": {
       "options": {
         "back_to_menu": "< Terug naar de circuits"
+      }
+    },
+    "when_done": {
+      "options": {
+        "keep": "Deze wijzigingen bewaren en teruggaan",
+        "discard": "< Verwerpen en teruggaan"
       }
     }
   }
