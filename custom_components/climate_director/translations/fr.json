@@ -42,7 +42,10 @@
           "holiday_calendars": "Agendas de vacances",
           "holiday_keyword": "Mot qui signale des vacances",
           "guest_start": "Mode invités à partir de",
-          "guest_end": "Mode invités jusqu'à"
+          "guest_end": "Mode invités jusqu'à",
+          "precondition_start": "Préchauffage à partir de",
+          "precondition_end": "Préchauffage jusqu'à",
+          "max_precondition": "Préchauffage le plus long (minutes)"
         },
         "data_description": {
           "season_source": "Déduisez la saison du mois, lisez-la depuis une entité, ou fixez-la à la main.",
@@ -54,7 +57,10 @@
           "holiday_calendars": "Un évènement en cours dans l'un de ces agendas met la maison en vacances. Laisser vide n'utilise que l'interrupteur vacances.",
           "holiday_keyword": "Seuls les évènements portant ce mot comptent, par exemple 'vacances'. Laissé vide, les agendas sont entièrement ignorés et le mode vacances ne dépend plus que de l'interrupteur.",
           "guest_start": "Le mode invités ne porte la maison qu'entre ces heures. Laisser les deux vides pour qu'il s'applique toute la journée. En dehors, les portes ordinaires reprennent la main, afin qu'un interrupteur oublié ne tourne pas toute la nuit.",
-          "guest_end": "Le mode invités ne porte la maison qu'entre ces heures. Laisser les deux vides pour qu'il s'applique toute la journée. En dehors, les portes ordinaires reprennent la main, afin qu'un interrupteur oublié ne tourne pas toute la nuit."
+          "guest_end": "Le mode invités ne porte la maison qu'entre ces heures. Laisser les deux vides pour qu'il s'applique toute la journée. En dehors, les portes ordinaires reprennent la main, afin qu'un interrupteur oublié ne tourne pas toute la nuit.",
+          "precondition_start": "Le préchauffage est la seule chose autorisée à faire tourner une maison vide ; il reste donc dans ces heures. En dehors, une demande ne compte pas.",
+          "precondition_end": "Le préchauffage est la seule chose autorisée à faire tourner une maison vide ; il reste donc dans ces heures. En dehors, une demande ne compte pas.",
+          "max_precondition": "Une demande ne s'oublie pas, elle se saisit mal. Ce plafond empêche une faute de frappe de chauffer une maison vide tout un après-midi. Demander plus long raccourcit la demande au lieu de la refuser."
         }
       },
       "zones": {

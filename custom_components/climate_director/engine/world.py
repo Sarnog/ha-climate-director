@@ -106,6 +106,14 @@ class WorldState:
     master_enabled: bool = True
     holiday_mode: bool = False
 
+    precondition_until: dict[str, datetime] = field(default_factory=dict)
+    """Per zone, the moment a human's pre-conditioning request runs out.
+
+    Absolute rather than a countdown on purpose: a moment that has passed is
+    over, whatever happened in between - a restart, a stopped clock, a plan that
+    took a while. There is no way for this to quietly stay alive.
+    """
+
     guest_mode: bool = False
     """Keeps the house running while the tracked people are away.
 
@@ -147,6 +155,11 @@ class WorldState:
     def priority_for(self, zone_id: str, configured: int) -> int:
         """Return the priority in force for a zone, live value first."""
         return self.zone_priorities.get(zone_id, configured)
+
+    def preconditioning(self, zone_id: str) -> bool:
+        """Return whether a live pre-conditioning request covers this zone."""
+        until = self.precondition_until.get(zone_id)
+        return until is not None and self.now < until
 
     def overridden(self, zone_id: str) -> bool:
         """Return whether a manual override holds this zone."""

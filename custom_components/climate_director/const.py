@@ -33,6 +33,18 @@ EVENT_DECISION = f"{DOMAIN}_decision"
 SERVICE_EVALUATE = "evaluate"
 ATTR_ENTRY_ID = "entry_id"
 
+# Vooruit verwarmen of koelen voor wie onderweg naar huis is. Alleen met de
+# hand aan te zetten, met een teller die vanzelf afloopt - er is geen schakelaar
+# die aan kan blijven staan.
+#
+# Pre-conditioning for somebody on their way home. Only ever switched on by
+# hand, with a timer that runs out by itself - there is no switch here that can
+# be left on.
+SERVICE_PRECONDITION = "precondition"
+SERVICE_CANCEL_PRECONDITION = "cancel_precondition"
+ATTR_ZONE_IDS = "zone_ids"
+ATTR_MINUTES = "minutes"
+
 # Sleutels in de config entry.
 # Keys in the config entry.
 CONF_INSTALLATION = "installation"

@@ -42,7 +42,10 @@
           "holiday_calendars": "Vakantieagenda's",
           "holiday_keyword": "Woord dat vakantie aangeeft",
           "guest_start": "Gastenmodus vanaf",
-          "guest_end": "Gastenmodus tot"
+          "guest_end": "Gastenmodus tot",
+          "precondition_start": "Vooruit verwarmen vanaf",
+          "precondition_end": "Vooruit verwarmen tot",
+          "max_precondition": "Langste vooruitverwarming (minuten)"
         },
         "data_description": {
           "season_source": "Leid het seizoen af uit de maand, lees het uit een entiteit, of zet het met de hand vast.",
@@ -54,7 +57,10 @@
           "holiday_calendars": "Een lopend item in een van deze agenda's zet het huis op vakantie. Leeg laten gebruikt alleen de vakantieschakelaar.",
           "holiday_keyword": "Alleen items met dit woord tellen mee, bijvoorbeeld 'vakantie'. Laat je het leeg, dan blijven de agenda's helemaal buiten beschouwing en gaat de vakantiemodus alleen nog met de schakelaar.",
           "guest_start": "De gastenmodus draagt het huis alleen tussen deze tijden. Laat beide leeg om hem de hele dag te laten gelden. Daarbuiten nemen de gewone poorten het over, zodat een schakelaar die niemand uitzette niet de hele nacht doordraait.",
-          "guest_end": "De gastenmodus draagt het huis alleen tussen deze tijden. Laat beide leeg om hem de hele dag te laten gelden. Daarbuiten nemen de gewone poorten het over, zodat een schakelaar die niemand uitzette niet de hele nacht doordraait."
+          "guest_end": "De gastenmodus draagt het huis alleen tussen deze tijden. Laat beide leeg om hem de hele dag te laten gelden. Daarbuiten nemen de gewone poorten het over, zodat een schakelaar die niemand uitzette niet de hele nacht doordraait.",
+          "precondition_start": "Vooruit verwarmen is het enige dat een leeg huis mag laten draaien, en blijft daarom binnen deze tijden. Daarbuiten telt een verzoek niet mee.",
+          "precondition_end": "Vooruit verwarmen is het enige dat een leeg huis mag laten draaien, en blijft daarom binnen deze tijden. Daarbuiten telt een verzoek niet mee.",
+          "max_precondition": "Een verzoek kun je niet vergeten, alleen verkeerd intikken. Dit plafond voorkomt dat een vertypte tijd een hele middag een leeg huis verwarmt. Vraag je langer, dan wordt het verzoek ingekort in plaats van geweigerd."
         }
       },
       "zones": {

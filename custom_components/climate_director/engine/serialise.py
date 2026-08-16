@@ -85,6 +85,15 @@ def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
         "gates": {
             "require_awake": config.gates.require_awake,
             "require_schedule": config.gates.require_schedule,
+            "precondition_window": (
+                None
+                if config.gates.precondition_window is None
+                else {
+                    "start": config.gates.precondition_window.start.isoformat(),
+                    "end": config.gates.precondition_window.end.isoformat(),
+                }
+            ),
+            "max_precondition": int(config.gates.max_precondition.total_seconds()),
             "guest_window": (
                 None
                 if config.gates.guest_window is None
@@ -225,10 +234,16 @@ def _gates(raw: Any) -> GateSettings:
     if not isinstance(raw, Mapping):
         return GateSettings()
     guest = raw.get("guest_window")
+    precondition = raw.get("precondition_window")
+    default_window = TimeWindow(time(6, 0), time(23, 0))
     return GateSettings(
         require_awake=_bool(raw.get("require_awake"), True),
         require_schedule=_bool(raw.get("require_schedule"), False),
         guest_window=_guest_window(guest if isinstance(guest, dict) else {}),
+        precondition_window=(
+            _guest_window(precondition) if isinstance(precondition, dict) else default_window
+        ),
+        max_precondition=_seconds(raw.get("max_precondition"), 7200.0),
     )
 
 

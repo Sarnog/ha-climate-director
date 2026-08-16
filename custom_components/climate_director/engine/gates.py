@@ -73,6 +73,16 @@ def evaluate(config: DirectorConfig, world: WorldState, zone: Zone) -> GateVerdi
     # is staying, so a house that looks empty says nothing and should not shut
     # down. Sleep still counts: once a resident is home and turns in, the day is
     # over and the house is theirs again.
+    # Vooruit verwarmen: iemand heeft dit met de hand gevraagd en er loopt een
+    # teller. Dit is het enige dat een leeg huis mag laten draaien, dus het staat
+    # ná het raam en de override en vóór alles wat over mensen gaat.
+    #
+    # Pre-conditioning: somebody asked for this by hand and a timer is running.
+    # This is the only thing allowed to run an empty house, so it sits after the
+    # window and the override, and before everything about people.
+    if _preconditioning(config, world, zone):
+        return GateVerdict.allow()
+
     # Een zone die op de kamer draait laat het huishouden erbuiten. Wie er zit,
     # zit er - dat is een beter antwoord dan welk rooster ook kan geven.
     #
@@ -126,6 +136,25 @@ def evaluate(config: DirectorConfig, world: WorldState, zone: Zone) -> GateVerdi
         return GateVerdict.block(Reason.ZONE_UNOCCUPIED)
 
     return GateVerdict.allow()
+
+
+def _preconditioning(config: DirectorConfig, world: WorldState, zone: Zone) -> bool:
+    """Return whether a live request is warming this zone up for somebody's return.
+
+    Twee grenzen maken dit veilig, en geen van beide is te vergeten: het verzoek
+    verloopt vanzelf, en buiten het ingestelde venster telt het niet mee. Er is
+    geen schakelaar die aan kan blijven staan.
+
+    Two bounds make this safe, and neither can be forgotten: the request expires
+    by itself, and outside the configured window it does not count. There is no
+    switch here that can be left on.
+    """
+    if not world.preconditioning(zone.zone_id):
+        return False
+    window = config.gates.precondition_window
+    if window is None:
+        return True
+    return window.contains(world.now.time(), world.now.weekday())
 
 
 def _guests_carry_the_house(config: DirectorConfig, world: WorldState) -> bool:

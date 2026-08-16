@@ -42,7 +42,10 @@
           "holiday_calendars": "Calendarios de vacaciones",
           "holiday_keyword": "Palabra que indica vacaciones",
           "guest_start": "Modo invitados desde",
-          "guest_end": "Modo invitados hasta"
+          "guest_end": "Modo invitados hasta",
+          "precondition_start": "Preacondicionamiento desde",
+          "precondition_end": "Preacondicionamiento hasta",
+          "max_precondition": "Preacondicionamiento más largo (minutos)"
         },
         "data_description": {
           "season_source": "Deduce la estación del mes, léela de una entidad, o fíjala a mano.",
@@ -54,7 +57,10 @@
           "holiday_calendars": "Un evento en curso en alguno de estos calendarios pone la casa en vacaciones. Dejarlo vacío usa solo el interruptor de vacaciones.",
           "holiday_keyword": "Solo cuentan los eventos que llevan esta palabra, por ejemplo 'vacaciones'. Si la dejas vacía, los calendarios se ignoran por completo y el modo vacaciones queda solo en manos del interruptor.",
           "guest_start": "El modo invitados solo sostiene la casa entre estas horas. Deja ambas vacías para que se aplique todo el día. Fuera de ellas vuelven a mandar las puertas ordinarias, de modo que un interruptor olvidado no funcione toda la noche.",
-          "guest_end": "El modo invitados solo sostiene la casa entre estas horas. Deja ambas vacías para que se aplique todo el día. Fuera de ellas vuelven a mandar las puertas ordinarias, de modo que un interruptor olvidado no funcione toda la noche."
+          "guest_end": "El modo invitados solo sostiene la casa entre estas horas. Deja ambas vacías para que se aplique todo el día. Fuera de ellas vuelven a mandar las puertas ordinarias, de modo que un interruptor olvidado no funcione toda la noche.",
+          "precondition_start": "El preacondicionamiento es lo único que puede hacer funcionar una casa vacía, así que se mantiene en estas horas. Fuera de ellas una petición no cuenta.",
+          "precondition_end": "El preacondicionamiento es lo único que puede hacer funcionar una casa vacía, así que se mantiene en estas horas. Fuera de ellas una petición no cuenta.",
+          "max_precondition": "Una petición no se olvida, solo se teclea mal. Este techo evita que una errata caliente una casa vacía toda la tarde. Pedir más tiempo acorta la petición en lugar de rechazarla."
         }
       },
       "zones": {

@@ -5,3 +5,38 @@ evaluate:
       selector:
         config_entry:
           integration: climate_director
+
+precondition:
+  fields:
+    entry_id:
+      required: false
+      selector:
+        config_entry:
+          integration: climate_director
+    zone_ids:
+      required: false
+      example: "[woonkamer, zolder]"
+      selector:
+        object:
+    minutes:
+      required: false
+      default: 60
+      selector:
+        number:
+          min: 1
+          max: 480
+          unit_of_measurement: min
+          mode: box
+
+cancel_precondition:
+  fields:
+    entry_id:
+      required: false
+      selector:
+        config_entry:
+          integration: climate_director
+    zone_ids:
+      required: false
+      example: "[woonkamer]"
+      selector:
+        object:

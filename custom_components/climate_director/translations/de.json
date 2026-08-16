@@ -42,7 +42,10 @@
           "holiday_calendars": "Urlaubskalender",
           "holiday_keyword": "Wort, das Urlaub kennzeichnet",
           "guest_start": "Gästemodus ab",
-          "guest_end": "Gästemodus bis"
+          "guest_end": "Gästemodus bis",
+          "precondition_start": "Vorheizen ab",
+          "precondition_end": "Vorheizen bis",
+          "max_precondition": "Längstes Vorheizen (Minuten)"
         },
         "data_description": {
           "season_source": "Leite die Jahreszeit aus dem Monat ab, lies sie aus einer Entität, oder lege sie von Hand fest.",
@@ -54,7 +57,10 @@
           "holiday_calendars": "Ein laufender Termin in einem dieser Kalender versetzt das Haus in den Urlaub. Leer lassen nutzt nur den Urlaubsschalter.",
           "holiday_keyword": "Nur Termine mit diesem Wort zählen, zum Beispiel 'Urlaub'. Lässt du es leer, bleiben die Kalender ganz außer Betracht und der Urlaubsmodus hängt allein am Schalter.",
           "guest_start": "Der Gästemodus trägt das Haus nur zwischen diesen Zeiten. Beide leer lassen, damit er den ganzen Tag gilt. Außerhalb übernehmen die gewöhnlichen Tore, damit ein vergessener Schalter nicht die ganze Nacht durchläuft.",
-          "guest_end": "Der Gästemodus trägt das Haus nur zwischen diesen Zeiten. Beide leer lassen, damit er den ganzen Tag gilt. Außerhalb übernehmen die gewöhnlichen Tore, damit ein vergessener Schalter nicht die ganze Nacht durchläuft."
+          "guest_end": "Der Gästemodus trägt das Haus nur zwischen diesen Zeiten. Beide leer lassen, damit er den ganzen Tag gilt. Außerhalb übernehmen die gewöhnlichen Tore, damit ein vergessener Schalter nicht die ganze Nacht durchläuft.",
+          "precondition_start": "Vorheizen ist das Einzige, was ein leeres Haus laufen lassen darf, und bleibt deshalb in diesen Zeiten. Außerhalb zählt eine Anforderung nicht.",
+          "precondition_end": "Vorheizen ist das Einzige, was ein leeres Haus laufen lassen darf, und bleibt deshalb in diesen Zeiten. Außerhalb zählt eine Anforderung nicht.",
+          "max_precondition": "Eine Anforderung kann man nicht vergessen, nur vertippen. Diese Obergrenze verhindert, dass ein Tippfehler einen ganzen Nachmittag ein leeres Haus heizt. Wer mehr anfordert, bekommt eine gekürzte statt gar keiner."
         }
       },
       "zones": {

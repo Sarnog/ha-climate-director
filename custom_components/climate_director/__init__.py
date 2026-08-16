@@ -20,7 +20,16 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 
 from . import problems
-from .const import ATTR_ENTRY_ID, DOMAIN, PLATFORMS, SERVICE_EVALUATE
+from .const import (
+    ATTR_ENTRY_ID,
+    ATTR_MINUTES,
+    ATTR_ZONE_IDS,
+    DOMAIN,
+    PLATFORMS,
+    SERVICE_CANCEL_PRECONDITION,
+    SERVICE_EVALUATE,
+    SERVICE_PRECONDITION,
+)
 from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,6 +37,19 @@ _LOGGER = logging.getLogger(__name__)
 __all__ = ["DOMAIN", "async_setup_entry", "async_unload_entry"]
 
 _EVALUATE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTRY_ID): vol.All(cv.ensure_list, [cv.string])})
+
+_ENTRIES = {vol.Optional(ATTR_ENTRY_ID): vol.All(cv.ensure_list, [cv.string])}
+_ZONES = {vol.Optional(ATTR_ZONE_IDS): vol.All(cv.ensure_list, [cv.string])}
+
+_PRECONDITION_SCHEMA = vol.Schema(
+    {
+        **_ENTRIES,
+        **_ZONES,
+        vol.Optional(ATTR_MINUTES): vol.All(vol.Coerce(float), vol.Range(min=0)),
+    }
+)
+
+_CANCEL_SCHEMA = vol.Schema({**_ENTRIES, **_ZONES})
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -> bool:
@@ -89,4 +111,30 @@ def _async_register_services(hass: HomeAssistant) -> None:
                 continue
             entry.runtime_data.async_request_evaluation()
 
+    async def _async_precondition(call: ServiceCall) -> None:
+        """Warm zones up for somebody on their way home."""
+        for entry in _chosen(call):
+            entry.runtime_data.async_precondition(
+                call.data.get(ATTR_ZONE_IDS), call.data.get(ATTR_MINUTES, 0)
+            )
+
+    async def _async_cancel_precondition(call: ServiceCall) -> None:
+        """Call a running pre-conditioning request off."""
+        for entry in _chosen(call):
+            entry.runtime_data.async_cancel_precondition(call.data.get(ATTR_ZONE_IDS))
+
+    def _chosen(call: ServiceCall):
+        wanted = set(call.data.get(ATTR_ENTRY_ID) or ())
+        return [
+            entry
+            for entry in hass.config_entries.async_loaded_entries(DOMAIN)
+            if not wanted or entry.entry_id in wanted
+        ]
+
     hass.services.async_register(DOMAIN, SERVICE_EVALUATE, _async_evaluate, _EVALUATE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_PRECONDITION, _async_precondition, _PRECONDITION_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_CANCEL_PRECONDITION, _async_cancel_precondition, _CANCEL_SCHEMA
+    )

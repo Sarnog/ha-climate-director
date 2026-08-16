@@ -441,6 +441,27 @@ class GateSettings:
     require_schedule: bool = False
     """Someone's schedule window must be open."""
 
+    precondition_window: TimeWindow | None = field(
+        default_factory=lambda: TimeWindow(time(6, 0), time(23, 0))
+    )
+    """Hours in which a pre-conditioning request may run. `None` means all day.
+
+    Vooruit verwarmen is het enige dat een leeg huis mag laten draaien, en dus
+    het enige dat 's nachts echt geld kan kosten. Standaard 06:00 tot 23:00, en
+    daarbuiten telt een verzoek eenvoudig niet mee.
+
+    Pre-conditioning is the only thing allowed to run an empty house, and so the
+    only thing that can really cost money overnight. 06:00 to 23:00 by default,
+    and outside it a request simply does not count.
+    """
+
+    max_precondition: timedelta = timedelta(hours=2)
+    """Longest a single request may last, however long somebody asks for.
+
+    A request cannot be forgotten, only mistyped - so the ceiling is what keeps
+    a slip of the thumb from becoming an afternoon of heating an empty house.
+    """
+
     guest_window: TimeWindow | None = None
     """Hours in which guest mode carries the house. `None` means all day.
 
@@ -703,6 +724,11 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
     if config.gates.require_schedule and not any(resident.windows for resident in config.residents):
         problems.append(
             "the schedule gate is on but nobody has a schedule, so nothing can ever run"
+        )
+
+    if config.gates.max_precondition.total_seconds() <= 0:
+        problems.append(
+            "the maximum pre-conditioning time is zero or negative, so no request can ever run"
         )
 
     if config.holiday_calendars and not config.holiday_keyword.strip():

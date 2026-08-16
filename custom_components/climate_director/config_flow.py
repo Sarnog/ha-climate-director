@@ -41,6 +41,12 @@ _TEMPERATURE = selector.NumberSelector(
 _BAND = selector.NumberSelector(
     selector.NumberSelectorConfig(min=0, max=10, step=0.1, mode=selector.NumberSelectorMode.BOX)
 )
+_MINUTES = selector.NumberSelector(
+    selector.NumberSelectorConfig(
+        min=1, max=480, step=1, unit_of_measurement="min", mode=selector.NumberSelectorMode.BOX
+    )
+)
+
 _SECONDS = selector.NumberSelector(
     selector.NumberSelectorConfig(min=0, max=3600, step=1, mode=selector.NumberSelectorMode.BOX)
 )
@@ -171,6 +177,11 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     "start": user_input.get("guest_start") or "",
                     "end": user_input.get("guest_end") or "",
                 },
+                "precondition_window": {
+                    "start": user_input.get("precondition_start") or "",
+                    "end": user_input.get("precondition_end") or "",
+                },
+                "max_precondition": int(user_input.get("max_precondition") or 0) * 60,
             }
             self._installation["holiday_calendars"] = list(
                 user_input.get("holiday_calendars") or ()
@@ -184,6 +195,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         seasons = self._installation.get("seasons") or {}
         gates = self._installation.get("gates") or {}
         guest = gates.get("guest_window") or {}
+        precondition = gates.get("precondition_window") or {}
         return self.async_show_form(
             step_id="settings",
             data_schema=vol.Schema(
@@ -217,6 +229,18 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     ): selector.EntitySelector(
                         selector.EntitySelectorConfig(domain="calendar", multiple=True)
                     ),
+                    vol.Optional(
+                        "precondition_start",
+                        description={"suggested_value": precondition.get("start") or "06:00:00"},
+                    ): _TIME,
+                    vol.Optional(
+                        "precondition_end",
+                        description={"suggested_value": precondition.get("end") or "23:00:00"},
+                    ): _TIME,
+                    vol.Required(
+                        "max_precondition",
+                        default=int(gates.get("max_precondition", 7200)) // 60,
+                    ): _MINUTES,
                     vol.Optional(
                         "guest_start",
                         description={"suggested_value": guest.get("start") or None},

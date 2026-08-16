@@ -20,7 +20,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Mapping
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -176,6 +176,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self.master_enabled = True
         self.holiday_mode = False
         self.guest_mode = False
+        self._precondition: dict[str, datetime] = {}
         self.zone_overrides: dict[str, bool] = {}
         self.zone_priorities: dict[str, int] = {}
 
@@ -329,6 +330,68 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             self._schedule_deferral(plan)
             self.async_set_updated_data(plan)
 
+    # -- vooruit verwarmen / pre-conditioning --------------------------------
+
+    def _live_preconditions(self) -> dict[str, datetime]:
+        """Return the requests that have not run out, dropping the rest.
+
+        Pruned on reading rather than on a timer: an expired request is over
+        whether or not anything got round to noticing.
+        """
+        now = dt_util.now()
+        self._precondition = {
+            zone_id: until for zone_id, until in self._precondition.items() if now < until
+        }
+        return dict(self._precondition)
+
+    @callback
+    def async_precondition(self, zone_ids: list[str] | None, minutes: float) -> dict[str, datetime]:
+        """Start warming the named zones up for somebody on their way home.
+
+        The request is capped at the configured maximum, so asking for longer
+        than the installation allows shortens the request rather than refusing
+        it: the intent was clear, only the number was wrong.
+        """
+        ceiling = self.config.gates.max_precondition
+        wanted = timedelta(minutes=max(minutes, 0.0))
+        length = min(wanted, ceiling) if wanted else ceiling
+        until = dt_util.now() + length
+
+        known = {zone.zone_id for zone in self.config.zones}
+        chosen = [zone_id for zone_id in (zone_ids or known) if zone_id in known]
+        for zone_id in chosen:
+            self._precondition[zone_id] = until
+
+        if chosen:
+            self._preconditions_expire_at(until)
+            self.async_request_evaluation()
+        return {zone_id: until for zone_id in chosen}
+
+    @callback
+    def async_cancel_precondition(self, zone_ids: list[str] | None) -> None:
+        """Call the whole thing off, for the named zones or for all of them."""
+        if zone_ids is None:
+            self._precondition.clear()
+        else:
+            for zone_id in zone_ids:
+                self._precondition.pop(zone_id, None)
+        self.async_request_evaluation()
+
+    @callback
+    def _preconditions_expire_at(self, until: datetime) -> None:
+        """Re-evaluate the moment the request runs out.
+
+        Zonder dit blijft een lege woning doorstoken tot er toevallig iets
+        anders verandert, en op een stille middag gebeurt dat lang niet.
+
+        Without this an empty house keeps burning until something else happens
+        to change, and on a quiet afternoon that is a long wait.
+        """
+        seconds = (until - dt_util.now()).total_seconds()
+        if seconds <= 0:
+            return
+        async_call_later(self.hass, seconds + 1, lambda _now: self.async_request_evaluation())
+
     def build_world(self) -> WorldState:
         """Return a snapshot of everything the engine needs.
 
@@ -363,6 +426,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             master_enabled=self.master_enabled,
             holiday_mode=self.holiday_mode or self._calendar_says_holiday(),
             guest_mode=self.guest_mode,
+            precondition_until=self._live_preconditions(),
             zone_overrides=dict(self.zone_overrides),
             zone_priorities=dict(self.zone_priorities),
         )
@@ -476,6 +540,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             master_enabled=world.master_enabled,
             holiday_mode=world.holiday_mode,
             guest_mode=world.guest_mode,
+            precondition_until=dict(world.precondition_until),
             zone_overrides=world.zone_overrides,
             zone_priorities=world.zone_priorities,
         )

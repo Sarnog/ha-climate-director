@@ -42,7 +42,10 @@
           "holiday_calendars": "Holiday calendars",
           "holiday_keyword": "Word that marks a holiday",
           "guest_start": "Guest mode from",
-          "guest_end": "Guest mode until"
+          "guest_end": "Guest mode until",
+          "precondition_start": "Pre-conditioning from",
+          "precondition_end": "Pre-conditioning until",
+          "max_precondition": "Longest pre-conditioning (minutes)"
         },
         "data_description": {
           "season_source": "Derive the season from the month, read it from an entity, or pin it by hand.",
@@ -54,7 +57,10 @@
           "holiday_calendars": "A running event on one of these calendars puts the house on holiday. Leave empty to use only the holiday switch.",
           "holiday_keyword": "Only events carrying this word count, for example 'holiday'. Leave it empty and the calendars are ignored entirely, leaving holiday mode to the switch alone.",
           "guest_start": "Guest mode only carries the house between these times. Leave both empty to let it apply all day. Outside them the ordinary gates take over, so a switch nobody remembered to turn off does not run all night.",
-          "guest_end": "Guest mode only carries the house between these times. Leave both empty to let it apply all day. Outside them the ordinary gates take over, so a switch nobody remembered to turn off does not run all night."
+          "guest_end": "Guest mode only carries the house between these times. Leave both empty to let it apply all day. Outside them the ordinary gates take over, so a switch nobody remembered to turn off does not run all night.",
+          "precondition_start": "Pre-conditioning is the only thing allowed to run an empty house, so it is kept to these hours. Outside them a request simply does not count.",
+          "precondition_end": "Pre-conditioning is the only thing allowed to run an empty house, so it is kept to these hours. Outside them a request simply does not count.",
+          "max_precondition": "A request cannot be forgotten, only mistyped, so this ceiling is what keeps a slip of the thumb from heating an empty house all afternoon. Asking for longer shortens the request rather than refusing it."
         }
       },
       "zones": {
