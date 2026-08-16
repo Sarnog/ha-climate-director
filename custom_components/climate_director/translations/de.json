@@ -56,7 +56,7 @@
           "outdoor_sensor": "Speist jede Außengrenze, hier wie auch an jeder Quelle. Ohne diesen Sensor kann keine Schwelle für die Außentemperatur je erfüllt werden, und die gesamte Anlage steht still.",
           "require_awake": "Wer zu Hause ist, aber schläft, zählt nicht. Welche Entität sagt, dass jemand schläft, stellst du pro Bewohner ein.",
           "holiday_calendars": "Ein laufender Termin in einem dieser Kalender versetzt das Haus in den Urlaub. Leer lassen nutzt nur den Urlaubsschalter.",
-          "holiday_keyword": "Nur Termine mit diesem Wort zählen, zum Beispiel 'Urlaub'. Lässt du es leer, bleiben die Kalender ganz außer Betracht und der Urlaubsmodus hängt allein am Schalter.",
+          "holiday_keyword": "Nur Termine mit diesem Wort zählen, zum Beispiel 'Urlaub'. Groß- und Kleinschreibung spielen keine Rolle, und das Wort zählt auch mitten in einem längeren, sodass 'Sommerurlaub' ebenfalls passt. Lässt du es leer, bleiben die Kalender ganz außer Betracht und der Urlaubsmodus hängt allein am Schalter.",
           "guest_start": "Der Gästemodus trägt das Haus nur zwischen diesen Zeiten. Beide leer lassen, damit er den ganzen Tag gilt. Außerhalb übernehmen die gewöhnlichen Tore, damit ein vergessener Schalter nicht die ganze Nacht durchläuft.",
           "guest_end": "Der Gästemodus trägt das Haus nur zwischen diesen Zeiten. Beide leer lassen, damit er den ganzen Tag gilt. Außerhalb übernehmen die gewöhnlichen Tore, damit ein vergessener Schalter nicht die ganze Nacht durchläuft.",
           "precondition_start": "Vorheizen ist das Einzige, was ein leeres Haus laufen lassen darf, und bleibt deshalb in diesen Zeiten. Außerhalb zählt eine Anforderung nicht.",

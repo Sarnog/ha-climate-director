@@ -56,7 +56,7 @@
           "outdoor_sensor": "Feeds every outdoor limit, both here and on each source. Without it no threshold on outdoor temperature can ever be met, and the whole installation quietly stands still.",
           "require_awake": "Somebody home but asleep does not count. Which entity says they are asleep is set per resident.",
           "holiday_calendars": "A running event on one of these calendars puts the house on holiday. Leave empty to use only the holiday switch.",
-          "holiday_keyword": "Only events carrying this word count, for example 'holiday'. Leave it empty and the calendars are ignored entirely, leaving holiday mode to the switch alone.",
+          "holiday_keyword": "Only events carrying this word count, for example 'holiday'. Spelling and capitals do not matter, and the word counts inside a longer one too, so 'Summer holiday' and 'holidays' both match. Leave it empty and the calendars are ignored entirely, leaving holiday mode to the switch alone.",
           "guest_start": "Guest mode only carries the house between these times. Leave both empty to let it apply all day. Outside them the ordinary gates take over, so a switch nobody remembered to turn off does not run all night.",
           "guest_end": "Guest mode only carries the house between these times. Leave both empty to let it apply all day. Outside them the ordinary gates take over, so a switch nobody remembered to turn off does not run all night.",
           "precondition_start": "Pre-conditioning is the only thing allowed to run an empty house, so it is kept to these hours. Outside them a request simply does not count.",
