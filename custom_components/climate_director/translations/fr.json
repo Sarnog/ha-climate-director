@@ -36,21 +36,21 @@
           "outdoor_sensor": "Température extérieure",
           "season_source": "Origine de la saison",
           "season_entity": "Entité de saison",
-          "require_occupancy": "Quelqu'un doit être à la maison",
           "require_awake": "Une personne présente doit être éveillée",
           "require_schedule": "Le planning d'un occupant doit être ouvert",
-          "holiday_bypasses_schedule": "Le mode vacances ignore le planning",
-          "shadow_mode": "Mode ombre"
+          "shadow_mode": "Mode ombre",
+          "holiday_calendars": "Agendas de vacances",
+          "holiday_keyword": "Mot qui signale des vacances"
         },
         "data_description": {
           "season_source": "Déduisez la saison du mois, lisez-la depuis une entité, ou fixez-la à la main.",
           "season_entity": "Utilisée uniquement si l'origine est réglée sur entité. L'été et l'hiver sont reconnus en anglais, néerlandais, allemand, français, espagnol et arabe.",
           "shadow_mode": "Calcule chaque décision mais n'exécute rien.",
-          "require_schedule": "Utilise les plannings des occupants eux-mêmes, à définir sous Occupants. Seuls les occupants qui en ont un participent : le leur ouvre la porte tant qu'ils sont levés, et la maintient fermée tant qu'ils dorment à la maison avant l'ouverture de leur propre plage. Sans aucun planning, rien ne fonctionne.",
+          "require_schedule": "La maison attend alors l'ouverture de la première plage réglée, et continue d'attendre tant qu'une personne présente dort encore avant la sienne.",
           "outdoor_sensor": "Alimente chaque limite extérieure, ici comme sur chaque source. Sans ce capteur, aucun seuil de température extérieure ne peut être atteint, et toute l'installation reste à l'arrêt.",
-          "require_occupancy": "S'applique à l'installation entière. La présence dans une pièce se règle sur la zone elle-même.",
           "require_awake": "Une personne présente mais endormie ne compte pas. L'entité qui indique le sommeil se règle par occupant.",
-          "holiday_bypasses_schedule": "L'interrupteur vacances ignore alors les plages horaires, mais respecte toujours la présence et le sommeil."
+          "holiday_calendars": "Un évènement en cours dans l'un de ces agendas met la maison en vacances. Laisser vide n'utilise que l'interrupteur vacances.",
+          "holiday_keyword": "Seuls les évènements portant ce mot comptent, par exemple 'vacances'. Laisser vide fait compter tout évènement en cours de ces agendas."
         }
       },
       "zones": {
@@ -266,13 +266,15 @@
           "start": "De",
           "end": "À",
           "weekdays": "Jours",
-          "delete": "Supprimer ce planning"
+          "delete": "Supprimer ce planning",
+          "holiday": "Ceci est une plage de vacances"
         },
         "data_description": {
           "weekdays": "Laissez vide pour tous les jours.",
           "end": "Exclue de la plage.",
           "start": "Comprise dans la plage.",
-          "delete": "Supprime ce planning."
+          "delete": "Supprime ce planning.",
+          "holiday": "Une plage de vacances ne s'applique que lorsque le mode vacances est actif, et remplace alors les plages ordinaires. Ses jours de la semaine sont ignorés. Sans elle, un jour de vacances compte comme un samedi."
         }
       },
       "openings": {
@@ -334,6 +336,9 @@
       },
       "zone_override": {
         "name": "Dérogation {zone}"
+      },
+      "guest": {
+        "name": "Mode invités"
       }
     },
     "number": {

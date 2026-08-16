@@ -62,6 +62,8 @@ def config_from_dict(raw: Mapping[str, Any]) -> DirectorConfig:
         gates=_gates(raw.get("gates")),
         seasons=_seasons(raw.get("seasons")),
         outdoor_sensor=_text(raw.get("outdoor_sensor")),
+        holiday_calendars=tuple(_strings(raw.get("holiday_calendars"))),
+        holiday_keyword=_text(raw.get("holiday_keyword")),
     )
 
 
@@ -80,10 +82,8 @@ def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
         "generators": [_generator_to_dict(item) for item in config.generators],
         "exclusive_groups": [sorted(group) for group in config.exclusive_groups],
         "gates": {
-            "require_occupancy": config.gates.require_occupancy,
             "require_awake": config.gates.require_awake,
             "require_schedule": config.gates.require_schedule,
-            "holiday_bypasses_schedule": config.gates.holiday_bypasses_schedule,
         },
         "seasons": {
             "source": config.seasons.source.value,
@@ -91,6 +91,8 @@ def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
             "summer_months": sorted(config.seasons.summer_months),
         },
         "outdoor_sensor": config.outdoor_sensor,
+        "holiday_calendars": list(config.holiday_calendars),
+        "holiday_keyword": config.holiday_keyword,
     }
 
 
@@ -180,6 +182,7 @@ def _resident(raw: Mapping[str, Any]) -> Resident:
 def _time_window(raw: Mapping[str, Any]) -> TimeWindow:
     weekdays = raw.get("weekdays")
     return TimeWindow(
+        holiday=_bool(raw.get("holiday"), False),
         start=_time(raw.get("start"), time(0, 0)),
         end=_time(raw.get("end"), time(0, 0)),
         weekdays=(
@@ -212,10 +215,8 @@ def _gates(raw: Any) -> GateSettings:
     if not isinstance(raw, Mapping):
         return GateSettings()
     return GateSettings(
-        require_occupancy=_bool(raw.get("require_occupancy"), True),
         require_awake=_bool(raw.get("require_awake"), True),
         require_schedule=_bool(raw.get("require_schedule"), False),
-        holiday_bypasses_schedule=_bool(raw.get("holiday_bypasses_schedule"), True),
     )
 
 
@@ -311,6 +312,7 @@ def _resident_to_dict(resident: Resident) -> dict[str, Any]:
                 "start": window.start.strftime("%H:%M:%S"),
                 "end": window.end.strftime("%H:%M:%S"),
                 "weekdays": (None if window.weekdays is None else sorted(window.weekdays)),
+                "holiday": window.holiday,
             }
             for window in resident.windows
         ],

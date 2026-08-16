@@ -36,21 +36,21 @@
           "outdoor_sensor": "Buitentemperatuur",
           "season_source": "Herkomst seizoen",
           "season_entity": "Seizoensentiteit",
-          "require_occupancy": "Er moet iemand thuis zijn",
           "require_awake": "Iemand die thuis is moet wakker zijn",
           "require_schedule": "Het rooster van een bewoner moet openstaan",
-          "holiday_bypasses_schedule": "Vakantiemodus slaat het rooster over",
-          "shadow_mode": "Schaduwmodus"
+          "shadow_mode": "Schaduwmodus",
+          "holiday_calendars": "Vakantieagenda's",
+          "holiday_keyword": "Woord dat vakantie aangeeft"
         },
         "data_description": {
           "season_source": "Leid het seizoen af uit de maand, lees het uit een entiteit, of zet het met de hand vast.",
           "season_entity": "Wordt alleen gebruikt als de herkomst op entiteit staat. Zomer en winter worden herkend in het Engels, Nederlands, Duits, Frans, Spaans en Arabisch.",
           "shadow_mode": "Berekent elke beslissing maar voert niets uit.",
-          "require_schedule": "Gebruikt de roosters van de bewoners zelf, in te stellen onder Bewoners. Alleen bewoners met een rooster doen mee: dat van hen opent de poort zolang ze op zijn, en houdt hem dicht zolang ze thuis slapen voordat hun eigen venster opengaat. Heeft niemand een rooster, dan draait er niets.",
+          "require_schedule": "Het huis wacht dan tot het eerste ingestelde venster opengaat, en blijft wachten zolang iemand die thuis is nog slaapt vóór zijn eigen venster.",
           "outdoor_sensor": "Voedt elke buitengrens, zowel hier als op elke bron. Zonder deze sensor kan geen enkele drempel op buitentemperatuur ooit voldaan worden, en staat de hele installatie stilletjes stil.",
-          "require_occupancy": "Geldt voor de installatie als geheel. Aanwezigheid in een enkele ruimte stel je bij de zone zelf in.",
           "require_awake": "Iemand die thuis is maar slaapt telt niet mee. Welke entiteit zegt dat iemand slaapt stel je per bewoner in.",
-          "holiday_bypasses_schedule": "De vakantieschakelaar negeert dan de tijdvensters, maar houdt zich nog wel aan aanwezigheid en slaap."
+          "holiday_calendars": "Een lopend item in een van deze agenda's zet het huis op vakantie. Leeg laten gebruikt alleen de vakantieschakelaar.",
+          "holiday_keyword": "Alleen items met dit woord tellen mee, bijvoorbeeld 'vakantie'. Leeg laten laat elk lopend item in die agenda's meetellen."
         }
       },
       "zones": {
@@ -266,13 +266,15 @@
           "start": "Van",
           "end": "Tot",
           "weekdays": "Dagen",
-          "delete": "Dit rooster verwijderen"
+          "delete": "Dit rooster verwijderen",
+          "holiday": "Dit is een vakantievenster"
         },
         "data_description": {
           "weekdays": "Laat leeg voor elke dag.",
           "end": "Valt buiten het venster.",
           "start": "Valt binnen het venster.",
-          "delete": "Verwijdert dit rooster."
+          "delete": "Verwijdert dit rooster.",
+          "holiday": "Een vakantievenster geldt alleen als de vakantiemodus aan staat, en vervangt dan de gewone vensters. De dagen van de week tellen er niet in mee. Zonder vakantievenster telt een vakantiedag als zaterdag."
         }
       },
       "openings": {
@@ -334,6 +336,9 @@
       },
       "zone_override": {
         "name": "Override {zone}"
+      },
+      "guest": {
+        "name": "Gastenmodus"
       }
     },
     "number": {

@@ -165,11 +165,15 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 "entity_id": user_input.get("season_entity", ""),
             }
             self._installation["gates"] = {
-                "require_occupancy": user_input["require_occupancy"],
                 "require_awake": user_input["require_awake"],
                 "require_schedule": user_input["require_schedule"],
-                "holiday_bypasses_schedule": user_input["holiday_bypasses_schedule"],
             }
+            self._installation["holiday_calendars"] = list(
+                user_input.get("holiday_calendars") or ()
+            )
+            self._installation["holiday_keyword"] = (
+                user_input.get("holiday_keyword") or ""
+            ).strip()
             self._shadow_mode = user_input[CONF_SHADOW_MODE]
             return await self.async_step_init()
 
@@ -196,17 +200,24 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     ): selector.EntitySelector(
                         selector.EntitySelectorConfig(domain=["sensor", "input_select", "select"])
                     ),
-                    vol.Required(
-                        "require_occupancy", default=gates.get("require_occupancy", True)
-                    ): bool,
                     vol.Required("require_awake", default=gates.get("require_awake", True)): bool,
                     vol.Required(
                         "require_schedule", default=gates.get("require_schedule", False)
                     ): bool,
-                    vol.Required(
-                        "holiday_bypasses_schedule",
-                        default=gates.get("holiday_bypasses_schedule", True),
-                    ): bool,
+                    vol.Optional(
+                        "holiday_calendars",
+                        description={
+                            "suggested_value": self._installation.get("holiday_calendars") or None
+                        },
+                    ): selector.EntitySelector(
+                        selector.EntitySelectorConfig(domain="calendar", multiple=True)
+                    ),
+                    vol.Optional(
+                        "holiday_keyword",
+                        description={
+                            "suggested_value": self._installation.get("holiday_keyword") or None
+                        },
+                    ): str,
                     vol.Required(
                         CONF_SHADOW_MODE,
                         default=(
@@ -854,6 +865,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     # No days ticked means every day, not never. A schedule with
                     # no days would lock the resident out permanently.
                     "weekdays": ([int(day) for day in user_input.get("weekdays") or ()] or None),
+                    "holiday": user_input.get("holiday", False),
                 }
                 if self._window_index is None:
                     windows.append(window)
@@ -867,6 +879,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             step_id="window",
             data_schema=vol.Schema(
                 {
+                    vol.Required("holiday", default=current.get("holiday", False)): bool,
                     vol.Required("start", default=current.get("start", "08:00:00")): _TIME,
                     vol.Required("end", default=current.get("end", "23:00:00")): _TIME,
                     vol.Optional(

@@ -106,6 +106,13 @@ class WorldState:
     master_enabled: bool = True
     holiday_mode: bool = False
 
+    guest_mode: bool = False
+    """Keeps the house running while the tracked people are away.
+
+    Somebody is staying who is not one of the residents, so presence, sleep and
+    schedules say nothing useful about whether the rooms are in use.
+    """
+
     zone_overrides: dict[str, bool] = field(default_factory=dict)
     """Manual override per `zone_id`; a missing zone counts as no override."""
 

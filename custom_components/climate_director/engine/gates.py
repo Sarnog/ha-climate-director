@@ -64,10 +64,17 @@ def evaluate(config: DirectorConfig, world: WorldState, zone: Zone) -> GateVerdi
     # applies: that one is about the room, not about who is in the house.
     gates = config.gates
 
-    if config.residents:
-        if gates.require_occupancy and not any(
-            world.resident(resident.resident_id).home for resident in config.residents
-        ):
+    # Gastenmodus zet elke poort over personen opzij. Er logeert iemand die geen
+    # bewoner is, dus aanwezigheid, slaap en roosters zeggen niets zinnigs meer
+    # over of de kamers in gebruik zijn - en het huis hoort dan niet uit te gaan
+    # omdat de bewoners weg zijn.
+    #
+    # Guest mode sets every gate about people aside. Somebody is staying who is
+    # not a resident, so presence, sleep and schedules no longer say anything
+    # useful about whether the rooms are in use - and the house should not shut
+    # down merely because the residents are out.
+    if config.residents and not world.guest_mode:
+        if not any(world.resident(resident.resident_id).home for resident in config.residents):
             return GateVerdict.block(Reason.NOBODY_HOME)
 
         if gates.require_awake and not any(
@@ -148,23 +155,27 @@ def _schedule_open(config: DirectorConfig, world: WorldState) -> bool:
     own window opens, their sleeping stops counting: the schedule said they
     meant to be up by then.
     """
-    if world.holiday_mode and config.gates.holiday_bypasses_schedule:
-        return True
-
     moment = world.now.time()
     weekday = world.now.weekday()
+    holiday = world.holiday_mode
 
-    participants = [resident for resident in config.residents if resident.windows]
+    participants = [
+        resident for resident in config.residents if resident.takes_part(holiday=holiday)
+    ]
     if not participants:
         return False
 
     for resident in participants:
         state = world.resident(resident.resident_id)
-        if state.home and state.asleep and not resident.wants_climate_at(moment, weekday):
+        if (
+            state.home
+            and state.asleep
+            and not resident.wants_climate_at(moment, weekday, holiday=holiday)
+        ):
             return False
 
     return any(
-        resident.wants_climate_at(moment, weekday)
+        resident.wants_climate_at(moment, weekday, holiday=holiday)
         for resident in participants
         if _counts_towards_schedule(config, world, resident.resident_id)
     )
@@ -173,12 +184,12 @@ def _schedule_open(config: DirectorConfig, world: WorldState) -> bool:
 def _counts_towards_schedule(config: DirectorConfig, world: WorldState, resident_id: str) -> bool:
     """Return whether a resident's own schedule may open the schedule gate.
 
-    Deliberately mirrors the presence and sleep gates rather than hard-coding
-    "home and awake": with `require_occupancy` off, someone's schedule should
-    still count while they are out, and with `require_awake` off it should
-    still count while they sleep.
+    Being home is required outright: a schedule says when somebody wants the
+    house warm, not that it should be warm without them. Sleep mirrors the
+    sleep gate instead of being hard-coded, so with `require_awake` off a
+    schedule still counts while its owner sleeps.
     """
     state = world.resident(resident_id)
-    if config.gates.require_occupancy and not state.home:
+    if not state.home:
         return False
     return not (config.gates.require_awake and state.asleep)

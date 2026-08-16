@@ -32,6 +32,10 @@ from enum import StrEnum
 
 from .families import ModeFamily
 
+#: Een vakantiedag telt als zaterdag, tenzij er een eigen vakantierooster is.
+#: A holiday counts as a Saturday, unless a holiday schedule says otherwise.
+HOLIDAY_WEEKDAY = 5
+
 
 class Season(StrEnum):
     """Coarse season used to gate whole modes on and off."""
@@ -290,7 +294,13 @@ class TimeWindow:
     weekdays: frozenset[int] | None = None
     """`datetime.weekday()` numbers (Monday is 0). `None` means every day."""
 
-    def contains(self, moment: time, weekday: int) -> bool:
+    holiday: bool = False
+    """Whether this window applies on holidays instead of on ordinary days.
+
+    A holiday window ignores its weekdays: a holiday is not a day of the week.
+    """
+
+    def contains(self, moment: time, weekday: int, *, any_day: bool = False) -> bool:
         """Return whether `moment` on `weekday` falls inside this window.
 
         A window whose end lies before its start runs through midnight. It is
@@ -306,6 +316,8 @@ class TimeWindow:
             start_weekday = (weekday - 1) % 7 if after_midnight else weekday
         if not in_window:
             return False
+        if any_day:
+            return True
         return self.weekdays is None or start_weekday in self.weekdays
 
 
@@ -333,11 +345,33 @@ class Resident:
     binding layer reads entities with, exactly like `Zone.indoor_sensor`.
     """
 
-    def wants_climate_at(self, moment: time, weekday: int) -> bool:
+    def windows_for(self, *, holiday: bool) -> tuple[TimeWindow, ...]:
+        """Return the windows that apply today.
+
+        On a holiday the resident's holiday windows take over if they set any.
+        Without them a holiday counts as a Saturday, which is what a household
+        means by one: the day the alarm stays off.
+        """
+        if holiday:
+            special = tuple(window for window in self.windows if window.holiday)
+            if special:
+                return special
+        return tuple(window for window in self.windows if not window.holiday)
+
+    def takes_part(self, *, holiday: bool) -> bool:
+        """Return whether this resident has anything to say about today."""
+        return bool(self.windows_for(holiday=holiday))
+
+    def wants_climate_at(self, moment: time, weekday: int, *, holiday: bool = False) -> bool:
         """Return whether this resident's schedule is open at that moment."""
-        if not self.windows:
+        windows = self.windows_for(holiday=holiday)
+        if not windows:
             return True
-        return any(window.contains(moment, weekday) for window in self.windows)
+        if holiday and any(window.holiday for window in windows):
+            return any(window.contains(moment, weekday, any_day=True) for window in windows)
+        return any(
+            window.contains(moment, HOLIDAY_WEEKDAY if holiday else weekday) for window in windows
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -365,17 +399,11 @@ class Opening:
 class GateSettings:
     """Which conditions must hold before the director regulates at all."""
 
-    require_occupancy: bool = True
-    """Someone must be home."""
-
     require_awake: bool = True
     """Someone home must also be awake."""
 
     require_schedule: bool = False
     """Someone's schedule window must be open."""
-
-    holiday_bypasses_schedule: bool = True
-    """Holiday mode ignores the schedule gate, keeping presence and sleep."""
 
 
 class SeasonSource(StrEnum):
@@ -423,6 +451,12 @@ class DirectorConfig:
 
     outdoor_sensor: str = ""
     """Entity carrying the outdoor temperature. Empty leaves it unknown."""
+
+    holiday_calendars: tuple[str, ...] = ()
+    """Calendars whose running events may put the house on holiday."""
+
+    holiday_keyword: str = ""
+    """Word an event must carry to count. Empty makes any running event count."""
 
     def zone(self, zone_id: str) -> Zone | None:
         """Return the zone with this id, if it exists."""
@@ -611,19 +645,16 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
         if opening.delay.total_seconds() < 0:
             problems.append(f"opening {opening.entity_id} has a negative delay")
 
-    if config.gates.require_schedule and not any(
-        resident.windows for resident in config.residents
-    ):
+    if config.gates.require_schedule and not any(resident.windows for resident in config.residents):
         problems.append(
             "the schedule gate is on but nobody has a schedule, so nothing can ever run"
         )
 
-    if config.gates.require_occupancy:
-        problems += [
-            f"resident {resident.resident_id} has no presence entity, so can never be home"
-            for resident in config.residents
-            if not resident.presence_entity
-        ]
+    problems += [
+        f"resident {resident.resident_id} has no presence entity, so can never be home"
+        for resident in config.residents
+        if not resident.presence_entity
+    ]
 
     known_sources = set(source_ids)
     for group in config.exclusive_groups:

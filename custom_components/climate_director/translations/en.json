@@ -36,21 +36,21 @@
           "outdoor_sensor": "Outdoor temperature",
           "season_source": "Season source",
           "season_entity": "Season entity",
-          "require_occupancy": "Somebody must be home",
           "require_awake": "Somebody home must be awake",
           "require_schedule": "A resident's schedule must be open",
-          "holiday_bypasses_schedule": "Holiday mode skips the schedule",
-          "shadow_mode": "Shadow mode"
+          "shadow_mode": "Shadow mode",
+          "holiday_calendars": "Holiday calendars",
+          "holiday_keyword": "Word that marks a holiday"
         },
         "data_description": {
           "season_source": "Derive the season from the month, read it from an entity, or pin it by hand.",
           "season_entity": "Only used when the source is set to entity. Summer and winter are recognised in English, Dutch, German, French, Spanish and Arabic.",
           "shadow_mode": "Compute every decision but execute nothing.",
-          "require_schedule": "Uses each resident's own schedules, set under Residents. Only residents who have one take part: theirs opens the gate while they are up, and holds it shut while they sleep at home before their own window opens. With nobody scheduled at all, nothing runs.",
+          "require_schedule": "The house then waits for the first scheduled window to open, and keeps waiting while somebody who is home is still asleep before theirs.",
           "outdoor_sensor": "Feeds every outdoor limit, both here and on each source. Without it no threshold on outdoor temperature can ever be met, and the whole installation quietly stands still.",
-          "require_occupancy": "Applies to the installation as a whole. Presence in a single room is set on the zone itself.",
           "require_awake": "Somebody home but asleep does not count. Which entity says they are asleep is set per resident.",
-          "holiday_bypasses_schedule": "The holiday switch then ignores the time windows but still honours presence and sleep."
+          "holiday_calendars": "A running event on one of these calendars puts the house on holiday. Leave empty to use only the holiday switch.",
+          "holiday_keyword": "Only events carrying this word count, for example 'holiday'. Leave empty to let every running event on those calendars count."
         }
       },
       "zones": {
@@ -266,13 +266,15 @@
           "start": "From",
           "end": "Until",
           "weekdays": "Days",
-          "delete": "Delete this schedule"
+          "delete": "Delete this schedule",
+          "holiday": "This is a holiday window"
         },
         "data_description": {
           "weekdays": "Leave empty for every day.",
           "end": "Excluded from the window.",
           "start": "Included in the window.",
-          "delete": "Removes this schedule."
+          "delete": "Removes this schedule.",
+          "holiday": "A holiday window applies only while holiday mode is on, and then replaces the ordinary windows. Its days of the week are ignored. Without one, a holiday counts as a Saturday."
         }
       },
       "openings": {
@@ -334,6 +336,9 @@
       },
       "zone_override": {
         "name": "{zone} override"
+      },
+      "guest": {
+        "name": "Guest mode"
       }
     },
     "number": {

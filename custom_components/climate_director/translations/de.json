@@ -36,21 +36,21 @@
           "outdoor_sensor": "Außentemperatur",
           "season_source": "Herkunft der Jahreszeit",
           "season_entity": "Jahreszeit-Entität",
-          "require_occupancy": "Es muss jemand zu Hause sein",
           "require_awake": "Wer zu Hause ist, muss wach sein",
           "require_schedule": "Der Zeitplan eines Bewohners muss offen sein",
-          "holiday_bypasses_schedule": "Urlaubsmodus übergeht den Zeitplan",
-          "shadow_mode": "Schattenmodus"
+          "shadow_mode": "Schattenmodus",
+          "holiday_calendars": "Urlaubskalender",
+          "holiday_keyword": "Wort, das Urlaub kennzeichnet"
         },
         "data_description": {
           "season_source": "Leite die Jahreszeit aus dem Monat ab, lies sie aus einer Entität, oder lege sie von Hand fest.",
           "season_entity": "Wird nur verwendet, wenn die Herkunft auf Entität steht. Sommer und Winter werden auf Englisch, Niederländisch, Deutsch, Französisch, Spanisch und Arabisch erkannt.",
           "shadow_mode": "Berechnet jede Entscheidung, führt aber nichts aus.",
-          "require_schedule": "Nutzt die Zeitpläne der Bewohner selbst, einzustellen unter Bewohner. Nur Bewohner mit einem Zeitplan machen mit: ihrer öffnet das Tor, solange sie auf sind, und hält es zu, solange sie zu Hause schlafen, bevor ihr eigenes Fenster aufgeht. Hat niemand einen Zeitplan, läuft nichts.",
+          "require_schedule": "Das Haus wartet dann auf das erste eingestellte Fenster und wartet weiter, solange jemand zu Hause vor seinem eigenen Fenster noch schläft.",
           "outdoor_sensor": "Speist jede Außengrenze, hier wie auch an jeder Quelle. Ohne diesen Sensor kann keine Schwelle für die Außentemperatur je erfüllt werden, und die gesamte Anlage steht still.",
-          "require_occupancy": "Gilt für die Anlage als Ganzes. Anwesenheit in einem einzelnen Raum stellst du an der Zone selbst ein.",
           "require_awake": "Wer zu Hause ist, aber schläft, zählt nicht. Welche Entität sagt, dass jemand schläft, stellst du pro Bewohner ein.",
-          "holiday_bypasses_schedule": "Der Urlaubsschalter ignoriert dann die Zeitfenster, achtet aber weiter auf Anwesenheit und Schlaf."
+          "holiday_calendars": "Ein laufender Termin in einem dieser Kalender versetzt das Haus in den Urlaub. Leer lassen nutzt nur den Urlaubsschalter.",
+          "holiday_keyword": "Nur Termine mit diesem Wort zählen, zum Beispiel 'Urlaub'. Leer lassen lässt jeden laufenden Termin dieser Kalender zählen."
         }
       },
       "zones": {
@@ -266,13 +266,15 @@
           "start": "Von",
           "end": "Bis",
           "weekdays": "Tage",
-          "delete": "Diesen Zeitplan löschen"
+          "delete": "Diesen Zeitplan löschen",
+          "holiday": "Dies ist ein Urlaubsfenster"
         },
         "data_description": {
           "weekdays": "Leer lassen für jeden Tag.",
           "end": "Gehört nicht mehr zum Fenster.",
           "start": "Gehört zum Fenster.",
-          "delete": "Entfernt diesen Zeitplan."
+          "delete": "Entfernt diesen Zeitplan.",
+          "holiday": "Ein Urlaubsfenster gilt nur bei eingeschaltetem Urlaubsmodus und ersetzt dann die gewöhnlichen Fenster. Seine Wochentage zählen nicht mit. Ohne eines zählt ein Urlaubstag als Samstag."
         }
       },
       "openings": {
@@ -334,6 +336,9 @@
       },
       "zone_override": {
         "name": "Übersteuerung {zone}"
+      },
+      "guest": {
+        "name": "Gästemodus"
       }
     },
     "number": {

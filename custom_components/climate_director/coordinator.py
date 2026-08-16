@@ -175,6 +175,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         # write it back here.
         self.master_enabled = True
         self.holiday_mode = False
+        self.guest_mode = False
         self.zone_overrides: dict[str, bool] = {}
         self.zone_priorities: dict[str, int] = {}
 
@@ -239,6 +240,8 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             if opening.entity_id:
                 entities.add(opening.entity_id)
 
+        entities.update(item for item in self.config.holiday_calendars if item)
+
         for resident in self.config.residents:
             if resident.presence_entity:
                 entities.add(resident.presence_entity)
@@ -246,6 +249,33 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 entities.add(resident.sleep_entity)
 
         return entities
+
+    def _calendar_says_holiday(self) -> bool:
+        """Return whether a configured calendar has a holiday running right now.
+
+        Een agenda-item telt zodra het loopt en het trefwoord erin voorkomt. Zonder
+        trefwoord telt elk lopend item, want dan is de agenda zelf de vakantieagenda.
+
+        An event counts once it is running and carries the keyword. Without a
+        keyword every running event counts, since the calendar is then the
+        holiday calendar itself.
+        """
+        keyword = self.config.holiday_keyword.strip().casefold()
+
+        for entity_id in self.config.holiday_calendars:
+            state = self.hass.states.get(entity_id)
+            if state is None or state.state != "on":
+                continue
+            if not keyword:
+                return True
+            haystack = " ".join(
+                str(state.attributes.get(field) or "")
+                for field in ("message", "summary", "description", "location")
+            ).casefold()
+            if keyword in haystack:
+                return True
+
+        return False
 
     # -- aanleidingen / triggers --------------------------------------------
 
@@ -330,7 +360,8 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 if zone.presence_entity
             },
             master_enabled=self.master_enabled,
-            holiday_mode=self.holiday_mode,
+            holiday_mode=self.holiday_mode or self._calendar_says_holiday(),
+            guest_mode=self.guest_mode,
             zone_overrides=dict(self.zone_overrides),
             zone_priorities=dict(self.zone_priorities),
         )
@@ -443,6 +474,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             circuit_family_since=dict(self._family_since),
             master_enabled=world.master_enabled,
             holiday_mode=world.holiday_mode,
+            guest_mode=world.guest_mode,
             zone_overrides=world.zone_overrides,
             zone_priorities=world.zone_priorities,
         )

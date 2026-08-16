@@ -1,6 +1,6 @@
 """Bedieningsschakelaars: hoofdschakelaar, vakantiemodus en overrides.
 
-Control switches: master, holiday mode and per-zone overrides.
+Control switches: master, holiday mode, guest mode and per-zone overrides.
 
 Deze schakelaars zijn de bedieningstoestand van de installatie, geen
 configuratie. Ze herstellen zichzelf na een herstart en schrijven hun stand
@@ -29,9 +29,13 @@ async def async_setup_entry(
     entry: ClimateDirectorEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the master switch, holiday mode and one override per zone."""
+    """Set up the master, holiday and guest switches, and one override per zone."""
     coordinator = entry.runtime_data
-    entities: list[SwitchEntity] = [MasterSwitch(coordinator), HolidaySwitch(coordinator)]
+    entities: list[SwitchEntity] = [
+        MasterSwitch(coordinator),
+        HolidaySwitch(coordinator),
+        GuestSwitch(coordinator),
+    ]
     entities.extend(
         ZoneOverrideSwitch(coordinator, zone.zone_id) for zone in coordinator.config.zones
     )
@@ -99,7 +103,7 @@ class MasterSwitch(_DirectorSwitch):
 
 
 class HolidaySwitch(_DirectorSwitch):
-    """Holiday mode: keeps presence and sleep, skips the schedule."""
+    """Holiday mode: every day counts as a Saturday, or as its own schedule."""
 
     _attr_translation_key = "holiday"
     _attr_icon = "mdi:palm-tree"
@@ -110,6 +114,20 @@ class HolidaySwitch(_DirectorSwitch):
 
     def _push(self) -> None:
         self.coordinator.holiday_mode = self._is_on
+
+
+class GuestSwitch(_DirectorSwitch):
+    """Guest mode: keeps the house running while the residents are away."""
+
+    _attr_translation_key = "guest"
+    _attr_icon = "mdi:account-multiple-plus"
+
+    def __init__(self, coordinator: ClimateDirectorCoordinator) -> None:
+        """Set up the guest switch."""
+        super().__init__(coordinator, "guest")
+
+    def _push(self) -> None:
+        self.coordinator.guest_mode = self._is_on
 
 
 class ZoneOverrideSwitch(_DirectorSwitch):

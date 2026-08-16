@@ -36,21 +36,21 @@
           "outdoor_sensor": "Temperatura exterior",
           "season_source": "Origen de la estación",
           "season_entity": "Entidad de estación",
-          "require_occupancy": "Alguien debe estar en casa",
           "require_awake": "Alguien en casa debe estar despierto",
           "require_schedule": "El horario de un residente debe estar abierto",
-          "holiday_bypasses_schedule": "El modo vacaciones omite el horario",
-          "shadow_mode": "Modo sombra"
+          "shadow_mode": "Modo sombra",
+          "holiday_calendars": "Calendarios de vacaciones",
+          "holiday_keyword": "Palabra que indica vacaciones"
         },
         "data_description": {
           "season_source": "Deduce la estación del mes, léela de una entidad, o fíjala a mano.",
           "season_entity": "Solo se usa cuando el origen está en entidad. Verano e invierno se reconocen en inglés, neerlandés, alemán, francés, español y árabe.",
           "shadow_mode": "Calcula cada decisión pero no ejecuta nada.",
-          "require_schedule": "Usa los horarios de los propios residentes, que se definen en Residentes. Solo participan los residentes que tienen uno: el suyo abre la puerta mientras están levantados, y la mantiene cerrada mientras duermen en casa antes de que se abra su propia franja. Sin ningún horario, no funciona nada.",
+          "require_schedule": "La casa espera entonces a que se abra la primera franja establecida, y sigue esperando mientras alguien que está en casa aún duerme antes de la suya.",
           "outdoor_sensor": "Alimenta cada límite exterior, tanto aquí como en cada fuente. Sin este sensor ningún umbral de temperatura exterior puede cumplirse, y toda la instalación se queda parada en silencio.",
-          "require_occupancy": "Se aplica a la instalación entera. La presencia en una sola habitación se ajusta en la zona misma.",
           "require_awake": "Alguien en casa pero dormido no cuenta. Qué entidad indica que duerme se ajusta por residente.",
-          "holiday_bypasses_schedule": "El interruptor de vacaciones ignora entonces las franjas horarias, pero sigue respetando presencia y sueño."
+          "holiday_calendars": "Un evento en curso en alguno de estos calendarios pone la casa en vacaciones. Dejarlo vacío usa solo el interruptor de vacaciones.",
+          "holiday_keyword": "Solo cuentan los eventos que llevan esta palabra, por ejemplo 'vacaciones'. Dejarlo vacío hace que cuente cualquier evento en curso."
         }
       },
       "zones": {
@@ -266,13 +266,15 @@
           "start": "Desde",
           "end": "Hasta",
           "weekdays": "Días",
-          "delete": "Eliminar este horario"
+          "delete": "Eliminar este horario",
+          "holiday": "Esta es una franja de vacaciones"
         },
         "data_description": {
           "weekdays": "Déjalo vacío para todos los días.",
           "end": "Excluida de la franja.",
           "start": "Incluida en la franja.",
-          "delete": "Elimina este horario."
+          "delete": "Elimina este horario.",
+          "holiday": "Una franja de vacaciones solo se aplica con el modo vacaciones activo, y entonces sustituye a las franjas ordinarias. Sus días de la semana no cuentan. Sin ella, un día de vacaciones cuenta como un sábado."
         }
       },
       "openings": {
@@ -334,6 +336,9 @@
       },
       "zone_override": {
         "name": "Anulación {zone}"
+      },
+      "guest": {
+        "name": "Modo invitados"
       }
     },
     "number": {
