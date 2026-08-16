@@ -396,7 +396,19 @@ class Resident:
     binding layer reads entities with, exactly like `Zone.indoor_sensor`.
     """
 
-    def windows_for(self, *, holiday: bool) -> tuple[TimeWindow, ...]:
+    def _applies_on(self, window: TimeWindow, weekday: int) -> bool:
+        """Return whether that window could be open at all on that weekday."""
+        if window.weekdays is None or weekday in window.weekdays:
+            return True
+        # Een venster over middernacht loopt door in de volgende dag, dus dan
+        # telt gisteren ook mee.
+        #
+        # A window crossing midnight runs on into the next day, so yesterday
+        # counts as well.
+        crosses_midnight = window.end <= window.start
+        return crosses_midnight and (weekday - 1) % 7 in window.weekdays
+
+    def windows_for(self, *, holiday: bool, weekday: int | None = None) -> tuple[TimeWindow, ...]:
         """Return the windows that apply today.
 
         On a holiday the resident's holiday windows take over if they set any.
@@ -407,11 +419,27 @@ class Resident:
             special = tuple(window for window in self.windows if window.holiday)
             if special:
                 return special
-        return tuple(window for window in self.windows if not window.holiday)
+        ordinary = tuple(window for window in self.windows if not window.holiday)
+        if weekday is None:
+            return ordinary
+        return tuple(window for window in ordinary if self._applies_on(window, weekday))
 
-    def takes_part(self, *, holiday: bool) -> bool:
-        """Return whether this resident has anything to say about today."""
-        return bool(self.windows_for(holiday=holiday))
+    def takes_part(self, *, holiday: bool, weekday: int | None = None) -> bool:
+        """Return whether this resident has anything to say about today.
+
+        Alleen wie vandaag een venster heeft doet vandaag mee. Wie er geen heeft
+        opent de poort niet en houdt hem ook niet tegen - net als wie helemaal
+        geen rooster invulde. Anders zou een bewoner met alleen weekendvensters
+        het huis elke doordeweekse ochtend tegenhouden tot hij wakker wordt, en
+        dat is geen rooster maar een slot.
+
+        Only somebody with a window today takes part today. Whoever has none
+        neither opens the gate nor holds it shut - just like somebody who filled
+        in no schedule at all. Otherwise a resident with weekend windows only
+        would hold the house back every weekday morning until they woke up,
+        which is not a schedule but a lock.
+        """
+        return bool(self.windows_for(holiday=holiday, weekday=weekday))
 
     def wants_climate_at(self, moment: time, weekday: int, *, holiday: bool = False) -> bool:
         """Return whether this resident's schedule is open at that moment."""

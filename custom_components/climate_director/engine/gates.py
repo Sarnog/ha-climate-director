@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .models import DirectorConfig, Zone, ZoneGate
+from .models import HOLIDAY_WEEKDAY, DirectorConfig, Zone, ZoneGate
 from .plan import Reason
 from .world import WorldState
 
@@ -239,8 +239,11 @@ def _schedule_open(config: DirectorConfig, world: WorldState) -> bool:
     weekday = world.now.weekday()
     holiday = world.holiday_mode
 
+    effective = HOLIDAY_WEEKDAY if holiday else weekday
     participants = [
-        resident for resident in config.residents if resident.takes_part(holiday=holiday)
+        resident
+        for resident in config.residents
+        if resident.takes_part(holiday=holiday, weekday=effective)
     ]
     if not participants:
         return False
