@@ -49,7 +49,8 @@
           "precondition_start": "Preacondicionamiento desde",
           "precondition_end": "Preacondicionamiento hasta",
           "max_precondition": "Duración del preacondicionamiento (minutos)",
-          "when_done": "Cuando termines aquí"
+          "when_done": "Cuando termines aquí",
+          "stuck_after": "Zona se considera atascada tras (minutos)"
         },
         "data_description": {
           "season_source": "Deduce la estación del mes, léela de una entidad, o fíjala a mano.",
@@ -65,7 +66,8 @@
           "precondition_start": "El preacondicionamiento es lo único que puede hacer funcionar una casa vacía, así que se mantiene en estas horas. Fuera de ellas una petición no cuenta.",
           "precondition_end": "El preacondicionamiento es lo único que puede hacer funcionar una casa vacía, así que se mantiene en estas horas. Fuera de ellas una petición no cuenta.",
           "max_precondition": "Una petición no se olvida, solo se teclea mal. Este techo evita que una errata caliente una casa vacía toda la tarde. Pedir más tiempo acorta la petición en lugar de rechazarla.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
+          "stuck_after": "Una pausa al cambiar de tarea debe durar segundos. Una zona que sigue en ella pasado este tiempo ya no espera, está atascada, y desde fuera eso se parece exactamente a no hacer nada. Mantenlo bien por encima de tu pausa más larga; una falsa alarma enseña a ignorar la alarma. Cero apaga el sensor."
         }
       },
       "zones": {
@@ -377,6 +379,9 @@
     "binary_sensor": {
       "zone_blocked": {
         "name": "{zone} bloqueada"
+      },
+      "stuck": {
+        "name": "Atascado"
       }
     },
     "switch": {

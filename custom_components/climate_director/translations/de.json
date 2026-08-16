@@ -49,7 +49,8 @@
           "precondition_start": "Vorheizen ab",
           "precondition_end": "Vorheizen bis",
           "max_precondition": "Vorheizdauer (Minuten)",
-          "when_done": "Wenn du hier fertig bist"
+          "when_done": "Wenn du hier fertig bist",
+          "stuck_after": "Zone gilt als festgefahren nach (Minuten)"
         },
         "data_description": {
           "season_source": "Leite die Jahreszeit aus dem Monat ab, lies sie aus einer Entität, oder lege sie von Hand fest.",
@@ -65,7 +66,8 @@
           "precondition_start": "Vorheizen ist das Einzige, was ein leeres Haus laufen lassen darf, und bleibt deshalb in diesen Zeiten. Außerhalb zählt eine Anforderung nicht.",
           "precondition_end": "Vorheizen ist das Einzige, was ein leeres Haus laufen lassen darf, und bleibt deshalb in diesen Zeiten. Außerhalb zählt eine Anforderung nicht.",
           "max_precondition": "Eine Anforderung kann man nicht vergessen, nur vertippen. Diese Obergrenze verhindert, dass ein Tippfehler einen ganzen Nachmittag ein leeres Haus heizt. Wer mehr anfordert, bekommt eine gekürzte statt gar keiner.",
-          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst.",
+          "stuck_after": "Eine Pause beim Aufgabenwechsel sollte Sekunden dauern. Eine Zone, die nach dieser Zeit noch darauf steht, wartet nicht mehr, sondern hängt fest - von außen sieht das genau wie Nichtstun aus. Halte den Wert deutlich über deiner längsten Pause; ein Fehlalarm lehrt dich, den Melder zu ignorieren. Null schaltet ihn aus."
         }
       },
       "zones": {
@@ -377,6 +379,9 @@
     "binary_sensor": {
       "zone_blocked": {
         "name": "{zone} blockiert"
+      },
+      "stuck": {
+        "name": "Festgefahren"
       }
     },
     "switch": {

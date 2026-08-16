@@ -41,12 +41,14 @@ from .const import (
     MIN_DEFERRAL_SECONDS,
 )
 from .engine import (
+    WAITING_REASONS,
     ClimateState,
     DirectorConfig,
     ModeFamily,
     OpeningState,
     Plan,
     PresenceState,
+    Reason,
     ResidentState,
     Season,
     WorldState,
@@ -178,6 +180,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self.holiday_mode = False
         self.guest_mode = False
         self._precondition: dict[str, datetime] = {}
+        self._waiting: dict[str, tuple[Reason, datetime]] = {}
         self.zone_overrides: dict[str, bool] = {}
         self._handed_back: dict[str, date] = {}
         self.zone_priorities: dict[str, int] = {}
@@ -410,6 +413,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 _LOGGER.exception("Applying the climate plan failed")
 
             self._fire_events(plan)
+            self._note_waiting(plan)
             self._schedule_deferral(plan)
             self.async_set_updated_data(plan)
 
@@ -474,6 +478,58 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         if seconds <= 0:
             return
         async_call_later(self.hass, seconds + 1, lambda _now: self.async_request_evaluation())
+
+    # -- vastgelopen zones / stuck zones -------------------------------------
+
+    @callback
+    def _note_waiting(self, plan: Plan) -> None:
+        """Remember since when each zone has been on its current waiting reason.
+
+        De tijdstempel verspringt zodra de reden verandert, want dan is er wel
+        iets gebeurd. Blijft dezelfde reden staan, dan loopt de teller door.
+
+        The timestamp moves the moment the reason changes, since something did
+        happen then. While the reason stays the same, the clock keeps running.
+        """
+        now = dt_util.now()
+        fresh: dict[str, tuple[Reason, datetime]] = {}
+        for decision in plan.zones:
+            if decision.reason not in WAITING_REASONS:
+                continue
+            since = self._waiting.get(decision.zone_id)
+            fresh[decision.zone_id] = (
+                since if since and since[0] is decision.reason else (decision.reason, now)
+            )
+        self._waiting = fresh
+
+    def waiting_seconds(self) -> dict[str, float]:
+        """Return how long each waiting zone has been on its reason."""
+        now = dt_util.now()
+        return {
+            zone_id: (now - since).total_seconds()
+            for zone_id, (_reason, since) in self._waiting.items()
+        }
+
+    def stuck_zones(self) -> dict[str, Reason]:
+        """Return the zones that have waited longer than the installation allows.
+
+        Een pauze bij het wisselen van taak hoort seconden te duren. Staat een
+        zone er een kwartier op, dan wacht hij niet meer maar zit hij vast - en
+        dat is van buiten niet te onderscheiden van niets doen.
+
+        A pause when switching duty should last seconds. A zone sitting on one
+        for a quarter of an hour is no longer waiting but stuck - and from the
+        outside that is indistinguishable from doing nothing at all.
+        """
+        limit = self.config.stuck_after.total_seconds()
+        if limit <= 0:
+            return {}
+        now = dt_util.now()
+        return {
+            zone_id: reason
+            for zone_id, (reason, since) in self._waiting.items()
+            if (now - since).total_seconds() >= limit
+        }
 
     def build_world(self) -> WorldState:
         """Return a snapshot of everything the engine needs.

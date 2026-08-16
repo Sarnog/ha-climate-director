@@ -63,6 +63,7 @@ def config_from_dict(raw: Mapping[str, Any]) -> DirectorConfig:
         gates=_gates(raw.get("gates")),
         seasons=_seasons(raw.get("seasons")),
         outdoor_sensor=_text(raw.get("outdoor_sensor")),
+        stuck_after=_seconds(raw.get("stuck_after"), 900.0),
         holiday_calendars=tuple(_strings(raw.get("holiday_calendars"))),
         holiday_keyword=_text(raw.get("holiday_keyword")),
     )
@@ -109,6 +110,7 @@ def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
             "summer_months": sorted(config.seasons.summer_months),
         },
         "outdoor_sensor": config.outdoor_sensor,
+        "stuck_after": int(config.stuck_after.total_seconds()),
         "holiday_calendars": list(config.holiday_calendars),
         "holiday_keyword": config.holiday_keyword,
     }

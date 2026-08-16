@@ -54,6 +54,12 @@ _TEMPERATURE = selector.NumberSelector(
 _BAND = selector.NumberSelector(
     selector.NumberSelectorConfig(min=0, max=10, step=0.1, mode=selector.NumberSelectorMode.BOX)
 )
+_MINUTES_OR_OFF = selector.NumberSelector(
+    selector.NumberSelectorConfig(
+        min=0, max=240, step=1, unit_of_measurement="min", mode=selector.NumberSelectorMode.BOX
+    )
+)
+
 _MINUTES = selector.NumberSelector(
     selector.NumberSelectorConfig(
         min=1, max=480, step=1, unit_of_measurement="min", mode=selector.NumberSelectorMode.BOX
@@ -277,6 +283,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             self._installation["holiday_calendars"] = list(
                 user_input.get("holiday_calendars") or ()
             )
+            self._installation["stuck_after"] = int(user_input.get("stuck_after") or 0) * 60
             self._installation["holiday_keyword"] = (
                 user_input.get("holiday_keyword") or ""
             ).strip()
@@ -340,6 +347,10 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         "guest_end",
                         description={"suggested_value": guest.get("end") or None},
                     ): _TIME,
+                    vol.Required(
+                        "stuck_after",
+                        default=int(self._installation.get("stuck_after", 900)) // 60,
+                    ): _MINUTES_OR_OFF,
                     vol.Optional(
                         "holiday_keyword",
                         description={

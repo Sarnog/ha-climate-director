@@ -54,6 +54,21 @@ class Reason(StrEnum):
     EXCLUSIVE_GROUP_LOST = "exclusive_group_lost"
 
 
+#: Redenen die uit zichzelf horen op te lossen. Een zone die er lang op blijft
+#: staan wacht op iets dat niet komt, en dat is een fout en geen toestand.
+#:
+#: Reasons that should resolve by themselves. A zone sitting on one for long is
+#: waiting for something that is not coming, which is a fault and not a state.
+WAITING_REASONS = frozenset(
+    {
+        Reason.CIRCUIT_SWITCH_PENDING,
+        Reason.CIRCUIT_SWITCH_TOO_SOON,
+        Reason.SHORT_CYCLE_PROTECTION,
+        Reason.CIRCUIT_AT_CAPACITY,
+    }
+)
+
+
 @dataclass(frozen=True, slots=True)
 class UnitCommand:
     """The end state one climate entity should be in."""

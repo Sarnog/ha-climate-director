@@ -532,6 +532,16 @@ class DirectorConfig:
     outdoor_sensor: str = ""
     """Entity carrying the outdoor temperature. Empty leaves it unknown."""
 
+    stuck_after: timedelta = timedelta(minutes=15)
+    """How long a zone may sit on a waiting reason before it counts as stuck.
+
+    Ruim boven elke pauze die je redelijkerwijs instelt, want een valse melding
+    leert je de melder te negeren. Nul zet de melder uit.
+
+    Comfortably above any pause you would reasonably configure, since a false
+    alarm teaches you to ignore the alarm. Zero switches it off.
+    """
+
     holiday_calendars: tuple[str, ...] = ()
     """Calendars whose running events may put the house on holiday."""
 
@@ -745,6 +755,9 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
         problems.append(
             "the schedule gate is on but nobody has a schedule, so nothing can ever run"
         )
+
+    if config.stuck_after.total_seconds() < 0:
+        problems.append("the stuck-detection time is negative")
 
     if config.gates.max_precondition.total_seconds() <= 0:
         problems.append(

@@ -46,7 +46,15 @@ from .models import (
     ZoneGate,
     validate,
 )
-from .plan import CircuitDecision, Deferral, Plan, Reason, UnitCommand, ZoneDecision
+from .plan import (
+    WAITING_REASONS,
+    CircuitDecision,
+    Deferral,
+    Plan,
+    Reason,
+    UnitCommand,
+    ZoneDecision,
+)
 from .world import ClimateState, OpeningState, PresenceState, ResidentState, WorldState
 
 __all__ = [
@@ -73,6 +81,7 @@ __all__ = [
     "OutdoorWindow",
     "Plan",
     "Reason",
+    "WAITING_REASONS",
     "Resident",
     "ResidentState",
     "Season",

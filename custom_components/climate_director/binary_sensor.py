@@ -1,13 +1,17 @@
-"""Per zone: wordt hij tegengehouden, en waardoor.
+"""Per zone of hij tegengehouden wordt, en of er ergens iets vastloopt.
 
-Per zone: is it being held back, and by what.
+Per zone whether it is held back, and whether anything is stuck.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -20,11 +24,13 @@ async def async_setup_entry(
     entry: ClimateDirectorEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up one blocked sensor per zone."""
+    """Set up one blocked sensor per zone, and one stuck sensor for the whole."""
     coordinator = entry.runtime_data
-    async_add_entities(
+    entities: list[BinarySensorEntity] = [
         ZoneBlockedSensor(coordinator, zone.zone_id) for zone in coordinator.config.zones
-    )
+    ]
+    entities.append(StuckSensor(coordinator))
+    async_add_entities(entities)
 
 
 class ZoneBlockedSensor(ClimateDirectorEntity, BinarySensorEntity):
@@ -57,3 +63,49 @@ class ZoneBlockedSensor(ClimateDirectorEntity, BinarySensorEntity):
             return {}
         decision = plan.decision_for(self._zone_id)
         return {"reason": decision.reason.value} if decision else {}
+
+
+class StuckSensor(ClimateDirectorEntity, BinarySensorEntity):
+    """On when a zone keeps waiting for something that is not coming.
+
+    De andere melders zeggen wat er nu is; deze zegt dat er iets niet meer
+    verandert. Een pauze bij het wisselen van taak hoort seconden te duren, dus
+    een zone die er een kwartier op staat wacht niet meer - die zit vast. Zo'n
+    klem is van buiten niet te onderscheiden van "de director besluit niets",
+    en dat is de stilste manier waarop deze integratie kan falen.
+
+    The other sensors say what is; this one says that something has stopped
+    changing. A pause when switching duty should last seconds, so a zone sitting
+    on one for a quarter of an hour is no longer waiting - it is stuck. From the
+    outside such a deadlock is indistinguishable from "the director decides
+    nothing", which is the quietest way this integration can fail.
+    """
+
+    _attr_translation_key = "stuck"
+    _attr_icon = "mdi:progress-alert"
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: ClimateDirectorCoordinator) -> None:
+        """Set up the installation-wide stuck sensor."""
+        super().__init__(coordinator, "stuck")
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return whether any zone has been waiting too long."""
+        if self.coordinator.data is None:
+            return None
+        return bool(self.coordinator.stuck_zones())
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return which zones are stuck, on what, and for how long."""
+        stuck = self.coordinator.stuck_zones()
+        return {
+            "zones": sorted(stuck),
+            "reasons": {zone_id: reason.value for zone_id, reason in sorted(stuck.items())},
+            "waiting_seconds": {
+                zone_id: round(seconds)
+                for zone_id, seconds in sorted(self.coordinator.waiting_seconds().items())
+            },
+        }

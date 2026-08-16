@@ -49,7 +49,8 @@
           "precondition_start": "Préchauffage à partir de",
           "precondition_end": "Préchauffage jusqu'à",
           "max_precondition": "Durée du préchauffage (minutes)",
-          "when_done": "Quand vous avez terminé ici"
+          "when_done": "Quand vous avez terminé ici",
+          "stuck_after": "Zone considérée bloquée après (minutes)"
         },
         "data_description": {
           "season_source": "Déduisez la saison du mois, lisez-la depuis une entité, ou fixez-la à la main.",
@@ -65,7 +66,8 @@
           "precondition_start": "Le préchauffage est la seule chose autorisée à faire tourner une maison vide ; il reste donc dans ces heures. En dehors, une demande ne compte pas.",
           "precondition_end": "Le préchauffage est la seule chose autorisée à faire tourner une maison vide ; il reste donc dans ces heures. En dehors, une demande ne compte pas.",
           "max_precondition": "Une demande ne s'oublie pas, elle se saisit mal. Ce plafond empêche une faute de frappe de chauffer une maison vide tout un après-midi. Demander plus long raccourcit la demande au lieu de la refuser.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
+          "stuck_after": "Une pause lors d'un changement de tâche doit durer des secondes. Une pièce qui y reste au-delà n'attend plus, elle est bloquée - ce qui, vu de l'extérieur, ressemble exactement à ne rien faire. Gardez la valeur bien au-dessus de votre plus longue pause ; une fausse alerte apprend à ignorer l'alerte. Zéro désactive le capteur."
         }
       },
       "zones": {
@@ -377,6 +379,9 @@
     "binary_sensor": {
       "zone_blocked": {
         "name": "{zone} bloquée"
+      },
+      "stuck": {
+        "name": "Bloqué"
       }
     },
     "switch": {
