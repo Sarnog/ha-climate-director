@@ -599,6 +599,50 @@ class TestTheCalendarReading:
         states = {"calendar.gezin": self._State("on", message="VAKANTIE")}
         assert self._read(["calendar.gezin"], "Vakantie", states)
 
+    @pytest.mark.parametrize(
+        "title",
+        [
+            "Vakantie",
+            "vakantie",
+            "VAKANTIE",
+            "VaKaNtIe",
+            "Herfstvakantie",
+            "herfstvakantie",
+            "Zomervakantie 2026",
+            "meivakantie Danny",
+            "KERSTVAKANTIE",
+            "Vakantie Frankrijk",
+            "Twee weken vakantie!",
+            "vakantie/vrij",
+        ],
+    )
+    def test_any_spelling_carrying_the_word_counts(self, title: str) -> None:
+        """Het woord staat er, hoe je het ook schrijft of waar het in vastzit.
+
+        Een agenda staat vol met "Herfstvakantie" en "Zomervakantie", niet met
+        het kale woord. Een match op woordgrenzen zou daar precies overheen
+        kijken, dus dit is met opzet een gewone deelstring.
+
+        The word is there, however you spell it or whatever it is stuck inside.
+        A calendar is full of "Herfstvakantie" and "Zomervakantie", not the bare
+        word. Matching on word boundaries would look straight past those, so
+        this is a plain substring on purpose.
+        """
+        states = {"calendar.gezin": self._State("on", message=title)}
+        assert self._read(["calendar.gezin"], "vakantie", states)
+
+    @pytest.mark.parametrize("keyword", ["vakantie", "Vakantie", "VAKANTIE", "  vakantie  "])
+    def test_the_keyword_itself_may_be_written_any_way(self, keyword: str) -> None:
+        """Wat je in de instellingen tikt hoort er net zo min toe te doen."""
+        states = {"calendar.gezin": self._State("on", message="Herfstvakantie")}
+        assert self._read(["calendar.gezin"], keyword, states)
+
+    @pytest.mark.parametrize("title", ["Tandarts", "Vacation", "Vakanti", "akantie", ""])
+    def test_something_else_still_does_not_count(self, title: str) -> None:
+        """Ruim matchen mag, maar niet zo ruim dat alles vakantie wordt."""
+        states = {"calendar.gezin": self._State("on", message=title)}
+        assert not self._read(["calendar.gezin"], "vakantie", states)
+
     def test_an_event_without_the_word_does_not(self) -> None:
         states = {"calendar.gezin": self._State("on", message="Tandarts")}
         assert not self._read(["calendar.gezin"], "vakantie", states)
