@@ -301,3 +301,71 @@ class TestEveryScreenCanBeLeft:
         assert lists
         missing = [key for key in lists if "back_to_menu" not in chooser[key]["options"]]
         assert not missing, missing
+
+
+class TestNoScreenCanRefuseToBeLeft:
+    """Leaving must never depend on having filled the screen in.
+
+    Voluptuous keurt het hele formulier af vóór de handler draait, dus één leeg
+    verplicht veld maakte "Verwerpen en teruggaan" onbereikbaar: je kreeg "Niet
+    alle verplichte velden zijn ingevuld" en zat vast in een scherm waar je
+    alleen uit kwam door het af te maken. Verplichte velden staan daarom als
+    optioneel in het schema en worden in de handler gecontroleerd.
+
+    Voluptuous refuses the whole form before the handler runs, so one empty
+    required field made "Discard and go back" unreachable: you got "not all
+    required fields are filled in" and were stuck in a screen you could leave
+    only by finishing it. Required fields are therefore optional in the schema
+    and checked in the handler.
+    """
+
+    def _forms(self) -> dict[str, ast.AsyncFunctionDef]:
+        tree = ast.parse((COMPONENT / "config_flow.py").read_text(encoding="utf-8"))
+        found = {}
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.AsyncFunctionDef):
+                continue
+            for call in ast.walk(node):
+                if (
+                    isinstance(call, ast.Call)
+                    and getattr(call.func, "attr", "") == "async_show_form"
+                ):
+                    step = next((k.value.value for k in call.keywords if k.arg == "step_id"), None)
+                    if isinstance(step, str):
+                        found[step] = node
+        return found
+
+    def test_the_reader_finds_the_forms(self) -> None:
+        assert len(self._forms()) >= 15
+
+    def test_no_field_is_required_without_a_default(self) -> None:
+        """A required field with no default is exactly what blocks the way out."""
+        blocking = []
+        for step, node in self._forms().items():
+            for call in ast.walk(node):
+                if not (
+                    isinstance(call, ast.Call) and getattr(call.func, "attr", "") == "Required"
+                ):
+                    continue
+                if any(keyword.arg == "default" for keyword in call.keywords):
+                    continue
+                if call.args and isinstance(call.args[0], ast.Constant):
+                    blocking.append(f"{step}.{call.args[0].value}")
+        assert not blocking, blocking
+
+    def test_the_missing_field_error_is_translated(self) -> None:
+        for path in FILES:
+            data = load(path)
+            for section in ("config", "options"):
+                if section in data:
+                    assert "required" in data[section].get("error", {}), f"{path.name}.{section}"
+
+    def test_deleting_needs_no_filled_in_fields(self) -> None:
+        """Throwing something away should not demand you complete it first."""
+        source = (COMPONENT / "config_flow.py").read_text(encoding="utf-8")
+        checks = source.count("errors = _missing(user_input,")
+        guarded = source.count(
+            'if not user_input.get("delete"):\n                errors = _missing('
+        )
+        assert checks >= 6
+        assert guarded == checks, f"{checks - guarded} controles zonder verwijder-uitzondering"
