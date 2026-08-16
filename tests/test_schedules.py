@@ -291,3 +291,78 @@ class TestSomebodyMustBeHome:
         )
         world = make_world(now=at(12, 0), residents={"nancy": away()}, guest_mode=True)
         assert gates.evaluate(config, world, empty).reason is Reason.ZONE_UNOCCUPIED
+
+
+class TestOnlyTodaysSchedulesCount:
+    """A window on other days says nothing about today, blocking included.
+
+    De regel "wie thuis is en slaapt terwijl zijn eigen venster nog niet open is
+    houdt het huis tegen" is bedoeld voor de zaterdagochtend, waar iedereen een
+    venster heeft. Wie op een dag helemaal geen venster heeft, hoort die dag
+    niet mee te doen - anders houdt een bewoner met alleen weekendvensters het
+    huis elke doordeweekse ochtend tegen tot hij wakker wordt, en dat is geen
+    rooster maar een slot.
+
+    The rule "whoever is home asleep while their own window has not opened holds
+    the house back" is meant for a Saturday morning, where everybody has a
+    window. Somebody with no window at all on a given day should not take part
+    that day - otherwise a resident with weekend windows only holds the house
+    back every weekday morning until they wake, which is not a schedule but a
+    lock.
+    """
+
+    weekender = Resident(
+        "danny",
+        "Danny",
+        windows=(TimeWindow(time(8, 0), time(15, 0), WEEKEND),),
+        presence_entity="person.danny",
+    )
+    early = Resident(
+        "nancy",
+        "Nancy",
+        windows=(TimeWindow(time(5, 0), time(8, 0), frozenset({1})),),
+        presence_entity="person.nancy",
+    )
+
+    def config(self) -> DirectorConfig:
+        return household(self.weekender, self.early)
+
+    def test_a_weekend_sleeper_no_longer_blocks_a_weekday(self) -> None:
+        """The case from the live installation: her window opens, he sleeps on."""
+        result = verdict(self.config(), at(6, 0), danny=asleep(), nancy=awake())
+        assert result.allowed
+
+    def test_he_still_does_not_open_it_himself(self) -> None:
+        """Saying nothing cuts both ways: no block, and no opening either."""
+        result = verdict(self.config(), at(9, 0), danny=awake(), nancy=awake())
+        assert result.reason is Reason.OUTSIDE_SCHEDULE
+
+    def test_the_weekend_wait_is_untouched(self) -> None:
+        """Both have a Saturday window, so there the rule still holds."""
+        config = household(
+            self.weekender,
+            Resident(
+                "nancy",
+                "Nancy",
+                windows=(TimeWindow(time(11, 0), time(15, 0), WEEKEND),),
+                presence_entity="person.nancy",
+            ),
+        )
+        early = verdict(config, at(9, 0, day=SATURDAY), danny=awake(), nancy=asleep())
+        assert early.reason is Reason.OUTSIDE_SCHEDULE
+        assert verdict(config, at(11, 0, day=SATURDAY), danny=awake(), nancy=asleep()).allowed
+
+    def test_a_window_crossing_midnight_still_counts_the_next_morning(self) -> None:
+        """A Monday night window runs into Tuesday, so Tuesday is still their day."""
+        night = Resident(
+            "nancy",
+            "Nancy",
+            windows=(TimeWindow(time(22, 0), time(6, 0), frozenset({0})),),
+            presence_entity="person.nancy",
+        )
+        assert night.takes_part(holiday=False, weekday=1)
+        assert not night.takes_part(holiday=False, weekday=3)
+
+    def test_a_resident_without_any_schedule_is_unchanged(self) -> None:
+        config = household(NANCY_TUESDAY, DANNY_NO_SCHEDULE)
+        assert verdict(config, at(8, 45), nancy=awake(), danny=asleep()).allowed
