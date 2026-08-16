@@ -339,6 +339,11 @@ minimale cyclustijd, of op een vrije plek op de buitenunit. Staat een zone daar 
 dan de ingestelde tijd (standaard vijftien minuten), dan wacht hij niet meer maar zit hij
 vast, en gaat de melder aan. In de attributen staat welke zones, waarop, en hoe lang.
 
+Dezelfde melder gaat ook aan als een **ingestelde entiteit niet te lezen is** — verkeerd
+getikt, verwijderd, of tijdelijk `unavailable`. Ook dat faalt stil: de poort die erop leunt
+gaat dicht, de zone doet niets, en dat lijkt op een zone die niets hoeft te doen. Welke
+entiteiten het zijn staat in het attribuut `unusable_entities`.
+
 Redenen die wél lang mogen blijven staan — niemand thuis, kamer leeg, buiten het
 temperatuurvenster — tellen niet mee. Nul minuten zet de melder uit.
 
@@ -877,6 +882,11 @@ themselves: waiting on the changeover pause, on the minimum run, on the minimum 
 or on a free slot on the outdoor unit. A zone sitting on one of those longer than the
 configured time (fifteen minutes by default) is no longer waiting but stuck, and the sensor
 comes on. The attributes say which zones, on what, and for how long.
+
+The same sensor also comes on when a **configured entity cannot be read** — mistyped,
+deleted, or temporarily `unavailable`. That fails silently too: the gate leaning on it
+closes, the zone does nothing, and that looks like a zone with nothing to do. Which
+entities they are is in the `unusable_entities` attribute.
 
 Reasons that may rightly hold for a long time — nobody home, room empty, outside the
 temperature window — do not count. Zero minutes switches the sensor off.
