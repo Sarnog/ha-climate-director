@@ -243,8 +243,27 @@ def house() -> DirectorConfig:
             ),
         ),
         residents=(
-            Resident(resident_id="danny", name="Danny"),
-            Resident(resident_id="nancy", name="Nancy"),
+            # De entiteiten waar de koppelingslaag ze mee uitleest. De engine
+            # raakt ze nooit aan, maar zonder aanwezigheidsentiteit kan een
+            # bewoner nooit thuis zijn, en daar klaagt `validate()` terecht over.
+            #
+            # The entities the binding layer reads them with. The engine never
+            # touches them, but without a presence entity a resident can never
+            # be home, which `validate()` rightly complains about.
+            Resident(
+                resident_id="danny",
+                name="Danny",
+                presence_entity="person.danny",
+                sleep_entity="sensor.danny_charger_type",
+                sleep_state="wireless",
+            ),
+            Resident(
+                resident_id="nancy",
+                name="Nancy",
+                presence_entity="person.nancy",
+                sleep_entity="sensor.nancy_charger_type",
+                sleep_state="wireless",
+            ),
         ),
         openings=(Opening(entity_id=BACK_DOOR, delay=timedelta(seconds=30)),),
         gates=GateSettings(require_occupancy=True, require_awake=True),
