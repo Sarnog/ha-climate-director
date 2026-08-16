@@ -256,6 +256,26 @@ Heb je al een helper die je wilt blijven gebruiken — een `input_select` voor h
 een template-sensor die meerdere thermometers middelt — dan wijs je die gewoon aan. De
 integratie dwingt je nergens iets nieuws voor aan te maken, maar staat het overal toe.
 
+### Radiatorkranen en een cv
+
+Een cv met slimme radiatorkranen werkt anders dan een multi-split, en dat verschil zit in
+het model. Kranen vechten niet om een compressortaak — ze verwarmen allemaal alleen maar —
+dus er valt niets te verdelen. Zet ze **niet** in een koelcircuit: dat begrip gaat over een
+gedeelde compressor, en een ketel heeft er geen.
+
+Modelleer het zo: elke kamer een zone, de kraan van die kamer als bron met rol *alleen
+verwarmen*. Dat werkt met elke integratie die per ruimte een `climate`-entiteit levert —
+Tado, Netatmo, Homematic, Z-Wave- en Zigbee-kranen.
+
+Wat kranen wél delen is het apparaat dat het water warm maakt. Draait dat systeem zijn eigen
+brander, zoals Tado doet, dan hoef je niets extra's in te stellen: de brug start de ketel
+zodra een kraan erom vraagt. Is de warmtebron een aparte entiteit die iemand moet schakelen,
+zet die dan onder **Gedeelde warmtebronnen**. Hij draait dan zolang een kamer die hij
+bedient verwarmd wordt, en stopt zodra dat er geen meer is.
+
+Zonder vast setpoint volgt de bron het warmste doel van de kamers die vragen. Het koudste
+nemen zou de kamer die het hardst om warmte vraagt nooit laten halen wat hij vroeg.
+
 ### Talen
 
 De uitleg onder elk invoerveld volgt de taal van je Home Assistant. Staat je HA op
@@ -536,6 +556,26 @@ What you do point at are entities you already have:
 Already have a helper you want to keep using — an `input_select` for the season, a template
 sensor averaging several thermometers — then simply point at it. The integration never makes
 you create something new, but allows it everywhere.
+
+### Radiator valves and a boiler
+
+A wet system with smart radiator valves works differently from a multi-split, and that
+difference lives in the model. Valves do not fight over a compressor duty — they all only
+ever heat — so there is nothing to arbitrate. Do **not** put them in a refrigerant circuit:
+that concept is about a shared compressor, and a boiler has none.
+
+Model it like this: every room a zone, that room's valve as its source with the role *heat
+only*. That works with any integration exposing a `climate` entity per room — Tado, Netatmo,
+Homematic, Z-Wave and Zigbee valves.
+
+What valves do share is the appliance making the water hot. If that system fires its own
+burner, as Tado does, nothing extra is needed: the bridge starts the boiler the moment a
+valve asks. If the heat source is a separate entity somebody has to switch, put it under
+**Shared heat sources**. It then runs while any room it serves is being heated, and stops
+once none is.
+
+Without a fixed setpoint the source follows the warmest target among the rooms asking.
+Taking the coldest would leave the room asking hardest never reaching what it asked for.
 
 ### Languages
 
