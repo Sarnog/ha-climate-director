@@ -58,14 +58,26 @@ def household(*residents: Resident) -> DirectorConfig:
             ),
         ),
         residents=residents,
-        gates=GateSettings(require_occupancy=True, require_awake=True, require_schedule=True),
+        gates=GateSettings(require_awake=True, require_schedule=True),
     )
 
 
 def verdict(config: DirectorConfig, moment: datetime, **states: object):
+    return _verdict(config, moment, states)
+
+
+def holiday_verdict(config: DirectorConfig, moment: datetime, **states: object):
+    return _verdict(config, moment, states, holiday_mode=True)
+
+
+def guest_verdict(config: DirectorConfig, moment: datetime, **states: object):
+    return _verdict(config, moment, states, guest_mode=True)
+
+
+def _verdict(config: DirectorConfig, moment: datetime, states: dict[str, object], **flags: bool):
     zone = config.zone("woonkamer")
     assert zone is not None
-    world = make_world(now=moment, residents=dict(states))  # type: ignore[arg-type]
+    world = make_world(now=moment, residents=states, **flags)  # type: ignore[arg-type]
     return gates.evaluate(config, world, zone)
 
 
@@ -162,9 +174,120 @@ class TestNobodyScheduledAtAll:
 
 
 class TestHolidayMode:
-    def test_it_skips_the_schedule_entirely(self) -> None:
+    """A holiday is a Saturday, unless somebody wrote a holiday window."""
+
+    def test_a_weekend_window_applies_on_a_holiday_weekday(self) -> None:
+        """Nancy's Saturday hours hold on a Tuesday once the house is on holiday."""
+        weekender = Resident(
+            "nancy",
+            "Nancy",
+            windows=(TimeWindow(time(11, 0), time(15, 0), WEEKEND),),
+            presence_entity="person.nancy",
+        )
+        config = household(weekender)
+        assert not verdict(config, at(12, 0), nancy=awake()).allowed
+        assert holiday_verdict(config, at(12, 0), nancy=awake()).allowed
+
+    def test_a_weekday_window_stops_applying(self) -> None:
+        """A holiday is not a working day, so Nancy's Tuesday hours do not hold."""
+        config = household(NANCY_TUESDAY)
+        assert holiday_verdict(config, at(8, 45), nancy=awake()).reason is (Reason.OUTSIDE_SCHEDULE)
+
+    def test_the_weekend_wait_still_holds(self) -> None:
+        """The house waits for the late sleeper on a holiday just as on a Saturday."""
+        config = household(
+            Resident(
+                "danny",
+                "Danny",
+                windows=(TimeWindow(time(8, 0), time(15, 0), WEEKEND),),
+                presence_entity="person.danny",
+            ),
+            Resident(
+                "nancy",
+                "Nancy",
+                windows=(TimeWindow(time(11, 0), time(15, 0), WEEKEND),),
+                presence_entity="person.nancy",
+            ),
+        )
+        early = holiday_verdict(config, at(9, 0), danny=awake(), nancy=asleep())
+        assert early.reason is Reason.OUTSIDE_SCHEDULE
+        assert holiday_verdict(config, at(11, 0), danny=awake(), nancy=asleep()).allowed
+
+
+class TestAHolidayWindow:
+    """A window marked as a holiday window takes over from the ordinary ones."""
+
+    nancy = Resident(
+        "nancy",
+        "Nancy",
+        windows=(
+            TimeWindow(time(11, 0), time(15, 0), WEEKEND),
+            TimeWindow(time(6, 0), time(23, 0), holiday=True),
+        ),
+        presence_entity="person.nancy",
+    )
+
+    def test_it_replaces_the_ordinary_windows(self) -> None:
+        config = household(self.nancy)
+        assert holiday_verdict(config, at(7, 0), nancy=awake()).allowed
+
+    def test_it_ignores_its_days_of_the_week(self) -> None:
+        """A holiday is not a day of the week, so a Tuesday holiday counts too."""
+        nancy = Resident(
+            "nancy",
+            "Nancy",
+            windows=(TimeWindow(time(6, 0), time(23, 0), WEEKEND, holiday=True),),
+            presence_entity="person.nancy",
+        )
+        assert holiday_verdict(household(nancy), at(7, 0), nancy=awake()).allowed
+
+    def test_it_does_nothing_on_an_ordinary_day(self) -> None:
+        config = household(self.nancy)
+        assert verdict(config, at(7, 0, day=SATURDAY), nancy=awake()).reason is (
+            Reason.OUTSIDE_SCHEDULE
+        )
+
+    def test_somebody_with_only_a_holiday_window_sits_out_ordinary_days(self) -> None:
+        """He said nothing about working days, so he neither opens nor blocks."""
+        danny = Resident(
+            "danny",
+            "Danny",
+            windows=(TimeWindow(time(6, 0), time(23, 0), holiday=True),),
+            presence_entity="person.danny",
+        )
+        config = household(NANCY_TUESDAY, danny)
+        assert verdict(config, at(8, 45), nancy=awake(), danny=asleep()).allowed
+
+
+class TestSomebodyMustBeHome:
+    """Nothing may start on an empty house, whatever else says otherwise."""
+
+    def test_an_open_window_is_not_enough(self) -> None:
+        config = household(NANCY_TUESDAY)
+        assert verdict(config, at(8, 45), nancy=away()).reason is Reason.NOBODY_HOME
+
+    def test_guest_mode_carries_the_house_instead(self) -> None:
+        """Somebody is staying who is not tracked, so absence says nothing."""
+        config = household(NANCY_TUESDAY)
+        assert guest_verdict(config, at(8, 45), nancy=away()).allowed
+
+    def test_guest_mode_also_sets_the_schedule_aside(self) -> None:
+        """A guest keeps their own hours, and the residents' windows are not theirs."""
+        config = household(NANCY_TUESDAY)
+        assert guest_verdict(config, at(3, 0), nancy=away()).allowed
+
+    def test_guest_mode_leaves_the_room_gate_alone(self) -> None:
+        """Guest mode is about people, not about which rooms are in use."""
         config = household(NANCY_TUESDAY)
         zone = config.zone("woonkamer")
         assert zone is not None
-        world = make_world(now=at(23, 0), residents={"nancy": awake()}, holiday_mode=True)
-        assert gates.evaluate(config, world, zone).allowed
+        empty = Zone(
+            zone.zone_id,
+            zone.name,
+            zone.indoor_sensor,
+            sources=zone.sources,
+            heat=zone.heat,
+            presence_entity="binary_sensor.woonkamer",
+        )
+        world = make_world(now=at(12, 0), residents={"nancy": away()}, guest_mode=True)
+        assert gates.evaluate(config, world, empty).reason is Reason.ZONE_UNOCCUPIED

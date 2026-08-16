@@ -79,6 +79,7 @@ def make_world(
     circuit_family_since: dict[str, datetime | None] | None = None,
     master_enabled: bool = True,
     holiday_mode: bool = False,
+    guest_mode: bool = False,
     zone_overrides: dict[str, bool] | None = None,
     zone_priorities: dict[str, int] | None = None,
 ) -> WorldState:
@@ -99,6 +100,7 @@ def make_world(
         circuit_family_since=dict(circuit_family_since or {}),
         master_enabled=master_enabled,
         holiday_mode=holiday_mode,
+        guest_mode=guest_mode,
         zone_overrides=dict(zone_overrides or {}),
         zone_priorities=dict(zone_priorities or {}),
     )
@@ -266,7 +268,7 @@ def house() -> DirectorConfig:
             ),
         ),
         openings=(Opening(entity_id=BACK_DOOR, delay=timedelta(seconds=30)),),
-        gates=GateSettings(require_occupancy=True, require_awake=True),
+        gates=GateSettings(require_awake=True),
         # De engine leest deze entiteit nooit zelf - de koppelingslaag doet dat
         # en zet het resultaat in `WorldState`. Hij hoort hier omdat elk
         # begrensd buitenvenster in deze opstelling zonder buitentemperatuur

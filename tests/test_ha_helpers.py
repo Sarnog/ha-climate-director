@@ -225,7 +225,7 @@ class TestScheduleWindowsReachTheEngine:
                     "heat": {"target": 21.0, "start_at": 20.0, "hysteresis": 1.0},
                 }
             ],
-            "gates": {"require_occupancy": True, "require_awake": False, "require_schedule": True},
+            "gates": {"require_awake": False, "require_schedule": True},
         }
         return config_from_dict(stored)
 

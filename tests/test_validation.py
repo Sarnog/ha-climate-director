@@ -23,7 +23,6 @@ from conftest import house
 from custom_components.climate_director.engine import (
     Circuit,
     DirectorConfig,
-    GateSettings,
     ModeSettings,
     Opening,
     Resident,
@@ -156,19 +155,17 @@ class TestReferencesThatGoNowhere:
 
 class TestResidentsWhoCanNeverBeHome:
     def test_a_resident_without_a_presence_entity(self) -> None:
+        """Being home is required outright, so an untracked resident is a mistake."""
         config = DirectorConfig(
             zones=(zone("a"),),
             residents=(Resident("danny", "Danny"),),
-            gates=GateSettings(require_occupancy=True),
         )
         assert problem(config, "can never be home")
 
-    def test_it_is_no_problem_when_occupancy_is_not_required(self) -> None:
-        """Without that gate the entity is never consulted, so nothing is broken."""
+    def test_a_tracked_resident_is_fine(self) -> None:
         config = DirectorConfig(
             zones=(zone("a"),),
-            residents=(Resident("danny", "Danny"),),
-            gates=GateSettings(require_occupancy=False),
+            residents=(Resident("danny", "Danny", presence_entity="person.danny"),),
         )
         assert not problem(config, "can never be home")
 

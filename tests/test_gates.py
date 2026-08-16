@@ -89,7 +89,7 @@ def test_sleep_gate_can_be_switched_off() -> None:
         circuits=config.circuits,
         residents=config.residents,
         openings=config.openings,
-        gates=GateSettings(require_occupancy=True, require_awake=False),
+        gates=GateSettings(require_awake=False),
     )
     world = make_world(residents={"danny": asleep(), "nancy": away()})
     assert gates.evaluate(relaxed, world, living_room(relaxed)).allowed
@@ -233,7 +233,7 @@ class TestNoResidents:
         """An office or holiday home has nobody to track; do not lock it out."""
         config = DirectorConfig(
             zones=(Zone("a", "A", "sensor.a", sources=(Source("s", "climate.x"),)),),
-            gates=GateSettings(require_occupancy=True, require_awake=True),
+            gates=GateSettings(require_awake=True),
         )
         zone = config.zone("a")
         assert zone is not None
@@ -265,9 +265,16 @@ class TestSchedule:
         verdict = gates.evaluate(config, world, living_room(config))
         assert verdict.reason is Reason.OUTSIDE_SCHEDULE
 
-    def test_holiday_mode_bypasses_the_schedule(self) -> None:
+    def test_holiday_mode_does_not_bypass_the_schedule(self) -> None:
+        """A holiday counts as a Saturday, and a Saturday still has hours."""
         config = self._config()
         world = make_world(now=at(20, 0), residents=everyone_up(), holiday_mode=True)
+        verdict = gates.evaluate(config, world, living_room(config))
+        assert verdict.reason is Reason.OUTSIDE_SCHEDULE
+
+    def test_guest_mode_sets_the_schedule_aside(self) -> None:
+        config = self._config()
+        world = make_world(now=at(20, 0), residents=everyone_up(), guest_mode=True)
         assert gates.evaluate(config, world, living_room(config)).allowed
 
     def test_holiday_mode_still_needs_someone_home(self) -> None:
