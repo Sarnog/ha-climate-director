@@ -431,6 +431,11 @@ Je zit dus nergens vast. Home Assistant tekent precies één knop onder een form
 laat een integratie er geen tweede bij zetten, dus een echte Terug-knop naast Opslaan
 bestaat niet — deze regels zijn wat er wél kan.
 
+Teruggaan kan altijd, ook als je een veld half hebt ingevuld of leeg hebt gelaten. Je krijgt
+dan geen "niet alle verplichte velden zijn ingevuld" meer: het scherm laat je gaan en wat
+je intikte gaat verloren. Kies je juist wel bewaren en mist er iets, dan wijst de melding
+het veld aan in plaats van de deur op slot te doen.
+
 Er wordt sowieso niets naar de installatie geschreven tot je in het hoofdmenu **Opslaan en
 sluiten** kiest.
 
@@ -947,6 +952,11 @@ discarding, and every picker carries a **← Back to the main menu** row. So now
 you. Home Assistant draws exactly one button under a form and lets an integration add no
 second one, so a real Back button beside Save does not exist — these rows are what is
 possible instead.
+
+Going back always works, even with a field half filled in or left empty. You no longer get
+"not all required fields are filled in": the screen lets you go and what you typed is
+thrown away. Choose to keep instead, and if something is missing the message points at the
+field rather than locking the door.
 
 Nothing is written to the installation until you pick **Save and close** in the main menu
 in any case.
