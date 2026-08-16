@@ -29,7 +29,7 @@ COMPONENT = pathlib.Path(__file__).resolve().parents[1] / "custom_components" / 
 
 #: Velden waarvan de naam uit een constante komt in plaats van uit een letterlijke.
 #: Fields whose name comes from a constant rather than from a literal.
-CONSTANTS = {"CONF_NAME": "name", "CONF_SHADOW_MODE": "shadow_mode", "_CANCEL": "discard"}
+CONSTANTS = {"CONF_NAME": "name", "CONF_SHADOW_MODE": "shadow_mode", "_EXIT": "when_done"}
 
 
 def translation_files() -> list[pathlib.Path]:
@@ -241,3 +241,63 @@ class TestTheLanguagesAgree:
             return [] if str(value).strip() else [trail]
 
         assert not walk(load(path)), walk(load(path))
+
+
+class TestEveryScreenCanBeLeft:
+    """No screen may trap somebody who only came to look.
+
+    Home Assistant tekent precies één knop onder een formulier en laat een
+    integratie er geen tweede bij zetten, dus een echte "Terug"-knop naast
+    "Opslaan" bestaat niet. Wat wél kan is een regel in dezelfde lijstopmaak,
+    en die hoort op élk scherm te staan - anders kom je ergens binnen waar
+    alleen opslaan je nog weghelpt.
+
+    Home Assistant draws exactly one button under a form and lets an integration
+    add no second one, so a real "Back" button beside "Save" does not exist.
+    What is possible is a row in the same list styling, and every screen should
+    carry one - otherwise you walk into a place only saving gets you out of.
+    """
+
+    #: `user` is het eerste scherm van de installatiewizard en `init` is het
+    #: hoofdmenu zelf; die twee sluit je met het kruisje, niet met een terugregel.
+    #:
+    #: `user` is the first screen of the setup wizard and `init` is the main menu
+    #: itself; those two you leave with the cross, not with a back row.
+    exempt = {"user", "init"}
+
+    def _steps(self) -> dict[str, str]:
+        """Return the source of each step's own method, keyed by step id."""
+        source = (COMPONENT / "config_flow.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        lines = source.splitlines(keepends=True)
+        found: dict[str, str] = {}
+
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.AsyncFunctionDef):
+                continue
+            body = "".join(lines[node.lineno - 1 : node.end_lineno])
+            for step in re.findall(r'step_id="(\w+)"', body):
+                found[step] = body
+        return found
+
+    def test_the_reader_finds_the_screens(self) -> None:
+        assert len(self._steps()) >= 15
+
+    def test_each_one_offers_a_way_back(self) -> None:
+        trapped = [
+            step
+            for step, body in self._steps().items()
+            if step not in self.exempt and "_back_option" not in body and "_EXIT" not in body
+        ]
+        assert not trapped, trapped
+
+    @pytest.mark.parametrize("path", FILES, ids=IDS)
+    def test_the_way_back_is_named(self, path: pathlib.Path) -> None:
+        """Both shapes of it, so neither reads as a bare key on screen."""
+        chooser = load(path).get("selector", {})
+        assert "when_done" in chooser
+        assert set(chooser["when_done"]["options"]) == {"keep", "discard"}
+        lists = [key for key in chooser if key.endswith("_list")]
+        assert lists
+        missing = [key for key in lists if "back_to_menu" not in chooser[key]["options"]]
+        assert not missing, missing
