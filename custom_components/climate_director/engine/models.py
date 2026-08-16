@@ -316,8 +316,13 @@ class Opening:
     zone_ids: tuple[str, ...] = ()
     """Zones this opening suspends. Empty means the whole installation."""
 
-    delay: timedelta = timedelta(seconds=30)
-    """How long it must stand open before anything is suspended."""
+    delay: timedelta = timedelta(0)
+    """How long it must stand open before anything is suspended.
+
+    Zero suspends the moment it opens. Deliberately the default: a delay is
+    a choice about a particular door, and inventing half a minute for one
+    that was never given a value hides that choice.
+    """
 
     def affects(self, zone_id: str) -> bool:
         """Return whether this opening suspends `zone_id`."""

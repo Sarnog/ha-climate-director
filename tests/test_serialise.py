@@ -99,9 +99,22 @@ class TestDurations:
         assert circuit is not None
         assert circuit.min_cycle_time == timedelta(minutes=3)
 
-    def test_an_opening_keeps_its_thirty_second_default(self) -> None:
+    def test_an_opening_without_a_delay_gets_none(self) -> None:
+        """Inventing half a minute would hide a choice the user never made."""
         config = config_from_dict({"openings": [{"entity_id": "binary_sensor.door"}]})
-        assert config.openings[0].delay == timedelta(seconds=30)
+        assert config.openings[0].delay == timedelta(0)
+
+    def test_an_explicit_zero_delay_survives(self) -> None:
+        config = config_from_dict({"openings": [{"entity_id": "binary_sensor.door", "delay": 0}]})
+        assert config.openings[0].delay == timedelta(0)
+
+    def test_a_given_delay_is_kept(self) -> None:
+        config = config_from_dict({"openings": [{"entity_id": "binary_sensor.door", "delay": 45}]})
+        assert config.openings[0].delay == timedelta(seconds=45)
+
+    def test_a_presence_timeout_defaults_to_none(self) -> None:
+        config = config_from_dict({"zones": [{"zone_id": "z", "presence_entity": "b.p"}]})
+        assert config.zones[0].presence_timeout == timedelta(0)
 
 
 class TestScheduleWindows:

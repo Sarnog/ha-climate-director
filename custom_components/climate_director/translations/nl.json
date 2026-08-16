@@ -84,7 +84,7 @@
           "delete": "Verwijdert de zone en zijn bronnen.",
           "presence_entity": "Laat leeg om deze ruimte te regelen of er nu iemand is of niet. Iemand thuis zegt niets over of er iemand op zolder zit.",
           "presence_state": "Een aanwezigheidssensor meldt on.",
-          "presence_timeout": "Aanwezigheidssensoren knipperen; zonder nalooptijd stopt een zone zodra iemand even stilzit."
+          "presence_timeout": "Laat leeg of zet op nul om direct te reageren zodra de aanwezigheid wegvalt. Aanwezigheidssensoren knipperen, dus een paar seconden hier scheelt de compressor een zinloze stop."
         }
       },
       "sources": {
@@ -193,11 +193,12 @@
         "data": {
           "entity_id": "Sensor",
           "zone_ids": "Zones die dit raakt",
-          "delay": "Zo lang open voordat er opgeschort wordt (seconden)",
+          "delay": "Vertraging voordat er opgeschort wordt (seconden)",
           "delete": "Deze opening verwijderen"
         },
         "data_description": {
-          "zone_ids": "Laat leeg om de hele installatie op te schorten."
+          "zone_ids": "Laat leeg om de hele installatie op te schorten.",
+          "delay": "Laat leeg of zet op nul om direct op te schorten zodra hij opengaat."
         }
       }
     }

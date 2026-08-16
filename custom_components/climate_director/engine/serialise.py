@@ -191,7 +191,7 @@ def _opening(raw: Mapping[str, Any]) -> Opening:
     return Opening(
         entity_id=_text(raw.get("entity_id")),
         zone_ids=tuple(_strings(raw.get("zone_ids"))),
-        delay=_seconds(raw.get("delay"), 30.0),
+        delay=_seconds(raw.get("delay")),
     )
 
 

@@ -84,7 +84,7 @@
           "delete": "Removes the zone and its sources.",
           "presence_entity": "Leave empty to regulate this room whether or not anybody is in it. Somebody being home says nothing about whether they are in the attic.",
           "presence_state": "A presence sensor reports on.",
-          "presence_timeout": "Presence sensors flicker; without a grace period a zone stops the moment somebody sits still."
+          "presence_timeout": "Leave empty or set to zero to react the moment presence drops. Presence sensors flicker, so a few seconds here saves the compressor a pointless stop."
         }
       },
       "sources": {
@@ -193,11 +193,12 @@
         "data": {
           "entity_id": "Sensor",
           "zone_ids": "Zones affected",
-          "delay": "Open for this long before suspending (seconds)",
+          "delay": "Delay before suspending (seconds)",
           "delete": "Delete this opening"
         },
         "data_description": {
-          "zone_ids": "Leave empty to suspend the whole installation."
+          "zone_ids": "Leave empty to suspend the whole installation.",
+          "delay": "Leave empty or set to zero to suspend the moment it opens."
         }
       }
     }

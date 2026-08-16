@@ -281,8 +281,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Required(
                         "presence_state", default=current.get("presence_state", "on")
                     ): _TEXT,
-                    vol.Required(
-                        "presence_timeout", default=current.get("presence_timeout", 0)
+                    vol.Optional(
+                        "presence_timeout",
+                        description={"suggested_value": current.get("presence_timeout") or None},
                     ): _SECONDS,
                     vol.Required("enable_heat", default=bool(heat)): bool,
                     vol.Required("heat_target", default=heat.get("target", 21.0)): _TEMPERATURE,
@@ -749,7 +750,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 opening = {
                     "entity_id": user_input["entity_id"],
                     "zone_ids": user_input.get("zone_ids") or [],
-                    "delay": user_input["delay"],
+                    "delay": user_input.get("delay") or 0,
                 }
                 if self._index is None:
                     openings.append(opening)
@@ -780,7 +781,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(options=zone_options, multiple=True)
                     ),
-                    vol.Required("delay", default=current.get("delay", 30)): _SECONDS,
+                    vol.Optional(
+                        "delay", description={"suggested_value": current.get("delay") or None}
+                    ): _SECONDS,
                     vol.Required("delete", default=False): bool,
                 }
             ),

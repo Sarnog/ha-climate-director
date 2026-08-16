@@ -22,6 +22,7 @@ from conftest import (
 from custom_components.climate_director.engine import (
     DirectorConfig,
     GateSettings,
+    Opening,
     OpeningState,
     PresenceState,
     Reason,
@@ -122,6 +123,25 @@ class TestOpenings:
             openings={BACK_DOOR: OpeningState(open=True, changed_at=None)},
         )
         assert not gates.evaluate(config, world, living_room(config)).allowed
+
+    def test_without_a_delay_it_blocks_the_moment_it_opens(self) -> None:
+        """No delay given means no delay wanted, not half a minute of grace."""
+        base = house()
+        config = DirectorConfig(
+            zones=base.zones,
+            circuits=base.circuits,
+            residents=base.residents,
+            openings=(Opening(entity_id=BACK_DOOR),),
+            gates=base.gates,
+            outdoor_sensor=base.outdoor_sensor,
+        )
+        world = make_world(
+            now=at(12, 0),
+            residents=everyone_up(),
+            openings={BACK_DOOR: OpeningState(open=True, changed_at=at(12, 0))},
+        )
+        verdict = gates.evaluate(config, world, living_room(config))
+        assert verdict.reason is Reason.OPENING_OPEN
 
     def test_closed_opening_does_not_block(self) -> None:
         config = house()
