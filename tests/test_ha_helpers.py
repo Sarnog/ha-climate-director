@@ -256,6 +256,73 @@ class TestScheduleWindowsReachTheEngine:
         assert self._verdict(config, datetime(2026, 8, 15, 9, 0)).allowed
 
 
+class TestCircuitCursors:
+    """Circuits gained sub-steps, so they need a cursor of their own."""
+
+    def _flow(self) -> ClimateDirectorOptionsFlow:
+        flow = ClimateDirectorOptionsFlow()
+        flow._installation = {
+            "circuits": [
+                {"circuit_id": "a", "name": "A", "units": ["climate.x", "climate.y"]},
+                {"circuit_id": "b", "name": "B", "units": ["climate.z"]},
+            ],
+            "zones": [
+                {
+                    "zone_id": "woonkamer",
+                    "name": "Woonkamer",
+                    "priority": 2,
+                    "sources": [{"entity_id": "climate.x"}],
+                },
+                {
+                    "zone_id": "zolder",
+                    "name": "Zolder",
+                    "priority": 0,
+                    "sources": [{"entity_id": "climate.y"}],
+                },
+                {
+                    "zone_id": "kelder",
+                    "name": "Kelder",
+                    "priority": 0,
+                    "sources": [{"entity_id": "climate.z"}],
+                },
+            ],
+        }
+        return flow
+
+    def test_a_stale_cursor_yields_no_circuit(self) -> None:
+        flow = self._flow()
+        flow._circuit_index = 9
+        assert flow._current_circuit() is None
+
+    def test_only_the_zones_on_that_circuit_are_offered(self) -> None:
+        flow = self._flow()
+        flow._circuit_index = 0
+        circuit = flow._current_circuit()
+        assert circuit is not None
+        assert [zone["zone_id"] for zone in flow._zones_on(circuit)] == ["zolder", "woonkamer"]
+
+    def test_they_are_listed_in_the_order_they_win_in(self) -> None:
+        """Priority 0 outranks priority 2, so the attic comes first."""
+        flow = self._flow()
+        flow._circuit_index = 0
+        circuit = flow._current_circuit()
+        assert circuit is not None
+        assert flow._zones_on(circuit)[0]["name"] == "Zolder"
+
+    def test_a_circuit_with_one_zone(self) -> None:
+        flow = self._flow()
+        flow._circuit_index = 1
+        circuit = flow._current_circuit()
+        assert circuit is not None
+        assert [zone["zone_id"] for zone in flow._zones_on(circuit)] == ["kelder"]
+
+    def test_the_circuit_cursor_is_not_shared_with_the_zone_one(self) -> None:
+        flow = self._flow()
+        flow._zone_index = 1
+        flow._circuit_index = 0
+        assert flow._zone_index == 1
+
+
 class TestPriorityAfterRestart:
     """What a restart or a reload should start the priority entity from."""
 

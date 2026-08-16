@@ -174,6 +174,25 @@
           "delete": "Verwijdert het circuit. De units blijven werken; ze zijn alleen niet langer aan elkaar gekoppeld."
         }
       },
+      "circuit_priorities": {
+        "title": "Prioriteiten op {circuit}",
+        "description": "Welke zone voorgaat op deze buitenunit. Het laagste nummer wint; de zones staan in de volgorde waarin ze nu winnen. Dit is dezelfde instelling als bij de zone zelf.",
+        "data": {
+          "zone": "Zone"
+        },
+        "data_description": {
+          "zone": "Kies er een om zijn prioriteit te wijzigen, of ga terug."
+        }
+      },
+      "circuit_priority": {
+        "title": "Prioriteit voor {zone}",
+        "data": {
+          "priority": "Prioriteit"
+        },
+        "data_description": {
+          "priority": "Het laagste nummer wint het circuit. Zones met hetzelfde nummer worden op naam gescheiden."
+        }
+      },
       "residents": {
         "title": "Bewoners",
         "description": "Laat dit leeg voor een pand waar niemand gevolgd wordt; de aanwezigheidspoorten worden dan overgeslagen in plaats van eeuwig te blokkeren.",

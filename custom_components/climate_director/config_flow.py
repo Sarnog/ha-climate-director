@@ -110,6 +110,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         # in one list move the position in another.
         self._zone_index: int | None = None
         self._source_index: int | None = None
+        self._circuit_index: int | None = None
+        self._priority_zone_id: str | None = None
         self._resident_index: int | None = None
         self._window_index: int | None = None
         self._index: int | None = None
@@ -416,7 +418,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         circuits = self._list("circuits")
         if user_input is not None:
             choice = user_input["circuit"]
-            self._index = None if choice == _ADD else int(choice)
+            self._circuit_index = None if choice == _ADD else int(choice)
             return await self.async_step_circuit()
 
         options = [
@@ -444,34 +446,36 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Edit one refrigerant circuit."""
         circuits = self._list("circuits")
-        current = circuits[self._index] if self._index is not None else {}
+        current = circuits[self._circuit_index] if self._circuit_index is not None else {}
 
         if user_input is not None:
-            if user_input.get("delete") and self._index is not None:
-                circuits.pop(self._index)
+            if user_input.get("delete") and self._circuit_index is not None:
+                circuits.pop(self._circuit_index)
+                self._circuit_index = None
+                return await self.async_step_init()
+
+            circuit = {
+                "circuit_id": current.get("circuit_id")
+                or _unique_id(
+                    user_input[CONF_NAME],
+                    [item["circuit_id"] for item in circuits],
+                ),
+                "name": user_input[CONF_NAME],
+                "units": user_input["units"],
+                "simultaneous_heat_cool": user_input["simultaneous_heat_cool"],
+                "conflict_policy": user_input["conflict_policy"],
+                "allow_fan_only_during_conflict": user_input["allow_fan_only_during_conflict"],
+                "family_switch_delay": user_input["family_switch_delay"],
+                "min_family_switch_interval": user_input["min_family_switch_interval"],
+                "min_cycle_time": user_input["min_cycle_time"],
+                "max_concurrent_units": user_input.get("max_concurrent_units"),
+            }
+            if self._circuit_index is None:
+                circuits.append(circuit)
+                self._circuit_index = len(circuits) - 1
             else:
-                circuit = {
-                    "circuit_id": current.get("circuit_id")
-                    or _unique_id(
-                        user_input[CONF_NAME],
-                        [item["circuit_id"] for item in circuits],
-                    ),
-                    "name": user_input[CONF_NAME],
-                    "units": user_input["units"],
-                    "simultaneous_heat_cool": user_input["simultaneous_heat_cool"],
-                    "conflict_policy": user_input["conflict_policy"],
-                    "allow_fan_only_during_conflict": user_input["allow_fan_only_during_conflict"],
-                    "family_switch_delay": user_input["family_switch_delay"],
-                    "min_family_switch_interval": user_input["min_family_switch_interval"],
-                    "min_cycle_time": user_input["min_cycle_time"],
-                    "max_concurrent_units": user_input.get("max_concurrent_units"),
-                }
-                if self._index is None:
-                    circuits.append(circuit)
-                else:
-                    circuits[self._index] = circuit
-            self._index = None
-            return await self.async_step_init()
+                circuits[self._circuit_index] = circuit
+            return await self.async_step_circuit_priorities()
 
         return self.async_show_form(
             step_id="circuit",
@@ -510,6 +514,76 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Required("delete", default=False): bool,
                 }
             ),
+        )
+
+    # -- prioriteiten op een circuit / priorities on a circuit ---------------
+
+    async def async_step_circuit_priorities(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick a zone on this circuit whose priority to change, or go back.
+
+        Priority lives on the zone, because that is what it belongs to, but it
+        only ever matters on a shared outdoor unit. Reachable from both places,
+        writing the same field, so the two can never disagree.
+        """
+        circuit = self._current_circuit()
+        if circuit is None:
+            return await self.async_step_init()
+        zones = self._zones_on(circuit)
+
+        if user_input is not None:
+            choice = user_input["zone"]
+            if choice == _BACK:
+                return await self.async_step_init()
+            self._priority_zone_id = choice
+            return await self.async_step_circuit_priority()
+
+        options = [
+            selector.SelectOptionDict(
+                value=zone["zone_id"],
+                label=f"{zone.get('name') or zone['zone_id']} — {zone.get('priority', 0)}",
+            )
+            for zone in zones
+        ]
+        options.append(selector.SelectOptionDict(value=_BACK, label="< Back to menu"))
+        return self.async_show_form(
+            step_id="circuit_priorities",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("zone", default=_BACK): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=options, mode=selector.SelectSelectorMode.LIST
+                        )
+                    )
+                }
+            ),
+            description_placeholders={"circuit": circuit.get("name") or circuit["circuit_id"]},
+        )
+
+    async def async_step_circuit_priority(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Set one zone's priority from the circuit it sits on."""
+        zone = next(
+            (item for item in self._list("zones") if item["zone_id"] == self._priority_zone_id),
+            None,
+        )
+        if zone is None:
+            self._priority_zone_id = None
+            return await self.async_step_circuit_priorities()
+
+        if user_input is not None:
+            zone["priority"] = int(user_input["priority"])
+            self._priority_zone_id = None
+            return await self.async_step_circuit_priorities()
+
+        return self.async_show_form(
+            step_id="circuit_priority",
+            data_schema=vol.Schema(
+                {vol.Required("priority", default=zone.get("priority", 0)): _RANK}
+            ),
+            description_placeholders={"zone": zone.get("name") or zone["zone_id"]},
         )
 
     # -- bewoners / residents ------------------------------------------------
@@ -794,6 +868,23 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
     def _list(self, key: str) -> list[dict[str, Any]]:
         """Return the editable list stored under `key`, creating it if needed."""
         return self._installation.setdefault(key, [])
+
+    def _current_circuit(self) -> dict[str, Any] | None:
+        """Return the circuit being edited, or `None` when the cursor is stale."""
+        circuits = self._list("circuits")
+        if self._circuit_index is None or not 0 <= self._circuit_index < len(circuits):
+            return None
+        return circuits[self._circuit_index]
+
+    def _zones_on(self, circuit: dict[str, Any]) -> list[dict[str, Any]]:
+        """Return the zones with a source on this circuit, most preferred first."""
+        units = set(circuit.get("units") or ())
+        on_it = [
+            zone
+            for zone in self._list("zones")
+            if any(source.get("entity_id") in units for source in zone.get("sources") or ())
+        ]
+        return sorted(on_it, key=lambda zone: (zone.get("priority", 0), zone["zone_id"]))
 
     def _current_resident(self) -> dict[str, Any] | None:
         """Return the resident being edited, or `None` when the cursor is stale."""

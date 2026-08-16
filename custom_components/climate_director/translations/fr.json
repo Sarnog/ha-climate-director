@@ -174,6 +174,25 @@
           "delete": "Supprime le circuit. Les unités continuent de fonctionner ; elles ne sont simplement plus liées entre elles."
         }
       },
+      "circuit_priorities": {
+        "title": "Priorités sur {circuit}",
+        "description": "Quelle zone l'emporte sur cette unité extérieure. Le nombre le plus bas gagne ; les zones sont listées dans l'ordre où elles gagnent actuellement. C'est le même réglage que sous la zone elle-même.",
+        "data": {
+          "zone": "Zone"
+        },
+        "data_description": {
+          "zone": "Choisissez-en une pour changer sa priorité, ou revenez en arrière."
+        }
+      },
+      "circuit_priority": {
+        "title": "Priorité de {zone}",
+        "data": {
+          "priority": "Priorité"
+        },
+        "data_description": {
+          "priority": "Le nombre le plus bas gagne le circuit. Les zones partageant un nombre sont départagées par leur nom."
+        }
+      },
       "residents": {
         "title": "Occupants",
         "description": "Laissez vide pour un bâtiment où personne n'est suivi ; les portes de présence sont alors ignorées au lieu de bloquer indéfiniment.",
