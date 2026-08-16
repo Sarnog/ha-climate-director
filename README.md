@@ -108,10 +108,10 @@ de eerste die dichtzit is de reden die je terugziet in `sensor.*_bron_<zone>`.
 | 1 | **Hoofdschakelaar** | alles | niets | nee |
 | 2 | **Handmatige override** | één zone | niets | nee |
 | 3 | **Openingen** | de zones die je aan de opening koppelt | niets | door de opening niet in te stellen |
-| 4 | **Iemand thuis** | het hele huis | gastenmodus, aanwezigheidszones | nee, dit is een voorwaarde |
+| 4 | **Iemand thuis** | het hele huis | vooruit verwarmen, gastenmodus, aanwezigheidszones | nee, dit is een voorwaarde |
 | 5 | **Wakker** | het hele huis | aanwezigheidszones | ja, *Iemand moet wakker zijn* |
 | 6 | **Rooster** | het hele huis | gastenmodus, aanwezigheidszones | ja, *Het rooster van een bewoner moet openstaan* |
-| 7 | **Aanwezigheid in de ruimte** | één zone | niets | door geen sensor in te stellen |
+| 7 | **Aanwezigheid in de ruimte** | één zone | vooruit verwarmen | door geen sensor in te stellen |
 
 Zo lees je de tabel: staat de hoofdschakelaar uit, dan doet de rest er niet toe. Staat er
 een raam open, dan helpt geen enkele aanwezigheid. En is een kamer aantoonbaar leeg, dan
@@ -138,6 +138,41 @@ Poorten 1, 2 en 3 blijven in beide gevallen gelden. Die gaan niet over mensen.
 
 Zo kun je in één huis de woonkamer op het rooster laten lopen en de zolder op
 aanwezigheid, zonder dat de een de ander in de weg zit.
+
+#### Vooruit verwarmen
+
+De enige manier om een leeg huis te laten draaien, en met opzet de enige die je met de
+hand moet aanzetten. Roep de actie `climate_director.precondition` aan vanaf je telefoon,
+een dashboardknop of een automatisering, en de opgegeven zones beginnen alvast te
+verwarmen of te koelen zodat het goed is als je binnenloopt.
+
+```yaml
+action: climate_director.precondition
+data:
+  zone_ids: [woonkamer]
+  minutes: 45
+```
+
+Wat het overslaat: *iemand thuis*, *wakker*, *rooster* en *aanwezigheid in de ruimte* —
+precies de poorten die een leeg huis tegenhouden. Wat het niet overslaat: de
+hoofdschakelaar, een handmatige override, een openstaand raam, de dode band, de
+buitengrenzen en alle circuitregels. Vooruit verwarmen is een reden om te mogen, geen
+reden om te moeten.
+
+Twee grenzen maken dit veilig, en geen van beide is te vergeten:
+
+- **Het verloopt vanzelf.** Er is geen schakelaar die aan kan blijven staan, alleen een
+  teller die afloopt. Vraag je langer dan het ingestelde maximum (standaard twee uur), dan
+  wordt je verzoek ingekort in plaats van geweigerd. Geen tijd opgeven geeft het maximum.
+- **Het geldt alleen binnen het venster**, standaard 06:00 tot 23:00. Daarbuiten telt een
+  verzoek eenvoudig niet mee, dus een vertypte automatisering kan je 's nachts niet de
+  ketel laten aanslaan.
+
+Bij het aflopen van de teller neemt niets het over: de gewone poorten gelden weer. Ben je
+inmiddels thuis, dan draait alles gewoon door. Is er niemand thuis, dan gaat alles uit.
+Dat is dezelfde poort die het altijd al was, en precies wat je wilt.
+
+Afblazen kan met `climate_director.cancel_precondition`, met of zonder `zone_ids`.
 
 #### Vakantiemodus
 
@@ -197,6 +232,8 @@ regelaars.
 | Herkomst van het seizoen | maand, entiteit, of vast op zomer/winter | een entiteit laat een bestaande helper gewoon doorwerken |
 | Iemand moet wakker zijn | poort 5 aan of uit | uit als je slaapsensoren niet vertrouwt |
 | Het rooster van een bewoner moet openstaan | poort 6 aan of uit | uit als je alleen op aanwezigheid wilt sturen |
+| Vooruit verwarmen vanaf / tot | het venster waarin een verzoek meetelt | dit is het enige dat een leeg huis laat draaien |
+| Langste vooruitverwarming | het plafond op één verzoek | een verzoek kun je niet vergeten, alleen vertypen |
 | Gastenmodus vanaf / tot | het gastenvenster | voorkomt dat een vergeten schakelaar de nacht doordraait |
 | Vakantieagenda's | welke agenda's vakantie mogen aankondigen | meerdere toegestaan |
 | Woord dat vakantie aangeeft | het trefwoord dat een item moet dragen | leeg = agenda's worden genegeerd |
@@ -540,10 +577,10 @@ walked from broad to narrow, and the first one that is shut is the reason you se
 | 1 | **Master switch** | everything | nothing | no |
 | 2 | **Manual override** | one zone | nothing | no |
 | 3 | **Openings** | the zones you attach the opening to | nothing | by not configuring the opening |
-| 4 | **Somebody home** | the whole house | guest mode, presence-driven zones | no, this is a condition |
+| 4 | **Somebody home** | the whole house | pre-conditioning, guest mode, presence-driven zones | no, this is a condition |
 | 5 | **Awake** | the whole house | presence-driven zones | yes, *Somebody must be awake* |
 | 6 | **Schedule** | the whole house | guest mode, presence-driven zones | yes, *A resident's schedule must be open* |
-| 7 | **Room presence** | one zone | nothing | by setting no sensor |
+| 7 | **Room presence** | one zone | pre-conditioning | by setting no sensor |
 
 Read the table like this: with the master switch off, the rest does not matter. With a
 window open, no amount of presence helps. And a room that is demonstrably empty is not
@@ -569,6 +606,39 @@ Gates 1, 2 and 3 apply either way. Those are not about people.
 
 So one house can run its living room on the schedule and its attic on presence, without
 either getting in the other's way.
+
+#### Pre-conditioning
+
+The only way to run an empty house, and deliberately the only one you have to switch on by
+hand. Call the action `climate_director.precondition` from your phone, a dashboard button
+or an automation, and the named zones start heating or cooling ahead so the place is right
+when you walk in.
+
+```yaml
+action: climate_director.precondition
+data:
+  zone_ids: [woonkamer]
+  minutes: 45
+```
+
+What it skips: *somebody home*, *awake*, *schedule* and *room presence* — exactly the gates
+that hold an empty house back. What it does not skip: the master switch, a manual override,
+an open window, the dead band, the outdoor bounds and every circuit rule. Pre-conditioning
+is a reason to be allowed, never a reason to be needed.
+
+Two bounds make this safe, and neither can be forgotten:
+
+- **It expires by itself.** There is no switch that can be left on, only a timer that runs
+  out. Ask for longer than the configured maximum (two hours by default) and your request
+  is shortened rather than refused. Giving no time at all gives you the maximum.
+- **It only counts inside the window**, 06:00 to 23:00 by default. Outside it a request
+  simply does not count, so a mistyped automation cannot fire the boiler at three at night.
+
+When the timer runs out nothing takes over: the ordinary gates apply again. If you are home
+by then, everything simply keeps running. If nobody is home, everything goes off. That is
+the same gate it always was, and exactly what you want.
+
+Call it off with `climate_director.cancel_precondition`, with or without `zone_ids`.
 
 #### Holiday mode
 
@@ -626,6 +696,8 @@ controls.
 | Where the season comes from | month, entity, or pinned to summer/winter | an entity lets an existing helper keep working |
 | Somebody must be awake | gate 5 on or off | off if you do not trust your sleep sensors |
 | A resident's schedule must be open | gate 6 on or off | off if you want to steer on presence alone |
+| Pre-conditioning from / until | the window in which a request counts | this is the only thing that runs an empty house |
+| Longest pre-conditioning | the ceiling on a single request | a request cannot be forgotten, only mistyped |
 | Guest mode from / until | the guest window | keeps a forgotten switch from running all night |
 | Holiday calendars | which calendars may announce a holiday | several allowed |
 | Word that marks a holiday | the keyword an event must carry | empty = calendars are ignored |
