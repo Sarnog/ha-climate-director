@@ -202,3 +202,113 @@ class TestTheSetting:
 
         broken = DirectorConfig(zones=config().zones, stuck_after=timedelta(seconds=-1))
         assert any("stuck-detection time is negative" in item for item in validate(broken))
+
+
+class TestUnitsBelongingToNobody:
+    """A unit on a circuit but in no zone: exactly what caught the user out.
+
+    Zo'n unit houdt het hele circuit op zijn taak zodra hij draait, en de
+    director kan hem niet uitzetten want hij is van niemand. Van buiten lijkt
+    dat op "de director doet niets", en daar kwam de gebruiker pas achter door
+    de installatie handmatig door te rekenen.
+
+    Such a unit holds the whole circuit to its duty the moment it runs, and the
+    director cannot stand it down because it belongs to nobody. From the outside
+    that looks like "the director does nothing", which the user only found out
+    by working the installation through by hand.
+    """
+
+    def _config(self, units: tuple[str, ...]) -> DirectorConfig:
+        from custom_components.climate_director.engine import Circuit
+
+        return DirectorConfig(
+            zones=(
+                Zone(
+                    "woonkamer",
+                    "Woonkamer",
+                    "sensor.woonkamer",
+                    sources=(Source("w", "climate.huiskamer"),),
+                    heat=ModeSettings(21.0, 20.0),
+                ),
+            ),
+            circuits=(Circuit("airco", "Airco", units=units),),
+        )
+
+    def _problems(self, units: tuple[str, ...]) -> list[str]:
+        from custom_components.climate_director.engine import validate
+
+        return [item for item in validate(self._config(units)) if "in no zone" in item]
+
+    def test_a_stray_unit_is_reported(self) -> None:
+        found = self._problems(("climate.huiskamer", "climate.master_bedroom"))
+        assert found
+        assert "climate.master_bedroom" in found[0]
+
+    def test_every_stray_unit_is_named(self) -> None:
+        found = self._problems(("climate.huiskamer", "climate.a", "climate.b"))
+        assert len(found) == 2
+
+    def test_a_circuit_of_only_known_units_is_sound(self) -> None:
+        assert not self._problems(("climate.huiskamer",))
+
+    def test_a_manual_source_still_counts_as_known(self) -> None:
+        """Turning autostart off does not make a unit stray; it is still a source."""
+        from custom_components.climate_director.engine import Circuit, validate
+
+        config = DirectorConfig(
+            zones=(
+                Zone(
+                    "slaapkamer",
+                    "Slaapkamer",
+                    "climate.master_bedroom",
+                    sources=(Source("s", "climate.master_bedroom", autostart=False),),
+                    heat=ModeSettings(21.0, 20.0),
+                ),
+            ),
+            circuits=(Circuit("airco", "Airco", units=("climate.master_bedroom",)),),
+        )
+        assert not [item for item in validate(config) if "in no zone" in item]
+
+
+class TestEntitiesThatCannotBeRead:
+    """A mistyped or dropped-out entity fails silently, so it gets said out loud."""
+
+    def _coordinator(self, states: dict[str, str | None]):
+        class Registry:
+            def get(self, entity_id):
+                value = states.get(entity_id, "__absent__")
+                if value == "__absent__" or value is None:
+                    return None
+                return type("S", (), {"state": value})()
+
+        class Hass:
+            def __init__(self) -> None:
+                self.states = Registry()
+
+        class StandIn:
+            def __init__(self) -> None:
+                self.config = config()
+                self.hass = Hass()
+
+            tracked_entities = ClimateDirectorCoordinator.tracked_entities
+            unusable_entities = ClimateDirectorCoordinator.unusable_entities
+
+        return StandIn()
+
+    def test_everything_readable_is_quiet(self) -> None:
+        item = self._coordinator({"sensor.woonkamer": "21.0", "climate.huiskamer": "off"})
+        assert item.unusable_entities() == {}
+
+    def test_a_missing_entity_is_named(self) -> None:
+        """The classic typo: the id is wrong, so the zone silently never runs."""
+        item = self._coordinator({"climate.huiskamer": "off"})
+        assert item.unusable_entities() == {"sensor.woonkamer": "missing"}
+
+    @pytest.mark.parametrize("state", ["unavailable", "unknown"])
+    def test_an_unreadable_entity_is_named(self, state: str) -> None:
+        item = self._coordinator({"sensor.woonkamer": state, "climate.huiskamer": "off"})
+        assert item.unusable_entities() == {"sensor.woonkamer": state}
+
+    def test_several_are_all_named(self) -> None:
+        item = self._coordinator({"sensor.woonkamer": "unavailable"})
+        assert set(item.unusable_entities()) == {"sensor.woonkamer", "climate.huiskamer"}
