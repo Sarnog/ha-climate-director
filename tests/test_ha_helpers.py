@@ -23,6 +23,7 @@ from custom_components.climate_director.config_flow import (
     ClimateDirectorOptionsFlow,
     _all_source_ids,
     _deep_copy,
+    _next_priority,
     _unique_id,
     _window_label,
     _zone_from_form,
@@ -321,6 +322,28 @@ class TestCircuitCursors:
         flow._zone_index = 1
         flow._circuit_index = 0
         assert flow._zone_index == 1
+
+
+class TestNextPriority:
+    """A new zone counts up rather than joining everyone else on zero."""
+
+    def test_the_first_zone_starts_at_zero(self) -> None:
+        assert _next_priority([]) == 0
+
+    def test_each_new_zone_takes_the_next_number(self) -> None:
+        zones = [{"priority": 0}]
+        assert _next_priority(zones) == 1
+        assert _next_priority([*zones, {"priority": 1}]) == 2
+
+    def test_it_never_collides_after_a_deletion(self) -> None:
+        """Counting the list would reuse a number a surviving zone still holds."""
+        assert _next_priority([{"priority": 0}, {"priority": 5}]) == 6
+
+    def test_zones_without_a_priority_are_ignored(self) -> None:
+        assert _next_priority([{"name": "no priority yet"}]) == 0
+
+    def test_a_boolean_is_not_read_as_a_number(self) -> None:
+        assert _next_priority([{"priority": True}]) == 0
 
 
 class TestPriorityAfterRestart:

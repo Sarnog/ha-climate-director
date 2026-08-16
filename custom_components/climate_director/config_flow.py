@@ -268,6 +268,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
 
         heat = current.get("heat") or {}
         cool = current.get("cool") or {}
+        priority = current.get("priority", _next_priority(zones))
         return self.async_show_form(
             step_id="zone",
             data_schema=vol.Schema(
@@ -279,7 +280,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     ): selector.EntitySelector(
                         selector.EntitySelectorConfig(domain=["sensor", "climate"])
                     ),
-                    vol.Required("priority", default=current.get("priority", 0)): _RANK,
+                    vol.Required("priority", default=priority): _RANK,
                     vol.Optional(
                         "presence_entity",
                         description={"suggested_value": current.get("presence_entity") or None},
@@ -1039,6 +1040,23 @@ def _zone_from_form(user_input: dict[str, Any], current: dict[str, Any]) -> dict
         "presence_state": user_input.get("presence_state") or "on",
         "presence_timeout": user_input.get("presence_timeout") or 0,
     }
+
+
+def _next_priority(zones: list[dict[str, Any]]) -> int:
+    """Return the priority a newly added zone should start on.
+
+    Every zone defaulting to zero would leave them all tied, and a tie falls
+    back on the zone id - so the room that happens to come first alphabetically
+    would quietly win every circuit. Counting up instead means the order rooms
+    are added in is the order they win in, which is both predictable and easy
+    to correct.
+    """
+    used = [
+        zone["priority"]
+        for zone in zones
+        if isinstance(zone.get("priority"), int) and not isinstance(zone.get("priority"), bool)
+    ]
+    return max(used) + 1 if used else 0
 
 
 def _window_label(window: dict[str, Any]) -> str:
