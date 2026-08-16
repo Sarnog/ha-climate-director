@@ -20,7 +20,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Mapping
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -55,6 +55,7 @@ from .engine import (
 )
 from .engine.constraints import active_family
 from .engine.diff import Change, changes
+from .engine.families import family_of
 from .engine.models import SeasonSource
 from .engine.serialise import config_from_dict
 
@@ -178,6 +179,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self.guest_mode = False
         self._precondition: dict[str, datetime] = {}
         self.zone_overrides: dict[str, bool] = {}
+        self._handed_back: dict[str, date] = {}
         self.zone_priorities: dict[str, int] = {}
 
         self.world: WorldState | None = None
@@ -284,7 +286,88 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
     @callback
     def _handle_change(self, event: Event[EventStateChangedData]) -> None:
         """Queue a fresh decision after a tracked entity changed."""
+        self._notice_hand(event)
         self._debouncer.async_schedule_call()
+
+    @callback
+    def _notice_hand(self, event: Event[EventStateChangedData]) -> None:
+        """Record an appliance somebody switched off, or switched back on.
+
+        Iemand die bij het apparaat zelf op uit drukt zegt daarmee iets, en dat
+        overstemmen door het meteen weer aan te zetten is het ergste wat deze
+        integratie kan doen. Dus: die zone valt stil tot dezelfde hand hem weer
+        aanzet, of tot de volgende dag - want een besluit van gisteravond hoort
+        vanochtend niet meer te gelden.
+
+        Somebody pressing off on the appliance itself is saying something, and
+        overriding that by switching it straight back on is the worst thing this
+        integration can do. So: that zone falls silent until the same hand turns
+        it back on, or until the next day - since last night's decision should
+        not still hold this morning.
+        """
+        entity_id = event.data["entity_id"]
+        zone = self._zone_of(entity_id)
+        if zone is None:
+            return
+
+        new_state = event.data["new_state"]
+        old_state = event.data["old_state"]
+        if new_state is None or old_state is None:
+            return
+
+        was = family_of(old_state.state)
+        now = family_of(new_state.state)
+        if was is now:
+            return
+
+        if now is not ModeFamily.NEUTRAL:
+            # Weer aangezet, met de hand of door ons: hoe dan ook meedoen.
+            # Switched on again, by hand or by us: taking part either way.
+            self._handed_back.pop(zone, None)
+            return
+
+        # Alleen als wíj hem niet net hebben uitgezet. Ons eigen commando is
+        # geen handmatige ingreep, en zou de zone anders permanent stilleggen.
+        #
+        # Only when we did not just switch it off ourselves. Our own command is
+        # not a hand at the appliance, and would otherwise silence the zone for
+        # good.
+        if self._we_wanted_it_off(entity_id):
+            return
+
+        self._handed_back[zone] = dt_util.now().date()
+
+    def _zone_of(self, entity_id: str) -> str | None:
+        """Return the zone this climate entity serves, if the director drives it."""
+        for zone, source in self.config.sources():
+            if source.entity_id == entity_id:
+                return zone.zone_id
+        return None
+
+    def _we_wanted_it_off(self, entity_id: str) -> bool:
+        """Return whether the last plan already had this appliance standing still."""
+        plan = self.data
+        if plan is None:
+            return False
+        for command in plan.commands:
+            if command.entity_id == entity_id:
+                return family_of(command.hvac_mode) is ModeFamily.NEUTRAL
+        return False
+
+    def _zones_handed_back(self) -> set[str]:
+        """Return the zones a hand stood down today, forgetting yesterday's.
+
+        De datum is de hele vervaltermijn. Wie gisteravond de slaapkamer uitzette
+        wil vanochtend niet dat hij nog steeds stilstaat, en een teller van
+        vierentwintig uur zou dat wel doen.
+
+        The date is the whole expiry. Whoever switched the bedroom off last night
+        does not want it still standing still this morning, and a twenty-four
+        hour timer would do exactly that.
+        """
+        today = dt_util.now().date()
+        self._handed_back = {zone: day for zone, day in self._handed_back.items() if day == today}
+        return set(self._handed_back)
 
     @callback
     def async_request_evaluation(self) -> None:
@@ -427,7 +510,10 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             holiday_mode=self.holiday_mode or self._calendar_says_holiday(),
             guest_mode=self.guest_mode,
             precondition_until=self._live_preconditions(),
-            zone_overrides=dict(self.zone_overrides),
+            zone_overrides={
+                **dict.fromkeys(self._zones_handed_back(), True),
+                **self.zone_overrides,
+            },
             zone_priorities=dict(self.zone_priorities),
         )
 

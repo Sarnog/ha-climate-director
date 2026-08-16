@@ -28,8 +28,9 @@ from .engine.models import ConflictPolicy, Season, SeasonSource, SourceRole, Zon
 
 CONF_NAME = "name"
 
-_ADD = "__add__"
-_BACK = "__back__"
+_ADD = "add_new"
+_BACK = "back_to_menu"
+_CANCEL = "discard"
 
 _ADD_FALLBACK = {
     "zone": "+ Add zone",
@@ -89,6 +90,15 @@ def _choices(values: list[str], key: str = "") -> selector.SelectSelector:
             translation_key=key or None,
         )
     )
+
+
+def _back_option(key: str) -> selector.SelectOptionDict:
+    """Return the "back to the main menu" row of a picker.
+
+    De Engelse tekst blijft als terugval staan, net als bij de toevoegregel.
+    The English text stays as a fallback, as with the add row.
+    """
+    return selector.SelectOptionDict(value=_BACK, label="< Back to the main menu")
 
 
 def _add_option(key: str) -> selector.SelectOptionDict:
@@ -309,6 +319,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         zones = self._list("zones")
         if user_input is not None:
             choice = user_input["zone"]
+            if choice == _BACK:
+                return await self.async_step_init()
             self._zone_index = None if choice == _ADD else int(choice)
             return await self.async_step_zone()
 
@@ -317,6 +329,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for index, zone in enumerate(zones)
         ]
         options.append(_add_option("zone"))
+        options.append(_back_option("zone"))
         return self.async_show_form(
             step_id="zones",
             data_schema=vol.Schema(
@@ -340,6 +353,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            if user_input.get(_CANCEL):
+                return await self.async_step_zones()
             if user_input.get("delete") and self._zone_index is not None:
                 zones.pop(self._zone_index)
                 self._zone_index = None
@@ -411,6 +426,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         default=Season.SUMMER.value in (cool.get("seasons") or []),
                     ): bool,
                     vol.Required("delete", default=False): bool,
+                    vol.Required(_CANCEL, default=False): bool,
                 }
             ),
         )
@@ -438,7 +454,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for index, source in enumerate(sources)
         ]
         options.append(_add_option("source"))
-        options.append(selector.SelectOptionDict(value=_BACK, label="< Back to menu"))
+        options.append(_back_option("source"))
         return self.async_show_form(
             step_id="sources",
             data_schema=vol.Schema(
@@ -464,6 +480,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         current = sources[self._source_index] if self._source_index is not None else {}
 
         if user_input is not None:
+            if user_input.get(_CANCEL):
+                return await self.async_step_sources()
             if user_input.get("delete") and self._source_index is not None:
                 sources.pop(self._source_index)
             else:
@@ -512,6 +530,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         description={"suggested_value": outdoor.get("maximum")},
                     ): _TEMPERATURE,
                     vol.Required("delete", default=False): bool,
+                    vol.Required(_CANCEL, default=False): bool,
                 }
             ),
         )
@@ -525,6 +544,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         circuits = self._list("circuits")
         if user_input is not None:
             choice = user_input["circuit"]
+            if choice == _BACK:
+                return await self.async_step_init()
             self._circuit_index = None if choice == _ADD else int(choice)
             return await self.async_step_circuit()
 
@@ -535,6 +556,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for index, circuit in enumerate(circuits)
         ]
         options.append(_add_option("circuit"))
+        options.append(_back_option("circuit"))
         return self.async_show_form(
             step_id="circuits",
             data_schema=vol.Schema(
@@ -558,6 +580,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         current = circuits[self._circuit_index] if self._circuit_index is not None else {}
 
         if user_input is not None:
+            if user_input.get(_CANCEL):
+                return await self.async_step_circuits()
             if user_input.get("delete") and self._circuit_index is not None:
                 circuits.pop(self._circuit_index)
                 self._circuit_index = None
@@ -621,6 +645,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         description={"suggested_value": current.get("max_concurrent_units")},
                     ): _RANK,
                     vol.Required("delete", default=False): bool,
+                    vol.Required(_CANCEL, default=False): bool,
                 }
             ),
         )
@@ -655,14 +680,16 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             )
             for zone in zones
         ]
-        options.append(selector.SelectOptionDict(value=_BACK, label="< Back to menu"))
+        options.append(_back_option("circuit_priority"))
         return self.async_show_form(
             step_id="circuit_priorities",
             data_schema=vol.Schema(
                 {
                     vol.Required("zone", default=_BACK): selector.SelectSelector(
                         selector.SelectSelectorConfig(
-                            options=options, mode=selector.SelectSelectorMode.LIST
+                            options=options,
+                            mode=selector.SelectSelectorMode.LIST,
+                            translation_key="circuit_priority_list",
                         )
                     )
                 }
@@ -711,6 +738,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         generators = self._list("generators")
         if user_input is not None:
             choice = user_input["generator"]
+            if choice == _BACK:
+                return await self.async_step_init()
             self._index = None if choice == _ADD else int(choice)
             return await self.async_step_generator()
 
@@ -721,6 +750,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for index, item in enumerate(generators)
         ]
         options.append(_add_option("generator"))
+        options.append(_back_option("generator"))
         return self.async_show_form(
             step_id="generators",
             data_schema=vol.Schema(
@@ -744,6 +774,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         current = generators[self._index] if self._index is not None else {}
 
         if user_input is not None:
+            if user_input.get(_CANCEL):
+                return await self.async_step_generators()
             if user_input.get("delete") and self._index is not None:
                 generators.pop(self._index)
             else:
@@ -789,6 +821,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         "setpoint", description={"suggested_value": current.get("setpoint")}
                     ): _TEMPERATURE,
                     vol.Required("delete", default=False): bool,
+                    vol.Required(_CANCEL, default=False): bool,
                 }
             ),
         )
@@ -802,6 +835,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         residents = self._list("residents")
         if user_input is not None:
             choice = user_input["resident"]
+            if choice == _BACK:
+                return await self.async_step_init()
             self._resident_index = None if choice == _ADD else int(choice)
             return await self.async_step_resident()
 
@@ -812,6 +847,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for index, person in enumerate(residents)
         ]
         options.append(_add_option("resident"))
+        options.append(_back_option("resident"))
         return self.async_show_form(
             step_id="residents",
             data_schema=vol.Schema(
@@ -835,6 +871,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         current = residents[self._resident_index] if self._resident_index is not None else {}
 
         if user_input is not None:
+            if user_input.get(_CANCEL):
+                return await self.async_step_residents()
             if user_input.get("delete") and self._resident_index is not None:
                 residents.pop(self._resident_index)
                 self._resident_index = None
@@ -887,6 +925,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     ),
                     vol.Required("sleep_state", default=current.get("sleep_state", "on")): _TEXT,
                     vol.Required("delete", default=False): bool,
+                    vol.Required(_CANCEL, default=False): bool,
                 }
             ),
         )
@@ -914,7 +953,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for index, window in enumerate(windows)
         ]
         options.append(_add_option("window"))
-        options.append(selector.SelectOptionDict(value=_BACK, label="< Back to menu"))
+        options.append(_back_option("window"))
         return self.async_show_form(
             step_id="windows",
             data_schema=vol.Schema(
@@ -942,6 +981,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         current = windows[self._window_index] if self._window_index is not None else {}
 
         if user_input is not None:
+            if user_input.get(_CANCEL):
+                return await self.async_step_windows()
             if user_input.get("delete") and self._window_index is not None:
                 windows.pop(self._window_index)
             else:
@@ -989,6 +1030,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         )
                     ),
                     vol.Required("delete", default=False): bool,
+                    vol.Required(_CANCEL, default=False): bool,
                 }
             ),
         )
@@ -1002,6 +1044,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         openings = self._list("openings")
         if user_input is not None:
             choice = user_input["opening"]
+            if choice == _BACK:
+                return await self.async_step_init()
             self._index = None if choice == _ADD else int(choice)
             return await self.async_step_opening()
 
@@ -1010,6 +1054,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for index, opening in enumerate(openings)
         ]
         options.append(_add_option("opening"))
+        options.append(_back_option("opening"))
         return self.async_show_form(
             step_id="openings",
             data_schema=vol.Schema(
@@ -1033,6 +1078,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         current = openings[self._index] if self._index is not None else {}
 
         if user_input is not None:
+            if user_input.get(_CANCEL):
+                return await self.async_step_openings()
             if user_input.get("delete") and self._index is not None:
                 openings.pop(self._index)
             else:
@@ -1074,6 +1121,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         "delay", description={"suggested_value": current.get("delay") or None}
                     ): _SECONDS,
                     vol.Required("delete", default=False): bool,
+                    vol.Required(_CANCEL, default=False): bool,
                 }
             ),
         )

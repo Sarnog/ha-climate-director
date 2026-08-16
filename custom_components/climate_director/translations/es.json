@@ -23,10 +23,10 @@
         "menu_options": {
           "settings": "Ajustes generales",
           "zones": "Zonas y fuentes",
-          "circuits": "Circuitos frigoríficos",
+          "circuits": "Circuitos de climatización",
           "residents": "Residentes",
           "openings": "Puertas y ventanas",
-          "save": "Guardar y cerrar",
+          "save": "✅ Guardar y cerrar",
           "generators": "Fuentes de calor compartidas"
         }
       },
@@ -95,7 +95,8 @@
           "presence_entity": "Presencia en esta habitación",
           "presence_state": "Estado que significa ocupada",
           "presence_timeout": "Seguir contando como ocupada durante (segundos)",
-          "gate": "Qué decide si esta zona funciona"
+          "gate": "Qué decide si esta zona funciona",
+          "discard": "Descartar y volver"
         },
         "data_description": {
           "indoor_sensor": "Un sensor de temperatura, o una entidad climate que ya mide la habitación.",
@@ -116,7 +117,8 @@
           "cool_hysteresis": "La refrigeración para una banda por debajo del punto de encendido. Cero hace que la zona oscile sobre una sola temperatura.",
           "cool_outdoor_min": "Por debajo de esta temperatura exterior la refrigeración sigue apagada. Déjalo vacío para no poner límite.",
           "cool_summer_only": "Ata la refrigeración a la estación definida en Ajustes generales.",
-          "gate": "'household' sigue el horario, el sueño y si hay alguien en casa; un sensor de presencia lo estrecha después. 'presence' deja que la habitación decida sola, de modo que una habitación ocupada anula el horario, que es lo que necesita una habitación de uso ocasional. Elegirlo exige un sensor de presencia."
+          "gate": "'household' sigue el horario, el sueño y si hay alguien en casa; un sensor de presencia lo estrecha después. 'presence' deja que la habitación decida sola, de modo que una habitación ocupada anula el horario, que es lo que necesita una habitación de uso ocasional. Elegirlo exige un sensor de presencia.",
+          "discard": "Sale de esta pantalla sin conservar lo que cambiaste aquí."
         }
       },
       "sources": {
@@ -139,7 +141,8 @@
           "outdoor_min": "Usar a partir de esta temperatura exterior",
           "outdoor_max": "Usar hasta esta temperatura exterior",
           "delete": "Eliminar esta fuente",
-          "autostart": "Encender este aparato automáticamente"
+          "autostart": "Encender este aparato automáticamente",
+          "discard": "Descartar y volver"
         },
         "data_description": {
           "priority": "El más bajo gana cuando varias fuentes podrían cumplir la misma tarea.",
@@ -148,11 +151,12 @@
           "entity_id": "La entidad climate que gobierna esta fuente.",
           "role": "Si este aparato puede calentar, enfriar, o ambas cosas. Una caldera solo calienta.",
           "delete": "Saca la fuente de esta zona. El aparato en sí queda intacto.",
-          "autostart": "Desactivado lo deja en paz: el director nunca lo enciende, y solo lo apaga si realiza una tarea que la unidad exterior compartida no permite. Para un aparato que enciendes tú y quieres dejar como está."
+          "autostart": "Desactivado lo deja en paz: el director nunca lo enciende, y solo lo apaga si realiza una tarea que la unidad exterior compartida no permite. Para un aparato que enciendes tú y quieres dejar como está.",
+          "discard": "Sale de esta pantalla sin conservar lo que cambiaste aquí."
         }
       },
       "circuits": {
-        "title": "Circuitos frigoríficos",
+        "title": "Circuitos de climatización",
         "description": "Un circuito es una unidad exterior con las unidades interiores conectadas a ella. Déjalo vacío si cada unidad tiene su propia unidad exterior.",
         "data": {
           "circuit": "Circuito"
@@ -162,7 +166,7 @@
         }
       },
       "circuit": {
-        "title": "Circuito frigorífico",
+        "title": "Circuito de climatización",
         "description": "Las unidades interiores que comparten una unidad exterior normalmente no pueden calentar y enfriar a la vez. Enuméralas aquí para que el director pueda decidir entre ellas.",
         "data": {
           "name": "Nombre",
@@ -174,7 +178,8 @@
           "min_family_switch_interval": "Tiempo mínimo antes de cambiar de tarea (segundos)",
           "min_cycle_time": "Descanso antes de que una unidad pueda rearrancar (segundos)",
           "max_concurrent_units": "Número máximo de unidades funcionando a la vez",
-          "delete": "Eliminar este circuito"
+          "delete": "Eliminar este circuito",
+          "discard": "Descartar y volver"
         },
         "data_description": {
           "units": "Incluye también las unidades que el director no gobierna: siguen reclamando el compresor.",
@@ -186,7 +191,8 @@
           "family_switch_delay": "Para la tarea antigua, espera, y solo entonces arranca la nueva, para no invertir bruscamente la unidad exterior.",
           "min_family_switch_interval": "Evita que una zona arrastre el compresor de un lado a otro entre calentar y enfriar.",
           "max_concurrent_units": "Para una unidad exterior que no puede con todas sus unidades interiores a la vez. Déjalo vacío para no poner límite.",
-          "delete": "Elimina el circuito. Las unidades siguen funcionando; simplemente dejan de estar atadas entre sí."
+          "delete": "Elimina el circuito. Las unidades siguen funcionando; simplemente dejan de estar atadas entre sí.",
+          "discard": "Sale de esta pantalla sin conservar lo que cambiaste aquí."
         }
       },
       "circuit_priorities": {
@@ -226,14 +232,16 @@
           "entity_id": "Entidad climate",
           "zone_ids": "Habitaciones a las que sirve",
           "setpoint": "Consigna fija",
-          "delete": "Eliminar esta fuente de calor"
+          "delete": "Eliminar esta fuente de calor",
+          "discard": "Descartar y volver"
         },
         "data_description": {
           "name": "Un nombre, para distinguir fuentes de calor.",
           "entity_id": "La caldera o bomba de calor en sí. No puede ser además la fuente de una zona, o recibiría dos órdenes.",
           "zone_ids": "Déjalo vacío para todas las habitaciones.",
           "setpoint": "Déjalo vacío para seguir la consigna más alta entre las habitaciones que piden. Tomar la más baja dejaría corta a la que más pide.",
-          "delete": "Elimina la fuente de calor; las válvulas siguen funcionando por su cuenta."
+          "delete": "Elimina la fuente de calor; las válvulas siguen funcionando por su cuenta.",
+          "discard": "Sale de esta pantalla sin conservar lo que cambiaste aquí."
         }
       },
       "residents": {
@@ -253,14 +261,16 @@
           "presence_entity": "Presencia",
           "sleep_entity": "Sueño",
           "sleep_state": "Estado que significa dormido",
-          "delete": "Eliminar este residente"
+          "delete": "Eliminar este residente",
+          "discard": "Descartar y volver"
         },
         "data_description": {
           "sleep_entity": "Déjalo vacío si no se sigue el sueño de esta persona.",
           "sleep_state": "Un sensor de cama informa on, un sensor del tipo de cargador de un teléfono informa wireless.",
           "name": "Un nombre, para distinguir residentes.",
           "presence_entity": "Normalmente una entidad person. Indica si este residente está en casa.",
-          "delete": "Elimina al residente junto con sus horarios."
+          "delete": "Elimina al residente junto con sus horarios.",
+          "discard": "Sale de esta pantalla sin conservar lo que cambiaste aquí."
         }
       },
       "windows": {
@@ -281,14 +291,16 @@
           "end": "Hasta",
           "weekdays": "Días",
           "delete": "Eliminar este horario",
-          "holiday": "Esta es una franja de vacaciones"
+          "holiday": "Esta es una franja de vacaciones",
+          "discard": "Descartar y volver"
         },
         "data_description": {
           "weekdays": "Déjalo vacío para todos los días.",
           "end": "Excluida de la franja.",
           "start": "Incluida en la franja.",
           "delete": "Elimina este horario.",
-          "holiday": "Una franja de vacaciones solo se aplica con el modo vacaciones activo, y entonces sustituye a las franjas ordinarias. Sus días de la semana no cuentan. Sin ella, un día de vacaciones cuenta como un sábado."
+          "holiday": "Una franja de vacaciones solo se aplica con el modo vacaciones activo, y entonces sustituye a las franjas ordinarias. Sus días de la semana no cuentan. Sin ella, un día de vacaciones cuenta como un sábado.",
+          "discard": "Sale de esta pantalla sin conservar lo que cambiaste aquí."
         }
       },
       "openings": {
@@ -307,13 +319,15 @@
           "entity_id": "Sensor",
           "zone_ids": "Zonas afectadas",
           "delay": "Retardo antes de suspender (segundos)",
-          "delete": "Eliminar esta abertura"
+          "delete": "Eliminar esta abertura",
+          "discard": "Descartar y volver"
         },
         "data_description": {
           "zone_ids": "Déjalo vacío para suspender toda la instalación.",
           "delay": "Déjalo vacío o ponlo a cero para suspender en cuanto se abre.",
           "entity_id": "El contacto de puerta o ventana. Abierto cuenta como el estado 'on'.",
-          "delete": "Elimina la abertura; deja de suspender nada."
+          "delete": "Elimina la abertura; deja de suspender nada.",
+          "discard": "Sale de esta pantalla sin conservar lo que cambiaste aquí."
         }
       }
     },
@@ -382,37 +396,44 @@
   "selector": {
     "zone_list": {
       "options": {
-        "__add__": "+ Añadir zona"
+        "add_new": "+ Añadir zona",
+        "back_to_menu": "← Volver al menú principal"
       }
     },
     "source_list": {
       "options": {
-        "__add__": "+ Añadir fuente"
+        "add_new": "+ Añadir fuente",
+        "back_to_menu": "← Volver al menú principal"
       }
     },
     "circuit_list": {
       "options": {
-        "__add__": "+ Añadir circuito"
+        "add_new": "+ Añadir circuito",
+        "back_to_menu": "← Volver al menú principal"
       }
     },
     "generator_list": {
       "options": {
-        "__add__": "+ Añadir fuente de calor"
+        "add_new": "+ Añadir fuente de calor",
+        "back_to_menu": "← Volver al menú principal"
       }
     },
     "resident_list": {
       "options": {
-        "__add__": "+ Añadir residente"
+        "add_new": "+ Añadir residente",
+        "back_to_menu": "← Volver al menú principal"
       }
     },
     "window_list": {
       "options": {
-        "__add__": "+ Añadir horario"
+        "add_new": "+ Añadir horario",
+        "back_to_menu": "← Volver al menú principal"
       }
     },
     "opening_list": {
       "options": {
-        "__add__": "+ Añadir apertura"
+        "add_new": "+ Añadir apertura",
+        "back_to_menu": "← Volver al menú principal"
       }
     },
     "season_source": {
@@ -442,6 +463,11 @@
         "first_come": "El primero: la tarea en marcha se queda el circuito",
         "demand": "Demanda: gana la mayor desviación",
         "season_lock": "Estación: la estación dicta la tarea"
+      }
+    },
+    "circuit_priority_list": {
+      "options": {
+        "back_to_menu": "< Volver a los circuitos"
       }
     }
   }

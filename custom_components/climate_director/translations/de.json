@@ -23,10 +23,10 @@
         "menu_options": {
           "settings": "Allgemeine Einstellungen",
           "zones": "Zonen und Quellen",
-          "circuits": "Kältekreise",
+          "circuits": "Klimakreise",
           "residents": "Bewohner",
           "openings": "Türen und Fenster",
-          "save": "Speichern und schließen",
+          "save": "✅ Speichern und schließen",
           "generators": "Gemeinsame Wärmequellen"
         }
       },
@@ -95,7 +95,8 @@
           "presence_entity": "Anwesenheit in diesem Raum",
           "presence_state": "Zustand, der belegt bedeutet",
           "presence_timeout": "Noch so lange als belegt zählen (Sekunden)",
-          "gate": "Was entscheidet, ob diese Zone läuft"
+          "gate": "Was entscheidet, ob diese Zone läuft",
+          "discard": "Verwerfen und zurück"
         },
         "data_description": {
           "indoor_sensor": "Ein Temperatursensor, oder eine Climate-Entität, die den Raum bereits misst.",
@@ -116,7 +117,8 @@
           "cool_hysteresis": "Kühlen stoppt eine Totzone unter dem Einschaltpunkt. Null lässt die Zone auf einer einzigen Temperatur pendeln.",
           "cool_outdoor_min": "Unter dieser Außentemperatur bleibt Kühlen aus. Leer lassen für keine Grenze.",
           "cool_summer_only": "Bindet das Kühlen an die Jahreszeit aus den Allgemeinen Einstellungen.",
-          "gate": "'household' folgt dem Zeitplan, dem Schlaf und ob jemand zu Hause ist; ein Anwesenheitssensor engt das danach weiter ein. 'presence' lässt den Raum allein entscheiden, sodass ein belegter Raum den Zeitplan übergeht - was ein gelegentlich genutzter Raum braucht. Dafür ist ein Anwesenheitssensor nötig."
+          "gate": "'household' folgt dem Zeitplan, dem Schlaf und ob jemand zu Hause ist; ein Anwesenheitssensor engt das danach weiter ein. 'presence' lässt den Raum allein entscheiden, sodass ein belegter Raum den Zeitplan übergeht - was ein gelegentlich genutzter Raum braucht. Dafür ist ein Anwesenheitssensor nötig.",
+          "discard": "Verlässt diesen Bildschirm, ohne das Geänderte zu behalten."
         }
       },
       "sources": {
@@ -139,7 +141,8 @@
           "outdoor_min": "Verwenden ab dieser Außentemperatur",
           "outdoor_max": "Verwenden bis zu dieser Außentemperatur",
           "delete": "Diese Quelle löschen",
-          "autostart": "Dieses Gerät automatisch einschalten"
+          "autostart": "Dieses Gerät automatisch einschalten",
+          "discard": "Verwerfen und zurück"
         },
         "data_description": {
           "priority": "Niedriger gewinnt, wenn mehrere Quellen dieselbe Aufgabe erfüllen könnten.",
@@ -148,11 +151,12 @@
           "entity_id": "Die Climate-Entität, die diese Quelle steuert.",
           "role": "Ob dieses Gerät heizen, kühlen oder beides kann. Ein Heizkessel kann nur heizen.",
           "delete": "Nimmt die Quelle aus dieser Zone. Das Gerät selbst bleibt unangetastet.",
-          "autostart": "Aus lässt es in Ruhe: der Director schaltet es nie ein und nur dann aus, wenn es eine Aufgabe fährt, die das gemeinsame Außengerät nicht zulässt. Für ein Gerät, das du selbst einschaltest und so lassen willst."
+          "autostart": "Aus lässt es in Ruhe: der Director schaltet es nie ein und nur dann aus, wenn es eine Aufgabe fährt, die das gemeinsame Außengerät nicht zulässt. Für ein Gerät, das du selbst einschaltest und so lassen willst.",
+          "discard": "Verlässt diesen Bildschirm, ohne das Geänderte zu behalten."
         }
       },
       "circuits": {
-        "title": "Kältekreise",
+        "title": "Klimakreise",
         "description": "Ein Kreis ist ein Außengerät mit den Innengeräten daran. Lass dies leer, wenn jedes Gerät sein eigenes Außengerät hat.",
         "data": {
           "circuit": "Kreis"
@@ -162,7 +166,7 @@
         }
       },
       "circuit": {
-        "title": "Kältekreis",
+        "title": "Klimakreis",
         "description": "Innengeräte, die sich ein Außengerät teilen, können normalerweise nicht gleichzeitig heizen und kühlen. Liste sie hier auf, damit der Director zwischen ihnen entscheiden kann.",
         "data": {
           "name": "Name",
@@ -174,7 +178,8 @@
           "min_family_switch_interval": "Mindestlaufzeit vor einem Aufgabenwechsel (Sekunden)",
           "min_cycle_time": "Ruhezeit, bevor ein Gerät neu starten darf (Sekunden)",
           "max_concurrent_units": "Höchstzahl gleichzeitig laufender Geräte",
-          "delete": "Diesen Kreis löschen"
+          "delete": "Diesen Kreis löschen",
+          "discard": "Verwerfen und zurück"
         },
         "data_description": {
           "units": "Nimm auch Geräte auf, die der Director nicht steuert: sie beanspruchen den Verdichter trotzdem.",
@@ -186,7 +191,8 @@
           "family_switch_delay": "Stoppt die alte Aufgabe, wartet, und startet erst dann die neue, damit das Außengerät nicht abrupt umgekehrt wird.",
           "min_family_switch_interval": "Verhindert, dass eine Zone den Verdichter zwischen Heizen und Kühlen hin und her zieht.",
           "max_concurrent_units": "Für ein Außengerät, das nicht alle Innengeräte gleichzeitig tragen kann. Leer lassen für keine Grenze.",
-          "delete": "Entfernt den Kreis. Die Geräte laufen weiter; sie sind nur nicht länger aneinander gebunden."
+          "delete": "Entfernt den Kreis. Die Geräte laufen weiter; sie sind nur nicht länger aneinander gebunden.",
+          "discard": "Verlässt diesen Bildschirm, ohne das Geänderte zu behalten."
         }
       },
       "circuit_priorities": {
@@ -226,14 +232,16 @@
           "entity_id": "Climate-Entität",
           "zone_ids": "Versorgte Räume",
           "setpoint": "Fester Sollwert",
-          "delete": "Diese Wärmequelle löschen"
+          "delete": "Diese Wärmequelle löschen",
+          "discard": "Verwerfen und zurück"
         },
         "data_description": {
           "name": "Ein Name, um Wärmequellen auseinanderzuhalten.",
           "entity_id": "Der Kessel oder die Wärmepumpe selbst. Darf nicht zugleich Quelle einer Zone sein, sonst bekommt sie zwei Befehle.",
           "zone_ids": "Leer lassen für alle Räume.",
           "setpoint": "Leer lassen, um dem wärmsten Ziel der fragenden Räume zu folgen. Das kälteste zu nehmen würde den Raum, der am dringendsten fragt, zu kurz kommen lassen.",
-          "delete": "Entfernt die Wärmequelle; die Ventile arbeiten für sich weiter."
+          "delete": "Entfernt die Wärmequelle; die Ventile arbeiten für sich weiter.",
+          "discard": "Verlässt diesen Bildschirm, ohne das Geänderte zu behalten."
         }
       },
       "residents": {
@@ -253,14 +261,16 @@
           "presence_entity": "Anwesenheit",
           "sleep_entity": "Schlaf",
           "sleep_state": "Zustand, der schlafend bedeutet",
-          "delete": "Diesen Bewohner löschen"
+          "delete": "Diesen Bewohner löschen",
+          "discard": "Verwerfen und zurück"
         },
         "data_description": {
           "sleep_entity": "Leer lassen, wenn der Schlaf dieser Person nicht erfasst wird.",
           "sleep_state": "Ein Bettsensor meldet on, ein Sensor für den Ladetyp eines Telefons meldet wireless.",
           "name": "Ein Name, um Bewohner auseinanderzuhalten.",
           "presence_entity": "Meist eine person-Entität. Sagt, ob dieser Bewohner zu Hause ist.",
-          "delete": "Entfernt den Bewohner samt seinen Zeitplänen."
+          "delete": "Entfernt den Bewohner samt seinen Zeitplänen.",
+          "discard": "Verlässt diesen Bildschirm, ohne das Geänderte zu behalten."
         }
       },
       "windows": {
@@ -281,14 +291,16 @@
           "end": "Bis",
           "weekdays": "Tage",
           "delete": "Diesen Zeitplan löschen",
-          "holiday": "Dies ist ein Urlaubsfenster"
+          "holiday": "Dies ist ein Urlaubsfenster",
+          "discard": "Verwerfen und zurück"
         },
         "data_description": {
           "weekdays": "Leer lassen für jeden Tag.",
           "end": "Gehört nicht mehr zum Fenster.",
           "start": "Gehört zum Fenster.",
           "delete": "Entfernt diesen Zeitplan.",
-          "holiday": "Ein Urlaubsfenster gilt nur bei eingeschaltetem Urlaubsmodus und ersetzt dann die gewöhnlichen Fenster. Seine Wochentage zählen nicht mit. Ohne eines zählt ein Urlaubstag als Samstag."
+          "holiday": "Ein Urlaubsfenster gilt nur bei eingeschaltetem Urlaubsmodus und ersetzt dann die gewöhnlichen Fenster. Seine Wochentage zählen nicht mit. Ohne eines zählt ein Urlaubstag als Samstag.",
+          "discard": "Verlässt diesen Bildschirm, ohne das Geänderte zu behalten."
         }
       },
       "openings": {
@@ -307,13 +319,15 @@
           "entity_id": "Sensor",
           "zone_ids": "Betroffene Zonen",
           "delay": "Verzögerung vor dem Aussetzen (Sekunden)",
-          "delete": "Diese Öffnung löschen"
+          "delete": "Diese Öffnung löschen",
+          "discard": "Verwerfen und zurück"
         },
         "data_description": {
           "zone_ids": "Leer lassen, um die gesamte Anlage auszusetzen.",
           "delay": "Leer lassen oder auf null setzen, um sofort auszusetzen, sobald sie aufgeht.",
           "entity_id": "Der Tür- oder Fensterkontakt. Offen zählt als Zustand 'on'.",
-          "delete": "Entfernt die Öffnung; sie setzt dann nichts mehr aus."
+          "delete": "Entfernt die Öffnung; sie setzt dann nichts mehr aus.",
+          "discard": "Verlässt diesen Bildschirm, ohne das Geänderte zu behalten."
         }
       }
     },
@@ -382,37 +396,44 @@
   "selector": {
     "zone_list": {
       "options": {
-        "__add__": "+ Zone hinzufügen"
+        "add_new": "+ Zone hinzufügen",
+        "back_to_menu": "← Zurück zum Hauptmenü"
       }
     },
     "source_list": {
       "options": {
-        "__add__": "+ Quelle hinzufügen"
+        "add_new": "+ Quelle hinzufügen",
+        "back_to_menu": "← Zurück zum Hauptmenü"
       }
     },
     "circuit_list": {
       "options": {
-        "__add__": "+ Kältekreis hinzufügen"
+        "add_new": "+ Kältekreis hinzufügen",
+        "back_to_menu": "← Zurück zum Hauptmenü"
       }
     },
     "generator_list": {
       "options": {
-        "__add__": "+ Wärmequelle hinzufügen"
+        "add_new": "+ Wärmequelle hinzufügen",
+        "back_to_menu": "← Zurück zum Hauptmenü"
       }
     },
     "resident_list": {
       "options": {
-        "__add__": "+ Bewohner hinzufügen"
+        "add_new": "+ Bewohner hinzufügen",
+        "back_to_menu": "← Zurück zum Hauptmenü"
       }
     },
     "window_list": {
       "options": {
-        "__add__": "+ Zeitplan hinzufügen"
+        "add_new": "+ Zeitplan hinzufügen",
+        "back_to_menu": "← Zurück zum Hauptmenü"
       }
     },
     "opening_list": {
       "options": {
-        "__add__": "+ Tür oder Fenster hinzufügen"
+        "add_new": "+ Tür oder Fenster hinzufügen",
+        "back_to_menu": "← Zurück zum Hauptmenü"
       }
     },
     "season_source": {
@@ -442,6 +463,11 @@
         "first_come": "Wer zuerst kam: die laufende Aufgabe behält den Kreis",
         "demand": "Bedarf: die größte Abweichung gewinnt",
         "season_lock": "Jahreszeit: die Jahreszeit bestimmt die Aufgabe"
+      }
+    },
+    "circuit_priority_list": {
+      "options": {
+        "back_to_menu": "< Zurück zu den Kreisen"
       }
     }
   }

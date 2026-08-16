@@ -23,10 +23,10 @@
         "menu_options": {
           "settings": "Algemene instellingen",
           "zones": "Zones en bronnen",
-          "circuits": "Koelcircuits",
+          "circuits": "Airco-circuits",
           "residents": "Bewoners",
           "openings": "Deuren en ramen",
-          "save": "Opslaan en sluiten",
+          "save": "✅ Opslaan en sluiten",
           "generators": "Gedeelde warmtebronnen"
         }
       },
@@ -95,7 +95,8 @@
           "presence_entity": "Aanwezigheid in deze ruimte",
           "presence_state": "Toestand die bezet betekent",
           "presence_timeout": "Nog zo lang als bezet tellen (seconden)",
-          "gate": "Wat bepaalt of deze zone draait"
+          "gate": "Wat bepaalt of deze zone draait",
+          "discard": "Verwerpen en teruggaan"
         },
         "data_description": {
           "indoor_sensor": "Een temperatuursensor, of een climate-entiteit die de ruimte al meet.",
@@ -116,7 +117,8 @@
           "cool_hysteresis": "Koelen stopt een band onder het aanpunt. Nul laat de zone pendelen op een enkele temperatuur.",
           "cool_outdoor_min": "Onder deze buitentemperatuur blijft koelen uit. Laat leeg voor geen grens.",
           "cool_summer_only": "Koppelt koelen aan het seizoen dat je bij Algemene instellingen hebt gezet.",
-          "gate": "'household' volgt het rooster, de slaap en of er iemand thuis is; een aanwezigheidssensor knijpt het daarna verder dicht. 'presence' laat de kamer zelf beslissen, zodat een bezette ruimte het rooster overruled - wat een kamer die je af en toe gebruikt nodig heeft. Kiezen hiervoor vereist een aanwezigheidssensor."
+          "gate": "'household' volgt het rooster, de slaap en of er iemand thuis is; een aanwezigheidssensor knijpt het daarna verder dicht. 'presence' laat de kamer zelf beslissen, zodat een bezette ruimte het rooster overruled - wat een kamer die je af en toe gebruikt nodig heeft. Kiezen hiervoor vereist een aanwezigheidssensor.",
+          "discard": "Verlaat dit scherm zonder te bewaren wat je hier wijzigde."
         }
       },
       "sources": {
@@ -139,7 +141,8 @@
           "outdoor_min": "Gebruiken vanaf deze buitentemperatuur",
           "outdoor_max": "Gebruiken tot deze buitentemperatuur",
           "delete": "Deze bron verwijderen",
-          "autostart": "Dit apparaat automatisch aanzetten"
+          "autostart": "Dit apparaat automatisch aanzetten",
+          "discard": "Verwerpen en teruggaan"
         },
         "data_description": {
           "priority": "Lager wint als meerdere bronnen dezelfde taak kunnen leveren.",
@@ -148,11 +151,12 @@
           "entity_id": "De climate-entiteit die deze bron aanstuurt.",
           "role": "Of dit apparaat kan verwarmen, koelen, of allebei. Een cv-ketel kan alleen verwarmen.",
           "delete": "Haalt de bron uit deze zone. Het apparaat zelf blijft ongemoeid.",
-          "autostart": "Uit laat hem met rust: de director zet hem nooit aan, en zet hem alleen uit als hij een taak draait die de gedeelde buitenunit niet toestaat. Voor een apparaat dat je zelf aanzet en zo wilt laten staan."
+          "autostart": "Uit laat hem met rust: de director zet hem nooit aan, en zet hem alleen uit als hij een taak draait die de gedeelde buitenunit niet toestaat. Voor een apparaat dat je zelf aanzet en zo wilt laten staan.",
+          "discard": "Verlaat dit scherm zonder te bewaren wat je hier wijzigde."
         }
       },
       "circuits": {
-        "title": "Koelcircuits",
+        "title": "Airco-circuits",
         "description": "Een circuit is één buitenunit met de binnenunits die eraan hangen. Laat dit leeg als elke unit een eigen buitenunit heeft.",
         "data": {
           "circuit": "Circuit"
@@ -162,7 +166,7 @@
         }
       },
       "circuit": {
-        "title": "Koelcircuit",
+        "title": "Airco-circuit",
         "description": "Binnenunits die één buitenunit delen kunnen normaal gesproken niet tegelijk verwarmen en koelen. Zet ze hier bij elkaar, zodat de director ertussen kan kiezen.",
         "data": {
           "name": "Naam",
@@ -174,7 +178,8 @@
           "min_family_switch_interval": "Minimale looptijd voor een taakwissel (seconden)",
           "min_cycle_time": "Rusttijd voordat een unit opnieuw mag starten (seconden)",
           "max_concurrent_units": "Maximaal aantal units tegelijk aan",
-          "delete": "Dit circuit verwijderen"
+          "delete": "Dit circuit verwijderen",
+          "discard": "Verwerpen en teruggaan"
         },
         "data_description": {
           "units": "Neem ook units op die de director niet aanstuurt: die claimen de compressor evengoed.",
@@ -186,7 +191,8 @@
           "family_switch_delay": "Stopt eerst de oude taak, wacht, en start pas dan de nieuwe, zodat de buitenunit niet abrupt omgekeerd wordt.",
           "min_family_switch_interval": "Voorkomt dat een zone de compressor heen en weer trekt tussen verwarmen en koelen.",
           "max_concurrent_units": "Voor een buitenunit die niet al zijn binnenunits tegelijk aankan. Laat leeg voor geen grens.",
-          "delete": "Verwijdert het circuit. De units blijven werken; ze zijn alleen niet langer aan elkaar gekoppeld."
+          "delete": "Verwijdert het circuit. De units blijven werken; ze zijn alleen niet langer aan elkaar gekoppeld.",
+          "discard": "Verlaat dit scherm zonder te bewaren wat je hier wijzigde."
         }
       },
       "circuit_priorities": {
@@ -226,14 +232,16 @@
           "entity_id": "Climate-entiteit",
           "zone_ids": "Kamers die hij bedient",
           "setpoint": "Vast setpoint",
-          "delete": "Deze warmtebron verwijderen"
+          "delete": "Deze warmtebron verwijderen",
+          "discard": "Verwerpen en teruggaan"
         },
         "data_description": {
           "name": "Een naam, om warmtebronnen uit elkaar te houden.",
           "entity_id": "De ketel of warmtepomp zelf. Mag niet ook een bron van een zone zijn, anders krijgt hij twee commando's.",
           "zone_ids": "Laat leeg voor alle kamers.",
           "setpoint": "Laat leeg om het warmste doel te volgen van de kamers die vragen. Het koudste nemen zou de kamer die het hardst vraagt tekortdoen.",
-          "delete": "Verwijdert de warmtebron; de kranen blijven op zichzelf werken."
+          "delete": "Verwijdert de warmtebron; de kranen blijven op zichzelf werken.",
+          "discard": "Verlaat dit scherm zonder te bewaren wat je hier wijzigde."
         }
       },
       "residents": {
@@ -253,14 +261,16 @@
           "presence_entity": "Aanwezigheid",
           "sleep_entity": "Slaap",
           "sleep_state": "Toestand die slapen betekent",
-          "delete": "Deze bewoner verwijderen"
+          "delete": "Deze bewoner verwijderen",
+          "discard": "Verwerpen en teruggaan"
         },
         "data_description": {
           "sleep_entity": "Laat leeg als de slaap van deze persoon niet gevolgd wordt.",
           "sleep_state": "Een bedsensor meldt on, een sensor voor het opladertype van een telefoon meldt wireless.",
           "name": "Een naam, om bewoners uit elkaar te houden.",
           "presence_entity": "Meestal een person-entiteit. Zegt of deze bewoner thuis is.",
-          "delete": "Verwijdert de bewoner inclusief zijn roosters."
+          "delete": "Verwijdert de bewoner inclusief zijn roosters.",
+          "discard": "Verlaat dit scherm zonder te bewaren wat je hier wijzigde."
         }
       },
       "windows": {
@@ -281,14 +291,16 @@
           "end": "Tot",
           "weekdays": "Dagen",
           "delete": "Dit rooster verwijderen",
-          "holiday": "Dit is een vakantievenster"
+          "holiday": "Dit is een vakantievenster",
+          "discard": "Verwerpen en teruggaan"
         },
         "data_description": {
           "weekdays": "Laat leeg voor elke dag.",
           "end": "Valt buiten het venster.",
           "start": "Valt binnen het venster.",
           "delete": "Verwijdert dit rooster.",
-          "holiday": "Een vakantievenster geldt alleen als de vakantiemodus aan staat, en vervangt dan de gewone vensters. De dagen van de week tellen er niet in mee. Zonder vakantievenster telt een vakantiedag als zaterdag."
+          "holiday": "Een vakantievenster geldt alleen als de vakantiemodus aan staat, en vervangt dan de gewone vensters. De dagen van de week tellen er niet in mee. Zonder vakantievenster telt een vakantiedag als zaterdag.",
+          "discard": "Verlaat dit scherm zonder te bewaren wat je hier wijzigde."
         }
       },
       "openings": {
@@ -307,13 +319,15 @@
           "entity_id": "Sensor",
           "zone_ids": "Zones die dit raakt",
           "delay": "Vertraging voordat er opgeschort wordt (seconden)",
-          "delete": "Deze opening verwijderen"
+          "delete": "Deze opening verwijderen",
+          "discard": "Verwerpen en teruggaan"
         },
         "data_description": {
           "zone_ids": "Laat leeg om de hele installatie op te schorten.",
           "delay": "Laat leeg of zet op nul om direct op te schorten zodra hij opengaat.",
           "entity_id": "Het deur- of raamcontact. Open telt als de toestand 'on'.",
-          "delete": "Verwijdert de opening; hij schort dan niets meer op."
+          "delete": "Verwijdert de opening; hij schort dan niets meer op.",
+          "discard": "Verlaat dit scherm zonder te bewaren wat je hier wijzigde."
         }
       }
     },
@@ -382,37 +396,44 @@
   "selector": {
     "zone_list": {
       "options": {
-        "__add__": "+ Zone toevoegen"
+        "add_new": "+ Zone toevoegen",
+        "back_to_menu": "← Terug naar het hoofdmenu"
       }
     },
     "source_list": {
       "options": {
-        "__add__": "+ Bron toevoegen"
+        "add_new": "+ Bron toevoegen",
+        "back_to_menu": "← Terug naar het hoofdmenu"
       }
     },
     "circuit_list": {
       "options": {
-        "__add__": "+ Koelcircuit toevoegen"
+        "add_new": "+ Koelcircuit toevoegen",
+        "back_to_menu": "← Terug naar het hoofdmenu"
       }
     },
     "generator_list": {
       "options": {
-        "__add__": "+ Warmtebron toevoegen"
+        "add_new": "+ Warmtebron toevoegen",
+        "back_to_menu": "← Terug naar het hoofdmenu"
       }
     },
     "resident_list": {
       "options": {
-        "__add__": "+ Bewoner toevoegen"
+        "add_new": "+ Bewoner toevoegen",
+        "back_to_menu": "← Terug naar het hoofdmenu"
       }
     },
     "window_list": {
       "options": {
-        "__add__": "+ Rooster toevoegen"
+        "add_new": "+ Rooster toevoegen",
+        "back_to_menu": "← Terug naar het hoofdmenu"
       }
     },
     "opening_list": {
       "options": {
-        "__add__": "+ Deur of raam toevoegen"
+        "add_new": "+ Deur of raam toevoegen",
+        "back_to_menu": "← Terug naar het hoofdmenu"
       }
     },
     "season_source": {
@@ -442,6 +463,11 @@
         "first_come": "Wie eerst was: de draaiende taak houdt het circuit",
         "demand": "Vraag: de grootste afwijking wint",
         "season_lock": "Seizoen: het seizoen bepaalt de taak"
+      }
+    },
+    "circuit_priority_list": {
+      "options": {
+        "back_to_menu": "< Terug naar de circuits"
       }
     }
   }
