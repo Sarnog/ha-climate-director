@@ -43,7 +43,7 @@
         },
         "data_description": {
           "season_source": "Derive the season from the month, read it from an entity, or pin it by hand.",
-          "season_entity": "Only used when the source is set to entity. Summer, winter and their Dutch equivalents are recognised.",
+          "season_entity": "Only used when the source is set to entity. Summer and winter are recognised in English, Dutch, German, French, Spanish and Arabic.",
           "shadow_mode": "Compute every decision but execute nothing.",
           "require_schedule": "Uses each resident's own schedules, set under Residents. With no schedules anywhere this gate lets everything through.",
           "outdoor_sensor": "Feeds every outdoor limit, both here and on each source. Without it no threshold on outdoor temperature can ever be met, and the whole installation quietly stands still.",

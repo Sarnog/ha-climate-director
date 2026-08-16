@@ -43,7 +43,7 @@
         },
         "data_description": {
           "season_source": "Leid het seizoen af uit de maand, lees het uit een entiteit, of zet het met de hand vast.",
-          "season_entity": "Wordt alleen gebruikt als de herkomst op entiteit staat. Zomer, winter en hun Engelse namen worden herkend.",
+          "season_entity": "Wordt alleen gebruikt als de herkomst op entiteit staat. Zomer en winter worden herkend in het Engels, Nederlands, Duits, Frans, Spaans en Arabisch.",
           "shadow_mode": "Berekent elke beslissing maar voert niets uit.",
           "require_schedule": "Gebruikt de roosters van de bewoners zelf, in te stellen onder Bewoners. Staan er nergens roosters, dan laat deze poort alles door.",
           "outdoor_sensor": "Voedt elke buitengrens, zowel hier als op elke bron. Zonder deze sensor kan geen enkele drempel op buitentemperatuur ooit voldaan worden, en staat de hele installatie stilletjes stil.",

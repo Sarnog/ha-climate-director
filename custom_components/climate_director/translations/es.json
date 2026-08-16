@@ -1,0 +1,307 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Climate Director",
+        "description": "Crea una instalación. Las zonas, las fuentes y los circuitos frigoríficos se añaden después, en Configurar.",
+        "data": {
+          "name": "Nombre",
+          "shadow_mode": "Modo sombra"
+        },
+        "data_description": {
+          "shadow_mode": "Calcula cada decisión pero no ejecuta nada, para que el director funcione junto a tus automatizaciones actuales hasta que confíes en él.",
+          "name": "Pasa a ser el título de la instalación y precede al nombre de cada entidad que crea esta integración."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Climate Director",
+        "description": "Compón la instalación. No se guarda nada hasta que elijas Guardar y cerrar.",
+        "menu_options": {
+          "settings": "Ajustes generales",
+          "zones": "Zonas y fuentes",
+          "circuits": "Circuitos frigoríficos",
+          "residents": "Residentes",
+          "openings": "Puertas y ventanas",
+          "save": "Guardar y cerrar"
+        }
+      },
+      "settings": {
+        "title": "Ajustes generales",
+        "data": {
+          "outdoor_sensor": "Temperatura exterior",
+          "season_source": "Origen de la estación",
+          "season_entity": "Entidad de estación",
+          "require_occupancy": "Alguien debe estar en casa",
+          "require_awake": "Alguien en casa debe estar despierto",
+          "require_schedule": "El horario de un residente debe estar abierto",
+          "holiday_bypasses_schedule": "El modo vacaciones omite el horario",
+          "shadow_mode": "Modo sombra"
+        },
+        "data_description": {
+          "season_source": "Deduce la estación del mes, léela de una entidad, o fíjala a mano.",
+          "season_entity": "Solo se usa cuando el origen está en entidad. Verano e invierno se reconocen en inglés, neerlandés, alemán, francés, español y árabe.",
+          "shadow_mode": "Calcula cada decisión pero no ejecuta nada.",
+          "require_schedule": "Usa los horarios de los propios residentes, que se definen en Residentes. Sin ningún horario, esta puerta lo deja pasar todo.",
+          "outdoor_sensor": "Alimenta cada límite exterior, tanto aquí como en cada fuente. Sin este sensor ningún umbral de temperatura exterior puede cumplirse, y toda la instalación se queda parada en silencio.",
+          "require_occupancy": "Se aplica a la instalación entera. La presencia en una sola habitación se ajusta en la zona misma.",
+          "require_awake": "Alguien en casa pero dormido no cuenta. Qué entidad indica que duerme se ajusta por residente.",
+          "holiday_bypasses_schedule": "El interruptor de vacaciones ignora entonces las franjas horarias, pero sigue respetando presencia y sueño."
+        }
+      },
+      "zones": {
+        "title": "Zonas",
+        "description": "Elige una zona para editarla, o añade una.",
+        "data": {
+          "zone": "Zona"
+        },
+        "data_description": {
+          "zone": "Elige una para cambiarla, o añade una nueva."
+        }
+      },
+      "zone": {
+        "title": "Zona",
+        "description": "Una zona describe lo que quieres en una habitación. La calefacción arranca en su punto de encendido y para una banda muerta por encima; la refrigeración arranca en su punto de encendido y para una banda muerta por debajo.",
+        "data": {
+          "name": "Nombre",
+          "indoor_sensor": "Temperatura interior",
+          "priority": "Prioridad",
+          "enable_heat": "Esta zona puede calentar",
+          "heat_target": "Consigna de calefacción",
+          "heat_start_at": "Empezar a calentar en",
+          "heat_hysteresis": "Banda muerta de calefacción",
+          "heat_outdoor_max": "Calentar solo por debajo de esta temperatura exterior",
+          "enable_cool": "Esta zona puede enfriar",
+          "cool_target": "Consigna de refrigeración",
+          "cool_start_at": "Empezar a enfriar en",
+          "cool_hysteresis": "Banda muerta de refrigeración",
+          "cool_outdoor_min": "Enfriar solo por encima de esta temperatura exterior",
+          "cool_summer_only": "Enfriar solo en verano",
+          "delete": "Eliminar esta zona",
+          "presence_entity": "Presencia en esta habitación",
+          "presence_state": "Estado que significa ocupada",
+          "presence_timeout": "Seguir contando como ocupada durante (segundos)"
+        },
+        "data_description": {
+          "indoor_sensor": "Un sensor de temperatura, o una entidad climate que ya mide la habitación.",
+          "priority": "El más bajo gana cuando dos zonas se disputan una unidad exterior.",
+          "heat_hysteresis": "Cero hace que la zona oscile sobre una sola temperatura. Un grado es un punto de partida sensato.",
+          "delete": "Elimina la zona y sus fuentes.",
+          "presence_entity": "Déjalo vacío para regular esta habitación haya alguien o no. Que alguien esté en casa no dice nada sobre si hay alguien en el desván.",
+          "presence_state": "Un sensor de presencia informa on.",
+          "presence_timeout": "Déjalo vacío o ponlo a cero para reaccionar en cuanto desaparece la presencia. Los sensores de presencia parpadean, así que unos segundos aquí le ahorran al compresor una parada inútil.",
+          "name": "El nombre de la zona en todas partes. Su identificador interno se deriva una vez y luego no cambia, así que renombrarla después es seguro.",
+          "enable_heat": "Desactivado significa que esta habitación nunca se calienta, diga lo que diga el termómetro.",
+          "heat_target": "La consigna que recibe el aparato una vez que calienta. No el punto en el que arranca.",
+          "heat_start_at": "La calefacción arranca a esta temperatura interior o por debajo.",
+          "heat_outdoor_max": "Por encima de esta temperatura exterior la calefacción sigue apagada. Déjalo vacío para no poner límite.",
+          "enable_cool": "Desactivado significa que esta habitación nunca se enfría, diga lo que diga el termómetro.",
+          "cool_target": "La consigna que recibe el aparato una vez que enfría. No el punto en el que arranca.",
+          "cool_start_at": "La refrigeración arranca a esta temperatura interior o por encima.",
+          "cool_hysteresis": "La refrigeración para una banda por debajo del punto de encendido. Cero hace que la zona oscile sobre una sola temperatura.",
+          "cool_outdoor_min": "Por debajo de esta temperatura exterior la refrigeración sigue apagada. Déjalo vacío para no poner límite.",
+          "cool_summer_only": "Ata la refrigeración a la estación definida en Ajustes generales."
+        }
+      },
+      "sources": {
+        "title": "Fuentes de {zone}",
+        "description": "Una fuente es un aparato capaz de atender esta zona. Elige una para editarla, o añade una.",
+        "data": {
+          "source": "Fuente"
+        },
+        "data_description": {
+          "source": "Elige una para cambiarla, o añade una nueva."
+        }
+      },
+      "source": {
+        "title": "Fuente",
+        "description": "La ventana exterior es lo que separa una caldera de una bomba de calor. Dos ventanas contiguas se encuentran exactamente, así que ninguna temperatura exterior cae entre ellas.",
+        "data": {
+          "entity_id": "Entidad climate",
+          "role": "Función",
+          "priority": "Preferencia",
+          "outdoor_min": "Usar a partir de esta temperatura exterior",
+          "outdoor_max": "Usar hasta esta temperatura exterior",
+          "delete": "Eliminar esta fuente"
+        },
+        "data_description": {
+          "priority": "El más bajo gana cuando varias fuentes podrían cumplir la misma tarea.",
+          "outdoor_min": "Incluida en el rango.",
+          "outdoor_max": "Excluida del rango.",
+          "entity_id": "La entidad climate que gobierna esta fuente.",
+          "role": "Si este aparato puede calentar, enfriar, o ambas cosas. Una caldera solo calienta.",
+          "delete": "Saca la fuente de esta zona. El aparato en sí queda intacto."
+        }
+      },
+      "circuits": {
+        "title": "Circuitos frigoríficos",
+        "description": "Un circuito es una unidad exterior con las unidades interiores conectadas a ella. Déjalo vacío si cada unidad tiene su propia unidad exterior.",
+        "data": {
+          "circuit": "Circuito"
+        },
+        "data_description": {
+          "circuit": "Elige uno para cambiarlo, o añade uno nuevo."
+        }
+      },
+      "circuit": {
+        "title": "Circuito frigorífico",
+        "description": "Las unidades interiores que comparten una unidad exterior normalmente no pueden calentar y enfriar a la vez. Enuméralas aquí para que el director pueda decidir entre ellas.",
+        "data": {
+          "name": "Nombre",
+          "units": "Unidades interiores",
+          "simultaneous_heat_cool": "Puede calentar y enfriar a la vez",
+          "conflict_policy": "Regla de conflicto",
+          "allow_fan_only_during_conflict": "Una zona que pierde puede mover aire",
+          "family_switch_delay": "Pausa al cambiar de tarea (segundos)",
+          "min_family_switch_interval": "Tiempo mínimo antes de cambiar de tarea (segundos)",
+          "min_cycle_time": "Descanso antes de que una unidad pueda rearrancar (segundos)",
+          "max_concurrent_units": "Número máximo de unidades funcionando a la vez",
+          "delete": "Eliminar este circuito"
+        },
+        "data_description": {
+          "units": "Incluye también las unidades que el director no gobierna: siguen reclamando el compresor.",
+          "simultaneous_heat_cool": "Desactivado para un multisplit corriente. Activado para un split individual, o para un VRF de tres tubos con recuperación de calor.",
+          "min_cycle_time": "Solo retrasa el arranque, nunca la parada.",
+          "name": "Un nombre, para distinguir circuitos.",
+          "conflict_policy": "Decide qué zona se queda el circuito cuando dos de ellas quieren tareas opuestas.",
+          "allow_fan_only_during_conflict": "Una zona que pierde mueve entonces aire en lugar de apagarse del todo.",
+          "family_switch_delay": "Para la tarea antigua, espera, y solo entonces arranca la nueva, para no invertir bruscamente la unidad exterior.",
+          "min_family_switch_interval": "Evita que una zona arrastre el compresor de un lado a otro entre calentar y enfriar.",
+          "max_concurrent_units": "Para una unidad exterior que no puede con todas sus unidades interiores a la vez. Déjalo vacío para no poner límite.",
+          "delete": "Elimina el circuito. Las unidades siguen funcionando; simplemente dejan de estar atadas entre sí."
+        }
+      },
+      "residents": {
+        "title": "Residentes",
+        "description": "Déjalo vacío para un edificio donde no se sigue a nadie; las puertas de presencia se omiten entonces en lugar de bloquear para siempre.",
+        "data": {
+          "resident": "Residente"
+        },
+        "data_description": {
+          "resident": "Elige uno para cambiarlo, o añade uno nuevo."
+        }
+      },
+      "resident": {
+        "title": "Residente",
+        "data": {
+          "name": "Nombre",
+          "presence_entity": "Presencia",
+          "sleep_entity": "Sueño",
+          "sleep_state": "Estado que significa dormido",
+          "delete": "Eliminar este residente"
+        },
+        "data_description": {
+          "sleep_entity": "Déjalo vacío si no se sigue el sueño de esta persona.",
+          "sleep_state": "Un sensor de cama informa on, un sensor del tipo de cargador de un teléfono informa wireless.",
+          "name": "Un nombre, para distinguir residentes.",
+          "presence_entity": "Normalmente una entidad person. Indica si este residente está en casa.",
+          "delete": "Elimina al residente junto con sus horarios."
+        }
+      },
+      "windows": {
+        "title": "Horarios de {resident}",
+        "description": "Horas en las que este residente quiere climatización. Deja la lista vacía para que cuente a cualquier hora.",
+        "data": {
+          "window": "Horario"
+        },
+        "data_description": {
+          "window": "Elige uno para cambiarlo, añade uno, o vuelve al menú."
+        }
+      },
+      "window": {
+        "title": "Horario",
+        "description": "Una franja que pasa de medianoche está permitida; pertenece al día en que empieza, así que una franja del viernes 22:00-02:00 sigue contando el sábado a la 01:00.",
+        "data": {
+          "start": "Desde",
+          "end": "Hasta",
+          "weekdays": "Días",
+          "delete": "Eliminar este horario"
+        },
+        "data_description": {
+          "weekdays": "Déjalo vacío para todos los días.",
+          "end": "Excluida de la franja.",
+          "start": "Incluida en la franja.",
+          "delete": "Elimina este horario."
+        }
+      },
+      "openings": {
+        "title": "Puertas y ventanas",
+        "description": "Una abertura que permanece abierta el tiempo suficiente suspende las zonas afectadas.",
+        "data": {
+          "opening": "Abertura"
+        },
+        "data_description": {
+          "opening": "Elige una para cambiarla, o añade una nueva."
+        }
+      },
+      "opening": {
+        "title": "Abertura",
+        "data": {
+          "entity_id": "Sensor",
+          "zone_ids": "Zonas afectadas",
+          "delay": "Retardo antes de suspender (segundos)",
+          "delete": "Eliminar esta abertura"
+        },
+        "data_description": {
+          "zone_ids": "Déjalo vacío para suspender toda la instalación.",
+          "delay": "Déjalo vacío o ponlo a cero para suspender en cuanto se abre.",
+          "entity_id": "El contacto de puerta o ventana. Abierto cuenta como el estado 'on'.",
+          "delete": "Elimina la abertura; deja de suspender nada."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "last_decision": {
+        "name": "Última decisión"
+      },
+      "zone_source": {
+        "name": "Fuente {zone}"
+      },
+      "would_command": {
+        "name": "Gobernaría {entity}"
+      },
+      "mismatch": {
+        "name": "Discrepancias"
+      }
+    },
+    "binary_sensor": {
+      "zone_blocked": {
+        "name": "{zone} bloqueada"
+      }
+    },
+    "switch": {
+      "master": {
+        "name": "Director"
+      },
+      "holiday": {
+        "name": "Modo vacaciones"
+      },
+      "zone_override": {
+        "name": "Anulación {zone}"
+      }
+    }
+  },
+  "issues": {
+    "invalid_config": {
+      "title": "Climate Director: {name} tiene un problema de configuración",
+      "description": "Se han encontrado {count} problema(s) en esta instalación. Las zonas correctas se siguen regulando; el resto queda parado hasta que se arregle.\n\n{problems}\n\nAbre la integración y elige Configurar para corregirlos. La lista completa está en el diagnóstico descargable."
+    }
+  },
+  "services": {
+    "evaluate": {
+      "name": "Decidir de nuevo",
+      "description": "Recalcula el plan ahora mismo, en vez de esperar a que cambie una entidad seguida. En modo sombra no ejecuta nada adicional.",
+      "fields": {
+        "entry_id": {
+          "name": "Instalación",
+          "description": "Qué instalación recalcular. Déjalo vacío para todas."
+        }
+      }
+    }
+  }
+}
