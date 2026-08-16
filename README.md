@@ -327,6 +327,21 @@ houdt het huis tegen — dat is wat het huis op zaterdag op de laatste slaper la
 | Minimale cyclustijd | hoe lang een unit uit blijft na het stoppen; vertraagt alleen starten, nooit stoppen |
 | Maximum aantal units tegelijk | de capaciteitsgrens van de buitenunit |
 
+#### Als er iets vastloopt
+
+De mismatch-teller vergelijkt het plan met de werkelijkheid, en loopt daarvoor over de
+commando's. Een apparaat waar het plan **geen** commando voor heeft komt daar niet in voor
+— een klem waarbij er niets wordt aangestuurd is voor die teller dus onzichtbaar.
+
+`binary_sensor.*_vastgelopen` kijkt naar het andere spoor. Een handvol redenen hoort uit
+zichzelf op te lossen: wachten op de omschakelpauze, op de minimale looptijd, op de
+minimale cyclustijd, of op een vrije plek op de buitenunit. Staat een zone daar langer op
+dan de ingestelde tijd (standaard vijftien minuten), dan wacht hij niet meer maar zit hij
+vast, en gaat de melder aan. In de attributen staat welke zones, waarop, en hoe lang.
+
+Redenen die wél lang mogen blijven staan — niemand thuis, kamer leeg, buiten het
+temperatuurvenster — tellen niet mee. Nul minuten zet de melder uit.
+
 ### Dode band
 
 Aan- en uitschakelen gebeuren op twee verschillende temperaturen. Je stelt een aanpunt in
@@ -360,6 +375,7 @@ Eén device per installatie, met daaronder:
 | `sensor.*_afwijkingen` | Hoeveel apparaten er nú anders staan dan het plan wil. Nul betekent dat de director het eens is met wat het huis op dit moment stuurt |
 | `sensor.*_bron_<zone>` | Welke bron deze zone bedient, met wat de zone wilde, wat hij kreeg en waarom |
 | `binary_sensor.*_<zone>_geblokkeerd` | Aan als een zone minder kreeg dan hij vroeg, met de reden als attribuut |
+| `binary_sensor.*_vastgelopen` | Aan als een zone te lang op dezelfde wachtreden staat, met de zones en de wachttijd als attribuut |
 | `switch.*_director` | Hoofdschakelaar; uit betekent dat er niets geregeld wordt |
 | `switch.*_vakantiemodus` | Laat elke dag als zaterdag tellen, of als het eigen vakantierooster |
 | `switch.*_gastenmodus` | Blijft regelen terwijl de bewoners weg zijn; slaap en het gastenvenster blijven gelden |
@@ -850,6 +866,21 @@ the house back — which is what makes the house wait for the last sleeper on a 
 | Minimum cycle time | how long a unit stays off after stopping; only ever delays starting, never stopping |
 | Maximum units at once | the capacity limit of the outdoor unit |
 
+#### When something gets stuck
+
+The mismatch count compares the plan with reality by walking the commands. An appliance the
+plan has **no** command for does not appear there — so a deadlock in which nothing is
+steered is invisible to that count.
+
+`binary_sensor.*_stuck` watches the other trail. A handful of reasons should resolve by
+themselves: waiting on the changeover pause, on the minimum run, on the minimum cycle time,
+or on a free slot on the outdoor unit. A zone sitting on one of those longer than the
+configured time (fifteen minutes by default) is no longer waiting but stuck, and the sensor
+comes on. The attributes say which zones, on what, and for how long.
+
+Reasons that may rightly hold for a long time — nobody home, room empty, outside the
+temperature window — do not count. Zero minutes switches the sensor off.
+
 ### Dead band
 
 Switching on and switching off happen at two different temperatures. You set a switch-on
@@ -884,6 +915,7 @@ One device per installation, holding:
 | `sensor.*_mismatch` | How many appliances currently sit somewhere other than where the plan wants them. Zero means the director agrees with whatever is steering the house right now |
 | `sensor.*_<zone>_source` | Which source serves this zone, with what the zone wanted, what it got and why |
 | `binary_sensor.*_<zone>_blocked` | On when a zone got less than it asked for, with the reason as an attribute |
+| `binary_sensor.*_stuck` | On when a zone sits on the same waiting reason too long, with the zones and the wait as attributes |
 | `switch.*_director` | Master switch; off means nothing is regulated |
 | `switch.*_holiday_mode` | Makes every day count as a Saturday, or as its own holiday schedule |
 | `switch.*_guest_mode` | Keeps regulating while the residents are away; sleep and the guest window still apply |
