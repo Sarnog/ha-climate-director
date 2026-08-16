@@ -92,16 +92,17 @@ class StuckSensor(ClimateDirectorEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool | None:
-        """Return whether any zone has been waiting too long."""
+        """Return whether anything is stuck or unreadable."""
         if self.coordinator.data is None:
             return None
-        return bool(self.coordinator.stuck_zones())
+        return bool(self.coordinator.stuck_zones() or self.coordinator.unusable_entities())
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return which zones are stuck, on what, and for how long."""
         stuck = self.coordinator.stuck_zones()
         return {
+            "unusable_entities": self.coordinator.unusable_entities(),
             "zones": sorted(stuck),
             "reasons": {zone_id: reason.value for zone_id, reason in sorted(stuck.items())},
             "waiting_seconds": {

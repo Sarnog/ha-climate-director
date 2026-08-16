@@ -612,6 +612,28 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
         for entity_id in _duplicates(entity_ids)
     ]
 
+    # Een unit die wel aan een buitenunit hangt maar in geen enkele zone staat,
+    # is voor de director onbeheerd. Draait hij, dan zet hij het hele circuit op
+    # zijn taak en kan geen kamer er meer iets anders vragen - en omdat hij van
+    # niemand is, zet de director hem ook nooit uit. Van buiten is dat niet te
+    # onderscheiden van "de director doet niets", dus het hoort gemeld te worden
+    # vóór iemand zich erop verkijkt.
+    #
+    # A unit that hangs on an outdoor unit but appears in no zone is unmanaged
+    # as far as the director is concerned. If it runs it holds the whole circuit
+    # to its duty and no room can ask for anything else - and since it belongs
+    # to nobody, the director never switches it off either. From the outside
+    # that is indistinguishable from "the director does nothing", so it should
+    # be reported before somebody is caught out by it.
+    in_a_zone = {source.entity_id for _zone, source in config.sources()}
+    problems += [
+        f"unit {unit} is on circuit {circuit.circuit_id} but in no zone, so it can "
+        f"lock that circuit without the director being able to stand it down"
+        for circuit in config.circuits
+        for unit in circuit.units
+        if unit not in in_a_zone
+    ]
+
     seen_units: dict[str, str] = {}
     for circuit in config.circuits:
         for unit in circuit.units:

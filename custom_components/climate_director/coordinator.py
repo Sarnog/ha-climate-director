@@ -479,6 +479,32 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             return
         async_call_later(self.hass, seconds + 1, lambda _now: self.async_request_evaluation())
 
+    # -- onbruikbare entiteiten / unusable entities --------------------------
+
+    def unusable_entities(self) -> dict[str, str]:
+        """Return the configured entities that cannot be read right now.
+
+        Een verkeerd getikte entiteit bestaat gewoon niet, en een sensor die
+        wegvalt leest als niets. In beide gevallen valt er niets om: de poort
+        die erop leunt gaat dicht, de zone doet niets, en dat is van buiten niet
+        te onderscheiden van een zone die niets hoeft te doen. Daarom staat het
+        hier apart, in plaats van dat je het uit een stille zone moet afleiden.
+
+        A mistyped entity simply does not exist, and a sensor that drops out
+        reads as nothing. Neither breaks anything: the gate leaning on it closes,
+        the zone does nothing, and from the outside that is indistinguishable
+        from a zone with nothing to do. Hence this, rather than leaving you to
+        infer it from a silent zone.
+        """
+        found: dict[str, str] = {}
+        for entity_id in sorted(self.tracked_entities()):
+            state = self.hass.states.get(entity_id)
+            if state is None:
+                found[entity_id] = "missing"
+            elif state.state in ("unavailable", "unknown"):
+                found[entity_id] = state.state
+        return found
+
     # -- vastgelopen zones / stuck zones -------------------------------------
 
     @callback
