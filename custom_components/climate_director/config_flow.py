@@ -31,6 +31,16 @@ CONF_NAME = "name"
 _ADD = "__add__"
 _BACK = "__back__"
 
+_ADD_FALLBACK = {
+    "zone": "+ Add zone",
+    "source": "+ Add source",
+    "circuit": "+ Add circuit",
+    "generator": "+ Add heat source",
+    "resident": "+ Add resident",
+    "window": "+ Add schedule",
+    "opening": "+ Add opening",
+}
+
 #: Maandag is 0, gelijk aan `datetime.weekday()`, dat de engine ook gebruikt.
 #: Monday is 0, matching `datetime.weekday()`, which the engine uses too.
 _WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
@@ -61,11 +71,36 @@ _TEXT = selector.TextSelector()
 _TIME = selector.TimeSelector()
 
 
-def _choices(values: list[str]) -> selector.SelectSelector:
-    """Return a dropdown over plain string values."""
+def _choices(values: list[str], key: str = "") -> selector.SelectSelector:
+    """Return a dropdown over plain string values.
+
+    Met een vertaalsleutel toont Home Assistant de vertaalde namen in plaats van
+    de opgeslagen waarden. Zonder sleutel blijft het bij de waarde zelf, wat voor
+    een lijst die al leesbaar is genoeg is.
+
+    With a translation key Home Assistant shows translated names instead of the
+    stored values. Without one the value itself shows, which is enough for a list
+    that reads well already.
+    """
     return selector.SelectSelector(
-        selector.SelectSelectorConfig(options=values, mode=selector.SelectSelectorMode.DROPDOWN)
+        selector.SelectSelectorConfig(
+            options=values,
+            mode=selector.SelectSelectorMode.DROPDOWN,
+            translation_key=key or None,
+        )
     )
+
+
+def _add_option(key: str) -> selector.SelectOptionDict:
+    """Return the "add one" row of a picker.
+
+    De Engelse tekst blijft als terugval staan: vertaalt Home Assistant de
+    sleutel niet, dan staat er nog altijd iets leesbaars in plaats van niets.
+
+    The English text stays as a fallback: if Home Assistant does not translate
+    the key, something readable still shows rather than nothing.
+    """
+    return selector.SelectOptionDict(value=_ADD, label=_ADD_FALLBACK[key])
 
 
 class ClimateDirectorConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -210,7 +245,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     ),
                     vol.Required(
                         "season_source", default=seasons.get("source", SeasonSource.AUTO.value)
-                    ): _choices([item.value for item in SeasonSource]),
+                    ): _choices([item.value for item in SeasonSource], "season_source"),
                     vol.Optional(
                         "season_entity",
                         description={"suggested_value": seasons.get("entity_id") or None},
@@ -281,14 +316,16 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             selector.SelectOptionDict(value=str(index), label=zone.get("name") or zone["zone_id"])
             for index, zone in enumerate(zones)
         ]
-        options.append(selector.SelectOptionDict(value=_ADD, label="+ Add zone"))
+        options.append(_add_option("zone"))
         return self.async_show_form(
             step_id="zones",
             data_schema=vol.Schema(
                 {
                     vol.Required("zone", default=_ADD): selector.SelectSelector(
                         selector.SelectSelectorConfig(
-                            options=options, mode=selector.SelectSelectorMode.LIST
+                            options=options,
+                            mode=selector.SelectSelectorMode.LIST,
+                            translation_key="zone_list",
                         )
                     )
                 }
@@ -337,7 +374,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Required("priority", default=priority): _RANK,
                     vol.Required(
                         "gate", default=current.get("gate", ZoneGate.HOUSEHOLD.value)
-                    ): _choices([item.value for item in ZoneGate]),
+                    ): _choices([item.value for item in ZoneGate], "zone_gate"),
                     vol.Optional(
                         "presence_entity",
                         description={"suggested_value": current.get("presence_entity") or None},
@@ -400,7 +437,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             selector.SelectOptionDict(value=str(index), label=source["entity_id"])
             for index, source in enumerate(sources)
         ]
-        options.append(selector.SelectOptionDict(value=_ADD, label="+ Add source"))
+        options.append(_add_option("source"))
         options.append(selector.SelectOptionDict(value=_BACK, label="< Back to menu"))
         return self.async_show_form(
             step_id="sources",
@@ -408,7 +445,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 {
                     vol.Required("source", default=_ADD): selector.SelectSelector(
                         selector.SelectSelectorConfig(
-                            options=options, mode=selector.SelectSelectorMode.LIST
+                            options=options,
+                            mode=selector.SelectSelectorMode.LIST,
+                            translation_key="source_list",
                         )
                     )
                 }
@@ -436,6 +475,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     ),
                     "entity_id": user_input["entity_id"],
                     "role": user_input["role"],
+                    "autostart": user_input["autostart"],
                     "priority": int(user_input["priority"]),
                     "outdoor": {
                         "minimum": user_input.get("outdoor_min"),
@@ -460,7 +500,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     ): _CLIMATE,
                     vol.Required(
                         "role", default=current.get("role", SourceRole.HEAT_COOL.value)
-                    ): _choices([item.value for item in SourceRole]),
+                    ): _choices([item.value for item in SourceRole], "source_role"),
+                    vol.Required("autostart", default=current.get("autostart", True)): bool,
                     vol.Required("priority", default=current.get("priority", 0)): _RANK,
                     vol.Optional(
                         "outdoor_min",
@@ -493,14 +534,16 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             )
             for index, circuit in enumerate(circuits)
         ]
-        options.append(selector.SelectOptionDict(value=_ADD, label="+ Add circuit"))
+        options.append(_add_option("circuit"))
         return self.async_show_form(
             step_id="circuits",
             data_schema=vol.Schema(
                 {
                     vol.Required("circuit", default=_ADD): selector.SelectSelector(
                         selector.SelectSelectorConfig(
-                            options=options, mode=selector.SelectSelectorMode.LIST
+                            options=options,
+                            mode=selector.SelectSelectorMode.LIST,
+                            translation_key="circuit_list",
                         )
                     )
                 }
@@ -558,7 +601,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Required(
                         "conflict_policy",
                         default=current.get("conflict_policy", ConflictPolicy.PRIORITY.value),
-                    ): _choices([item.value for item in ConflictPolicy]),
+                    ): _choices([item.value for item in ConflictPolicy], "conflict_policy"),
                     vol.Required(
                         "allow_fan_only_during_conflict",
                         default=current.get("allow_fan_only_during_conflict", False),
@@ -677,14 +720,16 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             )
             for index, item in enumerate(generators)
         ]
-        options.append(selector.SelectOptionDict(value=_ADD, label="+ Add heat source"))
+        options.append(_add_option("generator"))
         return self.async_show_form(
             step_id="generators",
             data_schema=vol.Schema(
                 {
                     vol.Required("generator", default=_ADD): selector.SelectSelector(
                         selector.SelectSelectorConfig(
-                            options=options, mode=selector.SelectSelectorMode.LIST
+                            options=options,
+                            mode=selector.SelectSelectorMode.LIST,
+                            translation_key="generator_list",
                         )
                     )
                 }
@@ -766,14 +811,16 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             )
             for index, person in enumerate(residents)
         ]
-        options.append(selector.SelectOptionDict(value=_ADD, label="+ Add resident"))
+        options.append(_add_option("resident"))
         return self.async_show_form(
             step_id="residents",
             data_schema=vol.Schema(
                 {
                     vol.Required("resident", default=_ADD): selector.SelectSelector(
                         selector.SelectSelectorConfig(
-                            options=options, mode=selector.SelectSelectorMode.LIST
+                            options=options,
+                            mode=selector.SelectSelectorMode.LIST,
+                            translation_key="resident_list",
                         )
                     )
                 }
@@ -866,7 +913,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             selector.SelectOptionDict(value=str(index), label=_window_label(window))
             for index, window in enumerate(windows)
         ]
-        options.append(selector.SelectOptionDict(value=_ADD, label="+ Add schedule"))
+        options.append(_add_option("window"))
         options.append(selector.SelectOptionDict(value=_BACK, label="< Back to menu"))
         return self.async_show_form(
             step_id="windows",
@@ -875,7 +922,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Required("window", default=_BACK if windows else _ADD): (
                         selector.SelectSelector(
                             selector.SelectSelectorConfig(
-                                options=options, mode=selector.SelectSelectorMode.LIST
+                                options=options,
+                                mode=selector.SelectSelectorMode.LIST,
+                                translation_key="window_list",
                             )
                         )
                     )
@@ -960,14 +1009,16 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             selector.SelectOptionDict(value=str(index), label=opening["entity_id"])
             for index, opening in enumerate(openings)
         ]
-        options.append(selector.SelectOptionDict(value=_ADD, label="+ Add opening"))
+        options.append(_add_option("opening"))
         return self.async_show_form(
             step_id="openings",
             data_schema=vol.Schema(
                 {
                     vol.Required("opening", default=_ADD): selector.SelectSelector(
                         selector.SelectSelectorConfig(
-                            options=options, mode=selector.SelectSelectorMode.LIST
+                            options=options,
+                            mode=selector.SelectSelectorMode.LIST,
+                            translation_key="opening_list",
                         )
                     )
                 }

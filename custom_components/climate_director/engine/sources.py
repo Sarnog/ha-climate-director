@@ -40,6 +40,16 @@ def candidates(zone: Zone, family: ModeFamily, world: WorldState) -> tuple[Sourc
 
 def _eligible(source: Source, family: ModeFamily, world: WorldState) -> bool:
     """Return whether a source can serve this duty under current conditions."""
+    # Een handbediende bron is nooit een antwoord op een vraag. Hem hier toch
+    # meetellen zou de zone een aanspraak op het circuit geven die hij nooit
+    # verzilvert, en daarmee een kamer met minder voorrang laten winnen zonder
+    # dat er iets gaat draaien.
+    #
+    # A manual source is never an answer to a demand. Counting it here would
+    # give the zone a claim on the circuit it never cashes in, letting a room
+    # with less claim win while nothing actually runs.
+    if not source.autostart:
+        return False
     if not source.supports(family):
         return False
     if not source.outdoor.contains(world.outdoor_temperature):

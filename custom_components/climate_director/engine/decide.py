@@ -14,7 +14,7 @@ detection after the fact - it simply never comes out.
 from __future__ import annotations
 
 from . import constraints, gates, hysteresis, sources
-from .families import MODE_FAN_ONLY, MODE_HEAT, MODE_OFF, ModeFamily, preferred_mode
+from .families import MODE_FAN_ONLY, MODE_HEAT, MODE_OFF, ModeFamily, family_of, preferred_mode
 from .models import Circuit, DirectorConfig, Source, Zone
 from .plan import CircuitDecision, Deferral, Plan, Reason, UnitCommand, ZoneDecision
 from .world import WorldState
@@ -160,6 +160,57 @@ def _zone_reasons(
     return reasons
 
 
+def _manual_conflict(
+    config: DirectorConfig,
+    world: WorldState,
+    zone: Zone,
+    source: Source,
+    grants: dict[str, constraints.Grant],
+) -> UnitCommand | None:
+    """Return the command standing a manual source down, or `None` to leave it.
+
+    Alleen als hij draait en zijn taak botst met wat het circuit gaat doen. Een
+    apparaat dat uit staat hoeft niet uitgezet te worden, en een apparaat dat
+    hetzelfde doet als de rest zit niemand in de weg.
+
+    Only when it is running and its duty clashes with what the circuit is about
+    to do. An appliance that is off needs no switching off, and one doing the
+    same as the rest is in nobody's way.
+    """
+    running = family_of(world.climate(source.entity_id).hvac_mode)
+    if running is ModeFamily.NEUTRAL:
+        return None
+
+    circuit = config.circuit_for_entity(source.entity_id)
+    if circuit is None or circuit.simultaneous_heat_cool:
+        return None
+
+    wanted = {
+        grant.family
+        for zone_id, grant in grants.items()
+        if grant.granted and zone_id != zone.zone_id and _on_circuit(config, circuit, zone_id)
+    }
+    if not wanted or running in wanted:
+        return None
+
+    return UnitCommand(
+        entity_id=source.entity_id,
+        hvac_mode=_idle_mode(config, source, Reason.CIRCUIT_CONFLICT_LOST),
+        temperature=None,
+        zone_id=zone.zone_id,
+        source_id=source.source_id,
+        reason=Reason.CIRCUIT_CONFLICT_LOST,
+    )
+
+
+def _on_circuit(config: DirectorConfig, circuit: Circuit, zone_id: str) -> bool:
+    """Return whether any of that zone's sources hangs on this circuit."""
+    zone = config.zone(zone_id)
+    if zone is None:
+        return False
+    return any(source.entity_id in circuit.units for source in zone.sources)
+
+
 def _build_commands(
     config: DirectorConfig,
     world: WorldState,
@@ -180,6 +231,19 @@ def _build_commands(
 
         grant = grants.get(zone.zone_id)
         chosen = grant is not None and grant.granted and grant.source_id == source.source_id
+
+        # Een handbediende bron wordt niet aangestuurd tenzij hij in de weg
+        # staat. Hem "voor de zekerheid" uitzetten zou precies het apparaat
+        # uitschakelen dat iemand net met de hand heeft aangezet.
+        #
+        # A manual source is left alone unless it is in the way. Switching it
+        # off "to be safe" would turn off exactly the appliance somebody just
+        # switched on by hand.
+        if not source.autostart:
+            standing_down = _manual_conflict(config, world, zone, source, grants)
+            if standing_down is not None:
+                commands.append(standing_down)
+            continue
 
         if chosen and grant is not None:
             settings = zone.settings_for(grant.family)

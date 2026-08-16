@@ -138,7 +138,8 @@
           "priority": "Préférence",
           "outdoor_min": "Utiliser à partir de cette température extérieure",
           "outdoor_max": "Utiliser jusqu'à cette température extérieure",
-          "delete": "Supprimer cette source"
+          "delete": "Supprimer cette source",
+          "autostart": "Démarrer cet appareil automatiquement"
         },
         "data_description": {
           "priority": "Le plus bas l'emporte quand plusieurs sources peuvent assurer la même tâche.",
@@ -146,7 +147,8 @@
           "outdoor_max": "Exclue de la plage.",
           "entity_id": "L'entité climate que cette source pilote.",
           "role": "Si cet appareil peut chauffer, refroidir, ou les deux. Une chaudière ne fait que chauffer.",
-          "delete": "Retire la source de cette zone. L'appareil lui-même reste intact."
+          "delete": "Retire la source de cette zone. L'appareil lui-même reste intact.",
+          "autostart": "Désactivé le laisse tranquille : le directeur ne l'allume jamais et ne l'éteint que s'il exécute une tâche que l'unité extérieure partagée n'autorise pas. Pour un appareil que vous allumez vous-même et voulez laisser tel quel."
         }
       },
       "circuits": {
@@ -374,6 +376,72 @@
           "name": "Installation",
           "description": "Quelle installation recalculer. Laissez vide pour toutes."
         }
+      }
+    }
+  },
+  "selector": {
+    "zone_list": {
+      "options": {
+        "__add__": "+ Ajouter une zone"
+      }
+    },
+    "source_list": {
+      "options": {
+        "__add__": "+ Ajouter une source"
+      }
+    },
+    "circuit_list": {
+      "options": {
+        "__add__": "+ Ajouter un circuit"
+      }
+    },
+    "generator_list": {
+      "options": {
+        "__add__": "+ Ajouter une source de chaleur"
+      }
+    },
+    "resident_list": {
+      "options": {
+        "__add__": "+ Ajouter un habitant"
+      }
+    },
+    "window_list": {
+      "options": {
+        "__add__": "+ Ajouter un horaire"
+      }
+    },
+    "opening_list": {
+      "options": {
+        "__add__": "+ Ajouter une ouverture"
+      }
+    },
+    "season_source": {
+      "options": {
+        "auto": "D'après le mois",
+        "entity": "D'après une entité",
+        "summer": "Toujours l'été",
+        "winter": "Toujours l'hiver"
+      }
+    },
+    "zone_gate": {
+      "options": {
+        "household": "Le foyer : planning, sommeil, quelqu'un à la maison",
+        "presence": "La pièce même : son capteur de présence passe outre le planning"
+      }
+    },
+    "source_role": {
+      "options": {
+        "heat_only": "Chauffage seulement",
+        "cool_only": "Refroidissement seulement",
+        "heat_cool": "Chauffage et refroidissement"
+      }
+    },
+    "conflict_policy": {
+      "options": {
+        "priority": "Priorité : le plus petit numéro gagne",
+        "first_come": "Premier arrivé : la tâche en cours garde le circuit",
+        "demand": "Demande : le plus grand écart gagne",
+        "season_lock": "Saison : la saison dicte la tâche"
       }
     }
   }

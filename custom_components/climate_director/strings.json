@@ -138,7 +138,8 @@
           "priority": "Preference",
           "outdoor_min": "Use from this outdoor temperature",
           "outdoor_max": "Use up to this outdoor temperature",
-          "delete": "Delete this source"
+          "delete": "Delete this source",
+          "autostart": "Start this appliance automatically"
         },
         "data_description": {
           "priority": "Lower wins when several sources could serve the same duty.",
@@ -146,7 +147,8 @@
           "outdoor_max": "Excluded from the range.",
           "entity_id": "The climate entity this source steers.",
           "role": "Whether this appliance can heat, cool, or both. A boiler is heating only.",
-          "delete": "Removes the source from this zone. The appliance itself is left alone."
+          "delete": "Removes the source from this zone. The appliance itself is left alone.",
+          "autostart": "Off leaves it alone: the director never switches it on, and switches it off only when it runs a duty the shared outdoor unit cannot allow. For an appliance you switch on yourself and want left as you left it."
         }
       },
       "circuits": {
@@ -374,6 +376,72 @@
           "name": "Installation",
           "description": "Which installation to recompute. Leave empty for all of them."
         }
+      }
+    }
+  },
+  "selector": {
+    "zone_list": {
+      "options": {
+        "__add__": "+ Add zone"
+      }
+    },
+    "source_list": {
+      "options": {
+        "__add__": "+ Add source"
+      }
+    },
+    "circuit_list": {
+      "options": {
+        "__add__": "+ Add circuit"
+      }
+    },
+    "generator_list": {
+      "options": {
+        "__add__": "+ Add heat source"
+      }
+    },
+    "resident_list": {
+      "options": {
+        "__add__": "+ Add resident"
+      }
+    },
+    "window_list": {
+      "options": {
+        "__add__": "+ Add schedule"
+      }
+    },
+    "opening_list": {
+      "options": {
+        "__add__": "+ Add opening"
+      }
+    },
+    "season_source": {
+      "options": {
+        "auto": "From the month",
+        "entity": "From an entity",
+        "summer": "Always summer",
+        "winter": "Always winter"
+      }
+    },
+    "zone_gate": {
+      "options": {
+        "household": "The household: schedule, sleep, somebody home",
+        "presence": "The room itself: its presence sensor overrules the schedule"
+      }
+    },
+    "source_role": {
+      "options": {
+        "heat_only": "Heating only",
+        "cool_only": "Cooling only",
+        "heat_cool": "Heating and cooling"
+      }
+    },
+    "conflict_policy": {
+      "options": {
+        "priority": "Priority: the lowest number wins",
+        "first_come": "First come: the running duty keeps the circuit",
+        "demand": "Demand: the largest deviation wins",
+        "season_lock": "Season: the season dictates the duty"
       }
     }
   }

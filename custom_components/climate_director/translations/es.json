@@ -138,7 +138,8 @@
           "priority": "Preferencia",
           "outdoor_min": "Usar a partir de esta temperatura exterior",
           "outdoor_max": "Usar hasta esta temperatura exterior",
-          "delete": "Eliminar esta fuente"
+          "delete": "Eliminar esta fuente",
+          "autostart": "Encender este aparato automáticamente"
         },
         "data_description": {
           "priority": "El más bajo gana cuando varias fuentes podrían cumplir la misma tarea.",
@@ -146,7 +147,8 @@
           "outdoor_max": "Excluida del rango.",
           "entity_id": "La entidad climate que gobierna esta fuente.",
           "role": "Si este aparato puede calentar, enfriar, o ambas cosas. Una caldera solo calienta.",
-          "delete": "Saca la fuente de esta zona. El aparato en sí queda intacto."
+          "delete": "Saca la fuente de esta zona. El aparato en sí queda intacto.",
+          "autostart": "Desactivado lo deja en paz: el director nunca lo enciende, y solo lo apaga si realiza una tarea que la unidad exterior compartida no permite. Para un aparato que enciendes tú y quieres dejar como está."
         }
       },
       "circuits": {
@@ -374,6 +376,72 @@
           "name": "Instalación",
           "description": "Qué instalación recalcular. Déjalo vacío para todas."
         }
+      }
+    }
+  },
+  "selector": {
+    "zone_list": {
+      "options": {
+        "__add__": "+ Añadir zona"
+      }
+    },
+    "source_list": {
+      "options": {
+        "__add__": "+ Añadir fuente"
+      }
+    },
+    "circuit_list": {
+      "options": {
+        "__add__": "+ Añadir circuito"
+      }
+    },
+    "generator_list": {
+      "options": {
+        "__add__": "+ Añadir fuente de calor"
+      }
+    },
+    "resident_list": {
+      "options": {
+        "__add__": "+ Añadir residente"
+      }
+    },
+    "window_list": {
+      "options": {
+        "__add__": "+ Añadir horario"
+      }
+    },
+    "opening_list": {
+      "options": {
+        "__add__": "+ Añadir apertura"
+      }
+    },
+    "season_source": {
+      "options": {
+        "auto": "Del mes",
+        "entity": "De una entidad",
+        "summer": "Siempre verano",
+        "winter": "Siempre invierno"
+      }
+    },
+    "zone_gate": {
+      "options": {
+        "household": "El hogar: horario, sueño, alguien en casa",
+        "presence": "La habitación misma: su sensor de presencia anula el horario"
+      }
+    },
+    "source_role": {
+      "options": {
+        "heat_only": "Solo calefacción",
+        "cool_only": "Solo refrigeración",
+        "heat_cool": "Calefacción y refrigeración"
+      }
+    },
+    "conflict_policy": {
+      "options": {
+        "priority": "Prioridad: gana el número más bajo",
+        "first_come": "El primero: la tarea en marcha se queda el circuito",
+        "demand": "Demanda: gana la mayor desviación",
+        "season_lock": "Estación: la estación dicta la tarea"
       }
     }
   }

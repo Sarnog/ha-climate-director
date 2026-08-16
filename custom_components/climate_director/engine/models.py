@@ -187,6 +187,21 @@ class Source:
     outdoor: OutdoorWindow = field(default_factory=OutdoorWindow)
     """Outdoor range in which this source is the sensible choice."""
 
+    autostart: bool = True
+    """Whether the director may switch this source on of its own accord.
+
+    Zet dit uit voor een apparaat dat je zelf aanzet en verder met rust gelaten
+    wil hebben - een slaapkamerairco bijvoorbeeld. De director start hem dan
+    nooit, en laat hem staan zoals hij staat. Alleen als hij een taak draait die
+    het circuit niet toestaat wordt hij uitgezet, want anders zou hij een kamer
+    met meer voorrang blokkeren.
+
+    Turn this off for an appliance you switch on yourself and want left alone -
+    a bedroom air conditioner, say. The director then never starts it and leaves
+    it as it stands. Only when it runs a duty the circuit cannot allow is it
+    switched off, since otherwise it would block a room with more claim.
+    """
+
     def supports(self, family: ModeFamily) -> bool:
         """Return whether this source can deliver `family`."""
         if family is ModeFamily.HEAT:
@@ -616,6 +631,11 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
             problems.append(f"zone {zone.zone_id} has no indoor temperature sensor")
         if zone.heat is None and zone.cool is None:
             problems.append(f"zone {zone.zone_id} may neither heat nor cool")
+        if zone.sources and not any(source.autostart for source in zone.sources):
+            problems.append(
+                f"zone {zone.zone_id} has no source the director may start, "
+                f"so it can never run on its own"
+            )
         if zone.gate is ZoneGate.PRESENCE and not zone.presence_entity:
             problems.append(
                 f"zone {zone.zone_id} runs on room presence but has no presence entity, "

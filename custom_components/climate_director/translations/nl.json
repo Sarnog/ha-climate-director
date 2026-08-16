@@ -138,7 +138,8 @@
           "priority": "Voorkeur",
           "outdoor_min": "Gebruiken vanaf deze buitentemperatuur",
           "outdoor_max": "Gebruiken tot deze buitentemperatuur",
-          "delete": "Deze bron verwijderen"
+          "delete": "Deze bron verwijderen",
+          "autostart": "Dit apparaat automatisch aanzetten"
         },
         "data_description": {
           "priority": "Lager wint als meerdere bronnen dezelfde taak kunnen leveren.",
@@ -146,7 +147,8 @@
           "outdoor_max": "Valt buiten het bereik.",
           "entity_id": "De climate-entiteit die deze bron aanstuurt.",
           "role": "Of dit apparaat kan verwarmen, koelen, of allebei. Een cv-ketel kan alleen verwarmen.",
-          "delete": "Haalt de bron uit deze zone. Het apparaat zelf blijft ongemoeid."
+          "delete": "Haalt de bron uit deze zone. Het apparaat zelf blijft ongemoeid.",
+          "autostart": "Uit laat hem met rust: de director zet hem nooit aan, en zet hem alleen uit als hij een taak draait die de gedeelde buitenunit niet toestaat. Voor een apparaat dat je zelf aanzet en zo wilt laten staan."
         }
       },
       "circuits": {
@@ -374,6 +376,72 @@
           "name": "Installatie",
           "description": "Welke installatie opnieuw berekend wordt. Laat leeg voor allemaal."
         }
+      }
+    }
+  },
+  "selector": {
+    "zone_list": {
+      "options": {
+        "__add__": "+ Zone toevoegen"
+      }
+    },
+    "source_list": {
+      "options": {
+        "__add__": "+ Bron toevoegen"
+      }
+    },
+    "circuit_list": {
+      "options": {
+        "__add__": "+ Koelcircuit toevoegen"
+      }
+    },
+    "generator_list": {
+      "options": {
+        "__add__": "+ Warmtebron toevoegen"
+      }
+    },
+    "resident_list": {
+      "options": {
+        "__add__": "+ Bewoner toevoegen"
+      }
+    },
+    "window_list": {
+      "options": {
+        "__add__": "+ Rooster toevoegen"
+      }
+    },
+    "opening_list": {
+      "options": {
+        "__add__": "+ Deur of raam toevoegen"
+      }
+    },
+    "season_source": {
+      "options": {
+        "auto": "Uit de maand",
+        "entity": "Uit een entiteit",
+        "summer": "Altijd zomer",
+        "winter": "Altijd winter"
+      }
+    },
+    "zone_gate": {
+      "options": {
+        "household": "Het huishouden: rooster, slaap, iemand thuis",
+        "presence": "De ruimte zelf: de aanwezigheidssensor overruled het rooster"
+      }
+    },
+    "source_role": {
+      "options": {
+        "heat_only": "Alleen verwarmen",
+        "cool_only": "Alleen koelen",
+        "heat_cool": "Verwarmen en koelen"
+      }
+    },
+    "conflict_policy": {
+      "options": {
+        "priority": "Prioriteit: het laagste nummer wint",
+        "first_come": "Wie eerst was: de draaiende taak houdt het circuit",
+        "demand": "Vraag: de grootste afwijking wint",
+        "season_lock": "Seizoen: het seizoen bepaalt de taak"
       }
     }
   }

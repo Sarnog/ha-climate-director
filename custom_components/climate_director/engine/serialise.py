@@ -140,6 +140,7 @@ def _source(raw: Mapping[str, Any]) -> Source:
         source_id=_text(raw.get("source_id")),
         entity_id=_text(raw.get("entity_id")),
         role=_enum(SourceRole, raw.get("role"), SourceRole.HEAT_COOL),
+        autostart=_bool(raw.get("autostart"), True),
         priority=_int(raw.get("priority"), 0),
         outdoor=_window(raw.get("outdoor")),
     )
@@ -300,6 +301,7 @@ def _source_to_dict(source: Source) -> dict[str, Any]:
         "source_id": source.source_id,
         "entity_id": source.entity_id,
         "role": source.role.value,
+        "autostart": source.autostart,
         "priority": source.priority,
         "outdoor": _window_to_dict(source.outdoor),
     }

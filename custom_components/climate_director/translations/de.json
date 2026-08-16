@@ -138,7 +138,8 @@
           "priority": "Vorrang",
           "outdoor_min": "Verwenden ab dieser Außentemperatur",
           "outdoor_max": "Verwenden bis zu dieser Außentemperatur",
-          "delete": "Diese Quelle löschen"
+          "delete": "Diese Quelle löschen",
+          "autostart": "Dieses Gerät automatisch einschalten"
         },
         "data_description": {
           "priority": "Niedriger gewinnt, wenn mehrere Quellen dieselbe Aufgabe erfüllen könnten.",
@@ -146,7 +147,8 @@
           "outdoor_max": "Gehört nicht mehr zum Bereich.",
           "entity_id": "Die Climate-Entität, die diese Quelle steuert.",
           "role": "Ob dieses Gerät heizen, kühlen oder beides kann. Ein Heizkessel kann nur heizen.",
-          "delete": "Nimmt die Quelle aus dieser Zone. Das Gerät selbst bleibt unangetastet."
+          "delete": "Nimmt die Quelle aus dieser Zone. Das Gerät selbst bleibt unangetastet.",
+          "autostart": "Aus lässt es in Ruhe: der Director schaltet es nie ein und nur dann aus, wenn es eine Aufgabe fährt, die das gemeinsame Außengerät nicht zulässt. Für ein Gerät, das du selbst einschaltest und so lassen willst."
         }
       },
       "circuits": {
@@ -374,6 +376,72 @@
           "name": "Anlage",
           "description": "Welche Anlage neu berechnet wird. Leer lassen für alle."
         }
+      }
+    }
+  },
+  "selector": {
+    "zone_list": {
+      "options": {
+        "__add__": "+ Zone hinzufügen"
+      }
+    },
+    "source_list": {
+      "options": {
+        "__add__": "+ Quelle hinzufügen"
+      }
+    },
+    "circuit_list": {
+      "options": {
+        "__add__": "+ Kältekreis hinzufügen"
+      }
+    },
+    "generator_list": {
+      "options": {
+        "__add__": "+ Wärmequelle hinzufügen"
+      }
+    },
+    "resident_list": {
+      "options": {
+        "__add__": "+ Bewohner hinzufügen"
+      }
+    },
+    "window_list": {
+      "options": {
+        "__add__": "+ Zeitplan hinzufügen"
+      }
+    },
+    "opening_list": {
+      "options": {
+        "__add__": "+ Tür oder Fenster hinzufügen"
+      }
+    },
+    "season_source": {
+      "options": {
+        "auto": "Aus dem Monat",
+        "entity": "Aus einer Entität",
+        "summer": "Immer Sommer",
+        "winter": "Immer Winter"
+      }
+    },
+    "zone_gate": {
+      "options": {
+        "household": "Der Haushalt: Zeitplan, Schlaf, jemand zu Hause",
+        "presence": "Der Raum selbst: sein Anwesenheitssensor übergeht den Zeitplan"
+      }
+    },
+    "source_role": {
+      "options": {
+        "heat_only": "Nur heizen",
+        "cool_only": "Nur kühlen",
+        "heat_cool": "Heizen und kühlen"
+      }
+    },
+    "conflict_policy": {
+      "options": {
+        "priority": "Priorität: die niedrigste Zahl gewinnt",
+        "first_come": "Wer zuerst kam: die laufende Aufgabe behält den Kreis",
+        "demand": "Bedarf: die größte Abweichung gewinnt",
+        "season_lock": "Jahreszeit: die Jahreszeit bestimmt die Aufgabe"
       }
     }
   }
