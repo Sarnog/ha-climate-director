@@ -74,14 +74,42 @@ _HOME_STATES = frozenset({"home", "on", "true"})
 #: existing setups already have a season helper reporting "Zomer" or "Winter",
 #: and that should keep working.
 _SEASON_NAMES: dict[str, Season] = {
+    # Engels / English
     "summer": Season.SUMMER,
-    "zomer": Season.SUMMER,
     "winter": Season.WINTER,
     "spring": Season.WINTER,
-    "lente": Season.WINTER,
     "autumn": Season.WINTER,
     "fall": Season.WINTER,
+    # Nederlands / Dutch
+    "zomer": Season.SUMMER,
+    "lente": Season.WINTER,
+    "voorjaar": Season.WINTER,
     "herfst": Season.WINTER,
+    "najaar": Season.WINTER,
+    # Duits / German
+    "sommer": Season.SUMMER,
+    "frühling": Season.WINTER,
+    "fruehling": Season.WINTER,
+    "herbst": Season.WINTER,
+    # Frans / French
+    "été": Season.SUMMER,
+    "ete": Season.SUMMER,
+    "hiver": Season.WINTER,
+    "printemps": Season.WINTER,
+    "automne": Season.WINTER,
+    # Spaans / Spanish
+    "verano": Season.SUMMER,
+    "invierno": Season.WINTER,
+    "primavera": Season.WINTER,
+    "otoño": Season.WINTER,
+    "otono": Season.WINTER,
+    # Arabisch / Arabic
+    "صيف": Season.SUMMER,
+    "الصيف": Season.SUMMER,
+    "شتاء": Season.WINTER,
+    "الشتاء": Season.WINTER,
+    "ربيع": Season.WINTER,
+    "خريف": Season.WINTER,
 }
 
 
