@@ -111,7 +111,21 @@ naar temperaturen:
   knipperende aanwezigheidsmelders. Iemand thuis zegt niets over of er iemand op zolder
   zit; een zone zonder zo'n sensor wordt hier nooit op tegengehouden.
 - **Wakker** — iemand die thuis is moet ook uit bed zijn.
-- **Rooster** — per bewoner instelbare tijdvensters, met een vakantiemodus die dat overslaat.
+- **Rooster** — per bewoner instelbare tijdvensters. Wie geen rooster invult doet niet
+  mee: die opent de poort niet en houdt hem ook niet tegen. Wie thuis nog slaapt terwijl
+  zijn eigen venster nog niet open is, laat het huis wachten.
+- **Iemand thuis** — dit is geen keuze maar een voorwaarde. Gaat er een trigger af terwijl
+  niemand van de ingestelde bewoners thuis is, dan gebeurt er niets.
+
+Een vakantiedag telt als zaterdag, tenzij een bewoner een eigen vakantievenster invult;
+dat venster vervangt dan zijn gewone vensters en negeert de dagen van de week. De
+vakantiemodus gaat aan met de schakelaar, of vanzelf zodra er in een van de ingestelde
+agenda's een item loopt met het ingestelde trefwoord erin.
+
+De gastenmodus zet elke poort over personen opzij — aanwezigheid, slaap en rooster. Er
+logeert dan iemand die niet gevolgd wordt, dus dat het huis leeg lijkt zegt niets, en de
+verwarming of airco hoort daar niet op uit te gaan. De poort over aanwezigheid in de
+ruimte zelf blijft wél gelden: die gaat over de kamer, niet over wie er in huis is.
 
 Een installatie zonder bewoners (kantoor, vakantiehuis, serverruimte) slaat de
 aanwezigheidspoorten over in plaats van permanent op slot te zitten.
@@ -150,7 +164,8 @@ Eén device per installatie, met daaronder:
 | `sensor.*_bron_<zone>` | Welke bron deze zone bedient, met wat de zone wilde, wat hij kreeg en waarom |
 | `binary_sensor.*_<zone>_geblokkeerd` | Aan als een zone minder kreeg dan hij vroeg, met de reden als attribuut |
 | `switch.*_director` | Hoofdschakelaar; uit betekent dat er niets geregeld wordt |
-| `switch.*_vakantiemodus` | Slaat het rooster over, houdt aanwezigheid en slaap wél aan |
+| `switch.*_vakantiemodus` | Laat elke dag als zaterdag tellen, of als het eigen vakantierooster |
+| `switch.*_gastenmodus` | Blijft regelen terwijl de bewoners weg zijn; zet aanwezigheid, slaap en rooster opzij |
 | `switch.*_override_<zone>` | Geeft één zone terug aan de gebruiker tot je hem weer uitzet |
 | `number.*_prioriteit_<zone>` | Hoe sterk deze zone een gedeelde buitenunit claimt; lager wint. Vanuit een automatisering te wijzigen |
 
@@ -213,8 +228,9 @@ Alles verder — zones, bronnen, koelcircuits, bewoners en openingen — bouw je
 
 Een verstandige volgorde:
 
-1. **Algemene instellingen** — buitentemperatuursensor, herkomst van het seizoen, en welke
-   poorten je wilt (aanwezigheid, wakker, rooster).
+1. **Algemene instellingen** — buitentemperatuursensor, herkomst van het seizoen, welke
+   poorten je wilt (wakker, rooster), en welke agenda's een vakantie aankondigen met welk
+   trefwoord.
 2. **Zones en bronnen** — per ruimte de binnentemperatuursensor en de aan-/uitpunten,
    daarna de apparaten die die ruimte kunnen bedienen. Geef een cv-ketel en een warmtepomp
    aansluitende buitenvensters, dan wisselen ze elkaar naadloos af.
@@ -413,7 +429,21 @@ temperatures:
   detectors. Somebody being home says nothing about whether anybody is in the attic; a
   zone without such a sensor is never held back on this.
 - **Awake** — somebody home must also be out of bed.
-- **Schedule** — per-resident time windows, with a holiday mode that skips them.
+- **Schedule** — time windows set per resident. Whoever fills in no schedule does not take
+  part: they neither open the gate nor hold it shut. Whoever is home asleep while their own
+  window has not opened yet makes the house wait.
+- **Somebody home** — not a choice but a condition. If a trigger fires while none of the
+  configured residents is home, nothing happens.
+
+A holiday counts as a Saturday, unless a resident fills in a holiday window of their own;
+that window then replaces their ordinary ones and ignores the days of the week. Holiday
+mode goes on with the switch, or by itself as soon as one of the configured calendars has
+an event running that carries the configured keyword.
+
+Guest mode sets every gate about people aside — presence, sleep and schedule. Somebody is
+staying who is not tracked, so the house looking empty says nothing, and the heating or air
+conditioning should not go off over it. The gate about presence in the room itself still
+applies: that one is about the room, not about who is in the house.
 
 An installation without residents (an office, a holiday home, a server room) skips the
 presence gates rather than staying locked out forever.
@@ -453,7 +483,8 @@ One device per installation, holding:
 | `sensor.*_<zone>_source` | Which source serves this zone, with what the zone wanted, what it got and why |
 | `binary_sensor.*_<zone>_blocked` | On when a zone got less than it asked for, with the reason as an attribute |
 | `switch.*_director` | Master switch; off means nothing is regulated |
-| `switch.*_holiday_mode` | Skips the schedule, keeps presence and sleep |
+| `switch.*_holiday_mode` | Makes every day count as a Saturday, or as its own holiday schedule |
+| `switch.*_guest_mode` | Keeps regulating while the residents are away; sets presence, sleep and schedule aside |
 | `switch.*_<zone>_override` | Hands one zone back to the user until you turn it off again |
 | `number.*_<zone>_priority` | How strongly this zone claims a shared outdoor unit; lower wins. Settable from an automation |
 
@@ -514,8 +545,9 @@ in that menu.
 
 A sensible order:
 
-1. **General settings** — outdoor temperature sensor, where the season comes from, and
-   which gates you want (occupancy, awake, schedule).
+1. **General settings** — outdoor temperature sensor, where the season comes from, which
+   gates you want (awake, schedule), and which calendars announce a holiday with which
+   keyword.
 2. **Zones and sources** — per room the indoor sensor and the switch-on/off points, then
    the appliances able to serve that room. Give a boiler and a heat pump adjacent outdoor
    windows and they hand over to each other seamlessly.
