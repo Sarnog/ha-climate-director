@@ -40,7 +40,9 @@
           "require_schedule": "El horario de un residente debe estar abierto",
           "shadow_mode": "Modo sombra",
           "holiday_calendars": "Calendarios de vacaciones",
-          "holiday_keyword": "Palabra que indica vacaciones"
+          "holiday_keyword": "Palabra que indica vacaciones",
+          "guest_start": "Modo invitados desde",
+          "guest_end": "Modo invitados hasta"
         },
         "data_description": {
           "season_source": "Deduce la estación del mes, léela de una entidad, o fíjala a mano.",
@@ -50,7 +52,9 @@
           "outdoor_sensor": "Alimenta cada límite exterior, tanto aquí como en cada fuente. Sin este sensor ningún umbral de temperatura exterior puede cumplirse, y toda la instalación se queda parada en silencio.",
           "require_awake": "Alguien en casa pero dormido no cuenta. Qué entidad indica que duerme se ajusta por residente.",
           "holiday_calendars": "Un evento en curso en alguno de estos calendarios pone la casa en vacaciones. Dejarlo vacío usa solo el interruptor de vacaciones.",
-          "holiday_keyword": "Solo cuentan los eventos que llevan esta palabra, por ejemplo 'vacaciones'. Dejarlo vacío hace que cuente cualquier evento en curso."
+          "holiday_keyword": "Solo cuentan los eventos que llevan esta palabra, por ejemplo 'vacaciones'. Si la dejas vacía, los calendarios se ignoran por completo y el modo vacaciones queda solo en manos del interruptor.",
+          "guest_start": "El modo invitados solo sostiene la casa entre estas horas. Deja ambas vacías para que se aplique todo el día. Fuera de ellas vuelven a mandar las puertas ordinarias, de modo que un interruptor olvidado no funcione toda la noche.",
+          "guest_end": "El modo invitados solo sostiene la casa entre estas horas. Deja ambas vacías para que se aplique todo el día. Fuera de ellas vuelven a mandar las puertas ordinarias, de modo que un interruptor olvidado no funcione toda la noche."
         }
       },
       "zones": {

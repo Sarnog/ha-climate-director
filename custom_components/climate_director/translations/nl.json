@@ -40,7 +40,9 @@
           "require_schedule": "Het rooster van een bewoner moet openstaan",
           "shadow_mode": "Schaduwmodus",
           "holiday_calendars": "Vakantieagenda's",
-          "holiday_keyword": "Woord dat vakantie aangeeft"
+          "holiday_keyword": "Woord dat vakantie aangeeft",
+          "guest_start": "Gastenmodus vanaf",
+          "guest_end": "Gastenmodus tot"
         },
         "data_description": {
           "season_source": "Leid het seizoen af uit de maand, lees het uit een entiteit, of zet het met de hand vast.",
@@ -50,7 +52,9 @@
           "outdoor_sensor": "Voedt elke buitengrens, zowel hier als op elke bron. Zonder deze sensor kan geen enkele drempel op buitentemperatuur ooit voldaan worden, en staat de hele installatie stilletjes stil.",
           "require_awake": "Iemand die thuis is maar slaapt telt niet mee. Welke entiteit zegt dat iemand slaapt stel je per bewoner in.",
           "holiday_calendars": "Een lopend item in een van deze agenda's zet het huis op vakantie. Leeg laten gebruikt alleen de vakantieschakelaar.",
-          "holiday_keyword": "Alleen items met dit woord tellen mee, bijvoorbeeld 'vakantie'. Leeg laten laat elk lopend item in die agenda's meetellen."
+          "holiday_keyword": "Alleen items met dit woord tellen mee, bijvoorbeeld 'vakantie'. Laat je het leeg, dan blijven de agenda's helemaal buiten beschouwing en gaat de vakantiemodus alleen nog met de schakelaar.",
+          "guest_start": "De gastenmodus draagt het huis alleen tussen deze tijden. Laat beide leeg om hem de hele dag te laten gelden. Daarbuiten nemen de gewone poorten het over, zodat een schakelaar die niemand uitzette niet de hele nacht doordraait.",
+          "guest_end": "De gastenmodus draagt het huis alleen tussen deze tijden. Laat beide leeg om hem de hele dag te laten gelden. Daarbuiten nemen de gewone poorten het over, zodat een schakelaar die niemand uitzette niet de hele nacht doordraait."
         }
       },
       "zones": {

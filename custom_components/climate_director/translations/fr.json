@@ -40,7 +40,9 @@
           "require_schedule": "Le planning d'un occupant doit être ouvert",
           "shadow_mode": "Mode ombre",
           "holiday_calendars": "Agendas de vacances",
-          "holiday_keyword": "Mot qui signale des vacances"
+          "holiday_keyword": "Mot qui signale des vacances",
+          "guest_start": "Mode invités à partir de",
+          "guest_end": "Mode invités jusqu'à"
         },
         "data_description": {
           "season_source": "Déduisez la saison du mois, lisez-la depuis une entité, ou fixez-la à la main.",
@@ -50,7 +52,9 @@
           "outdoor_sensor": "Alimente chaque limite extérieure, ici comme sur chaque source. Sans ce capteur, aucun seuil de température extérieure ne peut être atteint, et toute l'installation reste à l'arrêt.",
           "require_awake": "Une personne présente mais endormie ne compte pas. L'entité qui indique le sommeil se règle par occupant.",
           "holiday_calendars": "Un évènement en cours dans l'un de ces agendas met la maison en vacances. Laisser vide n'utilise que l'interrupteur vacances.",
-          "holiday_keyword": "Seuls les évènements portant ce mot comptent, par exemple 'vacances'. Laisser vide fait compter tout évènement en cours de ces agendas."
+          "holiday_keyword": "Seuls les évènements portant ce mot comptent, par exemple 'vacances'. Laissé vide, les agendas sont entièrement ignorés et le mode vacances ne dépend plus que de l'interrupteur.",
+          "guest_start": "Le mode invités ne porte la maison qu'entre ces heures. Laisser les deux vides pour qu'il s'applique toute la journée. En dehors, les portes ordinaires reprennent la main, afin qu'un interrupteur oublié ne tourne pas toute la nuit.",
+          "guest_end": "Le mode invités ne porte la maison qu'entre ces heures. Laisser les deux vides pour qu'il s'applique toute la journée. En dehors, les portes ordinaires reprennent la main, afin qu'un interrupteur oublié ne tourne pas toute la nuit."
         }
       },
       "zones": {

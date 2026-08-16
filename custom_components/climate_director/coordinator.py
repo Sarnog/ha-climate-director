@@ -253,21 +253,22 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
     def _calendar_says_holiday(self) -> bool:
         """Return whether a configured calendar has a holiday running right now.
 
-        Een agenda-item telt zodra het loopt en het trefwoord erin voorkomt. Zonder
-        trefwoord telt elk lopend item, want dan is de agenda zelf de vakantieagenda.
+        Een agenda-item telt zodra het loopt en het trefwoord erin voorkomt.
+        Zonder trefwoord blijven de agenda's buiten beschouwing: raden welk item
+        vakantie bedoelde is niet aan de integratie.
 
         An event counts once it is running and carries the keyword. Without a
-        keyword every running event counts, since the calendar is then the
-        holiday calendar itself.
+        keyword the calendars are left alone: guessing which event meant a
+        holiday is not the integration's call to make.
         """
         keyword = self.config.holiday_keyword.strip().casefold()
+        if not keyword:
+            return False
 
         for entity_id in self.config.holiday_calendars:
             state = self.hass.states.get(entity_id)
             if state is None or state.state != "on":
                 continue
-            if not keyword:
-                return True
             haystack = " ".join(
                 str(state.attributes.get(field) or "")
                 for field in ("message", "summary", "description", "location")

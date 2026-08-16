@@ -40,7 +40,9 @@
           "require_schedule": "Der Zeitplan eines Bewohners muss offen sein",
           "shadow_mode": "Schattenmodus",
           "holiday_calendars": "Urlaubskalender",
-          "holiday_keyword": "Wort, das Urlaub kennzeichnet"
+          "holiday_keyword": "Wort, das Urlaub kennzeichnet",
+          "guest_start": "Gästemodus ab",
+          "guest_end": "Gästemodus bis"
         },
         "data_description": {
           "season_source": "Leite die Jahreszeit aus dem Monat ab, lies sie aus einer Entität, oder lege sie von Hand fest.",
@@ -50,7 +52,9 @@
           "outdoor_sensor": "Speist jede Außengrenze, hier wie auch an jeder Quelle. Ohne diesen Sensor kann keine Schwelle für die Außentemperatur je erfüllt werden, und die gesamte Anlage steht still.",
           "require_awake": "Wer zu Hause ist, aber schläft, zählt nicht. Welche Entität sagt, dass jemand schläft, stellst du pro Bewohner ein.",
           "holiday_calendars": "Ein laufender Termin in einem dieser Kalender versetzt das Haus in den Urlaub. Leer lassen nutzt nur den Urlaubsschalter.",
-          "holiday_keyword": "Nur Termine mit diesem Wort zählen, zum Beispiel 'Urlaub'. Leer lassen lässt jeden laufenden Termin dieser Kalender zählen."
+          "holiday_keyword": "Nur Termine mit diesem Wort zählen, zum Beispiel 'Urlaub'. Lässt du es leer, bleiben die Kalender ganz außer Betracht und der Urlaubsmodus hängt allein am Schalter.",
+          "guest_start": "Der Gästemodus trägt das Haus nur zwischen diesen Zeiten. Beide leer lassen, damit er den ganzen Tag gilt. Außerhalb übernehmen die gewöhnlichen Tore, damit ein vergessener Schalter nicht die ganze Nacht durchläuft.",
+          "guest_end": "Der Gästemodus trägt das Haus nur zwischen diesen Zeiten. Beide leer lassen, damit er den ganzen Tag gilt. Außerhalb übernehmen die gewöhnlichen Tore, damit ein vergessener Schalter nicht die ganze Nacht durchläuft."
         }
       },
       "zones": {

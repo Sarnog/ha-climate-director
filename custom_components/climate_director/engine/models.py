@@ -405,6 +405,14 @@ class GateSettings:
     require_schedule: bool = False
     """Someone's schedule window must be open."""
 
+    guest_window: TimeWindow | None = None
+    """Hours in which guest mode carries the house. `None` means all day.
+
+    Guest mode stands in for people the integration cannot see, and people are
+    only unaccounted for while they are up. Outside these hours the ordinary
+    gates take over again.
+    """
+
 
 class SeasonSource(StrEnum):
     """Where the coarse season comes from."""
@@ -456,7 +464,13 @@ class DirectorConfig:
     """Calendars whose running events may put the house on holiday."""
 
     holiday_keyword: str = ""
-    """Word an event must carry to count. Empty makes any running event count."""
+    """Word an event must carry to count.
+
+    Empty switches the calendars off entirely rather than letting every event
+    through: a calendar full of dentist appointments is not a holiday calendar,
+    and guessing which of its events meant a holiday is not the integration's
+    call to make.
+    """
 
     def zone(self, zone_id: str) -> Zone | None:
         """Return the zone with this id, if it exists."""
@@ -648,6 +662,12 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
     if config.gates.require_schedule and not any(resident.windows for resident in config.residents):
         problems.append(
             "the schedule gate is on but nobody has a schedule, so nothing can ever run"
+        )
+
+    if config.holiday_calendars and not config.holiday_keyword.strip():
+        problems.append(
+            "holiday calendars are set but no keyword is, so no event can ever "
+            "switch holiday mode on"
         )
 
     problems += [

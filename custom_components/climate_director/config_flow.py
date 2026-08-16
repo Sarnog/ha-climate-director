@@ -167,6 +167,10 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             self._installation["gates"] = {
                 "require_awake": user_input["require_awake"],
                 "require_schedule": user_input["require_schedule"],
+                "guest_window": {
+                    "start": user_input.get("guest_start") or "",
+                    "end": user_input.get("guest_end") or "",
+                },
             }
             self._installation["holiday_calendars"] = list(
                 user_input.get("holiday_calendars") or ()
@@ -179,6 +183,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
 
         seasons = self._installation.get("seasons") or {}
         gates = self._installation.get("gates") or {}
+        guest = gates.get("guest_window") or {}
         return self.async_show_form(
             step_id="settings",
             data_schema=vol.Schema(
@@ -212,6 +217,14 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     ): selector.EntitySelector(
                         selector.EntitySelectorConfig(domain="calendar", multiple=True)
                     ),
+                    vol.Optional(
+                        "guest_start",
+                        description={"suggested_value": guest.get("start") or None},
+                    ): _TIME,
+                    vol.Optional(
+                        "guest_end",
+                        description={"suggested_value": guest.get("end") or None},
+                    ): _TIME,
                     vol.Optional(
                         "holiday_keyword",
                         description={

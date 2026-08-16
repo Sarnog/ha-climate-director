@@ -84,6 +84,14 @@ def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
         "gates": {
             "require_awake": config.gates.require_awake,
             "require_schedule": config.gates.require_schedule,
+            "guest_window": (
+                None
+                if config.gates.guest_window is None
+                else {
+                    "start": config.gates.guest_window.start.isoformat(),
+                    "end": config.gates.guest_window.end.isoformat(),
+                }
+            ),
         },
         "seasons": {
             "source": config.seasons.source.value,
@@ -214,10 +222,24 @@ def _generator(raw: Mapping[str, Any]) -> Generator:
 def _gates(raw: Any) -> GateSettings:
     if not isinstance(raw, Mapping):
         return GateSettings()
+    guest = raw.get("guest_window")
     return GateSettings(
         require_awake=_bool(raw.get("require_awake"), True),
         require_schedule=_bool(raw.get("require_schedule"), False),
+        guest_window=_guest_window(guest if isinstance(guest, dict) else {}),
     )
+
+
+def _guest_window(raw: dict[str, Any]) -> TimeWindow | None:
+    """Return the guest window, or `None` when it is not both-ends filled in.
+
+    Half een venster is geen venster: dan geldt de gastenmodus de hele dag.
+    Half a window is no window: guest mode then applies all day.
+    """
+    start, end = raw.get("start"), raw.get("end")
+    if not start or not end:
+        return None
+    return TimeWindow(start=_time(start, time(0, 0)), end=_time(end, time(0, 0)))
 
 
 def _seasons(raw: Any) -> SeasonSettings:

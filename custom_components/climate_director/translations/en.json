@@ -40,7 +40,9 @@
           "require_schedule": "A resident's schedule must be open",
           "shadow_mode": "Shadow mode",
           "holiday_calendars": "Holiday calendars",
-          "holiday_keyword": "Word that marks a holiday"
+          "holiday_keyword": "Word that marks a holiday",
+          "guest_start": "Guest mode from",
+          "guest_end": "Guest mode until"
         },
         "data_description": {
           "season_source": "Derive the season from the month, read it from an entity, or pin it by hand.",
@@ -50,7 +52,9 @@
           "outdoor_sensor": "Feeds every outdoor limit, both here and on each source. Without it no threshold on outdoor temperature can ever be met, and the whole installation quietly stands still.",
           "require_awake": "Somebody home but asleep does not count. Which entity says they are asleep is set per resident.",
           "holiday_calendars": "A running event on one of these calendars puts the house on holiday. Leave empty to use only the holiday switch.",
-          "holiday_keyword": "Only events carrying this word count, for example 'holiday'. Leave empty to let every running event on those calendars count."
+          "holiday_keyword": "Only events carrying this word count, for example 'holiday'. Leave it empty and the calendars are ignored entirely, leaving holiday mode to the switch alone.",
+          "guest_start": "Guest mode only carries the house between these times. Leave both empty to let it apply all day. Outside them the ordinary gates take over, so a switch nobody remembered to turn off does not run all night.",
+          "guest_end": "Guest mode only carries the house between these times. Leave both empty to let it apply all day. Outside them the ordinary gates take over, so a switch nobody remembered to turn off does not run all night."
         }
       },
       "zones": {

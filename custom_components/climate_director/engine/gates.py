@@ -64,26 +64,48 @@ def evaluate(config: DirectorConfig, world: WorldState, zone: Zone) -> GateVerdi
     # applies: that one is about the room, not about who is in the house.
     gates = config.gates
 
-    # Gastenmodus zet elke poort over personen opzij. Er logeert iemand die geen
-    # bewoner is, dus aanwezigheid, slaap en roosters zeggen niets zinnigs meer
-    # over of de kamers in gebruik zijn - en het huis hoort dan niet uit te gaan
-    # omdat de bewoners weg zijn.
+    # Gastenmodus neemt de poorten over die over afwezigheid gaan. Er logeert
+    # iemand die niet gevolgd wordt, dus een leeg lijkend huis zegt niets en
+    # hoort niet uit te gaan. Slaap blijft wél tellen: zodra een bewoner thuis
+    # is en naar bed gaat, is de dag voorbij en is het huis weer van hen.
     #
-    # Guest mode sets every gate about people aside. Somebody is staying who is
-    # not a resident, so presence, sleep and schedules no longer say anything
-    # useful about whether the rooms are in use - and the house should not shut
-    # down merely because the residents are out.
-    if config.residents and not world.guest_mode:
-        if not any(world.resident(resident.resident_id).home for resident in config.residents):
-            return GateVerdict.block(Reason.NOBODY_HOME)
+    # Guest mode takes over the gates that are about absence. Somebody untracked
+    # is staying, so a house that looks empty says nothing and should not shut
+    # down. Sleep still counts: once a resident is home and turns in, the day is
+    # over and the house is theirs again.
+    if config.residents:
+        if _guests_carry_the_house(config, world):
+            # Afwezigheid en rooster zeggen niets meer, slaap wel: zodra iemand
+            # thuis is en naar bed gaat, is het huis weer van de bewoners.
+            #
+            # Absence and schedule no longer say anything, sleep still does: the
+            # moment somebody is home and turns in, the house is the residents'
+            # again.
+            at_home = [
+                resident
+                for resident in config.residents
+                if world.resident(resident.resident_id).home
+            ]
+            if (
+                at_home
+                and gates.require_awake
+                and not any(
+                    world.resident(resident.resident_id).present_and_awake for resident in at_home
+                )
+            ):
+                return GateVerdict.block(Reason.EVERYONE_ASLEEP)
+        else:
+            if not any(world.resident(resident.resident_id).home for resident in config.residents):
+                return GateVerdict.block(Reason.NOBODY_HOME)
 
-        if gates.require_awake and not any(
-            world.resident(resident.resident_id).present_and_awake for resident in config.residents
-        ):
-            return GateVerdict.block(Reason.EVERYONE_ASLEEP)
+            if gates.require_awake and not any(
+                world.resident(resident.resident_id).present_and_awake
+                for resident in config.residents
+            ):
+                return GateVerdict.block(Reason.EVERYONE_ASLEEP)
 
-        if gates.require_schedule and not _schedule_open(config, world):
-            return GateVerdict.block(Reason.OUTSIDE_SCHEDULE)
+            if gates.require_schedule and not _schedule_open(config, world):
+                return GateVerdict.block(Reason.OUTSIDE_SCHEDULE)
 
     # Het smalst van allemaal, en daarom als laatste: iemand thuis zegt niets
     # over of er iemand op zolder zit.
@@ -94,6 +116,25 @@ def evaluate(config: DirectorConfig, world: WorldState, zone: Zone) -> GateVerdi
         return GateVerdict.block(Reason.ZONE_UNOCCUPIED)
 
     return GateVerdict.allow()
+
+
+def _guests_carry_the_house(config: DirectorConfig, world: WorldState) -> bool:
+    """Return whether guest mode is standing in for the residents right now.
+
+    Alleen overdag, of preciezer: binnen het ingestelde gastenvenster. Buiten
+    dat venster nemen de gewone poorten het weer over, zodat een schakelaar die
+    iemand vergeet uit te zetten het huis niet de hele nacht laat doordraaien.
+
+    Only during the day, or more precisely: inside the configured guest window.
+    Outside it the ordinary gates take over again, so a switch somebody forgets
+    to turn off does not keep the house running all night.
+    """
+    if not world.guest_mode:
+        return False
+    window = config.gates.guest_window
+    if window is None:
+        return True
+    return window.contains(world.now.time(), world.now.weekday())
 
 
 def _room_occupied(world: WorldState, zone: Zone) -> bool:
