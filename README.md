@@ -152,6 +152,7 @@ Eén device per installatie, met daaronder:
 | `switch.*_director` | Hoofdschakelaar; uit betekent dat er niets geregeld wordt |
 | `switch.*_vakantiemodus` | Slaat het rooster over, houdt aanwezigheid en slaap wél aan |
 | `switch.*_override_<zone>` | Geeft één zone terug aan de gebruiker tot je hem weer uitzet |
+| `number.*_prioriteit_<zone>` | Hoe sterk deze zone een gedeelde buitenunit claimt; lager wint. Vanuit een automatisering te wijzigen |
 
 Daarnaast is er een downloadbare diagnose met de configuratie, de laatst gelezen
 momentopname en het laatste plan. Met die drie is elke beslissing exact na te spelen.
@@ -230,6 +231,30 @@ pip install -r requirements_test.txt
 python -m pytest
 python -m ruff check .
 ```
+
+### Heb je helpers nodig
+
+Nee. Er is geen enkele `input_number`, `input_boolean` of `input_select` die je vooraf moet
+aanmaken. Alles wat handgeschreven automatiseringen daarvoor gebruiken — drempels,
+setpoints, een hoofdschakelaar, een vakantieschakelaar, een override, de prioriteit per zone
+— maakt de integratie zelf aan of bewaart hij in zijn eigen configuratie.
+
+Wat je wél aanwijst zijn entiteiten die je toch al hebt:
+
+| Nodig | Waarvoor |
+|---|---|
+| Een binnentemperatuursensor per zone | Verplicht; anders weet een zone niets |
+| Eén of meer `climate`-entiteiten | Verplicht; dat zijn de apparaten die hij aanstuurt |
+| Een buitentemperatuursensor | Alleen nodig als je grenzen op buitentemperatuur zet — en dat wil je vrijwel altijd |
+| `person`-entiteiten | Optioneel, voor de aanwezigheidspoort |
+| Een slaapsensor per bewoner | Optioneel |
+| Een aanwezigheidssensor per ruimte | Optioneel |
+| Deur- en raamcontacten | Optioneel |
+| Een seizoensentiteit | Optioneel; standaard leidt hij het seizoen af uit de maand |
+
+Heb je al een helper die je wilt blijven gebruiken — een `input_select` voor het seizoen,
+een template-sensor die meerdere thermometers middelt — dan wijs je die gewoon aan. De
+integratie dwingt je nergens iets nieuws voor aan te maken, maar staat het overal toe.
 
 ### Talen
 
@@ -410,6 +435,7 @@ One device per installation, holding:
 | `switch.*_director` | Master switch; off means nothing is regulated |
 | `switch.*_holiday_mode` | Skips the schedule, keeps presence and sleep |
 | `switch.*_<zone>_override` | Hands one zone back to the user until you turn it off again |
+| `number.*_<zone>_priority` | How strongly this zone claims a shared outdoor unit; lower wins. Settable from an automation |
 
 There is also a downloadable diagnostics export holding the configuration, the last
 snapshot read and the last plan. With those three, any decision is exactly reproducible.
@@ -486,6 +512,30 @@ pip install -r requirements_test.txt
 python -m pytest
 python -m ruff check .
 ```
+
+### Do you need helpers
+
+No. There is no `input_number`, `input_boolean` or `input_select` you have to create
+beforehand. Everything hand-written automations use those for — thresholds, setpoints, a
+master switch, a holiday switch, an override, the priority per zone — the integration either
+creates itself or keeps in its own configuration.
+
+What you do point at are entities you already have:
+
+| Needed | For |
+|---|---|
+| An indoor temperature sensor per zone | Required; without one a zone knows nothing |
+| One or more `climate` entities | Required; those are the appliances it steers |
+| An outdoor temperature sensor | Only needed once you set limits on outdoor temperature — which you almost always want |
+| `person` entities | Optional, for the occupancy gate |
+| A sleep sensor per resident | Optional |
+| A presence sensor per room | Optional |
+| Door and window contacts | Optional |
+| A season entity | Optional; by default the season is derived from the month |
+
+Already have a helper you want to keep using — an `input_select` for the season, a template
+sensor averaging several thermometers — then simply point at it. The integration never makes
+you create something new, but allows it everywhere.
 
 ### Languages
 
