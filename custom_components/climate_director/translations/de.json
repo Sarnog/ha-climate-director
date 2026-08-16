@@ -13,6 +13,9 @@
           "name": "Wird der Titel der Anlage und steht vor dem Namen jeder Entität, die diese Integration anlegt."
         }
       }
+    },
+    "error": {
+      "required": "Dieses Feld wird zum Speichern gebraucht. Fülle es aus, oder wähle unten „Verwerfen und zurück“, um ohne Speichern zu gehen."
     }
   },
   "options": {
@@ -62,7 +65,7 @@
           "precondition_start": "Vorheizen ist das Einzige, was ein leeres Haus laufen lassen darf, und bleibt deshalb in diesen Zeiten. Außerhalb zählt eine Anforderung nicht.",
           "precondition_end": "Vorheizen ist das Einzige, was ein leeres Haus laufen lassen darf, und bleibt deshalb in diesen Zeiten. Außerhalb zählt eine Anforderung nicht.",
           "max_precondition": "Eine Anforderung kann man nicht vergessen, nur vertippen. Diese Obergrenze verhindert, dass ein Tippfehler einen ganzen Nachmittag ein leeres Haus heizt. Wer mehr anfordert, bekommt eine gekürzte statt gar keiner.",
-          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "zones": {
@@ -74,7 +77,7 @@
         },
         "data_description": {
           "zone": "Wähle eine zum Ändern, oder füge eine neue hinzu.",
-          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "zone": {
@@ -122,7 +125,7 @@
           "cool_outdoor_min": "Unter dieser Außentemperatur bleibt Kühlen aus. Leer lassen für keine Grenze.",
           "cool_summer_only": "Bindet das Kühlen an die Jahreszeit aus den Allgemeinen Einstellungen.",
           "gate": "'household' folgt dem Zeitplan, dem Schlaf und ob jemand zu Hause ist; ein Anwesenheitssensor engt das danach weiter ein. 'presence' lässt den Raum allein entscheiden, sodass ein belegter Raum den Zeitplan übergeht - was ein gelegentlich genutzter Raum braucht. Dafür ist ein Anwesenheitssensor nötig.",
-          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "sources": {
@@ -134,7 +137,7 @@
         },
         "data_description": {
           "source": "Wähle eine zum Ändern, oder füge eine neue hinzu.",
-          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "source": {
@@ -158,7 +161,7 @@
           "role": "Ob dieses Gerät heizen, kühlen oder beides kann. Ein Heizkessel kann nur heizen.",
           "delete": "Nimmt die Quelle aus dieser Zone. Das Gerät selbst bleibt unangetastet.",
           "autostart": "Aus lässt es in Ruhe: der Director schaltet es nie ein und nur dann aus, wenn es eine Aufgabe fährt, die das gemeinsame Außengerät nicht zulässt. Für ein Gerät, das du selbst einschaltest und so lassen willst.",
-          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "circuits": {
@@ -170,7 +173,7 @@
         },
         "data_description": {
           "circuit": "Wähle einen zum Ändern, oder füge einen neuen hinzu.",
-          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "circuit": {
@@ -200,7 +203,7 @@
           "min_family_switch_interval": "Verhindert, dass eine Zone den Verdichter zwischen Heizen und Kühlen hin und her zieht.",
           "max_concurrent_units": "Für ein Außengerät, das nicht alle Innengeräte gleichzeitig tragen kann. Leer lassen für keine Grenze.",
           "delete": "Entfernt den Kreis. Die Geräte laufen weiter; sie sind nur nicht länger aneinander gebunden.",
-          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "circuit_priorities": {
@@ -212,7 +215,7 @@
         },
         "data_description": {
           "zone": "Wähle eine, um ihre Priorität zu ändern, oder geh zurück.",
-          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "circuit_priority": {
@@ -223,7 +226,7 @@
         },
         "data_description": {
           "priority": "Die niedrigste Zahl gewinnt den Kreis. Zonen mit derselben Zahl werden über ihren Namen getrennt.",
-          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "generators": {
@@ -235,7 +238,7 @@
         },
         "data_description": {
           "generator": "Wähle eine zum Ändern, oder füge eine neue hinzu.",
-          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "generator": {
@@ -255,7 +258,7 @@
           "zone_ids": "Leer lassen für alle Räume.",
           "setpoint": "Leer lassen, um dem wärmsten Ziel der fragenden Räume zu folgen. Das kälteste zu nehmen würde den Raum, der am dringendsten fragt, zu kurz kommen lassen.",
           "delete": "Entfernt die Wärmequelle; die Ventile arbeiten für sich weiter.",
-          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "residents": {
@@ -267,7 +270,7 @@
         },
         "data_description": {
           "resident": "Wähle einen zum Ändern, oder füge einen neuen hinzu.",
-          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "resident": {
@@ -286,7 +289,7 @@
           "name": "Ein Name, um Bewohner auseinanderzuhalten.",
           "presence_entity": "Meist eine person-Entität. Sagt, ob dieser Bewohner zu Hause ist.",
           "delete": "Entfernt den Bewohner samt seinen Zeitplänen.",
-          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "windows": {
@@ -298,7 +301,7 @@
         },
         "data_description": {
           "window": "Wähle einen zum Ändern, füge einen hinzu, oder geh zurück zum Menü.",
-          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "window": {
@@ -318,7 +321,7 @@
           "start": "Gehört zum Fenster.",
           "delete": "Entfernt diesen Zeitplan.",
           "holiday": "Ein Urlaubsfenster gilt nur bei eingeschaltetem Urlaubsmodus und ersetzt dann die gewöhnlichen Fenster. Seine Wochentage zählen nicht mit. Ohne eines zählt ein Urlaubstag als Samstag.",
-          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "openings": {
@@ -330,7 +333,7 @@
         },
         "data_description": {
           "opening": "Wähle eine zum Ändern, oder füge eine neue hinzu.",
-          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
       "opening": {
@@ -347,12 +350,13 @@
           "delay": "Leer lassen oder auf null setzen, um sofort auszusetzen, sobald sie aufgeht.",
           "entity_id": "Der Tür- oder Fensterkontakt. Offen zählt als Zustand 'on'.",
           "delete": "Entfernt die Öffnung; sie setzt dann nichts mehr aus.",
-          "when_done": "Home Assistant zeichnet einen Knopf unter ein Formular, in dieser Zeile wählst du also, was er tut. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       }
     },
     "error": {
-      "duplicate_priority": "Ein anderer Raum an derselben Außeneinheit hat diese Priorität bereits. Zwei Räume mit derselben Zahl lassen das Ergebnis von ihrem Namen abhängen, wähle also eine freie."
+      "duplicate_priority": "Ein anderer Raum an derselben Außeneinheit hat diese Priorität bereits. Zwei Räume mit derselben Zahl lassen das Ergebnis von ihrem Namen abhängen, wähle also eine freie.",
+      "required": "Dieses Feld wird zum Speichern gebraucht. Fülle es aus, oder wähle unten „Verwerfen und zurück“, um ohne Speichern zu gehen."
     }
   },
   "entity": {

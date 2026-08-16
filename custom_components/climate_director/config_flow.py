@@ -103,6 +103,23 @@ def _back_option(key: str) -> selector.SelectOptionDict:
     return selector.SelectOptionDict(value=_BACK, label="< Back to the main menu")
 
 
+def _missing(user_input: dict[str, Any], *fields: str) -> dict[str, str]:
+    """Return an error per field the user left empty.
+
+    Die velden staan in het schema als optioneel, zodat voluptuous een half
+    ingevuld formulier niet weigert vóór wij het gezien hebben. Anders kun je
+    niet meer terug zodra je ergens aan begonnen bent: je zit dan vast in een
+    scherm dat je alleen kunt verlaten door het af te maken, en dat is geen
+    keuze maar een val.
+
+    The fields are optional in the schema so voluptuous does not refuse a
+    half-filled form before we have seen it. Otherwise there is no way back once
+    you have started: you are stuck in a screen you can leave only by finishing
+    it, which is not a choice but a trap.
+    """
+    return {field: "required" for field in fields if not user_input.get(field)}
+
+
 def _exit_row() -> selector.SelectSelector:
     """Return the row that closes a form, keeping or discarding what is on it.
 
@@ -385,6 +402,12 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         if user_input is not None:
             if user_input.get(_EXIT) == _EXIT_DROP:
                 return await self.async_step_zones()
+            if not user_input.get("delete"):
+                errors = _missing(user_input, "indoor_sensor")
+            if errors:
+                current = {**current, **user_input}
+
+        if user_input is not None and not errors:
             if user_input.get("delete") and self._zone_index is not None:
                 zones.pop(self._zone_index)
                 self._zone_index = None
@@ -410,7 +433,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_NAME, default=current.get("name", "")): _TEXT,
-                    vol.Required(
+                    vol.Optional(
                         "indoor_sensor",
                         description={"suggested_value": current.get("indoor_sensor") or None},
                     ): selector.EntitySelector(
@@ -509,9 +532,17 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         sources = zone.setdefault("sources", [])
         current = sources[self._source_index] if self._source_index is not None else {}
 
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             if user_input.get(_EXIT) == _EXIT_DROP:
                 return await self.async_step_sources()
+            if not user_input.get("delete"):
+                errors = _missing(user_input, "entity_id")
+            if errors:
+                current = {**current, **user_input}
+
+        if user_input is not None and not errors:
             if user_input.get("delete") and self._source_index is not None:
                 sources.pop(self._source_index)
             else:
@@ -540,9 +571,10 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         outdoor = current.get("outdoor") or {}
         return self.async_show_form(
             step_id="source",
+            errors=errors,
             data_schema=vol.Schema(
                 {
-                    vol.Required(
+                    vol.Optional(
                         "entity_id",
                         description={"suggested_value": current.get("entity_id") or None},
                     ): _CLIMATE,
@@ -609,9 +641,17 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         circuits = self._list("circuits")
         current = circuits[self._circuit_index] if self._circuit_index is not None else {}
 
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             if user_input.get(_EXIT) == _EXIT_DROP:
                 return await self.async_step_circuits()
+            if not user_input.get("delete"):
+                errors = _missing(user_input, "units")
+            if errors:
+                current = {**current, **user_input}
+
+        if user_input is not None and not errors:
             if user_input.get("delete") and self._circuit_index is not None:
                 circuits.pop(self._circuit_index)
                 self._circuit_index = None
@@ -642,10 +682,11 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
 
         return self.async_show_form(
             step_id="circuit",
+            errors=errors,
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_NAME, default=current.get("name", "")): _TEXT,
-                    vol.Required(
+                    vol.Optional(
                         "units", description={"suggested_value": current.get("units") or []}
                     ): _CLIMATE_MULTI,
                     vol.Required(
@@ -808,9 +849,17 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         generators = self._list("generators")
         current = generators[self._index] if self._index is not None else {}
 
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             if user_input.get(_EXIT) == _EXIT_DROP:
                 return await self.async_step_generators()
+            if not user_input.get("delete"):
+                errors = _missing(user_input, "entity_id")
+            if errors:
+                current = {**current, **user_input}
+
+        if user_input is not None and not errors:
             if user_input.get("delete") and self._index is not None:
                 generators.pop(self._index)
             else:
@@ -839,10 +888,11 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         ]
         return self.async_show_form(
             step_id="generator",
+            errors=errors,
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_NAME, default=current.get("name", "")): _TEXT,
-                    vol.Required(
+                    vol.Optional(
                         "entity_id",
                         description={"suggested_value": current.get("entity_id") or None},
                     ): _CLIMATE,
@@ -905,9 +955,17 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         residents = self._list("residents")
         current = residents[self._resident_index] if self._resident_index is not None else {}
 
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             if user_input.get(_EXIT) == _EXIT_DROP:
                 return await self.async_step_residents()
+            if not user_input.get("delete"):
+                errors = _missing(user_input, "presence_entity")
+            if errors:
+                current = {**current, **user_input}
+
+        if user_input is not None and not errors:
             if user_input.get("delete") and self._resident_index is not None:
                 residents.pop(self._resident_index)
                 self._resident_index = None
@@ -939,10 +997,11 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
 
         return self.async_show_form(
             step_id="resident",
+            errors=errors,
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_NAME, default=current.get("name", "")): _TEXT,
-                    vol.Required(
+                    vol.Optional(
                         "presence_entity",
                         description={"suggested_value": current.get("presence_entity") or None},
                     ): selector.EntitySelector(
@@ -1112,9 +1171,17 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         openings = self._list("openings")
         current = openings[self._index] if self._index is not None else {}
 
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             if user_input.get(_EXIT) == _EXIT_DROP:
                 return await self.async_step_openings()
+            if not user_input.get("delete"):
+                errors = _missing(user_input, "entity_id")
+            if errors:
+                current = {**current, **user_input}
+
+        if user_input is not None and not errors:
             if user_input.get("delete") and self._index is not None:
                 openings.pop(self._index)
             else:
@@ -1138,9 +1205,10 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         ]
         return self.async_show_form(
             step_id="opening",
+            errors=errors,
             data_schema=vol.Schema(
                 {
-                    vol.Required(
+                    vol.Optional(
                         "entity_id",
                         description={"suggested_value": current.get("entity_id") or None},
                     ): selector.EntitySelector(

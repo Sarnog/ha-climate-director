@@ -13,6 +13,9 @@
           "name": "Wordt de titel van de installatie en staat voor de naam van elke entiteit die deze integratie aanmaakt."
         }
       }
+    },
+    "error": {
+      "required": "Dit veld is nodig om te bewaren. Vul het in, of kies onderaan “Verwerpen en teruggaan” om weg te gaan zonder op te slaan."
     }
   },
   "options": {
@@ -62,7 +65,7 @@
           "precondition_start": "Vooruit verwarmen is het enige dat een leeg huis mag laten draaien, en blijft daarom binnen deze tijden. Daarbuiten telt een verzoek niet mee.",
           "precondition_end": "Vooruit verwarmen is het enige dat een leeg huis mag laten draaien, en blijft daarom binnen deze tijden. Daarbuiten telt een verzoek niet mee.",
           "max_precondition": "Een verzoek kun je niet vergeten, alleen verkeerd intikken. Dit plafond voorkomt dat een vertypte tijd een hele middag een leeg huis verwarmt. Vraag je langer, dan wordt het verzoek ingekort in plaats van geweigerd.",
-          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "zones": {
@@ -74,7 +77,7 @@
         },
         "data_description": {
           "zone": "Kies er een om aan te passen, of voeg er een toe.",
-          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "zone": {
@@ -122,7 +125,7 @@
           "cool_outdoor_min": "Onder deze buitentemperatuur blijft koelen uit. Laat leeg voor geen grens.",
           "cool_summer_only": "Koppelt koelen aan het seizoen dat je bij Algemene instellingen hebt gezet.",
           "gate": "'household' volgt het rooster, de slaap en of er iemand thuis is; een aanwezigheidssensor knijpt het daarna verder dicht. 'presence' laat de kamer zelf beslissen, zodat een bezette ruimte het rooster overruled - wat een kamer die je af en toe gebruikt nodig heeft. Kiezen hiervoor vereist een aanwezigheidssensor.",
-          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "sources": {
@@ -134,7 +137,7 @@
         },
         "data_description": {
           "source": "Kies er een om aan te passen, of voeg er een toe.",
-          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "source": {
@@ -158,7 +161,7 @@
           "role": "Of dit apparaat kan verwarmen, koelen, of allebei. Een cv-ketel kan alleen verwarmen.",
           "delete": "Haalt de bron uit deze zone. Het apparaat zelf blijft ongemoeid.",
           "autostart": "Uit laat hem met rust: de director zet hem nooit aan, en zet hem alleen uit als hij een taak draait die de gedeelde buitenunit niet toestaat. Voor een apparaat dat je zelf aanzet en zo wilt laten staan.",
-          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "circuits": {
@@ -170,7 +173,7 @@
         },
         "data_description": {
           "circuit": "Kies er een om aan te passen, of voeg er een toe.",
-          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "circuit": {
@@ -200,7 +203,7 @@
           "min_family_switch_interval": "Voorkomt dat een zone de compressor heen en weer trekt tussen verwarmen en koelen.",
           "max_concurrent_units": "Voor een buitenunit die niet al zijn binnenunits tegelijk aankan. Laat leeg voor geen grens.",
           "delete": "Verwijdert het circuit. De units blijven werken; ze zijn alleen niet langer aan elkaar gekoppeld.",
-          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "circuit_priorities": {
@@ -212,7 +215,7 @@
         },
         "data_description": {
           "zone": "Kies er een om zijn prioriteit te wijzigen, of ga terug.",
-          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "circuit_priority": {
@@ -223,7 +226,7 @@
         },
         "data_description": {
           "priority": "Het laagste nummer wint het circuit. Zones met hetzelfde nummer worden op naam gescheiden.",
-          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "generators": {
@@ -235,7 +238,7 @@
         },
         "data_description": {
           "generator": "Kies er een om aan te passen, of voeg er een toe.",
-          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "generator": {
@@ -255,7 +258,7 @@
           "zone_ids": "Laat leeg voor alle kamers.",
           "setpoint": "Laat leeg om het warmste doel te volgen van de kamers die vragen. Het koudste nemen zou de kamer die het hardst vraagt tekortdoen.",
           "delete": "Verwijdert de warmtebron; de kranen blijven op zichzelf werken.",
-          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "residents": {
@@ -267,7 +270,7 @@
         },
         "data_description": {
           "resident": "Kies er een om aan te passen, of voeg er een toe.",
-          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "resident": {
@@ -286,7 +289,7 @@
           "name": "Een naam, om bewoners uit elkaar te houden.",
           "presence_entity": "Meestal een person-entiteit. Zegt of deze bewoner thuis is.",
           "delete": "Verwijdert de bewoner inclusief zijn roosters.",
-          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "windows": {
@@ -298,7 +301,7 @@
         },
         "data_description": {
           "window": "Kies er een om aan te passen, voeg er een toe, of ga terug naar het menu.",
-          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "window": {
@@ -318,7 +321,7 @@
           "start": "Valt binnen het venster.",
           "delete": "Verwijdert dit rooster.",
           "holiday": "Een vakantievenster geldt alleen als de vakantiemodus aan staat, en vervangt dan de gewone vensters. De dagen van de week tellen er niet in mee. Zonder vakantievenster telt een vakantiedag als zaterdag.",
-          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "openings": {
@@ -330,7 +333,7 @@
         },
         "data_description": {
           "opening": "Kies er een om aan te passen, of voeg er een toe.",
-          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "opening": {
@@ -347,12 +350,13 @@
           "delay": "Laat leeg of zet op nul om direct op te schorten zodra hij opengaat.",
           "entity_id": "Het deur- of raamcontact. Open telt als de toestand 'on'.",
           "delete": "Verwijdert de opening; hij schort dan niets meer op.",
-          "when_done": "Home Assistant tekent één knop onder een formulier, dus in deze regel kies je wat die knop doet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       }
     },
     "error": {
-      "duplicate_priority": "Een andere kamer op dezelfde buitenunit heeft deze prioriteit al. Twee kamers met hetzelfde nummer laten de uitkomst van hun naam afhangen, dus kies een vrij nummer."
+      "duplicate_priority": "Een andere kamer op dezelfde buitenunit heeft deze prioriteit al. Twee kamers met hetzelfde nummer laten de uitkomst van hun naam afhangen, dus kies een vrij nummer.",
+      "required": "Dit veld is nodig om te bewaren. Vul het in, of kies onderaan “Verwerpen en teruggaan” om weg te gaan zonder op te slaan."
     }
   },
   "entity": {

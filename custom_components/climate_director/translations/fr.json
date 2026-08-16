@@ -13,6 +13,9 @@
           "name": "Devient le titre de l'installation et précède le nom de chaque entité créée par cette intégration."
         }
       }
+    },
+    "error": {
+      "required": "Ce champ est nécessaire pour enregistrer. Remplissez-le, ou choisissez « Abandonner et revenir » en bas pour partir sans enregistrer."
     }
   },
   "options": {
@@ -62,7 +65,7 @@
           "precondition_start": "Le préchauffage est la seule chose autorisée à faire tourner une maison vide ; il reste donc dans ces heures. En dehors, une demande ne compte pas.",
           "precondition_end": "Le préchauffage est la seule chose autorisée à faire tourner une maison vide ; il reste donc dans ces heures. En dehors, une demande ne compte pas.",
           "max_precondition": "Une demande ne s'oublie pas, elle se saisit mal. Ce plafond empêche une faute de frappe de chauffer une maison vide tout un après-midi. Demander plus long raccourcit la demande au lieu de la refuser.",
-          "when_done": "Home Assistant ne dessine qu'un bouton sous un formulaire ; cette ligne choisit donc ce qu'il fait. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "zones": {
@@ -74,7 +77,7 @@
         },
         "data_description": {
           "zone": "Choisissez-en une à modifier, ou ajoutez-en une nouvelle.",
-          "when_done": "Home Assistant ne dessine qu'un bouton sous un formulaire ; cette ligne choisit donc ce qu'il fait. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "zone": {
@@ -122,7 +125,7 @@
           "cool_outdoor_min": "Sous cette température extérieure, le refroidissement reste éteint. Laissez vide pour aucune limite.",
           "cool_summer_only": "Lie le refroidissement à la saison définie dans les Réglages généraux.",
           "gate": "'household' suit le planning, le sommeil et la présence de quelqu'un à la maison ; un capteur de présence resserre ensuite. 'presence' laisse la pièce décider seule, si bien qu'une pièce occupée passe outre le planning - ce dont a besoin une pièce utilisée de temps en temps. Ce choix exige un capteur de présence.",
-          "when_done": "Home Assistant ne dessine qu'un bouton sous un formulaire ; cette ligne choisit donc ce qu'il fait. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "sources": {
@@ -134,7 +137,7 @@
         },
         "data_description": {
           "source": "Choisissez-en une à modifier, ou ajoutez-en une nouvelle.",
-          "when_done": "Home Assistant ne dessine qu'un bouton sous un formulaire ; cette ligne choisit donc ce qu'il fait. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "source": {
@@ -158,7 +161,7 @@
           "role": "Si cet appareil peut chauffer, refroidir, ou les deux. Une chaudière ne fait que chauffer.",
           "delete": "Retire la source de cette zone. L'appareil lui-même reste intact.",
           "autostart": "Désactivé le laisse tranquille : le directeur ne l'allume jamais et ne l'éteint que s'il exécute une tâche que l'unité extérieure partagée n'autorise pas. Pour un appareil que vous allumez vous-même et voulez laisser tel quel.",
-          "when_done": "Home Assistant ne dessine qu'un bouton sous un formulaire ; cette ligne choisit donc ce qu'il fait. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "circuits": {
@@ -170,7 +173,7 @@
         },
         "data_description": {
           "circuit": "Choisissez-en un à modifier, ou ajoutez-en un nouveau.",
-          "when_done": "Home Assistant ne dessine qu'un bouton sous un formulaire ; cette ligne choisit donc ce qu'il fait. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "circuit": {
@@ -200,7 +203,7 @@
           "min_family_switch_interval": "Empêche une zone de tirer le compresseur d'avant en arrière entre chauffage et refroidissement.",
           "max_concurrent_units": "Pour une unité extérieure qui ne peut pas porter toutes ses unités intérieures à la fois. Laissez vide pour aucune limite.",
           "delete": "Supprime le circuit. Les unités continuent de fonctionner ; elles ne sont simplement plus liées entre elles.",
-          "when_done": "Home Assistant ne dessine qu'un bouton sous un formulaire ; cette ligne choisit donc ce qu'il fait. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "circuit_priorities": {
@@ -212,7 +215,7 @@
         },
         "data_description": {
           "zone": "Choisissez-en une pour changer sa priorité, ou revenez en arrière.",
-          "when_done": "Home Assistant ne dessine qu'un bouton sous un formulaire ; cette ligne choisit donc ce qu'il fait. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "circuit_priority": {
@@ -223,7 +226,7 @@
         },
         "data_description": {
           "priority": "Le nombre le plus bas gagne le circuit. Les zones partageant un nombre sont départagées par leur nom.",
-          "when_done": "Home Assistant ne dessine qu'un bouton sous un formulaire ; cette ligne choisit donc ce qu'il fait. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "generators": {
@@ -235,7 +238,7 @@
         },
         "data_description": {
           "generator": "Choisissez-en une à modifier, ou ajoutez-en une nouvelle.",
-          "when_done": "Home Assistant ne dessine qu'un bouton sous un formulaire ; cette ligne choisit donc ce qu'il fait. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "generator": {
@@ -255,7 +258,7 @@
           "zone_ids": "Laissez vide pour toutes les pièces.",
           "setpoint": "Laissez vide pour suivre la consigne la plus élevée parmi les pièces qui demandent. Prendre la plus basse laisserait la pièce la plus demandeuse à court.",
           "delete": "Supprime la source de chaleur ; les vannes continuent de fonctionner seules.",
-          "when_done": "Home Assistant ne dessine qu'un bouton sous un formulaire ; cette ligne choisit donc ce qu'il fait. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "residents": {
@@ -267,7 +270,7 @@
         },
         "data_description": {
           "resident": "Choisissez-en un à modifier, ou ajoutez-en un nouveau.",
-          "when_done": "Home Assistant ne dessine qu'un bouton sous un formulaire ; cette ligne choisit donc ce qu'il fait. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "resident": {
@@ -286,7 +289,7 @@
           "name": "Un nom, pour distinguer les occupants.",
           "presence_entity": "Généralement une entité person. Indique si cet occupant est à la maison.",
           "delete": "Supprime l'occupant ainsi que ses plannings.",
-          "when_done": "Home Assistant ne dessine qu'un bouton sous un formulaire ; cette ligne choisit donc ce qu'il fait. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "windows": {
@@ -298,7 +301,7 @@
         },
         "data_description": {
           "window": "Choisissez-en un à modifier, ajoutez-en un, ou revenez au menu.",
-          "when_done": "Home Assistant ne dessine qu'un bouton sous un formulaire ; cette ligne choisit donc ce qu'il fait. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "window": {
@@ -318,7 +321,7 @@
           "start": "Comprise dans la plage.",
           "delete": "Supprime ce planning.",
           "holiday": "Une plage de vacances ne s'applique que lorsque le mode vacances est actif, et remplace alors les plages ordinaires. Ses jours de la semaine sont ignorés. Sans elle, un jour de vacances compte comme un samedi.",
-          "when_done": "Home Assistant ne dessine qu'un bouton sous un formulaire ; cette ligne choisit donc ce qu'il fait. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "openings": {
@@ -330,7 +333,7 @@
         },
         "data_description": {
           "opening": "Choisissez-en une à modifier, ou ajoutez-en une nouvelle.",
-          "when_done": "Home Assistant ne dessine qu'un bouton sous un formulaire ; cette ligne choisit donc ce qu'il fait. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "opening": {
@@ -347,12 +350,13 @@
           "delay": "Laissez vide ou mettez zéro pour suspendre dès l'ouverture.",
           "entity_id": "Le contact de porte ou de fenêtre. Ouvert correspond à l'état 'on'.",
           "delete": "Supprime l'ouverture ; elle ne suspend plus rien.",
-          "when_done": "Home Assistant ne dessine qu'un bouton sous un formulaire ; cette ligne choisit donc ce qu'il fait. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       }
     },
     "error": {
-      "duplicate_priority": "Une autre pièce sur la même unité extérieure a déjà cette priorité. Deux pièces partageant un nombre font dépendre le résultat de leur nom ; choisissez-en un libre."
+      "duplicate_priority": "Une autre pièce sur la même unité extérieure a déjà cette priorité. Deux pièces partageant un nombre font dépendre le résultat de leur nom ; choisissez-en un libre.",
+      "required": "Ce champ est nécessaire pour enregistrer. Remplissez-le, ou choisissez « Abandonner et revenir » en bas pour partir sans enregistrer."
     }
   },
   "entity": {
