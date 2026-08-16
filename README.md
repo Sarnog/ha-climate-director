@@ -104,7 +104,8 @@ naar temperaturen:
 
 - **Hoofdschakelaar** — alles uit.
 - **Handmatige override** — per zone.
-- **Openingen** — een deur of raam dat lang genoeg openstaat schort de zone op.
+- **Openingen** — een deur of raam dat openstaat schort de zone op, eventueel pas na een
+  vertraging die je per opening in seconden instelt. Leeg of nul betekent direct.
 - **Aanwezigheid** — er moet iemand thuis zijn.
 - **Aanwezigheid in de ruimte** — per zone een eigen sensor, met een nalooptijd tegen
   knipperende aanwezigheidsmelders. Iemand thuis zegt niets over of er iemand op zolder
@@ -347,7 +348,8 @@ temperatures:
 
 - **Master switch** — everything off.
 - **Manual override** — per zone.
-- **Openings** — a door or window standing open long enough suspends the zone.
+- **Openings** — a door or window standing open suspends the zone, optionally only after a
+  delay you set per opening in seconds. Empty or zero means at once.
 - **Occupancy** — somebody must be home.
 - **Room presence** — a sensor per zone, with a grace period against flickering presence
   detectors. Somebody being home says nothing about whether anybody is in the attic; a
