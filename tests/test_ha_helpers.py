@@ -49,6 +49,7 @@ from custom_components.climate_director.engine import (
 )
 from custom_components.climate_director.engine.diff import Change
 from custom_components.climate_director.engine.serialise import config_from_dict, config_to_dict
+from custom_components.climate_director.number import resolve_initial
 from custom_components.climate_director.problems import MAX_LISTED, summarise
 
 
@@ -253,6 +254,24 @@ class TestScheduleWindowsReachTheEngine:
     def test_no_days_means_every_day(self) -> None:
         config = self._config(None)
         assert self._verdict(config, datetime(2026, 8, 15, 9, 0)).allowed
+
+
+class TestPriorityAfterRestart:
+    """What a restart or a reload should start the priority entity from."""
+
+    def test_a_fresh_entity_takes_the_configured_value(self) -> None:
+        assert resolve_initial(configured=0, last_value=None, last_configured=None) == 0
+
+    def test_a_restored_value_survives_a_restart(self) -> None:
+        """Losing what an automation set on every restart would make it pointless."""
+        assert resolve_initial(configured=0, last_value=7, last_configured=0) == 7
+
+    def test_an_edited_configuration_wins_over_the_restored_value(self) -> None:
+        """The options flow is the newer statement of intent."""
+        assert resolve_initial(configured=3, last_value=7, last_configured=0) == 3
+
+    def test_a_restored_value_without_its_origin_is_not_trusted(self) -> None:
+        assert resolve_initial(configured=2, last_value=7, last_configured=None) == 2
 
 
 class TestProblemSummary:

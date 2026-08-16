@@ -80,6 +80,7 @@ def make_world(
     master_enabled: bool = True,
     holiday_mode: bool = False,
     zone_overrides: dict[str, bool] | None = None,
+    zone_priorities: dict[str, int] | None = None,
 ) -> WorldState:
     """Return a `WorldState`, accepting bare mode strings for climate entities."""
     resolved = {
@@ -99,6 +100,7 @@ def make_world(
         master_enabled=master_enabled,
         holiday_mode=holiday_mode,
         zone_overrides=dict(zone_overrides or {}),
+        zone_priorities=dict(zone_priorities or {}),
     )
 
 

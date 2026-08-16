@@ -334,6 +334,51 @@ def test_heat_recovery_multi_split_is_not_crippled() -> None:
     assert modes[unit("zolder")] == MODE_COOL
 
 
+class TestLivePriority:
+    """Which room outranks which has to be changeable while the house runs."""
+
+    config = DirectorConfig(
+        zones=rooms("woonkamer", "zolder"),
+        circuits=(multi_split("c", "woonkamer", "zolder"),),
+    )
+    temperatures = {"woonkamer": WANTS_HEAT, "zolder": WANTS_COOL}
+
+    def test_the_configured_priority_decides_by_default(self) -> None:
+        modes, _ = run(self.config, self.temperatures)
+        assert modes[unit("woonkamer")] == MODE_HEAT
+        assert modes[unit("zolder")] == MODE_OFF
+
+    def test_a_live_priority_turns_the_outcome_around(self) -> None:
+        """An automation can hand the attic the circuit without touching the config."""
+        modes, _ = run(
+            self.config,
+            self.temperatures,
+            zone_priorities={"woonkamer": 5, "zolder": 1},
+        )
+        assert modes[unit("zolder")] == MODE_COOL
+        assert modes[unit("woonkamer")] == MODE_OFF
+
+    def test_a_zone_without_a_live_value_keeps_its_configured_one(self) -> None:
+        modes, _ = run(self.config, self.temperatures, zone_priorities={"zolder": 5})
+        assert modes[unit("woonkamer")] == MODE_HEAT
+
+    def test_it_also_settles_the_demand_policy_tie_break(self) -> None:
+        config = DirectorConfig(
+            zones=rooms("woonkamer", "zolder"),
+            circuits=(
+                multi_split("c", "woonkamer", "zolder", conflict_policy=ConflictPolicy.DEMAND),
+            ),
+        )
+        # Both are exactly two degrees past their switch-on point, so only the
+        # priority separates them.
+        modes, _ = run(
+            config,
+            {"woonkamer": 18.0, "zolder": 18.0},
+            zone_priorities={"woonkamer": 9, "zolder": 1},
+        )
+        assert modes[unit("zolder")] == MODE_HEAT
+
+
 class TestConflictPolicies:
     temperatures = {"woonkamer": WANTS_HEAT, "zolder": 30.0}
 
