@@ -420,6 +420,15 @@ Alles verder — zones, bronnen, airco-circuits, bewoners en openingen — bouw 
 
 Een verstandige volgorde:
 
+Elk scherm heeft onderaan een regel **Als je hier klaar bent**, met de keuze tussen
+bewaren of verwerpen, en elke keuzelijst heeft een regel **← Terug naar het hoofdmenu**.
+Je zit dus nergens vast. Home Assistant tekent precies één knop onder een formulier en
+laat een integratie er geen tweede bij zetten, dus een echte Terug-knop naast Opslaan
+bestaat niet — deze regels zijn wat er wél kan.
+
+Er wordt sowieso niets naar de installatie geschreven tot je in het hoofdmenu **Opslaan en
+sluiten** kiest.
+
 1. **Algemene instellingen** — buitentemperatuursensor, herkomst van het seizoen, welke
    poorten je wilt (wakker, rooster), tussen welke tijden de gastenmodus geldt, en welke
    agenda's een vakantie aankondigen met welk trefwoord.
@@ -922,6 +931,15 @@ under **Configure** on that integration. Nothing is stored until you choose "Sav
 in that menu.
 
 A sensible order:
+
+Every screen ends in a **When you are done here** row, choosing between keeping and
+discarding, and every picker carries a **← Back to the main menu** row. So nowhere traps
+you. Home Assistant draws exactly one button under a form and lets an integration add no
+second one, so a real Back button beside Save does not exist — these rows are what is
+possible instead.
+
+Nothing is written to the installation until you pick **Save and close** in the main menu
+in any case.
 
 1. **General settings** — outdoor temperature sensor, where the season comes from, which
    gates you want (awake, schedule), between which hours guest mode applies, and which
