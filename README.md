@@ -256,6 +256,32 @@ Koelen start bij `binnen >= aanzetpunt` en stopt bij `binnen <= aanzetpunt - dod
 Het aanzetpunt telt als bereikt, het uitzetpunt als gepasseerd — dat is wat een apparaat
 belet om op één tiende graad te blijven klepperen.
 
+**Per bron**
+
+| Instelling | Wat het doet |
+|---|---|
+| Climate-entiteit | het apparaat zelf |
+| Taak | alleen verwarmen, alleen koelen, of allebei |
+| Dit apparaat automatisch aanzetten | uit laat hem met rust, zie hieronder |
+| Prioriteit | welke bron binnen de zone de voorkeur heeft; lager wint |
+| Buitengrenzen | tussen welke buitentemperaturen deze bron de verstandige keuze is |
+
+#### Een apparaat dat je zelf aanzet
+
+Zet *Dit apparaat automatisch aanzetten* uit voor een airco die je met de hand bedient en
+verder met rust gelaten wilt hebben — een slaapkamer zonder aanwezigheidssensor,
+bijvoorbeeld. De director:
+
+- **zet hem nooit aan**, hoe koud of warm die kamer ook wordt;
+- **laat hem staan** zoals hij staat als jij hem aanzet;
+- **zet hem alleen uit** als hij een taak draait die de gedeelde buitenunit niet toestaat,
+  bijvoorbeeld wanneer hij verwarmt terwijl de woonkamer moet koelen.
+
+Zo'n bron telt ook niet mee als antwoord op een warmte- of koudevraag. Hij claimt dus geen
+plek op de buitenunit die hij nooit gebruikt, en houdt een kamer met meer voorrang niet
+tegen. Heeft een zone alleen zulke bronnen, dan kan hij nooit vanzelf draaien — de
+configuratiecontrole meldt dat.
+
 **Per bewoner**
 
 | Instelling | Wat het doet |
@@ -719,6 +745,30 @@ Heating starts at `indoor <= switch-on point` and stops at `indoor >= switch-on 
 dead band`. Cooling starts at `indoor >= switch-on point` and stops at `indoor <=
 switch-on point - dead band`. The switch-on point counts as reached, the switch-off point
 as passed — which is what keeps an appliance from chattering on a tenth of a degree.
+
+**Per source**
+
+| Setting | What it does |
+|---|---|
+| Climate entity | the appliance itself |
+| Duty | heating only, cooling only, or both |
+| Start this appliance automatically | off leaves it alone, see below |
+| Priority | which source within the zone is preferred; lower wins |
+| Outdoor bounds | between which outdoor temperatures this source is the sensible choice |
+
+#### An appliance you switch on yourself
+
+Turn *Start this appliance automatically* off for an air conditioner you operate by hand
+and want left alone — a bedroom without a presence sensor, say. The director:
+
+- **never switches it on**, however cold or warm that room gets;
+- **leaves it as it stands** once you switch it on;
+- **switches it off only** when it runs a duty the shared outdoor unit cannot allow, for
+  instance heating while the living room needs to cool.
+
+Such a source also does not count as an answer to a demand. It therefore claims no place on
+the outdoor unit it never uses, and holds back no room with more claim. If a zone has only
+sources like this, it can never run on its own — and the configuration check says so.
 
 **Per resident**
 
