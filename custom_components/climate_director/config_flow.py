@@ -128,7 +128,15 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
 
         return self.async_show_menu(
             step_id="init",
-            menu_options=["settings", "zones", "circuits", "residents", "openings", "save"],
+            menu_options=[
+                "settings",
+                "zones",
+                "circuits",
+                "generators",
+                "residents",
+                "openings",
+                "save",
+            ],
         )
 
     async def async_step_save(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -584,6 +592,95 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 {vol.Required("priority", default=zone.get("priority", 0)): _RANK}
             ),
             description_placeholders={"zone": zone.get("name") or zone["zone_id"]},
+        )
+
+    # -- warmtebronnen / heat generators -------------------------------------
+
+    async def async_step_generators(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick a shared heat source to edit, or add one."""
+        generators = self._list("generators")
+        if user_input is not None:
+            choice = user_input["generator"]
+            self._index = None if choice == _ADD else int(choice)
+            return await self.async_step_generator()
+
+        options = [
+            selector.SelectOptionDict(
+                value=str(index), label=item.get("name") or item["generator_id"]
+            )
+            for index, item in enumerate(generators)
+        ]
+        options.append(selector.SelectOptionDict(value=_ADD, label="+ Add heat source"))
+        return self.async_show_form(
+            step_id="generators",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("generator", default=_ADD): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=options, mode=selector.SelectSelectorMode.LIST
+                        )
+                    )
+                }
+            ),
+        )
+
+    async def async_step_generator(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Edit one shared heat source."""
+        generators = self._list("generators")
+        current = generators[self._index] if self._index is not None else {}
+
+        if user_input is not None:
+            if user_input.get("delete") and self._index is not None:
+                generators.pop(self._index)
+            else:
+                item = {
+                    "generator_id": current.get("generator_id")
+                    or _unique_id(
+                        user_input[CONF_NAME], [entry["generator_id"] for entry in generators]
+                    ),
+                    "name": user_input[CONF_NAME],
+                    "entity_id": user_input["entity_id"],
+                    "zone_ids": user_input.get("zone_ids") or [],
+                    "setpoint": user_input.get("setpoint"),
+                }
+                if self._index is None:
+                    generators.append(item)
+                else:
+                    generators[self._index] = item
+            self._index = None
+            return await self.async_step_init()
+
+        zone_options = [
+            selector.SelectOptionDict(
+                value=zone["zone_id"], label=zone.get("name") or zone["zone_id"]
+            )
+            for zone in self._list("zones")
+        ]
+        return self.async_show_form(
+            step_id="generator",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_NAME, default=current.get("name", "")): _TEXT,
+                    vol.Required(
+                        "entity_id",
+                        description={"suggested_value": current.get("entity_id") or None},
+                    ): _CLIMATE,
+                    vol.Optional(
+                        "zone_ids",
+                        description={"suggested_value": current.get("zone_ids") or []},
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(options=zone_options, multiple=True)
+                    ),
+                    vol.Optional(
+                        "setpoint", description={"suggested_value": current.get("setpoint")}
+                    ): _TEMPERATURE,
+                    vol.Required("delete", default=False): bool,
+                }
+            ),
         )
 
     # -- bewoners / residents ------------------------------------------------

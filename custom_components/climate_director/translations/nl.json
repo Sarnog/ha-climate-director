@@ -26,7 +26,8 @@
           "circuits": "Koelcircuits",
           "residents": "Bewoners",
           "openings": "Deuren en ramen",
-          "save": "Opslaan en sluiten"
+          "save": "Opslaan en sluiten",
+          "generators": "Gedeelde warmtebronnen"
         }
       },
       "settings": {
@@ -191,6 +192,34 @@
         },
         "data_description": {
           "priority": "Het laagste nummer wint het circuit. Zones met hetzelfde nummer worden op naam gescheiden."
+        }
+      },
+      "generators": {
+        "title": "Gedeelde warmtebronnen",
+        "description": "Een ketel of warmtepomp waar meerdere kamers via hun eigen kranen op trekken. Laat dit leeg als het systeem zijn eigen brander aanstuurt, zoals Tado en soortgelijke dat doen.",
+        "data": {
+          "generator": "Warmtebron"
+        },
+        "data_description": {
+          "generator": "Kies er een om aan te passen, of voeg er een toe."
+        }
+      },
+      "generator": {
+        "title": "Gedeelde warmtebron",
+        "description": "Draait zolang een kamer die hij bedient verwarmd wordt, en stopt zodra dat er geen meer is. Radiatorkranen vechten niet om een taak zoals binnenunits op een multi-split, dus hier valt niets te verdelen.",
+        "data": {
+          "name": "Naam",
+          "entity_id": "Climate-entiteit",
+          "zone_ids": "Kamers die hij bedient",
+          "setpoint": "Vast setpoint",
+          "delete": "Deze warmtebron verwijderen"
+        },
+        "data_description": {
+          "name": "Een naam, om warmtebronnen uit elkaar te houden.",
+          "entity_id": "De ketel of warmtepomp zelf. Mag niet ook een bron van een zone zijn, anders krijgt hij twee commando's.",
+          "zone_ids": "Laat leeg voor alle kamers.",
+          "setpoint": "Laat leeg om het warmste doel te volgen van de kamers die vragen. Het koudste nemen zou de kamer die het hardst vraagt tekortdoen.",
+          "delete": "Verwijdert de warmtebron; de kranen blijven op zichzelf werken."
         }
       },
       "residents": {

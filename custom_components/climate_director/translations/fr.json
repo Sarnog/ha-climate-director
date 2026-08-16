@@ -26,7 +26,8 @@
           "circuits": "Circuits frigorifiques",
           "residents": "Occupants",
           "openings": "Portes et fenêtres",
-          "save": "Enregistrer et fermer"
+          "save": "Enregistrer et fermer",
+          "generators": "Sources de chaleur partagées"
         }
       },
       "settings": {
@@ -191,6 +192,34 @@
         },
         "data_description": {
           "priority": "Le nombre le plus bas gagne le circuit. Les zones partageant un nombre sont départagées par leur nom."
+        }
+      },
+      "generators": {
+        "title": "Sources de chaleur partagées",
+        "description": "Une chaudière ou une pompe à chaleur sur laquelle plusieurs pièces tirent via leurs propres vannes. Laissez vide si le système commande lui-même son brûleur, comme le font Tado et ses semblables.",
+        "data": {
+          "generator": "Source de chaleur"
+        },
+        "data_description": {
+          "generator": "Choisissez-en une à modifier, ou ajoutez-en une nouvelle."
+        }
+      },
+      "generator": {
+        "title": "Source de chaleur partagée",
+        "description": "Fonctionne tant qu'une pièce qu'elle dessert est chauffée, et s'arrête dès qu'il n'y en a plus. Les vannes de radiateur ne se disputent pas une tâche comme les unités intérieures d'un multi-split ; rien n'est arbitré ici.",
+        "data": {
+          "name": "Nom",
+          "entity_id": "Entité climate",
+          "zone_ids": "Pièces desservies",
+          "setpoint": "Consigne fixe",
+          "delete": "Supprimer cette source de chaleur"
+        },
+        "data_description": {
+          "name": "Un nom, pour distinguer les sources de chaleur.",
+          "entity_id": "La chaudière ou la pompe à chaleur elle-même. Ne doit pas être aussi la source d'une zone, sinon elle recevrait deux commandes.",
+          "zone_ids": "Laissez vide pour toutes les pièces.",
+          "setpoint": "Laissez vide pour suivre la consigne la plus élevée parmi les pièces qui demandent. Prendre la plus basse laisserait la pièce la plus demandeuse à court.",
+          "delete": "Supprime la source de chaleur ; les vannes continuent de fonctionner seules."
         }
       },
       "residents": {

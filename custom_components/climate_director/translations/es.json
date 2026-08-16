@@ -26,7 +26,8 @@
           "circuits": "Circuitos frigoríficos",
           "residents": "Residentes",
           "openings": "Puertas y ventanas",
-          "save": "Guardar y cerrar"
+          "save": "Guardar y cerrar",
+          "generators": "Fuentes de calor compartidas"
         }
       },
       "settings": {
@@ -191,6 +192,34 @@
         },
         "data_description": {
           "priority": "El número más bajo gana el circuito. Las zonas que comparten número se separan por su nombre."
+        }
+      },
+      "generators": {
+        "title": "Fuentes de calor compartidas",
+        "description": "Una caldera o bomba de calor de la que varias habitaciones tiran mediante sus propias válvulas. Déjalo vacío si el sistema enciende su propio quemador, como hacen Tado y similares.",
+        "data": {
+          "generator": "Fuente de calor"
+        },
+        "data_description": {
+          "generator": "Elige una para cambiarla, o añade una nueva."
+        }
+      },
+      "generator": {
+        "title": "Fuente de calor compartida",
+        "description": "Funciona mientras se caliente alguna habitación a la que sirve, y para en cuanto no queda ninguna. Las válvulas de radiador no compiten por una tarea como las unidades interiores de un multisplit; aquí no se decide nada.",
+        "data": {
+          "name": "Nombre",
+          "entity_id": "Entidad climate",
+          "zone_ids": "Habitaciones a las que sirve",
+          "setpoint": "Consigna fija",
+          "delete": "Eliminar esta fuente de calor"
+        },
+        "data_description": {
+          "name": "Un nombre, para distinguir fuentes de calor.",
+          "entity_id": "La caldera o bomba de calor en sí. No puede ser además la fuente de una zona, o recibiría dos órdenes.",
+          "zone_ids": "Déjalo vacío para todas las habitaciones.",
+          "setpoint": "Déjalo vacío para seguir la consigna más alta entre las habitaciones que piden. Tomar la más baja dejaría corta a la que más pide.",
+          "delete": "Elimina la fuente de calor; las válvulas siguen funcionando por su cuenta."
         }
       },
       "residents": {

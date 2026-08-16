@@ -26,7 +26,8 @@
           "circuits": "Refrigerant circuits",
           "residents": "Residents",
           "openings": "Doors and windows",
-          "save": "Save and close"
+          "save": "Save and close",
+          "generators": "Shared heat sources"
         }
       },
       "settings": {
@@ -191,6 +192,34 @@
         },
         "data_description": {
           "priority": "The lowest number wins the circuit. Zones sharing a number are separated by their name."
+        }
+      },
+      "generators": {
+        "title": "Shared heat sources",
+        "description": "A boiler or heat pump several rooms draw on through their own valves. Leave this empty when the system fires its own burner, as Tado and the like do.",
+        "data": {
+          "generator": "Heat source"
+        },
+        "data_description": {
+          "generator": "Pick one to change it, or add a new one."
+        }
+      },
+      "generator": {
+        "title": "Shared heat source",
+        "description": "Runs while any room it serves is being heated, and stops once none is. Radiator valves do not compete for a duty the way indoor units on a multi-split do, so nothing is arbitrated here.",
+        "data": {
+          "name": "Name",
+          "entity_id": "Climate entity",
+          "zone_ids": "Rooms it serves",
+          "setpoint": "Fixed setpoint",
+          "delete": "Delete this heat source"
+        },
+        "data_description": {
+          "name": "A label, to tell heat sources apart.",
+          "entity_id": "The boiler or heat pump itself. Must not also be a zone's source, or it would receive two commands.",
+          "zone_ids": "Leave empty for every room.",
+          "setpoint": "Leave empty to follow the warmest target among the rooms asking. Taking the coldest would leave the room asking hardest short.",
+          "delete": "Removes the heat source; the valves keep working on their own."
         }
       },
       "residents": {

@@ -233,6 +233,8 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         for circuit in self.config.circuits:
             entities.update(unit for unit in circuit.units if unit)
 
+        entities.update(item.entity_id for item in self.config.generators if item.entity_id)
+
         for opening in self.config.openings:
             if opening.entity_id:
                 entities.add(opening.entity_id)
@@ -343,6 +345,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         }
         for circuit in self.config.circuits:
             entities.update(unit for unit in circuit.units if unit)
+        entities.update(item.entity_id for item in self.config.generators if item.entity_id)
         return entities
 
     def _climate(self, entity_id: str) -> ClimateState:

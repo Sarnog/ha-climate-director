@@ -26,7 +26,8 @@
           "circuits": "Kältekreise",
           "residents": "Bewohner",
           "openings": "Türen und Fenster",
-          "save": "Speichern und schließen"
+          "save": "Speichern und schließen",
+          "generators": "Gemeinsame Wärmequellen"
         }
       },
       "settings": {
@@ -191,6 +192,34 @@
         },
         "data_description": {
           "priority": "Die niedrigste Zahl gewinnt den Kreis. Zonen mit derselben Zahl werden über ihren Namen getrennt."
+        }
+      },
+      "generators": {
+        "title": "Gemeinsame Wärmequellen",
+        "description": "Ein Kessel oder eine Wärmepumpe, an der mehrere Räume über ihre eigenen Ventile hängen. Lass dies leer, wenn das System seinen Brenner selbst ansteuert, wie Tado und ähnliche es tun.",
+        "data": {
+          "generator": "Wärmequelle"
+        },
+        "data_description": {
+          "generator": "Wähle eine zum Ändern, oder füge eine neue hinzu."
+        }
+      },
+      "generator": {
+        "title": "Gemeinsame Wärmequelle",
+        "description": "Läuft, solange ein Raum geheizt wird, den sie versorgt, und stoppt, sobald keiner mehr. Heizkörperventile streiten nicht um eine Aufgabe wie Innengeräte an einem Multi-Split, hier wird also nichts entschieden.",
+        "data": {
+          "name": "Name",
+          "entity_id": "Climate-Entität",
+          "zone_ids": "Versorgte Räume",
+          "setpoint": "Fester Sollwert",
+          "delete": "Diese Wärmequelle löschen"
+        },
+        "data_description": {
+          "name": "Ein Name, um Wärmequellen auseinanderzuhalten.",
+          "entity_id": "Der Kessel oder die Wärmepumpe selbst. Darf nicht zugleich Quelle einer Zone sein, sonst bekommt sie zwei Befehle.",
+          "zone_ids": "Leer lassen für alle Räume.",
+          "setpoint": "Leer lassen, um dem wärmsten Ziel der fragenden Räume zu folgen. Das kälteste zu nehmen würde den Raum, der am dringendsten fragt, zu kurz kommen lassen.",
+          "delete": "Entfernt die Wärmequelle; die Ventile arbeiten für sich weiter."
         }
       },
       "residents": {
