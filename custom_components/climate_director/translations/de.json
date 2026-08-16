@@ -45,7 +45,7 @@
           "guest_end": "Gästemodus bis",
           "precondition_start": "Vorheizen ab",
           "precondition_end": "Vorheizen bis",
-          "max_precondition": "Längstes Vorheizen (Minuten)"
+          "max_precondition": "Vorheizdauer (Minuten)"
         },
         "data_description": {
           "season_source": "Leite die Jahreszeit aus dem Monat ab, lies sie aus einer Entität, oder lege sie von Hand fest.",

@@ -45,7 +45,7 @@
           "guest_end": "Guest mode until",
           "precondition_start": "Pre-conditioning from",
           "precondition_end": "Pre-conditioning until",
-          "max_precondition": "Longest pre-conditioning (minutes)"
+          "max_precondition": "Pre-conditioning duration (minutes)"
         },
         "data_description": {
           "season_source": "Derive the season from the month, read it from an entity, or pin it by hand.",

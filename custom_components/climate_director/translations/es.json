@@ -45,7 +45,7 @@
           "guest_end": "Modo invitados hasta",
           "precondition_start": "Preacondicionamiento desde",
           "precondition_end": "Preacondicionamiento hasta",
-          "max_precondition": "Preacondicionamiento más largo (minutos)"
+          "max_precondition": "Duración del preacondicionamiento (minutos)"
         },
         "data_description": {
           "season_source": "Deduce la estación del mes, léela de una entidad, o fíjala a mano.",

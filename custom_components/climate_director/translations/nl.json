@@ -45,7 +45,7 @@
           "guest_end": "Gastenmodus tot",
           "precondition_start": "Vooruit verwarmen vanaf",
           "precondition_end": "Vooruit verwarmen tot",
-          "max_precondition": "Langste vooruitverwarming (minuten)"
+          "max_precondition": "Vooruitverwarmingsduur (minuten)"
         },
         "data_description": {
           "season_source": "Leid het seizoen af uit de maand, lees het uit een entiteit, of zet het met de hand vast.",

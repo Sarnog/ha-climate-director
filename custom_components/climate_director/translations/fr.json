@@ -45,7 +45,7 @@
           "guest_end": "Mode invités jusqu'à",
           "precondition_start": "Préchauffage à partir de",
           "precondition_end": "Préchauffage jusqu'à",
-          "max_precondition": "Préchauffage le plus long (minutes)"
+          "max_precondition": "Durée du préchauffage (minutes)"
         },
         "data_description": {
           "season_source": "Déduisez la saison du mois, lisez-la depuis une entité, ou fixez-la à la main.",

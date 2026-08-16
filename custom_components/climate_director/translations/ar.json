@@ -45,7 +45,7 @@
           "guest_end": "وضع الضيوف حتى",
           "precondition_start": "التدفئة المسبقة من",
           "precondition_end": "التدفئة المسبقة حتى",
-          "max_precondition": "أطول تدفئة مسبقة (بالدقائق)"
+          "max_precondition": "مدة التدفئة المسبقة (بالدقائق)"
         },
         "data_description": {
           "season_source": "استنتج الفصل من الشهر، أو اقرأه من كيان، أو ثبّته يدويًا.",

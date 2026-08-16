@@ -233,7 +233,7 @@ regelaars.
 | Iemand moet wakker zijn | poort 5 aan of uit | uit als je slaapsensoren niet vertrouwt |
 | Het rooster van een bewoner moet openstaan | poort 6 aan of uit | uit als je alleen op aanwezigheid wilt sturen |
 | Vooruit verwarmen vanaf / tot | het venster waarin een verzoek meetelt | dit is het enige dat een leeg huis laat draaien |
-| Langste vooruitverwarming | het plafond op één verzoek | een verzoek kun je niet vergeten, alleen vertypen |
+| Vooruitverwarmingsduur | het plafond op één verzoek | een verzoek kun je niet vergeten, alleen vertypen |
 | Gastenmodus vanaf / tot | het gastenvenster | voorkomt dat een vergeten schakelaar de nacht doordraait |
 | Vakantieagenda's | welke agenda's vakantie mogen aankondigen | meerdere toegestaan |
 | Woord dat vakantie aangeeft | het trefwoord dat een item moet dragen | leeg = agenda's worden genegeerd |
@@ -697,7 +697,7 @@ controls.
 | Somebody must be awake | gate 5 on or off | off if you do not trust your sleep sensors |
 | A resident's schedule must be open | gate 6 on or off | off if you want to steer on presence alone |
 | Pre-conditioning from / until | the window in which a request counts | this is the only thing that runs an empty house |
-| Longest pre-conditioning | the ceiling on a single request | a request cannot be forgotten, only mistyped |
+| Pre-conditioning duration | the ceiling on a single request | a request cannot be forgotten, only mistyped |
 | Guest mode from / until | the guest window | keeps a forgotten switch from running all night |
 | Holiday calendars | which calendars may announce a holiday | several allowed |
 | Word that marks a holiday | the keyword an event must carry | empty = calendars are ignored |
