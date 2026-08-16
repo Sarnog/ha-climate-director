@@ -42,10 +42,13 @@ class Request:
     family: ModeFamily
     deviation: float = 0.0
 
+    priority: int = 0
+    """The priority in force, which may be a live value rather than the configured one."""
+
     @property
     def rank(self) -> tuple[int, str]:
         """Return the tie-break key: priority first, then zone id."""
-        return (self.zone.priority, self.zone.zone_id)
+        return (self.priority, self.zone.zone_id)
 
 
 @dataclass(frozen=True, slots=True)
@@ -231,7 +234,7 @@ def _choose_family(
         return current, Reason.CIRCUIT_CONFLICT_LOST
 
     if circuit.conflict_policy is ConflictPolicy.DEMAND:
-        winner = max(requests, key=lambda request: (request.deviation, -request.zone.priority))
+        winner = max(requests, key=lambda request: (request.deviation, -request.priority))
         return winner.family, Reason.CIRCUIT_CONFLICT_LOST
 
     if circuit.conflict_policy is ConflictPolicy.SEASON_LOCK:

@@ -109,6 +109,14 @@ class WorldState:
     zone_overrides: dict[str, bool] = field(default_factory=dict)
     """Manual override per `zone_id`; a missing zone counts as no override."""
 
+    zone_priorities: dict[str, int] = field(default_factory=dict)
+    """Live priority per `zone_id`, overriding the configured one.
+
+    Kept out of the configuration on purpose: which room outranks which is
+    something an automation may well want to change by the hour, and
+    rewriting a config entry for that would reload the whole installation.
+    """
+
     def climate(self, entity_id: str) -> ClimateState:
         """Return a climate entity's state, or an unavailable placeholder."""
         return self.climates.get(entity_id, ClimateState(available=False))
@@ -128,6 +136,10 @@ class WorldState:
     def presence_of(self, zone_id: str) -> PresenceState:
         """Return a zone's occupancy, or an empty-room placeholder."""
         return self.presence.get(zone_id, PresenceState())
+
+    def priority_for(self, zone_id: str, configured: int) -> int:
+        """Return the priority in force for a zone, live value first."""
+        return self.zone_priorities.get(zone_id, configured)
 
     def overridden(self, zone_id: str) -> bool:
         """Return whether a manual override holds this zone."""

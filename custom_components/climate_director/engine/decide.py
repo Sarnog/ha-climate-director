@@ -63,7 +63,11 @@ def _collect_wishes(
             continue
 
         wishes[zone.zone_id] = constraints.Request(
-            zone=zone, source=source, family=demand.family, deviation=demand.deviation
+            zone=zone,
+            source=source,
+            family=demand.family,
+            deviation=demand.deviation,
+            priority=world.priority_for(zone.zone_id, zone.priority),
         )
 
     return wishes, refusals
