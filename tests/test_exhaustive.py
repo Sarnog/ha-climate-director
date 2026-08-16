@@ -721,3 +721,103 @@ class TestPresenceDrivenZonesAcrossEveryWorld:
                 continue
             if gates.evaluate(household, world, household.zones[0]).allowed:
                 assert gates.evaluate(presence_driven, world, presence_driven.zones[0]).allowed
+
+
+class TestManualSourcesAcrossEveryPlan:
+    """A source the director may not start, swept over the whole temperature range."""
+
+    def _config(self) -> DirectorConfig:
+        base = house()
+        return DirectorConfig(
+            zones=tuple(
+                Zone(
+                    zone.zone_id,
+                    zone.name,
+                    zone.indoor_sensor,
+                    sources=tuple(
+                        Source(
+                            source.source_id,
+                            source.entity_id,
+                            role=source.role,
+                            priority=source.priority,
+                            outdoor=source.outdoor,
+                            autostart=zone.zone_id != "slaapkamer",
+                        )
+                        for source in zone.sources
+                    ),
+                    priority=zone.priority,
+                    heat=zone.heat,
+                    cool=zone.cool,
+                )
+                for zone in base.zones
+            ),
+            circuits=base.circuits,
+            residents=base.residents,
+        )
+
+    def _worlds(self):
+        config = self._config()
+        appliances = [source.entity_id for zone in config.zones for source in zone.sources]
+        for outdoor, indoor, running in itertools.product(
+            [-10.0, GAS_CUTOVER + 0.1, 25.0],
+            [15.0, 21.0, 28.0],
+            ["off", "heat", "cool"],
+        ):
+            yield (
+                config,
+                make_world(
+                    now=TUESDAY,
+                    outdoor=outdoor,
+                    season=Season.UNKNOWN,
+                    indoor={zone.zone_id: indoor for zone in config.zones},
+                    climates={entity: running for entity in appliances},
+                    residents={
+                        resident.resident_id: _state(True, False) for resident in config.residents
+                    },
+                    presence={zone.zone_id: PresenceState(occupied=True) for zone in config.zones},
+                ),
+            )
+
+    def _manual_entities(self, config: DirectorConfig) -> set[str]:
+        return {
+            source.entity_id
+            for zone in config.zones
+            for source in zone.sources
+            if not source.autostart
+        }
+
+    def test_it_is_never_commanded_to_run(self) -> None:
+        """The one promise the setting makes, over every world in the sweep."""
+        for config, world in self._worlds():
+            manual = self._manual_entities(config)
+            for command in decide(config, world).commands:
+                if command.entity_id in manual:
+                    assert family_of(command.hvac_mode) is ModeFamily.NEUTRAL, command
+
+    def test_an_idle_one_is_never_touched(self) -> None:
+        """Nothing to stand down means no command at all, not a redundant off."""
+        for config, world in self._worlds():
+            manual = self._manual_entities(config)
+            idle = {
+                entity
+                for entity in manual
+                if family_of(world.climate(entity).hvac_mode) is ModeFamily.NEUTRAL
+            }
+            commanded = {command.entity_id for command in decide(config, world).commands}
+            assert not (commanded & idle)
+
+    def test_its_zone_never_claims_to_be_served(self) -> None:
+        for config, world in self._worlds():
+            for decision in decide(config, world).zones:
+                if decision.zone_id == "slaapkamer":
+                    assert decision.granted is ModeFamily.NEUTRAL
+
+    def test_the_sweep_stands_it_down_at_least_once(self) -> None:
+        """Otherwise the invariants above would be proving nothing."""
+        stood_down = any(
+            command.reason is Reason.CIRCUIT_CONFLICT_LOST
+            and command.entity_id in self._manual_entities(config)
+            for config, world in self._worlds()
+            for command in decide(config, world).commands
+        )
+        assert stood_down
