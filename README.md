@@ -46,7 +46,7 @@ Drie niveaus, die los van elkaar staan:
 |---|---|
 | **Zone** | Een ruimte. Beschrijft *wat je wilt*: gewenste temperatuur, aan- en uitpunt, in welk seizoen. |
 | **Bron** | Een apparaat dat een zone kan bedienen, met een rol (verwarmen, koelen of beide), een voorkeursvolgorde en een buitentemperatuurvenster. |
-| **Koelcircuit** | Eén buitenunit met de binnenunits die eraan hangen. Beschrijft *wat technisch tegelijk kan*. |
+| **Airco-circuit** | Eén buitenunit met de binnenunits die eraan hangen. Beschrijft *wat technisch tegelijk kan*. |
 
 Een circuit spant willekeurige zones, en een zone mag binnenunits van meerdere circuits
 hebben. De twee assen kruisen elkaar en zitten nergens aan elkaar vast.
@@ -106,7 +106,7 @@ de eerste die dichtzit is de reden die je terugziet in `sensor.*_bron_<zone>`.
 | # | Poort | Geldt voor | Wordt overruled door | Uit te zetten |
 |---|---|---|---|---|
 | 1 | **Hoofdschakelaar** | alles | niets | nee |
-| 2 | **Handmatige override** | één zone | niets | nee |
+| 2 | **Handmatige override** | één zone | niets | nee, maar hij loopt af: zelf uitgezet geldt tot de volgende dag |
 | 3 | **Openingen** | de zones die je aan de opening koppelt | niets | door de opening niet in te stellen |
 | 4 | **Iemand thuis** | het hele huis | vooruit verwarmen, gastenmodus, aanwezigheidszones | nee, dit is een voorwaarde |
 | 5 | **Wakker** | het hele huis | aanwezigheidszones | ja, *Iemand moet wakker zijn* |
@@ -138,6 +138,22 @@ Poorten 1, 2 en 3 blijven in beide gevallen gelden. Die gaan niet over mensen.
 
 Zo kun je in één huis de woonkamer op het rooster laten lopen en de zolder op
 aanwezigheid, zonder dat de een de ander in de weg zit.
+
+#### Zelf een airco uitzetten
+
+Zet je een airco uit bij het apparaat of op de afstandsbediening, dan valt die zone stil.
+De director zet hem niet twee seconden later weer aan — dat is het ergste wat hij kan doen,
+want jij had hem net expres stilgezet.
+
+De zone doet weer mee zodra:
+
+- **jij hem weer aanzet**, in welke stand dan ook;
+- **het de volgende dag is.** Een besluit van gisteravond hoort vanochtend niet meer te
+  gelden, dus de zone doet vanaf middernacht gewoon weer mee.
+
+Uitzetten dat de director zélf doet telt niet mee, anders zou elke zone die hij ooit
+uitzet permanent stil komen te staan. De schakelaar `switch.*_override_<zone>` blijft
+daarnaast gewoon werken en staat boven dit alles.
 
 #### Vooruit verwarmen
 
@@ -294,7 +310,7 @@ Een bewoner zonder rooster doet niet mee aan poort 6: die opent hem niet en houd
 niet tegen. Een bewoner die thuis is en slaapt terwijl zijn eigen venster nog niet open is,
 houdt het huis tegen — dat is wat het huis op zaterdag op de laatste slaper laat wachten.
 
-**Per koelcircuit**
+**Per airco-circuit**
 
 | Instelling | Wat het doet |
 |---|---|
@@ -398,7 +414,7 @@ Daarna: **Instellingen > Apparaten en diensten > Integratie toevoegen > Climate 
 Je geeft een naam en laat schaduwmodus aan. De installatie verschijnt vervolgens op het
 tabblad **Integraties**.
 
-Alles verder — zones, bronnen, koelcircuits, bewoners en openingen — bouw je op via
+Alles verder — zones, bronnen, airco-circuits, bewoners en openingen — bouw je op via
 **Configureren** bij die integratie. Er wordt niets opgeslagen tot je in dat menu
 "Opslaan en sluiten" kiest.
 
@@ -410,7 +426,7 @@ Een verstandige volgorde:
 2. **Zones en bronnen** — per ruimte de binnentemperatuursensor en de aan-/uitpunten,
    daarna de apparaten die die ruimte kunnen bedienen. Geef een cv-ketel en een warmtepomp
    aansluitende buitenvensters, dan wisselen ze elkaar naadloos af.
-3. **Koelcircuits** — alleen nodig als binnenunits een buitenunit delen. Laat leeg als elke
+3. **Airco-circuits** — alleen nodig als binnenunits een buitenunit delen. Laat leeg als elke
    unit zijn eigen buitenunit heeft.
 4. **Bewoners** en **Deuren en ramen** — optioneel.
 
@@ -452,7 +468,7 @@ integratie dwingt je nergens iets nieuws voor aan te maken, maar staat het overa
 
 Een cv met slimme radiatorkranen werkt anders dan een multi-split, en dat verschil zit in
 het model. Kranen vechten niet om een compressortaak — ze verwarmen allemaal alleen maar —
-dus er valt niets te verdelen. Zet ze **niet** in een koelcircuit: dat begrip gaat over een
+dus er valt niets te verdelen. Zet ze **niet** in een airco-circuit: dat begrip gaat over een
 gedeelde compressor, en een ketel heeft er geen.
 
 Modelleer het zo: elke kamer een zone, de kraan van die kamer als bron met rol *alleen
@@ -601,7 +617,7 @@ walked from broad to narrow, and the first one that is shut is the reason you se
 | # | Gate | Applies to | Overruled by | Can be turned off |
 |---|---|---|---|---|
 | 1 | **Master switch** | everything | nothing | no |
-| 2 | **Manual override** | one zone | nothing | no |
+| 2 | **Manual override** | one zone | nothing | no, but it expires: switched off by hand holds until the next day |
 | 3 | **Openings** | the zones you attach the opening to | nothing | by not configuring the opening |
 | 4 | **Somebody home** | the whole house | pre-conditioning, guest mode, presence-driven zones | no, this is a condition |
 | 5 | **Awake** | the whole house | presence-driven zones | yes, *Somebody must be awake* |
@@ -632,6 +648,22 @@ Gates 1, 2 and 3 apply either way. Those are not about people.
 
 So one house can run its living room on the schedule and its attic on presence, without
 either getting in the other's way.
+
+#### Switching an air conditioner off yourself
+
+Switch an air conditioner off at the appliance or on the remote and that zone falls silent.
+The director does not put it back on two seconds later — that is the worst thing it could
+do, since you had just deliberately silenced it.
+
+The zone takes part again as soon as:
+
+- **you switch it back on**, in whatever mode;
+- **it is the next day.** Last night's decision should not still hold this morning, so from
+  midnight the zone simply joins in again.
+
+Switching off that the director does itself does not count, or every zone it ever switches
+off would fall silent for good. The `switch.*_<zone>_override` switch keeps working
+alongside this and outranks all of it.
 
 #### Pre-conditioning
 
