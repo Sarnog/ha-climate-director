@@ -270,6 +270,20 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         selector.EntitySelectorConfig(domain=["sensor", "climate"])
                     ),
                     vol.Required("priority", default=current.get("priority", 0)): _RANK,
+                    vol.Optional(
+                        "presence_entity",
+                        description={"suggested_value": current.get("presence_entity") or None},
+                    ): selector.EntitySelector(
+                        selector.EntitySelectorConfig(
+                            domain=["binary_sensor", "sensor", "input_boolean"]
+                        )
+                    ),
+                    vol.Required(
+                        "presence_state", default=current.get("presence_state", "on")
+                    ): _TEXT,
+                    vol.Required(
+                        "presence_timeout", default=current.get("presence_timeout", 0)
+                    ): _SECONDS,
                     vol.Required("enable_heat", default=bool(heat)): bool,
                     vol.Required("heat_target", default=heat.get("target", 21.0)): _TEMPERATURE,
                     vol.Required("heat_start_at", default=heat.get("start_at", 20.0)): _TEMPERATURE,
@@ -830,6 +844,9 @@ def _zone_from_form(user_input: dict[str, Any], current: dict[str, Any]) -> dict
         "sources": current.get("sources") or [],
         "heat": heat,
         "cool": cool,
+        "presence_entity": user_input.get("presence_entity") or "",
+        "presence_state": user_input.get("presence_state") or "on",
+        "presence_timeout": user_input.get("presence_timeout") or 0,
     }
 
 

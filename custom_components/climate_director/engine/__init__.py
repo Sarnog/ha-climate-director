@@ -45,7 +45,7 @@ from .models import (
     validate,
 )
 from .plan import CircuitDecision, Deferral, Plan, Reason, UnitCommand, ZoneDecision
-from .world import ClimateState, OpeningState, ResidentState, WorldState
+from .world import ClimateState, OpeningState, PresenceState, ResidentState, WorldState
 
 __all__ = [
     "ACTIVE_FAMILIES",
@@ -66,6 +66,7 @@ __all__ = [
     "ModeSettings",
     "Opening",
     "OpeningState",
+    "PresenceState",
     "OutdoorWindow",
     "Plan",
     "Reason",

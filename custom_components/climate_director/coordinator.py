@@ -46,6 +46,7 @@ from .engine import (
     ModeFamily,
     OpeningState,
     Plan,
+    PresenceState,
     ResidentState,
     Season,
     WorldState,
@@ -196,6 +197,8 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         for zone in self.config.zones:
             if zone.indoor_sensor:
                 entities.add(zone.indoor_sensor)
+            if zone.presence_entity:
+                entities.add(zone.presence_entity)
             entities.update(source.entity_id for source in zone.sources if source.entity_id)
 
         for circuit in self.config.circuits:
@@ -290,6 +293,11 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 for opening in self.config.openings
                 if opening.entity_id
             },
+            presence={
+                zone.zone_id: self._presence(zone.presence_entity, zone.presence_state)
+                for zone in self.config.zones
+                if zone.presence_entity
+            },
             master_enabled=self.master_enabled,
             holiday_mode=self.holiday_mode,
             zone_overrides=dict(self.zone_overrides),
@@ -350,6 +358,16 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             changed_at=dt_util.as_local(state.last_changed),
         )
 
+    def _presence(self, entity_id: str, occupied_state: str) -> PresenceState:
+        """Return whether a room is occupied, and since when."""
+        state = self.hass.states.get(entity_id)
+        if state is None:
+            return PresenceState()
+        return PresenceState(
+            occupied=state.state == occupied_state,
+            changed_at=dt_util.as_local(state.last_changed),
+        )
+
     def _season(self) -> Season:
         settings = self.config.seasons
         if settings.source is SeasonSource.SUMMER:
@@ -388,6 +406,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             climates=world.climates,
             residents=world.residents,
             openings=world.openings,
+            presence=world.presence,
             circuit_family_since=dict(self._family_since),
             master_enabled=world.master_enabled,
             holiday_mode=world.holiday_mode,

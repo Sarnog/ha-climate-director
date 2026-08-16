@@ -72,13 +72,19 @@
           "cool_hysteresis": "Dode band koelen",
           "cool_outdoor_min": "Alleen koelen boven deze buitentemperatuur",
           "cool_summer_only": "Alleen koelen in de zomer",
-          "delete": "Deze zone verwijderen"
+          "delete": "Deze zone verwijderen",
+          "presence_entity": "Aanwezigheid in deze ruimte",
+          "presence_state": "Toestand die bezet betekent",
+          "presence_timeout": "Nog zo lang als bezet tellen (seconden)"
         },
         "data_description": {
           "indoor_sensor": "Een temperatuursensor, of een climate-entiteit die de ruimte al meet.",
           "priority": "Lager wint als twee zones ruziën om één buitenunit.",
           "heat_hysteresis": "Nul laat de zone pendelen op één enkele temperatuur. Eén graad is een verstandig beginpunt.",
-          "delete": "Verwijdert de zone en zijn bronnen."
+          "delete": "Verwijdert de zone en zijn bronnen.",
+          "presence_entity": "Laat leeg om deze ruimte te regelen of er nu iemand is of niet. Iemand thuis zegt niets over of er iemand op zolder zit.",
+          "presence_state": "Een aanwezigheidssensor meldt on.",
+          "presence_timeout": "Aanwezigheidssensoren knipperen; zonder nalooptijd stopt een zone zodra iemand even stilzit."
         }
       },
       "sources": {

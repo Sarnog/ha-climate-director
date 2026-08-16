@@ -66,6 +66,18 @@ class OpeningState:
 
 
 @dataclass(frozen=True, slots=True)
+class PresenceState:
+    """Whether a room is occupied, and since when.
+
+    The timestamp is what lets a zone ride out a presence sensor blinking off
+    for a moment instead of stopping its compressor over it.
+    """
+
+    occupied: bool = False
+    changed_at: datetime | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class WorldState:
     """Everything the engine needs to know at one moment in time."""
 
@@ -84,6 +96,9 @@ class WorldState:
 
     openings: dict[str, OpeningState] = field(default_factory=dict)
     """Keyed by opening entity id."""
+
+    presence: dict[str, PresenceState] = field(default_factory=dict)
+    """Room occupancy, keyed by `zone_id`."""
 
     circuit_family_since: dict[str, datetime | None] = field(default_factory=dict)
     """When each circuit last took on its current duty, keyed by `circuit_id`."""
@@ -109,6 +124,10 @@ class WorldState:
     def opening(self, entity_id: str) -> OpeningState:
         """Return an opening's state, or a closed placeholder."""
         return self.openings.get(entity_id, OpeningState())
+
+    def presence_of(self, zone_id: str) -> PresenceState:
+        """Return a zone's occupancy, or an empty-room placeholder."""
+        return self.presence.get(zone_id, PresenceState())
 
     def overridden(self, zone_id: str) -> bool:
         """Return whether a manual override holds this zone."""

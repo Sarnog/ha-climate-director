@@ -52,29 +52,68 @@ def evaluate(config: DirectorConfig, world: WorldState, zone: Zone) -> GateVerdi
     if _any_opening_open(config, world, zone):
         return GateVerdict.block(Reason.OPENING_OPEN)
 
+    # Een configuratie zonder bewoners beschrijft een pand waar niemand gevolgd
+    # wordt - een kantoor, een vakantiehuis, een serverruimte. De poorten die
+    # over bewoners gaan slaan we daar over, want die kunnen nooit slagen. De
+    # kamerpoort hieronder blijft wél gelden: die gaat over de ruimte, niet over
+    # wie er in het huis is.
+    #
     # A configuration without residents describes a building nobody is tracked
-    # in - an office, a holiday home, a server room. Blocking it forever on a
-    # presence gate that can never pass would be useless, so presence-based
-    # gates simply do not apply there.
-    if not config.residents:
-        return GateVerdict.allow()
-
+    # in - an office, a holiday home, a server room. The gates about residents
+    # are skipped there, since they could never pass. The room gate below still
+    # applies: that one is about the room, not about who is in the house.
     gates = config.gates
 
-    if gates.require_occupancy and not any(
-        world.resident(resident.resident_id).home for resident in config.residents
-    ):
-        return GateVerdict.block(Reason.NOBODY_HOME)
+    if config.residents:
+        if gates.require_occupancy and not any(
+            world.resident(resident.resident_id).home for resident in config.residents
+        ):
+            return GateVerdict.block(Reason.NOBODY_HOME)
 
-    if gates.require_awake and not any(
-        world.resident(resident.resident_id).present_and_awake for resident in config.residents
-    ):
-        return GateVerdict.block(Reason.EVERYONE_ASLEEP)
+        if gates.require_awake and not any(
+            world.resident(resident.resident_id).present_and_awake for resident in config.residents
+        ):
+            return GateVerdict.block(Reason.EVERYONE_ASLEEP)
 
-    if gates.require_schedule and not _schedule_open(config, world):
-        return GateVerdict.block(Reason.OUTSIDE_SCHEDULE)
+        if gates.require_schedule and not _schedule_open(config, world):
+            return GateVerdict.block(Reason.OUTSIDE_SCHEDULE)
+
+    # Het smalst van allemaal, en daarom als laatste: iemand thuis zegt niets
+    # over of er iemand op zolder zit.
+    #
+    # The narrowest of the lot, and therefore last: somebody being home says
+    # nothing about whether anybody is in the attic.
+    if not _room_occupied(world, zone):
+        return GateVerdict.block(Reason.ZONE_UNOCCUPIED)
 
     return GateVerdict.allow()
+
+
+def _room_occupied(world: WorldState, zone: Zone) -> bool:
+    """Return whether this room counts as occupied right now.
+
+    A zone without a presence entity is never held back on this: not measuring
+    a room is not the same as knowing it is empty.
+    """
+    if not zone.presence_entity:
+        return True
+
+    state = world.presence_of(zone.zone_id)
+    if state.occupied:
+        return True
+    if not zone.presence_timeout:
+        return False
+
+    # Zonder tijdstempel valt niet aan te tonen dat de kamer nog binnen de
+    # nalooptijd valt, en dan telt hij als leeg. Een lege kamer met rust laten
+    # is de onschadelijke kant om fout te zitten.
+    #
+    # Without a timestamp there is no showing the room is still inside the
+    # grace period, so it counts as empty. Leaving an empty room alone is the
+    # harmless side to be wrong on.
+    if state.changed_at is None:
+        return False
+    return world.now - state.changed_at < zone.presence_timeout
 
 
 def _any_opening_open(config: DirectorConfig, world: WorldState, zone: Zone) -> bool:

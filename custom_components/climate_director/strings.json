@@ -72,13 +72,19 @@
           "cool_hysteresis": "Cooling dead band",
           "cool_outdoor_min": "Only cool above this outdoor temperature",
           "cool_summer_only": "Only cool in summer",
-          "delete": "Delete this zone"
+          "delete": "Delete this zone",
+          "presence_entity": "Presence in this room",
+          "presence_state": "State meaning occupied",
+          "presence_timeout": "Keep counting as occupied for (seconds)"
         },
         "data_description": {
           "indoor_sensor": "A temperature sensor, or a climate entity that already measures the room.",
           "priority": "Lower wins when two zones fight over one outdoor unit.",
           "heat_hysteresis": "Zero lets the zone chatter on a single temperature. One degree is a sensible starting point.",
-          "delete": "Removes the zone and its sources."
+          "delete": "Removes the zone and its sources.",
+          "presence_entity": "Leave empty to regulate this room whether or not anybody is in it. Somebody being home says nothing about whether they are in the attic.",
+          "presence_state": "A presence sensor reports on.",
+          "presence_timeout": "Presence sensors flicker; without a grace period a zone stops the moment somebody sits still."
         }
       },
       "sources": {

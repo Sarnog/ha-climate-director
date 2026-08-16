@@ -178,6 +178,24 @@ class Zone:
     heat: ModeSettings | None = None
     cool: ModeSettings | None = None
 
+    presence_entity: str = ""
+    """Entity saying whether this room is occupied. Empty means never checked.
+
+    Distinct from the installation-wide occupancy gate: somebody being home
+    says nothing about whether they are in the attic. A room nobody sits in is
+    a room worth leaving alone, however awake the household is.
+    """
+
+    presence_state: str = "on"
+    """The `presence_entity` state that means occupied."""
+
+    presence_timeout: timedelta = timedelta(0)
+    """How long the room still counts as occupied after presence drops.
+
+    Presence sensors flicker, and a zone that stops the moment somebody sits
+    still would cycle its compressor for no reason. Zero means react at once.
+    """
+
     def settings_for(self, family: ModeFamily) -> ModeSettings | None:
         """Return the settings for `family`, or `None` if the zone forbids it."""
         if family is ModeFamily.HEAT:

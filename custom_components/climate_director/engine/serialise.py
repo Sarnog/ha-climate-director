@@ -105,6 +105,9 @@ def _zone(raw: Mapping[str, Any]) -> Zone:
         priority=_int(raw.get("priority"), 0),
         heat=_mode(raw.get("heat")),
         cool=_mode(raw.get("cool")),
+        presence_entity=_text(raw.get("presence_entity")),
+        presence_state=_text(raw.get("presence_state")) or "on",
+        presence_timeout=_seconds(raw.get("presence_timeout")),
     )
 
 
@@ -232,6 +235,9 @@ def _zone_to_dict(zone: Zone) -> dict[str, Any]:
         "sources": [_source_to_dict(source) for source in zone.sources],
         "heat": _mode_to_dict(zone.heat),
         "cool": _mode_to_dict(zone.cool),
+        "presence_entity": zone.presence_entity,
+        "presence_state": zone.presence_state,
+        "presence_timeout": zone.presence_timeout.total_seconds(),
     }
 
 
