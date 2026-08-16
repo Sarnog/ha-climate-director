@@ -176,6 +176,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self.master_enabled = True
         self.holiday_mode = False
         self.zone_overrides: dict[str, bool] = {}
+        self.zone_priorities: dict[str, int] = {}
 
         self.world: WorldState | None = None
         self.last_changes: tuple[Change, ...] = ()
@@ -329,6 +330,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             master_enabled=self.master_enabled,
             holiday_mode=self.holiday_mode,
             zone_overrides=dict(self.zone_overrides),
+            zone_priorities=dict(self.zone_priorities),
         )
 
     def _climate_ids(self) -> set[str]:
@@ -439,6 +441,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             master_enabled=world.master_enabled,
             holiday_mode=world.holiday_mode,
             zone_overrides=world.zone_overrides,
+            zone_priorities=world.zone_priorities,
         )
 
     # -- naar buiten / outward ----------------------------------------------

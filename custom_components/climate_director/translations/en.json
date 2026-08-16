@@ -284,6 +284,11 @@
       "zone_override": {
         "name": "{zone} override"
       }
+    },
+    "number": {
+      "zone_priority": {
+        "name": "{zone} priority"
+      }
     }
   },
   "issues": {
