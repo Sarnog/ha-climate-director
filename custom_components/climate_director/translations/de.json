@@ -300,6 +300,9 @@
           "delete": "Entfernt die Öffnung; sie setzt dann nichts mehr aus."
         }
       }
+    },
+    "error": {
+      "duplicate_priority": "Ein anderer Raum an derselben Außeneinheit hat diese Priorität bereits. Zwei Räume mit derselben Zahl lassen das Ergebnis von ihrem Namen abhängen, wähle also eine freie."
     }
   },
   "entity": {

@@ -252,6 +252,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         zones = self._list("zones")
         current = zones[self._zone_index] if self._zone_index is not None else {}
 
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             if user_input.get("delete") and self._zone_index is not None:
                 zones.pop(self._zone_index)
@@ -259,18 +261,22 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 return await self.async_step_init()
 
             zone = _zone_from_form(user_input, current)
-            if self._zone_index is None:
-                zones.append(zone)
-                self._zone_index = len(zones) - 1
-            else:
-                zones[self._zone_index] = zone
-            return await self.async_step_sources()
+            if self._priority_clash(zone["zone_id"], zone["priority"]):
+                errors["priority"] = "duplicate_priority"
+            if not errors:
+                if self._zone_index is None:
+                    zones.append(zone)
+                    self._zone_index = len(zones) - 1
+                else:
+                    zones[self._zone_index] = zone
+                return await self.async_step_sources()
 
         heat = current.get("heat") or {}
         cool = current.get("cool") or {}
         priority = current.get("priority", _next_priority(zones))
         return self.async_show_form(
             step_id="zone",
+            errors=errors,
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_NAME, default=current.get("name", "")): _TEXT,
@@ -582,13 +588,20 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             self._priority_zone_id = None
             return await self.async_step_circuit_priorities()
 
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            zone["priority"] = int(user_input["priority"])
-            self._priority_zone_id = None
-            return await self.async_step_circuit_priorities()
+            wanted = int(user_input["priority"])
+            if self._priority_clash(zone["zone_id"], wanted):
+                errors["priority"] = "duplicate_priority"
+            else:
+                zone["priority"] = wanted
+                self._priority_zone_id = None
+                return await self.async_step_circuit_priorities()
 
         return self.async_show_form(
             step_id="circuit_priority",
+            errors=errors,
             data_schema=vol.Schema(
                 {vol.Required("priority", default=zone.get("priority", 0)): _RANK}
             ),
@@ -966,6 +979,28 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
     def _list(self, key: str) -> list[dict[str, Any]]:
         """Return the editable list stored under `key`, creating it if needed."""
         return self._installation.setdefault(key, [])
+
+    def _priority_clash(self, zone_id: str, priority: int) -> bool:
+        """Return whether another zone on the same circuit already holds this number.
+
+        Only zones sharing an outdoor unit are checked. Rooms on separate
+        circuits never compete, so making them pick different numbers would be
+        an obstacle without a reason behind it.
+        """
+        for circuit in self._list("circuits"):
+            units = set(circuit.get("units") or ())
+            on_it = [
+                zone
+                for zone in self._list("zones")
+                if any(source.get("entity_id") in units for source in zone.get("sources") or ())
+            ]
+            if not any(zone["zone_id"] == zone_id for zone in on_it):
+                continue
+            if any(
+                zone["zone_id"] != zone_id and zone.get("priority") == priority for zone in on_it
+            ):
+                return True
+        return False
 
     def _current_circuit(self) -> dict[str, Any] | None:
         """Return the circuit being edited, or `None` when the cursor is stale."""

@@ -507,6 +507,27 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
     for zone in config.zones:
         if not zone.sources:
             problems.append(f"zone {zone.zone_id} has no sources")
+        if not zone.indoor_sensor:
+            problems.append(f"zone {zone.zone_id} has no indoor temperature sensor")
+        if zone.heat is None and zone.cool is None:
+            problems.append(f"zone {zone.zone_id} may neither heat nor cool")
+        if zone.presence_timeout.total_seconds() < 0:
+            problems.append(f"zone {zone.zone_id} has a negative presence timeout")
+        if (
+            zone.heat is not None
+            and zone.cool is not None
+            and zone.cool.start_at <= zone.heat.start_at
+        ):
+            # Anders vragen verwarmen en koelen tegelijk om dezelfde kamer. De
+            # engine kiest dan wel deterministisch, maar dat het zover komt is
+            # een instelfout die niemand bedoeld kan hebben.
+            #
+            # Otherwise heating and cooling ask for the same room at once. The
+            # engine still picks deterministically, but getting there is a
+            # mistake nobody can have meant.
+            problems.append(
+                f"zone {zone.zone_id} starts cooling at or below where it starts heating"
+            )
         for source in zone.sources:
             if source.outdoor.empty:
                 problems.append(
@@ -548,6 +569,53 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
         problems += [
             f"generator {generator.generator_id} names unknown zone {zone_id}"
             for zone_id in unknown
+        ]
+
+    # Twee zones op één buitenunit met hetzelfde nummer laten de uitkomst
+    # afhangen van hun zone-id, dus alfabetisch. Dat crasht niets en beschadigt
+    # niets - de tie-break is deterministisch en het circuit houdt zich aan zijn
+    # ene taak - maar welke kamer wint is dan onzichtbaar en willekeurig.
+    #
+    # Two zones on one outdoor unit sharing a number leave the outcome hanging
+    # on their zone id, so alphabetical. That crashes nothing and damages
+    # nothing - the tie-break is deterministic and the circuit still keeps to
+    # its one duty - but which room wins becomes invisible and arbitrary.
+    for circuit in config.circuits:
+        seen: dict[int, str] = {}
+        for zone, _ in config.sources_on(circuit):
+            if zone.priority in seen and seen[zone.priority] != zone.zone_id:
+                problems.append(
+                    f"zones {seen[zone.priority]} and {zone.zone_id} share priority "
+                    f"{zone.priority} on circuit {circuit.circuit_id}"
+                )
+            else:
+                seen[zone.priority] = zone.zone_id
+
+        if circuit.max_concurrent_units is not None and circuit.max_concurrent_units < 1:
+            problems.append(f"circuit {circuit.circuit_id} allows no unit to run at all")
+        for label, span in (
+            ("family switch delay", circuit.family_switch_delay),
+            ("minimum switch interval", circuit.min_family_switch_interval),
+            ("minimum cycle time", circuit.min_cycle_time),
+        ):
+            if span.total_seconds() < 0:
+                problems.append(f"circuit {circuit.circuit_id} has a negative {label}")
+
+    known_zones = set(zone_ids)
+    for opening in config.openings:
+        problems += [
+            f"opening {opening.entity_id} names unknown zone {zone_id}"
+            for zone_id in opening.zone_ids
+            if zone_id not in known_zones
+        ]
+        if opening.delay.total_seconds() < 0:
+            problems.append(f"opening {opening.entity_id} has a negative delay")
+
+    if config.gates.require_occupancy:
+        problems += [
+            f"resident {resident.resident_id} has no presence entity, so can never be home"
+            for resident in config.residents
+            if not resident.presence_entity
         ]
 
     known_sources = set(source_ids)

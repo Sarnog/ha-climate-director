@@ -300,6 +300,9 @@
           "delete": "Elimina la abertura; deja de suspender nada."
         }
       }
+    },
+    "error": {
+      "duplicate_priority": "Otra habitación en la misma unidad exterior ya tiene esta prioridad. Dos habitaciones con el mismo número hacen que el resultado dependa de su nombre; elige uno libre."
     }
   },
   "entity": {

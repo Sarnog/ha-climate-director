@@ -300,6 +300,9 @@
           "delete": "Supprime l'ouverture ; elle ne suspend plus rien."
         }
       }
+    },
+    "error": {
+      "duplicate_priority": "Une autre pièce sur la même unité extérieure a déjà cette priorité. Deux pièces partageant un nombre font dépendre le résultat de leur nom ; choisissez-en un libre."
     }
   },
   "entity": {

@@ -300,6 +300,9 @@
           "delete": "Removes the opening; it stops suspending anything."
         }
       }
+    },
+    "error": {
+      "duplicate_priority": "Another room on the same outdoor unit already has this priority. Two rooms sharing a number leaves the outcome hanging on their name, so pick a free one."
     }
   },
   "entity": {

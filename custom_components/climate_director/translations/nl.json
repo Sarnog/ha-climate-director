@@ -300,6 +300,9 @@
           "delete": "Verwijdert de opening; hij schort dan niets meer op."
         }
       }
+    },
+    "error": {
+      "duplicate_priority": "Een andere kamer op dezelfde buitenunit heeft deze prioriteit al. Twee kamers met hetzelfde nummer laten de uitkomst van hun naam afhangen, dus kies een vrij nummer."
     }
   },
   "entity": {
