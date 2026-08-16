@@ -23,6 +23,7 @@ from custom_components.climate_director.engine import (
     DirectorConfig,
     GateSettings,
     OpeningState,
+    PresenceState,
     Reason,
     Resident,
     Source,
@@ -129,6 +130,82 @@ class TestOpenings:
             openings={BACK_DOOR: OpeningState(open=False, changed_at=at(11, 0))},
         )
         assert gates.evaluate(config, world, living_room(config)).allowed
+
+
+class TestZonePresence:
+    """The attic only wants heating when somebody is actually in it."""
+
+    def _config(self, timeout: timedelta = timedelta(0)) -> DirectorConfig:
+        zone = Zone(
+            "zolder",
+            "Zolder",
+            "sensor.zolder",
+            sources=(Source("s", "climate.zolder"),),
+            presence_entity="binary_sensor.eplite_zolder_occupancy",
+            presence_timeout=timeout,
+        )
+        return DirectorConfig(zones=(zone,))
+
+    def _zone(self, config: DirectorConfig) -> Zone:
+        zone = config.zone("zolder")
+        assert zone is not None
+        return zone
+
+    def test_an_occupied_room_passes(self) -> None:
+        config = self._config()
+        world = make_world(presence={"zolder": PresenceState(occupied=True)})
+        assert gates.evaluate(config, world, self._zone(config)).allowed
+
+    def test_an_empty_room_is_left_alone(self) -> None:
+        config = self._config()
+        world = make_world(presence={"zolder": PresenceState(occupied=False)})
+        verdict = gates.evaluate(config, world, self._zone(config))
+        assert verdict.reason is Reason.ZONE_UNOCCUPIED
+
+    def test_an_unknown_room_counts_as_empty(self) -> None:
+        config = self._config()
+        verdict = gates.evaluate(config, make_world(), self._zone(config))
+        assert verdict.reason is Reason.ZONE_UNOCCUPIED
+
+    def test_a_zone_without_a_presence_entity_is_never_held_back(self) -> None:
+        """Not measuring a room is not the same as knowing it is empty."""
+        zone = Zone("z", "Z", "sensor.t", sources=(Source("s", "climate.x"),))
+        config = DirectorConfig(zones=(zone,))
+        assert gates.evaluate(config, make_world(), zone).allowed
+
+    def test_the_grace_period_rides_out_a_flicker(self) -> None:
+        config = self._config(timedelta(minutes=5))
+        world = make_world(
+            now=at(12, 2),
+            presence={"zolder": PresenceState(occupied=False, changed_at=at(12, 0))},
+        )
+        assert gates.evaluate(config, world, self._zone(config)).allowed
+
+    def test_the_grace_period_expires(self) -> None:
+        config = self._config(timedelta(minutes=5))
+        world = make_world(
+            now=at(12, 6),
+            presence={"zolder": PresenceState(occupied=False, changed_at=at(12, 0))},
+        )
+        verdict = gates.evaluate(config, world, self._zone(config))
+        assert verdict.reason is Reason.ZONE_UNOCCUPIED
+
+    def test_without_a_timestamp_the_grace_period_cannot_be_claimed(self) -> None:
+        config = self._config(timedelta(minutes=5))
+        world = make_world(presence={"zolder": PresenceState(occupied=False, changed_at=None)})
+        verdict = gates.evaluate(config, world, self._zone(config))
+        assert verdict.reason is Reason.ZONE_UNOCCUPIED
+
+    def test_presence_is_the_narrowest_gate(self) -> None:
+        """Nobody home outranks nobody in the attic, since it explains more."""
+        base = self._config()
+        config = DirectorConfig(zones=base.zones, residents=(Resident("danny", "Danny"),))
+        world = make_world(
+            residents={"danny": away()},
+            presence={"zolder": PresenceState(occupied=False)},
+        )
+        verdict = gates.evaluate(config, world, self._zone(config))
+        assert verdict.reason is Reason.NOBODY_HOME
 
 
 class TestNoResidents:
