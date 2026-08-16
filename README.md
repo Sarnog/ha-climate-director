@@ -231,6 +231,19 @@ python -m pytest
 python -m ruff check .
 ```
 
+### Talen
+
+De uitleg onder elk invoerveld volgt de taal van je Home Assistant. Staat je HA op
+Nederlands, dan zie je alleen Nederlands.
+
+Meegeleverd: Nederlands, Engels, Duits, Frans, Spaans en Arabisch.
+
+Een taal toevoegen is één bestand: kopieer `custom_components/climate_director/strings.json`
+naar `custom_components/climate_director/translations/<taalcode>.json` en vertaal de
+waarden. De sleutels en de plaatshouders (`{zone}`, `{resident}`, `{name}`, …) moeten
+precies hetzelfde blijven; een test bewaakt dat voor elk taalbestand, zodat een vergeten
+regel niet stilletjes als Engels doorschiet.
+
 ### Architectuur
 
 Het technische ontwerp staat in [`ARCHITECTURE.md`](ARCHITECTURE.md).
@@ -473,6 +486,19 @@ pip install -r requirements_test.txt
 python -m pytest
 python -m ruff check .
 ```
+
+### Languages
+
+The explanation under each input follows your Home Assistant's language. With HA set to
+Dutch you see Dutch and nothing else.
+
+Shipped: Dutch, English, German, French, Spanish and Arabic.
+
+Adding a language is one file: copy `custom_components/climate_director/strings.json` to
+`custom_components/climate_director/translations/<code>.json` and translate the values. The
+keys and the placeholders (`{zone}`, `{resident}`, `{name}`, …) have to stay exactly the
+same; a test guards that for every language file, so a forgotten line cannot slip through as
+English.
 
 ### Architecture
 
