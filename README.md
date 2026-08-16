@@ -97,44 +97,151 @@ Daarnaast beschermen `min_family_switch_interval` (minimale looptijd voor een ta
 een unit opnieuw mag starten) de buitenunit. Die laatste vertraagt alleen starten, nooit
 stoppen.
 
-### Poorten
+### Poorten en rangorde
 
-Poorten bepalen of er überhaupt geregeld mag worden. Ze kijken naar omstandigheden, niet
-naar temperaturen:
+Poorten bepalen of er überhaupt geregeld mag worden. Ze kijken naar omstandigheden, nooit
+naar temperaturen — "mag het", niet "moet het". Ze worden van breed naar smal afgelopen, en
+de eerste die dichtzit is de reden die je terugziet in `sensor.*_bron_<zone>`.
 
-- **Hoofdschakelaar** — alles uit.
-- **Handmatige override** — per zone.
-- **Openingen** — een deur of raam dat openstaat schort de zone op, eventueel pas na een
-  vertraging die je per opening in seconden instelt. Leeg of nul betekent direct.
-- **Aanwezigheid** — er moet iemand thuis zijn.
-- **Aanwezigheid in de ruimte** — per zone een eigen sensor, met een nalooptijd tegen
-  knipperende aanwezigheidsmelders. Iemand thuis zegt niets over of er iemand op zolder
-  zit; een zone zonder zo'n sensor wordt hier nooit op tegengehouden.
-- **Wakker** — iemand die thuis is moet ook uit bed zijn.
-- **Rooster** — per bewoner instelbare tijdvensters. Wie geen rooster invult doet niet
-  mee: die opent de poort niet en houdt hem ook niet tegen. Wie thuis nog slaapt terwijl
-  zijn eigen venster nog niet open is, laat het huis wachten.
-- **Iemand thuis** — dit is geen keuze maar een voorwaarde. Gaat er een trigger af terwijl
-  niemand van de ingestelde bewoners thuis is, dan gebeurt er niets.
+| # | Poort | Geldt voor | Wordt overruled door | Uit te zetten |
+|---|---|---|---|---|
+| 1 | **Hoofdschakelaar** | alles | niets | nee |
+| 2 | **Handmatige override** | één zone | niets | nee |
+| 3 | **Openingen** | de zones die je aan de opening koppelt | niets | door de opening niet in te stellen |
+| 4 | **Iemand thuis** | het hele huis | gastenmodus, aanwezigheidszones | nee, dit is een voorwaarde |
+| 5 | **Wakker** | het hele huis | aanwezigheidszones | ja, *Iemand moet wakker zijn* |
+| 6 | **Rooster** | het hele huis | gastenmodus, aanwezigheidszones | ja, *Het rooster van een bewoner moet openstaan* |
+| 7 | **Aanwezigheid in de ruimte** | één zone | niets | door geen sensor in te stellen |
 
-Een vakantiedag telt als zaterdag, tenzij een bewoner een eigen vakantievenster invult;
-dat venster vervangt dan zijn gewone vensters en negeert de dagen van de week. De
-vakantiemodus gaat aan met de schakelaar, of vanzelf zodra er in een van de ingestelde
-agenda's een item loopt met het ingestelde trefwoord erin. Vul je geen trefwoord in, dan
-blijven de agenda's helemaal buiten beschouwing; raden welk item vakantie bedoelde is niet
-aan de integratie.
+Zo lees je de tabel: staat de hoofdschakelaar uit, dan doet de rest er niet toe. Staat er
+een raam open, dan helpt geen enkele aanwezigheid. En is een kamer aantoonbaar leeg, dan
+wordt hij niet verwarmd hoe wakker en aanwezig de rest van het huis ook is.
 
-De gastenmodus neemt de poorten over die over afwezigheid gaan: aanwezigheid en rooster.
-Er logeert dan iemand die niet gevolgd wordt, dus dat het huis leeg lijkt zegt niets, en
-de verwarming of airco hoort daar niet op uit te gaan. **Slaap blijft wél tellen** — komt
-een bewoner thuis en gaat die naar bed, dan is de dag voorbij en gaat het huis uit. Ook
-buiten het ingestelde gastenvenster (standaard de hele dag) nemen de gewone poorten het
-weer over, zodat een schakelaar die niemand uitzette niet de hele nacht doordraait. De
-poort over aanwezigheid in de ruimte zelf blijft altijd gelden: die gaat over de kamer,
-niet over wie er in huis is.
+**Iemand thuis is bewust geen instelling.** Een leeg huis verwarmen is iets waar je alleen
+per ongeluk voor kiest, dus die knop bestaat niet. Wil je toch dat een ruimte draait
+zonder dat er iemand thuis is, dan is dat precies waar de twee uitzonderingen hieronder
+voor zijn.
 
-Een installatie zonder bewoners (kantoor, vakantiehuis, serverruimte) slaat de
-aanwezigheidspoorten over in plaats van permanent op slot te zitten.
+#### Wat bepaalt een zone: het huishouden of de kamer
+
+Per zone kies je bij *Wat bepaalt of deze zone draait*:
+
+- **Het huishouden** (standaard) — poorten 4 tot en met 7 gelden. Dit is de woonkamer:
+  hij volgt het ritme van het huis. Stel je hier óók een aanwezigheidssensor in, dan knijpt
+  die het verder dicht: het huishouden moet het toestaan **en** de kamer moet bezet zijn.
+- **De ruimte zelf** — poorten 4 tot en met 6 worden overgeslagen. Alleen de
+  aanwezigheidssensor beslist. Dit is de zolder: wie er zit, zit er, en dat is een beter
+  antwoord dan welk rooster ook kan geven. Deze keuze vereist een aanwezigheidssensor,
+  anders kan de zone nooit draaien — de configuratiecontrole zegt dat ook.
+
+Poorten 1, 2 en 3 blijven in beide gevallen gelden. Die gaan niet over mensen.
+
+Zo kun je in één huis de woonkamer op het rooster laten lopen en de zolder op
+aanwezigheid, zonder dat de een de ander in de weg zit.
+
+#### Vakantiemodus
+
+Een vakantiedag telt als **zaterdag**: elk rooster in huis wordt als een zaterdagrooster
+gelezen, inclusief het wachten op wie er nog slaapt. Wil iemand op vakantie andere uren,
+dan vinkt die bij een venster *Dit is een vakantievenster* aan; dat venster vervangt dan
+zijn gewone vensters en negeert de dagen van de week.
+
+De vakantiemodus gaat aan met `switch.*_vakantiemodus`, of vanzelf zodra er in een van de
+ingestelde agenda's een item loopt met het ingestelde trefwoord erin. **Zonder trefwoord
+blijven de agenda's helemaal buiten beschouwing** — raden welk agenda-item vakantie
+bedoelde is niet aan de integratie.
+
+#### Gastenmodus
+
+`switch.*_gastenmodus` neemt de poorten over die over afwezigheid gaan: *iemand thuis* en
+*rooster*. Er logeert dan iemand die niet gevolgd wordt, dus dat het huis leeg lijkt zegt
+niets.
+
+Wat blijft gelden:
+
+- **Slaap**, maar alleen van wie thuis is. Komt een bewoner thuis en gaat die naar bed,
+  dan is de dag voorbij en gaat het huis uit. Is er niemand thuis, dan slaapt er ook
+  niemand en blijft het draaien.
+- **Het gastenvenster**. Daarbuiten nemen de gewone poorten het weer over, zodat een
+  schakelaar die niemand uitzette niet de hele nacht doordraait. Beide velden leeg laten
+  betekent de hele dag.
+- **Aanwezigheid in de ruimte.** Die gaat over de kamer, niet over wie er in huis is.
+
+Een installatie zonder bewoners (kantoor, vakantiehuis, serverruimte) slaat poorten 4 tot
+en met 6 over in plaats van permanent op slot te zitten.
+
+### Welke entiteiten heb je nodig
+
+| Entiteit | Verplicht | Waarvoor |
+|---|---|---|
+| Eén `climate.*` per zone | **ja** | zonder apparaat valt er niets aan te sturen |
+| Een temperatuursensor per zone | **ja** | zonder meting weet de integratie niet of het te koud of te warm is; een `climate.*` met `current_temperature` mag ook |
+| `sensor.*` of `weather.*` buitentemperatuur | nee | alleen nodig als je bronnen of taken op buitentemperatuur wilt begrenzen — bijvoorbeeld gas onder 3 °C, warmtepomp erboven |
+| `person.*` of `device_tracker.*` per bewoner | ja, zodra je bewoners instelt | anders kan die bewoner nooit thuis zijn |
+| Een slaapsensor per bewoner | nee | zonder deze telt niemand ooit als slapend; de wakker-poort staat dan altijd open |
+| `binary_sensor.*` aanwezigheid per zone | nee, tenzij de zone op *de ruimte zelf* draait | dan is het de enige poort die de zone heeft |
+| `binary_sensor.*` deur of raam | nee | schort de gekoppelde zones op zolang hij openstaat |
+| `calendar.*` | nee | zet de vakantiemodus vanzelf aan; werkt alleen mét trefwoord |
+| Een seizoensentiteit | nee | alleen als je het seizoen niet uit de maand wilt afleiden |
+
+Helpers hoef je nergens voor aan te maken. De integratie levert haar eigen schakelaars en
+regelaars.
+
+### Alle instellingen
+
+**Algemene instellingen**
+
+| Instelling | Wat het doet | Waarom |
+|---|---|---|
+| Buitentemperatuursensor | voedt alle buitengrenzen | zonder deze telt elke ingestelde grens als niet gehaald |
+| Herkomst van het seizoen | maand, entiteit, of vast op zomer/winter | een entiteit laat een bestaande helper gewoon doorwerken |
+| Iemand moet wakker zijn | poort 5 aan of uit | uit als je slaapsensoren niet vertrouwt |
+| Het rooster van een bewoner moet openstaan | poort 6 aan of uit | uit als je alleen op aanwezigheid wilt sturen |
+| Gastenmodus vanaf / tot | het gastenvenster | voorkomt dat een vergeten schakelaar de nacht doordraait |
+| Vakantieagenda's | welke agenda's vakantie mogen aankondigen | meerdere toegestaan |
+| Woord dat vakantie aangeeft | het trefwoord dat een item moet dragen | leeg = agenda's worden genegeerd |
+| Schaduwmodus | rekent alles door, stuurt niets aan | om naast je bestaande automatiseringen mee te kijken |
+
+**Per zone**
+
+| Instelling | Wat het doet |
+|---|---|
+| Naam | de naam in de entiteiten |
+| Binnentemperatuursensor | waarop de dode band rekent |
+| Prioriteit | hoe hard deze zone een gedeelde buitenunit claimt; **lager wint**. Op één multi-split mag geen enkel nummer dubbel voorkomen |
+| Wat bepaalt of deze zone draait | het huishouden of de ruimte zelf, zie hierboven |
+| Aanwezigheidssensor + status + nalooptijd | wanneer de kamer als bezet telt; de nalooptijd vangt knipperende melders op |
+| Verwarmen aan/uit, doel, aanzetpunt, dode band, buitengrens | wanneer verwarmen mag beginnen en stoppen |
+| Koelen aan/uit, doel, aanzetpunt, dode band, buitengrens | idem voor koelen |
+
+Verwarmen start bij `binnen <= aanzetpunt` en stopt bij `binnen >= aanzetpunt + dode band`.
+Koelen start bij `binnen >= aanzetpunt` en stopt bij `binnen <= aanzetpunt - dode band`.
+Het aanzetpunt telt als bereikt, het uitzetpunt als gepasseerd — dat is wat een apparaat
+belet om op één tiende graad te blijven klepperen.
+
+**Per bewoner**
+
+| Instelling | Wat het doet |
+|---|---|
+| Aanwezigheidsentiteit | of deze persoon thuis is |
+| Slaapentiteit + status | wanneer deze persoon slaapt, bijvoorbeeld `sensor.danny_charger_type` op `wireless` |
+| Roostervensters | begin, eind, dagen van de week, en of het een vakantievenster is |
+
+Een bewoner zonder rooster doet niet mee aan poort 6: die opent hem niet en houdt hem ook
+niet tegen. Een bewoner die thuis is en slaapt terwijl zijn eigen venster nog niet open is,
+houdt het huis tegen — dat is wat het huis op zaterdag op de laatste slaper laat wachten.
+
+**Per koelcircuit**
+
+| Instelling | Wat het doet |
+|---|---|
+| Binnenunits | welke `climate.*` aan deze buitenunit hangen |
+| Verwarmen en koelen tegelijk | uit voor een gewone multi-split: die kan maar één taak tegelijk |
+| Conflictbeleid | wie wint als twee kamers het oneens zijn: prioriteit, wie eerst was, grootste afwijking, of het seizoen |
+| Pauze bij het wisselen van taak | hoe lang alles uit moet staan vóór de omschakeling |
+| Minimale looptijd voor een taakwissel | hoe lang een taak minstens moet hebben gedraaid voordat de andere hem mag overnemen |
+| Minimale cyclustijd | hoe lang een unit uit blijft na het stoppen; vertraagt alleen starten, nooit stoppen |
+| Maximum aantal units tegelijk | de capaciteitsgrens van de buitenunit |
 
 ### Dode band
 
@@ -421,42 +528,149 @@ that, `min_family_switch_interval` (minimum run before a duty swap), `family_swi
 (pause between stopping and starting) and `min_cycle_time` (rest before a unit may start
 again) protect the outdoor unit. The last only ever delays starting, never stopping.
 
-### Gates
+### Gates and precedence
 
-Gates decide whether regulating is allowed at all. They look at circumstances, not
-temperatures:
+Gates decide whether anything may be regulated at all. They look at
+circumstances, never at temperatures — "is this allowed", not "is this needed". They are
+walked from broad to narrow, and the first one that is shut is the reason you see back in
+`sensor.*_<zone>_source`.
 
-- **Master switch** — everything off.
-- **Manual override** — per zone.
-- **Openings** — a door or window standing open suspends the zone, optionally only after a
-  delay you set per opening in seconds. Empty or zero means at once.
-- **Occupancy** — somebody must be home.
-- **Room presence** — a sensor per zone, with a grace period against flickering presence
-  detectors. Somebody being home says nothing about whether anybody is in the attic; a
-  zone without such a sensor is never held back on this.
-- **Awake** — somebody home must also be out of bed.
-- **Schedule** — time windows set per resident. Whoever fills in no schedule does not take
-  part: they neither open the gate nor hold it shut. Whoever is home asleep while their own
-  window has not opened yet makes the house wait.
-- **Somebody home** — not a choice but a condition. If a trigger fires while none of the
-  configured residents is home, nothing happens.
+| # | Gate | Applies to | Overruled by | Can be turned off |
+|---|---|---|---|---|
+| 1 | **Master switch** | everything | nothing | no |
+| 2 | **Manual override** | one zone | nothing | no |
+| 3 | **Openings** | the zones you attach the opening to | nothing | by not configuring the opening |
+| 4 | **Somebody home** | the whole house | guest mode, presence-driven zones | no, this is a condition |
+| 5 | **Awake** | the whole house | presence-driven zones | yes, *Somebody must be awake* |
+| 6 | **Schedule** | the whole house | guest mode, presence-driven zones | yes, *A resident's schedule must be open* |
+| 7 | **Room presence** | one zone | nothing | by setting no sensor |
 
-A holiday counts as a Saturday, unless a resident fills in a holiday window of their own;
-that window then replaces their ordinary ones and ignores the days of the week. Holiday
-mode goes on with the switch, or by itself as soon as one of the configured calendars has
-an event running that carries the configured keyword. Fill in no keyword and the calendars
-are ignored entirely; guessing which event meant a holiday is not the integration's call.
+Read the table like this: with the master switch off, the rest does not matter. With a
+window open, no amount of presence helps. And a room that is demonstrably empty is not
+heated however awake and present the rest of the house may be.
 
-Guest mode takes over the gates that are about absence: presence and schedule. Somebody
-untracked is staying, so the house looking empty says nothing, and the heating or air
-conditioning should not go off over it. **Sleep still counts** — once a resident comes home
-and turns in, the day is over and the house goes off. Outside the configured guest window
-(all day by default) the ordinary gates take over again too, so a switch nobody turned off
-does not run all night. The gate about presence in the room itself always applies: that one
-is about the room, not about who is in the house.
+**Somebody being home is deliberately not a setting.** Heating an empty house is something
+you only ever choose by accident, so that button does not exist. If you do want a room to
+run while nobody is home, that is exactly what the two exceptions below are for.
 
-An installation without residents (an office, a holiday home, a server room) skips the
-presence gates rather than staying locked out forever.
+#### What decides a zone: the household or the room
+
+Per zone you choose under *What decides whether this zone runs*:
+
+- **The household** (default) — gates 4 through 7 apply. This is the living room: it
+  follows the rhythm of the house. Set a presence sensor here as well and it narrows things
+  further: the household must allow it **and** the room must be occupied.
+- **The room itself** — gates 4 through 6 are skipped. Only the presence sensor decides.
+  This is the attic: whoever is sitting there is sitting there, and that is a better answer
+  than any schedule can give. This choice requires a presence sensor, or the zone can never
+  run — and the configuration check says so.
+
+Gates 1, 2 and 3 apply either way. Those are not about people.
+
+So one house can run its living room on the schedule and its attic on presence, without
+either getting in the other's way.
+
+#### Holiday mode
+
+A holiday counts as a **Saturday**: every schedule in the house is read as a Saturday's,
+including waiting for whoever is still asleep. Want different hours on holiday? Tick *This
+is a holiday window* on a window; it then replaces that resident's ordinary windows and
+ignores the days of the week.
+
+Holiday mode goes on with `switch.*_holiday_mode`, or by itself as soon as one of the
+configured calendars has an event running that carries the configured keyword. **Without a
+keyword the calendars are ignored entirely** — guessing which event meant a holiday is not
+the integration's call to make.
+
+#### Guest mode
+
+`switch.*_guest_mode` takes over the gates that are about absence: *somebody home* and
+*schedule*. Somebody untracked is staying, so the house looking empty says nothing.
+
+What still applies:
+
+- **Sleep**, but only of those who are home. Once a resident comes home and turns in, the
+  day is over and the house goes off. With nobody home nobody is asleep, and it keeps
+  running.
+- **The guest window.** Outside it the ordinary gates take over again, so a switch nobody
+  turned off does not run all night. Leaving both fields empty means all day.
+- **Room presence.** That one is about the room, not about who is in the house.
+
+An installation without residents (an office, a holiday home, a server room) skips gates 4
+through 6 rather than staying locked out forever.
+
+### Which entities you need
+
+| Entity | Required | What for |
+|---|---|---|
+| One `climate.*` per zone | **yes** | without an appliance there is nothing to steer |
+| A temperature sensor per zone | **yes** | without a reading the integration cannot tell too cold from too warm; a `climate.*` with `current_temperature` will do |
+| `sensor.*` or `weather.*` outdoor temperature | no | only needed to bound sources or duties by outdoor temperature — gas below 3 °C, heat pump above it, say |
+| `person.*` or `device_tracker.*` per resident | yes, once you configure residents | otherwise that resident can never be home |
+| A sleep sensor per resident | no | without one nobody ever counts as asleep, so the awake gate stays open |
+| `binary_sensor.*` presence per zone | no, unless the zone runs on *the room itself* | then it is the only gate the zone has |
+| `binary_sensor.*` door or window | no | suspends the attached zones while it is open |
+| `calendar.*` | no | switches holiday mode on by itself; works only with a keyword |
+| A season entity | no | only if you do not want the season derived from the month |
+
+You need to create no helpers for any of this. The integration ships its own switches and
+controls.
+
+### Every setting
+
+**General settings**
+
+| Setting | What it does | Why |
+|---|---|---|
+| Outdoor temperature sensor | feeds every outdoor bound | without it any bound you set counts as not met |
+| Where the season comes from | month, entity, or pinned to summer/winter | an entity lets an existing helper keep working |
+| Somebody must be awake | gate 5 on or off | off if you do not trust your sleep sensors |
+| A resident's schedule must be open | gate 6 on or off | off if you want to steer on presence alone |
+| Guest mode from / until | the guest window | keeps a forgotten switch from running all night |
+| Holiday calendars | which calendars may announce a holiday | several allowed |
+| Word that marks a holiday | the keyword an event must carry | empty = calendars are ignored |
+| Shadow mode | works everything out, steers nothing | to watch along beside your existing automations |
+
+**Per zone**
+
+| Setting | What it does |
+|---|---|
+| Name | the name in the entities |
+| Indoor temperature sensor | what the dead band works from |
+| Priority | how strongly this zone claims a shared outdoor unit; **lower wins**. On one multi-split no number may appear twice |
+| What decides whether this zone runs | the household or the room itself, see above |
+| Presence sensor + state + grace period | when the room counts as occupied; the grace period absorbs flickering detectors |
+| Heating on/off, target, switch-on point, dead band, outdoor bound | when heating may start and stop |
+| Cooling on/off, target, switch-on point, dead band, outdoor bound | the same for cooling |
+
+Heating starts at `indoor <= switch-on point` and stops at `indoor >= switch-on point +
+dead band`. Cooling starts at `indoor >= switch-on point` and stops at `indoor <=
+switch-on point - dead band`. The switch-on point counts as reached, the switch-off point
+as passed — which is what keeps an appliance from chattering on a tenth of a degree.
+
+**Per resident**
+
+| Setting | What it does |
+|---|---|
+| Presence entity | whether this person is home |
+| Sleep entity + state | when this person is asleep, for example `sensor.danny_charger_type` at `wireless` |
+| Schedule windows | start, end, days of the week, and whether it is a holiday window |
+
+A resident without a schedule does not take part in gate 6: they neither open it nor hold
+it shut. A resident who is home and asleep while their own window has not opened yet holds
+the house back — which is what makes the house wait for the last sleeper on a Saturday.
+
+**Per refrigerant circuit**
+
+| Setting | What it does |
+|---|---|
+| Indoor units | which `climate.*` hang on this outdoor unit |
+| Heat and cool at once | off for an ordinary multi-split: it can only do one duty at a time |
+| Conflict policy | who wins when two rooms disagree: priority, who was first, largest deviation, or the season |
+| Pause when switching duty | how long everything must be off before the changeover |
+| Minimum run before a duty switch | how long a duty must have run before the other may take over |
+| Minimum cycle time | how long a unit stays off after stopping; only ever delays starting, never stopping |
+| Maximum units at once | the capacity limit of the outdoor unit |
 
 ### Dead band
 
