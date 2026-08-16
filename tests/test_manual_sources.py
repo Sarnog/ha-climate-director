@@ -15,8 +15,9 @@ must give way - otherwise it holds back a room with more claim.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
+import pytest
 from conftest import awake, make_world
 
 from custom_components.climate_director.engine import (
@@ -191,3 +192,70 @@ class TestItSurvivesStorage:
             {"zones": [{"zone_id": "z", "sources": [{"source_id": "a", "entity_id": "climate.a"}]}]}
         )
         assert config.zones[0].sources[0].autostart is True
+
+
+class TestTheChangeoverPauseDoesNotDeadlock:
+    """A pause before switching duty must not keep the manual unit alive.
+
+    De klem: zolang de handbediende unit draait houdt hij het circuit op zijn
+    taak, dus de woonkamer krijgt niets toegekend. Keken we naar toekenningen in
+    plaats van naar vragen, dan wachtte de een op de ander en gebeurde er nooit
+    meer iets - met een pauze van vijf seconden al genoeg om vast te lopen.
+
+    The deadlock: while the manual unit runs it holds the circuit to its duty,
+    so the living room is granted nothing. Were we to look at grants rather than
+    at wishes, each would wait on the other and nothing would ever happen again
+    - a five second pause being quite enough to hang on.
+    """
+
+    def _config(self, pause: int) -> DirectorConfig:
+        base = house()
+        circuit = base.circuits[0]
+        return DirectorConfig(
+            zones=base.zones,
+            circuits=(
+                Circuit(
+                    circuit.circuit_id,
+                    circuit.name,
+                    units=circuit.units,
+                    simultaneous_heat_cool=False,
+                    family_switch_delay=timedelta(seconds=pause),
+                    min_family_switch_interval=timedelta(minutes=3),
+                ),
+            ),
+            residents=base.residents,
+        )
+
+    @pytest.mark.parametrize("pause", [0, 5, 15, 300])
+    def test_it_stands_down_whatever_the_pause(self, pause: int) -> None:
+        result = plan(
+            self._config(pause),
+            living=30.0,
+            bedroom=21.5,
+            running={LIVING: "off", BEDROOM: "heat"},
+        )
+        command = command_for(result, BEDROOM)
+        assert command is not None, f"pauze {pause}s liet de slaapkamer draaien"
+        assert family_of(command.hvac_mode) is ModeFamily.NEUTRAL
+
+    def test_a_wish_is_enough_even_without_a_grant(self) -> None:
+        """The living room may still be waiting out the pause; it asked, and that counts."""
+        result = plan(
+            self._config(300),
+            living=30.0,
+            bedroom=21.5,
+            running={LIVING: "off", BEDROOM: "heat"},
+        )
+        living = next(item for item in result.zones if item.zone_id == "woonkamer")
+        assert living.granted is ModeFamily.NEUTRAL
+        assert command_for(result, BEDROOM) is not None
+
+    def test_nobody_asking_still_leaves_it_alone(self) -> None:
+        """No wish anywhere means it is in nobody's way, pause or no pause."""
+        result = plan(
+            self._config(300),
+            living=21.5,
+            bedroom=21.5,
+            running={LIVING: "off", BEDROOM: "heat"},
+        )
+        assert command_for(result, BEDROOM) is None
