@@ -245,6 +245,10 @@ De circuitregels blijven wel gelden voor de *andere* kamers: twee binnenunits op
 buitenunit kunnen fysiek niet tegengesteld draaien, en dat verandert niet doordat jij er
 één overneemt.
 
+De override vervalt vanzelf zodra iedereen die thuis is naar bed gaat, of zodra het huis
+leeg is. Een noodknop hoort niet dagenlang te blijven hangen omdat iemand vergat hem uit te
+zetten.
+
 Wil je juist dat een zone **stil blijft**, zet dan het apparaat zelf uit. Dat houdt die
 zone stil tot je hem weer aanzet of tot de volgende dag.
 
@@ -347,6 +351,11 @@ Het is een rem op **beginnen**, niet op doorgaan:
 - Zet je zelf iets aan, dan wordt dat opgepakt en doorgeregeld — je kunt dus prima besluiten
   toch nog even op te blijven.
 - Wat uit staat blijft uit tot het venster voorbij is.
+
+**Een open roostervenster wint.** Staat het venster van iemand die thuis is open, dan wijkt
+de stilte — anders zou een stiltevenster van 21:00 tot 09:00 precies het ochtendritme
+afknijpen dat het rooster beschrijft. Wie om vijf uur opstaat heeft dat immers in zijn
+rooster gezet omdat het vroeg is. Het rooster van iemand die weg is telt niet mee.
 
 Vensters mogen over middernacht heen lopen en kennen weekdagen, zodat een weekendritme
 apart te zetten is. Stel je geen vensters in, dan doet de rem niet mee: de integratie start
@@ -1055,6 +1064,10 @@ The circuit rules do still apply to the *other* rooms: two indoor units on one o
 cannot physically run opposing duties, and that does not change because you took one of
 them over.
 
+The override lapses by itself once everybody who is home turns in, or as soon as the house
+is empty. An emergency handle should not hang about for days because somebody forgot to
+release it.
+
 Want a zone to **stay silent** instead? Switch the appliance off yourself. That holds the
 zone still until you switch it back on or until the next day.
 
@@ -1156,6 +1169,11 @@ It is a brake on **starting**, not on continuing:
 - Switch something on yourself and it is picked up and carried on — so you can perfectly
   well decide to stay up after all.
 - Whatever is off stays off until the window has passed.
+
+**An open schedule window wins.** With the window of somebody who is home open, the quiet
+yields — otherwise a quiet window from 21:00 to 09:00 would pinch off the very morning
+rhythm the schedule describes. Whoever gets up at five put that in their schedule because it
+is early, after all. The schedule of somebody who is out does not count.
 
 Windows may cross midnight and carry weekdays, so a weekend rhythm can be set apart. Set no
 windows and the brake does not apply: the integration then starts whenever the other gates
