@@ -172,6 +172,12 @@ gasketel geen enkele airco in de weg zit, maar dat twee airco's op hetzelfde cir
 samen mogen koelen, maak dan één groep per paar — gas met de ene airco, gas met de andere —
 in plaats van alles in één groep.
 
+Een groep geldt ook voor apparaten die je **zelf** aanzet. Staat er een apparaat met
+*automatisch aanzetten* uit in een groep, en komt een ander lid van die groep aan de beurt,
+dan gaat het handbediende apparaat uit met reden `exclusive_group_lost` — ook al doen ze
+hetzelfde en delen ze geen buitenunit. Zonder die regel zou juist het apparaat dat jij met
+de hand bedient de groep straffeloos negeren, en dan is de groep een regel op papier.
+
 De configuratiecontrole meldt het wanneer de buitengrenzen van twee apparaten in dezelfde
 groep elkaar overlappen. Dat hoeft geen fout te zijn — de groep vangt het immers op — maar
 het betekent dat er bij die temperatuur echt gekozen moet worden, en dat is meestal niet wat
@@ -887,6 +893,12 @@ Mind what a group means: **one** appliance from the group at a time. If you want
 boiler to stay out of every air conditioner's way, while two air conditioners on the same
 circuit may still cool together, make one group per pair — gas with the one, gas with the
 other — rather than putting everything in a single group.
+
+A group also binds appliances you switch on **yourself**. With an appliance whose *start
+automatically* is off sitting in a group, and another member of that group getting its turn,
+the hand-operated one goes off with reason `exclusive_group_lost` — even when they do the
+same thing and share no outdoor unit. Without that rule it would be precisely the appliance
+you operate by hand that ignores the group with impunity, leaving the group a rule on paper.
 
 The configuration check reports it when the outdoor bounds of two appliances in the same
 group overlap. That need not be a mistake — the group catches it, after all — but it does
