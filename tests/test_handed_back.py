@@ -34,8 +34,31 @@ LIVING = "climate.huiskamer"
 BEDROOM = "climate.master_bedroom"
 
 
-def config() -> DirectorConfig:
+def config(*, with_residents: bool = False) -> DirectorConfig:
+    from custom_components.climate_director.engine import Resident
+
+    residents = (
+        (
+            Resident(
+                "danny",
+                "Danny",
+                presence_entity="person.danny",
+                sleep_entity="sensor.danny_charger_type",
+                sleep_state="wireless",
+            ),
+            Resident(
+                "nancy",
+                "Nancy",
+                presence_entity="person.nancy",
+                sleep_entity="sensor.nancy_charger_type",
+                sleep_state="wireless",
+            ),
+        )
+        if with_residents
+        else ()
+    )
     return DirectorConfig(
+        residents=residents,
         zones=(
             Zone(
                 "woonkamer",
@@ -51,7 +74,7 @@ def config() -> DirectorConfig:
                 sources=(Source("s", BEDROOM),),
                 heat=ModeSettings(21.0, 20.0),
             ),
-        )
+        ),
     )
 
 
@@ -71,20 +94,32 @@ class _Event:
         }
 
 
-def coordinator(plan: Plan | None = None):
+def coordinator(plan: Plan | None = None, states: dict[str, str] | None = None):
     """Return a stand-in carrying only what the notice methods touch."""
+
+    class Registry:
+        def get(self, entity_id):
+            value = (states or {}).get(entity_id)
+            return None if value is None else _State(value)
+
+    class Hass:
+        def __init__(self) -> None:
+            self.states = Registry()
 
     class StandIn:
         def __init__(self) -> None:
-            self.config = config()
+            self.config = config(with_residents=bool(states))
             self.zone_overrides: dict[str, bool] = {}
             self._handed_back: dict[str, date] = {}
             self.data = plan
+            self.hass = Hass()
 
         _notice_hand = ClimateDirectorCoordinator._notice_hand
         _zone_of = ClimateDirectorCoordinator._zone_of
         _we_wanted_it_off = ClimateDirectorCoordinator._we_wanted_it_off
         _zones_handed_back = ClimateDirectorCoordinator._zones_handed_back
+        _everyone_asleep = ClimateDirectorCoordinator._everyone_asleep
+        _state_is = ClimateDirectorCoordinator._state_is
 
     return StandIn()
 
@@ -227,3 +262,71 @@ class TestItReachesTheGates:
             **item.zone_overrides,
         }
         assert overrides["woonkamer"] is True
+
+
+class TestGoingToBedGivesItBack:
+    """Iedereen op bed betekent dat de dag voorbij is, niet pas middernacht.
+
+    De automatiseringen zetten de override uit zodra beiden op bed lagen. Tot
+    middernacht wachten houdt de zone een paar uur langer stil dan iemand
+    bedoelde, en dat merk je pas de volgende ochtend als er niets is voorverwarmd.
+
+    Everybody in bed means the day is over, not midnight. The automations
+    switched the override off the moment both had turned in. Waiting for midnight
+    holds the zone still a few hours longer than anybody meant, and you only
+    notice the next morning when nothing has warmed up.
+    """
+
+    HOME_AWAKE = {
+        "person.danny": "home",
+        "person.nancy": "home",
+        "sensor.danny_charger_type": "none",
+        "sensor.nancy_charger_type": "none",
+    }
+
+    def _with(self, **changes: str) -> dict[str, str]:
+        return {**self.HOME_AWAKE, **changes}
+
+    def test_both_asleep_hands_the_zone_back(self) -> None:
+        states = self._with(
+            **{"sensor.danny_charger_type": "wireless", "sensor.nancy_charger_type": "wireless"}
+        )
+        item = coordinator(running_plan(), states)
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        assert item._zones_handed_back() == set()
+
+    def test_one_still_up_keeps_it(self) -> None:
+        states = self._with(**{"sensor.danny_charger_type": "wireless"})
+        item = coordinator(running_plan(), states)
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        assert item._zones_handed_back() == {"slaapkamer"}
+
+    def test_the_one_who_is_away_does_not_have_to_sleep(self) -> None:
+        """Somebody out is not somebody awake; the house is still turning in."""
+        states = self._with(**{"person.nancy": "not_home", "sensor.danny_charger_type": "wireless"})
+        item = coordinator(running_plan(), states)
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        assert item._zones_handed_back() == set()
+
+    def test_an_empty_house_does_not_count_as_asleep(self) -> None:
+        """Nobody home is nobody in bed, so the zone stays where it was put."""
+        states = self._with(**{"person.danny": "not_home", "person.nancy": "not_home"})
+        item = coordinator(running_plan(), states)
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        assert item._zones_handed_back() == {"slaapkamer"}
+
+    def test_waking_up_does_not_hand_it_back_again(self) -> None:
+        """Once given back it is gone; getting up cannot re-silence the zone."""
+        asleep_states = self._with(
+            **{"sensor.danny_charger_type": "wireless", "sensor.nancy_charger_type": "wireless"}
+        )
+        item = coordinator(running_plan(), asleep_states)
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        assert item._zones_handed_back() == set()
+        assert item._handed_back == {}
+
+    def test_without_residents_the_day_boundary_still_rules(self) -> None:
+        """An installation nobody is tracked in falls back on the date."""
+        item = coordinator(running_plan())
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        assert item._zones_handed_back() == {"slaapkamer"}
