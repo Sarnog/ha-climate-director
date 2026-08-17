@@ -24,6 +24,7 @@ wrong comes out of `validate()`, not out of an exception here.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable, Mapping
 from datetime import time, timedelta
 from typing import Any
@@ -58,7 +59,7 @@ def config_from_dict(raw: Mapping[str, Any]) -> DirectorConfig:
         openings=tuple(_opening(item) for item in _items(raw, "openings")),
         generators=tuple(_generator(item) for item in _items(raw, "generators")),
         exclusive_groups=tuple(
-            frozenset(_strings(group)) for group in raw.get("exclusive_groups") or ()
+            frozenset(_strings(group)) for group in _sequence(raw.get("exclusive_groups"))
         ),
         gates=_gates(raw.get("gates")),
         seasons=_seasons(raw.get("seasons")),
@@ -221,7 +222,17 @@ def _time_window(raw: Mapping[str, Any]) -> TimeWindow:
         weekdays=(
             None
             if weekdays is None
-            else frozenset(_int(day, 0) for day in weekdays if _is_number(day))
+            # Een dagnummer buiten 0-6 is onzin en vervalt. Hem terugvouwen op
+            # een geldige dag zou een venster zetten op een dag die de gebruiker
+            # nooit koos, en dat is stiller mis dan hem weglaten.
+            #
+            # A day number outside 0-6 is nonsense and is dropped. Folding it
+            # back onto a valid day would put a window on a day the user never
+            # picked, which is more quietly wrong than leaving it out.
+            else frozenset(
+                _int(day, 0) for day in _sequence(weekdays) if _is_number(day) and 0 <= day <= 6
+            )
+            or None
         ),
     )
 
@@ -253,7 +264,9 @@ def _gates(raw: Any) -> GateSettings:
     return GateSettings(
         require_awake=_bool(raw.get("require_awake"), True),
         quiet_windows=tuple(
-            _time_window(item) for item in raw.get("quiet_windows") or () if isinstance(item, dict)
+            _time_window(item)
+            for item in _sequence(raw.get("quiet_windows"))
+            if isinstance(item, dict)
         ),
         require_schedule=_bool(raw.get("require_schedule"), False),
         guest_window=_guest_window(guest if isinstance(guest, dict) else {}),
@@ -410,7 +423,25 @@ def _opening_to_dict(opening: Opening) -> dict[str, Any]:
 
 def _items(raw: Mapping[str, Any], key: str) -> list[Mapping[str, Any]]:
     """Return the mappings stored under `key`, skipping anything else."""
-    return [item for item in (raw.get(key) or ()) if isinstance(item, Mapping)]
+    return [item for item in _sequence(raw.get(key)) if isinstance(item, Mapping)]
+
+
+def _sequence(raw: Any) -> list[Any]:
+    """Return the entries of a stored list, or nothing at all.
+
+    Een opgeslagen lijst die geen lijst blijkt - een getal, een tekst, een dict -
+    werd hiervoor gewoon doorlopen, en dan viel de hele integratie om op een
+    `TypeError` bij het laden. Alles of niets is hier de veilige kant: een
+    onleesbare lijst is een lege lijst, en de configuratiecontrole meldt daarna
+    vanzelf wat er ontbreekt.
+
+    A stored list that turns out not to be one - a number, a string, a dict -
+    used to be iterated all the same, and the whole integration then fell over on
+    a `TypeError` while loading. All or nothing is the safe side here: an
+    unreadable list is an empty list, and the configuration check then reports
+    what is missing of its own accord.
+    """
+    return list(raw) if isinstance(raw, list | tuple) else []
 
 
 def _strings(raw: Any) -> list[str]:
@@ -424,7 +455,22 @@ def _text(raw: Any) -> str:
 
 
 def _is_number(raw: Any) -> bool:
-    return isinstance(raw, int | float) and not isinstance(raw, bool)
+    """Return whether this value can stand in for a number here.
+
+    Booleans zijn in Python getallen, maar `True` als temperatuur is een
+    typefout en geen 1 graad. En oneindig of NaN haalt het door elke berekening
+    heen tot er ergens een `int()` op stukloopt - dan laadt de hele integratie
+    niet meer omdat er ooit iets raars in de opslag terechtkwam.
+
+    Booleans are numbers in Python, but `True` as a temperature is a typing
+    mistake rather than one degree. And infinity or NaN carries through every
+    calculation until an `int()` somewhere breaks on it - and then the whole
+    integration fails to load because something odd once found its way into
+    storage.
+    """
+    if isinstance(raw, bool) or not isinstance(raw, int | float):
+        return False
+    return math.isfinite(raw)
 
 
 def _float(raw: Any, default: float) -> float:
