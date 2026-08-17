@@ -24,6 +24,8 @@ from custom_components.climate_director.engine import (
     Circuit,
     DirectorConfig,
     ModeSettings,
+    Opening,
+    OutdoorWindow,
     Reason,
     Resident,
     Source,
@@ -444,3 +446,93 @@ class TestAnExclusiveGroupBindsAManualSource:
         command = command_for(self._plan(self._config(), bedroom="heat"), "climate.gas")
         assert command is not None
         assert family_of(command.hvac_mode) is ModeFamily.HEAT
+
+
+class TestTheOverrideHandsTheZoneOver:
+    """De override is een noodknop van de beheerder, geen slot.
+
+    Wie hem gebruikt wil het apparaat zelf zetten en houden - ook als het buiten
+    te koel is om te koelen, ook met een raam open, ook als het binnen al goed
+    is. De director stuurt die zone dan niets meer, en dus ook geen uit. Zou hij
+    hem alsnog uitzetten, dan was de override precies het tegenovergestelde van
+    wat de naam belooft.
+
+    The override is the administrator's emergency handle, not a lock. Whoever
+    uses it wants to set the appliance themselves and keep it there - even when
+    it is too cool outside to cool, even with a window open, even when the room
+    is already fine. The director then sends that zone nothing at all, an off
+    included. Were it to switch off anyway, the override would be the exact
+    opposite of what its name promises.
+    """
+
+    def _config(self) -> DirectorConfig:
+        return DirectorConfig(
+            zones=(
+                Zone(
+                    "woonkamer",
+                    "Woonkamer",
+                    "sensor.woonkamer",
+                    sources=(Source("w", LIVING),),
+                    heat=ModeSettings(23.0, 22.0),
+                    # Koelen mag alleen boven 24 buiten - dat is precies het
+                    # geval uit het voorbeeld: binnen te warm, buiten te koel.
+                    #
+                    # Cooling is allowed above 24 outdoors only - exactly the
+                    # case from the example: too warm inside, too cool outside.
+                    cool=ModeSettings(23.0, 24.0, outdoor=OutdoorWindow(minimum=24.0)),
+                ),
+            ),
+            residents=(Resident("danny", "Danny", presence_entity="person.danny"),),
+            openings=(Opening("binary_sensor.raam", zone_ids=("woonkamer",)),),
+        )
+
+    def _plan(self, running: str, *, override: bool, **extra: object):
+        from custom_components.climate_director.engine.world import OpeningState
+
+        config = self._config()
+        world = make_world(
+            now=NOON,
+            outdoor=extra.pop("outdoor", 15.0),
+            indoor={"woonkamer": extra.pop("indoor", 26.0)},
+            climates={LIVING: running},
+            residents={"danny": awake()},
+            presence={"woonkamer": PresenceState(occupied=True)},
+            zone_overrides={"woonkamer": override},
+            openings=(
+                {"binary_sensor.raam": OpeningState(open=True, changed_at=None)}
+                if extra.pop("window_open", False)
+                else {}
+            ),
+        )
+        return decide(config, world), config
+
+    def test_a_running_appliance_is_left_alone(self) -> None:
+        """Outdoor is 15, cooling starts at 24: without the override it goes off."""
+        result, _ = self._plan("cool", override=True)
+        assert command_for(result, LIVING) is None
+
+    def test_without_the_override_it_is_switched_off(self) -> None:
+        result, _ = self._plan("cool", override=False)
+        command = command_for(result, LIVING)
+        assert command is not None
+        assert family_of(command.hvac_mode) is ModeFamily.NEUTRAL
+
+    def test_an_open_window_does_not_reach_it_either(self) -> None:
+        """The one thing that overrules everything else still yields to the override."""
+        result, _ = self._plan("cool", override=True, window_open=True)
+        assert command_for(result, LIVING) is None
+
+    def test_a_satisfied_room_is_left_alone_too(self) -> None:
+        """The dead band is the director's rule, and the director is standing back."""
+        result, _ = self._plan("cool", override=True, indoor=18.0)
+        assert command_for(result, LIVING) is None
+
+    def test_an_idle_appliance_is_not_started(self) -> None:
+        """Hands off means hands off in both directions."""
+        result, _ = self._plan("off", override=True, indoor=15.0)
+        assert command_for(result, LIVING) is None
+
+    def test_the_zone_still_reports_why(self) -> None:
+        result, _ = self._plan("cool", override=True)
+        decision = next(item for item in result.zones if item.zone_id == "woonkamer")
+        assert decision.reason is Reason.MANUAL_OVERRIDE
