@@ -212,10 +212,41 @@ def _guests_carry_the_house(config: DirectorConfig, world: WorldState) -> bool:
 
 
 def _quiet_hours(config: DirectorConfig, world: WorldState) -> bool:
-    """Return whether this moment falls inside a quiet window."""
-    return any(
+    """Return whether this moment falls inside a quiet window.
+
+    Een open roostervenster wint. De stilte is bedoeld voor thuiskomen op een
+    uur waarop je zo naar bed gaat, niet voor opstaan - en wie om vijf uur
+    's ochtends begint, heeft dat in zijn rooster gezet juist omdat het vroeg
+    is. Zonder deze uitzondering zou de stilte het ochtendritme afknijpen dat
+    het rooster net beschrijft.
+
+    An open schedule window wins. The quiet is meant for coming home at an hour
+    when you are about to turn in, not for getting up - and whoever starts at
+    five in the morning put that in their schedule precisely because it is
+    early. Without this exception the quiet would pinch off the very morning
+    rhythm the schedule describes.
+
+    Alleen het venster van wie thuis is telt: het rooster van iemand die weg is
+    hoeft het huis niet te laten beginnen.
+
+    Only the window of somebody who is home counts: the schedule of somebody who
+    is out need not set the house going.
+    """
+    if not any(
         window.contains(world.now.time(), world.now.weekday())
         for window in config.gates.quiet_windows
+    ):
+        return False
+
+    moment = world.now.time()
+    weekday = world.now.weekday()
+    holiday = world.holiday_mode
+    effective = HOLIDAY_WEEKDAY if holiday else weekday
+    return not any(
+        world.resident(resident.resident_id).home
+        and resident.takes_part(holiday=holiday, weekday=effective)
+        and resident.wants_climate_at(moment, weekday, holiday=holiday)
+        for resident in config.residents
     )
 
 

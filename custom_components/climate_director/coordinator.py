@@ -368,8 +368,9 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         does not want it still standing still this morning, and a twenty-four
         hour timer would do exactly that.
         """
-        if self._everyone_asleep():
+        if self._everyone_asleep() or self._house_is_empty():
             self._handed_back.clear()
+            self.zone_overrides.clear()
             return set()
 
         today = dt_util.now().date()
@@ -401,6 +402,24 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             and self._state_is(resident.sleep_entity, resident.sleep_state)
             for resident in at_home
         )
+
+    def _house_is_empty(self) -> bool:
+        """Return whether none of the tracked residents is home.
+
+        De noodknop van de beheerder hoort niet te blijven hangen. Is er niemand
+        meer, dan is het geval waarvoor hij hem omzette voorbij - en niets is zo
+        vervelend als thuiskomen in een huis dat al dagen niets doet omdat er ooit
+        een schakelaar aan bleef staan.
+
+        The administrator's emergency handle should not stay hanging. With nobody
+        left, the case it was thrown for is over - and nothing is as annoying as
+        coming home to a house that has done nothing for days because a switch
+        was once left on.
+        """
+        tracked = [resident for resident in self.config.residents if resident.presence_entity]
+        if not tracked:
+            return False
+        return not any(self._state_is(resident.presence_entity, "home") for resident in tracked)
 
     def _state_is(self, entity_id: str, wanted: str) -> bool:
         """Return whether that entity currently reads exactly that state."""

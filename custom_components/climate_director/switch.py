@@ -145,3 +145,17 @@ class ZoneOverrideSwitch(_DirectorSwitch):
 
     def _push(self) -> None:
         self.coordinator.zone_overrides[self._zone_id] = self._is_on
+
+    @property
+    def is_on(self) -> bool:
+        """Return the switch state, following the coordinator when it lets go.
+
+        De noodknop vervalt bij bedtijd en bij een leeg huis. Zou de schakelaar
+        zijn eigen stand houden, dan stond hij aan terwijl de zone allang weer
+        meedraait - en dan geloof je de schakelaar niet meer.
+
+        The emergency handle lapses at bedtime and on an empty house. Were the
+        switch to keep its own state it would read on while the zone has long
+        since rejoined - and then you stop believing the switch.
+        """
+        return self.coordinator.zone_overrides.get(self._zone_id, False)
