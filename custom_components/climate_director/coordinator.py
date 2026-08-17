@@ -368,9 +368,44 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         does not want it still standing still this morning, and a twenty-four
         hour timer would do exactly that.
         """
+        if self._everyone_asleep():
+            self._handed_back.clear()
+            return set()
+
         today = dt_util.now().date()
         self._handed_back = {zone: day for zone, day in self._handed_back.items() if day == today}
         return set(self._handed_back)
+
+    def _everyone_asleep(self) -> bool:
+        """Return whether everybody who is home has turned in.
+
+        Dan is de dag voorbij en hoort een zone die iemand met de hand stilzette
+        weer mee te doen - precies zoals de automatiseringen het deden. Wachten
+        tot middernacht zou de zone een paar uur langer stil houden dan iemand
+        bedoelde, en dat merk je pas de volgende ochtend.
+
+        The day is then over, and a zone somebody silenced by hand should join in
+        again - exactly as the automations did it. Waiting for midnight would
+        hold the zone still a few hours longer than anybody meant, and you only
+        notice that the next morning.
+        """
+        at_home = [
+            resident
+            for resident in self.config.residents
+            if resident.presence_entity and self._state_is(resident.presence_entity, "home")
+        ]
+        if not at_home:
+            return False
+        return all(
+            bool(resident.sleep_entity)
+            and self._state_is(resident.sleep_entity, resident.sleep_state)
+            for resident in at_home
+        )
+
+    def _state_is(self, entity_id: str, wanted: str) -> bool:
+        """Return whether that entity currently reads exactly that state."""
+        state = self.hass.states.get(entity_id)
+        return state is not None and state.state == wanted
 
     @callback
     def async_request_evaluation(self) -> None:
