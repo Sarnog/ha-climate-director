@@ -30,6 +30,14 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
 
 ## Could have
 
+- **De droogstand als eigen taak** — de engine leest `dry` wel (het telt als koelen), maar
+  kiest hem nooit: er wordt alleen `heat`, `cool`, `fan_only` en `off` aangestuurd. Wie bij
+  vochtig weer bewust ontvochtigt, moet dat nu naast de integratie doen. Een zone zou een
+  derde taak moeten kunnen hebben, met een eigen aan-/uitpunt op een
+  luchtvochtigheidssensor in plaats van op een thermometer — en met de hand aan te zetten
+  voor wie geen sensor heeft. Op een niet-simultaan circuit hoort `dry` bij de koelfamilie,
+  dus die kant is al geregeld.
+
 - **Meerdere binnensensoren per zone** — nu wijst een zone één entiteit aan. Meerdere
   sensoren met een keuze uit gemiddelde, laagste, hoogste of "de eerste die een waarde
   geeft" scheelt een handgemaakte template- of min/max-helper voor wie meerdere meters in
@@ -93,6 +101,14 @@ The history of what has already been built and changed is **not** here but in th
   fact, since most climate integrations do not expose that relationship.
 
 ## Could have
+
+- **Drying as a duty of its own** — the engine does read `dry` (it counts as cooling) but
+  never picks it: only `heat`, `cool`, `fan_only` and `off` are commanded. Anyone
+  deliberately dehumidifying in muggy weather has to do that beside the integration. A zone
+  should be able to carry a third duty, with its own switch-on point on a humidity sensor
+  rather than on a thermometer — and switchable by hand for those without such a sensor. On
+  a non-simultaneous circuit `dry` already belongs to the cooling family, so that side is
+  settled.
 
 - **Several indoor sensors per zone** — a zone currently names one entity. Several sensors
   with a choice of average, lowest, highest or "the first one reporting a value" saves a
