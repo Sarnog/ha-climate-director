@@ -95,10 +95,37 @@ def readable(hass: HomeAssistant, problem: str) -> str:
         return str(problem)
 
 
+async def async_prepare(hass: HomeAssistant) -> None:
+    """Load the texts before anyone asks for them.
+
+    `async_get_cached_translations` reads a cache and nothing more: is the
+    category never loaded, then it hands back an empty dictionary and every
+    complaint silently falls back to English. Loading is asynchronous and
+    looking up is not, so this has to happen at the two places that ask - once,
+    before the list is built.
+
+    `async_get_cached_translations` reads a cache and no more: if the category
+    was never loaded it returns an empty dictionary and every complaint quietly
+    falls back to English. Loading is asynchronous and looking up is not, so it
+    has to happen at the two places that ask - once, before the list is built.
+    """
+    await translation.async_load_integrations(hass, {DOMAIN})
+
+
 def _translated(hass: HomeAssistant, code: str) -> str | None:
-    """Return the translated template for one problem code, if there is one."""
-    key = f"component.{DOMAIN}.problems.{code}"
-    cached = translation.async_get_cached_translations(hass, hass.config.language, "problems")
+    """Return the translated template for one problem code, if there is one.
+
+    De meldingen wonen onder `exceptions`. Dat is geen willekeurige keuze: Home
+    Assistant valideert `strings.json` tegen een vast schema, en een zelf
+    verzonnen blok op het hoogste niveau wordt afgewezen - voor elke taal
+    tegelijk.
+
+    The complaints live under `exceptions`. That is not an arbitrary choice:
+    Home Assistant validates `strings.json` against a fixed schema, and a
+    self-invented top-level block is rejected - for every language at once.
+    """
+    key = f"component.{DOMAIN}.exceptions.{code}.message"
+    cached = translation.async_get_cached_translations(hass, hass.config.language, "exceptions")
     return cached.get(key)
 
 

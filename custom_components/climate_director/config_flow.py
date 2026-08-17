@@ -284,6 +284,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         """
         found = validate(config_from_dict(self._installation))
         if found and user_input is None:
+            await problems.async_prepare(self.hass)
             return self.async_show_form(
                 step_id="save",
                 data_schema=vol.Schema({vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row()}),

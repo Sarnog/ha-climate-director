@@ -57,6 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) ->
     coordinator = ClimateDirectorCoordinator(hass, entry)
     entry.runtime_data = coordinator
 
+    await problems.async_prepare(hass)
     found = problems.async_report(hass, entry.entry_id, entry.title, coordinator.config)
     if found:
         _LOGGER.warning(

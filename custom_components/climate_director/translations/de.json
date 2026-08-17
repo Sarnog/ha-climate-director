@@ -433,99 +433,6 @@
       "too_few": "Wähle mindestens zwei Geräte; eine Gruppe aus einem schließt nichts aus."
     }
   },
-  "entity": {
-    "sensor": {
-      "last_decision": {
-        "name": "Letzte Entscheidung"
-      },
-      "zone_source": {
-        "name": "Quelle {zone}"
-      },
-      "would_command": {
-        "name": "Würde {entity} ansteuern"
-      },
-      "mismatch": {
-        "name": "Abweichungen"
-      }
-    },
-    "binary_sensor": {
-      "zone_blocked": {
-        "name": "{zone} blockiert"
-      },
-      "stuck": {
-        "name": "Festgefahren"
-      }
-    },
-    "switch": {
-      "master": {
-        "name": "Director"
-      },
-      "holiday": {
-        "name": "Urlaubsplan"
-      },
-      "zone_override": {
-        "name": "Übersteuerung {zone}"
-      },
-      "guest": {
-        "name": "Gästemodus"
-      }
-    },
-    "number": {
-      "zone_priority": {
-        "name": "Priorität {zone}"
-      }
-    }
-  },
-  "issues": {
-    "invalid_config": {
-      "title": "Climate Director: {name} hat ein Konfigurationsproblem",
-      "description": "In dieser Anlage wurden {count} Problem(e) gefunden. Die Zonen, die stimmen, werden weiter geregelt; der Rest steht still, bis dies behoben ist.\n\n{problems}\n\nÖffne die Integration und wähle Konfigurieren, um sie zu korrigieren. Die vollständige Liste steht in der herunterladbaren Diagnose."
-    }
-  },
-  "services": {
-    "evaluate": {
-      "name": "Erneut entscheiden",
-      "description": "Berechnet den Plan jetzt neu, statt zu warten, bis sich eine verfolgte Entität ändert. Führt im Schattenmodus nichts zusätzlich aus.",
-      "fields": {
-        "entry_id": {
-          "name": "Anlage",
-          "description": "Welche Anlage neu berechnet wird. Leer lassen für alle."
-        }
-      }
-    },
-    "precondition": {
-      "name": "Vorheizen",
-      "description": "Heizt oder kühlt die genannten Räume schon vor der Rückkehr, auch wenn niemand zu Hause ist. Die Anforderung läuft von selbst ab und gilt nur in den eingestellten Zeiten.",
-      "fields": {
-        "entry_id": {
-          "name": "Anlage",
-          "description": "Welche Anlage gemeint ist. Leer lassen gilt für alle."
-        },
-        "zone_ids": {
-          "name": "Räume",
-          "description": "Welche Räume vorbereitet werden, mit ihrer Zonen-ID. Leer lassen gilt für das ganze Haus."
-        },
-        "minutes": {
-          "name": "Minuten",
-          "description": "Wie lange die Anforderung dauert. Mehr als das eingestellte Maximum wird gekürzt; leer lassen ergibt genau dieses Maximum."
-        }
-      }
-    },
-    "cancel_precondition": {
-      "name": "Vorheizen abbrechen",
-      "description": "Bricht eine laufende Vorheiz-Anforderung sofort ab.",
-      "fields": {
-        "entry_id": {
-          "name": "Anlage",
-          "description": "Welche Anlage gemeint ist. Leer lassen gilt für alle."
-        },
-        "zone_ids": {
-          "name": "Räume",
-          "description": "Welche Räume vorbereitet werden, mit ihrer Zonen-ID. Leer lassen gilt für das ganze Haus."
-        }
-      }
-    }
-  },
   "selector": {
     "zone_list": {
       "options": {
@@ -628,14 +535,126 @@
       }
     }
   },
-  "problems": {
-    "unit_in_no_zone": "{unit} hängt an Kreis {circuit}, steht aber in keiner Zone. Solange es läuft, hält es diesen Kreis auf seiner Aufgabe, und der Director kann es nicht ausschalten. Füge es als Quelle einer Zone hinzu.",
-    "zone_without_sources": "Zone {zone} hat überhaupt kein Gerät, es gibt also nichts zu steuern. Füge eine Quelle hinzu.",
-    "zone_without_sensor": "Zone {zone} hat keinen Innentemperatursensor und kann zu kalt nie von zu warm unterscheiden. Wähle einen Sensor, oder die Climate-Entität des Geräts selbst.",
-    "zone_presence_without_sensor": "Zone {zone} läuft auf Raumanwesenheit, hat aber keinen Anwesenheitssensor und kann daher nie laufen — auch nicht, um das Gerät auszuschalten. Wähle einen Sensor, oder stell sie auf den Haushalt zurück.",
-    "resident_without_presence": "Bewohner {resident} hat keinen Anwesenheitssensor und kann daher nie als zu Hause gelten. Wähle eine Person oder einen Device-Tracker.",
-    "shared_priority": "Die Zonen {first} und {second} haben beide Vorrang {priority} in Kreis {circuit}. An einem Außengerät überlässt das den Sieger dem Zufall; gib jeder eine eigene Zahl.",
-    "calendars_without_keyword": "Es sind Urlaubskalender eingestellt, aber kein Stichwort, also kann kein Termin den Urlaubsmodus einschalten. Trag das Wort ein, das ein Termin tragen muss, oder entferne die Kalender.",
-    "exclusive_overlap": "{first} und {second} schließen sich aus, gelten aber beide {overlap}. Die Gruppe fängt das ab, doch sie begegnen einander, statt sich schon durch ihre Außengrenzen auszuschließen. Gib ihnen angrenzende Grenzen, um sie endgültig zu trennen."
+  "entity": {
+    "sensor": {
+      "last_decision": {
+        "name": "Letzte Entscheidung"
+      },
+      "zone_source": {
+        "name": "Quelle {zone}"
+      },
+      "would_command": {
+        "name": "Würde {entity} ansteuern"
+      },
+      "mismatch": {
+        "name": "Abweichungen"
+      }
+    },
+    "binary_sensor": {
+      "zone_blocked": {
+        "name": "{zone} blockiert"
+      },
+      "zone_fallback": {
+        "name": "{zone} auf Ersatzgerät"
+      },
+      "stuck": {
+        "name": "Festgefahren"
+      }
+    },
+    "switch": {
+      "master": {
+        "name": "Director"
+      },
+      "holiday": {
+        "name": "Urlaubsplan"
+      },
+      "zone_override": {
+        "name": "Übersteuerung {zone}"
+      },
+      "guest": {
+        "name": "Gästemodus"
+      }
+    },
+    "number": {
+      "zone_priority": {
+        "name": "Priorität {zone}"
+      }
+    }
+  },
+  "issues": {
+    "invalid_config": {
+      "title": "Climate Director: {name} hat ein Konfigurationsproblem",
+      "description": "In dieser Anlage wurden {count} Problem(e) gefunden. Die Zonen, die stimmen, werden weiter geregelt; der Rest steht still, bis dies behoben ist.\n\n{problems}\n\nÖffne die Integration und wähle Konfigurieren, um sie zu korrigieren. Die vollständige Liste steht in der herunterladbaren Diagnose."
+    }
+  },
+  "exceptions": {
+    "unit_in_no_zone": {
+      "message": "{unit} hängt an Kreis {circuit}, steht aber in keiner Zone. Solange es läuft, hält es diesen Kreis auf seiner Aufgabe, und der Director kann es nicht ausschalten. Füge es als Quelle einer Zone hinzu."
+    },
+    "zone_without_sources": {
+      "message": "Zone {zone} hat überhaupt kein Gerät, es gibt also nichts zu steuern. Füge eine Quelle hinzu."
+    },
+    "zone_without_sensor": {
+      "message": "Zone {zone} hat keinen Innentemperatursensor und kann zu kalt nie von zu warm unterscheiden. Wähle einen Sensor, oder die Climate-Entität des Geräts selbst."
+    },
+    "zone_presence_without_sensor": {
+      "message": "Zone {zone} läuft auf Raumanwesenheit, hat aber keinen Anwesenheitssensor und kann daher nie laufen — auch nicht, um das Gerät auszuschalten. Wähle einen Sensor, oder stell sie auf den Haushalt zurück."
+    },
+    "resident_without_presence": {
+      "message": "Bewohner {resident} hat keinen Anwesenheitssensor und kann daher nie als zu Hause gelten. Wähle eine Person oder einen Device-Tracker."
+    },
+    "shared_priority": {
+      "message": "Die Zonen {first} und {second} haben beide Vorrang {priority} in Kreis {circuit}. An einem Außengerät überlässt das den Sieger dem Zufall; gib jeder eine eigene Zahl."
+    },
+    "calendars_without_keyword": {
+      "message": "Es sind Urlaubskalender eingestellt, aber kein Stichwort, also kann kein Termin den Urlaubsmodus einschalten. Trag das Wort ein, das ein Termin tragen muss, oder entferne die Kalender."
+    },
+    "exclusive_overlap": {
+      "message": "{first} und {second} schließen sich aus, gelten aber beide {overlap}. Die Gruppe fängt das ab, doch sie begegnen einander, statt sich schon durch ihre Außengrenzen auszuschließen. Gib ihnen angrenzende Grenzen, um sie endgültig zu trennen."
+    }
+  },
+  "services": {
+    "evaluate": {
+      "name": "Erneut entscheiden",
+      "description": "Berechnet den Plan jetzt neu, statt zu warten, bis sich eine verfolgte Entität ändert. Führt im Schattenmodus nichts zusätzlich aus.",
+      "fields": {
+        "entry_id": {
+          "name": "Anlage",
+          "description": "Welche Anlage neu berechnet wird. Leer lassen für alle."
+        }
+      }
+    },
+    "precondition": {
+      "name": "Vorheizen",
+      "description": "Heizt oder kühlt die genannten Räume schon vor der Rückkehr, auch wenn niemand zu Hause ist. Die Anforderung läuft von selbst ab und gilt nur in den eingestellten Zeiten.",
+      "fields": {
+        "entry_id": {
+          "name": "Anlage",
+          "description": "Welche Anlage gemeint ist. Leer lassen gilt für alle."
+        },
+        "zone_ids": {
+          "name": "Räume",
+          "description": "Welche Räume vorbereitet werden, mit ihrer Zonen-ID. Leer lassen gilt für das ganze Haus."
+        },
+        "minutes": {
+          "name": "Minuten",
+          "description": "Wie lange die Anforderung dauert. Mehr als das eingestellte Maximum wird gekürzt; leer lassen ergibt genau dieses Maximum."
+        }
+      }
+    },
+    "cancel_precondition": {
+      "name": "Vorheizen abbrechen",
+      "description": "Bricht eine laufende Vorheiz-Anforderung sofort ab.",
+      "fields": {
+        "entry_id": {
+          "name": "Anlage",
+          "description": "Welche Anlage gemeint ist. Leer lassen gilt für alle."
+        },
+        "zone_ids": {
+          "name": "Räume",
+          "description": "Welche Räume vorbereitet werden, mit ihrer Zonen-ID. Leer lassen gilt für das ganze Haus."
+        }
+      }
+    }
   }
 }

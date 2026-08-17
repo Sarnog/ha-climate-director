@@ -433,99 +433,6 @@
       "too_few": "Kies minstens twee apparaten; een groep van één sluit niets uit."
     }
   },
-  "entity": {
-    "sensor": {
-      "last_decision": {
-        "name": "Laatste beslissing"
-      },
-      "zone_source": {
-        "name": "Bron {zone}"
-      },
-      "would_command": {
-        "name": "Zou {entity} aansturen"
-      },
-      "mismatch": {
-        "name": "Afwijkingen"
-      }
-    },
-    "binary_sensor": {
-      "zone_blocked": {
-        "name": "{zone} geblokkeerd"
-      },
-      "stuck": {
-        "name": "Vastgelopen"
-      }
-    },
-    "switch": {
-      "master": {
-        "name": "Director"
-      },
-      "holiday": {
-        "name": "Vakantieschema"
-      },
-      "zone_override": {
-        "name": "Override {zone}"
-      },
-      "guest": {
-        "name": "Gastenmodus"
-      }
-    },
-    "number": {
-      "zone_priority": {
-        "name": "Prioriteit {zone}"
-      }
-    }
-  },
-  "issues": {
-    "invalid_config": {
-      "title": "Climate Director: {name} heeft een configuratieprobleem",
-      "description": "Er zijn {count} probleem(en) gevonden in deze installatie. De zones die wél kloppen worden gewoon geregeld; de rest staat stil tot dit opgelost is.\n\n{problems}\n\nOpen de integratie en kies Configureren om ze te corrigeren. De volledige lijst staat in de downloadbare diagnose."
-    }
-  },
-  "services": {
-    "evaluate": {
-      "name": "Opnieuw beslissen",
-      "description": "Berekent het plan nu opnieuw, in plaats van te wachten tot een gevolgde entiteit verandert. Voert in schaduwmodus niets extra's uit.",
-      "fields": {
-        "entry_id": {
-          "name": "Installatie",
-          "description": "Welke installatie opnieuw berekend wordt. Laat leeg voor allemaal."
-        }
-      }
-    },
-    "precondition": {
-      "name": "Vooruit verwarmen",
-      "description": "Verwarmt of koelt de opgegeven ruimtes alvast voor wie onderweg is, ook als er niemand thuis is. Het verzoek verloopt vanzelf en telt alleen binnen de ingestelde tijden.",
-      "fields": {
-        "entry_id": {
-          "name": "Installatie",
-          "description": "Welke installatie het betreft. Leeg laten geldt voor allemaal."
-        },
-        "zone_ids": {
-          "name": "Ruimtes",
-          "description": "Welke ruimtes vast op temperatuur moeten, met hun zone-id. Leeg laten geldt voor het hele huis."
-        },
-        "minutes": {
-          "name": "Minuten",
-          "description": "Hoe lang het verzoek duurt. Vraag je langer dan het ingestelde maximum, dan wordt het ingekort; laat je het leeg, dan krijg je dat maximum."
-        }
-      }
-    },
-    "cancel_precondition": {
-      "name": "Vooruit verwarmen afbreken",
-      "description": "Blaast een lopend vooruitverwarm-verzoek meteen af.",
-      "fields": {
-        "entry_id": {
-          "name": "Installatie",
-          "description": "Welke installatie het betreft. Leeg laten geldt voor allemaal."
-        },
-        "zone_ids": {
-          "name": "Ruimtes",
-          "description": "Welke ruimtes vast op temperatuur moeten, met hun zone-id. Leeg laten geldt voor het hele huis."
-        }
-      }
-    }
-  },
   "selector": {
     "zone_list": {
       "options": {
@@ -628,14 +535,126 @@
       }
     }
   },
-  "problems": {
-    "unit_in_no_zone": "{unit} hangt aan circuit {circuit} maar staat in geen enkele zone. Zolang hij draait houdt hij dat circuit op zijn taak, en de director kan hem niet uitzetten. Voeg hem toe als bron van een zone.",
-    "zone_without_sources": "Zone {zone} heeft helemaal geen apparaat, dus er valt niets aan te sturen. Voeg een bron toe.",
-    "zone_without_sensor": "Zone {zone} heeft geen binnentemperatuursensor, dus hij kan te koud nooit van te warm onderscheiden. Kies een sensor, of de climate-entiteit van het apparaat zelf.",
-    "zone_presence_without_sensor": "Zone {zone} draait op aanwezigheid in de ruimte maar heeft geen aanwezigheidssensor, dus hij kan nooit draaien — ook niet om het apparaat uit te zetten. Kies een sensor, of zet hem terug op het huishouden.",
-    "resident_without_presence": "Bewoner {resident} heeft geen aanwezigheidssensor, dus die kan nooit als thuis tellen. Kies een persoon of device tracker.",
-    "shared_priority": "Zones {first} en {second} hebben allebei voorrang {priority} op circuit {circuit}. Op één buitenunit laat dat de winnaar aan het toeval over; geef ze elk een eigen nummer.",
-    "calendars_without_keyword": "Er staan vakantieagenda's ingesteld maar geen trefwoord, dus geen enkel item kan de vakantiemodus aanzetten. Vul het woord in dat een item moet dragen, of haal de agenda's weg.",
-    "exclusive_overlap": "{first} en {second} sluiten elkaar uit maar gelden allebei {overlap}. De groep vangt dat op, maar ze komen elkaar tegen in plaats van elkaar door hun buitengrenzen al uit te sluiten. Geef ze aansluitende grenzen om ze definitief uit elkaar te houden."
+  "entity": {
+    "sensor": {
+      "last_decision": {
+        "name": "Laatste beslissing"
+      },
+      "zone_source": {
+        "name": "Bron {zone}"
+      },
+      "would_command": {
+        "name": "Zou {entity} aansturen"
+      },
+      "mismatch": {
+        "name": "Afwijkingen"
+      }
+    },
+    "binary_sensor": {
+      "zone_blocked": {
+        "name": "{zone} geblokkeerd"
+      },
+      "zone_fallback": {
+        "name": "{zone} op reserve"
+      },
+      "stuck": {
+        "name": "Vastgelopen"
+      }
+    },
+    "switch": {
+      "master": {
+        "name": "Director"
+      },
+      "holiday": {
+        "name": "Vakantieschema"
+      },
+      "zone_override": {
+        "name": "Override {zone}"
+      },
+      "guest": {
+        "name": "Gastenmodus"
+      }
+    },
+    "number": {
+      "zone_priority": {
+        "name": "Prioriteit {zone}"
+      }
+    }
+  },
+  "issues": {
+    "invalid_config": {
+      "title": "Climate Director: {name} heeft een configuratieprobleem",
+      "description": "Er zijn {count} probleem(en) gevonden in deze installatie. De zones die wél kloppen worden gewoon geregeld; de rest staat stil tot dit opgelost is.\n\n{problems}\n\nOpen de integratie en kies Configureren om ze te corrigeren. De volledige lijst staat in de downloadbare diagnose."
+    }
+  },
+  "exceptions": {
+    "unit_in_no_zone": {
+      "message": "{unit} hangt aan circuit {circuit} maar staat in geen enkele zone. Zolang hij draait houdt hij dat circuit op zijn taak, en de director kan hem niet uitzetten. Voeg hem toe als bron van een zone."
+    },
+    "zone_without_sources": {
+      "message": "Zone {zone} heeft helemaal geen apparaat, dus er valt niets aan te sturen. Voeg een bron toe."
+    },
+    "zone_without_sensor": {
+      "message": "Zone {zone} heeft geen binnentemperatuursensor, dus hij kan te koud nooit van te warm onderscheiden. Kies een sensor, of de climate-entiteit van het apparaat zelf."
+    },
+    "zone_presence_without_sensor": {
+      "message": "Zone {zone} draait op aanwezigheid in de ruimte maar heeft geen aanwezigheidssensor, dus hij kan nooit draaien — ook niet om het apparaat uit te zetten. Kies een sensor, of zet hem terug op het huishouden."
+    },
+    "resident_without_presence": {
+      "message": "Bewoner {resident} heeft geen aanwezigheidssensor, dus die kan nooit als thuis tellen. Kies een persoon of device tracker."
+    },
+    "shared_priority": {
+      "message": "Zones {first} en {second} hebben allebei voorrang {priority} op circuit {circuit}. Op één buitenunit laat dat de winnaar aan het toeval over; geef ze elk een eigen nummer."
+    },
+    "calendars_without_keyword": {
+      "message": "Er staan vakantieagenda's ingesteld maar geen trefwoord, dus geen enkel item kan de vakantiemodus aanzetten. Vul het woord in dat een item moet dragen, of haal de agenda's weg."
+    },
+    "exclusive_overlap": {
+      "message": "{first} en {second} sluiten elkaar uit maar gelden allebei {overlap}. De groep vangt dat op, maar ze komen elkaar tegen in plaats van elkaar door hun buitengrenzen al uit te sluiten. Geef ze aansluitende grenzen om ze definitief uit elkaar te houden."
+    }
+  },
+  "services": {
+    "evaluate": {
+      "name": "Opnieuw beslissen",
+      "description": "Berekent het plan nu opnieuw, in plaats van te wachten tot een gevolgde entiteit verandert. Voert in schaduwmodus niets extra's uit.",
+      "fields": {
+        "entry_id": {
+          "name": "Installatie",
+          "description": "Welke installatie opnieuw berekend wordt. Laat leeg voor allemaal."
+        }
+      }
+    },
+    "precondition": {
+      "name": "Vooruit verwarmen",
+      "description": "Verwarmt of koelt de opgegeven ruimtes alvast voor wie onderweg is, ook als er niemand thuis is. Het verzoek verloopt vanzelf en telt alleen binnen de ingestelde tijden.",
+      "fields": {
+        "entry_id": {
+          "name": "Installatie",
+          "description": "Welke installatie het betreft. Leeg laten geldt voor allemaal."
+        },
+        "zone_ids": {
+          "name": "Ruimtes",
+          "description": "Welke ruimtes vast op temperatuur moeten, met hun zone-id. Leeg laten geldt voor het hele huis."
+        },
+        "minutes": {
+          "name": "Minuten",
+          "description": "Hoe lang het verzoek duurt. Vraag je langer dan het ingestelde maximum, dan wordt het ingekort; laat je het leeg, dan krijg je dat maximum."
+        }
+      }
+    },
+    "cancel_precondition": {
+      "name": "Vooruit verwarmen afbreken",
+      "description": "Blaast een lopend vooruitverwarm-verzoek meteen af.",
+      "fields": {
+        "entry_id": {
+          "name": "Installatie",
+          "description": "Welke installatie het betreft. Leeg laten geldt voor allemaal."
+        },
+        "zone_ids": {
+          "name": "Ruimtes",
+          "description": "Welke ruimtes vast op temperatuur moeten, met hun zone-id. Leeg laten geldt voor het hele huis."
+        }
+      }
+    }
   }
 }

@@ -433,99 +433,6 @@
       "too_few": "Pick at least two appliances; a group of one rules nothing out."
     }
   },
-  "entity": {
-    "sensor": {
-      "last_decision": {
-        "name": "Last decision"
-      },
-      "zone_source": {
-        "name": "{zone} source"
-      },
-      "would_command": {
-        "name": "Would command {entity}"
-      },
-      "mismatch": {
-        "name": "Mismatch"
-      }
-    },
-    "binary_sensor": {
-      "zone_blocked": {
-        "name": "{zone} blocked"
-      },
-      "stuck": {
-        "name": "Stuck"
-      }
-    },
-    "switch": {
-      "master": {
-        "name": "Director"
-      },
-      "holiday": {
-        "name": "Holiday schedule"
-      },
-      "zone_override": {
-        "name": "{zone} override"
-      },
-      "guest": {
-        "name": "Guest mode"
-      }
-    },
-    "number": {
-      "zone_priority": {
-        "name": "{zone} priority"
-      }
-    }
-  },
-  "issues": {
-    "invalid_config": {
-      "title": "Climate Director: {name} has a configuration problem",
-      "description": "{count} problem(s) were found in this installation. The zones that are sound carry on being regulated; the rest stand down until this is fixed.\n\n{problems}\n\nOpen the integration and choose Configure to correct them. The full list is in the downloadable diagnostics."
-    }
-  },
-  "services": {
-    "evaluate": {
-      "name": "Decide again",
-      "description": "Recompute the plan right now, instead of waiting for a tracked entity to change. Executes nothing extra in shadow mode.",
-      "fields": {
-        "entry_id": {
-          "name": "Installation",
-          "description": "Which installation to recompute. Leave empty for all of them."
-        }
-      }
-    },
-    "precondition": {
-      "name": "Pre-condition",
-      "description": "Warms or cools the named rooms ahead of somebody's return, even with nobody home. The request expires by itself and only counts inside the configured hours.",
-      "fields": {
-        "entry_id": {
-          "name": "Installation",
-          "description": "Which installation to act on. Leave empty for all of them."
-        },
-        "zone_ids": {
-          "name": "Rooms",
-          "description": "Which rooms to warm up, by their zone id. Leave empty for the whole house."
-        },
-        "minutes": {
-          "name": "Minutes",
-          "description": "How long the request lasts. Asking for longer than the configured maximum shortens it; leaving it empty gives you that maximum."
-        }
-      }
-    },
-    "cancel_precondition": {
-      "name": "Cancel pre-conditioning",
-      "description": "Calls a running pre-conditioning request off straight away.",
-      "fields": {
-        "entry_id": {
-          "name": "Installation",
-          "description": "Which installation to act on. Leave empty for all of them."
-        },
-        "zone_ids": {
-          "name": "Rooms",
-          "description": "Which rooms to warm up, by their zone id. Leave empty for the whole house."
-        }
-      }
-    }
-  },
   "selector": {
     "zone_list": {
       "options": {
@@ -628,14 +535,126 @@
       }
     }
   },
-  "problems": {
-    "unit_in_no_zone": "{unit} hangs on circuit {circuit} but is in no zone. While it runs it holds that circuit to its duty, and the director cannot switch it off. Add it as a source of a zone.",
-    "zone_without_sources": "Zone {zone} has no appliance at all, so there is nothing to steer. Add a source.",
-    "zone_without_sensor": "Zone {zone} has no indoor temperature sensor, so it can never tell too cold from too warm. Pick a sensor, or the appliance's own climate entity.",
-    "zone_presence_without_sensor": "Zone {zone} runs on room presence but has no presence sensor, so it can never run — not even to switch the appliance off. Pick a sensor, or set it back to the household.",
-    "resident_without_presence": "Resident {resident} has no presence sensor, so they can never count as home. Pick a person or device tracker.",
-    "shared_priority": "Zones {first} and {second} both hold priority {priority} on circuit {circuit}. On one outdoor unit that leaves the winner to chance; give each its own number.",
-    "calendars_without_keyword": "Holiday calendars are set but no keyword is, so no event can ever switch holiday mode on. Fill in the word an event must carry, or clear the calendars.",
-    "exclusive_overlap": "{first} and {second} are exclusive but both apply {overlap}. The group does catch it, but they meet rather than ruling each other out by their outdoor bounds. Give them adjacent bounds to keep them apart for good."
+  "entity": {
+    "sensor": {
+      "last_decision": {
+        "name": "Last decision"
+      },
+      "zone_source": {
+        "name": "{zone} source"
+      },
+      "would_command": {
+        "name": "Would command {entity}"
+      },
+      "mismatch": {
+        "name": "Mismatch"
+      }
+    },
+    "binary_sensor": {
+      "zone_blocked": {
+        "name": "{zone} blocked"
+      },
+      "zone_fallback": {
+        "name": "{zone} on stand-in"
+      },
+      "stuck": {
+        "name": "Stuck"
+      }
+    },
+    "switch": {
+      "master": {
+        "name": "Director"
+      },
+      "holiday": {
+        "name": "Holiday schedule"
+      },
+      "zone_override": {
+        "name": "{zone} override"
+      },
+      "guest": {
+        "name": "Guest mode"
+      }
+    },
+    "number": {
+      "zone_priority": {
+        "name": "{zone} priority"
+      }
+    }
+  },
+  "issues": {
+    "invalid_config": {
+      "title": "Climate Director: {name} has a configuration problem",
+      "description": "{count} problem(s) were found in this installation. The zones that are sound carry on being regulated; the rest stand down until this is fixed.\n\n{problems}\n\nOpen the integration and choose Configure to correct them. The full list is in the downloadable diagnostics."
+    }
+  },
+  "exceptions": {
+    "unit_in_no_zone": {
+      "message": "{unit} hangs on circuit {circuit} but is in no zone. While it runs it holds that circuit to its duty, and the director cannot switch it off. Add it as a source of a zone."
+    },
+    "zone_without_sources": {
+      "message": "Zone {zone} has no appliance at all, so there is nothing to steer. Add a source."
+    },
+    "zone_without_sensor": {
+      "message": "Zone {zone} has no indoor temperature sensor, so it can never tell too cold from too warm. Pick a sensor, or the appliance's own climate entity."
+    },
+    "zone_presence_without_sensor": {
+      "message": "Zone {zone} runs on room presence but has no presence sensor, so it can never run — not even to switch the appliance off. Pick a sensor, or set it back to the household."
+    },
+    "resident_without_presence": {
+      "message": "Resident {resident} has no presence sensor, so they can never count as home. Pick a person or device tracker."
+    },
+    "shared_priority": {
+      "message": "Zones {first} and {second} both hold priority {priority} on circuit {circuit}. On one outdoor unit that leaves the winner to chance; give each its own number."
+    },
+    "calendars_without_keyword": {
+      "message": "Holiday calendars are set but no keyword is, so no event can ever switch holiday mode on. Fill in the word an event must carry, or clear the calendars."
+    },
+    "exclusive_overlap": {
+      "message": "{first} and {second} are exclusive but both apply {overlap}. The group does catch it, but they meet rather than ruling each other out by their outdoor bounds. Give them adjacent bounds to keep them apart for good."
+    }
+  },
+  "services": {
+    "evaluate": {
+      "name": "Decide again",
+      "description": "Recompute the plan right now, instead of waiting for a tracked entity to change. Executes nothing extra in shadow mode.",
+      "fields": {
+        "entry_id": {
+          "name": "Installation",
+          "description": "Which installation to recompute. Leave empty for all of them."
+        }
+      }
+    },
+    "precondition": {
+      "name": "Pre-condition",
+      "description": "Warms or cools the named rooms ahead of somebody's return, even with nobody home. The request expires by itself and only counts inside the configured hours.",
+      "fields": {
+        "entry_id": {
+          "name": "Installation",
+          "description": "Which installation to act on. Leave empty for all of them."
+        },
+        "zone_ids": {
+          "name": "Rooms",
+          "description": "Which rooms to warm up, by their zone id. Leave empty for the whole house."
+        },
+        "minutes": {
+          "name": "Minutes",
+          "description": "How long the request lasts. Asking for longer than the configured maximum shortens it; leaving it empty gives you that maximum."
+        }
+      }
+    },
+    "cancel_precondition": {
+      "name": "Cancel pre-conditioning",
+      "description": "Calls a running pre-conditioning request off straight away.",
+      "fields": {
+        "entry_id": {
+          "name": "Installation",
+          "description": "Which installation to act on. Leave empty for all of them."
+        },
+        "zone_ids": {
+          "name": "Rooms",
+          "description": "Which rooms to warm up, by their zone id. Leave empty for the whole house."
+        }
+      }
+    }
   }
 }

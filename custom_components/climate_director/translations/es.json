@@ -433,99 +433,6 @@
       "too_few": "Elige al menos dos aparatos; un grupo de uno no excluye nada."
     }
   },
-  "entity": {
-    "sensor": {
-      "last_decision": {
-        "name": "Última decisión"
-      },
-      "zone_source": {
-        "name": "Fuente {zone}"
-      },
-      "would_command": {
-        "name": "Gobernaría {entity}"
-      },
-      "mismatch": {
-        "name": "Discrepancias"
-      }
-    },
-    "binary_sensor": {
-      "zone_blocked": {
-        "name": "{zone} bloqueada"
-      },
-      "stuck": {
-        "name": "Atascado"
-      }
-    },
-    "switch": {
-      "master": {
-        "name": "Director"
-      },
-      "holiday": {
-        "name": "Horario de vacaciones"
-      },
-      "zone_override": {
-        "name": "Anulación {zone}"
-      },
-      "guest": {
-        "name": "Modo invitados"
-      }
-    },
-    "number": {
-      "zone_priority": {
-        "name": "Prioridad {zone}"
-      }
-    }
-  },
-  "issues": {
-    "invalid_config": {
-      "title": "Climate Director: {name} tiene un problema de configuración",
-      "description": "Se han encontrado {count} problema(s) en esta instalación. Las zonas correctas se siguen regulando; el resto queda parado hasta que se arregle.\n\n{problems}\n\nAbre la integración y elige Configurar para corregirlos. La lista completa está en el diagnóstico descargable."
-    }
-  },
-  "services": {
-    "evaluate": {
-      "name": "Decidir de nuevo",
-      "description": "Recalcula el plan ahora mismo, en vez de esperar a que cambie una entidad seguida. En modo sombra no ejecuta nada adicional.",
-      "fields": {
-        "entry_id": {
-          "name": "Instalación",
-          "description": "Qué instalación recalcular. Déjalo vacío para todas."
-        }
-      }
-    },
-    "precondition": {
-      "name": "Preacondicionar",
-      "description": "Calienta o enfría las habitaciones indicadas antes de que alguien vuelva, aunque no haya nadie en casa. La petición caduca sola y solo cuenta dentro de las horas configuradas.",
-      "fields": {
-        "entry_id": {
-          "name": "Instalación",
-          "description": "A qué instalación se refiere. Dejarlo vacío vale para todas."
-        },
-        "zone_ids": {
-          "name": "Habitaciones",
-          "description": "Qué habitaciones preparar, por su identificador de zona. Dejarlo vacío vale para toda la casa."
-        },
-        "minutes": {
-          "name": "Minutos",
-          "description": "Cuánto dura la petición. Pedir más del máximo configurado la acorta; dejarlo vacío da ese máximo."
-        }
-      }
-    },
-    "cancel_precondition": {
-      "name": "Cancelar el preacondicionamiento",
-      "description": "Interrumpe de inmediato una petición en curso.",
-      "fields": {
-        "entry_id": {
-          "name": "Instalación",
-          "description": "A qué instalación se refiere. Dejarlo vacío vale para todas."
-        },
-        "zone_ids": {
-          "name": "Habitaciones",
-          "description": "Qué habitaciones preparar, por su identificador de zona. Dejarlo vacío vale para toda la casa."
-        }
-      }
-    }
-  },
   "selector": {
     "zone_list": {
       "options": {
@@ -628,14 +535,126 @@
       }
     }
   },
-  "problems": {
-    "unit_in_no_zone": "{unit} cuelga del circuito {circuit} pero no está en ninguna zona. Mientras funciona mantiene ese circuito en su tarea, y el director no puede apagarlo. Añádelo como fuente de una zona.",
-    "zone_without_sources": "La zona {zone} no tiene ningún aparato, así que no hay nada que gobernar. Añade una fuente.",
-    "zone_without_sensor": "La zona {zone} no tiene sensor de temperatura interior, así que nunca puede distinguir demasiado frío de demasiado calor. Elige un sensor, o la entidad climate del propio aparato.",
-    "zone_presence_without_sensor": "La zona {zone} funciona por presencia en la habitación pero no tiene sensor de presencia, así que nunca puede funcionar, ni siquiera para apagar el aparato. Elige un sensor, o vuelve a ponerla en el hogar.",
-    "resident_without_presence": "El residente {resident} no tiene sensor de presencia, así que nunca puede contar como en casa. Elige una persona o un rastreador de dispositivo.",
-    "shared_priority": "Las zonas {first} y {second} tienen ambas la prioridad {priority} en el circuito {circuit}. En una unidad exterior eso deja el ganador al azar; da a cada una su propio número.",
-    "calendars_without_keyword": "Hay calendarios de vacaciones configurados pero ninguna palabra clave, así que ningún evento puede activar el modo vacaciones. Escribe la palabra que debe llevar un evento, o quita los calendarios.",
-    "exclusive_overlap": "{first} y {second} se excluyen pero ambos aplican {overlap}. El grupo lo recoge, pero se encuentran en lugar de excluirse ya por sus límites exteriores. Dales límites contiguos para separarlos del todo."
+  "entity": {
+    "sensor": {
+      "last_decision": {
+        "name": "Última decisión"
+      },
+      "zone_source": {
+        "name": "Fuente {zone}"
+      },
+      "would_command": {
+        "name": "Gobernaría {entity}"
+      },
+      "mismatch": {
+        "name": "Discrepancias"
+      }
+    },
+    "binary_sensor": {
+      "zone_blocked": {
+        "name": "{zone} bloqueada"
+      },
+      "zone_fallback": {
+        "name": "{zone} en equipo suplente"
+      },
+      "stuck": {
+        "name": "Atascado"
+      }
+    },
+    "switch": {
+      "master": {
+        "name": "Director"
+      },
+      "holiday": {
+        "name": "Horario de vacaciones"
+      },
+      "zone_override": {
+        "name": "Anulación {zone}"
+      },
+      "guest": {
+        "name": "Modo invitados"
+      }
+    },
+    "number": {
+      "zone_priority": {
+        "name": "Prioridad {zone}"
+      }
+    }
+  },
+  "issues": {
+    "invalid_config": {
+      "title": "Climate Director: {name} tiene un problema de configuración",
+      "description": "Se han encontrado {count} problema(s) en esta instalación. Las zonas correctas se siguen regulando; el resto queda parado hasta que se arregle.\n\n{problems}\n\nAbre la integración y elige Configurar para corregirlos. La lista completa está en el diagnóstico descargable."
+    }
+  },
+  "exceptions": {
+    "unit_in_no_zone": {
+      "message": "{unit} cuelga del circuito {circuit} pero no está en ninguna zona. Mientras funciona mantiene ese circuito en su tarea, y el director no puede apagarlo. Añádelo como fuente de una zona."
+    },
+    "zone_without_sources": {
+      "message": "La zona {zone} no tiene ningún aparato, así que no hay nada que gobernar. Añade una fuente."
+    },
+    "zone_without_sensor": {
+      "message": "La zona {zone} no tiene sensor de temperatura interior, así que nunca puede distinguir demasiado frío de demasiado calor. Elige un sensor, o la entidad climate del propio aparato."
+    },
+    "zone_presence_without_sensor": {
+      "message": "La zona {zone} funciona por presencia en la habitación pero no tiene sensor de presencia, así que nunca puede funcionar, ni siquiera para apagar el aparato. Elige un sensor, o vuelve a ponerla en el hogar."
+    },
+    "resident_without_presence": {
+      "message": "El residente {resident} no tiene sensor de presencia, así que nunca puede contar como en casa. Elige una persona o un rastreador de dispositivo."
+    },
+    "shared_priority": {
+      "message": "Las zonas {first} y {second} tienen ambas la prioridad {priority} en el circuito {circuit}. En una unidad exterior eso deja el ganador al azar; da a cada una su propio número."
+    },
+    "calendars_without_keyword": {
+      "message": "Hay calendarios de vacaciones configurados pero ninguna palabra clave, así que ningún evento puede activar el modo vacaciones. Escribe la palabra que debe llevar un evento, o quita los calendarios."
+    },
+    "exclusive_overlap": {
+      "message": "{first} y {second} se excluyen pero ambos aplican {overlap}. El grupo lo recoge, pero se encuentran en lugar de excluirse ya por sus límites exteriores. Dales límites contiguos para separarlos del todo."
+    }
+  },
+  "services": {
+    "evaluate": {
+      "name": "Decidir de nuevo",
+      "description": "Recalcula el plan ahora mismo, en vez de esperar a que cambie una entidad seguida. En modo sombra no ejecuta nada adicional.",
+      "fields": {
+        "entry_id": {
+          "name": "Instalación",
+          "description": "Qué instalación recalcular. Déjalo vacío para todas."
+        }
+      }
+    },
+    "precondition": {
+      "name": "Preacondicionar",
+      "description": "Calienta o enfría las habitaciones indicadas antes de que alguien vuelva, aunque no haya nadie en casa. La petición caduca sola y solo cuenta dentro de las horas configuradas.",
+      "fields": {
+        "entry_id": {
+          "name": "Instalación",
+          "description": "A qué instalación se refiere. Dejarlo vacío vale para todas."
+        },
+        "zone_ids": {
+          "name": "Habitaciones",
+          "description": "Qué habitaciones preparar, por su identificador de zona. Dejarlo vacío vale para toda la casa."
+        },
+        "minutes": {
+          "name": "Minutos",
+          "description": "Cuánto dura la petición. Pedir más del máximo configurado la acorta; dejarlo vacío da ese máximo."
+        }
+      }
+    },
+    "cancel_precondition": {
+      "name": "Cancelar el preacondicionamiento",
+      "description": "Interrumpe de inmediato una petición en curso.",
+      "fields": {
+        "entry_id": {
+          "name": "Instalación",
+          "description": "A qué instalación se refiere. Dejarlo vacío vale para todas."
+        },
+        "zone_ids": {
+          "name": "Habitaciones",
+          "description": "Qué habitaciones preparar, por su identificador de zona. Dejarlo vacío vale para toda la casa."
+        }
+      }
+    }
   }
 }

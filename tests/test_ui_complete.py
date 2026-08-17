@@ -36,6 +36,16 @@ def translation_files() -> list[pathlib.Path]:
     return [COMPONENT / "strings.json", *sorted((COMPONENT / "translations").glob("*.json"))]
 
 
+def _flatten(data: object, prefix: str = "") -> dict[str, object]:
+    """Return one translation tree as a flat {dotted key: text} mapping."""
+    if not isinstance(data, dict):
+        return {prefix: data}
+    found: dict[str, object] = {}
+    for key, value in data.items():
+        found.update(_flatten(value, f"{prefix}.{key}" if prefix else key))
+    return found
+
+
 def load(path: pathlib.Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -477,18 +487,30 @@ class TestProblemsAreTranslatable:
     def test_the_engine_emits_codes(self) -> None:
         assert len(self._codes()) >= 8
 
+    def _texts(self, path: pathlib.Path) -> dict[str, str]:
+        """Return the complaint templates of one file, keyed by code.
+
+        Ze wonen onder `exceptions`, in de vorm die Home Assistant voorschrijft:
+        een blok per code met daarin `message`. Een zelf verzonnen blok op het
+        hoogste niveau wordt door hassfest afgewezen.
+
+        They live under `exceptions`, in the shape Home Assistant prescribes: a
+        block per code holding `message`. A self-invented top-level block is
+        rejected by hassfest.
+        """
+        block = load(path).get("exceptions", {})
+        return {code: entry.get("message", "") for code, entry in block.items()}
+
     @pytest.mark.parametrize("path", FILES, ids=IDS)
     def test_every_code_is_translated(self, path: pathlib.Path) -> None:
-        texts = load(path).get("problems", {})
-        missing = sorted(self._codes() - set(texts))
+        missing = sorted(self._codes() - set(self._texts(path)))
         assert not missing, missing
 
     @pytest.mark.parametrize("path", FILES, ids=IDS)
     def test_the_placeholders_line_up(self, path: pathlib.Path) -> None:
         """A template naming a placeholder the engine never passes renders raw."""
-        english = load(COMPONENT / "translations" / "en.json").get("problems", {})
-        texts = load(path).get("problems", {})
-        for code, template in texts.items():
+        english = self._texts(COMPONENT / "translations" / "en.json")
+        for code, template in self._texts(path).items():
             expected = set(re.findall(r"\{(\w+)\}", english.get(code, "")))
             assert set(re.findall(r"\{(\w+)\}", template)) == expected, code
 
@@ -501,3 +523,98 @@ class TestProblemsAreTranslatable:
         assert "no sources" in item
         assert item.code == "zone_without_sources"
         assert item.params == {"zone": "z"}
+
+
+#: De sleutels die Home Assistant op het hoogste niveau van een vertaalbestand
+#: toestaat. Staat er iets anders, dan wijst hassfest het bestand af - en niet
+#: een beetje: de hele integratie zakt door de controle, voor elke taal
+#: tegelijk. Deze lijst komt uit het schema van HA zelf.
+#:
+#: The keys Home Assistant allows at the top level of a translation file.
+#: Anything else and hassfest rejects the file - and not by halves: the whole
+#: integration fails validation, for every language at once. This list comes
+#: from HA's own schema.
+ALLOWED_TOP_LEVEL = frozenset(
+    {
+        "title",
+        "config",
+        "config_subentries",
+        "config_panel",
+        "options",
+        "device_automation",
+        "issues",
+        "entity",
+        "entity_component",
+        "device",
+        "exceptions",
+        "services",
+        "selector",
+        "triggers",
+        "conditions",
+        "common",
+        "application_credentials",
+        "system_health",
+        "conversation",
+    }
+)
+
+
+class TestEveryLanguageStandsUp:
+    """Wat voor Nederlands en Engels geldt, geldt voor elke taal.
+
+    Er zijn er nu zes en er komen er meer bij. Een taal die een sleutel mist
+    valt in het Engels terug - vervelend maar te overzien. Een taal met een
+    sleutel die niet bestaat, of een verzonnen blok bovenin, laat hassfest
+    struikelen en dan is de héle integratie afgekeurd. Deze tests draaien over
+    alles wat in `translations/` staat, dus een nieuwe taal doet vanzelf mee.
+
+    What holds for Dutch and English holds for every language. There are six now
+    and more are coming. A language missing a key falls back to English -
+    annoying but survivable. A language with a key that does not exist, or an
+    invented block at the top, trips hassfest, and then the whole integration is
+    rejected. These tests run over everything in `translations/`, so a new
+    language joins in by itself.
+    """
+
+    @pytest.mark.parametrize("path", FILES, ids=IDS)
+    def test_no_invented_block_at_the_top(self, path: pathlib.Path) -> None:
+        unknown = sorted(set(load(path)) - ALLOWED_TOP_LEVEL)
+        assert not unknown, f"{path.name}: {unknown}"
+
+    @pytest.mark.parametrize("path", FILES, ids=IDS)
+    def test_the_same_keys_as_the_source(self, path: pathlib.Path) -> None:
+        """Every language carries exactly what strings.json describes."""
+        source = set(_flatten(load(COMPONENT / "strings.json")))
+        here = set(_flatten(load(path)))
+        assert not sorted(source - here), f"{path.name} mist: {sorted(source - here)}"
+        assert not sorted(here - source), f"{path.name} heeft extra: {sorted(here - source)}"
+
+    @pytest.mark.parametrize("path", FILES, ids=IDS)
+    def test_the_placeholders_survive_translation(self, path: pathlib.Path) -> None:
+        """A translation that renames {zone} shows the braces to the user."""
+        source = _flatten(load(COMPONENT / "strings.json"))
+        for key, text in _flatten(load(path)).items():
+            if key not in source:
+                continue
+            expected = set(re.findall(r"\{(\w+)\}", str(source[key])))
+            assert set(re.findall(r"\{(\w+)\}", str(text))) == expected, f"{path.name}: {key}"
+
+    @pytest.mark.parametrize("path", FILES, ids=IDS)
+    def test_nothing_was_left_in_english(self, path: pathlib.Path) -> None:
+        """A sentence identical to the English one was never translated.
+
+        Korte teksten mogen samenvallen - een merknaam, een eenheid, "OK". Een
+        hele zin die letterlijk gelijk is, is vergeten werk.
+
+        Short texts may coincide - a brand name, a unit, "OK". A whole sentence
+        that is literally identical is forgotten work.
+        """
+        if path.stem in {"en", "strings"}:
+            return
+        english = _flatten(load(COMPONENT / "translations" / "en.json"))
+        left = [
+            key
+            for key, text in _flatten(load(path)).items()
+            if isinstance(text, str) and len(text) > 25 and text == english.get(key)
+        ]
+        assert not left, f"{path.name} is hier nog Engels: {sorted(left)[:8]}"

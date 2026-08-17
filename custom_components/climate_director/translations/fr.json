@@ -433,99 +433,6 @@
       "too_few": "Choisissez au moins deux appareils ; un groupe d'un seul n'exclut rien."
     }
   },
-  "entity": {
-    "sensor": {
-      "last_decision": {
-        "name": "Dernière décision"
-      },
-      "zone_source": {
-        "name": "Source {zone}"
-      },
-      "would_command": {
-        "name": "Commanderait {entity}"
-      },
-      "mismatch": {
-        "name": "Écarts"
-      }
-    },
-    "binary_sensor": {
-      "zone_blocked": {
-        "name": "{zone} bloquée"
-      },
-      "stuck": {
-        "name": "Bloqué"
-      }
-    },
-    "switch": {
-      "master": {
-        "name": "Director"
-      },
-      "holiday": {
-        "name": "Planning de vacances"
-      },
-      "zone_override": {
-        "name": "Dérogation {zone}"
-      },
-      "guest": {
-        "name": "Mode invités"
-      }
-    },
-    "number": {
-      "zone_priority": {
-        "name": "Priorité {zone}"
-      }
-    }
-  },
-  "issues": {
-    "invalid_config": {
-      "title": "Climate Director : {name} a un problème de configuration",
-      "description": "{count} problème(s) ont été trouvés dans cette installation. Les zones correctes continuent d'être régulées ; le reste s'arrête jusqu'à correction.\n\n{problems}\n\nOuvrez l'intégration et choisissez Configurer pour les corriger. La liste complète se trouve dans le diagnostic téléchargeable."
-    }
-  },
-  "services": {
-    "evaluate": {
-      "name": "Décider à nouveau",
-      "description": "Recalcule le plan immédiatement, au lieu d'attendre qu'une entité suivie change. N'exécute rien de plus en mode ombre.",
-      "fields": {
-        "entry_id": {
-          "name": "Installation",
-          "description": "Quelle installation recalculer. Laissez vide pour toutes."
-        }
-      }
-    },
-    "precondition": {
-      "name": "Préchauffer",
-      "description": "Chauffe ou refroidit les pièces indiquées avant le retour de quelqu'un, même si personne n'est là. La demande expire d'elle-même et ne compte que dans les heures réglées.",
-      "fields": {
-        "entry_id": {
-          "name": "Installation",
-          "description": "L'installation concernée. Laisser vide vaut pour toutes."
-        },
-        "zone_ids": {
-          "name": "Pièces",
-          "description": "Les pièces à préparer, par leur identifiant de zone. Laisser vide vaut pour toute la maison."
-        },
-        "minutes": {
-          "name": "Minutes",
-          "description": "La durée de la demande. Demander plus que le maximum réglé la raccourcit ; laisser vide donne ce maximum."
-        }
-      }
-    },
-    "cancel_precondition": {
-      "name": "Annuler le préchauffage",
-      "description": "Interrompt aussitôt une demande de préchauffage en cours.",
-      "fields": {
-        "entry_id": {
-          "name": "Installation",
-          "description": "L'installation concernée. Laisser vide vaut pour toutes."
-        },
-        "zone_ids": {
-          "name": "Pièces",
-          "description": "Les pièces à préparer, par leur identifiant de zone. Laisser vide vaut pour toute la maison."
-        }
-      }
-    }
-  },
   "selector": {
     "zone_list": {
       "options": {
@@ -628,14 +535,126 @@
       }
     }
   },
-  "problems": {
-    "unit_in_no_zone": "{unit} est raccordé au circuit {circuit} mais ne figure dans aucune zone. Tant qu'il tourne, il maintient ce circuit sur sa tâche, et le directeur ne peut pas l'éteindre. Ajoutez-le comme source d'une zone.",
-    "zone_without_sources": "La zone {zone} n'a aucun appareil, il n'y a donc rien à piloter. Ajoutez une source.",
-    "zone_without_sensor": "La zone {zone} n'a pas de capteur de température intérieure et ne peut donc jamais distinguer trop froid de trop chaud. Choisissez un capteur, ou l'entité climate de l'appareil lui-même.",
-    "zone_presence_without_sensor": "La zone {zone} fonctionne sur la présence dans la pièce mais n'a pas de capteur de présence ; elle ne peut donc jamais fonctionner — pas même pour éteindre l'appareil. Choisissez un capteur, ou remettez-la sur le foyer.",
-    "resident_without_presence": "L'habitant {resident} n'a pas de capteur de présence et ne peut donc jamais compter comme présent. Choisissez une personne ou un traqueur d'appareil.",
-    "shared_priority": "Les zones {first} et {second} ont toutes deux la priorité {priority} sur le circuit {circuit}. Sur une même unité extérieure, cela laisse le gagnant au hasard ; donnez à chacune son propre numéro.",
-    "calendars_without_keyword": "Des agendas de vacances sont réglés mais pas de mot-clé ; aucun évènement ne peut donc activer le mode vacances. Saisissez le mot qu'un évènement doit porter, ou retirez les agendas.",
-    "exclusive_overlap": "{first} et {second} s'excluent mais s'appliquent tous deux {overlap}. Le groupe le rattrape, mais ils se rencontrent au lieu de s'exclure déjà par leurs bornes extérieures. Donnez-leur des bornes contiguës pour les séparer définitivement."
+  "entity": {
+    "sensor": {
+      "last_decision": {
+        "name": "Dernière décision"
+      },
+      "zone_source": {
+        "name": "Source {zone}"
+      },
+      "would_command": {
+        "name": "Commanderait {entity}"
+      },
+      "mismatch": {
+        "name": "Écarts"
+      }
+    },
+    "binary_sensor": {
+      "zone_blocked": {
+        "name": "{zone} bloquée"
+      },
+      "zone_fallback": {
+        "name": "{zone} sur appareil de secours"
+      },
+      "stuck": {
+        "name": "Bloqué"
+      }
+    },
+    "switch": {
+      "master": {
+        "name": "Director"
+      },
+      "holiday": {
+        "name": "Planning de vacances"
+      },
+      "zone_override": {
+        "name": "Dérogation {zone}"
+      },
+      "guest": {
+        "name": "Mode invités"
+      }
+    },
+    "number": {
+      "zone_priority": {
+        "name": "Priorité {zone}"
+      }
+    }
+  },
+  "issues": {
+    "invalid_config": {
+      "title": "Climate Director : {name} a un problème de configuration",
+      "description": "{count} problème(s) ont été trouvés dans cette installation. Les zones correctes continuent d'être régulées ; le reste s'arrête jusqu'à correction.\n\n{problems}\n\nOuvrez l'intégration et choisissez Configurer pour les corriger. La liste complète se trouve dans le diagnostic téléchargeable."
+    }
+  },
+  "exceptions": {
+    "unit_in_no_zone": {
+      "message": "{unit} est raccordé au circuit {circuit} mais ne figure dans aucune zone. Tant qu'il tourne, il maintient ce circuit sur sa tâche, et le directeur ne peut pas l'éteindre. Ajoutez-le comme source d'une zone."
+    },
+    "zone_without_sources": {
+      "message": "La zone {zone} n'a aucun appareil, il n'y a donc rien à piloter. Ajoutez une source."
+    },
+    "zone_without_sensor": {
+      "message": "La zone {zone} n'a pas de capteur de température intérieure et ne peut donc jamais distinguer trop froid de trop chaud. Choisissez un capteur, ou l'entité climate de l'appareil lui-même."
+    },
+    "zone_presence_without_sensor": {
+      "message": "La zone {zone} fonctionne sur la présence dans la pièce mais n'a pas de capteur de présence ; elle ne peut donc jamais fonctionner — pas même pour éteindre l'appareil. Choisissez un capteur, ou remettez-la sur le foyer."
+    },
+    "resident_without_presence": {
+      "message": "L'habitant {resident} n'a pas de capteur de présence et ne peut donc jamais compter comme présent. Choisissez une personne ou un traqueur d'appareil."
+    },
+    "shared_priority": {
+      "message": "Les zones {first} et {second} ont toutes deux la priorité {priority} sur le circuit {circuit}. Sur une même unité extérieure, cela laisse le gagnant au hasard ; donnez à chacune son propre numéro."
+    },
+    "calendars_without_keyword": {
+      "message": "Des agendas de vacances sont réglés mais pas de mot-clé ; aucun évènement ne peut donc activer le mode vacances. Saisissez le mot qu'un évènement doit porter, ou retirez les agendas."
+    },
+    "exclusive_overlap": {
+      "message": "{first} et {second} s'excluent mais s'appliquent tous deux {overlap}. Le groupe le rattrape, mais ils se rencontrent au lieu de s'exclure déjà par leurs bornes extérieures. Donnez-leur des bornes contiguës pour les séparer définitivement."
+    }
+  },
+  "services": {
+    "evaluate": {
+      "name": "Décider à nouveau",
+      "description": "Recalcule le plan immédiatement, au lieu d'attendre qu'une entité suivie change. N'exécute rien de plus en mode ombre.",
+      "fields": {
+        "entry_id": {
+          "name": "Installation",
+          "description": "Quelle installation recalculer. Laissez vide pour toutes."
+        }
+      }
+    },
+    "precondition": {
+      "name": "Préchauffer",
+      "description": "Chauffe ou refroidit les pièces indiquées avant le retour de quelqu'un, même si personne n'est là. La demande expire d'elle-même et ne compte que dans les heures réglées.",
+      "fields": {
+        "entry_id": {
+          "name": "Installation",
+          "description": "L'installation concernée. Laisser vide vaut pour toutes."
+        },
+        "zone_ids": {
+          "name": "Pièces",
+          "description": "Les pièces à préparer, par leur identifiant de zone. Laisser vide vaut pour toute la maison."
+        },
+        "minutes": {
+          "name": "Minutes",
+          "description": "La durée de la demande. Demander plus que le maximum réglé la raccourcit ; laisser vide donne ce maximum."
+        }
+      }
+    },
+    "cancel_precondition": {
+      "name": "Annuler le préchauffage",
+      "description": "Interrompt aussitôt une demande de préchauffage en cours.",
+      "fields": {
+        "entry_id": {
+          "name": "Installation",
+          "description": "L'installation concernée. Laisser vide vaut pour toutes."
+        },
+        "zone_ids": {
+          "name": "Pièces",
+          "description": "Les pièces à préparer, par leur identifiant de zone. Laisser vide vaut pour toute la maison."
+        }
+      }
+    }
   }
 }
