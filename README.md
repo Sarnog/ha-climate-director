@@ -572,6 +572,117 @@ entiteiten het zijn staat in het attribuut `unusable_entities`.
 Redenen die wél lang mogen blijven staan — niemand thuis, kamer leeg, buiten het
 temperatuurvenster — tellen niet mee. Nul minuten zet de melder uit.
 
+#### Als een apparaat niet te bereiken is
+
+Een apparaat dat `unavailable` of `unknown` is laat niets omvallen. De director behandelt
+onbereikbaarheid als een toestand, niet als een ongeluk: zo'n bron telt gewoon niet mee als
+kandidaat, en de volgende bron op voorkeur neemt het over.
+
+Concreet, met een woonkamer die de gasverwarming als eerste bron heeft en de airco als
+tweede: valt de thermostaat van de gasverwarming weg, dan verwarmt de airco. De kamer wordt
+gewoon warm. Je hoeft daar niets voor in te stellen — het is voldoende dat beide apparaten
+als bron onder dezelfde zone staan, met de gasverwarming op de laagste voorkeur.
+
+En precies daar zit het gevaar. **Een vangnet dat werkt, voel je niet.** De kamer komt op
+temperatuur, alles lijkt in orde, en pas op de energierekening merk je dat er wekenlang
+elektrisch verwarmd is omdat niemand de kapotte thermostaat gerepareerd heeft.
+
+Daarom is er per zone een melder: `binary_sensor.*_op_reserve`. Die gaat aan zodra een zone
+draait op een bron die níét de eerste keus was, omdat de eerste keus onbereikbaar is. In de
+attributen staat wat er overgeslagen is en wat het overgenomen heeft:
+
+| Attribuut | Betekenis |
+| --- | --- |
+| `unreachable` | De bron-ID's die overgeslagen zijn omdat ze niet te bereiken waren |
+| `serving` | De bron-ID die het nu doet |
+| `zone` | De zone waar het over gaat |
+
+De melder maakt onderscheid tussen een storing en een normale keuze. Hij gaat **niet** aan
+als de airco koelt terwijl de gasverwarming stilstaat — die kan nu eenmaal niet koelen. Hij
+gaat ook niet aan voor een bron die buiten zijn buitentemperatuurvenster valt: die stond
+toch al stil, dat is precies waar dat venster voor is. En hij gaat niet aan voor een bron
+die mínder voorrang heeft dan wat er nu draait. Alleen wat écht aan de beurt was en niet
+opnam, telt.
+
+##### Voorbeeld: een melding als het vangnet inschiet
+
+De integratie stuurt zelf geen berichten. Dat is met opzet: waar een melding heen gaat, hoe
+hij klinkt en of hij 's nachts mag komen, is niets waar een klimaatregelaar over hoort te
+beslissen. Hang er dus je eigen automatisering aan. Vervang `woonkamer` door je eigen zone
+en de doelen door je eigen telefoon of speakers.
+
+```yaml
+alias: Klimaat - melding als het vangnet inschiet
+description: >
+  Waarschuwt zodra een zone op een reserve-apparaat draait, en meldt het
+  opnieuw als de eerste keus weer meedoet.
+mode: single
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.woonkamer_op_reserve
+    from: "off"
+    to: "on"
+    for: "00:05:00"
+    id: uitgeweken
+  - trigger: state
+    entity_id: binary_sensor.woonkamer_op_reserve
+    from: "on"
+    to: "off"
+    id: hersteld
+actions:
+  - variables:
+      overgeslagen: >-
+        {{ state_attr('binary_sensor.woonkamer_op_reserve', 'unreachable')
+           | default([], true) | join(', ') }}
+      draait_op: >-
+        {{ state_attr('binary_sensor.woonkamer_op_reserve', 'serving')
+           | default('niets', true) }}
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: uitgeweken
+        sequence:
+          - action: notify.mobile_app_telefoon_danny
+            data:
+              title: Klimaat wijkt uit
+              message: >-
+                De woonkamer verwarmt via {{ draait_op }}, want {{ overgeslagen }}
+                is niet te bereiken.
+          - action: tts.speak
+            target:
+              entity_id: tts.google_nl
+            data:
+              cache: false
+              media_player_entity_id: media_player.woonkamer
+              message: >-
+                Let op. De woonkamer verwarmt nu via {{ draait_op }}, omdat
+                de gasverwarming niet reageert.
+      - conditions:
+          - condition: trigger
+            id: hersteld
+        sequence:
+          - action: notify.mobile_app_telefoon_danny
+            data:
+              title: Klimaat hersteld
+              message: De woonkamer draait weer op de eerste keus.
+```
+
+Drie dingen die de moeite waard zijn om over te nemen:
+
+- **`for: "00:05:00"`** — een apparaat dat één keer knippert tijdens een herstart is geen
+  storing. Vijf minuten filtert dat weg zonder een echt defect te missen.
+- **De attributen in het bericht** — "de woonkamer verwarmt via airco, want gas is niet te
+  bereiken" vertelt je wat er aan de hand is; "vangnet actief" laat je zoeken.
+- **Ook een bericht bij herstel** — anders weet je nooit of het probleem nog speelt, en
+  wordt de melding iets wat je wegklikt in plaats van iets waar je op handelt.
+
+Wil je het voor élke zone in één automatisering, gebruik dan een trigger op meerdere
+entiteiten en lees `trigger.entity_id` uit in plaats van de zone hard in te tikken.
+
+Blijft de eerste keus lang weg, dan gaat ook `binary_sensor.*_vastgelopen` aan, met de
+onleesbare entiteit in `unusable_entities`. De twee melders vullen elkaar aan: de ene zegt
+*er is uitgeweken*, de andere zegt *er is iets niet te lezen*.
+
 ### Dode band
 
 Aan- en uitschakelen gebeuren op twee verschillende temperaturen. Je stelt een aanpunt in
@@ -645,6 +756,7 @@ Eén device per installatie, met daaronder:
 | `sensor.*_afwijkingen` | Hoeveel apparaten er nú anders staan dan het plan wil. Nul betekent dat de director het eens is met wat het huis op dit moment stuurt |
 | `sensor.*_bron_<zone>` | Welke bron deze zone bedient, met wat de zone wilde, wat hij kreeg en waarom |
 | `binary_sensor.*_<zone>_geblokkeerd` | Aan als een zone minder kreeg dan hij vroeg, met de reden als attribuut |
+| `binary_sensor.*_<zone>_op_reserve` | Aan als een zone draait op een reserve-apparaat omdat de eerste keus onbereikbaar is, met de overgeslagen bron als attribuut |
 | `binary_sensor.*_vastgelopen` | Aan als een zone te lang op dezelfde wachtreden staat, met de zones en de wachttijd als attribuut |
 | `switch.*_director` | Hoofdschakelaar; uit betekent dat er niets geregeld wordt |
 | `switch.*_vakantieschema` | Laat elke dag als zaterdag tellen, of als het eigen vakantierooster |
@@ -1386,6 +1498,119 @@ entities they are is in the `unusable_entities` attribute.
 Reasons that may rightly hold for a long time — nobody home, room empty, outside the
 temperature window — do not count. Zero minutes switches the sensor off.
 
+#### When an appliance cannot be reached
+
+An appliance that is `unavailable` or `unknown` breaks nothing. The director treats
+unreachability as a state rather than an accident: such a source simply does not count as a
+candidate, and the next source by preference takes over.
+
+Concretely, with a living room that has the gas heating as its first source and the air
+conditioner as its second: if the gas thermostat drops out, the air conditioner heats. The
+room simply gets warm. There is nothing to configure for this — it is enough that both
+appliances sit as sources under the same zone, with the gas heating on the lowest
+preference number.
+
+And that is exactly where the danger sits. **A safety net that works is one you do not
+feel.** The room reaches temperature, everything looks fine, and you notice on the energy
+bill that it has been heating electrically for weeks because nobody fixed the broken
+thermostat.
+
+Hence a sensor per zone: `binary_sensor.*_on_stand_in`. It comes on as soon as a zone runs
+on a source that was not the first choice, because the first choice cannot be reached. The
+attributes say what was skipped and what took over:
+
+| Attribute | Meaning |
+| --- | --- |
+| `unreachable` | The source ids skipped because they could not be reached |
+| `serving` | The source id doing the work now |
+| `zone` | The zone this is about |
+
+The sensor tells a fault apart from an ordinary choice. It does **not** come on when the
+air conditioner cools while the gas heating sits idle — that one cannot cool. Nor does it
+come on for a source outside its outdoor-temperature window: that one was standing still
+anyway, which is precisely what the window is for. And it does not come on for a source
+ranked below whatever is running now. Only what was genuinely up next and did not answer
+counts.
+
+##### Example: a notification when the safety net catches
+
+The integration sends no messages of its own. That is deliberate: where a notification
+goes, how it sounds and whether it may arrive at night is nothing a climate controller
+should decide. So hang your own automation on it. Replace `living_room` with your own zone
+and the targets with your own phone or speakers.
+
+```yaml
+alias: Climate - notify when the safety net catches
+description: >
+  Warns as soon as a zone runs on a stand-in appliance, and reports again
+  once the first choice is back.
+mode: single
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.living_room_on_stand_in
+    from: "off"
+    to: "on"
+    for: "00:05:00"
+    id: fell_back
+  - trigger: state
+    entity_id: binary_sensor.living_room_on_stand_in
+    from: "on"
+    to: "off"
+    id: recovered
+actions:
+  - variables:
+      skipped: >-
+        {{ state_attr('binary_sensor.living_room_on_stand_in', 'unreachable')
+           | default([], true) | join(', ') }}
+      running_on: >-
+        {{ state_attr('binary_sensor.living_room_on_stand_in', 'serving')
+           | default('nothing', true) }}
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: fell_back
+        sequence:
+          - action: notify.mobile_app_danny_phone
+            data:
+              title: Climate falling back
+              message: >-
+                The living room is heating through {{ running_on }}, because
+                {{ skipped }} cannot be reached.
+          - action: tts.speak
+            target:
+              entity_id: tts.google_en
+            data:
+              cache: false
+              media_player_entity_id: media_player.living_room
+              message: >-
+                Heads up. The living room is now heating through {{ running_on }},
+                because the gas heating is not responding.
+      - conditions:
+          - condition: trigger
+            id: recovered
+        sequence:
+          - action: notify.mobile_app_danny_phone
+            data:
+              title: Climate recovered
+              message: The living room is back on its first choice.
+```
+
+Three things worth copying:
+
+- **`for: "00:05:00"`** — an appliance that blinks once during a restart is not a fault.
+  Five minutes filters that out without missing a real failure.
+- **The attributes in the message** — "the living room is heating through airco, because
+  gas cannot be reached" tells you what is going on; "fallback active" sends you hunting.
+- **A message on recovery too** — otherwise you never know whether the problem still
+  stands, and the notification becomes something you swipe away rather than act on.
+
+Want it for every zone in one automation? Trigger on several entities and read
+`trigger.entity_id` instead of typing the zone in by hand.
+
+If the first choice stays away for long, `binary_sensor.*_stuck` comes on as well, with the
+unreadable entity in `unusable_entities`. The two sensors complement each other: one says
+*something fell back*, the other says *something cannot be read*.
+
 ### Dead band
 
 Switching on and switching off happen at two different temperatures. You set a switch-on
@@ -1460,6 +1685,7 @@ One device per installation, holding:
 | `sensor.*_mismatch` | How many appliances currently sit somewhere other than where the plan wants them. Zero means the director agrees with whatever is steering the house right now |
 | `sensor.*_<zone>_source` | Which source serves this zone, with what the zone wanted, what it got and why |
 | `binary_sensor.*_<zone>_blocked` | On when a zone got less than it asked for, with the reason as an attribute |
+| `binary_sensor.*_<zone>_on_stand_in` | On when a zone runs on a stand-in appliance because its first choice is unreachable, with the skipped source as an attribute |
 | `binary_sensor.*_stuck` | On when a zone sits on the same waiting reason too long, with the zones and the wait as attributes |
 | `switch.*_director` | Master switch; off means nothing is regulated |
 | `switch.*_holiday_schedule` | Makes every day count as a Saturday, or as its own holiday schedule |

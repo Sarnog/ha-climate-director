@@ -38,6 +38,52 @@ def candidates(zone: Zone, family: ModeFamily, world: WorldState) -> tuple[Sourc
     return tuple(sorted(eligible, key=lambda source: (source.priority, source.source_id)))
 
 
+def passed_over(zone: Zone, family: ModeFamily, world: WorldState) -> tuple[str, ...]:
+    """Return the preferred sources this duty had to skip because they are unreachable.
+
+    Valt de gasketel weg, dan neemt de airco het over - dat regelt `select()` al,
+    want een onbereikbaar apparaat is geen kandidaat. Alleen: van buiten zie je
+    dat niet. De kamer komt op temperatuur, alles lijkt goed, en pas op de
+    energierekening merk je dat er wekenlang elektrisch verwarmd is.
+
+    Deze functie noemt wat er overgeslagen is: bronnen die op geschiktheid en
+    buitentemperatuur wél aan de beurt waren, maar niet te bereiken zijn, en die
+    voorrang hebben op wat er nu draait. Wat niet gekozen werd omdat een ander
+    apparaat gewoon beter past, staat er dus niet bij - dat is geen storing.
+
+    If the gas boiler drops out the air conditioner takes over - `select()`
+    already arranges that, since an unreachable appliance is no candidate. Only:
+    from the outside you cannot see it. The room reaches temperature, all looks
+    well, and you notice on the energy bill that it has been heating
+    electrically for weeks.
+
+    This function names what was skipped: sources that on suitability and
+    outdoor temperature were up next, but cannot be reached, and that outrank
+    what is running now. What was not chosen because another appliance simply
+    fits better is therefore absent - that is no fault.
+    """
+    chosen = select(zone, family, world)
+    if chosen is None:
+        return ()
+    rank = (chosen.priority, chosen.source_id)
+    return tuple(
+        source.source_id
+        for source in sorted(zone.sources, key=lambda item: (item.priority, item.source_id))
+        if (source.priority, source.source_id) < rank
+        and _suitable(source, family, world)
+        and not world.climate(source.entity_id).available
+    )
+
+
+def _suitable(source: Source, family: ModeFamily, world: WorldState) -> bool:
+    """Return whether a source fits this duty, leaving reachability aside."""
+    return (
+        source.autostart
+        and source.supports(family)
+        and source.outdoor.contains(world.outdoor_temperature)
+    )
+
+
 def _eligible(source: Source, family: ModeFamily, world: WorldState) -> bool:
     """Return whether a source can serve this duty under current conditions."""
     # Een handbediende bron is nooit een antwoord op een vraag. Hem hier toch

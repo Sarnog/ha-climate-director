@@ -33,7 +33,7 @@ def decide(config: DirectorConfig, world: WorldState) -> Plan:
 
     return Plan(
         commands=_build_commands(config, world, grants, reasons, wishes),
-        zones=_build_zone_decisions(config, wishes, dropped, grants, refusals),
+        zones=_build_zone_decisions(config, world, wishes, dropped, grants, refusals),
         circuits=circuit_decisions,
         deferrals=deferrals,
     )
@@ -437,6 +437,7 @@ def _command_order(config: DirectorConfig, command: UnitCommand) -> tuple[int, s
 
 def _build_zone_decisions(
     config: DirectorConfig,
+    world: WorldState,
     wishes: dict[str, constraints.Request],
     dropped: dict[str, constraints.Request],
     grants: dict[str, constraints.Grant],
@@ -476,6 +477,7 @@ def _build_zone_decisions(
                 granted=grant.family if grant is not None else ModeFamily.NEUTRAL,
                 source_id=request.source.source_id,
                 reason=grant.reason if grant is not None else Reason.NO_SOURCE_AVAILABLE,
+                passed_over=sources.passed_over(zone, request.family, world),
             )
         )
 

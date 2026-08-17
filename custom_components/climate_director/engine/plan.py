@@ -92,10 +92,27 @@ class ZoneDecision:
     source_id: str | None = None
     reason: Reason = Reason.REGULATING
 
+    passed_over: tuple[str, ...] = ()
+    """Preferred sources skipped because they could not be reached.
+
+    Leeg is het normale geval. Staat er iets in, dan draait de zone op een
+    tweede keus omdat het eerste apparaat niet te bereiken was - de kamer wordt
+    warm, maar niet zoals bedoeld.
+
+    Empty is the normal case. Anything in here means the zone is running on a
+    second choice because the first appliance could not be reached - the room
+    gets warm, but not the way it was meant to.
+    """
+
     @property
     def blocked(self) -> bool:
         """Return whether the zone got less than it asked for."""
         return self.wanted != self.granted
+
+    @property
+    def on_fallback(self) -> bool:
+        """Return whether this zone is running on a stand-in."""
+        return bool(self.passed_over)
 
 
 @dataclass(frozen=True, slots=True)

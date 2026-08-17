@@ -24,11 +24,12 @@ async def async_setup_entry(
     entry: ClimateDirectorEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up one blocked sensor per zone, and one stuck sensor for the whole."""
+    """Set up the per-zone sensors, and one stuck sensor for the whole."""
     coordinator = entry.runtime_data
-    entities: list[BinarySensorEntity] = [
-        ZoneBlockedSensor(coordinator, zone.zone_id) for zone in coordinator.config.zones
-    ]
+    entities: list[BinarySensorEntity] = []
+    for zone in coordinator.config.zones:
+        entities.append(ZoneBlockedSensor(coordinator, zone.zone_id))
+        entities.append(ZoneFallbackSensor(coordinator, zone.zone_id))
     entities.append(StuckSensor(coordinator))
     async_add_entities(entities)
 
@@ -63,6 +64,66 @@ class ZoneBlockedSensor(ClimateDirectorEntity, BinarySensorEntity):
             return {}
         decision = plan.decision_for(self._zone_id)
         return {"reason": decision.reason.value} if decision else {}
+
+
+class ZoneFallbackSensor(ClimateDirectorEntity, BinarySensorEntity):
+    """On when a zone runs on a stand-in because its own appliance is unreachable.
+
+    Valt de thermostaat van de gasverwarming weg, dan schuift de director door
+    naar de airco: de kamer wordt gewoon warm. Precies daarom is dit nodig. Een
+    vangnet dat werkt is een vangnet dat je niet voelt, en dus wekenlang kan
+    blijven hangen zonder dat iemand de kapotte thermostaat repareert - je merkt
+    het pas op de energierekening.
+
+    Deze sensor maakt het zichtbaar, zodat een eigen automatisering er een
+    melding aan kan hangen. Hij zegt niets over of het warm wordt; hij zegt dat
+    het anders warm wordt dan bedoeld.
+
+    If the gas thermostat drops out, the director moves on to the air
+    conditioner: the room simply gets warm. That is exactly why this is needed.
+    A safety net that works is a safety net you do not feel, and so it can stay
+    in place for weeks without anybody fixing the broken thermostat - you notice
+    on the energy bill.
+
+    This sensor makes it visible, so an automation of your own can hang a
+    notification on it. It says nothing about whether the room gets warm; it
+    says the room gets warm differently than intended.
+    """
+
+    _attr_translation_key = "zone_fallback"
+    _attr_icon = "mdi:swap-horizontal"
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+
+    def __init__(self, coordinator: ClimateDirectorCoordinator, zone_id: str) -> None:
+        """Set up the sensor for one zone."""
+        super().__init__(coordinator, f"zone_{zone_id}_fallback")
+        self._zone_id = zone_id
+        zone = coordinator.config.zone(zone_id)
+        self._attr_translation_placeholders = {"zone": zone.name if zone else zone_id}
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return whether a preferred appliance had to be skipped."""
+        plan = self.coordinator.data
+        if plan is None:
+            return None
+        decision = plan.decision_for(self._zone_id)
+        return decision.on_fallback if decision else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return which appliance was skipped and which one stepped in."""
+        plan = self.coordinator.data
+        if plan is None:
+            return {}
+        decision = plan.decision_for(self._zone_id)
+        if decision is None:
+            return {}
+        return {
+            "unreachable": list(decision.passed_over),
+            "serving": decision.source_id,
+            "zone": self._zone_id,
+        }
 
 
 class StuckSensor(ClimateDirectorEntity, BinarySensorEntity):
