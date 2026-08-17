@@ -408,3 +408,48 @@ class TestTheSaveScreenWarns:
         assert step.get("title")
         assert "{problems}" in step.get("description", ""), "de lijst wordt niet ingevuld"
         assert "when_done" in step.get("data", {})
+
+
+class TestEveryPickerCanBeBuilt:
+    """Een kiezer die zijn eigen knop niet kan tekenen, opent helemaal niet.
+
+    De toevoegregel haalt zijn terugvaltekst uit een tabel. Ontbreekt de sleutel,
+    dan is het een `KeyError` bij het opbouwen van het scherm - en Home Assistant
+    laat dan alleen "Fout" zien, zonder te zeggen waar. Een lege menuregel en een
+    dialoog met één woord: dat is alles wat de gebruiker ervan merkt.
+
+    A picker that cannot draw its own button does not open at all. The add row
+    takes its fallback text from a table. With the key missing that is a
+    `KeyError` while building the screen - and Home Assistant then shows only
+    "Error", without saying where. A blank menu row and a one-word dialog: that
+    is all the user gets to see.
+    """
+
+    _flow = (COMPONENT / "config_flow.py").read_text(encoding="utf-8")
+
+    def test_every_add_row_has_a_fallback(self) -> None:
+        used = set(re.findall(r'_add_option\("(\w+)"\)', self._flow))
+        table = set(re.findall(r'^    "(\w+)": "\+ ', self._flow, re.M))
+        assert used, "geen enkele toevoegregel gevonden"
+        assert not (used - table), sorted(used - table)
+
+    def test_an_unknown_key_does_not_raise(self) -> None:
+        """Belt and braces: even a key nobody added may not break the screen."""
+        assert "_ADD_FALLBACK.get(" in self._flow, "de terugval kan nog een KeyError geven"
+
+    def test_every_menu_option_has_a_step(self) -> None:
+        """A menu row without its own step is a dead end that reports nothing."""
+        menu = re.search(r"menu_options=\[(.*?)\]", self._flow, re.S)
+        assert menu
+        options = re.findall(r'"(\w+)"', menu.group(1))
+        assert len(options) >= 7
+        for option in options:
+            assert f"async def async_step_{option}(" in self._flow, option
+
+    @pytest.mark.parametrize("path", FILES, ids=IDS)
+    def test_every_menu_option_is_named(self, path: pathlib.Path) -> None:
+        menu = re.search(r"menu_options=\[(.*?)\]", self._flow, re.S)
+        assert menu
+        options = set(re.findall(r'"(\w+)"', menu.group(1)))
+        named = set(load(path)["options"]["step"]["init"]["menu_options"])
+        assert not (options - named), sorted(options - named)
