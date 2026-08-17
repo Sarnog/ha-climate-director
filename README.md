@@ -435,8 +435,14 @@ configuratiecontrole meldt dat.
 | Instelling | Wat het doet |
 |---|---|
 | Aanwezigheidsentiteit | of deze persoon thuis is |
-| Slaapentiteit + status | wanneer deze persoon slaapt, bijvoorbeeld `sensor.danny_charger_type` op `wireless` |
+| Slaapsensor + status | wanneer deze persoon slaapt, bijvoorbeeld `sensor.danny_charger_type` op `wireless` |
+| Slaapsensor telt vanaf / tot | de uren waarin die sensor iets betekent; leeg is de klok rond |
 | Roostervensters | begin, eind, dagen van de week, en of het een vakantievenster is |
+
+Een oplaadsensor is niet altijd een bedtijd. Vul je bij een bewoner **Slaapsensor telt
+vanaf/tot** in, dan telt die sensor alleen binnen die uren; daarbuiten is een oplader gewoon
+een oplader. Laat je ze leeg, dan geldt hij de klok rond — en legt iemand zijn telefoon om
+drie uur 's middags neer, dan telt dat als slapen.
 
 Een bewoner zonder rooster doet niet mee aan poort 6: die opent hem niet en houdt hem ook
 niet tegen. Datzelfde geldt **per dag**: wie op dinsdag geen venster heeft, doet dinsdag
@@ -1153,8 +1159,14 @@ sources like this, it can never run on its own — and the configuration check s
 | Setting | What it does |
 |---|---|
 | Presence entity | whether this person is home |
-| Sleep entity + state | when this person is asleep, for example `sensor.danny_charger_type` at `wireless` |
+| Sleep sensor + state | when this person is asleep, for example `sensor.danny_charger_type` at `wireless` |
+| Sleep sensor counts from / until | the hours in which that sensor means anything; empty is around the clock |
 | Schedule windows | start, end, days of the week, and whether it is a holiday window |
+
+A charging sensor is not always a bedtime. Fill in **Sleep sensor counts from/until** for a
+resident and that sensor counts only within those hours; outside them a charger is just a
+charger. Leave them empty and it counts around the clock — and somebody putting their phone
+down at three in the afternoon counts as sleeping.
 
 A resident without a schedule does not take part in gate 6: they neither open it nor hold
 it shut. The same holds **per day**: somebody with no window on a Tuesday does not take
