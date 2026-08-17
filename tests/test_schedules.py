@@ -31,6 +31,10 @@ from custom_components.climate_director.engine import (
     Zone,
     gates,
 )
+from custom_components.climate_director.engine.serialise import (
+    config_from_dict,
+    config_to_dict,
+)
 
 WEEKDAYS = frozenset({0, 1, 2, 3, 4})
 WEEKEND = frozenset({5, 6})
@@ -366,3 +370,72 @@ class TestOnlyTodaysSchedulesCount:
     def test_a_resident_without_any_schedule_is_unchanged(self) -> None:
         config = household(NANCY_TUESDAY, DANNY_NO_SCHEDULE)
         assert verdict(config, at(8, 45), nancy=awake(), danny=asleep()).allowed
+
+
+class TestASleepSensorWithItsOwnHours:
+    """Een oplader is niet altijd een bedtijd.
+
+    De automatiseringen keken alleen tussen 21:00 en 08:00 naar de oplader. Zonder
+    die grens telt elke lading als slapen, en zet het huis zichzelf midden op de
+    dag uit omdat er iemand zijn telefoon neerlegde. Dat is precies het soort
+    fout waarvan je de oorzaak nooit vermoedt.
+
+    A charger is not always a bedtime. The automations looked at it only between
+    21:00 and 08:00. Without that bound every charge counts as sleeping, and the
+    house switches itself off in the middle of the day because somebody put their
+    phone down. Exactly the kind of fault whose cause you never suspect.
+    """
+
+    def _house(self, window: TimeWindow | None) -> DirectorConfig:
+        """Return a household whose only gate that matters is being awake."""
+        base = household()
+        return DirectorConfig(
+            zones=base.zones,
+            residents=(
+                Resident(
+                    "danny",
+                    "Danny",
+                    presence_entity="person.danny",
+                    sleep_entity="sensor.danny_charger_type",
+                    sleep_state="wireless",
+                    sleep_window=window,
+                ),
+            ),
+            gates=GateSettings(require_awake=True, require_schedule=False),
+        )
+
+    night = TimeWindow(time(21, 0), time(8, 0))
+
+    def test_without_a_window_a_charger_always_means_asleep(self) -> None:
+        result = verdict(self._house(None), at(15, 0), danny=asleep())
+        assert result.reason is Reason.EVERYONE_ASLEEP
+
+    def test_inside_the_window_it_still_does(self) -> None:
+        result = verdict(self._house(self.night), at(23, 0), danny=asleep())
+        assert result.reason is Reason.EVERYONE_ASLEEP
+
+    def test_outside_the_window_it_does_not(self) -> None:
+        """Three in the afternoon: a charger is just a charger."""
+        assert verdict(self._house(self.night), at(15, 0), danny=asleep()).allowed
+
+    @pytest.mark.parametrize("hour", [21, 23, 3, 7])
+    def test_the_night_hours_count(self, hour: int) -> None:
+        assert verdict(self._house(self.night), at(hour), danny=asleep()).reason is (
+            Reason.EVERYONE_ASLEEP
+        )
+
+    @pytest.mark.parametrize("hour", [8, 12, 17, 20])
+    def test_the_day_hours_do_not(self, hour: int) -> None:
+        assert verdict(self._house(self.night), at(hour), danny=asleep()).allowed
+
+    def test_being_awake_is_unaffected(self) -> None:
+        """The window says when sleeping counts, never that somebody is asleep."""
+        assert verdict(self._house(self.night), at(23, 0), danny=awake()).allowed
+
+    def test_it_survives_storage(self) -> None:
+        config = self._house(self.night)
+        assert config_from_dict(config_to_dict(config)) == config
+
+    def test_older_residents_keep_counting_around_the_clock(self) -> None:
+        stored = config_from_dict({"residents": [{"resident_id": "d", "name": "D"}]})
+        assert stored.residents[0].sleep_window is None
