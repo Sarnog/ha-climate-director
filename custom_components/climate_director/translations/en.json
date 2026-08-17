@@ -432,7 +432,7 @@
         "name": "Director"
       },
       "holiday": {
-        "name": "Holiday mode"
+        "name": "Holiday schedule"
       },
       "zone_override": {
         "name": "{zone} override"

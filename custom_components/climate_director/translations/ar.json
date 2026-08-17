@@ -432,7 +432,7 @@
         "name": "المنسّق"
       },
       "holiday": {
-        "name": "وضع العطلة"
+        "name": "جدول العطلة"
       },
       "zone_override": {
         "name": "تجاوز {zone}"

@@ -271,6 +271,21 @@ def _build_commands(
         if not world.climate(source.entity_id).available:
             continue
 
+        # Een zone met een override is van de beheerder, niet van de director.
+        # Overnemen betekent hier: niet aansturen - ook niet uitzetten. Wie de
+        # noodknop gebruikt wil het apparaat zelf zetten en houden, ongeacht
+        # buitengrenzen, seizoen of een openstaand raam. Zou de director hem
+        # alsnog uitzetten, dan was de override geen noodknop maar een slot.
+        #
+        # A zone under override belongs to the administrator, not to the
+        # director. Taking over means: issue nothing - not even an off. Whoever
+        # reaches for the override wants to set the appliance themselves and
+        # keep it there, whatever the outdoor bounds, the season or an open
+        # window say. Were the director to switch it off anyway, the override
+        # would be a lock rather than an override.
+        if world.overridden(zone.zone_id):
+            continue
+
         grant = grants.get(zone.zone_id)
         chosen = grant is not None and grant.granted and grant.source_id == source.source_id
 

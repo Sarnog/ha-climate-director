@@ -432,7 +432,7 @@
         "name": "Director"
       },
       "holiday": {
-        "name": "Urlaubsmodus"
+        "name": "Urlaubsplan"
       },
       "zone_override": {
         "name": "Übersteuerung {zone}"

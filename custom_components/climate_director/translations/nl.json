@@ -432,7 +432,7 @@
         "name": "Director"
       },
       "holiday": {
-        "name": "Vakantiemodus"
+        "name": "Vakantieschema"
       },
       "zone_override": {
         "name": "Override {zone}"

@@ -432,7 +432,7 @@
         "name": "Director"
       },
       "holiday": {
-        "name": "Modo vacaciones"
+        "name": "Horario de vacaciones"
       },
       "zone_override": {
         "name": "Anulación {zone}"
