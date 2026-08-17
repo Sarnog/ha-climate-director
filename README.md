@@ -155,6 +155,60 @@ Uitzetten dat de director zélf doet telt niet mee, anders zou elke zone die hij
 uitzet permanent stil komen te staan. De schakelaar `switch.*_override_<zone>` blijft
 daarnaast gewoon werken en staat boven dit alles.
 
+
+#### Een handmatige timer ernaast laten lopen
+
+Wil je een apparaat een paar uur met de hand aanzetten — "de gasverwarming twee uur aan" —
+dan hoeft dat niet in de integratie. Het kan gewoon met een script ernaast, mits je die
+zone zolang aan jezelf teruggeeft met de override. Zonder dat rekent de director bij de
+eerstvolgende evaluatie haar eigen plan door en zet ze je apparaat weer uit.
+
+```yaml
+alias: Gasverwarming twee uur aan
+sequence:
+  - action: switch.turn_on
+    target:
+      entity_id: switch.climate_director_override_woonkamer
+  - action: timer.start
+    data:
+      duration: "02:00:00"
+    target:
+      entity_id: timer.verwarming
+  - action: climate.set_temperature
+    data:
+      temperature: 20
+      hvac_mode: heat
+    target:
+      entity_id: climate.smart_thermostat_x
+```
+
+En het aflopen van de timer zet alles weer terug:
+
+```yaml
+alias: Gasverwarming timer afgelopen
+triggers:
+  - trigger: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.verwarming
+actions:
+  - action: climate.turn_off
+    target:
+      entity_id: climate.smart_thermostat_x
+  - action: switch.turn_off
+    target:
+      entity_id: switch.climate_director_override_woonkamer
+```
+
+Een apparaat waarvan *Dit apparaat automatisch aanzetten* uit staat heeft die override niet
+nodig: de director start hem toch al nooit en laat hem staan zoals hij staat. Een
+slaapkamerairco die je met een script aanzet, blijft dus gewoon draaien tot je timer
+afloopt — en gaat alleen uit als de gedeelde buitenunit een andere taak moet doen.
+
+Verwar dit niet met **vooruit verwarmen**. Dat is bedoeld voor een leeg huis, geldt alleen
+binnen het ingestelde venster en heeft een maximum. Een handmatige timer met override is
+het gereedschap voor "ik wil dit nu, en ik bepaal hoe lang".
+
 #### Vooruit verwarmen
 
 De enige manier om een leeg huis te laten draaien, en met opzet de enige die je met de
@@ -370,6 +424,46 @@ daarop luistert vervangt een notificatieblok per automatisering.
 Redenen zijn stabiele identifiers (`circuit_conflict_lost`, `everyone_asleep`,
 `short_cycle_protection`, …), zodat ze te vertalen zijn en je er in je eigen
 automatiseringen op kunt filteren.
+
+Wat er in het event zit: `zone_id`, `zone_name`, `wanted`, `granted`, `source_id`,
+`entity_id`, `hvac_mode`, `temperature` en `reason`.
+
+Één automatisering vervangt daarmee al je losse notificatieblokken. Met de gewone
+`notify`-actie:
+
+```yaml
+alias: Klimaat: melden wat er besloten is
+triggers:
+  - trigger: event
+    event_type: climate_director_decision
+actions:
+  - action: notify.mobile_app_telefoon
+    data:
+      message: >-
+        {{ trigger.event.data.zone_name }}: {{ trigger.event.data.hvac_mode }}
+        via {{ trigger.event.data.source_id }} ({{ trigger.event.data.reason }})
+```
+
+Heb je een eigen notificatiescript, dan roep je dat op dezelfde plek aan:
+
+```yaml
+actions:
+  - action: script.notify_algemeen_met_keuzemenu
+    data:
+      bericht: >-
+        {{ trigger.event.data.zone_name }} staat nu op
+        {{ trigger.event.data.hvac_mode }}
+```
+
+Filteren op wat je interesseert kan met een conditie op `reason`. Alleen melden wanneer een
+kamer iets niet kreeg:
+
+```yaml
+conditions:
+  - condition: template
+    value_template: "{{ trigger.event.data.granted == 'neutral' }}"
+```
+
 
 ### Wat je in Home Assistant krijgt
 
@@ -707,6 +801,61 @@ Switching off that the director does itself does not count, or every zone it eve
 off would fall silent for good. The `switch.*_<zone>_override` switch keeps working
 alongside this and outranks all of it.
 
+
+#### Running a manual timer alongside
+
+Want to switch an appliance on by hand for a few hours — "the gas heating on for two
+hours" — that need not go through the integration. A script beside it does the job, as long
+as you hand that zone back to yourself with the override for the duration. Without it the
+director works out its own plan at the next evaluation and switches your appliance off
+again.
+
+```yaml
+alias: Gas heating on for two hours
+sequence:
+  - action: switch.turn_on
+    target:
+      entity_id: switch.climate_director_woonkamer_override
+  - action: timer.start
+    data:
+      duration: "02:00:00"
+    target:
+      entity_id: timer.heating
+  - action: climate.set_temperature
+    data:
+      temperature: 20
+      hvac_mode: heat
+    target:
+      entity_id: climate.smart_thermostat_x
+```
+
+And the timer running out puts everything back:
+
+```yaml
+alias: Gas heating timer finished
+triggers:
+  - trigger: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.heating
+actions:
+  - action: climate.turn_off
+    target:
+      entity_id: climate.smart_thermostat_x
+  - action: switch.turn_off
+    target:
+      entity_id: switch.climate_director_woonkamer_override
+```
+
+An appliance with *Start this appliance automatically* switched off needs no override: the
+director never starts it anyway and leaves it as it stands. A bedroom air conditioner you
+switch on with a script therefore keeps running until your timer expires — and only goes
+off when the shared outdoor unit has to do another duty.
+
+Do not confuse this with **pre-conditioning**. That is meant for an empty house, applies
+only inside the configured window and has a maximum. A manual timer with an override is the
+tool for "I want this now, and I decide for how long".
+
 #### Pre-conditioning
 
 The only way to run an empty house, and deliberately the only one you have to switch on by
@@ -917,6 +1066,46 @@ automation.
 Reasons are stable identifiers (`circuit_conflict_lost`, `everyone_asleep`,
 `short_cycle_protection`, …), so they can be translated and filtered on in your own
 automations.
+
+What the event carries: `zone_id`, `zone_name`, `wanted`, `granted`, `source_id`,
+`entity_id`, `hvac_mode`, `temperature` and `reason`.
+
+One automation thereby replaces every separate notification block you had. With the
+ordinary `notify` action:
+
+```yaml
+alias: Climate: report what was decided
+triggers:
+  - trigger: event
+    event_type: climate_director_decision
+actions:
+  - action: notify.mobile_app_phone
+    data:
+      message: >-
+        {{ trigger.event.data.zone_name }}: {{ trigger.event.data.hvac_mode }}
+        via {{ trigger.event.data.source_id }} ({{ trigger.event.data.reason }})
+```
+
+Have a notification script of your own? Call it in the same place:
+
+```yaml
+actions:
+  - action: script.notify_general_with_menu
+    data:
+      message: >-
+        {{ trigger.event.data.zone_name }} is now on
+        {{ trigger.event.data.hvac_mode }}
+```
+
+Filter down to what interests you with a condition on `reason`. Reporting only when a room
+did not get what it asked for:
+
+```yaml
+conditions:
+  - condition: template
+    value_template: "{{ trigger.event.data.granted == 'neutral' }}"
+```
+
 
 ### What you get in Home Assistant
 
