@@ -369,3 +369,42 @@ class TestNoScreenCanRefuseToBeLeft:
         )
         assert checks >= 6
         assert guarded == checks, f"{checks - guarded} controles zonder verwijder-uitzondering"
+
+
+class TestTheSaveScreenWarns:
+    """Opslaan laat eerst zien wat er afwijkt, en houdt niets tegen.
+
+    Een afwijkende installatie mag: soms wíl je een kamer anders laten werken
+    dan de rest. Tegenhouden zou dat onmogelijk maken. Maar er stilzwijgend
+    overheen gaan is net zo fout, want dan merk je het pas als er iets niet
+    gebeurt - en dat is precies de fout die je nooit vindt.
+
+    An unusual installation is allowed: sometimes you do want one room to work
+    differently. Refusing would make that impossible. But passing over it in
+    silence is just as wrong, since then you only notice when something fails to
+    happen - and that is exactly the fault you never find.
+    """
+
+    def test_the_save_step_checks_before_writing(self) -> None:
+        source = (COMPONENT / "config_flow.py").read_text(encoding="utf-8")
+        start = source.index("async def async_step_save(")
+        body = source[start : source.index("\n    async def ", start + 1)]
+        assert "validate(" in body, "opslaan doet geen configuratiecontrole"
+        assert "async_create_entry" in body, "opslaan schrijft niet meer weg"
+        assert body.index("validate(") < body.index("async_create_entry")
+
+    def test_it_can_be_saved_anyway(self) -> None:
+        """The warning must be a warning, not a lock."""
+        source = (COMPONENT / "config_flow.py").read_text(encoding="utf-8")
+        start = source.index("async def async_step_save(")
+        body = source[start : source.index("\n    async def ", start + 1)]
+        assert "_EXIT_DROP" in body, "geen weg terug vanaf het opslaanscherm"
+        assert "_exit_row()" in body, "geen keuze tussen opslaan en teruggaan"
+
+    @pytest.mark.parametrize("path", FILES, ids=IDS)
+    def test_the_warning_screen_is_translated(self, path: pathlib.Path) -> None:
+        step = load(path).get("options", {}).get("step", {}).get("save")
+        assert step, "de opslaanstap ontbreekt"
+        assert step.get("title")
+        assert "{problems}" in step.get("description", ""), "de lijst wordt niet ingevuld"
+        assert "when_done" in step.get("data", {})

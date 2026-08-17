@@ -162,9 +162,18 @@ class TestTheZoneItself:
         bedroom = next(item for item in result.zones if item.zone_id == "slaapkamer")
         assert bedroom.granted is ModeFamily.NEUTRAL
 
-    def test_a_zone_with_only_manual_sources_is_reported(self) -> None:
-        """It can never run on its own, and saying so beats silent nothing."""
-        assert any("can never run on its own" in item for item in validate(house()))
+    def test_a_zone_with_only_manual_sources_is_no_complaint(self) -> None:
+        """It is the recommended shape for a room you switch on yourself.
+
+        Zo'n zone draait inderdaad nooit uit zichzelf, en dat is de bedoeling.
+        Er blijvend over klagen leert je de lijst te negeren, en dan mis je de
+        melding die er wel toe doet.
+
+        Such a zone indeed never runs of its own accord, which is the point.
+        Complaining about it forever teaches you to ignore the list, and then
+        you miss the one that matters.
+        """
+        assert validate(house()) == ()
 
     def test_a_zone_with_one_of_each_is_sound(self) -> None:
         config = DirectorConfig(
