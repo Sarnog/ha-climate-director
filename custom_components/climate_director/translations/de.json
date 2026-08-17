@@ -592,5 +592,15 @@
         "back_to_menu": "< Zurück zum Hauptmenü"
       }
     }
+  },
+  "problems": {
+    "unit_in_no_zone": "{unit} hängt an Kreis {circuit}, steht aber in keiner Zone. Solange es läuft, hält es diesen Kreis auf seiner Aufgabe, und der Director kann es nicht ausschalten. Füge es als Quelle einer Zone hinzu.",
+    "zone_without_sources": "Zone {zone} hat überhaupt kein Gerät, es gibt also nichts zu steuern. Füge eine Quelle hinzu.",
+    "zone_without_sensor": "Zone {zone} hat keinen Innentemperatursensor und kann zu kalt nie von zu warm unterscheiden. Wähle einen Sensor, oder die Climate-Entität des Geräts selbst.",
+    "zone_presence_without_sensor": "Zone {zone} läuft auf Raumanwesenheit, hat aber keinen Anwesenheitssensor und kann daher nie laufen — auch nicht, um das Gerät auszuschalten. Wähle einen Sensor, oder stell sie auf den Haushalt zurück.",
+    "resident_without_presence": "Bewohner {resident} hat keinen Anwesenheitssensor und kann daher nie als zu Hause gelten. Wähle eine Person oder einen Device-Tracker.",
+    "shared_priority": "Die Zonen {first} und {second} haben beide Vorrang {priority} in Kreis {circuit}. An einem Außengerät überlässt das den Sieger dem Zufall; gib jeder eine eigene Zahl.",
+    "calendars_without_keyword": "Es sind Urlaubskalender eingestellt, aber kein Stichwort, also kann kein Termin den Urlaubsmodus einschalten. Trag das Wort ein, das ein Termin tragen muss, oder entferne die Kalender.",
+    "exclusive_overlap": "{first} und {second} schließen sich aus, gelten aber beide {overlap}. Die Gruppe fängt das ab, doch sie begegnen einander, statt sich schon durch ihre Außengrenzen auszuschließen. Gib ihnen angrenzende Grenzen, um sie endgültig zu trennen."
   }
 }

@@ -592,5 +592,15 @@
         "back_to_menu": "< Volver al menú principal"
       }
     }
+  },
+  "problems": {
+    "unit_in_no_zone": "{unit} cuelga del circuito {circuit} pero no está en ninguna zona. Mientras funciona mantiene ese circuito en su tarea, y el director no puede apagarlo. Añádelo como fuente de una zona.",
+    "zone_without_sources": "La zona {zone} no tiene ningún aparato, así que no hay nada que gobernar. Añade una fuente.",
+    "zone_without_sensor": "La zona {zone} no tiene sensor de temperatura interior, así que nunca puede distinguir demasiado frío de demasiado calor. Elige un sensor, o la entidad climate del propio aparato.",
+    "zone_presence_without_sensor": "La zona {zone} funciona por presencia en la habitación pero no tiene sensor de presencia, así que nunca puede funcionar, ni siquiera para apagar el aparato. Elige un sensor, o vuelve a ponerla en el hogar.",
+    "resident_without_presence": "El residente {resident} no tiene sensor de presencia, así que nunca puede contar como en casa. Elige una persona o un rastreador de dispositivo.",
+    "shared_priority": "Las zonas {first} y {second} tienen ambas la prioridad {priority} en el circuito {circuit}. En una unidad exterior eso deja el ganador al azar; da a cada una su propio número.",
+    "calendars_without_keyword": "Hay calendarios de vacaciones configurados pero ninguna palabra clave, así que ningún evento puede activar el modo vacaciones. Escribe la palabra que debe llevar un evento, o quita los calendarios.",
+    "exclusive_overlap": "{first} y {second} se excluyen pero ambos aplican {overlap}. El grupo lo recoge, pero se encuentran en lugar de excluirse ya por sus límites exteriores. Dales límites contiguos para separarlos del todo."
   }
 }

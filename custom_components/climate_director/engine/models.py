@@ -629,6 +629,33 @@ class DirectorConfig:
         )
 
 
+class Problem(str):
+    """One configuration complaint, readable as text and identifiable by code.
+
+    Een `str`-subklasse met opzet: alles wat er al mee werkte - de diagnose, het
+    logboek, de tests - blijft werken alsof er niets veranderd is. De code komt
+    er alleen bij, zodat de Home Assistant-laag er een vertaling bij kan zoeken.
+    De Engelse tekst blijft de terugval, dus een melding zonder vertaling is
+    nooit erger dan hij was.
+
+    A `str` subclass on purpose: everything already working with these - the
+    diagnostics, the log, the tests - keeps working as though nothing changed.
+    The code is merely added, so the Home Assistant layer can look up a
+    translation for it. The English text stays the fallback, so a complaint
+    without a translation is never worse off than it was.
+    """
+
+    code: str
+    params: dict[str, str]
+
+    def __new__(cls, code: str, text: str, **params: object) -> Problem:
+        """Return the complaint, carrying its code and placeholders."""
+        item = super().__new__(cls, text)
+        item.code = code
+        item.params = {key: str(value) for key, value in params.items()}
+        return item
+
+
 def validate(config: DirectorConfig) -> tuple[str, ...]:
     """Return every structural problem found in `config`, newest checks last.
 
@@ -669,8 +696,13 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
     # be reported before somebody is caught out by it.
     in_a_zone = {source.entity_id for _zone, source in config.sources()}
     problems += [
-        f"unit {unit} is on circuit {circuit.circuit_id} but in no zone, so it can "
-        f"lock that circuit without the director being able to stand it down"
+        Problem(
+            "unit_in_no_zone",
+            f"unit {unit} is on circuit {circuit.circuit_id} but in no zone, so it can "
+            f"lock that circuit without the director being able to stand it down",
+            unit=unit,
+            circuit=circuit.circuit_id,
+        )
         for circuit in config.circuits
         for unit in circuit.units
         if unit not in in_a_zone
@@ -700,15 +732,31 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
 
     for zone in config.zones:
         if not zone.sources:
-            problems.append(f"zone {zone.zone_id} has no sources")
+            problems.append(
+                Problem(
+                    "zone_without_sources",
+                    f"zone {zone.zone_id} has no sources",
+                    zone=zone.zone_id,
+                )
+            )
         if not zone.indoor_sensor:
-            problems.append(f"zone {zone.zone_id} has no indoor temperature sensor")
+            problems.append(
+                Problem(
+                    "zone_without_sensor",
+                    f"zone {zone.zone_id} has no indoor temperature sensor",
+                    zone=zone.zone_id,
+                )
+            )
         if zone.heat is None and zone.cool is None:
             problems.append(f"zone {zone.zone_id} may neither heat nor cool")
         if zone.gate is ZoneGate.PRESENCE and not zone.presence_entity:
             problems.append(
-                f"zone {zone.zone_id} runs on room presence but has no presence entity, "
-                f"so it can never run"
+                Problem(
+                    "zone_presence_without_sensor",
+                    f"zone {zone.zone_id} runs on room presence but has no presence entity, "
+                    f"so it can never run",
+                    zone=zone.zone_id,
+                )
             )
         if zone.presence_timeout.total_seconds() < 0:
             problems.append(f"zone {zone.zone_id} has a negative presence timeout")
@@ -784,8 +832,15 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
         for zone, _ in config.sources_on(circuit):
             if zone.priority in seen and seen[zone.priority] != zone.zone_id:
                 problems.append(
-                    f"zones {seen[zone.priority]} and {zone.zone_id} share priority "
-                    f"{zone.priority} on circuit {circuit.circuit_id}"
+                    Problem(
+                        "shared_priority",
+                        f"zones {seen[zone.priority]} and {zone.zone_id} share priority "
+                        f"{zone.priority} on circuit {circuit.circuit_id}",
+                        first=seen[zone.priority],
+                        second=zone.zone_id,
+                        priority=zone.priority,
+                        circuit=circuit.circuit_id,
+                    )
                 )
             else:
                 seen[zone.priority] = zone.zone_id
@@ -825,12 +880,19 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
 
     if config.holiday_calendars and not config.holiday_keyword.strip():
         problems.append(
-            "holiday calendars are set but no keyword is, so no event can ever "
-            "switch holiday mode on"
+            Problem(
+                "calendars_without_keyword",
+                "holiday calendars are set but no keyword is, so no event can ever "
+                "switch holiday mode on",
+            )
         )
 
     problems += [
-        f"resident {resident.resident_id} has no presence entity, so can never be home"
+        Problem(
+            "resident_without_presence",
+            f"resident {resident.resident_id} has no presence entity, so can never be home",
+            resident=resident.resident_id,
+        )
         for resident in config.residents
         if not resident.presence_entity
     ]
@@ -881,9 +943,15 @@ def _overlapping_bounds(config: DirectorConfig) -> list[str]:
                 overlap = _windows_overlap(first.outdoor, second.outdoor)
                 if overlap is not None:
                     found.append(
-                        f"sources {first.source_id} and {second.source_id} are exclusive "
-                        f"but both apply {overlap}, so at that outdoor temperature one "
-                        f"has to give way instead of never meeting"
+                        Problem(
+                            "exclusive_overlap",
+                            f"sources {first.source_id} and {second.source_id} are "
+                            f"exclusive but both apply {overlap}, so at that outdoor "
+                            f"temperature one has to give way instead of never meeting",
+                            first=first.source_id,
+                            second=second.source_id,
+                            overlap=overlap,
+                        )
                     )
     return found
 

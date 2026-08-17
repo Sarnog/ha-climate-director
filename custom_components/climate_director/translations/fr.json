@@ -592,5 +592,15 @@
         "back_to_menu": "< Retour au menu principal"
       }
     }
+  },
+  "problems": {
+    "unit_in_no_zone": "{unit} est raccordé au circuit {circuit} mais ne figure dans aucune zone. Tant qu'il tourne, il maintient ce circuit sur sa tâche, et le directeur ne peut pas l'éteindre. Ajoutez-le comme source d'une zone.",
+    "zone_without_sources": "La zone {zone} n'a aucun appareil, il n'y a donc rien à piloter. Ajoutez une source.",
+    "zone_without_sensor": "La zone {zone} n'a pas de capteur de température intérieure et ne peut donc jamais distinguer trop froid de trop chaud. Choisissez un capteur, ou l'entité climate de l'appareil lui-même.",
+    "zone_presence_without_sensor": "La zone {zone} fonctionne sur la présence dans la pièce mais n'a pas de capteur de présence ; elle ne peut donc jamais fonctionner — pas même pour éteindre l'appareil. Choisissez un capteur, ou remettez-la sur le foyer.",
+    "resident_without_presence": "L'habitant {resident} n'a pas de capteur de présence et ne peut donc jamais compter comme présent. Choisissez une personne ou un traqueur d'appareil.",
+    "shared_priority": "Les zones {first} et {second} ont toutes deux la priorité {priority} sur le circuit {circuit}. Sur une même unité extérieure, cela laisse le gagnant au hasard ; donnez à chacune son propre numéro.",
+    "calendars_without_keyword": "Des agendas de vacances sont réglés mais pas de mot-clé ; aucun évènement ne peut donc activer le mode vacances. Saisissez le mot qu'un évènement doit porter, ou retirez les agendas.",
+    "exclusive_overlap": "{first} et {second} s'excluent mais s'appliquent tous deux {overlap}. Le groupe le rattrape, mais ils se rencontrent au lieu de s'exclure déjà par leurs bornes extérieures. Donnez-leur des bornes contiguës pour les séparer définitivement."
   }
 }

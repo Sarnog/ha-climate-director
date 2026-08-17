@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import translation
 
 from .const import DOMAIN
 from .engine import DirectorConfig, validate
@@ -63,15 +64,47 @@ def async_report(
         translation_placeholders={
             "name": title,
             "count": str(len(problems)),
-            "problems": summarise(problems),
+            "problems": summarise(hass, problems),
         },
     )
     return problems
 
 
-def summarise(problems: tuple[str, ...]) -> str:
+def readable(hass: HomeAssistant, problem: str) -> str:
+    """Return one complaint in the user's language, or its English text.
+
+    De engine kent geen Home Assistant en schrijft dus Engels. Draagt een
+    melding een code, dan zoeken we die hier op; zo niet, dan blijft de Engelse
+    zin staan. Een melding zonder vertaling is daarmee nooit slechter af dan hij
+    was - en beter half vertaald dan een lijst die half Nederlands is.
+
+    The engine knows no Home Assistant and therefore writes English. If a
+    complaint carries a code we look it up here; if not, the English sentence
+    stays. A complaint without a translation is thereby never worse off than it
+    was - and better than a list that is half translated.
+    """
+    code = getattr(problem, "code", "")
+    if not code:
+        return str(problem)
+    template = _translated(hass, code)
+    if template is None:
+        return str(problem)
+    try:
+        return template.format(**getattr(problem, "params", {}))
+    except (KeyError, IndexError):
+        return str(problem)
+
+
+def _translated(hass: HomeAssistant, code: str) -> str | None:
+    """Return the translated template for one problem code, if there is one."""
+    key = f"component.{DOMAIN}.problems.{code}"
+    cached = translation.async_get_cached_translations(hass, hass.config.language, "problems")
+    return cached.get(key)
+
+
+def summarise(hass: HomeAssistant, problems: tuple[str, ...]) -> str:
     """Return the problem list as it appears in the notice, capped in length."""
-    listed = [f"- {problem}" for problem in problems[:MAX_LISTED]]
+    listed = [f"- {readable(hass, problem)}" for problem in problems[:MAX_LISTED]]
     remaining = len(problems) - MAX_LISTED
     if remaining > 0:
         listed.append(f"- ... and {remaining} more")

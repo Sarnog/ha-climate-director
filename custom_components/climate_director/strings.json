@@ -592,5 +592,15 @@
         "back_to_menu": "< Back to the main menu"
       }
     }
+  },
+  "problems": {
+    "unit_in_no_zone": "{unit} hangs on circuit {circuit} but is in no zone. While it runs it holds that circuit to its duty, and the director cannot switch it off. Add it as a source of a zone.",
+    "zone_without_sources": "Zone {zone} has no appliance at all, so there is nothing to steer. Add a source.",
+    "zone_without_sensor": "Zone {zone} has no indoor temperature sensor, so it can never tell too cold from too warm. Pick a sensor, or the appliance's own climate entity.",
+    "zone_presence_without_sensor": "Zone {zone} runs on room presence but has no presence sensor, so it can never run — not even to switch the appliance off. Pick a sensor, or set it back to the household.",
+    "resident_without_presence": "Resident {resident} has no presence sensor, so they can never count as home. Pick a person or device tracker.",
+    "shared_priority": "Zones {first} and {second} both hold priority {priority} on circuit {circuit}. On one outdoor unit that leaves the winner to chance; give each its own number.",
+    "calendars_without_keyword": "Holiday calendars are set but no keyword is, so no event can ever switch holiday mode on. Fill in the word an event must carry, or clear the calendars.",
+    "exclusive_overlap": "{first} and {second} are exclusive but both apply {overlap}. The group does catch it, but they meet rather than ruling each other out by their outdoor bounds. Give them adjacent bounds to keep them apart for good."
   }
 }

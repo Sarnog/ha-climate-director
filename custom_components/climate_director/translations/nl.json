@@ -592,5 +592,15 @@
         "back_to_menu": "< Terug naar het hoofdmenu"
       }
     }
+  },
+  "problems": {
+    "unit_in_no_zone": "{unit} hangt aan circuit {circuit} maar staat in geen enkele zone. Zolang hij draait houdt hij dat circuit op zijn taak, en de director kan hem niet uitzetten. Voeg hem toe als bron van een zone.",
+    "zone_without_sources": "Zone {zone} heeft helemaal geen apparaat, dus er valt niets aan te sturen. Voeg een bron toe.",
+    "zone_without_sensor": "Zone {zone} heeft geen binnentemperatuursensor, dus hij kan te koud nooit van te warm onderscheiden. Kies een sensor, of de climate-entiteit van het apparaat zelf.",
+    "zone_presence_without_sensor": "Zone {zone} draait op aanwezigheid in de ruimte maar heeft geen aanwezigheidssensor, dus hij kan nooit draaien — ook niet om het apparaat uit te zetten. Kies een sensor, of zet hem terug op het huishouden.",
+    "resident_without_presence": "Bewoner {resident} heeft geen aanwezigheidssensor, dus die kan nooit als thuis tellen. Kies een persoon of device tracker.",
+    "shared_priority": "Zones {first} en {second} hebben allebei voorrang {priority} op circuit {circuit}. Op één buitenunit laat dat de winnaar aan het toeval over; geef ze elk een eigen nummer.",
+    "calendars_without_keyword": "Er staan vakantieagenda's ingesteld maar geen trefwoord, dus geen enkel item kan de vakantiemodus aanzetten. Vul het woord in dat een item moet dragen, of haal de agenda's weg.",
+    "exclusive_overlap": "{first} en {second} sluiten elkaar uit maar gelden allebei {overlap}. De groep vangt dat op, maar ze komen elkaar tegen in plaats van elkaar door hun buitengrenzen al uit te sluiten. Geef ze aansluitende grenzen om ze definitief uit elkaar te houden."
   }
 }
