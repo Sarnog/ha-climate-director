@@ -148,8 +148,9 @@ want jij had hem net expres stilgezet.
 De zone doet weer mee zodra:
 
 - **jij hem weer aanzet**, in welke stand dan ook;
+- **iedereen die thuis is naar bed gaat.** Dan is de dag voorbij en doet de zone weer mee.
 - **het de volgende dag is.** Een besluit van gisteravond hoort vanochtend niet meer te
-  gelden, dus de zone doet vanaf middernacht gewoon weer mee.
+  gelden, dus de zone doet uiterlijk vanaf middernacht gewoon weer mee.
 
 Uitzetten dat de director zélf doet telt niet mee, anders zou elke zone die hij ooit
 uitzet permanent stil komen te staan. De schakelaar `switch.*_override_<zone>` blijft
@@ -893,8 +894,9 @@ do, since you had just deliberately silenced it.
 The zone takes part again as soon as:
 
 - **you switch it back on**, in whatever mode;
+- **everybody who is home turns in.** The day is over then, and the zone joins in again.
 - **it is the next day.** Last night's decision should not still hold this morning, so from
-  midnight the zone simply joins in again.
+  midnight at the latest the zone simply joins in again.
 
 Switching off that the director does itself does not count, or every zone it ever switches
 off would fall silent for good. The `switch.*_<zone>_override` switch keeps working
