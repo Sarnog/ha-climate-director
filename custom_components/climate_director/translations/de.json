@@ -32,7 +32,8 @@
           "openings": "Türen und Fenster",
           "save": "✅ Speichern und schließen",
           "generators": "Gemeinsame Wärmequellen",
-          "exclusives": "Exklusive Gruppen"
+          "exclusives": "Exklusive Gruppen",
+          "quiets": "Ruhefenster"
         }
       },
       "settings": {
@@ -396,6 +397,34 @@
           "delete": "Diese Gruppe löschen",
           "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
+      },
+      "quiets": {
+        "title": "Ruhefenster",
+        "description": "Stunden, in denen der Director von sich aus nichts anfängt. Um elf Uhr abends heimkommen und gleich ins Bett gehen muss das Haus nicht aufheizen.\n\nDas bremst das Anfangen, nicht das Weiterlaufen: was schon läuft bleibt geregelt und geht zur Schlafenszeit wie immer aus, und was du selbst einschaltest wird übernommen und weitergeregelt. Ohne Fenster ist die Bremse gelöst.",
+        "data": {
+          "quiet": "Fenster"
+        },
+        "data_description": {
+          "quiet": "Wähle eines zum Bearbeiten, oder füge eines hinzu."
+        }
+      },
+      "quiet": {
+        "title": "Ruhefenster",
+        "description": "Stunden, in denen der Director von sich aus nichts anfängt. Um elf Uhr abends heimkommen und gleich ins Bett gehen muss das Haus nicht aufheizen.\n\nDas bremst das Anfangen, nicht das Weiterlaufen: was schon läuft bleibt geregelt und geht zur Schlafenszeit wie immer aus, und was du selbst einschaltest wird übernommen und weitergeregelt. Ohne Fenster ist die Bremse gelöst.",
+        "data": {
+          "start": "Ruhe ab",
+          "end": "Ruhe bis",
+          "weekdays": "Tage, an denen das gilt",
+          "delete": "Dieses Fenster löschen",
+          "when_done": "Wenn du hier fertig bist"
+        },
+        "data_description": {
+          "start": "Zwischen diesen Zeiten fängt der Director nichts von selbst an. Ein Fenster darf über Mitternacht laufen: 21:00 bis 09:00 ist die Nacht.",
+          "end": "Zwischen diesen Zeiten fängt der Director nichts von selbst an. Ein Fenster darf über Mitternacht laufen: 21:00 bis 09:00 ist die Nacht.",
+          "weekdays": "Leer lassen gilt jeden Tag.",
+          "delete": "Dieses Fenster löschen",
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+        }
       }
     },
     "error": {
@@ -589,6 +618,12 @@
     "exclusive_list": {
       "options": {
         "add_new": "+ Gruppe hinzufügen",
+        "back_to_menu": "< Zurück zum Hauptmenü"
+      }
+    },
+    "quiet_list": {
+      "options": {
+        "add_new": "+ Ruhefenster hinzufügen",
         "back_to_menu": "< Zurück zum Hauptmenü"
       }
     }

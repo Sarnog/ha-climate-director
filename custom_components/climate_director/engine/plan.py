@@ -38,6 +38,7 @@ class Reason(StrEnum):
     EVERYONE_ASLEEP = "everyone_asleep"
     OUTSIDE_SCHEDULE = "outside_schedule"
     ZONE_UNOCCUPIED = "zone_unoccupied"
+    QUIET_HOURS = "quiet_hours"
 
     NO_INDOOR_TEMPERATURE = "no_indoor_temperature"
     SEASON_BLOCKS_MODE = "season_blocks_mode"

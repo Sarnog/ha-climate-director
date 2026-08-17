@@ -85,6 +85,14 @@ def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
         "exclusive_groups": [sorted(group) for group in config.exclusive_groups],
         "gates": {
             "require_awake": config.gates.require_awake,
+            "quiet_windows": [
+                {
+                    "start": window.start.isoformat(),
+                    "end": window.end.isoformat(),
+                    "weekdays": (None if window.weekdays is None else sorted(window.weekdays)),
+                }
+                for window in config.gates.quiet_windows
+            ],
             "require_schedule": config.gates.require_schedule,
             "precondition_window": (
                 None
@@ -244,6 +252,9 @@ def _gates(raw: Any) -> GateSettings:
     default_window = TimeWindow(time(6, 0), time(23, 0))
     return GateSettings(
         require_awake=_bool(raw.get("require_awake"), True),
+        quiet_windows=tuple(
+            _time_window(item) for item in raw.get("quiet_windows") or () if isinstance(item, dict)
+        ),
         require_schedule=_bool(raw.get("require_schedule"), False),
         guest_window=_guest_window(guest if isinstance(guest, dict) else {}),
         precondition_window=(

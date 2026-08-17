@@ -32,7 +32,8 @@
           "openings": "Portes et fenêtres",
           "save": "✅ Enregistrer et fermer",
           "generators": "Sources de chaleur partagées",
-          "exclusives": "Groupes exclusifs"
+          "exclusives": "Groupes exclusifs",
+          "quiets": "Plages de silence"
         }
       },
       "settings": {
@@ -396,6 +397,34 @@
           "delete": "Supprimer ce groupe",
           "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
+      },
+      "quiets": {
+        "title": "Plages de silence",
+        "description": "Heures pendant lesquelles le directeur ne démarre rien de lui-même. Rentrer à onze heures du soir alors qu'on va se coucher n'oblige pas à chauffer la maison.\n\nCela freine le démarrage, pas la poursuite : ce qui tourne déjà reste régulé et s'éteint au coucher comme d'habitude, et ce que vous allumez vous-même est repris et poursuivi. Sans plage, le frein est relâché.",
+        "data": {
+          "quiet": "Plage"
+        },
+        "data_description": {
+          "quiet": "Choisissez-en une à modifier, ou ajoutez-en une."
+        }
+      },
+      "quiet": {
+        "title": "Plage de silence",
+        "description": "Heures pendant lesquelles le directeur ne démarre rien de lui-même. Rentrer à onze heures du soir alors qu'on va se coucher n'oblige pas à chauffer la maison.\n\nCela freine le démarrage, pas la poursuite : ce qui tourne déjà reste régulé et s'éteint au coucher comme d'habitude, et ce que vous allumez vous-même est repris et poursuivi. Sans plage, le frein est relâché.",
+        "data": {
+          "start": "Silence à partir de",
+          "end": "Silence jusqu'à",
+          "weekdays": "Jours concernés",
+          "delete": "Supprimer cette plage",
+          "when_done": "Quand vous avez terminé ici"
+        },
+        "data_description": {
+          "start": "Entre ces heures le directeur ne démarre rien de lui-même. Une plage peut franchir minuit : 21:00 à 09:00 est la nuit.",
+          "end": "Entre ces heures le directeur ne démarre rien de lui-même. Une plage peut franchir minuit : 21:00 à 09:00 est la nuit.",
+          "weekdays": "Laisser vide vaut tous les jours.",
+          "delete": "Supprimer cette plage",
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+        }
       }
     },
     "error": {
@@ -589,6 +618,12 @@
     "exclusive_list": {
       "options": {
         "add_new": "+ Ajouter un groupe",
+        "back_to_menu": "< Retour au menu principal"
+      }
+    },
+    "quiet_list": {
+      "options": {
+        "add_new": "+ Ajouter une plage de silence",
         "back_to_menu": "< Retour au menu principal"
       }
     }

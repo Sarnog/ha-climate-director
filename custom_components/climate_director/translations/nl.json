@@ -32,7 +32,8 @@
           "openings": "Deuren en ramen",
           "save": "✅ Opslaan en sluiten",
           "generators": "Gedeelde warmtebronnen",
-          "exclusives": "Exclusieve groepen"
+          "exclusives": "Exclusieve groepen",
+          "quiets": "Stiltevensters"
         }
       },
       "settings": {
@@ -396,6 +397,34 @@
           "delete": "Deze groep verwijderen",
           "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
+      },
+      "quiets": {
+        "title": "Stiltevensters",
+        "description": "Uren waarin de director uit zichzelf niets begint. Thuiskomen om elf uur 's avonds terwijl je zo naar bed gaat, hoeft het huis niet te laten opstoken.\n\nDit remt het beginnen, niet het doorgaan: wat al draait blijft gewoon geregeld en gaat bij bedtijd uit zoals altijd, en zet je zelf iets aan, dan wordt dat opgepakt en doorgeregeld. Geen vensters instellen zet de rem uit.",
+        "data": {
+          "quiet": "Venster"
+        },
+        "data_description": {
+          "quiet": "Kies er een om aan te passen, of voeg er een toe."
+        }
+      },
+      "quiet": {
+        "title": "Stiltevenster",
+        "description": "Uren waarin de director uit zichzelf niets begint. Thuiskomen om elf uur 's avonds terwijl je zo naar bed gaat, hoeft het huis niet te laten opstoken.\n\nDit remt het beginnen, niet het doorgaan: wat al draait blijft gewoon geregeld en gaat bij bedtijd uit zoals altijd, en zet je zelf iets aan, dan wordt dat opgepakt en doorgeregeld. Geen vensters instellen zet de rem uit.",
+        "data": {
+          "start": "Stilte vanaf",
+          "end": "Stilte tot",
+          "weekdays": "Dagen waarop dit geldt",
+          "delete": "Dit venster verwijderen",
+          "when_done": "Als je hier klaar bent"
+        },
+        "data_description": {
+          "start": "Tussen deze tijden begint de director niets uit zichzelf. Een venster mag over middernacht heen lopen: 21:00 tot 09:00 is de nacht.",
+          "end": "Tussen deze tijden begint de director niets uit zichzelf. Een venster mag over middernacht heen lopen: 21:00 tot 09:00 is de nacht.",
+          "weekdays": "Leeg laten geldt elke dag.",
+          "delete": "Dit venster verwijderen",
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+        }
       }
     },
     "error": {
@@ -589,6 +618,12 @@
     "exclusive_list": {
       "options": {
         "add_new": "+ Groep toevoegen",
+        "back_to_menu": "< Terug naar het hoofdmenu"
+      }
+    },
+    "quiet_list": {
+      "options": {
+        "add_new": "+ Stiltevenster toevoegen",
         "back_to_menu": "< Terug naar het hoofdmenu"
       }
     }

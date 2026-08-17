@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .families import ModeFamily
 from .models import HOLIDAY_WEEKDAY, DirectorConfig, Resident, Zone, ZoneGate
 from .plan import Reason
 from .world import WorldState
@@ -82,6 +83,19 @@ def evaluate(config: DirectorConfig, world: WorldState, zone: Zone) -> GateVerdi
     # window and the override, and before everything about people.
     if _preconditioning(config, world, zone):
         return GateVerdict.allow()
+
+    # De stiltevensters remmen het beginnen, niet het doorgaan. Een zone die al
+    # draait houdt zijn gewone regeling - inclusief uitgaan zodra iedereen naar
+    # bed is. Zet iemand zelf iets aan, dan draait dat mee alsof het altijd al
+    # liep. Zo blijft de rem een rem en wordt het geen tweede rooster.
+    #
+    # The quiet windows brake starting, not continuing. A zone already running
+    # keeps its ordinary regulation - going off once everybody has turned in
+    # included. Switch something on yourself and it runs along as though it had
+    # been going all the while. That keeps the brake a brake rather than a second
+    # schedule.
+    if _quiet_hours(config, world) and not _zone_running(world, zone):
+        return GateVerdict.block(Reason.QUIET_HOURS)
 
     # Een zone die op de kamer draait laat het huishouden erbuiten. Wie er zit,
     # zit er - dat is een beter antwoord dan welk rooster ook kan geven.
@@ -195,6 +209,21 @@ def _guests_carry_the_house(config: DirectorConfig, world: WorldState) -> bool:
     if window is None:
         return True
     return window.contains(world.now.time(), world.now.weekday())
+
+
+def _quiet_hours(config: DirectorConfig, world: WorldState) -> bool:
+    """Return whether this moment falls inside a quiet window."""
+    return any(
+        window.contains(world.now.time(), world.now.weekday())
+        for window in config.gates.quiet_windows
+    )
+
+
+def _zone_running(world: WorldState, zone: Zone) -> bool:
+    """Return whether any appliance of this zone is doing something right now."""
+    return any(
+        world.climate(source.entity_id).family is not ModeFamily.NEUTRAL for source in zone.sources
+    )
 
 
 def _room_occupied(world: WorldState, zone: Zone) -> bool:

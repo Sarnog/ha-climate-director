@@ -46,6 +46,7 @@ _ADD_FALLBACK = {
     "window": "+ Add schedule",
     "opening": "+ Add opening",
     "exclusive": "+ Add group",
+    "quiet": "+ Add quiet window",
 }
 
 #: Maandag is 0, gelijk aan `datetime.weekday()`, dat de engine ook gebruikt.
@@ -267,6 +268,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 "circuits",
                 "generators",
                 "exclusives",
+                "quiets",
                 "residents",
                 "openings",
                 "save",
@@ -493,6 +495,100 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                             options=_source_options(self),
                             mode=selector.SelectSelectorMode.LIST,
                             multiple=True,
+                        )
+                    ),
+                    vol.Required("delete", default=False): bool,
+                    vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
+                }
+            ),
+        )
+
+    # -- stiltevensters / quiet windows --------------------------------------
+
+    def _quiet_windows(self) -> list[dict[str, Any]]:
+        """Return the stored quiet windows, creating the list on first use."""
+        gates = self._installation.setdefault("gates", {})
+        return gates.setdefault("quiet_windows", [])
+
+    async def async_step_quiets(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Pick a quiet window to edit, add one, or go back."""
+        windows = self._quiet_windows()
+
+        if user_input is not None:
+            choice = user_input["quiet"]
+            if choice == _BACK:
+                return await self.async_step_init()
+            self._index = None if choice == _ADD else int(choice)
+            return await self.async_step_quiet()
+
+        options = [
+            selector.SelectOptionDict(value=str(index), label=_window_label(window))
+            for index, window in enumerate(windows)
+        ]
+        options.append(_add_option("quiet"))
+        options.append(_back_option("quiet"))
+        return self.async_show_form(
+            step_id="quiets",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("quiet", default=_BACK if windows else _ADD): (
+                        selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=options,
+                                mode=selector.SelectSelectorMode.LIST,
+                                translation_key="quiet_list",
+                            )
+                        )
+                    )
+                }
+            ),
+        )
+
+    async def async_step_quiet(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Edit one quiet window: when the director may not start anything."""
+        windows = self._quiet_windows()
+        current = windows[self._index] if self._index is not None else {}
+
+        if user_input is not None:
+            if user_input.get(_EXIT) == _EXIT_DROP:
+                return await self.async_step_quiets()
+            if user_input.get("delete") and self._index is not None:
+                windows.pop(self._index)
+            else:
+                window = {
+                    "start": user_input["start"],
+                    "end": user_input["end"],
+                    "weekdays": ([int(day) for day in user_input.get("weekdays") or ()] or None),
+                }
+                if self._index is None:
+                    windows.append(window)
+                else:
+                    windows[self._index] = window
+            self._index = None
+            return await self.async_step_quiets()
+
+        weekdays = current.get("weekdays")
+        return self.async_show_form(
+            step_id="quiet",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("start", default=current.get("start", "21:00:00")): _TIME,
+                    vol.Required("end", default=current.get("end", "09:00:00")): _TIME,
+                    vol.Optional(
+                        "weekdays",
+                        description={
+                            "suggested_value": (
+                                None if weekdays is None else [str(day) for day in weekdays]
+                            )
+                        },
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[
+                                selector.SelectOptionDict(value=str(number), label=label)
+                                for number, label in enumerate(_WEEKDAYS)
+                            ],
+                            multiple=True,
+                            mode=selector.SelectSelectorMode.LIST,
                         )
                     ),
                     vol.Required("delete", default=False): bool,

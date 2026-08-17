@@ -32,7 +32,8 @@
           "openings": "Puertas y ventanas",
           "save": "✅ Guardar y cerrar",
           "generators": "Fuentes de calor compartidas",
-          "exclusives": "Grupos exclusivos"
+          "exclusives": "Grupos exclusivos",
+          "quiets": "Franjas de silencio"
         }
       },
       "settings": {
@@ -396,6 +397,34 @@
           "delete": "Eliminar este grupo",
           "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
+      },
+      "quiets": {
+        "title": "Franjas de silencio",
+        "description": "Horas en las que el director no arranca nada por su cuenta. Llegar a casa a las once de la noche cuando te vas a acostar no obliga a calentar la casa.\n\nEsto frena el arranque, no la continuación: lo que ya funciona sigue regulado y se apaga al acostarse como siempre, y lo que enciendes tú se recoge y se sigue regulando. Sin franjas el freno está suelto.",
+        "data": {
+          "quiet": "Franja"
+        },
+        "data_description": {
+          "quiet": "Elige una para modificar, o añade una."
+        }
+      },
+      "quiet": {
+        "title": "Franja de silencio",
+        "description": "Horas en las que el director no arranca nada por su cuenta. Llegar a casa a las once de la noche cuando te vas a acostar no obliga a calentar la casa.\n\nEsto frena el arranque, no la continuación: lo que ya funciona sigue regulado y se apaga al acostarse como siempre, y lo que enciendes tú se recoge y se sigue regulando. Sin franjas el freno está suelto.",
+        "data": {
+          "start": "Silencio desde",
+          "end": "Silencio hasta",
+          "weekdays": "Días en que se aplica",
+          "delete": "Eliminar esta franja",
+          "when_done": "Cuando termines aquí"
+        },
+        "data_description": {
+          "start": "Entre estas horas el director no arranca nada por su cuenta. Una franja puede cruzar la medianoche: de 21:00 a 09:00 es la noche.",
+          "end": "Entre estas horas el director no arranca nada por su cuenta. Una franja puede cruzar la medianoche: de 21:00 a 09:00 es la noche.",
+          "weekdays": "Dejarlo vacío vale todos los días.",
+          "delete": "Eliminar esta franja",
+          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+        }
       }
     },
     "error": {
@@ -589,6 +618,12 @@
     "exclusive_list": {
       "options": {
         "add_new": "+ Añadir grupo",
+        "back_to_menu": "< Volver al menú principal"
+      }
+    },
+    "quiet_list": {
+      "options": {
+        "add_new": "+ Añadir franja de silencio",
         "back_to_menu": "< Volver al menú principal"
       }
     }

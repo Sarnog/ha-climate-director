@@ -498,6 +498,22 @@ class GateSettings:
     require_schedule: bool = False
     """Someone's schedule window must be open."""
 
+    quiet_windows: tuple[TimeWindow, ...] = ()
+    """Hours in which the director may not start anything of its own accord.
+
+    Thuiskomen om elf uur 's avonds terwijl je zo naar bed gaat, hoeft het huis
+    niet te laten opstoken. Binnen deze vensters begint de director dus niets
+    uit zichzelf. Wat al draait blijft gewoon geregeld, en zet je zelf iets aan,
+    dan pakt hij dat op en regelt door - het is een rem op beginnen, niet op
+    doorgaan. Leeg laten zet de rem uit.
+
+    Coming home at eleven at night when you are about to turn in need not fire
+    the boiler. Inside these windows the director therefore starts nothing of its
+    own accord. Whatever already runs stays regulated, and if you switch
+    something on yourself it is picked up and carried on - this is a brake on
+    starting, not on continuing. Leaving it empty releases the brake.
+    """
+
     precondition_window: TimeWindow | None = field(
         default_factory=lambda: TimeWindow(time(6, 0), time(23, 0))
     )
