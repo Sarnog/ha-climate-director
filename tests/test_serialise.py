@@ -169,3 +169,102 @@ class TestSeasons:
 
 def test_a_round_tripped_installation_still_validates() -> None:
     assert validate(config_from_dict(config_to_dict(house()))) == ()
+
+
+class TestNothingStoredCanStopTheLoad:
+    """Wat er ook in de opslag staat, de integratie moet blijven laden.
+
+    `config_from_dict` draait bij het opstarten. Loopt hij daar stuk, dan laadt de
+    hele integratie niet en zie je alleen een fout in het log - geen zone, geen
+    schakelaar, niets. Een half opgeslagen optie, een hand-bewerkte entry of een
+    veld dat ooit een ander type had mag dat nooit veroorzaken. Wat structureel
+    niet klopt hoort uit `validate()` te komen, met een naam erbij.
+
+    `config_from_dict` runs at startup. Break there and the whole integration
+    fails to load, leaving nothing but a line in the log - no zone, no switch,
+    nothing. A half-written option, a hand-edited entry or a field that once held
+    another type must never cause that. What is structurally wrong belongs in
+    `validate()`, with a name attached.
+    """
+
+    #: Waarden die een JSON-opslag kan bevatten en die ooit crashes gaven.
+    #: Values a JSON store can hold, each of which once caused a crash.
+    ODD: tuple[object, ...] = (
+        None,
+        "",
+        0,
+        -1,
+        3.5,
+        True,
+        False,
+        [],
+        {},
+        "tekst",
+        [1, 2],
+        {"a": 1},
+        1e400,
+        -1e400,
+        float("nan"),
+        [9, -3, "x"],
+    )
+
+    SECTIONS = (
+        "zones",
+        "circuits",
+        "residents",
+        "openings",
+        "generators",
+        "gates",
+        "seasons",
+        "outdoor_sensor",
+        "holiday_calendars",
+        "holiday_keyword",
+        "stuck_after",
+        "exclusive_groups",
+    )
+
+    def test_ten_thousand_stored_configurations(self) -> None:
+        import random
+
+        random.seed(11)
+        for _ in range(10_000):
+            raw: dict[str, object] = {
+                key: random.choice(self.ODD)
+                for key in random.sample(self.SECTIONS, random.randint(1, len(self.SECTIONS)))
+            }
+            if random.random() < 0.5:
+                raw["zones"] = [
+                    {
+                        "zone_id": random.choice(["z", "", None, 1]),
+                        "sources": random.choice([[], [{"entity_id": "climate.a"}], None, "x", 3]),
+                        "heat": random.choice([None, {}, {"target": random.choice(self.ODD)}]),
+                        "gate": random.choice(["household", "presence", "onzin", None]),
+                        "presence_timeout": random.choice(self.ODD),
+                    }
+                ]
+            if random.random() < 0.3:
+                raw["gates"] = {
+                    "quiet_windows": random.choice(
+                        [None, "x", 7, [{"weekdays": random.choice(self.ODD)}], [{}]]
+                    )
+                }
+            config = config_from_dict(raw)
+            config_to_dict(config)
+            validate(config)
+
+    def test_infinity_never_reaches_a_setting(self) -> None:
+        """A number that is not finite is not a number worth keeping."""
+        config = config_from_dict({"stuck_after": 1e400, "zones": [{"priority": float("nan")}]})
+        assert config.stuck_after.total_seconds() == 900
+        assert config.zones[0].priority == 0
+
+    def test_an_impossible_weekday_is_dropped(self) -> None:
+        """Folding 9 onto a Tuesday would put a window on a day nobody picked."""
+        stored = config_from_dict(
+            {"residents": [{"resident_id": "d", "windows": [{"weekdays": [9, 2, -3]}]}]}
+        )
+        assert stored.residents[0].windows[0].weekdays == frozenset({2})
+
+    def test_a_list_that_is_not_a_list_is_empty(self) -> None:
+        for value in (7, "tekst", True, {"a": 1}):
+            assert config_from_dict({"zones": value}).zones == ()
