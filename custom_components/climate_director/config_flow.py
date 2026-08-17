@@ -22,9 +22,9 @@ from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.util import slugify
 
+from . import problems
 from .const import CONF_INSTALLATION, CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE, DOMAIN
 from .coordinator import ClimateDirectorEntry
-from . import problems
 from .engine import validate
 from .engine.models import ConflictPolicy, Season, SeasonSource, SourceRole, ZoneGate
 from .engine.serialise import config_from_dict
