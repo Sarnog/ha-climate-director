@@ -129,3 +129,66 @@ class TestItSurvivesStorage:
     def test_rubbish_is_ignored(self) -> None:
         stored = config_from_dict({"gates": {"quiet_windows": ["nonsense", None, 42]}})
         assert stored.gates.quiet_windows == ()
+
+
+class TestAnOpenScheduleWins:
+    """Het rooster beschrijft juist het vroege uur; de stilte mag dat niet knijpen.
+
+    De stilte is bedoeld voor thuiskomen op een uur waarop je zo naar bed gaat.
+    Wie om vijf uur 's ochtends begint heeft dat in zijn rooster gezet omdat het
+    vroeg is - dan zou een stiltevenster van 21:00 tot 09:00 precies het ritme
+    afknijpen dat het rooster beschrijft.
+
+    The quiet is meant for coming home at an hour when you are about to turn in.
+    Whoever starts at five in the morning put that in their schedule because it
+    is early - a quiet window from 21:00 to 09:00 would then pinch off the very
+    rhythm the schedule describes.
+    """
+
+    #: Nancy staat op dinsdag en donderdag vroeg op.
+    #: Nancy is up early on Tuesdays and Thursdays.
+    nancy = Resident(
+        "nancy",
+        "Nancy",
+        windows=(TimeWindow(time(5, 0), time(8, 0), frozenset({1, 3})),),
+        presence_entity="person.nancy",
+    )
+
+    def _config(self) -> DirectorConfig:
+        base = house(*HIS)
+        return DirectorConfig(zones=base.zones, residents=(self.nancy,), gates=base.gates)
+
+    def _verdict(self, hour: int, *, day: int, home: bool = True):
+        from conftest import away
+
+        config = self._config()
+        zone = config.zone("woonkamer")
+        assert zone is not None
+        world = make_world(
+            now=datetime(2026, 8, day, hour, 0),
+            indoor={"woonkamer": 18.0},
+            climates={LIVING: "off"},
+            residents={"nancy": awake() if home else away()},
+            presence={"woonkamer": PresenceState(occupied=True)},
+        )
+        return gates.evaluate(config, world, zone)
+
+    def test_her_early_window_beats_the_quiet(self) -> None:
+        """Tuesday 06:00: inside the quiet window, but her schedule is open."""
+        assert self._verdict(6, day=18).allowed
+
+    def test_outside_her_window_the_quiet_holds(self) -> None:
+        """Tuesday 04:00: too early even for her."""
+        assert self._verdict(4, day=18).reason is Reason.QUIET_HOURS
+
+    def test_on_a_day_without_a_window_the_quiet_holds(self) -> None:
+        """Wednesday 06:00: her window is Tuesday and Thursday only."""
+        assert self._verdict(6, day=19).reason is Reason.QUIET_HOURS
+
+    def test_the_evening_stays_quiet(self) -> None:
+        """Tuesday 23:00: nobody's window is open, so coming home starts nothing."""
+        assert self._verdict(23, day=18).reason is Reason.QUIET_HOURS
+
+    def test_a_window_of_somebody_away_does_not_count(self) -> None:
+        """Her schedule need not set the house going while she is out."""
+        assert self._verdict(6, day=18, home=False).reason is Reason.QUIET_HOURS

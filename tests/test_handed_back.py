@@ -119,6 +119,7 @@ def coordinator(plan: Plan | None = None, states: dict[str, str] | None = None):
         _we_wanted_it_off = ClimateDirectorCoordinator._we_wanted_it_off
         _zones_handed_back = ClimateDirectorCoordinator._zones_handed_back
         _everyone_asleep = ClimateDirectorCoordinator._everyone_asleep
+        _house_is_empty = ClimateDirectorCoordinator._house_is_empty
         _state_is = ClimateDirectorCoordinator._state_is
 
     return StandIn()
@@ -308,12 +309,26 @@ class TestGoingToBedGivesItBack:
         item._notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item._zones_handed_back() == set()
 
-    def test_an_empty_house_does_not_count_as_asleep(self) -> None:
-        """Nobody home is nobody in bed, so the zone stays where it was put."""
+    def test_an_empty_house_hands_it_back_as_well(self) -> None:
+        """Nobody left means the case it was silenced for is over."""
         states = self._with(**{"person.danny": "not_home", "person.nancy": "not_home"})
         item = coordinator(running_plan(), states)
         item._notice_hand(_Event(BEDROOM, "heat", "off"))
-        assert item._zones_handed_back() == {"slaapkamer"}
+        assert item._zones_handed_back() == set()
+
+    def test_the_master_key_lapses_with_it(self) -> None:
+        """The administrator's switch should not stay hanging over an empty house."""
+        states = self._with(**{"person.danny": "not_home", "person.nancy": "not_home"})
+        item = coordinator(running_plan(), states)
+        item.zone_overrides["woonkamer"] = True
+        item._zones_handed_back()
+        assert item.zone_overrides == {}
+
+    def test_the_master_key_survives_a_house_in_use(self) -> None:
+        item = coordinator(running_plan(), self.HOME_AWAKE)
+        item.zone_overrides["woonkamer"] = True
+        item._zones_handed_back()
+        assert item.zone_overrides == {"woonkamer": True}
 
     def test_waking_up_does_not_hand_it_back_again(self) -> None:
         """Once given back it is gone; getting up cannot re-silence the zone."""
