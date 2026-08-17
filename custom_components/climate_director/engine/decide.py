@@ -408,6 +408,32 @@ def _generator_commands(
         ]
 
         if not asking:
+            # Een zone met een override is overgedragen: de director weet niet
+            # meer wat daar nodig is. Hem dan toch de gedeelde ketel laten
+            # uitzetten maakt de override een halve maatregel - de kamer mag
+            # zijn eigen kraan houden, maar het water wordt koud. Wie de
+            # noodknop gebruikt, of een zone tijdelijk aan een eigen
+            # automatisering laat, verwacht dat de director van die warmte
+            # afblijft.
+            #
+            # Aanzetten mag wel: dat botst nooit met een zone die warmte wil.
+            # Alleen het uitzetten wordt hier ingehouden.
+            #
+            # A zone under override has been handed over: the director no
+            # longer knows what it needs. Letting it switch off the shared
+            # boiler anyway would make the override a half measure - the room
+            # keeps its own valve, but the water goes cold. Whoever reaches for
+            # the override, or leaves a zone to an automation of their own,
+            # expects the director to keep its hands off that heat.
+            #
+            # Switching on stays allowed: that never clashes with a zone that
+            # wants heat. Only the switching off is withheld here.
+            if any(
+                generator.serves(zone.zone_id) and world.overridden(zone.zone_id)
+                for zone in config.zones
+            ):
+                continue
+
             commands.append(
                 UnitCommand(
                     entity_id=generator.entity_id,
