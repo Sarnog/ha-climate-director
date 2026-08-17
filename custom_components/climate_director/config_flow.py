@@ -24,6 +24,7 @@ from homeassistant.util import slugify
 
 from .const import CONF_INSTALLATION, CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE, DOMAIN
 from .coordinator import ClimateDirectorEntry
+from . import problems
 from .engine import validate
 from .engine.models import ConflictPolicy, Season, SeasonSource, SourceRole, ZoneGate
 from .engine.serialise import config_from_dict
@@ -284,7 +285,11 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             return self.async_show_form(
                 step_id="save",
                 data_schema=vol.Schema({vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row()}),
-                description_placeholders={"problems": "\n".join(f"- {item}" for item in found)},
+                description_placeholders={
+                    "problems": "\n".join(
+                        f"- {problems.readable(self.hass, item)}" for item in found
+                    )
+                },
             )
 
         if user_input is not None and user_input.get(_EXIT) == _EXIT_DROP:
