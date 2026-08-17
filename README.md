@@ -335,6 +335,44 @@ Dat is dezelfde poort die het altijd al was, en precies wat je wilt.
 
 Afblazen kan met `climate_director.cancel_precondition`, met of zonder `zone_ids`.
 
+#### Geen slaapsensor? Gebruik een knop
+
+De integratie leest de slaapsensor als een **toestand**: hij staat op de slaapstand of hij
+staat er niet op. Een `button` of `input_button` kan dat niet zeggen — de status daarvan is
+het tijdstip van de laatste druk, niet of je nu slaapt. Zo'n knop is dus niet rechtstreeks
+als slaapsensor te gebruiken.
+
+Wat wel werkt is een `input_boolean` die je met een knop omschakelt. Drie stappen:
+
+1. Maak een helper van het type **Schakelaar** (`input_boolean`), bijvoorbeeld
+   `input_boolean.danny_slaapt`.
+2. Kies die bij de bewoner als **Slaapsensor**, met `on` als slaapstand.
+3. Laat een slimme knop of een dashboardknop hem omschakelen:
+
+```yaml
+alias: Slaapknop Danny
+triggers:
+  - trigger: state
+    entity_id: input_button.danny_slaapknop
+actions:
+  - action: input_boolean.toggle
+    target:
+      entity_id: input_boolean.danny_slaapt
+```
+
+Eén knop voor beide richtingen: 's avonds indrukken zet hem aan, 's ochtends uit. Liever
+twee aparte knoppen, of kort en lang indrukken? Dat werkt net zo goed — de integratie kijkt
+alleen naar de boolean.
+
+Voor wie wél een sensor heeft die slapen verraadt — een draadloze lader, een
+slaapmatje, een bedsensor — is dat nauwkeuriger, want je hoeft er niet aan te denken. Een
+knop is de uitweg voor wie zoiets niet heeft, en je kunt ze combineren: maak een
+template-boolean die aan staat als de lader óf de knop aan staat.
+
+Laat je de slaapsensor helemaal leeg, dan telt die bewoner nooit als slapend. De
+wakker-poort staat dan altijd open, en een zone die je met de hand uitzette komt pas om
+middernacht weer vrij in plaats van bij het naar bed gaan.
+
 #### Vakantiemodus
 
 Een vakantiedag telt als **zaterdag**: elk rooster in huis wordt als een zaterdagrooster
@@ -1080,6 +1118,44 @@ by then, everything simply keeps running. If nobody is home, everything goes off
 the same gate it always was, and exactly what you want.
 
 Call it off with `climate_director.cancel_precondition`, with or without `zone_ids`.
+
+#### No sleep sensor? Use a button
+
+The integration reads the sleep sensor as a **state**: it either sits on the sleeping state
+or it does not. A `button` or `input_button` cannot say that — its state is the moment of
+the last press, not whether you are asleep now. Such a button therefore cannot serve as a
+sleep sensor directly.
+
+What does work is an `input_boolean` you toggle with a button. Three steps:
+
+1. Create a helper of type **Toggle** (`input_boolean`), say
+   `input_boolean.danny_asleep`.
+2. Pick it as the resident's **Sleep sensor**, with `on` as the sleeping state.
+3. Have a smart button or a dashboard button toggle it:
+
+```yaml
+alias: Danny's sleep button
+triggers:
+  - trigger: state
+    entity_id: input_button.danny_sleep_button
+actions:
+  - action: input_boolean.toggle
+    target:
+      entity_id: input_boolean.danny_asleep
+```
+
+One button for both directions: pressing it at night switches it on, in the morning off.
+Prefer two separate buttons, or a short and a long press? That works just as well — the
+integration only looks at the boolean.
+
+For anyone who does have a sensor that betrays sleeping — a wireless charger, a sleep mat,
+a bed sensor — that is more accurate, since you never have to remember it. A button is the
+way out for those without one, and you can combine them: make a template boolean that is on
+when either the charger or the button is on.
+
+Leave the sleep sensor empty altogether and that resident never counts as asleep. The awake
+gate then stays open at all times, and a zone you switched off by hand comes free at
+midnight rather than at bedtime.
 
 #### Holiday mode
 
