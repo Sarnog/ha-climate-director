@@ -354,6 +354,16 @@
           "delete": "Removes the opening; it stops suspending anything.",
           "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
+      },
+      "save": {
+        "title": "Something looks off",
+        "description": "This is a warning, not a refusal — an installation may deliberately be set up in an unusual way, and only you know whether it is.\n\n{problems}\n\nThe same list appears under Repairs for as long as it applies.",
+        "data": {
+          "when_done": "What now"
+        },
+        "data_description": {
+          "when_done": "Saving keeps everything as you set it, warnings and all."
+        }
       }
     },
     "error": {
@@ -535,6 +545,12 @@
       "options": {
         "keep": "Keep these changes and go back",
         "discard": "< Discard and go back"
+      }
+    },
+    "save_exit": {
+      "options": {
+        "keep": "Save anyway",
+        "discard": "< Back to the main menu to change something"
       }
     }
   }

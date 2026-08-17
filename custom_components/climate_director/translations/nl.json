@@ -354,6 +354,16 @@
           "delete": "Verwijdert de opening; hij schort dan niets meer op.",
           "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
+      },
+      "save": {
+        "title": "Er valt iets op",
+        "description": "Dit is een waarschuwing, geen weigering — een installatie mag met opzet afwijkend ingericht zijn, en alleen jij weet of dat zo is.\n\n{problems}\n\nDezelfde lijst staat onder Reparaties zolang het geldt.",
+        "data": {
+          "when_done": "Wat nu"
+        },
+        "data_description": {
+          "when_done": "Opslaan bewaart alles zoals je het hebt ingesteld, waarschuwingen en al."
+        }
       }
     },
     "error": {
@@ -535,6 +545,12 @@
       "options": {
         "keep": "Deze wijzigingen bewaren en teruggaan",
         "discard": "< Verwerpen en teruggaan"
+      }
+    },
+    "save_exit": {
+      "options": {
+        "keep": "Toch opslaan",
+        "discard": "< Terug naar het hoofdmenu om iets aan te passen"
       }
     }
   }

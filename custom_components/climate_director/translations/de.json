@@ -354,6 +354,16 @@
           "delete": "Entfernt die Öffnung; sie setzt dann nichts mehr aus.",
           "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
+      },
+      "save": {
+        "title": "Etwas fällt auf",
+        "description": "Das ist eine Warnung, keine Ablehnung — eine Anlage darf mit Absicht ungewöhnlich eingerichtet sein, und nur du weißt, ob das so ist.\n\n{problems}\n\nDieselbe Liste steht unter Reparaturen, solange sie gilt.",
+        "data": {
+          "when_done": "Was nun"
+        },
+        "data_description": {
+          "when_done": "Speichern behält alles so, wie du es eingestellt hast, Warnungen inklusive."
+        }
       }
     },
     "error": {
@@ -535,6 +545,12 @@
       "options": {
         "keep": "Diese Änderungen behalten und zurück",
         "discard": "< Verwerfen und zurück"
+      }
+    },
+    "save_exit": {
+      "options": {
+        "keep": "Trotzdem speichern",
+        "discard": "< Zurück zum Hauptmenü, um etwas zu ändern"
       }
     }
   }

@@ -354,6 +354,16 @@
           "delete": "Supprime l'ouverture ; elle ne suspend plus rien.",
           "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
+      },
+      "save": {
+        "title": "Quelque chose ressort",
+        "description": "Ceci est un avertissement, pas un refus — une installation peut être conçue de façon inhabituelle à dessein, et vous seul savez si c'est le cas.\n\n{problems}\n\nLa même liste figure sous Réparations tant qu'elle s'applique.",
+        "data": {
+          "when_done": "Et maintenant"
+        },
+        "data_description": {
+          "when_done": "Enregistrer conserve tout tel que vous l'avez réglé, avertissements compris."
+        }
       }
     },
     "error": {
@@ -535,6 +545,12 @@
       "options": {
         "keep": "Conserver ces modifications et revenir",
         "discard": "< Abandonner et revenir"
+      }
+    },
+    "save_exit": {
+      "options": {
+        "keep": "Enregistrer quand même",
+        "discard": "< Retour au menu principal pour modifier quelque chose"
       }
     }
   }

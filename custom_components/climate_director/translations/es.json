@@ -354,6 +354,16 @@
           "delete": "Elimina la abertura; deja de suspender nada.",
           "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
+      },
+      "save": {
+        "title": "Algo llama la atención",
+        "description": "Esto es un aviso, no una negativa — una instalación puede estar montada de forma poco habitual a propósito, y solo tú sabes si es así.\n\n{problems}\n\nLa misma lista aparece en Reparaciones mientras siga aplicando.",
+        "data": {
+          "when_done": "Y ahora"
+        },
+        "data_description": {
+          "when_done": "Guardar mantiene todo tal como lo ajustaste, avisos incluidos."
+        }
       }
     },
     "error": {
@@ -535,6 +545,12 @@
       "options": {
         "keep": "Conservar estos cambios y volver",
         "discard": "< Descartar y volver"
+      }
+    },
+    "save_exit": {
+      "options": {
+        "keep": "Guardar igualmente",
+        "discard": "< Volver al menú principal para cambiar algo"
       }
     }
   }

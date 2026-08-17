@@ -691,11 +691,6 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
             problems.append(f"zone {zone.zone_id} has no indoor temperature sensor")
         if zone.heat is None and zone.cool is None:
             problems.append(f"zone {zone.zone_id} may neither heat nor cool")
-        if zone.sources and not any(source.autostart for source in zone.sources):
-            problems.append(
-                f"zone {zone.zone_id} has no source the director may start, "
-                f"so it can never run on its own"
-            )
         if zone.gate is ZoneGate.PRESENCE and not zone.presence_entity:
             problems.append(
                 f"zone {zone.zone_id} runs on room presence but has no presence entity, "

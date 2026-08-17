@@ -24,7 +24,9 @@ from homeassistant.util import slugify
 
 from .const import CONF_INSTALLATION, CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE, DOMAIN
 from .coordinator import ClimateDirectorEntry
+from .engine import validate
 from .engine.models import ConflictPolicy, Season, SeasonSource, SourceRole, ZoneGate
+from .engine.serialise import config_from_dict
 
 CONF_NAME = "name"
 
@@ -247,6 +249,17 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         through would reload the entry while the user is still editing, which
         pulls the ground out from under the flow they are standing in.
         """
+        found = validate(config_from_dict(self._installation))
+        if found and user_input is None:
+            return self.async_show_form(
+                step_id="save",
+                data_schema=vol.Schema({vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row()}),
+                description_placeholders={"problems": "\n".join(f"- {item}" for item in found)},
+            )
+
+        if user_input is not None and user_input.get(_EXIT) == _EXIT_DROP:
+            return await self.async_step_init()
+
         options = dict(self.config_entry.options)
         options[CONF_INSTALLATION] = self._installation
         if self._shadow_mode is not None:
