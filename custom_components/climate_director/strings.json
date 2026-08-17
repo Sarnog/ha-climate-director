@@ -625,6 +625,9 @@
     },
     "layout_central_without_shared_source": {
       "message": "Heating is set to central, but no heat source is shared between the {count} zones. Every room has its own, which is a zoned system."
+    },
+    "entity_twice_in_one_zone": {
+      "message": "Zone {zone} uses {entity} for more than one source. Two sources on the same appliance leave nothing to choose between; remove one of them."
     }
   },
   "services": {

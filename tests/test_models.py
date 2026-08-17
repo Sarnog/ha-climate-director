@@ -169,11 +169,37 @@ class TestValidate:
         )
         assert any("sits on both circuit" in problem for problem in validate(config))
 
-    def test_entity_used_by_two_sources(self) -> None:
+    def test_one_appliance_may_serve_two_zones(self) -> None:
+        """Dat is geen fout maar een centrale verwarming.
+
+        Het mocht hier ooit niet, omdat zo'n apparaat dan twee tegengestelde
+        opdrachten kon krijgen. Sinds die samenvallen tot een per apparaat is
+        het bezwaar weg - en zonder dit kun je een gedeelde ketel niet als
+        reserve onder elke kamer zetten.
+
+        This used to be forbidden, since such an appliance could then get two
+        opposing commands. Since those collapse into one per appliance the
+        objection is gone - and without this you cannot put a shared boiler
+        under every room as a stand-in.
+        """
         config = DirectorConfig(
             zones=(
                 Zone("a", "A", "sensor.a", sources=(Source("s1", "climate.x"),)),
                 Zone("b", "B", "sensor.b", sources=(Source("s2", "climate.x"),)),
+            )
+        )
+        assert not [problem for problem in validate(config) if "more than one source" in problem]
+
+    def test_the_same_appliance_twice_in_one_zone_is_reported(self) -> None:
+        """Two sources on one appliance in one room leave nothing to choose."""
+        config = DirectorConfig(
+            zones=(
+                Zone(
+                    "a",
+                    "A",
+                    "sensor.a",
+                    sources=(Source("s1", "climate.x"), Source("s2", "climate.x")),
+                ),
             )
         )
         assert any("more than one source" in problem for problem in validate(config))

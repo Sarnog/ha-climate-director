@@ -625,6 +625,9 @@
     },
     "layout_central_without_shared_source": {
       "message": "Le chauffage est réglé sur central, mais aucune source de chaleur n'est partagée entre les {count} zones. Chaque pièce a la sienne, donc par zone."
+    },
+    "entity_twice_in_one_zone": {
+      "message": "La zone {zone} utilise {entity} pour plus d'une source. Deux sources sur le même appareil ne laissent aucun choix ; supprimez-en une."
     }
   },
   "services": {

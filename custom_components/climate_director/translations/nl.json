@@ -625,6 +625,9 @@
     },
     "layout_central_without_shared_source": {
       "message": "Verwarming staat op centraal, maar geen enkele warmtebron wordt gedeeld tussen de {count} zones. Elke ruimte heeft zijn eigen, en dat is gezoneerd."
+    },
+    "entity_twice_in_one_zone": {
+      "message": "Zone {zone} gebruikt {entity} voor meer dan één bron. Twee bronnen op hetzelfde apparaat laten niets te kiezen over; haal er één weg."
     }
   },
   "services": {

@@ -625,6 +625,9 @@
     },
     "layout_central_without_shared_source": {
       "message": "Die Heizung steht auf zentral, aber keine Wärmequelle wird zwischen den {count} Zonen geteilt. Jeder Raum hat seine eigene, das ist zoniert."
+    },
+    "entity_twice_in_one_zone": {
+      "message": "Zone {zone} verwendet {entity} für mehr als eine Quelle. Zwei Quellen auf demselben Gerät lassen keine Wahl; entfernen Sie eine davon."
     }
   },
   "services": {

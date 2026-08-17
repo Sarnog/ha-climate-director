@@ -718,11 +718,31 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
     source_ids = [source.source_id for _, source in config.sources()]
     problems += [f"duplicate source id: {source_id}" for source_id in _duplicates(source_ids)]
 
-    entity_ids = [source.entity_id for _, source in config.sources()]
-    problems += [
-        f"climate entity {entity_id} is used by more than one source"
-        for entity_id in _duplicates(entity_ids)
-    ]
+    # Hetzelfde apparaat twee keer in EEN kamer is onzin: welke van de twee
+    # bronnen wint, is dan willekeurig, en er valt niets te kiezen. Over
+    # meerdere kamers heen is het juist normaal - dat is precies hoe een
+    # centrale verwarming eruitziet, en hoe een gedeelde ketel als reserve
+    # onder elke zone komt te staan. Dat mocht hier ooit niet, omdat zo'n
+    # apparaat dan twee tegengestelde opdrachten kon krijgen; sinds die
+    # opdrachten samenvallen tot een per apparaat is dat bezwaar weg.
+    #
+    # The same appliance twice in ONE room is nonsense: which of the two
+    # sources wins is then arbitrary, and there is nothing to choose between.
+    # Across rooms it is ordinary - that is exactly what central heating looks
+    # like, and how a shared boiler ends up under every zone as a stand-in.
+    # This used to be forbidden here because such an appliance could then get
+    # two opposing commands; since those collapse into one per appliance, that
+    # objection is gone.
+    for zone in config.zones:
+        for entity_id in _duplicates([source.entity_id for source in zone.sources]):
+            problems.append(
+                Problem(
+                    "entity_twice_in_one_zone",
+                    f"zone {zone.zone_id} uses {entity_id} for more than one source",
+                    zone=zone.name or zone.zone_id,
+                    entity=entity_id,
+                )
+            )
 
     # Een unit die wel aan een buitenunit hangt maar in geen enkele zone staat,
     # is voor de director onbeheerd. Draait hij, dan zet hij het hele circuit op
@@ -848,7 +868,7 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
                     f"zone {zone.zone_id} wants {family.value} but has no source for it"
                 )
 
-    source_entities = set(entity_ids)
+    source_entities = {source.entity_id for _, source in config.sources()}
     for generator in config.generators:
         if generator.entity_id in source_entities:
             problems.append(

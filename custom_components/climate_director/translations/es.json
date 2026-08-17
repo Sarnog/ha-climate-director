@@ -625,6 +625,9 @@
     },
     "layout_central_without_shared_source": {
       "message": "La calefacción está en central, pero ninguna fuente de calor se comparte entre las {count} zonas. Cada estancia tiene la suya, y eso es por zona."
+    },
+    "entity_twice_in_one_zone": {
+      "message": "La zona {zone} usa {entity} para más de una fuente. Dos fuentes en el mismo aparato no dejan nada que elegir; elimina una de ellas."
     }
   },
   "services": {
