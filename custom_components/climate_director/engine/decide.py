@@ -334,11 +334,53 @@ def _build_commands(
         )
 
     commands.extend(_generator_commands(config, world, grants))
+    commands = _collapse_shared(config, commands)
 
     # Stops before starts. On a circuit that has to swap duty, starting the new
     # one before the old has let go would put two duties on one compressor for
     # as long as the calls take to land.
     return tuple(sorted(commands, key=lambda command: _command_order(config, command)))
+
+
+def _collapse_shared(config: DirectorConfig, commands: list[UnitCommand]) -> list[UnitCommand]:
+    """Return one command per appliance, so a shared source never gets two.
+
+    Bij een centrale verwarming staat dezelfde thermostaat als bron onder
+    meerdere zones. De opdrachten worden per zone opgebouwd, dus zo'n apparaat
+    kreeg er een van elke zone - en die spreken elkaar tegen zodra de ene kamer
+    warmte vraagt en de andere niets. Twee tegengestelde opdrachten naar een
+    apparaat is nooit goed; welke er wint hing af van de volgorde, en dat is
+    geen ontwerp maar toeval.
+
+    Vraag wint van stilte: een gesloten systeem heeft nu eenmaal geen manier om
+    de ene kamer wel en de andere niet te verwarmen. Vragen er meer zones
+    tegelijk, dan volgt het apparaat de zone met de meeste voorrang - net zoals
+    een gewone thermostaat de leidende kamer volgt.
+
+    With central heating the same thermostat sits as a source under several
+    zones. Commands are built per zone, so such an appliance got one from each -
+    and they contradict each other the moment one room asks for heat and the
+    other does not. Two opposing commands to one appliance is never right; which
+    won depended on ordering, and that is chance rather than design.
+
+    Demand beats silence: a closed system simply has no way to heat one room and
+    not the other. If several zones ask at once, the appliance follows the zone
+    with the most claim - just as an ordinary thermostat follows the leading
+    room.
+    """
+    ranked: dict[str, UnitCommand] = {}
+    for command in commands:
+        sitting = ranked.get(command.entity_id)
+        if sitting is None or _claim(config, command) < _claim(config, sitting):
+            ranked[command.entity_id] = command
+    return list(ranked.values())
+
+
+def _claim(config: DirectorConfig, command: UnitCommand) -> tuple[int, int, str]:
+    """Return how strong a command's claim on its appliance is; lower wins."""
+    running = command.hvac_mode not in (MODE_OFF, MODE_FAN_ONLY)
+    zone = config.zone(command.zone_id) if command.zone_id else None
+    return (0 if running else 1, zone.priority if zone else 0, command.zone_id or "")
 
 
 def _generator_commands(
