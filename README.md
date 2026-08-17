@@ -229,6 +229,23 @@ integratie een onbeheerde unit: draait hij, dan houdt hij het hele circuit op zi
 kan geen enkele kamer nog iets anders vragen — en uitzetten kan de integratie hem niet, want
 hij is van niemand. De configuratiecontrole meldt dat.
 
+#### De override als noodknop
+
+`switch.*_override_<zone>` geeft één zone **volledig** aan jou terug. De director stuurt
+die zone dan niets meer — ook geen uit. Wat jij met de hand instelt blijft staan, ongeacht
+de buitengrenzen, het seizoen, een openstaand raam of de dode band.
+
+Dat is de bedoeling: het is de noodknop voor gevallen die de regels niet dekken. Het is te
+warm binnen, de deur mag niet open, en het systeem wil niet koelen omdat het buiten onder
+je koelgrens zit — dan zet je de override aan en regel je het zelf.
+
+De circuitregels blijven wel gelden voor de *andere* kamers: twee binnenunits op één
+buitenunit kunnen fysiek niet tegengesteld draaien, en dat verandert niet doordat jij er
+één overneemt.
+
+Wil je juist dat een zone **stil blijft**, zet dan het apparaat zelf uit. Dat houdt die
+zone stil tot je hem weer aanzet of tot de volgende dag.
+
 #### Een handmatige timer ernaast laten lopen
 
 Wil je een apparaat een paar uur met de hand aanzetten — "de gasverwarming twee uur aan" —
@@ -557,9 +574,9 @@ Eén device per installatie, met daaronder:
 | `binary_sensor.*_<zone>_geblokkeerd` | Aan als een zone minder kreeg dan hij vroeg, met de reden als attribuut |
 | `binary_sensor.*_vastgelopen` | Aan als een zone te lang op dezelfde wachtreden staat, met de zones en de wachttijd als attribuut |
 | `switch.*_director` | Hoofdschakelaar; uit betekent dat er niets geregeld wordt |
-| `switch.*_vakantiemodus` | Laat elke dag als zaterdag tellen, of als het eigen vakantierooster |
+| `switch.*_vakantieschema` | Laat elke dag als zaterdag tellen, of als het eigen vakantierooster |
 | `switch.*_gastenmodus` | Blijft regelen terwijl de bewoners weg zijn; slaap en het gastenvenster blijven gelden |
-| `switch.*_override_<zone>` | Geeft één zone terug aan de gebruiker tot je hem weer uitzet |
+| `switch.*_override_<zone>` | Geeft één zone volledig terug aan jou: de director stuurt hem niets meer, ook geen uit |
 | `number.*_prioriteit_<zone>` | Hoe sterk deze zone een gedeelde buitenunit claimt; lager wint. Vanuit een automatisering te wijzigen |
 
 Daarnaast is er een downloadbare diagnose met de configuratie, de laatst gelezen
@@ -958,6 +975,23 @@ unmanaged unit as far as the integration is concerned: if it runs it holds the w
 to its duty and no room can ask for anything else — and the integration cannot switch it off,
 since it belongs to nobody. The configuration check reports that.
 
+#### The override as an emergency handle
+
+`switch.*_<zone>_override` hands one zone over to you **completely**. The director then
+sends that zone nothing at all — an off included. What you set by hand stays, whatever the
+outdoor bounds, the season, an open window or the dead band would otherwise say.
+
+That is the point: it is the emergency handle for cases the rules do not cover. It is too
+warm inside, the door may not be opened, and the system refuses to cool because it is below
+your cooling bound outside — then you switch the override on and see to it yourself.
+
+The circuit rules do still apply to the *other* rooms: two indoor units on one outdoor unit
+cannot physically run opposing duties, and that does not change because you took one of
+them over.
+
+Want a zone to **stay silent** instead? Switch the appliance off yourself. That holds the
+zone still until you switch it back on or until the next day.
+
 #### Running a manual timer alongside
 
 Want to switch an appliance on by hand for a few hours — "the gas heating on for two
@@ -1282,9 +1316,9 @@ One device per installation, holding:
 | `binary_sensor.*_<zone>_blocked` | On when a zone got less than it asked for, with the reason as an attribute |
 | `binary_sensor.*_stuck` | On when a zone sits on the same waiting reason too long, with the zones and the wait as attributes |
 | `switch.*_director` | Master switch; off means nothing is regulated |
-| `switch.*_holiday_mode` | Makes every day count as a Saturday, or as its own holiday schedule |
+| `switch.*_holiday_schedule` | Makes every day count as a Saturday, or as its own holiday schedule |
 | `switch.*_guest_mode` | Keeps regulating while the residents are away; sleep and the guest window still apply |
-| `switch.*_<zone>_override` | Hands one zone back to the user until you turn it off again |
+| `switch.*_<zone>_override` | Hands one zone over to you completely: the director sends it nothing, an off included |
 | `number.*_<zone>_priority` | How strongly this zone claims a shared outdoor unit; lower wins. Settable from an automation |
 
 There is also a downloadable diagnostics export holding the configuration, the last
