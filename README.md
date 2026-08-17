@@ -683,6 +683,43 @@ Blijft de eerste keus lang weg, dan gaat ook `binary_sensor.*_vastgelopen` aan, 
 onleesbare entiteit in `unusable_entities`. De twee melders vullen elkaar aan: de ene zegt
 *er is uitgeweken*, de andere zegt *er is iets niet te lezen*.
 
+#### Centraal of per zone
+
+Onder **Instellingen** staat **Verwarmingssysteem**, met twee keuzes. Die verandert niets
+aan wie er mag draaien — dat blijft aan de poorten en de voorrang. Hij legt vast wat je
+installatie *is*, zodat de configuratiecontrole kan waarschuwen als je invulling er niet
+bij past.
+
+| Keuze | Wat het betekent | Zo vul je het in |
+| --- | --- | --- |
+| **Centraal** | Eén warmtebron voor het hele huis. Een gesloten systeem kan de ene kamer niet verwarmen zonder de rest. Denk aan Tado met één thermostaat, of een cv zonder zoneregeling. | Zet **dezelfde** thermostaat als bron onder elke zone |
+| **Per zone** | Elke ruimte regelt zijn eigen warmte, via slimme radiatorkranen of een eigen apparaat. | Geef elke zone zijn **eigen** bron, en zet de ketel erbij als generator |
+
+De controle kijkt daarna mee. Staat de keuze op *per zone* terwijl één thermostaat meerdere
+zones verwarmt, dan krijg je een waarschuwing — aanzetten voor één kamer verwarmt de andere
+namelijk mee, en dat is bijna nooit wat iemand bedoelde. Andersom net zo: staat hij op
+*centraal* terwijl elke kamer zijn eigen bron heeft, dan is het systeem gezoneerd.
+
+Het blijft een **waarschuwing, geen blokkade**. De director regelt gewoon door. Alleen weet
+je nu dát het scheef staat, in plaats van het te ontdekken als het verkeerde deel van het
+huis warm wordt.
+
+Had je de integratie al draaien voordat deze instelling bestond? Dan wordt de keuze
+afgeleid uit wat er al stond: deelt een warmtebron twee of meer zones, dan is het centraal.
+Je krijgt dus geen waarschuwing voor een keuze die je nooit gemaakt hebt. Vanaf de eerste
+keer opslaan staat hij vast en raadt er niets meer.
+
+##### Wat er gebeurt bij een gedeelde bron
+
+Een apparaat krijgt altijd **één** opdracht, ook als het onder vijf zones hangt. Vraagt de
+woonkamer warmte en de slaapkamer niets, dan gaat de thermostaat aan — vraag wint van
+stilte, want een gesloten systeem heeft geen manier om dat te scheiden. Vragen er meerdere
+tegelijk, dan volgt het apparaat de zone met de meeste voorrang, net zoals een gewone
+thermostaat de leidende kamer volgt.
+
+Wil je dat de slaapkamer níét meeverwarmt, dan heb je geen instelling nodig maar een
+radiatorkraan — en daarmee wordt het een gezoneerd systeem.
+
 ### Dode band
 
 Aan- en uitschakelen gebeuren op twee verschillende temperaturen. Je stelt een aanpunt in
@@ -1610,6 +1647,42 @@ Want it for every zone in one automation? Trigger on several entities and read
 If the first choice stays away for long, `binary_sensor.*_stuck` comes on as well, with the
 unreadable entity in `unusable_entities`. The two sensors complement each other: one says
 *something fell back*, the other says *something cannot be read*.
+
+#### Central or per zone
+
+Under **Settings** sits **Heating system**, with two choices. It changes nothing about who
+may run — that stays with the gates and the priorities. It records what your installation
+*is*, so the configuration check can warn you when your setup does not match.
+
+| Choice | What it means | How you fill it in |
+| --- | --- | --- |
+| **Central** | One heat source for the whole house. A closed system cannot warm one room without warming the rest. Think Tado with a single thermostat, or a boiler without zone control. | Put the **same** thermostat as a source under every zone |
+| **Per zone** | Every room settles its own heat, through smart radiator valves or its own appliance. | Give each zone its **own** source, and add the boiler as a generator |
+
+The check then watches along. If the choice says *per zone* while one thermostat heats
+several zones, you get a warning — switching it on for one room warms the others too, and
+that is nearly never what anyone meant. The other way round just as much: if it says
+*central* while every room has its own source, the system is zoned.
+
+It stays a **warning, not a block**. The director carries on regulating. You simply know
+that something is askew, rather than discovering it when the wrong part of the house gets
+warm.
+
+Were you already running the integration before this setting existed? Then the choice is
+inferred from what was already there: if a heat source spans two or more zones, it is
+central. So you never get a warning about a choice you never made. From the first save
+onwards it is recorded and nothing guesses any more.
+
+##### What happens with a shared source
+
+An appliance always gets **one** command, even when it hangs under five zones. If the
+living room asks for heat and the bedroom does not, the thermostat comes on — demand beats
+silence, since a closed system has no way to separate the two. If several ask at once, the
+appliance follows the zone with the most claim, just as an ordinary thermostat follows the
+leading room.
+
+Want the bedroom to stay out of it? That needs a radiator valve rather than a setting — and
+with that, the system becomes zoned.
 
 ### Dead band
 

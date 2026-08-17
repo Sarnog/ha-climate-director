@@ -40,6 +40,7 @@
         "title": "Ajustes generales",
         "data": {
           "outdoor_sensor": "Sensor de temperatura exterior",
+          "heating_layout": "Sistema de calefacción",
           "season_source": "Origen de la estación",
           "season_entity": "Entidad de estación",
           "require_awake": "Alguien en casa debe estar despierto",
@@ -61,6 +62,7 @@
           "shadow_mode": "Calcula cada decisión pero no ejecuta nada.",
           "require_schedule": "La casa espera entonces a que se abra la primera franja establecida, y sigue esperando mientras alguien que está en casa aún duerme antes de la suya.",
           "outdoor_sensor": "Alimenta cada límite exterior, tanto aquí como en cada fuente. Sin este sensor ningún umbral de temperatura exterior puede cumplirse, y toda la instalación se queda parada en silencio.",
+          "heating_layout": "Central: una sola fuente de calor para toda la casa, que no puede calentar una habitación sin calentar el resto. Por zona: cada estancia gestiona su propio calor, mediante válvulas o su propio aparato. Esto no cambia quién puede funcionar; permite que la comprobación avise si tu instalación no encaja.",
           "require_awake": "Alguien en casa pero dormido no cuenta. Qué entidad indica que duerme se ajusta por residente.",
           "holiday_calendars": "Un evento en curso en alguno de estos calendarios pone la casa en vacaciones. Dejarlo vacío usa solo el interruptor de vacaciones.",
           "holiday_keyword": "Solo cuentan los eventos que llevan esta palabra, por ejemplo 'vacaciones'. Las mayúsculas y la grafía no importan, y la palabra cuenta también dentro de otra más larga, de modo que 'Vacaciones de verano' también coincide. Si la dejas vacía, los calendarios se ignoran por completo y el modo vacaciones queda solo en manos del interruptor.",
@@ -533,6 +535,12 @@
         "add_new": "+ Añadir franja de silencio",
         "back_to_menu": "< Volver al menú principal"
       }
+    },
+    "heating_layout": {
+      "options": {
+        "central": "Central - una fuente para toda la casa",
+        "per_zone": "Por zona - cada estancia la suya"
+      }
     }
   },
   "entity": {
@@ -611,6 +619,12 @@
     },
     "exclusive_overlap": {
       "message": "{first} y {second} se excluyen pero ambos aplican {overlap}. El grupo lo recoge, pero se encuentran en lugar de excluirse ya por sus límites exteriores. Dales límites contiguos para separarlos del todo."
+    },
+    "layout_zoned_with_shared_source": {
+      "message": "La calefacción está en por zona, pero {entity} calienta {count} zonas a la vez. Encenderla para una habitación calienta también las demás."
+    },
+    "layout_central_without_shared_source": {
+      "message": "La calefacción está en central, pero ninguna fuente de calor se comparte entre las {count} zonas. Cada estancia tiene la suya, y eso es por zona."
     }
   },
   "services": {

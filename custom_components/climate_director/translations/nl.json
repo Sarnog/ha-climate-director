@@ -40,6 +40,7 @@
         "title": "Algemene instellingen",
         "data": {
           "outdoor_sensor": "Buitentemperatuursensor",
+          "heating_layout": "Verwarmingssysteem",
           "season_source": "Herkomst seizoen",
           "season_entity": "Seizoensentiteit",
           "require_awake": "Iemand die thuis is moet wakker zijn",
@@ -61,6 +62,7 @@
           "shadow_mode": "Berekent elke beslissing maar voert niets uit.",
           "require_schedule": "Het huis wacht dan tot het eerste ingestelde venster opengaat, en blijft wachten zolang iemand die thuis is nog slaapt vóór zijn eigen venster.",
           "outdoor_sensor": "Voedt elke buitengrens, zowel hier als op elke bron. Zonder deze sensor kan geen enkele drempel op buitentemperatuur ooit voldaan worden, en staat de hele installatie stilletjes stil.",
+          "heating_layout": "Centraal: één warmtebron voor het hele huis, die de ene kamer niet kan verwarmen zonder de rest. Per zone: elke ruimte regelt zijn eigen warmte, via kranen of een eigen apparaat. Dit verandert niets aan wie er mag draaien - het laat de controle waarschuwen als je invulling er niet bij past.",
           "require_awake": "Iemand die thuis is maar slaapt telt niet mee. Welke entiteit zegt dat iemand slaapt stel je per bewoner in.",
           "holiday_calendars": "Een lopend item in een van deze agenda's zet het huis op vakantie. Leeg laten gebruikt alleen de vakantieschakelaar.",
           "holiday_keyword": "Alleen items met dit woord tellen mee, bijvoorbeeld 'vakantie'. Hoofdletters en schrijfwijze maken niet uit, en het woord telt ook midden in een langer woord, dus 'Herfstvakantie' en 'Zomervakantie' worden allebei herkend. Laat je het leeg, dan blijven de agenda's helemaal buiten beschouwing en gaat de vakantiemodus alleen nog met de schakelaar.",
@@ -533,6 +535,12 @@
         "add_new": "+ Stiltevenster toevoegen",
         "back_to_menu": "< Terug naar het hoofdmenu"
       }
+    },
+    "heating_layout": {
+      "options": {
+        "central": "Centraal - één bron voor het hele huis",
+        "per_zone": "Per zone - elke ruimte zijn eigen"
+      }
     }
   },
   "entity": {
@@ -611,6 +619,12 @@
     },
     "exclusive_overlap": {
       "message": "{first} en {second} sluiten elkaar uit maar gelden allebei {overlap}. De groep vangt dat op, maar ze komen elkaar tegen in plaats van elkaar door hun buitengrenzen al uit te sluiten. Geef ze aansluitende grenzen om ze definitief uit elkaar te houden."
+    },
+    "layout_zoned_with_shared_source": {
+      "message": "Verwarming staat op per zone, maar {entity} verwarmt {count} zones tegelijk. Aanzetten voor één kamer verwarmt de andere mee."
+    },
+    "layout_central_without_shared_source": {
+      "message": "Verwarming staat op centraal, maar geen enkele warmtebron wordt gedeeld tussen de {count} zones. Elke ruimte heeft zijn eigen, en dat is gezoneerd."
     }
   },
   "services": {

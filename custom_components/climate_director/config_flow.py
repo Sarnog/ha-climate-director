@@ -26,7 +26,14 @@ from . import problems
 from .const import CONF_INSTALLATION, CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE, DOMAIN
 from .coordinator import ClimateDirectorEntry
 from .engine import validate
-from .engine.models import ConflictPolicy, Season, SeasonSource, SourceRole, ZoneGate
+from .engine.models import (
+    ConflictPolicy,
+    HeatingLayout,
+    Season,
+    SeasonSource,
+    SourceRole,
+    ZoneGate,
+)
 from .engine.serialise import config_from_dict
 
 CONF_NAME = "name"
@@ -314,6 +321,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             if user_input.get(_EXIT) == _EXIT_DROP:
                 return await self.async_step_init()
             self._installation["outdoor_sensor"] = user_input.get("outdoor_sensor", "")
+            self._installation["heating_layout"] = user_input["heating_layout"]
             self._installation["seasons"] = {
                 "source": user_input["season_source"],
                 "entity_id": user_input.get("season_entity", ""),
@@ -357,6 +365,12 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     ): selector.EntitySelector(
                         selector.EntitySelectorConfig(domain=["sensor", "weather"])
                     ),
+                    vol.Required(
+                        "heating_layout",
+                        default=self._installation.get(
+                            "heating_layout", HeatingLayout.PER_ZONE.value
+                        ),
+                    ): _choices([item.value for item in HeatingLayout], "heating_layout"),
                     vol.Required(
                         "season_source", default=seasons.get("source", SeasonSource.AUTO.value)
                     ): _choices([item.value for item in SeasonSource], "season_source"),

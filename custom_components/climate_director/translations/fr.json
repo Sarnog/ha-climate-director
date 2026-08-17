@@ -40,6 +40,7 @@
         "title": "Réglages généraux",
         "data": {
           "outdoor_sensor": "Capteur de température extérieure",
+          "heating_layout": "Système de chauffage",
           "season_source": "Origine de la saison",
           "season_entity": "Entité de saison",
           "require_awake": "Une personne présente doit être éveillée",
@@ -61,6 +62,7 @@
           "shadow_mode": "Calcule chaque décision mais n'exécute rien.",
           "require_schedule": "La maison attend alors l'ouverture de la première plage réglée, et continue d'attendre tant qu'une personne présente dort encore avant la sienne.",
           "outdoor_sensor": "Alimente chaque limite extérieure, ici comme sur chaque source. Sans ce capteur, aucun seuil de température extérieure ne peut être atteint, et toute l'installation reste à l'arrêt.",
+          "heating_layout": "Central : une seule source de chaleur pour toute la maison, qui ne peut chauffer une pièce sans chauffer les autres. Par zone : chaque pièce règle sa propre chaleur, par vannes ou par son propre appareil. Cela ne change rien à qui peut fonctionner - cela permet au contrôle de vous avertir si votre installation ne correspond pas.",
           "require_awake": "Une personne présente mais endormie ne compte pas. L'entité qui indique le sommeil se règle par occupant.",
           "holiday_calendars": "Un évènement en cours dans l'un de ces agendas met la maison en vacances. Laisser vide n'utilise que l'interrupteur vacances.",
           "holiday_keyword": "Seuls les évènements portant ce mot comptent, par exemple 'vacances'. La casse et l'orthographe n'importent pas, et le mot compte aussi au milieu d'un mot plus long, si bien que 'Grandes vacances' correspond également. Laissé vide, les agendas sont entièrement ignorés et le mode vacances ne dépend plus que de l'interrupteur.",
@@ -533,6 +535,12 @@
         "add_new": "+ Ajouter une plage de silence",
         "back_to_menu": "< Retour au menu principal"
       }
+    },
+    "heating_layout": {
+      "options": {
+        "central": "Central - une source pour toute la maison",
+        "per_zone": "Par zone - chaque pièce la sienne"
+      }
     }
   },
   "entity": {
@@ -611,6 +619,12 @@
     },
     "exclusive_overlap": {
       "message": "{first} et {second} s'excluent mais s'appliquent tous deux {overlap}. Le groupe le rattrape, mais ils se rencontrent au lieu de s'exclure déjà par leurs bornes extérieures. Donnez-leur des bornes contiguës pour les séparer définitivement."
+    },
+    "layout_zoned_with_shared_source": {
+      "message": "Le chauffage est réglé par zone, mais {entity} chauffe {count} zones à la fois. L'allumer pour une pièce chauffe aussi les autres."
+    },
+    "layout_central_without_shared_source": {
+      "message": "Le chauffage est réglé sur central, mais aucune source de chaleur n'est partagée entre les {count} zones. Chaque pièce a la sienne, donc par zone."
     }
   },
   "services": {

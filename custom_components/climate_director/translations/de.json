@@ -40,6 +40,7 @@
         "title": "Allgemeine Einstellungen",
         "data": {
           "outdoor_sensor": "Außentemperatursensor",
+          "heating_layout": "Heizungsanlage",
           "season_source": "Herkunft der Jahreszeit",
           "season_entity": "Jahreszeit-Entität",
           "require_awake": "Wer zu Hause ist, muss wach sein",
@@ -61,6 +62,7 @@
           "shadow_mode": "Berechnet jede Entscheidung, führt aber nichts aus.",
           "require_schedule": "Das Haus wartet dann auf das erste eingestellte Fenster und wartet weiter, solange jemand zu Hause vor seinem eigenen Fenster noch schläft.",
           "outdoor_sensor": "Speist jede Außengrenze, hier wie auch an jeder Quelle. Ohne diesen Sensor kann keine Schwelle für die Außentemperatur je erfüllt werden, und die gesamte Anlage steht still.",
+          "heating_layout": "Zentral: eine Wärmequelle für das ganze Haus, die einen Raum nicht ohne die übrigen erwärmen kann. Pro Zone: jeder Raum regelt seine eigene Wärme, über Ventile oder ein eigenes Gerät. Das ändert nichts daran, wer laufen darf - es lässt die Prüfung warnen, wenn die Einrichtung nicht dazu passt.",
           "require_awake": "Wer zu Hause ist, aber schläft, zählt nicht. Welche Entität sagt, dass jemand schläft, stellst du pro Bewohner ein.",
           "holiday_calendars": "Ein laufender Termin in einem dieser Kalender versetzt das Haus in den Urlaub. Leer lassen nutzt nur den Urlaubsschalter.",
           "holiday_keyword": "Nur Termine mit diesem Wort zählen, zum Beispiel 'Urlaub'. Groß- und Kleinschreibung spielen keine Rolle, und das Wort zählt auch mitten in einem längeren, sodass 'Sommerurlaub' ebenfalls passt. Lässt du es leer, bleiben die Kalender ganz außer Betracht und der Urlaubsmodus hängt allein am Schalter.",
@@ -533,6 +535,12 @@
         "add_new": "+ Ruhefenster hinzufügen",
         "back_to_menu": "< Zurück zum Hauptmenü"
       }
+    },
+    "heating_layout": {
+      "options": {
+        "central": "Zentral - eine Quelle für das ganze Haus",
+        "per_zone": "Pro Zone - jeder Raum seine eigene"
+      }
     }
   },
   "entity": {
@@ -611,6 +619,12 @@
     },
     "exclusive_overlap": {
       "message": "{first} und {second} schließen sich aus, gelten aber beide {overlap}. Die Gruppe fängt das ab, doch sie begegnen einander, statt sich schon durch ihre Außengrenzen auszuschließen. Gib ihnen angrenzende Grenzen, um sie endgültig zu trennen."
+    },
+    "layout_zoned_with_shared_source": {
+      "message": "Die Heizung steht auf pro Zone, aber {entity} heizt {count} Zonen zugleich. Für einen Raum einschalten erwärmt die anderen mit."
+    },
+    "layout_central_without_shared_source": {
+      "message": "Die Heizung steht auf zentral, aber keine Wärmequelle wird zwischen den {count} Zonen geteilt. Jeder Raum hat seine eigene, das ist zoniert."
     }
   },
   "services": {

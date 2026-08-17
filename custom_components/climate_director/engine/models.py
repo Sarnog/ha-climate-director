@@ -544,6 +544,30 @@ class GateSettings:
     """
 
 
+class HeatingLayout(StrEnum):
+    """How the heating is laid out through the house.
+
+    Dit verandert niets aan wie er mag draaien - dat blijft aan de poorten en de
+    voorrang. Het legt vast wat de installatie *is*, zodat de controle kan
+    waarschuwen als de invulling er niet bij past. Een gedeelde thermostaat
+    onder vijf zones terwijl je "per zone" koos is bijna altijd een vergissing,
+    en zonder deze keuze is dat niet van een bewuste opzet te onderscheiden.
+
+    This changes nothing about who may run - that stays with the gates and the
+    priorities. It records what the installation *is*, so the check can warn
+    when the configuration does not match. A shared thermostat under five zones
+    while you picked "per zone" is nearly always a mistake, and without this
+    choice there is no telling that apart from a deliberate setup.
+    """
+
+    CENTRAL = "central"
+    """One heat source for the whole house: a closed system that cannot heat one
+    room without heating the rest."""
+
+    PER_ZONE = "per_zone"
+    """Every room settles its own heat, through valves or its own appliance."""
+
+
 class SeasonSource(StrEnum):
     """Where the coarse season comes from."""
 
@@ -586,6 +610,9 @@ class DirectorConfig:
 
     gates: GateSettings = field(default_factory=GateSettings)
     seasons: SeasonSettings = field(default_factory=SeasonSettings)
+
+    heating_layout: HeatingLayout = HeatingLayout.PER_ZONE
+    """What kind of heating installation this is; see `HeatingLayout`."""
 
     outdoor_sensor: str = ""
     """Entity carrying the outdoor temperature. Empty leaves it unknown."""
@@ -922,7 +949,58 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
             for source_id in sorted(group - known_sources)
         ]
 
+    problems += _layout_problems(config)
+
     return tuple(problems)
+
+
+def _layout_problems(config: DirectorConfig) -> list[str]:
+    """Return the complaints about a heating layout that does not match the wiring.
+
+    Waarschuwingen, geen blokkade. De director regelt gewoon door; dit zegt
+    alleen dat de installatie er anders uitziet dan wat je koos, en dat is bijna
+    altijd een vergissing die je pas merkt als het huis op de verkeerde plek
+    warm wordt.
+
+    Warnings, not a block. The director carries on regulating; this only says
+    the installation looks different from what you picked, which is nearly
+    always a mistake you notice when the wrong part of the house gets warm.
+    """
+    if len(config.zones) < 2:
+        return []
+
+    shared: dict[str, list[str]] = {}
+    for zone in config.zones:
+        for entity_id in {
+            source.entity_id
+            for source in zone.sources
+            if source.entity_id and source.supports(ModeFamily.HEAT)
+        }:
+            shared.setdefault(entity_id, []).append(zone.zone_id)
+    spanning = {entity_id: zones for entity_id, zones in shared.items() if len(zones) > 1}
+
+    if config.heating_layout is HeatingLayout.PER_ZONE and spanning:
+        entity_id, zones = next(iter(sorted(spanning.items())))
+        return [
+            Problem(
+                "layout_zoned_with_shared_source",
+                (f"heating is set to per zone, but {entity_id} heats {len(zones)} zones at once"),
+                entity=entity_id,
+                count=str(len(zones)),
+                zones=", ".join(sorted(zones)),
+            )
+        ]
+
+    if config.heating_layout is HeatingLayout.CENTRAL and not spanning:
+        return [
+            Problem(
+                "layout_central_without_shared_source",
+                ("heating is set to central, but no heat source is shared between zones"),
+                count=str(len(config.zones)),
+            )
+        ]
+
+    return []
 
 
 def _duplicates(values: list[str]) -> list[str]:

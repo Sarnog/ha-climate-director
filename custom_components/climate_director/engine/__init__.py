@@ -34,6 +34,7 @@ from .models import (
     DirectorConfig,
     GateSettings,
     Generator,
+    HeatingLayout,
     ModeSettings,
     Opening,
     OutdoorWindow,
@@ -58,6 +59,7 @@ from .plan import (
 from .world import ClimateState, OpeningState, PresenceState, ResidentState, WorldState
 
 __all__ = [
+    "HeatingLayout",
     "ACTIVE_FAMILIES",
     "MODE_COOL",
     "MODE_DRY",

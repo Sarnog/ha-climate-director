@@ -35,6 +35,7 @@ from .models import (
     DirectorConfig,
     GateSettings,
     Generator,
+    HeatingLayout,
     ModeSettings,
     Opening,
     OutdoorWindow,
@@ -63,6 +64,7 @@ def config_from_dict(raw: Mapping[str, Any]) -> DirectorConfig:
         ),
         gates=_gates(raw.get("gates")),
         seasons=_seasons(raw.get("seasons")),
+        heating_layout=_layout(raw),
         outdoor_sensor=_text(raw.get("outdoor_sensor")),
         stuck_after=_seconds(raw.get("stuck_after"), 900.0),
         holiday_calendars=tuple(_strings(raw.get("holiday_calendars"))),
@@ -118,6 +120,7 @@ def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
             "entity_id": config.seasons.entity_id,
             "summer_months": sorted(config.seasons.summer_months),
         },
+        "heating_layout": config.heating_layout.value,
         "outdoor_sensor": config.outdoor_sensor,
         "stuck_after": int(config.stuck_after.total_seconds()),
         "holiday_calendars": list(config.holiday_calendars),
@@ -424,6 +427,42 @@ def _opening_to_dict(opening: Opening) -> dict[str, Any]:
 def _items(raw: Mapping[str, Any], key: str) -> list[Mapping[str, Any]]:
     """Return the mappings stored under `key`, skipping anything else."""
     return [item for item in _sequence(raw.get(key)) if isinstance(item, Mapping)]
+
+
+def _layout(raw: dict[str, Any]) -> HeatingLayout:
+    """Return the heating layout, inferred when it was never chosen.
+
+    De instelling kwam er later bij. Een bestaande installatie zonder deze
+    sleutel mag daar geen waarschuwing voor krijgen, dus leiden we hem af uit
+    wat er al staat: deelt een warmtebron twee of meer zones, dan is het een
+    gesloten systeem. Vanaf de eerste keer opslaan staat de keuze vast en
+    raadt er niets meer.
+
+    The setting arrived later. An existing installation without this key must
+    not be warned about it, so we infer it from what is already there: if a heat
+    source spans two or more zones, it is a closed system. From the first save
+    onwards the choice is recorded and nothing guesses any more.
+    """
+    stored = raw.get("heating_layout")
+    if isinstance(stored, str) and stored in {item.value for item in HeatingLayout}:
+        return HeatingLayout(stored)
+
+    seen: dict[str, int] = {}
+    for zone in _sequence(raw.get("zones")):
+        if not isinstance(zone, dict):
+            continue
+        entities = {
+            _text(source.get("entity_id"))
+            for source in _sequence(zone.get("sources"))
+            if isinstance(source, dict)
+        }
+        for entity_id in entities - {""}:
+            seen[entity_id] = seen.get(entity_id, 0) + 1
+    return (
+        HeatingLayout.CENTRAL
+        if any(count > 1 for count in seen.values())
+        else HeatingLayout.PER_ZONE
+    )
 
 
 def _sequence(raw: Any) -> list[Any]:
