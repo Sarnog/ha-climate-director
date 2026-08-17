@@ -621,7 +621,7 @@
       "message": "{first} y {second} se excluyen pero ambos aplican {overlap}. El grupo lo recoge, pero se encuentran en lugar de excluirse ya por sus límites exteriores. Dales límites contiguos para separarlos del todo."
     },
     "layout_zoned_with_shared_source": {
-      "message": "La calefacción está en por zona, pero {entity} calienta {count} zonas a la vez. Encenderla para una habitación calienta también las demás."
+      "message": "La calefacción está en por zona, pero {entity} es la única fuente de calor de {count} zonas ({zones}). Esas estancias no se pueden calentar por separado."
     },
     "layout_central_without_shared_source": {
       "message": "La calefacción está en central, pero ninguna fuente de calor se comparte entre las {count} zonas. Cada estancia tiene la suya, y eso es por zona."

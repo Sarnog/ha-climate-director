@@ -621,7 +621,7 @@
       "message": "{first} et {second} s'excluent mais s'appliquent tous deux {overlap}. Le groupe le rattrape, mais ils se rencontrent au lieu de s'exclure déjà par leurs bornes extérieures. Donnez-leur des bornes contiguës pour les séparer définitivement."
     },
     "layout_zoned_with_shared_source": {
-      "message": "Le chauffage est réglé par zone, mais {entity} chauffe {count} zones à la fois. L'allumer pour une pièce chauffe aussi les autres."
+      "message": "Le chauffage est réglé par zone, mais {entity} est la seule source de chaleur de {count} zones ({zones}). Ces pièces ne peuvent pas être chauffées séparément."
     },
     "layout_central_without_shared_source": {
       "message": "Le chauffage est réglé sur central, mais aucune source de chaleur n'est partagée entre les {count} zones. Chaque pièce a la sienne, donc par zone."

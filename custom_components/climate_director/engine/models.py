@@ -969,33 +969,66 @@ def _layout_problems(config: DirectorConfig) -> list[str]:
     if len(config.zones) < 2:
         return []
 
+    def heats(source: Source) -> bool:
+        return bool(source.entity_id) and source.supports(ModeFamily.HEAT)
+
+    # Welke zones leunen op welk verwarmingsapparaat.
+    # Which zones lean on which heating appliance.
     shared: dict[str, list[str]] = {}
     for zone in config.zones:
-        for entity_id in {
-            source.entity_id
-            for source in zone.sources
-            if source.entity_id and source.supports(ModeFamily.HEAT)
-        }:
+        for entity_id in {source.entity_id for source in zone.sources if heats(source)}:
             shared.setdefault(entity_id, []).append(zone.zone_id)
     spanning = {entity_id: zones for entity_id, zones in shared.items() if len(zones) > 1}
 
-    if config.heating_layout is HeatingLayout.PER_ZONE and spanning:
-        entity_id, zones = next(iter(sorted(spanning.items())))
-        return [
-            Problem(
-                "layout_zoned_with_shared_source",
-                (f"heating is set to per zone, but {entity_id} heats {len(zones)} zones at once"),
-                entity=entity_id,
-                count=str(len(zones)),
-                zones=", ".join(sorted(zones)),
+    if config.heating_layout is HeatingLayout.PER_ZONE:
+        # Een gedeeld apparaat is op zichzelf geen bewijs van een gesloten
+        # systeem. Een gezoneerde cv werkt juist met EEN ketel en kleppen per
+        # zone, en een kamer met een eigen airco plus de gasverwarming als
+        # reserve is ook gewoon gezoneerd - die kan zichzelf verwarmen.
+        #
+        # Het gaat mis wanneer kamers uitsluitend op hetzelfde apparaat
+        # aangewezen zijn: dan is er niets meer om per kamer te regelen, en
+        # verwarmt aanzetten voor de een de ander mee.
+        #
+        # A shared appliance is no proof of a closed system by itself. A zoned
+        # boiler system works precisely with ONE boiler and valves per zone, and
+        # a room with its own air conditioner plus the gas heating as a stand-in
+        # is zoned too - it can heat itself.
+        #
+        # It goes wrong when rooms depend on the same appliance and nothing
+        # else: then there is nothing left to settle per room, and switching it
+        # on for one warms the other along with it.
+        for entity_id, zone_ids in sorted(spanning.items()):
+            stranded = sorted(
+                zone_id
+                for zone_id in zone_ids
+                if (zone := config.zone(zone_id)) is not None
+                and not [
+                    source
+                    for source in zone.sources
+                    if heats(source) and source.entity_id != entity_id
+                ]
             )
-        ]
+            if len(stranded) > 1:
+                return [
+                    Problem(
+                        "layout_zoned_with_shared_source",
+                        (
+                            f"heating is set to per zone, but {entity_id} is the only "
+                            f"heat source of {len(stranded)} zones"
+                        ),
+                        entity=entity_id,
+                        count=str(len(stranded)),
+                        zones=", ".join(stranded),
+                    )
+                ]
+        return []
 
     if config.heating_layout is HeatingLayout.CENTRAL and not spanning:
         return [
             Problem(
                 "layout_central_without_shared_source",
-                ("heating is set to central, but no heat source is shared between zones"),
+                "heating is set to central, but no heat source is shared between zones",
                 count=str(len(config.zones)),
             )
         ]

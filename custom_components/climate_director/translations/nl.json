@@ -621,7 +621,7 @@
       "message": "{first} en {second} sluiten elkaar uit maar gelden allebei {overlap}. De groep vangt dat op, maar ze komen elkaar tegen in plaats van elkaar door hun buitengrenzen al uit te sluiten. Geef ze aansluitende grenzen om ze definitief uit elkaar te houden."
     },
     "layout_zoned_with_shared_source": {
-      "message": "Verwarming staat op per zone, maar {entity} verwarmt {count} zones tegelijk. Aanzetten voor één kamer verwarmt de andere mee."
+      "message": "Verwarming staat op per zone, maar {entity} is de enige warmtebron van {count} zones ({zones}). Die kamers zijn niet los van elkaar te verwarmen."
     },
     "layout_central_without_shared_source": {
       "message": "Verwarming staat op centraal, maar geen enkele warmtebron wordt gedeeld tussen de {count} zones. Elke ruimte heeft zijn eigen, en dat is gezoneerd."

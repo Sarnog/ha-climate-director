@@ -22,6 +22,7 @@ from custom_components.climate_director.engine import (
     MODE_HEAT,
     MODE_OFF,
     DirectorConfig,
+    Generator,
     HeatingLayout,
     ModeSettings,
     Source,
@@ -201,6 +202,144 @@ class TestTheCheckWarns:
             zones=(
                 zone("a", Source(source_id="s1", entity_id="climate.a"), cooler),
                 zone("b", Source(source_id="s2", entity_id="climate.b"), cooler),
+            ),
+            heating_layout=HeatingLayout.PER_ZONE,
+        )
+        codes = [getattr(item, "code", "") for item in validate(config)]
+        assert "layout_zoned_with_shared_source" not in codes
+
+
+class TestAZonedSystemNeedNotHaveManyBoilers:
+    """Gezoneerd verwarmen doe je meestal met EEN ketel en kleppen.
+
+    Motorische zoneventielen of zonepompen op een enkele ketel, elk met een
+    eigen thermostaat - of lichter, slimme radiatorkranen. Twee losse ketels is
+    de uitzondering, niet de regel. Een controle die "gedeelde warmtebron" met
+    "centraal systeem" gelijkstelt, wijst zo'n installatie dus ten onrechte af.
+
+    Zoned heating usually runs on ONE boiler with valves: motorised zone valves
+    or zone pumps on a single boiler, each with its own thermostat - or lighter,
+    smart radiator valves. Two separate boilers is the exception, not the rule.
+    A check equating "shared heat source" with "central system" would therefore
+    reject such an installation wrongly.
+    """
+
+    def valve_system(self, layout: HeatingLayout) -> DirectorConfig:
+        """Return one boiler serving two zones, each with its own valve."""
+        return DirectorConfig(
+            zones=(
+                zone(
+                    "living_room",
+                    Source(
+                        source_id="valve_lr",
+                        entity_id="climate.valve_lr",
+                        role=SourceRole.HEAT_ONLY,
+                    ),
+                ),
+                zone(
+                    "bedroom",
+                    Source(
+                        source_id="valve_br",
+                        entity_id="climate.valve_br",
+                        role=SourceRole.HEAT_ONLY,
+                    ),
+                ),
+            ),
+            generators=(
+                Generator(
+                    generator_id="boiler",
+                    name="Boiler",
+                    entity_id="climate.boiler",
+                    zone_ids=("living_room", "bedroom"),
+                ),
+            ),
+            heating_layout=layout,
+        )
+
+    def test_valves_on_one_boiler_are_zoned(self) -> None:
+        codes = [
+            getattr(item, "code", "")
+            for item in validate(self.valve_system(HeatingLayout.PER_ZONE))
+        ]
+        assert not [code for code in codes if code.startswith("layout_")]
+
+    def test_calling_that_central_is_flagged(self) -> None:
+        codes = [
+            getattr(item, "code", "") for item in validate(self.valve_system(HeatingLayout.CENTRAL))
+        ]
+        assert "layout_central_without_shared_source" in codes
+
+    def test_only_the_asking_room_opens_its_valve(self) -> None:
+        """One boiler, but the cold room alone gets heat."""
+        plan = decide(
+            self.valve_system(HeatingLayout.PER_ZONE),
+            make_world(
+                indoor={"living_room": 18.0, "bedroom": 23.0},
+                outdoor=5.0,
+                climates={
+                    "climate.valve_lr": climate("off"),
+                    "climate.valve_br": climate("off"),
+                    "climate.boiler": climate("off"),
+                },
+            ),
+        )
+        commands = {c.entity_id: c.hvac_mode for c in plan.commands}
+        assert commands["climate.valve_lr"] == MODE_HEAT
+        assert commands["climate.valve_br"] == MODE_OFF
+        assert commands["climate.boiler"] == MODE_HEAT, "de ketel loopt mee met de vragende zone"
+
+    def test_an_own_appliance_plus_a_shared_boiler_is_zoned(self) -> None:
+        """Each room can heat itself; the shared source is only the stand-in.
+
+        Dit is de gewone opstelling van iemand met aircos en gasverwarming. Hem
+        waarschuwen zou betekenen dat het vangnet zelf een fout lijkt.
+
+        This is the ordinary setup of somebody with air conditioners and gas
+        heating. Warning about it would make the safety net itself look wrong.
+        """
+        config = DirectorConfig(
+            zones=(
+                zone(
+                    "living_room",
+                    Source(source_id="airco_lr", entity_id="climate.airco_lr", priority=0),
+                    Source(
+                        source_id="gas_lr",
+                        entity_id=THERMOSTAT,
+                        priority=1,
+                        role=SourceRole.HEAT_ONLY,
+                    ),
+                ),
+                zone(
+                    "bedroom",
+                    Source(source_id="airco_br", entity_id="climate.airco_br", priority=0),
+                    Source(
+                        source_id="gas_br",
+                        entity_id=THERMOSTAT,
+                        priority=1,
+                        role=SourceRole.HEAT_ONLY,
+                    ),
+                ),
+            ),
+            heating_layout=HeatingLayout.PER_ZONE,
+        )
+        codes = [getattr(item, "code", "") for item in validate(config)]
+        assert not [code for code in codes if code.startswith("layout_")], codes
+
+    def test_rooms_with_nothing_of_their_own_are_still_flagged(self) -> None:
+        """Two rooms leaning on one appliance and nothing else cannot be zoned."""
+        config = DirectorConfig(
+            zones=(zone("a", shared("s1")), zone("b", shared("s2"))),
+            heating_layout=HeatingLayout.PER_ZONE,
+        )
+        codes = [getattr(item, "code", "") for item in validate(config)]
+        assert "layout_zoned_with_shared_source" in codes
+
+    def test_one_stranded_room_is_not_enough(self) -> None:
+        """A single room on the shared appliance can still be settled on its own."""
+        config = DirectorConfig(
+            zones=(
+                zone("a", shared("s1")),
+                zone("b", Source(source_id="own", entity_id="climate.b"), shared("s2")),
             ),
             heating_layout=HeatingLayout.PER_ZONE,
         )

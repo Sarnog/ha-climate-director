@@ -621,7 +621,7 @@
       "message": "{first} and {second} are exclusive but both apply {overlap}. The group does catch it, but they meet rather than ruling each other out by their outdoor bounds. Give them adjacent bounds to keep them apart for good."
     },
     "layout_zoned_with_shared_source": {
-      "message": "Heating is set to per zone, but {entity} heats {count} zones at once. Switching it on for one room warms the others too."
+      "message": "Heating is set to per zone, but {entity} is the only heat source of {count} zones ({zones}). Those rooms cannot be warmed apart from each other."
     },
     "layout_central_without_shared_source": {
       "message": "Heating is set to central, but no heat source is shared between the {count} zones. Every room has its own, which is a zoned system."

@@ -693,11 +693,14 @@ bij past.
 | Keuze | Wat het betekent | Zo vul je het in |
 | --- | --- | --- |
 | **Centraal** | Eén warmtebron voor het hele huis. Een gesloten systeem kan de ene kamer niet verwarmen zonder de rest. Denk aan Tado met één thermostaat, of een cv zonder zoneregeling. | Zet **dezelfde** thermostaat als bron onder elke zone |
-| **Per zone** | Elke ruimte regelt zijn eigen warmte, via slimme radiatorkranen of een eigen apparaat. | Geef elke zone zijn **eigen** bron, en zet de ketel erbij als generator |
+| **Per zone** | Elke ruimte regelt zijn eigen warmte. Dat hoeft **geen** aparte warmtebron per kamer te zijn: een gezoneerde cv werkt juist met één ketel en zoneventielen of slimme radiatorkranen. | Geef elke zone zijn **eigen** klep of apparaat als bron, en zet de ketel erbij als generator |
 
-De controle kijkt daarna mee. Staat de keuze op *per zone* terwijl één thermostaat meerdere
-zones verwarmt, dan krijg je een waarschuwing — aanzetten voor één kamer verwarmt de andere
-namelijk mee, en dat is bijna nooit wat iemand bedoelde. Andersom net zo: staat hij op
+De controle kijkt daarna mee, maar hij telt niet zomaar gedeelde apparaten. Eén ketel onder
+tien zones is geen fout — zo hoort een gezoneerde cv er juist uit te zien. De waarschuwing
+komt pas als twee of meer kamers **uitsluitend** op hetzelfde apparaat zijn aangewezen en
+niets van zichzelf hebben: dan valt er per kamer niets meer te regelen en verwarmt aanzetten
+voor de een de ander mee. Heeft een kamer een eigen airco én de gasverwarming als reserve,
+dan is dat gewoon gezoneerd en zwijgt de controle. Andersom net zo: staat de keuze op
 *centraal* terwijl elke kamer zijn eigen bron heeft, dan is het systeem gezoneerd.
 
 Het blijft een **waarschuwing, geen blokkade**. De director regelt gewoon door. Alleen weet
@@ -1657,11 +1660,14 @@ may run — that stays with the gates and the priorities. It records what your i
 | Choice | What it means | How you fill it in |
 | --- | --- | --- |
 | **Central** | One heat source for the whole house. A closed system cannot warm one room without warming the rest. Think Tado with a single thermostat, or a boiler without zone control. | Put the **same** thermostat as a source under every zone |
-| **Per zone** | Every room settles its own heat, through smart radiator valves or its own appliance. | Give each zone its **own** source, and add the boiler as a generator |
+| **Per zone** | Every room settles its own heat. That needs **no** separate heat source per room: a zoned boiler system runs precisely on one boiler with zone valves or smart radiator valves. | Give each zone its **own** valve or appliance as a source, and add the boiler as a generator |
 
-The check then watches along. If the choice says *per zone* while one thermostat heats
-several zones, you get a warning — switching it on for one room warms the others too, and
-that is nearly never what anyone meant. The other way round just as much: if it says
+The check then watches along, but it does not simply count shared appliances. One boiler
+under ten zones is no fault — that is exactly what a zoned boiler system looks like. The
+warning comes only when two or more rooms depend on the same appliance and **nothing** else:
+then there is nothing left to settle per room, and switching it on for one warms the other
+along with it. A room with its own air conditioner plus the gas heating as a stand-in is
+zoned, and the check stays quiet. The other way round just as much: if the choice says
 *central* while every room has its own source, the system is zoned.
 
 It stays a **warning, not a block**. The director carries on regulating. You simply know
