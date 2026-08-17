@@ -156,6 +156,27 @@ uitzet permanent stil komen te staan. De schakelaar `switch.*_override_<zone>` b
 daarnaast gewoon werken en staat boven dit alles.
 
 
+#### Twee apparaten die elkaar uitsluiten
+
+Wil je dat een gasketel en een warmtepomp **nooit** tegelijk draaien, vertrouw dat dan niet
+aan de buitengrenzen toe. Die sluiten elkaar alleen uit zolang elk getal klopt, en één
+achtergebleven waarde is genoeg om ze samen te laten aanslaan — zonder dat er iets van
+gemeld wordt, want los van elkaar is er niets mis met beide instellingen.
+
+Onder **Exclusieve groepen** zet je ze bij elkaar. Van de apparaten in één groep draait er
+altijd maar één; de rest krijgt `exclusive_group_lost` als reden. Dat is een afgedwongen
+regel in plaats van een gelukkige samenloop.
+
+Let op wat een groep betekent: **één** apparaat uit de groep tegelijk. Wil je dat de
+gasketel geen enkele airco in de weg zit, maar dat twee airco's op hetzelfde circuit wél
+samen mogen koelen, maak dan één groep per paar — gas met de ene airco, gas met de andere —
+in plaats van alles in één groep.
+
+De configuratiecontrole meldt het wanneer de buitengrenzen van twee apparaten in dezelfde
+groep elkaar overlappen. Dat hoeft geen fout te zijn — de groep vangt het immers op — maar
+het betekent dat er bij die temperatuur echt gekozen moet worden, en dat is meestal niet wat
+je dacht te hebben ingesteld.
+
 #### Waar de grens tussen twee bronnen precies valt
 
 Buitengrenzen zijn **half open**: de ondergrens hoort erbij, de bovengrens niet. Twee
@@ -850,6 +871,27 @@ Switching off that the director does itself does not count, or every zone it eve
 off would fall silent for good. The `switch.*_<zone>_override` switch keeps working
 alongside this and outranks all of it.
 
+
+#### Two appliances that rule each other out
+
+Want a gas boiler and a heat pump to run **never** at the same time? Do not entrust that to
+the outdoor bounds. Those rule each other out only while every number is right, and one
+value left behind is enough to have them fire together — with nothing reported, because
+taken separately there is nothing wrong with either setting.
+
+Under **Exclusive groups** you put them together. Of the appliances in one group only one
+ever runs; the rest get `exclusive_group_lost` as their reason. That is an enforced rule
+rather than a happy coincidence.
+
+Mind what a group means: **one** appliance from the group at a time. If you want the gas
+boiler to stay out of every air conditioner's way, while two air conditioners on the same
+circuit may still cool together, make one group per pair — gas with the one, gas with the
+other — rather than putting everything in a single group.
+
+The configuration check reports it when the outdoor bounds of two appliances in the same
+group overlap. That need not be a mistake — the group catches it, after all — but it does
+mean a real choice has to be made at that temperature, and that is usually not what you
+thought you had set up.
 
 #### Where the boundary between two sources falls exactly
 
