@@ -15,7 +15,8 @@
       }
     },
     "error": {
-      "required": "Dit veld is nodig om te bewaren. Vul het in, of kies onderaan “Verwerpen en teruggaan” om weg te gaan zonder op te slaan."
+      "required": "Dit veld is nodig om te bewaren. Vul het in, of kies onderaan “Verwerpen en teruggaan” om weg te gaan zonder op te slaan.",
+      "too_few": "Kies minstens twee apparaten; een groep van één sluit niets uit."
     }
   },
   "options": {
@@ -30,7 +31,8 @@
           "residents": "Bewoners",
           "openings": "Deuren en ramen",
           "save": "✅ Opslaan en sluiten",
-          "generators": "Gedeelde warmtebronnen"
+          "generators": "Gedeelde warmtebronnen",
+          "exclusives": "Exclusieve groepen"
         }
       },
       "settings": {
@@ -364,11 +366,38 @@
         "data_description": {
           "when_done": "Opslaan bewaart alles zoals je het hebt ingesteld, waarschuwingen en al."
         }
+      },
+      "exclusives": {
+        "title": "Exclusieve groepen",
+        "description": "Apparaten die nooit tegelijk mogen draaien. Zet de gasketel en de warmtepompen bij elkaar en de director laat ze nooit samen aanslaan.",
+        "data": {
+          "group": "Groep",
+          "when_done": "Als je hier klaar bent"
+        },
+        "data_description": {
+          "group": "Kies er een om aan te passen, of voeg er een toe.",
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+        }
+      },
+      "exclusive": {
+        "title": "Exclusieve groep",
+        "description": "Apparaten die nooit tegelijk mogen draaien. Zet de gasketel en de warmtepompen bij elkaar en de director laat ze nooit samen aanslaan.",
+        "data": {
+          "sources": "Apparaten in deze groep",
+          "delete": "Deze groep verwijderen",
+          "when_done": "Als je hier klaar bent"
+        },
+        "data_description": {
+          "sources": "Hiervan mag er maar één tegelijk draaien. Minder dan twee is geen groep.",
+          "delete": "Deze groep verwijderen",
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+        }
       }
     },
     "error": {
       "duplicate_priority": "Een andere kamer op dezelfde buitenunit heeft deze prioriteit al. Twee kamers met hetzelfde nummer laten de uitkomst van hun naam afhangen, dus kies een vrij nummer.",
-      "required": "Dit veld is nodig om te bewaren. Vul het in, of kies onderaan “Verwerpen en teruggaan” om weg te gaan zonder op te slaan."
+      "required": "Dit veld is nodig om te bewaren. Vul het in, of kies onderaan “Verwerpen en teruggaan” om weg te gaan zonder op te slaan.",
+      "too_few": "Kies minstens twee apparaten; een groep van één sluit niets uit."
     }
   },
   "entity": {
@@ -551,6 +580,12 @@
       "options": {
         "keep": "Toch opslaan",
         "discard": "< Terug naar het hoofdmenu om iets aan te passen"
+      }
+    },
+    "exclusive_list": {
+      "options": {
+        "add_new": "+ Groep toevoegen",
+        "back_to_menu": "< Terug naar het hoofdmenu"
       }
     }
   }

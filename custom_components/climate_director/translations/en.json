@@ -15,7 +15,8 @@
       }
     },
     "error": {
-      "required": "This field is needed to save. Fill it in, or choose “Discard and go back” at the bottom to leave without saving."
+      "required": "This field is needed to save. Fill it in, or choose “Discard and go back” at the bottom to leave without saving.",
+      "too_few": "Pick at least two appliances; a group of one rules nothing out."
     }
   },
   "options": {
@@ -30,7 +31,8 @@
           "residents": "Residents",
           "openings": "Doors and windows",
           "save": "✅ Save and close",
-          "generators": "Shared heat sources"
+          "generators": "Shared heat sources",
+          "exclusives": "Exclusive groups"
         }
       },
       "settings": {
@@ -364,11 +366,38 @@
         "data_description": {
           "when_done": "Saving keeps everything as you set it, warnings and all."
         }
+      },
+      "exclusives": {
+        "title": "Exclusive groups",
+        "description": "Appliances that may never run at the same time. Put the gas boiler and the heat pumps together, and the director will never fire both.",
+        "data": {
+          "group": "Group",
+          "when_done": "When you are done here"
+        },
+        "data_description": {
+          "group": "Pick one to edit, or add one.",
+          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+        }
+      },
+      "exclusive": {
+        "title": "Exclusive group",
+        "description": "Appliances that may never run at the same time. Put the gas boiler and the heat pumps together, and the director will never fire both.",
+        "data": {
+          "sources": "Appliances in this group",
+          "delete": "Delete this group",
+          "when_done": "When you are done here"
+        },
+        "data_description": {
+          "sources": "Only one of these may run at once. Fewer than two makes no group.",
+          "delete": "Delete this group",
+          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+        }
       }
     },
     "error": {
       "duplicate_priority": "Another room on the same outdoor unit already has this priority. Two rooms sharing a number leaves the outcome hanging on their name, so pick a free one.",
-      "required": "This field is needed to save. Fill it in, or choose “Discard and go back” at the bottom to leave without saving."
+      "required": "This field is needed to save. Fill it in, or choose “Discard and go back” at the bottom to leave without saving.",
+      "too_few": "Pick at least two appliances; a group of one rules nothing out."
     }
   },
   "entity": {
@@ -551,6 +580,12 @@
       "options": {
         "keep": "Save anyway",
         "discard": "< Back to the main menu to change something"
+      }
+    },
+    "exclusive_list": {
+      "options": {
+        "add_new": "+ Add group",
+        "back_to_menu": "< Back to the main menu"
       }
     }
   }

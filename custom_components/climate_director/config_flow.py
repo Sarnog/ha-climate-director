@@ -153,6 +153,26 @@ def _exit_row() -> selector.SelectSelector:
     )
 
 
+def _source_options(flow: Any) -> list[selector.SelectOptionDict]:
+    """Return every source in the installation, labelled by zone and appliance."""
+    options: list[selector.SelectOptionDict] = []
+    for zone in flow._list("zones"):
+        for source in zone.get("sources") or []:
+            options.append(
+                selector.SelectOptionDict(
+                    value=source["source_id"],
+                    label=f"{zone.get('name') or zone['zone_id']} - {source['entity_id']}",
+                )
+            )
+    return options
+
+
+def _group_label(flow: Any, group: list[str]) -> str:
+    """Return a readable name for one exclusive group."""
+    known = {option["value"]: option["label"] for option in _source_options(flow)}
+    return " + ".join(known.get(source_id, source_id) for source_id in group) or "?"
+
+
 def _add_option(key: str) -> selector.SelectOptionDict:
     """Return the "add one" row of a picker.
 
@@ -236,6 +256,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 "zones",
                 "circuits",
                 "generators",
+                "exclusives",
                 "residents",
                 "openings",
                 "save",
@@ -378,6 +399,89 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                             else DEFAULT_SHADOW_MODE
                         ),
                     ): bool,
+                    vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
+                }
+            ),
+        )
+
+    # -- exclusieve groepen / exclusive groups -------------------------------
+
+    async def async_step_exclusives(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick an exclusive group to edit, or add one."""
+        groups = self._list("exclusive_groups")
+        if user_input is not None:
+            choice = user_input["group"]
+            if choice == _BACK:
+                return await self.async_step_init()
+            self._index = None if choice == _ADD else int(choice)
+            return await self.async_step_exclusive()
+
+        options = [
+            selector.SelectOptionDict(value=str(index), label=_group_label(self, group))
+            for index, group in enumerate(groups)
+        ]
+        options.append(_add_option("exclusive"))
+        options.append(_back_option("exclusive"))
+        return self.async_show_form(
+            step_id="exclusives",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("group", default=_ADD): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=options,
+                            mode=selector.SelectSelectorMode.LIST,
+                            translation_key="exclusive_list",
+                        )
+                    )
+                }
+            ),
+        )
+
+    async def async_step_exclusive(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Edit one exclusive group: the sources that may never run together."""
+        groups = self._list("exclusive_groups")
+        current = groups[self._index] if self._index is not None else []
+
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            if user_input.get(_EXIT) == _EXIT_DROP:
+                return await self.async_step_exclusives()
+            if user_input.get("delete") and self._index is not None:
+                groups.pop(self._index)
+                self._index = None
+                return await self.async_step_exclusives()
+            chosen = list(user_input.get("sources") or ())
+            if len(chosen) < 2:
+                errors["sources"] = "too_few"
+            else:
+                if self._index is None:
+                    groups.append(chosen)
+                else:
+                    groups[self._index] = chosen
+                self._index = None
+                return await self.async_step_exclusives()
+            current = chosen
+
+        return self.async_show_form(
+            step_id="exclusive",
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        "sources", description={"suggested_value": list(current) or None}
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=_source_options(self),
+                            mode=selector.SelectSelectorMode.LIST,
+                            multiple=True,
+                        )
+                    ),
+                    vol.Required("delete", default=False): bool,
                     vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
                 }
             ),

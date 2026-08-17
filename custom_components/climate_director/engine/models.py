@@ -822,6 +822,8 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
     ]
 
     known_sources = set(source_ids)
+    problems += _overlapping_bounds(config)
+
     for group in config.exclusive_groups:
         problems += [
             f"exclusive group names unknown source {source_id}"
@@ -840,3 +842,54 @@ def _duplicates(values: list[str]) -> list[str]:
             duplicated.append(value)
         seen.add(value)
     return duplicated
+
+
+def _overlapping_bounds(config: DirectorConfig) -> list[str]:
+    """Return the pairs in one exclusive group whose outdoor ranges overlap.
+
+    Bronnen in een exclusieve groep horen elkaar uit te sluiten. Doen hun
+    buitengrenzen dat al, dan komen ze elkaar nooit tegen en hoeft er nooit
+    iemand te wijken. Overlappen ze, dan kan er bij een bepaalde temperatuur
+    alsnog gekozen moeten worden - en dat is precies het moment waarop iemand
+    dacht dat het onmogelijk was. Eén verkeerd getal is genoeg.
+
+    Sources in an exclusive group are meant to rule each other out. If their
+    outdoor bounds already do so, they never meet and nobody ever has to give
+    way. If the bounds overlap, at some temperature a choice still has to be
+    made - which is exactly the moment somebody thought was impossible. One
+    wrong number is enough.
+    """
+    found: list[str] = []
+    for group in config.exclusive_groups:
+        members = [source for source in (config.source(item) for item in sorted(group)) if source]
+        for index, first in enumerate(members):
+            for second in members[index + 1 :]:
+                overlap = _windows_overlap(first.outdoor, second.outdoor)
+                if overlap is not None:
+                    found.append(
+                        f"sources {first.source_id} and {second.source_id} are exclusive "
+                        f"but both apply {overlap}, so at that outdoor temperature one "
+                        f"has to give way instead of never meeting"
+                    )
+    return found
+
+
+def _windows_overlap(first: OutdoorWindow, second: OutdoorWindow) -> str | None:
+    """Return a readable description of where two outdoor ranges meet, or `None`."""
+    low = max(
+        (bound for bound in (first.minimum, second.minimum) if bound is not None),
+        default=None,
+    )
+    high = min(
+        (bound for bound in (first.maximum, second.maximum) if bound is not None),
+        default=None,
+    )
+    if low is not None and high is not None and low >= high:
+        return None
+    if low is None and high is None:
+        return "at every outdoor temperature"
+    if low is None:
+        return f"below {high}"
+    if high is None:
+        return f"from {low} upwards"
+    return f"between {low} and {high}"

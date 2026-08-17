@@ -15,7 +15,8 @@
       }
     },
     "error": {
-      "required": "Este campo hace falta para guardar. Rellénalo, o elige «Descartar y volver» abajo para salir sin guardar."
+      "required": "Este campo hace falta para guardar. Rellénalo, o elige «Descartar y volver» abajo para salir sin guardar.",
+      "too_few": "Elige al menos dos aparatos; un grupo de uno no excluye nada."
     }
   },
   "options": {
@@ -30,7 +31,8 @@
           "residents": "Residentes",
           "openings": "Puertas y ventanas",
           "save": "✅ Guardar y cerrar",
-          "generators": "Fuentes de calor compartidas"
+          "generators": "Fuentes de calor compartidas",
+          "exclusives": "Grupos exclusivos"
         }
       },
       "settings": {
@@ -364,11 +366,38 @@
         "data_description": {
           "when_done": "Guardar mantiene todo tal como lo ajustaste, avisos incluidos."
         }
+      },
+      "exclusives": {
+        "title": "Grupos exclusivos",
+        "description": "Aparatos que nunca deben funcionar a la vez. Pon juntas la caldera de gas y las bombas de calor, y el director nunca encenderá ambas.",
+        "data": {
+          "group": "Grupo",
+          "when_done": "Cuando termines aquí"
+        },
+        "data_description": {
+          "group": "Elige uno para modificar, o añade uno.",
+          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+        }
+      },
+      "exclusive": {
+        "title": "Grupo exclusivo",
+        "description": "Aparatos que nunca deben funcionar a la vez. Pon juntas la caldera de gas y las bombas de calor, y el director nunca encenderá ambas.",
+        "data": {
+          "sources": "Aparatos de este grupo",
+          "delete": "Eliminar este grupo",
+          "when_done": "Cuando termines aquí"
+        },
+        "data_description": {
+          "sources": "Solo uno de ellos puede funcionar a la vez. Menos de dos no es un grupo.",
+          "delete": "Eliminar este grupo",
+          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+        }
       }
     },
     "error": {
       "duplicate_priority": "Otra habitación en la misma unidad exterior ya tiene esta prioridad. Dos habitaciones con el mismo número hacen que el resultado dependa de su nombre; elige uno libre.",
-      "required": "Este campo hace falta para guardar. Rellénalo, o elige «Descartar y volver» abajo para salir sin guardar."
+      "required": "Este campo hace falta para guardar. Rellénalo, o elige «Descartar y volver» abajo para salir sin guardar.",
+      "too_few": "Elige al menos dos aparatos; un grupo de uno no excluye nada."
     }
   },
   "entity": {
@@ -551,6 +580,12 @@
       "options": {
         "keep": "Guardar igualmente",
         "discard": "< Volver al menú principal para cambiar algo"
+      }
+    },
+    "exclusive_list": {
+      "options": {
+        "add_new": "+ Añadir grupo",
+        "back_to_menu": "< Volver al menú principal"
       }
     }
   }

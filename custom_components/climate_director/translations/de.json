@@ -15,7 +15,8 @@
       }
     },
     "error": {
-      "required": "Dieses Feld wird zum Speichern gebraucht. Fülle es aus, oder wähle unten „Verwerfen und zurück“, um ohne Speichern zu gehen."
+      "required": "Dieses Feld wird zum Speichern gebraucht. Fülle es aus, oder wähle unten „Verwerfen und zurück“, um ohne Speichern zu gehen.",
+      "too_few": "Wähle mindestens zwei Geräte; eine Gruppe aus einem schließt nichts aus."
     }
   },
   "options": {
@@ -30,7 +31,8 @@
           "residents": "Bewohner",
           "openings": "Türen und Fenster",
           "save": "✅ Speichern und schließen",
-          "generators": "Gemeinsame Wärmequellen"
+          "generators": "Gemeinsame Wärmequellen",
+          "exclusives": "Exklusive Gruppen"
         }
       },
       "settings": {
@@ -364,11 +366,38 @@
         "data_description": {
           "when_done": "Speichern behält alles so, wie du es eingestellt hast, Warnungen inklusive."
         }
+      },
+      "exclusives": {
+        "title": "Exklusive Gruppen",
+        "description": "Geräte, die nie gleichzeitig laufen dürfen. Stell Gaskessel und Wärmepumpen zusammen, und der Director lässt sie nie beide anspringen.",
+        "data": {
+          "group": "Gruppe",
+          "when_done": "Wenn du hier fertig bist"
+        },
+        "data_description": {
+          "group": "Wähle eine zum Bearbeiten, oder füge eine hinzu.",
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+        }
+      },
+      "exclusive": {
+        "title": "Exklusive Gruppe",
+        "description": "Geräte, die nie gleichzeitig laufen dürfen. Stell Gaskessel und Wärmepumpen zusammen, und der Director lässt sie nie beide anspringen.",
+        "data": {
+          "sources": "Geräte in dieser Gruppe",
+          "delete": "Diese Gruppe löschen",
+          "when_done": "Wenn du hier fertig bist"
+        },
+        "data_description": {
+          "sources": "Davon darf nur eines gleichzeitig laufen. Weniger als zwei ist keine Gruppe.",
+          "delete": "Diese Gruppe löschen",
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+        }
       }
     },
     "error": {
       "duplicate_priority": "Ein anderer Raum an derselben Außeneinheit hat diese Priorität bereits. Zwei Räume mit derselben Zahl lassen das Ergebnis von ihrem Namen abhängen, wähle also eine freie.",
-      "required": "Dieses Feld wird zum Speichern gebraucht. Fülle es aus, oder wähle unten „Verwerfen und zurück“, um ohne Speichern zu gehen."
+      "required": "Dieses Feld wird zum Speichern gebraucht. Fülle es aus, oder wähle unten „Verwerfen und zurück“, um ohne Speichern zu gehen.",
+      "too_few": "Wähle mindestens zwei Geräte; eine Gruppe aus einem schließt nichts aus."
     }
   },
   "entity": {
@@ -551,6 +580,12 @@
       "options": {
         "keep": "Trotzdem speichern",
         "discard": "< Zurück zum Hauptmenü, um etwas zu ändern"
+      }
+    },
+    "exclusive_list": {
+      "options": {
+        "add_new": "+ Gruppe hinzufügen",
+        "back_to_menu": "< Zurück zum Hauptmenü"
       }
     }
   }

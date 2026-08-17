@@ -15,7 +15,8 @@
       }
     },
     "error": {
-      "required": "Ce champ est nécessaire pour enregistrer. Remplissez-le, ou choisissez « Abandonner et revenir » en bas pour partir sans enregistrer."
+      "required": "Ce champ est nécessaire pour enregistrer. Remplissez-le, ou choisissez « Abandonner et revenir » en bas pour partir sans enregistrer.",
+      "too_few": "Choisissez au moins deux appareils ; un groupe d'un seul n'exclut rien."
     }
   },
   "options": {
@@ -30,7 +31,8 @@
           "residents": "Occupants",
           "openings": "Portes et fenêtres",
           "save": "✅ Enregistrer et fermer",
-          "generators": "Sources de chaleur partagées"
+          "generators": "Sources de chaleur partagées",
+          "exclusives": "Groupes exclusifs"
         }
       },
       "settings": {
@@ -364,11 +366,38 @@
         "data_description": {
           "when_done": "Enregistrer conserve tout tel que vous l'avez réglé, avertissements compris."
         }
+      },
+      "exclusives": {
+        "title": "Groupes exclusifs",
+        "description": "Appareils qui ne doivent jamais fonctionner en même temps. Mettez la chaudière à gaz et les pompes à chaleur ensemble, et le directeur ne les lancera jamais toutes les deux.",
+        "data": {
+          "group": "Groupe",
+          "when_done": "Quand vous avez terminé ici"
+        },
+        "data_description": {
+          "group": "Choisissez-en un à modifier, ou ajoutez-en un.",
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+        }
+      },
+      "exclusive": {
+        "title": "Groupe exclusif",
+        "description": "Appareils qui ne doivent jamais fonctionner en même temps. Mettez la chaudière à gaz et les pompes à chaleur ensemble, et le directeur ne les lancera jamais toutes les deux.",
+        "data": {
+          "sources": "Appareils de ce groupe",
+          "delete": "Supprimer ce groupe",
+          "when_done": "Quand vous avez terminé ici"
+        },
+        "data_description": {
+          "sources": "Un seul d'entre eux peut fonctionner à la fois. Moins de deux ne fait pas un groupe.",
+          "delete": "Supprimer ce groupe",
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+        }
       }
     },
     "error": {
       "duplicate_priority": "Une autre pièce sur la même unité extérieure a déjà cette priorité. Deux pièces partageant un nombre font dépendre le résultat de leur nom ; choisissez-en un libre.",
-      "required": "Ce champ est nécessaire pour enregistrer. Remplissez-le, ou choisissez « Abandonner et revenir » en bas pour partir sans enregistrer."
+      "required": "Ce champ est nécessaire pour enregistrer. Remplissez-le, ou choisissez « Abandonner et revenir » en bas pour partir sans enregistrer.",
+      "too_few": "Choisissez au moins deux appareils ; un groupe d'un seul n'exclut rien."
     }
   },
   "entity": {
@@ -551,6 +580,12 @@
       "options": {
         "keep": "Enregistrer quand même",
         "discard": "< Retour au menu principal pour modifier quelque chose"
+      }
+    },
+    "exclusive_list": {
+      "options": {
+        "add_new": "+ Ajouter un groupe",
+        "back_to_menu": "< Retour au menu principal"
       }
     }
   }
