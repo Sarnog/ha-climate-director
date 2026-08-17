@@ -364,27 +364,43 @@ class TestPriorityAfterRestart:
         assert resolve_initial(configured=2, last_value=7, last_configured=None) == 2
 
 
+def _no_hass():
+    """Return a stand-in without translations, so the English text stays put."""
+
+    class Config:
+        language = "en"
+
+    class Hass:
+        config = Config()
+
+    return Hass()
+
+
 class TestProblemSummary:
     def test_a_short_list_is_shown_in_full(self) -> None:
-        summary = summarise(("first", "second"))
+        summary = summarise(_no_hass(), ("first", "second"))
         assert summary == "- first\n- second"
         assert "more" not in summary
 
     def test_exactly_the_cap_needs_no_tail(self) -> None:
-        summary = summarise(tuple(f"problem {index}" for index in range(MAX_LISTED)))
+        summary = summarise(_no_hass(), tuple(f"problem {index}" for index in range(MAX_LISTED)))
         assert summary.count("\n") == MAX_LISTED - 1
         assert "more" not in summary
 
     def test_one_over_the_cap_counts_the_remainder(self) -> None:
-        summary = summarise(tuple(f"problem {index}" for index in range(MAX_LISTED + 1)))
+        summary = summarise(
+            _no_hass(), tuple(f"problem {index}" for index in range(MAX_LISTED + 1))
+        )
         assert summary.endswith("- ... and 1 more")
 
     def test_a_long_list_counts_correctly(self) -> None:
-        summary = summarise(tuple(f"problem {index}" for index in range(MAX_LISTED + 7)))
+        summary = summarise(
+            _no_hass(), tuple(f"problem {index}" for index in range(MAX_LISTED + 7))
+        )
         assert summary.endswith("- ... and 7 more")
 
     def test_nothing_wrong_produces_nothing(self) -> None:
-        assert summarise(()) == ""
+        assert summarise(_no_hass(), ()) == ""
 
 
 class TestDeepCopy:

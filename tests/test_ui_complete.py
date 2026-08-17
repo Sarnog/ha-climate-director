@@ -453,3 +453,51 @@ class TestEveryPickerCanBeBuilt:
         options = set(re.findall(r'"(\w+)"', menu.group(1)))
         named = set(load(path)["options"]["step"]["init"]["menu_options"])
         assert not (options - named), sorted(options - named)
+
+
+class TestProblemsAreTranslatable:
+    """Een melding in het Engels tussen een Nederlands scherm leest als een fout.
+
+    De engine kent geen Home Assistant en schrijft dus Engels. Draagt een melding
+    een code, dan zoekt de HA-laag daar een vertaling bij; zonder code blijft de
+    Engelse zin staan. Zo is niets ooit slechter af dan het was, en wordt alles
+    wat een gebruiker daadwerkelijk tegenkomt in zijn eigen taal getoond.
+
+    A complaint in English amid a Dutch screen reads as a fault. The engine knows
+    no Home Assistant and therefore writes English. If a complaint carries a code
+    the HA layer looks up a translation; without one the English sentence stays.
+    Nothing is ever worse off than it was, and everything a user actually meets
+    is shown in their own language.
+    """
+
+    def _codes(self) -> set[str]:
+        source = (COMPONENT / "engine" / "models.py").read_text(encoding="utf-8")
+        return set(re.findall(r'Problem\(\s*\n?\s*"(\w+)"', source))
+
+    def test_the_engine_emits_codes(self) -> None:
+        assert len(self._codes()) >= 8
+
+    @pytest.mark.parametrize("path", FILES, ids=IDS)
+    def test_every_code_is_translated(self, path: pathlib.Path) -> None:
+        texts = load(path).get("problems", {})
+        missing = sorted(self._codes() - set(texts))
+        assert not missing, missing
+
+    @pytest.mark.parametrize("path", FILES, ids=IDS)
+    def test_the_placeholders_line_up(self, path: pathlib.Path) -> None:
+        """A template naming a placeholder the engine never passes renders raw."""
+        english = load(COMPONENT / "translations" / "en.json").get("problems", {})
+        texts = load(path).get("problems", {})
+        for code, template in texts.items():
+            expected = set(re.findall(r"\{(\w+)\}", english.get(code, "")))
+            assert set(re.findall(r"\{(\w+)\}", template)) == expected, code
+
+    def test_a_problem_still_reads_as_its_english_text(self) -> None:
+        """Everything already treating these as plain strings must keep working."""
+        from custom_components.climate_director.engine.models import Problem
+
+        item = Problem("zone_without_sources", "zone z has no sources", zone="z")
+        assert item == "zone z has no sources"
+        assert "no sources" in item
+        assert item.code == "zone_without_sources"
+        assert item.params == {"zone": "z"}
