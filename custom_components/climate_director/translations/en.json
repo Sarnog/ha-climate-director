@@ -285,7 +285,9 @@
           "sleep_entity": "Sleep sensor",
           "sleep_state": "State meaning asleep",
           "delete": "Delete this resident",
-          "when_done": "When you are done here"
+          "when_done": "When you are done here",
+          "sleep_from": "Sleep sensor counts from",
+          "sleep_until": "Sleep sensor counts until"
         },
         "data_description": {
           "sleep_entity": "Leave empty if this person's sleep is not tracked.",
@@ -293,7 +295,9 @@
           "name": "A label, to tell residents apart.",
           "presence_entity": "Usually a person entity. Says whether this resident is home.",
           "delete": "Removes the resident along with their schedules.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
+          "sleep_from": "A phone on the charger at three in the afternoon does not mean somebody is turning in. Between these times the sleep sensor counts; outside them a charger is just a charger. Leave both empty to have it count around the clock.",
+          "sleep_until": "A phone on the charger at three in the afternoon does not mean somebody is turning in. Between these times the sleep sensor counts; outside them a charger is just a charger. Leave both empty to have it count around the clock."
         }
       },
       "windows": {

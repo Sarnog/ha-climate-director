@@ -1118,6 +1118,10 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 "presence_entity": user_input["presence_entity"],
                 "sleep_entity": user_input.get("sleep_entity", ""),
                 "sleep_state": user_input.get("sleep_state") or "on",
+                "sleep_window": {
+                    "start": user_input.get("sleep_from") or "",
+                    "end": user_input.get("sleep_until") or "",
+                },
                 # De roosters van deze bewoner blijven staan; die worden in de
                 # volgende stap bewerkt, niet in dit formulier.
                 #
@@ -1155,6 +1159,18 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         )
                     ),
                     vol.Required("sleep_state", default=current.get("sleep_state", "on")): _TEXT,
+                    vol.Optional(
+                        "sleep_from",
+                        description={
+                            "suggested_value": (current.get("sleep_window") or {}).get("start")
+                        },
+                    ): _TIME,
+                    vol.Optional(
+                        "sleep_until",
+                        description={
+                            "suggested_value": (current.get("sleep_window") or {}).get("end")
+                        },
+                    ): _TIME,
                     vol.Required("delete", default=False): bool,
                     vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
                 }

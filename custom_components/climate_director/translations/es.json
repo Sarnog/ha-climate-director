@@ -285,7 +285,9 @@
           "sleep_entity": "Sensor de sueño",
           "sleep_state": "Estado que significa dormido",
           "delete": "Eliminar este residente",
-          "when_done": "Cuando termines aquí"
+          "when_done": "Cuando termines aquí",
+          "sleep_from": "El sensor de sueño cuenta desde",
+          "sleep_until": "El sensor de sueño cuenta hasta"
         },
         "data_description": {
           "sleep_entity": "Déjalo vacío si no se sigue el sueño de esta persona.",
@@ -293,7 +295,9 @@
           "name": "Un nombre, para distinguir residentes.",
           "presence_entity": "Normalmente una entidad person. Indica si este residente está en casa.",
           "delete": "Elimina al residente junto con sus horarios.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
+          "sleep_from": "Un teléfono en el cargador a las tres de la tarde no significa que alguien se acueste. Entre estas horas el sensor de sueño cuenta; fuera de ellas un cargador es solo un cargador. Deja ambas vacías para que valga a todas horas.",
+          "sleep_until": "Un teléfono en el cargador a las tres de la tarde no significa que alguien se acueste. Entre estas horas el sensor de sueño cuenta; fuera de ellas un cargador es solo un cargador. Deja ambas vacías para que valga a todas horas."
         }
       },
       "windows": {

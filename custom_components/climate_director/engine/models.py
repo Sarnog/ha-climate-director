@@ -378,6 +378,20 @@ class Resident:
 
     resident_id: str
     name: str = ""
+    sleep_window: TimeWindow | None = None
+    """Hours in which this resident's sleep sensor counts. `None` means always.
+
+    Een telefoon die om drie uur 's middags op de lader ligt betekent niet dat
+    er iemand naar bed gaat. Zonder venster telt elke lading als slapen, en dan
+    zet het huis zichzelf midden op de dag uit. De dagen van de week tellen mee,
+    zodat een weekendritme apart te zetten is.
+
+    A phone on the charger at three in the afternoon does not mean somebody is
+    turning in. Without a window every charge counts as sleeping, and the house
+    switches itself off in the middle of the day. Weekdays are honoured, so a
+    weekend rhythm can be set apart.
+    """
+
     windows: tuple[TimeWindow, ...] = ()
     """Times this resident wants climate control. Empty means always."""
 

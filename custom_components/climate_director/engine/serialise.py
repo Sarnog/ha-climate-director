@@ -198,6 +198,9 @@ def _resident(raw: Mapping[str, Any]) -> Resident:
         presence_entity=_text(raw.get("presence_entity")),
         sleep_entity=_text(raw.get("sleep_entity")),
         sleep_state=_text(raw.get("sleep_state")) or "on",
+        sleep_window=_guest_window(
+            raw.get("sleep_window") if isinstance(raw.get("sleep_window"), dict) else {}
+        ),
     )
 
 
@@ -351,6 +354,14 @@ def _resident_to_dict(resident: Resident) -> dict[str, Any]:
         "presence_entity": resident.presence_entity,
         "sleep_entity": resident.sleep_entity,
         "sleep_state": resident.sleep_state,
+        "sleep_window": (
+            None
+            if resident.sleep_window is None
+            else {
+                "start": resident.sleep_window.start.isoformat(),
+                "end": resident.sleep_window.end.isoformat(),
+            }
+        ),
         "windows": [
             {
                 "start": window.start.strftime("%H:%M:%S"),

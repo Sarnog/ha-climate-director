@@ -285,7 +285,9 @@
           "sleep_entity": "Capteur de sommeil",
           "sleep_state": "État signifiant endormi",
           "delete": "Supprimer cet occupant",
-          "when_done": "Quand vous avez terminé ici"
+          "when_done": "Quand vous avez terminé ici",
+          "sleep_from": "Le capteur de sommeil compte à partir de",
+          "sleep_until": "Le capteur de sommeil compte jusqu'à"
         },
         "data_description": {
           "sleep_entity": "Laissez vide si le sommeil de cette personne n'est pas suivi.",
@@ -293,7 +295,9 @@
           "name": "Un nom, pour distinguer les occupants.",
           "presence_entity": "Généralement une entité person. Indique si cet occupant est à la maison.",
           "delete": "Supprime l'occupant ainsi que ses plannings.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
+          "sleep_from": "Un téléphone sur le chargeur à trois heures de l'après-midi ne veut pas dire que quelqu'un se couche. Entre ces heures le capteur de sommeil compte ; en dehors, un chargeur n'est qu'un chargeur. Laisser les deux vides pour qu'il vaille en permanence.",
+          "sleep_until": "Un téléphone sur le chargeur à trois heures de l'après-midi ne veut pas dire que quelqu'un se couche. Entre ces heures le capteur de sommeil compte ; en dehors, un chargeur n'est qu'un chargeur. Laisser les deux vides pour qu'il vaille en permanence."
         }
       },
       "windows": {

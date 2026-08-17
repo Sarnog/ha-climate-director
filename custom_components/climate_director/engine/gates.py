@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .models import HOLIDAY_WEEKDAY, DirectorConfig, Zone, ZoneGate
+from .models import HOLIDAY_WEEKDAY, DirectorConfig, Resident, Zone, ZoneGate
 from .plan import Reason
 from .world import WorldState
 
@@ -119,8 +119,7 @@ def evaluate(config: DirectorConfig, world: WorldState, zone: Zone) -> GateVerdi
                 return GateVerdict.block(Reason.NOBODY_HOME)
 
             if gates.require_awake and not any(
-                world.resident(resident.resident_id).present_and_awake
-                for resident in config.residents
+                _up_and_about(resident, world) for resident in config.residents
             ):
                 return GateVerdict.block(Reason.EVERYONE_ASLEEP)
 
@@ -155,6 +154,28 @@ def _preconditioning(config: DirectorConfig, world: WorldState, zone: Zone) -> b
     if window is None:
         return True
     return window.contains(world.now.time(), world.now.weekday())
+
+
+def asleep(resident: Resident, world: WorldState) -> bool:
+    """Return whether this resident counts as asleep right now.
+
+    De sensor zegt wat hij ziet; het venster zegt wanneer dat iets betekent.
+    Buiten die uren is een oplader gewoon een oplader.
+
+    The sensor says what it sees; the window says when that means anything.
+    Outside those hours a charger is just a charger.
+    """
+    if not world.resident(resident.resident_id).asleep:
+        return False
+    window = resident.sleep_window
+    if window is None:
+        return True
+    return window.contains(world.now.time(), world.now.weekday())
+
+
+def _up_and_about(resident: Resident, world: WorldState) -> bool:
+    """Return whether this resident is home and not asleep."""
+    return world.resident(resident.resident_id).home and not asleep(resident, world)
 
 
 def _guests_carry_the_house(config: DirectorConfig, world: WorldState) -> bool:
@@ -252,7 +273,7 @@ def _schedule_open(config: DirectorConfig, world: WorldState) -> bool:
         state = world.resident(resident.resident_id)
         if (
             state.home
-            and state.asleep
+            and asleep(resident, world)
             and not resident.wants_climate_at(moment, weekday, holiday=holiday)
         ):
             return False
@@ -272,7 +293,7 @@ def _counts_towards_schedule(config: DirectorConfig, world: WorldState, resident
     sleep gate instead of being hard-coded, so with `require_awake` off a
     schedule still counts while its owner sleeps.
     """
-    state = world.resident(resident_id)
-    if not state.home:
+    resident = next((item for item in config.residents if item.resident_id == resident_id), None)
+    if resident is None or not world.resident(resident_id).home:
         return False
-    return not (config.gates.require_awake and state.asleep)
+    return not (config.gates.require_awake and asleep(resident, world))
