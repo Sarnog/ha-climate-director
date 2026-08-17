@@ -554,7 +554,10 @@ je intikte gaat verloren. Kies je juist wel bewaren en mist er iets, dan wijst d
 het veld aan in plaats van de deur op slot te doen.
 
 Er wordt sowieso niets naar de installatie geschreven tot je in het hoofdmenu **Opslaan en
-sluiten** kiest.
+sluiten** kiest. Valt er dan iets op aan je configuratie, dan krijg je die lijst eerst te
+zien met de keuze *Toch opslaan* of *Terug om iets aan te passen*. Het is een
+waarschuwing, geen weigering: een installatie mag met opzet afwijkend zijn, en alleen jij
+weet of dat zo is.
 
 1. **Algemene instellingen** — buitentemperatuursensor, herkomst van het seizoen, welke
    poorten je wilt (wakker, rooster), tussen welke tijden de gastenmodus geldt, en welke
@@ -1194,7 +1197,9 @@ thrown away. Choose to keep instead, and if something is missing the message poi
 field rather than locking the door.
 
 Nothing is written to the installation until you pick **Save and close** in the main menu
-in any case.
+in any case. If something about your configuration stands out, you get that list first,
+with the choice of *Save anyway* or *Back to change something*. It is a warning, not a
+refusal: an installation may deliberately be unusual, and only you know whether it is.
 
 1. **General settings** — outdoor temperature sensor, where the season comes from, which
    gates you want (awake, schedule), between which hours guest mode applies, and which
