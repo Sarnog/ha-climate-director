@@ -268,3 +268,95 @@ class TestTheChangeoverPauseDoesNotDeadlock:
             running={LIVING: "off", BEDROOM: "heat"},
         )
         assert command_for(result, BEDROOM) is None
+
+
+class TestExclusiveGroupsRuleEachOtherOut:
+    """Gas en warmtepomp horen elkaar uit te sluiten, niet toevallig te missen.
+
+    Zonder groep berust die interlock volledig op buitengrenzen die elkaar netjes
+    aanvullen. Eén getal verkeerd en ze draaien samen, zonder dat er iets van
+    gemeld wordt - want los van elkaar is er niets mis met beide instellingen.
+
+    Without a group that interlock rests entirely on outdoor bounds that happen
+    to complement each other. One wrong number and they run together, with
+    nothing reported - because taken separately there is nothing wrong with
+    either setting.
+    """
+
+    def _config(self, attic_from: float, group: tuple[str, ...] | None = ("gas", "attic")):
+        from custom_components.climate_director.engine import OutdoorWindow, SourceRole
+
+        return DirectorConfig(
+            zones=(
+                Zone(
+                    "woonkamer",
+                    "Woonkamer",
+                    "sensor.woonkamer",
+                    sources=(
+                        Source(
+                            "gas",
+                            "climate.gas",
+                            role=SourceRole.HEAT_ONLY,
+                            outdoor=OutdoorWindow(maximum=3.1),
+                        ),
+                    ),
+                    heat=ModeSettings(21.0, 20.0),
+                ),
+                Zone(
+                    "zolder",
+                    "Zolder",
+                    "sensor.zolder",
+                    sources=(
+                        Source(
+                            "attic", "climate.zolder", outdoor=OutdoorWindow(minimum=attic_from)
+                        ),
+                    ),
+                    heat=ModeSettings(21.0, 20.0),
+                ),
+            ),
+            outdoor_sensor="sensor.buiten",
+            exclusive_groups=() if group is None else (frozenset(group),),
+        )
+
+    def _overlaps(self, config) -> list[str]:
+        return [item for item in validate(config) if "exclusive" in item and "apply" in item]
+
+    def test_bounds_that_meet_are_reported(self) -> None:
+        """The real mistake: one unit left at 3.0 while the rest moved to 3.1."""
+        found = self._overlaps(self._config(attic_from=3.0))
+        assert found
+        assert "between 3.0 and 3.1" in found[0]
+
+    def test_bounds_that_line_up_are_silent(self) -> None:
+        assert not self._overlaps(self._config(attic_from=3.1))
+
+    def test_without_a_group_nothing_is_checked(self) -> None:
+        """Overlapping bounds are perfectly normal until you declare exclusivity."""
+        assert not self._overlaps(self._config(attic_from=3.0, group=None))
+
+    def test_two_unbounded_sources_are_reported(self) -> None:
+        from custom_components.climate_director.engine import OutdoorWindow
+
+        config = self._config(attic_from=3.1)
+        loose = DirectorConfig(
+            zones=(
+                Zone(
+                    "a",
+                    "A",
+                    "sensor.a",
+                    sources=(Source("one", "climate.one", outdoor=OutdoorWindow()),),
+                    heat=ModeSettings(21.0, 20.0),
+                ),
+                Zone(
+                    "b",
+                    "B",
+                    "sensor.b",
+                    sources=(Source("two", "climate.two", outdoor=OutdoorWindow()),),
+                    heat=ModeSettings(21.0, 20.0),
+                ),
+            ),
+            exclusive_groups=(frozenset({"one", "two"}),),
+        )
+        assert not self._overlaps(config)
+        found = self._overlaps(loose)
+        assert found and "every outdoor temperature" in found[0]
