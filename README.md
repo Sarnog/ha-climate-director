@@ -156,6 +156,52 @@ uitzet permanent stil komen te staan. De schakelaar `switch.*_override_<zone>` b
 daarnaast gewoon werken en staat boven dit alles.
 
 
+#### Waar de grens tussen twee bronnen precies valt
+
+Buitengrenzen zijn **half open**: de ondergrens hoort erbij, de bovengrens niet. Twee
+aangrenzende bronnen dekken zo de hele schaal, zonder gat en zonder overlap — er is altijd
+precies één bron aan de beurt.
+
+Wil je gas onder de 3 °C en de airco erboven, dan zet je de grens **niet** op 3,0:
+
+| Grens | 2,9 °C | 3,0 °C | 3,1 °C |
+|---|---|---|---|
+| beide op `3.0` | gas | **airco** | airco |
+| beide op `3.1` | gas | **gas** | airco |
+
+De grenswaarde zelf valt dus altijd naar de bron met de ondergrens. Wil je dat 3,0 °C nog
+naar het gas gaat, zet dan beide op `3.1`. Zet ze **nooit verschillend** — gas tot `3.1` en
+airco vanaf `3.0` geeft een overlap waarin allebei mogen, en dan bepaalt de volgorde binnen
+de zone wie het wordt in plaats van de buitentemperatuur.
+
+Belangrijk: zet de grens bij **elke** bron gelijk. Staat de woonkamer-airco op `3.1` en de
+zolder-airco nog op `3.0`, dan kan bij precies 3,0 °C het gas de woonkamer verwarmen terwijl
+de zolder-airco aanslaat — precies de combinatie die je wilde vermijden.
+
+#### Een kamer die je zelf bedient
+
+Voor een ruimte zonder eigen thermometer en zonder aanwezigheidssensor, waar je het apparaat
+met de hand of met een script aanzet. Je maakt er toch een zone van, want alleen dan weet de
+integratie van dat apparaat af.
+
+1. **Zone toevoegen.** Als binnentemperatuursensor kies je de `climate.*`-entiteit van het
+   apparaat zelf — bijna elke airco meldt zijn eigen kamertemperatuur, en de integratie
+   leest dan het attribuut `current_temperature`.
+2. **Wat bepaalt of deze zone draait:** laat op *Het huishouden* staan. Kies je *De ruimte
+   zelf* zonder aanwezigheidssensor, dan kan de zone nooit draaien — ook niet om het
+   apparaat uit te zetten.
+3. **Bron toevoegen** met datzelfde apparaat, en zet **Dit apparaat automatisch aanzetten**
+   uit.
+
+Wat je daarmee krijgt: de integratie zet het apparaat **nooit zelf aan**, laat hem staan
+zoals jij hem zet, en zet hem **alleen uit** wanneer de gedeelde buitenunit een andere taak
+moet doen of wanneer er niemand meer thuis is.
+
+Sla je deze stap over en zet je het apparaat alleen in het airco-circuit, dan is het voor de
+integratie een onbeheerde unit: draait hij, dan houdt hij het hele circuit op zijn taak en
+kan geen enkele kamer nog iets anders vragen — en uitzetten kan de integratie hem niet, want
+hij is van niemand. De configuratiecontrole meldt dat.
+
 #### Een handmatige timer ernaast laten lopen
 
 Wil je een apparaat een paar uur met de hand aanzetten — "de gasverwarming twee uur aan" —
@@ -804,6 +850,53 @@ Switching off that the director does itself does not count, or every zone it eve
 off would fall silent for good. The `switch.*_<zone>_override` switch keeps working
 alongside this and outranks all of it.
 
+
+#### Where the boundary between two sources falls exactly
+
+Outdoor bounds are **half open**: the lower bound belongs to the window, the upper one does
+not. Two adjacent sources thereby cover the whole scale, with no gap and no overlap — there
+is always exactly one source whose turn it is.
+
+Want gas below 3 °C and the air conditioner above it? Then do **not** put the boundary at
+3.0:
+
+| Boundary | 2.9 °C | 3.0 °C | 3.1 °C |
+|---|---|---|---|
+| both at `3.0` | gas | **air conditioner** | air conditioner |
+| both at `3.1` | gas | **gas** | air conditioner |
+
+The boundary value itself always falls to the source carrying it as its lower bound. To have
+3.0 °C still go to the gas, put both at `3.1`. **Never set them differently** — gas up to
+`3.1` and the air conditioner from `3.0` leaves an overlap where both are allowed, and then
+the order within the zone decides rather than the outdoor temperature.
+
+Important: set the boundary the same on **every** source. With the living room unit at `3.1`
+and the attic unit still at `3.0`, at exactly 3.0 °C the gas can heat the living room while
+the attic unit fires up — precisely the combination you meant to avoid.
+
+#### A room you operate yourself
+
+For a room without a thermometer of its own and without a presence sensor, where you switch
+the appliance on by hand or with a script. You still make it a zone, because only then does
+the integration know that appliance exists.
+
+1. **Add a zone.** For the indoor temperature sensor, pick the appliance's own `climate.*`
+   entity — nearly every air conditioner reports its own room temperature, and the
+   integration then reads the `current_temperature` attribute.
+2. **What decides whether this zone runs:** leave it on *The household*. Choose *The room
+   itself* without a presence sensor and the zone can never run — not even to switch the
+   appliance off.
+3. **Add a source** with that same appliance, and switch **Start this appliance
+   automatically** off.
+
+What that gets you: the integration **never switches it on** itself, leaves it as you set
+it, and switches it **off only** when the shared outdoor unit has to do another duty or when
+nobody is home any more.
+
+Skip this and put the appliance in the air conditioning circuit alone, and it is an
+unmanaged unit as far as the integration is concerned: if it runs it holds the whole circuit
+to its duty and no room can ask for anything else — and the integration cannot switch it off,
+since it belongs to nobody. The configuration check reports that.
 
 #### Running a manual timer alongside
 
