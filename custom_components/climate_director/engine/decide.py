@@ -185,6 +185,20 @@ def _manual_conflict(
     if running is ModeFamily.NEUTRAL:
         return None
 
+    # Een exclusieve groep gaat over apparaten die elkaar uitsluiten, niet over
+    # taken die botsen: staat er een ander lid op het punt te draaien, dan moet
+    # deze uit, ook al doen ze hetzelfde en delen ze geen buitenunit. Zonder dit
+    # zou een handbediend apparaat de groep straffeloos negeren, want het doet
+    # zelf nooit een aanvraag - en dan is de hele groep een papieren regel.
+    #
+    # An exclusive group is about appliances ruling each other out, not about
+    # duties clashing: if another member is about to run, this one goes off even
+    # when they do the same thing and share no outdoor unit. Without this a
+    # hand-operated appliance would ignore the group with impunity, since it
+    # never files a request of its own - leaving the group a rule on paper.
+    if _exclusive_rival(config, zone, source, wishes):
+        return _stand_down(config, zone, source, Reason.EXCLUSIVE_GROUP_LOST)
+
     circuit = config.circuit_for_entity(source.entity_id)
     if circuit is None or circuit.simultaneous_heat_cool:
         return None
@@ -199,13 +213,34 @@ def _manual_conflict(
     if not wanted or running in wanted:
         return None
 
+    return _stand_down(config, zone, source, Reason.CIRCUIT_CONFLICT_LOST)
+
+
+def _exclusive_rival(
+    config: DirectorConfig,
+    zone: Zone,
+    source: Source,
+    wishes: dict[str, constraints.Request],
+) -> bool:
+    """Return whether another member of this source's exclusive group wants to run."""
+    for group in config.exclusive_groups:
+        if source.source_id not in group:
+            continue
+        for zone_id, request in wishes.items():
+            if zone_id != zone.zone_id and request.source.source_id in group:
+                return True
+    return False
+
+
+def _stand_down(config: DirectorConfig, zone: Zone, source: Source, reason: Reason) -> UnitCommand:
+    """Return the command putting one source back to standing still."""
     return UnitCommand(
         entity_id=source.entity_id,
-        hvac_mode=_idle_mode(config, source, Reason.CIRCUIT_CONFLICT_LOST),
+        hvac_mode=_idle_mode(config, source, reason),
         temperature=None,
         zone_id=zone.zone_id,
         source_id=source.source_id,
-        reason=Reason.CIRCUIT_CONFLICT_LOST,
+        reason=reason,
     )
 
 
