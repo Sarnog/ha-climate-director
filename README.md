@@ -111,6 +111,7 @@ de eerste die dichtzit is de reden die je terugziet in `sensor.*_bron_<zone>`.
 | 4 | **Iemand thuis** | het hele huis | vooruit verwarmen, gastenmodus, aanwezigheidszones | nee, dit is een voorwaarde |
 | 5 | **Wakker** | het hele huis | aanwezigheidszones | ja, *Iemand moet wakker zijn* |
 | 6 | **Rooster** | het hele huis | gastenmodus, aanwezigheidszones | ja, *Het rooster van een bewoner moet openstaan* |
+| 6b | **Stiltevenster** | het hele huis, alleen bij starten | een zone die al draait | door geen venster in te stellen |
 | 7 | **Aanwezigheid in de ruimte** | één zone | vooruit verwarmen | door geen sensor in te stellen |
 
 Zo lees je de tabel: staat de hoofdschakelaar uit, dan doet de rest er niet toe. Staat er
@@ -334,6 +335,30 @@ inmiddels thuis, dan draait alles gewoon door. Is er niemand thuis, dan gaat all
 Dat is dezelfde poort die het altijd al was, en precies wat je wilt.
 
 Afblazen kan met `climate_director.cancel_precondition`, met of zonder `zone_ids`.
+
+#### Stiltevensters
+
+Uren waarin de director **uit zichzelf niets begint**. Thuiskomen om elf uur 's avonds
+terwijl je zo naar bed gaat, hoeft het huis niet te laten opstoken.
+
+Het is een rem op **beginnen**, niet op doorgaan:
+
+- Wat al draait blijft gewoon geregeld, en gaat bij bedtijd uit zoals altijd.
+- Zet je zelf iets aan, dan wordt dat opgepakt en doorgeregeld — je kunt dus prima besluiten
+  toch nog even op te blijven.
+- Wat uit staat blijft uit tot het venster voorbij is.
+
+Vensters mogen over middernacht heen lopen en kennen weekdagen, zodat een weekendritme
+apart te zetten is. Stel je geen vensters in, dan doet de rem niet mee: de integratie start
+dan altijd wanneer de andere poorten dat toestaan.
+
+Onder **Stiltevensters** in het hoofdmenu. Een huishouden dat doordeweeks om negen uur 's
+avonds naar bed gaat en in het weekend om elf uur, zet er twee:
+
+| Van | Tot | Dagen |
+|---|---|---|
+| 21:00 | 09:00 | ma di wo do zo |
+| 23:00 | 09:00 | vr za |
 
 #### Geen slaapsensor? Gebruik een knop
 
@@ -896,6 +921,7 @@ walked from broad to narrow, and the first one that is shut is the reason you se
 | 4 | **Somebody home** | the whole house | pre-conditioning, guest mode, presence-driven zones | no, this is a condition |
 | 5 | **Awake** | the whole house | presence-driven zones | yes, *Somebody must be awake* |
 | 6 | **Schedule** | the whole house | guest mode, presence-driven zones | yes, *A resident's schedule must be open* |
+| 6b | **Quiet window** | the whole house, on starting only | a zone already running | by setting no window |
 | 7 | **Room presence** | one zone | pre-conditioning | by setting no sensor |
 
 Read the table like this: with the master switch off, the rest does not matter. With a
@@ -1118,6 +1144,30 @@ by then, everything simply keeps running. If nobody is home, everything goes off
 the same gate it always was, and exactly what you want.
 
 Call it off with `climate_director.cancel_precondition`, with or without `zone_ids`.
+
+#### Quiet windows
+
+Hours in which the director **starts nothing of its own accord**. Coming home at eleven at
+night when you are about to turn in need not fire the boiler.
+
+It is a brake on **starting**, not on continuing:
+
+- Whatever already runs stays regulated, and goes off at bedtime as usual.
+- Switch something on yourself and it is picked up and carried on — so you can perfectly
+  well decide to stay up after all.
+- Whatever is off stays off until the window has passed.
+
+Windows may cross midnight and carry weekdays, so a weekend rhythm can be set apart. Set no
+windows and the brake does not apply: the integration then starts whenever the other gates
+allow it.
+
+Under **Quiet windows** in the main menu. A household turning in at nine on weekdays and at
+eleven at weekends sets two:
+
+| From | Until | Days |
+|---|---|---|
+| 21:00 | 09:00 | Mon Tue Wed Thu Sun |
+| 23:00 | 09:00 | Fri Sat |
 
 #### No sleep sensor? Use a button
 
