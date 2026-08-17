@@ -36,7 +36,7 @@
       "settings": {
         "title": "General settings",
         "data": {
-          "outdoor_sensor": "Outdoor temperature",
+          "outdoor_sensor": "Outdoor temperature sensor",
           "season_source": "Season source",
           "season_entity": "Season entity",
           "require_awake": "Somebody home must be awake",
@@ -87,21 +87,21 @@
         "description": "A zone describes what you want in one room. Heating starts at its switch-on point and stops one dead band above it; cooling starts at its switch-on point and stops one dead band below it.",
         "data": {
           "name": "Name",
-          "indoor_sensor": "Indoor temperature",
-          "priority": "Priority",
+          "indoor_sensor": "Indoor temperature sensor",
+          "priority": "Precedence on a shared outdoor unit",
           "enable_heat": "This zone may heat",
-          "heat_target": "Heating setpoint",
+          "heat_target": "Target temperature for heating",
           "heat_start_at": "Start heating at",
           "heat_hysteresis": "Heating dead band",
           "heat_outdoor_max": "Only heat below this outdoor temperature",
           "enable_cool": "This zone may cool",
-          "cool_target": "Cooling setpoint",
+          "cool_target": "Target temperature for cooling",
           "cool_start_at": "Start cooling at",
           "cool_hysteresis": "Cooling dead band",
           "cool_outdoor_min": "Only cool above this outdoor temperature",
           "cool_summer_only": "Only cool in summer",
           "delete": "Delete this zone",
-          "presence_entity": "Presence in this room",
+          "presence_entity": "Presence sensor for this zone",
           "presence_state": "State meaning occupied",
           "presence_timeout": "Keep counting as occupied for (seconds)",
           "gate": "What decides whether this zone runs",
@@ -147,8 +147,8 @@
         "description": "The outdoor window is what separates a boiler from a heat pump. Two adjacent windows meet exactly, so no outdoor temperature falls between them.",
         "data": {
           "entity_id": "Climate entity",
-          "role": "Role",
-          "priority": "Preference",
+          "role": "What this appliance can do",
+          "priority": "Order within this zone",
           "outdoor_min": "Use from this outdoor temperature",
           "outdoor_max": "Use up to this outdoor temperature",
           "delete": "Delete this source",
@@ -223,7 +223,7 @@
       "circuit_priority": {
         "title": "Priority for {zone}",
         "data": {
-          "priority": "Priority",
+          "priority": "Precedence on this circuit",
           "when_done": "When you are done here"
         },
         "data_description": {
@@ -249,8 +249,8 @@
         "data": {
           "name": "Name",
           "entity_id": "Climate entity",
-          "zone_ids": "Rooms it serves",
-          "setpoint": "Fixed setpoint",
+          "zone_ids": "Zones it serves",
+          "setpoint": "Fixed target temperature",
           "delete": "Delete this heat source",
           "when_done": "When you are done here"
         },
@@ -279,8 +279,8 @@
         "title": "Resident",
         "data": {
           "name": "Name",
-          "presence_entity": "Presence",
-          "sleep_entity": "Sleep",
+          "presence_entity": "Presence sensor",
+          "sleep_entity": "Sleep sensor",
           "sleep_state": "State meaning asleep",
           "delete": "Delete this resident",
           "when_done": "When you are done here"

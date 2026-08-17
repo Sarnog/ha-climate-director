@@ -36,7 +36,7 @@
       "settings": {
         "title": "Ajustes generales",
         "data": {
-          "outdoor_sensor": "Temperatura exterior",
+          "outdoor_sensor": "Sensor de temperatura exterior",
           "season_source": "Origen de la estación",
           "season_entity": "Entidad de estación",
           "require_awake": "Alguien en casa debe estar despierto",
@@ -87,21 +87,21 @@
         "description": "Una zona describe lo que quieres en una habitación. La calefacción arranca en su punto de encendido y para una banda muerta por encima; la refrigeración arranca en su punto de encendido y para una banda muerta por debajo.",
         "data": {
           "name": "Nombre",
-          "indoor_sensor": "Temperatura interior",
-          "priority": "Prioridad",
+          "indoor_sensor": "Sensor de temperatura interior",
+          "priority": "Prioridad en una unidad exterior compartida",
           "enable_heat": "Esta zona puede calentar",
-          "heat_target": "Consigna de calefacción",
+          "heat_target": "Temperatura objetivo al calentar",
           "heat_start_at": "Empezar a calentar en",
           "heat_hysteresis": "Banda muerta de calefacción",
           "heat_outdoor_max": "Calentar solo por debajo de esta temperatura exterior",
           "enable_cool": "Esta zona puede enfriar",
-          "cool_target": "Consigna de refrigeración",
+          "cool_target": "Temperatura objetivo al enfriar",
           "cool_start_at": "Empezar a enfriar en",
           "cool_hysteresis": "Banda muerta de refrigeración",
           "cool_outdoor_min": "Enfriar solo por encima de esta temperatura exterior",
           "cool_summer_only": "Enfriar solo en verano",
           "delete": "Eliminar esta zona",
-          "presence_entity": "Presencia en esta habitación",
+          "presence_entity": "Sensor de presencia de esta zona",
           "presence_state": "Estado que significa ocupada",
           "presence_timeout": "Seguir contando como ocupada durante (segundos)",
           "gate": "Qué decide si esta zona funciona",
@@ -147,8 +147,8 @@
         "description": "La ventana exterior es lo que separa una caldera de una bomba de calor. Dos ventanas contiguas se encuentran exactamente, así que ninguna temperatura exterior cae entre ellas.",
         "data": {
           "entity_id": "Entidad climate",
-          "role": "Función",
-          "priority": "Preferencia",
+          "role": "Lo que puede hacer este aparato",
+          "priority": "Orden dentro de esta zona",
           "outdoor_min": "Usar a partir de esta temperatura exterior",
           "outdoor_max": "Usar hasta esta temperatura exterior",
           "delete": "Eliminar esta fuente",
@@ -223,7 +223,7 @@
       "circuit_priority": {
         "title": "Prioridad de {zone}",
         "data": {
-          "priority": "Prioridad",
+          "priority": "Prioridad en este circuito",
           "when_done": "Cuando termines aquí"
         },
         "data_description": {
@@ -249,8 +249,8 @@
         "data": {
           "name": "Nombre",
           "entity_id": "Entidad climate",
-          "zone_ids": "Habitaciones a las que sirve",
-          "setpoint": "Consigna fija",
+          "zone_ids": "Zonas a las que sirve",
+          "setpoint": "Temperatura objetivo fija",
           "delete": "Eliminar esta fuente de calor",
           "when_done": "Cuando termines aquí"
         },
@@ -279,8 +279,8 @@
         "title": "Residente",
         "data": {
           "name": "Nombre",
-          "presence_entity": "Presencia",
-          "sleep_entity": "Sueño",
+          "presence_entity": "Sensor de presencia",
+          "sleep_entity": "Sensor de sueño",
           "sleep_state": "Estado que significa dormido",
           "delete": "Eliminar este residente",
           "when_done": "Cuando termines aquí"

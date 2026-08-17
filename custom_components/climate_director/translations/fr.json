@@ -36,7 +36,7 @@
       "settings": {
         "title": "Réglages généraux",
         "data": {
-          "outdoor_sensor": "Température extérieure",
+          "outdoor_sensor": "Capteur de température extérieure",
           "season_source": "Origine de la saison",
           "season_entity": "Entité de saison",
           "require_awake": "Une personne présente doit être éveillée",
@@ -87,21 +87,21 @@
         "description": "Une zone décrit ce que vous voulez dans une pièce. Le chauffage démarre à son point d'enclenchement et s'arrête une bande morte au-dessus ; le refroidissement démarre à son point d'enclenchement et s'arrête une bande morte en dessous.",
         "data": {
           "name": "Nom",
-          "indoor_sensor": "Température intérieure",
-          "priority": "Priorité",
+          "indoor_sensor": "Capteur de température intérieure",
+          "priority": "Priorité sur une unité extérieure partagée",
           "enable_heat": "Cette zone peut chauffer",
-          "heat_target": "Consigne de chauffage",
+          "heat_target": "Température cible en chauffage",
           "heat_start_at": "Commencer à chauffer à",
           "heat_hysteresis": "Bande morte de chauffage",
           "heat_outdoor_max": "Chauffer uniquement sous cette température extérieure",
           "enable_cool": "Cette zone peut refroidir",
-          "cool_target": "Consigne de refroidissement",
+          "cool_target": "Température cible en refroidissement",
           "cool_start_at": "Commencer à refroidir à",
           "cool_hysteresis": "Bande morte de refroidissement",
           "cool_outdoor_min": "Refroidir uniquement au-dessus de cette température extérieure",
           "cool_summer_only": "Refroidir uniquement en été",
           "delete": "Supprimer cette zone",
-          "presence_entity": "Présence dans cette pièce",
+          "presence_entity": "Capteur de présence de cette zone",
           "presence_state": "État signifiant occupée",
           "presence_timeout": "Continuer à compter comme occupée pendant (secondes)",
           "gate": "Ce qui décide si cette zone fonctionne",
@@ -147,8 +147,8 @@
         "description": "La fenêtre extérieure est ce qui sépare une chaudière d'une pompe à chaleur. Deux fenêtres adjacentes se rejoignent exactement, aucune température extérieure ne tombe donc entre les deux.",
         "data": {
           "entity_id": "Entité climate",
-          "role": "Rôle",
-          "priority": "Préférence",
+          "role": "Ce que cet appareil sait faire",
+          "priority": "Ordre au sein de cette zone",
           "outdoor_min": "Utiliser à partir de cette température extérieure",
           "outdoor_max": "Utiliser jusqu'à cette température extérieure",
           "delete": "Supprimer cette source",
@@ -223,7 +223,7 @@
       "circuit_priority": {
         "title": "Priorité de {zone}",
         "data": {
-          "priority": "Priorité",
+          "priority": "Priorité sur ce circuit",
           "when_done": "Quand vous avez terminé ici"
         },
         "data_description": {
@@ -249,8 +249,8 @@
         "data": {
           "name": "Nom",
           "entity_id": "Entité climate",
-          "zone_ids": "Pièces desservies",
-          "setpoint": "Consigne fixe",
+          "zone_ids": "Zones qu'il dessert",
+          "setpoint": "Température cible fixe",
           "delete": "Supprimer cette source de chaleur",
           "when_done": "Quand vous avez terminé ici"
         },
@@ -279,8 +279,8 @@
         "title": "Occupant",
         "data": {
           "name": "Nom",
-          "presence_entity": "Présence",
-          "sleep_entity": "Sommeil",
+          "presence_entity": "Capteur de présence",
+          "sleep_entity": "Capteur de sommeil",
           "sleep_state": "État signifiant endormi",
           "delete": "Supprimer cet occupant",
           "when_done": "Quand vous avez terminé ici"

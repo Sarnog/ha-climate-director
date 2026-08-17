@@ -36,7 +36,7 @@
       "settings": {
         "title": "Algemene instellingen",
         "data": {
-          "outdoor_sensor": "Buitentemperatuur",
+          "outdoor_sensor": "Buitentemperatuursensor",
           "season_source": "Herkomst seizoen",
           "season_entity": "Seizoensentiteit",
           "require_awake": "Iemand die thuis is moet wakker zijn",
@@ -87,21 +87,21 @@
         "description": "Een zone beschrijft wat je in één ruimte wilt. Verwarmen start op het aanpunt en stopt één dode band daarboven; koelen start op het aanpunt en stopt één dode band daaronder.",
         "data": {
           "name": "Naam",
-          "indoor_sensor": "Binnentemperatuur",
-          "priority": "Prioriteit",
+          "indoor_sensor": "Binnentemperatuursensor",
+          "priority": "Voorrang op een gedeelde buitenunit",
           "enable_heat": "Deze zone mag verwarmen",
-          "heat_target": "Setpoint verwarmen",
+          "heat_target": "Doeltemperatuur verwarmen",
           "heat_start_at": "Begin met verwarmen bij",
           "heat_hysteresis": "Dode band verwarmen",
           "heat_outdoor_max": "Alleen verwarmen onder deze buitentemperatuur",
           "enable_cool": "Deze zone mag koelen",
-          "cool_target": "Setpoint koelen",
+          "cool_target": "Doeltemperatuur koelen",
           "cool_start_at": "Begin met koelen bij",
           "cool_hysteresis": "Dode band koelen",
           "cool_outdoor_min": "Alleen koelen boven deze buitentemperatuur",
           "cool_summer_only": "Alleen koelen in de zomer",
           "delete": "Deze zone verwijderen",
-          "presence_entity": "Aanwezigheid in deze ruimte",
+          "presence_entity": "Aanwezigheidssensor van deze zone",
           "presence_state": "Toestand die bezet betekent",
           "presence_timeout": "Nog zo lang als bezet tellen (seconden)",
           "gate": "Wat bepaalt of deze zone draait",
@@ -147,8 +147,8 @@
         "description": "Het buitenvenster is wat een cv-ketel van een warmtepomp scheidt. Twee aangrenzende vensters sluiten precies op elkaar aan, dus er valt geen buitentemperatuur tussenuit.",
         "data": {
           "entity_id": "Climate-entiteit",
-          "role": "Rol",
-          "priority": "Voorkeur",
+          "role": "Wat dit apparaat kan",
+          "priority": "Volgorde binnen deze zone",
           "outdoor_min": "Gebruiken vanaf deze buitentemperatuur",
           "outdoor_max": "Gebruiken tot deze buitentemperatuur",
           "delete": "Deze bron verwijderen",
@@ -223,7 +223,7 @@
       "circuit_priority": {
         "title": "Prioriteit voor {zone}",
         "data": {
-          "priority": "Prioriteit",
+          "priority": "Voorrang op dit circuit",
           "when_done": "Als je hier klaar bent"
         },
         "data_description": {
@@ -249,8 +249,8 @@
         "data": {
           "name": "Naam",
           "entity_id": "Climate-entiteit",
-          "zone_ids": "Kamers die hij bedient",
-          "setpoint": "Vast setpoint",
+          "zone_ids": "Zones die hij bedient",
+          "setpoint": "Vaste doeltemperatuur",
           "delete": "Deze warmtebron verwijderen",
           "when_done": "Als je hier klaar bent"
         },
@@ -279,8 +279,8 @@
         "title": "Bewoner",
         "data": {
           "name": "Naam",
-          "presence_entity": "Aanwezigheid",
-          "sleep_entity": "Slaap",
+          "presence_entity": "Aanwezigheidssensor",
+          "sleep_entity": "Slaapsensor",
           "sleep_state": "Toestand die slapen betekent",
           "delete": "Deze bewoner verwijderen",
           "when_done": "Als je hier klaar bent"

@@ -36,7 +36,7 @@
       "settings": {
         "title": "Allgemeine Einstellungen",
         "data": {
-          "outdoor_sensor": "Außentemperatur",
+          "outdoor_sensor": "Außentemperatursensor",
           "season_source": "Herkunft der Jahreszeit",
           "season_entity": "Jahreszeit-Entität",
           "require_awake": "Wer zu Hause ist, muss wach sein",
@@ -87,21 +87,21 @@
         "description": "Eine Zone beschreibt, was du in einem Raum willst. Heizen startet an seinem Einschaltpunkt und stoppt eine Totzone darüber; Kühlen startet an seinem Einschaltpunkt und stoppt eine Totzone darunter.",
         "data": {
           "name": "Name",
-          "indoor_sensor": "Innentemperatur",
-          "priority": "Priorität",
+          "indoor_sensor": "Innentemperatursensor",
+          "priority": "Vorrang an einem gemeinsamen Außengerät",
           "enable_heat": "Diese Zone darf heizen",
-          "heat_target": "Sollwert Heizen",
+          "heat_target": "Zieltemperatur Heizen",
           "heat_start_at": "Heizen beginnen bei",
           "heat_hysteresis": "Totzone Heizen",
           "heat_outdoor_max": "Nur heizen unter dieser Außentemperatur",
           "enable_cool": "Diese Zone darf kühlen",
-          "cool_target": "Sollwert Kühlen",
+          "cool_target": "Zieltemperatur Kühlen",
           "cool_start_at": "Kühlen beginnen bei",
           "cool_hysteresis": "Totzone Kühlen",
           "cool_outdoor_min": "Nur kühlen über dieser Außentemperatur",
           "cool_summer_only": "Nur im Sommer kühlen",
           "delete": "Diese Zone löschen",
-          "presence_entity": "Anwesenheit in diesem Raum",
+          "presence_entity": "Anwesenheitssensor dieser Zone",
           "presence_state": "Zustand, der belegt bedeutet",
           "presence_timeout": "Noch so lange als belegt zählen (Sekunden)",
           "gate": "Was entscheidet, ob diese Zone läuft",
@@ -147,8 +147,8 @@
         "description": "Das Außenfenster ist es, was einen Heizkessel von einer Wärmepumpe trennt. Zwei benachbarte Fenster treffen sich genau, sodass keine Außentemperatur dazwischen fällt.",
         "data": {
           "entity_id": "Climate-Entität",
-          "role": "Rolle",
-          "priority": "Vorrang",
+          "role": "Was dieses Gerät kann",
+          "priority": "Reihenfolge innerhalb dieser Zone",
           "outdoor_min": "Verwenden ab dieser Außentemperatur",
           "outdoor_max": "Verwenden bis zu dieser Außentemperatur",
           "delete": "Diese Quelle löschen",
@@ -223,7 +223,7 @@
       "circuit_priority": {
         "title": "Priorität für {zone}",
         "data": {
-          "priority": "Priorität",
+          "priority": "Vorrang in diesem Kreis",
           "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
@@ -249,8 +249,8 @@
         "data": {
           "name": "Name",
           "entity_id": "Climate-Entität",
-          "zone_ids": "Versorgte Räume",
-          "setpoint": "Fester Sollwert",
+          "zone_ids": "Zonen, die er versorgt",
+          "setpoint": "Feste Zieltemperatur",
           "delete": "Diese Wärmequelle löschen",
           "when_done": "Wenn du hier fertig bist"
         },
@@ -279,8 +279,8 @@
         "title": "Bewohner",
         "data": {
           "name": "Name",
-          "presence_entity": "Anwesenheit",
-          "sleep_entity": "Schlaf",
+          "presence_entity": "Anwesenheitssensor",
+          "sleep_entity": "Schlafsensor",
           "sleep_state": "Zustand, der schlafend bedeutet",
           "delete": "Diesen Bewohner löschen",
           "when_done": "Wenn du hier fertig bist"

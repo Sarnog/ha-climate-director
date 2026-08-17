@@ -328,6 +328,12 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         selector.EntitySelectorConfig(domain="calendar", multiple=True)
                     ),
                     vol.Optional(
+                        "holiday_keyword",
+                        description={
+                            "suggested_value": self._installation.get("holiday_keyword") or None
+                        },
+                    ): str,
+                    vol.Optional(
                         "precondition_start",
                         description={"suggested_value": precondition.get("start") or "06:00:00"},
                     ): _TIME,
@@ -351,12 +357,6 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         "stuck_after",
                         default=int(self._installation.get("stuck_after", 900)) // 60,
                     ): _MINUTES_OR_OFF,
-                    vol.Optional(
-                        "holiday_keyword",
-                        description={
-                            "suggested_value": self._installation.get("holiday_keyword") or None
-                        },
-                    ): str,
                     vol.Required(
                         CONF_SHADOW_MODE,
                         default=(
