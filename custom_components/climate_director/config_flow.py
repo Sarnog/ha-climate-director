@@ -44,6 +44,7 @@ _ADD_FALLBACK = {
     "resident": "+ Add resident",
     "window": "+ Add schedule",
     "opening": "+ Add opening",
+    "exclusive": "+ Add group",
 }
 
 #: Maandag is 0, gelijk aan `datetime.weekday()`, dat de engine ook gebruikt.
@@ -181,8 +182,16 @@ def _add_option(key: str) -> selector.SelectOptionDict:
 
     The English text stays as a fallback: if Home Assistant does not translate
     the key, something readable still shows rather than nothing.
+
+    Een onbekende sleutel valt terug op een generieke tekst in plaats van het
+    scherm op te blazen. Een terugval hoort nooit de reden te zijn dat er niets
+    te zien is - dat was precies wat er misging toen hier een sleutel ontbrak.
+
+    An unknown key falls back on generic wording rather than blowing the screen
+    up. A fallback should never itself be the reason nothing shows - which is
+    exactly what went wrong when a key was missing here.
     """
-    return selector.SelectOptionDict(value=_ADD, label=_ADD_FALLBACK[key])
+    return selector.SelectOptionDict(value=_ADD, label=_ADD_FALLBACK.get(key, "+ Add"))
 
 
 class ClimateDirectorConfigFlow(ConfigFlow, domain=DOMAIN):
