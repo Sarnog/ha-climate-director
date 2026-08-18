@@ -20,6 +20,7 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 import pytest
+from homeassistant.util import dt as dt_util
 
 from custom_components.climate_director.coordinator import ClimateDirectorCoordinator
 from custom_components.climate_director.engine import (
@@ -113,6 +114,10 @@ def coordinator(plan: Plan | None = None, states: dict[str, str] | None = None):
             self._handed_back: dict[str, date] = {}
             self.data = plan
             self.hass = Hass()
+            self.saved = 0
+
+        def _async_save_state(self) -> None:
+            self.saved += 1
 
         _notice_hand = ClimateDirectorCoordinator._notice_hand
         _zone_of = ClimateDirectorCoordinator._zone_of
@@ -345,3 +350,131 @@ class TestGoingToBedGivesItBack:
         item = coordinator(running_plan())
         item._notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item._zones_handed_back() == {"slaapkamer"}
+
+
+class TestItSurvivesARestart:
+    """Een besluit van een mens hoort niet in het werkgeheugen alleen.
+
+    Tot 6.4.2 stond een handmatige uitzetting alleen in het geheugen van de
+    coordinator. Herstart Home Assistant - een update, een herstart om iets
+    heel anders - en de zone deed weer gewoon mee, terwijl er iemand met de
+    hand had gezegd: laat maar. Precies de fout die de vooruit-verzoeken in
+    6.4.0 al hadden.
+
+    A person's decision does not belong in working memory alone.
+
+    Up to 6.4.2 a hand-back only lived in the coordinator's memory. Restart
+    Home Assistant - an update, a restart over something else entirely - and
+    the zone simply took part again, while somebody had said by hand: leave it.
+    Exactly the fault the pre-conditioning requests already had in 6.4.0.
+    """
+
+    def _coordinator(self, stored: dict | None = None):
+        class FakeStore:
+            def __init__(self) -> None:
+                self.written: dict | None = None
+
+            def async_delay_save(self, writer, delay: int) -> None:
+                self.written = writer()
+
+            async def async_load(self):
+                return stored
+
+        class StandIn:
+            def __init__(self) -> None:
+                self._precondition: dict = {}
+                self._precondition_bypass: set[str] = set()
+                self._handed_back: dict[str, date] = {}
+                self._store = FakeStore()
+
+            def _preconditions_expire_at(self, until) -> None:
+                pass
+
+            _async_save_state = ClimateDirectorCoordinator._async_save_state
+            _async_restore_state = ClimateDirectorCoordinator._async_restore_state
+
+        return StandIn()
+
+    def test_the_day_is_written_away(self) -> None:
+        item = self._coordinator()
+        item._handed_back = {"slaapkamer": date(2026, 8, 18)}
+        item._async_save_state()
+        assert item._store.written["handed_back"] == {"slaapkamer": "2026-08-18"}
+
+    async def test_today_comes_back(self) -> None:
+        today = dt_util.now().date()
+        item = self._coordinator({"handed_back": {"slaapkamer": today.isoformat()}})
+        await item._async_restore_state()
+        assert item._handed_back == {"slaapkamer": today}
+
+    async def test_yesterday_does_not(self) -> None:
+        """The date is the whole expiry, restart or no restart."""
+        yesterday = dt_util.now().date() - timedelta(days=1)
+        item = self._coordinator({"handed_back": {"slaapkamer": yesterday.isoformat()}})
+        await item._async_restore_state()
+        assert item._handed_back == {}
+
+    async def test_an_older_file_without_the_key_reads_as_nothing(self) -> None:
+        """No migration needed for a key that was never there."""
+        item = self._coordinator({"until": {}, "bypass": []})
+        await item._async_restore_state()
+        assert item._handed_back == {}
+
+    async def test_rubbish_in_the_file_does_not_stop_the_load(self) -> None:
+        item = self._coordinator({"handed_back": {"slaapkamer": "not a date"}})
+        await item._async_restore_state()
+        assert item._handed_back == {}
+
+
+class TestItIsWrittenAwayWhenItChanges:
+    """Bewaren op het moment zelf, niet bij het afsluiten: een herstart is zelden netjes.
+
+    Saving as it happens rather than on shutdown: a restart is rarely tidy.
+    """
+
+    def test_switching_it_off_by_hand_is_saved(self) -> None:
+        item = coordinator(running_plan())
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        assert item.saved == 1
+
+    def test_switching_it_back_on_is_saved_too(self) -> None:
+        item = coordinator(running_plan())
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item._notice_hand(_Event(BEDROOM, "off", "heat"))
+        assert item.saved == 2
+        assert item._handed_back == {}
+
+    def test_our_own_command_writes_nothing(self) -> None:
+        """The director standing an appliance down is not a hand at the appliance."""
+        item = coordinator(idle_plan())
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        assert item.saved == 0
+
+    def test_a_day_that_already_stood_there_writes_nothing(self) -> None:
+        """After a restore the same day is already known; nothing changed."""
+        item = coordinator(running_plan())
+        item._handed_back = {"slaapkamer": dt_util.now().date()}
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        assert item.saved == 0
+
+    def test_on_and_off_again_are_both_written(self) -> None:
+        """Two real changes, two writes: the second may not lean on the first."""
+        item = coordinator(running_plan())
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item._notice_hand(_Event(BEDROOM, "off", "cool"))
+        item._notice_hand(_Event(BEDROOM, "cool", "off"))
+        assert item.saved == 3
+        assert set(item._handed_back) == {"slaapkamer"}
+
+    def test_a_stale_day_falling_away_is_saved(self) -> None:
+        item = coordinator(running_plan())
+        item._handed_back = {"slaapkamer": dt_util.now().date() - timedelta(days=1)}
+        assert item._zones_handed_back() == set()
+        assert item.saved == 1
+
+    def test_reading_it_again_writes_nothing(self) -> None:
+        item = coordinator(running_plan())
+        item._handed_back = {"slaapkamer": dt_util.now().date()}
+        item._zones_handed_back()
+        item._zones_handed_back()
+        assert item.saved == 0

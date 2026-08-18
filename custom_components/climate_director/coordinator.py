@@ -195,6 +195,14 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self._precondition: dict[str, datetime] = {}
         self._precondition_bypass: set[str] = set()
         self._refused: set[str] = set()
+        # De bestandsnaam zegt nog "precondition" omdat hij dat ooit alleen
+        # was. Hernoemen zou de lopende verzoeken van elke bestaande
+        # installatie weggooien, en daar is de naam van een bestand het niet
+        # waard.
+        #
+        # The file name still says "precondition" because that is all it once
+        # held. Renaming it would throw away the running requests of every
+        # existing installation, and a file name is not worth that.
         self._store: Store[dict[str, Any]] = Store(
             hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}.precondition"
         )
@@ -232,7 +240,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 async_track_state_change_event(self.hass, sorted(entities), self._handle_change)
             )
         self.config_entry.async_on_unload(self._cancel_pending_deferral)
-        await self._async_restore_preconditions()
+        await self._async_restore_state()
         await self._async_evaluate()
 
     def tracked_entities(self) -> set[str]:
@@ -345,7 +353,8 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         if now is not ModeFamily.NEUTRAL:
             # Weer aangezet, met de hand of door ons: hoe dan ook meedoen.
             # Switched on again, by hand or by us: taking part either way.
-            self._handed_back.pop(zone, None)
+            if self._handed_back.pop(zone, None) is not None:
+                self._async_save_state()
             return
 
         # Alleen als wíj hem niet net hebben uitgezet. Ons eigen commando is
@@ -357,7 +366,10 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         if self._we_wanted_it_off(entity_id):
             return
 
-        self._handed_back[zone] = dt_util.now().date()
+        today = dt_util.now().date()
+        if self._handed_back.get(zone) != today:
+            self._handed_back[zone] = today
+            self._async_save_state()
 
     def _zone_of(self, entity_id: str) -> str | None:
         """Return the zone this climate entity serves, if the director drives it."""
@@ -388,12 +400,17 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         hour timer would do exactly that.
         """
         if self._everyone_asleep() or self._house_is_empty():
-            self._handed_back.clear()
+            if self._handed_back:
+                self._handed_back.clear()
+                self._async_save_state()
             self.zone_overrides.clear()
             return set()
 
         today = dt_util.now().date()
-        self._handed_back = {zone: day for zone, day in self._handed_back.items() if day == today}
+        kept = {zone: day for zone, day in self._handed_back.items() if day == today}
+        if kept != self._handed_back:
+            self._handed_back = kept
+            self._async_save_state()
         return set(self._handed_back)
 
     def _everyone_asleep(self) -> bool:
@@ -547,26 +564,50 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 self._precondition_bypass.discard(zone_id)
 
         if chosen:
-            self._async_save_preconditions()
+            self._async_save_state()
             self._preconditions_expire_at(until)
             self.async_request_evaluation()
         return {zone_id: until for zone_id in chosen}
 
-    # -- vooruit verwarmen bewaren / keeping pre-conditioning ----------------
+    # -- met de hand gegeven, dus bewaren / given by hand, so kept ----------
 
     @callback
-    def _async_save_preconditions(self) -> None:
-        """Write the running requests away, so a restart does not lose them.
+    def _async_save_state(self) -> None:
+        """Write away wat een mens met de hand heeft gezegd.
 
         Een verzoek is het enige dat een leeg huis mag laten draaien, en het is
         met de hand gegeven. Herstart Home Assistant tien minuten later, dan is
         het zonder dit spoorloos weg - en de gebruiker komt thuis in een koud
         huis zonder te weten waarom.
 
+        Hetzelfde geldt voor een apparaat dat iemand bij het apparaat zelf heeft
+        uitgezet. Dat besluit hoort tot de volgende dag te blijven staan, en een
+        herstart is geen reden om er alsnog overheen te gaan - dat is precies
+        het ergste wat deze integratie kan doen.
+
+        Wat hier NIET in staat, en na een herstart dus opnieuw begint: de
+        wachtteller achter de vastloopmelder, en het moment waarop een circuit
+        zijn taak aannam. Die eerste meldt hooguit een kwartier later, die
+        tweede geeft een apparaat hooguit een extra pauze. Allebei tijdelijk, en
+        allebei aan de veilige kant.
+
+        Write away what a person said by hand.
+
         A request is the only thing allowed to run an empty house, and it was
         given by hand. If Home Assistant restarts ten minutes later it is gone
         without trace - and the user comes home to a cold house with no idea
         why.
+
+        The same holds for an appliance somebody switched off at the appliance
+        itself. That decision should stand until the next day, and a restart is
+        no reason to override it after all - which is precisely the worst thing
+        this integration can do.
+
+        What is NOT in here, and therefore starts afresh after a restart: the
+        waiting clock behind the stuck sensor, and the moment a circuit took on
+        its duty. The first reports a quarter of an hour later at worst, the
+        second costs an appliance one extra pause at worst. Both temporary, and
+        both on the safe side.
         """
         self._store.async_delay_save(
             lambda: {
@@ -574,20 +615,33 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                     zone_id: until.isoformat() for zone_id, until in self._precondition.items()
                 },
                 "bypass": sorted(self._precondition_bypass),
+                "handed_back": {
+                    zone_id: day.isoformat() for zone_id, day in self._handed_back.items()
+                },
             },
             1,
         )
 
-    async def _async_restore_preconditions(self) -> None:
-        """Read back the requests that were running before the restart.
+    async def _async_restore_state(self) -> None:
+        """Read back what was standing before the restart.
 
         Verlopen verzoeken komen niet terug: de tijd liep door terwijl Home
         Assistant weg was, en een verzoek van gisteren alsnog uitvoeren is
-        erger dan het te vergeten.
+        erger dan het te vergeten. Een handmatige uitzetting van gisteren
+        vervalt om dezelfde reden - de datum is de hele vervaltermijn.
+
+        Een ouder bestand draagt nog geen `handed_back`. Dat leest gewoon als
+        niets, dus de opslagversie hoeft er niet voor omhoog: er valt niets te
+        migreren aan een sleutel die er niet was.
 
         Expired requests do not come back: time ran on while Home Assistant was
         away, and carrying out yesterday's request after the fact is worse than
-        forgetting it.
+        forgetting it. Yesterday's hand-back lapses for the same reason - the
+        date is the whole expiry.
+
+        An older file carries no `handed_back` yet. That simply reads as
+        nothing, so the storage version need not go up for it: there is nothing
+        to migrate about a key that was never there.
         """
         stored = await self._store.async_load()
         if not stored:
@@ -602,6 +656,12 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             zone_id for zone_id in (stored.get("bypass") or ()) if zone_id in self._precondition
         }
 
+        today = now.date()
+        for zone_id, raw in (stored.get("handed_back") or {}).items():
+            day = dt_util.parse_date(str(raw))
+            if day == today:
+                self._handed_back[zone_id] = day
+
         if self._precondition:
             self._preconditions_expire_at(max(self._precondition.values()))
 
@@ -615,7 +675,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             for zone_id in zone_ids:
                 self._precondition.pop(zone_id, None)
                 self._precondition_bypass.discard(zone_id)
-        self._async_save_preconditions()
+        self._async_save_state()
         self.async_request_evaluation()
 
     @callback

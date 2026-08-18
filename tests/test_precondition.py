@@ -320,7 +320,7 @@ class TestTheRequestItself:
             def async_request_evaluation(self) -> None:
                 self.asked += 1
 
-            def _async_save_preconditions(self) -> None:
+            def _async_save_state(self) -> None:
                 self.saved += 1
 
             def _preconditions_expire_at(self, until: datetime) -> None:
