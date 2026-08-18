@@ -15,6 +15,25 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
 
 ## Should have
 
+- **De "geblokkeerd"-melder gaat ook aan bij een dichte poort** — `binary_sensor.*_<zone>_geblokkeerd`
+  volgt nu "vroeg meer dan hij kreeg", en een zone met een dichte poort vraagt niets: die
+  komt niet eens aan zijn wens toe. Daardoor staat de melder juist uit in alle gevallen
+  waarvoor zijn eigen attribuut `closed_gates` bestaat — een openstaand raam, niemand
+  thuis, iedereen in bed, buiten het rooster, stille uren, een lege kamer. De reden en de
+  lijst dichte poorten staan er wél in, dus wie de attributen bekijkt ziet alles; wie een
+  automatisering op de sensor zelf bouwt krijgt nooit een melding. Te overwegen: de melder
+  aan laten gaan zodra er een poort dicht staat én de kamer buiten zijn dode band ligt, of
+  er een tweede melder naast zetten zodat de betekenis van de bestaande niet verschuift.
+- **Een uitsluitende groep telt ook wat er doordraait in een overgedragen zone** —
+  `exclusive_groups` kijkt alleen naar zones die deze ronde iets vrágen. Staat een lid van
+  de groep te draaien in een zone die is overgedragen (de override-schakelaar om, of zelf
+  bij het apparaat uitgezet), dan stuurt de director daar niets naartoe én mag een ander
+  lid gewoon starten — precies de combinatie die de groep hoort uit te sluiten. Voor de
+  buitenunit is dat al opgelost (`_standing_claims` telt een doordraaiende unit als een
+  bezette plek); voor de groep nog niet. Voorstel: hetzelfde doen — een draaiend lid dat de
+  director met rust laat bezet de groep, zodat een ander lid moet wachten in plaats van
+  ernaast te gaan draaien. Uitzetten van het overgedragen apparaat blijft uitgesloten; een
+  override is een override.
 - **Virtuele `climate` per zone** — één bedieningsentiteit per ruimte, waarmee de gewenste
   temperatuur en stand rechtstreeks op een gewone thermostaatkaart te bedienen zijn. De
   director kiest daar dan de bron bij.
@@ -107,6 +126,25 @@ The history of what has already been built and changed is **not** here but in th
 
 ## Should have
 
+- **The "blocked" sensor should also come on for a shut gate** — `binary_sensor.*_<zone>_blocked`
+  currently follows "asked for more than it got", and a zone with a shut gate asks for
+  nothing: it never gets as far as its wish. So the sensor is off in exactly the cases its
+  own `closed_gates` attribute exists for — an open window, nobody home, everybody asleep,
+  outside the schedule, quiet hours, an empty room. The reason and the list of shut gates
+  are in the attributes, so whoever inspects those sees everything; whoever builds an
+  automation on the sensor itself never gets a notification. Worth considering: turning the
+  sensor on once a gate is shut *and* the room sits outside its dead band, or adding a
+  second sensor beside it so the existing one's meaning does not shift.
+- **An exclusive group should count what keeps running in a handed-over zone** —
+  `exclusive_groups` only looks at zones asking for something this round. If a member of
+  the group is running in a zone that has been handed over (the override switch thrown, or
+  switched off at the appliance itself), the director sends it nothing *and* another member
+  is free to start — exactly the combination the group is meant to rule out. For the
+  outdoor unit this is already solved (`_standing_claims` counts a running unit as an
+  occupied slot); for the group it is not. Proposal: do the same — a running member the
+  director leaves alone occupies the group, so another member waits rather than running
+  alongside it. Switching the handed-over appliance off stays out of the question; an
+  override is an override.
 - **A virtual `climate` per zone** — one control entity per room, so the target temperature
   and mode can be set straight from an ordinary thermostat card. The director then picks the
   source to match.

@@ -1101,6 +1101,15 @@ python -m pytest
 python -m ruff check .
 ```
 
+De testset heeft twee helften. De ene beslist op nagebouwde momentopnamen — duizenden
+willekeurige installaties, en simulaties die maand na maand doorlopen met wisselend weer,
+mensen die komen en gaan en apparaten die wegvallen. Die maanden zijn **gesimuleerde tijd**
+aan een nagebouwde klok en zeggen niets over draaiuren in een echt huis. De andere zet een échte Home Assistant
+in het geheugen op, met deze integratie als custom component erin: de config entry wordt
+opgezet, de platforms komen omhoog, de entiteiten en acties worden aangemaakt, en de
+klimaatapparaten schrijven hun stand terug. Daarvoor is verder niets nodig — het
+`homeassistant`-pakket staat al in `requirements_test.txt`.
+
 ### Heb je helpers nodig
 
 Nee. Er is geen enkele `input_number`, `input_boolean` of `input_select` die je vooraf moet
@@ -2242,6 +2251,15 @@ pip install -r requirements_test.txt
 python -m pytest
 python -m ruff check .
 ```
+
+The test set has two halves. One decides on rebuilt snapshots — thousands of random
+installations, and simulations running month after month with changing weather, people
+coming and going and appliances dropping out. Those months are **simulated time** on a
+rebuilt clock and say nothing about running hours in a real house. The other stands up a real Home Assistant in
+memory with this integration in it as a custom component: the config entry is set up, the
+platforms come up, the entities and actions are created, and the climate appliances write
+their state back. Nothing else is needed for that — the `homeassistant` package is already
+in `requirements_test.txt`.
 
 ### Do you need helpers
 

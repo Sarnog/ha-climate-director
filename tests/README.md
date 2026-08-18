@@ -2,6 +2,10 @@
 
 ## NL
 
+> **Alle tijd in deze testset is gesimuleerd.** Een simulatie van een half jaar is een
+> nagebouwd huis met een nagebouwde klok, doorlopen in seconden. Het zegt niets over
+> draaiuren in een echte installatie, en mag nergens zo opgeschreven worden.
+
 ### Twee soorten tests
 
 **De engine** (`custom_components/climate_director/engine/`) importeert Home Assistant
@@ -27,7 +31,7 @@ de hele suite draait in een halve seconde. Dat is de reden dat die scheidslijn b
   ronde ziet het gevolg. Pas daar tellen de regels die alleen in de tijd bestaan. De motor
   eronder staat in `simulation.py`
 
-**De Home Assistant-laag** wordt op twee manieren getest:
+**De Home Assistant-laag** wordt op drie manieren getest:
 
 - `test_ha_helpers.py` — de pure helpers: seizoensnamen, getalconversie, de eventpayload en
   de formulierlogica van de config flow
@@ -36,8 +40,38 @@ de hele suite draait in een halve seconde. Dat is de reden dat die scheidslijn b
   entiteit en een `weather`-entiteit), de service calls van de applier en wat er gebeurt als
   er één faalt, de gebeurtenissen op de bus, alle entiteiten met een echt plan eronder, en
   het vangnet als een bron onbereikbaar wordt
+- de `test_campaign_*`-bestanden — dezelfde laag, maar dan in een **echt draaiende** Home
+  Assistant. `harness_live.py` zet er een op in het geheugen, met deze integratie als custom
+  component erin
 
-### Waarom niet tegen een draaiende hass
+### De echte Home Assistant
+
+`harness_live.py` bouwt een `HomeAssistant` op, laadt de registers, en zet de config entry
+op langs de gewone weg: `async_setup_entry`, de platforms omhoog, de entiteiten in het
+register, de acties geregistreerd. De klimaatapparaten zijn nagebouwd —
+`climate.set_hvac_mode` en `climate.set_temperature` schrijven de toestand terug — waardoor
+de lus rond is: de director stuurt, de apparaten veranderen, en dat leidt tot een volgende
+beslissing.
+
+- `test_campaign_live_ha.py` — opzetten, afbreken, herladen, de drie acties met hun velden
+  en grenzen, de schakelaars, de getallen, de knop, alle sensoren, de gebeurtenissen, de
+  schaduwmodus, en een verzoek dat een herstart overleeft
+- `test_campaign_live_flows.py` — de wizard en de options flow stap voor stap, de
+  reparatiemelding bij een foute configuratie, standen die een herstart moeten overleven, en
+  temperaturen uit een `weather`-entiteit of uit de binnenunit zelf
+- `test_campaign_settings.py` — elke instelling die een gebruiker kan zetten, van seizoen en
+  vakantie-agenda tot vertragingen, conflictbeleiden en de gedeelde ketel, telkens
+  gecontroleerd op het gevolg in plaats van op de opslag. De klok wordt daarbij vooruit
+  gezet in plaats van afgewacht
+- `test_campaign_outages.py` — elke combinatie van uitgevallen apparaten in een huis met
+  reservebronnen, en dezelfde gevallen als `unavailable`, `unknown` en helemaal weg in een
+  draaiende Home Assistant
+- `test_campaign_year.py` — twee halve jaren **gesimuleerde tijd** in een groot huis met
+  twee buitenunits, een gedeelde ketel, een uitsluitende groep, een handbediende airco en
+  een verplicht rooster. Samen met de andere simulaties komt elke maand van het jaar aan
+  bod
+
+### Waarom niet met `pytest-homeassistant-custom-component`
 
 De gangbare testomgeving voor custom components,
 [`pytest-homeassistant-custom-component`](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component),
@@ -45,23 +79,22 @@ importeert bij het laden `homeassistant.runner`, dat op module-niveau Unix-only
 stdlib-modules gebruikt (`fcntl`, `resource`). Op het Windows-ontwikkelsysteem waarop dit
 project gebouwd is bestaan die niet, en er is geen WSL of Docker beschikbaar.
 
-De gewone `homeassistant`-package is wél geïnstalleerd, dus imports en API-signaturen
-worden echt gecontroleerd.
+Een `HomeAssistant` zelf opbouwen kan wél, en dat is precies wat `harness_live.py` doet.
+Daarmee draait de echte kern: de config entries, de registers, de bus, de acties en de
+entiteitsplatforms.
 
 ### Wat dus niet automatisch gedekt is
 
-Alleen nog wat Home Assistant zélf aanstuurt:
-
-- de stappen van de config flow en de options flow (de formulierlogica erachter wél)
-- `async_setup_entry`: het opzetten van de platforms en de volgorde daarvan
-- de debouncer en het inplannen van een uitgestelde herberekening
-- het registreren van entiteiten en het herstellen van schakelaarstanden na een herstart
+- de echte klimaatintegraties en de apparaten eronder: hier staan nagebouwde acties die de
+  toestand netjes terugschrijven, en een echte airco doet dat trager en soms anders
+- de interface: hoe een formulier eruitziet, of een vertaling lekker loopt
+- alles wat over uren of dagen aan een echte klok hangt; de tijd wordt in de tests verzet in
+  plaats van afgewacht
 
 Deze zijn met de hand gereviewd tegen de geïnstalleerde `homeassistant`-broncode
 (signaturen met `grep` geverifieerd, niet uit het geheugen aangenomen). Ze worden in de
-praktijk getest door de integratie in een echte Home Assistant te installeren — en dat
-kan veilig, omdat schaduwmodus standaard aanstaat en er dan geen enkele service call
-uitgaat.
+praktijk getest door de integratie in een echte Home Assistant te installeren — en dat kan
+veilig, omdat schaduwmodus standaard aanstaat en er dan geen enkele service call uitgaat.
 
 ### Draaien
 
@@ -73,6 +106,10 @@ python -m ruff format --check .
 ```
 
 ## EN
+
+> **All time in this test set is simulated.** A half-year simulation is a rebuilt house
+> with a rebuilt clock, walked in seconds. It says nothing about running hours in a real
+> installation, and must never be written up as though it did.
 
 ### Two kinds of test
 
@@ -99,7 +136,7 @@ and the whole suite runs in half a second. That is the reason the dividing line 
   sees the consequence. Only there do the rules that exist solely in time count. The engine
   under them is `simulation.py`
 
-**The Home Assistant layer** is tested in two ways:
+**The Home Assistant layer** is tested in three ways:
 
 - `test_ha_helpers.py` — the pure helpers: season names, number conversion, the event
   payload and the config flow's form logic
@@ -108,8 +145,36 @@ and the whole suite runs in half a second. That is the reason the dividing line 
   `weather` entity), the applier's service calls and what happens when one fails, the
   events on the bus, every entity with a real plan under it, and the safety net when a
   source becomes unreachable
+- the `test_campaign_*` files — the same layer, but inside a **really running** Home
+  Assistant. `harness_live.py` stands one up in memory with this integration in it as a
+  custom component
 
-### Why not against a running hass
+### The real Home Assistant
+
+`harness_live.py` builds a `HomeAssistant`, loads the registries, and sets the config entry
+up along the ordinary road: `async_setup_entry`, the platforms up, the entities in the
+registry, the actions registered. The climate appliances are stand-ins —
+`climate.set_hvac_mode` and `climate.set_temperature` write the state back — which closes
+the loop: the director steers, the appliances change, and that leads to the next decision.
+
+- `test_campaign_live_ha.py` — setting up, tearing down, reloading, the three actions with
+  their fields and limits, the switches, the numbers, the button, every sensor, the events,
+  shadow mode, and a request surviving a restart
+- `test_campaign_live_flows.py` — the wizard and the options flow step by step, the repair
+  notice on a wrong configuration, states that have to survive a restart, and temperatures
+  from a `weather` entity or from the indoor unit itself
+- `test_campaign_settings.py` — every setting a user can pick, from the season and the
+  holiday calendar to delays, conflict policies and the shared boiler, each checked on its
+  consequence rather than on its storage. Time is moved forward there rather than waited out
+- `test_campaign_outages.py` — every combination of failed appliances in a house with
+  reserve sources, and the same cases as `unavailable`, `unknown` and gone altogether inside
+  a running Home Assistant
+- `test_campaign_year.py` — two half-years of **simulated time** in a large house with two
+  outdoor units, a shared boiler, an exclusive group, a hand-operated air conditioner and a
+  compulsory schedule. Together with the other simulations every month of the year is
+  covered
+
+### Why not with `pytest-homeassistant-custom-component`
 
 The usual test environment for custom components,
 [`pytest-homeassistant-custom-component`](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component),
@@ -117,17 +182,18 @@ imports `homeassistant.runner` on load, which uses Unix-only stdlib modules (`fc
 `resource`) at module level. On the Windows development machine this project was built on
 those do not exist, and no WSL or Docker is available.
 
-The plain `homeassistant` package *is* installed, so imports and API signatures are
-genuinely checked.
+Building a `HomeAssistant` directly *is* possible, and that is exactly what
+`harness_live.py` does. That runs the real core: the config entries, the registries, the
+bus, the actions and the entity platforms.
 
 ### What is therefore not covered automatically
 
-Only what Home Assistant itself drives:
-
-- the config flow and options flow steps (the form logic behind them is covered)
-- `async_setup_entry`: setting up the platforms and the order of that
-- the debouncer and scheduling a deferred re-evaluation
-- registering entities and restoring switch states after a restart
+- the real climate integrations and the devices under them: here stand-in actions write the
+  state back neatly, and a real air conditioner does that more slowly and sometimes
+  differently
+- the interface: what a form looks like, whether a translation reads well
+- anything hanging on a real clock over hours or days; time is moved in the tests rather
+  than waited out
 
 These were reviewed by hand against the installed `homeassistant` source (signatures
 verified with `grep`, not assumed from memory). They are tested in practice by installing
