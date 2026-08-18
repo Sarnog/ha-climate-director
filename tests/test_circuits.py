@@ -637,6 +637,101 @@ class TestCapacity:
         assert attic is not None
         assert attic.hvac_mode == MODE_OFF
 
+    def _house_with_a_third_unit(self, **source_kwargs: object) -> DirectorConfig:
+        """Return three rooms on one outdoor unit that can drive two."""
+        return DirectorConfig(
+            zones=(
+                *rooms("woonkamer", "zolder"),
+                Zone(
+                    zone_id="slaapkamer",
+                    name="Slaapkamer",
+                    indoor_sensor="sensor.slaapkamer",
+                    priority=2,
+                    sources=(
+                        Source(
+                            source_id="slaapkamer_unit",
+                            entity_id=unit("slaapkamer"),
+                            **source_kwargs,
+                        ),
+                    ),
+                    heat=HEAT_SETTINGS,
+                    cool=COOL_SETTINGS,
+                ),
+            ),
+            circuits=(
+                multi_split("c", "woonkamer", "zolder", "slaapkamer", max_concurrent_units=2),
+            ),
+        )
+
+    def _running_third(self, config: DirectorConfig, **world_kwargs: object):
+        """Return the plan with the third unit already heating by itself."""
+        world = make_world(
+            indoor={"woonkamer": WANTS_HEAT, "zolder": WANTS_HEAT, "slaapkamer": 21.0},
+            climates={
+                unit("woonkamer"): climate(MODE_OFF),
+                unit("zolder"): climate(MODE_OFF),
+                unit("slaapkamer"): climate(MODE_HEAT),
+            },
+            **world_kwargs,
+        )
+        return decide(config, world)
+
+    def test_a_hand_operated_unit_that_runs_occupies_capacity(self) -> None:
+        """Tot 6.6.0 telde die niet mee, en dan draaide de buitenunit met drie.
+
+        Een slaapkamerairco die je zelf aanzette werd met rust gelaten - terecht
+        - maar hij bezet wel een plek. Hem netjes als handbediende bron
+        instellen maakte de bescherming daarmee zwakker dan hem helemaal
+        weglaten, en dat is precies andersom dan het hoort.
+
+        Up to 6.6.0 it did not count, and then the outdoor unit ran with three.
+        A bedroom unit you switched on yourself was left alone - rightly - but
+        it does occupy a place. Configuring it tidily as a hand-operated source
+        thereby made the protection weaker than leaving it out altogether,
+        which is exactly the wrong way round.
+        """
+        config = self._house_with_a_third_unit(autostart=False)
+        plan = self._running_third(config)
+
+        running = [
+            entity
+            for entity in (unit("woonkamer"), unit("zolder"), unit("slaapkamer"))
+            if (plan.command_for(entity) or plan.untouched_for(entity)) is not None
+            and (
+                plan.command_for(entity).hvac_mode in (MODE_HEAT, MODE_COOL)
+                if plan.command_for(entity) is not None
+                else True
+            )
+        ]
+        assert len(running) <= 2, running
+        assert plan.untouched_for(unit("slaapkamer")) is not None
+
+    def test_a_handed_over_room_occupies_capacity_too(self) -> None:
+        """The director sends an overridden zone nothing, so what runs there keeps running."""
+        config = self._house_with_a_third_unit()
+        plan = self._running_third(config, zone_overrides={"slaapkamer": True})
+
+        commanded = [
+            entity
+            for entity in (unit("woonkamer"), unit("zolder"))
+            if (command := plan.command_for(entity)) is not None
+            and command.hvac_mode in (MODE_HEAT, MODE_COOL)
+        ]
+        assert len(commanded) == 1, commanded
+
+    def test_an_ordinary_unit_that_will_be_stopped_does_not_occupy_capacity(self) -> None:
+        """It gets an explicit off, so its place comes free this very round."""
+        config = self._house_with_a_third_unit()
+        plan = self._running_third(config)
+
+        bedroom = plan.command_for(unit("slaapkamer"))
+        assert bedroom is not None
+        assert bedroom.hvac_mode == MODE_OFF
+        for room in ("woonkamer", "zolder"):
+            command = plan.command_for(unit(room))
+            assert command is not None
+            assert command.hvac_mode == MODE_HEAT, room
+
 
 def test_active_family_reads_unmanaged_units_too() -> None:
     circuit = multi_split("c", "woonkamer", "zolder")

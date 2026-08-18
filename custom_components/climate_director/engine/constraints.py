@@ -289,6 +289,94 @@ def _finish(
     return Outcome(decision, tuple(granted), deferrals + cycle_deferrals)
 
 
+def _standing_claims(
+    config: DirectorConfig,
+    world: WorldState,
+    circuit: Circuit,
+    requests: tuple[Request, ...],
+    granted: list[Grant],
+) -> int:
+    """Return how many units keep the compressor whatever this round grants.
+
+    Een grens in stuks gaat over wat de buitenunit aankan, en die telt geen
+    configuratie maar draaiende binnenunits. Wie er niet om vraagt en toch
+    doordraait, bezet dus net zo goed een plek.
+
+    Drie soorten doen dat: een unit die in geen enkele zone staat, een unit in
+    een overgedragen zone - daar stuurt de director niets naartoe, ook geen uit
+    - en een handbediend apparaat dat hetzelfde doet als wat er nu gevraagd
+    wordt, want dat wordt niet weggeschakeld.
+
+    Tot 6.6.0 telde alleen de eerste soort mee. Daardoor beschermde de grens
+    een huis mínder zodra je je slaapkamerairco netjes als handbediende bron
+    configureerde dan wanneer je hem helemaal wegliet - precies andersom dan
+    het hoort.
+
+    A limit in units is about what the outdoor unit can take, and that counts
+    running indoor units rather than configuration. Whatever asks for nothing
+    and keeps running occupies a slot just the same.
+
+    Three kinds do that: a unit sitting in no zone at all, a unit in a zone that
+    has been handed over - the director sends that nothing, an off included -
+    and a hand-operated appliance doing the same duty as the one being asked
+    for, since that one is not stood down.
+
+    Up to 6.6.0 only the first kind counted. That made the limit protect a house
+    *less* once you tidily configured your bedroom unit as a hand-operated
+    source than when you left it out altogether - exactly the wrong way round.
+    """
+    asking = {request.source.entity_id for request in requests}
+    return sum(
+        1
+        for entity_id in circuit.units
+        if entity_id not in asking
+        and world.climate(entity_id).running
+        and _keeps_claiming(config, world, circuit, entity_id)
+    )
+
+
+def _keeps_claiming(
+    config: DirectorConfig,
+    world: WorldState,
+    circuit: Circuit,
+    entity_id: str,
+) -> bool:
+    """Return whether this running unit holds its place whatever we grant.
+
+    Drie soorten doen dat, en geen van drieën vraagt deze ronde iets: een unit
+    die in geen enkele zone staat, een unit in een overgedragen zone - daar
+    stuurt de director niets naartoe, ook geen uit - en een handbediend
+    apparaat, dat alleen opzij gaat als het iemand in de weg staat.
+
+    Dat laatste wordt hier niet nagerekend maar aangenomen. Gaat het apparaat
+    deze ronde alsnog opzij, dan is er één beoordelingsronde lang een plek te
+    weinig, en die ronde volgt binnen een seconde op het commando dat hem
+    uitzet. De omgekeerde fout - een plek te veel - zet een buitenunit aan het
+    werk waar hij niet op gebouwd is, en dat duurt niet één ronde.
+
+    Three kinds do, and none of the three asks for anything this round: a unit
+    sitting in no zone at all, a unit in a zone that has been handed over -
+    the director sends that nothing, an off included - and a hand-operated
+    appliance, which only steps aside when it is in somebody's way.
+
+    That last one is assumed rather than worked out here. If the appliance does
+    step aside this round, there is one evaluation round with a place too few,
+    and that round follows within a second of the command switching it off. The
+    opposite mistake - a place too many - puts an outdoor unit to work it was
+    not built for, and that does not last one round.
+    """
+    owners = [
+        (zone, source)
+        for zone, source in config.sources_on(circuit)
+        if source.entity_id == entity_id
+    ]
+    if not owners:
+        return True
+    if any(world.overridden(zone.zone_id) for zone, _ in owners):
+        return True
+    return all(not source.autostart for _, source in owners)
+
+
 def _apply_capacity(
     config: DirectorConfig,
     world: WorldState,
@@ -301,13 +389,7 @@ def _apply_capacity(
     if cap is None:
         return granted
 
-    # Units the director cannot steer still occupy capacity.
-    managed = {source.entity_id for _, source in config.sources_on(circuit)}
-    used = sum(
-        1
-        for entity_id in circuit.units
-        if entity_id not in managed and world.climate(entity_id).running
-    )
+    used = _standing_claims(config, world, circuit, requests, granted)
 
     rank = {request.zone.zone_id: request.rank for request in requests}
     winners = sorted(
