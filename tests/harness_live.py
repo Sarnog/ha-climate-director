@@ -214,7 +214,20 @@ async def start_house(
     loader.async_setup(hass)
     hass.config_entries = ConfigEntries(hass, {})
     await hass.config_entries.async_initialize()
-    device_registry.async_setup(hass)
+    # Het apparaatregister moet sinds Home Assistant 2026.3 eerst opgezet
+    # worden; daarvoor maakte het zichzelf aan bij het eerste gebruik. De
+    # testset draait tegen allebei - de CI installeert een oudere versie dan
+    # deze ontwikkelmachine - dus wordt de nieuwe stap alleen gezet als hij
+    # bestaat.
+    #
+    # Since Home Assistant 2026.3 the device registry has to be set up first;
+    # before that it created itself on first use. The test set runs against
+    # both - CI installs an older version than this development machine - so
+    # the newer step is only taken when it exists.
+    prepare = getattr(device_registry, "async_setup", None)
+    if prepare is not None:
+        prepare(hass)
+
     for module in (area_registry, device_registry, entity_registry, issue_registry, restore_state):
         await module.async_load(hass)
     await async_setup_component(hass, "homeassistant", {})
