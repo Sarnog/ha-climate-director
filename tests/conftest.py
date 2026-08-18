@@ -297,3 +297,128 @@ def office_hours() -> tuple:
     from custom_components.climate_director.engine import TimeWindow
 
     return (TimeWindow(time(8, 0), time(18, 0), frozenset({0, 1, 2, 3, 4})),)
+
+
+# ---------------------------------------------------------------------------
+# De beloftes die elk plan moet houden, welke installatie er ook onder ligt.
+# The promises every plan must keep, whatever installation lies under it.
+# ---------------------------------------------------------------------------
+
+
+def assert_plan_holds(config, world, plan, where: str = "") -> None:
+    """Assert what may never come out of `decide()`, for any configuration.
+
+    Bedoeld voor de brede tests die duizenden willekeurige installaties en een
+    hele maand doorlopen: die kunnen niet per geval een verwachting opschrijven,
+    dus leggen ze vast wat er nooit uit mag komen. Wat hier stukloopt, loopt bij
+    een gebruiker stuk terwijl het huis koud staat.
+
+    Meant for the broad tests that walk thousands of random installations and a
+    whole month: those cannot write down an expectation per case, so they pin
+    down what may never come out. What breaks here breaks for a user while the
+    house sits cold.
+    """
+    from custom_components.climate_director.engine import ModeFamily
+    from custom_components.climate_director.engine.families import family_of
+
+    mark = f"{where}: " if where else ""
+
+    steered = [command.entity_id for command in plan.commands]
+    assert len(steered) == len(set(steered)), f"{mark}twee opdrachten voor een apparaat"
+
+    known = {source.entity_id for _, source in config.sources() if source.entity_id}
+    known |= {item.entity_id for item in config.generators if item.entity_id}
+    assert set(steered) <= known, f"{mark}opdracht naar een onbekend apparaat"
+
+    assert len(plan.zones) == len(config.zones), f"{mark}niet elke zone kreeg een besluit"
+    assert len({zone.zone_id for zone in plan.zones}) == len(plan.zones), (
+        f"{mark}een zone kreeg twee besluiten"
+    )
+
+    left = {item.entity_id for item in plan.untouched}
+    assert not left & set(steered), f"{mark}apparaat in beide lijsten"
+
+    # Een zone die is overgedragen krijgt niets, ook geen uit - tenzij het
+    # apparaat gedeeld wordt met een zone die wel meedoet.
+    #
+    # A zone handed over gets nothing, an off included - unless the appliance is
+    # shared with a zone that does take part.
+    for zone in config.zones:
+        if not world.overridden(zone.zone_id):
+            continue
+        for source in zone.sources:
+            shared = any(
+                other.zone_id != zone.zone_id
+                and not world.overridden(other.zone_id)
+                and any(item.entity_id == source.entity_id for item in other.sources)
+                for other in config.zones
+            )
+            if not shared:
+                assert plan.command_for(source.entity_id) is None, (
+                    f"{mark}{zone.zone_id} is overgedragen en kreeg toch een opdracht"
+                )
+
+    # Een bron die overal handbediend is, wordt nooit gestart.
+    # A source that is hand-operated everywhere is never started.
+    owners: dict[str, list] = {}
+    for _, source in config.sources():
+        owners.setdefault(source.entity_id, []).append(source)
+    for entity_id, sources in owners.items():
+        if any(source.autostart for source in sources):
+            continue
+        command = plan.command_for(entity_id)
+        if command is not None:
+            assert family_of(command.hvac_mode) is ModeFamily.NEUTRAL, (
+                f"{mark}handbediende {entity_id} werd gestart"
+            )
+
+    # Een zone met een dichte poort draait nooit.
+    # A zone with a shut gate never runs.
+    for decision in plan.zones:
+        if decision.closed_gates:
+            assert decision.granted is ModeFamily.NEUTRAL, (
+                f"{mark}{decision.zone_id} draait terwijl {decision.closed_gates} dicht staat"
+            )
+
+    for circuit in config.circuits:
+        if circuit.simultaneous_heat_cool:
+            continue
+
+        ordered = {
+            family_of(command.hvac_mode)
+            for command in plan.commands
+            if command.entity_id in circuit.units
+        } & {ModeFamily.HEAT, ModeFamily.COOL}
+        assert len(ordered) <= 1, f"{mark}{circuit.circuit_id} krijgt {ordered} tegelijk"
+
+        if circuit.max_concurrent_units is None:
+            continue
+
+        # De grens gaat over wat de director erbij zet. Staan er al meer units
+        # te draaien dan de buitenunit aankan, dan heeft een mens dat gedaan -
+        # met een afstandsbediening, een override of een handbediend apparaat -
+        # en daar mag de director niets meer bovenop doen. Hij mag er dan ook
+        # niet dwars voor gaan liggen: een override uitzetten is precies wat een
+        # override niet is.
+        #
+        # The limit is about what the director adds. If more units already run
+        # than the outdoor unit can take, a person did that - with a remote, an
+        # override or a hand-operated appliance - and the director may add
+        # nothing on top. Nor may it get in the way: switching an override off
+        # is exactly what an override is not.
+        put_to_work = {
+            command.entity_id
+            for command in plan.commands
+            if command.entity_id in circuit.units
+            and family_of(command.hvac_mode) in (ModeFamily.HEAT, ModeFamily.COOL)
+        }
+        left_running = {
+            entity_id
+            for entity_id in circuit.units
+            if entity_id not in {command.entity_id for command in plan.commands}
+            and world.climate(entity_id).running
+        }
+        assert not put_to_work or len(put_to_work | left_running) <= circuit.max_concurrent_units, (
+            f"{mark}director zet {sorted(put_to_work)} aan terwijl {sorted(left_running)} al "
+            f"draait op een circuit voor {circuit.max_concurrent_units}"
+        )
