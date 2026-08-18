@@ -1026,8 +1026,10 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
 
         indoor = self.world.indoor(zone_id) if self.world is not None else None
         target: float | None = None
+        settled = False
         if zone is not None and self.world is not None:
-            _, target = wanted_target(zone, self.world)
+            demand, target = wanted_target(zone, self.world)
+            settled = demand.reason is Reason.SATISFIED
 
         if indoor is None:
             code = "precondition_confirmed_unknown"
@@ -1035,17 +1037,30 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 "{zone} is going ahead, ignoring {openings}. The room temperature cannot be "
                 "read, so nothing will happen until it can."
             )
-        elif target is None:
+        elif target is not None:
+            code = "precondition_confirmed"
+            fallback = (
+                "{zone} is going ahead, ignoring {openings}. Now {indoor} degrees, aiming for "
+                "{target} degrees."
+            )
+        elif settled:
             code = "precondition_confirmed_satisfied"
             fallback = (
                 "{zone} is going ahead, ignoring {openings}. Now {indoor} degrees - the room is "
                 "already right, so nothing happens for the moment."
             )
         else:
-            code = "precondition_confirmed"
+            # Geen streeftemperatuur en niet tevreden: het seizoen of de
+            # configuratie laat hier niets toe. "De kamer ligt al goed" zou dan
+            # een leugen zijn tegen iemand die op vijftien graden zit.
+            #
+            # No target and not satisfied: the season or the configuration
+            # allows nothing here. "The room is already right" would then be a
+            # lie to somebody sitting at fifteen degrees.
+            code = "precondition_confirmed_idle"
             fallback = (
-                "{zone} is going ahead, ignoring {openings}. Now {indoor} degrees, aiming for "
-                "{target} degrees."
+                "{zone} is going ahead, ignoring {openings}. Now {indoor} degrees - there is "
+                "nothing this room may do at the moment, so nothing happens."
             )
 
         filling = {

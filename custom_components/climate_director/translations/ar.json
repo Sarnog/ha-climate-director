@@ -665,6 +665,9 @@
     },
     "precondition_confirm_label": {
       "message": "نفّذه على أي حال"
+    },
+    "precondition_confirmed_idle": {
+      "message": "{zone} تمضي قدمًا مع تجاهل {openings}. الآن {indoor} درجة - لا يُسمح لهذه الغرفة بشيء في الوقت الحالي، فلن يحدث شيء."
     }
   },
   "services": {

@@ -665,6 +665,9 @@
     },
     "precondition_confirm_label": {
       "message": "Toch doen"
+    },
+    "precondition_confirmed_idle": {
+      "message": "{zone} gaat toch door, met {openings} genegeerd. Nu {indoor} graden - deze kamer mag op dit moment niets, dus er gebeurt niets."
     }
   },
   "services": {

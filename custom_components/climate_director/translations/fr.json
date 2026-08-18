@@ -665,6 +665,9 @@
     },
     "precondition_confirm_label": {
       "message": "Le faire quand même"
+    },
+    "precondition_confirmed_idle": {
+      "message": "{zone} démarre quand même, {openings} est ignoré. Actuellement {indoor} degrés - cette pièce n'a rien le droit de faire pour le moment, donc rien ne se passe."
     }
   },
   "services": {

@@ -42,24 +42,32 @@ def running_family(zone: Zone, world: WorldState) -> ModeFamily:
     return ModeFamily.NEUTRAL
 
 
-def wanted_target(zone: Zone, world: WorldState) -> tuple[ModeFamily, float | None]:
-    """Return the duty this room needs and the temperature it would aim for.
+def wanted_target(zone: Zone, world: WorldState) -> tuple[Demand, float | None]:
+    """Return what this room needs and the temperature it would aim for.
 
     Los van de poorten, en dat is precies waarvoor het bedoeld is: bij een
     geweigerd vooruit-verzoek wil je in het bericht kunnen zetten waar de kamer
-    naartoe zou gaan als de poort openging. `NEUTRAL` met `None` betekent dat de
-    kamer al goed ligt - ook dat hoort in zo'n bericht thuis, want dan gebeurt
-    er straks niets en is dat geen tekortkoming.
+    naartoe zou gaan als de poort openging.
+
+    De reden komt mee en niet alleen de taak, want zonder streeftemperatuur zijn
+    er twee heel verschillende antwoorden: de kamer ligt al goed (`SATISFIED`),
+    of er valt hier niets te doen omdat het seizoen of de configuratie het
+    verbiedt. Alleen het eerste mag je een gebruiker vertellen als "het is al
+    goed".
 
     Independent of the gates, which is exactly what it is for: on a refused
     pre-conditioning request you want to be able to put in the message where the
-    room would head if the gate opened. `NEUTRAL` with `None` means the room is
-    already right - which belongs in such a message too, since nothing will
-    happen then and that is not a shortcoming.
+    room would head if the gate opened.
+
+    The reason comes along rather than just the duty, since without a target
+    there are two very different answers: the room is already right
+    (`SATISFIED`), or there is nothing to do here because the season or the
+    configuration forbids it. Only the first may be told to a user as "it is
+    already right".
     """
     demand = evaluate(zone, world, running_family(zone, world))
     settings = zone.settings_for(demand.family)
-    return demand.family, settings.target if settings else None
+    return demand, settings.target if settings else None
 
 
 def evaluate(zone: Zone, world: WorldState, running: ModeFamily) -> Demand:

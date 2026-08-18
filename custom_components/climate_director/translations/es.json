@@ -665,6 +665,9 @@
     },
     "precondition_confirm_label": {
       "message": "Hacerlo igualmente"
+    },
+    "precondition_confirmed_idle": {
+      "message": "{zone} sigue adelante, ignorando {openings}. Ahora {indoor} grados: esta habitación no puede hacer nada en este momento, así que no pasa nada."
     }
   },
   "services": {

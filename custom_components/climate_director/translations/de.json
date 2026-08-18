@@ -665,6 +665,9 @@
     },
     "precondition_confirm_label": {
       "message": "Trotzdem starten"
+    },
+    "precondition_confirmed_idle": {
+      "message": "{zone} läuft trotzdem, {openings} wird ignoriert. Jetzt {indoor} Grad - dieser Raum darf derzeit nichts, also geschieht nichts."
     }
   },
   "services": {

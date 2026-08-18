@@ -34,6 +34,7 @@ from custom_components.climate_director.engine import (
     ModeSettings,
     Opening,
     OpeningState,
+    Season,
     Source,
     Zone,
 )
@@ -171,6 +172,40 @@ class TestTheSentenceAfterTheButton:
         data = coordinator(indoor=None)._refusal_data("zolder")
         assert "cannot be read" in data["confirmed_message"]
         assert "None" not in data["confirmed_message"]
+
+    def test_a_room_that_may_do_nothing_is_not_called_already_right(self) -> None:
+        """Vijftien graden en "de kamer ligt al goed" is een leugen.
+
+        Een zone die alleen in de zomer mag koelen en niet mag verwarmen heeft
+        geen streeftemperatuur, net als een kamer die al goed ligt - maar de
+        reden is een heel andere, en de gebruiker zit op vijftien graden.
+
+        Fifteen degrees and "the room is already right" is a lie. A zone that
+        may only cool in summer and may not heat has no target, just like a
+        room that is already right - but the reason is a very different one,
+        and the user is sitting at fifteen degrees.
+        """
+        item = coordinator(indoor=15.0)
+        item.config = DirectorConfig(
+            zones=(
+                Zone(
+                    "zolder",
+                    "Zolder",
+                    "sensor.zolder",
+                    sources=(Source("z", ATTIC),),
+                    cool=ModeSettings(
+                        target=23.0, start_at=24.0, seasons=frozenset({Season.SUMMER})
+                    ),
+                ),
+            ),
+            openings=(Opening(entity_id=WINDOW),),
+            gates=GateSettings(max_precondition=timedelta(hours=2)),
+        )
+        data = item._refusal_data("zolder")
+        assert data["target_temperature"] is None
+        assert "already right" not in data["confirmed_message"]
+        assert "nothing this room may do" in data["confirmed_message"]
+        assert "15 degrees" in data["confirmed_message"]
 
 
 class TestTheNumberFormatting:
