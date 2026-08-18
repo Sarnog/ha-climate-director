@@ -28,4 +28,5 @@ class ClimateDirectorEntity(CoordinatorEntity[ClimateDirectorCoordinator]):
             manufacturer="Sarnog",
             model="Climate Director",
             entry_type=DeviceEntryType.SERVICE,
+            sw_version=coordinator.version or None,
         )

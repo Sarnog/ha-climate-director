@@ -173,6 +173,16 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             entry.options.get(CONF_INSTALLATION) or entry.data.get(CONF_INSTALLATION) or {}
         )
         self.shadow: bool = entry.options.get(CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE)
+        self.version: str = ""
+        """Het geinstalleerde versienummer, voor in het apparaatpaneel.
+
+        Bij een handmatig geinstalleerde integratie is dit het enige plekje
+        waar je kunt zien welke versie er draait; HACS toont het niet.
+
+        The installed version, for the device panel. With a manually
+        installed integration this is the only place to see which version is
+        running; HACS does not show it.
+        """
 
         # Bedieningstoestand. De schakelentiteiten herstellen dit na een
         # herstart en schrijven het hier terug.

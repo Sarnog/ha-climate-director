@@ -18,6 +18,7 @@ import logging
 import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.loader import async_get_integration
 
 from . import problems
 from .const import (
@@ -57,6 +58,7 @@ _CANCEL_SCHEMA = vol.Schema({**_ENTRIES, **_ZONES})
 async def async_setup_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -> bool:
     """Set up one installation."""
     coordinator = ClimateDirectorCoordinator(hass, entry)
+    coordinator.version = str((await async_get_integration(hass, DOMAIN)).version or "")
     entry.runtime_data = coordinator
 
     await problems.async_prepare(hass)
