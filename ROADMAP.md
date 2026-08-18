@@ -25,6 +25,21 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
 - **Temperatuurschema per zone** — een streeftemperatuur die met de klok meebeweegt
   (nacht koeler, ochtend warmer), in plaats van één waarde per zone die alleen door de
   poorten aan- en uitgezet wordt.
+- **Neerslag zet de "zet een raam open"-grens opzij** — de buitengrens per zone is een
+  zuinigheidsregel met een aanname eronder: is het buiten aangenamer dan binnen, dan kun je
+  beter een deur of een raam openzetten dan de airco aanzetten. Regent het, dan gaat die
+  aanname niet op — dan blijft die deur dicht en gebeurt er dus niets, terwijl het binnen
+  te warm of te koud blijft.
+
+  Het voorstel: een neerslagbron aanwijzen (de `condition` van een `weather`-entiteit, of
+  een eigen regensensor) en, zolang die neerslag meldt, de **buitengrens per zone**
+  overslaan — precies zoals een vooruit-verzoek dat nu al doet. De dode band, het seizoen
+  en de buitengrens **per bron** blijven gelden; die kiezen nog steeds het apparaat.
+
+  Uit te zoeken: welke `weather`-condities meetellen (`rainy`, `pouring`, `snowy`,
+  `hail`, `lightning-rainy`), of een nalooptijd nodig is zodat een bui van vijf minuten de
+  regeling niet laat stuiteren, en of dit per zone aan of uit moet kunnen — een zolder
+  zonder ramen heeft er niets aan.
 - **Overrides via acties** — `climate_director.set_override` (met een duur of tot de
   volgende gebeurtenis) en `climate_director.clear_override`, plus knoppen die ze
   aanroepen. `climate_director.evaluate` bestaat al.
@@ -102,6 +117,21 @@ The history of what has already been built and changed is **not** here but in th
 - **A temperature schedule per zone** — a target that moves with the clock (cooler at
   night, warmer in the morning), instead of one value per zone that the gates merely switch
   on and off.
+- **Precipitation sets the "open a window" bound aside** — a zone's outdoor window is a
+  thrift rule with an assumption under it: if it is nicer outside than in, you are better
+  off opening a door or a window than switching the air conditioner on. When it rains that
+  assumption does not hold - the door stays shut, so nothing happens, while the room stays
+  too warm or too cold.
+
+  The proposal: name a precipitation source (a `weather` entity's `condition`, or a rain
+  sensor of your own) and, for as long as it reports precipitation, skip the **per-zone**
+  outdoor window - exactly as a pre-conditioning request already does. The dead band, the
+  season and the outdoor window **per source** still apply; those still pick the appliance.
+
+  To work out: which `weather` conditions count (`rainy`, `pouring`, `snowy`, `hail`,
+  `lightning-rainy`), whether a grace period is needed so a five-minute shower does not
+  make the regulation bounce, and whether this should be switchable per zone - an attic
+  without windows gains nothing from it.
 - **Overrides through actions** — `climate_director.set_override` (with a duration or
   until the next event) and `climate_director.clear_override`, plus buttons calling them.
   `climate_director.evaluate` already exists.
