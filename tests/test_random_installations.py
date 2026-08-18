@@ -532,6 +532,18 @@ class TestEveryInstallationHolds:
     #: surfaces when a zone may neither heat nor cool, and such a zone can no
     #: longer be saved as of this round - the screen refuses it. Being
     #: unreachable is the intent here.
+    #:
+    #: `exclusive_group_lost` staat er ook niet bij, om een andere reden: een
+    #: geldige groep mag geen twee bronnen bevatten die bij hetzelfde weer
+    #: allebei mogen draaien, dus in een willekeurig huis botsen ze bijna nooit.
+    #: Waar hij wél bijt is bij een handbediend apparaat dat opzij moet - en dat
+    #: is precies de opstelling van de maandsimulatie, die hem dan ook telt.
+    #:
+    #: `exclusive_group_lost` is absent too, for a different reason: a valid
+    #: group may not hold two sources both allowed to run at the same weather,
+    #: so in a random house they hardly ever meet. Where it does bite is a
+    #: hand-operated appliance having to step aside - which is exactly the month
+    #: simulation's setup, and it counts it there.
 
     @pytest.mark.parametrize(
         "reason",
@@ -556,7 +568,6 @@ class TestEveryInstallationHolds:
             Reason.CIRCUIT_SWITCH_PENDING,
             Reason.CIRCUIT_AT_CAPACITY,
             Reason.SHORT_CYCLE_PROTECTION,
-            Reason.EXCLUSIVE_GROUP_LOST,
         ],
         ids=lambda reason: reason.value,
     )
