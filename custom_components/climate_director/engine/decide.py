@@ -16,7 +16,15 @@ from __future__ import annotations
 from . import constraints, gates, hysteresis, sources
 from .families import MODE_FAN_ONLY, MODE_HEAT, MODE_OFF, ModeFamily, family_of, preferred_mode
 from .models import Circuit, DirectorConfig, Source, Zone
-from .plan import CircuitDecision, Deferral, Plan, Reason, UnitCommand, ZoneDecision
+from .plan import (
+    CircuitDecision,
+    Deferral,
+    Plan,
+    Reason,
+    UnitCommand,
+    UntouchedSource,
+    ZoneDecision,
+)
 from .world import WorldState
 
 #: Solo circuit standing in for a source with an outdoor unit to itself.
@@ -31,11 +39,13 @@ def decide(config: DirectorConfig, world: WorldState) -> Plan:
     grants, circuit_decisions, deferrals = _resolve_circuits(config, world, wishes)
     reasons = _zone_reasons(config, grants, dropped, refusals)
 
+    commands, untouched = _build_commands(config, world, grants, reasons, wishes)
     return Plan(
-        commands=_build_commands(config, world, grants, reasons, wishes),
+        commands=commands,
         zones=_build_zone_decisions(config, world, wishes, dropped, grants, refusals, shut),
         circuits=circuit_decisions,
         deferrals=deferrals,
+        untouched=untouched,
     )
 
 
@@ -268,17 +278,31 @@ def _build_commands(
     grants: dict[str, constraints.Grant],
     reasons: dict[str, Reason],
     wishes: dict[str, constraints.Request],
-) -> tuple[UnitCommand, ...]:
-    """Return the end state for every managed climate entity.
+) -> tuple[tuple[UnitCommand, ...], tuple[UntouchedSource, ...]]:
+    """Return the end state for every managed climate entity, and what is left alone.
 
     Sources that were not chosen are commanded off explicitly rather than left
     alone. That is what makes two appliances running against each other
     unreachable instead of merely unlikely.
+
+    Drie gevallen krijgen wél niets, en alle drie met opzet. Die worden
+    apart teruggegeven in plaats van stil overgeslagen: van buiten is "de
+    director laat dit met rust" niet te onderscheiden van "de director doet
+    niets", en dat verschil is nu juist wat je wilt weten.
+
+    Three cases do get nothing, all three deliberately. Those are returned
+    separately rather than quietly skipped: from the outside "the director is
+    leaving this alone" is indistinguishable from "the director does nothing",
+    and that difference is exactly what you want to know.
     """
     commands: list[UnitCommand] = []
+    untouched: list[UntouchedSource] = []
 
     for zone, source in config.sources():
         if not world.climate(source.entity_id).available:
+            untouched.append(
+                UntouchedSource(source.entity_id, zone.zone_id, Reason.SOURCE_UNREACHABLE)
+            )
             continue
 
         # Een zone met een override is van de beheerder, niet van de director.
@@ -294,6 +318,9 @@ def _build_commands(
         # window say. Were the director to switch it off anyway, the override
         # would be a lock rather than an override.
         if world.overridden(zone.zone_id):
+            untouched.append(
+                UntouchedSource(source.entity_id, zone.zone_id, Reason.MANUAL_OVERRIDE)
+            )
             continue
 
         grant = grants.get(zone.zone_id)
@@ -310,6 +337,10 @@ def _build_commands(
             standing_down = _manual_conflict(config, world, zone, source, wishes)
             if standing_down is not None:
                 commands.append(standing_down)
+            else:
+                untouched.append(
+                    UntouchedSource(source.entity_id, zone.zone_id, Reason.MANUAL_SOURCE)
+                )
             continue
 
         if chosen and grant is not None:
@@ -346,10 +377,31 @@ def _build_commands(
     commands.extend(_generator_commands(config, world, grants))
     commands = _collapse_shared(config, commands)
 
+    # Een gedeeld apparaat staat onder meerdere zones. Krijgt het via één zone
+    # toch een opdracht, dan wordt het niet met rust gelaten - hoe de andere
+    # zones erover dachten doet er dan niet meer toe.
+    #
+    # A shared appliance sits under several zones. If one of them commands it
+    # after all, it is not being left alone - what the other zones thought of
+    # it no longer matters.
+    commanded = {command.entity_id for command in commands}
+    left_alone = tuple(
+        item for item in _first_per_entity(untouched) if item.entity_id not in commanded
+    )
+
     # Stops before starts. On a circuit that has to swap duty, starting the new
     # one before the old has let go would put two duties on one compressor for
     # as long as the calls take to land.
-    return tuple(sorted(commands, key=lambda command: _command_order(config, command)))
+    ordered = tuple(sorted(commands, key=lambda command: _command_order(config, command)))
+    return ordered, left_alone
+
+
+def _first_per_entity(untouched: list[UntouchedSource]) -> list[UntouchedSource]:
+    """Return one entry per appliance, keeping the first zone that reported it."""
+    seen: dict[str, UntouchedSource] = {}
+    for item in untouched:
+        seen.setdefault(item.entity_id, item)
+    return list(seen.values())
 
 
 def _collapse_shared(config: DirectorConfig, commands: list[UnitCommand]) -> list[UnitCommand]:

@@ -47,6 +47,9 @@ class Reason(StrEnum):
     NO_SOURCE_AVAILABLE = "no_source_available"
     OTHER_SOURCE_CHOSEN = "other_source_chosen"
 
+    MANUAL_SOURCE = "manual_source"
+    SOURCE_UNREACHABLE = "source_unreachable"
+
     CIRCUIT_CONFLICT_LOST = "circuit_conflict_lost"
     CIRCUIT_SWITCH_TOO_SOON = "circuit_switch_too_soon"
     CIRCUIT_SWITCH_PENDING = "circuit_switch_pending"
@@ -80,6 +83,26 @@ class UnitCommand:
     zone_id: str | None = None
     source_id: str | None = None
     reason: Reason = Reason.REGULATING
+
+
+@dataclass(frozen=True, slots=True)
+class UntouchedSource:
+    """An appliance the director issues nothing to, and why not.
+
+    Niet aansturen is iets anders dan niets willen. Deze drie gevallen zijn
+    alle drie met opzet - een overgedragen zone, een handbediend apparaat dat
+    niemand in de weg staat, en een apparaat dat niet te bereiken is - en van
+    buiten zagen ze er alle drie hetzelfde uit als "de director doet niets".
+
+    Issuing nothing is not the same as wanting nothing. All three of these
+    cases are deliberate - a zone handed over, a hand-operated appliance nobody
+    needs out of the way, and an appliance that cannot be reached - and from
+    the outside all three looked the same as "the director does nothing".
+    """
+
+    entity_id: str
+    zone_id: str
+    reason: Reason
 
 
 @dataclass(frozen=True, slots=True)
@@ -175,9 +198,23 @@ class Plan:
     circuits: tuple[CircuitDecision, ...] = ()
     deferrals: tuple[Deferral, ...] = field(default_factory=tuple)
 
+    untouched: tuple[UntouchedSource, ...] = ()
+    """The appliances this plan deliberately issues nothing to.
+
+    Elk apparaat komt in precies één van de twee lijsten terecht: het krijgt
+    een opdracht, of het staat hier met de reden waarom niet.
+
+    Every appliance ends up in exactly one of the two lists: it gets a command,
+    or it stands here with the reason why not.
+    """
+
     def command_for(self, entity_id: str) -> UnitCommand | None:
         """Return the command aimed at this entity, if any."""
         return next((command for command in self.commands if command.entity_id == entity_id), None)
+
+    def untouched_for(self, entity_id: str) -> UntouchedSource | None:
+        """Return why this entity is being left alone, if it is."""
+        return next((item for item in self.untouched if item.entity_id == entity_id), None)
 
     def decision_for(self, zone_id: str) -> ZoneDecision | None:
         """Return the decision made for this zone, if any."""

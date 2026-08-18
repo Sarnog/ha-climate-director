@@ -20,7 +20,32 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry
+from .engine import Reason
 from .entity import ClimateDirectorEntity
+
+#: De toestand van een apparaat dat de director met opzet met rust laat: een
+#: overgedragen zone, of een handbediend apparaat dat niemand in de weg staat.
+#:
+#: Tot 6.5.0 stond hier `unmanaged`, en dat woord betekent in deze integratie
+#: al iets anders: een unit die aan een buitenunit hangt maar in geen enkele
+#: zone staat. Twee lezers zijn erover gestruikeld en dachten dat de director
+#: hun apparaat niet kende, terwijl hij er juist bewust van afbleef.
+#:
+#: The state of an appliance the director deliberately leaves alone: a zone
+#: handed over, or a hand-operated appliance nobody needs out of the way.
+#:
+#: Up to 6.5.0 this said `unmanaged`, and in this integration that word already
+#: means something else: a unit hanging on an outdoor unit but appearing in no
+#: zone. Two readers stumbled over it and took it to mean the director did not
+#: know their appliance, while it was deliberately keeping its hands off.
+STATE_LEFT_ALONE = "left_alone"
+
+#: De toestand van een apparaat dat niet te bereiken is. Er valt niets te
+#: sturen, dus er is ook geen opdracht - dat is iets anders dan met rust laten.
+#:
+#: The state of an appliance that cannot be reached. There is nothing to steer,
+#: so there is no command either - which is not the same as leaving it alone.
+STATE_UNREACHABLE = "unreachable"
 
 
 async def async_setup_entry(
@@ -130,12 +155,30 @@ class CommandSensor(ClimateDirectorEntity, SensorEntity):
 
     @property
     def native_value(self) -> str | None:
-        """Return the commanded hvac mode, or `unmanaged` when there is none."""
+        """Return the commanded hvac mode, or why there is no command.
+
+        Twee toestanden in plaats van één woord, want de twee gevallen vragen
+        om iets heel anders van je: bij `left_alone` is er niets aan de hand en
+        blijft de director er met opzet vanaf, bij `unreachable` is het
+        apparaat weg en werkt er iets niet. Het attribuut `reason` zegt daarna
+        welk van de drie gevallen het precies is.
+
+        Two states rather than one word, since the two cases ask something very
+        different of you: on `left_alone` nothing is wrong and the director is
+        deliberately keeping its hands off, on `unreachable` the appliance is
+        gone and something is broken. The `reason` attribute then says which of
+        the three cases it is exactly.
+        """
         plan = self.coordinator.data
         if plan is None:
             return None
         command = plan.command_for(self._target)
-        return command.hvac_mode if command else "unmanaged"
+        if command is not None:
+            return command.hvac_mode
+        left = plan.untouched_for(self._target)
+        if left is not None and left.reason is Reason.SOURCE_UNREACHABLE:
+            return STATE_UNREACHABLE
+        return STATE_LEFT_ALONE
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -145,12 +188,13 @@ class CommandSensor(ClimateDirectorEntity, SensorEntity):
         if plan is None:
             return {}
         command = plan.command_for(self._target)
+        left = plan.untouched_for(self._target)
         actual = world.climate(self._target) if world else None
         return {
             "target_entity": self._target,
             "temperature": command.temperature if command else None,
-            "zone_id": command.zone_id if command else None,
-            "reason": command.reason.value if command else None,
+            "zone_id": command.zone_id if command else (left.zone_id if left else None),
+            "reason": (command.reason.value if command else (left.reason.value if left else None)),
             "actual_hvac_mode": actual.hvac_mode if actual and actual.available else None,
             "actual_temperature": actual.target_temperature if actual else None,
             "agrees": (

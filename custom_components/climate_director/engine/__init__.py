@@ -54,6 +54,7 @@ from .plan import (
     Plan,
     Reason,
     UnitCommand,
+    UntouchedSource,
     ZoneDecision,
 )
 from .world import ClimateState, OpeningState, PresenceState, ResidentState, WorldState
@@ -92,6 +93,7 @@ __all__ = [
     "ZoneGate",
     "TimeWindow",
     "UnitCommand",
+    "UntouchedSource",
     "WorldState",
     "Zone",
     "ZoneDecision",
