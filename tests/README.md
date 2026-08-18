@@ -20,6 +20,12 @@ de hele suite draait in een halve seconde. Dat is de reden dat die scheidslijn b
   worden, stuk voor stuk als scenario
 - `test_serialise.py` — heen en terug tussen config entry en dataclasses
 - `test_diff.py` — welke service calls er nodig zijn, en wanneer geen
+- `test_random_installations.py` — tweeduizend geldige huizen met elke optie erin, elk in
+  een willekeurige wereld, plus de weg van het formulier naar een besluit
+- `test_month_simulation.py` en `test_seasons_simulation.py` — hele maanden in gesloten
+  lus: wat de director aanzet gaat draaien, wat draait warmt de kamer op, en de volgende
+  ronde ziet het gevolg. Pas daar tellen de regels die alleen in de tijd bestaan. De motor
+  eronder staat in `simulation.py`
 
 **De Home Assistant-laag** wordt getest op zijn pure helpers (`test_ha_helpers.py`):
 seizoensnamen, getalconversie, de eventpayload, en de formulierlogica van de config flow.
@@ -77,6 +83,12 @@ and the whole suite runs in half a second. That is the reason the dividing line 
   each as a scenario
 - `test_serialise.py` — round trips between config entry and dataclasses
 - `test_diff.py` — which service calls are needed, and when none are
+- `test_random_installations.py` — two thousand valid houses using every option, each in a
+  random world, plus the road from the form to a decision
+- `test_month_simulation.py` and `test_seasons_simulation.py` — whole months in a closed
+  loop: what the director switches on runs, what runs warms the room, and the next round
+  sees the consequence. Only there do the rules that exist solely in time count. The engine
+  under them is `simulation.py`
 
 **The Home Assistant layer** is tested on its pure helpers (`test_ha_helpers.py`): season
 names, number conversion, the event payload, and the config flow's form logic.

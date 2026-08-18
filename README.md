@@ -1006,9 +1006,21 @@ herberekent alleen. Zonder `entry_id` worden alle installaties herberekend.
 ### Configuratiecontrole
 
 Klopt er iets structureel niet — een zone zonder bruikbare bron, twee bronnen op dezelfde
-entiteit, een buitenvenster dat niets toelaat — dan verschijnt dat als reparatiemelding in
-Home Assistant. De zones die wél kloppen worden ondertussen gewoon geregeld; één stukke
-zone legt de installatie niet stil. De volledige lijst staat in de diagnose.
+entiteit, een buitenvenster dat niets toelaat, dezelfde binnenunit aan twee buitenunits —
+dan verschijnt dat als reparatiemelding in Home Assistant. De zones die wél kloppen worden
+ondertussen gewoon geregeld; één stukke zone legt de installatie niet stil. De volledige
+lijst staat in de diagnose.
+
+Er wordt ook geklaagd over instellingen die stilletjes niets doen. Twee daarvan zijn
+makkelijk te maken:
+
+- **stiltevensters die samen de klok rondgaan.** Een stiltevenster is de omgekeerde van een
+  rooster: het zegt wanneer er níets mag beginnen. Blijft er op een dag minder dan een
+  kwartier over en heeft niemand een rooster dat de stilte kan verslaan, dan kan het huis
+  uit zichzelf niets meer beginnen;
+- **een omschakelpauze op een buitenunit die verwarmen en koelen tegelijk aankan.** Zo'n
+  unit wisselt nooit van taak, dus die pauze en de minimale looptijd ervoor doen er niets.
+  De minimale cyclustijd en de capaciteitsgrens blijven wél gelden.
 
 Dat onderscheid is er met opzet: een fout in de configuratie ziet er van buiten hetzelfde
 uit als "de director besluit niets", en dan zoek je een bug die eigenlijk een typefout is.
@@ -2140,9 +2152,20 @@ Without an `entry_id`, every installation is recomputed.
 ### Configuration check
 
 If something is structurally wrong — a zone with no usable source, two sources on the same
-entity, an outdoor window that admits nothing — it shows up as a repair notice in Home
-Assistant. The zones that are sound carry on being regulated meanwhile; one broken zone does
-not stop the installation. The full list is in the diagnostics.
+entity, an outdoor window that admits nothing, the same indoor unit on two outdoor units —
+it shows up as a repair notice in Home Assistant. The zones that are sound carry on being
+regulated meanwhile; one broken zone does not stop the installation. The full list is in the
+diagnostics.
+
+Settings that quietly do nothing are reported too. Two of those are easy to make:
+
+- **quiet windows that together go round the clock.** A quiet window is the inverse of a
+  schedule: it says when nothing may begin. If under a quarter of an hour is left on a day
+  and nobody has a schedule that can beat the quiet, the house can no longer start anything
+  of its own accord;
+- **a switch pause on an outdoor unit that can heat and cool at once.** Such a unit never
+  switches duty, so that pause and the minimum run before it do nothing. The minimum cycle
+  time and the capacity limit do still apply.
 
 That distinction is deliberate: a mistake in the configuration looks, from the outside, the
 same as "the director decides nothing", and you end up hunting a bug that is really a typo.
