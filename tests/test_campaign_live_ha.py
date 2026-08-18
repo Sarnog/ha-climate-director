@@ -263,6 +263,23 @@ class TestTheActions:
         assert home.state(LIVING) == "heat"
         assert home.state(ATTIC) == "off", "alleen de gevraagde zone hoort te draaien"
 
+    @pytest.mark.parametrize("minutes", ["45", "45.0"])
+    async def test_a_duration_may_arrive_as_text(self, home: LiveHome, minutes: str) -> None:
+        """YAML levert getallen vaak als tekst aan; het schema hoort dat om te zetten.
+
+        YAML often hands numbers over as text; the schema should coerce that.
+        """
+        home.set("person.danny", "not_home")
+        await home.evaluate()
+        assert home.state(LIVING) == "off"
+
+        await home.call(
+            "climate_director", "precondition", {"zone_ids": ["woonkamer"], "minutes": minutes}
+        )
+        await asyncio.sleep(1.4)
+        await home.hass.async_block_till_done()
+        assert home.state(LIVING) == "heat"
+
     async def test_a_request_is_capped_at_the_installation_maximum(self, home: LiveHome) -> None:
         home.coordinator.async_precondition(["woonkamer"], 6000)
         granted = home.coordinator._live_preconditions()["woonkamer"]
