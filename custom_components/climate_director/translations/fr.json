@@ -430,10 +430,13 @@
       }
     },
     "error": {
+      "bands_overlap": "Le refroidissement démarre au niveau du point de démarrage du chauffage ou en dessous, donc les deux demanderaient cette pièce en même temps. Placez le point de démarrage du refroidissement au-dessus de celui du chauffage, avec de la marge entre les deux.",
       "duplicate_priority": "Une autre pièce sur la même unité extérieure a déjà cette priorité. Deux pièces partageant un nombre font dépendre le résultat de leur nom ; choisissez-en un libre.",
+      "presence_gate_without_sensor": "Cette zone fonctionne selon la présence dans la pièce, mais aucun capteur de présence n'est choisi. La pièce compte alors comme vide pour de bon et la zone ne fonctionnera plus jamais. Choisissez un capteur, ou laissez le foyer décider.",
       "required": "Ce champ est nécessaire pour enregistrer. Remplissez-le, ou choisissez « Abandonner et revenir » en bas pour partir sans enregistrer.",
       "target_outside_band": "La température cible se trouve du mauvais côté du point de démarrage. Le chauffage vise au-dessus du point où il commence, le refroidissement en dessous ; à l'inverse, l'appareil reçoit une température pour laquelle il n'a rien à faire, ce qui donne l'impression qu'il refuse.",
-      "too_few": "Choisissez au moins deux appareils ; un groupe d'un seul n'exclut rien."
+      "too_few": "Choisissez au moins deux appareils ; un groupe d'un seul n'exclut rien.",
+      "zone_without_modes": "Cette zone ne peut ni chauffer ni refroidir, elle ne pourra donc jamais rien faire. Activez au moins l'un des deux, ou supprimez la zone."
     }
   },
   "selector": {

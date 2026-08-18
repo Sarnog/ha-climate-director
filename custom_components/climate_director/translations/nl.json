@@ -430,10 +430,13 @@
       }
     },
     "error": {
+      "bands_overlap": "Koelen begint op of onder het punt waar verwarmen begint, dus allebei zouden ze deze kamer tegelijk vragen. Zet het aanpunt van koelen boven dat van verwarmen, met ruimte ertussen.",
       "duplicate_priority": "Een andere kamer op dezelfde buitenunit heeft deze prioriteit al. Twee kamers met hetzelfde nummer laten de uitkomst van hun naam afhangen, dus kies een vrij nummer.",
+      "presence_gate_without_sensor": "Deze zone staat op aanwezigheid in de ruimte, maar er is geen aanwezigheidssensor gekozen. De kamer telt dan voorgoed als leeg en de zone doet nooit meer iets. Kies een sensor, of laat het huishouden beslissen.",
       "required": "Dit veld is nodig om te bewaren. Vul het in, of kies onderaan “Verwerpen en teruggaan” om weg te gaan zonder op te slaan.",
       "target_outside_band": "De streeftemperatuur ligt aan de verkeerde kant van het aanpunt. Verwarmen streeft boven het punt waarop het begint, koelen eronder; andersom krijgt het apparaat een temperatuur waar het niets voor hoeft te doen, wat eruitziet alsof het weigert.",
-      "too_few": "Kies minstens twee apparaten; een groep van één sluit niets uit."
+      "too_few": "Kies minstens twee apparaten; een groep van één sluit niets uit.",
+      "zone_without_modes": "Deze zone mag niet verwarmen en niet koelen, dus hij kan nooit iets doen. Zet er minstens één van de twee aan, of verwijder de zone."
     }
   },
   "selector": {

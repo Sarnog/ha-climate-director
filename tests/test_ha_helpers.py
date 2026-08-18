@@ -27,6 +27,7 @@ from custom_components.climate_director.config_flow import (
     _next_priority,
     _unique_id,
     _window_label,
+    _zone_errors,
     _zone_from_form,
 )
 from custom_components.climate_director.coordinator import (
@@ -588,3 +589,82 @@ class TestTheBandIsRefusedAtTheScreen:
         codes = [getattr(item, "code", "") for item in validate(config)]
         assert "target_outside_band" in codes
         assert _band_errors({"heat": {"target": 19.0, "start_at": 20.0}, "cool": None}) != {}
+
+
+class TestTheScreenRefusesWhatCanNeverWork:
+    """Drie instellingen die een zone stilzetten zonder dat er iets kapot is.
+
+    Alle drie leverden een zone op die keurig verscheen, met al zijn
+    entiteiten, en vervolgens nooit iets deed. Dat is de stilste manier waarop
+    deze integratie kan falen, en het scherm waarop je ze intikt kan ze alle
+    drie meteen zien. `validate()` zag ze ook al, maar pas achteraf - en tot je
+    die melding opmerkt zoek je in de verkeerde hoek.
+
+    Three settings that silence a zone without anything being broken.
+
+    All three produced a zone that appeared neatly, with all its entities, and
+    then never did anything. That is the quietest way this integration can
+    fail, and the screen you type them on can see all three at once.
+    `validate()` saw them too, but only afterwards - and until you notice that
+    notice you are looking in the wrong place.
+    """
+
+    def _zone(self, **changes) -> dict:
+        zone = {
+            "zone_id": "zolder",
+            "name": "Zolder",
+            "heat": {"target": 21.0, "start_at": 20.0},
+            "cool": {"target": 23.0, "start_at": 24.0},
+            "gate": "household",
+            "presence_entity": "",
+        }
+        return {**zone, **changes}
+
+    def test_a_sound_zone_passes(self) -> None:
+        assert _zone_errors(self._zone()) == {}
+
+    def test_the_room_gate_needs_a_room_sensor(self) -> None:
+        """Without one the room counts as empty for good."""
+        assert _zone_errors(self._zone(gate="presence")) == {
+            "presence_entity": "presence_gate_without_sensor"
+        }
+
+    def test_the_room_gate_with_a_sensor_is_fine(self) -> None:
+        zone = self._zone(gate="presence", presence_entity="binary_sensor.zolder")
+        assert _zone_errors(zone) == {}
+
+    def test_a_zone_that_may_do_nothing_is_refused(self) -> None:
+        assert _zone_errors(self._zone(heat=None, cool=None)) == {
+            "enable_heat": "zone_without_modes"
+        }
+
+    def test_cooling_may_not_start_below_heating(self) -> None:
+        """Both would then ask for the same room at once."""
+        zone = self._zone(cool={"target": 18.0, "start_at": 19.0})
+        assert _zone_errors(zone)["cool_start_at"] == "bands_overlap"
+
+    def test_cooling_may_not_start_exactly_where_heating_does(self) -> None:
+        zone = self._zone(cool={"target": 19.0, "start_at": 20.0})
+        assert _zone_errors(zone)["cool_start_at"] == "bands_overlap"
+
+    def test_a_zone_that_only_cools_never_overlaps(self) -> None:
+        assert _zone_errors(self._zone(heat=None)) == {}
+
+    def test_it_gathers_every_complaint_at_once(self) -> None:
+        """Fixing one and meeting the next on the following screen is a round too many."""
+        zone = self._zone(
+            gate="presence",
+            heat={"target": 19.0, "start_at": 20.0},
+            cool={"target": 25.0, "start_at": 19.0},
+        )
+        assert set(_zone_errors(zone)) == {
+            "presence_entity",
+            "heat_target",
+            "cool_target",
+            "cool_start_at",
+        }
+
+    def test_the_band_check_still_stands_on_its_own(self) -> None:
+        """`_zone_errors` gathers; the parts keep working separately."""
+        zone = self._zone(heat={"target": 19.0, "start_at": 20.0})
+        assert _band_errors(zone) == {"heat_target": "target_outside_band"}

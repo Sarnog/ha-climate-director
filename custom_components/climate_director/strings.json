@@ -430,10 +430,13 @@
       }
     },
     "error": {
+      "bands_overlap": "Cooling starts at or below the point where heating starts, so both would ask for this room at once. Put the cooling switch-on point above the heating one, with room between them.",
       "duplicate_priority": "Another room on the same outdoor unit already has this priority. Two rooms sharing a number leaves the outcome hanging on their name, so pick a free one.",
+      "presence_gate_without_sensor": "This zone is set to run on room presence, but no presence sensor is chosen. The room would then count as empty for good and the zone would never run again. Pick a sensor, or let the household decide.",
       "required": "This field is needed to save. Fill it in, or choose “Discard and go back” at the bottom to leave without saving.",
       "target_outside_band": "The target sits on the wrong side of the switch-on point. Heating aims above where it starts, cooling below; the other way round the appliance is set to a temperature it need do nothing for, which looks like it is refusing.",
-      "too_few": "Pick at least two appliances; a group of one rules nothing out."
+      "too_few": "Pick at least two appliances; a group of one rules nothing out.",
+      "zone_without_modes": "This zone may neither heat nor cool, so it can never do anything. Switch on at least one of the two, or delete the zone."
     }
   },
   "selector": {

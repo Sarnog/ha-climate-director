@@ -679,7 +679,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 return await self.async_step_init()
 
             zone = _zone_from_form(user_input, current)
-            errors |= _band_errors(zone)
+            errors |= _zone_errors(zone)
             if self._priority_clash(zone["zone_id"], zone["priority"]):
                 errors["priority"] = "duplicate_priority"
             if errors:
@@ -1587,6 +1587,63 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         return zones[self._zone_index]
 
 
+def _zone_errors(zone: dict[str, Any]) -> dict[str, str]:
+    """Return every complaint this screen can make about one zone.
+
+    De verzamelplek, zodat de vlucht er maar op één ding hoeft te leunen en er
+    geen controle vergeten kan worden. Wat hier doorheen komt, hoort door
+    `validate()` heen te komen - `test_random_installations.py` legt precies dat
+    vast, in beide richtingen.
+
+    The gathering point, so the flow leans on one thing only and no check can
+    be forgotten. What passes here should pass `validate()` -
+    `test_random_installations.py` pins down exactly that, in both directions.
+    """
+    return _band_errors(zone) | _gate_errors(zone) | _mode_errors(zone)
+
+
+def _mode_errors(zone: dict[str, Any]) -> dict[str, str]:
+    """Return an error when a zone may neither heat nor cool.
+
+    Zo'n zone kan per definitie nooit iets doen. Hij verschijnt wel met al zijn
+    entiteiten, en dan zoek je later waarom er niets gebeurt in een kamer die
+    het nooit had mogen proberen.
+
+    Such a zone can never do anything by definition. It still appears with all
+    its entities, and then you go looking later for why nothing happens in a
+    room that was never allowed to try.
+    """
+    if zone.get("heat") or zone.get("cool"):
+        return {}
+    return {"enable_heat": "zone_without_modes"}
+
+
+def _gate_errors(zone: dict[str, Any]) -> dict[str, str]:
+    """Return an error when the room gate has no room sensor to lean on.
+
+    Een zone op *Ruimte* kijkt naar de aanwezigheidssensor en naar niets
+    anders. Is die er niet, dan is de kamer per definitie leeg en doet de zone
+    nooit meer iets - stil, want een zone die niets doet ziet er precies zo uit
+    als een zone die niets hoeft te doen.
+
+    `validate()` klaagt hier terecht over, maar pas achteraf. Het scherm waarop
+    je de poort kiest weet het meteen.
+
+    A zone on *Room* looks at the presence sensor and at nothing else. Without
+    one the room is empty by definition and the zone never does anything again
+    - quietly, since a zone doing nothing looks exactly like a zone with
+    nothing to do.
+
+    `validate()` rightly complains about this, but only afterwards. The screen
+    where you pick the gate knows at once.
+    """
+    if zone.get("gate") != ZoneGate.PRESENCE.value:
+        return {}
+    if zone.get("presence_entity"):
+        return {}
+    return {"presence_entity": "presence_gate_without_sensor"}
+
+
 def _band_errors(zone: dict[str, Any]) -> dict[str, str]:
     """Return an error per mode whose target sits on the wrong side of its switch-on point.
 
@@ -1619,6 +1676,18 @@ def _band_errors(zone: dict[str, Any]) -> dict[str, str]:
     cool = zone.get("cool") or {}
     if cool and cool["target"] > cool["start_at"]:
         errors["cool_target"] = "target_outside_band"
+
+    # Begint koelen op of onder het punt waar verwarmen begint, dan vragen de
+    # twee tegelijk om dezelfde kamer. De engine kiest dan nog steeds
+    # deterministisch, maar dat het zover komt kan niemand bedoeld hebben - en
+    # het is aan dit scherm om dat te zeggen, niet aan een melding achteraf.
+    #
+    # If cooling starts at or below where heating starts, the two ask for the
+    # same room at once. The engine still picks deterministically, but getting
+    # there is something nobody can have meant - and it is for this screen to
+    # say so, rather than for a notice afterwards.
+    if heat and cool and cool["start_at"] <= heat["start_at"]:
+        errors["cool_start_at"] = "bands_overlap"
 
     return errors
 
