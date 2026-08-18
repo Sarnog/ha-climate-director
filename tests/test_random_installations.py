@@ -99,7 +99,14 @@ def _quiet_window(rng: random.Random) -> dict:
 
 def _mode_settings(rng: random.Random, *, heating: bool) -> dict:
     """Return a sound band: heating aims above its switch-on point, cooling below."""
-    start = rng.uniform(16.0, 22.0) if heating else rng.uniform(22.0, 28.0)
+    # De twee bereiken raken elkaar niet: koelen dat op hetzelfde punt begint als
+    # verwarmen is een configuratiefout, en die hoort niet uit een generator van
+    # geldige huizen te komen. Eén op de paar duizend keer vielen ze samen.
+    #
+    # The two ranges do not touch: cooling that starts where heating starts is a
+    # configuration mistake, and that should not come out of a generator of valid
+    # houses. One in a few thousand they coincided.
+    start = rng.uniform(16.0, 21.0) if heating else rng.uniform(22.0, 28.0)
     offset = rng.choice([0.0, 0.5, 1.0, 2.0])
     return {
         "target": round(start + offset if heating else start - offset, 1),
@@ -156,6 +163,27 @@ def _zone(rng: random.Random, index: int, units: list[str], shared: str | None) 
                 "priority": rng.randrange(1, 4),
                 "autostart": True,
                 "outdoor": {"minimum": None, "maximum": 3.1},
+            }
+        )
+
+    # Een reservebron: hetzelfde kunstje, geen eigen buitengrens, en een plek
+    # verder in de rij. Zonder zo'n bron is er niets om naar uit te wijken als
+    # de eerste keus wegvalt, en dan test een onbereikbaar apparaat alleen dat
+    # de zone stilvalt.
+    #
+    # A reserve source: the same trick, no outdoor bound of its own, and a place
+    # further down the queue. Without one there is nothing to fall back to when
+    # the first choice drops out, and then an unreachable appliance only tests
+    # that the zone falls silent.
+    if rng.random() < 0.4:
+        sources.append(
+            {
+                "source_id": f"z{index}_reserve",
+                "entity_id": f"climate.reserve{index}",
+                "role": role.value,
+                "priority": 5,
+                "autostart": True,
+                "outdoor": {"minimum": None, "maximum": None},
             }
         )
 
@@ -271,7 +299,12 @@ def _installation(rng: random.Random) -> dict:
             None,
         )
         warm_source = next(
-            (source["source_id"] for zone in zones for source in zone["sources"][1:]),
+            (
+                source["source_id"]
+                for zone in zones
+                for source in zone["sources"]
+                if source["source_id"].endswith("_shared")
+            ),
             None,
         )
         if chilly is not None and warm_source is not None:
@@ -458,6 +491,7 @@ def sweep():
     reasons: Counter[str] = Counter()
     problems = 0
     plans = 0
+    fallbacks = 0
 
     for _ in range(2_000):
         stored = _installation(rng)
@@ -486,6 +520,8 @@ def sweep():
 
         for decision in plan.zones:
             reasons[decision.reason.value] += 1
+            if decision.on_fallback:
+                fallbacks += 1
         for command in plan.commands:
             reasons[command.reason.value] += 1
         for item in plan.untouched:
@@ -501,7 +537,12 @@ def sweep():
         for deferral in plan.deferrals:
             reasons[deferral.reason.value] += 1
 
-    return {"reasons": reasons, "plans": plans, "problems": problems}
+    return {
+        "reasons": reasons,
+        "plans": plans,
+        "problems": problems,
+        "fallbacks": fallbacks,
+    }
 
 
 class TestEveryInstallationHolds:
@@ -516,6 +557,10 @@ class TestEveryInstallationHolds:
     def test_the_generator_only_builds_sound_houses(self, sweep: dict) -> None:
         """Otherwise the sweep would be testing the complaint, not the decision."""
         assert sweep["problems"] == 0
+
+    def test_a_room_fell_back_on_its_reserve(self, sweep: dict) -> None:
+        """Apparaten vallen weg in deze werelden; dan hoort het vangnet te werken."""
+        assert sweep["fallbacks"] > 0, sweep["fallbacks"]
 
     def test_it_reached_the_interesting_corners(self, sweep: dict) -> None:
         """A sweep in which nothing ever happens proves nothing."""

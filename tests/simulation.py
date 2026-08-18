@@ -169,6 +169,7 @@ class Simulation:
         self.events: Counter[str] = Counter()
         self.commanded: Counter[str] = Counter()
         self.duty_by_month: Counter[tuple[int, str]] = Counter()
+        self.fallbacks = 0
 
         # De echte actiecode en de echte boekhouding, gedreven in plaats van
         # nagebouwd, zodat de maand ook díe code raakt.
@@ -473,6 +474,8 @@ class Simulation:
 
         for decision in plan.zones:
             self.reasons[decision.reason.value] += 1
+            if decision.on_fallback:
+                self.fallbacks += 1
         for command in plan.commands:
             self.reasons[command.reason.value] += 1
         for item in plan.untouched:
@@ -500,13 +503,16 @@ def check_duty_and_timing(config: DirectorConfig, world: WorldState, plan, where
 
     for circuit in config.circuits:
         # Wat er nog draait in de andere taak, moet de director deze ronde
-        # stilzetten of met opzet loslaten. Een mens met een afstandsbediening
-        # kan altijd twee taken maken; de director mag er nooit stil bij blijven
+        # aanpakken: stilzetten, meenemen naar de taak die wél opgedragen wordt,
+        # of met opzet loslaten. Een mens met een afstandsbediening kan altijd
+        # twee taken maken; de director mag er alleen nooit stil bij blijven
         # staan.
         #
-        # Whatever still runs in the other duty, the director must stop this
-        # round or deliberately let go of. A person with a remote can always
-        # create two duties; the director may never stand by quietly.
+        # Whatever still runs in the other duty, the director must deal with
+        # this round: stop it, take it along to the duty that *is* being
+        # ordered, or deliberately let go of it. A person with a remote can
+        # always create two duties; the director simply may never stand by
+        # quietly.
         if not circuit.simultaneous_heat_cool:
             ordered = {
                 family_of(command.hvac_mode)
@@ -519,10 +525,11 @@ def check_duty_and_timing(config: DirectorConfig, world: WorldState, plan, where
                     if other not in (ModeFamily.HEAT, ModeFamily.COOL) or other is duty:
                         continue
                     command = plan.command_for(entity_id)
-                    stopped = (
-                        command is not None and family_of(command.hvac_mode) is ModeFamily.NEUTRAL
+                    handled = command is not None and family_of(command.hvac_mode) in (
+                        ModeFamily.NEUTRAL,
+                        duty,
                     )
-                    assert stopped or plan.untouched_for(entity_id) is not None, (
+                    assert handled or plan.untouched_for(entity_id) is not None, (
                         f"{mark}{entity_id} draait {other} terwijl {duty} wordt opgedragen"
                     )
 
