@@ -590,6 +590,8 @@ class _HandStandIn:
     def __init__(self, sim: Simulation) -> None:
         self.config = sim.config
         self.data = None
+        self._issued = None
+        self.shadow = False
         self.zone_overrides: dict[str, bool] = {}
         self._handed_back: dict[str, object] = {}
         self.saved = 0

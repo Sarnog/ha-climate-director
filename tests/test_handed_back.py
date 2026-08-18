@@ -112,7 +112,16 @@ def coordinator(plan: Plan | None = None, states: dict[str, str] | None = None):
             self.config = config(with_residents=bool(states))
             self.zone_overrides: dict[str, bool] = {}
             self._handed_back: dict[str, date] = {}
+            # `data` is het gepubliceerde besluit, `_issued` het besluit dat op
+            # tafel ligt. Tijdens het uitvoeren zijn dat er twee; hier gaat het
+            # om het plan dat de director net gaf, dus staan ze gelijk.
+            #
+            # `data` is the published decision, `_issued` the decision on the
+            # table. While carrying one out those are two; here it is about the
+            # plan the director just gave, so they are the same.
             self.data = plan
+            self._issued = plan
+            self.shadow = False
             self.hass = Hass()
             self.saved = 0
 

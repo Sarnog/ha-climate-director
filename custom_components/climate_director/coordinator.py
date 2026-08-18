@@ -20,10 +20,12 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Mapping
+from dataclasses import replace
 from datetime import date, datetime, timedelta
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import CALLBACK_TYPE, Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
@@ -228,6 +230,18 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self.zone_priorities: dict[str, int] = {}
 
         self.world: WorldState | None = None
+        self._issued: Plan | None = None
+        """Het plan dat nu uitgevoerd wordt, nog voordat het gepubliceerd is.
+
+        `self.data` loopt een stap achter zolang de service calls draaien, en
+        precies in dat gaatje meldt een apparaat zijn nieuwe stand. Zie
+        `_we_wanted_it_off`.
+
+        The plan being carried out, before it is published. `self.data` lags by
+        one step while the service calls run, and an appliance reports its new
+        state in exactly that gap. See `_we_wanted_it_off`.
+        """
+
         self.last_changes: tuple[Change, ...] = ()
         """What the plan wants changed, whether or not it was carried out."""
 
@@ -351,6 +365,22 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         it back on, or until the next day - since last night's decision should
         not still hold this morning.
         """
+        # In schaduwmodus stuurt de director niets, dus valt er ook niemand te
+        # overstemmen - en daarmee vervalt de reden waarom dit bestaat. Wat er
+        # wél gebeurt is dat de bestaande automatiseringen de hele dag apparaten
+        # aan- en uitzetten. Elk van die uitzettingen las als een hand, waarna
+        # de zone werd overgedragen en er niets meer te vergelijken viel. Juist
+        # dat vergelijken is het enige product van deze modus.
+        #
+        # In shadow mode the director steers nothing, so there is nobody to
+        # overrule - and with that the reason this exists falls away. What does
+        # happen is that the existing automations switch appliances on and off
+        # all day. Every one of those switch-offs read as a hand, after which
+        # the zone was handed over and there was nothing left to compare. That
+        # comparing is this mode's only product.
+        if self.shadow:
+            return
+
         entity_id = event.data["entity_id"]
         zone = self._zone_of(entity_id)
         if zone is None:
@@ -359,6 +389,24 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         new_state = event.data["new_state"]
         old_state = event.data["old_state"]
         if new_state is None or old_state is None:
+            return
+
+        # Wegvallen en terugkomen is geen hand aan het apparaat. `unavailable`
+        # en `unknown` zijn geen standen maar het ontbreken van een stand, en
+        # `family_of()` leest ze - terecht - als "geen idee wat dit ding doet".
+        # Daardoor las een apparaat dat terugkwam op `off` als iemand die het
+        # net had uitgezet, en viel die zone de rest van de dag stil. Andersom
+        # net zo: een apparaat dat wegvalt zou een handmatige uitzetting
+        # opheffen alsof iemand hem weer had aangezet.
+        #
+        # Dropping out and coming back is not a hand at the appliance.
+        # `unavailable` and `unknown` are not modes but the absence of one, and
+        # `family_of()` reads them - rightly - as "no telling what this thing is
+        # doing". So an appliance coming back on `off` read as somebody having
+        # just switched it off, and that zone fell silent for the rest of the
+        # day. The other way round just as much: an appliance dropping out would
+        # lift a hand-back as though somebody had switched it on again.
+        if _unreadable(old_state.state) or _unreadable(new_state.state):
             return
 
         was = family_of(old_state.state)
@@ -395,8 +443,24 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         return None
 
     def _we_wanted_it_off(self, entity_id: str) -> bool:
-        """Return whether the last plan already had this appliance standing still."""
-        plan = self.data
+        """Return whether the plan being carried out has this appliance standing still.
+
+        Het plan dat op tafel ligt, niet het plan dat af is. Een apparaat meldt
+        zijn nieuwe stand terwijl de service call nog loopt, en op dat moment
+        staat het gepubliceerde besluit nog op de vorige ronde. Wie dáárin
+        keek, zag "wij wilden hem aan" en boekte het eigen uitzetcommando als
+        een hand aan het apparaat - waarna de zone de rest van de dag stil
+        bleef staan. Dat is precies de fout die deze controle hoort te
+        voorkomen.
+
+        The plan on the table, not the plan that is finished. An appliance
+        reports its new state while the service call is still running, and at
+        that moment the published decision is still the previous round's.
+        Looking there saw "we wanted it on" and recorded our own switch-off as a
+        hand at the appliance - after which the zone stood still for the rest of
+        the day. That is exactly the mistake this check exists to prevent.
+        """
+        plan = self._issued or self.data
         if plan is None:
             return False
         for command in plan.commands:
@@ -500,6 +564,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
 
             plan = decide(self.config, world)
             self.world = world
+            self._issued = plan
 
             # De verschillenlijst wordt hier bewaard, niet wat de applier
             # ervan uitgevoerd kreeg. In schaduwmodus is dit precies "wat de
@@ -731,7 +796,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             state = self.hass.states.get(entity_id)
             if state is None:
                 found[entity_id] = "missing"
-            elif state.state in ("unavailable", "unknown"):
+            elif _unreadable(state.state):
                 found[entity_id] = state.state
         return found
 
@@ -823,12 +888,29 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             guest_mode=self.guest_mode,
             precondition_until=self._live_preconditions(),
             precondition_bypass=frozenset(self._precondition_bypass),
-            zone_overrides={
-                **dict.fromkeys(self._zones_handed_back(), True),
-                **self.zone_overrides,
-            },
+            zone_overrides=self._overridden_zones(),
             zone_priorities=dict(self.zone_priorities),
         )
+
+    def _overridden_zones(self) -> dict[str, bool]:
+        """Return which zones are handed over, from either of the two ways in.
+
+        Er zijn twee manieren waarop een zone van de gebruiker wordt: de
+        schakelaar omzetten, of bij het apparaat zelf op uit drukken. Ze staan
+        los van elkaar, dus één van de twee is genoeg - wie ze samenvoegde met
+        de schakelaar als laatste, liet een schakelaar die gewoon uit staat de
+        handmatige uitzetting wissen. En die schakelaar staat er voor elke zone,
+        en staat standaard uit: dan werkte "zelf uitzetten" dus nergens.
+
+        There are two ways a zone becomes the user's: throwing the switch, or
+        pressing off on the appliance itself. They stand apart, so either one is
+        enough - whoever merged them with the switch last let a switch that is
+        simply off erase the hand-back. And that switch exists for every zone,
+        and is off by default: so "switching off yourself" worked nowhere.
+        """
+        handed_back = self._zones_handed_back()
+        thrown = {zone_id for zone_id, on in self.zone_overrides.items() if on}
+        return dict.fromkeys(handed_back | thrown, True)
 
     def _climate_ids(self) -> set[str]:
         """Return every climate entity the engine may need to read."""
@@ -845,7 +927,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
 
     def _climate(self, entity_id: str) -> ClimateState:
         state = self.hass.states.get(entity_id)
-        if state is None or state.state in ("unknown", "unavailable"):
+        if state is None or _unreadable(state.state):
             return ClimateState(available=False)
         return ClimateState(
             hvac_mode=state.state,
@@ -925,24 +1007,23 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 )
 
     def _with_family_history(self, world: WorldState) -> WorldState:
-        """Return the snapshot with the recorded duty-change times filled in."""
-        return WorldState(
-            now=world.now,
-            outdoor_temperature=world.outdoor_temperature,
-            season=world.season,
-            indoor_temperatures=world.indoor_temperatures,
-            climates=world.climates,
-            residents=world.residents,
-            openings=world.openings,
-            presence=world.presence,
-            circuit_family_since=dict(self._family_since),
-            master_enabled=world.master_enabled,
-            holiday_mode=world.holiday_mode,
-            guest_mode=world.guest_mode,
-            precondition_until=dict(world.precondition_until),
-            zone_overrides=world.zone_overrides,
-            zone_priorities=world.zone_priorities,
-        )
+        """Return the snapshot with the recorded duty-change times filled in.
+
+        Eén veld vervangen, de rest overnemen zoals hij is. Dat gebeurde ooit
+        door de momentopname met de hand opnieuw op te bouwen, en toen viel er
+        stilletjes een veld uit: `precondition_bypass` bleef leeg, waardoor
+        "toch doen" bij een openstaand raam nooit werkte in een draaiende Home
+        Assistant - terwijl elke engine-test hem wél doorgaf. Een veld dat er
+        later bij komt kan zo niet meer vergeten worden.
+
+        Replace one field and carry the rest across as it stands. This once
+        rebuilt the snapshot by hand, and a field quietly fell out of it:
+        `precondition_bypass` stayed empty, so "do it anyway" on an open window
+        never worked inside a running Home Assistant - while every engine test
+        did pass it along. A field added later can no longer be forgotten this
+        way.
+        """
+        return replace(world, circuit_family_since=dict(self._family_since))
 
     # -- naar buiten / outward ----------------------------------------------
 
@@ -1160,6 +1241,20 @@ def _event_data(config: DirectorConfig, plan: Plan, decision: ZoneDecision) -> d
         "temperature": command.temperature if command else None,
         "reason": decision.reason.value,
     }
+
+
+def _unreadable(state: str) -> bool:
+    """Return whether an entity state carries no reading at all.
+
+    Eén plek waar de koppelingslaag bepaalt wat "hier valt niets uit op te
+    maken" betekent, zodat het uitlezen van een apparaat en het opmerken van
+    een hand aan datzelfde apparaat het nooit oneens kunnen zijn.
+
+    One place where the binding layer settles what "nothing can be made of
+    this" means, so reading an appliance and noticing a hand at that same
+    appliance can never disagree.
+    """
+    return state in (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
 
 def _as_float(raw: Any) -> float | None:

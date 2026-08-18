@@ -194,12 +194,14 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
             self._waiting: dict = {}
             self._refused: set[str] = set()
             self.data = None
+            self._issued = None
             self.world = None
             self.shadow = False
             self.last_changes = ()
             self.last_applied = ()
 
         build_world = ClimateDirectorCoordinator.build_world
+        _overridden_zones = ClimateDirectorCoordinator._overridden_zones
         tracked_entities = ClimateDirectorCoordinator.tracked_entities
         unusable_entities = ClimateDirectorCoordinator.unusable_entities
         stuck_zones = ClimateDirectorCoordinator.stuck_zones
