@@ -1,0 +1,121 @@
+blueprint:
+  name: Climate Director - wat er besloten is / decision notifier
+  author: Sarnog
+  homeassistant:
+    min_version: "2024.10.0"
+  source_url: https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/decisions.yaml
+  description: >-
+    NL - Meldt na elke beslissing wat de director met een kamer doet, en waarom.
+    Niet noodzakelijk, wel het handigste gereedschap dat er is bij het
+    inrichten en tijdens een schaduwrun: je ziet zonder in de diagnose te duiken
+    wat er zou gebeuren.
+
+
+    Draait alles eenmaal naar wens, dan wil je hem waarschijnlijk beperken tot
+    de redenen die je echt wilt weten - of uitzetten.
+
+
+    Redenen zijn stabiele identifiers, dus je kunt erop filteren:
+    `regulating`, `satisfied`, `within_deadband`, `master_disabled`,
+    `manual_override`, `opening_open`, `nobody_home`, `everyone_asleep`,
+    `outside_schedule`, `zone_unoccupied`, `quiet_hours`,
+    `no_indoor_temperature`, `season_blocks_mode`, `outdoor_outside_window`,
+    `mode_not_configured`, `no_source_available`, `other_source_chosen`,
+    `manual_source`, `source_unreachable`, `circuit_conflict_lost`,
+    `circuit_switch_too_soon`, `circuit_switch_pending`, `circuit_at_capacity`,
+    `short_cycle_protection`, `exclusive_group_lost`.
+
+
+    EN - Reports what the director does with a room after every decision, and
+    why. Not essential, but the handiest tool there is while setting up and
+    during a shadow run: you see what would happen without diving into the
+    diagnostics.
+
+
+    Once everything runs the way you want it, you probably want to narrow it to
+    the reasons you actually care about - or switch it off.
+
+
+    Reasons are stable identifiers, so you can filter on them; the list is
+    above.
+  domain: automation
+  input:
+    notify_action:
+      name: Notificatie-actie / Notification action
+      description: >-
+        NL - Wat er aangeroepen wordt om te melden. Een `notify.*`-dienst, of je
+        eigen script - het krijgt `title` en `message` mee.
+
+        EN - What gets called to notify. A `notify.*` service, or a script of
+        your own - it is handed `title` and `message`.
+      default: notify.persistent_notification
+      selector:
+        action: {}
+    only_reasons:
+      name: Alleen deze redenen / Only these reasons
+      description: >-
+        NL - Laat leeg om alles te melden. Vul redenen in om alleen die te
+        krijgen, bijvoorbeeld `circuit_conflict_lost`.
+
+        EN - Leave empty to report everything. Fill in reasons to get only
+        those, for instance `circuit_conflict_lost`.
+      default: []
+      selector:
+        text:
+          multiple: true
+    only_zones:
+      name: Alleen deze zones / Only these zones
+      description: >-
+        NL - Laat leeg voor alle kamers. Vul zone-ID's in om je tot die te
+        beperken.
+
+        EN - Leave empty for every room. Fill in zone ids to limit it to those.
+      default: []
+      selector:
+        text:
+          multiple: true
+    title:
+      name: Titel / Title
+      default: Climate Director
+      selector:
+        text: {}
+    message:
+      name: Bericht / Message
+      description: >-
+        NL - Een sjabloon. Beschikbaar: `zone_name`, `zone_id`, `wanted`,
+        `granted`, `source_id`, `entity_id`, `hvac_mode`, `temperature` en
+        `reason`.
+
+        EN - A template. Available: `zone_name`, `zone_id`, `wanted`, `granted`,
+        `source_id`, `entity_id`, `hvac_mode`, `temperature` and `reason`.
+      default: >-
+        {{ trigger.event.data.zone_name }}: {{ trigger.event.data.granted }} via
+        {{ trigger.event.data.source_id or 'nothing' }} ({{
+        trigger.event.data.reason }})
+      selector:
+        text:
+          multiline: true
+
+mode: queued
+max: 25
+
+triggers:
+  - trigger: event
+    event_type: climate_director_decision
+
+variables:
+  only_reasons: !input only_reasons
+  only_zones: !input only_zones
+
+conditions:
+  - condition: template
+    value_template: >-
+      {{ (only_reasons | length == 0 or trigger.event.data.reason in
+      only_reasons) and (only_zones | length == 0 or trigger.event.data.zone_id
+      in only_zones) }}
+
+actions:
+  - action: !input notify_action
+    data:
+      title: !input title
+      message: !input message

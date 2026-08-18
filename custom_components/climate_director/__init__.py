@@ -16,8 +16,9 @@ from __future__ import annotations
 import logging
 
 import voluptuous as vol
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.start import async_at_started
 from homeassistant.loader import async_get_integration
 
 from . import problems, texts
@@ -27,6 +28,7 @@ from .const import (
     ATTR_MINUTES,
     ATTR_ZONE_IDS,
     DOMAIN,
+    EVENT_AUTOMATION_RELOADED,
     PLATFORMS,
     SERVICE_CANCEL_PRECONDITION,
     SERVICE_EVALUATE,
@@ -80,8 +82,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) ->
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await coordinator.async_start()
 
+    _async_watch_for_listeners(hass, entry)
+
     entry.async_on_unload(entry.add_update_listener(_async_reload))
     return True
+
+
+@callback
+def _async_watch_for_listeners(hass: HomeAssistant, entry: ClimateDirectorEntry) -> None:
+    """Keep an eye on whether anybody hears a refused pre-conditioning request.
+
+    Pas nadat Home Assistant klaar is met starten, want daarvoor zijn de
+    automatiseringen er nog niet en zou de melding over iets klagen dat een
+    seconde later gewoon goed staat. Daarna opnieuw bij elke herlaadbeurt van
+    de automatiseringen - dat is ook wat er gebeurt als je er in de interface
+    een aanmaakt.
+
+    Only after Home Assistant has finished starting, since before that the
+    automations are not there yet and the notice would complain about something
+    that is fine a second later. After that, again on every automation reload -
+    which is also what happens when you create one in the interface.
+    """
+
+    @callback
+    def _recheck(_event: Event | None = None) -> None:
+        problems.async_check_watchers(hass)
+
+    entry.async_on_unload(async_at_started(hass, _recheck))
+    entry.async_on_unload(hass.bus.async_listen(EVENT_AUTOMATION_RELOADED, _recheck))
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -> bool:
@@ -90,6 +118,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -
     if unloaded:
         await entry.runtime_data.async_shutdown()
         problems.async_clear(hass, entry.entry_id)
+        # De luistermelding is er één voor de hele integratie, dus hij gaat pas
+        # weg als de laatste installatie weg is.
+        #
+        # The listener notice is one for the whole integration, so it only goes
+        # when the last installation does.
+        if not hass.config_entries.async_loaded_entries(DOMAIN):
+            problems.async_clear_watchers(hass)
     return unloaded
 
 

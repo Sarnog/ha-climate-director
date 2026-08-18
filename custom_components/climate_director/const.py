@@ -42,6 +42,25 @@ EVENT_DECISION = f"{DOMAIN}_decision"
 #: an automation of your own hangs on.
 EVENT_PRECONDITION_REFUSED = f"{DOMAIN}_precondition_refused"
 
+#: De gebeurtenis die Home Assistant afvuurt zodra de automatiseringen
+#: opnieuw geladen zijn - en dus ook wanneer iemand er in de interface een
+#: aanmaakt. Daarop wordt opnieuw gekeken of er nu wel iemand naar een
+#: geweigerd vooruit-verzoek luistert.
+#:
+#: Bewust als letterlijke tekst in plaats van via een import uit
+#: `homeassistant.components.automation`: die import zou deze integratie
+#: laten leunen op een component die we alleen willen afluisteren.
+#:
+#: The event Home Assistant fires once the automations have been reloaded -
+#: and therefore also when somebody creates one in the interface. On it, we
+#: look again at whether anybody is now listening for a refused
+#: pre-conditioning request.
+#:
+#: Deliberately a literal string rather than an import from
+#: `homeassistant.components.automation`: that import would have this
+#: integration lean on a component we only want to eavesdrop on.
+EVENT_AUTOMATION_RELOADED = "automation_reloaded"
+
 # Actie om nu opnieuw te laten beslissen, zonder te wachten tot een gevolgde
 # entiteit uit zichzelf verandert. Handig bij het inrichten en bij het napluizen
 # van een afwijking.

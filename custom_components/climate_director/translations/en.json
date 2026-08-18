@@ -602,6 +602,10 @@
     "invalid_config": {
       "title": "Climate Director: {name} has a configuration problem",
       "description": "{count} problem(s) were found in this installation. The zones that are sound carry on being regulated; the rest stand down until this is fixed.\n\n{problems}\n\nOpen the integration and choose Configure to correct them. The full list is in the downloadable diagnostics."
+    },
+    "precondition_unwatched": {
+      "title": "Nobody hears a refused pre-conditioning request",
+      "description": "A pre-conditioning request that strands on an open window or door reports itself as the event `climate_director_precondition_refused`, and nowhere else. Nothing is listening for it right now, so such a request fails silently: you press the button and nothing happens, with no way of telling why.\n\nFix it in one of two ways:\n\n1. Import the blueprint **Climate Director - refused pre-conditioning** *and set it up*. Importing alone is not enough - a blueprint without an automation built from it listens to nothing.\n2. Or write an automation of your own on that event. It carries the zone, the open sensors and a ready-made message.\n\nThis notice disappears by itself once something is listening."
     }
   },
   "exceptions": {
@@ -658,6 +662,9 @@
     },
     "precondition_confirmed_unknown": {
       "message": "{zone} is going ahead, ignoring {openings}. The room temperature cannot be read, so nothing will happen until it can."
+    },
+    "precondition_confirm_label": {
+      "message": "Do it anyway"
     }
   },
   "services": {

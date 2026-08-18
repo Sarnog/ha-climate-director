@@ -602,6 +602,10 @@
     "invalid_config": {
       "title": "Climate Director: {name} hat ein Konfigurationsproblem",
       "description": "In dieser Anlage wurden {count} Problem(e) gefunden. Die Zonen, die stimmen, werden weiter geregelt; der Rest steht still, bis dies behoben ist.\n\n{problems}\n\nÖffne die Integration und wähle Konfigurieren, um sie zu korrigieren. Die vollständige Liste steht in der herunterladbaren Diagnose."
+    },
+    "precondition_unwatched": {
+      "title": "Niemand hört eine abgelehnte Vorheiz-Anforderung",
+      "description": "Eine Vorheiz-Anforderung, die an einem offenen Fenster oder einer offenen Tür scheitert, meldet sich als Ereignis `climate_director_precondition_refused` und sonst nirgends. Darauf hört derzeit nichts, also scheitert eine solche Anforderung stillschweigend: Sie drücken den Knopf und nichts geschieht, ohne erkennbaren Grund.\n\nAuf eine von zwei Arten zu beheben:\n\n1. Importieren Sie den Blueprint **Climate Director - abgelehntes Vorheizen** *und richten Sie ihn ein*. Importieren allein genügt nicht - ein Blueprint ohne darauf gebaute Automatisierung hört auf nichts.\n2. Oder schreiben Sie eine eigene Automatisierung auf dieses Ereignis. Es trägt die Zone, die offenen Sensoren und eine fertige Nachricht mit sich.\n\nDieser Hinweis verschwindet von selbst, sobald etwas zuhört."
     }
   },
   "exceptions": {
@@ -658,6 +662,9 @@
     },
     "precondition_confirmed_unknown": {
       "message": "{zone} läuft trotzdem, {openings} wird ignoriert. Die Raumtemperatur ist nicht lesbar, also geschieht nichts, solange das so bleibt."
+    },
+    "precondition_confirm_label": {
+      "message": "Trotzdem starten"
     }
   },
   "services": {

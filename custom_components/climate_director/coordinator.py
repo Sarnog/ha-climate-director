@@ -1079,6 +1079,9 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 self.hass, "precondition_confirmed_title", "Pre-conditioning is running", **filling
             ),
             "confirmed_message": texts.translated(self.hass, code, fallback, **filling),
+            "confirm_label": texts.translated(
+                self.hass, "precondition_confirm_label", "Do it anyway", **filling
+            ),
         }
 
     def _friendly(self, entity_id: str) -> str:

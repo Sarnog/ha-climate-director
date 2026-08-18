@@ -602,6 +602,10 @@
     "invalid_config": {
       "title": "Climate Director : {name} a un problème de configuration",
       "description": "{count} problème(s) ont été trouvés dans cette installation. Les zones correctes continuent d'être régulées ; le reste s'arrête jusqu'à correction.\n\n{problems}\n\nOuvrez l'intégration et choisissez Configurer pour les corriger. La liste complète se trouve dans le diagnostic téléchargeable."
+    },
+    "precondition_unwatched": {
+      "title": "Personne n'entend une demande de préchauffage refusée",
+      "description": "Une demande de préchauffage qui échoue sur une fenêtre ou une porte ouverte se signale par l'événement `climate_director_precondition_refused`, et nulle part ailleurs. Rien ne l'écoute actuellement, donc une telle demande échoue en silence : vous appuyez sur le bouton et rien ne se passe, sans savoir pourquoi.\n\nÀ corriger de deux façons :\n\n1. Importez le blueprint **Climate Director - préchauffage refusé** *et configurez-le*. L'importer ne suffit pas - un blueprint sans automatisation construite dessus n'écoute rien.\n2. Ou écrivez votre propre automatisation sur cet événement. Il transporte la zone, les capteurs ouverts et un message tout prêt.\n\nCet avis disparaît de lui-même dès que quelque chose écoute."
     }
   },
   "exceptions": {
@@ -658,6 +662,9 @@
     },
     "precondition_confirmed_unknown": {
       "message": "{zone} démarre quand même, {openings} est ignoré. La température de la pièce est illisible, donc rien ne se passera tant que cela dure."
+    },
+    "precondition_confirm_label": {
+      "message": "Le faire quand même"
     }
   },
   "services": {

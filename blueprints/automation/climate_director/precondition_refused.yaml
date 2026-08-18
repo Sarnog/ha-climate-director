@@ -1,0 +1,124 @@
+blueprint:
+  name: Climate Director - geweigerd vooruit-verzoek / refused pre-conditioning
+  author: Sarnog
+  homeassistant:
+    min_version: "2024.10.0"
+  source_url: https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/precondition_refused.yaml
+  description: >-
+    NL - Je drukte op een vooruit-knop en er gebeurde niets, want er staat een
+    raam of een deur open. Zonder melding weet je niet dát het geweigerd is,
+    laat staan waarom. Deze automatisering meldt het, met een knop erbij die
+    hetzelfde verzoek nog eens doet - nu met het openstaande raam genegeerd.
+
+
+    De teksten komen uit de integratie zelf en staan dus in de taal van je
+    interface, met Engels als terugval. De duur van het doorgezette verzoek is
+    het maximum dat in de installatie staat ingesteld (standaard twee uur).
+
+
+    Vereist een telefoon met de Home Assistant-app: alleen die kan een knop
+    onder een melding tonen.
+
+
+    EN - You pressed a pre-conditioning button and nothing happened, because a
+    window or door stands open. Without a notification you do not know that it
+    was refused, let alone why. This automation reports it, with a button that
+    files the same request again - now ignoring the open window.
+
+
+    The texts come from the integration itself, so they are in the language of
+    your interface, with English as the fallback. The duration of the pushed
+    request is the maximum configured in the installation (two hours by
+    default).
+
+
+    Needs a phone with the Home Assistant app: only that can show a button
+    under a notification.
+  domain: automation
+  input:
+    notify_device:
+      name: Telefoon / Phone
+      description: >-
+        NL - Het apparaat waar de melding met de knop naartoe gaat.
+
+        EN - The device the notification with the button goes to.
+      selector:
+        device:
+          integration: mobile_app
+    confirm_within:
+      name: Hoe lang de knop geldig blijft / How long the button stays valid
+      description: >-
+        NL - Druk je later dan dit, dan gebeurt er niets meer. Een verzoek van
+        een uur geleden hoort niet alsnog te beginnen.
+
+        EN - Press it later than this and nothing happens any more. A request
+        from an hour ago should not start after the fact.
+      default:
+        minutes: 30
+      selector:
+        duration: {}
+
+# Parallel en niet in de rij: elke zone kan zijn eigen melding open hebben
+# staan, en een tweede weigering hoort niet een half uur te wachten tot de
+# eerste knop ingedrukt of verlopen is.
+#
+# Parallel rather than queued: every zone may have its own notification
+# standing open, and a second refusal should not wait half an hour for the
+# first button to be pressed or to expire.
+mode: parallel
+max: 10
+
+triggers:
+  - trigger: event
+    event_type: climate_director_precondition_refused
+
+variables:
+  notify_device: !input notify_device
+  zone_id: "{{ trigger.event.data.zone_id }}"
+  confirm: "CLIMATE_DIRECTOR_CONFIRM_{{ trigger.event.data.zone_id | upper }}"
+  tag: "climate_director_precondition_{{ trigger.event.data.zone_id }}"
+  phone: >-
+    notify.mobile_app_{{ device_attr(notify_device, 'name') | slugify }}
+
+actions:
+  - action: "{{ phone }}"
+    data:
+      title: "{{ trigger.event.data.title }}"
+      message: "{{ trigger.event.data.message }}"
+      data:
+        tag: "{{ tag }}"
+        actions:
+          - action: "{{ confirm }}"
+            title: "{{ trigger.event.data.confirm_label }}"
+
+  # Wachten op de knop. Gebeurt er niets, dan stopt het hier: het verzoek
+  # verloopt vanzelf en een melding die je negeert hoort geen gevolgen te
+  # hebben.
+  #
+  # Wait for the button. If nothing comes, it stops here: the request expires by
+  # itself, and a notification you ignore should have no consequences.
+  - wait_for_trigger:
+      - trigger: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: "{{ confirm }}"
+    timeout: !input confirm_within
+    continue_on_timeout: false
+
+  # Geen `minutes`: dan geldt het ingestelde maximum van de installatie, en dat
+  # is precies het getal dat in de melding stond.
+  #
+  # No `minutes`: that grants the installation's configured maximum, which is
+  # exactly the number the notification named.
+  - action: climate_director.precondition
+    data:
+      entry_id: "{{ trigger.event.data.entry_id }}"
+      zone_ids: "{{ [zone_id] }}"
+      ignore_openings: true
+
+  - action: "{{ phone }}"
+    data:
+      title: "{{ trigger.event.data.confirmed_title }}"
+      message: "{{ trigger.event.data.confirmed_message }}"
+      data:
+        tag: "{{ tag }}"

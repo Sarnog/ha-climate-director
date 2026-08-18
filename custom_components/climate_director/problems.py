@@ -17,11 +17,11 @@ typo in the configuration.
 
 from __future__ import annotations
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
 from . import texts
-from .const import DOMAIN
+from .const import DOMAIN, EVENT_PRECONDITION_REFUSED
 from .engine import DirectorConfig, validate
 
 #: Hoeveel problemen er hoogstens in de melding zelf komen te staan. De rest
@@ -107,3 +107,67 @@ def summarise(hass: HomeAssistant, problems: tuple[str, ...]) -> str:
 def async_clear(hass: HomeAssistant, entry_id: str) -> None:
     """Drop the repair notice for one installation."""
     ir.async_delete_issue(hass, DOMAIN, _issue_id(entry_id))
+
+
+#: De melding dat er niemand naar een geweigerd vooruit-verzoek luistert. Eén
+#: melding voor de hele integratie, niet per installatie: de gebeurtenis is
+#: domeinbreed, dus twee identieke meldingen zouden alleen maar herhalen.
+#:
+#: The notice that nobody is listening for a refused pre-conditioning request.
+#: One notice for the whole integration rather than one per installation: the
+#: event is domain-wide, so two identical notices would merely repeat.
+UNWATCHED_ISSUE = "precondition_unwatched"
+
+#: Waar de melding heen wijst: het hoofdstuk dat de blueprints uitlegt.
+#: Where the notice points: the chapter explaining the blueprints.
+BLUEPRINTS_URL = (
+    "https://github.com/Sarnog/ha-climate-director#must-have-automatiseringen-en-notificaties"
+)
+
+
+@callback
+def async_check_watchers(hass: HomeAssistant) -> bool:
+    """Raise or clear the notice about a refusal nobody hears, and return who hears.
+
+    Een vooruit-verzoek dat op een openstaand raam strandt meldt zichzelf op de
+    bus en verder nergens. Luistert daar niemand naar, dan is het van buiten
+    niet te onderscheiden van een knop die niets doet - en dan is de knop stuk,
+    ook al werkt hij precies zoals bedoeld.
+
+    Daarom staat deze melding er meteen, en niet pas nadat er een verzoek
+    geweigerd is: een halve functie is geen functie. Wie hem wegwerkt moet de
+    blueprint niet alleen importeren maar ook instellen, want een geïmporteerde
+    blueprint zonder automatisering luistert nog steeds nergens naar.
+
+    A pre-conditioning request stranding on an open window reports itself on the
+    bus and nowhere else. If nobody listens, that is indistinguishable from a
+    button that does nothing - and then the button is broken, however exactly it
+    works as intended.
+
+    Hence this notice stands from the start rather than only after a request has
+    been refused: half a feature is no feature. Clearing it means not merely
+    importing the blueprint but setting it up, since an imported blueprint
+    without an automation still listens to nothing.
+    """
+    listeners = hass.bus.async_listeners().get(EVENT_PRECONDITION_REFUSED, 0)
+
+    if listeners:
+        ir.async_delete_issue(hass, DOMAIN, UNWATCHED_ISSUE)
+        return True
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        UNWATCHED_ISSUE,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=UNWATCHED_ISSUE,
+        learn_more_url=BLUEPRINTS_URL,
+    )
+    return False
+
+
+@callback
+def async_clear_watchers(hass: HomeAssistant) -> None:
+    """Drop the notice, for when the last installation goes away."""
+    ir.async_delete_issue(hass, DOMAIN, UNWATCHED_ISSUE)

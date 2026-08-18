@@ -1,0 +1,142 @@
+blueprint:
+  name: Climate Director - bewaking / monitoring
+  author: Sarnog
+  homeassistant:
+    min_version: "2024.10.0"
+  source_url: https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/monitoring.yaml
+  description: >-
+    NL - Meldt de twee dingen die stil misgaan: een zone die blijft wachten, en
+    een zone die op een reserve-apparaat draait omdat de eerste keus niet te
+    bereiken is. Allebei zijn ze van buiten onzichtbaar - je huis wordt gewoon
+    warm - en dus kun je er maanden overheen kijken. Meldt ook het herstel,
+    want anders weet je nooit of het nog speelt en wordt het iets wat je
+    wegklikt.
+
+
+    Kies alle probleemmelders van je installatie: `binary_sensor.*_vastgelopen`
+    en elke `binary_sensor.*_<zone>_op_reserve`.
+
+
+    EN - Reports the two things that go wrong quietly: a zone that keeps
+    waiting, and a zone running on a stand-in appliance because its first choice
+    cannot be reached. Both are invisible from the outside - your house simply
+    gets warm - so you can overlook them for months. It reports the recovery
+    too, since otherwise you never know whether it still applies and it becomes
+    something you swipe away.
+
+
+    Pick every problem sensor of your installation: `binary_sensor.*_stuck` and
+    each `binary_sensor.*_<zone>_on_stand_in`.
+  domain: automation
+  input:
+    problem_sensors:
+      name: Probleemmelders / Problem sensors
+      description: >-
+        NL - De melders die bewaakt worden. Kies ze allemaal; ze horen bij
+        hetzelfde apparaat in Home Assistant.
+
+        EN - The sensors to watch. Pick all of them; they sit under the same
+        device in Home Assistant.
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: binary_sensor
+              integration: climate_director
+              device_class: problem
+    notify_action:
+      name: Notificatie-actie / Notification action
+      description: >-
+        NL - Wat er aangeroepen wordt om te melden. Een `notify.*`-dienst, of je
+        eigen script - het krijgt `title` en `message` mee.
+
+        EN - What gets called to notify. A `notify.*` service, or a script of
+        your own - it is handed `title` and `message`.
+      default: notify.persistent_notification
+      selector:
+        action: {}
+    settle:
+      name: Wachttijd voor melden / Settling time
+      description: >-
+        NL - Hoe lang het mis moet zijn voordat er gemeld wordt. Een apparaat
+        dat bij een herstart één keer knippert is geen storing. Dit is het
+        belangrijkste getal van deze automatisering.
+
+        EN - How long something must be wrong before it is reported. An
+        appliance blinking once during a restart is not a fault. This is the
+        most important number in this automation.
+      default:
+        minutes: 5
+      selector:
+        duration: {}
+    problem_title:
+      name: Titel bij een probleem / Title on a problem
+      default: Climate Director
+      selector:
+        text: {}
+    problem_message:
+      name: Bericht bij een probleem / Message on a problem
+      description: >-
+        NL - Een sjabloon. De vastloopmelder draagt `zones` en `reasons`; een
+        reservemelder draagt `zone`, `serving` en `unreachable`.
+
+        EN - A template. The stuck sensor carries `zones` and `reasons`; a
+        stand-in sensor carries `zone`, `serving` and `unreachable`.
+      default: >-
+        {% set entity = trigger.entity_id %} {% if
+        state_attr(entity, 'unreachable') is not none %} {{ state_attr(entity,
+        'zone') }} is running on {{ state_attr(entity, 'serving') }}, because {{
+        state_attr(entity, 'unreachable') | join(', ') }} cannot be reached. {%
+        else %} {{ state_attr(entity, 'zones') | join(', ') or 'The installation'
+        }} has been waiting too long: {{ state_attr(entity, 'reasons') }}. {{
+        state_attr(entity, 'unusable_entities') or '' }} {% endif %}
+      selector:
+        text:
+          multiline: true
+    recovered_title:
+      name: Titel bij herstel / Title on recovery
+      default: Climate Director
+      selector:
+        text: {}
+    recovered_message:
+      name: Bericht bij herstel / Message on recovery
+      default: >-
+        {{ trigger.to_state.name }} is in order again.
+      selector:
+        text:
+          multiline: true
+
+mode: queued
+max: 10
+
+triggers:
+  - trigger: state
+    id: problem
+    entity_id: !input problem_sensors
+    from: "off"
+    to: "on"
+    for: !input settle
+  - trigger: state
+    id: recovered
+    entity_id: !input problem_sensors
+    from: "on"
+    to: "off"
+
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: problem
+        sequence:
+          - action: !input notify_action
+            data:
+              title: !input problem_title
+              message: !input problem_message
+      - conditions:
+          - condition: trigger
+            id: recovered
+        sequence:
+          - action: !input notify_action
+            data:
+              title: !input recovered_title
+              message: !input recovered_message
