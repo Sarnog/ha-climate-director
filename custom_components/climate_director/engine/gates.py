@@ -11,6 +11,7 @@ allowed", not "is this needed" - the latter belongs to `hysteresis.py`.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 
 from .families import ModeFamily
@@ -44,11 +45,41 @@ def evaluate(config: DirectorConfig, world: WorldState, zone: Zone) -> GateVerdi
     would name first: a disabled master switch outranks an open window, which
     outranks nobody being home.
     """
+    reason = next(_closed(config, world, zone), None)
+    return GateVerdict.allow() if reason is None else GateVerdict.block(reason)
+
+
+def closed(config: DirectorConfig, world: WorldState, zone: Zone) -> tuple[Reason, ...]:
+    """Return every gate standing shut for this zone, broadest first.
+
+    Het oordeel noemt er één, en bij het regelen is dat genoeg: één dichte
+    poort houdt de zone tegen, welke het ook is. Bij het inrichten is het juist
+    lastig, want je zet er één open, kijkt weer, en vindt de volgende. Deze
+    lijst geeft ze in één keer.
+
+    Poorten die niet meer van toepassing zijn staan er niet bij. Loopt er een
+    vooruit-verzoek, dan zeggen de poorten over mensen niets meer, en ze toch
+    noemen zou een hindernis suggereren die er niet is.
+
+    The verdict names one, and while regulating that is enough: one shut gate
+    holds the zone back, whichever it is. While setting up it is awkward,
+    because you open one, look again, and find the next. This list gives them
+    all at once.
+
+    Gates that no longer apply are left out. With a pre-conditioning request
+    running the gates about people no longer say anything, and naming them
+    would suggest an obstacle that is not there.
+    """
+    return tuple(_closed(config, world, zone))
+
+
+def _closed(config: DirectorConfig, world: WorldState, zone: Zone) -> Iterator[Reason]:
+    """Yield the shut gates in order, stopping where the rest stops applying."""
     if not world.master_enabled:
-        return GateVerdict.block(Reason.MASTER_DISABLED)
+        yield Reason.MASTER_DISABLED
 
     if world.overridden(zone.zone_id):
-        return GateVerdict.block(Reason.MANUAL_OVERRIDE)
+        yield Reason.MANUAL_OVERRIDE
 
     # Een openstaand raam weigert alles, behalve een vooruit-verzoek waarbij
     # iemand uitdrukkelijk heeft gezegd: toch doen. Dat blijft een bewuste daad
@@ -62,29 +93,8 @@ def evaluate(config: DirectorConfig, world: WorldState, zone: Zone) -> GateVerdi
     if _any_opening_open(config, world, zone) and not world.precondition_ignores_openings(
         zone.zone_id
     ):
-        return GateVerdict.block(Reason.OPENING_OPEN)
+        yield Reason.OPENING_OPEN
 
-    # Een configuratie zonder bewoners beschrijft een pand waar niemand gevolgd
-    # wordt - een kantoor, een vakantiehuis, een serverruimte. De poorten die
-    # over bewoners gaan slaan we daar over, want die kunnen nooit slagen. De
-    # kamerpoort hieronder blijft wél gelden: die gaat over de ruimte, niet over
-    # wie er in het huis is.
-    #
-    # A configuration without residents describes a building nobody is tracked
-    # in - an office, a holiday home, a server room. The gates about residents
-    # are skipped there, since they could never pass. The room gate below still
-    # applies: that one is about the room, not about who is in the house.
-    gates = config.gates
-
-    # Gastenmodus neemt de poorten over die over afwezigheid gaan. Er logeert
-    # iemand die niet gevolgd wordt, dus een leeg lijkend huis zegt niets en
-    # hoort niet uit te gaan. Slaap blijft wél tellen: zodra een bewoner thuis
-    # is en naar bed gaat, is de dag voorbij en is het huis weer van hen.
-    #
-    # Guest mode takes over the gates that are about absence. Somebody untracked
-    # is staying, so a house that looks empty says nothing and should not shut
-    # down. Sleep still counts: once a resident is home and turns in, the day is
-    # over and the house is theirs again.
     # Vooruit verwarmen: iemand heeft dit met de hand gevraagd en er loopt een
     # teller. Dit is het enige dat een leeg huis mag laten draaien, dus het staat
     # ná het raam en de override en vóór alles wat over mensen gaat.
@@ -93,7 +103,7 @@ def evaluate(config: DirectorConfig, world: WorldState, zone: Zone) -> GateVerdi
     # This is the only thing allowed to run an empty house, so it sits after the
     # window and the override, and before everything about people.
     if _preconditioning(config, world, zone):
-        return GateVerdict.allow()
+        return
 
     # De stiltevensters remmen het beginnen, niet het doorgaan. Een zone die al
     # draait houdt zijn gewone regeling - inclusief uitgaan zodra iedereen naar
@@ -106,7 +116,7 @@ def evaluate(config: DirectorConfig, world: WorldState, zone: Zone) -> GateVerdi
     # been going all the while. That keeps the brake a brake rather than a second
     # schedule.
     if _quiet_hours(config, world) and not _zone_running(world, zone):
-        return GateVerdict.block(Reason.QUIET_HOURS)
+        yield Reason.QUIET_HOURS
 
     # Een zone die op de kamer draait laat het huishouden erbuiten. Wie er zit,
     # zit er - dat is een beter antwoord dan welk rooster ook kan geven.
@@ -115,41 +125,21 @@ def evaluate(config: DirectorConfig, world: WorldState, zone: Zone) -> GateVerdi
     # sitting there is sitting there - a better answer than any schedule gives.
     if zone.gate is ZoneGate.PRESENCE:
         if not _room_occupied(world, zone):
-            return GateVerdict.block(Reason.ZONE_UNOCCUPIED)
-        return GateVerdict.allow()
+            yield Reason.ZONE_UNOCCUPIED
+        return
 
+    # Een configuratie zonder bewoners beschrijft een pand waar niemand gevolgd
+    # wordt - een kantoor, een vakantiehuis, een serverruimte. De poorten die
+    # over bewoners gaan slaan we daar over, want die kunnen nooit slagen. De
+    # kamerpoort hieronder blijft wél gelden: die gaat over de ruimte, niet over
+    # wie er in het huis is.
+    #
+    # A configuration without residents describes a building nobody is tracked
+    # in - an office, a holiday home, a server room. The gates about residents
+    # are skipped there, since they could never pass. The room gate below still
+    # applies: that one is about the room, not about who is in the house.
     if config.residents:
-        if _guests_carry_the_house(config, world):
-            # Afwezigheid en rooster zeggen niets meer, slaap wel: zodra iemand
-            # thuis is en naar bed gaat, is het huis weer van de bewoners.
-            #
-            # Absence and schedule no longer say anything, sleep still does: the
-            # moment somebody is home and turns in, the house is the residents'
-            # again.
-            at_home = [
-                resident
-                for resident in config.residents
-                if world.resident(resident.resident_id).home
-            ]
-            if (
-                at_home
-                and gates.require_awake
-                and not any(
-                    world.resident(resident.resident_id).present_and_awake for resident in at_home
-                )
-            ):
-                return GateVerdict.block(Reason.EVERYONE_ASLEEP)
-        else:
-            if not any(world.resident(resident.resident_id).home for resident in config.residents):
-                return GateVerdict.block(Reason.NOBODY_HOME)
-
-            if gates.require_awake and not any(
-                _up_and_about(resident, world) for resident in config.residents
-            ):
-                return GateVerdict.block(Reason.EVERYONE_ASLEEP)
-
-            if gates.require_schedule and not _schedule_open(config, world):
-                return GateVerdict.block(Reason.OUTSIDE_SCHEDULE)
+        yield from _household(config, world)
 
     # Het smalst van allemaal, en daarom als laatste: iemand thuis zegt niets
     # over of er iemand op zolder zit.
@@ -157,9 +147,62 @@ def evaluate(config: DirectorConfig, world: WorldState, zone: Zone) -> GateVerdi
     # The narrowest of the lot, and therefore last: somebody being home says
     # nothing about whether anybody is in the attic.
     if not _room_occupied(world, zone):
-        return GateVerdict.block(Reason.ZONE_UNOCCUPIED)
+        yield Reason.ZONE_UNOCCUPIED
 
-    return GateVerdict.allow()
+
+def _household(config: DirectorConfig, world: WorldState) -> Iterator[Reason]:
+    """Yield the gates about the people in the house, the shut ones only.
+
+    Gastenmodus neemt de poorten over die over afwezigheid gaan. Er logeert
+    iemand die niet gevolgd wordt, dus een leeg lijkend huis zegt niets en
+    hoort niet uit te gaan. Slaap blijft wél tellen: zodra een bewoner thuis
+    is en naar bed gaat, is de dag voorbij en is het huis weer van hen.
+
+    Guest mode takes over the gates that are about absence. Somebody untracked
+    is staying, so a house that looks empty says nothing and should not shut
+    down. Sleep still counts: once a resident is home and turns in, the day is
+    over and the house is theirs again.
+    """
+    gates = config.gates
+
+    if _guests_carry_the_house(config, world):
+        # Afwezigheid en rooster zeggen niets meer, slaap wel: zodra iemand
+        # thuis is en naar bed gaat, is het huis weer van de bewoners.
+        #
+        # Absence and schedule no longer say anything, sleep still does: the
+        # moment somebody is home and turns in, the house is the residents'
+        # again.
+        at_home = [
+            resident for resident in config.residents if world.resident(resident.resident_id).home
+        ]
+        if (
+            at_home
+            and gates.require_awake
+            and not any(
+                world.resident(resident.resident_id).present_and_awake for resident in at_home
+            )
+        ):
+            yield Reason.EVERYONE_ASLEEP
+        return
+
+    # Een leeg huis maakt de twee poorten hieronder betekenisloos: niemand kan
+    # wakker zijn of een rooster openen als er niemand is. Ze er toch bij
+    # noemen zou de lijst laten zwellen met gevolgen in plaats van oorzaken.
+    #
+    # An empty house makes the two gates below meaningless: nobody can be awake
+    # or open a schedule when nobody is there. Naming them anyway would swell
+    # the list with consequences rather than causes.
+    if not any(world.resident(resident.resident_id).home for resident in config.residents):
+        yield Reason.NOBODY_HOME
+        return
+
+    if gates.require_awake and not any(
+        _up_and_about(resident, world) for resident in config.residents
+    ):
+        yield Reason.EVERYONE_ASLEEP
+
+    if gates.require_schedule and not _schedule_open(config, world):
+        yield Reason.OUTSIDE_SCHEDULE
 
 
 def _preconditioning(config: DirectorConfig, world: WorldState, zone: Zone) -> bool:

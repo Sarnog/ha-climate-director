@@ -113,6 +113,7 @@ def _plan(plan: Plan | None) -> dict[str, Any] | None:
                 "granted": zone.granted.value,
                 "source_id": zone.source_id,
                 "reason": zone.reason.value,
+                "closed_gates": [reason.value for reason in zone.closed_gates],
             }
             for zone in plan.zones
         ],

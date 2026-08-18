@@ -58,12 +58,26 @@ class ZoneBlockedSensor(ClimateDirectorEntity, BinarySensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the cause, as a stable identifier rather than free text."""
+        """Return the cause, plus every gate shut on this zone.
+
+        `reason` is de eerste hindernis; `closed_gates` zijn ze allemaal. Bij
+        het inrichten scheelt dat een ronde per poort: je zet het raam dicht,
+        kijkt weer, en vindt dan pas dat er ook niemand thuis is.
+
+        `reason` is the first obstacle; `closed_gates` are all of them. While
+        setting up that saves a round per gate: you close the window, look
+        again, and only then find that nobody is home either.
+        """
         plan = self.coordinator.data
         if plan is None:
             return {}
         decision = plan.decision_for(self._zone_id)
-        return {"reason": decision.reason.value} if decision else {}
+        if decision is None:
+            return {}
+        return {
+            "reason": decision.reason.value,
+            "closed_gates": [reason.value for reason in decision.closed_gates],
+        }
 
 
 class ZoneFallbackSensor(ClimateDirectorEntity, BinarySensorEntity):

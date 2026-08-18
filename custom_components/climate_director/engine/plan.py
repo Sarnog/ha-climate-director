@@ -92,6 +92,18 @@ class ZoneDecision:
     source_id: str | None = None
     reason: Reason = Reason.REGULATING
 
+    closed_gates: tuple[Reason, ...] = ()
+    """Every gate standing shut for this zone, broadest first.
+
+    `reason` noemt er één, want één dichte poort houdt de zone al tegen. Bij
+    het inrichten wil je ze alle vier tegelijk zien, in plaats van ze er stuk
+    voor stuk uit te peuteren.
+
+    `reason` names one, since one shut gate is enough to hold the zone back.
+    While setting up you want to see all four at once rather than prising them
+    out one at a time.
+    """
+
     passed_over: tuple[str, ...] = ()
     """Preferred sources skipped because they could not be reached.
 
