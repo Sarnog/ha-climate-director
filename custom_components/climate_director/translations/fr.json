@@ -432,6 +432,7 @@
     "error": {
       "duplicate_priority": "Une autre pièce sur la même unité extérieure a déjà cette priorité. Deux pièces partageant un nombre font dépendre le résultat de leur nom ; choisissez-en un libre.",
       "required": "Ce champ est nécessaire pour enregistrer. Remplissez-le, ou choisissez « Abandonner et revenir » en bas pour partir sans enregistrer.",
+      "target_outside_band": "La température cible se trouve du mauvais côté du point de démarrage. Le chauffage vise au-dessus du point où il commence, le refroidissement en dessous ; à l'inverse, l'appareil reçoit une température pour laquelle il n'a rien à faire, ce qui donne l'impression qu'il refuse.",
       "too_few": "Choisissez au moins deux appareils ; un groupe d'un seul n'exclut rien."
     }
   },

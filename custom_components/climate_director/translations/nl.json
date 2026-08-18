@@ -432,6 +432,7 @@
     "error": {
       "duplicate_priority": "Een andere kamer op dezelfde buitenunit heeft deze prioriteit al. Twee kamers met hetzelfde nummer laten de uitkomst van hun naam afhangen, dus kies een vrij nummer.",
       "required": "Dit veld is nodig om te bewaren. Vul het in, of kies onderaan “Verwerpen en teruggaan” om weg te gaan zonder op te slaan.",
+      "target_outside_band": "De streeftemperatuur ligt aan de verkeerde kant van het aanpunt. Verwarmen streeft boven het punt waarop het begint, koelen eronder; andersom krijgt het apparaat een temperatuur waar het niets voor hoeft te doen, wat eruitziet alsof het weigert.",
       "too_few": "Kies minstens twee apparaten; een groep van één sluit niets uit."
     }
   },

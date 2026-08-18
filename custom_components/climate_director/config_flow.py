@@ -679,8 +679,20 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 return await self.async_step_init()
 
             zone = _zone_from_form(user_input, current)
+            errors |= _band_errors(zone)
             if self._priority_clash(zone["zone_id"], zone["priority"]):
                 errors["priority"] = "duplicate_priority"
+            if errors:
+                # Het formulier komt terug met wat er ingevuld stónd, niet met
+                # wat er stond voordat je begon. Anders wijst de melding een
+                # veld aan dat inmiddels weer zijn oude waarde toont, en zoek
+                # je naar een fout die er niet meer lijkt te zijn.
+                #
+                # The form comes back with what was filled in, not with what
+                # stood there before you started. Otherwise the complaint points
+                # at a field that has reverted to its old value, and you go
+                # looking for a mistake that no longer appears to be there.
+                current = zone
             if not errors:
                 if self._zone_index is None:
                     zones.append(zone)
@@ -1573,6 +1585,42 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         if self._zone_index is None or not 0 <= self._zone_index < len(zones):
             return None
         return zones[self._zone_index]
+
+
+def _band_errors(zone: dict[str, Any]) -> dict[str, str]:
+    """Return an error per mode whose target sits on the wrong side of its switch-on point.
+
+    Het aanpunt is waar de zone besluit te beginnen, de streeftemperatuur is wat
+    het apparaat te horen krijgt. Ligt het streven aan de verkeerde kant, dan
+    start de zone keurig en zet hij het apparaat vervolgens op een temperatuur
+    waar het niets voor hoeft te doen. Van buiten lijkt dat op een apparaat dat
+    weigert, en daar ga je een dag mee zoeken.
+
+    `validate()` waarschuwt hier ook over, maar pas achteraf, in een
+    reparatiemelding. Achteraf is te laat als het scherm waarop je het intikte
+    het meteen had kunnen zeggen.
+
+    The switch-on point is where the zone decides to begin, the target is what
+    the appliance is told. If the target sits on the wrong side, the zone starts
+    dutifully and then sets the appliance to a temperature it need do nothing
+    for. From the outside that looks like an appliance refusing, and you can
+    spend a day chasing it.
+
+    `validate()` warns about this too, but only afterwards, in a repair notice.
+    Afterwards is too late when the screen you typed it on could have said so at
+    once.
+    """
+    errors: dict[str, str] = {}
+
+    heat = zone.get("heat") or {}
+    if heat and heat["target"] < heat["start_at"]:
+        errors["heat_target"] = "target_outside_band"
+
+    cool = zone.get("cool") or {}
+    if cool and cool["target"] > cool["start_at"]:
+        errors["cool_target"] = "target_outside_band"
+
+    return errors
 
 
 def _zone_from_form(user_input: dict[str, Any], current: dict[str, Any]) -> dict[str, Any]:

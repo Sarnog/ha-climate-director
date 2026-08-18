@@ -432,6 +432,7 @@
     "error": {
       "duplicate_priority": "Ein anderer Raum an derselben Außeneinheit hat diese Priorität bereits. Zwei Räume mit derselben Zahl lassen das Ergebnis von ihrem Namen abhängen, wähle also eine freie.",
       "required": "Dieses Feld wird zum Speichern gebraucht. Fülle es aus, oder wähle unten „Verwerfen und zurück“, um ohne Speichern zu gehen.",
+      "target_outside_band": "Die Zieltemperatur liegt auf der falschen Seite des Einschaltpunkts. Heizen zielt über den Punkt, an dem es beginnt, Kühlen darunter; umgekehrt bekommt das Gerät eine Temperatur, für die es nichts tun muss, was aussieht, als würde es sich weigern.",
       "too_few": "Wähle mindestens zwei Geräte; eine Gruppe aus einem schließt nichts aus."
     }
   },

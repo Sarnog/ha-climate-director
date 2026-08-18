@@ -22,6 +22,7 @@ from custom_components.climate_director.applier import _is_stop
 from custom_components.climate_director.config_flow import (
     ClimateDirectorOptionsFlow,
     _all_source_ids,
+    _band_errors,
     _deep_copy,
     _next_priority,
     _unique_id,
@@ -509,3 +510,81 @@ class TestStopDetection:
     @pytest.mark.parametrize("mode", [MODE_HEAT, MODE_COOL])
     def test_active_modes_do_not(self, mode: str) -> None:
         assert not _is_stop(Change(UnitCommand("climate.x", mode, 21.0), True, True))
+
+
+class TestTheBandIsRefusedAtTheScreen:
+    """Een streeftemperatuur aan de verkeerde kant van het aanpunt komt er niet in.
+
+    De zone start dan keurig en zet het apparaat vervolgens op een temperatuur
+    waar het niets voor hoeft te doen. Van buiten lijkt dat op een apparaat dat
+    weigert - een fout waar je een dag mee zoekt, en die het scherm waarop je
+    hem intikt meteen kan zien.
+
+    A target on the wrong side of the switch-on point does not get in.
+
+    The zone then starts dutifully and sets the appliance to a temperature it
+    need do nothing for. From the outside that looks like an appliance refusing
+    - a fault you can spend a day chasing, and one the screen you type it on can
+    see at once.
+    """
+
+    def _zone(self, heat: dict | None = None, cool: dict | None = None) -> dict:
+        return {"zone_id": "zolder", "name": "Zolder", "heat": heat, "cool": cool}
+
+    def test_a_sound_zone_passes(self) -> None:
+        zone = self._zone(
+            heat={"target": 21.0, "start_at": 20.0},
+            cool={"target": 23.0, "start_at": 24.0},
+        )
+        assert _band_errors(zone) == {}
+
+    def test_heating_that_aims_below_where_it_starts_is_refused(self) -> None:
+        zone = self._zone(heat={"target": 19.0, "start_at": 20.0})
+        assert _band_errors(zone) == {"heat_target": "target_outside_band"}
+
+    def test_cooling_that_aims_above_where_it_starts_is_refused(self) -> None:
+        zone = self._zone(cool={"target": 25.0, "start_at": 24.0})
+        assert _band_errors(zone) == {"cool_target": "target_outside_band"}
+
+    def test_both_are_named_at_once(self) -> None:
+        """Fixing one and finding the other on the next screen is a round too many."""
+        zone = self._zone(
+            heat={"target": 19.0, "start_at": 20.0},
+            cool={"target": 25.0, "start_at": 24.0},
+        )
+        assert _band_errors(zone) == {
+            "heat_target": "target_outside_band",
+            "cool_target": "target_outside_band",
+        }
+
+    def test_equal_is_allowed(self) -> None:
+        """Starting and aiming at the same degree is narrow, not wrong."""
+        zone = self._zone(
+            heat={"target": 20.0, "start_at": 20.0},
+            cool={"target": 24.0, "start_at": 24.0},
+        )
+        assert _band_errors(zone) == {}
+
+    def test_a_mode_that_is_off_says_nothing(self) -> None:
+        """A zone that may not cool has no cooling band to be wrong about."""
+        assert _band_errors(self._zone()) == {}
+
+    def test_the_complaint_matches_the_one_validate_makes(self) -> None:
+        """Two places may not disagree about what a sound band is."""
+        from custom_components.climate_director.engine import ModeSettings, validate
+        from custom_components.climate_director.engine.models import DirectorConfig, Source, Zone
+
+        config = DirectorConfig(
+            zones=(
+                Zone(
+                    "zolder",
+                    "Zolder",
+                    "sensor.zolder",
+                    sources=(Source("z", "climate.zolder"),),
+                    heat=ModeSettings(target=19.0, start_at=20.0),
+                ),
+            )
+        )
+        codes = [getattr(item, "code", "") for item in validate(config)]
+        assert "target_outside_band" in codes
+        assert _band_errors({"heat": {"target": 19.0, "start_at": 20.0}, "cool": None}) != {}

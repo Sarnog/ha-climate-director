@@ -432,6 +432,7 @@
     "error": {
       "duplicate_priority": "Otra habitación en la misma unidad exterior ya tiene esta prioridad. Dos habitaciones con el mismo número hacen que el resultado dependa de su nombre; elige uno libre.",
       "required": "Este campo hace falta para guardar. Rellénalo, o elige «Descartar y volver» abajo para salir sin guardar.",
+      "target_outside_band": "La temperatura objetivo está al lado equivocado del punto de arranque. Calentar apunta por encima del punto en que empieza, y enfriar por debajo; al revés, el aparato recibe una temperatura para la que no tiene nada que hacer, lo que parece que se niega.",
       "too_few": "Elige al menos dos aparatos; un grupo de uno no excluye nada."
     }
   },
