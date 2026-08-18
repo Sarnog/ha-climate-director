@@ -671,6 +671,12 @@
     },
     "precondition_confirmed_idle": {
       "message": "{zone} démarre quand même, {openings} est ignoré. Actuellement {indoor} degrés - cette pièce n'a rien le droit de faire pour le moment, donc rien ne se passe."
+    },
+    "quiet_covers_the_day": {
+      "message": "Les fenêtres de silence laissent moins de {minutes} minutes sur {days} jour(s), et personne n'a d'horaire qui les emporte. Rien ne peut démarrer de lui-même ces jours-là. Une fenêtre de silence est l'inverse d'un horaire : elle dit quand rien ne doit commencer."
+    },
+    "switch_timings_without_a_switch": {
+      "message": "Le circuit {circuit} peut assurer les deux fonctions à la fois, il ne change donc jamais de fonction. Sa pause de commutation et sa durée minimale avant changement ne s'appliquent jamais. Le temps anti-court-cycle et la limite de capacité fonctionnent bien, eux."
     }
   },
   "services": {

@@ -671,6 +671,12 @@
     },
     "precondition_confirmed_idle": {
       "message": "{zone} sigue adelante, ignorando {openings}. Ahora {indoor} grados: esta habitación no puede hacer nada en este momento, así que no pasa nada."
+    },
+    "quiet_covers_the_day": {
+      "message": "Las ventanas de silencio dejan menos de {minutes} minutos en {days} día(s), y nadie tiene un horario que las supere. Esos días no puede arrancar nada por sí solo. Una ventana de silencio es lo contrario de un horario: dice cuándo no debe empezar nada."
+    },
+    "switch_timings_without_a_switch": {
+      "message": "El circuito {circuit} puede hacer ambas funciones a la vez, así que nunca cambia de función. Su pausa de conmutación y su tiempo mínimo antes de cambiar no se aplican nunca. El tiempo anticiclado y el límite de capacidad sí funcionan."
     }
   },
   "services": {

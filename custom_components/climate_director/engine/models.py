@@ -34,6 +34,13 @@ from .families import ModeFamily
 
 #: Een vakantiedag telt als zaterdag, tenzij er een eigen vakantierooster is.
 #: A holiday counts as a Saturday, unless a holiday schedule says otherwise.
+#: Hoeveel ruimte de stiltevensters minstens moeten laten voordat een dag als
+#: dichtgetimmerd geldt. Een gat van één minuut is geen ruimte maar toeval.
+#:
+#: How much room the quiet windows must leave at least before a day counts as
+#: boarded up. A gap of one minute is not room but coincidence.
+QUIET_ROOM_MINUTES = 15
+
 HOLIDAY_WEEKDAY = 5
 
 
@@ -999,8 +1006,129 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
         ]
 
     problems += _layout_problems(config)
+    problems += _quiet_problems(config)
+    problems += _timing_problems(config)
 
     return tuple(problems)
+
+
+def _quiet_problems(config: DirectorConfig) -> list[Problem]:
+    """Return a complaint when the quiet windows leave no room to start.
+
+    Een stiltevenster is de omgekeerde van een rooster: het zegt wanneer er
+    níets mag beginnen. Wie dat verkeerd om leest en er vensters in zet die
+    samen de klok rondgaan, krijgt een huis dat uit zichzelf nooit meer iets
+    doet - en dat ziet er van buiten precies zo uit als een integratie die stuk
+    is.
+
+    Er is één ontsnapping: een bewoner die thuis is met een open roostervenster
+    verslaat de stilte. Heeft niemand een rooster, dan is die ontsnapping er
+    niet.
+
+    Een kwartier is de grens. Niet nul: een gat van één minuut per dag is geen
+    ruimte maar toeval, en dan begint er alleen iets als de klok precies goed
+    valt.
+
+    A quiet window is the inverse of a schedule: it says when nothing may start.
+    Read that the wrong way round and put in windows that together go round the
+    clock, and you get a house that never does anything of its own accord again
+    - which looks, from the outside, exactly like a broken integration.
+
+    There is one escape: a resident who is home with an open schedule window
+    beats the quiet. If nobody has a schedule, that escape does not exist.
+
+    A quarter of an hour is the line. Not zero: a gap of one minute a day is not
+    room but coincidence, and then something only starts if the clock happens to
+    fall right.
+    """
+    windows = [window for window in config.gates.quiet_windows if not window.holiday]
+    if not windows:
+        return []
+    if any(resident.windows for resident in config.residents):
+        return []
+
+    silent = [day for day in range(7) if _free_minutes(windows, day) < QUIET_ROOM_MINUTES]
+    if not silent:
+        return []
+
+    return [
+        Problem(
+            "quiet_covers_the_day",
+            f"the quiet windows leave under {QUIET_ROOM_MINUTES} minutes on {len(silent)} day(s) "
+            "and nobody has a schedule to beat them, so nothing can start on those days",
+            days=str(len(silent)),
+            minutes=str(QUIET_ROOM_MINUTES),
+        )
+    ]
+
+
+def _free_minutes(windows: list[TimeWindow], weekday: int) -> int:
+    """Return how many minutes of that day no quiet window covers.
+
+    Geteld zoals `TimeWindow.contains` het leest: het beginpunt telt mee, het
+    eindpunt niet. Zou dit ruimer tellen, dan zou een venster dat om 12:00
+    eindigt en een venster dat om 12:00 begint samen als sluitend gelden
+    terwijl er in werkelijkheid een minuut tussen zit.
+
+    Counted the way `TimeWindow.contains` reads it: the start counts, the end
+    does not. Counting this more loosely would let a window ending at 12:00 and
+    one starting at 12:00 pass as watertight while a minute really sits between
+    them.
+    """
+    covered = [False] * (24 * 60)
+    for window in windows:
+        start = window.start.hour * 60 + window.start.minute
+        end = window.end.hour * 60 + window.end.minute
+
+        # Een venster over middernacht hangt aan zijn startdag. Op déze dag telt
+        # zowel het stuk na de start als het stuk dat gisteren begon.
+        #
+        # A window through midnight hangs off its starting day. On *this* day
+        # both the piece after the start and the piece begun yesterday count.
+        if start < end:
+            spans = [(start, end, weekday)]
+        elif start == end:
+            spans = []
+        else:
+            spans = [(start, 24 * 60, weekday), (0, end, (weekday - 1) % 7)]
+
+        for first, last, owning_day in spans:
+            if window.weekdays is not None and owning_day not in window.weekdays:
+                continue
+            for minute in range(first, last):
+                covered[minute] = True
+
+    return covered.count(False)
+
+
+def _timing_problems(config: DirectorConfig) -> list[Problem]:
+    """Return a complaint about switch timings on a circuit that never switches.
+
+    Een buitenunit die verwarmen en koelen tegelijk aankan wisselt nooit van
+    taak, dus een omschakelpauze en een minimale looptijd voor die wissel doen
+    daar niets. Ze staan er dan wel, en dan ga je ervan uit dat ze werken.
+
+    De kortcyclustijd en de capaciteitsgrens blijven wél gelden; die gaan over
+    losse units en niet over de taak van het circuit.
+
+    An outdoor unit that can heat and cool at once never switches duty, so a
+    switch pause and a minimum run before that switch do nothing there. They
+    still sit in the settings, and then you assume they work.
+
+    The short-cycle time and the capacity limit do still apply; those are about
+    individual units rather than about the circuit's duty.
+    """
+    return [
+        Problem(
+            "switch_timings_without_a_switch",
+            f"circuit {circuit.circuit_id} can run both duties at once, so its switch pause "
+            "and minimum run before switching never apply",
+            circuit=circuit.name or circuit.circuit_id,
+        )
+        for circuit in config.circuits
+        if circuit.simultaneous_heat_cool
+        and (circuit.family_switch_delay or circuit.min_family_switch_interval)
+    ]
 
 
 def _layout_problems(config: DirectorConfig) -> list[str]:

@@ -671,6 +671,12 @@
     },
     "precondition_confirmed_idle": {
       "message": "{zone} läuft trotzdem, {openings} wird ignoriert. Jetzt {indoor} Grad - dieser Raum darf derzeit nichts, also geschieht nichts."
+    },
+    "quiet_covers_the_day": {
+      "message": "Die Ruhefenster lassen an {days} Tag(en) weniger als {minutes} Minuten übrig, und niemand hat einen Zeitplan, der sie schlägt. An diesen Tagen kann von selbst nichts starten. Ein Ruhefenster ist die Umkehrung eines Zeitplans: es sagt, wann nichts beginnen darf."
+    },
+    "switch_timings_without_a_switch": {
+      "message": "Kreis {circuit} kann beide Betriebsarten gleichzeitig fahren, wechselt also nie die Aufgabe. Seine Umschaltpause und die Mindestlaufzeit vor dem Wechsel greifen nie. Die Taktsperre und die Kapazitätsgrenze wirken sehr wohl."
     }
   },
   "services": {

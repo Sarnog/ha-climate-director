@@ -671,6 +671,12 @@
     },
     "precondition_confirmed_idle": {
       "message": "{zone} is going ahead, ignoring {openings}. Now {indoor} degrees - there is nothing this room may do at the moment, so nothing happens."
+    },
+    "quiet_covers_the_day": {
+      "message": "The quiet windows leave under {minutes} minutes on {days} day(s), and nobody has a schedule that beats them. Nothing can start by itself on those days. A quiet window is the inverse of a schedule: it says when nothing may begin."
+    },
+    "switch_timings_without_a_switch": {
+      "message": "Circuit {circuit} can run both duties at once, so it never switches duty. Its switch pause and minimum run before switching never apply. The short-cycle time and the capacity limit do still work."
     }
   },
   "services": {

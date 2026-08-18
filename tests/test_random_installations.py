@@ -78,6 +78,25 @@ def _window(rng: random.Random) -> dict:
     }
 
 
+def _quiet_window(rng: random.Random) -> dict:
+    """Return a quiet window as somebody would really set one: evening to morning.
+
+    Een willekeurig venster kan bij toeval de hele dag beslaan, en dan zet het
+    huis zichzelf voorgoed stil - `validate()` klaagt daar sinds deze ronde
+    terecht over, dus een generator van geldige huizen hoort het niet te maken.
+
+    A random window can cover the whole day by chance, and then the house
+    silences itself for good - `validate()` rightly complains about that as of
+    this round, so a generator of valid houses should not make one.
+    """
+    return {
+        "start": f"{rng.randrange(20, 24):02d}:00:00",
+        "end": f"{rng.randrange(5, 11):02d}:00:00",
+        "weekdays": rng.choice([None, [0, 1, 2, 3, 4], [5, 6]]),
+        "holiday": rng.random() < 0.2,
+    }
+
+
 def _mode_settings(rng: random.Random, *, heating: bool) -> dict:
     """Return a sound band: heating aims above its switch-on point, cooling below."""
     start = rng.uniform(16.0, 22.0) if heating else rng.uniform(22.0, 28.0)
@@ -171,16 +190,24 @@ def _installation(rng: random.Random) -> dict:
     circuits = []
     if count > 1 and rng.random() < 0.8:
         members = units[: rng.randrange(2, count + 1)]
+        # Een buitenunit die beide taken tegelijk aankan wisselt nooit van
+        # taak, dus omschakeltijden horen daar niet bij - `validate()` zegt dat
+        # ook, en dan hoort een generator van geldige huizen ze niet te maken.
+        #
+        # An outdoor unit that can run both duties at once never switches duty,
+        # so switch timings do not belong there - `validate()` says so too, and
+        # a generator of valid houses should not make them.
+        simultaneous = rng.random() < 0.3
         circuits.append(
             {
                 "circuit_id": "buiten",
                 "name": "Buitenunit",
                 "units": members,
-                "simultaneous_heat_cool": rng.random() < 0.3,
+                "simultaneous_heat_cool": simultaneous,
                 "conflict_policy": rng.choice([item.value for item in ConflictPolicy]),
                 "allow_fan_only_during_conflict": rng.random() < 0.3,
-                "family_switch_delay": rng.choice([0, 60, 300]),
-                "min_family_switch_interval": rng.choice([0, 600, 1800]),
+                "family_switch_delay": 0 if simultaneous else rng.choice([0, 60, 300]),
+                "min_family_switch_interval": (0 if simultaneous else rng.choice([0, 600, 1800])),
                 "min_cycle_time": rng.choice([0, 300, 1200]),
                 "max_concurrent_units": rng.choice([None, 1, 2, len(members)]),
             }
@@ -289,7 +316,7 @@ def _installation(rng: random.Random) -> dict:
             "max_precondition": rng.choice([1800, 7200, 14400]),
             "precondition_window": rng.choice([None, _window(rng)]),
             "guest_window": rng.choice([None, _window(rng)]),
-            "quiet_windows": [_window(rng) for _ in range(rng.randrange(0, 3))],
+            "quiet_windows": [_quiet_window(rng) for _ in range(rng.randrange(0, 3))],
         },
         "seasons": rng.choice(
             [

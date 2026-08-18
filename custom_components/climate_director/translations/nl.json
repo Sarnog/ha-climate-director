@@ -671,6 +671,12 @@
     },
     "precondition_confirmed_idle": {
       "message": "{zone} gaat toch door, met {openings} genegeerd. Nu {indoor} graden - deze kamer mag op dit moment niets, dus er gebeurt niets."
+    },
+    "quiet_covers_the_day": {
+      "message": "De stiltevensters laten op {days} dag(en) minder dan {minutes} minuten over, en niemand heeft een rooster dat ze verslaat. Er kan op die dagen dus niets uit zichzelf beginnen. Een stiltevenster is de omgekeerde van een rooster: het zegt wanneer er níets mag beginnen."
+    },
+    "switch_timings_without_a_switch": {
+      "message": "Circuit {circuit} kan verwarmen en koelen tegelijk, dus het wisselt nooit van taak. De omschakelpauze en de minimale looptijd voor een taakwissel doen daar dus niets. De kortcyclustijd en de capaciteitsgrens werken wél."
     }
   },
   "services": {
