@@ -459,10 +459,20 @@ def _layout(raw: dict[str, Any]) -> HeatingLayout:
     for zone in _sequence(raw.get("zones")):
         if not isinstance(zone, dict):
             continue
+        # Alleen bronnen die kunnen verwarmen tellen mee: het gaat hier om de
+        # verwarmingsindeling. Een gedeelde airco die alleen koelt zegt niets
+        # over hoe het huis verwarmd wordt, en meetellen maakte van zo'n
+        # configuratie stilletjes een "centrale verwarming" waar de controle
+        # daarna over klaagde.
+        #
+        # Only sources able to heat count: this is about the heating layout. A
+        # shared cooler says nothing about how the house is heated, and counting
+        # it quietly turned such a setup into "central heating", which the check
+        # then complained about.
         entities = {
             _text(source.get("entity_id"))
             for source in _sequence(zone.get("sources"))
-            if isinstance(source, dict)
+            if isinstance(source, dict) and source.get("role") != SourceRole.COOL_ONLY.value
         }
         for entity_id in entities - {""}:
             seen[entity_id] = seen.get(entity_id, 0) + 1

@@ -131,6 +131,35 @@ class TestTheChoiceIsRecorded:
         }
         assert config_from_dict(stored).heating_layout is HeatingLayout.PER_ZONE
 
+    def test_an_old_installation_with_only_a_shared_cooler_reads_as_zoned(self) -> None:
+        """Een gedeelde airco die alleen koelt zegt niets over de verwarmingsindeling.
+
+        A shared cooler says nothing about the heating layout, so the reader may
+        not turn it into central heating and the check may not complain about it.
+        """
+        stored = {
+            "zones": [
+                {
+                    "zone_id": "a",
+                    "sources": [
+                        {"source_id": "s1", "entity_id": "climate.chiller", "role": "cool_only"}
+                    ],
+                    "cool": {"target": 22.0, "start_at": 24.0},
+                },
+                {
+                    "zone_id": "b",
+                    "sources": [
+                        {"source_id": "s2", "entity_id": "climate.chiller", "role": "cool_only"}
+                    ],
+                    "cool": {"target": 22.0, "start_at": 24.0},
+                },
+            ]
+        }
+        config = config_from_dict(stored)
+        assert config.heating_layout is HeatingLayout.PER_ZONE
+        codes = [getattr(item, "code", "") for item in validate(config)]
+        assert not [code for code in codes if code.startswith("layout_")], codes
+
     def test_a_stored_choice_beats_the_guess(self) -> None:
         """Once chosen, nothing infers over it."""
         stored = {
