@@ -569,6 +569,11 @@
         "name": "Vastgelopen"
       }
     },
+    "button": {
+      "zone_precondition": {
+        "name": "{zone} vooruit"
+      }
+    },
     "switch": {
       "master": {
         "name": "Director"
@@ -586,6 +591,9 @@
     "number": {
       "zone_priority": {
         "name": "Prioriteit {zone}"
+      },
+      "precondition_minutes": {
+        "name": "Vooruitduur"
       }
     }
   },

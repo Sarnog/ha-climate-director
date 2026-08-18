@@ -569,6 +569,11 @@
         "name": "Atascado"
       }
     },
+    "button": {
+      "zone_precondition": {
+        "name": "Preacondicionar {zone}"
+      }
+    },
     "switch": {
       "master": {
         "name": "Director"
@@ -586,6 +591,9 @@
     "number": {
       "zone_priority": {
         "name": "Prioridad {zone}"
+      },
+      "precondition_minutes": {
+        "name": "Duración del preacondicionamiento"
       }
     }
   },

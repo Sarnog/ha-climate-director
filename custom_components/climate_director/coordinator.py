@@ -36,6 +36,7 @@ from .const import (
     CONF_INSTALLATION,
     CONF_SHADOW_MODE,
     DEBOUNCE_SECONDS,
+    DEFAULT_PRECONDITION_MINUTES,
     DEFAULT_SHADOW_MODE,
     DOMAIN,
     EVENT_DECISION,
@@ -192,6 +193,19 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self.master_enabled = True
         self.holiday_mode = False
         self.guest_mode = False
+        self.precondition_minutes: float = DEFAULT_PRECONDITION_MINUTES
+        """Hoe lang een druk op de vooruit-knop duurt.
+
+        De duurentiteit herstelt dit na een herstart en schrijft het hier
+        terug, net als de schakelaars. Het staat hier en niet op de knop, zodat
+        elke zone dezelfde duur gebruikt en er maar op één plek aan gedraaid
+        hoeft te worden.
+
+        How long a press of the pre-conditioning button lasts. The duration
+        entity restores this after a restart and writes it back here, just like
+        the switches. It lives here rather than on the button so every zone uses
+        the same duration and there is only one place to change it.
+        """
         self._precondition: dict[str, datetime] = {}
         self._precondition_bypass: set[str] = set()
         self._refused: set[str] = set()

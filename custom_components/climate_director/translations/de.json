@@ -569,6 +569,11 @@
         "name": "Festgefahren"
       }
     },
+    "button": {
+      "zone_precondition": {
+        "name": "{zone} vorheizen"
+      }
+    },
     "switch": {
       "master": {
         "name": "Director"
@@ -586,6 +591,9 @@
     "number": {
       "zone_priority": {
         "name": "Priorität {zone}"
+      },
+      "precondition_minutes": {
+        "name": "Vorheizdauer"
       }
     }
   },

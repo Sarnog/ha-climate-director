@@ -18,6 +18,7 @@ STORAGE_VERSION = 1
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -63,6 +64,23 @@ SERVICE_CANCEL_PRECONDITION = "cancel_precondition"
 ATTR_ZONE_IDS = "zone_ids"
 ATTR_MINUTES = "minutes"
 ATTR_IGNORE_OPENINGS = "ignore_openings"
+
+# De duur die de knop per zone gebruikt. Een uur is lang genoeg om een koud huis
+# op temperatuur te krijgen en kort genoeg om niet mis te zijn als je het per
+# ongeluk aanraakt. De ondergrens houdt een verzoek zinvol - onder een kwartier
+# is een gasketel nog aan het opwarmen - en de bovengrens houdt het een verzoek
+# in plaats van een tweede rooster. Het ingestelde maximum van de installatie
+# kort het daarna alsnog in als dat lager ligt.
+#
+# The duration the per-zone button uses. An hour is long enough to bring a cold
+# house up to temperature and short enough not to matter much if you touch it by
+# accident. The floor keeps a request meaningful - under a quarter of an hour a
+# boiler is still warming up - and the ceiling keeps it a request rather than a
+# second schedule. The installation's own maximum still shortens it afterwards
+# when that is lower.
+DEFAULT_PRECONDITION_MINUTES = 60
+MIN_PRECONDITION_MINUTES = 15
+MAX_PRECONDITION_MINUTES = 120
 
 # Sleutels in de config entry.
 # Keys in the config entry.

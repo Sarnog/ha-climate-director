@@ -569,6 +569,11 @@
         "name": "Stuck"
       }
     },
+    "button": {
+      "zone_precondition": {
+        "name": "Pre-condition {zone}"
+      }
+    },
     "switch": {
       "master": {
         "name": "Director"
@@ -586,6 +591,9 @@
     "number": {
       "zone_priority": {
         "name": "{zone} priority"
+      },
+      "precondition_minutes": {
+        "name": "Pre-conditioning duration"
       }
     }
   },

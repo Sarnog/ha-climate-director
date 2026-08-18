@@ -569,6 +569,11 @@
         "name": "متعثّر"
       }
     },
+    "button": {
+      "zone_precondition": {
+        "name": "التدفئة المسبقة لـ {zone}"
+      }
+    },
     "switch": {
       "master": {
         "name": "المنسّق"
@@ -586,6 +591,9 @@
     "number": {
       "zone_priority": {
         "name": "أولوية {zone}"
+      },
+      "precondition_minutes": {
+        "name": "مدة التدفئة المسبقة"
       }
     }
   },
