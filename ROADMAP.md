@@ -63,8 +63,6 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
   temperatuur over enkele uren in plaats van alleen de huidige.
 - **Vochtigheid** — `dry` als eigen taak met een eigen drempel, in plaats van alleen als
   lid van de koelfamilie.
-- **Blueprint voor notificaties** — een kant-en-klare automatisering die op
-  `climate_director_decision` luistert, zodat nieuwe gebruikers niets hoeven te schrijven.
 - **Meer conflictbeleiden** — bijvoorbeeld beurtelings (round-robin) of een vast schema
   per dagdeel.
 
@@ -140,8 +138,6 @@ The history of what has already been built and changed is **not** here but in th
   hours rather than only the current one.
 - **Humidity** — `dry` as a duty of its own with its own threshold, instead of only as a
   member of the cooling family.
-- **Notification blueprint** — a ready-made automation listening for
-  `climate_director_decision`, so new users need write nothing.
 - **More conflict policies** — round-robin, for instance, or a fixed schedule per part of
   the day.
 

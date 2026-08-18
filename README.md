@@ -391,9 +391,11 @@ beoordeeld, dus anders sneuvelde het verzoek een minuut later alsnog. Hij verval
 met de teller — het is geen instelling die blijft hangen.
 
 Wordt een verzoek geweigerd, dan gaat de gebeurtenis `climate_director_precondition_refused`
-af, met de zone en de openstaande entiteiten erin. Daar hang je je eigen melding aan; zie
-[Must-have automatiseringen](#must-have-automatiseringen-en-notificaties) voor een uitgewerkt
-voorbeeld met een knop *"Toch doen"*.
+af. Daarin zit alles wat een melding nodig heeft: de zone, de openstaande entiteiten met hun
+naam, de kamertemperatuur, de streeftemperatuur, en **twee kant-en-klare zinnen in de taal van
+je interface** — één voor de weigering en één voor na de bevestiging. Zie
+[Must-have automatiseringen](#must-have-automatiseringen-en-notificaties) voor de blueprint met
+een knop *"Toch doen"* eronder.
 
 ##### Twee grenzen die je niet kunt vergeten
 
@@ -786,6 +788,32 @@ huis wordt gewoon warm, en zonder melding merk je maanden niets.
 | **2. Geweigerd vooruit-verzoek** | Je drukte op een knop en er gebeurde niets. Zonder melding weet je niet dát het geweigerd is, laat staan waarom |
 | **3. Wat er besloten is** | Niet noodzakelijk, wel het handigste stuk gereedschap bij het instellen en bij een schaduwrun |
 
+#### Kant-en-klaar: importeer de blueprints
+
+Alle drie staan als blueprint in deze repo. Importeren gaat via **Instellingen → Automatiseringen
+en scènes → Blueprints → Blueprint importeren**, met een van deze links:
+
+| Blueprint | Link om te importeren |
+| --- | --- |
+| Bewaking | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/monitoring.yaml` |
+| Geweigerd vooruit-verzoek | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/precondition_refused.yaml` |
+| Wat er besloten is | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/decisions.yaml` |
+
+> **Importeren alleen is niet genoeg.** Een blueprint is een sjabloon; er luistert pas iets
+> zodra je er een automatisering van maakt. Doe dat meteen na het importeren — kies de
+> blueprint, vul je entiteiten in, en sla op.
+
+Zolang er niemand naar een geweigerd vooruit-verzoek luistert, staat daar een
+reparatiemelding over in Home Assistant. Die verdwijnt vanzelf zodra er een automatisering
+op die gebeurtenis staat, of die nu uit de blueprint komt of van jezelf.
+
+De teksten van de tweede blueprint komen uit de integratie zelf en staan dus in de taal van
+je interface, met Engels als terugval. De andere twee hebben hun berichten als invulveld, met
+een Engels sjabloon als vertrekpunt — die schrijf je in je eigen woorden.
+
+De blueprints zijn een **vertrekpunt en geen keurslijf**: je kunt ze openmaken en aanpassen.
+Wil je liever zelf schrijven, dan staat hieronder precies wat je nodig hebt.
+
 #### 1. Vastgelopen en op reserve
 
 Twee melders, één automatisering. `binary_sensor.*_vastgelopen` gaat aan als een zone te
@@ -932,7 +960,7 @@ Eén device per installatie, met daaronder:
 | Entiteit | Waarvoor |
 |---|---|
 | `sensor.*_laatste_beslissing` | Hoeveel zones bediend worden, met het volledige plan als attributen: elk commando, elk circuit, elke uitgestelde actie, en welke apparaten er aangestuurd zouden zijn |
-| `sensor.*_zou_<entiteit>_aansturen` | De stand waarin de director dit apparaat zou zetten — één sensor per aangestuurd apparaat |
+| `sensor.*_zou_<entiteit>_aansturen` | De stand waarin de director dit apparaat zou zetten — één sensor per aangestuurd apparaat. Staat er geen opdracht, dan leest hij `left_alone` (met opzet met rust gelaten) of `unreachable` (niet te bereiken), met de precieze reden als attribuut |
 | `sensor.*_afwijkingen` | Hoeveel apparaten er nú anders staan dan het plan wil. Nul betekent dat de director het eens is met wat het huis op dit moment stuurt |
 | `sensor.*_bron_<zone>` | Welke bron deze zone bedient, met wat de zone wilde, wat hij kreeg en waarom |
 | `binary_sensor.*_<zone>_geblokkeerd` | Aan als een zone minder kreeg dan hij vroeg, met de eerste reden én alle dichte poorten (`closed_gates`) als attributen |
@@ -1490,10 +1518,12 @@ The choice belongs **to the request** rather than to the call: the gate is judge
 every time, so otherwise the request would die a minute later after all. It lapses with the
 timer — it is not a setting that lingers.
 
-When a request is refused the event `climate_director_precondition_refused` fires, carrying
-the zone and the open entities. Hang your own notification on that; see
-[Must-have automations](#must-have-automations-and-notifications) for a worked example with
-a *"Do it anyway"* button.
+If a request is refused, the event `climate_director_precondition_refused` fires. It carries
+everything a notification needs: the zone, the open entities by name, the room temperature,
+the target, and **two ready-made sentences in the language of your interface** — one for the
+refusal and one for after the confirmation. See
+[Must-have automations](#must-have-automations-and-notifications) for the blueprint with a
+*"Do it anyway"* button under it.
 
 ##### Two limits you cannot forget
 
@@ -1878,6 +1908,32 @@ house simply gets warm, and without a notification you notice nothing for months
 | **2. A refused pre-conditioning request** | You pressed a button and nothing happened. Without a notification you do not know it was refused, let alone why |
 | **3. What was decided** | Not essential, but the handiest tool while configuring and during a shadow run |
 
+#### Ready-made: import the blueprints
+
+All three ship as blueprints in this repository. Import them through **Settings → Automations
+and scenes → Blueprints → Import blueprint**, with one of these links:
+
+| Blueprint | Link to import |
+| --- | --- |
+| Monitoring | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/monitoring.yaml` |
+| Refused pre-conditioning | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/precondition_refused.yaml` |
+| What was decided | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/decisions.yaml` |
+
+> **Importing alone is not enough.** A blueprint is a template; nothing listens until you
+> build an automation from it. Do that right after importing — pick the blueprint, fill in
+> your entities, and save.
+
+For as long as nobody is listening for a refused pre-conditioning request, Home Assistant
+carries a repair notice about it. That disappears by itself once an automation stands on
+that event, whether it came from the blueprint or from you.
+
+The texts of the second blueprint come from the integration itself, so they are in the
+language of your interface, with English as the fallback. The other two carry their messages
+as an input, with an English template as a starting point — write those in your own words.
+
+The blueprints are a **starting point rather than a straitjacket**: you can open them and
+change them. If you would rather write your own, everything you need is below.
+
 #### 1. Stuck and on stand-in
 
 Two sensors, one automation. `binary_sensor.*_stuck` comes on when a zone sits on the same
@@ -2025,7 +2081,7 @@ One device per installation, holding:
 | Entity | For |
 |---|---|
 | `sensor.*_last_decision` | How many zones are being served, with the full plan as attributes: every command, every circuit, every deferred action, and which appliances would have been steered |
-| `sensor.*_would_command_<entity>` | The mode the director would put this appliance in — one sensor per steered appliance |
+| `sensor.*_would_command_<entity>` | The mode the director would put this appliance in — one sensor per steered appliance. With no command it reads `left_alone` (deliberately left alone) or `unreachable` (cannot be reached), with the exact reason as an attribute |
 | `sensor.*_mismatch` | How many appliances currently sit somewhere other than where the plan wants them. Zero means the director agrees with whatever is steering the house right now |
 | `sensor.*_<zone>_source` | Which source serves this zone, with what the zone wanted, what it got and why |
 | `binary_sensor.*_<zone>_blocked` | On when a zone got less than it asked for, with the first reason and every shut gate (`closed_gates`) as attributes |

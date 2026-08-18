@@ -189,11 +189,17 @@ uitgaat altijd kan zeggen waaróm — "de warmtepomp bedient deze zone" leest an
 
 ### plan.py — uitvoer
 
-`UnitCommand`, `ZoneDecision`, `CircuitDecision`, `Deferral` en `Reason`. `Reason` is een
-`StrEnum` met stabiele identifiers in plaats van vrije tekst, zodat de Home
+`UnitCommand`, `ZoneDecision`, `CircuitDecision`, `UntouchedSource`, `Deferral` en `Reason`.
+`Reason` is een `StrEnum` met stabiele identifiers in plaats van vrije tekst, zodat de Home
 Assistant-laag ze kan vertalen en gebruikers erop kunnen filteren in hun eigen
 automatiseringen. Een `Deferral` vertelt de coordinator wanneer er opnieuw beslist moet
 worden, zodat een plan dat op een timer wacht vanzelf hervat.
+
+Elk beheerd apparaat staat in precies één van twee lijsten: het krijgt een `UnitCommand`, of
+het staat als `UntouchedSource` genoteerd met de reden waarom niet — overgedragen zone,
+handbediende bron, of niet te bereiken. Niets aansturen is een uitkomst en geen leegte, en
+zonder dat onderscheid was "de director laat dit met rust" van buiten hetzelfde als "de
+director doet niets".
 
 ### serialise.py — opslag
 
@@ -274,6 +280,30 @@ overschrijven.
 
 De platforms worden vóór de eerste beslissing opgezet, zodat een uitgeschakelde
 hoofdschakelaar niet één ronde lang aan lijkt te staan.
+
+### texts.py — vertaalde zinnen naar buiten
+
+De integratie stuurt zelf geen berichten; waar een melding heen gaat hoort een gebruiker te
+bepalen. De **tekst** komt wel hiervandaan: een blueprint kan niet vertalen, en een half
+Engelse melding op een Nederlands scherm leest als een fout.
+
+Deze module zoekt een zin op in de taal van de interface en valt terug op Engels — twee keer
+zelfs, want een vertaling kan ontbreken én uit de pas lopen met de code. De zinnen wonen
+onder `exceptions` in `strings.json`, omdat Home Assistant het hoogste niveau van dat bestand
+tegen een vast schema valideert.
+
+### blueprints/ — de must-have automatiseringen, kant-en-klaar
+
+Drie blueprints, buiten `custom_components/` en dus geen onderdeel van de integratie zelf:
+bewaking, een geweigerd vooruit-verzoek met bevestigingsknop, en de besluitmelder. Ze worden
+bewust **niet** automatisch geïnstalleerd — dat kan technisch wel, maar het is geen gebaand
+pad voor een custom integratie, en er moet daarna alsnog een automatisering van gemaakt
+worden.
+
+De vindbaarheid wordt in plaats daarvan opgelost met een reparatiemelding: zodra niemand naar
+`climate_director_precondition_refused` luistert, staat dat in Home Assistant. Meetbaar via
+`hass.bus.async_listeners()`, herbeoordeeld zodra Home Assistant klaar is met starten en bij
+elke herlaadbeurt van de automatiseringen.
 
 ### problems.py — configuratiefouten zichtbaar maken
 
@@ -483,10 +513,16 @@ nothing to do".
 
 ### plan.py — output
 
-`UnitCommand`, `ZoneDecision`, `CircuitDecision`, `Deferral` and `Reason`. `Reason` is a
-`StrEnum` of stable identifiers rather than free text, so the Home Assistant layer can
-translate them and users can filter on them in their own automations. A `Deferral` tells
-the coordinator when to decide again, so a plan held back by a timer resumes on its own.
+`UnitCommand`, `ZoneDecision`, `CircuitDecision`, `UntouchedSource`, `Deferral` and `Reason`.
+`Reason` is a `StrEnum` of stable identifiers rather than free text, so the Home Assistant
+layer can translate them and users can filter on them in their own automations. A `Deferral`
+tells the coordinator when to decide again, so a plan held back by a timer resumes on its own.
+
+Every managed appliance sits in exactly one of two lists: it gets a `UnitCommand`, or it is
+noted as an `UntouchedSource` with the reason why not - a zone handed over, a hand-operated
+source, or one that cannot be reached. Steering nothing is an outcome rather than a void, and
+without that distinction "the director is leaving this alone" looked, from the outside, the
+same as "the director does nothing".
 
 ### serialise.py — storage
 
@@ -562,6 +598,30 @@ otherwise the outcome of one decision would overwrite the input to the next.
 
 The platforms are set up before the first decision, so a master switch left off does not
 appear on for one round.
+
+### texts.py — translated sentences going outward
+
+The integration sends no messages of its own; where a notification goes is for a user to
+decide. The **text** does come from here: a blueprint cannot translate, and a half-English
+notice on a Dutch screen reads as a fault.
+
+This module looks a sentence up in the language of the interface and falls back on English -
+twice, in fact, since a translation may be missing *and* may have drifted from the code. The
+sentences live under `exceptions` in `strings.json`, because Home Assistant validates the top
+level of that file against a fixed schema.
+
+### blueprints/ — the must-have automations, ready-made
+
+Three blueprints, outside `custom_components/` and therefore not part of the integration
+itself: monitoring, a refused pre-conditioning request with a confirm button, and the
+decision notifier. They are deliberately **not** installed automatically - technically
+possible, but no beaten path for a custom integration, and an automation still has to be
+built from them afterwards.
+
+Findability is solved with a repair notice instead: the moment nobody is listening for
+`climate_director_precondition_refused`, Home Assistant says so. Measured through
+`hass.bus.async_listeners()`, judged afresh once Home Assistant has finished starting and on
+every automation reload.
 
 ### problems.py — surfacing configuration mistakes
 
