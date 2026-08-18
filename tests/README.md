@@ -92,9 +92,10 @@ entiteitsplatforms.
   plaats van afgewacht
 
 Deze zijn met de hand gereviewd tegen de geïnstalleerde `homeassistant`-broncode
-(signaturen met `grep` geverifieerd, niet uit het geheugen aangenomen). Ze worden in de
-praktijk getest door de integratie in een echte Home Assistant te installeren — en dat kan
-veilig, omdat schaduwmodus standaard aanstaat en er dan geen enkele service call uitgaat.
+(signaturen met `grep` geverifieerd, niet uit het geheugen aangenomen). Beoordelen kan
+alleen door de integratie in een echte Home Assistant te installeren, en **dat is nog niet
+gebeurd** — er is nog nergens draaitijd. Wie eraan begint kan dat veilig doen, omdat
+schaduwmodus standaard aanstaat en er dan geen enkele service call uitgaat.
 
 ### Draaien
 
@@ -196,9 +197,10 @@ bus, the actions and the entity platforms.
   than waited out
 
 These were reviewed by hand against the installed `homeassistant` source (signatures
-verified with `grep`, not assumed from memory). They are tested in practice by installing
-the integration in a real Home Assistant — which is safe to do, because shadow mode is on
-by default and no service call goes out while it is.
+verified with `grep`, not assumed from memory). Judging them takes installing the
+integration in a real Home Assistant, and **that has not happened yet** — there are no
+running hours anywhere. Whoever starts can do so safely, because shadow mode is on by
+default and no service call goes out while it is.
 
 ### Running
 
