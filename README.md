@@ -269,13 +269,13 @@ sequence:
     data:
       duration: "02:00:00"
     target:
-      entity_id: timer.verwarming
+      entity_id: timer.<jouw_timer>
   - action: climate.set_temperature
     data:
       temperature: 20
       hvac_mode: heat
     target:
-      entity_id: climate.smart_thermostat_x
+      entity_id: <entiteit>
 ```
 
 En het aflopen van de timer zet alles weer terug:
@@ -286,11 +286,11 @@ triggers:
   - trigger: event
     event_type: timer.finished
     event_data:
-      entity_id: timer.verwarming
+      entity_id: timer.<jouw_timer>
 actions:
   - action: climate.turn_off
     target:
-      entity_id: climate.smart_thermostat_x
+      entity_id: <entiteit>
   - action: switch.turn_off
     target:
       entity_id: switch.climate_director_override_woonkamer
@@ -305,38 +305,103 @@ Verwar dit niet met **vooruit verwarmen**. Dat is bedoeld voor een leeg huis, ge
 binnen het ingestelde venster en heeft een maximum. Een handmatige timer met override is
 het gereedschap voor "ik wil dit nu, en ik bepaal hoe lang".
 
-#### Vooruit verwarmen
+#### Vooruit verwarmen en koelen
 
-De enige manier om een leeg huis te laten draaien, en met opzet de enige die je met de
-hand moet aanzetten. Roep de actie `climate_director.precondition` aan vanaf je telefoon,
-een dashboardknop of een automatisering, en de opgegeven zones beginnen alvast te
-verwarmen of te koelen zodat het goed is als je binnenloopt.
+De enige manier om een leeg huis te laten draaien, en met opzet de enige die je met de hand
+moet aanzetten. Roep de actie `climate_director.precondition` aan vanaf je telefoon, een
+dashboardknop of een automatisering, en de opgegeven zones beginnen alvast te werken zodat
+het goed is als je binnenloopt.
 
 ```yaml
 action: climate_director.precondition
 data:
-  zone_ids: [woonkamer]
+  zone_ids: [<zone>]
   minutes: 45
 ```
 
-Wat het overslaat: *iemand thuis*, *wakker*, *rooster* en *aanwezigheid in de ruimte* —
-precies de poorten die een leeg huis tegenhouden. Wat het niet overslaat: de
-hoofdschakelaar, een handmatige override, een openstaand raam, de dode band, de
-buitengrenzen en alle circuitregels. Vooruit verwarmen is een reden om te mogen, geen
-reden om te moeten.
+##### Je vraagt niet om verwarmen, je vraagt om aandacht
 
-Twee grenzen maken dit veilig, en geen van beide is te vergeten:
+Dit is het belangrijkste om te begrijpen: **je zegt niet wát er moet gebeuren.** Het verzoek
+opent alleen de deur; daarna beslist de integratie precies zoals wanneer je gewoon thuis
+bent — de dode band kijkt of het te koud of te warm is, het seizoen en de buitengrens per
+bron kiezen het apparaat.
+
+Hetzelfde verzoek geeft dus verschillende uitkomsten:
+
+| Binnen | Buiten | Uitkomst |
+| --- | --- | --- |
+| 18 °C | 21 °C | verwarmen, via de airco |
+| 18 °C | −5 °C | verwarmen, via de gasverwarming |
+| 26 °C | 28 °C | koelen |
+| 23 °C | 21 °C | **niets** — de kamer ligt al goed |
+
+Die laatste regel is geen tekortkoming. Een verzoek is geen "aanzetten"; ligt de kamer al
+goed, dan blijft het apparaat uit.
+
+##### Wat het overslaat, en wat niet
+
+| Blijft gelden | Wordt overgeslagen |
+| --- | --- |
+| De hoofdschakelaar | *Iemand thuis* |
+| Een handmatige override | *Wakker* |
+| De dode band | *Rooster* |
+| Het seizoen | *Aanwezigheid in de ruimte* |
+| De buitengrens **per bron** (die kiest het apparaat) | De buitengrens **per zone** |
+| Ramen en deuren (zie hieronder) | Het stiltevenster |
+| Circuit, uitsluitende groepen, voorrang | |
+
+Twee rijen verdienen uitleg.
+
+**De buitengrens per zone vervalt.** Die grens beantwoordt de vraag *"mag er bij dit weer
+überhaupt geregeld worden"* — een zuinigheidsregel die ervan uitgaat dat er iemand thuis is.
+Vraag je er zelf om, dan is dat antwoord al gegeven. Zonder deze uitzondering zit er een gat
+tussen je twee grenzen: staat verwarmen op *tot 19 °C buiten* en koelen op *vanaf 24 °C*,
+dan doet een verzoek bij 21 °C buiten helemaal niets. De grens **per bron** blijft wel
+gelden, want die kiest welk apparaat geschikt is.
+
+**Aanwezigheid wordt overgeslagen, ook per kamer.** Staat een zone op *Ruimte* in plaats van
+*Huishouden*, dan werkt vooruit verwarmen daar net zo goed. Vooruit verwarmen staat in de
+rangorde vóór alles wat over mensen gaat, en een lege kamer valt daar vanzelf onder — dat is
+juist het punt.
+
+##### Ramen en deuren
+
+Een openstaand raam of een openstaande deur **weigert** een verzoek. Stoken tegen de
+buitenlucht in is weggegooid geld, dus dat is de standaard.
+
+Maar wie het raam zelf openzette weet dat, en mag zeggen: toch doen.
+
+```yaml
+action: climate_director.precondition
+data:
+  zone_ids: [<zone>]
+  minutes: 90
+  ignore_openings: true
+```
+
+De keuze hoort **bij het verzoek**, niet bij de aanroep: de poort wordt telkens opnieuw
+beoordeeld, dus anders sneuvelde het verzoek een minuut later alsnog. Hij vervalt vanzelf
+met de teller — het is geen instelling die blijft hangen.
+
+Wordt een verzoek geweigerd, dan gaat de gebeurtenis `climate_director_precondition_refused`
+af, met de zone en de openstaande entiteiten erin. Daar hang je je eigen melding aan; zie
+[Must-have automatiseringen](#must-have-automatiseringen-en-notificaties) voor een uitgewerkt
+voorbeeld met een knop *"Toch doen"*.
+
+##### Twee grenzen die je niet kunt vergeten
 
 - **Het verloopt vanzelf.** Er is geen schakelaar die aan kan blijven staan, alleen een
   teller die afloopt. Vraag je langer dan het ingestelde maximum (standaard twee uur), dan
   wordt je verzoek ingekort in plaats van geweigerd. Geen tijd opgeven geeft het maximum.
 - **Het geldt alleen binnen het venster**, standaard 06:00 tot 23:00. Daarbuiten telt een
-  verzoek eenvoudig niet mee, dus een vertypte automatisering kan je 's nachts niet de
-  ketel laten aanslaan.
+  verzoek eenvoudig niet mee, dus een vertypte automatisering kan je 's nachts niet de ketel
+  laten aanslaan.
+
+Een lopend verzoek **overleeft een herstart** van Home Assistant. Een verzoek dat intussen
+is afgelopen komt bewust niet terug: de tijd liep door terwijl HA weg was.
 
 Bij het aflopen van de teller neemt niets het over: de gewone poorten gelden weer. Ben je
-inmiddels thuis, dan draait alles gewoon door. Is er niemand thuis, dan gaat alles uit.
-Dat is dezelfde poort die het altijd al was, en precies wat je wilt.
+inmiddels thuis, dan draait alles door. Is er niemand thuis, dan gaat alles uit.
 
 Afblazen kan met `climate_director.cancel_precondition`, met of zonder `zone_ids`.
 
@@ -379,19 +444,19 @@ als slaapsensor te gebruiken.
 Wat wel werkt is een `input_boolean` die je met een knop omschakelt. Drie stappen:
 
 1. Maak een helper van het type **Schakelaar** (`input_boolean`), bijvoorbeeld
-   `input_boolean.danny_slaapt`.
+   `input_boolean.<naam>_slaapt`.
 2. Kies die bij de bewoner als **Slaapsensor**, met `on` als slaapstand.
 3. Laat een slimme knop of een dashboardknop hem omschakelen:
 
 ```yaml
-alias: Slaapknop Danny
+alias: Slaapknop <naam>
 triggers:
   - trigger: state
-    entity_id: input_button.danny_slaapknop
+    entity_id: input_button.<naam>_slaapknop
 actions:
   - action: input_boolean.toggle
     target:
-      entity_id: input_boolean.danny_slaapt
+      entity_id: input_boolean.<naam>_slaapt
 ```
 
 Eén knop voor beide richtingen: 's avonds indrukken zet hem aan, 's ochtends uit. Liever
@@ -407,14 +472,14 @@ Laat je de slaapsensor helemaal leeg, dan telt die bewoner nooit als slapend. De
 wakker-poort staat dan altijd open, en een zone die je met de hand uitzette komt pas om
 middernacht weer vrij in plaats van bij het naar bed gaan.
 
-#### Vakantiemodus
+#### Vakantieschema
 
 Een vakantiedag telt als **zaterdag**: elk rooster in huis wordt als een zaterdagrooster
 gelezen, inclusief het wachten op wie er nog slaapt. Wil iemand op vakantie andere uren,
 dan vinkt die bij een venster *Dit is een vakantievenster* aan; dat venster vervangt dan
 zijn gewone vensters en negeert de dagen van de week.
 
-De vakantiemodus gaat aan met `switch.*_vakantiemodus`, of vanzelf zodra er in een van de
+Het vakantieschema gaat aan met `switch.*_vakantieschema`, of vanzelf zodra er in een van de
 ingestelde agenda's een item loopt met het ingestelde trefwoord erin. **Zonder trefwoord
 blijven de agenda's helemaal buiten beschouwing** — raden welk agenda-item vakantie
 bedoelde is niet aan de integratie.
@@ -454,7 +519,7 @@ en met 6 over in plaats van permanent op slot te zitten.
 | Een slaapsensor per bewoner | nee | zonder deze telt niemand ooit als slapend; de wakker-poort staat dan altijd open |
 | `binary_sensor.*` aanwezigheid per zone | nee, tenzij de zone op *de ruimte zelf* draait | dan is het de enige poort die de zone heeft |
 | `binary_sensor.*` deur of raam | nee | schort de gekoppelde zones op zolang hij openstaat |
-| `calendar.*` | nee | zet de vakantiemodus vanzelf aan; werkt alleen mét trefwoord |
+| `calendar.*` | nee | zet het vakantieschema vanzelf aan; werkt alleen mét trefwoord |
 | Een seizoensentiteit | nee | alleen als je het seizoen niet uit de maand wilt afleiden |
 
 Helpers hoef je nergens voor aan te maken. De integratie levert haar eigen schakelaars en
@@ -525,7 +590,7 @@ configuratiecontrole meldt dat.
 | Instelling | Wat het doet |
 |---|---|
 | Aanwezigheidsentiteit | of deze persoon thuis is |
-| Slaapsensor + status | wanneer deze persoon slaapt, bijvoorbeeld `sensor.danny_charger_type` op `wireless` |
+| Slaapsensor + status | wanneer deze persoon slaapt, bijvoorbeeld `<entiteit>` op de stand die slapen verraadt |
 | Slaapsensor telt vanaf / tot | de uren waarin die sensor iets betekent; leeg is de klok rond |
 | Roostervensters | begin, eind, dagen van de week, en of het een vakantievenster is |
 
@@ -578,14 +643,15 @@ Een apparaat dat `unavailable` of `unknown` is laat niets omvallen. De director 
 onbereikbaarheid als een toestand, niet als een ongeluk: zo'n bron telt gewoon niet mee als
 kandidaat, en de volgende bron op voorkeur neemt het over.
 
-Concreet, met een woonkamer die de gasverwarming als eerste bron heeft en de airco als
-tweede: valt de thermostaat van de gasverwarming weg, dan verwarmt de airco. De kamer wordt
-gewoon warm. Je hoeft daar niets voor in te stellen — het is voldoende dat beide apparaten
-als bron onder dezelfde zone staan, met de gasverwarming op de laagste voorkeur.
+Concreet, met een kamer die een warmtepomp of airco als eerste bron heeft en de
+gasverwarming als tweede: valt `<entiteit>` van de airco weg, dan neemt het gas het over. De
+kamer wordt gewoon warm. Je hoeft daar niets voor in te stellen — het is voldoende dat beide
+apparaten als bron onder dezelfde zone staan, met de goedkoopste op de laagste voorkeur.
 
 En precies daar zit het gevaar. **Een vangnet dat werkt, voel je niet.** De kamer komt op
-temperatuur, alles lijkt in orde, en pas op de energierekening merk je dat er wekenlang
-elektrisch verwarmd is omdat niemand de kapotte thermostaat gerepareerd heeft.
+temperatuur, alles lijkt in orde, en pas op de energierekening merk je dat er wekenlang op
+gas gestookt is — duurder dan elektrisch — omdat niemand de kapotte airco gerepareerd
+heeft.
 
 Daarom is er per zone een melder: `binary_sensor.*_op_reserve`. Die gaat aan zodra een zone
 draait op een bron die níét de eerste keus was, omdat de eerste keus onbereikbaar is. In de
@@ -604,124 +670,85 @@ toch al stil, dat is precies waar dat venster voor is. En hij gaat niet aan voor
 die mínder voorrang heeft dan wat er nu draait. Alleen wat écht aan de beurt was en niet
 opnam, telt.
 
-##### Voorbeeld: een melding als het vangnet inschiet
-
-De integratie stuurt zelf geen berichten. Dat is met opzet: waar een melding heen gaat, hoe
-hij klinkt en of hij 's nachts mag komen, is niets waar een klimaatregelaar over hoort te
-beslissen. Hang er dus je eigen automatisering aan. Vervang `woonkamer` door je eigen zone
-en de doelen door je eigen telefoon of speakers.
-
-```yaml
-alias: Klimaat - melding als het vangnet inschiet
-description: >
-  Waarschuwt zodra een zone op een reserve-apparaat draait, en meldt het
-  opnieuw als de eerste keus weer meedoet.
-mode: single
-triggers:
-  - trigger: state
-    entity_id: binary_sensor.woonkamer_op_reserve
-    from: "off"
-    to: "on"
-    for: "00:05:00"
-    id: uitgeweken
-  - trigger: state
-    entity_id: binary_sensor.woonkamer_op_reserve
-    from: "on"
-    to: "off"
-    id: hersteld
-actions:
-  - variables:
-      overgeslagen: >-
-        {{ state_attr('binary_sensor.woonkamer_op_reserve', 'unreachable')
-           | default([], true) | join(', ') }}
-      draait_op: >-
-        {{ state_attr('binary_sensor.woonkamer_op_reserve', 'serving')
-           | default('niets', true) }}
-  - choose:
-      - conditions:
-          - condition: trigger
-            id: uitgeweken
-        sequence:
-          - action: notify.mobile_app_telefoon_danny
-            data:
-              title: Klimaat wijkt uit
-              message: >-
-                De woonkamer verwarmt via {{ draait_op }}, want {{ overgeslagen }}
-                is niet te bereiken.
-          - action: tts.speak
-            target:
-              entity_id: tts.google_nl
-            data:
-              cache: false
-              media_player_entity_id: media_player.woonkamer
-              message: >-
-                Let op. De woonkamer verwarmt nu via {{ draait_op }}, omdat
-                de gasverwarming niet reageert.
-      - conditions:
-          - condition: trigger
-            id: hersteld
-        sequence:
-          - action: notify.mobile_app_telefoon_danny
-            data:
-              title: Klimaat hersteld
-              message: De woonkamer draait weer op de eerste keus.
-```
-
-Drie dingen die de moeite waard zijn om over te nemen:
-
-- **`for: "00:05:00"`** — een apparaat dat één keer knippert tijdens een herstart is geen
-  storing. Vijf minuten filtert dat weg zonder een echt defect te missen.
-- **De attributen in het bericht** — "de woonkamer verwarmt via airco, want gas is niet te
-  bereiken" vertelt je wat er aan de hand is; "vangnet actief" laat je zoeken.
-- **Ook een bericht bij herstel** — anders weet je nooit of het probleem nog speelt, en
-  wordt de melding iets wat je wegklikt in plaats van iets waar je op handelt.
-
-Wil je het voor élke zone in één automatisering, gebruik dan een trigger op meerdere
-entiteiten en lees `trigger.entity_id` uit in plaats van de zone hard in te tikken.
-
 Blijft de eerste keus lang weg, dan gaat ook `binary_sensor.*_vastgelopen` aan, met de
 onleesbare entiteit in `unusable_entities`. De twee melders vullen elkaar aan: de ene zegt
-*er is uitgeweken*, de andere zegt *er is iets niet te lezen*.
+*er is uitgeweken*, de andere zegt *er is iets niet te lezen*. Een uitgewerkte melding voor
+allebei staat bij
+[Must-have automatiseringen](#must-have-automatiseringen-en-notificaties).
 
-#### Centraal of per zone
+#### Wat voor verwarmingssysteem heb je
 
-Onder **Instellingen** staat **Verwarmingssysteem**, met twee keuzes. Die verandert niets
-aan wie er mag draaien — dat blijft aan de poorten en de voorrang. Hij legt vast wat je
-installatie *is*, zodat de configuratiecontrole kan waarschuwen als je invulling er niet
-bij past.
+Onder **Instellingen** staat **Verwarmingssysteem**, met twee keuzes. Die instelling
+verandert niets aan wie er mag draaien — dat blijft aan de poorten en de voorrang. Hij legt
+vast wat je installatie *is*, zodat de configuratiecontrole kan waarschuwen als je invulling
+er niet bij past.
+
+##### Wanneer is een systeem gezoneerd
+
+Een systeem is gezoneerd als het de warmte per deel van het huis kan **afsluiten of apart
+opwekken**. Dat kan op twee manieren:
+
+- **Zoneventielen** — motorische kleppen (of aparte zonepompen) die de toevoer naar een
+  groep radiatoren of een vloerverwarmingsgroep open- en dichtzetten, elk met een eigen
+  thermostaat die om warmte vraagt.
+- **Meerdere warmtebronnen** — bijvoorbeeld een ketel voor beneden en een warmtepomp of
+  airco voor boven.
+
+**Slimme radiatorknoppen alleen zijn géén gezoneerd systeem.** Een knop smoort de doorstroming
+van één radiator, maar het huis heeft nog steeds één circuit en één warmtebron die voor
+iedereen tegelijk aan of uit gaat. Draai je de knoppen in de slaapkamer dicht, dan stookt de
+ketel gewoon door voor de rest van het huis. Kies dan **Centraal**.
+
+##### De twee keuzes
 
 | Keuze | Wat het betekent | Zo vul je het in |
 | --- | --- | --- |
-| **Centraal** | Eén warmtebron voor het hele huis. Een gesloten systeem kan de ene kamer niet verwarmen zonder de rest. Denk aan Tado met één thermostaat, of een cv zonder zoneregeling. | Zet **dezelfde** thermostaat als bron onder elke zone |
-| **Per zone** | Elke ruimte regelt zijn eigen warmte. Dat hoeft **geen** aparte warmtebron per kamer te zijn: een gezoneerde cv werkt juist met één ketel en zoneventielen of slimme radiatorkranen. | Geef elke zone zijn **eigen** klep of apparaat als bron, en zet de ketel erbij als generator |
+| **Centraal** | Eén warmtebron voor het hele huis. Aanzetten voor één kamer verwarmt de rest mee. Denk aan één slimme thermostaat, met of zonder radiatorknoppen. | Zet **dezelfde** thermostaat als bron onder elke zone |
+| **Per zone** | Elk deel van het huis kan zijn warmte apart krijgen, via een zoneventiel of een eigen warmtebron. | Geef elke zone zijn **eigen** klep of apparaat als bron; is er één gedeelde ketel, zet die er dan bij als generator |
 
-De controle kijkt daarna mee, maar hij telt niet zomaar gedeelde apparaten. Eén ketel onder
-tien zones is geen fout — zo hoort een gezoneerde cv er juist uit te zien. De waarschuwing
-komt pas als twee of meer kamers **uitsluitend** op hetzelfde apparaat zijn aangewezen en
-niets van zichzelf hebben: dan valt er per kamer niets meer te regelen en verwarmt aanzetten
-voor de een de ander mee. Heeft een kamer een eigen airco én de gasverwarming als reserve,
-dan is dat gewoon gezoneerd en zwijgt de controle. Andersom net zo: staat de keuze op
-*centraal* terwijl elke kamer zijn eigen bron heeft, dan is het systeem gezoneerd.
+Eén ketel met drie zoneventielen is dus **per zone**, ook al is er maar één brander: de
+ventielen bepalen wie warmte krijgt. Eén ketel met vijftien radiatorknoppen is **centraal**.
 
-Het blijft een **waarschuwing, geen blokkade**. De director regelt gewoon door. Alleen weet
-je nu dát het scheef staat, in plaats van het te ontdekken als het verkeerde deel van het
-huis warm wordt.
+##### Zo modelleer je een cv met kleppen of knoppen
 
-Had je de integratie al draaien voordat deze instelling bestond? Dan wordt de keuze
-afgeleid uit wat er al stond: deelt een warmtebron twee of meer zones, dan is het centraal.
-Je krijgt dus geen waarschuwing voor een keuze die je nooit gemaakt hebt. Vanaf de eerste
-keer opslaan staat hij vast en raadt er niets meer.
+Elke kamer een zone, en de `climate`-entiteit van die kamer als bron met rol *alleen
+verwarmen*. Dat werkt met elke integratie die per ruimte zo'n entiteit levert. Zet ze
+**niet** in een circuit: dat begrip gaat over een gedeelde compressor van airco's, en een
+ketel heeft er geen.
+
+Wat ze wél delen is het apparaat dat het water warm maakt. Draait dat systeem zijn eigen
+brander zodra een kraan erom vraagt, dan hoef je niets extra's in te stellen. Is de
+warmtebron een aparte entiteit die geschakeld moet worden, zet die dan onder **Gedeelde
+warmtebronnen**. Hij draait zolang een kamer die hij bedient verwarmd wordt, en stopt zodra
+dat er geen meer is. Zonder vast setpoint volgt hij het warmste doel van de kamers die
+vragen — het koudste nemen zou de kamer die het hardst om warmte vraagt nooit laten halen
+wat hij vroeg.
+
+##### Wat de controle wel en niet meldt
+
+De controle telt niet zomaar gedeelde apparaten. Eén ketel onder tien zones is geen fout.
+De waarschuwing komt pas als twee of meer kamers **uitsluitend** op hetzelfde apparaat zijn
+aangewezen en niets van zichzelf hebben: dan valt er per kamer niets meer te regelen.
+Heeft een kamer een eigen airco én de gasverwarming als reserve, dan is dat gewoon gezoneerd
+en zwijgt de controle. Andersom net zo: staat de keuze op *centraal* terwijl elke kamer zijn
+eigen bron heeft, dan is het systeem gezoneerd.
+
+Het blijft een **waarschuwing, geen blokkade**. De director regelt gewoon door.
+
+Had je de integratie al draaien voordat deze instelling bestond? Dan wordt de keuze afgeleid
+uit wat er al stond: deelt een warmtebron twee of meer zones, dan is het centraal. Je krijgt
+dus geen waarschuwing voor een keuze die je nooit gemaakt hebt.
 
 ##### Wat er gebeurt bij een gedeelde bron
 
 Een apparaat krijgt altijd **één** opdracht, ook als het onder vijf zones hangt. Vraagt de
-woonkamer warmte en de slaapkamer niets, dan gaat de thermostaat aan — vraag wint van
-stilte, want een gesloten systeem heeft geen manier om dat te scheiden. Vragen er meerdere
-tegelijk, dan volgt het apparaat de zone met de meeste voorrang, net zoals een gewone
-thermostaat de leidende kamer volgt.
+ene kamer warmte en de andere niets, dan gaat de thermostaat aan — vraag wint van stilte,
+want een gesloten systeem heeft geen manier om dat te scheiden. Vragen er meerdere tegelijk,
+dan volgt het apparaat de zone met de meeste voorrang, net zoals een gewone thermostaat de
+leidende kamer volgt.
 
-Wil je dat de slaapkamer níét meeverwarmt, dan heb je geen instelling nodig maar een
-radiatorkraan — en daarmee wordt het een gezoneerd systeem.
+Wil je dat een kamer níét meeverwarmt, dan heb je geen instelling nodig maar een
+zoneventiel — en daarmee wordt het systeem gezoneerd.
 
 ### Dode band
 
@@ -734,56 +761,160 @@ plus de breedte van de band:
 Twee getallen per stand in plaats van vier losse minimum-/maximumdrempels, en de band is een
 bewuste keuze in plaats van een toevalligheid.
 
-### Notificaties
+### Must-have automatiseringen en notificaties
 
-Climate Director stuurt zelf geen notificaties — dat is precies het onuniversele deel. Na
-elke beslissing komt er een event op de Home Assistant event bus (`climate_director_decision`)
-met de zone, de gekozen bron, de stand, de temperatuur en de reden. Eén automatisering die
-daarop luistert vervangt een notificatieblok per automatisering.
+Climate Director stuurt zelf geen berichten. Waar een melding heen gaat, hoe hij klinkt en
+of hij 's nachts mag komen, is niets waar een klimaatregelaar over hoort te beslissen — en
+het is precies het deel dat bij iedereen anders is. In plaats daarvan zet de integratie
+gebeurtenissen en melders klaar waar je je eigen automatisering aan hangt.
 
-Redenen zijn stabiele identifiers (`circuit_conflict_lost`, `everyone_asleep`,
-`short_cycle_protection`, …), zodat ze te vertalen zijn en je er in je eigen
-automatiseringen op kunt filteren.
+Drie daarvan zou ik niet overslaan. De eerste twee melden dingen die **stil** misgaan: je
+huis wordt gewoon warm, en zonder melding merk je maanden niets.
 
-Wat er in het event zit: `zone_id`, `zone_name`, `wanted`, `granted`, `source_id`,
-`entity_id`, `hvac_mode`, `temperature` en `reason`.
+| Wat | Waarom je het niet zonder kunt |
+| --- | --- |
+| **1. Vastgelopen en op reserve** | Een zone die blijft wachten, of die op een duurder apparaat draait omdat het eerste onbereikbaar is. Beide zijn van buiten onzichtbaar |
+| **2. Geweigerd vooruit-verzoek** | Je drukte op een knop en er gebeurde niets. Zonder melding weet je niet dát het geweigerd is, laat staan waarom |
+| **3. Wat er besloten is** | Niet noodzakelijk, wel het handigste stuk gereedschap bij het instellen en bij een schaduwrun |
 
-Één automatisering vervangt daarmee al je losse notificatieblokken. Met de gewone
-`notify`-actie:
+#### 1. Vastgelopen en op reserve
+
+Twee melders, één automatisering. `binary_sensor.*_vastgelopen` gaat aan als een zone te
+lang op dezelfde wachtreden staat of als een ingestelde entiteit niet te lezen is;
+`binary_sensor.*_<zone>_op_reserve` als een zone op een tweede keus draait.
 
 ```yaml
-alias: Klimaat: melden wat er besloten is
+alias: Klimaat - bewaking
+mode: queued
+max: 10
+triggers:
+  - trigger: state
+    id: vastgelopen
+    entity_id: binary_sensor.<installatie>_vastgelopen
+    from: "off"
+    to: "on"
+    for: "00:02:00"
+  - trigger: state
+    id: reserve
+    entity_id:
+      - binary_sensor.<installatie>_<zone>_op_reserve
+    from: "off"
+    to: "on"
+    for: "00:05:00"
+  - trigger: state
+    id: hersteld
+    entity_id:
+      - binary_sensor.<installatie>_vastgelopen
+      - binary_sensor.<installatie>_<zone>_op_reserve
+    from: "on"
+    to: "off"
+actions:
+  - choose:
+      - conditions: [{condition: trigger, id: vastgelopen}]
+        sequence:
+          - action: notify.mobile_app_<telefoon>
+            data:
+              title: Klimaat loopt vast
+              message: >-
+                {{ state_attr(trigger.entity_id, 'zones') | join(', ') }} wacht te lang.
+                {{ state_attr(trigger.entity_id, 'reasons') }}
+      - conditions: [{condition: trigger, id: reserve}]
+        sequence:
+          - action: notify.mobile_app_<telefoon>
+            data:
+              title: Klimaat wijkt uit
+              message: >-
+                {{ state_attr(trigger.entity_id, 'zone') }} draait op
+                {{ state_attr(trigger.entity_id, 'serving') }}, want
+                {{ state_attr(trigger.entity_id, 'unreachable') | join(', ') }}
+                is niet te bereiken.
+      - conditions: [{condition: trigger, id: hersteld}]
+        sequence:
+          - action: notify.mobile_app_<telefoon>
+            data:
+              message: Klimaat is weer in orde.
+```
+
+De wachttijden zijn het belangrijkste eraan: een apparaat dat één keer knippert bij een
+herstart is geen storing. En meld ook het herstel — anders weet je nooit of het probleem nog
+speelt, en wordt de melding iets wat je wegklikt.
+
+#### 2. Een geweigerd vooruit-verzoek, met een knop om door te zetten
+
+Staat er een raam open, dan weigert een vooruit-verzoek. De gebeurtenis
+`climate_director_precondition_refused` vertelt welke zone en welk raam. Hang er een melding
+aan met een knop die hetzelfde verzoek nog eens doet, nu met `ignore_openings: true`.
+
+```yaml
+alias: Klimaat - vooruit verwarmen geweigerd
+mode: queued
+triggers:
+  - trigger: event
+    event_type: climate_director_precondition_refused
+actions:
+  - variables:
+      zone_id: "{{ trigger.event.data.zone_id }}"
+  - action: notify.mobile_app_<telefoon>
+    data:
+      title: Vooruit verwarmen geweigerd
+      message: >-
+        {{ trigger.event.data.zone }}: {{ trigger.event.data.openings | join(', ') }}
+        staat open.
+      data:
+        actions:
+          - action: "KLIMAAT_TOCH_{{ zone_id }}"
+            title: Toch doen
+```
+
+En de tweede helft, die op de knop reageert:
+
+```yaml
+alias: Klimaat - toch vooruit verwarmen
+triggers:
+  - trigger: event
+    event_type: mobile_app_notification_action
+    event_data: {}
+conditions:
+  - condition: template
+    value_template: "{{ trigger.event.data.action.startswith('KLIMAAT_TOCH_') }}"
+actions:
+  - action: climate_director.precondition
+    data:
+      zone_ids: >-
+        {{ [ trigger.event.data.action | replace('KLIMAAT_TOCH_', '') ] }}
+      minutes: 60
+      ignore_openings: true
+```
+
+Dit is dezelfde vorm als een gewone bevestigingsvraag: melden, een knop tonen, en op de knop
+handelen. De keuze geldt alleen voor dat ene verzoek en vervalt met de teller.
+
+#### 3. Wat er besloten is
+
+Na elke beslissing komt er een gebeurtenis `climate_director_decision` op de bus, met de
+zone, de gekozen bron, de stand, de temperatuur en de reden. Redenen zijn stabiele
+identifiers (`circuit_conflict_lost`, `everyone_asleep`, `short_cycle_protection`, …), zodat
+je erop kunt filteren.
+
+In het event zitten: `zone_id`, `zone_name`, `wanted`, `granted`, `source_id`, `entity_id`,
+`hvac_mode`, `temperature` en `reason`.
+
+```yaml
+alias: Klimaat - melden wat er besloten is
 triggers:
   - trigger: event
     event_type: climate_director_decision
 actions:
-  - action: notify.mobile_app_telefoon
+  - action: notify.mobile_app_<telefoon>
     data:
       message: >-
         {{ trigger.event.data.zone_name }}: {{ trigger.event.data.hvac_mode }}
         via {{ trigger.event.data.source_id }} ({{ trigger.event.data.reason }})
 ```
 
-Heb je een eigen notificatiescript, dan roep je dat op dezelfde plek aan:
-
-```yaml
-actions:
-  - action: script.notify_algemeen_met_keuzemenu
-    data:
-      bericht: >-
-        {{ trigger.event.data.zone_name }} staat nu op
-        {{ trigger.event.data.hvac_mode }}
-```
-
-Filteren op wat je interesseert kan met een conditie op `reason`. Alleen melden wanneer een
-kamer iets niet kreeg:
-
-```yaml
-conditions:
-  - condition: template
-    value_template: "{{ trigger.event.data.granted == 'neutral' }}"
-```
-
+Eén automatisering vervangt daarmee al je losse notificatieblokken. Tijdens een schaduwrun
+is dit het handigste dat je kunt aanzetten; als alles eenmaal draait wil je hem waarschijnlijk
+filteren op de redenen die je echt wilt weten.
 
 ### Wat je in Home Assistant krijgt
 
@@ -807,7 +938,13 @@ Eén device per installatie, met daaronder:
 Daarnaast is er een downloadbare diagnose met de configuratie, de laatst gelezen
 momentopname en het laatste plan. Met die drie is elke beslissing exact na te spelen.
 
-### Actie
+### Acties
+
+| Actie | Waarvoor |
+| --- | --- |
+| `climate_director.evaluate` | Nu opnieuw laten beslissen |
+| `climate_director.precondition` | Vooruit verwarmen of koelen aanzetten — zie [Vooruit verwarmen en koelen](#vooruit-verwarmen-en-koelen) |
+| `climate_director.cancel_precondition` | Een lopend vooruit-verzoek afblazen |
 
 `climate_director.evaluate` laat de director nu opnieuw beslissen, in plaats van te wachten
 tot een gevolgde entiteit uit zichzelf verandert. Handig tijdens het inrichten en bij het
@@ -923,26 +1060,6 @@ Wat je wél aanwijst zijn entiteiten die je toch al hebt:
 Heb je al een helper die je wilt blijven gebruiken — een `input_select` voor het seizoen,
 een template-sensor die meerdere thermometers middelt — dan wijs je die gewoon aan. De
 integratie dwingt je nergens iets nieuws voor aan te maken, maar staat het overal toe.
-
-### Radiatorkranen en een cv
-
-Een cv met slimme radiatorkranen werkt anders dan een multi-split, en dat verschil zit in
-het model. Kranen vechten niet om een compressortaak — ze verwarmen allemaal alleen maar —
-dus er valt niets te verdelen. Zet ze **niet** in een airco-circuit: dat begrip gaat over een
-gedeelde compressor, en een ketel heeft er geen.
-
-Modelleer het zo: elke kamer een zone, de kraan van die kamer als bron met rol *alleen
-verwarmen*. Dat werkt met elke integratie die per ruimte een `climate`-entiteit levert —
-Tado, Netatmo, Homematic, Z-Wave- en Zigbee-kranen.
-
-Wat kranen wél delen is het apparaat dat het water warm maakt. Draait dat systeem zijn eigen
-brander, zoals Tado doet, dan hoef je niets extra's in te stellen: de brug start de ketel
-zodra een kraan erom vraagt. Is de warmtebron een aparte entiteit die iemand moet schakelen,
-zet die dan onder **Gedeelde warmtebronnen**. Hij draait dan zolang een kamer die hij
-bedient verwarmd wordt, en stopt zodra dat er geen meer is.
-
-Zonder vast setpoint volgt de bron het warmste doel van de kamers die vragen. Het koudste
-nemen zou de kamer die het hardst om warmte vraagt nooit laten halen wat hij vroeg.
 
 ### Talen
 
@@ -1241,13 +1358,13 @@ sequence:
     data:
       duration: "02:00:00"
     target:
-      entity_id: timer.heating
+      entity_id: timer.<your_timer>
   - action: climate.set_temperature
     data:
       temperature: 20
       hvac_mode: heat
     target:
-      entity_id: climate.smart_thermostat_x
+      entity_id: <entiteit>
 ```
 
 And the timer running out puts everything back:
@@ -1258,11 +1375,11 @@ triggers:
   - trigger: event
     event_type: timer.finished
     event_data:
-      entity_id: timer.heating
+      entity_id: timer.<your_timer>
 actions:
   - action: climate.turn_off
     target:
-      entity_id: climate.smart_thermostat_x
+      entity_id: <entiteit>
   - action: switch.turn_off
     target:
       entity_id: switch.climate_director_woonkamer_override
@@ -1280,33 +1397,99 @@ tool for "I want this now, and I decide for how long".
 #### Pre-conditioning
 
 The only way to run an empty house, and deliberately the only one you have to switch on by
-hand. Call the action `climate_director.precondition` from your phone, a dashboard button
-or an automation, and the named zones start heating or cooling ahead so the place is right
-when you walk in.
+hand. Call the action `climate_director.precondition` from your phone, a dashboard button or
+an automation, and the named zones start working ahead of time so it is right when you walk
+in.
 
 ```yaml
 action: climate_director.precondition
 data:
-  zone_ids: [woonkamer]
+  zone_ids: [<zone>]
   minutes: 45
 ```
 
-What it skips: *somebody home*, *awake*, *schedule* and *room presence* — exactly the gates
-that hold an empty house back. What it does not skip: the master switch, a manual override,
-an open window, the dead band, the outdoor bounds and every circuit rule. Pre-conditioning
-is a reason to be allowed, never a reason to be needed.
+##### You are not asking for heat, you are asking for attention
 
-Two bounds make this safe, and neither can be forgotten:
+This is the thing to understand: **you do not say what should happen.** The request only
+opens the door; after that the integration decides exactly as it would while you are home —
+the dead band checks whether it is too cold or too warm, the season and the outdoor window
+per source pick the appliance.
 
-- **It expires by itself.** There is no switch that can be left on, only a timer that runs
-  out. Ask for longer than the configured maximum (two hours by default) and your request
-  is shortened rather than refused. Giving no time at all gives you the maximum.
-- **It only counts inside the window**, 06:00 to 23:00 by default. Outside it a request
-  simply does not count, so a mistyped automation cannot fire the boiler at three at night.
+So the same request gives different outcomes:
+
+| Indoors | Outdoors | Outcome |
+| --- | --- | --- |
+| 18 °C | 21 °C | heating, through the air conditioner |
+| 18 °C | −5 °C | heating, through the gas heating |
+| 26 °C | 28 °C | cooling |
+| 23 °C | 21 °C | **nothing** — the room is already fine |
+
+That last row is no shortcoming. A request is not "switch on"; if the room already sits
+right, the appliance stays off.
+
+##### What it skips, and what it does not
+
+| Still applies | Skipped |
+| --- | --- |
+| The master switch | *Somebody home* |
+| A manual override | *Awake* |
+| The dead band | *Schedule* |
+| The season | *Presence in the room* |
+| The outdoor window **per source** (it picks the appliance) | The outdoor window **per zone** |
+| Windows and doors (see below) | The quiet window |
+| Circuit, exclusive groups, priorities | |
+
+Two rows deserve explaining.
+
+**The outdoor window per zone lapses.** That window answers *"may anything be regulated in
+this weather at all"* — a thrift rule assuming somebody is home. If you ask for it yourself,
+that answer is already given. Without this exception a gap sits between your two windows:
+with heating set to *up to 19 °C outside* and cooling to *from 24 °C*, a request at 21 °C
+outside does nothing at all. The window **per source** does still apply, since it picks
+which appliance is suitable.
+
+**Presence is skipped, per room as well.** If a zone is set to *Room* rather than
+*Household*, pre-conditioning works there just as well. It sits ahead of everything about
+people in the order of precedence, and an empty room falls under that by itself — which is
+precisely the point.
+
+##### Windows and doors
+
+An open window or door **refuses** a request. Heating against the outside air is money
+thrown away, so that is the default.
+
+But whoever opened the window knows that, and may say: do it anyway.
+
+```yaml
+action: climate_director.precondition
+data:
+  zone_ids: [<zone>]
+  minutes: 90
+  ignore_openings: true
+```
+
+The choice belongs **to the request** rather than to the call: the gate is judged afresh
+every time, so otherwise the request would die a minute later after all. It lapses with the
+timer — it is not a setting that lingers.
+
+When a request is refused the event `climate_director_precondition_refused` fires, carrying
+the zone and the open entities. Hang your own notification on that; see
+[Must-have automations](#must-have-automations-and-notifications) for a worked example with
+a *"Do it anyway"* button.
+
+##### Two limits you cannot forget
+
+- **It expires by itself.** There is no switch that can stay on, only a timer running down.
+  Ask for longer than the configured maximum (two hours by default) and your request is
+  shortened rather than refused. Naming no time gives you the maximum.
+- **It applies only inside the window**, 06:00 to 23:00 by default. Outside it a request
+  simply does not count, so a mistyped automation cannot fire the boiler at night.
+
+A running request **survives a restart** of Home Assistant. A request that ran out
+meanwhile deliberately does not come back: time ran on while HA was away.
 
 When the timer runs out nothing takes over: the ordinary gates apply again. If you are home
-by then, everything simply keeps running. If nobody is home, everything goes off. That is
-the same gate it always was, and exactly what you want.
+by then everything carries on. If nobody is home everything switches off.
 
 Call it off with `climate_director.cancel_precondition`, with or without `zone_ids`.
 
@@ -1349,19 +1532,19 @@ sleep sensor directly.
 What does work is an `input_boolean` you toggle with a button. Three steps:
 
 1. Create a helper of type **Toggle** (`input_boolean`), say
-   `input_boolean.danny_asleep`.
+   `input_boolean.<name>_asleep`.
 2. Pick it as the resident's **Sleep sensor**, with `on` as the sleeping state.
 3. Have a smart button or a dashboard button toggle it:
 
 ```yaml
-alias: Danny's sleep button
+alias: <name>'s sleep button
 triggers:
   - trigger: state
-    entity_id: input_button.danny_sleep_button
+    entity_id: input_button.<name>_sleep_button
 actions:
   - action: input_boolean.toggle
     target:
-      entity_id: input_boolean.danny_asleep
+      entity_id: input_boolean.<name>_asleep
 ```
 
 One button for both directions: pressing it at night switches it on, in the morning off.
@@ -1377,14 +1560,14 @@ Leave the sleep sensor empty altogether and that resident never counts as asleep
 gate then stays open at all times, and a zone you switched off by hand comes free at
 midnight rather than at bedtime.
 
-#### Holiday mode
+#### Holiday schedule
 
 A holiday counts as a **Saturday**: every schedule in the house is read as a Saturday's,
 including waiting for whoever is still asleep. Want different hours on holiday? Tick *This
 is a holiday window* on a window; it then replaces that resident's ordinary windows and
 ignores the days of the week.
 
-Holiday mode goes on with `switch.*_holiday_mode`, or by itself as soon as one of the
+The holiday schedule goes on with `switch.*_holiday_schedule`, or by itself as soon as one of the
 configured calendars has an event running that carries the configured keyword. **Without a
 keyword the calendars are ignored entirely** — guessing which event meant a holiday is not
 the integration's call to make.
@@ -1422,7 +1605,7 @@ through 6 rather than staying locked out forever.
 | A sleep sensor per resident | no | without one nobody ever counts as asleep, so the awake gate stays open |
 | `binary_sensor.*` presence per zone | no, unless the zone runs on *the room itself* | then it is the only gate the zone has |
 | `binary_sensor.*` door or window | no | suspends the attached zones while it is open |
-| `calendar.*` | no | switches holiday mode on by itself; works only with a keyword |
+| `calendar.*` | no | switches the holiday schedule on by itself; works only with a keyword |
 | A season entity | no | only if you do not want the season derived from the month |
 
 You need to create no helpers for any of this. The integration ships its own switches and
@@ -1491,7 +1674,7 @@ sources like this, it can never run on its own — and the configuration check s
 | Setting | What it does |
 |---|---|
 | Presence entity | whether this person is home |
-| Sleep sensor + state | when this person is asleep, for example `sensor.danny_charger_type` at `wireless` |
+| Sleep sensor + state | when this person is asleep, for example `<entity>` at the state that betrays sleeping |
 | Sleep sensor counts from / until | the hours in which that sensor means anything; empty is around the clock |
 | Schedule windows | start, end, days of the week, and whether it is a holiday window |
 
@@ -1544,16 +1727,16 @@ An appliance that is `unavailable` or `unknown` breaks nothing. The director tre
 unreachability as a state rather than an accident: such a source simply does not count as a
 candidate, and the next source by preference takes over.
 
-Concretely, with a living room that has the gas heating as its first source and the air
-conditioner as its second: if the gas thermostat drops out, the air conditioner heats. The
-room simply gets warm. There is nothing to configure for this — it is enough that both
-appliances sit as sources under the same zone, with the gas heating on the lowest
+Concretely, with a room that has a heat pump or air conditioner as its first source and the
+gas heating as its second: if `<entity>` of the air conditioner drops out, the gas takes
+over. The room simply gets warm. There is nothing to configure for this — it is enough that
+both appliances sit as sources under the same zone, with the cheapest on the lowest
 preference number.
 
 And that is exactly where the danger sits. **A safety net that works is one you do not
 feel.** The room reaches temperature, everything looks fine, and you notice on the energy
-bill that it has been heating electrically for weeks because nobody fixed the broken
-thermostat.
+bill that it has been burning gas for weeks — dearer than electricity — because nobody
+fixed the broken air conditioner.
 
 Hence a sensor per zone: `binary_sensor.*_on_stand_in`. It comes on as soon as a zone runs
 on a source that was not the first choice, because the first choice cannot be reached. The
@@ -1572,123 +1755,81 @@ anyway, which is precisely what the window is for. And it does not come on for a
 ranked below whatever is running now. Only what was genuinely up next and did not answer
 counts.
 
-##### Example: a notification when the safety net catches
-
-The integration sends no messages of its own. That is deliberate: where a notification
-goes, how it sounds and whether it may arrive at night is nothing a climate controller
-should decide. So hang your own automation on it. Replace `living_room` with your own zone
-and the targets with your own phone or speakers.
-
-```yaml
-alias: Climate - notify when the safety net catches
-description: >
-  Warns as soon as a zone runs on a stand-in appliance, and reports again
-  once the first choice is back.
-mode: single
-triggers:
-  - trigger: state
-    entity_id: binary_sensor.living_room_on_stand_in
-    from: "off"
-    to: "on"
-    for: "00:05:00"
-    id: fell_back
-  - trigger: state
-    entity_id: binary_sensor.living_room_on_stand_in
-    from: "on"
-    to: "off"
-    id: recovered
-actions:
-  - variables:
-      skipped: >-
-        {{ state_attr('binary_sensor.living_room_on_stand_in', 'unreachable')
-           | default([], true) | join(', ') }}
-      running_on: >-
-        {{ state_attr('binary_sensor.living_room_on_stand_in', 'serving')
-           | default('nothing', true) }}
-  - choose:
-      - conditions:
-          - condition: trigger
-            id: fell_back
-        sequence:
-          - action: notify.mobile_app_danny_phone
-            data:
-              title: Climate falling back
-              message: >-
-                The living room is heating through {{ running_on }}, because
-                {{ skipped }} cannot be reached.
-          - action: tts.speak
-            target:
-              entity_id: tts.google_en
-            data:
-              cache: false
-              media_player_entity_id: media_player.living_room
-              message: >-
-                Heads up. The living room is now heating through {{ running_on }},
-                because the gas heating is not responding.
-      - conditions:
-          - condition: trigger
-            id: recovered
-        sequence:
-          - action: notify.mobile_app_danny_phone
-            data:
-              title: Climate recovered
-              message: The living room is back on its first choice.
-```
-
-Three things worth copying:
-
-- **`for: "00:05:00"`** — an appliance that blinks once during a restart is not a fault.
-  Five minutes filters that out without missing a real failure.
-- **The attributes in the message** — "the living room is heating through airco, because
-  gas cannot be reached" tells you what is going on; "fallback active" sends you hunting.
-- **A message on recovery too** — otherwise you never know whether the problem still
-  stands, and the notification becomes something you swipe away rather than act on.
-
-Want it for every zone in one automation? Trigger on several entities and read
-`trigger.entity_id` instead of typing the zone in by hand.
-
 If the first choice stays away for long, `binary_sensor.*_stuck` comes on as well, with the
 unreadable entity in `unusable_entities`. The two sensors complement each other: one says
-*something fell back*, the other says *something cannot be read*.
+*something fell back*, the other says *something cannot be read*. A worked notification for
+both sits under
+[Must-have automations](#must-have-automations-and-notifications).
 
-#### Central or per zone
+#### What kind of heating system do you have
 
-Under **Settings** sits **Heating system**, with two choices. It changes nothing about who
-may run — that stays with the gates and the priorities. It records what your installation
-*is*, so the configuration check can warn you when your setup does not match.
+Under **Settings** sits **Heating system**, with two choices. The setting changes nothing
+about who may run — that stays with the gates and the priorities. It records what your
+installation *is*, so the configuration check can warn you when your setup does not match.
+
+##### When is a system zoned
+
+A system is zoned when it can **shut off or separately generate** heat per part of the
+house. That happens in one of two ways:
+
+- **Zone valves** — motorised valves (or separate zone pumps) that open and close the flow
+  to a group of radiators or an underfloor loop, each with its own thermostat calling for
+  heat.
+- **Several heat sources** — a boiler downstairs and a heat pump or air conditioner
+  upstairs, for instance.
+
+**Smart radiator valves on their own are not a zoned system.** A knob throttles the flow
+through one radiator, but the house still has one circuit and one heat source that goes on
+or off for everybody at once. Close the knobs in the bedroom and the boiler keeps firing for
+the rest of the house. Choose **Central** in that case.
+
+##### The two choices
 
 | Choice | What it means | How you fill it in |
 | --- | --- | --- |
-| **Central** | One heat source for the whole house. A closed system cannot warm one room without warming the rest. Think Tado with a single thermostat, or a boiler without zone control. | Put the **same** thermostat as a source under every zone |
-| **Per zone** | Every room settles its own heat. That needs **no** separate heat source per room: a zoned boiler system runs precisely on one boiler with zone valves or smart radiator valves. | Give each zone its **own** valve or appliance as a source, and add the boiler as a generator |
+| **Central** | One heat source for the whole house. Switching on for one room warms the rest along with it. Think of a single smart thermostat, with or without radiator valves. | Put the **same** thermostat as a source under every zone |
+| **Per zone** | Each part of the house can get its heat separately, through a zone valve or a heat source of its own. | Give each zone its **own** valve or appliance as a source; if there is one shared boiler, add it as a generator |
 
-The check then watches along, but it does not simply count shared appliances. One boiler
-under ten zones is no fault — that is exactly what a zoned boiler system looks like. The
-warning comes only when two or more rooms depend on the same appliance and **nothing** else:
-then there is nothing left to settle per room, and switching it on for one warms the other
-along with it. A room with its own air conditioner plus the gas heating as a stand-in is
-zoned, and the check stays quiet. The other way round just as much: if the choice says
-*central* while every room has its own source, the system is zoned.
+So one boiler with three zone valves is **per zone**, even though there is only one burner:
+the valves decide who gets heat. One boiler with fifteen radiator knobs is **central**.
 
-It stays a **warning, not a block**. The director carries on regulating. You simply know
-that something is askew, rather than discovering it when the wrong part of the house gets
-warm.
+##### Modelling a boiler with valves or knobs
+
+One zone per room, and that room's `climate` entity as its source with role *heating only*.
+That works with any integration providing such an entity per room. Do **not** put them in a
+circuit: that idea is about a shared compressor in air conditioners, and a boiler has none.
+
+What they do share is the appliance heating the water. If that system fires its own burner
+as soon as a valve asks, there is nothing extra to configure. If the heat source is a
+separate entity that has to be switched, put it under **Shared heat sources**. It runs while
+a room it serves is being heated, and stops once none is. Without a fixed setpoint it
+follows the warmest target among the rooms asking — taking the coldest would never let the
+room asking hardest reach what it asked for.
+
+##### What the check does and does not report
+
+The check does not simply count shared appliances. One boiler under ten zones is no fault.
+The warning comes only when two or more rooms depend on the same appliance and **nothing**
+else: then there is nothing left to settle per room. A room with its own air conditioner
+plus the gas heating as a stand-in is zoned, and the check stays quiet. The other way round
+just as much: if the choice says *central* while every room has its own source, the system
+is zoned.
+
+It stays a **warning, not a block**. The director carries on regulating.
 
 Were you already running the integration before this setting existed? Then the choice is
 inferred from what was already there: if a heat source spans two or more zones, it is
-central. So you never get a warning about a choice you never made. From the first save
-onwards it is recorded and nothing guesses any more.
+central. So you never get a warning about a choice you never made.
 
 ##### What happens with a shared source
 
-An appliance always gets **one** command, even when it hangs under five zones. If the
-living room asks for heat and the bedroom does not, the thermostat comes on — demand beats
-silence, since a closed system has no way to separate the two. If several ask at once, the
-appliance follows the zone with the most claim, just as an ordinary thermostat follows the
-leading room.
+An appliance always gets **one** command, even when it hangs under five zones. If one room
+asks for heat and another does not, the thermostat comes on — demand beats silence, since a
+closed system has no way to separate the two. If several ask at once, the appliance follows
+the zone with the most claim, just as an ordinary thermostat follows the leading room.
 
-Want the bedroom to stay out of it? That needs a radiator valve rather than a setting — and
-with that, the system becomes zoned.
+Want a room to stay out of it? That needs a zone valve rather than a setting — and with
+that, the system becomes zoned.
 
 ### Dead band
 
@@ -1701,57 +1842,161 @@ point plus the width of the band:
 Two numbers per mode instead of four separate minimum/maximum thresholds, and the band is a
 deliberate choice rather than an accident.
 
-### Notifications
+### Must-have automations and notifications
 
-Climate Director sends no notifications itself — that is precisely the part that cannot be
-made universal. After every decision an event lands on the Home Assistant event bus
-(`climate_director_decision`) carrying the zone, the chosen source, the mode, the temperature
-and the reason. One automation listening for that replaces a notification block per
-automation.
+Climate Director sends no messages of its own. Where a notification goes, how it sounds and
+whether it may arrive at night is nothing a climate controller should decide — and it is
+exactly the part that differs for everybody. Instead the integration lays out events and
+sensors for your own automation to hang on.
 
-Reasons are stable identifiers (`circuit_conflict_lost`, `everyone_asleep`,
-`short_cycle_protection`, …), so they can be translated and filtered on in your own
-automations.
+Three of them I would not skip. The first two report things that fail **silently**: your
+house simply gets warm, and without a notification you notice nothing for months.
 
-What the event carries: `zone_id`, `zone_name`, `wanted`, `granted`, `source_id`,
-`entity_id`, `hvac_mode`, `temperature` and `reason`.
+| What | Why you cannot do without it |
+| --- | --- |
+| **1. Stuck and on stand-in** | A zone that keeps waiting, or that runs on a dearer appliance because the first cannot be reached. Both are invisible from the outside |
+| **2. A refused pre-conditioning request** | You pressed a button and nothing happened. Without a notification you do not know it was refused, let alone why |
+| **3. What was decided** | Not essential, but the handiest tool while configuring and during a shadow run |
 
-One automation thereby replaces every separate notification block you had. With the
-ordinary `notify` action:
+#### 1. Stuck and on stand-in
+
+Two sensors, one automation. `binary_sensor.*_stuck` comes on when a zone sits on the same
+waiting reason too long or when a configured entity cannot be read;
+`binary_sensor.*_<zone>_on_stand_in` when a zone runs on a second choice.
 
 ```yaml
-alias: Climate: report what was decided
+alias: Climate - monitoring
+mode: queued
+max: 10
+triggers:
+  - trigger: state
+    id: stuck
+    entity_id: binary_sensor.<installation>_stuck
+    from: "off"
+    to: "on"
+    for: "00:02:00"
+  - trigger: state
+    id: stand_in
+    entity_id:
+      - binary_sensor.<installation>_<zone>_on_stand_in
+    from: "off"
+    to: "on"
+    for: "00:05:00"
+  - trigger: state
+    id: recovered
+    entity_id:
+      - binary_sensor.<installation>_stuck
+      - binary_sensor.<installation>_<zone>_on_stand_in
+    from: "on"
+    to: "off"
+actions:
+  - choose:
+      - conditions: [{condition: trigger, id: stuck}]
+        sequence:
+          - action: notify.mobile_app_<phone>
+            data:
+              title: Climate is stuck
+              message: >-
+                {{ state_attr(trigger.entity_id, 'zones') | join(', ') }} is waiting too
+                long. {{ state_attr(trigger.entity_id, 'reasons') }}
+      - conditions: [{condition: trigger, id: stand_in}]
+        sequence:
+          - action: notify.mobile_app_<phone>
+            data:
+              title: Climate falling back
+              message: >-
+                {{ state_attr(trigger.entity_id, 'zone') }} runs on
+                {{ state_attr(trigger.entity_id, 'serving') }}, because
+                {{ state_attr(trigger.entity_id, 'unreachable') | join(', ') }}
+                cannot be reached.
+      - conditions: [{condition: trigger, id: recovered}]
+        sequence:
+          - action: notify.mobile_app_<phone>
+            data:
+              message: Climate is back to normal.
+```
+
+The waiting times are the important part: an appliance that blinks once during a restart is
+not a fault. And report the recovery too — otherwise you never know whether the problem
+still stands, and the notification becomes something you swipe away.
+
+#### 2. A refused pre-conditioning request, with a button to push through
+
+With a window open, a pre-conditioning request is refused. The event
+`climate_director_precondition_refused` says which zone and which window. Hang a
+notification on it with a button that repeats the same request, now with
+`ignore_openings: true`.
+
+```yaml
+alias: Climate - pre-conditioning refused
+mode: queued
+triggers:
+  - trigger: event
+    event_type: climate_director_precondition_refused
+actions:
+  - variables:
+      zone_id: "{{ trigger.event.data.zone_id }}"
+  - action: notify.mobile_app_<phone>
+    data:
+      title: Pre-conditioning refused
+      message: >-
+        {{ trigger.event.data.zone }}: {{ trigger.event.data.openings | join(', ') }}
+        is open.
+      data:
+        actions:
+          - action: "CLIMATE_ANYWAY_{{ zone_id }}"
+            title: Do it anyway
+```
+
+And the second half, acting on the button:
+
+```yaml
+alias: Climate - pre-condition anyway
+triggers:
+  - trigger: event
+    event_type: mobile_app_notification_action
+    event_data: {}
+conditions:
+  - condition: template
+    value_template: "{{ trigger.event.data.action.startswith('CLIMATE_ANYWAY_') }}"
+actions:
+  - action: climate_director.precondition
+    data:
+      zone_ids: >-
+        {{ [ trigger.event.data.action | replace('CLIMATE_ANYWAY_', '') ] }}
+      minutes: 60
+      ignore_openings: true
+```
+
+This is the same shape as an ordinary confirmation question: report, show a button, act on
+the button. The choice applies to that one request and lapses with the timer.
+
+#### 3. What was decided
+
+After every decision an event `climate_director_decision` lands on the bus, carrying the
+zone, the chosen source, the mode, the temperature and the reason. Reasons are stable
+identifiers (`circuit_conflict_lost`, `everyone_asleep`, `short_cycle_protection`, …), so
+you can filter on them.
+
+The event holds: `zone_id`, `zone_name`, `wanted`, `granted`, `source_id`, `entity_id`,
+`hvac_mode`, `temperature` and `reason`.
+
+```yaml
+alias: Climate - report what was decided
 triggers:
   - trigger: event
     event_type: climate_director_decision
 actions:
-  - action: notify.mobile_app_phone
+  - action: notify.mobile_app_<phone>
     data:
       message: >-
         {{ trigger.event.data.zone_name }}: {{ trigger.event.data.hvac_mode }}
-        via {{ trigger.event.data.source_id }} ({{ trigger.event.data.reason }})
+        through {{ trigger.event.data.source_id }} ({{ trigger.event.data.reason }})
 ```
 
-Have a notification script of your own? Call it in the same place:
-
-```yaml
-actions:
-  - action: script.notify_general_with_menu
-    data:
-      message: >-
-        {{ trigger.event.data.zone_name }} is now on
-        {{ trigger.event.data.hvac_mode }}
-```
-
-Filter down to what interests you with a condition on `reason`. Reporting only when a room
-did not get what it asked for:
-
-```yaml
-conditions:
-  - condition: template
-    value_template: "{{ trigger.event.data.granted == 'neutral' }}"
-```
-
+One automation thereby replaces all your separate notification blocks. During a shadow run
+this is the handiest thing you can switch on; once everything runs you will probably want to
+filter it down to the reasons you actually care about.
 
 ### What you get in Home Assistant
 
@@ -1775,7 +2020,13 @@ One device per installation, holding:
 There is also a downloadable diagnostics export holding the configuration, the last
 snapshot read and the last plan. With those three, any decision is exactly reproducible.
 
-### Action
+### Actions
+
+| Action | What for |
+| --- | --- |
+| `climate_director.evaluate` | Decide again right now |
+| `climate_director.precondition` | Start pre-conditioning — see [Pre-conditioning](#pre-conditioning) |
+| `climate_director.cancel_precondition` | Call a running request off |
 
 `climate_director.evaluate` makes the director decide again right now, instead of waiting
 for a tracked entity to change of its own accord. Useful while setting up and while chasing
@@ -1888,26 +2139,6 @@ What you do point at are entities you already have:
 Already have a helper you want to keep using — an `input_select` for the season, a template
 sensor averaging several thermometers — then simply point at it. The integration never makes
 you create something new, but allows it everywhere.
-
-### Radiator valves and a boiler
-
-A wet system with smart radiator valves works differently from a multi-split, and that
-difference lives in the model. Valves do not fight over a compressor duty — they all only
-ever heat — so there is nothing to arbitrate. Do **not** put them in a refrigerant circuit:
-that concept is about a shared compressor, and a boiler has none.
-
-Model it like this: every room a zone, that room's valve as its source with the role *heat
-only*. That works with any integration exposing a `climate` entity per room — Tado, Netatmo,
-Homematic, Z-Wave and Zigbee valves.
-
-What valves do share is the appliance making the water hot. If that system fires its own
-burner, as Tado does, nothing extra is needed: the bridge starts the boiler the moment a
-valve asks. If the heat source is a separate entity somebody has to switch, put it under
-**Shared heat sources**. It then runs while any room it serves is being heated, and stops
-once none is.
-
-Without a fixed setpoint the source follows the warmest target among the rooms asking.
-Taking the coldest would leave the room asking hardest never reaching what it asked for.
 
 ### Languages
 
