@@ -313,10 +313,15 @@ class TestTheRequestItself:
             def __init__(self) -> None:
                 self.config = config
                 self._precondition: dict[str, datetime] = {}
+                self._precondition_bypass: set[str] = set()
                 self.asked = 0
+                self.saved = 0
 
             def async_request_evaluation(self) -> None:
                 self.asked += 1
+
+            def _async_save_preconditions(self) -> None:
+                self.saved += 1
 
             def _preconditions_expire_at(self, until: datetime) -> None:
                 self.expiry = until

@@ -398,13 +398,25 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                             "suggested_value": self._installation.get("holiday_keyword") or None
                         },
                     ): str,
-                    vol.Optional(
+                    # Een echte standaard en geen suggestie. Bleef het veld
+                    # leeg, dan schreef de flow een leeg venster weg, en dat
+                    # leest de integratie als "de hele dag" - precies het
+                    # tegenovergestelde van de bedoeling, want vooruit
+                    # verwarmen is het enige dat een leeg huis mag laten
+                    # draaien.
+                    #
+                    # A real default rather than a suggestion. If the field was
+                    # left empty the flow wrote an empty window, which the
+                    # integration reads as "all day" - the exact opposite of
+                    # the intent, since pre-conditioning is the only thing
+                    # allowed to run an empty house.
+                    vol.Required(
                         "precondition_start",
-                        description={"suggested_value": precondition.get("start") or "06:00:00"},
+                        default=precondition.get("start") or "06:00:00",
                     ): _TIME,
-                    vol.Optional(
+                    vol.Required(
                         "precondition_end",
-                        description={"suggested_value": precondition.get("end") or "23:00:00"},
+                        default=precondition.get("end") or "23:00:00",
                     ): _TIME,
                     vol.Required(
                         "max_precondition",

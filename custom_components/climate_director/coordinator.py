@@ -27,6 +27,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
@@ -38,7 +39,9 @@ from .const import (
     DEFAULT_SHADOW_MODE,
     DOMAIN,
     EVENT_DECISION,
+    EVENT_PRECONDITION_REFUSED,
     MIN_DEFERRAL_SECONDS,
+    STORAGE_VERSION,
 )
 from .engine import (
     WAITING_REASONS,
@@ -180,6 +183,11 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self.holiday_mode = False
         self.guest_mode = False
         self._precondition: dict[str, datetime] = {}
+        self._precondition_bypass: set[str] = set()
+        self._refused: set[str] = set()
+        self._store: Store[dict[str, Any]] = Store(
+            hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}.precondition"
+        )
         self._waiting: dict[str, tuple[Reason, datetime]] = {}
         self.zone_overrides: dict[str, bool] = {}
         self._handed_back: dict[str, date] = {}
@@ -214,6 +222,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 async_track_state_change_event(self.hass, sorted(entities), self._handle_change)
             )
         self.config_entry.async_on_unload(self._cancel_pending_deferral)
+        await self._async_restore_preconditions()
         await self._async_evaluate()
 
     def tracked_entities(self) -> set[str]:
@@ -467,6 +476,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 _LOGGER.exception("Applying the climate plan failed")
 
             self._fire_events(plan)
+            self._fire_refusals(plan)
             self._note_waiting(plan)
             self._schedule_deferral(plan)
             self.async_set_updated_data(plan)
@@ -483,15 +493,34 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self._precondition = {
             zone_id: until for zone_id, until in self._precondition.items() if now < until
         }
+        self._precondition_bypass &= set(self._precondition)
         return dict(self._precondition)
 
     @callback
-    def async_precondition(self, zone_ids: list[str] | None, minutes: float) -> dict[str, datetime]:
+    def async_precondition(
+        self,
+        zone_ids: list[str] | None,
+        minutes: float,
+        *,
+        ignore_openings: bool = False,
+    ) -> dict[str, datetime]:
         """Start warming the named zones up for somebody on their way home.
 
         The request is capped at the configured maximum, so asking for longer
         than the installation allows shortens the request rather than refusing
         it: the intent was clear, only the number was wrong.
+
+        `ignore_openings` laat het verzoek doorgaan met een raam of deur open.
+        Standaard weigert dat, en terecht - stoken tegen de buitenlucht in is
+        weggegooid geld. Wie het raam zelf openzette weet dat en mag zeggen:
+        toch doen. De keuze hoort bij het verzoek, niet bij de aanroep, want de
+        poort wordt telkens opnieuw beoordeeld.
+
+        `ignore_openings` lets the request run with a window or door open. That
+        is refused by default, and rightly so - heating against the outside air
+        is money thrown away. Whoever opened the window knows that and may say:
+        do it anyway. The choice belongs to the request rather than to the call,
+        since the gate is judged afresh every time.
         """
         ceiling = self.config.gates.max_precondition
         wanted = timedelta(minutes=max(minutes, 0.0))
@@ -502,20 +531,81 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         chosen = [zone_id for zone_id in (zone_ids or known) if zone_id in known]
         for zone_id in chosen:
             self._precondition[zone_id] = until
+            if ignore_openings:
+                self._precondition_bypass.add(zone_id)
+            else:
+                self._precondition_bypass.discard(zone_id)
 
         if chosen:
+            self._async_save_preconditions()
             self._preconditions_expire_at(until)
             self.async_request_evaluation()
         return {zone_id: until for zone_id in chosen}
+
+    # -- vooruit verwarmen bewaren / keeping pre-conditioning ----------------
+
+    @callback
+    def _async_save_preconditions(self) -> None:
+        """Write the running requests away, so a restart does not lose them.
+
+        Een verzoek is het enige dat een leeg huis mag laten draaien, en het is
+        met de hand gegeven. Herstart Home Assistant tien minuten later, dan is
+        het zonder dit spoorloos weg - en de gebruiker komt thuis in een koud
+        huis zonder te weten waarom.
+
+        A request is the only thing allowed to run an empty house, and it was
+        given by hand. If Home Assistant restarts ten minutes later it is gone
+        without trace - and the user comes home to a cold house with no idea
+        why.
+        """
+        self._store.async_delay_save(
+            lambda: {
+                "until": {
+                    zone_id: until.isoformat() for zone_id, until in self._precondition.items()
+                },
+                "bypass": sorted(self._precondition_bypass),
+            },
+            1,
+        )
+
+    async def _async_restore_preconditions(self) -> None:
+        """Read back the requests that were running before the restart.
+
+        Verlopen verzoeken komen niet terug: de tijd liep door terwijl Home
+        Assistant weg was, en een verzoek van gisteren alsnog uitvoeren is
+        erger dan het te vergeten.
+
+        Expired requests do not come back: time ran on while Home Assistant was
+        away, and carrying out yesterday's request after the fact is worse than
+        forgetting it.
+        """
+        stored = await self._store.async_load()
+        if not stored:
+            return
+
+        now = dt_util.now()
+        for zone_id, raw in (stored.get("until") or {}).items():
+            until = dt_util.parse_datetime(str(raw))
+            if until is not None and now < until:
+                self._precondition[zone_id] = until
+        self._precondition_bypass = {
+            zone_id for zone_id in (stored.get("bypass") or ()) if zone_id in self._precondition
+        }
+
+        if self._precondition:
+            self._preconditions_expire_at(max(self._precondition.values()))
 
     @callback
     def async_cancel_precondition(self, zone_ids: list[str] | None) -> None:
         """Call the whole thing off, for the named zones or for all of them."""
         if zone_ids is None:
             self._precondition.clear()
+            self._precondition_bypass.clear()
         else:
             for zone_id in zone_ids:
                 self._precondition.pop(zone_id, None)
+                self._precondition_bypass.discard(zone_id)
+        self._async_save_preconditions()
         self.async_request_evaluation()
 
     @callback
@@ -646,6 +736,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             holiday_mode=self.holiday_mode or self._calendar_says_holiday(),
             guest_mode=self.guest_mode,
             precondition_until=self._live_preconditions(),
+            precondition_bypass=frozenset(self._precondition_bypass),
             zone_overrides={
                 **dict.fromkeys(self._zones_handed_back(), True),
                 **self.zone_overrides,
@@ -782,6 +873,60 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             if previous.get(decision.zone_id) == decision:
                 continue
             self.hass.bus.async_fire(EVENT_DECISION, _event_data(self.config, plan, decision))
+
+    def _fire_refusals(self, plan: Plan) -> None:
+        """Say so when a pre-conditioning request strands on an open window.
+
+        Zonder dit verdwijnt het verzoek in stilte: de zone meldt `opening_open`,
+        maar dat ziet er van buiten hetzelfde uit als een raam dat gewoon
+        openstaat terwijl niemand iets vroeg. Wie op een knop drukte hoort te
+        horen waarom er niets gebeurt, en welk raam het is.
+
+        Alleen bij een wisseling, niet bij elke beoordeling - anders verzuipt
+        elke automatisering die meeluistert.
+
+        Without this the request vanishes silently: the zone reports
+        `opening_open`, but from the outside that looks the same as a window
+        simply standing open while nobody asked for anything. Whoever pressed a
+        button deserves to hear why nothing happens, and which window it is.
+
+        Only on a change, not on every evaluation - otherwise any automation
+        listening drowns.
+        """
+        refused: set[str] = set()
+        for decision in plan.zones:
+            if decision.reason is not Reason.OPENING_OPEN:
+                continue
+            if not self._precondition.get(decision.zone_id):
+                continue
+            refused.add(decision.zone_id)
+
+            if decision.zone_id in self._refused:
+                continue
+            zone = self.config.zone(decision.zone_id)
+            self.hass.bus.async_fire(
+                EVENT_PRECONDITION_REFUSED,
+                {
+                    "entry_id": self.config_entry.entry_id,
+                    "zone_id": decision.zone_id,
+                    "zone": zone.name if zone else decision.zone_id,
+                    "openings": self._open_openings(decision.zone_id),
+                    "until": self._precondition[decision.zone_id].isoformat(),
+                },
+            )
+
+        self._refused = refused
+
+    def _open_openings(self, zone_id: str) -> list[str]:
+        """Return the entity ids standing open for one zone, so the notice can name them."""
+        if self.world is None:
+            return []
+        return sorted(
+            opening.entity_id
+            for opening in self.config.openings
+            if (not opening.zone_ids or zone_id in opening.zone_ids)
+            and self.world.opening(opening.entity_id).open
+        )
 
     def _schedule_deferral(self, plan: Plan) -> None:
         """Re-evaluate when a timer in the plan expires.

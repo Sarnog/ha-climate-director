@@ -9,6 +9,13 @@ from homeassistant.const import Platform
 
 DOMAIN = "climate_director"
 
+#: Versie van het opslagbestand voor lopende vooruit-verzoeken. Verhoog dit
+#: alleen als de vorm verandert, en schrijf er dan een migratie bij.
+#:
+#: Version of the store holding running pre-conditioning requests. Raise this
+#: only when its shape changes, and write a migration along with it.
+STORAGE_VERSION = 1
+
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.NUMBER,
@@ -22,6 +29,17 @@ PLATFORMS: list[Platform] = [
 # Event fired on the Home Assistant event bus after every decision, so users
 # can build their own notification automations.
 EVENT_DECISION = f"{DOMAIN}_decision"
+
+#: Gaat af wanneer een vooruit-verzoek strandt op een openstaand raam of
+#: deur. De integratie stuurt zelf geen berichten - waar een melding heen
+#: gaat is niets waar een klimaatregelaar over hoort te beslissen - dus dit
+#: is het haakje waar een eigen automatisering aan hangt.
+#:
+#: Fires when a pre-conditioning request runs aground on an open window or
+#: door. The integration sends no messages of its own - where a notification
+#: goes is nothing a climate controller should decide - so this is the hook
+#: an automation of your own hangs on.
+EVENT_PRECONDITION_REFUSED = f"{DOMAIN}_precondition_refused"
 
 # Actie om nu opnieuw te laten beslissen, zonder te wachten tot een gevolgde
 # entiteit uit zichzelf verandert. Handig bij het inrichten en bij het napluizen
@@ -44,6 +62,7 @@ SERVICE_PRECONDITION = "precondition"
 SERVICE_CANCEL_PRECONDITION = "cancel_precondition"
 ATTR_ZONE_IDS = "zone_ids"
 ATTR_MINUTES = "minutes"
+ATTR_IGNORE_OPENINGS = "ignore_openings"
 
 # Sleutels in de config entry.
 # Keys in the config entry.
