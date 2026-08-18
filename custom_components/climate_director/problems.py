@@ -1,6 +1,14 @@
-"""Configuratieproblemen zichtbaar maken in Home Assistant zelf.
+"""Stille problemen zichtbaar maken in Home Assistant zelf.
 
-Surfacing configuration problems in Home Assistant itself.
+Surfacing quiet problems in Home Assistant itself.
+
+Twee soorten, met dezelfde reden om te bestaan: een fout in de configuratie en
+een gebeurtenis waar niemand naar luistert zien er van buiten allebei hetzelfde
+uit als "de director besluit niets".
+
+Two kinds, with the same reason to exist: a mistake in the configuration and an
+event nobody listens for both look, from the outside, the same as "the director
+decides nothing".
 
 `validate()` vindt structurele fouten, maar tot nu toe kwamen die alleen in de
 diagnose terecht. Dat is precies verkeerd tijdens een schaduwrun: een zone met
