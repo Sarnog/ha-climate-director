@@ -31,6 +31,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
+from . import texts
 from .applier import apply
 from .const import (
     CONF_INSTALLATION,
@@ -58,6 +59,7 @@ from .engine import (
     WorldState,
     ZoneDecision,
     decide,
+    wanted_target,
 )
 from .engine.constraints import active_family
 from .engine.diff import Change, changes
@@ -987,19 +989,102 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
 
             if decision.zone_id in self._refused:
                 continue
-            zone = self.config.zone(decision.zone_id)
             self.hass.bus.async_fire(
-                EVENT_PRECONDITION_REFUSED,
-                {
-                    "entry_id": self.config_entry.entry_id,
-                    "zone_id": decision.zone_id,
-                    "zone": zone.name if zone else decision.zone_id,
-                    "openings": self._open_openings(decision.zone_id),
-                    "until": self._precondition[decision.zone_id].isoformat(),
-                },
+                EVENT_PRECONDITION_REFUSED, self._refusal_data(decision.zone_id)
             )
 
         self._refused = refused
+
+    def _refusal_data(self, zone_id: str) -> dict[str, Any]:
+        """Return the payload of one refusal, the sentences included.
+
+        De zinnen worden hier al gemaakt, in de taal van de interface. Een
+        blueprint kan niet vertalen en een gebruiker die zijn huis in het
+        Nederlands bedient wil geen Engelse melding op zijn telefoon. Waar de
+        melding heen gaat blijft aan de gebruiker; alleen de tekst komt hier
+        vandaan.
+
+        Er zitten twee zinnen in: de weigering, en wat er te melden valt zodra
+        iemand op "toch doen" drukt. Die tweede staat er nu al in omdat hij
+        precies dan nodig is, en dan is de gebeurtenis allang geweest.
+
+        The sentences are made here, in the language of the interface. A
+        blueprint cannot translate, and somebody running their house in Dutch
+        does not want an English notice on their phone. Where the notice goes
+        stays the user's business; only the text comes from here.
+
+        Two sentences go in: the refusal, and what there is to report the
+        moment somebody presses "do it anyway". The second is in here already
+        because that is exactly when it is needed, and by then the event is
+        long past.
+        """
+        zone = self.config.zone(zone_id)
+        name = zone.name if zone else zone_id
+        openings = self._open_openings(zone_id)
+        listed = ", ".join(self._friendly(entity_id) for entity_id in openings) or "-"
+        minutes = round(self.config.gates.max_precondition.total_seconds() / 60)
+
+        indoor = self.world.indoor(zone_id) if self.world is not None else None
+        target: float | None = None
+        if zone is not None and self.world is not None:
+            _, target = wanted_target(zone, self.world)
+
+        if indoor is None:
+            code = "precondition_confirmed_unknown"
+            fallback = (
+                "{zone} is going ahead, ignoring {openings}. The room temperature cannot be "
+                "read, so nothing will happen until it can."
+            )
+        elif target is None:
+            code = "precondition_confirmed_satisfied"
+            fallback = (
+                "{zone} is going ahead, ignoring {openings}. Now {indoor} degrees - the room is "
+                "already right, so nothing happens for the moment."
+            )
+        else:
+            code = "precondition_confirmed"
+            fallback = (
+                "{zone} is going ahead, ignoring {openings}. Now {indoor} degrees, aiming for "
+                "{target} degrees."
+            )
+
+        filling = {
+            "zone": name,
+            "openings": listed,
+            "indoor": texts.number(indoor),
+            "target": texts.number(target),
+            "minutes": minutes,
+        }
+        return {
+            "entry_id": self.config_entry.entry_id,
+            "zone_id": zone_id,
+            "zone": name,
+            "openings": openings,
+            "opening_names": [self._friendly(entity_id) for entity_id in openings],
+            "until": self._precondition[zone_id].isoformat(),
+            "indoor_temperature": indoor,
+            "target_temperature": target,
+            "override_minutes": minutes,
+            "title": texts.translated(
+                self.hass, "precondition_refused_title", "Pre-conditioning refused", **filling
+            ),
+            "message": texts.translated(
+                self.hass,
+                "precondition_refused",
+                "{zone} could not start pre-conditioning. Still open: {openings}. Close it, or "
+                "let the request run anyway for {minutes} minutes.",
+                **filling,
+            ),
+            "confirmed_title": texts.translated(
+                self.hass, "precondition_confirmed_title", "Pre-conditioning is running", **filling
+            ),
+            "confirmed_message": texts.translated(self.hass, code, fallback, **filling),
+        }
+
+    def _friendly(self, entity_id: str) -> str:
+        """Return the name somebody would recognise, or the entity id."""
+        state = self.hass.states.get(entity_id)
+        return state.name if state is not None else entity_id
 
     def _open_openings(self, zone_id: str) -> list[str]:
         """Return the entity ids standing open for one zone, so the notice can name them."""

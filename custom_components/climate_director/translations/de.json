@@ -640,6 +640,24 @@
     },
     "target_outside_band": {
       "message": "Zone {zone} beginnt mit {mode} bei {start}°, strebt aber {target}° an. Das Gerät erhält dann eine Temperatur, für die es nichts tun muss - das sieht aus, als würde es sich weigern."
+    },
+    "precondition_refused_title": {
+      "message": "Vorheizen abgelehnt"
+    },
+    "precondition_refused": {
+      "message": "{zone} konnte nicht vorheizen. Noch offen: {openings}. Schließen Sie es, oder lassen Sie die Anforderung trotzdem {minutes} Minuten laufen."
+    },
+    "precondition_confirmed_title": {
+      "message": "Vorheizen läuft"
+    },
+    "precondition_confirmed": {
+      "message": "{zone} läuft trotzdem, {openings} wird ignoriert. Jetzt {indoor} Grad, Ziel {target} Grad."
+    },
+    "precondition_confirmed_satisfied": {
+      "message": "{zone} läuft trotzdem, {openings} wird ignoriert. Jetzt {indoor} Grad - der Raum passt bereits, also geschieht vorerst nichts."
+    },
+    "precondition_confirmed_unknown": {
+      "message": "{zone} läuft trotzdem, {openings} wird ignoriert. Die Raumtemperatur ist nicht lesbar, also geschieht nichts, solange das so bleibt."
     }
   },
   "services": {

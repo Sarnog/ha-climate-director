@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.loader import async_get_integration
 
-from . import problems
+from . import problems, texts
 from .const import (
     ATTR_ENTRY_ID,
     ATTR_IGNORE_OPENINGS,
@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) ->
     coordinator.version = str((await async_get_integration(hass, DOMAIN)).version or "")
     entry.runtime_data = coordinator
 
-    await problems.async_prepare(hass)
+    await texts.async_prepare(hass)
     found = problems.async_report(hass, entry.entry_id, entry.title, coordinator.config)
     if found:
         _LOGGER.warning(

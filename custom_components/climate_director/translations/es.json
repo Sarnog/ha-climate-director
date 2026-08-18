@@ -640,6 +640,24 @@
     },
     "target_outside_band": {
       "message": "La zona {zone} empieza a {mode} a {start}° pero aspira a {target}°. El aparato recibe entonces una temperatura para la que no tiene que hacer nada, y parece que se niega."
+    },
+    "precondition_refused_title": {
+      "message": "Preacondicionamiento rechazado"
+    },
+    "precondition_refused": {
+      "message": "{zone} no pudo empezar el preacondicionamiento. Sigue abierto: {openings}. Ciérralo, o deja que la petición se ejecute igualmente durante {minutes} minutos."
+    },
+    "precondition_confirmed_title": {
+      "message": "El preacondicionamiento está en marcha"
+    },
+    "precondition_confirmed": {
+      "message": "{zone} sigue adelante, ignorando {openings}. Ahora {indoor} grados, objetivo {target} grados."
+    },
+    "precondition_confirmed_satisfied": {
+      "message": "{zone} sigue adelante, ignorando {openings}. Ahora {indoor} grados: la habitación ya está bien, así que de momento no pasa nada."
+    },
+    "precondition_confirmed_unknown": {
+      "message": "{zone} sigue adelante, ignorando {openings}. La temperatura de la habitación no se puede leer, así que no pasará nada mientras siga así."
     }
   },
   "services": {

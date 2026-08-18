@@ -72,7 +72,7 @@ def _collect_wishes(
             refusals[zone.zone_id] = shut[zone.zone_id][0]
             continue
 
-        demand = hysteresis.evaluate(zone, world, _running_family(zone, world))
+        demand = hysteresis.evaluate(zone, world, hysteresis.running_family(zone, world))
         if demand.family is ModeFamily.NEUTRAL:
             refusals[zone.zone_id] = demand.reason
             continue
@@ -615,12 +615,3 @@ def _build_zone_decisions(
         )
 
     return tuple(decisions)
-
-
-def _running_family(zone: Zone, world: WorldState) -> ModeFamily:
-    """Return the duty this zone is running now, for the dead band to build on."""
-    for source in zone.sources:
-        family = world.climate(source.entity_id).family
-        if family in (ModeFamily.HEAT, ModeFamily.COOL):
-            return family
-    return ModeFamily.NEUTRAL

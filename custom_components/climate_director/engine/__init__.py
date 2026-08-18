@@ -28,6 +28,7 @@ from .families import (
     family_of,
     is_compatible,
 )
+from .hysteresis import running_family, wanted_target
 from .models import (
     Circuit,
     ConflictPolicy,
@@ -98,6 +99,8 @@ __all__ = [
     "Zone",
     "ZoneDecision",
     "decide",
+    "running_family",
+    "wanted_target",
     "family_of",
     "is_compatible",
     "validate",

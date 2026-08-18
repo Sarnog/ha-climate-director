@@ -22,7 +22,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.util import slugify
 
-from . import problems
+from . import problems, texts
 from .const import CONF_INSTALLATION, CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE, DOMAIN
 from .coordinator import ClimateDirectorEntry
 from .engine import validate
@@ -291,7 +291,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         """
         found = validate(config_from_dict(self._installation))
         if found and user_input is None:
-            await problems.async_prepare(self.hass)
+            await texts.async_prepare(self.hass)
             return self.async_show_form(
                 step_id="save",
                 data_schema=vol.Schema({vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row()}),

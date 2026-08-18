@@ -640,6 +640,24 @@
     },
     "target_outside_band": {
       "message": "La zone {zone} démarre {mode} à {start}° mais vise {target}°. L'appareil reçoit alors une température pour laquelle il n'a rien à faire, ce qui donne l'impression qu'il refuse."
+    },
+    "precondition_refused_title": {
+      "message": "Préchauffage refusé"
+    },
+    "precondition_refused": {
+      "message": "{zone} n'a pas pu démarrer le préchauffage. Toujours ouvert : {openings}. Fermez-le, ou laissez la demande s'exécuter quand même pendant {minutes} minutes."
+    },
+    "precondition_confirmed_title": {
+      "message": "Le préchauffage est en cours"
+    },
+    "precondition_confirmed": {
+      "message": "{zone} démarre quand même, {openings} est ignoré. Actuellement {indoor} degrés, objectif {target} degrés."
+    },
+    "precondition_confirmed_satisfied": {
+      "message": "{zone} démarre quand même, {openings} est ignoré. Actuellement {indoor} degrés - la pièce est déjà au bon niveau, donc rien ne se passe pour l'instant."
+    },
+    "precondition_confirmed_unknown": {
+      "message": "{zone} démarre quand même, {openings} est ignoré. La température de la pièce est illisible, donc rien ne se passera tant que cela dure."
     }
   },
   "services": {

@@ -33,6 +33,35 @@ class Demand:
     """How far the indoor temperature sits past the switch-on point."""
 
 
+def running_family(zone: Zone, world: WorldState) -> ModeFamily:
+    """Return the duty this zone is running now, for the dead band to build on."""
+    for source in zone.sources:
+        family = world.climate(source.entity_id).family
+        if family in (ModeFamily.HEAT, ModeFamily.COOL):
+            return family
+    return ModeFamily.NEUTRAL
+
+
+def wanted_target(zone: Zone, world: WorldState) -> tuple[ModeFamily, float | None]:
+    """Return the duty this room needs and the temperature it would aim for.
+
+    Los van de poorten, en dat is precies waarvoor het bedoeld is: bij een
+    geweigerd vooruit-verzoek wil je in het bericht kunnen zetten waar de kamer
+    naartoe zou gaan als de poort openging. `NEUTRAL` met `None` betekent dat de
+    kamer al goed ligt - ook dat hoort in zo'n bericht thuis, want dan gebeurt
+    er straks niets en is dat geen tekortkoming.
+
+    Independent of the gates, which is exactly what it is for: on a refused
+    pre-conditioning request you want to be able to put in the message where the
+    room would head if the gate opened. `NEUTRAL` with `None` means the room is
+    already right - which belongs in such a message too, since nothing will
+    happen then and that is not a shortcoming.
+    """
+    demand = evaluate(zone, world, running_family(zone, world))
+    settings = zone.settings_for(demand.family)
+    return demand.family, settings.target if settings else None
+
+
 def evaluate(zone: Zone, world: WorldState, running: ModeFamily) -> Demand:
     """Return the duty `zone` needs, given the duty it is `running` now.
 
