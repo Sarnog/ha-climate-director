@@ -62,10 +62,10 @@
           "shadow_mode": "Berechnet jede Entscheidung, führt aber nichts aus.",
           "require_schedule": "Das Haus wartet dann auf das erste eingestellte Fenster und wartet weiter, solange jemand zu Hause vor seinem eigenen Fenster noch schläft.",
           "outdoor_sensor": "Speist jede Außengrenze, hier wie auch an jeder Quelle. Ohne diesen Sensor kann keine Schwelle für die Außentemperatur je erfüllt werden, und die gesamte Anlage steht still.",
-          "heating_layout": "Zentral: eine Wärmequelle für das ganze Haus, die einen Raum nicht ohne die übrigen erwärmen kann. Pro Zone: jeder Raum regelt seine eigene Wärme, über Ventile oder ein eigenes Gerät. Das ändert nichts daran, wer laufen darf - es lässt die Prüfung warnen, wenn die Einrichtung nicht dazu passt.",
+          "heating_layout": "Zentral: eine Wärmequelle für das ganze Haus, die einen Raum nicht ohne die übrigen erwärmen kann — ein Thermostat, mit oder ohne Heizkörperventile. Pro Zone: jeder Hausteil kann seine Wärme getrennt bekommen, über ein Zonenventil oder eine eigene Wärmequelle. Heizkörperventile allein sind keine Zonierung. Das ändert nichts daran, wer laufen darf; es lässt die Prüfung warnen, wenn die Einrichtung nicht dazu passt.",
           "require_awake": "Wer zu Hause ist, aber schläft, zählt nicht. Welche Entität sagt, dass jemand schläft, stellst du pro Bewohner ein.",
           "holiday_calendars": "Ein laufender Termin in einem dieser Kalender versetzt das Haus in den Urlaub. Leer lassen nutzt nur den Urlaubsschalter.",
-          "holiday_keyword": "Nur Termine mit diesem Wort zählen, zum Beispiel 'Urlaub'. Groß- und Kleinschreibung spielen keine Rolle, und das Wort zählt auch mitten in einem längeren, sodass 'Sommerurlaub' ebenfalls passt. Lässt du es leer, bleiben die Kalender ganz außer Betracht und der Urlaubsmodus hängt allein am Schalter.",
+          "holiday_keyword": "Nur Termine mit diesem Wort zählen, zum Beispiel 'Urlaub'. Groß- und Kleinschreibung spielen keine Rolle, und das Wort zählt auch mitten in einem längeren, sodass 'Sommerurlaub' ebenfalls passt. Lässt du es leer, bleiben die Kalender ganz außer Betracht und der Urlaubsplan hängt allein am Schalter.",
           "guest_start": "Der Gästemodus trägt das Haus nur zwischen diesen Zeiten. Beide leer lassen, damit er den ganzen Tag gilt. Außerhalb übernehmen die gewöhnlichen Tore, damit ein vergessener Schalter nicht die ganze Nacht durchläuft.",
           "guest_end": "Der Gästemodus trägt das Haus nur zwischen diesen Zeiten. Beide leer lassen, damit er den ganzen Tag gilt. Außerhalb übernehmen die gewöhnlichen Tore, damit ein vergessener Schalter nicht die ganze Nacht durchläuft.",
           "precondition_start": "Vorheizen ist das Einzige, was ein leeres Haus laufen lassen darf, und bleibt deshalb in diesen Zeiten. Außerhalb zählt eine Anforderung nicht.",
@@ -331,7 +331,7 @@
           "end": "Gehört nicht mehr zum Fenster.",
           "start": "Gehört zum Fenster.",
           "delete": "Entfernt diesen Zeitplan.",
-          "holiday": "Ein Urlaubsfenster gilt nur bei eingeschaltetem Urlaubsmodus und ersetzt dann die gewöhnlichen Fenster. Seine Wochentage zählen nicht mit. Ohne eines zählt ein Urlaubstag als Samstag.",
+          "holiday": "Ein Urlaubsfenster gilt nur bei eingeschaltetem Urlaubsplan und ersetzt dann die gewöhnlichen Fenster. Seine Wochentage zählen nicht mit. Ohne eines zählt ein Urlaubstag als Samstag.",
           "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
@@ -539,7 +539,7 @@
     "heating_layout": {
       "options": {
         "central": "Zentral - eine Quelle für das ganze Haus",
-        "per_zone": "Pro Zone - jeder Raum seine eigene"
+        "per_zone": "Pro Zone - Zonenventile oder mehrere Wärmequellen"
       }
     }
   },
@@ -615,7 +615,7 @@
       "message": "Die Zonen {first} und {second} haben beide Vorrang {priority} in Kreis {circuit}. An einem Außengerät überlässt das den Sieger dem Zufall; gib jeder eine eigene Zahl."
     },
     "calendars_without_keyword": {
-      "message": "Es sind Urlaubskalender eingestellt, aber kein Stichwort, also kann kein Termin den Urlaubsmodus einschalten. Trag das Wort ein, das ein Termin tragen muss, oder entferne die Kalender."
+      "message": "Es sind Urlaubskalender eingestellt, aber kein Stichwort, also kann kein Termin den Urlaubsplan einschalten. Trag das Wort ein, das ein Termin tragen muss, oder entferne die Kalender."
     },
     "exclusive_overlap": {
       "message": "{first} und {second} schließen sich aus, gelten aber beide {overlap}. Die Gruppe fängt das ab, doch sie begegnen einander, statt sich schon durch ihre Außengrenzen auszuschließen. Gib ihnen angrenzende Grenzen, um sie endgültig zu trennen."

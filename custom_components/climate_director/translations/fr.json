@@ -62,10 +62,10 @@
           "shadow_mode": "Calcule chaque décision mais n'exécute rien.",
           "require_schedule": "La maison attend alors l'ouverture de la première plage réglée, et continue d'attendre tant qu'une personne présente dort encore avant la sienne.",
           "outdoor_sensor": "Alimente chaque limite extérieure, ici comme sur chaque source. Sans ce capteur, aucun seuil de température extérieure ne peut être atteint, et toute l'installation reste à l'arrêt.",
-          "heating_layout": "Central : une seule source de chaleur pour toute la maison, qui ne peut chauffer une pièce sans chauffer les autres. Par zone : chaque pièce règle sa propre chaleur, par vannes ou par son propre appareil. Cela ne change rien à qui peut fonctionner - cela permet au contrôle de vous avertir si votre installation ne correspond pas.",
+          "heating_layout": "Central : une seule source de chaleur pour toute la maison, qui ne peut chauffer une pièce sans les autres — un thermostat, avec ou sans robinets thermostatiques. Par zone : chaque partie de la maison peut recevoir sa chaleur séparément, via une vanne de zone ou sa propre source. Des robinets seuls ne constituent pas un zonage. Cela ne change rien à qui peut fonctionner ; cela permet au contrôle de vous avertir si votre installation ne correspond pas.",
           "require_awake": "Une personne présente mais endormie ne compte pas. L'entité qui indique le sommeil se règle par occupant.",
           "holiday_calendars": "Un évènement en cours dans l'un de ces agendas met la maison en vacances. Laisser vide n'utilise que l'interrupteur vacances.",
-          "holiday_keyword": "Seuls les évènements portant ce mot comptent, par exemple 'vacances'. La casse et l'orthographe n'importent pas, et le mot compte aussi au milieu d'un mot plus long, si bien que 'Grandes vacances' correspond également. Laissé vide, les agendas sont entièrement ignorés et le mode vacances ne dépend plus que de l'interrupteur.",
+          "holiday_keyword": "Seuls les évènements portant ce mot comptent, par exemple 'vacances'. La casse et l'orthographe n'importent pas, et le mot compte aussi au milieu d'un mot plus long, si bien que 'Grandes vacances' correspond également. Laissé vide, les agendas sont entièrement ignorés et le planning de vacances ne dépend plus que de l'interrupteur.",
           "guest_start": "Le mode invités ne porte la maison qu'entre ces heures. Laisser les deux vides pour qu'il s'applique toute la journée. En dehors, les portes ordinaires reprennent la main, afin qu'un interrupteur oublié ne tourne pas toute la nuit.",
           "guest_end": "Le mode invités ne porte la maison qu'entre ces heures. Laisser les deux vides pour qu'il s'applique toute la journée. En dehors, les portes ordinaires reprennent la main, afin qu'un interrupteur oublié ne tourne pas toute la nuit.",
           "precondition_start": "Le préchauffage est la seule chose autorisée à faire tourner une maison vide ; il reste donc dans ces heures. En dehors, une demande ne compte pas.",
@@ -331,7 +331,7 @@
           "end": "Exclue de la plage.",
           "start": "Comprise dans la plage.",
           "delete": "Supprime ce planning.",
-          "holiday": "Une plage de vacances ne s'applique que lorsque le mode vacances est actif, et remplace alors les plages ordinaires. Ses jours de la semaine sont ignorés. Sans elle, un jour de vacances compte comme un samedi.",
+          "holiday": "Une plage de vacances ne s'applique que lorsque le planning de vacances est actif, et remplace alors les plages ordinaires. Ses jours de la semaine sont ignorés. Sans elle, un jour de vacances compte comme un samedi.",
           "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
@@ -539,7 +539,7 @@
     "heating_layout": {
       "options": {
         "central": "Central - une source pour toute la maison",
-        "per_zone": "Par zone - chaque pièce la sienne"
+        "per_zone": "Par zone - vannes de zone ou plusieurs sources"
       }
     }
   },
@@ -615,7 +615,7 @@
       "message": "Les zones {first} et {second} ont toutes deux la priorité {priority} sur le circuit {circuit}. Sur une même unité extérieure, cela laisse le gagnant au hasard ; donnez à chacune son propre numéro."
     },
     "calendars_without_keyword": {
-      "message": "Des agendas de vacances sont réglés mais pas de mot-clé ; aucun évènement ne peut donc activer le mode vacances. Saisissez le mot qu'un évènement doit porter, ou retirez les agendas."
+      "message": "Des agendas de vacances sont réglés mais pas de mot-clé ; aucun évènement ne peut donc activer le planning de vacances. Saisissez le mot qu'un évènement doit porter, ou retirez les agendas."
     },
     "exclusive_overlap": {
       "message": "{first} et {second} s'excluent mais s'appliquent tous deux {overlap}. Le groupe le rattrape, mais ils se rencontrent au lieu de s'exclure déjà par leurs bornes extérieures. Donnez-leur des bornes contiguës pour les séparer définitivement."

@@ -62,10 +62,10 @@
           "shadow_mode": "Berekent elke beslissing maar voert niets uit.",
           "require_schedule": "Het huis wacht dan tot het eerste ingestelde venster opengaat, en blijft wachten zolang iemand die thuis is nog slaapt vóór zijn eigen venster.",
           "outdoor_sensor": "Voedt elke buitengrens, zowel hier als op elke bron. Zonder deze sensor kan geen enkele drempel op buitentemperatuur ooit voldaan worden, en staat de hele installatie stilletjes stil.",
-          "heating_layout": "Centraal: één warmtebron voor het hele huis, die de ene kamer niet kan verwarmen zonder de rest. Per zone: elke ruimte regelt zijn eigen warmte, via kranen of een eigen apparaat. Dit verandert niets aan wie er mag draaien - het laat de controle waarschuwen als je invulling er niet bij past.",
+          "heating_layout": "Centraal: één warmtebron voor het hele huis, die de ene kamer niet kan verwarmen zonder de rest — één thermostaat, met of zonder radiatorknoppen. Per zone: elk deel van het huis kan zijn warmte apart krijgen, via een zoneventiel of een eigen warmtebron. Radiatorknoppen alleen zijn geen zonering. Dit verandert niets aan wie er mag draaien; het laat de controle waarschuwen als je invulling er niet bij past.",
           "require_awake": "Iemand die thuis is maar slaapt telt niet mee. Welke entiteit zegt dat iemand slaapt stel je per bewoner in.",
           "holiday_calendars": "Een lopend item in een van deze agenda's zet het huis op vakantie. Leeg laten gebruikt alleen de vakantieschakelaar.",
-          "holiday_keyword": "Alleen items met dit woord tellen mee, bijvoorbeeld 'vakantie'. Hoofdletters en schrijfwijze maken niet uit, en het woord telt ook midden in een langer woord, dus 'Herfstvakantie' en 'Zomervakantie' worden allebei herkend. Laat je het leeg, dan blijven de agenda's helemaal buiten beschouwing en gaat de vakantiemodus alleen nog met de schakelaar.",
+          "holiday_keyword": "Alleen items met dit woord tellen mee, bijvoorbeeld 'vakantie'. Hoofdletters en schrijfwijze maken niet uit, en het woord telt ook midden in een langer woord, dus 'Herfstvakantie' en 'Zomervakantie' worden allebei herkend. Laat je het leeg, dan blijven de agenda's helemaal buiten beschouwing en gaat de vakantieschema alleen nog met de schakelaar.",
           "guest_start": "De gastenmodus draagt het huis alleen tussen deze tijden. Laat beide leeg om hem de hele dag te laten gelden. Daarbuiten nemen de gewone poorten het over, zodat een schakelaar die niemand uitzette niet de hele nacht doordraait.",
           "guest_end": "De gastenmodus draagt het huis alleen tussen deze tijden. Laat beide leeg om hem de hele dag te laten gelden. Daarbuiten nemen de gewone poorten het over, zodat een schakelaar die niemand uitzette niet de hele nacht doordraait.",
           "precondition_start": "Vooruit verwarmen is het enige dat een leeg huis mag laten draaien, en blijft daarom binnen deze tijden. Daarbuiten telt een verzoek niet mee.",
@@ -331,7 +331,7 @@
           "end": "Valt buiten het venster.",
           "start": "Valt binnen het venster.",
           "delete": "Verwijdert dit rooster.",
-          "holiday": "Een vakantievenster geldt alleen als de vakantiemodus aan staat, en vervangt dan de gewone vensters. De dagen van de week tellen er niet in mee. Zonder vakantievenster telt een vakantiedag als zaterdag.",
+          "holiday": "Een vakantievenster geldt alleen als de vakantieschema aan staat, en vervangt dan de gewone vensters. De dagen van de week tellen er niet in mee. Zonder vakantievenster telt een vakantiedag als zaterdag.",
           "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
@@ -539,7 +539,7 @@
     "heating_layout": {
       "options": {
         "central": "Centraal - één bron voor het hele huis",
-        "per_zone": "Per zone - elke ruimte zijn eigen"
+        "per_zone": "Per zone - zoneventielen of meerdere warmtebronnen"
       }
     }
   },
@@ -615,7 +615,7 @@
       "message": "Zones {first} en {second} hebben allebei voorrang {priority} op circuit {circuit}. Op één buitenunit laat dat de winnaar aan het toeval over; geef ze elk een eigen nummer."
     },
     "calendars_without_keyword": {
-      "message": "Er staan vakantieagenda's ingesteld maar geen trefwoord, dus geen enkel item kan de vakantiemodus aanzetten. Vul het woord in dat een item moet dragen, of haal de agenda's weg."
+      "message": "Er staan vakantieagenda's ingesteld maar geen trefwoord, dus geen enkel item kan de vakantieschema aanzetten. Vul het woord in dat een item moet dragen, of haal de agenda's weg."
     },
     "exclusive_overlap": {
       "message": "{first} en {second} sluiten elkaar uit maar gelden allebei {overlap}. De groep vangt dat op, maar ze komen elkaar tegen in plaats van elkaar door hun buitengrenzen al uit te sluiten. Geef ze aansluitende grenzen om ze definitief uit elkaar te houden."

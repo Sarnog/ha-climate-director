@@ -62,10 +62,10 @@
           "shadow_mode": "Compute every decision but execute nothing.",
           "require_schedule": "The house then waits for the first scheduled window to open, and keeps waiting while somebody who is home is still asleep before theirs.",
           "outdoor_sensor": "Feeds every outdoor limit, both here and on each source. Without it no threshold on outdoor temperature can ever be met, and the whole installation quietly stands still.",
-          "heating_layout": "Central: one heat source for the whole house, which cannot warm one room without warming the rest. Per zone: every room settles its own heat, through valves or its own appliance. This changes nothing about who may run - it lets the check warn you when your setup does not match.",
+          "heating_layout": "Central: one heat source for the whole house, which cannot warm one room without warming the rest — a single thermostat, with or without radiator knobs. Per zone: each part of the house can get its heat separately, through a zone valve or a heat source of its own. Radiator knobs alone are not zoning. This changes nothing about who may run; it lets the check warn you when your setup does not match.",
           "require_awake": "Somebody home but asleep does not count. Which entity says they are asleep is set per resident.",
           "holiday_calendars": "A running event on one of these calendars puts the house on holiday. Leave empty to use only the holiday switch.",
-          "holiday_keyword": "Only events carrying this word count, for example 'holiday'. Spelling and capitals do not matter, and the word counts inside a longer one too, so 'Summer holiday' and 'holidays' both match. Leave it empty and the calendars are ignored entirely, leaving holiday mode to the switch alone.",
+          "holiday_keyword": "Only events carrying this word count, for example 'holiday'. Spelling and capitals do not matter, and the word counts inside a longer one too, so 'Summer holiday' and 'holidays' both match. Leave it empty and the calendars are ignored entirely, leaving holiday schedule to the switch alone.",
           "guest_start": "Guest mode only carries the house between these times. Leave both empty to let it apply all day. Outside them the ordinary gates take over, so a switch nobody remembered to turn off does not run all night.",
           "guest_end": "Guest mode only carries the house between these times. Leave both empty to let it apply all day. Outside them the ordinary gates take over, so a switch nobody remembered to turn off does not run all night.",
           "precondition_start": "Pre-conditioning is the only thing allowed to run an empty house, so it is kept to these hours. Outside them a request simply does not count.",
@@ -331,7 +331,7 @@
           "end": "Excluded from the window.",
           "start": "Included in the window.",
           "delete": "Removes this schedule.",
-          "holiday": "A holiday window applies only while holiday mode is on, and then replaces the ordinary windows. Its days of the week are ignored. Without one, a holiday counts as a Saturday.",
+          "holiday": "A holiday window applies only while holiday schedule is on, and then replaces the ordinary windows. Its days of the week are ignored. Without one, a holiday counts as a Saturday.",
           "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
@@ -539,7 +539,7 @@
     "heating_layout": {
       "options": {
         "central": "Central - one source for the whole house",
-        "per_zone": "Per zone - every room its own"
+        "per_zone": "Per zone - zone valves or several heat sources"
       }
     }
   },
@@ -615,7 +615,7 @@
       "message": "Zones {first} and {second} both hold priority {priority} on circuit {circuit}. On one outdoor unit that leaves the winner to chance; give each its own number."
     },
     "calendars_without_keyword": {
-      "message": "Holiday calendars are set but no keyword is, so no event can ever switch holiday mode on. Fill in the word an event must carry, or clear the calendars."
+      "message": "Holiday calendars are set but no keyword is, so no event can ever switch holiday schedule on. Fill in the word an event must carry, or clear the calendars."
     },
     "exclusive_overlap": {
       "message": "{first} and {second} are exclusive but both apply {overlap}. The group does catch it, but they meet rather than ruling each other out by their outdoor bounds. Give them adjacent bounds to keep them apart for good."

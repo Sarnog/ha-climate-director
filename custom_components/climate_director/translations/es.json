@@ -62,7 +62,7 @@
           "shadow_mode": "Calcula cada decisión pero no ejecuta nada.",
           "require_schedule": "La casa espera entonces a que se abra la primera franja establecida, y sigue esperando mientras alguien que está en casa aún duerme antes de la suya.",
           "outdoor_sensor": "Alimenta cada límite exterior, tanto aquí como en cada fuente. Sin este sensor ningún umbral de temperatura exterior puede cumplirse, y toda la instalación se queda parada en silencio.",
-          "heating_layout": "Central: una sola fuente de calor para toda la casa, que no puede calentar una habitación sin calentar el resto. Por zona: cada estancia gestiona su propio calor, mediante válvulas o su propio aparato. Esto no cambia quién puede funcionar; permite que la comprobación avise si tu instalación no encaja.",
+          "heating_layout": "Central: una fuente de calor para toda la casa, que no puede calentar una habitación sin el resto — un termostato, con o sin válvulas de radiador. Por zona: cada parte de la casa puede recibir su calor por separado, mediante una válvula de zona o una fuente propia. Las válvulas de radiador por sí solas no son zonificación. Esto no cambia quién puede funcionar; permite que la comprobación avise si tu instalación no encaja.",
           "require_awake": "Alguien en casa pero dormido no cuenta. Qué entidad indica que duerme se ajusta por residente.",
           "holiday_calendars": "Un evento en curso en alguno de estos calendarios pone la casa en vacaciones. Dejarlo vacío usa solo el interruptor de vacaciones.",
           "holiday_keyword": "Solo cuentan los eventos que llevan esta palabra, por ejemplo 'vacaciones'. Las mayúsculas y la grafía no importan, y la palabra cuenta también dentro de otra más larga, de modo que 'Vacaciones de verano' también coincide. Si la dejas vacía, los calendarios se ignoran por completo y el modo vacaciones queda solo en manos del interruptor.",
@@ -331,7 +331,7 @@
           "end": "Excluida de la franja.",
           "start": "Incluida en la franja.",
           "delete": "Elimina este horario.",
-          "holiday": "Una franja de vacaciones solo se aplica con el modo vacaciones activo, y entonces sustituye a las franjas ordinarias. Sus días de la semana no cuentan. Sin ella, un día de vacaciones cuenta como un sábado.",
+          "holiday": "Una franja de vacaciones solo se aplica con el horario de vacaciones activo, y entonces sustituye a las franjas ordinarias. Sus días de la semana no cuentan. Sin ella, un día de vacaciones cuenta como un sábado.",
           "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
@@ -539,7 +539,7 @@
     "heating_layout": {
       "options": {
         "central": "Central - una fuente para toda la casa",
-        "per_zone": "Por zona - cada estancia la suya"
+        "per_zone": "Por zona - válvulas de zona o varias fuentes"
       }
     }
   },
@@ -615,7 +615,7 @@
       "message": "Las zonas {first} y {second} tienen ambas la prioridad {priority} en el circuito {circuit}. En una unidad exterior eso deja el ganador al azar; da a cada una su propio número."
     },
     "calendars_without_keyword": {
-      "message": "Hay calendarios de vacaciones configurados pero ninguna palabra clave, así que ningún evento puede activar el modo vacaciones. Escribe la palabra que debe llevar un evento, o quita los calendarios."
+      "message": "Hay calendarios de vacaciones configurados pero ninguna palabra clave, así que ningún evento puede activar el horario de vacaciones. Escribe la palabra que debe llevar un evento, o quita los calendarios."
     },
     "exclusive_overlap": {
       "message": "{first} y {second} se excluyen pero ambos aplican {overlap}. El grupo lo recoge, pero se encuentran en lugar de excluirse ya por sus límites exteriores. Dales límites contiguos para separarlos del todo."
