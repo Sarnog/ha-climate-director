@@ -34,10 +34,20 @@ async def async_setup_entry(
     entities.extend(
         ZoneSourceSensor(coordinator, zone.zone_id) for zone in coordinator.config.zones
     )
+    # Een sensor per APPARAAT, niet per bron. Sinds een apparaat onder meerdere
+    # zones mag staan - zo ziet een centrale verwarming eruit - leverde een
+    # bron-voor-bron-lijst dubbele unieke ID's op, en gooide Home Assistant de
+    # tweede en derde weg met een fout in het logboek.
+    #
+    # One sensor per APPLIANCE, not per source. Since an appliance may sit under
+    # several zones - which is what central heating looks like - a source-by-
+    # source list produced duplicate unique ids, and Home Assistant discarded the
+    # second and third with an error in the log.
     entities.extend(
-        CommandSensor(coordinator, source.entity_id)
-        for _, source in coordinator.config.sources()
-        if source.entity_id
+        CommandSensor(coordinator, entity_id)
+        for entity_id in dict.fromkeys(
+            source.entity_id for _, source in coordinator.config.sources() if source.entity_id
+        )
     )
     async_add_entities(entities)
 
