@@ -18,6 +18,13 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
 - **Virtuele `climate` per zone** — één bedieningsentiteit per ruimte, waarmee de gewenste
   temperatuur en stand rechtstreeks op een gewone thermostaatkaart te bedienen zijn. De
   director kiest daar dan de bron bij.
+- **Huisbreed vermogensplafond** — een maximum in watt over de hele installatie, in plaats
+  van alleen een maximum aantal units per circuit. Een grens in stuks zegt niets over wat
+  er werkelijk uit de meter loopt: drie kleine units zijn iets heel anders dan één ketel.
+  Vraagt een vermogen per bron en een rangorde bij het afkappen.
+- **Temperatuurschema per zone** — een streeftemperatuur die met de klok meebeweegt
+  (nacht koeler, ochtend warmer), in plaats van één waarde per zone die alleen door de
+  poorten aan- en uitgezet wordt.
 - **Overrides via acties** — `climate_director.set_override` (met een duur of tot de
   volgende gebeurtenis) en `climate_director.clear_override`, plus knoppen die ze
   aanroepen. `climate_director.evaluate` bestaat al.
@@ -90,6 +97,13 @@ The history of what has already been built and changed is **not** here but in th
 - **A virtual `climate` per zone** — one control entity per room, so the target temperature
   and mode can be set straight from an ordinary thermostat card. The director then picks the
   source to match.
+- **A house-wide power ceiling** — a maximum in watts across the whole installation, rather
+  than only a maximum number of units per circuit. A limit in units says nothing about what
+  actually leaves the meter: three small units are a very different thing from one boiler.
+  Needs a wattage per source and an order in which to shed.
+- **A temperature schedule per zone** — a target that moves with the clock (cooler at
+  night, warmer in the morning), instead of one value per zone that the gates merely switch
+  on and off.
 - **Overrides through actions** — `climate_director.set_override` (with a duration or
   until the next event) and `climate_director.clear_override`, plus buttons calling them.
   `climate_director.evaluate` already exists.

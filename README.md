@@ -308,9 +308,16 @@ het gereedschap voor "ik wil dit nu, en ik bepaal hoe lang".
 #### Vooruit verwarmen en koelen
 
 De enige manier om een leeg huis te laten draaien, en met opzet de enige die je met de hand
-moet aanzetten. Roep de actie `climate_director.precondition` aan vanaf je telefoon, een
-dashboardknop of een automatisering, en de opgegeven zones beginnen alvast te werken zodat
-het goed is als je binnenloopt.
+moet aanzetten. De zones die je erom vraagt beginnen alvast te werken, zodat het goed is als
+je binnenloopt.
+
+**Met een knop.** Elke zone heeft er één: `button.*_<zone>_vooruit`. Zet hem op je dashboard
+en druk erop. Hoe lang zo'n druk duurt staat ernaast, in `number.*_vooruitduur` — standaard
+een uur, in te stellen van een kwartier tot twee uur. Eén duur voor de hele installatie, dus
+je stelt hem één keer in op wat bij je huis past.
+
+**Met de actie**, voor wat niet op een knop past: meerdere zones tegelijk, een afwijkende
+duur, of een open raam overbruggen.
 
 ```yaml
 action: climate_director.precondition
@@ -392,7 +399,9 @@ voorbeeld met een knop *"Toch doen"*.
 
 - **Het verloopt vanzelf.** Er is geen schakelaar die aan kan blijven staan, alleen een
   teller die afloopt. Vraag je langer dan het ingestelde maximum (standaard twee uur), dan
-  wordt je verzoek ingekort in plaats van geweigerd. Geen tijd opgeven geeft het maximum.
+  wordt je verzoek ingekort in plaats van geweigerd — dat geldt ook voor de knop, dus
+  `number.*_vooruitduur` kan het maximum van de installatie nooit oprekken. Geen tijd opgeven
+  geeft het maximum.
 - **Het geldt alleen binnen het venster**, standaard 06:00 tot 23:00. Daarbuiten telt een
   verzoek eenvoudig niet mee, dus een vertypte automatisering kan je 's nachts niet de ketel
   laten aanslaan.
@@ -926,7 +935,7 @@ Eén device per installatie, met daaronder:
 | `sensor.*_zou_<entiteit>_aansturen` | De stand waarin de director dit apparaat zou zetten — één sensor per aangestuurd apparaat |
 | `sensor.*_afwijkingen` | Hoeveel apparaten er nú anders staan dan het plan wil. Nul betekent dat de director het eens is met wat het huis op dit moment stuurt |
 | `sensor.*_bron_<zone>` | Welke bron deze zone bedient, met wat de zone wilde, wat hij kreeg en waarom |
-| `binary_sensor.*_<zone>_geblokkeerd` | Aan als een zone minder kreeg dan hij vroeg, met de reden als attribuut |
+| `binary_sensor.*_<zone>_geblokkeerd` | Aan als een zone minder kreeg dan hij vroeg, met de eerste reden én alle dichte poorten (`closed_gates`) als attributen |
 | `binary_sensor.*_<zone>_op_reserve` | Aan als een zone draait op een reserve-apparaat omdat de eerste keus onbereikbaar is, met de overgeslagen bron als attribuut |
 | `binary_sensor.*_vastgelopen` | Aan als een zone te lang op dezelfde wachtreden staat, met de zones en de wachttijd als attribuut |
 | `switch.*_director` | Hoofdschakelaar; uit betekent dat er niets geregeld wordt |
@@ -934,6 +943,8 @@ Eén device per installatie, met daaronder:
 | `switch.*_gastenmodus` | Blijft regelen terwijl de bewoners weg zijn; slaap en het gastenvenster blijven gelden |
 | `switch.*_override_<zone>` | Geeft één zone volledig terug aan jou: de director stuurt hem niets meer, ook geen uit |
 | `number.*_prioriteit_<zone>` | Hoe sterk deze zone een gedeelde buitenunit claimt; lager wint. Vanuit een automatisering te wijzigen |
+| `number.*_vooruitduur` | Hoe lang één druk op een vooruit-knop duurt; een kwartier tot twee uur |
+| `button.*_<zone>_vooruit` | Laat deze zone vooruit verwarmen of koelen — zie [Vooruit verwarmen en koelen](#vooruit-verwarmen-en-koelen) |
 
 Daarnaast is er een downloadbare diagnose met de configuratie, de laatst gelezen
 momentopname en het laatste plan. Met die drie is elke beslissing exact na te spelen.
@@ -1397,9 +1408,16 @@ tool for "I want this now, and I decide for how long".
 #### Pre-conditioning
 
 The only way to run an empty house, and deliberately the only one you have to switch on by
-hand. Call the action `climate_director.precondition` from your phone, a dashboard button or
-an automation, and the named zones start working ahead of time so it is right when you walk
-in.
+hand. The zones you ask for start working ahead of time, so it is right when you walk in.
+
+**With a button.** Every zone has one: `button.*_<zone>_pre_condition`. Put it on your
+dashboard and press it. How long such a press lasts sits beside it, in
+`number.*_pre_conditioning_duration` — an hour by default, settable from a quarter of an hour
+to two hours. One duration for the whole installation, so you set it once to what suits your
+house.
+
+**With the action**, for what does not fit on a button: several zones at once, a different
+duration, or overriding an open window.
 
 ```yaml
 action: climate_director.precondition
@@ -1481,7 +1499,9 @@ a *"Do it anyway"* button.
 
 - **It expires by itself.** There is no switch that can stay on, only a timer running down.
   Ask for longer than the configured maximum (two hours by default) and your request is
-  shortened rather than refused. Naming no time gives you the maximum.
+  shortened rather than refused — the button included, so
+  `number.*_pre_conditioning_duration` can never stretch the installation's own maximum.
+  Naming no time gives you the maximum.
 - **It applies only inside the window**, 06:00 to 23:00 by default. Outside it a request
   simply does not count, so a mistyped automation cannot fire the boiler at night.
 
@@ -2008,7 +2028,7 @@ One device per installation, holding:
 | `sensor.*_would_command_<entity>` | The mode the director would put this appliance in — one sensor per steered appliance |
 | `sensor.*_mismatch` | How many appliances currently sit somewhere other than where the plan wants them. Zero means the director agrees with whatever is steering the house right now |
 | `sensor.*_<zone>_source` | Which source serves this zone, with what the zone wanted, what it got and why |
-| `binary_sensor.*_<zone>_blocked` | On when a zone got less than it asked for, with the reason as an attribute |
+| `binary_sensor.*_<zone>_blocked` | On when a zone got less than it asked for, with the first reason and every shut gate (`closed_gates`) as attributes |
 | `binary_sensor.*_<zone>_on_stand_in` | On when a zone runs on a stand-in appliance because its first choice is unreachable, with the skipped source as an attribute |
 | `binary_sensor.*_stuck` | On when a zone sits on the same waiting reason too long, with the zones and the wait as attributes |
 | `switch.*_director` | Master switch; off means nothing is regulated |
@@ -2016,6 +2036,8 @@ One device per installation, holding:
 | `switch.*_guest_mode` | Keeps regulating while the residents are away; sleep and the guest window still apply |
 | `switch.*_<zone>_override` | Hands one zone over to you completely: the director sends it nothing, an off included |
 | `number.*_<zone>_priority` | How strongly this zone claims a shared outdoor unit; lower wins. Settable from an automation |
+| `number.*_pre_conditioning_duration` | How long one press of a pre-conditioning button lasts; a quarter of an hour to two hours |
+| `button.*_<zone>_pre_condition` | Warms or cools this zone ahead of time — see [Pre-conditioning](#pre-conditioning) |
 
 There is also a downloadable diagnostics export holding the configuration, the last
 snapshot read and the last plan. With those three, any decision is exactly reproducible.

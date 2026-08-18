@@ -572,7 +572,7 @@
     },
     "button": {
       "zone_precondition": {
-        "name": "Pre-condition {zone}"
+        "name": "{zone} pre-condition"
       }
     },
     "switch": {

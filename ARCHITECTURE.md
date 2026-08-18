@@ -70,7 +70,8 @@ Home Assistant (entiteitstoestanden, klokgebeurtenissen)
   applier              voert het verschil uit, of in schaduwmodus niet
       │
       ▼
-  entiteiten + event   sensor / binary_sensor / switch / diagnostics
+  entiteiten + event   sensor / binary_sensor / switch / button / number
+                       + diagnostics
 ```
 
 ### families.py — modusfamilies
@@ -262,10 +263,17 @@ opgebouwde installatie achter zonder weg terug.
 
 Eén device per installatie. De sensoren zijn bewust uitgebreid: in schaduwmodus zijn zij de
 enige zichtbare uitkomst, en het hele punt van die modus is kunnen zien wat er gebeurd zou
-zijn. De schakelaars zijn bedieningstoestand, geen configuratie — ze herstellen zichzelf na
-een herstart en schrijven hun stand terug naar de coordinator. De platforms worden vóór de
-eerste beslissing opgezet, zodat een uitgeschakelde hoofdschakelaar niet één ronde lang aan
-lijkt te staan.
+zijn.
+
+Daarnaast staat er een tweede soort entiteit onder hetzelfde device, en het verschil is
+principieel: de schakelaars, de `number`-entiteiten en de knoppen zijn **invoer**, geen
+uitvoer. Ze zijn bedieningstoestand, geen configuratie — ze herstellen zichzelf na een
+herstart, schrijven hun stand terug naar de coordinator en negeren updates van de
+coordinator, want anders zou de uitkomst van een beslissing de invoer van de volgende
+overschrijven.
+
+De platforms worden vóór de eerste beslissing opgezet, zodat een uitgeschakelde
+hoofdschakelaar niet één ronde lang aan lijkt te staan.
 
 ### problems.py — configuratiefouten zichtbaar maken
 
@@ -360,7 +368,8 @@ Home Assistant (entity states, clock events)
   applier              executes the difference, or in shadow mode does not
       │
       ▼
-  entities + event     sensor / binary_sensor / switch / diagnostics
+  entities + event     sensor / binary_sensor / switch / button / number
+                       + diagnostics
 ```
 
 ### families.py — mode families
@@ -543,9 +552,16 @@ into it.
 
 One device per installation. The sensors are deliberately detailed: in shadow mode they are
 the only visible output, and the whole point of that mode is being able to see what would
-have happened. The switches are control state, not configuration — they restore themselves
-after a restart and write their state back to the coordinator. The platforms are set up
-before the first decision, so a master switch left off does not appear on for one round.
+have happened.
+
+Beside them sits a second kind of entity under the same device, and the difference is a
+matter of principle: the switches, the `number` entities and the buttons are **input**, not
+output. They are control state rather than configuration — they restore themselves after a
+restart, write their state back to the coordinator and ignore coordinator updates, since
+otherwise the outcome of one decision would overwrite the input to the next.
+
+The platforms are set up before the first decision, so a master switch left off does not
+appear on for one round.
 
 ### problems.py — surfacing configuration mistakes
 
