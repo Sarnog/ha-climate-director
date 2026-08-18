@@ -165,7 +165,11 @@ Volgorde van afhandeling:
    Ontbreekt de tijdstempel, dan gaat de wissel door: de installatie bevriezen op een
    onbekende waarde is erger dan iets te vroeg wisselen.
 4. **Wisselpauze** stopt eerst de oude taak en start de nieuwe pas na een `Deferral`.
-5. **Capaciteitsgrens** snoeit de winnaars terug; onbeheerde draaiende units tellen mee.
+5. **Capaciteitsgrens** snoeit de winnaars. Elke unit die blijft draaien telt mee, niet
+   alleen de units die in geen enkele zone staan: ook een overgedragen zone en een
+   handbediend apparaat bezetten een plek op de buitenunit. De grens gaat over wat de
+   director erbij zet — staat er al meer te draaien dan het ding aankan, dan doet hij er
+   niets bovenop en gaat hij er ook niet dwars voor liggen.
 6. **Kortcyclusbescherming** houdt een start tegen van een unit die net gestopt is —
    alleen starten, nooit stoppen.
 
@@ -489,7 +493,11 @@ Order of handling:
    is worse than swapping a little early.
 4. **Switch delay** stops the old duty first and starts the new one only after a
    `Deferral`.
-5. **Capacity cap** trims the winners; unmanaged running units count towards it.
+5. **Capacity cap** trims the winners. Every unit that keeps running counts, not only the
+   ones sitting in no zone: a handed-over zone and a hand-operated appliance occupy a place
+   on the outdoor unit just the same. The cap is about what the director adds — if more is
+   already running than the thing can take, it adds nothing on top and does not get in the
+   way either.
 6. **Short-cycle protection** holds back a start from a unit that just stopped — starts
    only, never stops.
 

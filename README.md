@@ -570,6 +570,19 @@ Koelen start bij `binnen >= aanzetpunt` en stopt bij `binnen <= aanzetpunt - dod
 Het aanzetpunt telt als bereikt, het uitzetpunt als gepasseerd — dat is wat een apparaat
 belet om op één tiende graad te blijven klepperen.
 
+Drie combinaties weigert dit scherm bij het opslaan, omdat ze alle drie een zone opleveren
+die er wel staat maar nooit iets doet:
+
+- een **streeftemperatuur aan de verkeerde kant van het aanzetpunt** — het apparaat krijgt
+  dan een temperatuur waar het niets voor hoeft te doen, wat eruitziet alsof het weigert;
+- **koelen dat begint op of onder het punt waar verwarmen begint** — dan vragen de twee
+  tegelijk om dezelfde kamer;
+- de zone op **de ruimte zelf zonder aanwezigheidssensor**, of een zone die **niet mag
+  verwarmen en niet mag koelen** — allebei kan de zone dan per definitie nooit draaien.
+
+Achteraf melden kan ook, en dat gebeurde eerder ook — maar dan zoek je eerst een dag naar
+een apparaat dat het niet doet.
+
 **Per bron**
 
 | Instelling | Wat het doet |
@@ -626,7 +639,7 @@ houdt het huis tegen — dat is wat het huis op zaterdag op de laatste slaper la
 | Pauze bij het wisselen van taak | hoe lang alles uit moet staan vóór de omschakeling |
 | Minimale looptijd voor een taakwissel | hoe lang een taak minstens moet hebben gedraaid voordat de andere hem mag overnemen |
 | Minimale cyclustijd | hoe lang een unit uit blijft na het stoppen; vertraagt alleen starten, nooit stoppen |
-| Maximum aantal units tegelijk | de capaciteitsgrens van de buitenunit |
+| Maximum aantal units tegelijk | de capaciteitsgrens van de buitenunit. Alles wat draait telt mee — ook een kamer die je zelf hebt overgenomen en een handbediend apparaat |
 
 #### Als er iets vastloopt
 
@@ -1695,6 +1708,19 @@ dead band`. Cooling starts at `indoor >= switch-on point` and stops at `indoor <
 switch-on point - dead band`. The switch-on point counts as reached, the switch-off point
 as passed — which is what keeps an appliance from chattering on a tenth of a degree.
 
+Three combinations are refused by this screen on saving, since all three produce a zone that
+is there but never does anything:
+
+- a **target on the wrong side of the switch-on point** — the appliance is then set to a
+  temperature it need do nothing for, which looks like it is refusing;
+- **cooling that starts at or below where heating starts** — the two then ask for the same
+  room at once;
+- the zone set to **the room itself without a presence sensor**, or a zone that **may
+  neither heat nor cool** — either way the zone can never run by definition.
+
+Reporting it afterwards works too, and that is what used to happen — but then you spend a
+day first looking for an appliance that will not do its job.
+
 **Per source**
 
 | Setting | What it does |
@@ -1749,7 +1775,7 @@ the house back — which is what makes the house wait for the last sleeper on a 
 | Pause when switching duty | how long everything must be off before the changeover |
 | Minimum run before a duty switch | how long a duty must have run before the other may take over |
 | Minimum cycle time | how long a unit stays off after stopping; only ever delays starting, never stopping |
-| Maximum units at once | the capacity limit of the outdoor unit |
+| Maximum units at once | the capacity limit of the outdoor unit. Everything running counts — a room you took over yourself and a hand-operated appliance included |
 
 #### When something gets stuck
 
