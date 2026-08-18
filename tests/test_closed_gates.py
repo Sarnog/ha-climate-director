@@ -256,3 +256,52 @@ def test_a_zone_that_carries_on_reports_an_empty_list() -> None:
     decision = plan.decision_for("woonkamer")
     assert decision is not None
     assert decision.closed_gates == ()
+
+
+class TestItDoesNotSetOffTheDecisionEvent:
+    """De koppelingslaag vuurt alleen bij een veránderd besluit.
+
+    `_fire_events` vergelijkt de nieuwe beslissing met de vorige en zwijgt als
+    ze gelijk zijn - anders verzuipt elke automatisering die meeluistert. Gaat
+    er een tweede poort dicht terwijl de eerste al dicht stond, dan verandert
+    er voor zo'n automatisering niets: de reden is dezelfde, het gevolg ook.
+    Daarom telt de lijst niet mee in de gelijkheid.
+
+    The binding layer only fires on a changed decision.
+
+    `_fire_events` compares the new decision with the previous one and stays
+    quiet when they are equal - otherwise every automation listening drowns. A
+    second gate shutting while the first already stood shut changes nothing for
+    such an automation: same reason, same outcome. Hence the list is left out
+    of equality.
+    """
+
+    def _decision(self, *gates_shut: Reason) -> object:
+        from custom_components.climate_director.engine import ModeFamily
+        from custom_components.climate_director.engine.plan import ZoneDecision
+
+        return ZoneDecision(
+            zone_id="woonkamer",
+            wanted=ModeFamily.NEUTRAL,
+            granted=ModeFamily.NEUTRAL,
+            reason=Reason.NOBODY_HOME,
+            closed_gates=gates_shut,
+        )
+
+    def test_a_second_shut_gate_is_not_a_new_decision(self) -> None:
+        assert self._decision(Reason.NOBODY_HOME) == self._decision(
+            Reason.NOBODY_HOME, Reason.ZONE_UNOCCUPIED
+        )
+
+    def test_a_different_reason_still_is(self) -> None:
+        """The reason does count; it moves the moment the topmost gate changes."""
+        from custom_components.climate_director.engine import ModeFamily
+        from custom_components.climate_director.engine.plan import ZoneDecision
+
+        other = ZoneDecision(
+            zone_id="woonkamer",
+            wanted=ModeFamily.NEUTRAL,
+            granted=ModeFamily.NEUTRAL,
+            reason=Reason.MASTER_DISABLED,
+        )
+        assert self._decision(Reason.NOBODY_HOME) != other

@@ -92,16 +92,28 @@ class ZoneDecision:
     source_id: str | None = None
     reason: Reason = Reason.REGULATING
 
-    closed_gates: tuple[Reason, ...] = ()
+    closed_gates: tuple[Reason, ...] = field(default=(), compare=False)
     """Every gate standing shut for this zone, broadest first.
 
     `reason` noemt er één, want één dichte poort houdt de zone al tegen. Bij
     het inrichten wil je ze alle vier tegelijk zien, in plaats van ze er stuk
     voor stuk uit te peuteren.
 
+    Telt bewust niet mee in de gelijkheid. De koppelingslaag vuurt zijn
+    beslissings-event alleen als een besluit veránderde, en dat is deze lijst
+    niet: gaat er een tweede poort dicht terwijl de eerste al dicht stond, dan
+    verandert er voor een automatisering niets. De reden zelf telt wél mee,
+    en die verspringt zodra de bovenste poort wisselt.
+
     `reason` names one, since one shut gate is enough to hold the zone back.
     While setting up you want to see all four at once rather than prising them
     out one at a time.
+
+    Deliberately left out of equality. The binding layer fires its decision
+    event only when a decision changed, and this list is not that: a second
+    gate shutting while the first already stood shut changes nothing for an
+    automation. The reason itself does count, and it moves the moment the
+    topmost gate changes.
     """
 
     passed_over: tuple[str, ...] = ()
