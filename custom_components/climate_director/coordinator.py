@@ -583,7 +583,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             self._async_save_state()
             self._preconditions_expire_at(until)
             self.async_request_evaluation()
-        return {zone_id: until for zone_id in chosen}
+        return dict.fromkeys(chosen, until)
 
     # -- met de hand gegeven, dus bewaren / given by hand, so kept ----------
 

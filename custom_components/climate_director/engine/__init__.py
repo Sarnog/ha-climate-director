@@ -99,9 +99,9 @@ __all__ = [
     "Zone",
     "ZoneDecision",
     "decide",
-    "running_family",
-    "wanted_target",
     "family_of",
     "is_compatible",
+    "running_family",
     "validate",
+    "wanted_target",
 ]

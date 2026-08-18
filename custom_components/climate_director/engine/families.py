@@ -92,11 +92,6 @@ def is_compatible(mode: str, family: ModeFamily) -> bool:
     return mode_family is family
 
 
-def idle_mode(allow_fan_only: bool) -> str:
-    """Return the mode a unit takes when it may not run its own duty."""
-    return MODE_FAN_ONLY if allow_fan_only else MODE_OFF
-
-
 def preferred_mode(family: ModeFamily) -> str:
     """Return the concrete mode the engine commands for an active duty."""
     if family is ModeFamily.HEAT:

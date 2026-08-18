@@ -220,12 +220,6 @@ class Plan:
         """Return the decision made for this zone, if any."""
         return next((zone for zone in self.zones if zone.zone_id == zone_id), None)
 
-    def circuit_for(self, circuit_id: str) -> CircuitDecision | None:
-        """Return the decision made for this circuit, if any."""
-        return next(
-            (circuit for circuit in self.circuits if circuit.circuit_id == circuit_id), None
-        )
-
     @property
     def next_deferral(self) -> Deferral | None:
         """Return the deferral that expires first, if any."""

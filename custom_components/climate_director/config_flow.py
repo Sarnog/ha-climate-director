@@ -112,11 +112,16 @@ def _choices(values: list[str], key: str = "") -> selector.SelectSelector:
     )
 
 
-def _back_option(key: str) -> selector.SelectOptionDict:
+def _back_option() -> selector.SelectOptionDict:
     """Return the "back to the main menu" row of a picker.
 
     De Engelse tekst blijft als terugval staan, net als bij de toevoegregel.
-    The English text stays as a fallback, as with the add row.
+    Anders dan die regel hoeft hier geen sleutel bij: de terugval luidt in elke
+    lijst hetzelfde, en de vertaling hangt aan de waarde `back_to_menu`.
+
+    The English text stays as a fallback, as with the add row. Unlike that row
+    this one needs no key: the fallback reads the same in every list, and the
+    translation hangs off the `back_to_menu` value.
     """
     return selector.SelectOptionDict(value=_BACK, label="< Back to the main menu")
 
@@ -466,7 +471,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for index, group in enumerate(groups)
         ]
         options.append(_add_option("exclusive"))
-        options.append(_back_option("exclusive"))
+        options.append(_back_option())
         return self.async_show_form(
             step_id="exclusives",
             data_schema=vol.Schema(
@@ -553,7 +558,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for index, window in enumerate(windows)
         ]
         options.append(_add_option("quiet"))
-        options.append(_back_option("quiet"))
+        options.append(_back_option())
         return self.async_show_form(
             step_id="quiets",
             data_schema=vol.Schema(
@@ -641,7 +646,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for index, zone in enumerate(zones)
         ]
         options.append(_add_option("zone"))
-        options.append(_back_option("zone"))
+        options.append(_back_option())
         return self.async_show_form(
             step_id="zones",
             data_schema=vol.Schema(
@@ -784,7 +789,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for index, source in enumerate(sources)
         ]
         options.append(_add_option("source"))
-        options.append(_back_option("source"))
+        options.append(_back_option())
         return self.async_show_form(
             step_id="sources",
             data_schema=vol.Schema(
@@ -895,7 +900,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for index, circuit in enumerate(circuits)
         ]
         options.append(_add_option("circuit"))
-        options.append(_back_option("circuit"))
+        options.append(_back_option())
         return self.async_show_form(
             step_id="circuits",
             data_schema=vol.Schema(
@@ -1103,7 +1108,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for index, item in enumerate(generators)
         ]
         options.append(_add_option("generator"))
-        options.append(_back_option("generator"))
+        options.append(_back_option())
         return self.async_show_form(
             step_id="generators",
             data_schema=vol.Schema(
@@ -1209,7 +1214,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for index, person in enumerate(residents)
         ]
         options.append(_add_option("resident"))
-        options.append(_back_option("resident"))
+        options.append(_back_option())
         return self.async_show_form(
             step_id="residents",
             data_schema=vol.Schema(
@@ -1340,7 +1345,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for index, window in enumerate(windows)
         ]
         options.append(_add_option("window"))
-        options.append(_back_option("window"))
+        options.append(_back_option())
         return self.async_show_form(
             step_id="windows",
             data_schema=vol.Schema(
@@ -1441,7 +1446,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for index, opening in enumerate(openings)
         ]
         options.append(_add_option("opening"))
-        options.append(_back_option("opening"))
+        options.append(_back_option())
         return self.async_show_form(
             step_id="openings",
             data_schema=vol.Schema(

@@ -17,7 +17,6 @@ from custom_components.climate_director.engine.families import (
     MODE_OFF,
     ModeFamily,
     family_of,
-    idle_mode,
     is_compatible,
     preferred_mode,
 )
@@ -67,9 +66,14 @@ def test_idle_circuit_still_rejects_ambiguous_modes() -> None:
     assert not is_compatible(MODE_HEAT_COOL, ModeFamily.NEUTRAL)
 
 
-def test_idle_mode_and_preferred_mode() -> None:
-    assert idle_mode(allow_fan_only=True) == MODE_FAN_ONLY
-    assert idle_mode(allow_fan_only=False) == MODE_OFF
+def test_preferred_mode_names_the_concrete_mode() -> None:
+    """Hoe een unit stilstaat hangt af van het circuit en de reden, en wordt
+    daarom in `decide.py` bepaald; `test_circuits.py` dekt dat met een echt
+    circuit erbij.
+
+    How a unit stands still depends on the circuit and the reason, so that is
+    decided in `decide.py`; `test_circuits.py` covers it with a real circuit.
+    """
     assert preferred_mode(ModeFamily.HEAT) == MODE_HEAT
     assert preferred_mode(ModeFamily.COOL) == MODE_COOL
     assert preferred_mode(ModeFamily.NEUTRAL) == MODE_OFF
