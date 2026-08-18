@@ -51,9 +51,10 @@ from custom_components.climate_director.engine import (
     gates,
 )
 from custom_components.climate_director.engine.diff import Change
+from custom_components.climate_director.engine.models import Problem
 from custom_components.climate_director.engine.serialise import config_from_dict, config_to_dict
 from custom_components.climate_director.number import resolve_initial
-from custom_components.climate_director.problems import MAX_LISTED, summarise
+from custom_components.climate_director.problems import MAX_LISTED, readable, summarise
 
 
 class TestSeasonFromState:
@@ -403,6 +404,19 @@ class TestProblemSummary:
 
     def test_nothing_wrong_produces_nothing(self) -> None:
         assert summarise(_no_hass(), ()) == ""
+
+    def test_a_translation_with_a_format_spec_falls_back_to_english(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Een kapotte vertaling mag een melding niet breken; dan blijft Engels staan.
+
+        A broken translation may not break a notice; the English sentence stays.
+        """
+        from custom_components.climate_director import texts
+
+        monkeypatch.setattr(texts, "lookup", lambda hass, code: "{zone:d}")
+        problem = Problem("zone_without_sources", "zone z has no sources", zone="z")
+        assert readable(_no_hass(), problem) == "zone z has no sources"
 
 
 class TestDeepCopy:

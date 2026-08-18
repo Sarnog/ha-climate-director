@@ -99,7 +99,7 @@ def readable(hass: HomeAssistant, problem: str) -> str:
         return str(problem)
     try:
         return template.format(**getattr(problem, "params", {}))
-    except (KeyError, IndexError):
+    except (KeyError, IndexError, ValueError):
         return str(problem)
 
 
