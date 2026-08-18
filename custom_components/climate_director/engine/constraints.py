@@ -294,7 +294,6 @@ def _standing_claims(
     world: WorldState,
     circuit: Circuit,
     requests: tuple[Request, ...],
-    granted: list[Grant],
 ) -> int:
     """Return how many units keep the compressor whatever this round grants.
 
@@ -389,7 +388,7 @@ def _apply_capacity(
     if cap is None:
         return granted
 
-    used = _standing_claims(config, world, circuit, requests, granted)
+    used = _standing_claims(config, world, circuit, requests)
 
     rank = {request.zone.zone_id: request.rank for request in requests}
     winners = sorted(
