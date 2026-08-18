@@ -1,6 +1,12 @@
-"""Een half jaar aan één stuk, van nazomer tot en met de winter.
+"""Een half jaar gesimuleerde tijd aan één stuk, van nazomer tot en met de winter.
 
-Half a year in one go, from late summer through the winter.
+Half a year of simulated time in one go, from late summer through the winter.
+
+Gesimuleerd, en dus geen draaitijd: een nagebouwd huis met een nagebouwde klok,
+doorlopen in seconden.
+
+Simulated, and therefore not running time: a rebuilt house with a rebuilt clock,
+walked in seconds.
 
 De maanden in de andere simulaties blijven binnen één seizoen of springen er in
 dertig dagen doorheen. Deze loopt een half jaar aan één stuk: eerst koelen in de
