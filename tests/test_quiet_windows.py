@@ -123,6 +123,19 @@ class TestItSurvivesStorage:
         config = house(*HIS)
         assert config_from_dict(config_to_dict(config)) == config
 
+    def test_a_holiday_window_keeps_its_flag(self) -> None:
+        """De schrijver vergat deze vlag, dus een vakantievenster werd bij het
+        terugschrijven stilletjes een gewoon venster - en de diagnose gaf
+        daarmee een ander huis terug dan er draaide.
+
+        The writer forgot this flag, so a holiday window quietly became an
+        ordinary one on the way back - and the diagnostics then handed back a
+        different house than the one running.
+        """
+        config = house(TimeWindow(time(21, 0), time(9, 0), holiday=True))
+        assert config_to_dict(config)["gates"]["quiet_windows"][0]["holiday"] is True
+        assert config_from_dict(config_to_dict(config)).gates.quiet_windows[0].holiday is True
+
     def test_older_options_have_no_windows(self) -> None:
         assert config_from_dict({}).gates.quiet_windows == ()
 

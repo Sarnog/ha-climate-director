@@ -93,6 +93,14 @@ def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
                     "start": window.start.isoformat(),
                     "end": window.end.isoformat(),
                     "weekdays": (None if window.weekdays is None else sorted(window.weekdays)),
+                    # De lezer kent deze vlag al; hem hier vergeten maakte van
+                    # een vakantievenster stilletjes een gewoon venster zodra de
+                    # configuratie werd teruggeschreven.
+                    #
+                    # The reader already knows this flag; forgetting it here
+                    # quietly turned a holiday window into an ordinary one the
+                    # moment the configuration was written back.
+                    "holiday": window.holiday,
                 }
                 for window in config.gates.quiet_windows
             ],
