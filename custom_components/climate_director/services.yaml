@@ -27,6 +27,11 @@ precondition:
           max: 480
           unit_of_measurement: min
           mode: box
+    ignore_openings:
+      required: false
+      default: false
+      selector:
+        boolean:
 
 cancel_precondition:
   fields:

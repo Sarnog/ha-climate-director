@@ -78,7 +78,28 @@ def _candidate(
         return Demand(ModeFamily.NEUTRAL, Reason.MODE_NOT_CONFIGURED)
     if not settings.allowed_in(world.season):
         return Demand(ModeFamily.NEUTRAL, Reason.SEASON_BLOCKS_MODE)
-    if not settings.outdoor.contains(world.outdoor_temperature):
+    # De buitengrens van een zone beantwoordt de vraag "mag er bij dit weer
+    # uberhaupt geregeld worden" - een zuinigheidsregel die ervan uitgaat dat
+    # er iemand thuis is. Vraagt iemand met de hand om vooruit verwarmen, dan
+    # is dat antwoord al gegeven: hij wil het, en hij komt eraan. Zonder deze
+    # uitzondering valt er een gat tussen de twee grenzen, waar verwarmen niet
+    # meer mag en koelen nog niet - en daar doet een verzoek dan niets.
+    #
+    # De grens per BRON blijft wel gelden; die kiest het apparaat. Net als het
+    # seizoen, de dode band en alles daarna.
+    #
+    # A zone's outdoor window answers "may anything be regulated in this
+    # weather at all" - a thrift rule that assumes somebody is home. If
+    # somebody asks for pre-conditioning by hand, that answer is already given:
+    # they want it, and they are on their way. Without this exception a gap
+    # opens between the two windows, where heating is no longer allowed and
+    # cooling not yet - and a request does nothing there.
+    #
+    # The window per SOURCE does still apply; that one picks the appliance. As
+    # do the season, the dead band and everything after them.
+    if not world.preconditioning(zone.zone_id) and not settings.outdoor.contains(
+        world.outdoor_temperature
+    ):
         return Demand(ModeFamily.NEUTRAL, Reason.OUTDOOR_OUTSIDE_WINDOW)
 
     running_now = running is family

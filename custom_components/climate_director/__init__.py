@@ -22,6 +22,7 @@ from homeassistant.helpers import config_validation as cv
 from . import problems
 from .const import (
     ATTR_ENTRY_ID,
+    ATTR_IGNORE_OPENINGS,
     ATTR_MINUTES,
     ATTR_ZONE_IDS,
     DOMAIN,
@@ -46,6 +47,7 @@ _PRECONDITION_SCHEMA = vol.Schema(
         **_ENTRIES,
         **_ZONES,
         vol.Optional(ATTR_MINUTES): vol.All(vol.Coerce(float), vol.Range(min=0)),
+        vol.Optional(ATTR_IGNORE_OPENINGS, default=False): cv.boolean,
     }
 )
 
@@ -116,7 +118,9 @@ def _async_register_services(hass: HomeAssistant) -> None:
         """Warm zones up for somebody on their way home."""
         for entry in _chosen(call):
             entry.runtime_data.async_precondition(
-                call.data.get(ATTR_ZONE_IDS), call.data.get(ATTR_MINUTES, 0)
+                call.data.get(ATTR_ZONE_IDS),
+                call.data.get(ATTR_MINUTES, 0),
+                ignore_openings=call.data.get(ATTR_IGNORE_OPENINGS, False),
             )
 
     async def _async_cancel_precondition(call: ServiceCall) -> None:

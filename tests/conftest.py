@@ -81,6 +81,7 @@ def make_world(
     holiday_mode: bool = False,
     guest_mode: bool = False,
     precondition_until: dict[str, datetime] | None = None,
+    precondition_bypass: frozenset[str] = frozenset(),
     zone_overrides: dict[str, bool] | None = None,
     zone_priorities: dict[str, int] | None = None,
 ) -> WorldState:
@@ -103,6 +104,7 @@ def make_world(
         holiday_mode=holiday_mode,
         guest_mode=guest_mode,
         precondition_until=dict(precondition_until or {}),
+        precondition_bypass=precondition_bypass,
         zone_overrides=dict(zone_overrides or {}),
         zone_priorities=dict(zone_priorities or {}),
     )

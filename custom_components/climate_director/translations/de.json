@@ -628,6 +628,9 @@
     },
     "entity_twice_in_one_zone": {
       "message": "Zone {zone} verwendet {entity} für mehr als eine Quelle. Zwei Quellen auf demselben Gerät lassen keine Wahl; entfernen Sie eine davon."
+    },
+    "target_outside_band": {
+      "message": "Zone {zone} beginnt mit {mode} bei {start}°, strebt aber {target}° an. Das Gerät erhält dann eine Temperatur, für die es nichts tun muss - das sieht aus, als würde es sich weigern."
     }
   },
   "services": {
@@ -656,6 +659,10 @@
         "minutes": {
           "name": "Minuten",
           "description": "Wie lange die Anforderung dauert. Mehr als das eingestellte Maximum wird gekürzt; leer lassen ergibt genau dieses Maximum."
+        },
+        "ignore_openings": {
+          "name": "Offene Fenster ignorieren",
+          "description": "Die Anfrage auch ausführen, wenn in dem Raum ein Fenster oder eine Tür offen steht. Standardmäßig aus: gegen die Außenluft zu heizen ist weggeworfenes Geld. Gilt nur für diese eine Anfrage."
         }
       }
     },

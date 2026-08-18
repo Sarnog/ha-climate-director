@@ -50,7 +50,18 @@ def evaluate(config: DirectorConfig, world: WorldState, zone: Zone) -> GateVerdi
     if world.overridden(zone.zone_id):
         return GateVerdict.block(Reason.MANUAL_OVERRIDE)
 
-    if _any_opening_open(config, world, zone):
+    # Een openstaand raam weigert alles, behalve een vooruit-verzoek waarbij
+    # iemand uitdrukkelijk heeft gezegd: toch doen. Dat blijft een bewuste daad
+    # van een mens, geen instelling die blijft hangen - hij vervalt vanzelf met
+    # de timer van het verzoek.
+    #
+    # An open window refuses everything, except a pre-conditioning request on
+    # which somebody expressly said: do it anyway. That stays a deliberate
+    # human act rather than a setting that lingers - it lapses with the
+    # request's own timer.
+    if _any_opening_open(config, world, zone) and not world.precondition_ignores_openings(
+        zone.zone_id
+    ):
         return GateVerdict.block(Reason.OPENING_OPEN)
 
     # Een configuratie zonder bewoners beschrijft een pand waar niemand gevolgd

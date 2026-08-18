@@ -106,6 +106,22 @@ class WorldState:
     master_enabled: bool = True
     holiday_mode: bool = False
 
+    precondition_bypass: frozenset[str] = frozenset()
+    """Zones whose pre-conditioning request may run with an opening open.
+
+    Standaard weigert een openstaand raam een verzoek, en dat hoort ook: stoken
+    tegen de buitenlucht in is weggegooid geld. Maar wie het raam zelf heeft
+    opengezet weet dat, en mag zeggen: toch doen. Die keuze hoort bij het
+    verzoek en niet bij de aanroep, want de poort wordt telkens opnieuw
+    beoordeeld - zonder dit zou het verzoek een minuut later alsnog sneuvelen.
+
+    By default an open window refuses a request, and rightly so: heating
+    against the outside air is money thrown away. But whoever opened the window
+    knows that, and may say: do it anyway. That choice belongs to the request
+    rather than to the call, since the gate is judged afresh every time -
+    without this the request would die a minute later after all.
+    """
+
     precondition_until: dict[str, datetime] = field(default_factory=dict)
     """Per zone, the moment a human's pre-conditioning request runs out.
 
@@ -155,6 +171,10 @@ class WorldState:
     def priority_for(self, zone_id: str, configured: int) -> int:
         """Return the priority in force for a zone, live value first."""
         return self.zone_priorities.get(zone_id, configured)
+
+    def precondition_ignores_openings(self, zone_id: str) -> bool:
+        """Return whether this zone's request was told to ignore an open window."""
+        return self.preconditioning(zone_id) and zone_id in self.precondition_bypass
 
     def preconditioning(self, zone_id: str) -> bool:
         """Return whether a live pre-conditioning request covers this zone."""

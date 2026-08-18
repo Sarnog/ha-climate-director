@@ -628,6 +628,9 @@
     },
     "entity_twice_in_one_zone": {
       "message": "La zona {zone} usa {entity} para más de una fuente. Dos fuentes en el mismo aparato no dejan nada que elegir; elimina una de ellas."
+    },
+    "target_outside_band": {
+      "message": "La zona {zone} empieza a {mode} a {start}° pero aspira a {target}°. El aparato recibe entonces una temperatura para la que no tiene que hacer nada, y parece que se niega."
     }
   },
   "services": {
@@ -656,6 +659,10 @@
         "minutes": {
           "name": "Minutos",
           "description": "Cuánto dura la petición. Pedir más del máximo configurado la acorta; dejarlo vacío da ese máximo."
+        },
+        "ignore_openings": {
+          "name": "Ignorar ventanas abiertas",
+          "description": "Ejecutar la petición aunque haya una ventana o puerta abierta en esa estancia. Desactivado por defecto: calentar contra el aire exterior es dinero tirado. Solo vale para esta petición."
         }
       }
     },

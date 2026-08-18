@@ -868,6 +868,35 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
                     f"zone {zone.zone_id} wants {family.value} but has no source for it"
                 )
 
+            # De streeftemperatuur is wat het apparaat te horen krijgt; het
+            # aanpunt is waar de zone besluit te beginnen. Ligt het streven aan
+            # de verkeerde kant daarvan, dan start de zone keurig en zet hij
+            # het apparaat vervolgens op een temperatuur waar het niets voor
+            # hoeft te doen. Van buiten lijkt dat op een apparaat dat weigert.
+            #
+            # The target is what the appliance is told; the switch-on point is
+            # where the zone decides to begin. If the target sits on the wrong
+            # side of it, the zone starts dutifully and then sets the appliance
+            # to a temperature it need do nothing for. From the outside that
+            # looks like an appliance refusing.
+            askew = (
+                settings.target < settings.start_at
+                if family is ModeFamily.HEAT
+                else settings.target > settings.start_at
+            )
+            if askew:
+                problems.append(
+                    Problem(
+                        "target_outside_band",
+                        f"zone {zone.zone_id} starts {family.value} at {settings.start_at} "
+                        f"but aims for {settings.target}",
+                        zone=zone.name or zone.zone_id,
+                        mode=family.value,
+                        start=f"{settings.start_at:g}",
+                        target=f"{settings.target:g}",
+                    )
+                )
+
     source_entities = {source.entity_id for _, source in config.sources()}
     for generator in config.generators:
         if generator.entity_id in source_entities:

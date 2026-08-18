@@ -628,6 +628,9 @@
     },
     "entity_twice_in_one_zone": {
       "message": "Zone {zone} gebruikt {entity} voor meer dan één bron. Twee bronnen op hetzelfde apparaat laten niets te kiezen over; haal er één weg."
+    },
+    "target_outside_band": {
+      "message": "Zone {zone} begint met {mode} bij {start}° maar streeft naar {target}°. Het apparaat krijgt dan een temperatuur waar het niets voor hoeft te doen, wat eruitziet alsof het weigert."
     }
   },
   "services": {
@@ -656,6 +659,10 @@
         "minutes": {
           "name": "Minuten",
           "description": "Hoe lang het verzoek duurt. Vraag je langer dan het ingestelde maximum, dan wordt het ingekort; laat je het leeg, dan krijg je dat maximum."
+        },
+        "ignore_openings": {
+          "name": "Openstaande ramen negeren",
+          "description": "Voer het verzoek ook uit als er in die ruimte een raam of deur openstaat. Standaard uit: stoken tegen de buitenlucht in is weggegooid geld. Geldt alleen voor dit ene verzoek."
         }
       }
     },

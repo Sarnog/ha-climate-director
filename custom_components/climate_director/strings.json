@@ -628,6 +628,9 @@
     },
     "entity_twice_in_one_zone": {
       "message": "Zone {zone} uses {entity} for more than one source. Two sources on the same appliance leave nothing to choose between; remove one of them."
+    },
+    "target_outside_band": {
+      "message": "Zone {zone} starts {mode} at {start}° but aims for {target}°. The appliance is then set to a temperature it need do nothing for, which looks like it is refusing."
     }
   },
   "services": {
@@ -656,6 +659,10 @@
         "minutes": {
           "name": "Minutes",
           "description": "How long the request lasts. Asking for longer than the configured maximum shortens it; leaving it empty gives you that maximum."
+        },
+        "ignore_openings": {
+          "name": "Ignore open windows",
+          "description": "Run the request even when a window or door in that room is open. Off by default: heating against the outside air is money thrown away. Only lasts for this one request."
         }
       }
     },

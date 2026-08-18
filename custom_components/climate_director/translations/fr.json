@@ -628,6 +628,9 @@
     },
     "entity_twice_in_one_zone": {
       "message": "La zone {zone} utilise {entity} pour plus d'une source. Deux sources sur le même appareil ne laissent aucun choix ; supprimez-en une."
+    },
+    "target_outside_band": {
+      "message": "La zone {zone} démarre {mode} à {start}° mais vise {target}°. L'appareil reçoit alors une température pour laquelle il n'a rien à faire, ce qui donne l'impression qu'il refuse."
     }
   },
   "services": {
@@ -656,6 +659,10 @@
         "minutes": {
           "name": "Minutes",
           "description": "La durée de la demande. Demander plus que le maximum réglé la raccourcit ; laisser vide donne ce maximum."
+        },
+        "ignore_openings": {
+          "name": "Ignorer les fenêtres ouvertes",
+          "description": "Exécuter la demande même si une fenêtre ou une porte est ouverte dans cette pièce. Désactivé par défaut : chauffer contre l'air extérieur est de l'argent jeté. Ne vaut que pour cette demande."
         }
       }
     },
