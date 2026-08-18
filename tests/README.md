@@ -27,8 +27,15 @@ de hele suite draait in een halve seconde. Dat is de reden dat die scheidslijn b
   ronde ziet het gevolg. Pas daar tellen de regels die alleen in de tijd bestaan. De motor
   eronder staat in `simulation.py`
 
-**De Home Assistant-laag** wordt getest op zijn pure helpers (`test_ha_helpers.py`):
-seizoensnamen, getalconversie, de eventpayload, en de formulierlogica van de config flow.
+**De Home Assistant-laag** wordt op twee manieren getest:
+
+- `test_ha_helpers.py` — de pure helpers: seizoensnamen, getalconversie, de eventpayload en
+  de formulierlogica van de config flow
+- `test_ha_layer.py` — de laag zelf, met een nagebouwde Home Assistant eromheen: entiteiten
+  uitlezen tot een momentopname (inclusief `unavailable`, `unknown`, een ontbrekende
+  entiteit en een `weather`-entiteit), de service calls van de applier en wat er gebeurt als
+  er één faalt, de gebeurtenissen op de bus, alle entiteiten met een echt plan eronder, en
+  het vangnet als een bron onbereikbaar wordt
 
 ### Waarom niet tegen een draaiende hass
 
@@ -43,10 +50,12 @@ worden echt gecontroleerd.
 
 ### Wat dus niet automatisch gedekt is
 
-- de stappen van de config flow en de options flow zelf
-- de coordinator: entiteiten uitlezen, debouncen, uitgestelde herberekeningen
-- de entiteitsplatforms en het herstellen van schakelaarstanden
-- de daadwerkelijke service calls van de applier
+Alleen nog wat Home Assistant zélf aanstuurt:
+
+- de stappen van de config flow en de options flow (de formulierlogica erachter wél)
+- `async_setup_entry`: het opzetten van de platforms en de volgorde daarvan
+- de debouncer en het inplannen van een uitgestelde herberekening
+- het registreren van entiteiten en het herstellen van schakelaarstanden na een herstart
 
 Deze zijn met de hand gereviewd tegen de geïnstalleerde `homeassistant`-broncode
 (signaturen met `grep` geverifieerd, niet uit het geheugen aangenomen). Ze worden in de
@@ -90,8 +99,15 @@ and the whole suite runs in half a second. That is the reason the dividing line 
   sees the consequence. Only there do the rules that exist solely in time count. The engine
   under them is `simulation.py`
 
-**The Home Assistant layer** is tested on its pure helpers (`test_ha_helpers.py`): season
-names, number conversion, the event payload, and the config flow's form logic.
+**The Home Assistant layer** is tested in two ways:
+
+- `test_ha_helpers.py` — the pure helpers: season names, number conversion, the event
+  payload and the config flow's form logic
+- `test_ha_layer.py` — the layer itself, with a stand-in Home Assistant around it: reading
+  entities into a snapshot (including `unavailable`, `unknown`, a missing entity and a
+  `weather` entity), the applier's service calls and what happens when one fails, the
+  events on the bus, every entity with a real plan under it, and the safety net when a
+  source becomes unreachable
 
 ### Why not against a running hass
 
@@ -106,10 +122,12 @@ genuinely checked.
 
 ### What is therefore not covered automatically
 
-- the config flow and options flow steps themselves
-- the coordinator: reading entities, debouncing, deferred re-evaluations
-- the entity platforms and switch state restoration
-- the applier's actual service calls
+Only what Home Assistant itself drives:
+
+- the config flow and options flow steps (the form logic behind them is covered)
+- `async_setup_entry`: setting up the platforms and the order of that
+- the debouncer and scheduling a deferred re-evaluation
+- registering entities and restoring switch states after a restart
 
 These were reviewed by hand against the installed `homeassistant` source (signatures
 verified with `grep`, not assumed from memory). They are tested in practice by installing
