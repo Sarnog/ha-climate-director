@@ -537,3 +537,71 @@ class TestAcrossARestart:
             assert again.state(LIVING) == "heat"
         finally:
             await stop_house(again)
+
+
+# ---------------------------------------------------------------------------
+# De vertalingen, geladen zoals een draaiende Home Assistant dat zelf doet.
+# The translations, loaded the way a running Home Assistant loads them itself.
+# ---------------------------------------------------------------------------
+
+
+class TestTheTranslationsLive:
+    """Elke taal wordt echt geladen en ingevuld, niet alleen op vorm gecontroleerd.
+
+    Each language is really loaded and filled in, not just checked for shape.
+    """
+
+    LANGUAGES = ("en", "nl", "de", "fr", "es", "ar")
+
+    @pytest.mark.parametrize("language", LANGUAGES)
+    async def test_every_language_loads_and_fills_its_sentences(self, language: str) -> None:
+        home = await start_house(installation(), states=cold_world())
+        try:
+            home.hass.config.language = language
+            from custom_components.climate_director import texts
+
+            await texts.async_prepare(home.hass)
+            message = texts.translated(
+                home.hass,
+                "precondition_refused",
+                "fallback {zone} {openings} {minutes}",
+                zone="Woonkamer",
+                openings="Achterdeur",
+                minutes=120,
+            )
+
+            assert "{" not in message, f"{language}: {message}"
+            assert "Woonkamer" in message, f"{language}: {message}"
+            assert "Achterdeur" in message, f"{language}: {message}"
+            if language == "nl":
+                assert "kon niet vooruit beginnen" in message
+            elif language == "en":
+                assert "could not start pre-conditioning" in message
+        finally:
+            await stop_house(home)
+
+    async def test_the_refusal_event_speaks_dutch_in_a_dutch_interface(self) -> None:
+        """De gebeurtenis draagt de zin in de taal van de interface.
+
+        The event carries the sentence in the language of the interface.
+        """
+        home = await start_house(installation(), states=cold_world())
+        try:
+            home.hass.config.language = "nl"
+            from custom_components.climate_director import texts
+
+            await texts.async_prepare(home.hass)
+
+            home.set("person.danny", "not_home")
+            home.set("binary_sensor.achterdeur", "on")
+            home.coordinator.async_precondition(["woonkamer"], 30)
+            await home.evaluate()
+
+            refused = home.fired("climate_director_precondition_refused")
+            assert refused, "een geweigerd verzoek hoort zichzelf te melden"
+            message = refused[-1]["message"]
+            assert "kon niet vooruit beginnen" in message, message
+            assert "Staat nog open" in message, message
+            assert "120 minuten" in message, message
+        finally:
+            await stop_house(home)
