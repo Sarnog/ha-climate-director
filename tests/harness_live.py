@@ -30,6 +30,7 @@ leads to the next decision.
 from __future__ import annotations
 
 import asyncio
+import atexit
 import contextlib
 import os
 import shutil
@@ -57,6 +58,8 @@ from custom_components.climate_director.const import (
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+_own_config_dirs: list[str] = []
+
 
 def new_config_dir() -> str:
     """Return a fresh Home Assistant config directory with the integration in it.
@@ -77,7 +80,36 @@ def new_config_dir() -> str:
         os.path.join(target, "custom_components"),
         ignore=shutil.ignore_patterns("__pycache__"),
     )
+    _own_config_dirs.append(target)
     return target
+
+
+def _remove_own_config_dirs() -> None:
+    """Ruim aan het eind van de testrun elke zelfgemaakte map weer op.
+
+    Elk huis kopieert de integratie naar zijn eigen map van ongeveer een
+    megabyte, en de suite zet er duizenden op. Zonder deze stap blijven die
+    allemaal in de tijdelijke map van het systeem staan - na twee dagen testen
+    stonden er 3668, samen ruim drie gigabyte. Opruimen gebeurt pas als het
+    proces eindigt, want een test die een herstart nabootst geeft dezelfde map
+    een tweede keer mee en heeft hem tot dat moment nodig. Een map die de
+    aanroeper zelf meegeeft, blijft staan: die is niet van ons.
+
+    Clean up every self-made directory when the test run ends.
+
+    Every house copies the integration into its own directory of about a
+    megabyte, and the suite stands up thousands of them. Without this step they
+    all stay behind in the system's temporary directory - after two days of
+    testing there were 3668, over three gigabytes together. The cleanup only
+    happens once the process ends, since a test mimicking a restart passes the
+    same directory a second time and needs it until then. A directory the caller
+    supplies itself stays: that one is not ours.
+    """
+    while _own_config_dirs:
+        shutil.rmtree(_own_config_dirs.pop(), ignore_errors=True)
+
+
+atexit.register(_remove_own_config_dirs)
 
 
 class LiveHome:
