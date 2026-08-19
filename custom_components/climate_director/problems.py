@@ -128,9 +128,7 @@ UNWATCHED_ISSUE = "precondition_unwatched"
 
 #: Waar de melding heen wijst: het hoofdstuk dat de blueprints uitlegt.
 #: Where the notice points: the chapter explaining the blueprints.
-BLUEPRINTS_URL = (
-    "https://github.com/Sarnog/ha-climate-director#must-have-automatiseringen-en-notificaties"
-)
+BLUEPRINTS_URL = "https://github.com/Sarnog/ha-climate-director#blueprints"
 
 
 @callback

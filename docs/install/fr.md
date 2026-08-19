@@ -150,7 +150,8 @@ le menu principal.
 | **Capteur de température extérieure** | alimente chaque limite extérieure. Sans capteur, toute limite compte comme non atteinte et l'installation reste immobile |
 | **Système de chauffage** | *Centralisé* ou *Par zone*, voir ci-dessous |
 | **Source de la saison** | d'où vient la saison : le mois, une entité, ou fixée été/hiver |
-| **Entité de saison** | seulement si la source est réglée sur *entité* |
+| **Entité de saison** | seulement si la source est réglée sur *entité* ; l’entité intégrée `season.*` est aussi sélectionnable |
+| **Hémisphère** | quels mois comptent comme été lorsque la saison vient du mois : nord avril–septembre, sud octobre–mars |
 | **Quelqu'un à la maison doit être réveillé** | activé = la maison attend quelqu'un à la maison *et* réveillé ; désactivé = le sommeil ne compte pas |
 | **L'emploi du temps d'un résident doit être ouvert** | activé = la maison attend la première fenêtre d'emploi du temps ; désactivé = la présence seule décide |
 | **Calendriers de vacances** | quels calendriers peuvent annoncer des vacances ; plusieurs autorisés |

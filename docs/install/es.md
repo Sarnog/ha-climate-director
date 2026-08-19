@@ -147,7 +147,8 @@ hasta que eliges **Guardar y cerrar** en el menú principal.
 | **Sensor de temperatura exterior** | alimenta cada límite exterior. Sin sensor, todo límite cuenta como no alcanzado y la instalación se queda quieta |
 | **Sistema de calefacción** | *Central* o *Por zona*, ver abajo |
 | **Fuente de la estación** | de dónde sale la estación: el mes, una entidad, o fijada verano/invierno |
-| **Entidad de estación** | solo si la fuente está en *entidad* |
+| **Entidad de estación** | solo si la fuente está en *entidad*; la entidad integrada `season.*` también se puede elegir |
+| **Hemisferio** | qué meses cuentan como verano cuando la estación sale del mes: norte abril–septiembre, sur octubre–marzo |
 | **Alguien en casa debe estar despierto** | activado = la casa espera a alguien en casa *y* despierto; desactivado = dormir no cuenta |
 | **El horario de un residente debe estar abierto** | activado = la casa espera la primera ventana de horario; desactivado = solo la presencia decide |
 | **Calendarios de vacaciones** | qué calendarios pueden anunciar vacaciones; se permiten varios |

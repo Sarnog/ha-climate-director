@@ -63,41 +63,16 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
   volgende gebeurtenis) en `climate_director.clear_override`, plus knoppen die ze
   aanroepen. `climate_director.evaluate` bestaat al.
 - **`select` voor het seizoen** — het seizoen met de hand omzetten zonder de options flow.
-- **Zomermaanden instelbaar maken (zuidelijk halfrond)** — `SeasonSettings.summer_months`
-  staat in de engine al klaar (standaard april–september, het noordelijk halfrond) en wordt
-  met de configuratie opgeslagen, maar is nergens in de wizard te wijzigen. Wie op het
-  zuidelijk halfrond woont, moet nu een seizoensentiteit aanwijzen of het seizoen handmatig
-  vastzetten. Voorstel: een veld "Zomermaanden" — of een eenvoudige keuze noord-/zuidhalfrond
-  — in de algemene instellingen, dat `summer_months` vult.
-- **`season.*`-entiteiten zijn niet kiesbaar als seizoensbron** — de selector staat op
-  `sensor`/`input_select`/`select`, terwijl Home Assistant sinds 2024.4 een eigen
-  `season`-domein heeft. Wie de ingebouwde seizoensentiteit wil gebruiken, kan hem niet
-  aanwijzen. Voorstel: `season` toevoegen aan de domeinlijst; de herkenning van de staten
-  (`summer`, `winter`, …) bestaat al in `season_from_state`.
-- **Een zone met alleen handbediende bronnen wordt niet gemeld** — heeft een zone
-  uitsluitend bronnen met *Dit apparaat automatisch starten* uit, dan kan de director hem
-  nooit zelf starten, maar de configuratiecontrole zegt daar niets over. Voorstel: in
-  `validate()` een probleem toevoegen wanneer een gewenste taak alleen door
-  `autostart: false`-bronnen gedekt wordt.
 - **`fan_only` voor een verliezer wordt gegeven zonder te weten of de unit het kan** — bij
   `allow_fan_only_during_conflict` krijgt een verliezende zone `fan_only`. Units die alleen
   heat/cool/off kennen weigeren die modus; de mislukte service call telt als mislukte
   *stop* en breekt de rest van het plan af. Voorstel: `ClimateState` uitbreiden met
   `hvac_modes` en in `_idle_mode` op `off` terugvallen wanneer `fan_only` ontbreekt.
-- **Een seizoensentiteit met onbekende staat blokkeert stilletjes koelen** — de herkenning
-  dekt zes talen; een helper die iets anders meldt geeft `Season.UNKNOWN`, en zomerkoeling
-  (`seasons: {summer}`) staat dan uit met `season_blocks_mode`, zonder dat er iets gemeld
-  wordt (de entiteit is gewoon leesbaar). Voorstel: een onherkenbare seizoensstaat melden
-  in `unusable_entities`.
 - **Een sensor die bestaat maar geen getal levert, wordt niet gemeld** — een `climate`
   zonder `current_temperature` of een sensor zonder numerieke waarde geeft
   `NO_INDOOR_TEMPERATURE`; de zone doet niets, en de vastloopmelder telt die reden niet
   mee. Voorstel: na het lezen van de wereld melden welke ingestelde sensoren geen getal
   opleveren (met een nalooptijd tegen opstartruis).
-- **Onbekende zone in een vooruit-verzoek wordt stilletjes genegeerd** —
-  `climate_director.precondition` (en `cancel_precondition`) met een verkeerde `zone_id`
-  filtert de onbekende stilletjes weg; een typfout in een automatisering doet dus niets,
-  zonder melding. Voorstel: een waarschuwing loggen en/of de onbekende id's teruggeven.
 - **Poortinstellingen per zone** — nu gelden `GateSettings` voor de hele installatie. Een
   slaapkamer wil andere aanwezigheids- en slaapregels dan een woonkamer.
 - **Suggestie voor circuitgroepering** — voorstellen welke binnenunits een buitenunit delen
@@ -214,40 +189,16 @@ The history of what has already been built and changed is **not** here but in th
   until the next event) and `climate_director.clear_override`, plus buttons calling them.
   `climate_director.evaluate` already exists.
 - **A `select` for the season** — flipping the season by hand without the options flow.
-- **Make the summer months configurable (southern hemisphere)** —
-  `SeasonSettings.summer_months` already sits ready in the engine (default April–September,
-  the northern hemisphere) and is stored with the configuration, but nowhere in the wizard
-  can it be changed. Anyone living in the southern hemisphere now has to name a season
-  entity or pin the season by hand. Proposal: a "Summer months" field — or a simple
-  northern/southern hemisphere choice — in the general settings, filling `summer_months`.
-- **`season.*` entities cannot be picked as the season source** — the selector lists
-  `sensor`/`input_select`/`select`, while Home Assistant has had its own `season` domain
-  since 2024.4. Anyone wanting to use the built-in season entity cannot point at it.
-  Proposal: add `season` to the domain list; the state recognition (`summer`, `winter`, …)
-  already exists in `season_from_state`.
-- **A zone with only hand-operated sources is not reported** — if a zone's only sources
-  have *Start this appliance automatically* off, the director can never start it itself,
-  but the configuration check says nothing. Proposal: add a `validate()` problem when a
-  wanted duty is covered only by `autostart: false` sources.
 - **`fan_only` is handed to a loser without knowing whether the unit supports it** — with
   `allow_fan_only_during_conflict`, a losing zone gets `fan_only`. Units that only know
   heat/cool/off refuse that mode; the failed service call counts as a failed *stop* and
   aborts the rest of the plan. Proposal: extend `ClimateState` with `hvac_modes` and fall
   back to `off` in `_idle_mode` when `fan_only` is missing.
-- **A season entity with an unrecognised state silently blocks cooling** — the recognition
-  covers six languages; a helper reporting anything else yields `Season.UNKNOWN`, and
-  summer-only cooling (`seasons: {summer}`) then stands down with `season_blocks_mode`,
-  with nothing reported (the entity reads fine). Proposal: report an unrecognised season
-  state in `unusable_entities`.
 - **A sensor that exists but reports no number is not reported** — a `climate` without
   `current_temperature` or a sensor without a numeric value yields
   `NO_INDOOR_TEMPERATURE`; the zone does nothing, and the stuck sensor does not count that
   reason. Proposal: after reading the world, report which configured sensors yield no
   number (with a grace period against startup noise).
-- **An unknown zone in a pre-conditioning request is silently ignored** —
-  `climate_director.precondition` (and `cancel_precondition`) with a wrong `zone_id`
-  silently filters the unknown away; a typo in an automation thus does nothing, without a
-  message. Proposal: log a warning and/or return the unknown ids.
 - **Per-zone gate settings** — `GateSettings` currently applies to the whole installation.
   A bedroom wants different presence and sleep rules from a living room.
 - **Suggested circuit grouping** — propose which indoor units share an outdoor unit based on

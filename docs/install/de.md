@@ -150,7 +150,8 @@ wählst.
 | **Außentemperatursensor** | speist jede Außengrenze. Ohne Sensor gilt jede gesetzte Grenze als nicht erreicht und die Installation steht still |
 | **Heizsystem** | *Zentral* oder *Pro Zone*, siehe unten |
 | **Jahreszeitenquelle** | woher die Jahreszeit kommt: der Monat, eine Entität oder fest Sommer/Winter |
-| **Jahreszeiten-Entität** | nur nötig, wenn die Quelle auf *Entität* steht |
+| **Jahreszeiten-Entität** | nur nötig, wenn die Quelle auf *Entität* steht; auch die eingebaute `season.*`-Entität ist wählbar |
+| **Hemisphäre** | welche Monate als Sommer zählen, wenn die Jahreszeit aus dem Monat kommt: Nord April–September, Süd Oktober–März |
 | **Jemand zu Hause muss wach sein** | an = das Haus wartet auf jemanden zu Hause *und* wach; aus = Schlaf zählt nicht |
 | **Der Zeitplan eines Bewohners muss offen sein** | an = das Haus wartet auf das erste Zeitfenster; aus = Anwesenheit allein entscheidet |
 | **Ferienkalender** | welche Kalender Ferien ankündigen dürfen; mehrere erlaubt |

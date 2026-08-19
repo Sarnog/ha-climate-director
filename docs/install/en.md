@@ -147,7 +147,8 @@ what you typed is then thrown away. And **nothing** is stored until you pick
 | **Outdoor temperature sensor** | feeds every outdoor limit. Without a sensor every limit counts as not met and the installation stands still |
 | **Heating system** | *Central* or *Per zone*, see below |
 | **Season source** | where the season comes from: the month, an entity, or pinned to summer/winter |
-| **Season entity** | only needed when the source is set to *entity* |
+| **Season entity** | only needed when the source is set to *entity*; the built-in `season.*` entity can be picked too |
+| **Hemisphere** | which months count as summer when the season comes from the month: northern April–September, southern October–March |
 | **Somebody home must be awake** | on = the house waits for somebody home *and* awake; off = sleep does not count |
 | **A resident's schedule must be open** | on = the house waits for the first schedule window; off = presence alone decides |
 | **Holiday calendars** | which calendars may announce a holiday; several allowed |
