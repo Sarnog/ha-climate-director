@@ -741,6 +741,20 @@ class TestReadingEntitiesNeverBreaks:
             value = temperature_from_state(entity, rng.choice(self.JUNK), attributes)
             assert value is None or isinstance(value, float)
 
+    def test_a_non_finite_reading_is_no_reading(self) -> None:
+        """`nan` and `inf` are unreadable too, exactly like `unknown`.
+
+        Every comparison with them is false, so a broken sensor reporting one
+        would satisfy each bounded outdoor window at once and quietly pick a
+        source that an unreadable temperature should have shut out.
+        """
+        for raw in ("nan", "-nan", "inf", "-inf", "1e400", "-1e400", "NaN", "Infinity"):
+            assert temperature_from_state("sensor.x", raw, {}) is None
+            assert temperature_from_state("weather.home", "cloudy", {"temperature": raw}) is None
+            assert (
+                temperature_from_state("climate.unit", "heat", {"current_temperature": raw}) is None
+            )
+
     def test_any_state_reads_as_a_season(self) -> None:
         rng = random.Random(4)
         for _ in range(500):

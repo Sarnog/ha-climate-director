@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 from collections.abc import Mapping
 from dataclasses import replace
 from datetime import date, datetime, timedelta
@@ -1258,8 +1259,17 @@ def _unreadable(state: str) -> bool:
 
 
 def _as_float(raw: Any) -> float | None:
-    """Return `raw` as a float, or `None` when it is not a number."""
+    """Return `raw` as a float, or `None` when it is not a usable number.
+
+    `nan` and `inf` count as no reading too. Every comparison with them is
+    false, so a broken sensor reporting one would satisfy each bounded outdoor
+    window at once and quietly pick a source that an unreadable temperature
+    should have shut out - while `unavailable` and `unknown` are translated to
+    `None` further up and behave the other way. One rule for every unreadable
+    value, not two.
+    """
     try:
-        return float(raw)
+        value = float(raw)
     except (TypeError, ValueError):
         return None
+    return value if math.isfinite(value) else None
