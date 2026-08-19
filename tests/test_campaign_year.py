@@ -314,6 +314,25 @@ def autumn_into_spring(now: datetime, rng: random.Random) -> tuple[float, Season
     return round(outdoor, 1), SeasonSettings().for_month(now.month)
 
 
+def whole_year(now: datetime, rng: random.Random) -> tuple[float, Season]:
+    """Return a full calendar year: frost in January, a heatwave in July.
+
+    Eén doorlopend jaar is de proef die twee halve jaren niet kunnen zijn: er is
+    geen kunstmatige knip, dus de overgangen van winter naar zomer én van zomer
+    naar winter zitten er allebei in, met alle vier de seizoenen ertussen.
+
+    One continuous year is the test two half-years cannot be: there is no
+    artificial cut, so both the winter-to-summer and the summer-to-winter
+    crossings are in it, with all four seasons in between.
+    """
+    outdoor = _curve(now, rng, swing=12.5, middle=10.5)
+    if now.month == 1 and 5 <= now.day <= 18:
+        outdoor -= 9.0
+    if now.month == 7 and 10 <= now.day <= 20:
+        outdoor += 8.0
+    return round(outdoor, 1), SeasonSettings().for_month(now.month)
+
+
 # -- extra beloftes voor dit huis / extra promises for this house -----------
 
 
@@ -369,7 +388,9 @@ def _the_big_house_holds(config: DirectorConfig, world, plan, where: str) -> Non
 
 FIRST_START = datetime(2026, 2, 1, 0, 0)
 SECOND_START = datetime(2026, 11, 1, 0, 0)
+YEAR_START = datetime(2026, 1, 1, 0, 0)
 DAYS = 182
+YEAR_DAYS = 365
 
 BUSY = Profile(
     drops_out=0.005,
@@ -387,8 +408,15 @@ BUSY = Profile(
 )
 
 
-def _scenario(name: str, policy: ConflictPolicy, start: datetime, weather) -> Scenario:
-    """Return one half-year scenario for the big house."""
+def _scenario(
+    name: str,
+    policy: ConflictPolicy,
+    start: datetime,
+    weather,
+    *,
+    days: int = DAYS,
+) -> Scenario:
+    """Return one scenario for the big house."""
     return Scenario(
         name=name,
         config=villa(policy),
@@ -401,7 +429,7 @@ def _scenario(name: str, policy: ConflictPolicy, start: datetime, weather) -> Sc
             "zolder": 19.0,
         },
         weather=weather,
-        days=DAYS,
+        days=days,
         profile=BUSY,
         extra_check=_the_big_house_holds,
         duty_rate=0.4,
@@ -449,6 +477,16 @@ def frost():
     )
     assert not _real_problems(scenario.config), _real_problems(scenario.config)
     return run_month(scenario, seed=20261101)
+
+
+@pytest.fixture(scope="module")
+def year():
+    """Return one uninterrupted calendar year, arbitrated first-come."""
+    scenario = _scenario(
+        "heel_jaar", ConflictPolicy.FIRST_COME, YEAR_START, whole_year, days=YEAR_DAYS
+    )
+    assert not _real_problems(scenario.config), _real_problems(scenario.config)
+    return run_month(scenario, seed=20260101)
 
 
 class TestTheHalfYearReallyRan:
@@ -612,3 +650,75 @@ class TestTheSafetyNetEngaged:
 
     def test_requests_were_made_and_ran_out(self, spring, frost) -> None:
         assert spring.events["precondition"] + frost.events["precondition"] > 5
+
+
+class TestTheWholeYear:
+    """Eén doorlopend jaar, van januari tot en met december.
+
+    One continuous year, from January through December.
+    """
+
+    def test_the_clock_advanced_a_whole_year(self, year) -> None:
+        assert year.now - YEAR_START == timedelta(days=YEAR_DAYS)
+
+    def test_hundreds_of_thousands_of_decisions_were_taken(self, year) -> None:
+        assert sum(year.reasons.values()) > 200_000, sum(year.reasons.values())
+
+    def test_every_season_was_touched(self, year) -> None:
+        """Alle vier de seizoenen komen aan bod, niet alleen de uitersten.
+
+        All four seasons get their turn, not just the extremes.
+        """
+        months = {month for month, _mode in year.duty_by_month}
+        seasons = {
+            "winter": {12, 1, 2},
+            "lente": {3, 4, 5},
+            "zomer": {6, 7, 8},
+            "herfst": {9, 10, 11},
+        }
+        for name, span in seasons.items():
+            assert months & span, f"{name} ontbreekt in {sorted(months)}"
+
+    def test_both_duties_were_commanded(self, year) -> None:
+        assert year.commanded["heat"] > 100, year.commanded
+        assert year.commanded["cool"] > 20, year.commanded
+
+    def test_cooling_only_happened_in_the_summer_months(self, year) -> None:
+        cooling = {month for (month, mode) in year.duty_by_month if mode == "cool"}
+        assert cooling
+        assert cooling <= {4, 5, 6, 7, 8, 9}, f"koelen in {sorted(cooling)}"
+
+    def test_the_house_stayed_liveable(self, year) -> None:
+        for zone_id, temperature in year.indoor.items():
+            assert -10.0 < temperature < 45.0, (zone_id, temperature)
+
+    def test_appliances_dropped_out_and_the_stand_in_took_over(self, year) -> None:
+        assert year.events["unavailable"] > 20, year.events
+        assert year.fallbacks > 0
+        assert year.reasons[Reason.SOURCE_UNREACHABLE.value] > 0
+        assert year.reasons[Reason.NO_SOURCE_AVAILABLE.value] > 0
+
+    def test_the_safeguards_were_exercised(self, year) -> None:
+        for reason in (
+            Reason.CIRCUIT_AT_CAPACITY.value,
+            Reason.SHORT_CYCLE_PROTECTION.value,
+            Reason.EXCLUSIVE_GROUP_LOST.value,
+            Reason.ZONE_UNOCCUPIED.value,
+            Reason.OUTSIDE_SCHEDULE.value,
+            Reason.EVERYONE_ASLEEP.value,
+            Reason.QUIET_HOURS.value,
+            Reason.OPENING_OPEN.value,
+            Reason.MANUAL_SOURCE.value,
+            Reason.MANUAL_OVERRIDE.value,
+            Reason.OUTDOOR_OUTSIDE_WINDOW.value,
+        ):
+            assert year.reasons[reason] > 0, reason
+        assert (
+            year.reasons[Reason.CIRCUIT_SWITCH_PENDING.value]
+            + year.reasons[Reason.CIRCUIT_SWITCH_TOO_SOON.value]
+            > 0
+        )
+
+    def test_requests_were_made_and_hands_were_noticed(self, year) -> None:
+        assert year.events["precondition"] > 5, year.events
+        assert year.events["by_hand"] > 10, year.events
