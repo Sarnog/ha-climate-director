@@ -147,7 +147,8 @@ je in het hoofdmenu **Opslaan en sluiten** kiest.
 | **Buitentemperatuursensor** | voedt elke buitengrens. Zonder sensor telt elke ingestelde grens als niet gehaald en staat de installatie stil |
 | **Verwarmingssysteem** | *Centraal* of *Per zone*, zie hieronder |
 | **Seizoensbron** | waar het seizoen vandaan komt: de maand, een entiteit, of vast zomer/winter |
-| **Seizoensentiteit** | alleen nodig als de bron op *entiteit* staat |
+| **Seizoensentiteit** | alleen nodig als de bron op *entiteit* staat; ook de ingebouwde `season.*`-entiteit is kiesbaar |
+| **Halfrond** | welke maanden als zomer tellen wanneer het seizoen uit de maand komt: noordelijk april–september, zuidelijk oktober–maart |
 | **Iemand thuis moet wakker zijn** | aan = het huis wacht tot er iemand thuis én wakker is; uit = slapen telt niet |
 | **Het rooster van een bewoner moet openstaan** | aan = het huis wacht op het eerste roostervenster; uit = alleen aanwezigheid telt |
 | **Vakantieagenda's** | welke agenda's een vakantie mogen aankondigen; meerdere toegestaan |

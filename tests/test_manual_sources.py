@@ -164,18 +164,22 @@ class TestTheZoneItself:
         bedroom = next(item for item in result.zones if item.zone_id == "slaapkamer")
         assert bedroom.granted is ModeFamily.NEUTRAL
 
-    def test_a_zone_with_only_manual_sources_is_no_complaint(self) -> None:
-        """It is the recommended shape for a room you switch on yourself.
+    def test_a_zone_with_only_manual_sources_is_reported(self) -> None:
+        """Een zone die alleen handbediend kan, hoort in de controlelijst te staan.
 
-        Zo'n zone draait inderdaad nooit uit zichzelf, en dat is de bedoeling.
-        Er blijvend over klagen leert je de lijst te negeren, en dan mis je de
-        melding die er wel toe doet.
+        Zo'n zone draait inderdaad nooit uit zichzelf - en dat mag de bedoeling
+        zijn, maar dan hoort de gebruiker dat zwart-op-wit te zien. Van buiten
+        is zo'n installatie namelijk niet te onderscheiden van een zone waarvan
+        iemand per ongeluk automatisch starten heeft uitgezet.
 
-        Such a zone indeed never runs of its own accord, which is the point.
-        Complaining about it forever teaches you to ignore the list, and then
-        you miss the one that matters.
+        Such a zone indeed never runs of its own accord - and that may well be
+        the point, but then the user should see that in black and white. From
+        the outside such a setup is indistinguishable from a zone where somebody
+        accidentally switched automatic start off.
         """
-        assert validate(house()) == ()
+        complaints = [str(item) for item in validate(house())]
+        assert complaints, complaints
+        assert all("automatic start off" in item for item in complaints), complaints
 
     def test_a_zone_with_one_of_each_is_sound(self) -> None:
         config = DirectorConfig(

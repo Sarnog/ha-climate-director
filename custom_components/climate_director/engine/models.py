@@ -874,6 +874,27 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
                 problems.append(
                     f"zone {zone.zone_id} wants {family.value} but has no source for it"
                 )
+            elif not any(source.supports(family) and source.autostart for source in zone.sources):
+                # Een bron die alleen met de hand start kan de zone nooit uit
+                # zichzelf bedienen; wie er alleen zulke heeft, krijgt een zone
+                # die er staat maar nooit begint - stil, want "doet niets" lijkt
+                # op "hoeft niets te doen". De bronnen zelf zijn geen fout, dus
+                # dit is een eigen melding naast de bron-zonder-taken-controle.
+                #
+                # A source that only ever starts by hand can never serve the zone
+                # of its own accord; a zone with nothing but those stands there
+                # and never begins - quietly, since "does nothing" looks like
+                # "needs nothing done". The sources themselves are no mistake, so
+                # this is a complaint of its own beside the no-source check.
+                problems.append(
+                    Problem(
+                        "zone_only_manual_sources",
+                        f"zone {zone.zone_id} wants {family.value} but every source "
+                        "able to deliver it has automatic start off",
+                        zone=zone.name or zone.zone_id,
+                        mode=family.value,
+                    )
+                )
 
             # De streeftemperatuur is wat het apparaat te horen krijgt; het
             # aanpunt is waar de zone besluit te beginnen. Ligt het streven aan

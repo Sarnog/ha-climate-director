@@ -222,6 +222,31 @@ class TestBuildingAnInstallationInTheWizard:
         finally:
             await stop_house(home)
 
+    async def test_the_settings_step_writes_the_hemisphere_through(self) -> None:
+        home = await start_house(simple_installation(), states=cold())
+        try:
+            flow = home.hass.config_entries.options
+            result = await flow.async_init(home.entry.entry_id)
+            result = await flow.async_configure(result["flow_id"], {"next_step_id": "settings"})
+            assert result["step_id"] == "settings"
+
+            fields = {str(key): key for key in result["data_schema"].schema}
+            filled: dict[str, Any] = {}
+            for name in fields:
+                if name == "hemisphere":
+                    filled[name] = "south"
+                elif name == "when_done":
+                    filled[name] = "keep"
+
+            result = await flow.async_configure(result["flow_id"], filled)
+            result = await flow.async_configure(result["flow_id"], {"next_step_id": "save"})
+            await home.hass.async_block_till_done()
+
+            stored = home.entry.options["installation"]["seasons"]
+            assert stored["summer_months"] == [1, 2, 3, 10, 11, 12]
+        finally:
+            await stop_house(home)
+
 
 # ---------------------------------------------------------------------------
 # De reparatiemelding.

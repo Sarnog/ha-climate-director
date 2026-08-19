@@ -497,6 +497,39 @@ async def test_an_unreadable_season_entity_falls_back_to_no_season() -> None:
         await stop_house(home)
 
 
+async def test_an_unrecognised_season_state_is_reported() -> None:
+    """Een leesbare maar onherkenbare seizoensstaat hoort op te vallen.
+
+    De entiteit bestaat en is leesbaar, dus de gewone onbruikbaarheidscontrole
+    pakt hem niet - terwijl het seizoen wél UNKNOWN wordt en alles wat eraan
+    hangt stilletjes wegvalt.
+
+    A readable but unrecognised season state should stand out. The entity
+    exists and reads fine, so the ordinary unusable check does not catch it -
+    while the season does become UNKNOWN and everything hanging off it quietly
+    falls away.
+    """
+    states = live_world()
+    states["sensor.seizoen"] = ("droog", {})
+    home = await start_house(live_installation(), states=states)
+    try:
+        unusable = home.coordinator.unusable_entities()
+        assert unusable.get("sensor.seizoen") == "unrecognized season: droog"
+        assert home.value("stuck") == "on", "een onherkenbaar seizoen hoort op te vallen"
+    finally:
+        await stop_house(home)
+
+
+async def test_a_recognised_season_state_is_not_reported() -> None:
+    states = live_world()
+    states["sensor.seizoen"] = ("Zomer", {})
+    home = await start_house(live_installation(), states=states)
+    try:
+        assert "sensor.seizoen" not in home.coordinator.unusable_entities()
+    finally:
+        await stop_house(home)
+
+
 async def test_a_missing_climate_entity_never_gets_a_service_call() -> None:
     """Er wordt niets gestuurd naar een apparaat dat er niet is.
 

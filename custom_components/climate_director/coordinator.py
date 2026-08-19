@@ -637,6 +637,12 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         until = dt_util.now() + length
 
         known = {zone.zone_id for zone in self.config.zones}
+        unknown = sorted(set(zone_ids or ()) - known)
+        if unknown:
+            _LOGGER.warning(
+                "Pre-conditioning asked for unknown zones, ignored: %s",
+                ", ".join(unknown),
+            )
         chosen = [zone_id for zone_id in (zone_ids or known) if zone_id in known]
         for zone_id in chosen:
             self._precondition[zone_id] = until
@@ -750,10 +756,17 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
     @callback
     def async_cancel_precondition(self, zone_ids: list[str] | None) -> None:
         """Call the whole thing off, for the named zones or for all of them."""
+        known = {zone.zone_id for zone in self.config.zones}
         if zone_ids is None:
             self._precondition.clear()
             self._precondition_bypass.clear()
         else:
+            unknown = sorted(set(zone_ids) - known)
+            if unknown:
+                _LOGGER.warning(
+                    "Cancel pre-conditioning asked for unknown zones, ignored: %s",
+                    ", ".join(unknown),
+                )
             for zone_id in zone_ids:
                 self._precondition.pop(zone_id, None)
                 self._precondition_bypass.discard(zone_id)
@@ -799,6 +812,28 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 found[entity_id] = "missing"
             elif _unreadable(state.state):
                 found[entity_id] = state.state
+
+        # Een leesbare seizoensentiteit met een onherkenbare staat is net zo
+        # stil kapot als een onleesbare: het seizoen wordt UNKNOWN en alles wat
+        # eraan hangt - zomerkoeling bijvoorbeeld - valt weg zonder dat er iets
+        # van te zien is. De entiteit bestaat en is leesbaar, dus de gewone
+        # controle hierboven pakt hem niet.
+        #
+        # A readable season entity with an unrecognised state is just as
+        # silently broken as an unreadable one: the season becomes UNKNOWN and
+        # everything hanging off it - summer cooling, say - falls away with
+        # nothing to show for it. The entity exists and reads fine, so the
+        # ordinary check above does not catch it.
+        if self.config.seasons.source is SeasonSource.ENTITY and self.config.seasons.entity_id:
+            entity_id = self.config.seasons.entity_id
+            state = self.hass.states.get(entity_id)
+            if (
+                state is not None
+                and not _unreadable(state.state)
+                and season_from_state(state.state) is Season.UNKNOWN
+            ):
+                found[entity_id] = f"unrecognized season: {state.state}"
+
         return found
 
     # -- vastgelopen zones / stuck zones -------------------------------------

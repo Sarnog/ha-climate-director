@@ -43,6 +43,7 @@
           "heating_layout": "Verwarmingssysteem",
           "season_source": "Herkomst seizoen",
           "season_entity": "Seizoensentiteit",
+          "hemisphere": "Halfrond",
           "require_awake": "Iemand die thuis is moet wakker zijn",
           "require_schedule": "Het rooster van een bewoner moet openstaan",
           "shadow_mode": "Schaduwmodus",
@@ -59,6 +60,7 @@
         "data_description": {
           "season_source": "Leid het seizoen af uit de maand, lees het uit een entiteit, of zet het met de hand vast.",
           "season_entity": "Wordt alleen gebruikt als de herkomst op entiteit staat. Zomer en winter worden herkend in het Engels, Nederlands, Duits, Frans, Spaans en Arabisch.",
+          "hemisphere": "Welke helft van het jaar als zomer telt wanneer het seizoen uit de maand komt. Noordelijk: april-september. Zuidelijk: oktober-maart.",
           "shadow_mode": "Berekent elke beslissing maar voert niets uit.",
           "require_schedule": "Het huis wacht dan tot het eerste ingestelde venster opengaat, en blijft wachten zolang iemand die thuis is nog slaapt vóór zijn eigen venster.",
           "outdoor_sensor": "Voedt elke buitengrens, zowel hier als op elke bron. Zonder deze sensor kan geen enkele drempel op buitentemperatuur ooit voldaan worden, en staat de hele installatie stilletjes stil.",
@@ -490,6 +492,12 @@
         "winter": "Altijd winter"
       }
     },
+    "hemisphere": {
+      "options": {
+        "north": "Noordelijk halfrond (zomer april-september)",
+        "south": "Zuidelijk halfrond (zomer oktober-maart)"
+      }
+    },
     "zone_gate": {
       "options": {
         "household": "Het huishouden: rooster, slaap, iemand thuis",
@@ -632,6 +640,9 @@
     },
     "calendars_without_keyword": {
       "message": "Er staan vakantieagenda's ingesteld maar geen trefwoord, dus geen enkel item kan de vakantieschema aanzetten. Vul het woord in dat een item moet dragen, of haal de agenda's weg."
+    },
+    "zone_only_manual_sources": {
+      "message": "Zone {zone} wil {mode}, maar elke bron die dat kan heeft automatisch starten uit, dus hij kan nooit uit zichzelf beginnen. Zet automatisch starten bij één bron aan."
     },
     "exclusive_overlap": {
       "message": "{first} en {second} sluiten elkaar uit maar gelden allebei {overlap}. De groep vangt dat op, maar ze komen elkaar tegen in plaats van elkaar door hun buitengrenzen al uit te sluiten. Geef ze aansluitende grenzen om ze definitief uit elkaar te houden."

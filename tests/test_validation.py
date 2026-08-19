@@ -341,3 +341,76 @@ class TestSwitchTimingsThatNeverApply:
         """Die geldt per unit en werkt dus wél op zo'n circuit."""
         config = self._config(simultaneous_heat_cool=True, min_cycle_time=timedelta(minutes=20))
         assert "switch_timings_without_a_switch" not in self._codes(config)
+
+
+class TestOnlyManualSources:
+    """A zone with only hand-operated sources can never start, so it is named."""
+
+    def _config(self, autostart: bool, role: object = None) -> DirectorConfig:
+        from custom_components.climate_director.engine.models import SourceRole
+
+        return DirectorConfig(
+            zones=(
+                zone(
+                    "woonkamer",
+                    sources=(
+                        Source(
+                            "s",
+                            "climate.woonkamer",
+                            role=role or SourceRole.HEAT_COOL,
+                            autostart=autostart,
+                        ),
+                    ),
+                ),
+            ),
+        )
+
+    def test_a_zone_with_only_manual_sources_is_reported(self) -> None:
+        assert problem(self._config(autostart=False), "automatic start off")
+
+    def test_one_automatic_source_is_enough(self) -> None:
+        assert not problem(self._config(autostart=True), "automatic start off")
+
+    def test_a_manual_cooler_next_to_an_automatic_heater_is_fine_without_cooling(self) -> None:
+        """Zolang de zone niet vraagt te koelen, is de handbediende koeler geen dood spoor.
+
+        As long as the zone never asks to cool, the manual cooler is no dead end.
+        """
+        from custom_components.climate_director.engine.models import SourceRole
+
+        config = DirectorConfig(
+            zones=(
+                zone(
+                    "woonkamer",
+                    heat=ModeSettings(21.0, 20.0),
+                    sources=(
+                        Source("h", "climate.heater", role=SourceRole.HEAT_ONLY, autostart=True),
+                        Source("c", "climate.cooler", role=SourceRole.COOL_ONLY, autostart=False),
+                    ),
+                ),
+            ),
+        )
+        assert not problem(config, "automatic start off")
+
+    def test_a_duty_covered_only_by_manual_sources_is_reported(self) -> None:
+        """Koelen dat alleen een handbediend apparaat kan, is een stille dode stand.
+
+        Cooling that only a hand-operated appliance can deliver is a quietly dead
+        duty, even when heating starts fine.
+        """
+        from custom_components.climate_director.engine.models import SourceRole
+
+        config = DirectorConfig(
+            zones=(
+                zone(
+                    "woonkamer",
+                    heat=ModeSettings(21.0, 20.0),
+                    cool=ModeSettings(23.0, 24.0),
+                    sources=(
+                        Source("h", "climate.heater", role=SourceRole.HEAT_ONLY, autostart=True),
+                        Source("c", "climate.cooler", role=SourceRole.COOL_ONLY, autostart=False),
+                    ),
+                ),
+            ),
+        )
+        assert problem(config, "automatic start off")
