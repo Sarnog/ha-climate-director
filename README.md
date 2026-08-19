@@ -1047,8 +1047,9 @@ ontwerp in plaats van tot een vermoeden.
 
 ### Installatie
 
-**Vereist:** Home Assistant **2024.5** of nieuwer. De integratie gebruikt
-`entry.runtime_data` en getypeerde config entries, die sinds 2024.5 bestaan.
+**Vereist:** Home Assistant **2025.3** of nieuwer. De integratie voegt haar
+entiteiten toe met `AddConfigEntryEntitiesCallback` (bestaat sinds 2025.3) en
+gebruikt `entry.runtime_data` met getypeerde config entries (sinds 2024.6).
 
 **Via HACS:** voeg deze repository toe als **custom repository** (HACS > drie puntjes >
 Aangepaste repositories > deze GitHub-URL, categorie "Integratie"), installeer, en
@@ -2203,8 +2204,9 @@ rule in the design rather than to a hunch.
 
 ### Installation
 
-**Requires:** Home Assistant **2024.5** or newer. The integration uses
-`entry.runtime_data` and typed config entries, which exist since 2024.5.
+**Requires:** Home Assistant **2025.3** or newer. The integration adds its
+entities through `AddConfigEntryEntitiesCallback` (available since 2025.3) and
+uses `entry.runtime_data` with typed config entries (since 2024.6).
 
 **Through HACS:** add this repository as a **custom repository** (HACS > three dots >
 Custom repositories > this GitHub URL, category "Integration"), install it, and restart

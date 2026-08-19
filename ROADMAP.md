@@ -104,9 +104,6 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
   `- ... and N more` onder de (wel vertaalde) lijst. Voor wie de interface in het
   Nederlands of een andere taal draait, is dat de enige zin in de melding die Engels
   blijft. Een vertaling onder `exceptions` met plaatshouder `{remaining}` lost dat op.
-- **Minimum-HA-versie in `hacs.json`** — de README noemt 2024.5 als minimum; HACS kan dat
-  ook afdwingen via het veld `"homeassistant": "2024.5.0"` in `hacs.json`, zodat de
-  store zelf waarschuwt bij een te oude installatie.
 
 ## Would have
 
@@ -221,9 +218,6 @@ The history of what has already been built and changed is **not** here but in th
   than five configuration problems. For anyone running the interface in Dutch or another
   language, that is the one sentence in the notice that stays English. A translation under
   `exceptions` with a `{remaining}` placeholder solves it.
-- **Minimum HA version in `hacs.json`** — the README names 2024.5 as the minimum; HACS can
-  also enforce it through the field `"homeassistant": "2024.5.0"` in `hacs.json`, so the
-  store itself warns on an installation that is too old.
 
 ## Would have
 
