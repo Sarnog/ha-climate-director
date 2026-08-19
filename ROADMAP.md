@@ -63,6 +63,12 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
   volgende gebeurtenis) en `climate_director.clear_override`, plus knoppen die ze
   aanroepen. `climate_director.evaluate` bestaat al.
 - **`select` voor het seizoen** — het seizoen met de hand omzetten zonder de options flow.
+- **Zomermaanden instelbaar maken (zuidelijk halfrond)** — `SeasonSettings.summer_months`
+  staat in de engine al klaar (standaard april–september, het noordelijk halfrond) en wordt
+  met de configuratie opgeslagen, maar is nergens in de wizard te wijzigen. Wie op het
+  zuidelijk halfrond woont, moet nu een seizoensentiteit aanwijzen of het seizoen handmatig
+  vastzetten. Voorstel: een veld "Zomermaanden" — of een eenvoudige keuze noord-/zuidhalfrond
+  — in de algemene instellingen, dat `summer_months` vult.
 - **Poortinstellingen per zone** — nu gelden `GateSettings` voor de hele installatie. Een
   slaapkamer wil andere aanwezigheids- en slaapregels dan een woonkamer.
 - **Suggestie voor circuitgroepering** — voorstellen welke binnenunits een buitenunit delen
@@ -179,6 +185,12 @@ The history of what has already been built and changed is **not** here but in th
   until the next event) and `climate_director.clear_override`, plus buttons calling them.
   `climate_director.evaluate` already exists.
 - **A `select` for the season** — flipping the season by hand without the options flow.
+- **Make the summer months configurable (southern hemisphere)** —
+  `SeasonSettings.summer_months` already sits ready in the engine (default April–September,
+  the northern hemisphere) and is stored with the configuration, but nowhere in the wizard
+  can it be changed. Anyone living in the southern hemisphere now has to name a season
+  entity or pin the season by hand. Proposal: a "Summer months" field — or a simple
+  northern/southern hemisphere choice — in the general settings, filling `summer_months`.
 - **Per-zone gate settings** — `GateSettings` currently applies to the whole installation.
   A bedroom wants different presence and sleep rules from a living room.
 - **Suggested circuit grouping** — propose which indoor units share an outdoor unit based on
