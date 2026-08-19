@@ -99,6 +99,11 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
   lid van de koelfamilie.
 - **Meer conflictbeleiden** — bijvoorbeeld beurtelings (round-robin) of een vast schema
   per dagdeel.
+- **Vertaal de \"en nog N meer\"-regel van de reparatiemelding** — `problems.summarise`
+  plakt bij meer dan vijf configuratieproblemen een hardcoded Engelse regel
+  `- ... and N more` onder de (wel vertaalde) lijst. Voor wie de interface in het
+  Nederlands of een andere taal draait, is dat de enige zin in de melding die Engels
+  blijft. Een vertaling onder `exceptions` met plaatshouder `{remaining}` lost dat op.
 
 ## Would have
 
@@ -208,6 +213,11 @@ The history of what has already been built and changed is **not** here but in th
   member of the cooling family.
 - **More conflict policies** — round-robin, for instance, or a fixed schedule per part of
   the day.
+- **Translate the repair notice's \"and N more\" line** — `problems.summarise` appends a
+  hardcoded English line `- ... and N more` under the (translated) list when there are more
+  than five configuration problems. For anyone running the interface in Dutch or another
+  language, that is the one sentence in the notice that stays English. A translation under
+  `exceptions` with a `{remaining}` placeholder solves it.
 
 ## Would have
 
