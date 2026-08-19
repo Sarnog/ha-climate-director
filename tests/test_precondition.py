@@ -342,10 +342,19 @@ class TestTheRequestItself:
         granted = coordinator.async_precondition(None, 30)
         assert set(granted) == {"woonkamer", "zolder"}
 
-    def test_an_unknown_zone_is_quietly_dropped(self) -> None:
+    def test_an_unknown_zone_is_dropped_and_warned_about(self, caplog) -> None:
         coordinator = self._coordinator()
         assert coordinator.async_precondition(["kelder"], 30) == {}
         assert coordinator.asked == 0
+        assert "unknown zones" in caplog.text
+        assert "kelder" in caplog.text
+
+    def test_cancelling_an_unknown_zone_is_warned_about(self, caplog) -> None:
+        coordinator = self._coordinator()
+        coordinator.async_precondition(None, 30)
+        coordinator.async_cancel_precondition(["kelder"])
+        assert "unknown zones" in caplog.text
+        assert set(coordinator._live_preconditions()) == {"woonkamer", "zolder"}
 
     def test_asking_for_too_long_shortens_it(self) -> None:
         """The intent was clear, only the number was wrong."""

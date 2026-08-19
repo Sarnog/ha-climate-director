@@ -310,7 +310,8 @@ def month():
     looks at today's date, and without moving that along a hand-back never
     lapses and the month tests nothing on that point.
     """
-    assert not validate(SCENARIO.config), validate(SCENARIO.config)
+    problems = [str(item) for item in validate(SCENARIO.config)]
+    assert problems and all("automatic start off" in item for item in problems), problems
     return run_month(SCENARIO, seed=20260218)
 
 

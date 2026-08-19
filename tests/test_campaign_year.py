@@ -447,15 +447,25 @@ def _real_problems(config: DirectorConfig) -> list[str]:
     om die keuze te maken. De README noemt die melding dan ook uitdrukkelijk
     geen fout.
 
+    Ook de handbediende slaapkamerknop is hier de bedoeling: de director start
+    die nooit uit zichzelf, en dat is precies wat deze campagne wil aantonen
+    (MANUAL_SOURCE hoort voor te komen). De nieuwe controle die zo'n zone
+    meldt, is dus evenmin een fout in dit huis.
+
     The check warns that the two appliances in the exclusive group can meet in
     any weather. That is the point here: they share a group precisely because
     they hang on the same fuse, and the group exists to make that choice. The
     README expressly calls that notice no error.
+
+    The hand-operated bedroom valve is deliberate too: the director never
+    starts it of its own accord, which is exactly what this campaign wants to
+    show (MANUAL_SOURCE should occur). The new check reporting such a zone is
+    therefore no error in this house either.
     """
     return [
         problem
         for problem in validate(config)
-        if getattr(problem, "code", "") != "exclusive_overlap"
+        if getattr(problem, "code", "") not in {"exclusive_overlap", "zone_only_manual_sources"}
     ]
 
 

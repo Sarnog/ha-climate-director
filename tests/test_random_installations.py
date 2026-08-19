@@ -187,6 +187,31 @@ def _zone(rng: random.Random, index: int, units: list[str], shared: str | None) 
             }
         )
 
+    # Een zone waarvan een gewenste taak alleen door handbediende bronnen wordt
+    # gedekt, zou de wizard weigeren. De generator hoort alleen te bouwen wat
+    # een gebruiker had kunnen invoeren, dus valt de eigen bron dan terug op
+    # automatisch starten; haar rol dekt beide gewenste taken.
+    #
+    # A zone where a wanted duty is covered only by hand-operated sources would
+    # be refused by the wizard. The generator should only build what a user
+    # could have entered, so the own source then falls back on starting
+    # automatically; its role covers both wanted duties.
+    def covers(role: str, wants_heat: bool, wants_cool: bool) -> bool:
+        if wants_heat and role in (SourceRole.HEAT_COOL.value, SourceRole.HEAT_ONLY.value):
+            return True
+        return wants_cool and role in (
+            SourceRole.HEAT_COOL.value,
+            SourceRole.COOL_ONLY.value,
+        )
+
+    def has_auto(wants_heat: bool, wants_cool: bool) -> bool:
+        return any(
+            item["autostart"] and covers(item["role"], wants_heat, wants_cool) for item in sources
+        )
+
+    if (heating and not has_auto(True, False)) or (cooling and not has_auto(False, True)):
+        sources[0]["autostart"] = True
+
     gate = rng.choice([item.value for item in ZoneGate])
     return {
         "zone_id": f"zone{index}",
