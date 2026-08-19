@@ -12,6 +12,8 @@
 
 ##### <ins>NL</ins>
 
+<a href="#en">→ Naar de Engelse versie</a>
+
 Een integratie voor Home Assistant die bestaande klimaatapparaten aanstuurt: hij
 beslist welke warmte- of koudebron in welke ruimte, in welke stand en op welke
 temperatuur draait.
@@ -109,8 +111,8 @@ Drie kant-en-klare automatiseringen, te importeren via
 
 ### Steun dit project ☕
 
-Vind je deze integratie nuttig? Een kleine bijdrage houdt de koffie warm
-en de commits komend. Volledig vrijblijvend natuurlijk!
+Als u deze integratie nuttig vindt en mijn werk waardeert, overweeg dan om
+een bedrag te doneren. Alvast bedankt!
 
 [![Koop me een koffie op Ko-fi](https://img.shields.io/badge/Ko--fi-Koop%20me%20een%20koffie-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white)](https://ko-fi.com/sarnog)
 
@@ -121,6 +123,8 @@ en de commits komend. Volledig vrijblijvend natuurlijk!
 
 
 ##### <ins>EN</ins>
+
+<a href="#nl">→ Go to the Dutch version</a>
 
 A Home Assistant integration that steers existing climate appliances: it decides
 which heat or cold source runs in which room, in which mode and at which
@@ -219,8 +223,8 @@ Three ready-made automations, importable through
 
 ### Support this project ☕
 
-Do you find this integration useful? A small contribution keeps the coffee
-warm and the commits coming. Entirely optional, of course!
+If you find this integration useful and appreciate my work, please consider
+making a donation. Thank you in advance!
 
 [![Buy me a coffee on Ko-fi](https://img.shields.io/badge/Ko--fi-Buy%20me%20a%20coffee-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white)](https://ko-fi.com/sarnog)
 
