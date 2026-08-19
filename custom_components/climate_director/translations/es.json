@@ -43,6 +43,7 @@
           "heating_layout": "Sistema de calefacción",
           "season_source": "Origen de la estación",
           "season_entity": "Entidad de estación",
+          "hemisphere": "Hemisferio",
           "require_awake": "Alguien en casa debe estar despierto",
           "require_schedule": "El horario de un residente debe estar abierto",
           "shadow_mode": "Modo sombra",
@@ -59,6 +60,7 @@
         "data_description": {
           "season_source": "Deduce la estación del mes, léela de una entidad, o fíjala a mano.",
           "season_entity": "Solo se usa cuando el origen está en entidad. Verano e invierno se reconocen en inglés, neerlandés, alemán, francés, español y árabe.",
+          "hemisphere": "Qué mitad del año cuenta como verano cuando la estación sale del mes. Norte: abril-septiembre. Sur: octubre-marzo.",
           "shadow_mode": "Calcula cada decisión pero no ejecuta nada.",
           "require_schedule": "La casa espera entonces a que se abra la primera franja establecida, y sigue esperando mientras alguien que está en casa aún duerme antes de la suya.",
           "outdoor_sensor": "Alimenta cada límite exterior, tanto aquí como en cada fuente. Sin este sensor ningún umbral de temperatura exterior puede cumplirse, y toda la instalación se queda parada en silencio.",
@@ -490,6 +492,12 @@
         "winter": "Siempre invierno"
       }
     },
+    "hemisphere": {
+      "options": {
+        "north": "Hemisferio norte (verano abril-septiembre)",
+        "south": "Hemisferio sur (verano octubre-marzo)"
+      }
+    },
     "zone_gate": {
       "options": {
         "household": "El hogar: horario, sueño, alguien en casa",
@@ -632,6 +640,9 @@
     },
     "calendars_without_keyword": {
       "message": "Hay calendarios de vacaciones configurados pero ninguna palabra clave, así que ningún evento puede activar el horario de vacaciones. Escribe la palabra que debe llevar un evento, o quita los calendarios."
+    },
+    "zone_only_manual_sources": {
+      "message": "La zona {zone} quiere {mode}, pero toda fuente capaz de dárselo tiene el arranque automático apagado, así que nunca puede arrancar por sí misma. Activa el arranque automático en una fuente."
     },
     "exclusive_overlap": {
       "message": "{first} y {second} se excluyen pero ambos aplican {overlap}. El grupo lo recoge, pero se encuentran en lugar de excluirse ya por sus límites exteriores. Dales límites contiguos para separarlos del todo."

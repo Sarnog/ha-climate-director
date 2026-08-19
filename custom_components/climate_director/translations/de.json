@@ -43,6 +43,7 @@
           "heating_layout": "Heizungsanlage",
           "season_source": "Herkunft der Jahreszeit",
           "season_entity": "Jahreszeit-Entität",
+          "hemisphere": "Hemisphäre",
           "require_awake": "Wer zu Hause ist, muss wach sein",
           "require_schedule": "Der Zeitplan eines Bewohners muss offen sein",
           "shadow_mode": "Schattenmodus",
@@ -59,6 +60,7 @@
         "data_description": {
           "season_source": "Leite die Jahreszeit aus dem Monat ab, lies sie aus einer Entität, oder lege sie von Hand fest.",
           "season_entity": "Wird nur verwendet, wenn die Herkunft auf Entität steht. Sommer und Winter werden auf Englisch, Niederländisch, Deutsch, Französisch, Spanisch und Arabisch erkannt.",
+          "hemisphere": "Welche Jahreshälfte als Sommer zählt, wenn die Jahreszeit aus dem Monat kommt. Nord: April-September. Süd: Oktober-März.",
           "shadow_mode": "Berechnet jede Entscheidung, führt aber nichts aus.",
           "require_schedule": "Das Haus wartet dann auf das erste eingestellte Fenster und wartet weiter, solange jemand zu Hause vor seinem eigenen Fenster noch schläft.",
           "outdoor_sensor": "Speist jede Außengrenze, hier wie auch an jeder Quelle. Ohne diesen Sensor kann keine Schwelle für die Außentemperatur je erfüllt werden, und die gesamte Anlage steht still.",
@@ -490,6 +492,12 @@
         "winter": "Immer Winter"
       }
     },
+    "hemisphere": {
+      "options": {
+        "north": "Nordhalbkugel (Sommer April-September)",
+        "south": "Südhalbkugel (Sommer Oktober-März)"
+      }
+    },
     "zone_gate": {
       "options": {
         "household": "Der Haushalt: Zeitplan, Schlaf, jemand zu Hause",
@@ -632,6 +640,9 @@
     },
     "calendars_without_keyword": {
       "message": "Es sind Urlaubskalender eingestellt, aber kein Stichwort, also kann kein Termin den Urlaubsplan einschalten. Trag das Wort ein, das ein Termin tragen muss, oder entferne die Kalender."
+    },
+    "zone_only_manual_sources": {
+      "message": "Zone {zone} möchte {mode}, aber jede Quelle, die das kann, hat automatisches Starten aus, daher kann sie nie von selbst beginnen. Schalte automatisches Starten bei einer Quelle ein."
     },
     "exclusive_overlap": {
       "message": "{first} und {second} schließen sich aus, gelten aber beide {overlap}. Die Gruppe fängt das ab, doch sie begegnen einander, statt sich schon durch ihre Außengrenzen auszuschließen. Gib ihnen angrenzende Grenzen, um sie endgültig zu trennen."

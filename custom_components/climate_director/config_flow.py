@@ -30,6 +30,7 @@ from .engine.models import (
     ConflictPolicy,
     HeatingLayout,
     Season,
+    SeasonSettings,
     SeasonSource,
     SourceRole,
     ZoneGate,
@@ -59,6 +60,35 @@ _ADD_FALLBACK = {
 #: Maandag is 0, gelijk aan `datetime.weekday()`, dat de engine ook gebruikt.
 #: Monday is 0, matching `datetime.weekday()`, which the engine uses too.
 _WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+
+#: Zomermaanden per halfrond, als maandnummers 1-12. De engine telt
+#: april-september als zomer; wie op het zuidelijk halfrond woont, krijgt
+#: oktober-maart. De noordelijke standaard komt uit de engine, zodat hij hier
+#: niet stilletjes uit de pas kan lopen.
+#:
+#: Summer months per hemisphere, as month numbers 1-12. The engine counts
+#: April-September as summer; the southern hemisphere gets October-March. The
+#: northern default comes from the engine, so it cannot drift apart here.
+_SUMMER_NORTH = SeasonSettings().summer_months
+_SUMMER_SOUTH = frozenset({1, 2, 3, 10, 11, 12})
+
+
+def _hemisphere(months: Any) -> str:
+    """Return which hemisphere a stored summer-months set describes.
+
+    Alles wat niet precies het zuidelijke rijtje is, telt als noordelijk. Dat is
+    de veilige kant: een handmatig bewerkte of half geschreven waarde valt
+    terug op de standaard in plaats van de wizard te laten struikelen.
+
+    Anything that is not exactly the southern row counts as northern. That is
+    the safe side: a hand-edited or half-written value falls back on the
+    default rather than tripping the wizard up.
+    """
+    try:
+        return "south" if frozenset(int(month) for month in months) == _SUMMER_SOUTH else "north"
+    except (TypeError, ValueError):
+        return "north"
+
 
 _TEMPERATURE = selector.NumberSelector(
     selector.NumberSelectorConfig(min=-20, max=40, step=0.5, mode=selector.NumberSelectorMode.BOX)
@@ -330,6 +360,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             self._installation["seasons"] = {
                 "source": user_input["season_source"],
                 "entity_id": user_input.get("season_entity", ""),
+                "summer_months": sorted(
+                    _SUMMER_SOUTH if user_input["hemisphere"] == "south" else _SUMMER_NORTH
+                ),
             }
             self._installation["gates"] = {
                 "require_awake": user_input["require_awake"],
@@ -383,8 +416,14 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         "season_entity",
                         description={"suggested_value": seasons.get("entity_id") or None},
                     ): selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain=["sensor", "input_select", "select"])
+                        selector.EntitySelectorConfig(
+                            domain=["sensor", "input_select", "select", "season"]
+                        )
                     ),
+                    vol.Required(
+                        "hemisphere",
+                        default=_hemisphere(seasons.get("summer_months")),
+                    ): _choices(["north", "south"], "hemisphere"),
                     vol.Required("require_awake", default=gates.get("require_awake", True)): bool,
                     vol.Required(
                         "require_schedule", default=gates.get("require_schedule", False)

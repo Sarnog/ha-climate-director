@@ -43,6 +43,7 @@
           "heating_layout": "Système de chauffage",
           "season_source": "Origine de la saison",
           "season_entity": "Entité de saison",
+          "hemisphere": "Hémisphère",
           "require_awake": "Une personne présente doit être éveillée",
           "require_schedule": "Le planning d'un occupant doit être ouvert",
           "shadow_mode": "Mode ombre",
@@ -59,6 +60,7 @@
         "data_description": {
           "season_source": "Déduisez la saison du mois, lisez-la depuis une entité, ou fixez-la à la main.",
           "season_entity": "Utilisée uniquement si l'origine est réglée sur entité. L'été et l'hiver sont reconnus en anglais, néerlandais, allemand, français, espagnol et arabe.",
+          "hemisphere": "Quelle moitié de l’année compte comme été lorsque la saison vient du mois. Nord : avril-septembre. Sud : octobre-mars.",
           "shadow_mode": "Calcule chaque décision mais n'exécute rien.",
           "require_schedule": "La maison attend alors l'ouverture de la première plage réglée, et continue d'attendre tant qu'une personne présente dort encore avant la sienne.",
           "outdoor_sensor": "Alimente chaque limite extérieure, ici comme sur chaque source. Sans ce capteur, aucun seuil de température extérieure ne peut être atteint, et toute l'installation reste à l'arrêt.",
@@ -490,6 +492,12 @@
         "winter": "Toujours l'hiver"
       }
     },
+    "hemisphere": {
+      "options": {
+        "north": "Hémisphère nord (été avril-septembre)",
+        "south": "Hémisphère sud (été octobre-mars)"
+      }
+    },
     "zone_gate": {
       "options": {
         "household": "Le foyer : planning, sommeil, quelqu'un à la maison",
@@ -632,6 +640,9 @@
     },
     "calendars_without_keyword": {
       "message": "Des agendas de vacances sont réglés mais pas de mot-clé ; aucun évènement ne peut donc activer le planning de vacances. Saisissez le mot qu'un évènement doit porter, ou retirez les agendas."
+    },
+    "zone_only_manual_sources": {
+      "message": "La zone {zone} veut {mode}, mais chaque source capable de le fournir a le démarrage automatique désactivé, elle ne peut donc jamais démarrer d’elle-même. Activez le démarrage automatique sur une source."
     },
     "exclusive_overlap": {
       "message": "{first} et {second} s'excluent mais s'appliquent tous deux {overlap}. Le groupe le rattrape, mais ils se rencontrent au lieu de s'exclure déjà par leurs bornes extérieures. Donnez-leur des bornes contiguës pour les séparer définitivement."
