@@ -1047,6 +1047,9 @@ ontwerp in plaats van tot een vermoeden.
 
 ### Installatie
 
+**Vereist:** Home Assistant **2024.5** of nieuwer. De integratie gebruikt
+`entry.runtime_data` en getypeerde config entries, die sinds 2024.5 bestaan.
+
 **Via HACS:** voeg deze repository toe als **custom repository** (HACS > drie puntjes >
 Aangepaste repositories > deze GitHub-URL, categorie "Integratie"), installeer, en
 herstart Home Assistant.
@@ -2199,6 +2202,9 @@ Every sensor carries the reason as an attribute (`circuit_conflict_lost`,
 rule in the design rather than to a hunch.
 
 ### Installation
+
+**Requires:** Home Assistant **2024.5** or newer. The integration uses
+`entry.runtime_data` and typed config entries, which exist since 2024.5.
 
 **Through HACS:** add this repository as a **custom repository** (HACS > three dots >
 Custom repositories > this GitHub URL, category "Integration"), install it, and restart
