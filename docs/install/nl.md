@@ -68,7 +68,7 @@ conflict voor je op.
 | Eén `climate.*` per zone | **ja** | zonder apparaat valt er niets aan te sturen |
 | Eén temperatuursensor per zone | **ja** | zonder meting weet de integratie niet of het te koud of te warm is; een `climate.*` met `current_temperature` mag ook |
 | `sensor.*` of `weather.*` buitentemperatuur | nee | alleen nodig als je grenzen op buitentemperatuur wilt — gas onder 3 °C, warmtepomp erboven, bijvoorbeeld |
-| `weather.*` of `sensor.*` neerslag | nee | alleen als regen de 'zet een raam open'-grens mag opheffen |
+| `weather.*` of `sensor.*` neerslag | nee | alleen als neerslag de 'zet een raam open'-grens mag opheffen |
 | `person.*` of `device_tracker.*` per bewoner | ja, zodra je bewoners instelt | anders kan die bewoner nooit thuis zijn |
 | Een slaapsensor per bewoner | nee | zonder deze telt niemand ooit als slapend |
 | `binary_sensor.*` aanwezigheid per zone | alleen als een zone op *de ruimte zelf* draait | dan is het de enige poort die de zone heeft |
@@ -159,28 +159,28 @@ je in het hoofdmenu **Opslaan en sluiten** kiest.
 | **Vooruitverwarmingsduur** | het plafond op één verzoek; standaard 120 minuten |
 | **Gastenmodus vanaf / tot** | het venster waarin de gastenmodus geldt; beide leeg = de hele dag |
 | **Meld een zone vastgelopen na** | na hoeveel minuten wachten een zone als vastgelopen geldt; 0 zet de melder uit |
-| **Neerslagbron** | een `weather.*`- of `sensor.*`-entiteit die zegt of het regent; leeg = de regenregel doet niet mee |
-| **Staten die als neerslag tellen** | welke standen van die entiteit regen betekenen; standaard de regenachtige condities |
-| **Hoe lang regen blijft tellen (minuten)** | nalooptijd na het stoppen van de regen; standaard 15 minuten |
+| **Neerslagbron** | een `weather.*`- of `sensor.*`-entiteit die zegt of er neerslag valt; leeg = de neerslagregel doet niet mee |
+| **Staten die als neerslag tellen** | welke standen van die entiteit neerslag betekenen; standaard regen, sneeuw en hagel |
+| **Hoe lang neerslag blijft tellen (minuten)** | nalooptijd na het stoppen van de neerslag; standaard 15 minuten |
 | **Schaduwmodus** | aan = alles doorrekenen, niets aansturen |
 
-### Regen zet de buitengrens opzij
+### Neerslag zet de buitengrens opzij
 
 De buitengrens per zone is een zuinigheidsregel met een aanname eronder: is
 het buiten aangenamer dan binnen, dan kun je beter een raam openzetten dan de
-airco aanzetten. Regent het, dan blijft dat raam dicht en gebeurt er dus
-niets, terwijl het binnen te warm of te koud blijft.
+airco aanzetten. Valt er neerslag, dan blijft dat raam dicht en gebeurt er
+dus niets, terwijl het binnen te warm of te koud blijft.
 
 Stel daarom een **neerslagbron** in. Zolang die neerslag meldt, slaat Climate
 Director de **buitengrens per zone** over — precies zoals een vooruit-verzoek
 dat doet. De dode band, het seizoen en de buitengrens **per bron** blijven
 gewoon gelden; die kiezen nog steeds het apparaat. De nalooptijd zorgt dat een
 bui van vijf minuten de regeling niet laat stuiteren. Zonder bron doet de
-regenregel niet mee.
+neerslagregel niet mee.
 
-Een ruimte zonder ramen heeft er niets aan. Zet daar in de zone **Regen heft
-de 'zet een raam open'-regel niet op** aan, en de buitengrens blijft ook bij
-regen gelden.
+Een ruimte zonder ramen heeft er niets aan. Zet daar in de zone **Neerslag
+heft de 'zet een raam open'-regel niet op** aan, en de buitengrens blijft ook
+bij neerslag gelden.
 
 ### Verwarmingssysteem: centraal of per zone
 
@@ -210,7 +210,7 @@ Een zone is een ruimte. Per zone stel je in:
 | **Voorrang op een gedeelde buitenunit** | hoe hard deze zone een gedeelde buitenunit claimt; **lager wint**. Op één circuit mag geen nummer dubbel voorkomen |
 | **Wat bepaalt of deze zone draait** | *het huishouden* (rooster, slaap, iemand thuis) of *de ruimte zelf* (alleen de aanwezigheidssensor) |
 | **Aanwezigheidssensor + status + nalooptijd** | wanneer de kamer als bezet telt; de nalooptijd vangt knipperende melders op |
-| **Regen heft de 'zet een raam open'-regel niet op** | aan voor een ruimte zonder ramen; daar blijft de buitengrens ook bij regen gelden |
+| **Neerslag heft de 'zet een raam open'-regel niet op** | aan voor een ruimte zonder ramen; daar blijft de buitengrens ook bij neerslag gelden |
 | **Deze zone mag verwarmen** | uit = deze kamer wordt nooit verwarmd |
 | **Streeftemperatuur verwarmen** | het setpoint dat het apparaat krijgt als verwarmen draait — niet het startpunt |
 | **Verwarmen starten bij** | verwarmen start bij deze binnentemperatuur of lager |

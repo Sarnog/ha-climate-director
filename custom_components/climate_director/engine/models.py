@@ -259,7 +259,7 @@ class Zone:
     """
 
     ignore_precipitation: bool = False
-    """Whether this zone keeps its outdoor window even while it rains.
+    """Whether this zone keeps its outdoor window even during precipitation.
 
     Een zolder zonder ramen heeft niets aan de "zet een raam open"-regel, dus
     daar mag neerslag de buitengrens niet opzij zetten.
@@ -618,14 +618,14 @@ class PrecipitationSettings:
     """Which source counts as precipitation, and how long it keeps counting.
 
     De buitengrens per zone is een zuinigheidsregel die ervan uitgaat dat je
-    bij mooi weer beter een raam openzet dan de airco aan. Regent het, dan
-    gaat die aanname niet op — en zolang een neerslagbron neerslag meldt,
+    bij mooi weer beter een raam openzet dan de airco aan. Valt er neerslag,
+    dan gaat die aanname niet op — en zolang een neerslagbron neerslag meldt,
     slaat de engine de buitengrens per zone over, precies zoals een
     vooruit-verzoek dat al doet.
 
     The per-zone outdoor bound is a thrift rule that assumes you are better off
     opening a window than switching the air conditioner on in nice weather.
-    When it rains that assumption does not hold — and as long as a
+    When precipitation falls that assumption does not hold — and as long as a
     precipitation source reports precipitation, the engine skips the per-zone
     outdoor bound, exactly as a pre-conditioning request already does.
     """

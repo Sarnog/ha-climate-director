@@ -58,7 +58,7 @@
           "stuck_after": "Zone gilt als festgefahren nach (Minuten)",
           "precipitation_source": "Niederschlagsquelle",
           "precipitation_states": "Zustände, die als Niederschlag zählen",
-          "precipitation_grace": "Wie lange Regen weiter zählt (Minuten)"
+          "precipitation_grace": "Wie lange Niederschlag weiter zählt (Minuten)"
         },
         "data_description": {
           "season_source": "Leite die Jahreszeit aus dem Monat ab, lies sie aus einer Entität, oder lege sie von Hand fest.",
@@ -78,9 +78,9 @@
           "max_precondition": "Eine Anforderung kann man nicht vergessen, nur vertippen. Diese Obergrenze verhindert, dass ein Tippfehler einen ganzen Nachmittag ein leeres Haus heizt. Wer mehr anfordert, bekommt eine gekürzte statt gar keiner.",
           "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst.",
           "stuck_after": "Eine Pause beim Aufgabenwechsel sollte Sekunden dauern. Eine Zone, die nach dieser Zeit noch darauf steht, wartet nicht mehr, sondern hängt fest - von außen sieht das genau wie Nichtstun aus. Halte den Wert deutlich über deiner längsten Pause; ein Fehlalarm lehrt dich, den Melder zu ignorieren. Null schaltet ihn aus.",
-          "precipitation_source": "Eine Wetter-Entität oder ein Regensensor. Solange sie einen der Zustände unten meldet, wird die 'Fenster-öffnen'-Grenze pro Zone übersprungen. Leer lassen, damit die gewöhnliche Regel immer gilt.",
-          "precipitation_states": "Kommagetrennt. Bei einer Wetter-Entität sind das ihre Bedingungen, bei einem Sensor seine Zustände. Die Vorgabe deckt die regnerischen Bedingungen ab.",
-          "precipitation_grace": "Ein Fünf-Minuten-Schauer soll die Regelung nicht ins Schwingen bringen, also zählt eine Messung noch so lange weiter, nachdem der Regen aufgehört hat."
+          "precipitation_source": "Eine Wetter-Entität oder ein Niederschlagssensor. Solange sie einen der Zustände unten meldet, wird die 'Fenster-öffnen'-Grenze pro Zone übersprungen. Leer lassen, damit die gewöhnliche Regel immer gilt.",
+          "precipitation_states": "Kommagetrennt. Bei einer Wetter-Entität sind das ihre Bedingungen, bei einem Sensor seine Zustände. Die Vorgabe deckt Regen, Schnee und Hagel ab.",
+          "precipitation_grace": "Ein Fünf-Minuten-Schauer soll die Regelung nicht ins Schwingen bringen, also zählt eine Messung noch so lange weiter, nachdem der Niederschlag aufgehört hat."
         }
       },
       "zones": {
@@ -117,7 +117,7 @@
           "presence_entity": "Anwesenheitssensor dieser Zone",
           "presence_state": "Zustand, der belegt bedeutet",
           "presence_timeout": "Noch so lange als belegt zählen (Sekunden)",
-          "ignore_precipitation": "Regen hebt die 'Fenster-öffnen'-Regel nicht auf",
+          "ignore_precipitation": "Niederschlag hebt die 'Fenster-öffnen'-Regel nicht auf",
           "gate": "Was entscheidet, ob diese Zone läuft",
           "when_done": "Wenn du hier fertig bist"
         },
@@ -129,7 +129,7 @@
           "presence_entity": "Leer lassen, um diesen Raum zu regeln, ob jemand darin ist oder nicht. Jemand zu Hause sagt nichts darüber, ob jemand auf dem Dachboden sitzt.",
           "presence_state": "Ein Anwesenheitssensor meldet on.",
           "presence_timeout": "Leer lassen oder auf null setzen, um sofort zu reagieren, sobald die Anwesenheit wegfällt. Anwesenheitssensoren flackern, also erspart ein paar Sekunden hier dem Verdichter einen sinnlosen Stopp.",
-          "ignore_precipitation": "An für einen Raum ohne Fenster: Er hat nichts von der 'Fenster-öffnen'-Regel, also soll Regen sie dort nicht aufheben.",
+          "ignore_precipitation": "An für einen Raum ohne Fenster: Er hat nichts von der 'Fenster-öffnen'-Regel, also soll Niederschlag sie dort nicht aufheben.",
           "name": "Der Name der Zone überall. Ihre interne Kennung wird einmal abgeleitet und bleibt dann stehen, späteres Umbenennen ist also unbedenklich.",
           "enable_heat": "Aus bedeutet, dass dieser Raum nie geheizt wird, was das Thermometer auch sagt.",
           "heat_target": "Der Sollwert, den das Gerät bekommt, sobald geheizt wird. Nicht der Punkt, an dem es anfängt.",

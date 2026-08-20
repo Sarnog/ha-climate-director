@@ -58,7 +58,7 @@
           "stuck_after": "Zone geldt als vastgelopen na (minuten)",
           "precipitation_source": "Neerslagbron",
           "precipitation_states": "Staten die als neerslag tellen",
-          "precipitation_grace": "Hoe lang regen blijft tellen (minuten)"
+          "precipitation_grace": "Hoe lang neerslag blijft tellen (minuten)"
         },
         "data_description": {
           "season_source": "Leid het seizoen af uit de maand, lees het uit een entiteit, of zet het met de hand vast.",
@@ -78,9 +78,9 @@
           "max_precondition": "Een verzoek kun je niet vergeten, alleen verkeerd intikken. Dit plafond voorkomt dat een vertypte tijd een hele middag een leeg huis verwarmt. Vraag je langer, dan wordt het verzoek ingekort in plaats van geweigerd.",
           "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
           "stuck_after": "Een pauze bij het wisselen van taak hoort seconden te duren. Een zone die er na deze tijd nog op staat wacht niet meer maar zit vast, en dat lijkt van buiten precies op niets doen. Houd hem ruim boven je langste pauze; een valse melding leert je de melder te negeren. Nul zet de melder uit.",
-          "precipitation_source": "Een weather-entiteit of regensensor. Zolang die een van de staten hieronder meldt, wordt de 'zet een raam open'-grens per zone overgeslagen. Laat leeg om de gewone regel altijd te laten gelden.",
-          "precipitation_states": "Komma-gescheiden. Voor een weather-entiteit zijn dit zijn condities; voor een sensor de standen. De standaard dekt de regenachtige condities.",
-          "precipitation_grace": "Een bui van vijf minuten hoort de regeling niet te laten stuiteren, dus een meting blijft nog zo lang meetellen nadat de regen ophoudt."
+          "precipitation_source": "Een weather-entiteit of neerslagsensor. Zolang die een van de staten hieronder meldt, wordt de 'zet een raam open'-grens per zone overgeslagen. Laat leeg om de gewone regel altijd te laten gelden.",
+          "precipitation_states": "Komma-gescheiden. Voor een weather-entiteit zijn dit zijn condities; voor een sensor de standen. De standaard dekt regen, sneeuw en hagel.",
+          "precipitation_grace": "Een bui van vijf minuten hoort de regeling niet te laten stuiteren, dus een meting blijft nog zo lang meetellen nadat de neerslag ophoudt."
         }
       },
       "zones": {
@@ -117,7 +117,7 @@
           "presence_entity": "Aanwezigheidssensor van deze zone",
           "presence_state": "Toestand die bezet betekent",
           "presence_timeout": "Nog zo lang als bezet tellen (seconden)",
-          "ignore_precipitation": "Regen heft de 'zet een raam open'-regel niet op",
+          "ignore_precipitation": "Neerslag heft de 'zet een raam open'-regel niet op",
           "gate": "Wat bepaalt of deze zone draait",
           "when_done": "Als je hier klaar bent"
         },
@@ -129,7 +129,7 @@
           "presence_entity": "Laat leeg om deze ruimte te regelen of er nu iemand is of niet. Iemand thuis zegt niets over of er iemand op zolder zit.",
           "presence_state": "Een aanwezigheidssensor meldt on.",
           "presence_timeout": "Laat leeg of zet op nul om direct te reageren zodra de aanwezigheid wegvalt. Aanwezigheidssensoren knipperen, dus een paar seconden hier scheelt de compressor een zinloze stop.",
-          "ignore_precipitation": "Aan voor een ruimte zonder ramen: die heeft niets aan de 'zet een raam open'-regel, dus regen hoort die regel daar niet op te heffen.",
+          "ignore_precipitation": "Aan voor een ruimte zonder ramen: die heeft niets aan de 'zet een raam open'-regel, dus neerslag hoort die regel daar niet op te heffen.",
           "name": "De naam van de zone overal. Zijn interne id wordt een keer afgeleid en blijft daarna staan, dus later hernoemen kan gerust.",
           "enable_heat": "Uit betekent dat deze ruimte nooit verwarmd wordt, wat de thermometer ook zegt.",
           "heat_target": "Het setpoint dat het apparaat krijgt zodra er verwarmd wordt. Niet het punt waarop hij begint.",

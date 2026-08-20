@@ -58,7 +58,7 @@
           "stuck_after": "Zone considérée bloquée après (minutes)",
           "precipitation_source": "Source de précipitations",
           "precipitation_states": "États comptant comme précipitations",
-          "precipitation_grace": "Combien de temps la pluie continue de compter (minutes)"
+          "precipitation_grace": "Combien de temps les précipitations continuent de compter (minutes)"
         },
         "data_description": {
           "season_source": "Déduisez la saison du mois, lisez-la depuis une entité, ou fixez-la à la main.",
@@ -78,9 +78,9 @@
           "max_precondition": "Une demande ne s'oublie pas, elle se saisit mal. Ce plafond empêche une faute de frappe de chauffer une maison vide tout un après-midi. Demander plus long raccourcit la demande au lieu de la refuser.",
           "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
           "stuck_after": "Une pause lors d'un changement de tâche doit durer des secondes. Une pièce qui y reste au-delà n'attend plus, elle est bloquée - ce qui, vu de l'extérieur, ressemble exactement à ne rien faire. Gardez la valeur bien au-dessus de votre plus longue pause ; une fausse alerte apprend à ignorer l'alerte. Zéro désactive le capteur.",
-          "precipitation_source": "Une entité météo ou un capteur de pluie. Tant qu'elle signale l'un des états ci-dessous, la limite « ouvrir une fenêtre » par zone est ignorée. Laissez vide pour que la règle ordinaire s'applique toujours.",
-          "precipitation_states": "Séparés par des virgules. Pour une entité météo, ce sont ses conditions ; pour un capteur, ses états. La valeur par défaut couvre les conditions pluvieuses.",
-          "precipitation_grace": "Une averse de cinq minutes ne doit pas faire osciller la régulation, donc une lecture continue de compter encore ce temps après que la pluie s'est arrêtée."
+          "precipitation_source": "Une entité météo ou un capteur de précipitations. Tant qu'elle signale l'un des états ci-dessous, la limite « ouvrir une fenêtre » par zone est ignorée. Laissez vide pour que la règle ordinaire s'applique toujours.",
+          "precipitation_states": "Séparés par des virgules. Pour une entité météo, ce sont ses conditions ; pour un capteur, ses états. La valeur par défaut couvre la pluie, la neige et la grêle.",
+          "precipitation_grace": "Une averse de cinq minutes ne doit pas faire osciller la régulation, donc une lecture continue de compter encore ce temps après que les précipitations se sont arrêtées."
         }
       },
       "zones": {
@@ -117,7 +117,7 @@
           "presence_entity": "Capteur de présence de cette zone",
           "presence_state": "État signifiant occupée",
           "presence_timeout": "Continuer à compter comme occupée pendant (secondes)",
-          "ignore_precipitation": "La pluie ne lève pas la règle « ouvrir une fenêtre »",
+          "ignore_precipitation": "Les précipitations ne lèvent pas la règle « ouvrir une fenêtre »",
           "gate": "Ce qui décide si cette zone fonctionne",
           "when_done": "Quand vous avez terminé ici"
         },
@@ -129,7 +129,7 @@
           "presence_entity": "Laissez vide pour réguler cette pièce, que quelqu'un s'y trouve ou non. Quelqu'un à la maison ne dit rien sur la présence dans le grenier.",
           "presence_state": "Un capteur de présence rapporte on.",
           "presence_timeout": "Laissez vide ou mettez zéro pour réagir dès que la présence disparaît. Les capteurs de présence clignotent, donc quelques secondes ici épargnent au compresseur un arrêt inutile.",
-          "ignore_precipitation": "Activé pour une pièce sans fenêtres : la règle « ouvrir une fenêtre » ne lui apporte rien, donc la pluie ne doit pas la lever là.",
+          "ignore_precipitation": "Activé pour une pièce sans fenêtres : la règle « ouvrir une fenêtre » ne lui apporte rien, donc les précipitations ne doivent pas la lever là.",
           "name": "Le nom de la zone partout. Son identifiant interne est dérivé une fois puis reste en place, un renommage ultérieur est donc sans risque.",
           "enable_heat": "Désactivé signifie que cette pièce n'est jamais chauffée, quoi que dise le thermomètre.",
           "heat_target": "La consigne transmise à l'appareil une fois le chauffage lancé. Pas le point auquel il démarre.",

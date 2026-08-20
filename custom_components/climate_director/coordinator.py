@@ -1104,8 +1104,8 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         if not settings.source:
             return False
         state = self.hass.states.get(settings.source)
-        raining = state is not None and state.state in settings.states
-        if raining:
+        precipitating = state is not None and state.state in settings.states
+        if precipitating:
             self._precipitation_seen_at = dt_util.now()
             return True
         seen = self._precipitation_seen_at
