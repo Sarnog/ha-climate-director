@@ -55,7 +55,10 @@
           "precondition_end": "Preacondicionamiento hasta",
           "max_precondition": "Duración del preacondicionamiento (minutos)",
           "when_done": "Cuando termines aquí",
-          "stuck_after": "Zona se considera atascada tras (minutos)"
+          "stuck_after": "Zona se considera atascada tras (minutos)",
+          "precipitation_source": "Fuente de precipitaciones",
+          "precipitation_states": "Estados que cuentan como precipitación",
+          "precipitation_grace": "Cuánto tiempo sigue contando la lluvia (minutos)"
         },
         "data_description": {
           "season_source": "Deduce la estación del mes, léela de una entidad, o fíjala a mano.",
@@ -74,7 +77,10 @@
           "precondition_end": "El preacondicionamiento es lo único que puede hacer funcionar una casa vacía, así que se mantiene en estas horas. Fuera de ellas una petición no cuenta.",
           "max_precondition": "Una petición no se olvida, solo se teclea mal. Este techo evita que una errata caliente una casa vacía toda la tarde. Pedir más tiempo acorta la petición en lugar de rechazarla.",
           "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
-          "stuck_after": "Una pausa al cambiar de tarea debe durar segundos. Una zona que sigue en ella pasado este tiempo ya no espera, está atascada, y desde fuera eso se parece exactamente a no hacer nada. Mantenlo bien por encima de tu pausa más larga; una falsa alarma enseña a ignorar la alarma. Cero apaga el sensor."
+          "stuck_after": "Una pausa al cambiar de tarea debe durar segundos. Una zona que sigue en ella pasado este tiempo ya no espera, está atascada, y desde fuera eso se parece exactamente a no hacer nada. Mantenlo bien por encima de tu pausa más larga; una falsa alarma enseña a ignorar la alarma. Cero apaga el sensor.",
+          "precipitation_source": "Una entidad meteorológica o un sensor de lluvia. Mientras informe de uno de los estados de abajo, el límite de «abrir una ventana» por zona se omite. Déjalo vacío para que la regla ordinaria se aplique siempre.",
+          "precipitation_states": "Separados por comas. Para una entidad meteorológica son sus condiciones; para un sensor, sus estados. El valor por defecto cubre las condiciones lluviosas.",
+          "precipitation_grace": "Un chaparrón de cinco minutos no debe hacer oscilar la regulación, así que una lectura sigue contando este tiempo después de cesar."
         }
       },
       "zones": {
@@ -111,6 +117,7 @@
           "presence_entity": "Sensor de presencia de esta zona",
           "presence_state": "Estado que significa ocupada",
           "presence_timeout": "Seguir contando como ocupada durante (segundos)",
+          "ignore_precipitation": "La lluvia no levanta la regla de «abrir una ventana»",
           "gate": "Qué decide si esta zona funciona",
           "when_done": "Cuando termines aquí"
         },
@@ -122,6 +129,7 @@
           "presence_entity": "Déjalo vacío para regular esta habitación haya alguien o no. Que alguien esté en casa no dice nada sobre si hay alguien en el desván.",
           "presence_state": "Un sensor de presencia informa on.",
           "presence_timeout": "Déjalo vacío o ponlo a cero para reaccionar en cuanto desaparece la presencia. Los sensores de presencia parpadean, así que unos segundos aquí le ahorran al compresor una parada inútil.",
+          "ignore_precipitation": "Actívalo en una estancia sin ventanas: la regla de «abrir una ventana» no le aporta nada, así que la lluvia no debe levantarla allí.",
           "name": "El nombre de la zona en todas partes. Su identificador interno se deriva una vez y luego no cambia, así que renombrarla después es seguro.",
           "enable_heat": "Desactivado significa que esta habitación nunca se calienta, diga lo que diga el termómetro.",
           "heat_target": "La consigna que recibe el aparato una vez que calienta. No el punto en el que arranca.",

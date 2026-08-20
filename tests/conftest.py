@@ -84,6 +84,7 @@ def make_world(
     precondition_bypass: frozenset[str] = frozenset(),
     zone_overrides: dict[str, bool] | None = None,
     zone_priorities: dict[str, int] | None = None,
+    precipitation: bool = False,
 ) -> WorldState:
     """Return a `WorldState`, accepting bare mode strings for climate entities."""
     resolved = {
@@ -107,6 +108,7 @@ def make_world(
         precondition_bypass=precondition_bypass,
         zone_overrides=dict(zone_overrides or {}),
         zone_priorities=dict(zone_priorities or {}),
+        precipitation=precipitation,
     )
 
 

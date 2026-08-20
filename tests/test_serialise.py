@@ -5,6 +5,7 @@ Tests for converting to and from a config entry's storage.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import time, timedelta
 
 from conftest import house
@@ -12,6 +13,7 @@ from conftest import house
 from custom_components.climate_director.engine import (
     ConflictPolicy,
     DirectorConfig,
+    PrecipitationSettings,
     Season,
     SourceRole,
     validate,
@@ -31,6 +33,21 @@ class TestRoundTrip:
 
     def test_an_empty_installation_round_trips(self) -> None:
         assert config_from_dict(config_to_dict(DirectorConfig())) == DirectorConfig()
+
+    def test_precipitation_settings_round_trip(self) -> None:
+        config = replace(
+            house(),
+            precipitation=PrecipitationSettings(
+                source="weather.buienradar",
+                states=frozenset({"rainy", "snowy"}),
+                grace=timedelta(minutes=30),
+            ),
+            zones=tuple(
+                replace(zone, ignore_precipitation=True) if zone.zone_id == "zolder" else zone
+                for zone in house().zones
+            ),
+        )
+        assert config_from_dict(config_to_dict(config)) == config
 
     def test_the_stored_form_is_plain_json_types(self) -> None:
         """A config entry stores JSON; a timedelta or an enum would not survive."""

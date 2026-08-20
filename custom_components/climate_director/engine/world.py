@@ -152,6 +152,18 @@ class WorldState:
     schedules say nothing useful about whether the rooms are in use.
     """
 
+    precipitation: bool = False
+    """Whether a configured source reports precipitation, grace period included.
+
+    De koppelingslaag lost de bron en de nalooptijd op; de engine krijgt alleen
+    het antwoord. Zolang dit waar is, telt de buitengrens per zone niet — de
+    dode band, het seizoen en de buitengrens per bron blijven gewoon gelden.
+
+    The binding layer resolves the source and the grace period; the engine only
+    gets the answer. While this holds, the per-zone outdoor bound does not
+    count — the dead band, the season and the per-source bound still apply.
+    """
+
     zone_overrides: dict[str, bool] = field(default_factory=dict)
     """Manual override per `zone_id`; a missing zone counts as no override."""
 

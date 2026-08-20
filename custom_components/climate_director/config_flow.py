@@ -29,6 +29,7 @@ from .engine import validate
 from .engine.models import (
     ConflictPolicy,
     HeatingLayout,
+    PrecipitationSettings,
     Season,
     SeasonSettings,
     SeasonSource,
@@ -384,6 +385,17 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             self._installation["holiday_keyword"] = (
                 user_input.get("holiday_keyword") or ""
             ).strip()
+            self._installation["precipitation"] = {
+                "source": user_input.get("precipitation_source") or "",
+                "states": sorted(
+                    {
+                        item.strip()
+                        for item in (user_input.get("precipitation_states") or "").split(",")
+                        if item.strip()
+                    }
+                ),
+                "grace": int(user_input.get("precipitation_grace") or 0) * 60,
+            }
             self._shadow_mode = user_input[CONF_SHADOW_MODE]
             return await self.async_step_init()
 
@@ -391,6 +403,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         gates = self._installation.get("gates") or {}
         guest = gates.get("guest_window") or {}
         precondition = gates.get("precondition_window") or {}
+        precipitation = self._installation.get("precipitation") or {}
         return self.async_show_form(
             step_id="settings",
             data_schema=vol.Schema(
@@ -478,6 +491,27 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         "stuck_after",
                         default=int(self._installation.get("stuck_after", 900)) // 60,
                     ): _MINUTES_OR_OFF,
+                    vol.Optional(
+                        "precipitation_source",
+                        description={"suggested_value": precipitation.get("source") or None},
+                    ): selector.EntitySelector(
+                        selector.EntitySelectorConfig(domain=["weather", "sensor"])
+                    ),
+                    vol.Required(
+                        "precipitation_states",
+                        default=", ".join(
+                            precipitation.get("states") or sorted(PrecipitationSettings().states)
+                        ),
+                    ): _TEXT,
+                    vol.Required(
+                        "precipitation_grace",
+                        default=int(
+                            precipitation.get(
+                                "grace", PrecipitationSettings().grace.total_seconds()
+                            )
+                        )
+                        // 60,
+                    ): _MINUTES,
                     vol.Required(
                         CONF_SHADOW_MODE,
                         default=(
@@ -779,6 +813,10 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         "presence_timeout",
                         description={"suggested_value": current.get("presence_timeout") or None},
                     ): _SECONDS,
+                    vol.Required(
+                        "ignore_precipitation",
+                        default=current.get("ignore_precipitation", False),
+                    ): bool,
                     vol.Required("enable_heat", default=bool(heat)): bool,
                     vol.Required("heat_target", default=heat.get("target", 21.0)): _TEMPERATURE,
                     vol.Required("heat_start_at", default=heat.get("start_at", 20.0)): _TEMPERATURE,
@@ -1772,6 +1810,7 @@ def _zone_from_form(user_input: dict[str, Any], current: dict[str, Any]) -> dict
         "presence_entity": user_input.get("presence_entity") or "",
         "presence_state": user_input.get("presence_state") or "on",
         "presence_timeout": user_input.get("presence_timeout") or 0,
+        "ignore_precipitation": bool(user_input.get("ignore_precipitation", False)),
     }
 
 

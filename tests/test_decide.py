@@ -149,6 +149,47 @@ class TestHeldBack:
         assert decision.held_back is False
 
 
+class TestPrecipitation:
+    """Regen zet de buitengrens per zone opzij, en alleen die."""
+
+    def test_rain_lifts_the_zone_outdoor_bound(self) -> None:
+        """Buiten 22 graden is boven de verwarmgrens; regen zet die opzij."""
+        decision = decide(house(), cold_house(outdoor=22.0, precipitation=True)).decision_for(
+            "woonkamer"
+        )
+        assert decision is not None
+        assert decision.granted is ModeFamily.HEAT
+        assert decision.source_id == "woonkamer_airco"
+
+    def test_without_rain_the_zone_bound_stays(self) -> None:
+        decision = decide(house(), cold_house(outdoor=22.0)).decision_for("woonkamer")
+        assert decision is not None
+        assert decision.reason is Reason.OUTDOOR_OUTSIDE_WINDOW
+
+    def test_a_windowless_room_keeps_its_bound_in_the_rain(self) -> None:
+        config = replace(
+            house(),
+            zones=tuple(
+                replace(zone, ignore_precipitation=True) if zone.zone_id == "woonkamer" else zone
+                for zone in house().zones
+            ),
+        )
+        decision = decide(config, cold_house(outdoor=22.0, precipitation=True)).decision_for(
+            "woonkamer"
+        )
+        assert decision is not None
+        assert decision.reason is Reason.OUTDOOR_OUTSIDE_WINDOW
+
+    def test_rain_does_not_override_the_source_bound(self) -> None:
+        """De grens per bron kiest nog steeds het apparaat: onder 3 graden blijft gas."""
+        decision = decide(house(), cold_house(outdoor=1.0, precipitation=True)).decision_for(
+            "woonkamer"
+        )
+        assert decision is not None
+        assert decision.granted is ModeFamily.HEAT
+        assert decision.source_id == "gasketel"
+
+
 class TestCommandOrder:
     def test_stops_are_ordered_before_starts(self) -> None:
         """Otherwise two duties briefly share one compressor while calls land."""

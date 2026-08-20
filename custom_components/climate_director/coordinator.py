@@ -265,6 +265,22 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self._lock = asyncio.Lock()
         self._family_since: dict[str, datetime | None] = {}
         self._family_seen: dict[str, ModeFamily] = {}
+        self._precipitation_seen_at: datetime | None = None
+        """Wanneer de neerslagbron voor het laatst neerslag meldde.
+
+        De nalooptijd hangt hieraan: een bui van vijf minuten hoort de regeling
+        niet te laten stuiteren, dus zodra de bron neerslag meldt blijft dat
+        nog even gelden nadat het ophoudt. Een herstart begint opnieuw op
+        "geen neerslag", en dat is de onschadelijke kant om fout te zitten:
+        dan geldt de gewone buitengrens gewoon weer.
+
+        The moment the precipitation source last reported precipitation. The
+        grace period hangs off this: a five-minute shower should not make the
+        regulation bounce, so once the source reports precipitation it keeps
+        counting for a while after it stops. A restart begins afresh on "no
+        precipitation", which is the harmless side to be wrong on: the ordinary
+        outdoor bound simply applies again.
+        """
         self._cancel_deferral: CALLBACK_TYPE | None = None
         self._debouncer = Debouncer(
             hass,
@@ -300,6 +316,8 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             entities.add(self.config.outdoor_sensor)
         if self.config.seasons.source is SeasonSource.ENTITY and self.config.seasons.entity_id:
             entities.add(self.config.seasons.entity_id)
+        if self.config.precipitation.source:
+            entities.add(self.config.precipitation.source)
 
         for zone in self.config.zones:
             if zone.indoor_sensor:
@@ -965,6 +983,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             precondition_bypass=frozenset(self._precondition_bypass),
             zone_overrides=self._overridden_zones(),
             zone_priorities=dict(self.zone_priorities),
+            precipitation=self._precipitation(),
         )
 
     def _overridden_zones(self) -> dict[str, bool]:
@@ -1066,6 +1085,31 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             state = self.hass.states.get(settings.entity_id) if settings.entity_id else None
             return season_from_state(state.state if state else None)
         return settings.for_month(dt_util.now().month)
+
+    def _precipitation(self) -> bool:
+        """Return whether the configured source reports precipitation, with grace.
+
+        Een bui van vijf minuten hoort de regeling niet te laten stuiteren, dus
+        zodra de bron neerslag meldt blijft dat nog even gelden nadat het
+        ophoudt. De nalooptijd komt uit de configuratie; zonder bron is het
+        antwoord gewoon "nee", en dan blijft de gewone buitengrens gelden.
+
+        A five-minute shower should not make the regulation bounce, so once the
+        source reports precipitation it keeps counting for a while after it
+        stops. The grace period comes from the configuration; without a source
+        the answer is simply "no", and the ordinary outdoor bound stays in
+        force.
+        """
+        settings = self.config.precipitation
+        if not settings.source:
+            return False
+        state = self.hass.states.get(settings.source)
+        raining = state is not None and state.state in settings.states
+        if raining:
+            self._precipitation_seen_at = dt_util.now()
+            return True
+        seen = self._precipitation_seen_at
+        return seen is not None and dt_util.now() - seen < settings.grace
 
     # -- circuitgeschiedenis / circuit history -------------------------------
 

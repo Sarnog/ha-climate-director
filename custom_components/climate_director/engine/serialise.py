@@ -39,6 +39,7 @@ from .models import (
     ModeSettings,
     Opening,
     OutdoorWindow,
+    PrecipitationSettings,
     Resident,
     Season,
     SeasonSettings,
@@ -64,6 +65,7 @@ def config_from_dict(raw: Mapping[str, Any]) -> DirectorConfig:
         ),
         gates=_gates(raw.get("gates")),
         seasons=_seasons(raw.get("seasons")),
+        precipitation=_precipitation(raw.get("precipitation")),
         heating_layout=_layout(raw),
         outdoor_sensor=_text(raw.get("outdoor_sensor")),
         stuck_after=_seconds(raw.get("stuck_after"), 900.0),
@@ -128,6 +130,11 @@ def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
             "entity_id": config.seasons.entity_id,
             "summer_months": sorted(config.seasons.summer_months),
         },
+        "precipitation": {
+            "source": config.precipitation.source,
+            "states": sorted(config.precipitation.states),
+            "grace": int(config.precipitation.grace.total_seconds()),
+        },
         "heating_layout": config.heating_layout.value,
         "outdoor_sensor": config.outdoor_sensor,
         "stuck_after": int(config.stuck_after.total_seconds()),
@@ -154,6 +161,7 @@ def _zone(raw: Mapping[str, Any]) -> Zone:
         presence_entity=_text(raw.get("presence_entity")),
         presence_state=_text(raw.get("presence_state")) or "on",
         presence_timeout=_seconds(raw.get("presence_timeout")),
+        ignore_precipitation=_bool(raw.get("ignore_precipitation"), False),
     )
 
 
@@ -315,6 +323,22 @@ def _seasons(raw: Any) -> SeasonSettings:
     )
 
 
+def _precipitation(raw: Any) -> PrecipitationSettings:
+    """Return the precipitation settings, defaulting to the engine's own."""
+    if not isinstance(raw, Mapping):
+        return PrecipitationSettings()
+    states = raw.get("states")
+    return PrecipitationSettings(
+        source=_text(raw.get("source")),
+        states=(
+            PrecipitationSettings().states
+            if states is None
+            else frozenset(item for item in _strings(states) if item.strip())
+        ),
+        grace=_seconds(raw.get("grace"), 900.0),
+    )
+
+
 # ---------------------------------------------------------------------------
 # Schrijven / writing
 # ---------------------------------------------------------------------------
@@ -333,6 +357,7 @@ def _zone_to_dict(zone: Zone) -> dict[str, Any]:
         "presence_entity": zone.presence_entity,
         "presence_state": zone.presence_state,
         "presence_timeout": zone.presence_timeout.total_seconds(),
+        "ignore_precipitation": zone.ignore_precipitation,
     }
 
 

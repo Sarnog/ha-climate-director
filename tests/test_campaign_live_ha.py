@@ -204,6 +204,52 @@ class TestSteeringForReal:
         assert home.state(LIVING) == "off"
 
 
+class TestPrecipitation:
+    """Regen zet de 'zet een raam open'-grens opzij, met nalooptijd."""
+
+    def _installation(self, grace: int) -> dict[str, Any]:
+        found = installation()
+        found["zones"][0]["heat"] = {
+            **found["zones"][0]["heat"],
+            "outdoor": {"minimum": None, "maximum": 25.0},
+        }
+        found["precipitation"] = {
+            "source": "weather.buienradar",
+            "states": ["rainy", "pouring"],
+            "grace": grace,
+        }
+        return found
+
+    def _states(self) -> dict[str, tuple[str, dict[str, Any]]]:
+        return {
+            **cold_world(),
+            "sensor.buiten": ("26.0", {}),
+            "weather.buienradar": ("rainy", {}),
+        }
+
+    async def test_rain_lifts_the_zone_bound_and_stopping_rain_drops_it(self) -> None:
+        """Buiten 26 graden is boven de verwarmgrens; regen zet die opzij."""
+        live = await start_house(self._installation(grace=0), states=self._states())
+        try:
+            assert live.state(LIVING) == "heat"
+            live.set("weather.buienradar", "cloudy")
+            await live.evaluate()
+            assert live.state(LIVING) == "off"
+        finally:
+            await stop_house(live)
+
+    async def test_rain_keeps_counting_for_the_grace_period(self) -> None:
+        """Een bui van vijf minuten hoort de regeling niet te laten stuiteren."""
+        live = await start_house(self._installation(grace=900), states=self._states())
+        try:
+            assert live.state(LIVING) == "heat"
+            live.set("weather.buienradar", "cloudy")
+            await live.evaluate()
+            assert live.state(LIVING) == "heat", "de nalooptijd hoort regen te laten meetellen"
+        finally:
+            await stop_house(live)
+
+
 class TestShadowMode:
     """In schaduwmodus gebeurt er niets, en wordt alles wel opgeschreven.
 

@@ -122,6 +122,11 @@ def _candidate(
     # uitzondering valt er een gat tussen de twee grenzen, waar verwarmen niet
     # meer mag en koelen nog niet - en daar doet een verzoek dan niets.
     #
+    # Regen zet die zuinigheidsregel opzij: is het buiten aangenamer dan
+    # binnen maar regent het, dan blijft het raam dicht en gebeurt er niets,
+    # terwijl de kamer te warm of te koud blijft. Een zone kan dat uitzetten
+    # (`ignore_precipitation`), want een zolder zonder ramen heeft er niets aan.
+    #
     # De grens per BRON blijft wel gelden; die kiest het apparaat. Net als het
     # seizoen, de dode band en alles daarna.
     #
@@ -132,10 +137,17 @@ def _candidate(
     # opens between the two windows, where heating is no longer allowed and
     # cooling not yet - and a request does nothing there.
     #
+    # Rain sets that thrift rule aside: if it is nicer outside than in but it
+    # rains, the window stays shut and nothing happens while the room stays too
+    # warm or too cold. A zone can switch this off (`ignore_precipitation`),
+    # since an attic without windows gains nothing from it.
+    #
     # The window per SOURCE does still apply; that one picks the appliance. As
     # do the season, the dead band and everything after them.
-    if not world.preconditioning(zone.zone_id) and not settings.outdoor.contains(
-        world.outdoor_temperature
+    if (
+        not world.preconditioning(zone.zone_id)
+        and not (world.precipitation and not zone.ignore_precipitation)
+        and not settings.outdoor.contains(world.outdoor_temperature)
     ):
         return Demand(ModeFamily.NEUTRAL, Reason.OUTDOOR_OUTSIDE_WINDOW)
 
