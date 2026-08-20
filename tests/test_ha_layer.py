@@ -450,9 +450,14 @@ class TestTheSeasonAndTheCalendar:
         """Zonder neerslagbron is het antwoord gewoon 'nee'."""
         assert coordinator({}, self._config())._precipitation() is False
 
-    def test_the_precipitation_source_reads_the_condition(self) -> None:
+    @pytest.mark.parametrize("condition", ["rainy", "pouring", "snowy", "hail", "lightning-rainy"])
+    def test_the_precipitation_source_reads_every_precipitation_form(self, condition: str) -> None:
+        """Elke standaard neerslagvorm telt: regen, sneeuw en hagel.
+
+        Every default precipitation form counts: rain, snow and hail.
+        """
         config = self._config(precipitation=PrecipitationSettings(source="weather.buienradar"))
-        states = {"weather.buienradar": FakeState("rainy")}
+        states = {"weather.buienradar": FakeState(condition)}
         assert coordinator(states, config)._precipitation() is True
 
 
