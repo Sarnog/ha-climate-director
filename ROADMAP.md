@@ -32,6 +32,13 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   van alleen een maximum aantal units per circuit. Een grens in stuks zegt niets over wat
   er werkelijk uit de meter loopt: drie kleine units zijn iets heel anders dan één ketel.
   Vraagt een vermogen per bron en een rangorde bij het afkappen.
+- **Neerslagintensiteit als drempel** — neerslag telt nu als ja/nee: een ingestelde staat
+  heft de buitengrens op, hoe licht de neerslag ook is. Wie bij een miezerbui de ramen
+  gewoon open wil houden, zou een ondergrens moeten kunnen opgeven (een sensor met mm/h en
+  een drempel, of een aparte `weather`-conditie apart uitsluiten), zodat alleen neerslag
+  boven die intensiteit de buitengrens opzij zet. De drempel hoort per zone instelbaar te
+  zijn: een achterdeur mag bij een lichte bui best open blijven, terwijl een schuin dakraam
+  bij de minste neerslag al dicht moet.
 - **Temperatuurschema per zone** — een streeftemperatuur die met de klok meebeweegt
   (nacht koeler, ochtend warmer), in plaats van één waarde per zone die alleen door de
   poorten aan- en uitgezet wordt.
@@ -119,6 +126,13 @@ The worked-out design proposals for everything below live in
   than only a maximum number of units per circuit. A limit in units says nothing about what
   actually leaves the meter: three small units are a very different thing from one boiler.
   Needs a wattage per source and an order in which to shed.
+- **Precipitation intensity as a threshold** — precipitation currently counts as yes/no: a
+  configured state lifts the outdoor bound, however light the precipitation. Anyone who
+  wants to keep the windows open during a drizzle should be able to set a floor (a sensor
+  in mm/h with a threshold, or exclude a separate `weather` condition such as `light
+  drizzle`), so only precipitation above that intensity sets the outdoor bound aside. The
+  threshold should be settable per zone: a back door may well stay open during a light
+  shower, while a slanted skylight must close at the first drop.
 - **A temperature schedule per zone** — a target that moves with the clock (cooler at
   night, warmer in the morning), instead of one value per zone that the gates merely switch
   on and off.
