@@ -614,6 +614,10 @@
       "title": "Climate Director: {name} has a configuration problem",
       "description": "{count} problem(s) were found in this installation. The zones that are sound carry on being regulated; the rest stand down until this is fixed.\n\n{problems}\n\nOpen the integration and choose Configure to correct them. The full list is in the downloadable diagnostics."
     },
+    "manual_sources": {
+      "title": "Climate Director: {name} has hand-operated duties",
+      "description": "{count} duty(ies) can only be delivered by a source with automatic start off, so they never start by themselves:\n\n{problems}\n\nThat may be exactly what you want - a unit you switch on yourself is a fine choice. Confirm this notice once and it stays away, even after a restart. If you would rather the director drive these duties too, open the integration, choose Configure and switch automatic start on for one source."
+    },
     "precondition_unwatched": {
       "title": "Nobody hears a refused pre-conditioning request",
       "description": "A pre-conditioning request that strands on an open window or door reports itself as the event `climate_director_precondition_refused`, and nowhere else. Nothing is listening for it right now, so such a request fails silently: you press the button and nothing happens, with no way of telling why.\n\nFix it in one of two ways:\n\n1. Import the blueprint **Climate Director - refused pre-conditioning** *and set it up*. Importing alone is not enough - a blueprint without an automation built from it listens to nothing.\n2. Or write an automation of your own on that event. It carries the zone, the open sensors and a ready-made message.\n\nThis notice disappears by itself once something is listening."
@@ -642,7 +646,7 @@
       "message": "Holiday calendars are set but no keyword is, so no event can ever switch holiday schedule on. Fill in the word an event must carry, or clear the calendars."
     },
     "zone_only_manual_sources": {
-      "message": "Zone {zone} wants {mode} but every source able to deliver it has automatic start off, so it can never start by itself. Switch automatic start on for one source."
+      "message": "Zone {zone} wants {mode} but every source able to deliver it has automatic start off, so it never starts by itself."
     },
     "exclusive_overlap": {
       "message": "{first} and {second} are exclusive but both apply {overlap}. The group does catch it, but they meet rather than ruling each other out by their outdoor bounds. Give them adjacent bounds to keep them apart for good."

@@ -69,6 +69,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) ->
         _LOGGER.warning(
             "%s has %d configuration problem(s): %s", entry.title, len(found), "; ".join(found)
         )
+    problems.async_report_manual_sources(
+        hass, entry.entry_id, entry.title, entry.options, coordinator.config
+    )
 
     _async_register_services(hass)
 
@@ -118,6 +121,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -
     if unloaded:
         await entry.runtime_data.async_shutdown()
         problems.async_clear(hass, entry.entry_id)
+        problems.async_clear_manual_sources(hass, entry.entry_id)
         # De luistermelding is er één voor de hele integratie, dus hij gaat pas
         # weg als de laatste installatie weg is.
         #

@@ -614,6 +614,10 @@
       "title": "Climate Director : {name} a un problème de configuration",
       "description": "{count} problème(s) ont été trouvés dans cette installation. Les zones correctes continuent d'être régulées ; le reste s'arrête jusqu'à correction.\n\n{problems}\n\nOuvrez l'intégration et choisissez Configurer pour les corriger. La liste complète se trouve dans le diagnostic téléchargeable."
     },
+    "manual_sources": {
+      "title": "Climate Director : {name} a des tâches manuelles",
+      "description": "{count} tâche(s) ne peut être assurée que par une source avec démarrage automatique désactivé, elle ne démarre donc jamais seule :\n\n{problems}\n\nC’est peut-être exactement ce que vous voulez - un appareil que vous allumez vous-même est un très bon choix. Confirmez cet avis une fois et il ne reviendra pas, même après un redémarrage. Si vous préférez que le director s’en charge aussi, ouvrez l’intégration, choisissez Configurer et activez le démarrage automatique sur une source."
+    },
     "precondition_unwatched": {
       "title": "Personne n'entend une demande de préchauffage refusée",
       "description": "Une demande de préchauffage qui échoue sur une fenêtre ou une porte ouverte se signale par l'événement `climate_director_precondition_refused`, et nulle part ailleurs. Rien ne l'écoute actuellement, donc une telle demande échoue en silence : vous appuyez sur le bouton et rien ne se passe, sans savoir pourquoi.\n\nÀ corriger de deux façons :\n\n1. Importez le blueprint **Climate Director - préchauffage refusé** *et configurez-le*. L'importer ne suffit pas - un blueprint sans automatisation construite dessus n'écoute rien.\n2. Ou écrivez votre propre automatisation sur cet événement. Il transporte la zone, les capteurs ouverts et un message tout prêt.\n\nCet avis disparaît de lui-même dès que quelque chose écoute."
@@ -642,7 +646,7 @@
       "message": "Des agendas de vacances sont réglés mais pas de mot-clé ; aucun évènement ne peut donc activer le planning de vacances. Saisissez le mot qu'un évènement doit porter, ou retirez les agendas."
     },
     "zone_only_manual_sources": {
-      "message": "La zone {zone} veut {mode}, mais chaque source capable de le fournir a le démarrage automatique désactivé, elle ne peut donc jamais démarrer d’elle-même. Activez le démarrage automatique sur une source."
+      "message": "La zone {zone} veut {mode}, mais chaque source capable de le fournir a le démarrage automatique désactivé, elle ne démarre donc jamais d’elle-même."
     },
     "exclusive_overlap": {
       "message": "{first} et {second} s'excluent mais s'appliquent tous deux {overlap}. Le groupe le rattrape, mais ils se rencontrent au lieu de s'exclure déjà par leurs bornes extérieures. Donnez-leur des bornes contiguës pour les séparer définitivement."

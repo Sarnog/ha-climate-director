@@ -39,6 +39,7 @@ from .models import (
     ModeSettings,
     Opening,
     OutdoorWindow,
+    Problem,
     Resident,
     Season,
     Source,
@@ -46,6 +47,7 @@ from .models import (
     TimeWindow,
     Zone,
     ZoneGate,
+    manual_only_problems,
     validate,
 )
 from .plan import (
@@ -84,6 +86,7 @@ __all__ = [
     "PresenceState",
     "OutdoorWindow",
     "Plan",
+    "Problem",
     "Reason",
     "WAITING_REASONS",
     "Resident",
@@ -101,6 +104,7 @@ __all__ = [
     "decide",
     "family_of",
     "is_compatible",
+    "manual_only_problems",
     "running_family",
     "validate",
     "wanted_target",

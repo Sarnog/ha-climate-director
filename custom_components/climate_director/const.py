@@ -105,6 +105,7 @@ MAX_PRECONDITION_MINUTES = 120
 # Keys in the config entry.
 CONF_INSTALLATION = "installation"
 CONF_SHADOW_MODE = "shadow_mode"
+CONF_MANUAL_SOURCES_SEEN = "manual_sources_seen"
 
 # Schaduwmodus staat standaard AAN. Een integratie die bij de eerste start
 # meteen de verwarming van een huis overneemt is de verkeerde standaard; wie

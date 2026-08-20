@@ -614,6 +614,10 @@
       "title": "Climate Director: {name} heeft een configuratieprobleem",
       "description": "Er zijn {count} probleem(en) gevonden in deze installatie. De zones die wél kloppen worden gewoon geregeld; de rest staat stil tot dit opgelost is.\n\n{problems}\n\nOpen de integratie en kies Configureren om ze te corrigeren. De volledige lijst staat in de downloadbare diagnose."
     },
+    "manual_sources": {
+      "title": "Climate Director: {name} heeft handbediende taken",
+      "description": "{count} taak/taken kan alleen geleverd worden door een bron met automatisch starten uit, dus die start nooit uit zichzelf:\n\n{problems}\n\nDat mag precies de bedoeling zijn - een unit die je zelf aanzet is een prima keuze. Bevestig deze melding één keer en hij blijft weg, ook na een herstart. Wil je dat de director deze taken ook zelf oppakt, open dan de integratie, kies Configureren en zet automatisch starten bij één bron aan."
+    },
     "precondition_unwatched": {
       "title": "Niemand hoort een geweigerd vooruit-verzoek",
       "description": "Een vooruit-verzoek dat strandt op een openstaand raam of een openstaande deur meldt zichzelf als de gebeurtenis `climate_director_precondition_refused`, en verder nergens. Daar luistert op dit moment niets naar, dus zo'n verzoek mislukt in stilte: je drukt op de knop en er gebeurt niets, zonder dat je kunt zien waarom.\n\nLos het op een van deze twee manieren op:\n\n1. Importeer de blueprint **Climate Director - geweigerd vooruit-verzoek** *en stel hem in*. Alleen importeren is niet genoeg - een blueprint zonder automatisering die erop gebouwd is luistert nergens naar.\n2. Of maak zelf een automatisering op die gebeurtenis. Hij draagt de zone, de openstaande sensoren en een kant-en-klaar bericht mee.\n\nDeze melding verdwijnt vanzelf zodra er iets luistert."
@@ -642,7 +646,7 @@
       "message": "Er staan vakantieagenda's ingesteld maar geen trefwoord, dus geen enkel item kan de vakantieschema aanzetten. Vul het woord in dat een item moet dragen, of haal de agenda's weg."
     },
     "zone_only_manual_sources": {
-      "message": "Zone {zone} wil {mode}, maar elke bron die dat kan heeft automatisch starten uit, dus hij kan nooit uit zichzelf beginnen. Zet automatisch starten bij één bron aan."
+      "message": "Zone {zone} wil {mode}, maar elke bron die dat kan heeft automatisch starten uit, dus hij start nooit uit zichzelf."
     },
     "exclusive_overlap": {
       "message": "{first} en {second} sluiten elkaar uit maar gelden allebei {overlap}. De groep vangt dat op, maar ze komen elkaar tegen in plaats van elkaar door hun buitengrenzen al uit te sluiten. Geef ze aansluitende grenzen om ze definitief uit elkaar te houden."

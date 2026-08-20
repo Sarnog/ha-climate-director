@@ -25,12 +25,15 @@ typo in the configuration.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
 from . import texts
-from .const import DOMAIN, EVENT_PRECONDITION_REFUSED
-from .engine import DirectorConfig, validate
+from .const import CONF_MANUAL_SOURCES_SEEN, DOMAIN, EVENT_PRECONDITION_REFUSED
+from .engine import DirectorConfig, Problem, manual_only_problems, validate
 
 #: Hoeveel problemen er hoogstens in de melding zelf komen te staan. De rest
 #: staat in de diagnose; een reparatiemelding van dertig regels leest niemand.
@@ -43,6 +46,27 @@ MAX_LISTED = 5
 def _issue_id(entry_id: str) -> str:
     """Return the issue id for one installation."""
     return f"invalid_config_{entry_id}"
+
+
+def _manual_issue_id(entry_id: str) -> str:
+    """Return the one-time notice id for one installation."""
+    return f"manual_sources_{entry_id}"
+
+
+def _manual_signature(found: tuple[Problem, ...]) -> str:
+    """Return a stable fingerprint of which duties are hand-operated only.
+
+    De vingerafdruk bestaat uit zone en taak, niet uit namen of vertalingen.
+    Verandert er iets aan wélke taken handbediend zijn, dan verandert hij mee
+    en komt de melding opnieuw - precies wat je wilt: een nieuwe situatie is
+    een nieuwe melding waard, maar dezelfde situatie zeurt niet opnieuw.
+
+    The fingerprint is made of zone and duty, not names or translations. When
+    which duties are hand-operated changes, so does the fingerprint and the
+    notice returns - exactly what you want: a new situation deserves a new
+    notice, but the same situation does not nag twice.
+    """
+    return ",".join(sorted(f"{item.params['zone_id']}:{item.params['mode']}" for item in found))
 
 
 def async_report(
@@ -115,6 +139,57 @@ def summarise(hass: HomeAssistant, problems: tuple[str, ...]) -> str:
 def async_clear(hass: HomeAssistant, entry_id: str) -> None:
     """Drop the repair notice for one installation."""
     ir.async_delete_issue(hass, DOMAIN, _issue_id(entry_id))
+
+
+def async_report_manual_sources(
+    hass: HomeAssistant,
+    entry_id: str,
+    title: str,
+    options: Mapping[str, Any],
+    config: DirectorConfig,
+) -> tuple[Problem, ...]:
+    """Raise or clear the one-time notice about hand-operated-only duties.
+
+    De melding is oplosbaar via een fix-flow die de vingerafdruk in de
+    configuratie bewaart; zolang die klopt, komt dezelfde melding na een
+    herstart niet terug. Verdwijnt de situatie (autostart aangezet of de taak
+    eruit), dan gaat de melding vanzelf weg; verschijnt er een nieuwe
+    handbediende taak, dan is dat een nieuwe melding waard.
+
+    The notice is resolvable through a fix flow that stores the fingerprint in
+    the configuration; as long as it matches, the same notice does not return
+    after a restart. When the situation disappears (autostart switched on or
+    the duty removed) the notice clears by itself; a newly hand-operated duty
+    deserves a new notice.
+    """
+    found = manual_only_problems(config)
+    signature = _manual_signature(found)
+    seen = options.get(CONF_MANUAL_SOURCES_SEEN, "")
+
+    if not found or seen == signature:
+        ir.async_delete_issue(hass, DOMAIN, _manual_issue_id(entry_id))
+        return found
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        _manual_issue_id(entry_id),
+        is_fixable=True,
+        data={"entry_id": entry_id, "signature": signature},
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="manual_sources",
+        translation_placeholders={
+            "name": title,
+            "count": str(len(found)),
+            "problems": summarise(hass, found),
+        },
+    )
+    return found
+
+
+def async_clear_manual_sources(hass: HomeAssistant, entry_id: str) -> None:
+    """Drop the one-time notice for one installation."""
+    ir.async_delete_issue(hass, DOMAIN, _manual_issue_id(entry_id))
 
 
 #: De melding dat er niemand naar een geweigerd vooruit-verzoek luistert. Eén
