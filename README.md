@@ -43,8 +43,8 @@ automatiseringen lastig blijven:
 
 Voor iedereen met meer dan één klimaatapparaat dat elkaar in de weg kan zitten:
 een cv-ketel naast een warmtepomp, een multi-split airco over meerdere kamers,
-of zones die je per ruimte wilt regelen — met bewoners, roosters, aanwezigheid
-en vooruit verwarmen als extra's.
+of zones die je per ruimte wilt regelen — met bewoners, roosters, aanwezigheid,
+vooruit verwarmen en een optionele regenregel als extra's.
 
 <!-- Ko-fi badge via shields.io, geen externe tracking -->
 [![Koop me een koffie op Ko-fi](https://img.shields.io/badge/Ko--fi-Koop%20me%20een%20koffie-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white)](https://ko-fi.com/sarnog)
@@ -156,7 +156,7 @@ automations struggle with:
 Anyone with more than one climate appliance that could get in each other's way:
 a gas boiler next to a heat pump, a multi-split air conditioner across several
 rooms, or zones you want to control per room — with residents, schedules,
-presence and pre-conditioning as extras.
+presence, pre-conditioning and an optional rain rule as extras.
 
 <!-- Ko-fi badge via shields.io, no external tracking -->
 [![Buy me a coffee on Ko-fi](https://img.shields.io/badge/Ko--fi-Buy%20me%20a%20coffee-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white)](https://ko-fi.com/sarnog)
