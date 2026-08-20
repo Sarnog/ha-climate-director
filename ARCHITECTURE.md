@@ -344,19 +344,6 @@ volgen de ROADMAP.
 - Bewaakt: zonder optie nul gedragsverandering, en de engine-grens blijft heilig
   (runtime-state leeft in de coordinator; de engine leest alleen `WorldState`).
 
-**Neerslag zet de buitengrens opzij.** Zolang een neerslagbron neerslag meldt, wordt de
-buitengrens per zone overgeslagen — precies zoals een vooruit-verzoek dat nu al doet.
-- Config: `precipitation_source` (entiteit, optioneel), `precipitation_states` (welke
-  `weather`-condities of sensorstanden tellen; standaard de regenachtige),
-  `precipitation_grace` (nalooptijd) en per zone `ignore_precipitation` (voor een zolder
-  zonder ramen).
-- HA-laag: de coordinator leest de bron (de `condition` van een `weather`-entiteit, of de
-  staat van een sensor) en zet `WorldState.precipitation` met nalooptijd.
-- Engine: in `hysteresis.py` telt de zone-buitengrens niet zolang `world.precipitation`
-  geldt; de dode band, het seizoen en de buitengrens per bron blijven gelden.
-- Open keuzes: de conditieset, de nalooptijd (zodat een bui van vijf minuten de regeling
-  niet laat stuiteren) en of de uitzondering per zone aan of uit staat (standaard aan).
-
 **Poortinstellingen per zone.** Wakker-, rooster-, stilte- en slaapregels verhuizen van
 installatieniveau naar de zone.
 - Config: nieuw `ZoneGateSettings` op `Zone` met `require_awake`, `require_schedule` en
@@ -771,21 +758,6 @@ the ROADMAP.
   is decoration.
 - Guarded: no behavioural change without the option, and the engine border stays sacred
   (runtime state lives in the coordinator; the engine reads only `WorldState`).
-
-**Precipitation sets the outdoor bound aside.** As long as a precipitation source reports
-precipitation, the per-zone outdoor bound is skipped — exactly as a pre-conditioning request
-already does.
-- Config: `precipitation_source` (an entity, optional), `precipitation_states` (which
-  `weather` conditions or sensor states count; the rainy ones by default),
-  `precipitation_grace` (a grace period) and per zone `ignore_precipitation` (for an attic
-  without windows).
-- HA layer: the coordinator reads the source (a `weather` entity's `condition`, or a
-  sensor's state) and sets `WorldState.precipitation` with the grace period.
-- Engine: in `hysteresis.py` the zone's outdoor bound does not count while
-  `world.precipitation` holds; the dead band, the season and the per-source bound still
-  apply.
-- Open choices: the condition set, the grace period (so a five-minute shower does not make
-  the regulation bounce) and whether the exception is switchable per zone (on by default).
 
 **Per-zone gate settings.** The wake, schedule, quiet and sleep rules move from
 installation level to the zone.

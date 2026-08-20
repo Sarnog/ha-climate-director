@@ -21,21 +21,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 - **Virtuele `climate` per zone** — één bedieningsentiteit per ruimte, waarmee de gewenste
   temperatuur en stand rechtstreeks op een gewone thermostaatkaart te bedienen zijn. De
   director kiest daar dan de bron bij.
-- **Neerslag zet de "zet een raam open"-grens opzij** — de buitengrens per zone is een
-  zuinigheidsregel met een aanname eronder: is het buiten aangenamer dan binnen, dan kun je
-  beter een deur of een raam openzetten dan de airco aanzetten. Regent het, dan gaat die
-  aanname niet op — dan blijft die deur dicht en gebeurt er dus niets, terwijl het binnen
-  te warm of te koud blijft.
-
-  Het voorstel: een neerslagbron aanwijzen (de `condition` van een `weather`-entiteit, of
-  een eigen regensensor) en, zolang die neerslag meldt, de **buitengrens per zone**
-  overslaan — precies zoals een vooruit-verzoek dat nu al doet. De dode band, het seizoen
-  en de buitengrens **per bron** blijven gelden; die kiezen nog steeds het apparaat.
-
-  Uit te zoeken: welke `weather`-condities meetellen (`rainy`, `pouring`, `snowy`,
-  `hail`, `lightning-rainy`), of een nalooptijd nodig is zodat een bui van vijf minuten de
-  regeling niet laat stuiteren, en of dit per zone aan of uit moet kunnen — een zolder
-  zonder ramen heeft er niets aan.
 - **Poortinstellingen per zone voor wakker-, rooster-, stilte- en slaapregels** — die
   gelden nu in `GateSettings` voor de hele installatie. De keuze huishouden-vs-aanwezigheid,
   de aanwezigheidssensor en de nalooptijd zijn al per zone; een slaapkamer wil daarnaast
@@ -123,21 +108,6 @@ The worked-out design proposals for everything below live in
 - **A virtual `climate` per zone** — one control entity per room, so the target temperature
   and mode can be set straight from an ordinary thermostat card. The director then picks the
   source to match.
-- **Precipitation sets the "open a window" bound aside** — a zone's outdoor window is a
-  thrift rule with an assumption under it: if it is nicer outside than in, you are better
-  off opening a door or a window than switching the air conditioner on. When it rains that
-  assumption does not hold - the door stays shut, so nothing happens, while the room stays
-  too warm or too cold.
-
-  The proposal: name a precipitation source (a `weather` entity's `condition`, or a rain
-  sensor of your own) and, for as long as it reports precipitation, skip the **per-zone**
-  outdoor window - exactly as a pre-conditioning request already does. The dead band, the
-  season and the outdoor window **per source** still apply; those still pick the appliance.
-
-  To work out: which `weather` conditions count (`rainy`, `pouring`, `snowy`, `hail`,
-  `lightning-rainy`), whether a grace period is needed so a five-minute shower does not
-  make the regulation bounce, and whether this should be switchable per zone - an attic
-  without windows gains nothing from it.
 - **Per-zone gate settings for wake, schedule, quiet and sleep rules** — those currently
   live in `GateSettings` for the whole installation. The household-vs-presence choice, the
   presence sensor and the grace period are already per zone; a bedroom also wants different
