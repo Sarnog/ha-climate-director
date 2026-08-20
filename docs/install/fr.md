@@ -152,6 +152,7 @@ le menu principal.
 | **Source de la saison** | d'où vient la saison : le mois, une entité, ou fixée été/hiver |
 | **Entité de saison** | seulement si la source est réglée sur *entité* ; l’entité intégrée `season.*` est aussi sélectionnable |
 | **Hémisphère** | quels mois comptent comme été lorsque la saison vient du mois : nord avril–septembre, sud octobre–mars |
+| **Choix de saison** | l'entité `select.*` *Saison* règle la saison à la main sur Automatique, Été ou Hiver ; le choix survit à un redémarrage |
 | **Quelqu'un à la maison doit être réveillé** | activé = la maison attend quelqu'un à la maison *et* réveillé ; désactivé = le sommeil ne compte pas |
 | **L'emploi du temps d'un résident doit être ouvert** | activé = la maison attend la première fenêtre d'emploi du temps ; désactivé = la présence seule décide |
 | **Calendriers de vacances** | quels calendriers peuvent annoncer des vacances ; plusieurs autorisés |
@@ -292,7 +293,7 @@ extérieure. Si chaque unité a la sienne, laissez vide.
 | **Unités intérieures** | quelles entités `climate.*` sont raccordées à cette unité extérieure. Incluez aussi les unités que le directeur ne gère pas : elles réclament le compresseur également |
 | **Peut chauffer et refroidir en même temps** | désactivé pour un multi-split ordinaire ; activé pour un split simple ou un VRF trois tubes à récupération de chaleur |
 | **Règle de conflit** | qui gagne quand deux pièces veulent des fonctions opposées |
-| **Une zone perdante peut ventiler** | activé = la perdante passe en `fan_only` au lieu de s'éteindre |
+| **Une zone perdante peut ventiler** | activé = la perdante passe en `fan_only` au lieu de s'éteindre, mais seulement si l'unité connaît ce mode ; sinon elle s'éteint |
 | **Pause lors du changement de fonction** | combien de temps tout reste éteint avant le basculement |
 | **Durée minimale avant un changement de fonction** | combien de temps une fonction doit avoir tourné avant que l'autre puisse prendre le relais |
 | **Repos avant qu'une unité puisse redémarrer** | ne retarde que les démarrages, jamais les arrêts ; par défaut 180 secondes |
@@ -337,7 +338,9 @@ climatiseurs du même circuit peuvent refroidir ensemble, faites un groupe par
 paire — le gaz avec l'un, le gaz avec l'autre.
 
 Un groupe lie aussi les appareils que vous allumez vous-même : quand un autre
-membre du groupe vient à son tour, l'appareil manuel s'éteint.
+membre du groupe vient à son tour, l'appareil manuel s'éteint. Et dans
+l'autre sens : quand un tel appareil tourne déjà, il occupe le groupe et un
+autre membre attend.
 
 ## Étape 9 — Fenêtres silencieuses
 
@@ -587,7 +590,8 @@ automatisation repose sur cet événement.
   le même motif d'attente (15 minutes par défaut), ou quand une entité
   configurée est illisible — mal tapée, supprimée ou temporairement
   `unavailable`. Les entités concernées sont dans l'attribut
-  `unusable_entities`.
+  `unusable_entities`. Un capteur lisible mais qui ne donne aucun nombre y
+  figure aussi (`no number`).
 - **`binary_sensor.*_<zone>_on_stand_in`** s'allume quand une zone tourne sur
   une source qui n'était pas le premier choix, parce que le premier choix est
   injoignable. La pièce devient simplement chaude — et c'est exactement

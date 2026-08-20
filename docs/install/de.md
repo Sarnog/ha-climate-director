@@ -152,6 +152,7 @@ wählst.
 | **Jahreszeitenquelle** | woher die Jahreszeit kommt: der Monat, eine Entität oder fest Sommer/Winter |
 | **Jahreszeiten-Entität** | nur nötig, wenn die Quelle auf *Entität* steht; auch die eingebaute `season.*`-Entität ist wählbar |
 | **Hemisphäre** | welche Monate als Sommer zählen, wenn die Jahreszeit aus dem Monat kommt: Nord April–September, Süd Oktober–März |
+| **Jahreszeitenwahl** | die `select.*`-Entität *Jahreszeit* stellt die Jahreszeit von Hand auf Automatisch, Sommer oder Winter; die Wahl überlebt einen Neustart |
 | **Jemand zu Hause muss wach sein** | an = das Haus wartet auf jemanden zu Hause *und* wach; aus = Schlaf zählt nicht |
 | **Der Zeitplan eines Bewohners muss offen sein** | an = das Haus wartet auf das erste Zeitfenster; aus = Anwesenheit allein entscheidet |
 | **Ferienkalender** | welche Kalender Ferien ankündigen dürfen; mehrere erlaubt |
@@ -297,7 +298,7 @@ eigenes Außengerät, lass das leer.
 | **Innengeräte** | welche `climate.*`-Entitäten an diesem Außengerät hängen. Nimm auch Geräte auf, die der Director nicht verwaltet: Sie beanspruchen den Kompressor ebenfalls |
 | **Kann gleichzeitig heizen und kühlen** | aus für ein gewöhnliches Multi-Split; an für ein Single-Split oder Drei-Leiter-VRF mit Wärmerückgewinnung |
 | **Konfliktregel** | wer gewinnt, wenn zwei Räume gegensätzliche Aufgaben wollen |
-| **Eine verlierende Zone darf lüften** | an = der Verlierer geht auf `fan_only` statt auf aus |
+| **Eine verlierende Zone darf lüften** | an = der Verlierer geht auf `fan_only` statt auf aus, aber nur wenn das Gerät diesen Modus kennt; sonst geht es aus |
 | **Pause beim Aufgabenwechsel** | wie lange alles aus ist vor dem Umschalten |
 | **Mindestlaufzeit vor einem Aufgabenwechsel** | wie lange eine Aufgabe gelaufen sein muss, bevor die andere übernehmen darf |
 | **Ruhe, bevor ein Gerät neu starten darf** | verzögert nur Starten, nie Stoppen; Standard 180 Sekunden |
@@ -342,7 +343,9 @@ selben Kreislauf durchaus gemeinsam kühlen dürfen, dann mach eine Gruppe pro
 Paar — Gas mit der einen, Gas mit der anderen.
 
 Eine Gruppe bindet auch Geräte, die du selbst einschaltest: Kommt ein anderes
-Mitglied der Gruppe an die Reihe, geht das handbediente Gerät aus.
+Mitglied der Gruppe an die Reihe, geht das handbediente Gerät aus. Und
+umgekehrt: Läuft so ein Gerät schon, belegt es die Gruppe, und ein anderes
+Mitglied wartet.
 
 ## Schritt 9 — Ruhefenster
 
@@ -586,7 +589,8 @@ Automatisierung auf diesem Ereignis steht.
 - **`binary_sensor.*_stuck`** geht an, wenn eine Zone zu lange auf demselben
   Wartegrund sitzt (Standard 15 Minuten) oder wenn eine eingerichtete Entität
   nicht lesbar ist — vertippt, gelöscht oder vorübergehend `unavailable`.
-  Welche Entitäten es sind, steht im Attribut `unusable_entities`.
+  Welche Entitäten es sind, steht im Attribut `unusable_entities`. Ein Sensor,
+  der lesbar ist, aber keine Zahl liefert, steht dort ebenfalls (`no number`).
 - **`binary_sensor.*_<zone>_on_stand_in`** geht an, wenn eine Zone auf einer
   Quelle läuft, die nicht die erste Wahl war, weil die erste Wahl unerreichbar
   ist. Der Raum wird einfach warm — und genau deshalb merkst du ohne Melder

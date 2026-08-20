@@ -24,16 +24,6 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
   automatisering op de sensor zelf bouwt krijgt nooit een melding. Te overwegen: de melder
   aan laten gaan zodra er een poort dicht staat én de kamer buiten zijn dode band ligt, of
   er een tweede melder naast zetten zodat de betekenis van de bestaande niet verschuift.
-- **Een uitsluitende groep telt ook wat er doordraait in een overgedragen zone** —
-  `exclusive_groups` kijkt alleen naar zones die deze ronde iets vrágen. Staat een lid van
-  de groep te draaien in een zone die is overgedragen (de override-schakelaar om, of zelf
-  bij het apparaat uitgezet), dan stuurt de director daar niets naartoe én mag een ander
-  lid gewoon starten — precies de combinatie die de groep hoort uit te sluiten. Voor de
-  buitenunit is dat al opgelost (`_standing_claims` telt een doordraaiende unit als een
-  bezette plek); voor de groep nog niet. Voorstel: hetzelfde doen — een draaiend lid dat de
-  director met rust laat bezet de groep, zodat een ander lid moet wachten in plaats van
-  ernaast te gaan draaien. Uitzetten van het overgedragen apparaat blijft uitgesloten; een
-  override is een override.
 - **Virtuele `climate` per zone** — één bedieningsentiteit per ruimte, waarmee de gewenste
   temperatuur en stand rechtstreeks op een gewone thermostaatkaart te bedienen zijn. De
   director kiest daar dan de bron bij.
@@ -62,17 +52,6 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
 - **Overrides via acties** — `climate_director.set_override` (met een duur of tot de
   volgende gebeurtenis) en `climate_director.clear_override`, plus knoppen die ze
   aanroepen. `climate_director.evaluate` bestaat al.
-- **`select` voor het seizoen** — het seizoen met de hand omzetten zonder de options flow.
-- **`fan_only` voor een verliezer wordt gegeven zonder te weten of de unit het kan** — bij
-  `allow_fan_only_during_conflict` krijgt een verliezende zone `fan_only`. Units die alleen
-  heat/cool/off kennen weigeren die modus; de mislukte service call telt als mislukte
-  *stop* en breekt de rest van het plan af. Voorstel: `ClimateState` uitbreiden met
-  `hvac_modes` en in `_idle_mode` op `off` terugvallen wanneer `fan_only` ontbreekt.
-- **Een sensor die bestaat maar geen getal levert, wordt niet gemeld** — een `climate`
-  zonder `current_temperature` of een sensor zonder numerieke waarde geeft
-  `NO_INDOOR_TEMPERATURE`; de zone doet niets, en de vastloopmelder telt die reden niet
-  mee. Voorstel: na het lezen van de wereld melden welke ingestelde sensoren geen getal
-  opleveren (met een nalooptijd tegen opstartruis).
 - **Poortinstellingen per zone** — nu gelden `GateSettings` voor de hele installatie. Een
   slaapkamer wil andere aanwezigheids- en slaapregels dan een woonkamer.
 - **Suggestie voor circuitgroepering** — voorstellen welke binnenunits een buitenunit delen
@@ -150,16 +129,6 @@ The history of what has already been built and changed is **not** here but in th
   automation on the sensor itself never gets a notification. Worth considering: turning the
   sensor on once a gate is shut *and* the room sits outside its dead band, or adding a
   second sensor beside it so the existing one's meaning does not shift.
-- **An exclusive group should count what keeps running in a handed-over zone** —
-  `exclusive_groups` only looks at zones asking for something this round. If a member of
-  the group is running in a zone that has been handed over (the override switch thrown, or
-  switched off at the appliance itself), the director sends it nothing *and* another member
-  is free to start — exactly the combination the group is meant to rule out. For the
-  outdoor unit this is already solved (`_standing_claims` counts a running unit as an
-  occupied slot); for the group it is not. Proposal: do the same — a running member the
-  director leaves alone occupies the group, so another member waits rather than running
-  alongside it. Switching the handed-over appliance off stays out of the question; an
-  override is an override.
 - **A virtual `climate` per zone** — one control entity per room, so the target temperature
   and mode can be set straight from an ordinary thermostat card. The director then picks the
   source to match.
@@ -188,17 +157,6 @@ The history of what has already been built and changed is **not** here but in th
 - **Overrides through actions** — `climate_director.set_override` (with a duration or
   until the next event) and `climate_director.clear_override`, plus buttons calling them.
   `climate_director.evaluate` already exists.
-- **A `select` for the season** — flipping the season by hand without the options flow.
-- **`fan_only` is handed to a loser without knowing whether the unit supports it** — with
-  `allow_fan_only_during_conflict`, a losing zone gets `fan_only`. Units that only know
-  heat/cool/off refuse that mode; the failed service call counts as a failed *stop* and
-  aborts the rest of the plan. Proposal: extend `ClimateState` with `hvac_modes` and fall
-  back to `off` in `_idle_mode` when `fan_only` is missing.
-- **A sensor that exists but reports no number is not reported** — a `climate` without
-  `current_temperature` or a sensor without a numeric value yields
-  `NO_INDOOR_TEMPERATURE`; the zone does nothing, and the stuck sensor does not count that
-  reason. Proposal: after reading the world, report which configured sensors yield no
-  number (with a grace period against startup noise).
 - **Per-zone gate settings** — `GateSettings` currently applies to the whole installation.
   A bedroom wants different presence and sleep rules from a living room.
 - **Suggested circuit grouping** — propose which indoor units share an outdoor unit based on

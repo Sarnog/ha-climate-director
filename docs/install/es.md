@@ -149,6 +149,7 @@ hasta que eliges **Guardar y cerrar** en el menú principal.
 | **Fuente de la estación** | de dónde sale la estación: el mes, una entidad, o fijada verano/invierno |
 | **Entidad de estación** | solo si la fuente está en *entidad*; la entidad integrada `season.*` también se puede elegir |
 | **Hemisferio** | qué meses cuentan como verano cuando la estación sale del mes: norte abril–septiembre, sur octubre–marzo |
+| **Elección de estación** | la entidad `select.*` *Estación* fija la estación a mano en Automático, Verano o Invierno; la elección sobrevive a un reinicio |
 | **Alguien en casa debe estar despierto** | activado = la casa espera a alguien en casa *y* despierto; desactivado = dormir no cuenta |
 | **El horario de un residente debe estar abierto** | activado = la casa espera la primera ventana de horario; desactivado = solo la presencia decide |
 | **Calendarios de vacaciones** | qué calendarios pueden anunciar vacaciones; se permiten varios |
@@ -289,7 +290,7 @@ cada unidad tiene la suya, déjalo vacío.
 | **Unidades interiores** | qué entidades `climate.*` cuelgan de esta unidad exterior. Incluye también unidades que el director no gestiona: también reclaman el compresor |
 | **Puede calentar y enfriar a la vez** | desactivado para un multisplit normal; activado para un split simple o un VRF de tres tubos con recuperación de calor |
 | **Política de conflicto** | quién gana cuando dos habitaciones quieren funciones opuestas |
-| **Una zona perdedora puede ventilar** | activado = la perdedora pasa a `fan_only` en vez de apagarse |
+| **Una zona perdedora puede ventilar** | activado = la perdedora pasa a `fan_only` en vez de apagarse, pero solo si la unidad conoce ese modo; si no, se apaga |
 | **Pausa al cambiar de función** | cuánto tiempo está todo apagado antes del cambio |
 | **Mínimo antes de un cambio de función** | cuánto tiempo debe haber funcionado una función antes de que la otra pueda tomar el relevo |
 | **Descanso antes de que una unidad pueda rearrancar** | solo retrasa arranques, nunca paradas; por defecto 180 segundos |
@@ -333,7 +334,8 @@ que dos aires del mismo circuito sí pueden enfriar juntos, haz un grupo por
 pareja — el gas con uno, el gas con el otro.
 
 Un grupo también ata a los aparatos que enciendes tú mismo: cuando le toca a
-otro miembro del grupo, el aparato manual se apaga.
+otro miembro del grupo, el aparato manual se apaga. Y al revés: cuando un
+aparato así ya está en marcha, ocupa el grupo y otro miembro espera.
 
 ## Paso 9 — Ventanas silenciosas
 
@@ -578,6 +580,8 @@ una automatización se apoya en ese evento.
   con el mismo motivo de espera (15 minutos por defecto), o cuando una entidad
   configurada no se puede leer — mal escrita, borrada o temporalmente
   `unavailable`. Qué entidades son está en el atributo `unusable_entities`.
+  Un sensor legible pero que no da ningún número también figura ahí
+  (`no number`).
 - **`binary_sensor.*_<zone>_on_stand_in`** se enciende cuando una zona funciona
   con una fuente que no era la primera opción, porque la primera opción es
   inalcanzable. La habitación simplemente se calienta — y por eso mismo, sin

@@ -149,6 +149,7 @@ je in het hoofdmenu **Opslaan en sluiten** kiest.
 | **Seizoensbron** | waar het seizoen vandaan komt: de maand, een entiteit, of vast zomer/winter |
 | **Seizoensentiteit** | alleen nodig als de bron op *entiteit* staat; ook de ingebouwde `season.*`-entiteit is kiesbaar |
 | **Halfrond** | welke maanden als zomer tellen wanneer het seizoen uit de maand komt: noordelijk april–september, zuidelijk oktober–maart |
+| **Seizoenskeuze** | de `select.*`-entiteit *Seizoen* zet het seizoen met de hand op Automatisch, Zomer of Winter; de keuze overleeft een herstart |
 | **Iemand thuis moet wakker zijn** | aan = het huis wacht tot er iemand thuis én wakker is; uit = slapen telt niet |
 | **Het rooster van een bewoner moet openstaan** | aan = het huis wacht op het eerste roostervenster; uit = alleen aanwezigheid telt |
 | **Vakantieagenda's** | welke agenda's een vakantie mogen aankondigen; meerdere toegestaan |
@@ -292,7 +293,7 @@ buitenunit, laat dit dan leeg.
 | **Binnenunits** | welke `climate.*`-entiteiten aan deze buitenunit hangen. Neem ook units mee die de director niet beheert: die claimen de compressor ook |
 | **Kan tegelijk verwarmen en koelen** | uit voor een gewone multi-split; aan voor een losse split of driepijps-VRF met warmteterugwinning |
 | **Conflictbeleid** | wie wint als twee kamers tegengestelde taken willen |
-| **Een verliezende zone mag ventileren** | aan = de verliezer gaat naar `fan_only` in plaats van uit |
+| **Een verliezende zone mag ventileren** | aan = de verliezer gaat naar `fan_only` in plaats van uit, maar alleen als de unit die stand kent; anders gaat hij uit |
 | **Pauze bij taakwissel** | hoe lang alles uit staat vóór de omschakeling |
 | **Minimale looptijd voor een taakwissel** | hoe lang een taak minstens moet hebben gedraaid voor de andere hem mag overnemen |
 | **Rust voor een unit opnieuw mag starten** | vertraagt alleen starten, nooit stoppen; standaard 180 seconden |
@@ -336,7 +337,8 @@ hetzelfde circuit wél samen mogen koelen, maak dan één groep per paar — gas
 de ene airco, gas met de andere.
 
 Een groep geldt ook voor apparaten die je zelf aanzet: komt een ander lid van de
-groep aan de beurt, dan gaat het handbediende apparaat uit.
+groep aan de beurt, dan gaat het handbediende apparaat uit. En andersom: draait
+zo’n apparaat al, dan bezet het de groep en wacht een ander lid.
 
 ## Stap 9 — Stiltevensters
 
@@ -580,7 +582,9 @@ automatisering op die gebeurtenis staat.
 - **`binary_sensor.*_vastgelopen`** gaat aan als een zone te lang op dezelfde
   wachtreden staat (standaard na 15 minuten), of als een ingestelde entiteit
   niet te lezen is — verkeerd getikt, verwijderd, of tijdelijk `unavailable`.
-  Welke entiteiten het zijn staat in het attribuut `unusable_entities`.
+  Welke entiteiten het zijn staat in het attribuut `unusable_entities`. Een
+  sensor die wel leesbaar is maar geen getal oplevert, staat er ook in
+  (`no number`).
 - **`binary_sensor.*_<zone>_op_reserve`** gaat aan als een zone draait op een
   bron die niet de eerste keus was, omdat de eerste keus onbereikbaar is. De
   kamer wordt gewoon warm — en precies daarom merk je zonder melder niets tot

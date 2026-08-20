@@ -149,6 +149,7 @@ what you typed is then thrown away. And **nothing** is stored until you pick
 | **Season source** | where the season comes from: the month, an entity, or pinned to summer/winter |
 | **Season entity** | only needed when the source is set to *entity*; the built-in `season.*` entity can be picked too |
 | **Hemisphere** | which months count as summer when the season comes from the month: northern April–September, southern October–March |
+| **Season choice** | the `select.*` entity *Season* sets the season by hand to Automatic, Summer or Winter; the choice survives a restart |
 | **Somebody home must be awake** | on = the house waits for somebody home *and* awake; off = sleep does not count |
 | **A resident's schedule must be open** | on = the house waits for the first schedule window; off = presence alone decides |
 | **Holiday calendars** | which calendars may announce a holiday; several allowed |
@@ -293,7 +294,7 @@ leave this empty.
 | **Indoor units** | which `climate.*` entities hang on this outdoor unit. Include units the director does not manage: they claim the compressor too |
 | **Can heat and cool at the same time** | off for an ordinary multi-split; on for a single split or three-pipe VRF with heat recovery |
 | **Conflict policy** | who wins when two rooms want opposing duties |
-| **A zone that loses may circulate air** | on = the loser goes to `fan_only` instead of off |
+| **A zone that loses may circulate air** | on = the loser goes to `fan_only` instead of off, but only when the unit knows that mode; otherwise it goes off |
 | **Pause when swapping duty** | how long everything is off before the changeover |
 | **Minimum run before swapping duty** | how long a duty must have run before the other may take over |
 | **Rest before a unit may restart** | only ever delays starting, never stopping; default 180 seconds |
@@ -336,7 +337,9 @@ conditioners on the same circuit may still cool together, make one group per
 pair — gas with the one, gas with the other.
 
 A group also binds appliances you switch on yourself: when another member of the
-group gets its turn, the hand-operated appliance goes off.
+group gets its turn, the hand-operated appliance goes off. And the other way
+round: when such an appliance is already running it occupies the group, and
+another member waits.
 
 ## Step 9 — Quiet windows
 
@@ -576,7 +579,8 @@ automation stands on that event.
 - **`binary_sensor.*_stuck`** comes on when a zone sits on the same waiting
   reason too long (15 minutes by default), or when a configured entity cannot
   be read — mistyped, deleted, or temporarily `unavailable`. Which entities
-  they are is in the `unusable_entities` attribute.
+  they are is in the `unusable_entities` attribute. A sensor that reads fine
+  but yields no number is listed there too (`no number`).
 - **`binary_sensor.*_<zone>_on_stand_in`** comes on when a zone runs on a source
   that was not the first choice, because the first choice is unreachable. The
   room simply gets warm — and that is exactly why, without a sensor, you notice
