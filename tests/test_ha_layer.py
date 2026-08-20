@@ -57,7 +57,11 @@ from custom_components.climate_director.engine import (
     decide,
 )
 from custom_components.climate_director.engine.diff import changes
-from custom_components.climate_director.engine.models import SeasonSettings, SeasonSource
+from custom_components.climate_director.engine.models import (
+    PrecipitationSettings,
+    SeasonSettings,
+    SeasonSource,
+)
 from custom_components.climate_director.sensor import (
     CommandSensor,
     DecisionSensor,
@@ -441,6 +445,15 @@ class TestTheSeasonAndTheCalendar:
     def test_a_missing_calendar_is_survivable(self) -> None:
         config = self._config(holiday_calendars=("calendar.weg",), holiday_keyword="vakantie")
         assert coordinator({}, config)._calendar_says_holiday() is False
+
+    def test_without_a_precipitation_source_rain_never_counts(self) -> None:
+        """Zonder neerslagbron is het antwoord gewoon 'nee'."""
+        assert coordinator({}, self._config())._precipitation() is False
+
+    def test_the_precipitation_source_reads_the_condition(self) -> None:
+        config = self._config(precipitation=PrecipitationSettings(source="weather.buienradar"))
+        states = {"weather.buienradar": FakeState("rainy")}
+        assert coordinator(states, config)._precipitation() is True
 
 
 # ---------------------------------------------------------------------------
