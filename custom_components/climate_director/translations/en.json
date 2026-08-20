@@ -607,6 +607,16 @@
       "precondition_minutes": {
         "name": "Pre-conditioning duration"
       }
+    },
+    "select": {
+      "season": {
+        "name": "Season",
+        "state": {
+          "auto": "Automatic",
+          "summer": "Summer",
+          "winter": "Winter"
+        }
+      }
     }
   },
   "issues": {

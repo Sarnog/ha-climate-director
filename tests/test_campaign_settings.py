@@ -167,6 +167,36 @@ class TestTheSeasonSetting:
         finally:
             await stop_house(home)
 
+    async def test_the_select_overrides_the_season(self) -> None:
+        """Eén draai aan de select zet winter opzij, en terug op auto weer niet.
+
+        One turn of the select overrides winter, and back to auto it no longer
+        does.
+        """
+        home = await start_house(summer_house({"source": "winter"}), states=hot_world())
+        try:
+            assert home.state(LIVING) == "off"
+            await home.call(
+                "select",
+                "select_option",
+                {"entity_id": home.by_key("season"), "option": "summer"},
+            )
+            await home.evaluate()
+            assert home.coordinator.season_override is Season.SUMMER
+            assert home.coordinator.world.season is Season.SUMMER
+            assert home.state(LIVING) == "cool"
+
+            await home.call(
+                "select",
+                "select_option",
+                {"entity_id": home.by_key("season"), "option": "auto"},
+            )
+            await home.evaluate()
+            assert home.coordinator.season_override is None
+            assert home.coordinator.world.season is Season.WINTER
+        finally:
+            await stop_house(home)
+
 
 # ---------------------------------------------------------------------------
 # De poorten: rooster, stilte, gasten, vakantie-agenda.

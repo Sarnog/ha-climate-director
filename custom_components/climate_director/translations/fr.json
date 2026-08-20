@@ -607,6 +607,16 @@
       "precondition_minutes": {
         "name": "Durée du préchauffage"
       }
+    },
+    "select": {
+      "season": {
+        "name": "Saison",
+        "state": {
+          "auto": "Automatique",
+          "summer": "Été",
+          "winter": "Hiver"
+        }
+      }
     }
   },
   "issues": {

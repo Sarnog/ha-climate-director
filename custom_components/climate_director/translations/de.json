@@ -607,6 +607,16 @@
       "precondition_minutes": {
         "name": "Vorheizdauer"
       }
+    },
+    "select": {
+      "season": {
+        "name": "Jahreszeit",
+        "state": {
+          "auto": "Automatisch",
+          "summer": "Sommer",
+          "winter": "Winter"
+        }
+      }
     }
   },
   "issues": {

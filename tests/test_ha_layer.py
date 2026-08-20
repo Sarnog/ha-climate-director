@@ -362,6 +362,15 @@ class TestReadingTheWorld:
             assert entity_id in tracked, entity_id
 
 
+def _healthy_states() -> dict[str, FakeState]:
+    """Return a world where every entity reads, with numbers where numbers belong."""
+    states = {entity: FakeState("on") for entity in coordinator({}).tracked_entities()}
+    for entity in ("sensor.buiten", "sensor.woonkamer", "sensor.zolder"):
+        if entity in states:
+            states[entity] = FakeState("19.0")
+    return states
+
+
 class TestTheUnusableList:
     """Entiteiten die niet te lezen zijn, apart gemeld.
 
@@ -380,7 +389,7 @@ class TestTheUnusableList:
         assert coordinator(states).unusable_entities()["sensor.buiten"] == "unavailable"
 
     def test_a_healthy_installation_reports_nothing(self) -> None:
-        states = {entity: FakeState("on") for entity in coordinator({}).tracked_entities()}
+        states = _healthy_states()
         assert coordinator(states).unusable_entities() == {}
 
 
@@ -672,9 +681,7 @@ class TestTheEntities:
         assert sensor.extra_state_attributes["unusable_entities"]
 
     def test_the_stuck_sensor_is_quiet_when_everything_reads(self) -> None:
-        item = coordinator(
-            {entity: FakeState("on") for entity in coordinator({}).tracked_entities()}
-        )
+        item = coordinator(_healthy_states())
         item.data = object()
         sensor = _bind(StuckSensor, item)
         assert sensor.is_on is False

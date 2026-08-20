@@ -607,6 +607,16 @@
       "precondition_minutes": {
         "name": "Vooruitduur"
       }
+    },
+    "select": {
+      "season": {
+        "name": "Seizoen",
+        "state": {
+          "auto": "Automatisch",
+          "summer": "Zomer",
+          "winter": "Winter"
+        }
+      }
     }
   },
   "issues": {

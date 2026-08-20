@@ -229,6 +229,19 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self.zone_overrides: dict[str, bool] = {}
         self._handed_back: dict[str, date] = {}
         self.zone_priorities: dict[str, int] = {}
+        self.season_override: Season | None = None
+        """Een met de hand gekozen seizoen via de select-entiteit, of `None`.
+
+        Staat er een override, dan wint die van de maand, de entiteit en de
+        vaste instelling - de gebruiker heeft net nog met de hand gekozen. De
+        select-entiteit herstelt zijn stand na een herstart en schrijft hem
+        hier terug, net als de schakelaars.
+
+        A season picked by hand through the select entity, or `None`. With an
+        override it beats the month, the entity and the fixed setting - the
+        user has just chosen by hand. The select entity restores its state
+        after a restart and writes it back here, just like the switches.
+        """
 
         self.world: WorldState | None = None
         self._issued: Plan | None = None
@@ -834,6 +847,32 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             ):
                 found[entity_id] = f"unrecognized season: {state.state}"
 
+        # Een leesbare temperatuursensor die geen getal oplevert is net zo stil
+        # kapot als een onleesbare: de zone leest NO_INDOOR_TEMPERATURE en doet
+        # niets, zonder dat er iets van te zien is. De entiteit bestaat en is
+        # leesbaar, dus de gewone controle hierboven pakt hem niet.
+        #
+        # A readable temperature sensor that yields no number is just as
+        # silently broken as an unreadable one: the zone reads
+        # NO_INDOOR_TEMPERATURE and does nothing, with nothing to show for it.
+        # The entity exists and reads fine, so the ordinary check above does
+        # not catch it.
+        sensors: set[str] = set()
+        if self.config.outdoor_sensor:
+            sensors.add(self.config.outdoor_sensor)
+        for zone in self.config.zones:
+            if zone.indoor_sensor:
+                sensors.add(zone.indoor_sensor)
+        for entity_id in sorted(sensors):
+            if entity_id in found:
+                continue
+            state = self.hass.states.get(entity_id)
+            if state is None or _unreadable(state.state):
+                continue
+            attributes = getattr(state, "attributes", {})
+            if temperature_from_state(entity_id, state.state, attributes) is None:
+                found[entity_id] = "no number"
+
         return found
 
     # -- vastgelopen zones / stuck zones -------------------------------------
@@ -969,6 +1008,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             hvac_mode=state.state,
             current_temperature=_as_float(state.attributes.get("current_temperature")),
             target_temperature=_as_float(state.attributes.get("temperature")),
+            hvac_modes=_as_modes(state.attributes.get("hvac_modes")),
             available=True,
             changed_at=dt_util.as_local(state.last_changed),
         )
@@ -1015,6 +1055,8 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         )
 
     def _season(self) -> Season:
+        if getattr(self, "season_override", None) is not None:
+            return self.season_override
         settings = self.config.seasons
         if settings.source is SeasonSource.SUMMER:
             return Season.SUMMER
@@ -1308,3 +1350,15 @@ def _as_float(raw: Any) -> float | None:
     except (TypeError, ValueError):
         return None
     return value if math.isfinite(value) else None
+
+
+def _as_modes(raw: Any) -> frozenset[str] | None:
+    """Return the hvac modes an entity reports, or `None` when it reports none.
+
+    None means unknown, and unknown gets the benefit of the doubt: the engine
+    commands the mode anyway, exactly as before the check existed.
+    """
+    if not isinstance(raw, (list, tuple, set, frozenset)):
+        return None
+    modes = {str(item) for item in raw}
+    return frozenset(modes) if modes else None

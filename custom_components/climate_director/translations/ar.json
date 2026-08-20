@@ -607,6 +607,16 @@
       "precondition_minutes": {
         "name": "مدة التدفئة المسبقة"
       }
+    },
+    "select": {
+      "season": {
+        "name": "الفصل",
+        "state": {
+          "auto": "تلقائي",
+          "summer": "الصيف",
+          "winter": "الشتاء"
+        }
+      }
     }
   },
   "issues": {

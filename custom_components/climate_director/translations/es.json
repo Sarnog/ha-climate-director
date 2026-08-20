@@ -607,6 +607,16 @@
       "precondition_minutes": {
         "name": "Duración del preacondicionamiento"
       }
+    },
+    "select": {
+      "season": {
+        "name": "Estación",
+        "state": {
+          "auto": "Automático",
+          "summer": "Verano",
+          "winter": "Invierno"
+        }
+      }
     }
   },
   "issues": {
