@@ -68,6 +68,7 @@ und löst diesen Konflikt für dich.
 | Eine `climate.*` pro Zone | **ja** | ohne Gerät gibt es nichts zu steuern |
 | Ein Temperatursensor pro Zone | **ja** | ohne Messwert kann die Integration zu kalt nicht von zu warm unterscheiden; eine `climate.*` mit `current_temperature` geht auch |
 | `sensor.*` oder `weather.*` Außentemperatur | nein | nur nötig, wenn du Grenzen auf die Außentemperatur setzt — Gas unter 3 °C, Wärmepumpe darüber, zum Beispiel |
+| `weather.*` oder `sensor.*` Niederschlag | nein | nur wenn Regen die „Fenster-öffnen“-Grenze aufheben darf |
 | `person.*` oder `device_tracker.*` pro Bewohner | ja, sobald du Bewohner anlegst | sonst kann dieser Bewohner nie zu Hause sein |
 | Ein Schlafsensor pro Bewohner | nein | ohne ihn zählt niemand jemals als schlafend |
 | `binary_sensor.*` Anwesenheit pro Zone | nur wenn eine Zone auf *den Raum selbst* läuft | dann ist es das einzige Tor der Zone |
@@ -161,7 +162,28 @@ wählst.
 | **Vorheizdauer** | die Obergrenze einer einzelnen Anfrage; Standard 120 Minuten |
 | **Gastmodus von / bis** | das Fenster, in dem der Gastmodus gilt; beide leer = den ganzen Tag |
 | **Zone nach … Minuten als festgefahren melden** | nach wie vielen Minuten Wartezeit eine Zone als festgefahren gilt; 0 schaltet den Sensor aus |
+| **Niederschlagsquelle** | eine `weather.*`- oder `sensor.*`-Entität, die sagt, ob es regnet; leer = die Regenregel macht nicht mit |
+| **Zustände, die als Niederschlag zählen** | welche Zustände dieser Entität Regen bedeuten; standardmäßig die regnerischen Bedingungen |
+| **Wie lange Regen weiter zählt (Minuten)** | Nachlaufzeit nach dem Aufhören des Regens; Standard 15 Minuten |
 | **Schattenmodus** | an = alles durchrechnen, nichts steuern |
+
+### Regen setzt die Außengrenze außer Kraft
+
+Die Außengrenze pro Zone ist eine Sparregel mit einer Annahme darunter: Ist es
+draußen angenehmer als drinnen, öffnest du besser ein Fenster, als die
+Klimaanlage einzuschalten. Regnet es, bleibt das Fenster zu, also passiert
+nichts, während es drinnen zu warm oder zu kalt bleibt.
+
+Richte deshalb eine **Niederschlagsquelle** ein. Solange sie Niederschlag
+meldet, überspringt Climate Director die **Außengrenze pro Zone** — genau wie
+eine Vorheiz-Anfrage. Die Totzone, die Jahreszeit und die Außengrenze **pro
+Quelle** gelten weiter; die wählen immer noch das Gerät. Die Nachlaufzeit
+sorgt dafür, dass ein Fünf-Minuten-Schauer die Regelung nicht ins Schwingen
+bringt. Ohne Quelle macht die Regenregel nicht mit.
+
+Ein Raum ohne Fenster hat nichts davon. Dort schaltest du in der Zone **Regen
+hebt die 'Fenster-öffnen'-Regel nicht auf** ein, und die Außengrenze gilt auch
+bei Regen weiter.
 
 ### Heizsystem: zentral oder pro Zone
 
@@ -190,6 +212,7 @@ Eine Zone ist ein Raum. Pro Zone stellst du ein:
 | **Vorrang an einem gemeinsamen Außengerät** | wie stark diese Zone ein gemeinsames Außengerät beansprucht; **niedriger gewinnt**. An einem Kreislauf darf keine Nummer doppelt vorkommen |
 | **Was entscheidet, ob diese Zone läuft** | *der Haushalt* (Zeitplan, Schlaf, jemand zu Hause) oder *der Raum selbst* (nur der Anwesenheitssensor) |
 | **Anwesenheitssensor + Status + Nachlaufzeit** | wann der Raum als belegt zählt; die Nachlaufzeit fängt flackernde Melder auf |
+| **Regen hebt die 'Fenster-öffnen'-Regel nicht auf** | an für einen Raum ohne Fenster; dort gilt die Außengrenze auch bei Regen weiter |
 | **Diese Zone darf heizen** | aus = dieser Raum wird nie geheizt |
 | **Zieltemperatur Heizen** | der Sollwert, den das Gerät beim Heizen bekommt — nicht der Startpunkt |
 | **Heizen starten bei** | Heizen startet bei dieser Innentemperatur oder darunter |
@@ -438,7 +461,7 @@ Ein Gerät pro Installation, darunter:
 | `sensor.*_would_command_<entity>` | der Modus, in den der Director dieses Gerät setzen würde — ein Sensor pro Gerät |
 | `sensor.*_mismatch` | wie viele Geräte gerade anders stehen als der Plan will; 0 = Director und Haus sind einig |
 | `sensor.*_<zone>_source` | welche Quelle diese Zone bedient, mit dem, was die Zone wollte, bekam und warum |
-| `binary_sensor.*_<zone>_blocked` | an, wenn eine Zone weniger bekam als verlangt, mit den geschlossenen Toren als Attributen |
+| `binary_sensor.*_<zone>_blocked` | an, wenn eine Zone weniger bekam als verlangt oder laufen wollte, aber ein Umstand sie zurückhielt; die geschlossenen Tore stehen in den Attributen |
 | `binary_sensor.*_<zone>_on_stand_in` | an, wenn eine Zone auf einem Ersatzgerät läuft, weil die erste Wahl unerreichbar ist |
 | `binary_sensor.*_stuck` | an, wenn eine Zone zu lange auf demselben Wartegrund sitzt |
 | `switch.*_director` | der Hauptschalter; aus = es wird nichts geregelt |

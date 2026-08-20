@@ -79,8 +79,8 @@
           "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
           "stuck_after": "Een pauze bij het wisselen van taak hoort seconden te duren. Een zone die er na deze tijd nog op staat wacht niet meer maar zit vast, en dat lijkt van buiten precies op niets doen. Houd hem ruim boven je langste pauze; een valse melding leert je de melder te negeren. Nul zet de melder uit.",
           "precipitation_source": "Een weather-entiteit of regensensor. Zolang die een van de staten hieronder meldt, wordt de 'zet een raam open'-grens per zone overgeslagen. Laat leeg om de gewone regel altijd te laten gelden.",
-          "precipitation_states": "Komma-gescheiden. Voor een weather-entiteit zijn dit zijn condities; voor een sensor zijn standen. De standaard dekt de regenachtige condities.",
-          "precipitation_grace": "Een bui van vijf minuten hoort de regeling niet te laten stuiteren, dus een meting blijft nog zo lang meetellen nadat hij ophoudt."
+          "precipitation_states": "Komma-gescheiden. Voor een weather-entiteit zijn dit zijn condities; voor een sensor de standen. De standaard dekt de regenachtige condities.",
+          "precipitation_grace": "Een bui van vijf minuten hoort de regeling niet te laten stuiteren, dus een meting blijft nog zo lang meetellen nadat de regen ophoudt."
         }
       },
       "zones": {

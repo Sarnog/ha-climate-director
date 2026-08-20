@@ -80,7 +80,7 @@
           "stuck_after": "Une pause lors d'un changement de tâche doit durer des secondes. Une pièce qui y reste au-delà n'attend plus, elle est bloquée - ce qui, vu de l'extérieur, ressemble exactement à ne rien faire. Gardez la valeur bien au-dessus de votre plus longue pause ; une fausse alerte apprend à ignorer l'alerte. Zéro désactive le capteur.",
           "precipitation_source": "Une entité météo ou un capteur de pluie. Tant qu'elle signale l'un des états ci-dessous, la limite « ouvrir une fenêtre » par zone est ignorée. Laissez vide pour que la règle ordinaire s'applique toujours.",
           "precipitation_states": "Séparés par des virgules. Pour une entité météo, ce sont ses conditions ; pour un capteur, ses états. La valeur par défaut couvre les conditions pluvieuses.",
-          "precipitation_grace": "Une averse de cinq minutes ne doit pas faire osciller la régulation, donc une lecture continue de compter encore ce temps après s'être arrêtée."
+          "precipitation_grace": "Une averse de cinq minutes ne doit pas faire osciller la régulation, donc une lecture continue de compter encore ce temps après que la pluie s'est arrêtée."
         }
       },
       "zones": {

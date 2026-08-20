@@ -68,6 +68,7 @@ Director sait quelles unités vont ensemble et résout ce conflit pour vous.
 | Une `climate.*` par zone | **oui** | sans appareil, il n'y a rien à piloter |
 | Un capteur de température par zone | **oui** | sans mesure, l'intégration ne peut pas distinguer trop froid de trop chaud ; une `climate.*` avec `current_temperature` convient |
 | `sensor.*` ou `weather.*` température extérieure | non | seulement pour borner par température extérieure — gaz sous 3 °C, pompe à chaleur au-dessus, par exemple |
+| `weather.*` ou `sensor.*` précipitations | non | seulement si la pluie peut lever la limite « ouvrir une fenêtre » |
 | `person.*` ou `device_tracker.*` par résident | oui, dès que vous configurez des résidents | sinon ce résident ne peut jamais être présent |
 | Un capteur de sommeil par résident | non | sans lui, personne ne compte jamais comme endormi |
 | `binary_sensor.*` présence par zone | seulement si une zone fonctionne sur *la pièce elle-même* | c'est alors la seule porte de la zone |
@@ -161,7 +162,29 @@ le menu principal.
 | **Durée de préchauffage** | le plafond d'une seule demande ; par défaut 120 minutes |
 | **Mode invités de / jusqu'à** | la fenêtre où le mode invités s'applique ; les deux vides = toute la journée |
 | **Signaler une zone bloquée après** | après combien de minutes d'attente une zone compte comme bloquée ; 0 éteint le capteur |
+| **Source de précipitations** | une entité `weather.*` ou `sensor.*` qui dit s'il pleut ; vide = la règle de pluie ne participe pas |
+| **États comptant comme précipitations** | quels états de cette entité signifient de la pluie ; les conditions pluvieuses par défaut |
+| **Combien de temps la pluie continue de compter (minutes)** | délai de grâce après l'arrêt de la pluie ; 15 minutes par défaut |
 | **Mode fantôme** | activé = tout calculer, ne rien piloter |
+
+### La pluie met la limite extérieure de côté
+
+La limite extérieure par zone est une règle d'économie avec un postulat : s'il
+fait meilleur dehors que dedans, vous avez intérêt à ouvrir une fenêtre plutôt
+que d'allumer le climatiseur. Quand il pleut, cette fenêtre reste fermée, donc
+rien ne se passe, alors que la pièce reste trop chaude ou trop froide.
+
+Configurez donc une **source de précipitations**. Tant qu'elle signale de la
+pluie, Climate Director ignore la **limite extérieure par zone** — exactement
+comme le fait une demande de préchauffage. La bande morte, la saison et la
+limite extérieure **par source** continuent de s'appliquer ; ce sont elles qui
+choisissent l'appareil. Le délai de grâce fait qu'une averse de cinq minutes ne
+fait pas osciller la régulation. Sans source, la règle de pluie ne participe
+pas.
+
+Une pièce sans fenêtres n'y gagne rien. Là, activez dans la zone **La pluie ne
+lève pas la règle « ouvrir une fenêtre »**, et la limite extérieure continue de
+s'appliquer même sous la pluie.
 
 ### Système de chauffage : centralisé ou par zone
 
@@ -190,6 +213,7 @@ Une zone est une pièce. Par zone, vous réglez :
 | **Préséance sur une unité extérieure partagée** | avec quelle force cette zone revendique une unité extérieure partagée ; **le plus petit gagne**. Sur un circuit, aucun numéro ne peut apparaître deux fois |
 | **Ce qui décide si cette zone tourne** | *le foyer* (emploi du temps, sommeil, quelqu'un à la maison) ou *la pièce elle-même* (seul le capteur de présence) |
 | **Capteur de présence + état + délai de grâce** | quand la pièce compte comme occupée ; le délai absorbe les détecteurs qui clignotent |
+| **La pluie ne lève pas la règle « ouvrir une fenêtre »** | activé pour une pièce sans fenêtres ; là, la limite extérieure continue de s'appliquer même sous la pluie |
 | **Cette zone peut chauffer** | désactivé = cette pièce n'est jamais chauffée |
 | **Température cible chauffage** | la consigne donnée à l'appareil quand le chauffage tourne — pas le point de démarrage |
 | **Démarrer le chauffage à** | le chauffage démarre à cette température intérieure ou en dessous |
@@ -436,7 +460,7 @@ Un appareil par installation, avec en dessous :
 | `sensor.*_would_command_<entity>` | le mode dans lequel le directeur mettrait cet appareil — un capteur par appareil |
 | `sensor.*_mismatch` | combien d'appareils se trouvent ailleurs que là où le plan les veut ; 0 = directeur et maison d'accord |
 | `sensor.*_<zone>_source` | quelle source dessert cette zone, avec ce que la zone voulait, a obtenu et pourquoi |
-| `binary_sensor.*_<zone>_blocked` | activé quand une zone a reçu moins que demandé, avec les portes fermées en attributs |
+| `binary_sensor.*_<zone>_blocked` | activé quand une zone a reçu moins que demandé, ou voulait tourner mais qu'une circonstance l'a retenue ; les portes fermées sont dans les attributs |
 | `binary_sensor.*_<zone>_on_stand_in` | activé quand une zone tourne sur un appareil de secours parce que le premier choix est injoignable |
 | `binary_sensor.*_stuck` | activé quand une zone reste trop longtemps sur le même motif d'attente |
 | `switch.*_director` | l'interrupteur principal ; éteint = rien n'est régulé |

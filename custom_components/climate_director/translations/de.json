@@ -80,7 +80,7 @@
           "stuck_after": "Eine Pause beim Aufgabenwechsel sollte Sekunden dauern. Eine Zone, die nach dieser Zeit noch darauf steht, wartet nicht mehr, sondern hängt fest - von außen sieht das genau wie Nichtstun aus. Halte den Wert deutlich über deiner längsten Pause; ein Fehlalarm lehrt dich, den Melder zu ignorieren. Null schaltet ihn aus.",
           "precipitation_source": "Eine Wetter-Entität oder ein Regensensor. Solange sie einen der Zustände unten meldet, wird die 'Fenster-öffnen'-Grenze pro Zone übersprungen. Leer lassen, damit die gewöhnliche Regel immer gilt.",
           "precipitation_states": "Kommagetrennt. Bei einer Wetter-Entität sind das ihre Bedingungen, bei einem Sensor seine Zustände. Die Vorgabe deckt die regnerischen Bedingungen ab.",
-          "precipitation_grace": "Ein Fünf-Minuten-Schauer soll die Regelung nicht springen lassen, also zählt eine Messung noch so lange weiter, nachdem sie aufgehört hat."
+          "precipitation_grace": "Ein Fünf-Minuten-Schauer soll die Regelung nicht ins Schwingen bringen, also zählt eine Messung noch so lange weiter, nachdem der Regen aufgehört hat."
         }
       },
       "zones": {

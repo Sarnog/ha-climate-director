@@ -68,6 +68,7 @@ for you.
 | One `climate.*` per zone | **yes** | without an appliance there is nothing to steer |
 | One temperature sensor per zone | **yes** | without a reading the integration cannot tell too cold from too warm; a `climate.*` with `current_temperature` will do |
 | `sensor.*` or `weather.*` outdoor temperature | no | only needed to set limits on outdoor temperature — gas below 3 °C, heat pump above it, say |
+| `weather.*` or `sensor.*` precipitation | no | only when rain may lift the open-a-window bound |
 | `person.*` or `device_tracker.*` per resident | yes, once you configure residents | otherwise that resident can never be home |
 | A sleep sensor per resident | no | without one nobody ever counts as asleep |
 | `binary_sensor.*` presence per zone | only when a zone runs on *the room itself* | then it is the only gate the zone has |
@@ -158,7 +159,28 @@ what you typed is then thrown away. And **nothing** is stored until you pick
 | **Pre-conditioning duration** | the ceiling on a single request; default 120 minutes |
 | **Guest mode from / until** | the window in which guest mode applies; both empty = all day |
 | **Report a zone stuck after** | after how many minutes of waiting a zone counts as stuck; 0 switches the sensor off |
+| **Precipitation source** | a `weather.*` or `sensor.*` entity that says whether it rains; empty = the rain rule does not take part |
+| **States that count as precipitation** | which states of that entity mean rain; the rainy conditions by default |
+| **How long rain keeps counting (minutes)** | grace period after the rain stops; 15 minutes by default |
 | **Shadow mode** | on = compute everything, steer nothing |
+
+### Rain sets the outdoor bound aside
+
+A zone's outdoor bound is a thrift rule with an assumption under it: if it is
+nicer outside than in, you are better off opening a window than switching the
+air conditioner on. When it rains that window stays shut, so nothing happens,
+while the room stays too warm or too cold.
+
+Set a **precipitation source** to fix that. For as long as it reports
+precipitation, Climate Director skips the **per-zone outdoor bound** — exactly
+as a pre-conditioning request does. The dead band, the season and the
+**per-source** outdoor bound keep applying; those still pick the appliance. The
+grace period sees to it that a five-minute shower does not make the regulation
+bounce. Without a source the rain rule does not take part.
+
+A room without windows gains nothing from it. There, switch the zone's **Rain
+does not lift the open-a-window rule** on, and the outdoor bound keeps applying
+even in the rain.
 
 ### Heating system: central or per zone
 
@@ -186,6 +208,7 @@ A zone is a room. Per zone you set:
 | **Precedence on a shared outdoor unit** | how strongly this zone claims a shared outdoor unit; **lower wins**. On one circuit no number may appear twice |
 | **What decides whether this zone runs** | *the household* (schedule, sleep, somebody home) or *the room itself* (only the presence sensor) |
 | **Presence sensor + state + grace period** | when the room counts as occupied; the grace period absorbs flickering detectors |
+| **Rain does not lift the open-a-window rule** | on for a room without windows; there the outdoor bound keeps applying even in the rain |
 | **This zone may heat** | off = this room is never heated |
 | **Target temperature for heating** | the setpoint handed to the appliance once heating runs — not the start point |
 | **Start heating at** | heating starts at this indoor temperature or below |
@@ -430,7 +453,7 @@ One device per installation, holding:
 | `sensor.*_would_command_<entity>` | the mode the director would put this appliance in — one sensor per appliance |
 | `sensor.*_mismatch` | how many appliances currently sit somewhere other than where the plan wants them; 0 = director and house agree |
 | `sensor.*_<zone>_source` | which source serves this zone, with what the zone wanted, got and why |
-| `binary_sensor.*_<zone>_blocked` | on when a zone got less than it asked for, with the shut gates as attributes |
+| `binary_sensor.*_<zone>_blocked` | on when a zone got less than it asked for, or wanted to run but a circumstance held it back; the shut gates are in the attributes |
 | `binary_sensor.*_<zone>_on_stand_in` | on when a zone runs on a stand-in appliance because its first choice is unreachable |
 | `binary_sensor.*_stuck` | on when a zone sits on the same waiting reason too long |
 | `switch.*_director` | the master switch; off = nothing is regulated |

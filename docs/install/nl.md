@@ -68,6 +68,7 @@ conflict voor je op.
 | Eén `climate.*` per zone | **ja** | zonder apparaat valt er niets aan te sturen |
 | Eén temperatuursensor per zone | **ja** | zonder meting weet de integratie niet of het te koud of te warm is; een `climate.*` met `current_temperature` mag ook |
 | `sensor.*` of `weather.*` buitentemperatuur | nee | alleen nodig als je grenzen op buitentemperatuur wilt — gas onder 3 °C, warmtepomp erboven, bijvoorbeeld |
+| `weather.*` of `sensor.*` neerslag | nee | alleen als regen de 'zet een raam open'-grens mag opheffen |
 | `person.*` of `device_tracker.*` per bewoner | ja, zodra je bewoners instelt | anders kan die bewoner nooit thuis zijn |
 | Een slaapsensor per bewoner | nee | zonder deze telt niemand ooit als slapend |
 | `binary_sensor.*` aanwezigheid per zone | alleen als een zone op *de ruimte zelf* draait | dan is het de enige poort die de zone heeft |
@@ -158,7 +159,30 @@ je in het hoofdmenu **Opslaan en sluiten** kiest.
 | **Vooruitverwarmingsduur** | het plafond op één verzoek; standaard 120 minuten |
 | **Gastenmodus vanaf / tot** | het venster waarin de gastenmodus geldt; beide leeg = de hele dag |
 | **Meld een zone vastgelopen na** | na hoeveel minuten wachten een zone als vastgelopen geldt; 0 zet de melder uit |
+| **Neerslagbron** | een `weather.*`- of `sensor.*`-entiteit die zegt of het regent; leeg = de regenregel doet niet mee |
+| **Staten die als neerslag tellen** | welke standen van die entiteit regen betekenen; standaard de regenachtige condities |
+| **Hoe lang regen blijft tellen (minuten)** | nalooptijd na het stoppen van de regen; standaard 15 minuten |
 | **Schaduwmodus** | aan = alles doorrekenen, niets aansturen |
+
+### Regen zet de buitengrens opzij
+
+De buitengrens per zone is een zuinigheidsregel met een aanname eronder: is
+het buiten aangenamer dan binnen, dan kun je beter een raam openzetten dan de
+airco aanzetten. Regent het, dan blijft dat raam dicht en gebeurt er dus
+niets, terwijl het binnen te warm of te koud blijft.
+
+Stel daarom een **neerslagbron** in. Zolang die neerslag meldt, slaat Climate
+Director de **buitengrens per zone** over — precies zoals een vooruit-verzoek
+dat doet. De dode band, het seizoen en de buitengrens **per bron** blijven
+gewoon gelden; die kiezen nog steeds het apparaat. De nalooptijd zorgt dat een
+bui van vijf minuten de regeling niet laat stuiteren. Zonder bron doet de
+regenregel niet mee.
+
+Een ruimte zonder ramen heeft er niets aan. Zet daar in de zone **Regen heft
+de 'zet een raam open'-regel niet op** aan, en de buitengrens blijft ook bij
+regen gelden.
+
+### Verwarmingssysteem: centraal of per zone
 
 ### Verwarmingssysteem: centraal of per zone
 
@@ -186,6 +210,7 @@ Een zone is een ruimte. Per zone stel je in:
 | **Voorrang op een gedeelde buitenunit** | hoe hard deze zone een gedeelde buitenunit claimt; **lager wint**. Op één circuit mag geen nummer dubbel voorkomen |
 | **Wat bepaalt of deze zone draait** | *het huishouden* (rooster, slaap, iemand thuis) of *de ruimte zelf* (alleen de aanwezigheidssensor) |
 | **Aanwezigheidssensor + status + nalooptijd** | wanneer de kamer als bezet telt; de nalooptijd vangt knipperende melders op |
+| **Regen heft de 'zet een raam open'-regel niet op** | aan voor een ruimte zonder ramen; daar blijft de buitengrens ook bij regen gelden |
 | **Deze zone mag verwarmen** | uit = deze kamer wordt nooit verwarmd |
 | **Streeftemperatuur verwarmen** | het setpoint dat het apparaat krijgt als verwarmen draait — niet het startpunt |
 | **Verwarmen starten bij** | verwarmen start bij deze binnentemperatuur of lager |
@@ -431,7 +456,7 @@ Eén device per installatie, met daaronder:
 | `sensor.*_zou_<entiteit>_aansturen` | de stand waarin de director dit apparaat zou zetten — één sensor per apparaat |
 | `sensor.*_afwijkingen` | hoeveel apparaten er nú anders staan dan het plan wil; 0 = director en huis zijn het eens |
 | `sensor.*_bron_<zone>` | welke bron deze zone bedient, met wat de zone wilde, kreeg en waarom |
-| `binary_sensor.*_<zone>_geblokkeerd` | aan als een zone minder kreeg dan hij vroeg, met de dichte poorten als attributen |
+| `binary_sensor.*_<zone>_geblokkeerd` | aan als een zone minder kreeg dan hij vroeg, of wilde draaien maar een omstandigheid haar tegenhield; de dichte poorten staan in de attributen |
 | `binary_sensor.*_<zone>_op_reserve` | aan als een zone op een reserve-apparaat draait omdat de eerste keus onbereikbaar is |
 | `binary_sensor.*_vastgelopen` | aan als een zone te lang op dezelfde wachtreden staat |
 | `switch.*_director` | de hoofdschakelaar; uit = er wordt niets geregeld |
