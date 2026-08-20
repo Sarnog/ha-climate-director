@@ -368,13 +368,24 @@ class TestPriorityAfterRestart:
 
 
 def _no_hass():
-    """Return a stand-in without translations, so the English text stays put."""
+    """Return a stand-in without translations, so the English text stays put.
+
+    `texts.lookup` loopt door Home Assistants vertaalcache heen, en die heeft
+    meer van `hass` nodig dan alleen de taal: de lijst met geladen componenten
+    en het dataregister voor de singleton-cache.
+
+    `texts.lookup` runs through Home Assistant's translation cache, which needs
+    more of `hass` than just the language: the list of loaded components and
+    the data register for the singleton cache.
+    """
 
     class Config:
         language = "en"
+        top_level_components = set()
 
     class Hass:
         config = Config()
+        data = {}
 
     return Hass()
 

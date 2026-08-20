@@ -673,6 +673,9 @@
     "target_outside_band": {
       "message": "المنطقة {zone} تبدأ {mode} عند {start}° لكنها تستهدف {target}°. عندئذٍ يتلقى الجهاز درجة حرارة لا يلزمه فعل شيء من أجلها، فيبدو وكأنه يرفض."
     },
+    "and_n_more": {
+      "message": "- ... و{remaining} إضافية"
+    },
     "precondition_refused_title": {
       "message": "تم رفض التدفئة المسبقة"
     },

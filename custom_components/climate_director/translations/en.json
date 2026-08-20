@@ -673,6 +673,9 @@
     "target_outside_band": {
       "message": "Zone {zone} starts {mode} at {start}° but aims for {target}°. The appliance is then set to a temperature it need do nothing for, which looks like it is refusing."
     },
+    "and_n_more": {
+      "message": "- ... and {remaining} more"
+    },
     "precondition_refused_title": {
       "message": "Pre-conditioning refused"
     },

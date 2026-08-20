@@ -673,6 +673,9 @@
     "target_outside_band": {
       "message": "Zone {zone} beginnt mit {mode} bei {start}°, strebt aber {target}° an. Das Gerät erhält dann eine Temperatur, für die es nichts tun muss - das sieht aus, als würde es sich weigern."
     },
+    "and_n_more": {
+      "message": "- ... und {remaining} weitere"
+    },
     "precondition_refused_title": {
       "message": "Vorheizen abgelehnt"
     },

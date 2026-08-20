@@ -673,6 +673,9 @@
     "target_outside_band": {
       "message": "Zone {zone} begint met {mode} bij {start}° maar streeft naar {target}°. Het apparaat krijgt dan een temperatuur waar het niets voor hoeft te doen, wat eruitziet alsof het weigert."
     },
+    "and_n_more": {
+      "message": "- ... en nog {remaining} meer"
+    },
     "precondition_refused_title": {
       "message": "Vooruit verwarmen geweigerd"
     },
