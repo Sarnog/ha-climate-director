@@ -12,7 +12,7 @@
 
 ##### <ins>NL</ins>
 
-<a href="#en">→ Naar de Engelse versie</a>
+<a href="#en">→ Go to the English version</a>
 
 Een integratie voor Home Assistant die bestaande klimaatapparaten aanstuurt: hij
 beslist welke warmte- of koudebron in welke ruimte, in welke stand en op welke
@@ -124,7 +124,7 @@ een bedrag te doneren. Alvast bedankt!
 
 ##### <ins>EN</ins>
 
-<a href="#nl">→ Go to the Dutch version</a>
+<a href="#nl">→ Naar de Nederlandse versie</a>
 
 A Home Assistant integration that steers existing climate appliances: it decides
 which heat or cold source runs in which room, in which mode and at which
