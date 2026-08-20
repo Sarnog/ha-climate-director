@@ -27,13 +27,6 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
 - **Virtuele `climate` per zone** — één bedieningsentiteit per ruimte, waarmee de gewenste
   temperatuur en stand rechtstreeks op een gewone thermostaatkaart te bedienen zijn. De
   director kiest daar dan de bron bij.
-- **Huisbreed vermogensplafond** — een maximum in watt over de hele installatie, in plaats
-  van alleen een maximum aantal units per circuit. Een grens in stuks zegt niets over wat
-  er werkelijk uit de meter loopt: drie kleine units zijn iets heel anders dan één ketel.
-  Vraagt een vermogen per bron en een rangorde bij het afkappen.
-- **Temperatuurschema per zone** — een streeftemperatuur die met de klok meebeweegt
-  (nacht koeler, ochtend warmer), in plaats van één waarde per zone die alleen door de
-  poorten aan- en uitgezet wordt.
 - **Neerslag zet de "zet een raam open"-grens opzij** — de buitengrens per zone is een
   zuinigheidsregel met een aanname eronder: is het buiten aangenamer dan binnen, dan kun je
   beter een deur of een raam openzetten dan de airco aanzetten. Regent het, dan gaat die
@@ -49,25 +42,39 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
   `hail`, `lightning-rainy`), of een nalooptijd nodig is zodat een bui van vijf minuten de
   regeling niet laat stuiteren, en of dit per zone aan of uit moet kunnen — een zolder
   zonder ramen heeft er niets aan.
-- **Overrides via acties** — `climate_director.set_override` (met een duur of tot de
-  volgende gebeurtenis) en `climate_director.clear_override`, plus knoppen die ze
-  aanroepen. `climate_director.evaluate` bestaat al.
-- **Poortinstellingen per zone** — nu gelden `GateSettings` voor de hele installatie. Een
-  slaapkamer wil andere aanwezigheids- en slaapregels dan een woonkamer.
-- **Suggestie voor circuitgroepering** — voorstellen welke binnenunits een buitenunit delen
-  op basis van gedeeld `device` / `via_device` / fabrikant, uitdrukkelijk als voorstel en
-  niet als feit, omdat de meeste klimaatintegraties die relatie niet blootgeven.
+- **Poortinstellingen per zone voor wakker-, rooster-, stilte- en slaapregels** — die
+  gelden nu in `GateSettings` voor de hele installatie. De keuze huishouden-vs-aanwezigheid,
+  de aanwezigheidssensor en de nalooptijd zijn al per zone; een slaapkamer wil daarnaast
+  andere slaap- en stiltevensters dan een woonkamer.
+- **Vertaal de "en nog N meer"-regel van de reparatiemelding** — `problems.summarise`
+  plakt bij meer dan vijf configuratieproblemen een hardcoded Engelse regel
+  `- ... and N more` onder de (wel vertaalde) lijst. Voor wie de interface in het
+  Nederlands of een andere taal draait, is dat de enige zin in de melding die Engels
+  blijft. Een vertaling onder `exceptions` met plaatshouder `{remaining}` lost dat op.
 
 ## Could have
 
-- **De droogstand als eigen taak** — de engine leest `dry` wel (het telt als koelen), maar
-  kiest hem nooit: er wordt alleen `heat`, `cool`, `fan_only` en `off` aangestuurd. Wie bij
-  vochtig weer bewust ontvochtigt, moet dat nu naast de integratie doen. Een zone zou een
-  derde taak moeten kunnen hebben, met een eigen aan-/uitpunt op een
-  luchtvochtigheidssensor in plaats van op een thermometer — en met de hand aan te zetten
-  voor wie geen sensor heeft. Op een niet-simultaan circuit hoort `dry` bij de koelfamilie,
-  dus die kant is al geregeld.
-
+- **Huisbreed vermogensplafond** — een maximum in watt over de hele installatie, in plaats
+  van alleen een maximum aantal units per circuit. Een grens in stuks zegt niets over wat
+  er werkelijk uit de meter loopt: drie kleine units zijn iets heel anders dan één ketel.
+  Vraagt een vermogen per bron en een rangorde bij het afkappen.
+- **Temperatuurschema per zone** — een streeftemperatuur die met de klok meebeweegt
+  (nacht koeler, ochtend warmer), in plaats van één waarde per zone die alleen door de
+  poorten aan- en uitgezet wordt.
+- **Suggestie voor circuitgroepering** — voorstellen welke binnenunits een buitenunit delen
+  op basis van gedeeld `device` / `via_device` / fabrikant, uitdrukkelijk als voorstel en
+  niet als feit, omdat de meeste klimaatintegraties die relatie niet blootgeven.
+- **Overrides via acties** — `climate_director.set_override` (met een duur of tot de
+  volgende gebeurtenis) en `climate_director.clear_override`, plus knoppen die ze
+  aanroepen. De override-schakelaar per zone bestaat al; wat ontbreekt is deze
+  actie-interface met een duur. `climate_director.evaluate` bestaat al.
+- **De droogstand als eigen taak, met een eigen drempel** — de engine leest `dry` wel (het
+  telt als koelen), maar kiest hem nooit: er wordt alleen `heat`, `cool`, `fan_only` en
+  `off` aangestuurd. Wie bij vochtig weer bewust ontvochtigt, moet dat nu naast de
+  integratie doen. Een zone zou een derde taak moeten kunnen hebben, met een eigen aan-/
+  uitpunt op een luchtvochtigheidssensor in plaats van op een thermometer — en met de hand
+  aan te zetten voor wie geen sensor heeft. Op een niet-simultaan circuit hoort `dry` bij
+  de koelfamilie, dus die kant is al geregeld.
 - **Meerdere binnensensoren per zone** — nu wijst een zone één entiteit aan. Meerdere
   sensoren met een keuze uit gemiddelde, laagste, hoogste of "de eerste die een waarde
   geeft" scheelt een handgemaakte template- of min/max-helper voor wie meerdere meters in
@@ -77,27 +84,28 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
 - **Conflictdetector** — signaleren dat units zich gedragen alsof ze een buitenunit delen
   (spontane taakwissels, terugvallende standen) en de gebruiker vragen of de
   circuitgroepering klopt.
-- **Voorverwarmen en voorkoelen** — een zone alvast op temperatuur brengen tegen de tijd
-  dat het rooster opengaat, in plaats van pas op dat moment te beginnen.
+- **Automatisch voorverwarmen en voorkoelen** — een zone alvast op temperatuur brengen
+  tegen de tijd dat het rooster opengaat, in plaats van pas op dat moment te beginnen.
+  Vooruit verwarmen en koelen met de hand bestaat al (knop per zone, de `precondition`-
+  actie en een timer die vanzelf afloopt); dit idee gaat alleen over het automatische deel.
 - **Energieprijs als bronvoorkeur** — een dynamisch tarief of een
   zonnepanelenoverschot laten meewegen in `Source.priority`, zodat de goedkoopste bron
   wint zolang die het aankan.
 - **Weersvoorspelling in het buitentemperatuurvenster** — schakelen op de verwachte
   temperatuur over enkele uren in plaats van alleen de huidige.
-- **Vochtigheid** — `dry` als eigen taak met een eigen drempel, in plaats van alleen als
-  lid van de koelfamilie.
 - **Meer conflictbeleiden** — bijvoorbeeld beurtelings (round-robin) of een vast schema
-  per dagdeel.
-- **Vertaal de "en nog N meer"-regel van de reparatiemelding** — `problems.summarise`
-  plakt bij meer dan vijf configuratieproblemen een hardcoded Engelse regel
-  `- ... and N more` onder de (wel vertaalde) lijst. Voor wie de interface in het
-  Nederlands of een andere taal draait, is dat de enige zin in de melding die Engels
-  blijft. Een vertaling onder `exceptions` met plaatshouder `{remaining}` lost dat op.
+  per dagdeel. Vier beleiden bestaan al (`priority`, `first_come`, `demand`,
+  `season_lock`); het uitbreidpunt is er.
+- **`number`-entiteiten voor de drempels per zone** — streeftemperatuur, aanpunt en
+  hysterese zijn nu alleen via de config flow te wijzigen; eigen `number`-entiteiten maken
+  ze bedienbaar zonder de hele installatie te herladen. Staat ook in `ARCHITECTURE.md`
+  onder "Nog te bouwen".
+- **Documenteren dat meerdere installaties naast elkaar mogen** — de code en de tests
+  ondersteunen al twee config entries in één Home Assistant; de handleidingen zeggen er
+  nog niets over.
 
 ## Would have
 
-- **Meerdere installaties naast elkaar** — een tweede config entry voor een ander pand,
-  met eigen zones en circuits.
 - **Leren van looptijden** — de opwarm- en afkoelsnelheid per zone meten en de dode band
   of het voorverwarmen daarop aanpassen.
 - **Balancering over circuits** — bij twee gelijkwaardige bronnen op verschillende
@@ -132,13 +140,6 @@ The history of what has already been built and changed is **not** here but in th
 - **A virtual `climate` per zone** — one control entity per room, so the target temperature
   and mode can be set straight from an ordinary thermostat card. The director then picks the
   source to match.
-- **A house-wide power ceiling** — a maximum in watts across the whole installation, rather
-  than only a maximum number of units per circuit. A limit in units says nothing about what
-  actually leaves the meter: three small units are a very different thing from one boiler.
-  Needs a wattage per source and an order in which to shed.
-- **A temperature schedule per zone** — a target that moves with the clock (cooler at
-  night, warmer in the morning), instead of one value per zone that the gates merely switch
-  on and off.
 - **Precipitation sets the "open a window" bound aside** — a zone's outdoor window is a
   thrift rule with an assumption under it: if it is nicer outside than in, you are better
   off opening a door or a window than switching the air conditioner on. When it rains that
@@ -154,25 +155,39 @@ The history of what has already been built and changed is **not** here but in th
   `lightning-rainy`), whether a grace period is needed so a five-minute shower does not
   make the regulation bounce, and whether this should be switchable per zone - an attic
   without windows gains nothing from it.
-- **Overrides through actions** — `climate_director.set_override` (with a duration or
-  until the next event) and `climate_director.clear_override`, plus buttons calling them.
-  `climate_director.evaluate` already exists.
-- **Per-zone gate settings** — `GateSettings` currently applies to the whole installation.
-  A bedroom wants different presence and sleep rules from a living room.
-- **Suggested circuit grouping** — propose which indoor units share an outdoor unit based on
-  shared `device` / `via_device` / manufacturer, explicitly as a proposal rather than a
-  fact, since most climate integrations do not expose that relationship.
+- **Per-zone gate settings for wake, schedule, quiet and sleep rules** — those currently
+  live in `GateSettings` for the whole installation. The household-vs-presence choice, the
+  presence sensor and the grace period are already per zone; a bedroom also wants different
+  sleep and quiet windows from a living room.
+- **Translate the repair notice's "and N more" line** — `problems.summarise` appends a
+  hardcoded English line `- ... and N more` under the (translated) list when there are more
+  than five configuration problems. For anyone running the interface in Dutch or another
+  language, that is the one sentence in the notice that stays English. A translation under
+  `exceptions` with a `{remaining}` placeholder solves it.
 
 ## Could have
 
-- **Drying as a duty of its own** — the engine does read `dry` (it counts as cooling) but
-  never picks it: only `heat`, `cool`, `fan_only` and `off` are commanded. Anyone
-  deliberately dehumidifying in muggy weather has to do that beside the integration. A zone
-  should be able to carry a third duty, with its own switch-on point on a humidity sensor
-  rather than on a thermometer — and switchable by hand for those without such a sensor. On
-  a non-simultaneous circuit `dry` already belongs to the cooling family, so that side is
-  settled.
-
+- **A house-wide power ceiling** — a maximum in watts across the whole installation, rather
+  than only a maximum number of units per circuit. A limit in units says nothing about what
+  actually leaves the meter: three small units are a very different thing from one boiler.
+  Needs a wattage per source and an order in which to shed.
+- **A temperature schedule per zone** — a target that moves with the clock (cooler at
+  night, warmer in the morning), instead of one value per zone that the gates merely switch
+  on and off.
+- **Suggested circuit grouping** — propose which indoor units share an outdoor unit based on
+  shared `device` / `via_device` / manufacturer, explicitly as a proposal rather than a
+  fact, since most climate integrations do not expose that relationship.
+- **Overrides through actions** — `climate_director.set_override` (with a duration or
+  until the next event) and `climate_director.clear_override`, plus buttons calling them.
+  The per-zone override switch already exists; what is missing is this action interface with
+  a duration. `climate_director.evaluate` already exists.
+- **Drying as a duty of its own, with its own threshold** — the engine does read `dry` (it
+  counts as cooling) but never picks it: only `heat`, `cool`, `fan_only` and `off` are
+  commanded. Anyone deliberately dehumidifying in muggy weather has to do that beside the
+  integration. A zone should be able to carry a third duty, with its own switch-on point on
+  a humidity sensor rather than on a thermometer — and switchable by hand for those without
+  such a sensor. On a non-simultaneous circuit `dry` already belongs to the cooling family,
+  so that side is settled.
 - **Several indoor sensors per zone** — a zone currently names one entity. Several sensors
   with a choice of average, lowest, highest or "the first one reporting a value" saves a
   hand-built template or min/max helper for anyone with more than one meter in a room.
@@ -181,26 +196,26 @@ The history of what has already been built and changed is **not** here but in th
 - **Conflict detector** — spot units behaving as though they share an outdoor unit
   (spontaneous duty swaps, modes falling back) and ask the user whether the circuit
   grouping is right.
-- **Pre-heating and pre-cooling** — bring a zone up to temperature by the time the
-  schedule opens, rather than starting only at that moment.
+- **Automatic pre-heating and pre-cooling** — bring a zone up to temperature by the time
+  the schedule opens, rather than starting only at that moment. Pre-heating and pre-cooling
+  by hand already exist (a button per zone, the `precondition` action and a timer that runs
+  out by itself); this idea is only about the automatic part.
 - **Energy price as source preference** — let a dynamic tariff or a solar surplus weigh
   into `Source.priority`, so the cheapest source wins as long as it can cope.
 - **Weather forecast in the outdoor window** — switch on the temperature expected in a few
   hours rather than only the current one.
-- **Humidity** — `dry` as a duty of its own with its own threshold, instead of only as a
-  member of the cooling family.
 - **More conflict policies** — round-robin, for instance, or a fixed schedule per part of
-  the day.
-- **Translate the repair notice's "and N more" line** — `problems.summarise` appends a
-  hardcoded English line `- ... and N more` under the (translated) list when there are more
-  than five configuration problems. For anyone running the interface in Dutch or another
-  language, that is the one sentence in the notice that stays English. A translation under
-  `exceptions` with a `{remaining}` placeholder solves it.
+  the day. Four policies already exist (`priority`, `first_come`, `demand`, `season_lock`);
+  the extension point is there.
+- **Per-zone `number` entities for the thresholds** — target temperature, switch-on point
+  and hysteresis can currently only be changed through the config flow; `number` entities
+  of their own would make them controllable without reloading the whole installation. Also
+  listed in `ARCHITECTURE.md` under "Still to build".
+- **Document that several installations may sit side by side** — the code and tests already
+  support two config entries in one Home Assistant; the manuals say nothing about it yet.
 
 ## Would have
 
-- **Several installations side by side** — a second config entry for another building,
-  with its own zones and circuits.
 - **Learning from run times** — measure each zone's heating and cooling rate and adapt the
   dead band or the pre-heating to it.
 - **Balancing across circuits** — with two equivalent sources on different circuits, share
