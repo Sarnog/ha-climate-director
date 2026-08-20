@@ -29,6 +29,8 @@ class ClimateState:
     hvac_mode: str = MODE_OFF
     current_temperature: float | None = None
     target_temperature: float | None = None
+    hvac_modes: frozenset[str] | None = None
+    """Which modes the entity reports it can run; `None` means unknown."""
     available: bool = True
     changed_at: datetime | None = None
     """When this entity last changed state, for short-cycle protection."""
@@ -42,6 +44,19 @@ class ClimateState:
     def running(self) -> bool:
         """Return whether this entity currently claims the compressor."""
         return self.family in (ModeFamily.HEAT, ModeFamily.COOL, ModeFamily.AMBIGUOUS)
+
+    def supports(self, mode: str) -> bool:
+        """Return whether this entity reports it can run `mode`.
+
+        Geen opgave betekent onbekend, en onbekend krijgt het voordeel van de
+        twijfel: de engine stuurt de modus dan gewoon, precies zoals vóór deze
+        controle bestond.
+
+        No listing means unknown, and unknown gets the benefit of the doubt:
+        the engine commands the mode anyway, exactly as before this check
+        existed.
+        """
+        return self.hvac_modes is None or mode in self.hvac_modes
 
 
 @dataclass(frozen=True, slots=True)

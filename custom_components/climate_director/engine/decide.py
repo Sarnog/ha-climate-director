@@ -34,7 +34,7 @@ _SOLO = Circuit(circuit_id="", name="", units=(), simultaneous_heat_cool=True)
 def decide(config: DirectorConfig, world: WorldState) -> Plan:
     """Return the complete, consistent end state the installation should be in."""
     wishes, refusals, shut = _collect_wishes(config, world)
-    wishes, dropped = _apply_exclusive_groups(config, wishes)
+    wishes, dropped = _apply_exclusive_groups(config, world, wishes)
 
     grants, circuit_decisions, deferrals = _resolve_circuits(config, world, wishes)
     reasons = _zone_reasons(config, grants, dropped, refusals)
@@ -94,7 +94,7 @@ def _collect_wishes(
 
 
 def _apply_exclusive_groups(
-    config: DirectorConfig, wishes: dict[str, constraints.Request]
+    config: DirectorConfig, world: WorldState, wishes: dict[str, constraints.Request]
 ) -> tuple[dict[str, constraints.Request], dict[str, constraints.Request]]:
     """Split the requests into those that keep a shared appliance and those that lose it.
 
@@ -102,6 +102,16 @@ def _apply_exclusive_groups(
     source - so this covers only appliances shared across zones. Losers are
     returned rather than discarded, so the plan can still report what they
     wanted and why they did not get it.
+
+    Een lid dat nog draait in een overgedragen zone bezet de groep. Zo'n lid
+    vraagt deze ronde niets, want de director laat hem met rust - maar een
+    ander lid mag er niet naast gaan draaien, want precies die combinatie
+    hoort de groep uit te sluiten.
+
+    A member still running in a handed-over zone occupies the group. Such a
+    member asks for nothing this round, since the director leaves it alone -
+    but another member may not start beside it, because that is exactly the
+    combination the group exists to rule out.
     """
     if not config.exclusive_groups:
         return wishes, {}
@@ -109,6 +119,14 @@ def _apply_exclusive_groups(
     kept = dict(wishes)
     dropped: dict[str, constraints.Request] = {}
     for group in config.exclusive_groups:
+        if next(
+            (source_id for source_id in group if _keeps_running(config, world, source_id)),
+            None,
+        ):
+            for request in list(kept.values()):
+                if request.source.source_id in group and request.zone.zone_id in kept:
+                    dropped[request.zone.zone_id] = kept.pop(request.zone.zone_id)
+            continue
         contenders = sorted(
             (request for request in kept.values() if request.source.source_id in group),
             key=lambda request: request.rank,
@@ -116,6 +134,28 @@ def _apply_exclusive_groups(
         for loser in contenders[1:]:
             dropped[loser.zone.zone_id] = kept.pop(loser.zone.zone_id)
     return kept, dropped
+
+
+def _keeps_running(config: DirectorConfig, world: WorldState, source_id: str) -> bool:
+    """Return whether this group member runs in a zone the director leaves alone.
+
+    Dezelfde redenering als `_keeps_claiming` bij de buitenunit: een unit in
+    een overgedragen zone, of een handbediende bron, wordt deze ronde niet
+    aangestuurd - en dus telt wat hij nú doet net zo hard als wat iemand zou
+    vragen.
+
+    The same reasoning as `_keeps_claiming` on the outdoor unit: a unit in a
+    handed-over zone, or a hand-operated source, is not commanded this round -
+    so what it does right now counts just as hard as what somebody would ask.
+    """
+    owners = [(zone, source) for zone, source in config.sources() if source.source_id == source_id]
+    if not owners:
+        return False
+    if not world.climate(owners[0][1].entity_id).running:
+        return False
+    if any(world.overridden(zone.zone_id) for zone, _ in owners):
+        return True
+    return all(not source.autostart for _, source in owners)
 
 
 def _resolve_circuits(
@@ -217,7 +257,7 @@ def _manual_conflict(
     # hand-operated appliance would ignore the group with impunity, since it
     # never files a request of its own - leaving the group a rule on paper.
     if _exclusive_rival(config, zone, source, wishes):
-        return _stand_down(config, zone, source, Reason.EXCLUSIVE_GROUP_LOST)
+        return _stand_down(config, world, zone, source, Reason.EXCLUSIVE_GROUP_LOST)
 
     circuit = config.circuit_for_entity(source.entity_id)
     if circuit is None or circuit.simultaneous_heat_cool:
@@ -233,7 +273,7 @@ def _manual_conflict(
     if not wanted or running in wanted:
         return None
 
-    return _stand_down(config, zone, source, Reason.CIRCUIT_CONFLICT_LOST)
+    return _stand_down(config, world, zone, source, Reason.CIRCUIT_CONFLICT_LOST)
 
 
 def _exclusive_rival(
@@ -252,11 +292,13 @@ def _exclusive_rival(
     return False
 
 
-def _stand_down(config: DirectorConfig, zone: Zone, source: Source, reason: Reason) -> UnitCommand:
+def _stand_down(
+    config: DirectorConfig, world: WorldState, zone: Zone, source: Source, reason: Reason
+) -> UnitCommand:
     """Return the command putting one source back to standing still."""
     return UnitCommand(
         entity_id=source.entity_id,
-        hvac_mode=_idle_mode(config, source, reason),
+        hvac_mode=_idle_mode(config, world, source, reason),
         temperature=None,
         zone_id=zone.zone_id,
         source_id=source.source_id,
@@ -366,7 +408,7 @@ def _build_commands(
         commands.append(
             UnitCommand(
                 entity_id=source.entity_id,
-                hvac_mode=_idle_mode(config, source, reason),
+                hvac_mode=_idle_mode(config, world, source, reason),
                 temperature=None,
                 zone_id=zone.zone_id,
                 source_id=source.source_id,
@@ -531,17 +573,23 @@ def _generator_commands(
     return commands
 
 
-def _idle_mode(config: DirectorConfig, source: Source, reason: Reason) -> str:
+def _idle_mode(config: DirectorConfig, world: WorldState, source: Source, reason: Reason) -> str:
     """Return how a source stands down: off, or circulating air.
 
     Fan-only is only ever offered to a zone that lost its circuit to another
     zone. A zone that is simply warm enough has nothing to circulate for, and
-    leaving its fan running would read as a fault.
+    leaving its fan running would read as a fault. And fan-only is only offered
+    when the unit reports it can run that mode; a unit that knows just heat,
+    cool and off would refuse the command, so it falls back on off.
     """
     if reason is not Reason.CIRCUIT_CONFLICT_LOST:
         return MODE_OFF
     circuit = config.circuit_for_entity(source.entity_id)
-    if circuit is not None and circuit.allow_fan_only_during_conflict:
+    if (
+        circuit is not None
+        and circuit.allow_fan_only_during_conflict
+        and world.climate(source.entity_id).supports(MODE_FAN_ONLY)
+    ):
         return MODE_FAN_ONLY
     return MODE_OFF
 

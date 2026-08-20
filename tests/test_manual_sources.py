@@ -371,19 +371,19 @@ class TestExclusiveGroupsRuleEachOtherOut:
 
 
 class TestAnExclusiveGroupBindsAManualSource:
-    """De groep moet ook gelden voor wat jij met de hand aanzet.
+    """De groep geldt twee kanten op, ook voor wat jij met de hand aanzet.
 
     Een exclusieve groep werkt op aanvragen, en een handbediende bron doet er
-    nooit een - die is uitgesloten van de bronkeuze. Zonder aparte behandeling
-    negeert hij de groep dus straffeloos: gas en slaapkamerairco draaien samen
-    en niets houdt ze tegen. Dan is de groep een regel op papier, en dat is
-    erger dan geen groep, want je denkt beschermd te zijn.
+    nooit een - die is uitgesloten van de bronkeuze. Draait hij, dan bezet hij
+    de groep: een ander lid moet wachten, net zoals hij zou wachten als dat
+    andere lid al draaide. Zo kunnen gas en slaapkamerairco nooit samen draaien,
+    wie van de twee er ook als eerste was.
 
     An exclusive group works on requests, and a hand-operated source never files
-    one - it is excluded from source selection. Without separate handling it
-    therefore ignores the group with impunity: gas and the bedroom unit run
-    together and nothing stops them. The group is then a rule on paper, which is
-    worse than no group, since you believe yourself protected.
+    one - it is excluded from source selection. When it runs it occupies the
+    group: another member has to wait, just as it would if that other member
+    were already running. That way gas and the bedroom unit can never run
+    together, whichever of the two was there first.
     """
 
     def _config(self, *, grouped: bool = True) -> DirectorConfig:
@@ -424,22 +424,28 @@ class TestAnExclusiveGroupBindsAManualSource:
         )
         return decide(config, world)
 
-    def test_it_stands_down_for_the_gas(self) -> None:
-        """The living room wants the boiler; the bedroom unit is in its group."""
+    def test_a_running_one_occupies_the_group(self) -> None:
+        """Draait de slaapkamerairco, dan wacht het gas.
+
+        When the bedroom unit runs, the boiler waits.
+        """
         result = self._plan(self._config(), bedroom="heat")
-        command = command_for(result, BEDROOM)
-        assert command is not None
-        assert family_of(command.hvac_mode) is ModeFamily.NEUTRAL
-        assert command.reason is Reason.EXCLUSIVE_GROUP_LOST
+        assert command_for(result, BEDROOM) is None
+        living = result.decision_for("woonkamer")
+        assert living is not None
+        assert living.reason is Reason.EXCLUSIVE_GROUP_LOST
 
     def test_even_when_they_do_the_same_thing(self) -> None:
         """No circuit and the same duty: only the group rules this out."""
         result = self._plan(self._config(), bedroom="heat")
-        assert command_for(result, BEDROOM) is not None
+        assert command_for(result, BEDROOM) is None
 
-    def test_it_also_stands_down_while_cooling(self) -> None:
+    def test_it_also_occupies_the_group_while_cooling(self) -> None:
         result = self._plan(self._config(), bedroom="cool")
-        assert command_for(result, BEDROOM) is not None
+        assert command_for(result, BEDROOM) is None
+        living = result.decision_for("woonkamer")
+        assert living is not None
+        assert living.reason is Reason.EXCLUSIVE_GROUP_LOST
 
     def test_without_the_group_it_is_left_alone(self) -> None:
         """Two appliances in separate rooms may run together; that is normal."""
@@ -448,8 +454,8 @@ class TestAnExclusiveGroupBindsAManualSource:
     def test_an_idle_one_is_not_touched(self) -> None:
         assert command_for(self._plan(self._config(), bedroom="off"), BEDROOM) is None
 
-    def test_the_gas_still_gets_its_turn(self) -> None:
-        command = command_for(self._plan(self._config(), bedroom="heat"), "climate.gas")
+    def test_the_gas_still_gets_its_turn_when_the_bedroom_is_idle(self) -> None:
+        command = command_for(self._plan(self._config(), bedroom="off"), "climate.gas")
         assert command is not None
         assert family_of(command.hvac_mode) is ModeFamily.HEAT
 

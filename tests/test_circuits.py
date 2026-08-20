@@ -24,6 +24,7 @@ from custom_components.climate_director.engine import (
     MODE_HEAT,
     MODE_OFF,
     Circuit,
+    ClimateState,
     ConflictPolicy,
     DirectorConfig,
     ModeFamily,
@@ -746,3 +747,51 @@ def test_idle_modes_do_not_claim_a_circuit(mode: str) -> None:
     circuit = multi_split("c", "woonkamer")
     world = make_world(climates={unit("woonkamer"): climate(mode)})
     assert constraints.active_family(world, circuit) is ModeFamily.NEUTRAL
+
+
+class TestFanOnlySupport:
+    """Fan-only wordt alleen gegeven aan een unit die de modus ook kent.
+
+    Fan-only is only handed to a unit that actually knows the mode.
+    """
+
+    def _config(self) -> DirectorConfig:
+        return DirectorConfig(
+            zones=rooms("woonkamer", "zolder"),
+            circuits=(
+                multi_split(
+                    "multisplit",
+                    "woonkamer",
+                    "zolder",
+                    allow_fan_only_during_conflict=True,
+                ),
+            ),
+        )
+
+    def _world(self, modes: frozenset[str] | None) -> object:
+        return make_world(
+            indoor={"woonkamer": WANTS_HEAT, "zolder": WANTS_COOL},
+            climates={
+                unit("woonkamer"): climate(MODE_OFF),
+                unit("zolder"): ClimateState(hvac_mode=MODE_OFF, hvac_modes=modes),
+            },
+        )
+
+    def test_a_unit_without_fan_only_falls_back_to_off(self) -> None:
+        plan = decide(self._config(), self._world(frozenset({"heat", "cool", "off"})))
+        attic = plan.command_for(unit("zolder"))
+        assert attic is not None and attic.hvac_mode == MODE_OFF
+
+    def test_a_unit_with_fan_only_keeps_it(self) -> None:
+        plan = decide(self._config(), self._world(frozenset({"heat", "cool", "fan_only", "off"})))
+        attic = plan.command_for(unit("zolder"))
+        assert attic is not None and attic.hvac_mode == MODE_FAN_ONLY
+
+    def test_an_unknown_mode_list_still_gets_fan_only(self) -> None:
+        """Geen opgave betekent onbekend, en onbekend krijgt het voordeel.
+
+        No listing means unknown, and unknown gets the benefit of the doubt.
+        """
+        plan = decide(self._config(), self._world(None))
+        attic = plan.command_for(unit("zolder"))
+        assert attic is not None and attic.hvac_mode == MODE_FAN_ONLY
