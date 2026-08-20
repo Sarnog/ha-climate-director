@@ -276,6 +276,11 @@ par exemple). Le directeur :
 - **ne l'éteint que** lorsqu'il exécute une fonction que l'unité extérieure
   partagée ne peut pas admettre.
 
+Si une fonction ne peut être assurée que par un tel appareil, l'intégration le
+signale une fois sous *Réparations*. Confirmez l'avis et il ne reviendra pas —
+même après un redémarrage. Si la zone gagne plus tard une nouvelle fonction
+manuelle, un nouvel avis suivra.
+
 ## Étape 6 — Circuits de climatisation
 
 Nécessaire seulement quand des unités intérieures partagent une unité

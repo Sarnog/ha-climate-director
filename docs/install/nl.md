@@ -271,6 +271,16 @@ aanwezigheidssensor). De director:
 - **zet hem alleen uit** als hij een taak draait die de gedeelde buitenunit
   niet toestaat.
 
+Zit er een taak die alleen zo’n apparaat kan, dan meldt de integratie dat één
+keer onder *Reparaties*. Bevestig je die melding, dan blijft hij weg — ook na
+een herstart. Krijgt de zone er later een nieuwe handbediende taak bij, dan
+volgt er opnieuw één melding.
+
+Zit er een taak die alleen zo’n apparaat kan, dan meldt de integratie dat één
+keer onder *Reparaties*. Bevestig je die melding, dan blijft hij weg — ook na
+een herstart. Krijgt de zone er later een nieuwe handbediende taak bij, dan
+volgt er opnieuw één melding.
+
 ## Stap 6 — Airco-circuits
 
 Alleen nodig als binnenunits een buitenunit delen. Heeft elke unit zijn eigen

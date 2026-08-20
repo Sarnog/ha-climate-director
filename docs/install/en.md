@@ -272,6 +272,16 @@ director:
 - **switches it off only** when it runs a duty the shared outdoor unit cannot
   allow.
 
+If a duty can only be done by such an appliance, the integration reports that
+once under *Repairs*. Confirm the notice and it stays away — across restarts
+too. If the zone later gains a new hand-operated duty, one fresh notice
+follows.
+
+If a duty can only be done by such an appliance, the integration reports that
+once under *Repairs*. Confirm the notice and it stays away — across restarts
+too. If the zone later gains a new hand-operated duty, one fresh notice
+follows.
+
 ## Step 6 — Air conditioning circuits
 
 Only needed when indoor units share an outdoor unit. If every unit has its own,

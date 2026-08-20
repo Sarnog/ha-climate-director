@@ -273,6 +273,11 @@ ejemplo). El director:
 - **solo lo apaga** cuando ejecuta una función que la unidad exterior
   compartida no admite.
 
+Si una función solo puede hacerla un aparato así, la integración lo avisa una
+vez bajo *Reparaciones*. Confirma el aviso y no volverá — tampoco tras un
+reinicio. Si la zona gana luego una nueva función manual, llegará un aviso
+nuevo.
+
 ## Paso 6 — Circuitos de aire acondicionado
 
 Solo necesario cuando unidades interiores comparten una unidad exterior. Si

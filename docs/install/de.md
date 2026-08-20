@@ -276,6 +276,16 @@ Anwesenheitssensor). Der Director:
 - **schaltet es nur aus**, wenn es eine Aufgabe fährt, die das gemeinsame
   Außengerät nicht zulässt.
 
+Kann eine Aufgabe nur von so einem Gerät erledigt werden, meldet die
+Integration das einmal unter *Reparaturen*. Bestätigst du den Hinweis, bleibt
+er weg — auch nach einem Neustart. Kommt später eine neue handbediente Aufgabe
+in der Zone dazu, folgt ein neuer Hinweis.
+
+Kann eine Aufgabe nur von so einem Gerät erledigt werden, meldet die
+Integration das einmal unter *Reparaturen*. Bestätigst du den Hinweis, bleibt
+er weg — auch nach einem Neustart. Kommt später eine neue handbediente Aufgabe
+in der Zone dazu, folgt ein neuer Hinweis.
+
 ## Schritt 6 — Klimakreisläufe
 
 Nur nötig, wenn Innengeräte sich ein Außengerät teilen. Hat jedes Gerät sein
