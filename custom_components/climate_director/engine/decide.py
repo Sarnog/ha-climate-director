@@ -33,7 +33,7 @@ _SOLO = Circuit(circuit_id="", name="", units=(), simultaneous_heat_cool=True)
 
 def decide(config: DirectorConfig, world: WorldState) -> Plan:
     """Return the complete, consistent end state the installation should be in."""
-    wishes, refusals, shut = _collect_wishes(config, world)
+    wishes, refusals, shut, woulds = _collect_wishes(config, world)
     wishes, dropped = _apply_exclusive_groups(config, world, wishes)
 
     grants, circuit_decisions, deferrals = _resolve_circuits(config, world, wishes)
@@ -42,7 +42,7 @@ def decide(config: DirectorConfig, world: WorldState) -> Plan:
     commands, untouched = _build_commands(config, world, grants, reasons, wishes)
     return Plan(
         commands=commands,
-        zones=_build_zone_decisions(config, world, wishes, dropped, grants, refusals, shut),
+        zones=_build_zone_decisions(config, world, wishes, dropped, grants, refusals, shut, woulds),
         circuits=circuit_decisions,
         deferrals=deferrals,
         untouched=untouched,
@@ -51,28 +51,40 @@ def decide(config: DirectorConfig, world: WorldState) -> Plan:
 
 def _collect_wishes(
     config: DirectorConfig, world: WorldState
-) -> tuple[dict[str, constraints.Request], dict[str, Reason], dict[str, tuple[Reason, ...]]]:
-    """Return each zone's request, its refusal reason, and every gate shut on it.
+) -> tuple[
+    dict[str, constraints.Request],
+    dict[str, Reason],
+    dict[str, tuple[Reason, ...]],
+    dict[str, ModeFamily],
+]:
+    """Return each zone's request, its refusal reason, every gate shut on it,
+    and the duty it would want regardless of those gates.
 
     De dichte poorten worden voor elke zone opgehaald, ook voor de zones die
     gewoon doorlopen: dan staat er een lege lijst, en dat is precies wat een
-    zone zonder hindernis hoort te melden.
+    zone zonder hindernis hoort te melden. De gewenste taak wordt óók voor
+    geblokkeerde zones uitgerekend: zonder die wens valt niet te zien of een
+    dichte poort een kamer tegenhoudt die anders wél geregeld zou worden.
 
     The shut gates are collected for every zone, including the ones that carry
     straight on: those get an empty list, which is exactly what a zone without
-    an obstacle should report.
+    an obstacle should report. The wanted duty is computed for blocked zones
+    too: without that wish there is no telling whether a shut gate is holding
+    back a room that would otherwise be regulated.
     """
     wishes: dict[str, constraints.Request] = {}
     refusals: dict[str, Reason] = {}
     shut: dict[str, tuple[Reason, ...]] = {}
+    woulds: dict[str, ModeFamily] = {}
 
     for zone in config.zones:
         shut[zone.zone_id] = gates.closed(config, world, zone)
+        demand = hysteresis.evaluate(zone, world, hysteresis.running_family(zone, world))
+        woulds[zone.zone_id] = demand.family
         if shut[zone.zone_id]:
             refusals[zone.zone_id] = shut[zone.zone_id][0]
             continue
 
-        demand = hysteresis.evaluate(zone, world, hysteresis.running_family(zone, world))
         if demand.family is ModeFamily.NEUTRAL:
             refusals[zone.zone_id] = demand.reason
             continue
@@ -90,7 +102,7 @@ def _collect_wishes(
             priority=world.priority_for(zone.zone_id, zone.priority),
         )
 
-    return wishes, refusals, shut
+    return wishes, refusals, shut, woulds
 
 
 def _apply_exclusive_groups(
@@ -621,12 +633,14 @@ def _build_zone_decisions(
     grants: dict[str, constraints.Grant],
     refusals: dict[str, Reason],
     shut: dict[str, tuple[Reason, ...]],
+    woulds: dict[str, ModeFamily],
 ) -> tuple[ZoneDecision, ...]:
     """Return one decision per zone, saying what it asked for and what it got."""
     decisions: list[ZoneDecision] = []
 
     for zone in config.zones:
         request = wishes.get(zone.zone_id)
+        would = woulds.get(zone.zone_id, ModeFamily.NEUTRAL)
 
         if request is None:
             # A zone that lost a shared appliance still had a wish; keep it, so
@@ -645,6 +659,7 @@ def _build_zone_decisions(
                         else refusals.get(zone.zone_id, Reason.SATISFIED)
                     ),
                     closed_gates=shut.get(zone.zone_id, ()),
+                    would_want=would,
                 )
             )
             continue
@@ -659,6 +674,7 @@ def _build_zone_decisions(
                 reason=grant.reason if grant is not None else Reason.NO_SOURCE_AVAILABLE,
                 closed_gates=shut.get(zone.zone_id, ()),
                 passed_over=sources.passed_over(zone, request.family, world),
+                would_want=would,
             )
         )
 

@@ -5,11 +5,14 @@ Tests for the decision function as a whole.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from conftest import (
     ATTIC,
     BEDROOM,
     GAS,
     LIVING,
+    away,
     climate,
     everyone_up,
     house,
@@ -95,6 +98,55 @@ class TestEveryEntityIsCommanded:
             "zolder",
             "slaapkamer",
         }
+
+
+class TestHeldBack:
+    """Wanneer een dichte poort een gewillige kamer tegenhoudt, en wanneer niet."""
+
+    def test_a_shut_gate_holds_back_a_room_that_wants_heat(self) -> None:
+        """Niemand thuis en een koude kamer: de poort houdt een wens tegen."""
+        plan = decide(house(), cold_house(residents={"danny": away(), "nancy": away()}))
+        decision = plan.decision_for("woonkamer")
+        assert decision is not None
+        assert decision.held_back is True
+        assert decision.would_want is ModeFamily.HEAT
+
+    def test_a_shut_gate_in_a_comfortable_room_is_no_blockage(self) -> None:
+        """Niemand thuis, maar de kamer ligt al goed: niets tegengehouden."""
+        world = cold_house(
+            residents={"danny": away(), "nancy": away()},
+            indoor={"woonkamer": 23.0, "zolder": 23.0, "slaapkamer": 23.0},
+        )
+        decision = decide(house(), world).decision_for("woonkamer")
+        assert decision is not None
+        assert decision.held_back is False
+        assert decision.would_want is ModeFamily.NEUTRAL
+
+    def test_an_override_is_not_a_blockage(self) -> None:
+        """Wie een zone overdraagt wil geen 'geblokkeerd'-melder zien branden."""
+        decision = decide(house(), cold_house(zone_overrides={"woonkamer": True})).decision_for(
+            "woonkamer"
+        )
+        assert decision is not None
+        assert decision.held_back is False
+
+    def test_the_master_switch_is_not_a_blockage(self) -> None:
+        """De hoofdschakelaar uit is een bewuste ingreep, geen blokkade."""
+        decision = decide(house(), cold_house(master_enabled=False)).decision_for("woonkamer")
+        assert decision is not None
+        assert decision.held_back is False
+
+    def test_a_zone_that_lost_its_circuit_stays_blocked_not_held_back(self) -> None:
+        """Het oude 'vroeg meer dan hij kreeg' blijft gewoon bestaan."""
+        config = replace(
+            house(),
+            circuits=(replace(house().circuits[0], max_concurrent_units=1),),
+        )
+        plan = decide(config, cold_house(outdoor=10.0))
+        decision = plan.decision_for("zolder")
+        assert decision is not None
+        assert decision.blocked is True
+        assert decision.held_back is False
 
 
 class TestCommandOrder:

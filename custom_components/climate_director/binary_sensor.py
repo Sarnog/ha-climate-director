@@ -35,7 +35,20 @@ async def async_setup_entry(
 
 
 class ZoneBlockedSensor(ClimateDirectorEntity, BinarySensorEntity):
-    """On when a zone wanted something it did not get."""
+    """On when a zone is held back from regulating.
+
+    Twee manieren: het vroeg meer dan het kreeg (bijvoorbeeld een circuitconflict),
+    of een dichte poort houdt een zone tegen die wél had willen regelen. Dat
+    tweede kijkt naar de dode band: een open raam in een kamer die toch al op
+    temperatuur is, is geen blokkade om te melden. De hoofdschakelaar en de
+    override tellen nooit als blokkade: dat zijn bewuste ingrepen.
+
+    Two ways: it asked for more than it got (a circuit conflict, say), or a
+    shut gate holds back a zone that did want to regulate. That second one
+    honours the dead band: an open window in a room that is comfortable anyway
+    is no blockage to report. The master switch and the override never count
+    as a blockage: those are deliberate acts.
+    """
 
     _attr_translation_key = "zone_blocked"
     _attr_icon = "mdi:hand-back-left"
@@ -49,24 +62,30 @@ class ZoneBlockedSensor(ClimateDirectorEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool | None:
-        """Return whether this zone got less than it asked for."""
+        """Return whether this zone is being held back from regulating."""
         plan = self.coordinator.data
         if plan is None:
             return None
         decision = plan.decision_for(self._zone_id)
-        return decision.blocked if decision else None
+        if decision is None:
+            return None
+        return decision.blocked or decision.held_back
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the cause, plus every gate shut on this zone.
+        """Return the cause, the wish, and every gate shut on this zone.
 
-        `reason` is de eerste hindernis; `closed_gates` zijn ze allemaal. Bij
-        het inrichten scheelt dat een ronde per poort: je zet het raam dicht,
-        kijkt weer, en vindt dan pas dat er ook niemand thuis is.
+        `reason` is de eerste hindernis; `closed_gates` zijn ze allemaal, en
+        `would_want` is wat de temperatuurregeling gewild zou hebben als die
+        poorten open stonden. Bij het inrichten scheelt dat een ronde per
+        poort: je zet het raam dicht, kijkt weer, en vindt dan pas dat er ook
+        niemand thuis is.
 
-        `reason` is the first obstacle; `closed_gates` are all of them. While
-        setting up that saves a round per gate: you close the window, look
-        again, and only then find that nobody is home either.
+        `reason` is the first obstacle; `closed_gates` are all of them, and
+        `would_want` is what the temperature regulation would have wanted had
+        those gates stood open. While setting up that saves a round per gate:
+        you close the window, look again, and only then find that nobody is
+        home either.
         """
         plan = self.coordinator.data
         if plan is None:
@@ -77,6 +96,7 @@ class ZoneBlockedSensor(ClimateDirectorEntity, BinarySensorEntity):
         return {
             "reason": decision.reason.value,
             "closed_gates": [reason.value for reason in decision.closed_gates],
+            "would_want": decision.would_want.value,
         }
 
 

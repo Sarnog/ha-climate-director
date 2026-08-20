@@ -448,25 +448,48 @@ class TestTheReporting:
     async def test_the_blocked_sensor_names_the_gate_that_held_the_zone_back(
         self, home: LiveHome
     ) -> None:
-        """De attributen noemen de poort, ook als de melder zelf uit blijft.
+        """De melder gaat nu ook aan bij een dichte poort, en noemt hem.
 
-        `is_on` volgt "vroeg meer dan hij kreeg", en een zone met een dichte
-        poort vraagt niets - die komt niet eens aan zijn wens toe. De reden en
-        de lijst dichte poorten staan er wel, en dat is waar je bij het
-        inrichten naar kijkt.
+        Een zone met een dichte poort vraagt niets en kreeg dus niets te
+        weinig; de melder keek alleen daarnaar en bleef uit terwijl de kamer
+        wél iets nodig had. Nu telt ook "poort dicht terwijl de kamer buiten
+        zijn dode band ligt". De attributen noemen de poort en wat de kamer
+        gewild zou hebben.
 
-        The attributes name the gate, even while the sensor itself stays off.
-        `is_on` follows "asked for more than it got", and a zone with a shut
-        gate asks for nothing - it never gets as far as its wish. The reason
-        and the list of shut gates are there, and that is what you look at
-        while setting up.
+        The sensor now also comes on for a shut gate, and names it. A zone
+        with a shut gate asks for nothing and was therefore short-changed
+        nothing; the sensor only looked at that and stayed off while the room
+        did need something. Now "gate shut while the room sits outside its
+        dead band" counts too. The attributes name the gate and what the room
+        would have wanted.
         """
+        assert home.value("zone_woonkamer_blocked") == "off"
         assert home.values("zone_woonkamer_blocked")["closed_gates"] == []
         home.set("binary_sensor.achterdeur", "on")
         await home.evaluate()
+        assert home.value("zone_woonkamer_blocked") == "on"
         attributes = home.values("zone_woonkamer_blocked")
         assert attributes["reason"] == "opening_open"
         assert attributes["closed_gates"] == ["opening_open"]
+        assert attributes["would_want"] == "heat"
+
+    async def test_a_shut_gate_in_a_comfortable_room_does_not_light_the_sensor(
+        self, home: LiveHome
+    ) -> None:
+        """Een open raam in een kamer die al op temperatuur is, blokkeert niets."""
+        home.set("binary_sensor.achterdeur", "on")
+        home.set("sensor.woonkamer", "22.0")
+        await home.evaluate()
+        assert home.value("zone_woonkamer_blocked") == "off"
+
+    async def test_an_override_is_not_a_blockage(self, home: LiveHome) -> None:
+        """Wie een zone overdraagt wil geen 'geblokkeerd'-melder zien branden."""
+        home.set("binary_sensor.achterdeur", "on")
+        await home.evaluate()
+        assert home.value("zone_woonkamer_blocked") == "on"
+        home.coordinator.zone_overrides["woonkamer"] = True
+        await home.evaluate()
+        assert home.value("zone_woonkamer_blocked") == "off"
 
     async def test_the_stand_in_sensor_lights_up_when_it_takes_over(self, home: LiveHome) -> None:
         assert home.value("zone_woonkamer_fallback") == "off"

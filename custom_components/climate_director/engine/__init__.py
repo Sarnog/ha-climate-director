@@ -51,6 +51,7 @@ from .models import (
     validate,
 )
 from .plan import (
+    HOLDING_GATES,
     WAITING_REASONS,
     CircuitDecision,
     Deferral,
@@ -88,6 +89,7 @@ __all__ = [
     "Plan",
     "Problem",
     "Reason",
+    "HOLDING_GATES",
     "WAITING_REASONS",
     "Resident",
     "ResidentState",
