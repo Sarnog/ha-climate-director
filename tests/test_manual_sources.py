@@ -31,6 +31,7 @@ from custom_components.climate_director.engine import (
     Source,
     Zone,
     decide,
+    manual_only_problems,
     validate,
 )
 from custom_components.climate_director.engine.families import ModeFamily, family_of
@@ -164,22 +165,23 @@ class TestTheZoneItself:
         bedroom = next(item for item in result.zones if item.zone_id == "slaapkamer")
         assert bedroom.granted is ModeFamily.NEUTRAL
 
-    def test_a_zone_with_only_manual_sources_is_reported(self) -> None:
-        """Een zone die alleen handbediend kan, hoort in de controlelijst te staan.
+    def test_a_zone_with_only_manual_sources_is_sound_but_noticed(self) -> None:
+        """Een zone die alleen handbediend kan, is geen fout maar hoort een melding.
 
         Zo'n zone draait inderdaad nooit uit zichzelf - en dat mag de bedoeling
-        zijn, maar dan hoort de gebruiker dat zwart-op-wit te zien. Van buiten
-        is zo'n installatie namelijk niet te onderscheiden van een zone waarvan
-        iemand per ongeluk automatisch starten heeft uitgezet.
+        zijn. De controlelijst hoort er daarom schoon over te blijven; de
+        eenmalige melding (`manual_only_problems`) noemt hem wél, zodat de
+        gebruiker weet dat dit zo ingesteld staat.
 
         Such a zone indeed never runs of its own accord - and that may well be
-        the point, but then the user should see that in black and white. From
-        the outside such a setup is indistinguishable from a zone where somebody
-        accidentally switched automatic start off.
+        the point. The problem list should therefore stay clean about it; the
+        one-time notice (`manual_only_problems`) does name it, so the user knows
+        this is how it is set up.
         """
-        complaints = [str(item) for item in validate(house())]
-        assert complaints, complaints
-        assert all("automatic start off" in item for item in complaints), complaints
+        assert validate(house()) == ()
+        noticed = [str(item) for item in manual_only_problems(house())]
+        assert noticed, noticed
+        assert all("automatic start off" in item for item in noticed), noticed
 
     def test_a_zone_with_one_of_each_is_sound(self) -> None:
         config = DirectorConfig(

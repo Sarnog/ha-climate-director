@@ -362,8 +362,7 @@ SEEDS = (20260101, 20260707)
 @pytest.fixture(scope="module")
 def winters():
     """Return two Januaries, each on its own seed."""
-    problems = [str(item) for item in validate(house())]
-    assert problems and all("automatic start off" in item for item in problems), problems
+    assert not validate(house()), validate(house())
     return [run_month(WINTER_SCENARIO, seed=seed) for seed in SEEDS]
 
 

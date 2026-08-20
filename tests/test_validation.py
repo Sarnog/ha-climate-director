@@ -30,6 +30,7 @@ from custom_components.climate_director.engine import (
     Source,
     TimeWindow,
     Zone,
+    manual_only_problems,
     validate,
 )
 
@@ -344,7 +345,16 @@ class TestSwitchTimingsThatNeverApply:
 
 
 class TestOnlyManualSources:
-    """A zone with only hand-operated sources can never start, so it is named."""
+    """A zone with only hand-operated sources is no error, but it is noticed.
+
+    `validate()` hoort schoon te blijven: zo'n zone mag de bedoeling zijn. De
+    aparte `manual_only_problems()` levert wél de taken op waar de eenmalige
+    melding over gaat.
+
+    `validate()` should stay clean: such a zone may be the point. The separate
+    `manual_only_problems()` does return the duties the one-time notice is
+    about.
+    """
 
     def _config(self, autostart: bool, role: object = None) -> DirectorConfig:
         from custom_components.climate_director.engine.models import SourceRole
@@ -365,11 +375,18 @@ class TestOnlyManualSources:
             ),
         )
 
-    def test_a_zone_with_only_manual_sources_is_reported(self) -> None:
-        assert problem(self._config(autostart=False), "automatic start off")
+    def _manual(self, config: DirectorConfig, fragment: str) -> bool:
+        return any(fragment in str(item) for item in manual_only_problems(config))
+
+    def test_a_zone_with_only_manual_sources_is_listed_for_the_notice(self) -> None:
+        assert self._manual(self._config(autostart=False), "automatic start off")
+
+    def test_it_stays_out_of_validate(self) -> None:
+        """De controlelijst blijft leeg; dit is geen blijvend probleem."""
+        assert validate(self._config(autostart=False)) == ()
 
     def test_one_automatic_source_is_enough(self) -> None:
-        assert not problem(self._config(autostart=True), "automatic start off")
+        assert not self._manual(self._config(autostart=True), "automatic start off")
 
     def test_a_manual_cooler_next_to_an_automatic_heater_is_fine_without_cooling(self) -> None:
         """Zolang de zone niet vraagt te koelen, is de handbediende koeler geen dood spoor.
@@ -390,13 +407,13 @@ class TestOnlyManualSources:
                 ),
             ),
         )
-        assert not problem(config, "automatic start off")
+        assert not self._manual(config, "automatic start off")
 
-    def test_a_duty_covered_only_by_manual_sources_is_reported(self) -> None:
-        """Koelen dat alleen een handbediend apparaat kan, is een stille dode stand.
+    def test_a_duty_covered_only_by_manual_sources_is_listed(self) -> None:
+        """Koelen dat alleen een handbediend apparaat kan, hoort in de melding.
 
-        Cooling that only a hand-operated appliance can deliver is a quietly dead
-        duty, even when heating starts fine.
+        Cooling that only a hand-operated appliance can deliver belongs in the
+        notice, even when heating starts fine.
         """
         from custom_components.climate_director.engine.models import SourceRole
 
@@ -413,4 +430,5 @@ class TestOnlyManualSources:
                 ),
             ),
         )
-        assert problem(config, "automatic start off")
+        assert self._manual(config, "automatic start off")
+        assert validate(config) == ()

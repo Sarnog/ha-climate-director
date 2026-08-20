@@ -24,7 +24,18 @@ import re
 import pytest
 
 from custom_components.climate_director import problems
-from custom_components.climate_director.const import EVENT_PRECONDITION_REFUSED
+from custom_components.climate_director.const import (
+    CONF_MANUAL_SOURCES_SEEN,
+    EVENT_PRECONDITION_REFUSED,
+)
+from custom_components.climate_director.engine import (
+    DirectorConfig,
+    ModeSettings,
+    Source,
+    Zone,
+    manual_only_problems,
+)
+from custom_components.climate_director.repairs import ManualSourcesFlow
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 COMPONENT = ROOT / "custom_components" / "climate_director"
@@ -100,6 +111,125 @@ class TestSomebodyListening:
     def test_the_last_installation_leaving_clears_it(self, registry: Registry) -> None:
         problems.async_clear_watchers(hass_with(0))
         assert registry.deleted == [problems.UNWATCHED_ISSUE]
+
+
+def manual_house(*, autostart: bool = False) -> DirectorConfig:
+    """Return a house whose only bedroom source is hand-operated."""
+    return DirectorConfig(
+        zones=(
+            Zone(
+                "woonkamer",
+                "Woonkamer",
+                "sensor.woonkamer",
+                sources=(Source("w", "climate.huiskamer"),),
+                heat=ModeSettings(21.0, 20.0),
+            ),
+            Zone(
+                "slaapkamer",
+                "Slaapkamer",
+                "sensor.slaapkamer",
+                sources=(Source("s", "climate.master_bedroom", autostart=autostart),),
+                heat=ModeSettings(21.0, 20.0),
+                cool=ModeSettings(23.0, 24.0),
+            ),
+        ),
+    )
+
+
+class TestTheHandOperatedNotice:
+    """De eenmalige melding voor taken die alleen handbediend kunnen.
+
+    The one-time notice for duties that can only be delivered by hand.
+    """
+
+    @pytest.fixture(autouse=True)
+    def _no_translations(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Fall back to the English problem text; the notice text is not tested here."""
+        monkeypatch.setattr(problems.texts, "lookup", lambda hass, code: None)
+
+    def test_it_raises_the_notice(self, registry: Registry) -> None:
+        config = manual_house()
+        problems.async_report_manual_sources(None, "entry", "Climate Director", {}, config)
+        issue_id, kwargs = registry.created[0]
+        assert issue_id == "manual_sources_entry"
+        assert kwargs["is_fixable"] is True
+        assert kwargs["translation_key"] == "manual_sources"
+        assert kwargs["data"]["entry_id"] == "entry"
+        assert kwargs["data"]["signature"] == problems._manual_signature(
+            manual_only_problems(config)
+        )
+
+    def test_a_matching_acknowledgement_stays_quiet(self, registry: Registry) -> None:
+        config = manual_house()
+        signature = problems._manual_signature(manual_only_problems(config))
+        problems.async_report_manual_sources(
+            None, "entry", "Climate Director", {CONF_MANUAL_SOURCES_SEEN: signature}, config
+        )
+        assert not registry.created
+        assert registry.deleted == ["manual_sources_entry"]
+
+    def test_a_changed_situation_is_a_new_notice(self, registry: Registry) -> None:
+        config = manual_house()
+        problems.async_report_manual_sources(
+            None, "entry", "Climate Director", {CONF_MANUAL_SOURCES_SEEN: "slaapkamer:heat"}, config
+        )
+        assert registry.created
+
+    def test_no_hand_operated_duties_clears_the_notice(self, registry: Registry) -> None:
+        config = manual_house(autostart=True)
+        problems.async_report_manual_sources(None, "entry", "Climate Director", {}, config)
+        assert not registry.created
+        assert registry.deleted == ["manual_sources_entry"]
+
+
+class TestTheHandOperatedFixFlow:
+    """De bevestiging die de melding voorgoed oplost.
+
+    The confirmation that resolves the notice for good.
+    """
+
+    def _hass(self):
+        class Entries:
+            def __init__(self) -> None:
+                self.entry = None
+                self.updated = None
+
+            def async_get_entry(self, entry_id: str):
+                return self.entry
+
+            def async_update_entry(self, entry, options=None):
+                entry.options = dict(options)
+                self.updated = dict(entry.options)
+
+        entries = Entries()
+        entries.entry = type("Entry", (), {"options": {"existing": True}})()
+
+        class Hass:
+            config_entries = entries
+
+        return entries, Hass()
+
+    async def test_confirming_stores_the_fingerprint(self) -> None:
+        entries, hass = self._hass()
+        flow = ManualSourcesFlow()
+        flow.hass = hass
+        flow.data = {"entry_id": "abc", "signature": "slaapkamer:cool,slaapkamer:heat"}
+        result = await flow.async_step_init(user_input={})
+        assert result["type"] == "create_entry"
+        assert entries.updated == {
+            "existing": True,
+            CONF_MANUAL_SOURCES_SEEN: "slaapkamer:cool,slaapkamer:heat",
+        }
+
+    async def test_an_unknown_entry_still_finishes(self) -> None:
+        entries, hass = self._hass()
+        entries.entry = None
+        flow = ManualSourcesFlow()
+        flow.hass = hass
+        flow.data = {"entry_id": "missing", "signature": "x"}
+        result = await flow.async_step_init(user_input={})
+        assert result["type"] == "create_entry"
+        assert entries.updated is None
 
 
 class TestTheNoticeIsUsable:
