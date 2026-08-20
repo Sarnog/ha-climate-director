@@ -13,17 +13,11 @@ prioriteren of af te wijzen.
 De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar in de
 [release notes](https://github.com/Sarnog/ha-climate-director/releases) van elke versie.
 
+De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
+[`ARCHITECTURE.md`](ARCHITECTURE.md) onder "Nog te bouwen".
+
 ## Should have
 
-- **De "geblokkeerd"-melder gaat ook aan bij een dichte poort** — `binary_sensor.*_<zone>_geblokkeerd`
-  volgt nu "vroeg meer dan hij kreeg", en een zone met een dichte poort vraagt niets: die
-  komt niet eens aan zijn wens toe. Daardoor staat de melder juist uit in alle gevallen
-  waarvoor zijn eigen attribuut `closed_gates` bestaat — een openstaand raam, niemand
-  thuis, iedereen in bed, buiten het rooster, stille uren, een lege kamer. De reden en de
-  lijst dichte poorten staan er wél in, dus wie de attributen bekijkt ziet alles; wie een
-  automatisering op de sensor zelf bouwt krijgt nooit een melding. Te overwegen: de melder
-  aan laten gaan zodra er een poort dicht staat én de kamer buiten zijn dode band ligt, of
-  er een tweede melder naast zetten zodat de betekenis van de bestaande niet verschuift.
 - **Virtuele `climate` per zone** — één bedieningsentiteit per ruimte, waarmee de gewenste
   temperatuur en stand rechtstreeks op een gewone thermostaatkaart te bedienen zijn. De
   director kiest daar dan de bron bij.
@@ -46,11 +40,6 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
   gelden nu in `GateSettings` voor de hele installatie. De keuze huishouden-vs-aanwezigheid,
   de aanwezigheidssensor en de nalooptijd zijn al per zone; een slaapkamer wil daarnaast
   andere slaap- en stiltevensters dan een woonkamer.
-- **Vertaal de "en nog N meer"-regel van de reparatiemelding** — `problems.summarise`
-  plakt bij meer dan vijf configuratieproblemen een hardcoded Engelse regel
-  `- ... and N more` onder de (wel vertaalde) lijst. Voor wie de interface in het
-  Nederlands of een andere taal draait, is dat de enige zin in de melding die Engels
-  blijft. Een vertaling onder `exceptions` met plaatshouder `{remaining}` lost dat op.
 
 ## Could have
 
@@ -126,17 +115,11 @@ approved — it is a place to pick from, prioritise or reject.
 The history of what has already been built and changed is **not** here but in the
 [release notes](https://github.com/Sarnog/ha-climate-director/releases) of each version.
 
+The worked-out design proposals for everything below live in
+[`ARCHITECTURE.md`](ARCHITECTURE.md) under "Still to build".
+
 ## Should have
 
-- **The "blocked" sensor should also come on for a shut gate** — `binary_sensor.*_<zone>_blocked`
-  currently follows "asked for more than it got", and a zone with a shut gate asks for
-  nothing: it never gets as far as its wish. So the sensor is off in exactly the cases its
-  own `closed_gates` attribute exists for — an open window, nobody home, everybody asleep,
-  outside the schedule, quiet hours, an empty room. The reason and the list of shut gates
-  are in the attributes, so whoever inspects those sees everything; whoever builds an
-  automation on the sensor itself never gets a notification. Worth considering: turning the
-  sensor on once a gate is shut *and* the room sits outside its dead band, or adding a
-  second sensor beside it so the existing one's meaning does not shift.
 - **A virtual `climate` per zone** — one control entity per room, so the target temperature
   and mode can be set straight from an ordinary thermostat card. The director then picks the
   source to match.
@@ -159,11 +142,6 @@ The history of what has already been built and changed is **not** here but in th
   live in `GateSettings` for the whole installation. The household-vs-presence choice, the
   presence sensor and the grace period are already per zone; a bedroom also wants different
   sleep and quiet windows from a living room.
-- **Translate the repair notice's "and N more" line** — `problems.summarise` appends a
-  hardcoded English line `- ... and N more` under the (translated) list when there are more
-  than five configuration problems. For anyone running the interface in Dutch or another
-  language, that is the one sentence in the notice that stays English. A translation under
-  `exceptions` with a `{remaining}` placeholder solves it.
 
 ## Could have
 
