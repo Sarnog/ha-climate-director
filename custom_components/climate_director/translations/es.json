@@ -361,6 +361,7 @@
         "title": "Abertura",
         "data": {
           "entity_id": "Sensor",
+          "open_state": "Estado que significa abierto",
           "zone_ids": "Zonas afectadas",
           "delay": "Retardo antes de suspender (segundos)",
           "delete": "Eliminar esta abertura",
@@ -369,7 +370,8 @@
         "data_description": {
           "zone_ids": "Déjalo vacío para suspender toda la instalación.",
           "delay": "Déjalo vacío o ponlo a cero para suspender en cuanto se abre.",
-          "entity_id": "El contacto de puerta o ventana. Abierto cuenta como el estado 'on'.",
+          "entity_id": "El contacto de puerta, ventana o claraboya. Qué estado significa abierto se ajusta debajo.",
+          "open_state": "El estado que cuenta como abierto. Para un contacto de ventana suele ser 'on'; para una claraboya o persiana, 'open'.",
           "delete": "Elimina la abertura; deja de suspender nada.",
           "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }

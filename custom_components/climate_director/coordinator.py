@@ -982,7 +982,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 for resident in self.config.residents
             },
             openings={
-                opening.entity_id: self._opening(opening.entity_id)
+                opening.entity_id: self._opening(opening.entity_id, opening.open_state)
                 for opening in self.config.openings
                 if opening.entity_id
             },
@@ -1071,12 +1071,22 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
 
         return ResidentState(home=home, asleep=asleep)
 
-    def _opening(self, entity_id: str) -> OpeningState:
+    def _opening(self, entity_id: str, open_state: str) -> OpeningState:
+        """Read one opening, honouring the state it was told counts as open.
+
+        Een raamcontact meldt `on` als het openstaat, een cover meldt `open`.
+        De stand wordt per opening ingesteld en staat standaard op `on`, zodat
+        bestaande installaties hetzelfde blijven lezen.
+
+        A window contact reports `on` when open, a cover reports `open`. The
+        state is configured per opening and defaults to `on`, so existing
+        installations keep reading the same thing.
+        """
         state = self.hass.states.get(entity_id)
         if state is None:
             return OpeningState()
         return OpeningState(
-            open=state.state == "on",
+            open=state.state == open_state,
             changed_at=dt_util.as_local(state.last_changed),
         )
 

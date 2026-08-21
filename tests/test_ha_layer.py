@@ -294,6 +294,44 @@ class TestReadingTheWorld:
         assert world.opening("binary_sensor.achterdeur").open is False
         assert world.presence_of("zolder").occupied is True
 
+    def test_a_cover_opening_reads_its_configured_open_state(self) -> None:
+        """`cover.dakraam = open` schort de zone op, ook al is 'on' de standaard.
+
+        `cover.dakraam = open` suspends the zone even though 'on' is the default.
+        """
+        config = DirectorConfig(
+            zones=house().zones,
+            openings=(Opening(entity_id="cover.dakraam", open_state="open"),),
+        )
+        states = self._states(**{"cover.dakraam": FakeState("open")})
+        assert coordinator(states, config).build_world().opening("cover.dakraam").open is True
+
+    def test_a_cover_that_is_not_open_reads_as_closed(self) -> None:
+        config = DirectorConfig(
+            zones=house().zones,
+            openings=(Opening(entity_id="cover.dakraam", open_state="open"),),
+        )
+        states = self._states(**{"cover.dakraam": FakeState("closed")})
+        assert coordinator(states, config).build_world().opening("cover.dakraam").open is False
+
+    def test_an_opening_still_defaults_to_the_state_on(self) -> None:
+        """Wie niets instelt houdt het oude gedrag: 'on' is open, 'open' niet.
+
+        Whoever configures nothing keeps the old behaviour: 'on' is open, 'open' is not.
+        """
+        config = DirectorConfig(
+            zones=house().zones,
+            openings=(Opening(entity_id="binary_sensor.achterdeur"),),
+        )
+        states = self._states(
+            **{
+                "binary_sensor.achterdeur": FakeState("on"),
+                "cover.dakraam": FakeState("open"),
+            }
+        )
+        world = coordinator(states, config).build_world()
+        assert world.opening("binary_sensor.achterdeur").open is True
+
     def test_an_unavailable_appliance_reads_as_nothing(self) -> None:
         """Niet als "uit": als onbereikbaar, want dan valt er niets over te zeggen."""
         world = coordinator(self._states(**{LIVING: FakeState("unavailable")})).build_world()

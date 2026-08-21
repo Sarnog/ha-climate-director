@@ -361,6 +361,7 @@
         "title": "Opening",
         "data": {
           "entity_id": "Sensor",
+          "open_state": "State that means open",
           "zone_ids": "Zones affected",
           "delay": "Delay before suspending (seconds)",
           "delete": "Delete this opening",
@@ -369,7 +370,8 @@
         "data_description": {
           "zone_ids": "Leave empty to suspend the whole installation.",
           "delay": "Leave empty or set to zero to suspend the moment it opens.",
-          "entity_id": "The door or window contact. Open counts as the state 'on'.",
+          "entity_id": "The door, window or skylight contact. Which state means open is set below.",
+          "open_state": "The state that counts as open. For a window contact that is usually 'on', for a skylight or shutter 'open'.",
           "delete": "Removes the opening; it stops suspending anything.",
           "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }

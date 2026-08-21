@@ -361,6 +361,7 @@
         "title": "Öffnung",
         "data": {
           "entity_id": "Sensor",
+          "open_state": "Zustand, der „offen“ bedeutet",
           "zone_ids": "Betroffene Zonen",
           "delay": "Verzögerung vor dem Aussetzen (Sekunden)",
           "delete": "Diese Öffnung löschen",
@@ -369,7 +370,8 @@
         "data_description": {
           "zone_ids": "Leer lassen, um die gesamte Anlage auszusetzen.",
           "delay": "Leer lassen oder auf null setzen, um sofort auszusetzen, sobald sie aufgeht.",
-          "entity_id": "Der Tür- oder Fensterkontakt. Offen zählt als Zustand 'on'.",
+          "entity_id": "Der Tür-, Fenster- oder Dachfensterkontakt. Welcher Zustand offen bedeutet, steht darunter.",
+          "open_state": "Der Zustand, der als offen zählt. Bei einem Fensterkontakt ist das meist 'on', bei einem Dachfenster oder Rollladen 'open'.",
           "delete": "Entfernt die Öffnung; sie setzt dann nichts mehr aus.",
           "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }

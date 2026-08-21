@@ -492,6 +492,18 @@ class Opening:
     zone_ids: tuple[str, ...] = ()
     """Zones this opening suspends. Empty means the whole installation."""
 
+    open_state: str = "on"
+    """The entity state that counts as open; covers report `open` instead.
+
+    Standaard `on`, precies zoals de oude automatiseringen een raamcontact
+    lazen. Wie een `cover` als opening opgeeft - een dakraam bijvoorbeeld -
+    zet dit op `open`, want die rapporteert nooit `on`.
+
+    Defaults to `on`, exactly how the old automations read a window contact.
+    Whoever points an opening at a `cover` - a skylight, say - sets this to
+    `open`, since that never reports `on`.
+    """
+
     delay: timedelta = timedelta(0)
     """How long it must stand open before anything is suspended.
 

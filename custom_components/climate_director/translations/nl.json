@@ -361,6 +361,7 @@
         "title": "Opening",
         "data": {
           "entity_id": "Sensor",
+          "open_state": "Toestand die 'open' betekent",
           "zone_ids": "Zones die dit raakt",
           "delay": "Vertraging voordat er opgeschort wordt (seconden)",
           "delete": "Deze opening verwijderen",
@@ -369,7 +370,8 @@
         "data_description": {
           "zone_ids": "Laat leeg om de hele installatie op te schorten.",
           "delay": "Laat leeg of zet op nul om direct op te schorten zodra hij opengaat.",
-          "entity_id": "Het deur- of raamcontact. Open telt als de toestand 'on'.",
+          "entity_id": "Het deur-, raam- of dakraamcontact. Welke toestand open betekent, staat eronder.",
+          "open_state": "De toestand die telt als open. Voor een raamcontact is dat meestal 'on', voor een dakraam of rolluik 'open'.",
           "delete": "Verwijdert de opening; hij schort dan niets meer op.",
           "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }

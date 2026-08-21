@@ -1563,6 +1563,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 opening = {
                     "entity_id": user_input["entity_id"],
                     "zone_ids": user_input.get("zone_ids") or [],
+                    "open_state": user_input.get("open_state") or "on",
                     "delay": user_input.get("delay") or 0,
                 }
                 if self._index is None:
@@ -1589,6 +1590,10 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     ): selector.EntitySelector(
                         selector.EntitySelectorConfig(domain=["binary_sensor", "cover", "sensor"])
                     ),
+                    vol.Optional(
+                        "open_state",
+                        description={"suggested_value": current.get("open_state") or "on"},
+                    ): _TEXT,
                     vol.Optional(
                         "zone_ids",
                         description={"suggested_value": current.get("zone_ids") or []},

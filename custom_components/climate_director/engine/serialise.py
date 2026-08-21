@@ -260,6 +260,7 @@ def _opening(raw: Mapping[str, Any]) -> Opening:
     return Opening(
         entity_id=_text(raw.get("entity_id")),
         zone_ids=tuple(_strings(raw.get("zone_ids"))),
+        open_state=_text(raw.get("open_state")) or "on",
         delay=_seconds(raw.get("delay")),
     )
 
@@ -448,6 +449,7 @@ def _opening_to_dict(opening: Opening) -> dict[str, Any]:
     return {
         "entity_id": opening.entity_id,
         "zone_ids": list(opening.zone_ids),
+        "open_state": opening.open_state,
         "delay": opening.delay.total_seconds(),
     }
 

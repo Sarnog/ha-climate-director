@@ -361,6 +361,7 @@
         "title": "Ouverture",
         "data": {
           "entity_id": "Capteur",
+          "open_state": "État qui signifie ouvert",
           "zone_ids": "Zones concernées",
           "delay": "Délai avant suspension (secondes)",
           "delete": "Supprimer cette ouverture",
@@ -369,7 +370,8 @@
         "data_description": {
           "zone_ids": "Laissez vide pour suspendre toute l'installation.",
           "delay": "Laissez vide ou mettez zéro pour suspendre dès l'ouverture.",
-          "entity_id": "Le contact de porte ou de fenêtre. Ouvert correspond à l'état 'on'.",
+          "entity_id": "Le contact de porte, de fenêtre ou de velux. L'état qui signifie ouvert se règle ci-dessous.",
+          "open_state": "L'état qui compte comme ouvert. Pour un contact de fenêtre, c'est généralement 'on', pour un velux ou un volet, 'open'.",
           "delete": "Supprime l'ouverture ; elle ne suspend plus rien.",
           "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
