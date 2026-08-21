@@ -22,7 +22,7 @@ Gevonden gebreken die eerst gerepareerd worden vóór de schaduwmodus uitgaat.
 Het volledige stappenplan staat in de projectkennis van deze repo
 (`.claude/skills/climate-director/SKILL.md`).
 
-- **M1–M8** opstartgedrag, gedeelde apparaten, `minutes: 0`, diagnose, zoneformulier, commandosensor voor generatoren, neerslag-bijwerking, vakantievlag op stiltevensters.
+- **M3–M8** `minutes: 0`, diagnose, zoneformulier, commandosensor voor generatoren, neerslag-bijwerking, vakantievlag op stiltevensters.
 
 ## Should have
 
@@ -124,7 +124,7 @@ Defects found, to be repaired before shadow mode is switched off. The full
 step-by-step plan lives in this repo's project knowledge
 (`.claude/skills/climate-director/SKILL.md`).
 
-- **M1–M8** startup behaviour, shared appliances, `minutes: 0`, diagnostics, zone form, command sensor for generators, precipitation side effect, holiday flag on quiet windows.
+- **M3–M8** `minutes: 0`, diagnostics, zone form, command sensor for generators, precipitation side effect, holiday flag on quiet windows.
 
 ## Should have
 
