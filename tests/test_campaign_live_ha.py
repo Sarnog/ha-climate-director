@@ -150,6 +150,29 @@ class TestSettingUp:
         assert home.value("last_decision") == "2/2"
 
 
+class TestStartupWithHalfLoadedState:
+    """Opstarten met een half geladen wereld mag niets uitzetten.
+
+    Starting up with a half-loaded world must not switch anything off.
+    """
+
+    async def test_an_unreadable_sensor_leaves_the_running_appliance_alone(self) -> None:
+        """De sensor ontbreekt nog, het apparaat draait: geen `set_hvac_mode`.
+
+        The sensor is still missing and the appliance runs: no `set_hvac_mode`.
+        """
+        states = cold_world()
+        del states["sensor.woonkamer"]
+        states[LIVING] = ("heat", {"temperature": 21.0})
+
+        home = await start_house(installation(), states=states)
+        try:
+            calls = home.climate_calls()
+            assert not [call for call in calls if call[1].get("entity_id") == LIVING]
+        finally:
+            await stop_house(home)
+
+
 # ---------------------------------------------------------------------------
 # Van beslissing naar service call.
 # From decision to service call.

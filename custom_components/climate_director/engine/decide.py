@@ -446,6 +446,24 @@ def _build_commands(
         reason = (
             Reason.OTHER_SOURCE_CHOSEN if served else reasons.get(zone.zone_id, Reason.SATISFIED)
         )
+
+        # Zonder leesbare binnentemperatuur valt er niets te beslissen, en dan
+        # is uitzetten de enige fout die je kunt maken: een draaiend apparaat
+        # zou uitgaan omdat de sensor kapot is. Dat apparaat wordt met rust
+        # gelaten; wie uit staat krijgt gewoon zijn uit-commando, want "elke
+        # beheerde bron krijgt een commando" blijft gelden.
+        #
+        # Without a readable indoor temperature there is nothing to decide, and
+        # switching off is the only mistake to make then: a running appliance
+        # would go off because the sensor is broken. That appliance is left
+        # alone; one that is off simply gets its off command, since "every
+        # managed source gets a command" still holds.
+        if reason is Reason.NO_INDOOR_TEMPERATURE and world.climate(source.entity_id).running:
+            untouched.append(
+                UntouchedSource(source.entity_id, zone.zone_id, Reason.NO_INDOOR_TEMPERATURE)
+            )
+            continue
+
         commands.append(
             UnitCommand(
                 entity_id=source.entity_id,

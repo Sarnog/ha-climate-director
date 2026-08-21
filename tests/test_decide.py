@@ -499,3 +499,37 @@ def test_a_zone_whose_indoor_temperature_is_missing_stands_down() -> None:
     assert decision is not None
     assert decision.wanted is ModeFamily.NEUTRAL
     assert decision.reason is Reason.NO_INDOOR_TEMPERATURE
+
+
+def test_a_running_appliance_is_left_alone_when_the_temperature_is_unreadable() -> None:
+    """Kapotte sensor mag een draaiend apparaat niet uitzetten.
+
+    A broken sensor must not switch a running appliance off.
+    """
+    world = cold_house(
+        indoor={"zolder": 20.0, "slaapkamer": 20.0},
+        climates={
+            GAS: climate(MODE_OFF),
+            LIVING: climate(MODE_HEAT),
+            ATTIC: climate(MODE_OFF),
+            BEDROOM: climate(MODE_OFF),
+        },
+    )
+    plan = decide(house(), world)
+    assert plan.command_for(LIVING) is None
+    assert any(
+        item.entity_id == LIVING and item.reason is Reason.NO_INDOOR_TEMPERATURE
+        for item in plan.untouched
+    )
+
+
+def test_an_idle_appliance_still_gets_its_off_command_when_the_temperature_is_unreadable() -> None:
+    """Staat hij al uit, dan blijft de regel 'elke bron krijgt een commando' gelden.
+
+    When it is already off, the rule 'every source gets a command' still holds.
+    """
+    world = cold_house(indoor={"zolder": 20.0, "slaapkamer": 20.0})
+    command = decide(house(), world).command_for(LIVING)
+    assert command is not None
+    assert command.hvac_mode == MODE_OFF
+    assert command.reason is Reason.NO_INDOOR_TEMPERATURE

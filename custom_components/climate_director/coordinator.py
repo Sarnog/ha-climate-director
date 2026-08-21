@@ -30,6 +30,7 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import CALLBACK_TYPE, Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
@@ -295,7 +296,19 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
     # -- opzetten / setting up ----------------------------------------------
 
     async def async_start(self) -> None:
-        """Begin tracking entities and make a first decision."""
+        """Begin tracking entities; the first decision waits for Home Assistant.
+
+        De eerste beslissing hoort niet thuis in het opzetten van de entry. Op
+        dat moment is Home Assistant nog aan het opstarten: herstelde standen,
+        automatiseringen en andere integraties komen pas daarna. Wie dan al
+        beslist, ziet een half geladen wereld en kan een apparaat uitzetten dat
+        er gewoon hoort te draaien.
+
+        The first decision does not belong in the entry setup. At that point
+        Home Assistant is still starting: restored states, automations and other
+        integrations come only later. Whoever decides then sees a half-loaded
+        world and can switch off an appliance that should simply be running.
+        """
         entities = self.tracked_entities()
         if entities:
             self.config_entry.async_on_unload(
@@ -303,6 +316,10 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             )
         self.config_entry.async_on_unload(self._cancel_pending_deferral)
         self.config_entry.async_on_unload(self._cancel_clock_reeval)
+        self.config_entry.async_on_unload(async_at_started(self.hass, self._async_on_hass_started))
+
+    async def _async_on_hass_started(self, _hass: HomeAssistant) -> None:
+        """Restore what a restart left behind, decide once, and arm the clock."""
         await self._async_restore_state()
         await self._async_evaluate()
         self._schedule_clock_reeval()

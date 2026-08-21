@@ -40,7 +40,7 @@ from typing import Any
 
 from homeassistant import loader
 from homeassistant.config_entries import ConfigEntries, ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     area_registry,
     device_registry,
@@ -263,6 +263,19 @@ async def start_house(
     for module in (area_registry, device_registry, entity_registry, issue_registry, restore_state):
         await module.async_load(hass)
     await async_setup_component(hass, "homeassistant", {})
+
+    # De integratie hangt haar eerste beslissing aan `async_at_started`, en dat
+    # kijkt naar `hass.state`. In een echte Home Assistant staat die op
+    # `running` zodra de entry opgezet wordt; dit harnas roept `async_start()`
+    # nooit aan, dus wordt die stand hier gezet zodat `async_at_started` meteen
+    # vuurt - precies zoals een draaiende Home Assistant dat zou doen.
+    #
+    # The integration hangs its first decision off `async_at_started`, which
+    # looks at `hass.state`. In a real Home Assistant that reads `running` by
+    # the time the entry is set up; this harness never calls `async_start()`,
+    # so the state is set here to make `async_at_started` fire at once - exactly
+    # as a running Home Assistant would.
+    hass.set_state(CoreState.running)
 
     # Een bewaarde entry betekent dat dit een herstart is: dan hoort hij
     # opgezet te worden zoals hij bewaard staat, niet opnieuw aangemaakt.
