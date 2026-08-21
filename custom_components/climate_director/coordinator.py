@@ -668,7 +668,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             self._remember_families(world)
             world = self._with_family_history(world)
 
-            plan = decide(self.config, world)
+            plan = decide(self.config, world, self.data)
             self.world = world
             self._issued = plan
 
@@ -1317,7 +1317,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         target: float | None = None
         settled = False
         if zone is not None and self.world is not None:
-            demand, target = wanted_target(zone, self.world)
+            demand, target = wanted_target(self.config, zone, self.world, self.data)
             settled = demand.reason is Reason.SATISFIED
 
         if indoor is None:

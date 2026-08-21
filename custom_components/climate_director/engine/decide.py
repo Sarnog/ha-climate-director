@@ -31,9 +31,20 @@ from .world import WorldState
 _SOLO = Circuit(circuit_id="", name="", units=(), simultaneous_heat_cool=True)
 
 
-def decide(config: DirectorConfig, world: WorldState) -> Plan:
-    """Return the complete, consistent end state the installation should be in."""
-    wishes, refusals, shut, woulds = _collect_wishes(config, world)
+def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = None) -> Plan:
+    """Return the complete, consistent end state the installation should be in.
+
+    `previous` is het plan van de vorige ronde. De dode band en de stiltevensters
+    moeten weten of deze zone zelf draait, en bij een gedeeld apparaat zegt de
+    apparaattoestand dat niet: die telt alleen voor de zone die het commando
+    kreeg.
+
+    `previous` is the previous round's plan. The dead band and the quiet windows
+    need to know whether this zone itself is running, and on a shared appliance
+    the appliance state does not say that: it counts only for the zone that got
+    the command.
+    """
+    wishes, refusals, shut, woulds = _collect_wishes(config, world, previous)
     wishes, dropped = _apply_exclusive_groups(config, world, wishes)
 
     grants, circuit_decisions, deferrals = _resolve_circuits(config, world, wishes)
@@ -50,7 +61,7 @@ def decide(config: DirectorConfig, world: WorldState) -> Plan:
 
 
 def _collect_wishes(
-    config: DirectorConfig, world: WorldState
+    config: DirectorConfig, world: WorldState, previous: Plan | None
 ) -> tuple[
     dict[str, constraints.Request],
     dict[str, Reason],
@@ -78,8 +89,10 @@ def _collect_wishes(
     woulds: dict[str, ModeFamily] = {}
 
     for zone in config.zones:
-        shut[zone.zone_id] = gates.closed(config, world, zone)
-        demand = hysteresis.evaluate(zone, world, hysteresis.running_family(zone, world))
+        shut[zone.zone_id] = gates.closed(config, world, zone, previous)
+        demand = hysteresis.evaluate(
+            zone, world, hysteresis.running_family(config, zone, world, previous)
+        )
         woulds[zone.zone_id] = demand.family
         if shut[zone.zone_id]:
             refusals[zone.zone_id] = shut[zone.zone_id][0]

@@ -25,8 +25,10 @@ from custom_components.climate_director.engine import (
     Generator,
     HeatingLayout,
     ModeSettings,
+    Plan,
     Source,
     SourceRole,
+    UnitCommand,
     Zone,
     decide,
     validate,
@@ -374,3 +376,86 @@ class TestAZonedSystemNeedNotHaveManyBoilers:
         )
         codes = [getattr(item, "code", "") for item in validate(config)]
         assert "layout_zoned_with_shared_source" not in codes
+
+
+class TestWhoseRunningItIs:
+    """Een gedeeld apparaat telt alleen voor de zone die het commando kreeg.
+
+    A shared appliance counts only for the zone that got the command.
+    """
+
+    config = DirectorConfig(
+        zones=(
+            zone("living_room", shared("central_lr"), priority=0),
+            zone("bedroom", shared("central_br"), priority=1),
+        ),
+        heating_layout=HeatingLayout.CENTRAL,
+    )
+
+    def _previous(self, zone_id: str) -> Plan:
+        return Plan(
+            commands=(
+                UnitCommand(
+                    entity_id=THERMOSTAT,
+                    hvac_mode=MODE_HEAT,
+                    zone_id=zone_id,
+                    source_id=f"central_{zone_id}",
+                ),
+            )
+        )
+
+    def test_the_dead_band_does_not_follow_a_shared_boiler_of_another_zone(self) -> None:
+        """De ketel draait voor de woonkamer; de slaapkamer ligt op de startgrens.
+
+        The boiler runs for the living room; the bedroom sits on its switch-on edge.
+        """
+        from custom_components.climate_director.engine import Reason
+
+        world = make_world(
+            indoor={"living_room": 21.5, "bedroom": 20.5},
+            outdoor=5.0,
+            climates={THERMOSTAT: climate("heat")},
+        )
+        plan = decide(self.config, world, self._previous("living_room"))
+        bedroom = plan.decision_for("bedroom")
+        assert bedroom is not None
+        assert bedroom.reason is Reason.SATISFIED
+
+    def test_a_shared_boiler_running_elsewhere_does_not_lift_the_quiet_window(self) -> None:
+        """Stiltevenster blijft staan: de ketel brandt voor een andere kamer.
+
+        The quiet window holds: the boiler burns for another room.
+        """
+        from datetime import datetime, time
+
+        from conftest import awake
+
+        from custom_components.climate_director.engine import (
+            GateSettings,
+            Reason,
+            Resident,
+            TimeWindow,
+        )
+        from custom_components.climate_director.engine import gates as gates_module
+
+        config = DirectorConfig(
+            zones=self.config.zones,
+            heating_layout=HeatingLayout.CENTRAL,
+            residents=(Resident("danny", "Danny", presence_entity="person.danny"),),
+            gates=GateSettings(quiet_windows=(TimeWindow(time(21, 0), time(9, 0)),)),
+        )
+        world = make_world(
+            now=datetime(2026, 8, 17, 22, 0),
+            indoor={"living_room": 21.5, "bedroom": 20.5},
+            outdoor=5.0,
+            climates={THERMOSTAT: climate("heat")},
+            residents={"danny": awake()},
+        )
+        bedroom = config.zone("bedroom")
+        living = config.zone("living_room")
+        assert bedroom is not None and living is not None
+        assert (
+            gates_module.evaluate(config, world, bedroom, self._previous("living_room")).reason
+            is Reason.QUIET_HOURS
+        )
+        assert gates_module.evaluate(config, world, living, self._previous("living_room")).allowed
