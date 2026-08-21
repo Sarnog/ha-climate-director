@@ -356,6 +356,19 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         if user_input is not None:
             if user_input.get(_EXIT) == _EXIT_DROP:
                 return await self.async_step_init()
+            # Optionele velden worden hier bewust met `or ""` / `or ()` gelezen.
+            # De echte HA-interface vult een selector met een `suggested_value`
+            # voor en stuurt die waarde mee bij het opslaan; alleen een
+            # leeggemaakt veld komt als leeg binnen. Wie hier "afwezig = bewaren"
+            # van maakt, blokkeert het leegmaken van de buitensensor en de
+            # neerslagbron - een gedragswijziging, geen reparatie.
+            #
+            # Optional fields are deliberately read with `or ""` / `or ()`.
+            # The real HA frontend pre-fills a selector with a `suggested_value`
+            # and submits that value on save; only a field the user cleared
+            # arrives empty. Turning this into "absent = keep" would stop users
+            # from clearing the outdoor sensor and the precipitation source - a
+            # behaviour change, not a repair.
             self._installation["outdoor_sensor"] = user_input.get("outdoor_sensor", "")
             self._installation["heating_layout"] = user_input["heating_layout"]
             self._installation["seasons"] = {

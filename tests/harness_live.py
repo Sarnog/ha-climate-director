@@ -283,9 +283,22 @@ async def start_house(
     # A stored entry means this is a restart: it should then be set up as it
     # stands stored, rather than created afresh.
     stored = hass.config_entries.async_get_entry(entry_id)
+    # De echte config flow bewaart de installatie in `entry.options`, niet in
+    # `entry.data`. De coordinator leest beide (terugval voor oudere entries),
+    # maar de options flow leest alleen `options` - wie de installatie hier in
+    # `data` stopt, laat elke options-flow-test tegen een lege installatie
+    # aankijken.
+    #
+    # The real config flow stores the installation in `entry.options`, not in
+    # `entry.data`. The coordinator reads both (fallback for older entries), but
+    # the options flow reads only `options` - storing the installation in `data`
+    # here would make every options-flow test stare at an empty installation.
     entry = stored or ConfigEntry(
-        data={CONF_INSTALLATION: installation},
-        options={CONF_SHADOW_MODE: shadow},
+        data={},
+        options={
+            CONF_INSTALLATION: installation,
+            CONF_SHADOW_MODE: shadow,
+        },
         domain=DOMAIN,
         minor_version=1,
         version=1,
