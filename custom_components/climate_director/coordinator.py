@@ -272,16 +272,22 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
 
         De nalooptijd hangt hieraan: een bui van vijf minuten hoort de regeling
         niet te laten stuiteren, dus zodra de bron neerslag meldt blijft dat
-        nog even gelden nadat het ophoudt. Een herstart begint opnieuw op
-        "geen neerslag", en dat is de onschadelijke kant om fout te zitten:
-        dan geldt de gewone buitengrens gewoon weer.
+        nog even gelden nadat het ophoudt. Dit moment wordt vastgelegd in de
+        toestandswijziging van de bron (`_notice_precipitation`) en bij het
+        opstarten (`_note_precipitation_now`), nooit in de lezer zelf. Zonder
+        opstartstap begint een herstart op "geen neerslag", en dat is de
+        onschadelijke kant om fout te zitten: dan geldt de gewone buitengrens
+        gewoon weer.
 
         The moment the precipitation source last reported precipitation. The
         grace period hangs off this: a five-minute shower should not make the
         regulation bounce, so once the source reports precipitation it keeps
-        counting for a while after it stops. A restart begins afresh on "no
-        precipitation", which is the harmless side to be wrong on: the ordinary
-        outdoor bound simply applies again.
+        counting for a while after it stops. This moment is recorded in the
+        source's own state change (`_notice_precipitation`) and at startup
+        (`_note_precipitation_now`), never in the reader itself. Without the
+        startup step a restart begins on "no precipitation", which is the
+        harmless side to be wrong on: the ordinary outdoor bound simply applies
+        again.
         """
         self._cancel_deferral: CALLBACK_TYPE | None = None
         self._clock_reeval_unsub: CALLBACK_TYPE | None = None
@@ -321,6 +327,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
     async def _async_on_hass_started(self, _hass: HomeAssistant) -> None:
         """Restore what a restart left behind, decide once, and arm the clock."""
         await self._async_restore_state()
+        self._note_precipitation_now()
         await self._async_evaluate()
         self._schedule_clock_reeval()
 
@@ -399,8 +406,31 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
     @callback
     def _handle_change(self, event: Event[EventStateChangedData]) -> None:
         """Queue a fresh decision after a tracked entity changed."""
+        self._notice_precipitation(event)
         self._notice_hand(event)
         self._debouncer.async_schedule_call()
+
+    @callback
+    def _notice_precipitation(self, event: Event[EventStateChangedData]) -> None:
+        """Remember the moment the precipitation source reports precipitation.
+
+        Het moment hoort hier thuis, in de toestandswijziging van de bron zelf -
+        niet in `_precipitation()`, dat alleen een antwoord teruggeeft. Alleen
+        een overgang náár een neerslagstand telt; een overgang tussen twee droge
+        standen (bewolkt -> zonnig) mag de nalooptijd niet verlengen.
+
+        The moment belongs here, in the source's own state change - not in
+        `_precipitation()`, which only returns an answer. Only a transition INTO
+        a precipitation state counts; a transition between two dry states
+        (cloudy -> sunny) must not extend the grace.
+        """
+        source = self.config.precipitation.source
+        if not source or event.data["entity_id"] != source:
+            return
+        new_state = event.data["new_state"]
+        if new_state is None or new_state.state not in self.config.precipitation.states:
+            return
+        self._precipitation_seen_at = dt_util.now()
 
     @callback
     def _notice_hand(self, event: Event[EventStateChangedData]) -> None:
@@ -1191,27 +1221,49 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
     def _precipitation(self) -> bool:
         """Return whether the configured source reports precipitation, with grace.
 
-        Een bui van vijf minuten hoort de regeling niet te laten stuiteren, dus
-        zodra de bron neerslag meldt blijft dat nog even gelden nadat het
-        ophoudt. De nalooptijd komt uit de configuratie; zonder bron is het
-        antwoord gewoon "nee", en dan blijft de gewone buitengrens gelden.
+        Dit is een lezer en schrijft dus niets. Het moment waarop de bron voor
+        het laatst neerslag meldde wordt vastgelegd in `_notice_precipitation`
+        (de toestandswijziging van de bron zelf) en bij het opstarten in
+        `_note_precipitation_now`; hier wordt het alleen uitgelezen. Eerder
+        gebeurde dat wél hier, en daardoor verliep de nalooptijd alleen tijdens
+        een beoordelingsronde - een verborgen bijwerking op een pad dat "lezen"
+        heet.
 
-        A five-minute shower should not make the regulation bounce, so once the
-        source reports precipitation it keeps counting for a while after it
-        stops. The grace period comes from the configuration; without a source
-        the answer is simply "no", and the ordinary outdoor bound stays in
-        force.
+        This is a reader and therefore writes nothing. The moment the source
+        last reported precipitation is recorded in `_notice_precipitation` (the
+        source's own state change) and at startup in `_note_precipitation_now`;
+        here it is only read. It used to be written here, which made the grace
+        lapse only during an evaluation round - a hidden side effect on a path
+        that calls itself "read".
         """
         settings = self.config.precipitation
         if not settings.source:
             return False
         state = self.hass.states.get(settings.source)
-        precipitating = state is not None and state.state in settings.states
-        if precipitating:
-            self._precipitation_seen_at = dt_util.now()
+        if state is not None and state.state in settings.states:
             return True
         seen = self._precipitation_seen_at
         return seen is not None and dt_util.now() - seen < settings.grace
+
+    def _note_precipitation_now(self) -> None:
+        """Remember rain that was already falling before this process started.
+
+        De listener ziet alleen overgangen. Wie herstart terwijl het regent,
+        heeft geen overgang gezien, en zonder deze stap zou de nalooptijd voor
+        die bui verloren zijn - terwijl de lezer zelf nooit mag schrijven. Dit
+        is naast de listener de enige plek die het moment vastlegt.
+
+        The listener only sees transitions. Restarting while it rains means no
+        transition was seen, and without this step the grace for that shower
+        would be lost - while the reader itself must never write. Besides the
+        listener this is the only place that records the moment.
+        """
+        source = self.config.precipitation.source
+        if not source:
+            return
+        state = self.hass.states.get(source)
+        if state is not None and state.state in self.config.precipitation.states:
+            self._precipitation_seen_at = dt_util.now()
 
     # -- circuitgeschiedenis / circuit history -------------------------------
 

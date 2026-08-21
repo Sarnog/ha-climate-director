@@ -220,6 +220,7 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
         _presence = ClimateDirectorCoordinator._presence
         _season = ClimateDirectorCoordinator._season
         _precipitation = ClimateDirectorCoordinator._precipitation
+        _notice_precipitation = ClimateDirectorCoordinator._notice_precipitation
         _calendar_says_holiday = ClimateDirectorCoordinator._calendar_says_holiday
         _zones_handed_back = ClimateDirectorCoordinator._zones_handed_back
         _live_preconditions = ClimateDirectorCoordinator._live_preconditions
@@ -497,6 +498,44 @@ class TestTheSeasonAndTheCalendar:
         config = self._config(precipitation=PrecipitationSettings(source="weather.buienradar"))
         states = {"weather.buienradar": FakeState(condition)}
         assert coordinator(states, config)._precipitation() is True
+
+    def _event(self, entity_id: str, old: str, new: str):
+        """Return a state-change event like Home Assistant would hand over."""
+
+        class Event:
+            data = {
+                "entity_id": entity_id,
+                "old_state": FakeState(old),
+                "new_state": FakeState(new),
+            }
+
+        return Event()
+
+    def test_the_precipitation_reader_does_not_write(self) -> None:
+        """De lezer geeft alleen een antwoord; het moment hoort in de listener.
+
+        The reader only returns an answer; the moment belongs in the listener.
+        """
+        config = self._config(precipitation=PrecipitationSettings(source="weather.buienradar"))
+        item = coordinator({"weather.buienradar": FakeState("rainy")}, config)
+        assert item._precipitation() is True
+        assert item._precipitation_seen_at is None
+
+    def test_the_listener_records_the_moment_precipitation_is_reported(self) -> None:
+        config = self._config(precipitation=PrecipitationSettings(source="weather.buienradar"))
+        item = coordinator({"weather.buienradar": FakeState("cloudy")}, config)
+        item._notice_precipitation(self._event("weather.buienradar", "cloudy", "rainy"))
+        assert item._precipitation_seen_at == NOW
+
+    def test_the_listener_ignores_a_change_between_two_dry_states(self) -> None:
+        """Bewolkt -> zonnig is geen neerslag en hoort de nalooptijd niet te verlengen.
+
+        Cloudy -> sunny is not precipitation and must not extend the grace.
+        """
+        config = self._config(precipitation=PrecipitationSettings(source="weather.buienradar"))
+        item = coordinator({"weather.buienradar": FakeState("cloudy")}, config)
+        item._notice_precipitation(self._event("weather.buienradar", "cloudy", "sunny"))
+        assert item._precipitation_seen_at is None
 
 
 # ---------------------------------------------------------------------------
