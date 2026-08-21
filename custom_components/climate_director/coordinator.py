@@ -414,8 +414,8 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             return
 
         entity_id = event.data["entity_id"]
-        zone = self._zone_of(entity_id)
-        if zone is None:
+        zones = self._zones_of(entity_id)
+        if not zones:
             return
 
         new_state = event.data["new_state"]
@@ -449,7 +449,10 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         if now is not ModeFamily.NEUTRAL:
             # Weer aangezet, met de hand of door ons: hoe dan ook meedoen.
             # Switched on again, by hand or by us: taking part either way.
-            if self._handed_back.pop(zone, None) is not None:
+            cleared = False
+            for zone in zones:
+                cleared = self._handed_back.pop(zone, None) is not None or cleared
+            if cleared:
                 self._async_save_state()
             return
 
@@ -463,16 +466,28 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             return
 
         today = dt_util.now().date()
-        if self._handed_back.get(zone) != today:
-            self._handed_back[zone] = today
+        if any(self._handed_back.get(zone) != today for zone in zones):
+            for zone in zones:
+                self._handed_back[zone] = today
             self._async_save_state()
 
-    def _zone_of(self, entity_id: str) -> str | None:
-        """Return the zone this climate entity serves, if the director drives it."""
-        for zone, source in self.config.sources():
-            if source.entity_id == entity_id:
-                return zone.zone_id
-        return None
+    def _zones_of(self, entity_id: str) -> tuple[str, ...]:
+        """Return every zone this climate entity serves, if the director drives it.
+
+        Een gedeelde ketel staat onder meer dan één zone. Iemand die bij zo'n
+        apparaat zelf op uit drukt zegt iets over dat apparaat, niet over de
+        eerste zone die het toevallig bedient - dus elke zone die eraan hangt
+        hoort stil te vallen, anders zet de overgeslagen zone het apparaat meteen
+        weer aan.
+
+        A shared boiler sits under more than one zone. Somebody pressing off on
+        such an appliance says something about the appliance, not about whichever
+        zone happens to be listed first - so every zone hanging off it should fall
+        silent, otherwise the skipped zone switches it straight back on.
+        """
+        return tuple(
+            zone.zone_id for zone, source in self.config.sources() if source.entity_id == entity_id
+        )
 
     def _we_wanted_it_off(self, entity_id: str) -> bool:
         """Return whether the plan being carried out has this appliance standing still.
@@ -994,13 +1009,15 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         los van elkaar, dus één van de twee is genoeg - wie ze samenvoegde met
         de schakelaar als laatste, liet een schakelaar die gewoon uit staat de
         handmatige uitzetting wissen. En die schakelaar staat er voor elke zone,
-        en staat standaard uit: dan werkte "zelf uitzetten" dus nergens.
+        en staat standaard uit: dan werkte "zelf uitzetten" dus nergens. Een
+        hand aan een gedeeld apparaat telt voor elke zone die het bedient.
 
         There are two ways a zone becomes the user's: throwing the switch, or
         pressing off on the appliance itself. They stand apart, so either one is
         enough - whoever merged them with the switch last let a switch that is
         simply off erase the hand-back. And that switch exists for every zone,
-        and is off by default: so "switching off yourself" worked nowhere.
+        and is off by default: so "switching off yourself" worked nowhere. A
+        hand at a shared appliance counts for every zone it serves.
         """
         handed_back = self._zones_handed_back()
         thrown = {zone_id for zone_id, on in self.zone_overrides.items() if on}

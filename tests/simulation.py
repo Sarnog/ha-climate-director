@@ -598,7 +598,7 @@ class _HandStandIn:
         self.hass = _Hass(sim)
 
     _notice_hand = ClimateDirectorCoordinator._notice_hand
-    _zone_of = ClimateDirectorCoordinator._zone_of
+    _zones_of = ClimateDirectorCoordinator._zones_of
     _we_wanted_it_off = ClimateDirectorCoordinator._we_wanted_it_off
     handed_back = ClimateDirectorCoordinator._zones_handed_back
     _everyone_asleep = ClimateDirectorCoordinator._everyone_asleep

@@ -95,7 +95,50 @@ class _Event:
         }
 
 
-def coordinator(plan: Plan | None = None, states: dict[str, str] | None = None):
+def shared_config(*, with_residents: bool = False) -> DirectorConfig:
+    """Return two zones that both steer the same boiler thermostat."""
+    from custom_components.climate_director.engine import Resident
+
+    residents = (
+        (
+            Resident(
+                "danny",
+                "Danny",
+                presence_entity="person.danny",
+                sleep_entity="sensor.danny_charger_type",
+                sleep_state="wireless",
+            ),
+        )
+        if with_residents
+        else ()
+    )
+    return DirectorConfig(
+        residents=residents,
+        zones=(
+            Zone(
+                "woonkamer",
+                "Woonkamer",
+                "sensor.woonkamer",
+                sources=(Source("ketel", "climate.ketel"),),
+                heat=ModeSettings(21.0, 20.0),
+            ),
+            Zone(
+                "zolder",
+                "Zolder",
+                "sensor.zolder",
+                sources=(Source("ketel", "climate.ketel"),),
+                heat=ModeSettings(21.0, 20.0),
+            ),
+        ),
+    )
+
+
+def coordinator(
+    plan: Plan | None = None,
+    states: dict[str, str] | None = None,
+    *,
+    cfg: DirectorConfig | None = None,
+):
     """Return a stand-in carrying only what the notice methods touch."""
 
     class Registry:
@@ -109,7 +152,7 @@ def coordinator(plan: Plan | None = None, states: dict[str, str] | None = None):
 
     class StandIn:
         def __init__(self) -> None:
-            self.config = config(with_residents=bool(states))
+            self.config = cfg or config(with_residents=bool(states))
             self.zone_overrides: dict[str, bool] = {}
             self._handed_back: dict[str, date] = {}
             # `data` is het gepubliceerde besluit, `_issued` het besluit dat op
@@ -129,9 +172,10 @@ def coordinator(plan: Plan | None = None, states: dict[str, str] | None = None):
             self.saved += 1
 
         _notice_hand = ClimateDirectorCoordinator._notice_hand
-        _zone_of = ClimateDirectorCoordinator._zone_of
+        _zones_of = ClimateDirectorCoordinator._zones_of
         _we_wanted_it_off = ClimateDirectorCoordinator._we_wanted_it_off
         _zones_handed_back = ClimateDirectorCoordinator._zones_handed_back
+        _overridden_zones = ClimateDirectorCoordinator._overridden_zones
         _everyone_asleep = ClimateDirectorCoordinator._everyone_asleep
         _house_is_empty = ClimateDirectorCoordinator._house_is_empty
         _state_is = ClimateDirectorCoordinator._state_is
@@ -174,6 +218,50 @@ class TestAHandSwitchingItOff:
         item = coordinator(running_plan())
         item._notice_hand(_Event(BEDROOM, "heat", now))
         assert item._zones_handed_back() == {"slaapkamer"}
+
+
+class TestASharedAppliance:
+    """Eén apparaat onder meerdere zones: een hand telt voor elke zone.
+
+    A hand at an appliance shared by several zones counts for every one of them.
+    """
+
+    def test_every_zone_it_serves_is_handed_back(self) -> None:
+        item = coordinator(running_plan("climate.ketel"), cfg=shared_config())
+        item._notice_hand(_Event("climate.ketel", "heat", "off"))
+        assert item._zones_handed_back() == {"woonkamer", "zolder"}
+
+    def test_every_zone_is_overridden_so_no_command_follows(self) -> None:
+        """Two cold zones, one shared boiler off by hand: no set_hvac_mode after."""
+        from conftest import make_world
+
+        from custom_components.climate_director.engine import decide
+
+        item = coordinator(running_plan("climate.ketel"), cfg=shared_config())
+        item._notice_hand(_Event("climate.ketel", "heat", "off"))
+        assert item._overridden_zones() == {"woonkamer": True, "zolder": True}
+
+        world = make_world(
+            indoor={"woonkamer": 15.0, "zolder": 15.0},
+            climates={"climate.ketel": "off"},
+            zone_overrides=item._overridden_zones(),
+        )
+        plan = decide(item.config, world)
+        assert plan.command_for("climate.ketel") is None
+        assert any(entry.entity_id == "climate.ketel" for entry in plan.untouched)
+
+    def test_switching_it_back_on_clears_every_zone(self) -> None:
+        item = coordinator(running_plan("climate.ketel"), cfg=shared_config())
+        item._notice_hand(_Event("climate.ketel", "heat", "off"))
+        item._notice_hand(_Event("climate.ketel", "off", "heat"))
+        assert item._zones_handed_back() == set()
+        assert item._handed_back == {}
+
+    def test_the_next_day_forgets_every_zone(self) -> None:
+        yesterday = date.today() - timedelta(days=1)
+        item = coordinator(running_plan("climate.ketel"), cfg=shared_config())
+        item._handed_back = {"woonkamer": yesterday, "zolder": yesterday}
+        assert item._zones_handed_back() == set()
 
 
 class TestWhatDoesNotCount:
