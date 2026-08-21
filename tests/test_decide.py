@@ -5,11 +5,14 @@ Tests for the decision function as a whole.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from conftest import (
     ATTIC,
     BEDROOM,
     GAS,
     LIVING,
+    away,
     climate,
     everyone_up,
     house,
@@ -95,6 +98,96 @@ class TestEveryEntityIsCommanded:
             "zolder",
             "slaapkamer",
         }
+
+
+class TestHeldBack:
+    """Wanneer een dichte poort een gewillige kamer tegenhoudt, en wanneer niet."""
+
+    def test_a_shut_gate_holds_back_a_room_that_wants_heat(self) -> None:
+        """Niemand thuis en een koude kamer: de poort houdt een wens tegen."""
+        plan = decide(house(), cold_house(residents={"danny": away(), "nancy": away()}))
+        decision = plan.decision_for("woonkamer")
+        assert decision is not None
+        assert decision.held_back is True
+        assert decision.would_want is ModeFamily.HEAT
+
+    def test_a_shut_gate_in_a_comfortable_room_is_no_blockage(self) -> None:
+        """Niemand thuis, maar de kamer ligt al goed: niets tegengehouden."""
+        world = cold_house(
+            residents={"danny": away(), "nancy": away()},
+            indoor={"woonkamer": 23.0, "zolder": 23.0, "slaapkamer": 23.0},
+        )
+        decision = decide(house(), world).decision_for("woonkamer")
+        assert decision is not None
+        assert decision.held_back is False
+        assert decision.would_want is ModeFamily.NEUTRAL
+
+    def test_an_override_is_not_a_blockage(self) -> None:
+        """Wie een zone overdraagt wil geen 'geblokkeerd'-melder zien branden."""
+        decision = decide(house(), cold_house(zone_overrides={"woonkamer": True})).decision_for(
+            "woonkamer"
+        )
+        assert decision is not None
+        assert decision.held_back is False
+
+    def test_the_master_switch_is_not_a_blockage(self) -> None:
+        """De hoofdschakelaar uit is een bewuste ingreep, geen blokkade."""
+        decision = decide(house(), cold_house(master_enabled=False)).decision_for("woonkamer")
+        assert decision is not None
+        assert decision.held_back is False
+
+    def test_a_zone_that_lost_its_circuit_stays_blocked_not_held_back(self) -> None:
+        """Het oude 'vroeg meer dan hij kreeg' blijft gewoon bestaan."""
+        config = replace(
+            house(),
+            circuits=(replace(house().circuits[0], max_concurrent_units=1),),
+        )
+        plan = decide(config, cold_house(outdoor=10.0))
+        decision = plan.decision_for("zolder")
+        assert decision is not None
+        assert decision.blocked is True
+        assert decision.held_back is False
+
+
+class TestPrecipitation:
+    """Regen zet de buitengrens per zone opzij, en alleen die."""
+
+    def test_rain_lifts_the_zone_outdoor_bound(self) -> None:
+        """Buiten 22 graden is boven de verwarmgrens; regen zet die opzij."""
+        decision = decide(house(), cold_house(outdoor=22.0, precipitation=True)).decision_for(
+            "woonkamer"
+        )
+        assert decision is not None
+        assert decision.granted is ModeFamily.HEAT
+        assert decision.source_id == "woonkamer_airco"
+
+    def test_without_rain_the_zone_bound_stays(self) -> None:
+        decision = decide(house(), cold_house(outdoor=22.0)).decision_for("woonkamer")
+        assert decision is not None
+        assert decision.reason is Reason.OUTDOOR_OUTSIDE_WINDOW
+
+    def test_a_windowless_room_keeps_its_bound_in_the_rain(self) -> None:
+        config = replace(
+            house(),
+            zones=tuple(
+                replace(zone, ignore_precipitation=True) if zone.zone_id == "woonkamer" else zone
+                for zone in house().zones
+            ),
+        )
+        decision = decide(config, cold_house(outdoor=22.0, precipitation=True)).decision_for(
+            "woonkamer"
+        )
+        assert decision is not None
+        assert decision.reason is Reason.OUTDOOR_OUTSIDE_WINDOW
+
+    def test_rain_does_not_override_the_source_bound(self) -> None:
+        """De grens per bron kiest nog steeds het apparaat: onder 3 graden blijft gas."""
+        decision = decide(house(), cold_house(outdoor=1.0, precipitation=True)).decision_for(
+            "woonkamer"
+        )
+        assert decision is not None
+        assert decision.granted is ModeFamily.HEAT
+        assert decision.source_id == "gasketel"
 
 
 class TestCommandOrder:
@@ -221,6 +314,109 @@ class TestExclusiveGroups:
         assert command is not None
         assert command.reason is Reason.EXCLUSIVE_GROUP_LOST
 
+    def _config_with_manual(
+        self, office_priority: int = 0, hall_priority: int = 1
+    ) -> DirectorConfig:
+        shared = ModeSettings(target=21.0, start_at=20.0, hysteresis=1.0)
+        return DirectorConfig(
+            zones=(
+                Zone(
+                    "kantoor",
+                    "Kantoor",
+                    "sensor.kantoor",
+                    priority=office_priority,
+                    sources=(Source("kachel_kantoor", "climate.kachel", SourceRole.HEAT_ONLY),),
+                    heat=shared,
+                ),
+                Zone(
+                    "hal",
+                    "Hal",
+                    "sensor.hal",
+                    priority=hall_priority,
+                    sources=(
+                        Source(
+                            "kachel_hal",
+                            "climate.kachel_hal",
+                            SourceRole.HEAT_ONLY,
+                            autostart=False,
+                        ),
+                    ),
+                    heat=shared,
+                ),
+            ),
+            exclusive_groups=(frozenset({"kachel_kantoor", "kachel_hal"}),),
+        )
+
+    def test_a_stronger_request_takes_the_group_from_a_running_manual_member(self) -> None:
+        """Een draaiend handbediend lid wijkt voor een verzoek met meer voorrang.
+
+        A running hand-operated member yields to a request with more claim.
+        """
+        world = make_world(
+            indoor={"kantoor": 18.0, "hal": 18.0},
+            climates={
+                "climate.kachel": climate(),
+                "climate.kachel_hal": climate(MODE_HEAT),
+            },
+        )
+        plan = decide(self._config_with_manual(), world)
+        office = plan.command_for("climate.kachel")
+        hall = plan.command_for("climate.kachel_hal")
+        assert office is not None and office.hvac_mode == MODE_HEAT
+        assert hall is not None and hall.hvac_mode == MODE_OFF
+        assert hall.reason is Reason.EXCLUSIVE_GROUP_LOST
+
+    def test_a_running_manual_member_keeps_the_group_without_a_stronger_request(self) -> None:
+        """Zonder verzoek met méér voorrang blijft het handbediende lid draaien.
+
+        Without a request that outranks it, the hand-operated member keeps the group.
+        """
+        world = make_world(
+            indoor={"kantoor": 18.0, "hal": 18.0},
+            climates={
+                "climate.kachel": climate(),
+                "climate.kachel_hal": climate(MODE_HEAT),
+            },
+        )
+        plan = decide(self._config_with_manual(office_priority=1, hall_priority=0), world)
+        office = plan.command_for("climate.kachel")
+        assert office is not None and office.hvac_mode == MODE_OFF
+        assert office.reason is Reason.EXCLUSIVE_GROUP_LOST
+        assert plan.command_for("climate.kachel_hal") is None
+
+    def test_a_running_member_in_an_overridden_zone_occupies_the_group(self) -> None:
+        """Ook een overgedragen zone die doordraait houdt de groep bezet.
+
+        A handed-over zone that keeps running holds the group too.
+        """
+        world = make_world(
+            indoor={"kantoor": 18.0, "hal": 18.0},
+            climates={
+                "climate.kachel": climate(),
+                "climate.kachel_hal": climate(MODE_HEAT),
+            },
+            zone_overrides={"hal": True},
+        )
+        plan = decide(self._config(), world)
+        assert plan.decision_for("kantoor").reason is Reason.EXCLUSIVE_GROUP_LOST
+        assert plan.command_for("climate.kachel").hvac_mode == MODE_OFF
+
+    def test_an_idle_manual_member_leaves_the_group_free(self) -> None:
+        """Staat het handbediende lid uit, dan mag de ander gewoon draaien.
+
+        When the hand-operated member is off, the other may simply run.
+        """
+        world = make_world(
+            indoor={"kantoor": 18.0, "hal": 18.0},
+            climates={
+                "climate.kachel": climate(),
+                "climate.kachel_hal": climate(MODE_OFF),
+            },
+        )
+        plan = decide(self._config_with_manual(), world)
+        office = plan.command_for("climate.kachel")
+        assert office is not None and office.hvac_mode == MODE_HEAT
+
 
 class TestIdempotence:
     def test_deciding_twice_on_the_same_world_gives_the_same_plan(self) -> None:
@@ -303,3 +499,37 @@ def test_a_zone_whose_indoor_temperature_is_missing_stands_down() -> None:
     assert decision is not None
     assert decision.wanted is ModeFamily.NEUTRAL
     assert decision.reason is Reason.NO_INDOOR_TEMPERATURE
+
+
+def test_a_running_appliance_is_left_alone_when_the_temperature_is_unreadable() -> None:
+    """Kapotte sensor mag een draaiend apparaat niet uitzetten.
+
+    A broken sensor must not switch a running appliance off.
+    """
+    world = cold_house(
+        indoor={"zolder": 20.0, "slaapkamer": 20.0},
+        climates={
+            GAS: climate(MODE_OFF),
+            LIVING: climate(MODE_HEAT),
+            ATTIC: climate(MODE_OFF),
+            BEDROOM: climate(MODE_OFF),
+        },
+    )
+    plan = decide(house(), world)
+    assert plan.command_for(LIVING) is None
+    assert any(
+        item.entity_id == LIVING and item.reason is Reason.NO_INDOOR_TEMPERATURE
+        for item in plan.untouched
+    )
+
+
+def test_an_idle_appliance_still_gets_its_off_command_when_the_temperature_is_unreadable() -> None:
+    """Staat hij al uit, dan blijft de regel 'elke bron krijgt een commando' gelden.
+
+    When it is already off, the rule 'every source gets a command' still holds.
+    """
+    world = cold_house(indoor={"zolder": 20.0, "slaapkamer": 20.0})
+    command = decide(house(), world).command_for(LIVING)
+    assert command is not None
+    assert command.hvac_mode == MODE_OFF
+    assert command.reason is Reason.NO_INDOOR_TEMPERATURE

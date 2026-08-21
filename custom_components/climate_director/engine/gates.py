@@ -15,8 +15,9 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 
 from .families import ModeFamily
+from .hysteresis import source_counts_for
 from .models import HOLIDAY_WEEKDAY, DirectorConfig, Resident, Zone, ZoneGate
-from .plan import Reason
+from .plan import Plan, Reason
 from .world import WorldState
 
 
@@ -38,18 +39,22 @@ class GateVerdict:
         return GateVerdict(False, reason)
 
 
-def evaluate(config: DirectorConfig, world: WorldState, zone: Zone) -> GateVerdict:
+def evaluate(
+    config: DirectorConfig, world: WorldState, zone: Zone, previous: Plan | None = None
+) -> GateVerdict:
     """Return whether `zone` may be regulated right now.
 
     Checked from broadest to narrowest, so the reported cause is the one a user
     would name first: a disabled master switch outranks an open window, which
     outranks nobody being home.
     """
-    reason = next(_closed(config, world, zone), None)
+    reason = next(_closed(config, world, zone, previous), None)
     return GateVerdict.allow() if reason is None else GateVerdict.block(reason)
 
 
-def closed(config: DirectorConfig, world: WorldState, zone: Zone) -> tuple[Reason, ...]:
+def closed(
+    config: DirectorConfig, world: WorldState, zone: Zone, previous: Plan | None = None
+) -> tuple[Reason, ...]:
     """Return every gate standing shut for this zone, broadest first.
 
     Het oordeel noemt er één, en bij het regelen is dat genoeg: één dichte
@@ -70,10 +75,12 @@ def closed(config: DirectorConfig, world: WorldState, zone: Zone) -> tuple[Reaso
     running the gates about people no longer say anything, and naming them
     would suggest an obstacle that is not there.
     """
-    return tuple(_closed(config, world, zone))
+    return tuple(_closed(config, world, zone, previous))
 
 
-def _closed(config: DirectorConfig, world: WorldState, zone: Zone) -> Iterator[Reason]:
+def _closed(
+    config: DirectorConfig, world: WorldState, zone: Zone, previous: Plan | None
+) -> Iterator[Reason]:
     """Yield the shut gates in order, stopping where the rest stops applying."""
     if not world.master_enabled:
         yield Reason.MASTER_DISABLED
@@ -115,7 +122,7 @@ def _closed(config: DirectorConfig, world: WorldState, zone: Zone) -> Iterator[R
     # included. Switch something on yourself and it runs along as though it had
     # been going all the while. That keeps the brake a brake rather than a second
     # schedule.
-    if _quiet_hours(config, world) and not _zone_running(world, zone):
+    if _quiet_hours(config, world) and not _zone_running(config, world, zone, previous):
         yield Reason.QUIET_HOURS
 
     # Een zone die op de kamer draait laat het huishouden erbuiten. Wie er zit,
@@ -285,17 +292,35 @@ def _quiet_hours(config: DirectorConfig, world: WorldState) -> bool:
 
     Only the window of somebody who is home counts: the schedule of somebody who
     is out need not set the house going.
-    """
-    if not any(
-        window.contains(world.now.time(), world.now.weekday())
-        for window in config.gates.quiet_windows
-    ):
-        return False
 
+    Een vakantievenster geldt alleen op vakantiedagen, en dan elke dag van de
+    week. Zijn er vakantievensters, dan nemen die het op een vakantie over van
+    de gewone; zijn die er niet, dan telt een vakantie als zaterdag - precies
+    zoals de bewonersroosters dat doen.
+
+    A holiday window applies only on holidays, and then on any weekday. With
+    holiday windows set they take over from the ordinary ones on a holiday;
+    without them a holiday counts as a Saturday - exactly like the residents'
+    schedules do.
+    """
     moment = world.now.time()
     weekday = world.now.weekday()
     holiday = world.holiday_mode
     effective = HOLIDAY_WEEKDAY if holiday else weekday
+    holiday_windows = [window for window in config.gates.quiet_windows if window.holiday]
+    if holiday and holiday_windows:
+        in_window = any(
+            window.contains(moment, weekday, any_day=True) for window in holiday_windows
+        )
+    else:
+        in_window = any(
+            window.contains(moment, effective)
+            for window in config.gates.quiet_windows
+            if not window.holiday
+        )
+    if not in_window:
+        return False
+
     return not any(
         world.resident(resident.resident_id).home
         and resident.takes_part(holiday=holiday, weekday=effective)
@@ -304,10 +329,21 @@ def _quiet_hours(config: DirectorConfig, world: WorldState) -> bool:
     )
 
 
-def _zone_running(world: WorldState, zone: Zone) -> bool:
-    """Return whether any appliance of this zone is doing something right now."""
+def _zone_running(
+    config: DirectorConfig, world: WorldState, zone: Zone, previous: Plan | None
+) -> bool:
+    """Return whether any appliance that counts for this zone is doing something.
+
+    Een gedeeld apparaat telt alleen voor de zone die het commando kreeg, zodat
+    een ketel die voor een andere kamer brandt dit stiltevenster niet opheft.
+
+    A shared appliance counts only for the zone that got the command, so a
+    boiler burning for another room does not lift this quiet window.
+    """
     return any(
-        world.climate(source.entity_id).family is not ModeFamily.NEUTRAL for source in zone.sources
+        source_counts_for(config, zone, source, previous)
+        and world.climate(source.entity_id).family is not ModeFamily.NEUTRAL
+        for source in zone.sources
     )
 
 

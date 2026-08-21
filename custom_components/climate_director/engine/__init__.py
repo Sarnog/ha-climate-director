@@ -39,6 +39,7 @@ from .models import (
     ModeSettings,
     Opening,
     OutdoorWindow,
+    PrecipitationSettings,
     Problem,
     Resident,
     Season,
@@ -51,6 +52,7 @@ from .models import (
     validate,
 )
 from .plan import (
+    HOLDING_GATES,
     WAITING_REASONS,
     CircuitDecision,
     Deferral,
@@ -86,8 +88,10 @@ __all__ = [
     "PresenceState",
     "OutdoorWindow",
     "Plan",
+    "PrecipitationSettings",
     "Problem",
     "Reason",
+    "HOLDING_GATES",
     "WAITING_REASONS",
     "Resident",
     "ResidentState",

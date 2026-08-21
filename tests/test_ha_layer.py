@@ -57,7 +57,11 @@ from custom_components.climate_director.engine import (
     decide,
 )
 from custom_components.climate_director.engine.diff import changes
-from custom_components.climate_director.engine.models import SeasonSettings, SeasonSource
+from custom_components.climate_director.engine.models import (
+    PrecipitationSettings,
+    SeasonSettings,
+    SeasonSource,
+)
 from custom_components.climate_director.sensor import (
     CommandSensor,
     DecisionSensor,
@@ -190,6 +194,7 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
             self.zone_priorities: dict[str, int] = {}
             self._precondition: dict[str, datetime] = {}
             self._precondition_bypass: set[str] = set()
+            self._precipitation_seen_at: datetime | None = None
             self._handed_back: dict = {}
             self._waiting: dict = {}
             self._refused: set[str] = set()
@@ -214,6 +219,8 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
         _opening = ClimateDirectorCoordinator._opening
         _presence = ClimateDirectorCoordinator._presence
         _season = ClimateDirectorCoordinator._season
+        _precipitation = ClimateDirectorCoordinator._precipitation
+        _notice_precipitation = ClimateDirectorCoordinator._notice_precipitation
         _calendar_says_holiday = ClimateDirectorCoordinator._calendar_says_holiday
         _zones_handed_back = ClimateDirectorCoordinator._zones_handed_back
         _live_preconditions = ClimateDirectorCoordinator._live_preconditions
@@ -287,6 +294,44 @@ class TestReadingTheWorld:
         assert world.resident("danny").asleep is False
         assert world.opening("binary_sensor.achterdeur").open is False
         assert world.presence_of("zolder").occupied is True
+
+    def test_a_cover_opening_reads_its_configured_open_state(self) -> None:
+        """`cover.dakraam = open` schort de zone op, ook al is 'on' de standaard.
+
+        `cover.dakraam = open` suspends the zone even though 'on' is the default.
+        """
+        config = DirectorConfig(
+            zones=house().zones,
+            openings=(Opening(entity_id="cover.dakraam", open_state="open"),),
+        )
+        states = self._states(**{"cover.dakraam": FakeState("open")})
+        assert coordinator(states, config).build_world().opening("cover.dakraam").open is True
+
+    def test_a_cover_that_is_not_open_reads_as_closed(self) -> None:
+        config = DirectorConfig(
+            zones=house().zones,
+            openings=(Opening(entity_id="cover.dakraam", open_state="open"),),
+        )
+        states = self._states(**{"cover.dakraam": FakeState("closed")})
+        assert coordinator(states, config).build_world().opening("cover.dakraam").open is False
+
+    def test_an_opening_still_defaults_to_the_state_on(self) -> None:
+        """Wie niets instelt houdt het oude gedrag: 'on' is open, 'open' niet.
+
+        Whoever configures nothing keeps the old behaviour: 'on' is open, 'open' is not.
+        """
+        config = DirectorConfig(
+            zones=house().zones,
+            openings=(Opening(entity_id="binary_sensor.achterdeur"),),
+        )
+        states = self._states(
+            **{
+                "binary_sensor.achterdeur": FakeState("on"),
+                "cover.dakraam": FakeState("open"),
+            }
+        )
+        world = coordinator(states, config).build_world()
+        assert world.opening("binary_sensor.achterdeur").open is True
 
     def test_an_unavailable_appliance_reads_as_nothing(self) -> None:
         """Niet als "uit": als onbereikbaar, want dan valt er niets over te zeggen."""
@@ -362,6 +407,15 @@ class TestReadingTheWorld:
             assert entity_id in tracked, entity_id
 
 
+def _healthy_states() -> dict[str, FakeState]:
+    """Return a world where every entity reads, with numbers where numbers belong."""
+    states = {entity: FakeState("on") for entity in coordinator({}).tracked_entities()}
+    for entity in ("sensor.buiten", "sensor.woonkamer", "sensor.zolder"):
+        if entity in states:
+            states[entity] = FakeState("19.0")
+    return states
+
+
 class TestTheUnusableList:
     """Entiteiten die niet te lezen zijn, apart gemeld.
 
@@ -380,7 +434,7 @@ class TestTheUnusableList:
         assert coordinator(states).unusable_entities()["sensor.buiten"] == "unavailable"
 
     def test_a_healthy_installation_reports_nothing(self) -> None:
-        states = {entity: FakeState("on") for entity in coordinator({}).tracked_entities()}
+        states = _healthy_states()
         assert coordinator(states).unusable_entities() == {}
 
 
@@ -430,6 +484,58 @@ class TestTheSeasonAndTheCalendar:
     def test_a_missing_calendar_is_survivable(self) -> None:
         config = self._config(holiday_calendars=("calendar.weg",), holiday_keyword="vakantie")
         assert coordinator({}, config)._calendar_says_holiday() is False
+
+    def test_without_a_precipitation_source_rain_never_counts(self) -> None:
+        """Zonder neerslagbron is het antwoord gewoon 'nee'."""
+        assert coordinator({}, self._config())._precipitation() is False
+
+    @pytest.mark.parametrize("condition", ["rainy", "pouring", "snowy", "hail", "lightning-rainy"])
+    def test_the_precipitation_source_reads_every_precipitation_form(self, condition: str) -> None:
+        """Elke standaard neerslagvorm telt: regen, sneeuw en hagel.
+
+        Every default precipitation form counts: rain, snow and hail.
+        """
+        config = self._config(precipitation=PrecipitationSettings(source="weather.buienradar"))
+        states = {"weather.buienradar": FakeState(condition)}
+        assert coordinator(states, config)._precipitation() is True
+
+    def _event(self, entity_id: str, old: str, new: str):
+        """Return a state-change event like Home Assistant would hand over."""
+
+        class Event:
+            data = {
+                "entity_id": entity_id,
+                "old_state": FakeState(old),
+                "new_state": FakeState(new),
+            }
+
+        return Event()
+
+    def test_the_precipitation_reader_does_not_write(self) -> None:
+        """De lezer geeft alleen een antwoord; het moment hoort in de listener.
+
+        The reader only returns an answer; the moment belongs in the listener.
+        """
+        config = self._config(precipitation=PrecipitationSettings(source="weather.buienradar"))
+        item = coordinator({"weather.buienradar": FakeState("rainy")}, config)
+        assert item._precipitation() is True
+        assert item._precipitation_seen_at is None
+
+    def test_the_listener_records_the_moment_precipitation_is_reported(self) -> None:
+        config = self._config(precipitation=PrecipitationSettings(source="weather.buienradar"))
+        item = coordinator({"weather.buienradar": FakeState("cloudy")}, config)
+        item._notice_precipitation(self._event("weather.buienradar", "cloudy", "rainy"))
+        assert item._precipitation_seen_at == NOW
+
+    def test_the_listener_ignores_a_change_between_two_dry_states(self) -> None:
+        """Bewolkt -> zonnig is geen neerslag en hoort de nalooptijd niet te verlengen.
+
+        Cloudy -> sunny is not precipitation and must not extend the grace.
+        """
+        config = self._config(precipitation=PrecipitationSettings(source="weather.buienradar"))
+        item = coordinator({"weather.buienradar": FakeState("cloudy")}, config)
+        item._notice_precipitation(self._event("weather.buienradar", "cloudy", "sunny"))
+        assert item._precipitation_seen_at is None
 
 
 # ---------------------------------------------------------------------------
@@ -672,9 +778,7 @@ class TestTheEntities:
         assert sensor.extra_state_attributes["unusable_entities"]
 
     def test_the_stuck_sensor_is_quiet_when_everything_reads(self) -> None:
-        item = coordinator(
-            {entity: FakeState("on") for entity in coordinator({}).tracked_entities()}
-        )
+        item = coordinator(_healthy_states())
         item.data = object()
         sensor = _bind(StuckSensor, item)
         assert sensor.is_on is False

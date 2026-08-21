@@ -68,6 +68,7 @@ Director sait quelles unités vont ensemble et résout ce conflit pour vous.
 | Une `climate.*` par zone | **oui** | sans appareil, il n'y a rien à piloter |
 | Un capteur de température par zone | **oui** | sans mesure, l'intégration ne peut pas distinguer trop froid de trop chaud ; une `climate.*` avec `current_temperature` convient |
 | `sensor.*` ou `weather.*` température extérieure | non | seulement pour borner par température extérieure — gaz sous 3 °C, pompe à chaleur au-dessus, par exemple |
+| `weather.*` ou `sensor.*` précipitations | non | seulement si les précipitations peuvent lever la limite « ouvrir une fenêtre » |
 | `person.*` ou `device_tracker.*` par résident | oui, dès que vous configurez des résidents | sinon ce résident ne peut jamais être présent |
 | Un capteur de sommeil par résident | non | sans lui, personne ne compte jamais comme endormi |
 | `binary_sensor.*` présence par zone | seulement si une zone fonctionne sur *la pièce elle-même* | c'est alors la seule porte de la zone |
@@ -152,6 +153,7 @@ le menu principal.
 | **Source de la saison** | d'où vient la saison : le mois, une entité, ou fixée été/hiver |
 | **Entité de saison** | seulement si la source est réglée sur *entité* ; l’entité intégrée `season.*` est aussi sélectionnable |
 | **Hémisphère** | quels mois comptent comme été lorsque la saison vient du mois : nord avril–septembre, sud octobre–mars |
+| **Choix de saison** | l'entité `select.*` *Saison* règle la saison à la main sur Automatique, Été ou Hiver ; le choix survit à un redémarrage |
 | **Quelqu'un à la maison doit être réveillé** | activé = la maison attend quelqu'un à la maison *et* réveillé ; désactivé = le sommeil ne compte pas |
 | **L'emploi du temps d'un résident doit être ouvert** | activé = la maison attend la première fenêtre d'emploi du temps ; désactivé = la présence seule décide |
 | **Calendriers de vacances** | quels calendriers peuvent annoncer des vacances ; plusieurs autorisés |
@@ -160,7 +162,31 @@ le menu principal.
 | **Durée de préchauffage** | le plafond d'une seule demande ; par défaut 120 minutes |
 | **Mode invités de / jusqu'à** | la fenêtre où le mode invités s'applique ; les deux vides = toute la journée |
 | **Signaler une zone bloquée après** | après combien de minutes d'attente une zone compte comme bloquée ; 0 éteint le capteur |
+| **Source de précipitations** | une entité `weather.*` ou `sensor.*` qui dit s'il y a des précipitations ; vide = la règle de précipitations ne participe pas |
+| **États comptant comme précipitations** | quels états de cette entité signifient des précipitations ; pluie, neige et grêle par défaut |
+| **Combien de temps les précipitations continuent de compter (minutes)** | délai de grâce après l'arrêt des précipitations ; 15 minutes par défaut |
 | **Mode fantôme** | activé = tout calculer, ne rien piloter |
+
+### Les précipitations mettent la limite extérieure de côté
+
+La limite extérieure par zone est une règle d'économie avec un postulat : s'il
+fait meilleur dehors que dedans, vous avez intérêt à ouvrir une fenêtre plutôt
+que d'allumer le climatiseur. Quand il y a des précipitations, cette fenêtre
+reste fermée, donc rien ne se passe, alors que la pièce reste trop chaude ou
+trop froide.
+
+Configurez donc une **source de précipitations**. Tant qu'elle signale des
+précipitations, Climate Director ignore la **limite extérieure par zone** —
+exactement
+comme le fait une demande de préchauffage. La bande morte, la saison et la
+limite extérieure **par source** continuent de s'appliquer ; ce sont elles qui
+choisissent l'appareil. Le délai de grâce fait qu'une averse de cinq minutes ne
+fait pas osciller la régulation. Sans source, la règle de précipitations ne
+participe pas.
+
+Une pièce sans fenêtres n'y gagne rien. Là, activez dans la zone **Les
+précipitations ne lèvent pas la règle « ouvrir une fenêtre »**, et la limite
+extérieure continue de s'appliquer même lorsqu'il y a des précipitations.
 
 ### Système de chauffage : centralisé ou par zone
 
@@ -189,6 +215,7 @@ Une zone est une pièce. Par zone, vous réglez :
 | **Préséance sur une unité extérieure partagée** | avec quelle force cette zone revendique une unité extérieure partagée ; **le plus petit gagne**. Sur un circuit, aucun numéro ne peut apparaître deux fois |
 | **Ce qui décide si cette zone tourne** | *le foyer* (emploi du temps, sommeil, quelqu'un à la maison) ou *la pièce elle-même* (seul le capteur de présence) |
 | **Capteur de présence + état + délai de grâce** | quand la pièce compte comme occupée ; le délai absorbe les détecteurs qui clignotent |
+| **Les précipitations ne lèvent pas la règle « ouvrir une fenêtre »** | activé pour une pièce sans fenêtres ; là, la limite extérieure continue de s'appliquer même lorsqu'il y a des précipitations |
 | **Cette zone peut chauffer** | désactivé = cette pièce n'est jamais chauffée |
 | **Température cible chauffage** | la consigne donnée à l'appareil quand le chauffage tourne — pas le point de démarrage |
 | **Démarrer le chauffage à** | le chauffage démarre à cette température intérieure ou en dessous |
@@ -292,7 +319,7 @@ extérieure. Si chaque unité a la sienne, laissez vide.
 | **Unités intérieures** | quelles entités `climate.*` sont raccordées à cette unité extérieure. Incluez aussi les unités que le directeur ne gère pas : elles réclament le compresseur également |
 | **Peut chauffer et refroidir en même temps** | désactivé pour un multi-split ordinaire ; activé pour un split simple ou un VRF trois tubes à récupération de chaleur |
 | **Règle de conflit** | qui gagne quand deux pièces veulent des fonctions opposées |
-| **Une zone perdante peut ventiler** | activé = la perdante passe en `fan_only` au lieu de s'éteindre |
+| **Une zone perdante peut ventiler** | activé = la perdante passe en `fan_only` au lieu de s'éteindre, mais seulement si l'unité connaît ce mode ; sinon elle s'éteint |
 | **Pause lors du changement de fonction** | combien de temps tout reste éteint avant le basculement |
 | **Durée minimale avant un changement de fonction** | combien de temps une fonction doit avoir tourné avant que l'autre puisse prendre le relais |
 | **Repos avant qu'une unité puisse redémarrer** | ne retarde que les démarrages, jamais les arrêts ; par défaut 180 secondes |
@@ -337,7 +364,9 @@ climatiseurs du même circuit peuvent refroidir ensemble, faites un groupe par
 paire — le gaz avec l'un, le gaz avec l'autre.
 
 Un groupe lie aussi les appareils que vous allumez vous-même : quand un autre
-membre du groupe vient à son tour, l'appareil manuel s'éteint.
+membre du groupe vient à son tour, l'appareil manuel s'éteint. Et dans
+l'autre sens : quand un tel appareil tourne déjà, il occupe le groupe et un
+autre membre attend.
 
 ## Étape 9 — Fenêtres silencieuses
 
@@ -433,7 +462,7 @@ Un appareil par installation, avec en dessous :
 | `sensor.*_would_command_<entity>` | le mode dans lequel le directeur mettrait cet appareil — un capteur par appareil |
 | `sensor.*_mismatch` | combien d'appareils se trouvent ailleurs que là où le plan les veut ; 0 = directeur et maison d'accord |
 | `sensor.*_<zone>_source` | quelle source dessert cette zone, avec ce que la zone voulait, a obtenu et pourquoi |
-| `binary_sensor.*_<zone>_blocked` | activé quand une zone a reçu moins que demandé, avec les portes fermées en attributs |
+| `binary_sensor.*_<zone>_blocked` | activé quand une zone a reçu moins que demandé, ou voulait tourner mais qu'une circonstance l'a retenue ; les portes fermées sont dans les attributs |
 | `binary_sensor.*_<zone>_on_stand_in` | activé quand une zone tourne sur un appareil de secours parce que le premier choix est injoignable |
 | `binary_sensor.*_stuck` | activé quand une zone reste trop longtemps sur le même motif d'attente |
 | `switch.*_director` | l'interrupteur principal ; éteint = rien n'est régulé |
@@ -587,7 +616,8 @@ automatisation repose sur cet événement.
   le même motif d'attente (15 minutes par défaut), ou quand une entité
   configurée est illisible — mal tapée, supprimée ou temporairement
   `unavailable`. Les entités concernées sont dans l'attribut
-  `unusable_entities`.
+  `unusable_entities`. Un capteur lisible mais qui ne donne aucun nombre y
+  figure aussi (`no number`).
 - **`binary_sensor.*_<zone>_on_stand_in`** s'allume quand une zone tourne sur
   une source qui n'était pas le premier choix, parce que le premier choix est
   injoignable. La pièce devient simplement chaude — et c'est exactement

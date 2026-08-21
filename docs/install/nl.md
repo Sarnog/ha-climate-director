@@ -68,6 +68,7 @@ conflict voor je op.
 | Eén `climate.*` per zone | **ja** | zonder apparaat valt er niets aan te sturen |
 | Eén temperatuursensor per zone | **ja** | zonder meting weet de integratie niet of het te koud of te warm is; een `climate.*` met `current_temperature` mag ook |
 | `sensor.*` of `weather.*` buitentemperatuur | nee | alleen nodig als je grenzen op buitentemperatuur wilt — gas onder 3 °C, warmtepomp erboven, bijvoorbeeld |
+| `weather.*` of `sensor.*` neerslag | nee | alleen als neerslag de 'zet een raam open'-grens mag opheffen |
 | `person.*` of `device_tracker.*` per bewoner | ja, zodra je bewoners instelt | anders kan die bewoner nooit thuis zijn |
 | Een slaapsensor per bewoner | nee | zonder deze telt niemand ooit als slapend |
 | `binary_sensor.*` aanwezigheid per zone | alleen als een zone op *de ruimte zelf* draait | dan is het de enige poort die de zone heeft |
@@ -149,6 +150,7 @@ je in het hoofdmenu **Opslaan en sluiten** kiest.
 | **Seizoensbron** | waar het seizoen vandaan komt: de maand, een entiteit, of vast zomer/winter |
 | **Seizoensentiteit** | alleen nodig als de bron op *entiteit* staat; ook de ingebouwde `season.*`-entiteit is kiesbaar |
 | **Halfrond** | welke maanden als zomer tellen wanneer het seizoen uit de maand komt: noordelijk april–september, zuidelijk oktober–maart |
+| **Seizoenskeuze** | de `select.*`-entiteit *Seizoen* zet het seizoen met de hand op Automatisch, Zomer of Winter; de keuze overleeft een herstart |
 | **Iemand thuis moet wakker zijn** | aan = het huis wacht tot er iemand thuis én wakker is; uit = slapen telt niet |
 | **Het rooster van een bewoner moet openstaan** | aan = het huis wacht op het eerste roostervenster; uit = alleen aanwezigheid telt |
 | **Vakantieagenda's** | welke agenda's een vakantie mogen aankondigen; meerdere toegestaan |
@@ -157,7 +159,30 @@ je in het hoofdmenu **Opslaan en sluiten** kiest.
 | **Vooruitverwarmingsduur** | het plafond op één verzoek; standaard 120 minuten |
 | **Gastenmodus vanaf / tot** | het venster waarin de gastenmodus geldt; beide leeg = de hele dag |
 | **Meld een zone vastgelopen na** | na hoeveel minuten wachten een zone als vastgelopen geldt; 0 zet de melder uit |
+| **Neerslagbron** | een `weather.*`- of `sensor.*`-entiteit die zegt of er neerslag valt; leeg = de neerslagregel doet niet mee |
+| **Staten die als neerslag tellen** | welke standen van die entiteit neerslag betekenen; standaard regen, sneeuw en hagel |
+| **Hoe lang neerslag blijft tellen (minuten)** | nalooptijd na het stoppen van de neerslag; standaard 15 minuten |
 | **Schaduwmodus** | aan = alles doorrekenen, niets aansturen |
+
+### Neerslag zet de buitengrens opzij
+
+De buitengrens per zone is een zuinigheidsregel met een aanname eronder: is
+het buiten aangenamer dan binnen, dan kun je beter een raam openzetten dan de
+airco aanzetten. Valt er neerslag, dan blijft dat raam dicht en gebeurt er
+dus niets, terwijl het binnen te warm of te koud blijft.
+
+Stel daarom een **neerslagbron** in. Zolang die neerslag meldt, slaat Climate
+Director de **buitengrens per zone** over — precies zoals een vooruit-verzoek
+dat doet. De dode band, het seizoen en de buitengrens **per bron** blijven
+gewoon gelden; die kiezen nog steeds het apparaat. De nalooptijd zorgt dat een
+bui van vijf minuten de regeling niet laat stuiteren. Zonder bron doet de
+neerslagregel niet mee.
+
+Een ruimte zonder ramen heeft er niets aan. Zet daar in de zone **Neerslag
+heft de 'zet een raam open'-regel niet op** aan, en de buitengrens blijft ook
+bij neerslag gelden.
+
+### Verwarmingssysteem: centraal of per zone
 
 ### Verwarmingssysteem: centraal of per zone
 
@@ -185,6 +210,7 @@ Een zone is een ruimte. Per zone stel je in:
 | **Voorrang op een gedeelde buitenunit** | hoe hard deze zone een gedeelde buitenunit claimt; **lager wint**. Op één circuit mag geen nummer dubbel voorkomen |
 | **Wat bepaalt of deze zone draait** | *het huishouden* (rooster, slaap, iemand thuis) of *de ruimte zelf* (alleen de aanwezigheidssensor) |
 | **Aanwezigheidssensor + status + nalooptijd** | wanneer de kamer als bezet telt; de nalooptijd vangt knipperende melders op |
+| **Neerslag heft de 'zet een raam open'-regel niet op** | aan voor een ruimte zonder ramen; daar blijft de buitengrens ook bij neerslag gelden |
 | **Deze zone mag verwarmen** | uit = deze kamer wordt nooit verwarmd |
 | **Streeftemperatuur verwarmen** | het setpoint dat het apparaat krijgt als verwarmen draait — niet het startpunt |
 | **Verwarmen starten bij** | verwarmen start bij deze binnentemperatuur of lager |
@@ -292,7 +318,7 @@ buitenunit, laat dit dan leeg.
 | **Binnenunits** | welke `climate.*`-entiteiten aan deze buitenunit hangen. Neem ook units mee die de director niet beheert: die claimen de compressor ook |
 | **Kan tegelijk verwarmen en koelen** | uit voor een gewone multi-split; aan voor een losse split of driepijps-VRF met warmteterugwinning |
 | **Conflictbeleid** | wie wint als twee kamers tegengestelde taken willen |
-| **Een verliezende zone mag ventileren** | aan = de verliezer gaat naar `fan_only` in plaats van uit |
+| **Een verliezende zone mag ventileren** | aan = de verliezer gaat naar `fan_only` in plaats van uit, maar alleen als de unit die stand kent; anders gaat hij uit |
 | **Pauze bij taakwissel** | hoe lang alles uit staat vóór de omschakeling |
 | **Minimale looptijd voor een taakwissel** | hoe lang een taak minstens moet hebben gedraaid voor de andere hem mag overnemen |
 | **Rust voor een unit opnieuw mag starten** | vertraagt alleen starten, nooit stoppen; standaard 180 seconden |
@@ -336,7 +362,8 @@ hetzelfde circuit wél samen mogen koelen, maak dan één groep per paar — gas
 de ene airco, gas met de andere.
 
 Een groep geldt ook voor apparaten die je zelf aanzet: komt een ander lid van de
-groep aan de beurt, dan gaat het handbediende apparaat uit.
+groep aan de beurt, dan gaat het handbediende apparaat uit. En andersom: draait
+zo’n apparaat al, dan bezet het de groep en wacht een ander lid.
 
 ## Stap 9 — Stiltevensters
 
@@ -429,7 +456,7 @@ Eén device per installatie, met daaronder:
 | `sensor.*_zou_<entiteit>_aansturen` | de stand waarin de director dit apparaat zou zetten — één sensor per apparaat |
 | `sensor.*_afwijkingen` | hoeveel apparaten er nú anders staan dan het plan wil; 0 = director en huis zijn het eens |
 | `sensor.*_bron_<zone>` | welke bron deze zone bedient, met wat de zone wilde, kreeg en waarom |
-| `binary_sensor.*_<zone>_geblokkeerd` | aan als een zone minder kreeg dan hij vroeg, met de dichte poorten als attributen |
+| `binary_sensor.*_<zone>_geblokkeerd` | aan als een zone minder kreeg dan hij vroeg, of wilde draaien maar een omstandigheid haar tegenhield; de dichte poorten staan in de attributen |
 | `binary_sensor.*_<zone>_op_reserve` | aan als een zone op een reserve-apparaat draait omdat de eerste keus onbereikbaar is |
 | `binary_sensor.*_vastgelopen` | aan als een zone te lang op dezelfde wachtreden staat |
 | `switch.*_director` | de hoofdschakelaar; uit = er wordt niets geregeld |
@@ -580,7 +607,9 @@ automatisering op die gebeurtenis staat.
 - **`binary_sensor.*_vastgelopen`** gaat aan als een zone te lang op dezelfde
   wachtreden staat (standaard na 15 minuten), of als een ingestelde entiteit
   niet te lezen is — verkeerd getikt, verwijderd, of tijdelijk `unavailable`.
-  Welke entiteiten het zijn staat in het attribuut `unusable_entities`.
+  Welke entiteiten het zijn staat in het attribuut `unusable_entities`. Een
+  sensor die wel leesbaar is maar geen getal oplevert, staat er ook in
+  (`no number`).
 - **`binary_sensor.*_<zone>_op_reserve`** gaat aan als een zone draait op een
   bron die niet de eerste keus was, omdat de eerste keus onbereikbaar is. De
   kamer wordt gewoon warm — en precies daarom merk je zonder melder niets tot

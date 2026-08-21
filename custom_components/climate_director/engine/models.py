@@ -258,6 +258,16 @@ class Zone:
     still would cycle its compressor for no reason. Zero means react at once.
     """
 
+    ignore_precipitation: bool = False
+    """Whether this zone keeps its outdoor window even during precipitation.
+
+    Een zolder zonder ramen heeft niets aan de "zet een raam open"-regel, dus
+    daar mag neerslag de buitengrens niet opzij zetten.
+
+    An attic without windows gains nothing from the "open a window" rule, so
+    there precipitation must not set the outdoor bound aside.
+    """
+
     def settings_for(self, family: ModeFamily) -> ModeSettings | None:
         """Return the settings for `family`, or `None` if the zone forbids it."""
         if family is ModeFamily.HEAT:
@@ -482,6 +492,18 @@ class Opening:
     zone_ids: tuple[str, ...] = ()
     """Zones this opening suspends. Empty means the whole installation."""
 
+    open_state: str = "on"
+    """The entity state that counts as open; covers report `open` instead.
+
+    Standaard `on`, precies zoals de oude automatiseringen een raamcontact
+    lazen. Wie een `cover` als opening opgeeft - een dakraam bijvoorbeeld -
+    zet dit op `open`, want die rapporteert nooit `on`.
+
+    Defaults to `on`, exactly how the old automations read a window contact.
+    Whoever points an opening at a `cover` - a skylight, say - sets this to
+    `open`, since that never reports `on`.
+    """
+
     delay: timedelta = timedelta(0)
     """How long it must stand open before anything is suspended.
 
@@ -604,6 +626,49 @@ class SeasonSettings:
 
 
 @dataclass(frozen=True, slots=True)
+class PrecipitationSettings:
+    """Which source counts as precipitation, and how long it keeps counting.
+
+    De buitengrens per zone is een zuinigheidsregel die ervan uitgaat dat je
+    bij mooi weer beter een raam openzet dan de airco aan. Valt er neerslag,
+    dan gaat die aanname niet op — en zolang een neerslagbron neerslag meldt,
+    slaat de engine de buitengrens per zone over, precies zoals een
+    vooruit-verzoek dat al doet.
+
+    The per-zone outdoor bound is a thrift rule that assumes you are better off
+    opening a window than switching the air conditioner on in nice weather.
+    When precipitation falls that assumption does not hold — and as long as a
+    precipitation source reports precipitation, the engine skips the per-zone
+    outdoor bound, exactly as a pre-conditioning request already does.
+    """
+
+    source: str = ""
+    """Entity carrying the reading. Empty switches the whole feature off."""
+
+    states: frozenset[str] = frozenset({"rainy", "pouring", "snowy", "hail", "lightning-rainy"})
+    """States of that entity that count as precipitation.
+
+    Voor een `weather`-entiteit zijn dit zijn condities; voor een sensor zijn
+    het zijn standen.
+
+    For a `weather` entity these are its conditions; for a sensor its states.
+    """
+
+    grace: timedelta = timedelta(minutes=15)
+    """How long a reading keeps counting after it stops.
+
+    Een bui van vijf minuten hoort de regeling niet te laten stuiteren.
+
+    A five-minute shower should not make the regulation bounce.
+    """
+
+    @property
+    def enabled(self) -> bool:
+        """Return whether a source is configured at all."""
+        return bool(self.source)
+
+
+@dataclass(frozen=True, slots=True)
 class DirectorConfig:
     """A whole installation."""
 
@@ -617,6 +682,7 @@ class DirectorConfig:
 
     gates: GateSettings = field(default_factory=GateSettings)
     seasons: SeasonSettings = field(default_factory=SeasonSettings)
+    precipitation: PrecipitationSettings = field(default_factory=PrecipitationSettings)
 
     heating_layout: HeatingLayout = HeatingLayout.PER_ZONE
     """What kind of heating installation this is; see `HeatingLayout`."""

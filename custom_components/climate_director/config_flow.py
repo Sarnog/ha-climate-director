@@ -29,6 +29,7 @@ from .engine import validate
 from .engine.models import (
     ConflictPolicy,
     HeatingLayout,
+    PrecipitationSettings,
     Season,
     SeasonSettings,
     SeasonSource,
@@ -355,6 +356,19 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         if user_input is not None:
             if user_input.get(_EXIT) == _EXIT_DROP:
                 return await self.async_step_init()
+            # Optionele velden worden hier bewust met `or ""` / `or ()` gelezen.
+            # De echte HA-interface vult een selector met een `suggested_value`
+            # voor en stuurt die waarde mee bij het opslaan; alleen een
+            # leeggemaakt veld komt als leeg binnen. Wie hier "afwezig = bewaren"
+            # van maakt, blokkeert het leegmaken van de buitensensor en de
+            # neerslagbron - een gedragswijziging, geen reparatie.
+            #
+            # Optional fields are deliberately read with `or ""` / `or ()`.
+            # The real HA frontend pre-fills a selector with a `suggested_value`
+            # and submits that value on save; only a field the user cleared
+            # arrives empty. Turning this into "absent = keep" would stop users
+            # from clearing the outdoor sensor and the precipitation source - a
+            # behaviour change, not a repair.
             self._installation["outdoor_sensor"] = user_input.get("outdoor_sensor", "")
             self._installation["heating_layout"] = user_input["heating_layout"]
             self._installation["seasons"] = {
@@ -384,6 +398,17 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             self._installation["holiday_keyword"] = (
                 user_input.get("holiday_keyword") or ""
             ).strip()
+            self._installation["precipitation"] = {
+                "source": user_input.get("precipitation_source") or "",
+                "states": sorted(
+                    {
+                        item.strip()
+                        for item in (user_input.get("precipitation_states") or "").split(",")
+                        if item.strip()
+                    }
+                ),
+                "grace": int(user_input.get("precipitation_grace") or 0) * 60,
+            }
             self._shadow_mode = user_input[CONF_SHADOW_MODE]
             return await self.async_step_init()
 
@@ -391,6 +416,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         gates = self._installation.get("gates") or {}
         guest = gates.get("guest_window") or {}
         precondition = gates.get("precondition_window") or {}
+        precipitation = self._installation.get("precipitation") or {}
         return self.async_show_form(
             step_id="settings",
             data_schema=vol.Schema(
@@ -478,6 +504,27 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         "stuck_after",
                         default=int(self._installation.get("stuck_after", 900)) // 60,
                     ): _MINUTES_OR_OFF,
+                    vol.Optional(
+                        "precipitation_source",
+                        description={"suggested_value": precipitation.get("source") or None},
+                    ): selector.EntitySelector(
+                        selector.EntitySelectorConfig(domain=["weather", "sensor"])
+                    ),
+                    vol.Required(
+                        "precipitation_states",
+                        default=", ".join(
+                            precipitation.get("states") or sorted(PrecipitationSettings().states)
+                        ),
+                    ): _TEXT,
+                    vol.Required(
+                        "precipitation_grace",
+                        default=int(
+                            precipitation.get(
+                                "grace", PrecipitationSettings().grace.total_seconds()
+                            )
+                        )
+                        // 60,
+                    ): _MINUTES,
                     vol.Required(
                         CONF_SHADOW_MODE,
                         default=(
@@ -779,6 +826,10 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         "presence_timeout",
                         description={"suggested_value": current.get("presence_timeout") or None},
                     ): _SECONDS,
+                    vol.Required(
+                        "ignore_precipitation",
+                        default=current.get("ignore_precipitation", False),
+                    ): bool,
                     vol.Required("enable_heat", default=bool(heat)): bool,
                     vol.Required("heat_target", default=heat.get("target", 21.0)): _TEMPERATURE,
                     vol.Required("heat_start_at", default=heat.get("start_at", 20.0)): _TEMPERATURE,
@@ -1525,6 +1576,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 opening = {
                     "entity_id": user_input["entity_id"],
                     "zone_ids": user_input.get("zone_ids") or [],
+                    "open_state": user_input.get("open_state") or "on",
                     "delay": user_input.get("delay") or 0,
                 }
                 if self._index is None:
@@ -1551,6 +1603,10 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     ): selector.EntitySelector(
                         selector.EntitySelectorConfig(domain=["binary_sensor", "cover", "sensor"])
                     ),
+                    vol.Optional(
+                        "open_state",
+                        description={"suggested_value": current.get("open_state") or "on"},
+                    ): _TEXT,
                     vol.Optional(
                         "zone_ids",
                         description={"suggested_value": current.get("zone_ids") or []},
@@ -1737,14 +1793,33 @@ def _band_errors(zone: dict[str, Any]) -> dict[str, str]:
 
 
 def _zone_from_form(user_input: dict[str, Any], current: dict[str, Any]) -> dict[str, Any]:
-    """Return the stored zone described by a submitted zone form."""
+    """Return the stored zone described by a submitted zone form.
+
+    Het formulier toont maar één kant van elke buitengrens en geen
+    verwarmingsseizoenen. Wie die waarden eerder instelde - via een oudere
+    versie of een met de hand bewerkte configuratie - mag ze bij een gewone
+    formulierbewerking niet kwijtraken: wat het formulier niet toont, blijft
+    staan.
+
+    The form shows only one side of each outdoor bound and no heating seasons.
+    Whoever set those values earlier - through an older version or a hand-edited
+    configuration - should not lose them on an ordinary form edit: what the form
+    does not show stays.
+    """
+    stored_heat = current.get("heat") or {}
+    stored_cool = current.get("cool") or {}
+    stored_heat_outdoor = stored_heat.get("outdoor") or {}
+    stored_cool_outdoor = stored_cool.get("outdoor") or {}
     heat = (
         {
             "target": user_input["heat_target"],
             "start_at": user_input["heat_start_at"],
             "hysteresis": user_input["heat_hysteresis"],
-            "outdoor": {"minimum": None, "maximum": user_input.get("heat_outdoor_max")},
-            "seasons": None,
+            "outdoor": {
+                "minimum": stored_heat_outdoor.get("minimum"),
+                "maximum": user_input.get("heat_outdoor_max"),
+            },
+            "seasons": stored_heat.get("seasons"),
         }
         if user_input["enable_heat"]
         else None
@@ -1754,7 +1829,10 @@ def _zone_from_form(user_input: dict[str, Any], current: dict[str, Any]) -> dict
             "target": user_input["cool_target"],
             "start_at": user_input["cool_start_at"],
             "hysteresis": user_input["cool_hysteresis"],
-            "outdoor": {"minimum": user_input.get("cool_outdoor_min"), "maximum": None},
+            "outdoor": {
+                "minimum": user_input.get("cool_outdoor_min"),
+                "maximum": stored_cool_outdoor.get("maximum"),
+            },
             "seasons": [Season.SUMMER.value] if user_input["cool_summer_only"] else None,
         }
         if user_input["enable_cool"]
@@ -1772,6 +1850,7 @@ def _zone_from_form(user_input: dict[str, Any], current: dict[str, Any]) -> dict
         "presence_entity": user_input.get("presence_entity") or "",
         "presence_state": user_input.get("presence_state") or "on",
         "presence_timeout": user_input.get("presence_timeout") or 0,
+        "ignore_precipitation": bool(user_input.get("ignore_precipitation", False)),
     }
 
 

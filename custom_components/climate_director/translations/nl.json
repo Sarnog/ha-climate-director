@@ -55,7 +55,10 @@
           "precondition_end": "Vooruit verwarmen tot",
           "max_precondition": "Vooruitverwarmingsduur (minuten)",
           "when_done": "Als je hier klaar bent",
-          "stuck_after": "Zone geldt als vastgelopen na (minuten)"
+          "stuck_after": "Zone geldt als vastgelopen na (minuten)",
+          "precipitation_source": "Neerslagbron",
+          "precipitation_states": "Staten die als neerslag tellen",
+          "precipitation_grace": "Hoe lang neerslag blijft tellen (minuten)"
         },
         "data_description": {
           "season_source": "Leid het seizoen af uit de maand, lees het uit een entiteit, of zet het met de hand vast.",
@@ -74,7 +77,10 @@
           "precondition_end": "Vooruit verwarmen is het enige dat een leeg huis mag laten draaien, en blijft daarom binnen deze tijden. Daarbuiten telt een verzoek niet mee.",
           "max_precondition": "Een verzoek kun je niet vergeten, alleen verkeerd intikken. Dit plafond voorkomt dat een vertypte tijd een hele middag een leeg huis verwarmt. Vraag je langer, dan wordt het verzoek ingekort in plaats van geweigerd.",
           "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
-          "stuck_after": "Een pauze bij het wisselen van taak hoort seconden te duren. Een zone die er na deze tijd nog op staat wacht niet meer maar zit vast, en dat lijkt van buiten precies op niets doen. Houd hem ruim boven je langste pauze; een valse melding leert je de melder te negeren. Nul zet de melder uit."
+          "stuck_after": "Een pauze bij het wisselen van taak hoort seconden te duren. Een zone die er na deze tijd nog op staat wacht niet meer maar zit vast, en dat lijkt van buiten precies op niets doen. Houd hem ruim boven je langste pauze; een valse melding leert je de melder te negeren. Nul zet de melder uit.",
+          "precipitation_source": "Een weather-entiteit of neerslagsensor. Zolang die een van de staten hieronder meldt, wordt de 'zet een raam open'-grens per zone overgeslagen. Laat leeg om de gewone regel altijd te laten gelden.",
+          "precipitation_states": "Komma-gescheiden. Voor een weather-entiteit zijn dit zijn condities; voor een sensor de standen. De standaard dekt regen, sneeuw en hagel.",
+          "precipitation_grace": "Een bui van vijf minuten hoort de regeling niet te laten stuiteren, dus een meting blijft nog zo lang meetellen nadat de neerslag ophoudt."
         }
       },
       "zones": {
@@ -111,6 +117,7 @@
           "presence_entity": "Aanwezigheidssensor van deze zone",
           "presence_state": "Toestand die bezet betekent",
           "presence_timeout": "Nog zo lang als bezet tellen (seconden)",
+          "ignore_precipitation": "Neerslag heft de 'zet een raam open'-regel niet op",
           "gate": "Wat bepaalt of deze zone draait",
           "when_done": "Als je hier klaar bent"
         },
@@ -122,6 +129,7 @@
           "presence_entity": "Laat leeg om deze ruimte te regelen of er nu iemand is of niet. Iemand thuis zegt niets over of er iemand op zolder zit.",
           "presence_state": "Een aanwezigheidssensor meldt on.",
           "presence_timeout": "Laat leeg of zet op nul om direct te reageren zodra de aanwezigheid wegvalt. Aanwezigheidssensoren knipperen, dus een paar seconden hier scheelt de compressor een zinloze stop.",
+          "ignore_precipitation": "Aan voor een ruimte zonder ramen: die heeft niets aan de 'zet een raam open'-regel, dus neerslag hoort die regel daar niet op te heffen.",
           "name": "De naam van de zone overal. Zijn interne id wordt een keer afgeleid en blijft daarna staan, dus later hernoemen kan gerust.",
           "enable_heat": "Uit betekent dat deze ruimte nooit verwarmd wordt, wat de thermometer ook zegt.",
           "heat_target": "Het setpoint dat het apparaat krijgt zodra er verwarmd wordt. Niet het punt waarop hij begint.",
@@ -353,6 +361,7 @@
         "title": "Opening",
         "data": {
           "entity_id": "Sensor",
+          "open_state": "Toestand die 'open' betekent",
           "zone_ids": "Zones die dit raakt",
           "delay": "Vertraging voordat er opgeschort wordt (seconden)",
           "delete": "Deze opening verwijderen",
@@ -361,7 +370,8 @@
         "data_description": {
           "zone_ids": "Laat leeg om de hele installatie op te schorten.",
           "delay": "Laat leeg of zet op nul om direct op te schorten zodra hij opengaat.",
-          "entity_id": "Het deur- of raamcontact. Open telt als de toestand 'on'.",
+          "entity_id": "Het deur-, raam- of dakraamcontact. Welke toestand open betekent, staat eronder.",
+          "open_state": "De toestand die telt als open. Voor een raamcontact is dat meestal 'on', voor een dakraam of rolluik 'open'.",
           "delete": "Verwijdert de opening; hij schort dan niets meer op.",
           "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
@@ -607,6 +617,16 @@
       "precondition_minutes": {
         "name": "Vooruitduur"
       }
+    },
+    "select": {
+      "season": {
+        "name": "Seizoen",
+        "state": {
+          "auto": "Automatisch",
+          "summer": "Zomer",
+          "winter": "Winter"
+        }
+      }
     }
   },
   "issues": {
@@ -662,6 +682,9 @@
     },
     "target_outside_band": {
       "message": "Zone {zone} begint met {mode} bij {start}° maar streeft naar {target}°. Het apparaat krijgt dan een temperatuur waar het niets voor hoeft te doen, wat eruitziet alsof het weigert."
+    },
+    "and_n_more": {
+      "message": "- ... en nog {remaining} meer"
     },
     "precondition_refused_title": {
       "message": "Vooruit verwarmen geweigerd"

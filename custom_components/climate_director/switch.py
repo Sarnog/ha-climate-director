@@ -146,16 +146,27 @@ class ZoneOverrideSwitch(_DirectorSwitch):
     def _push(self) -> None:
         self.coordinator.zone_overrides[self._zone_id] = self._is_on
 
+    def _handle_coordinator_update(self) -> None:
+        """Follow the coordinator, and write the lapse away when it lets go.
+
+        De noodknop vervalt bij bedtijd en bij een leeg huis: de coordinator
+        gooit `zone_overrides` dan leeg. Zou de schakelaar haar eigen stand
+        houden, dan stond ze aan terwijl de zone allang weer meedraait - en erger:
+        een herstart herstelt die `on` terug de coordinator in, zodat de
+        overgedragen zone herleeft. Daarom wordt de stand hier bijgewerkt én
+        weggeschreven.
+
+        The emergency handle lapses at bedtime and on an empty house: the
+        coordinator then empties `zone_overrides`. Were the switch to keep its
+        own state it would read on while the zone has long since rejoined - and
+        worse: a restart restores that `on` back into the coordinator, so the
+        handed-over zone revives. Hence the state is both updated and written
+        away here.
+        """
+        self._is_on = self.coordinator.zone_overrides.get(self._zone_id, False)
+        self.async_write_ha_state()
+
     @property
     def is_on(self) -> bool:
-        """Return the switch state, following the coordinator when it lets go.
-
-        De noodknop vervalt bij bedtijd en bij een leeg huis. Zou de schakelaar
-        zijn eigen stand houden, dan stond hij aan terwijl de zone allang weer
-        meedraait - en dan geloof je de schakelaar niet meer.
-
-        The emergency handle lapses at bedtime and on an empty house. Were the
-        switch to keep its own state it would read on while the zone has long
-        since rejoined - and then you stop believing the switch.
-        """
+        """Return the switch state, following the coordinator when it lets go."""
         return self.coordinator.zone_overrides.get(self._zone_id, False)

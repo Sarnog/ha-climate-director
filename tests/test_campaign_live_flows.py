@@ -247,6 +247,53 @@ class TestBuildingAnInstallationInTheWizard:
         finally:
             await stop_house(home)
 
+    async def test_a_full_settings_save_keeps_optional_fields(self) -> None:
+        """De echte interface stuurt voorgevulde selectors mee; die horen te overleven.
+
+        The real frontend submits pre-filled selectors; those should survive.
+        """
+        installation = {
+            **simple_installation(),
+            "outdoor_sensor": "sensor.buiten",
+            "precipitation": {
+                "source": "weather.buienradar",
+                "states": ["rainy", "pouring"],
+                "grace": 900,
+            },
+        }
+        home = await start_house(installation, states=cold())
+        try:
+            flow = home.hass.config_entries.options
+            result = await flow.async_init(home.entry.entry_id)
+            result = await flow.async_configure(result["flow_id"], {"next_step_id": "settings"})
+
+            # Zoals de echte frontend: de voorgevulde optionele selectors worden
+            # meegestuurd, de rest blijft op zijn standaard.
+            #
+            # As the real frontend does: the pre-filled optional selectors are
+            # submitted, the rest stays on its default.
+            result = await flow.async_configure(
+                result["flow_id"],
+                {
+                    "shadow_mode": True,
+                    "when_done": "keep",
+                    "outdoor_sensor": "sensor.buiten",
+                    "precipitation_source": "weather.buienradar",
+                },
+            )
+            result = await flow.async_configure(result["flow_id"], {"next_step_id": "save"})
+            await home.hass.async_block_till_done()
+
+            stored = home.entry.options["installation"]
+            assert stored["outdoor_sensor"] == "sensor.buiten"
+            assert stored["precipitation"] == {
+                "source": "weather.buienradar",
+                "states": ["pouring", "rainy"],
+                "grace": 900,
+            }
+        finally:
+            await stop_house(home)
+
 
 # ---------------------------------------------------------------------------
 # De reparatiemelding.

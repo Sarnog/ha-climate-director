@@ -67,6 +67,7 @@ unidades van juntas y resuelve ese conflicto por ti.
 | Una `climate.*` por zona | **sí** | sin aparato no hay nada que gobernar |
 | Un sensor de temperatura por zona | **sí** | sin medición, la integración no distingue demasiado frío de demasiado calor; una `climate.*` con `current_temperature` sirve |
 | `sensor.*` o `weather.*` temperatura exterior | no | solo para poner límites por temperatura exterior — gas por debajo de 3 °C, bomba de calor por encima, por ejemplo |
+| `weather.*` o `sensor.*` precipitación | no | solo si las precipitaciones pueden levantar el límite de «abrir una ventana» |
 | `person.*` o `device_tracker.*` por residente | sí, en cuanto configures residentes | si no, ese residente nunca puede estar en casa |
 | Un sensor de sueño por residente | no | sin él, nadie cuenta nunca como dormido |
 | `binary_sensor.*` presencia por zona | solo si una zona funciona por *la habitación en sí* | entonces es la única puerta de la zona |
@@ -149,6 +150,7 @@ hasta que eliges **Guardar y cerrar** en el menú principal.
 | **Fuente de la estación** | de dónde sale la estación: el mes, una entidad, o fijada verano/invierno |
 | **Entidad de estación** | solo si la fuente está en *entidad*; la entidad integrada `season.*` también se puede elegir |
 | **Hemisferio** | qué meses cuentan como verano cuando la estación sale del mes: norte abril–septiembre, sur octubre–marzo |
+| **Elección de estación** | la entidad `select.*` *Estación* fija la estación a mano en Automático, Verano o Invierno; la elección sobrevive a un reinicio |
 | **Alguien en casa debe estar despierto** | activado = la casa espera a alguien en casa *y* despierto; desactivado = dormir no cuenta |
 | **El horario de un residente debe estar abierto** | activado = la casa espera la primera ventana de horario; desactivado = solo la presencia decide |
 | **Calendarios de vacaciones** | qué calendarios pueden anunciar vacaciones; se permiten varios |
@@ -157,7 +159,30 @@ hasta que eliges **Guardar y cerrar** en el menú principal.
 | **Duración del preacondicionamiento** | el tope de una sola petición; por defecto 120 minutos |
 | **Modo invitados de / hasta** | la ventana en la que se aplica el modo invitados; ambos vacíos = todo el día |
 | **Avisar de zona atascada tras** | tras cuántos minutos de espera una zona cuenta como atascada; 0 apaga el sensor |
+| **Fuente de precipitaciones** | una entidad `weather.*` o `sensor.*` que dice si hay precipitaciones; vacío = la regla de precipitaciones no participa |
+| **Estados que cuentan como precipitación** | qué estados de esa entidad significan precipitaciones; lluvia, nieve y granizo por defecto |
+| **Cuánto tiempo siguen contando las precipitaciones (minutos)** | margen tras cesar las precipitaciones; 15 minutos por defecto |
 | **Modo sombra** | activado = calcularlo todo, no gobernar nada |
+
+### Las precipitaciones dejan de lado el límite exterior
+
+El límite exterior por zona es una regla de ahorro con una suposición debajo:
+si fuera hace mejor tiempo que dentro, te conviene abrir una ventana antes que
+encender el aire acondicionado. Cuando hay precipitaciones, esa ventana se
+queda cerrada, así que no pasa nada, mientras la habitación sigue demasiado
+caliente o fría.
+
+Configura por eso una **fuente de precipitaciones**. Mientras informe de
+precipitaciones, Climate Director omite el **límite exterior por zona** —
+exactamente
+como hace una petición de preacondicionamiento. La banda muerta, la estación y
+el límite exterior **por fuente** siguen aplicándose; son ellos los que eligen
+el aparato. El margen hace que un chaparrón de cinco minutos no haga oscilar la
+regulación. Sin fuente, la regla de precipitaciones no participa.
+
+Una habitación sin ventanas no gana nada con ello. Ahí, activa en la zona **Las
+precipitaciones no levantan la regla de «abrir una ventana»**, y el límite
+exterior sigue aplicándose incluso con precipitaciones.
 
 ### Sistema de calefacción: central o por zona
 
@@ -186,6 +211,7 @@ Una zona es una habitación. Por zona configuras:
 | **Precedencia en una unidad exterior compartida** | con qué fuerza reclama esta zona una unidad exterior compartida; **el más bajo gana**. En un circuito no puede repetirse ningún número |
 | **Qué decide si esta zona funciona** | *el hogar* (horario, sueño, alguien en casa) o *la habitación en sí* (solo el sensor de presencia) |
 | **Sensor de presencia + estado + margen** | cuándo la habitación cuenta como ocupada; el margen absorbe detectores parpadeantes |
+| **Las precipitaciones no levantan la regla de «abrir una ventana»** | actívalo en una habitación sin ventanas; ahí el límite exterior sigue aplicándose incluso con precipitaciones |
 | **Esta zona puede calentar** | desactivado = esta habitación nunca se calienta |
 | **Temperatura objetivo calefacción** | la consigna que recibe el aparato cuando calienta — no el punto de arranque |
 | **Empezar a calentar a** | la calefacción arranca a esta temperatura interior o por debajo |
@@ -289,7 +315,7 @@ cada unidad tiene la suya, déjalo vacío.
 | **Unidades interiores** | qué entidades `climate.*` cuelgan de esta unidad exterior. Incluye también unidades que el director no gestiona: también reclaman el compresor |
 | **Puede calentar y enfriar a la vez** | desactivado para un multisplit normal; activado para un split simple o un VRF de tres tubos con recuperación de calor |
 | **Política de conflicto** | quién gana cuando dos habitaciones quieren funciones opuestas |
-| **Una zona perdedora puede ventilar** | activado = la perdedora pasa a `fan_only` en vez de apagarse |
+| **Una zona perdedora puede ventilar** | activado = la perdedora pasa a `fan_only` en vez de apagarse, pero solo si la unidad conoce ese modo; si no, se apaga |
 | **Pausa al cambiar de función** | cuánto tiempo está todo apagado antes del cambio |
 | **Mínimo antes de un cambio de función** | cuánto tiempo debe haber funcionado una función antes de que la otra pueda tomar el relevo |
 | **Descanso antes de que una unidad pueda rearrancar** | solo retrasa arranques, nunca paradas; por defecto 180 segundos |
@@ -333,7 +359,8 @@ que dos aires del mismo circuito sí pueden enfriar juntos, haz un grupo por
 pareja — el gas con uno, el gas con el otro.
 
 Un grupo también ata a los aparatos que enciendes tú mismo: cuando le toca a
-otro miembro del grupo, el aparato manual se apaga.
+otro miembro del grupo, el aparato manual se apaga. Y al revés: cuando un
+aparato así ya está en marcha, ocupa el grupo y otro miembro espera.
 
 ## Paso 9 — Ventanas silenciosas
 
@@ -426,7 +453,7 @@ Un dispositivo por instalación, con debajo:
 | `sensor.*_would_command_<entity>` | el modo en que el director pondría este aparato — un sensor por aparato |
 | `sensor.*_mismatch` | cuántos aparatos están ahora en un sitio distinto del que el plan quiere; 0 = director y casa de acuerdo |
 | `sensor.*_<zone>_source` | qué fuente sirve esta zona, con lo que la zona quería, obtuvo y por qué |
-| `binary_sensor.*_<zone>_blocked` | activado cuando una zona recibió menos de lo pedido, con las puertas cerradas como atributos |
+| `binary_sensor.*_<zone>_blocked` | activado cuando una zona recibió menos de lo pedido, o quería funcionar pero una circunstancia la retuvo; las puertas cerradas están en los atributos |
 | `binary_sensor.*_<zone>_on_stand_in` | activado cuando una zona funciona con un aparato suplente porque la primera opción es inalcanzable |
 | `binary_sensor.*_stuck` | activado cuando una zona lleva demasiado tiempo con el mismo motivo de espera |
 | `switch.*_director` | el interruptor principal; apagado = no se regula nada |
@@ -578,6 +605,8 @@ una automatización se apoya en ese evento.
   con el mismo motivo de espera (15 minutos por defecto), o cuando una entidad
   configurada no se puede leer — mal escrita, borrada o temporalmente
   `unavailable`. Qué entidades son está en el atributo `unusable_entities`.
+  Un sensor legible pero que no da ningún número también figura ahí
+  (`no number`).
 - **`binary_sensor.*_<zone>_on_stand_in`** se enciende cuando una zona funciona
   con una fuente que no era la primera opción, porque la primera opción es
   inalcanzable. La habitación simplemente se calienta — y por eso mismo, sin

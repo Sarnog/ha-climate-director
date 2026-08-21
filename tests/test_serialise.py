@@ -5,6 +5,7 @@ Tests for converting to and from a config entry's storage.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import time, timedelta
 
 from conftest import house
@@ -12,6 +13,7 @@ from conftest import house
 from custom_components.climate_director.engine import (
     ConflictPolicy,
     DirectorConfig,
+    PrecipitationSettings,
     Season,
     SourceRole,
     validate,
@@ -31,6 +33,21 @@ class TestRoundTrip:
 
     def test_an_empty_installation_round_trips(self) -> None:
         assert config_from_dict(config_to_dict(DirectorConfig())) == DirectorConfig()
+
+    def test_precipitation_settings_round_trip(self) -> None:
+        config = replace(
+            house(),
+            precipitation=PrecipitationSettings(
+                source="weather.buienradar",
+                states=frozenset({"rainy", "snowy"}),
+                grace=timedelta(minutes=30),
+            ),
+            zones=tuple(
+                replace(zone, ignore_precipitation=True) if zone.zone_id == "zolder" else zone
+                for zone in house().zones
+            ),
+        )
+        assert config_from_dict(config_to_dict(config)) == config
 
     def test_the_stored_form_is_plain_json_types(self) -> None:
         """A config entry stores JSON; a timedelta or an enum would not survive."""
@@ -115,6 +132,29 @@ class TestDurations:
     def test_a_presence_timeout_defaults_to_none(self) -> None:
         config = config_from_dict({"zones": [{"zone_id": "z", "presence_entity": "b.p"}]})
         assert config.zones[0].presence_timeout == timedelta(0)
+
+
+class TestOpenings:
+    def test_an_opening_without_an_open_state_gets_on(self) -> None:
+        """Existing installations keep reading the state 'on' as open."""
+        config = config_from_dict({"openings": [{"entity_id": "binary_sensor.door"}]})
+        assert config.openings[0].open_state == "on"
+
+    def test_a_cover_open_state_survives(self) -> None:
+        config = config_from_dict(
+            {"openings": [{"entity_id": "cover.dakraam", "open_state": "open"}]}
+        )
+        assert config.openings[0].open_state == "open"
+
+    def test_an_empty_open_state_falls_back_on_on(self) -> None:
+        config = config_from_dict({"openings": [{"entity_id": "cover.dakraam", "open_state": ""}]})
+        assert config.openings[0].open_state == "on"
+
+    def test_the_open_state_round_trips(self) -> None:
+        config = config_from_dict(
+            {"openings": [{"entity_id": "cover.dakraam", "open_state": "open"}]}
+        )
+        assert config_from_dict(config_to_dict(config)) == config
 
 
 class TestScheduleWindows:

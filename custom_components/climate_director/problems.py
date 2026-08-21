@@ -128,11 +128,27 @@ def readable(hass: HomeAssistant, problem: str) -> str:
 
 
 def summarise(hass: HomeAssistant, problems: tuple[str, ...]) -> str:
-    """Return the problem list as it appears in the notice, capped in length."""
+    """Return the problem list as it appears in the notice, capped in length.
+
+    De "en nog N meer"-regel gaat door `texts` heen: een hardcoded Engelse
+    zin onder een vertaalde lijst leest als een fout. Engels blijft de
+    terugval als er geen vertaling is.
+
+    The "and N more" line goes through `texts`: a hardcoded English sentence
+    under a translated list reads as a fault. English stays the fallback when
+    no translation exists.
+    """
     listed = [f"- {readable(hass, problem)}" for problem in problems[:MAX_LISTED]]
     remaining = len(problems) - MAX_LISTED
     if remaining > 0:
-        listed.append(f"- ... and {remaining} more")
+        listed.append(
+            texts.translated(
+                hass,
+                "and_n_more",
+                f"- ... and {remaining} more",
+                remaining=remaining,
+            )
+        )
     return "\n".join(listed)
 
 

@@ -68,6 +68,7 @@ und löst diesen Konflikt für dich.
 | Eine `climate.*` pro Zone | **ja** | ohne Gerät gibt es nichts zu steuern |
 | Ein Temperatursensor pro Zone | **ja** | ohne Messwert kann die Integration zu kalt nicht von zu warm unterscheiden; eine `climate.*` mit `current_temperature` geht auch |
 | `sensor.*` oder `weather.*` Außentemperatur | nein | nur nötig, wenn du Grenzen auf die Außentemperatur setzt — Gas unter 3 °C, Wärmepumpe darüber, zum Beispiel |
+| `weather.*` oder `sensor.*` Niederschlag | nein | nur wenn Niederschlag die „Fenster-öffnen“-Grenze aufheben darf |
 | `person.*` oder `device_tracker.*` pro Bewohner | ja, sobald du Bewohner anlegst | sonst kann dieser Bewohner nie zu Hause sein |
 | Ein Schlafsensor pro Bewohner | nein | ohne ihn zählt niemand jemals als schlafend |
 | `binary_sensor.*` Anwesenheit pro Zone | nur wenn eine Zone auf *den Raum selbst* läuft | dann ist es das einzige Tor der Zone |
@@ -152,6 +153,7 @@ wählst.
 | **Jahreszeitenquelle** | woher die Jahreszeit kommt: der Monat, eine Entität oder fest Sommer/Winter |
 | **Jahreszeiten-Entität** | nur nötig, wenn die Quelle auf *Entität* steht; auch die eingebaute `season.*`-Entität ist wählbar |
 | **Hemisphäre** | welche Monate als Sommer zählen, wenn die Jahreszeit aus dem Monat kommt: Nord April–September, Süd Oktober–März |
+| **Jahreszeitenwahl** | die `select.*`-Entität *Jahreszeit* stellt die Jahreszeit von Hand auf Automatisch, Sommer oder Winter; die Wahl überlebt einen Neustart |
 | **Jemand zu Hause muss wach sein** | an = das Haus wartet auf jemanden zu Hause *und* wach; aus = Schlaf zählt nicht |
 | **Der Zeitplan eines Bewohners muss offen sein** | an = das Haus wartet auf das erste Zeitfenster; aus = Anwesenheit allein entscheidet |
 | **Ferienkalender** | welche Kalender Ferien ankündigen dürfen; mehrere erlaubt |
@@ -160,7 +162,28 @@ wählst.
 | **Vorheizdauer** | die Obergrenze einer einzelnen Anfrage; Standard 120 Minuten |
 | **Gastmodus von / bis** | das Fenster, in dem der Gastmodus gilt; beide leer = den ganzen Tag |
 | **Zone nach … Minuten als festgefahren melden** | nach wie vielen Minuten Wartezeit eine Zone als festgefahren gilt; 0 schaltet den Sensor aus |
+| **Niederschlagsquelle** | eine `weather.*`- oder `sensor.*`-Entität, die sagt, ob Niederschlag fällt; leer = die Niederschlagsregel macht nicht mit |
+| **Zustände, die als Niederschlag zählen** | welche Zustände dieser Entität Niederschlag bedeuten; standardmäßig Regen, Schnee und Hagel |
+| **Wie lange Niederschlag weiter zählt (Minuten)** | Nachlaufzeit nach dem Aufhören des Niederschlags; Standard 15 Minuten |
 | **Schattenmodus** | an = alles durchrechnen, nichts steuern |
+
+### Niederschlag setzt die Außengrenze außer Kraft
+
+Die Außengrenze pro Zone ist eine Sparregel mit einer Annahme darunter: Ist es
+draußen angenehmer als drinnen, öffnest du besser ein Fenster, als die
+Klimaanlage einzuschalten. Fällt Niederschlag, bleibt das Fenster zu, also
+passiert nichts, während es drinnen zu warm oder zu kalt bleibt.
+
+Richte deshalb eine **Niederschlagsquelle** ein. Solange sie Niederschlag
+meldet, überspringt Climate Director die **Außengrenze pro Zone** — genau wie
+eine Vorheiz-Anfrage. Die Totzone, die Jahreszeit und die Außengrenze **pro
+Quelle** gelten weiter; die wählen immer noch das Gerät. Die Nachlaufzeit
+sorgt dafür, dass ein Fünf-Minuten-Schauer die Regelung nicht ins Schwingen
+bringt. Ohne Quelle macht die Niederschlagsregel nicht mit.
+
+Ein Raum ohne Fenster hat nichts davon. Dort schaltest du in der Zone
+**Niederschlag hebt die 'Fenster-öffnen'-Regel nicht auf** ein, und die
+Außengrenze gilt auch bei Niederschlag weiter.
 
 ### Heizsystem: zentral oder pro Zone
 
@@ -189,6 +212,7 @@ Eine Zone ist ein Raum. Pro Zone stellst du ein:
 | **Vorrang an einem gemeinsamen Außengerät** | wie stark diese Zone ein gemeinsames Außengerät beansprucht; **niedriger gewinnt**. An einem Kreislauf darf keine Nummer doppelt vorkommen |
 | **Was entscheidet, ob diese Zone läuft** | *der Haushalt* (Zeitplan, Schlaf, jemand zu Hause) oder *der Raum selbst* (nur der Anwesenheitssensor) |
 | **Anwesenheitssensor + Status + Nachlaufzeit** | wann der Raum als belegt zählt; die Nachlaufzeit fängt flackernde Melder auf |
+| **Niederschlag hebt die 'Fenster-öffnen'-Regel nicht auf** | an für einen Raum ohne Fenster; dort gilt die Außengrenze auch bei Niederschlag weiter |
 | **Diese Zone darf heizen** | aus = dieser Raum wird nie geheizt |
 | **Zieltemperatur Heizen** | der Sollwert, den das Gerät beim Heizen bekommt — nicht der Startpunkt |
 | **Heizen starten bei** | Heizen startet bei dieser Innentemperatur oder darunter |
@@ -297,7 +321,7 @@ eigenes Außengerät, lass das leer.
 | **Innengeräte** | welche `climate.*`-Entitäten an diesem Außengerät hängen. Nimm auch Geräte auf, die der Director nicht verwaltet: Sie beanspruchen den Kompressor ebenfalls |
 | **Kann gleichzeitig heizen und kühlen** | aus für ein gewöhnliches Multi-Split; an für ein Single-Split oder Drei-Leiter-VRF mit Wärmerückgewinnung |
 | **Konfliktregel** | wer gewinnt, wenn zwei Räume gegensätzliche Aufgaben wollen |
-| **Eine verlierende Zone darf lüften** | an = der Verlierer geht auf `fan_only` statt auf aus |
+| **Eine verlierende Zone darf lüften** | an = der Verlierer geht auf `fan_only` statt auf aus, aber nur wenn das Gerät diesen Modus kennt; sonst geht es aus |
 | **Pause beim Aufgabenwechsel** | wie lange alles aus ist vor dem Umschalten |
 | **Mindestlaufzeit vor einem Aufgabenwechsel** | wie lange eine Aufgabe gelaufen sein muss, bevor die andere übernehmen darf |
 | **Ruhe, bevor ein Gerät neu starten darf** | verzögert nur Starten, nie Stoppen; Standard 180 Sekunden |
@@ -342,7 +366,9 @@ selben Kreislauf durchaus gemeinsam kühlen dürfen, dann mach eine Gruppe pro
 Paar — Gas mit der einen, Gas mit der anderen.
 
 Eine Gruppe bindet auch Geräte, die du selbst einschaltest: Kommt ein anderes
-Mitglied der Gruppe an die Reihe, geht das handbediente Gerät aus.
+Mitglied der Gruppe an die Reihe, geht das handbediente Gerät aus. Und
+umgekehrt: Läuft so ein Gerät schon, belegt es die Gruppe, und ein anderes
+Mitglied wartet.
 
 ## Schritt 9 — Ruhefenster
 
@@ -435,7 +461,7 @@ Ein Gerät pro Installation, darunter:
 | `sensor.*_would_command_<entity>` | der Modus, in den der Director dieses Gerät setzen würde — ein Sensor pro Gerät |
 | `sensor.*_mismatch` | wie viele Geräte gerade anders stehen als der Plan will; 0 = Director und Haus sind einig |
 | `sensor.*_<zone>_source` | welche Quelle diese Zone bedient, mit dem, was die Zone wollte, bekam und warum |
-| `binary_sensor.*_<zone>_blocked` | an, wenn eine Zone weniger bekam als verlangt, mit den geschlossenen Toren als Attributen |
+| `binary_sensor.*_<zone>_blocked` | an, wenn eine Zone weniger bekam als verlangt oder laufen wollte, aber ein Umstand sie zurückhielt; die geschlossenen Tore stehen in den Attributen |
 | `binary_sensor.*_<zone>_on_stand_in` | an, wenn eine Zone auf einem Ersatzgerät läuft, weil die erste Wahl unerreichbar ist |
 | `binary_sensor.*_stuck` | an, wenn eine Zone zu lange auf demselben Wartegrund sitzt |
 | `switch.*_director` | der Hauptschalter; aus = es wird nichts geregelt |
@@ -586,7 +612,8 @@ Automatisierung auf diesem Ereignis steht.
 - **`binary_sensor.*_stuck`** geht an, wenn eine Zone zu lange auf demselben
   Wartegrund sitzt (Standard 15 Minuten) oder wenn eine eingerichtete Entität
   nicht lesbar ist — vertippt, gelöscht oder vorübergehend `unavailable`.
-  Welche Entitäten es sind, steht im Attribut `unusable_entities`.
+  Welche Entitäten es sind, steht im Attribut `unusable_entities`. Ein Sensor,
+  der lesbar ist, aber keine Zahl liefert, steht dort ebenfalls (`no number`).
 - **`binary_sensor.*_<zone>_on_stand_in`** geht an, wenn eine Zone auf einer
   Quelle läuft, die nicht die erste Wahl war, weil die erste Wahl unerreichbar
   ist. Der Raum wird einfach warm — und genau deshalb merkst du ohne Melder

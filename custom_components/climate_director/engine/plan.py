@@ -72,6 +72,26 @@ WAITING_REASONS = frozenset(
     }
 )
 
+#: Poorten die "tegengehouden" betekenen: omstandigheden waar niemand om
+#: vroeg. De hoofdschakelaar en de override staan er bewust niet bij: wie
+#: die omzet zegt niet "dit kan nu niet" maar "ik neem het over", en dat is
+#: geen blokkade om te melden.
+#:
+#: Gates that mean "held back": circumstances nobody asked for. The master
+#: switch and the override are deliberately absent: whoever throws those is
+#: not saying "this cannot run now" but "I am taking over", and that is no
+#: blockage to report.
+HOLDING_GATES = frozenset(
+    {
+        Reason.OPENING_OPEN,
+        Reason.QUIET_HOURS,
+        Reason.ZONE_UNOCCUPIED,
+        Reason.NOBODY_HOME,
+        Reason.EVERYONE_ASLEEP,
+        Reason.OUTSIDE_SCHEDULE,
+    }
+)
+
 
 @dataclass(frozen=True, slots=True)
 class UnitCommand:
@@ -151,10 +171,55 @@ class ZoneDecision:
     gets warm, but not the way it was meant to.
     """
 
+    would_want: ModeFamily = field(default=ModeFamily.NEUTRAL, compare=False)
+    """The duty this zone would want, its shut gates aside.
+
+    Een zone met een dichte poort vraagt nooit iets, dus `wanted` blijft
+    neutraal. Dit veld onthoudt wat de temperatuurregeling gewild zou hebben,
+    en dat is precies wat `held_back` nodig heeft om "een dichte poort houdt
+    een kamer tegen die wél iets nodig had" te onderscheiden van "een dichte
+    poort terwijl de kamer toch al goed ligt".
+
+    Zoals `closed_gates` bewust buiten de gelijkheid: een temperatuur die de
+    dode band oversteekt verandert de melder, niet het besluit, en de
+    koppelingslaag vuurt zijn event alleen bij een veranderd besluit.
+
+    A zone with a shut gate never asks for anything, so `wanted` stays
+    neutral. This field remembers what the temperature regulation would have
+    wanted, which is exactly what `held_back` needs to tell "a shut gate is
+    holding back a room that did need regulating" from "a shut gate while the
+    room is comfortable anyway".
+
+    Like `closed_gates`, deliberately outside equality: a temperature crossing
+    the dead band changes the sensor, not the decision, and the binding layer
+    fires its event only on a changed decision.
+    """
+
     @property
     def blocked(self) -> bool:
         """Return whether the zone got less than it asked for."""
         return self.wanted != self.granted
+
+    @property
+    def held_back(self) -> bool:
+        """Return whether a shut gate keeps a willing zone from regulating.
+
+        Alleen de poorten over omstandigheden tellen. De hoofdschakelaar en
+        de override zijn bewuste ingrepen van een mens, en die winnen: wie een
+        zone overdraagt of de hele director uitzet wil geen "geblokkeerd"-
+        melder per kamer zien branden.
+
+        Only the gates about circumstances count. The master switch and the
+        override are deliberate human acts, and they win: whoever hands a zone
+        over or switches the whole director off does not want a "blocked"
+        sensor burning in every room.
+        """
+        if self.would_want is ModeFamily.NEUTRAL:
+            return False
+        shut = set(self.closed_gates)
+        if Reason.MANUAL_OVERRIDE in shut or Reason.MASTER_DISABLED in shut:
+            return False
+        return bool(shut & HOLDING_GATES)
 
     @property
     def on_fallback(self) -> bool:

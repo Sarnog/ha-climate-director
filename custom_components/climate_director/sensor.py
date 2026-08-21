@@ -64,16 +64,21 @@ async def async_setup_entry(
     # bron-voor-bron-lijst dubbele unieke ID's op, en gooide Home Assistant de
     # tweede en derde weg met een fout in het logboek.
     #
+    # Generatoren doen ook mee: een gedeelde cv-ketel krijgt wél een commando
+    # (aan zodra een bediende zone warmte vraagt, uit zodra geen enkele dat meer
+    # doet), dus in schaduwmodus hoort dat commando net zo afleesbaar te zijn.
+    #
     # One sensor per APPLIANCE, not per source. Since an appliance may sit under
     # several zones - which is what central heating looks like - a source-by-
     # source list produced duplicate unique ids, and Home Assistant discarded the
     # second and third with an error in the log.
-    entities.extend(
-        CommandSensor(coordinator, entity_id)
-        for entity_id in dict.fromkeys(
-            source.entity_id for _, source in coordinator.config.sources() if source.entity_id
-        )
-    )
+    #
+    # Generators take part too: a shared boiler does get a command (on while any
+    # served zone asks for heat, off once none does), so in shadow mode that
+    # command should be just as readable.
+    steered = [source.entity_id for _, source in coordinator.config.sources() if source.entity_id]
+    steered.extend(item.entity_id for item in coordinator.config.generators if item.entity_id)
+    entities.extend(CommandSensor(coordinator, entity_id) for entity_id in dict.fromkeys(steered))
     async_add_entities(entities)
 
 

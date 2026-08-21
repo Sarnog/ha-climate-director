@@ -118,6 +118,20 @@ class TestSettingUp:
         assert "precondition_minutes" in keys
         assert {f"command_{LIVING}", f"command_{SPARE}", f"command_{ATTIC}"} <= keys
 
+    async def test_a_generator_gets_a_command_sensor(self) -> None:
+        """Een gedeelde warmtebron krijgt een commando, dus ook een sensor.
+
+        A shared heat source gets a command, so it also gets a sensor.
+        """
+        live = await start_house(
+            installation(generators=[{"generator_id": "cv", "name": "CV", "entity_id": BOILER}]),
+            states={**cold_world(), BOILER: ("off", {"temperature": 19.0})},
+        )
+        try:
+            assert f"command_{BOILER}" in live.registered()
+        finally:
+            await stop_house(live)
+
     async def test_no_two_entities_share_a_unique_id(self, home: LiveHome) -> None:
         registered = home.registered()
         assert len(registered) == len(set(registered.values()))
@@ -148,6 +162,29 @@ class TestSettingUp:
         assert await home.hass.config_entries.async_reload(home.entry.entry_id)
         await home.hass.async_block_till_done()
         assert home.value("last_decision") == "2/2"
+
+
+class TestStartupWithHalfLoadedState:
+    """Opstarten met een half geladen wereld mag niets uitzetten.
+
+    Starting up with a half-loaded world must not switch anything off.
+    """
+
+    async def test_an_unreadable_sensor_leaves_the_running_appliance_alone(self) -> None:
+        """De sensor ontbreekt nog, het apparaat draait: geen `set_hvac_mode`.
+
+        The sensor is still missing and the appliance runs: no `set_hvac_mode`.
+        """
+        states = cold_world()
+        del states["sensor.woonkamer"]
+        states[LIVING] = ("heat", {"temperature": 21.0})
+
+        home = await start_house(installation(), states=states)
+        try:
+            calls = home.climate_calls()
+            assert not [call for call in calls if call[1].get("entity_id") == LIVING]
+        finally:
+            await stop_house(home)
 
 
 # ---------------------------------------------------------------------------
@@ -202,6 +239,52 @@ class TestSteeringForReal:
         await asyncio.sleep(1.4)
         await home.hass.async_block_till_done()
         assert home.state(LIVING) == "off"
+
+
+class TestPrecipitation:
+    """Regen zet de 'zet een raam open'-grens opzij, met nalooptijd."""
+
+    def _installation(self, grace: int) -> dict[str, Any]:
+        found = installation()
+        found["zones"][0]["heat"] = {
+            **found["zones"][0]["heat"],
+            "outdoor": {"minimum": None, "maximum": 25.0},
+        }
+        found["precipitation"] = {
+            "source": "weather.buienradar",
+            "states": ["rainy", "pouring"],
+            "grace": grace,
+        }
+        return found
+
+    def _states(self) -> dict[str, tuple[str, dict[str, Any]]]:
+        return {
+            **cold_world(),
+            "sensor.buiten": ("26.0", {}),
+            "weather.buienradar": ("rainy", {}),
+        }
+
+    async def test_rain_lifts_the_zone_bound_and_stopping_rain_drops_it(self) -> None:
+        """Buiten 26 graden is boven de verwarmgrens; regen zet die opzij."""
+        live = await start_house(self._installation(grace=0), states=self._states())
+        try:
+            assert live.state(LIVING) == "heat"
+            live.set("weather.buienradar", "cloudy")
+            await live.evaluate()
+            assert live.state(LIVING) == "off"
+        finally:
+            await stop_house(live)
+
+    async def test_rain_keeps_counting_for_the_grace_period(self) -> None:
+        """Een bui van vijf minuten hoort de regeling niet te laten stuiteren."""
+        live = await start_house(self._installation(grace=900), states=self._states())
+        try:
+            assert live.state(LIVING) == "heat"
+            live.set("weather.buienradar", "cloudy")
+            await live.evaluate()
+            assert live.state(LIVING) == "heat", "de nalooptijd hoort regen te laten meetellen"
+        finally:
+            await stop_house(live)
 
 
 class TestShadowMode:
@@ -286,6 +369,37 @@ class TestTheActions:
         from homeassistant.util import dt as dt_util
 
         assert (granted - dt_util.now()).total_seconds() <= 7200 + 5
+
+    async def test_calling_without_minutes_grants_the_installation_maximum(
+        self, home: LiveHome
+    ) -> None:
+        """De blueprint laat `minutes` weg; dat hoort het maximum te geven.
+
+        The blueprint omits `minutes`; that should grant the installation maximum.
+        """
+        home.set("person.danny", "not_home")
+        await home.call("climate_director", "precondition", {"zone_ids": ["woonkamer"]})
+        granted = home.coordinator._live_preconditions()["woonkamer"]
+        from homeassistant.util import dt as dt_util
+
+        assert (granted - dt_util.now()).total_seconds() > 7200 - 5
+
+    async def test_calling_with_zero_minutes_does_nothing(self, home: LiveHome) -> None:
+        """Nul minuten is een typefout, geen vrijbrief voor het maximum.
+
+        Zero minutes is a typo, not a licence for the maximum.
+        """
+        home.set("person.danny", "not_home")
+        await home.evaluate()
+        assert home.state(LIVING) == "off"
+
+        await home.call(
+            "climate_director", "precondition", {"zone_ids": ["woonkamer"], "minutes": 0}
+        )
+        await asyncio.sleep(1.4)
+        await home.hass.async_block_till_done()
+        assert home.state(LIVING) == "off"
+        assert home.coordinator._live_preconditions() == {}
 
     async def test_cancelling_stops_it_again(self, home: LiveHome) -> None:
         home.set("person.danny", "not_home")
@@ -448,25 +562,48 @@ class TestTheReporting:
     async def test_the_blocked_sensor_names_the_gate_that_held_the_zone_back(
         self, home: LiveHome
     ) -> None:
-        """De attributen noemen de poort, ook als de melder zelf uit blijft.
+        """De melder gaat nu ook aan bij een dichte poort, en noemt hem.
 
-        `is_on` volgt "vroeg meer dan hij kreeg", en een zone met een dichte
-        poort vraagt niets - die komt niet eens aan zijn wens toe. De reden en
-        de lijst dichte poorten staan er wel, en dat is waar je bij het
-        inrichten naar kijkt.
+        Een zone met een dichte poort vraagt niets en kreeg dus niets te
+        weinig; de melder keek alleen daarnaar en bleef uit terwijl de kamer
+        wél iets nodig had. Nu telt ook "poort dicht terwijl de kamer buiten
+        zijn dode band ligt". De attributen noemen de poort en wat de kamer
+        gewild zou hebben.
 
-        The attributes name the gate, even while the sensor itself stays off.
-        `is_on` follows "asked for more than it got", and a zone with a shut
-        gate asks for nothing - it never gets as far as its wish. The reason
-        and the list of shut gates are there, and that is what you look at
-        while setting up.
+        The sensor now also comes on for a shut gate, and names it. A zone
+        with a shut gate asks for nothing and was therefore short-changed
+        nothing; the sensor only looked at that and stayed off while the room
+        did need something. Now "gate shut while the room sits outside its
+        dead band" counts too. The attributes name the gate and what the room
+        would have wanted.
         """
+        assert home.value("zone_woonkamer_blocked") == "off"
         assert home.values("zone_woonkamer_blocked")["closed_gates"] == []
         home.set("binary_sensor.achterdeur", "on")
         await home.evaluate()
+        assert home.value("zone_woonkamer_blocked") == "on"
         attributes = home.values("zone_woonkamer_blocked")
         assert attributes["reason"] == "opening_open"
         assert attributes["closed_gates"] == ["opening_open"]
+        assert attributes["would_want"] == "heat"
+
+    async def test_a_shut_gate_in_a_comfortable_room_does_not_light_the_sensor(
+        self, home: LiveHome
+    ) -> None:
+        """Een open raam in een kamer die al op temperatuur is, blokkeert niets."""
+        home.set("binary_sensor.achterdeur", "on")
+        home.set("sensor.woonkamer", "22.0")
+        await home.evaluate()
+        assert home.value("zone_woonkamer_blocked") == "off"
+
+    async def test_an_override_is_not_a_blockage(self, home: LiveHome) -> None:
+        """Wie een zone overdraagt wil geen 'geblokkeerd'-melder zien branden."""
+        home.set("binary_sensor.achterdeur", "on")
+        await home.evaluate()
+        assert home.value("zone_woonkamer_blocked") == "on"
+        home.coordinator.zone_overrides["woonkamer"] = True
+        await home.evaluate()
+        assert home.value("zone_woonkamer_blocked") == "off"
 
     async def test_the_stand_in_sensor_lights_up_when_it_takes_over(self, home: LiveHome) -> None:
         assert home.value("zone_woonkamer_fallback") == "off"

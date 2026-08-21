@@ -55,7 +55,10 @@
           "precondition_end": "Pre-conditioning until",
           "max_precondition": "Pre-conditioning duration (minutes)",
           "when_done": "When you are done here",
-          "stuck_after": "Report a zone stuck after (minutes)"
+          "stuck_after": "Report a zone stuck after (minutes)",
+          "precipitation_source": "Precipitation source",
+          "precipitation_states": "States that count as precipitation",
+          "precipitation_grace": "How long precipitation keeps counting (minutes)"
         },
         "data_description": {
           "season_source": "Derive the season from the month, read it from an entity, or pin it by hand.",
@@ -74,7 +77,10 @@
           "precondition_end": "Pre-conditioning is the only thing allowed to run an empty house, so it is kept to these hours. Outside them a request simply does not count.",
           "max_precondition": "A request cannot be forgotten, only mistyped, so this ceiling is what keeps a slip of the thumb from heating an empty house all afternoon. Asking for longer shortens the request rather than refusing it.",
           "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
-          "stuck_after": "A pause when switching duty should last seconds. A zone still sitting on one after this long is no longer waiting but stuck, which from the outside looks exactly like doing nothing. Keep it comfortably above your longest pause; a false alarm teaches you to ignore the alarm. Zero switches the sensor off."
+          "stuck_after": "A pause when switching duty should last seconds. A zone still sitting on one after this long is no longer waiting but stuck, which from the outside looks exactly like doing nothing. Keep it comfortably above your longest pause; a false alarm teaches you to ignore the alarm. Zero switches the sensor off.",
+          "precipitation_source": "A weather entity or precipitation sensor. While it reports one of the states below, the per-zone open-a-window bound is skipped. Leave empty to keep the ordinary rule always.",
+          "precipitation_states": "Comma-separated. For a weather entity these are its conditions; for a sensor its states. The default covers rain, snow and hail.",
+          "precipitation_grace": "A five-minute shower should not make the regulation bounce, so a reading keeps counting for this long after the precipitation stops."
         }
       },
       "zones": {
@@ -111,6 +117,7 @@
           "presence_entity": "Presence sensor for this zone",
           "presence_state": "State meaning occupied",
           "presence_timeout": "Keep counting as occupied for (seconds)",
+          "ignore_precipitation": "Precipitation does not lift the open-a-window rule",
           "gate": "What decides whether this zone runs",
           "when_done": "When you are done here"
         },
@@ -122,6 +129,7 @@
           "presence_entity": "Leave empty to regulate this room whether or not anybody is in it. Somebody being home says nothing about whether they are in the attic.",
           "presence_state": "A presence sensor reports on.",
           "presence_timeout": "Leave empty or set to zero to react the moment presence drops. Presence sensors flicker, so a few seconds here saves the compressor a pointless stop.",
+          "ignore_precipitation": "On for a room without windows: it gains nothing from the open-a-window rule, so precipitation should not lift that rule there.",
           "name": "The zone's label throughout. Its internal id is derived once and then stays put, so renaming later is safe.",
           "enable_heat": "Off means this room is never heated, whatever the thermometer says.",
           "heat_target": "The setpoint handed to the appliance once heating runs. Not the point at which it starts.",
@@ -353,6 +361,7 @@
         "title": "Opening",
         "data": {
           "entity_id": "Sensor",
+          "open_state": "State that means open",
           "zone_ids": "Zones affected",
           "delay": "Delay before suspending (seconds)",
           "delete": "Delete this opening",
@@ -361,7 +370,8 @@
         "data_description": {
           "zone_ids": "Leave empty to suspend the whole installation.",
           "delay": "Leave empty or set to zero to suspend the moment it opens.",
-          "entity_id": "The door or window contact. Open counts as the state 'on'.",
+          "entity_id": "The door, window or skylight contact. Which state means open is set below.",
+          "open_state": "The state that counts as open. For a window contact that is usually 'on', for a skylight or shutter 'open'.",
           "delete": "Removes the opening; it stops suspending anything.",
           "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
@@ -607,6 +617,16 @@
       "precondition_minutes": {
         "name": "Pre-conditioning duration"
       }
+    },
+    "select": {
+      "season": {
+        "name": "Season",
+        "state": {
+          "auto": "Automatic",
+          "summer": "Summer",
+          "winter": "Winter"
+        }
+      }
     }
   },
   "issues": {
@@ -662,6 +682,9 @@
     },
     "target_outside_band": {
       "message": "Zone {zone} starts {mode} at {start}° but aims for {target}°. The appliance is then set to a temperature it need do nothing for, which looks like it is refusing."
+    },
+    "and_n_more": {
+      "message": "- ... and {remaining} more"
     },
     "precondition_refused_title": {
       "message": "Pre-conditioning refused"

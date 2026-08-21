@@ -530,6 +530,36 @@ async def test_a_recognised_season_state_is_not_reported() -> None:
         await stop_house(home)
 
 
+async def test_a_readable_sensor_without_a_number_is_reported() -> None:
+    """Een sensor die bestaat en leesbaar is, maar geen getal geeft.
+
+    De zone leest NO_INDOOR_TEMPERATURE en doet niets; de sensor hoort daarom
+    in de onbruikbaarheidslijst te staan, zodat de vastloopmelder aangaat.
+
+    A sensor that exists and reads fine, but yields no number. The zone reads
+    NO_INDOOR_TEMPERATURE and does nothing; the sensor therefore belongs in the
+    unusable list, so the stuck sensor comes on.
+    """
+    states = live_world()
+    states["sensor.woonkamer"] = ("warm", {})
+    home = await start_house(live_installation(), states=states)
+    try:
+        unusable = home.coordinator.unusable_entities()
+        assert unusable.get("sensor.woonkamer") == "no number"
+        assert home.value("stuck") == "on"
+    finally:
+        await stop_house(home)
+
+
+async def test_a_sensor_with_a_number_is_not_reported() -> None:
+    states = live_world()
+    home = await start_house(live_installation(), states=states)
+    try:
+        assert "sensor.woonkamer" not in home.coordinator.unusable_entities()
+    finally:
+        await stop_house(home)
+
+
 async def test_a_missing_climate_entity_never_gets_a_service_call() -> None:
     """Er wordt niets gestuurd naar een apparaat dat er niet is.
 

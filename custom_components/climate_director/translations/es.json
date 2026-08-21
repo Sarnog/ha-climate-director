@@ -55,7 +55,10 @@
           "precondition_end": "Preacondicionamiento hasta",
           "max_precondition": "Duración del preacondicionamiento (minutos)",
           "when_done": "Cuando termines aquí",
-          "stuck_after": "Zona se considera atascada tras (minutos)"
+          "stuck_after": "Zona se considera atascada tras (minutos)",
+          "precipitation_source": "Fuente de precipitaciones",
+          "precipitation_states": "Estados que cuentan como precipitación",
+          "precipitation_grace": "Cuánto tiempo siguen contando las precipitaciones (minutos)"
         },
         "data_description": {
           "season_source": "Deduce la estación del mes, léela de una entidad, o fíjala a mano.",
@@ -74,7 +77,10 @@
           "precondition_end": "El preacondicionamiento es lo único que puede hacer funcionar una casa vacía, así que se mantiene en estas horas. Fuera de ellas una petición no cuenta.",
           "max_precondition": "Una petición no se olvida, solo se teclea mal. Este techo evita que una errata caliente una casa vacía toda la tarde. Pedir más tiempo acorta la petición en lugar de rechazarla.",
           "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
-          "stuck_after": "Una pausa al cambiar de tarea debe durar segundos. Una zona que sigue en ella pasado este tiempo ya no espera, está atascada, y desde fuera eso se parece exactamente a no hacer nada. Mantenlo bien por encima de tu pausa más larga; una falsa alarma enseña a ignorar la alarma. Cero apaga el sensor."
+          "stuck_after": "Una pausa al cambiar de tarea debe durar segundos. Una zona que sigue en ella pasado este tiempo ya no espera, está atascada, y desde fuera eso se parece exactamente a no hacer nada. Mantenlo bien por encima de tu pausa más larga; una falsa alarma enseña a ignorar la alarma. Cero apaga el sensor.",
+          "precipitation_source": "Una entidad meteorológica o un sensor de precipitaciones. Mientras informe de uno de los estados de abajo, el límite de «abrir una ventana» por zona se omite. Déjalo vacío para que la regla ordinaria se aplique siempre.",
+          "precipitation_states": "Separados por comas. Para una entidad meteorológica son sus condiciones; para un sensor, sus estados. El valor por defecto cubre lluvia, nieve y granizo.",
+          "precipitation_grace": "Un chaparrón de cinco minutos no debe hacer oscilar la regulación, así que una lectura sigue contando este tiempo después de que cesen las precipitaciones."
         }
       },
       "zones": {
@@ -111,6 +117,7 @@
           "presence_entity": "Sensor de presencia de esta zona",
           "presence_state": "Estado que significa ocupada",
           "presence_timeout": "Seguir contando como ocupada durante (segundos)",
+          "ignore_precipitation": "Las precipitaciones no levantan la regla de «abrir una ventana»",
           "gate": "Qué decide si esta zona funciona",
           "when_done": "Cuando termines aquí"
         },
@@ -122,6 +129,7 @@
           "presence_entity": "Déjalo vacío para regular esta habitación haya alguien o no. Que alguien esté en casa no dice nada sobre si hay alguien en el desván.",
           "presence_state": "Un sensor de presencia informa on.",
           "presence_timeout": "Déjalo vacío o ponlo a cero para reaccionar en cuanto desaparece la presencia. Los sensores de presencia parpadean, así que unos segundos aquí le ahorran al compresor una parada inútil.",
+          "ignore_precipitation": "Actívalo en una estancia sin ventanas: la regla de «abrir una ventana» no le aporta nada, así que las precipitaciones no deben levantarla allí.",
           "name": "El nombre de la zona en todas partes. Su identificador interno se deriva una vez y luego no cambia, así que renombrarla después es seguro.",
           "enable_heat": "Desactivado significa que esta habitación nunca se calienta, diga lo que diga el termómetro.",
           "heat_target": "La consigna que recibe el aparato una vez que calienta. No el punto en el que arranca.",
@@ -353,6 +361,7 @@
         "title": "Abertura",
         "data": {
           "entity_id": "Sensor",
+          "open_state": "Estado que significa abierto",
           "zone_ids": "Zonas afectadas",
           "delay": "Retardo antes de suspender (segundos)",
           "delete": "Eliminar esta abertura",
@@ -361,7 +370,8 @@
         "data_description": {
           "zone_ids": "Déjalo vacío para suspender toda la instalación.",
           "delay": "Déjalo vacío o ponlo a cero para suspender en cuanto se abre.",
-          "entity_id": "El contacto de puerta o ventana. Abierto cuenta como el estado 'on'.",
+          "entity_id": "El contacto de puerta, ventana o claraboya. Qué estado significa abierto se ajusta debajo.",
+          "open_state": "El estado que cuenta como abierto. Para un contacto de ventana suele ser 'on'; para una claraboya o persiana, 'open'.",
           "delete": "Elimina la abertura; deja de suspender nada.",
           "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
@@ -607,6 +617,16 @@
       "precondition_minutes": {
         "name": "Duración del preacondicionamiento"
       }
+    },
+    "select": {
+      "season": {
+        "name": "Estación",
+        "state": {
+          "auto": "Automático",
+          "summer": "Verano",
+          "winter": "Invierno"
+        }
+      }
     }
   },
   "issues": {
@@ -662,6 +682,9 @@
     },
     "target_outside_band": {
       "message": "La zona {zone} empieza a {mode} a {start}° pero aspira a {target}°. El aparato recibe entonces una temperatura para la que no tiene que hacer nada, y parece que se niega."
+    },
+    "and_n_more": {
+      "message": "- ... y {remaining} más"
     },
     "precondition_refused_title": {
       "message": "Preacondicionamiento rechazado"

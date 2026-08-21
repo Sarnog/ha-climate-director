@@ -320,11 +320,104 @@ een gebrekkige configuratie verslechtert de installatie zonder hem stil te legge
 precies waarom hij zichtbaar moet zijn - van buiten ziet een fout in de configuratie er
 hetzelfde uit als "de director besluit niets".
 
-### Nog te bouwen
+### Nog te bouwen — ontwerpvoorstellen
 
-Een virtuele `climate`-entiteit per zone als bedieningspunt, `number`-entiteiten voor de
-drempels, en de override-acties. Ideeën staan in
-[`ROADMAP.md`](ROADMAP.md).
+De ideeënbus staat in [`ROADMAP.md`](ROADMAP.md); hier staat per idee het ontwerp, zodat
+duidelijk is wat het inhoudt vóór eraan begonnen wordt. De prioriteiten (should/could/would)
+volgen de ROADMAP.
+
+#### Should have
+
+**Virtuele `climate` per zone.** Eén bedieningsentiteit per ruimte: een
+`climate.climate_director_<zone>` die op een gewone thermostaatkaart past.
+- Config: optie `virtual_climate_per_zone`, standaard uit. Bestaande entries hebben de
+  optie niet en gedragen zich exact als nu (`serialise.py` valt terug op de standaard).
+- HA-laag: nieuw `climate.py`-platform; `async_setup_entry` maakt alleen entiteiten aan als
+  de optie aan staat. De entiteit is invoer, net als de schakelaars: hij herstelt zijn
+  waarde na een herstart, schrijft naar de coordinator (`zone_targets`/`zone_modes`, zelfde
+  patroon als `zone_overrides`/`zone_priorities`) en negeert coordinator-updates.
+- Engine: `WorldState` krijgt de runtime-waarden; `hysteresis.py` gebruikt een terugval op
+  de geconfigureerde streefwaarde. De stand (`off`/`heat`/`cool`) wordt een filter vóór de
+  vraagbepaling.
+- Open keuze: betekent `off` "deze zone vraagt nooit iets" (nieuwe poort, nieuwe `Reason`),
+  en beperken `heat`/`cool` de toegestane taak? Zonder die semantiek is de stand decoratie.
+- Bewaakt: zonder optie nul gedragsverandering, en de engine-grens blijft heilig
+  (runtime-state leeft in de coordinator; de engine leest alleen `WorldState`).
+
+**Poortinstellingen per zone.** Wakker-, rooster-, stilte- en slaapregels verhuizen van
+installatieniveau naar de zone.
+- Config: nieuw `ZoneGateSettings` op `Zone` met `require_awake`, `require_schedule` en
+  `quiet_windows`; `precondition_window`, `max_precondition` en `guest_window` blijven
+  installatiebreed.
+- Engine: `gates.py` leest per zone; de huishoudpoorten (`_household`) krijgen de zone mee.
+- Migratie: `serialise.py` vult ontbrekende per-zone-velden met de oude installatiewaarde,
+  zodat bestaand gedrag ongewijzigd blijft; `config_flow.py` krijgt de poortformulieren per
+  zone en de validaties (`_quiet_problems`) worden per zone.
+- Risico: de migratie is de kern — zonder terugval op de oude waarde verandert gedrag
+  stilletjes bij de eerste upgrade.
+
+#### Could have
+
+**Huisbreed vermogensplafond.** `Source.wattage` + `DirectorConfig.watt_limit`; na de
+circuitresolutie snoeit een nieuwe installatiebrede stap in `constraints.py` de winnaars op
+watt, op zone-prioriteit, en houdt alleen starts tegen (nooit stops).
+
+**Temperatuurschema per zone.** `Zone.schedule`: vensters met een eigen streeftemperatuur;
+`hysteresis.py` kiest het geldende setpoint op de klok. De config-flow-editor voor zo'n
+schema is het meeste werk.
+
+**Suggestie voor circuitgroepering.** Alleen config-flow: groepeer gekozen
+climate-entiteiten op gedeeld `device` / `via_device` / fabrikant en bied het als
+voorstelknop aan. Geen engine-wijziging; nadrukkelijk een voorstel, omdat de relatie vaak
+niet blootligt.
+
+**Overrides via acties.** `climate_director.set_override` (duur of tot de volgende
+gebeurtenis) en `clear_override`; de coordinator bewaart `zone_override_until` en plant een
+evaluatie bij het verlopen. De bestaande schakelaar blijft bestaan.
+
+**Droogstand als eigen taak.** `Zone.dry: ModeSettings` met een luchtvochtigheidssensor;
+`dry` wordt een derde taak naast `heat`/`cool` met een eigen aan-/uitpunt. Op een
+niet-simultaan circuit blijft `dry` bij de koelfamilie horen.
+
+**Meerdere binnensensoren per zone.** `Zone.indoor_sensors` met een combinatieregel
+(gemiddelde/laagste/hoogste/eerste); de coordinator aggregeert vóór `WorldState`.
+
+**Openingen met herstel per zone.** Momentopname van de commando's vóór de opschorting; bij
+het sluiten wordt de momentopname teruggezet voor zover nog geldig.
+
+**Conflictdetector.** De coordinator telt onverwachte taakwissels en terugvallende standen
+en vraagt via een repair-issue of de circuitgroepering klopt.
+
+**Automatisch voorverwarmen en voorkoelen.** De engine berekent een startmoment vóór het
+roostervenster en hergebruikt de bestaande precondition-mechaniek, maar met een automatische
+trigger in plaats van een handmatige.
+
+**Energieprijs als bronvoorkeur.** `WorldState` krijgt runtime-bronvoorkeuren; de
+coordinator leest een tarief-/overschotsensor en `sources.py` sorteert daarop.
+
+**Weersvoorspelling in het buitentemperatuurvenster.** De coordinator leest de verwachte
+temperatuur uit een `weather`-entiteit; `WorldState.outdoor_forecast` laat de vensters op de
+verwachting in plaats van op het nu toetsen.
+
+**Meer conflictbeleiden.** `ConflictPolicy.ROUND_ROBIN` en `DAY_PART` in `constraints.py`,
+met de circuitgeschiedenis als invoer.
+
+**`number`-entiteiten voor de drempels.** Per zone `number`-entiteiten voor streef-, aanpunt
+en hysterese; zelfde runtime-patroon als de prioriteits-`number`s (RestoreEntity, terugval
+op de geconfigureerde waarde).
+
+**Documenteren dat meerdere installaties mogen.** Alleen `docs/install/<taal>.md` per taal
+bijwerken; de code en tests ondersteunen het al.
+
+#### Would have
+
+**Leren van looptijden.** De coordinator meet opwarm-/afkoelsnelheid per zone en stelt de
+dode band of het voorverwarmen bij; opslag via `Store`.
+
+**Balancering over circuits.** Bij gelijkwaardige bronnen op verschillende circuits kiest
+`decide.py` beurtelings op basis van draaiuren.
+
+**HACS-standaardlijst.** Geen ontwerp; procesbeslissing na bewezen praktijk.
 
 ### Uitbreidbaarheid
 
@@ -642,11 +735,104 @@ zone, so a flawed configuration degrades the installation without stopping it. T
 exactly why it has to be visible - from the outside, a mistake in the configuration looks the
 same as "the director decides nothing".
 
-### Still to build
+### Still to build — design proposals
 
-A virtual `climate` entity per zone as the control point, `number` entities for the
-thresholds, and the override actions. Ideas live in
-[`ROADMAP.md`](ROADMAP.md).
+The ideas box lives in [`ROADMAP.md`](ROADMAP.md); here stands the design per idea, so it
+is clear what it entails before any work starts. The priorities (should/could/would) follow
+the ROADMAP.
+
+#### Should have
+
+**A virtual `climate` per zone.** One control entity per room: a
+`climate.climate_director_<zone>` that fits an ordinary thermostat card.
+- Config: an option `virtual_climate_per_zone`, off by default. Existing entries lack the
+  option and behave exactly as today (`serialise.py` falls back to the default).
+- HA layer: a new `climate.py` platform; `async_setup_entry` only creates entities when the
+  option is on. The entity is input, like the switches: it restores its value after a
+  restart, writes to the coordinator (`zone_targets`/`zone_modes`, the same pattern as
+  `zone_overrides`/`zone_priorities`) and ignores coordinator updates.
+- Engine: `WorldState` gains the runtime values; `hysteresis.py` falls back to the
+  configured target. The mode (`off`/`heat`/`cool`) becomes a filter before demand.
+- Open choice: does `off` mean "this zone never asks for anything" (a new gate, a new
+  `Reason`), and do `heat`/`cool` restrict the allowed duty? Without that semantics the mode
+  is decoration.
+- Guarded: no behavioural change without the option, and the engine border stays sacred
+  (runtime state lives in the coordinator; the engine reads only `WorldState`).
+
+**Per-zone gate settings.** The wake, schedule, quiet and sleep rules move from
+installation level to the zone.
+- Config: a new `ZoneGateSettings` on `Zone` with `require_awake`, `require_schedule` and
+  `quiet_windows`; `precondition_window`, `max_precondition` and `guest_window` stay
+  installation-wide.
+- Engine: `gates.py` reads per zone; the household gates (`_household`) receive the zone.
+- Migration: `serialise.py` fills missing per-zone fields with the old installation value,
+  so existing behaviour stays unchanged; `config_flow.py` gains the per-zone gate forms and
+  the validations (`_quiet_problems`) run per zone.
+- Risk: the migration is the heart of it — without a fallback to the old value, behaviour
+  changes silently on the first upgrade.
+
+#### Could have
+
+**A house-wide power ceiling.** `Source.wattage` + `DirectorConfig.watt_limit`; after the
+circuit resolution a new installation-wide step in `constraints.py` trims the winners by
+watts, on zone priority, and only ever holds back starts (never stops).
+
+**A temperature schedule per zone.** `Zone.schedule`: windows with their own target
+temperature; `hysteresis.py` picks the setpoint that applies by the clock. The config-flow
+editor for such a schedule is the bulk of the work.
+
+**Suggested circuit grouping.** Config flow only: group chosen climate entities on shared
+`device` / `via_device` / manufacturer and offer it as a suggestion button. No engine
+change; explicitly a proposal, since the relation often does not show.
+
+**Overrides through actions.** `climate_director.set_override` (a duration or until the next
+event) and `clear_override`; the coordinator keeps `zone_override_until` and schedules an
+evaluation when it lapses. The existing switch stays.
+
+**Drying as a duty of its own.** `Zone.dry: ModeSettings` with a humidity sensor; `dry`
+becomes a third duty beside `heat`/`cool` with its own switch-on point. On a non-simultaneous
+circuit `dry` stays in the cooling family.
+
+**Several indoor sensors per zone.** `Zone.indoor_sensors` with a combination rule
+(average/lowest/highest/first); the coordinator aggregates before `WorldState`.
+
+**Openings with per-zone restore.** A snapshot of the commands before the suspension; when
+the opening closes the snapshot is put back where it still holds.
+
+**Conflict detector.** The coordinator counts unexpected duty swaps and modes falling back,
+and asks through a repair issue whether the circuit grouping is right.
+
+**Automatic pre-heating and pre-cooling.** The engine computes a start moment before the
+schedule window and reuses the existing pre-conditioning machinery, but with an automatic
+trigger instead of a manual one.
+
+**Energy price as source preference.** `WorldState` gains runtime source preferences; the
+coordinator reads a tariff/surplus sensor and `sources.py` sorts on it.
+
+**Weather forecast in the outdoor window.** The coordinator reads the expected temperature
+from a `weather` entity; `WorldState.outdoor_forecast` lets the windows check the forecast
+rather than the now.
+
+**More conflict policies.** `ConflictPolicy.ROUND_ROBIN` and `DAY_PART` in `constraints.py`,
+with the circuit history as input.
+
+**Per-zone `number` entities for the thresholds.** Per-zone `number` entities for the
+target, switch-on point and hysteresis; the same runtime pattern as the priority `number`s
+(RestoreEntity, fallback to the configured value).
+
+**Document that several installations may sit side by side.** Only update
+`docs/install/<language>.md` per language; the code and tests already support it.
+
+#### Would have
+
+**Learning from run times.** The coordinator measures each zone's heating and cooling rate
+and adjusts the dead band or the pre-heating; kept through `Store`.
+
+**Balancing across circuits.** With equivalent sources on different circuits, `decide.py`
+takes turns based on running hours.
+
+**Inclusion in the HACS default list.** No design; a process decision after proven
+practice.
 
 ### Extensibility
 

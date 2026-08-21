@@ -30,6 +30,7 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import CALLBACK_TYPE, Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
@@ -37,6 +38,7 @@ from homeassistant.util import dt as dt_util
 from . import texts
 from .applier import apply
 from .const import (
+    CLOCK_REEVAL_SECONDS,
     CONF_INSTALLATION,
     CONF_SHADOW_MODE,
     DEBOUNCE_SECONDS,
@@ -229,6 +231,19 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self.zone_overrides: dict[str, bool] = {}
         self._handed_back: dict[str, date] = {}
         self.zone_priorities: dict[str, int] = {}
+        self.season_override: Season | None = None
+        """Een met de hand gekozen seizoen via de select-entiteit, of `None`.
+
+        Staat er een override, dan wint die van de maand, de entiteit en de
+        vaste instelling - de gebruiker heeft net nog met de hand gekozen. De
+        select-entiteit herstelt zijn stand na een herstart en schrijft hem
+        hier terug, net als de schakelaars.
+
+        A season picked by hand through the select entity, or `None`. With an
+        override it beats the month, the entity and the fixed setting - the
+        user has just chosen by hand. The select entity restores its state
+        after a restart and writes it back here, just like the switches.
+        """
 
         self.world: WorldState | None = None
         self._issued: Plan | None = None
@@ -252,7 +267,30 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self._lock = asyncio.Lock()
         self._family_since: dict[str, datetime | None] = {}
         self._family_seen: dict[str, ModeFamily] = {}
+        self._precipitation_seen_at: datetime | None = None
+        """Wanneer de neerslagbron voor het laatst neerslag meldde.
+
+        De nalooptijd hangt hieraan: een bui van vijf minuten hoort de regeling
+        niet te laten stuiteren, dus zodra de bron neerslag meldt blijft dat
+        nog even gelden nadat het ophoudt. Dit moment wordt vastgelegd in de
+        toestandswijziging van de bron (`_notice_precipitation`) en bij het
+        opstarten (`_note_precipitation_now`), nooit in de lezer zelf. Zonder
+        opstartstap begint een herstart op "geen neerslag", en dat is de
+        onschadelijke kant om fout te zitten: dan geldt de gewone buitengrens
+        gewoon weer.
+
+        The moment the precipitation source last reported precipitation. The
+        grace period hangs off this: a five-minute shower should not make the
+        regulation bounce, so once the source reports precipitation it keeps
+        counting for a while after it stops. This moment is recorded in the
+        source's own state change (`_notice_precipitation`) and at startup
+        (`_note_precipitation_now`), never in the reader itself. Without the
+        startup step a restart begins on "no precipitation", which is the
+        harmless side to be wrong on: the ordinary outdoor bound simply applies
+        again.
+        """
         self._cancel_deferral: CALLBACK_TYPE | None = None
+        self._clock_reeval_unsub: CALLBACK_TYPE | None = None
         self._debouncer = Debouncer(
             hass,
             _LOGGER,
@@ -264,15 +302,34 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
     # -- opzetten / setting up ----------------------------------------------
 
     async def async_start(self) -> None:
-        """Begin tracking entities and make a first decision."""
+        """Begin tracking entities; the first decision waits for Home Assistant.
+
+        De eerste beslissing hoort niet thuis in het opzetten van de entry. Op
+        dat moment is Home Assistant nog aan het opstarten: herstelde standen,
+        automatiseringen en andere integraties komen pas daarna. Wie dan al
+        beslist, ziet een half geladen wereld en kan een apparaat uitzetten dat
+        er gewoon hoort te draaien.
+
+        The first decision does not belong in the entry setup. At that point
+        Home Assistant is still starting: restored states, automations and other
+        integrations come only later. Whoever decides then sees a half-loaded
+        world and can switch off an appliance that should simply be running.
+        """
         entities = self.tracked_entities()
         if entities:
             self.config_entry.async_on_unload(
                 async_track_state_change_event(self.hass, sorted(entities), self._handle_change)
             )
         self.config_entry.async_on_unload(self._cancel_pending_deferral)
+        self.config_entry.async_on_unload(self._cancel_clock_reeval)
+        self.config_entry.async_on_unload(async_at_started(self.hass, self._async_on_hass_started))
+
+    async def _async_on_hass_started(self, _hass: HomeAssistant) -> None:
+        """Restore what a restart left behind, decide once, and arm the clock."""
         await self._async_restore_state()
+        self._note_precipitation_now()
         await self._async_evaluate()
+        self._schedule_clock_reeval()
 
     def tracked_entities(self) -> set[str]:
         """Return every entity whose change could alter a decision.
@@ -287,6 +344,8 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             entities.add(self.config.outdoor_sensor)
         if self.config.seasons.source is SeasonSource.ENTITY and self.config.seasons.entity_id:
             entities.add(self.config.seasons.entity_id)
+        if self.config.precipitation.source:
+            entities.add(self.config.precipitation.source)
 
         for zone in self.config.zones:
             if zone.indoor_sensor:
@@ -347,8 +406,31 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
     @callback
     def _handle_change(self, event: Event[EventStateChangedData]) -> None:
         """Queue a fresh decision after a tracked entity changed."""
+        self._notice_precipitation(event)
         self._notice_hand(event)
         self._debouncer.async_schedule_call()
+
+    @callback
+    def _notice_precipitation(self, event: Event[EventStateChangedData]) -> None:
+        """Remember the moment the precipitation source reports precipitation.
+
+        Het moment hoort hier thuis, in de toestandswijziging van de bron zelf -
+        niet in `_precipitation()`, dat alleen een antwoord teruggeeft. Alleen
+        een overgang náár een neerslagstand telt; een overgang tussen twee droge
+        standen (bewolkt -> zonnig) mag de nalooptijd niet verlengen.
+
+        The moment belongs here, in the source's own state change - not in
+        `_precipitation()`, which only returns an answer. Only a transition INTO
+        a precipitation state counts; a transition between two dry states
+        (cloudy -> sunny) must not extend the grace.
+        """
+        source = self.config.precipitation.source
+        if not source or event.data["entity_id"] != source:
+            return
+        new_state = event.data["new_state"]
+        if new_state is None or new_state.state not in self.config.precipitation.states:
+            return
+        self._precipitation_seen_at = dt_util.now()
 
     @callback
     def _notice_hand(self, event: Event[EventStateChangedData]) -> None:
@@ -383,8 +465,8 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             return
 
         entity_id = event.data["entity_id"]
-        zone = self._zone_of(entity_id)
-        if zone is None:
+        zones = self._zones_of(entity_id)
+        if not zones:
             return
 
         new_state = event.data["new_state"]
@@ -418,7 +500,10 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         if now is not ModeFamily.NEUTRAL:
             # Weer aangezet, met de hand of door ons: hoe dan ook meedoen.
             # Switched on again, by hand or by us: taking part either way.
-            if self._handed_back.pop(zone, None) is not None:
+            cleared = False
+            for zone in zones:
+                cleared = self._handed_back.pop(zone, None) is not None or cleared
+            if cleared:
                 self._async_save_state()
             return
 
@@ -432,16 +517,28 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             return
 
         today = dt_util.now().date()
-        if self._handed_back.get(zone) != today:
-            self._handed_back[zone] = today
+        if any(self._handed_back.get(zone) != today for zone in zones):
+            for zone in zones:
+                self._handed_back[zone] = today
             self._async_save_state()
 
-    def _zone_of(self, entity_id: str) -> str | None:
-        """Return the zone this climate entity serves, if the director drives it."""
-        for zone, source in self.config.sources():
-            if source.entity_id == entity_id:
-                return zone.zone_id
-        return None
+    def _zones_of(self, entity_id: str) -> tuple[str, ...]:
+        """Return every zone this climate entity serves, if the director drives it.
+
+        Een gedeelde ketel staat onder meer dan één zone. Iemand die bij zo'n
+        apparaat zelf op uit drukt zegt iets over dat apparaat, niet over de
+        eerste zone die het toevallig bedient - dus elke zone die eraan hangt
+        hoort stil te vallen, anders zet de overgeslagen zone het apparaat meteen
+        weer aan.
+
+        A shared boiler sits under more than one zone. Somebody pressing off on
+        such an appliance says something about the appliance, not about whichever
+        zone happens to be listed first - so every zone hanging off it should fall
+        silent, otherwise the skipped zone switches it straight back on.
+        """
+        return tuple(
+            zone.zone_id for zone, source in self.config.sources() if source.entity_id == entity_id
+        )
 
     def _we_wanted_it_off(self, entity_id: str) -> bool:
         """Return whether the plan being carried out has this appliance standing still.
@@ -548,9 +645,47 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         """Ask for a fresh decision, from a switch or a service call."""
         self._debouncer.async_schedule_call()
 
+    @callback
+    def _cancel_clock_reeval(self) -> None:
+        """Drop the scheduled safety-net tick, if there is one."""
+        if self._clock_reeval_unsub is not None:
+            self._clock_reeval_unsub()
+            self._clock_reeval_unsub = None
+
+    @callback
+    def _schedule_clock_reeval(self) -> None:
+        """Arm the periodic safety-net evaluation, replacing any earlier one.
+
+        Het vangnet voor tijdregels die vanzelf verlopen: een raamvertraging,
+        een aanwezigheids-nalooptijd, de neerslag-grace, de eerstvolgende
+        vensterrand en middernacht. Zonder deze klok hangt zo'n omslagpunt op
+        toeval - er moet toevallig iets anders veranderen voordat er opnieuw
+        besloten wordt. Een ronde zonder verschil kost geen service call, dus
+        elke minuut is goedkoop.
+
+        The safety net for time rules that lapse by themselves: a window delay,
+        a presence grace period, the precipitation grace, the next window edge
+        and midnight. Without this clock such a turning point depends on chance
+        - something else must happen to change before another decision is made.
+        A round without a difference costs no service call, so every minute is
+        cheap.
+        """
+        self._cancel_clock_reeval()
+        self._clock_reeval_unsub = async_call_later(
+            self.hass, CLOCK_REEVAL_SECONDS, self._on_clock_reeval
+        )
+
+    @callback
+    def _on_clock_reeval(self, _now: datetime) -> None:
+        """Re-evaluate on the clock, and arm the next tick."""
+        self._clock_reeval_unsub = None
+        self.async_request_evaluation()
+        self._schedule_clock_reeval()
+
     async def async_shutdown(self) -> None:
         """Stop deciding and drop every pending timer."""
         self._cancel_pending_deferral()
+        self._cancel_clock_reeval()
         self._debouncer.async_shutdown()
         await super().async_shutdown()
 
@@ -563,7 +698,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             self._remember_families(world)
             world = self._with_family_history(world)
 
-            plan = decide(self.config, world)
+            plan = decide(self.config, world, self.data)
             self.world = world
             self._issued = plan
 
@@ -609,7 +744,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
     def async_precondition(
         self,
         zone_ids: list[str] | None,
-        minutes: float,
+        minutes: float | None,
         *,
         ignore_openings: bool = False,
     ) -> dict[str, datetime]:
@@ -618,6 +753,18 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         The request is capped at the configured maximum, so asking for longer
         than the installation allows shortens the request rather than refusing
         it: the intent was clear, only the number was wrong.
+
+        `minutes` is `None` when the call omitted the duration - then the
+        configured maximum applies, which is what the blueprint relies on when
+        it confirms a refused request. A non-positive number is refused instead:
+        zero minutes is no request, and treating it as the maximum would turn a
+        typo into the longest run the installation allows.
+
+        `minutes` is `None` als de aanroep de duur wegliet - dan geldt het
+        ingestelde maximum, precies wat de blueprint verwacht als hij een
+        geweigerd verzoek bevestigt. Een niet-positief getal wordt geweigerd:
+        nul minuten is geen verzoek, en dat als maximum tellen zou van een
+        typefout de langste run maken die de installatie toestaat.
 
         `ignore_openings` laat het verzoek doorgaan met een raam of deur open.
         Standaard weigert dat, en terecht - stoken tegen de buitenlucht in is
@@ -632,8 +779,12 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         since the gate is judged afresh every time.
         """
         ceiling = self.config.gates.max_precondition
-        wanted = timedelta(minutes=max(minutes, 0.0))
-        length = min(wanted, ceiling) if wanted else ceiling
+        if minutes is None:
+            length = ceiling
+        else:
+            if minutes <= 0:
+                return {}
+            length = min(timedelta(minutes=minutes), ceiling)
         until = dt_util.now() + length
 
         known = {zone.zone_id for zone in self.config.zones}
@@ -834,6 +985,32 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             ):
                 found[entity_id] = f"unrecognized season: {state.state}"
 
+        # Een leesbare temperatuursensor die geen getal oplevert is net zo stil
+        # kapot als een onleesbare: de zone leest NO_INDOOR_TEMPERATURE en doet
+        # niets, zonder dat er iets van te zien is. De entiteit bestaat en is
+        # leesbaar, dus de gewone controle hierboven pakt hem niet.
+        #
+        # A readable temperature sensor that yields no number is just as
+        # silently broken as an unreadable one: the zone reads
+        # NO_INDOOR_TEMPERATURE and does nothing, with nothing to show for it.
+        # The entity exists and reads fine, so the ordinary check above does
+        # not catch it.
+        sensors: set[str] = set()
+        if self.config.outdoor_sensor:
+            sensors.add(self.config.outdoor_sensor)
+        for zone in self.config.zones:
+            if zone.indoor_sensor:
+                sensors.add(zone.indoor_sensor)
+        for entity_id in sorted(sensors):
+            if entity_id in found:
+                continue
+            state = self.hass.states.get(entity_id)
+            if state is None or _unreadable(state.state):
+                continue
+            attributes = getattr(state, "attributes", {})
+            if temperature_from_state(entity_id, state.state, attributes) is None:
+                found[entity_id] = "no number"
+
         return found
 
     # -- vastgelopen zones / stuck zones -------------------------------------
@@ -910,7 +1087,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 for resident in self.config.residents
             },
             openings={
-                opening.entity_id: self._opening(opening.entity_id)
+                opening.entity_id: self._opening(opening.entity_id, opening.open_state)
                 for opening in self.config.openings
                 if opening.entity_id
             },
@@ -926,6 +1103,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             precondition_bypass=frozenset(self._precondition_bypass),
             zone_overrides=self._overridden_zones(),
             zone_priorities=dict(self.zone_priorities),
+            precipitation=self._precipitation(),
         )
 
     def _overridden_zones(self) -> dict[str, bool]:
@@ -936,13 +1114,15 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         los van elkaar, dus één van de twee is genoeg - wie ze samenvoegde met
         de schakelaar als laatste, liet een schakelaar die gewoon uit staat de
         handmatige uitzetting wissen. En die schakelaar staat er voor elke zone,
-        en staat standaard uit: dan werkte "zelf uitzetten" dus nergens.
+        en staat standaard uit: dan werkte "zelf uitzetten" dus nergens. Een
+        hand aan een gedeeld apparaat telt voor elke zone die het bedient.
 
         There are two ways a zone becomes the user's: throwing the switch, or
         pressing off on the appliance itself. They stand apart, so either one is
         enough - whoever merged them with the switch last let a switch that is
         simply off erase the hand-back. And that switch exists for every zone,
-        and is off by default: so "switching off yourself" worked nowhere.
+        and is off by default: so "switching off yourself" worked nowhere. A
+        hand at a shared appliance counts for every zone it serves.
         """
         handed_back = self._zones_handed_back()
         thrown = {zone_id for zone_id, on in self.zone_overrides.items() if on}
@@ -969,6 +1149,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             hvac_mode=state.state,
             current_temperature=_as_float(state.attributes.get("current_temperature")),
             target_temperature=_as_float(state.attributes.get("temperature")),
+            hvac_modes=_as_modes(state.attributes.get("hvac_modes")),
             available=True,
             changed_at=dt_util.as_local(state.last_changed),
         )
@@ -995,12 +1176,22 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
 
         return ResidentState(home=home, asleep=asleep)
 
-    def _opening(self, entity_id: str) -> OpeningState:
+    def _opening(self, entity_id: str, open_state: str) -> OpeningState:
+        """Read one opening, honouring the state it was told counts as open.
+
+        Een raamcontact meldt `on` als het openstaat, een cover meldt `open`.
+        De stand wordt per opening ingesteld en staat standaard op `on`, zodat
+        bestaande installaties hetzelfde blijven lezen.
+
+        A window contact reports `on` when open, a cover reports `open`. The
+        state is configured per opening and defaults to `on`, so existing
+        installations keep reading the same thing.
+        """
         state = self.hass.states.get(entity_id)
         if state is None:
             return OpeningState()
         return OpeningState(
-            open=state.state == "on",
+            open=state.state == open_state,
             changed_at=dt_util.as_local(state.last_changed),
         )
 
@@ -1015,6 +1206,8 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         )
 
     def _season(self) -> Season:
+        if getattr(self, "season_override", None) is not None:
+            return self.season_override
         settings = self.config.seasons
         if settings.source is SeasonSource.SUMMER:
             return Season.SUMMER
@@ -1024,6 +1217,53 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             state = self.hass.states.get(settings.entity_id) if settings.entity_id else None
             return season_from_state(state.state if state else None)
         return settings.for_month(dt_util.now().month)
+
+    def _precipitation(self) -> bool:
+        """Return whether the configured source reports precipitation, with grace.
+
+        Dit is een lezer en schrijft dus niets. Het moment waarop de bron voor
+        het laatst neerslag meldde wordt vastgelegd in `_notice_precipitation`
+        (de toestandswijziging van de bron zelf) en bij het opstarten in
+        `_note_precipitation_now`; hier wordt het alleen uitgelezen. Eerder
+        gebeurde dat wél hier, en daardoor verliep de nalooptijd alleen tijdens
+        een beoordelingsronde - een verborgen bijwerking op een pad dat "lezen"
+        heet.
+
+        This is a reader and therefore writes nothing. The moment the source
+        last reported precipitation is recorded in `_notice_precipitation` (the
+        source's own state change) and at startup in `_note_precipitation_now`;
+        here it is only read. It used to be written here, which made the grace
+        lapse only during an evaluation round - a hidden side effect on a path
+        that calls itself "read".
+        """
+        settings = self.config.precipitation
+        if not settings.source:
+            return False
+        state = self.hass.states.get(settings.source)
+        if state is not None and state.state in settings.states:
+            return True
+        seen = self._precipitation_seen_at
+        return seen is not None and dt_util.now() - seen < settings.grace
+
+    def _note_precipitation_now(self) -> None:
+        """Remember rain that was already falling before this process started.
+
+        De listener ziet alleen overgangen. Wie herstart terwijl het regent,
+        heeft geen overgang gezien, en zonder deze stap zou de nalooptijd voor
+        die bui verloren zijn - terwijl de lezer zelf nooit mag schrijven. Dit
+        is naast de listener de enige plek die het moment vastlegt.
+
+        The listener only sees transitions. Restarting while it rains means no
+        transition was seen, and without this step the grace for that shower
+        would be lost - while the reader itself must never write. Besides the
+        listener this is the only place that records the moment.
+        """
+        source = self.config.precipitation.source
+        if not source:
+            return
+        state = self.hass.states.get(source)
+        if state is not None and state.state in self.config.precipitation.states:
+            self._precipitation_seen_at = dt_util.now()
 
     # -- circuitgeschiedenis / circuit history -------------------------------
 
@@ -1145,7 +1385,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         target: float | None = None
         settled = False
         if zone is not None and self.world is not None:
-            demand, target = wanted_target(zone, self.world)
+            demand, target = wanted_target(self.config, zone, self.world, self.data)
             settled = demand.reason is Reason.SATISFIED
 
         if indoor is None:
@@ -1308,3 +1548,15 @@ def _as_float(raw: Any) -> float | None:
     except (TypeError, ValueError):
         return None
     return value if math.isfinite(value) else None
+
+
+def _as_modes(raw: Any) -> frozenset[str] | None:
+    """Return the hvac modes an entity reports, or `None` when it reports none.
+
+    None means unknown, and unknown gets the benefit of the doubt: the engine
+    commands the mode anyway, exactly as before the check existed.
+    """
+    if not isinstance(raw, (list, tuple, set, frozenset)):
+        return None
+    modes = {str(item) for item in raw}
+    return frozenset(modes) if modes else None

@@ -40,7 +40,18 @@ async def async_get_config_entry_diagnostics(
         "control_state": {
             "master_enabled": coordinator.master_enabled,
             "holiday_mode": coordinator.holiday_mode,
+            "guest_mode": coordinator.guest_mode,
+            "season_override": (
+                coordinator.season_override.value
+                if coordinator.season_override is not None
+                else None
+            ),
             "zone_overrides": dict(coordinator.zone_overrides),
+            "zone_priorities": dict(coordinator.zone_priorities),
+            "precondition_requests": {
+                zone_id: until.isoformat()
+                for zone_id, until in coordinator._live_preconditions().items()
+            },
         },
         "tracked_entities": sorted(coordinator.tracked_entities()),
         "world": _world(coordinator.world),
@@ -80,6 +91,20 @@ def _world(world: WorldState | None) -> dict[str, Any] | None:
             }
             for entity_id, state in world.openings.items()
         },
+        "presence": {
+            zone_id: {
+                "occupied": state.occupied,
+                "changed_at": state.changed_at.isoformat() if state.changed_at else None,
+            }
+            for zone_id, state in world.presence.items()
+        },
+        "precondition_until": {
+            zone_id: until.isoformat() for zone_id, until in world.precondition_until.items()
+        },
+        "precondition_bypass": sorted(world.precondition_bypass),
+        "guest_mode": world.guest_mode,
+        "precipitation": world.precipitation,
+        "zone_priorities": dict(world.zone_priorities),
         "circuit_family_since": {
             circuit_id: moment.isoformat() if moment else None
             for circuit_id, moment in world.circuit_family_since.items()
@@ -134,5 +159,13 @@ def _plan(plan: Plan | None) -> dict[str, Any] | None:
                 "reason": deferral.reason.value,
             }
             for deferral in plan.deferrals
+        ],
+        "untouched": [
+            {
+                "entity_id": item.entity_id,
+                "zone_id": item.zone_id,
+                "reason": item.reason.value,
+            }
+            for item in plan.untouched
         ],
     }

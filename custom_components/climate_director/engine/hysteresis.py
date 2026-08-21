@@ -17,9 +17,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .families import ModeFamily
-from .models import ModeSettings, Zone
-from .plan import Reason
+from .families import ModeFamily, family_of
+from .models import DirectorConfig, ModeSettings, Source, Zone
+from .plan import Plan, Reason
 from .world import WorldState
 
 
@@ -33,16 +33,52 @@ class Demand:
     """How far the indoor temperature sits past the switch-on point."""
 
 
-def running_family(zone: Zone, world: WorldState) -> ModeFamily:
+def source_counts_for(
+    config: DirectorConfig, zone: Zone, source: Source, previous: Plan | None
+) -> bool:
+    """Return whether a running source counts as this zone's own.
+
+    Een bron die maar in deze zone staat, telt gewoon op zijn toestand. Een
+    gedeeld apparaat telt alleen voor de zone die het commando kreeg; zonder
+    eerder plan telt het voor geen enkele zone. Wie de ketel alleen uitleest,
+    laat de dode band van elke kamer meeschuiven zodra één kamer warmte kreeg.
+
+    A source sitting in this zone alone simply counts on its own state. A shared
+    appliance counts only for the zone that got the command; without a previous
+    plan it counts for no zone. Reading the boiler alone would shift every
+    room's dead band the moment one room got heat.
+    """
+    owners = {
+        owner.zone_id for owner, item in config.sources() if item.entity_id == source.entity_id
+    }
+    if len(owners) <= 1:
+        return True
+    if previous is None:
+        return False
+    return any(
+        command.entity_id == source.entity_id
+        and command.zone_id == zone.zone_id
+        and family_of(command.hvac_mode) is not ModeFamily.NEUTRAL
+        for command in previous.commands
+    )
+
+
+def running_family(
+    config: DirectorConfig, zone: Zone, world: WorldState, previous: Plan | None
+) -> ModeFamily:
     """Return the duty this zone is running now, for the dead band to build on."""
     for source in zone.sources:
+        if not source_counts_for(config, zone, source, previous):
+            continue
         family = world.climate(source.entity_id).family
         if family in (ModeFamily.HEAT, ModeFamily.COOL):
             return family
     return ModeFamily.NEUTRAL
 
 
-def wanted_target(zone: Zone, world: WorldState) -> tuple[Demand, float | None]:
+def wanted_target(
+    config: DirectorConfig, zone: Zone, world: WorldState, previous: Plan | None = None
+) -> tuple[Demand, float | None]:
     """Return what this room needs and the temperature it would aim for.
 
     Los van de poorten, en dat is precies waarvoor het bedoeld is: bij een
@@ -65,7 +101,7 @@ def wanted_target(zone: Zone, world: WorldState) -> tuple[Demand, float | None]:
     configuration forbids it. Only the first may be told to a user as "it is
     already right".
     """
-    demand = evaluate(zone, world, running_family(zone, world))
+    demand = evaluate(zone, world, running_family(config, zone, world, previous))
     settings = zone.settings_for(demand.family)
     return demand, settings.target if settings else None
 
@@ -122,6 +158,11 @@ def _candidate(
     # uitzondering valt er een gat tussen de twee grenzen, waar verwarmen niet
     # meer mag en koelen nog niet - en daar doet een verzoek dan niets.
     #
+    # Regen zet die zuinigheidsregel opzij: is het buiten aangenamer dan
+    # binnen maar regent het, dan blijft het raam dicht en gebeurt er niets,
+    # terwijl de kamer te warm of te koud blijft. Een zone kan dat uitzetten
+    # (`ignore_precipitation`), want een zolder zonder ramen heeft er niets aan.
+    #
     # De grens per BRON blijft wel gelden; die kiest het apparaat. Net als het
     # seizoen, de dode band en alles daarna.
     #
@@ -132,10 +173,17 @@ def _candidate(
     # opens between the two windows, where heating is no longer allowed and
     # cooling not yet - and a request does nothing there.
     #
+    # Rain sets that thrift rule aside: if it is nicer outside than in but it
+    # rains, the window stays shut and nothing happens while the room stays too
+    # warm or too cold. A zone can switch this off (`ignore_precipitation`),
+    # since an attic without windows gains nothing from it.
+    #
     # The window per SOURCE does still apply; that one picks the appliance. As
     # do the season, the dead band and everything after them.
-    if not world.preconditioning(zone.zone_id) and not settings.outdoor.contains(
-        world.outdoor_temperature
+    if (
+        not world.preconditioning(zone.zone_id)
+        and not (world.precipitation and not zone.ignore_precipitation)
+        and not settings.outdoor.contains(world.outdoor_temperature)
     ):
         return Demand(ModeFamily.NEUTRAL, Reason.OUTDOOR_OUTSIDE_WINDOW)
 

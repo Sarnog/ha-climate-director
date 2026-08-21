@@ -31,10 +31,21 @@ from .world import WorldState
 _SOLO = Circuit(circuit_id="", name="", units=(), simultaneous_heat_cool=True)
 
 
-def decide(config: DirectorConfig, world: WorldState) -> Plan:
-    """Return the complete, consistent end state the installation should be in."""
-    wishes, refusals, shut = _collect_wishes(config, world)
-    wishes, dropped = _apply_exclusive_groups(config, wishes)
+def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = None) -> Plan:
+    """Return the complete, consistent end state the installation should be in.
+
+    `previous` is het plan van de vorige ronde. De dode band en de stiltevensters
+    moeten weten of deze zone zelf draait, en bij een gedeeld apparaat zegt de
+    apparaattoestand dat niet: die telt alleen voor de zone die het commando
+    kreeg.
+
+    `previous` is the previous round's plan. The dead band and the quiet windows
+    need to know whether this zone itself is running, and on a shared appliance
+    the appliance state does not say that: it counts only for the zone that got
+    the command.
+    """
+    wishes, refusals, shut, woulds = _collect_wishes(config, world, previous)
+    wishes, dropped = _apply_exclusive_groups(config, world, wishes)
 
     grants, circuit_decisions, deferrals = _resolve_circuits(config, world, wishes)
     reasons = _zone_reasons(config, grants, dropped, refusals)
@@ -42,7 +53,7 @@ def decide(config: DirectorConfig, world: WorldState) -> Plan:
     commands, untouched = _build_commands(config, world, grants, reasons, wishes)
     return Plan(
         commands=commands,
-        zones=_build_zone_decisions(config, world, wishes, dropped, grants, refusals, shut),
+        zones=_build_zone_decisions(config, world, wishes, dropped, grants, refusals, shut, woulds),
         circuits=circuit_decisions,
         deferrals=deferrals,
         untouched=untouched,
@@ -50,29 +61,43 @@ def decide(config: DirectorConfig, world: WorldState) -> Plan:
 
 
 def _collect_wishes(
-    config: DirectorConfig, world: WorldState
-) -> tuple[dict[str, constraints.Request], dict[str, Reason], dict[str, tuple[Reason, ...]]]:
-    """Return each zone's request, its refusal reason, and every gate shut on it.
+    config: DirectorConfig, world: WorldState, previous: Plan | None
+) -> tuple[
+    dict[str, constraints.Request],
+    dict[str, Reason],
+    dict[str, tuple[Reason, ...]],
+    dict[str, ModeFamily],
+]:
+    """Return each zone's request, its refusal reason, every gate shut on it,
+    and the duty it would want regardless of those gates.
 
     De dichte poorten worden voor elke zone opgehaald, ook voor de zones die
     gewoon doorlopen: dan staat er een lege lijst, en dat is precies wat een
-    zone zonder hindernis hoort te melden.
+    zone zonder hindernis hoort te melden. De gewenste taak wordt óók voor
+    geblokkeerde zones uitgerekend: zonder die wens valt niet te zien of een
+    dichte poort een kamer tegenhoudt die anders wél geregeld zou worden.
 
     The shut gates are collected for every zone, including the ones that carry
     straight on: those get an empty list, which is exactly what a zone without
-    an obstacle should report.
+    an obstacle should report. The wanted duty is computed for blocked zones
+    too: without that wish there is no telling whether a shut gate is holding
+    back a room that would otherwise be regulated.
     """
     wishes: dict[str, constraints.Request] = {}
     refusals: dict[str, Reason] = {}
     shut: dict[str, tuple[Reason, ...]] = {}
+    woulds: dict[str, ModeFamily] = {}
 
     for zone in config.zones:
-        shut[zone.zone_id] = gates.closed(config, world, zone)
+        shut[zone.zone_id] = gates.closed(config, world, zone, previous)
+        demand = hysteresis.evaluate(
+            zone, world, hysteresis.running_family(config, zone, world, previous)
+        )
+        woulds[zone.zone_id] = demand.family
         if shut[zone.zone_id]:
             refusals[zone.zone_id] = shut[zone.zone_id][0]
             continue
 
-        demand = hysteresis.evaluate(zone, world, hysteresis.running_family(zone, world))
         if demand.family is ModeFamily.NEUTRAL:
             refusals[zone.zone_id] = demand.reason
             continue
@@ -90,11 +115,11 @@ def _collect_wishes(
             priority=world.priority_for(zone.zone_id, zone.priority),
         )
 
-    return wishes, refusals, shut
+    return wishes, refusals, shut, woulds
 
 
 def _apply_exclusive_groups(
-    config: DirectorConfig, wishes: dict[str, constraints.Request]
+    config: DirectorConfig, world: WorldState, wishes: dict[str, constraints.Request]
 ) -> tuple[dict[str, constraints.Request], dict[str, constraints.Request]]:
     """Split the requests into those that keep a shared appliance and those that lose it.
 
@@ -102,6 +127,22 @@ def _apply_exclusive_groups(
     source - so this covers only appliances shared across zones. Losers are
     returned rather than discarded, so the plan can still report what they
     wanted and why they did not get it.
+
+    Een lid dat nog draait in een zone die de director met rust laat, bezet de
+    groep. Zo'n lid vraagt deze ronde niets - maar een ander lid mag er niet
+    naast gaan draaien, want precies die combinatie hoort de groep uit te
+    sluiten. Een handbediend lid heeft daarbij niet het laatste woord: vraagt
+    een ander lid met méér voorrang om te draaien, dan wijkt het handbediende
+    lid en gaat dat verzoek door. Een lid in een overgedragen zone is
+    onverslaanbaar, want daar stuurt de director niets naartoe, ook geen uit.
+
+    A member still running in a zone the director leaves alone occupies the
+    group. Such a member asks for nothing this round - but another member may
+    not start beside it, because that is exactly the combination the group
+    exists to rule out. A hand-operated member does not have the last word,
+    though: when another member with more claim asks to run, the hand-operated
+    member yields and that request goes through. A member in a handed-over zone
+    is unbeatable, since the director sends that zone nothing, an off included.
     """
     if not config.exclusive_groups:
         return wishes, {}
@@ -113,9 +154,62 @@ def _apply_exclusive_groups(
             (request for request in kept.values() if request.source.source_id in group),
             key=lambda request: request.rank,
         )
-        for loser in contenders[1:]:
+        holder = _group_holder(config, world, group)
+        if holder is None:
+            losers = contenders[1:]
+        elif holder[1] is None or not contenders or not _outranks(contenders[0], holder[1]):
+            losers = contenders
+        else:
+            losers = contenders[1:]
+        for loser in losers:
             dropped[loser.zone.zone_id] = kept.pop(loser.zone.zone_id)
     return kept, dropped
+
+
+def _group_holder(
+    config: DirectorConfig, world: WorldState, group: frozenset[str]
+) -> tuple[str, tuple[int, str] | None] | None:
+    """Return the strongest member running in a zone the director leaves alone.
+
+    Twee soorten bezetten de groep: een unit in een overgedragen zone - daar
+    stuurt de director niets naartoe, ook geen uit - en een handbediende bron,
+    die alleen opzij gaat als iemand hem in de weg zit. De eerste is
+    onverslaanbaar (`None` als rang); de tweede draagt de rang van de zone met
+    de meeste voorrang waarin hij staat, zodat hij vergelijkbaar is met een
+    verzoek.
+
+    Two kinds occupy the group: a unit in a handed-over zone - the director
+    sends that nothing, an off included - and a hand-operated source, which
+    only steps aside when it is in somebody's way. The first is unbeatable
+    (`None` as rank); the second carries the rank of its strongest zone, making
+    it comparable to a request.
+    """
+    strongest: tuple[tuple[int, str], str] | None = None
+    for source_id in group:
+        owners = [
+            (zone, source) for zone, source in config.sources() if source.source_id == source_id
+        ]
+        if not owners:
+            continue
+        if not world.climate(owners[0][1].entity_id).running:
+            continue
+        if any(world.overridden(zone.zone_id) for zone, _ in owners):
+            return source_id, None
+        if not all(not source.autostart for _, source in owners):
+            continue
+        rank = min(
+            (world.priority_for(zone.zone_id, zone.priority), zone.zone_id) for zone, _ in owners
+        )
+        if strongest is None or rank < strongest[0]:
+            strongest = (rank, source_id)
+    if strongest is None:
+        return None
+    return strongest[1], strongest[0]
+
+
+def _outranks(request: constraints.Request, holder_rank: tuple[int, str]) -> bool:
+    """Return whether a request carries more claim than a running member."""
+    return request.rank < holder_rank
 
 
 def _resolve_circuits(
@@ -217,7 +311,7 @@ def _manual_conflict(
     # hand-operated appliance would ignore the group with impunity, since it
     # never files a request of its own - leaving the group a rule on paper.
     if _exclusive_rival(config, zone, source, wishes):
-        return _stand_down(config, zone, source, Reason.EXCLUSIVE_GROUP_LOST)
+        return _stand_down(config, world, zone, source, Reason.EXCLUSIVE_GROUP_LOST)
 
     circuit = config.circuit_for_entity(source.entity_id)
     if circuit is None or circuit.simultaneous_heat_cool:
@@ -233,7 +327,7 @@ def _manual_conflict(
     if not wanted or running in wanted:
         return None
 
-    return _stand_down(config, zone, source, Reason.CIRCUIT_CONFLICT_LOST)
+    return _stand_down(config, world, zone, source, Reason.CIRCUIT_CONFLICT_LOST)
 
 
 def _exclusive_rival(
@@ -252,11 +346,13 @@ def _exclusive_rival(
     return False
 
 
-def _stand_down(config: DirectorConfig, zone: Zone, source: Source, reason: Reason) -> UnitCommand:
+def _stand_down(
+    config: DirectorConfig, world: WorldState, zone: Zone, source: Source, reason: Reason
+) -> UnitCommand:
     """Return the command putting one source back to standing still."""
     return UnitCommand(
         entity_id=source.entity_id,
-        hvac_mode=_idle_mode(config, source, reason),
+        hvac_mode=_idle_mode(config, world, source, reason),
         temperature=None,
         zone_id=zone.zone_id,
         source_id=source.source_id,
@@ -363,10 +459,28 @@ def _build_commands(
         reason = (
             Reason.OTHER_SOURCE_CHOSEN if served else reasons.get(zone.zone_id, Reason.SATISFIED)
         )
+
+        # Zonder leesbare binnentemperatuur valt er niets te beslissen, en dan
+        # is uitzetten de enige fout die je kunt maken: een draaiend apparaat
+        # zou uitgaan omdat de sensor kapot is. Dat apparaat wordt met rust
+        # gelaten; wie uit staat krijgt gewoon zijn uit-commando, want "elke
+        # beheerde bron krijgt een commando" blijft gelden.
+        #
+        # Without a readable indoor temperature there is nothing to decide, and
+        # switching off is the only mistake to make then: a running appliance
+        # would go off because the sensor is broken. That appliance is left
+        # alone; one that is off simply gets its off command, since "every
+        # managed source gets a command" still holds.
+        if reason is Reason.NO_INDOOR_TEMPERATURE and world.climate(source.entity_id).running:
+            untouched.append(
+                UntouchedSource(source.entity_id, zone.zone_id, Reason.NO_INDOOR_TEMPERATURE)
+            )
+            continue
+
         commands.append(
             UnitCommand(
                 entity_id=source.entity_id,
-                hvac_mode=_idle_mode(config, source, reason),
+                hvac_mode=_idle_mode(config, world, source, reason),
                 temperature=None,
                 zone_id=zone.zone_id,
                 source_id=source.source_id,
@@ -531,17 +645,23 @@ def _generator_commands(
     return commands
 
 
-def _idle_mode(config: DirectorConfig, source: Source, reason: Reason) -> str:
+def _idle_mode(config: DirectorConfig, world: WorldState, source: Source, reason: Reason) -> str:
     """Return how a source stands down: off, or circulating air.
 
     Fan-only is only ever offered to a zone that lost its circuit to another
     zone. A zone that is simply warm enough has nothing to circulate for, and
-    leaving its fan running would read as a fault.
+    leaving its fan running would read as a fault. And fan-only is only offered
+    when the unit reports it can run that mode; a unit that knows just heat,
+    cool and off would refuse the command, so it falls back on off.
     """
     if reason is not Reason.CIRCUIT_CONFLICT_LOST:
         return MODE_OFF
     circuit = config.circuit_for_entity(source.entity_id)
-    if circuit is not None and circuit.allow_fan_only_during_conflict:
+    if (
+        circuit is not None
+        and circuit.allow_fan_only_during_conflict
+        and world.climate(source.entity_id).supports(MODE_FAN_ONLY)
+    ):
         return MODE_FAN_ONLY
     return MODE_OFF
 
@@ -573,12 +693,14 @@ def _build_zone_decisions(
     grants: dict[str, constraints.Grant],
     refusals: dict[str, Reason],
     shut: dict[str, tuple[Reason, ...]],
+    woulds: dict[str, ModeFamily],
 ) -> tuple[ZoneDecision, ...]:
     """Return one decision per zone, saying what it asked for and what it got."""
     decisions: list[ZoneDecision] = []
 
     for zone in config.zones:
         request = wishes.get(zone.zone_id)
+        would = woulds.get(zone.zone_id, ModeFamily.NEUTRAL)
 
         if request is None:
             # A zone that lost a shared appliance still had a wish; keep it, so
@@ -597,6 +719,7 @@ def _build_zone_decisions(
                         else refusals.get(zone.zone_id, Reason.SATISFIED)
                     ),
                     closed_gates=shut.get(zone.zone_id, ()),
+                    would_want=would,
                 )
             )
             continue
@@ -611,6 +734,7 @@ def _build_zone_decisions(
                 reason=grant.reason if grant is not None else Reason.NO_SOURCE_AVAILABLE,
                 closed_gates=shut.get(zone.zone_id, ()),
                 passed_over=sources.passed_over(zone, request.family, world),
+                would_want=would,
             )
         )
 

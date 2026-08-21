@@ -20,6 +20,7 @@ PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -131,3 +132,18 @@ DEBOUNCE_SECONDS = 1.0
 # Floor for a deferred re-evaluation, so an already-expired timer cannot end up
 # in a tight loop.
 MIN_DEFERRAL_SECONDS = 1.0
+
+# Elke minuut opnieuw beslissen als vangnet voor tijdregels die vanzelf
+# verlopen: een raamvertraging, een aanwezigheids-nalooptijd, de neerslag-
+# grace, de eerstvolgende vensterrand en middernacht. Zonder dit hangt zo'n
+# omslagpunt op toeval: er moet toevallig iets anders veranderen. Een
+# beslisronde zonder verschil kost geen service call (engine.diff.changes),
+# dus dit vangnet is goedkoop.
+#
+# Re-decide every minute as a safety net for time rules that lapse by
+# themselves: a window delay, a presence grace period, the precipitation
+# grace, the next window edge and midnight. Without this such a turning point
+# depends on chance: something else must happen to change. A decision round
+# without a difference costs no service call (engine.diff.changes), so this
+# net is cheap.
+CLOCK_REEVAL_SECONDS = 60.0
