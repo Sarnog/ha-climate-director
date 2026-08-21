@@ -292,17 +292,35 @@ def _quiet_hours(config: DirectorConfig, world: WorldState) -> bool:
 
     Only the window of somebody who is home counts: the schedule of somebody who
     is out need not set the house going.
-    """
-    if not any(
-        window.contains(world.now.time(), world.now.weekday())
-        for window in config.gates.quiet_windows
-    ):
-        return False
 
+    Een vakantievenster geldt alleen op vakantiedagen, en dan elke dag van de
+    week. Zijn er vakantievensters, dan nemen die het op een vakantie over van
+    de gewone; zijn die er niet, dan telt een vakantie als zaterdag - precies
+    zoals de bewonersroosters dat doen.
+
+    A holiday window applies only on holidays, and then on any weekday. With
+    holiday windows set they take over from the ordinary ones on a holiday;
+    without them a holiday counts as a Saturday - exactly like the residents'
+    schedules do.
+    """
     moment = world.now.time()
     weekday = world.now.weekday()
     holiday = world.holiday_mode
     effective = HOLIDAY_WEEKDAY if holiday else weekday
+    holiday_windows = [window for window in config.gates.quiet_windows if window.holiday]
+    if holiday and holiday_windows:
+        in_window = any(
+            window.contains(moment, weekday, any_day=True) for window in holiday_windows
+        )
+    else:
+        in_window = any(
+            window.contains(moment, effective)
+            for window in config.gates.quiet_windows
+            if not window.holiday
+        )
+    if not in_window:
+        return False
+
     return not any(
         world.resident(resident.resident_id).home
         and resident.takes_part(holiday=holiday, weekday=effective)

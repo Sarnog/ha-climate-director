@@ -70,7 +70,9 @@ def house(*windows: TimeWindow) -> DirectorConfig:
     )
 
 
-def verdict(config: DirectorConfig, hour: int, running: str, *, day: int = MONDAY):
+def verdict(
+    config: DirectorConfig, hour: int, running: str, *, day: int = MONDAY, holiday: bool = False
+):
     zone = config.zone("woonkamer")
     assert zone is not None
     world = make_world(
@@ -79,6 +81,7 @@ def verdict(config: DirectorConfig, hour: int, running: str, *, day: int = MONDA
         climates={LIVING: running},
         residents={"danny": awake()},
         presence={"woonkamer": PresenceState(occupied=True)},
+        holiday_mode=holiday,
     )
     return gates.evaluate(config, world, zone)
 
@@ -116,6 +119,59 @@ class TestWithoutWindows:
     @pytest.mark.parametrize("hour", [0, 3, 12, 23])
     def test_the_brake_is_off(self, hour: int) -> None:
         assert verdict(house(), hour, "off").allowed
+
+
+class TestAHolidayWindow:
+    """Een vakantievenster geldt alleen op vakantiedagen, en dan elke dag.
+
+    A holiday window applies only on holidays, and then on any weekday.
+    """
+
+    def test_it_does_not_bite_on_an_ordinary_day(self) -> None:
+        window = TimeWindow(time(21, 0), time(9, 0), holiday=True)
+        assert verdict(house(window), 22, "off").allowed
+
+    def test_it_bites_on_a_holiday(self) -> None:
+        window = TimeWindow(time(21, 0), time(9, 0), holiday=True)
+        assert verdict(house(window), 22, "off", holiday=True).reason is Reason.QUIET_HOURS
+
+    def test_on_a_holiday_it_ignores_its_weekdays(self) -> None:
+        """Een vakantie is geen dag van de week, dus ook op zaterdag geldt hij.
+
+        A holiday is not a day of the week, so it applies on a Saturday too.
+        """
+        window = TimeWindow(time(21, 0), time(9, 0), WEEK, holiday=True)
+        assert verdict(house(window), 22, "off", day=22, holiday=True).reason is Reason.QUIET_HOURS
+
+    def test_ordinary_windows_fall_back_to_saturday_on_a_holiday(self) -> None:
+        """Zonder vakantievenster telt een vakantie als zaterdag.
+
+        Without a holiday window a holiday counts as a Saturday.
+        """
+        window = TimeWindow(time(21, 0), time(9, 0), WEEKEND)
+        assert verdict(house(window), 22, "off", day=18).allowed
+        assert verdict(house(window), 22, "off", day=18, holiday=True).reason is Reason.QUIET_HOURS
+
+    def test_a_weekday_window_stops_applying_on_a_holiday(self) -> None:
+        """Een doordeweeks venster is geen zaterdagvenster.
+
+        A weekday window is not a Saturday window.
+        """
+        window = TimeWindow(time(21, 0), time(9, 0), WEEK)
+        assert verdict(house(window), 22, "off", day=18).reason is Reason.QUIET_HOURS
+        assert verdict(house(window), 22, "off", day=18, holiday=True).allowed
+
+    def test_a_holiday_window_replaces_the_ordinary_ones(self) -> None:
+        """Op een vakantie neemt het vakantievenster het over.
+
+        On a holiday the holiday window takes over from the ordinary ones.
+        """
+        config = house(
+            TimeWindow(time(21, 0), time(9, 0)),
+            TimeWindow(time(23, 0), time(9, 0), holiday=True),
+        )
+        assert verdict(config, 22, "off", holiday=True).allowed
+        assert verdict(config, 23, "off", holiday=True).reason is Reason.QUIET_HOURS
 
 
 class TestItSurvivesStorage:
