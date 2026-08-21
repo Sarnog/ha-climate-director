@@ -36,6 +36,7 @@ class StandIn:
         self.restored = 0
         self.evaluated = 0
         self.clock_armed = 0
+        self.precipitation_noted = 0
 
     def tracked_entities(self) -> set[str]:
         return set()
@@ -48,6 +49,9 @@ class StandIn:
 
     async def _async_restore_state(self) -> None:
         self.restored += 1
+
+    def _note_precipitation_now(self) -> None:
+        self.precipitation_noted += 1
 
     async def _async_evaluate(self) -> None:
         self.evaluated += 1
@@ -81,5 +85,6 @@ async def test_the_first_decision_waits_for_hass_to_start(monkeypatch) -> None:
     await scheduled["callback"](item.hass)  # type: ignore[misc]
 
     assert item.restored == 1
+    assert item.precipitation_noted == 1
     assert item.evaluated == 1
     assert item.clock_armed == 1
