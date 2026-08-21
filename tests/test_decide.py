@@ -314,7 +314,9 @@ class TestExclusiveGroups:
         assert command is not None
         assert command.reason is Reason.EXCLUSIVE_GROUP_LOST
 
-    def _config_with_manual(self) -> DirectorConfig:
+    def _config_with_manual(
+        self, office_priority: int = 0, hall_priority: int = 1
+    ) -> DirectorConfig:
         shared = ModeSettings(target=21.0, start_at=20.0, hysteresis=1.0)
         return DirectorConfig(
             zones=(
@@ -322,7 +324,7 @@ class TestExclusiveGroups:
                     "kantoor",
                     "Kantoor",
                     "sensor.kantoor",
-                    priority=0,
+                    priority=office_priority,
                     sources=(Source("kachel_kantoor", "climate.kachel", SourceRole.HEAT_ONLY),),
                     heat=shared,
                 ),
@@ -330,7 +332,7 @@ class TestExclusiveGroups:
                     "hal",
                     "Hal",
                     "sensor.hal",
-                    priority=1,
+                    priority=hall_priority,
                     sources=(
                         Source(
                             "kachel_hal",
@@ -345,10 +347,10 @@ class TestExclusiveGroups:
             exclusive_groups=(frozenset({"kachel_kantoor", "kachel_hal"}),),
         )
 
-    def test_a_running_manual_member_occupies_the_group(self) -> None:
-        """Een draaiend handbediend lid bezet de groep; de ander wacht.
+    def test_a_stronger_request_takes_the_group_from_a_running_manual_member(self) -> None:
+        """Een draaiend handbediend lid wijkt voor een verzoek met meer voorrang.
 
-        A running hand-operated member occupies the group; the other waits.
+        A running hand-operated member yields to a request with more claim.
         """
         world = make_world(
             indoor={"kantoor": 18.0, "hal": 18.0},
@@ -359,9 +361,28 @@ class TestExclusiveGroups:
         )
         plan = decide(self._config_with_manual(), world)
         office = plan.command_for("climate.kachel")
+        hall = plan.command_for("climate.kachel_hal")
+        assert office is not None and office.hvac_mode == MODE_HEAT
+        assert hall is not None and hall.hvac_mode == MODE_OFF
+        assert hall.reason is Reason.EXCLUSIVE_GROUP_LOST
+
+    def test_a_running_manual_member_keeps_the_group_without_a_stronger_request(self) -> None:
+        """Zonder verzoek met méér voorrang blijft het handbediende lid draaien.
+
+        Without a request that outranks it, the hand-operated member keeps the group.
+        """
+        world = make_world(
+            indoor={"kantoor": 18.0, "hal": 18.0},
+            climates={
+                "climate.kachel": climate(),
+                "climate.kachel_hal": climate(MODE_HEAT),
+            },
+        )
+        plan = decide(self._config_with_manual(office_priority=1, hall_priority=0), world)
+        office = plan.command_for("climate.kachel")
         assert office is not None and office.hvac_mode == MODE_OFF
-        assert plan.decision_for("kantoor").reason is Reason.EXCLUSIVE_GROUP_LOST
-        assert plan.decision_for("hal").granted is ModeFamily.NEUTRAL
+        assert office.reason is Reason.EXCLUSIVE_GROUP_LOST
+        assert plan.command_for("climate.kachel_hal") is None
 
     def test_a_running_member_in_an_overridden_zone_occupies_the_group(self) -> None:
         """Ook een overgedragen zone die doordraait houdt de groep bezet.

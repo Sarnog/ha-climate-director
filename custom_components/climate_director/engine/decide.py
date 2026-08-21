@@ -115,15 +115,21 @@ def _apply_exclusive_groups(
     returned rather than discarded, so the plan can still report what they
     wanted and why they did not get it.
 
-    Een lid dat nog draait in een overgedragen zone bezet de groep. Zo'n lid
-    vraagt deze ronde niets, want de director laat hem met rust - maar een
-    ander lid mag er niet naast gaan draaien, want precies die combinatie
-    hoort de groep uit te sluiten.
+    Een lid dat nog draait in een zone die de director met rust laat, bezet de
+    groep. Zo'n lid vraagt deze ronde niets - maar een ander lid mag er niet
+    naast gaan draaien, want precies die combinatie hoort de groep uit te
+    sluiten. Een handbediend lid heeft daarbij niet het laatste woord: vraagt
+    een ander lid met méér voorrang om te draaien, dan wijkt het handbediende
+    lid en gaat dat verzoek door. Een lid in een overgedragen zone is
+    onverslaanbaar, want daar stuurt de director niets naartoe, ook geen uit.
 
-    A member still running in a handed-over zone occupies the group. Such a
-    member asks for nothing this round, since the director leaves it alone -
-    but another member may not start beside it, because that is exactly the
-    combination the group exists to rule out.
+    A member still running in a zone the director leaves alone occupies the
+    group. Such a member asks for nothing this round - but another member may
+    not start beside it, because that is exactly the combination the group
+    exists to rule out. A hand-operated member does not have the last word,
+    though: when another member with more claim asks to run, the hand-operated
+    member yields and that request goes through. A member in a handed-over zone
+    is unbeatable, since the director sends that zone nothing, an off included.
     """
     if not config.exclusive_groups:
         return wishes, {}
@@ -131,43 +137,66 @@ def _apply_exclusive_groups(
     kept = dict(wishes)
     dropped: dict[str, constraints.Request] = {}
     for group in config.exclusive_groups:
-        if next(
-            (source_id for source_id in group if _keeps_running(config, world, source_id)),
-            None,
-        ):
-            for request in list(kept.values()):
-                if request.source.source_id in group and request.zone.zone_id in kept:
-                    dropped[request.zone.zone_id] = kept.pop(request.zone.zone_id)
-            continue
         contenders = sorted(
             (request for request in kept.values() if request.source.source_id in group),
             key=lambda request: request.rank,
         )
-        for loser in contenders[1:]:
+        holder = _group_holder(config, world, group)
+        if holder is None:
+            losers = contenders[1:]
+        elif holder[1] is None or not contenders or not _outranks(contenders[0], holder[1]):
+            losers = contenders
+        else:
+            losers = contenders[1:]
+        for loser in losers:
             dropped[loser.zone.zone_id] = kept.pop(loser.zone.zone_id)
     return kept, dropped
 
 
-def _keeps_running(config: DirectorConfig, world: WorldState, source_id: str) -> bool:
-    """Return whether this group member runs in a zone the director leaves alone.
+def _group_holder(
+    config: DirectorConfig, world: WorldState, group: frozenset[str]
+) -> tuple[str, tuple[int, str] | None] | None:
+    """Return the strongest member running in a zone the director leaves alone.
 
-    Dezelfde redenering als `_keeps_claiming` bij de buitenunit: een unit in
-    een overgedragen zone, of een handbediende bron, wordt deze ronde niet
-    aangestuurd - en dus telt wat hij nú doet net zo hard als wat iemand zou
-    vragen.
+    Twee soorten bezetten de groep: een unit in een overgedragen zone - daar
+    stuurt de director niets naartoe, ook geen uit - en een handbediende bron,
+    die alleen opzij gaat als iemand hem in de weg zit. De eerste is
+    onverslaanbaar (`None` als rang); de tweede draagt de rang van de zone met
+    de meeste voorrang waarin hij staat, zodat hij vergelijkbaar is met een
+    verzoek.
 
-    The same reasoning as `_keeps_claiming` on the outdoor unit: a unit in a
-    handed-over zone, or a hand-operated source, is not commanded this round -
-    so what it does right now counts just as hard as what somebody would ask.
+    Two kinds occupy the group: a unit in a handed-over zone - the director
+    sends that nothing, an off included - and a hand-operated source, which
+    only steps aside when it is in somebody's way. The first is unbeatable
+    (`None` as rank); the second carries the rank of its strongest zone, making
+    it comparable to a request.
     """
-    owners = [(zone, source) for zone, source in config.sources() if source.source_id == source_id]
-    if not owners:
-        return False
-    if not world.climate(owners[0][1].entity_id).running:
-        return False
-    if any(world.overridden(zone.zone_id) for zone, _ in owners):
-        return True
-    return all(not source.autostart for _, source in owners)
+    strongest: tuple[tuple[int, str], str] | None = None
+    for source_id in group:
+        owners = [
+            (zone, source) for zone, source in config.sources() if source.source_id == source_id
+        ]
+        if not owners:
+            continue
+        if not world.climate(owners[0][1].entity_id).running:
+            continue
+        if any(world.overridden(zone.zone_id) for zone, _ in owners):
+            return source_id, None
+        if not all(not source.autostart for _, source in owners):
+            continue
+        rank = min(
+            (world.priority_for(zone.zone_id, zone.priority), zone.zone_id) for zone, _ in owners
+        )
+        if strongest is None or rank < strongest[0]:
+            strongest = (rank, source_id)
+    if strongest is None:
+        return None
+    return strongest[1], strongest[0]
+
+
+def _outranks(request: constraints.Request, holder_rank: tuple[int, str]) -> bool:
+    """Return whether a request carries more claim than a running member."""
+    return request.rank < holder_rank
 
 
 def _resolve_circuits(

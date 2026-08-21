@@ -21,6 +21,7 @@ import pytest
 from conftest import awake, make_world
 
 from custom_components.climate_director.engine import (
+    MODE_OFF,
     Circuit,
     DirectorConfig,
     ModeSettings,
@@ -386,7 +387,9 @@ class TestAnExclusiveGroupBindsAManualSource:
     together, whichever of the two was there first.
     """
 
-    def _config(self, *, grouped: bool = True) -> DirectorConfig:
+    def _config(
+        self, *, grouped: bool = True, living_priority: int = 0, bedroom_priority: int = 2
+    ) -> DirectorConfig:
         from custom_components.climate_director.engine import SourceRole
 
         return DirectorConfig(
@@ -396,7 +399,7 @@ class TestAnExclusiveGroupBindsAManualSource:
                     "Woonkamer",
                     "sensor.woonkamer",
                     sources=(Source("gas", "climate.gas", role=SourceRole.HEAT_ONLY),),
-                    priority=0,
+                    priority=living_priority,
                     heat=ModeSettings(21.0, 20.0),
                 ),
                 Zone(
@@ -404,7 +407,7 @@ class TestAnExclusiveGroupBindsAManualSource:
                     "Slaapkamer",
                     "sensor.slaapkamer",
                     sources=(Source("bed", BEDROOM, autostart=False),),
-                    priority=2,
+                    priority=bedroom_priority,
                     heat=ModeSettings(21.0, 20.0),
                     cool=ModeSettings(23.0, 24.0),
                 ),
@@ -424,28 +427,42 @@ class TestAnExclusiveGroupBindsAManualSource:
         )
         return decide(config, world)
 
-    def test_a_running_one_occupies_the_group(self) -> None:
-        """Draait de slaapkamerairco, dan wacht het gas.
+    def test_a_running_one_yields_to_a_stronger_request(self) -> None:
+        """Draait de slaapkamerairco, dan wijkt hij voor een gasverzoek met meer voorrang.
 
-        When the bedroom unit runs, the boiler waits.
+        When the bedroom unit runs, it yields to a boiler request with more claim.
         """
         result = self._plan(self._config(), bedroom="heat")
-        assert command_for(result, BEDROOM) is None
-        living = result.decision_for("woonkamer")
-        assert living is not None
-        assert living.reason is Reason.EXCLUSIVE_GROUP_LOST
+        boiler = command_for(result, "climate.gas")
+        bedroom = command_for(result, BEDROOM)
+        assert boiler is not None and family_of(boiler.hvac_mode) is ModeFamily.HEAT
+        assert bedroom is not None and bedroom.hvac_mode == MODE_OFF
+        assert bedroom.reason is Reason.EXCLUSIVE_GROUP_LOST
 
     def test_even_when_they_do_the_same_thing(self) -> None:
         """No circuit and the same duty: only the group rules this out."""
         result = self._plan(self._config(), bedroom="heat")
-        assert command_for(result, BEDROOM) is None
+        bedroom = command_for(result, BEDROOM)
+        assert bedroom is not None and bedroom.reason is Reason.EXCLUSIVE_GROUP_LOST
 
-    def test_it_also_occupies_the_group_while_cooling(self) -> None:
+    def test_it_also_yields_while_cooling(self) -> None:
         result = self._plan(self._config(), bedroom="cool")
+        boiler = command_for(result, "climate.gas")
+        bedroom = command_for(result, BEDROOM)
+        assert boiler is not None and family_of(boiler.hvac_mode) is ModeFamily.HEAT
+        assert bedroom is not None and bedroom.hvac_mode == MODE_OFF
+        assert bedroom.reason is Reason.EXCLUSIVE_GROUP_LOST
+
+    def test_without_a_stronger_request_it_keeps_the_group(self) -> None:
+        """Zonder verzoek met méér voorrang blijft de slaapkamerairco draaien.
+
+        Without a request that outranks it, the bedroom unit keeps the group.
+        """
+        result = self._plan(self._config(living_priority=2, bedroom_priority=0), bedroom="heat")
         assert command_for(result, BEDROOM) is None
-        living = result.decision_for("woonkamer")
-        assert living is not None
-        assert living.reason is Reason.EXCLUSIVE_GROUP_LOST
+        boiler = command_for(result, "climate.gas")
+        assert boiler is not None and boiler.hvac_mode == MODE_OFF
+        assert boiler.reason is Reason.EXCLUSIVE_GROUP_LOST
 
     def test_without_the_group_it_is_left_alone(self) -> None:
         """Two appliances in separate rooms may run together; that is normal."""
