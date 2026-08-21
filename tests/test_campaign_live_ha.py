@@ -118,6 +118,20 @@ class TestSettingUp:
         assert "precondition_minutes" in keys
         assert {f"command_{LIVING}", f"command_{SPARE}", f"command_{ATTIC}"} <= keys
 
+    async def test_a_generator_gets_a_command_sensor(self) -> None:
+        """Een gedeelde warmtebron krijgt een commando, dus ook een sensor.
+
+        A shared heat source gets a command, so it also gets a sensor.
+        """
+        live = await start_house(
+            installation(generators=[{"generator_id": "cv", "name": "CV", "entity_id": BOILER}]),
+            states={**cold_world(), BOILER: ("off", {"temperature": 19.0})},
+        )
+        try:
+            assert f"command_{BOILER}" in live.registered()
+        finally:
+            await stop_house(live)
+
     async def test_no_two_entities_share_a_unique_id(self, home: LiveHome) -> None:
         registered = home.registered()
         assert len(registered) == len(set(registered.values()))
