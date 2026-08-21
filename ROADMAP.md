@@ -22,9 +22,6 @@ Gevonden gebreken die eerst gerepareerd worden vóór de schaduwmodus uitgaat.
 Het volledige stappenplan staat in de projectkennis van deze repo
 (`.claude/skills/climate-director/SKILL.md`).
 
-- **C1** een exclusieve groep wint ten onrechte van voorrang; bij vorst kan de gasverwarming geblokkeerd blijven.
-- **H1** een hand aan een gedeeld apparaat wordt binnen een seconde overstemd.
-- **H2** een vervallen override herleeft na een herstart.
 - **H3** een cover als raam/deur wordt nooit als open gezien.
 - **H4** er is geen klokgestuurde herbeoordeling; alle tijdregels hangen op toeval.
 - **M1–M8** opstartgedrag, gedeelde apparaten, `minutes: 0`, diagnose, zoneformulier, commandosensor voor generatoren, neerslag-bijwerking, vakantievlag op stiltevensters.
@@ -129,9 +126,6 @@ Defects found, to be repaired before shadow mode is switched off. The full
 step-by-step plan lives in this repo's project knowledge
 (`.claude/skills/climate-director/SKILL.md`).
 
-- **C1** an exclusive group wrongly beats precedence; in frost the gas heating can stay blocked.
-- **H1** a hand on a shared appliance is overridden within a second.
-- **H2** an expired override revives after a restart.
 - **H3** a cover used as a door/window is never seen as open.
 - **H4** there is no clock-driven re-evaluation; every time rule depends on chance.
 - **M1–M8** startup behaviour, shared appliances, `minutes: 0`, diagnostics, zone form, command sensor for generators, precipitation side effect, holiday flag on quiet windows.
