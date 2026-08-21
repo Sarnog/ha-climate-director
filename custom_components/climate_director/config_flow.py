@@ -1780,14 +1780,33 @@ def _band_errors(zone: dict[str, Any]) -> dict[str, str]:
 
 
 def _zone_from_form(user_input: dict[str, Any], current: dict[str, Any]) -> dict[str, Any]:
-    """Return the stored zone described by a submitted zone form."""
+    """Return the stored zone described by a submitted zone form.
+
+    Het formulier toont maar één kant van elke buitengrens en geen
+    verwarmingsseizoenen. Wie die waarden eerder instelde - via een oudere
+    versie of een met de hand bewerkte configuratie - mag ze bij een gewone
+    formulierbewerking niet kwijtraken: wat het formulier niet toont, blijft
+    staan.
+
+    The form shows only one side of each outdoor bound and no heating seasons.
+    Whoever set those values earlier - through an older version or a hand-edited
+    configuration - should not lose them on an ordinary form edit: what the form
+    does not show stays.
+    """
+    stored_heat = current.get("heat") or {}
+    stored_cool = current.get("cool") or {}
+    stored_heat_outdoor = stored_heat.get("outdoor") or {}
+    stored_cool_outdoor = stored_cool.get("outdoor") or {}
     heat = (
         {
             "target": user_input["heat_target"],
             "start_at": user_input["heat_start_at"],
             "hysteresis": user_input["heat_hysteresis"],
-            "outdoor": {"minimum": None, "maximum": user_input.get("heat_outdoor_max")},
-            "seasons": None,
+            "outdoor": {
+                "minimum": stored_heat_outdoor.get("minimum"),
+                "maximum": user_input.get("heat_outdoor_max"),
+            },
+            "seasons": stored_heat.get("seasons"),
         }
         if user_input["enable_heat"]
         else None
@@ -1797,7 +1816,10 @@ def _zone_from_form(user_input: dict[str, Any], current: dict[str, Any]) -> dict
             "target": user_input["cool_target"],
             "start_at": user_input["cool_start_at"],
             "hysteresis": user_input["cool_hysteresis"],
-            "outdoor": {"minimum": user_input.get("cool_outdoor_min"), "maximum": None},
+            "outdoor": {
+                "minimum": user_input.get("cool_outdoor_min"),
+                "maximum": stored_cool_outdoor.get("maximum"),
+            },
             "seasons": [Season.SUMMER.value] if user_input["cool_summer_only"] else None,
         }
         if user_input["enable_cool"]

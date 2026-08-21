@@ -475,6 +475,50 @@ class TestZoneFromForm:
         assert zone["zone_id"] == "living"
         assert zone["sources"] == current["sources"]
 
+    def test_editing_keeps_bounds_and_seasons_the_form_does_not_show(self) -> None:
+        """De zijden die het formulier niet toont, mogen niet op None terugvallen.
+
+        The sides the form does not show must not fall back to None.
+        """
+        current = {
+            "zone_id": "living",
+            "sources": [{"source_id": "s", "entity_id": "climate.x"}],
+            "heat": {
+                "target": 21.0,
+                "start_at": 20.0,
+                "hysteresis": 1.0,
+                "outdoor": {"minimum": 5.0, "maximum": 19.0},
+                "seasons": ["winter", "summer"],
+            },
+            "cool": {
+                "target": 23.0,
+                "start_at": 24.0,
+                "hysteresis": 1.0,
+                "outdoor": {"minimum": 24.0, "maximum": 35.0},
+                "seasons": ["summer"],
+            },
+        }
+        zone = _zone_from_form(self.form, current)
+        assert zone["heat"]["outdoor"]["minimum"] == 5.0
+        assert zone["heat"]["outdoor"]["maximum"] == 19.0
+        assert zone["heat"]["seasons"] == ["winter", "summer"]
+        assert zone["cool"]["outdoor"]["minimum"] == 24.0
+        assert zone["cool"]["outdoor"]["maximum"] == 35.0
+
+    def test_a_newly_enabled_duty_starts_without_hidden_bounds(self) -> None:
+        """Wie verwarmen pas aanzet, krijgt geen verborgen waarden uit het niets.
+
+        Enabling heating for the first time should not conjure hidden values.
+        """
+        current = {
+            "zone_id": "living",
+            "sources": [{"source_id": "s", "entity_id": "climate.x"}],
+        }
+        zone = _zone_from_form(self.form, current)
+        assert zone["heat"]["outdoor"]["minimum"] is None
+        assert zone["heat"]["seasons"] is None
+        assert zone["cool"]["outdoor"]["maximum"] is None
+
     def test_a_disabled_duty_becomes_none(self) -> None:
         form = dict(self.form, enable_cool=False)
         zone = config_from_dict({"zones": [_zone_from_form(form, {})]}).zone("woonkamer")
