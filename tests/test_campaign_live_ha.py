@@ -356,6 +356,37 @@ class TestTheActions:
 
         assert (granted - dt_util.now()).total_seconds() <= 7200 + 5
 
+    async def test_calling_without_minutes_grants_the_installation_maximum(
+        self, home: LiveHome
+    ) -> None:
+        """De blueprint laat `minutes` weg; dat hoort het maximum te geven.
+
+        The blueprint omits `minutes`; that should grant the installation maximum.
+        """
+        home.set("person.danny", "not_home")
+        await home.call("climate_director", "precondition", {"zone_ids": ["woonkamer"]})
+        granted = home.coordinator._live_preconditions()["woonkamer"]
+        from homeassistant.util import dt as dt_util
+
+        assert (granted - dt_util.now()).total_seconds() > 7200 - 5
+
+    async def test_calling_with_zero_minutes_does_nothing(self, home: LiveHome) -> None:
+        """Nul minuten is een typefout, geen vrijbrief voor het maximum.
+
+        Zero minutes is a typo, not a licence for the maximum.
+        """
+        home.set("person.danny", "not_home")
+        await home.evaluate()
+        assert home.state(LIVING) == "off"
+
+        await home.call(
+            "climate_director", "precondition", {"zone_ids": ["woonkamer"], "minutes": 0}
+        )
+        await asyncio.sleep(1.4)
+        await home.hass.async_block_till_done()
+        assert home.state(LIVING) == "off"
+        assert home.coordinator._live_preconditions() == {}
+
     async def test_cancelling_stops_it_again(self, home: LiveHome) -> None:
         home.set("person.danny", "not_home")
         await home.call("climate_director", "precondition", {"minutes": 60})

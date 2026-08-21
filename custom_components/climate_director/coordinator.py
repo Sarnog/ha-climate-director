@@ -714,7 +714,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
     def async_precondition(
         self,
         zone_ids: list[str] | None,
-        minutes: float,
+        minutes: float | None,
         *,
         ignore_openings: bool = False,
     ) -> dict[str, datetime]:
@@ -723,6 +723,18 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         The request is capped at the configured maximum, so asking for longer
         than the installation allows shortens the request rather than refusing
         it: the intent was clear, only the number was wrong.
+
+        `minutes` is `None` when the call omitted the duration - then the
+        configured maximum applies, which is what the blueprint relies on when
+        it confirms a refused request. A non-positive number is refused instead:
+        zero minutes is no request, and treating it as the maximum would turn a
+        typo into the longest run the installation allows.
+
+        `minutes` is `None` als de aanroep de duur wegliet - dan geldt het
+        ingestelde maximum, precies wat de blueprint verwacht als hij een
+        geweigerd verzoek bevestigt. Een niet-positief getal wordt geweigerd:
+        nul minuten is geen verzoek, en dat als maximum tellen zou van een
+        typefout de langste run maken die de installatie toestaat.
 
         `ignore_openings` laat het verzoek doorgaan met een raam of deur open.
         Standaard weigert dat, en terecht - stoken tegen de buitenlucht in is
@@ -737,8 +749,12 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         since the gate is judged afresh every time.
         """
         ceiling = self.config.gates.max_precondition
-        wanted = timedelta(minutes=max(minutes, 0.0))
-        length = min(wanted, ceiling) if wanted else ceiling
+        if minutes is None:
+            length = ceiling
+        else:
+            if minutes <= 0:
+                return {}
+            length = min(timedelta(minutes=minutes), ceiling)
         until = dt_util.now() + length
 
         known = {zone.zone_id for zone in self.config.zones}

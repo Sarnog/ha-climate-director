@@ -362,15 +362,29 @@ class TestTheRequestItself:
         granted = coordinator.async_precondition(["zolder"], 600)
         assert granted["zolder"] - datetime.now().astimezone() <= timedelta(minutes=45)
 
-    def test_asking_for_nothing_gives_the_maximum(self) -> None:
+    def test_asking_for_nothing_does_nothing(self) -> None:
+        """Nul minuten is geen verzoek; het maximum geldt alleen bij weglaten.
+
+        Zero minutes is no request; the maximum applies only when omitted.
+        """
         coordinator = self._coordinator(ceiling=timedelta(minutes=45))
-        granted = coordinator.async_precondition(["zolder"], 0)
+        assert coordinator.async_precondition(["zolder"], 0) == {}
+        assert coordinator.asked == 0
+        assert coordinator.saved == 0
+
+    def test_no_minutes_means_the_installation_maximum(self) -> None:
+        """Weglaten (`None`) geeft het maximum, waar de blueprint op rekent.
+
+        Omitting (`None`) gives the maximum, which is what the blueprint relies on.
+        """
+        coordinator = self._coordinator(ceiling=timedelta(minutes=45))
+        granted = coordinator.async_precondition(["zolder"], None)
         assert granted["zolder"] - datetime.now().astimezone() > timedelta(minutes=44)
 
-    def test_a_negative_number_cannot_reach_into_the_past(self) -> None:
+    def test_a_negative_number_is_refused(self) -> None:
         coordinator = self._coordinator()
-        granted = coordinator.async_precondition(["zolder"], -600)
-        assert granted["zolder"] > datetime.now().astimezone()
+        assert coordinator.async_precondition(["zolder"], -600) == {}
+        assert coordinator.asked == 0
 
     def test_cancelling_one_zone_leaves_the_other(self) -> None:
         coordinator = self._coordinator()

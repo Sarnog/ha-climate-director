@@ -160,7 +160,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
         for entry in _chosen(call):
             entry.runtime_data.async_precondition(
                 call.data.get(ATTR_ZONE_IDS),
-                call.data.get(ATTR_MINUTES, 0),
+                call.data.get(ATTR_MINUTES),
                 ignore_openings=call.data.get(ATTR_IGNORE_OPENINGS, False),
             )
 
