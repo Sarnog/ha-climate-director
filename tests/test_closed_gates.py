@@ -305,3 +305,41 @@ class TestItDoesNotSetOffTheDecisionEvent:
             reason=Reason.MASTER_DISABLED,
         )
         assert self._decision(Reason.NOBODY_HOME) != other
+
+
+class TestTheClockCatchesUp:
+    """Tijdregels hangen op de klok: dezelfde wereld, later, beslist anders.
+
+    Time rules depend on the clock: the same world, later, decides differently.
+    """
+
+    def _world(self, now):
+        from conftest import ATTIC, BEDROOM, GAS, LIVING, climate
+
+        return make_world(
+            now=now,
+            outdoor=1.0,
+            indoor={"woonkamer": 20.0, "zolder": 20.0, "slaapkamer": 20.0},
+            climates={
+                GAS: climate("off"),
+                LIVING: climate("off"),
+                ATTIC: climate("off"),
+                BEDROOM: climate("off"),
+            },
+            residents=everyone_up(),
+            openings={BACK_DOOR: OpeningState(open=True, changed_at=at(12, 0))},
+        )
+
+    def test_a_window_delay_expiring_suspends_the_zone_without_any_state_change(self) -> None:
+        """Dezelfde toestanden, alleen de klok verder: de zone schort alsnog op.
+
+        The same states, only the clock further on: the zone still suspends.
+        """
+        from custom_components.climate_director.engine import decide
+
+        config = house()
+        just_opened = decide(config, self._world(at(12, 0) + timedelta(seconds=5)))
+        delay_over = decide(config, self._world(at(12, 1)))
+
+        assert just_opened.decision_for("woonkamer").reason is not Reason.OPENING_OPEN
+        assert delay_over.decision_for("woonkamer").reason is Reason.OPENING_OPEN

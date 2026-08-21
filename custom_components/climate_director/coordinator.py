@@ -37,6 +37,7 @@ from homeassistant.util import dt as dt_util
 from . import texts
 from .applier import apply
 from .const import (
+    CLOCK_REEVAL_SECONDS,
     CONF_INSTALLATION,
     CONF_SHADOW_MODE,
     DEBOUNCE_SECONDS,
@@ -282,6 +283,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         outdoor bound simply applies again.
         """
         self._cancel_deferral: CALLBACK_TYPE | None = None
+        self._clock_reeval_unsub: CALLBACK_TYPE | None = None
         self._debouncer = Debouncer(
             hass,
             _LOGGER,
@@ -300,8 +302,10 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 async_track_state_change_event(self.hass, sorted(entities), self._handle_change)
             )
         self.config_entry.async_on_unload(self._cancel_pending_deferral)
+        self.config_entry.async_on_unload(self._cancel_clock_reeval)
         await self._async_restore_state()
         await self._async_evaluate()
+        self._schedule_clock_reeval()
 
     def tracked_entities(self) -> set[str]:
         """Return every entity whose change could alter a decision.
@@ -594,9 +598,47 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         """Ask for a fresh decision, from a switch or a service call."""
         self._debouncer.async_schedule_call()
 
+    @callback
+    def _cancel_clock_reeval(self) -> None:
+        """Drop the scheduled safety-net tick, if there is one."""
+        if self._clock_reeval_unsub is not None:
+            self._clock_reeval_unsub()
+            self._clock_reeval_unsub = None
+
+    @callback
+    def _schedule_clock_reeval(self) -> None:
+        """Arm the periodic safety-net evaluation, replacing any earlier one.
+
+        Het vangnet voor tijdregels die vanzelf verlopen: een raamvertraging,
+        een aanwezigheids-nalooptijd, de neerslag-grace, de eerstvolgende
+        vensterrand en middernacht. Zonder deze klok hangt zo'n omslagpunt op
+        toeval - er moet toevallig iets anders veranderen voordat er opnieuw
+        besloten wordt. Een ronde zonder verschil kost geen service call, dus
+        elke minuut is goedkoop.
+
+        The safety net for time rules that lapse by themselves: a window delay,
+        a presence grace period, the precipitation grace, the next window edge
+        and midnight. Without this clock such a turning point depends on chance
+        - something else must happen to change before another decision is made.
+        A round without a difference costs no service call, so every minute is
+        cheap.
+        """
+        self._cancel_clock_reeval()
+        self._clock_reeval_unsub = async_call_later(
+            self.hass, CLOCK_REEVAL_SECONDS, self._on_clock_reeval
+        )
+
+    @callback
+    def _on_clock_reeval(self, _now: datetime) -> None:
+        """Re-evaluate on the clock, and arm the next tick."""
+        self._clock_reeval_unsub = None
+        self.async_request_evaluation()
+        self._schedule_clock_reeval()
+
     async def async_shutdown(self) -> None:
         """Stop deciding and drop every pending timer."""
         self._cancel_pending_deferral()
+        self._cancel_clock_reeval()
         self._debouncer.async_shutdown()
         await super().async_shutdown()
 
