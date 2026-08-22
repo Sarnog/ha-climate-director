@@ -29,8 +29,20 @@ BOILER = "climate.ketel"
 
 
 def installation(**extra: Any) -> dict[str, Any]:
-    """Return a two-zone house: a room with a stand-in, and an attic."""
+    """Return a two-zone house: a room with a stand-in, and an attic.
+
+    Het vooruit-venster staat op de hele dag. Standaard is dat 06:00-23:00, en
+    de klok van deze testopstelling is UTC: tussen 23:00 en 06:00 UTC vielen
+    zeven tests over een verzoek dan om, zonder dat er iets aan de code
+    veranderd was. Een test die van het uur afhangt zegt niets over de code.
+
+    The pre-conditioning window is set to the whole day. The default is
+    06:00-23:00 and this harness's clock is UTC: between 23:00 and 06:00 UTC
+    seven tests about a request fell over, with nothing in the code changed. A
+    test depending on the hour says nothing about the code.
+    """
     found: dict[str, Any] = {
+        "gates": {"precondition_window": None},
         "zones": [
             zone(
                 "woonkamer",
