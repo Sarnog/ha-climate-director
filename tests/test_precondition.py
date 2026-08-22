@@ -20,7 +20,7 @@ from __future__ import annotations
 from datetime import datetime, time, timedelta
 
 import pytest
-from conftest import asleep, awake, away, make_world
+from conftest import asleep, awake, away, gate_verdict, make_world
 
 from custom_components.climate_director.engine import (
     DirectorConfig,
@@ -33,7 +33,6 @@ from custom_components.climate_director.engine import (
     TimeWindow,
     Zone,
     ZoneGate,
-    gates,
     validate,
 )
 from custom_components.climate_director.engine.serialise import config_from_dict, config_to_dict
@@ -78,7 +77,7 @@ def house(**gate_kwargs: object) -> DirectorConfig:
 def verdict(config: DirectorConfig, **kwargs: object):
     zone = config.zone("woonkamer")
     assert zone is not None
-    return gates.evaluate(config, make_world(**kwargs), zone)  # type: ignore[arg-type]
+    return gate_verdict(config, make_world(**kwargs), zone)  # type: ignore[arg-type]
 
 
 def empty_house(moment: datetime, until: datetime | None, **extra: object):

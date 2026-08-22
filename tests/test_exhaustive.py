@@ -19,7 +19,7 @@ import itertools
 from datetime import datetime, time, timedelta
 
 import pytest
-from conftest import GAS_CUTOVER, house, make_world
+from conftest import GAS_CUTOVER, gate_verdict, house, make_world
 
 from custom_components.climate_director.engine import (
     Circuit,
@@ -41,7 +41,6 @@ from custom_components.climate_director.engine import (
     ZoneGate,
     decide,
     family_of,
-    gates,
     validate,
 )
 from custom_components.climate_director.engine.serialise import config_from_dict, config_to_dict
@@ -147,8 +146,8 @@ class TestEveryGateCombination:
         config = _config(**kwargs)
         zone = _zone(config)
         for world in _worlds():
-            verdict = gates.evaluate(config, world, zone)
-            assert verdict.allowed is (verdict.reason is None)
+            outcome = gate_verdict(config, world, zone)
+            assert outcome.allowed is (outcome.reason is None)
 
     @pytest.mark.parametrize("kwargs", settings)
     def test_the_master_switch_outranks_everything(self, kwargs: dict[str, object]) -> None:
@@ -156,7 +155,7 @@ class TestEveryGateCombination:
         zone = _zone(config)
         for world in _worlds():
             if not world.master_enabled:
-                assert gates.evaluate(config, world, zone).reason is Reason.MASTER_DISABLED
+                assert gate_verdict(config, world, zone).reason is Reason.MASTER_DISABLED
 
     @pytest.mark.parametrize("kwargs", settings)
     def test_an_override_is_never_overruled(self, kwargs: dict[str, object]) -> None:
@@ -164,7 +163,7 @@ class TestEveryGateCombination:
         zone = _zone(config)
         for world in _worlds():
             if world.master_enabled and world.overridden("woonkamer"):
-                assert gates.evaluate(config, world, zone).reason is Reason.MANUAL_OVERRIDE
+                assert gate_verdict(config, world, zone).reason is Reason.MANUAL_OVERRIDE
 
     @pytest.mark.parametrize("kwargs", settings)
     def test_an_empty_room_is_never_regulated(self, kwargs: dict[str, object]) -> None:
@@ -173,7 +172,7 @@ class TestEveryGateCombination:
         zone = _zone(config)
         for world in _worlds():
             if not world.presence_of("woonkamer").occupied:
-                assert not gates.evaluate(config, world, zone).allowed
+                assert not gate_verdict(config, world, zone).allowed
 
 
 class TestSomebodyMustBeHome:
@@ -190,10 +189,10 @@ class TestSomebodyMustBeHome:
                 world.resident(resident.resident_id).home for resident in config.residents
             )
             if nobody and world.master_enabled and not world.overridden("woonkamer"):
-                verdict = gates.evaluate(config, world, zone)
-                assert not verdict.allowed
+                outcome = gate_verdict(config, world, zone)
+                assert not outcome.allowed
                 if not world.opening("binary_sensor.deur").open:
-                    assert verdict.reason is Reason.NOBODY_HOME
+                    assert outcome.reason is Reason.NOBODY_HOME
 
 
 class TestGuestModeNeverTakesAway:
@@ -206,8 +205,8 @@ class TestGuestModeNeverTakesAway:
         for world in _worlds():
             if world.guest_mode:
                 continue
-            without = gates.evaluate(config, world, zone)
-            with_guests = gates.evaluate(config, _guest(world), zone)
+            without = gate_verdict(config, world, zone)
+            with_guests = gate_verdict(config, _guest(world), zone)
             if without.allowed:
                 assert with_guests.allowed, world
 
@@ -240,7 +239,7 @@ class TestGuestModeStopsAtBedtime:
             presence={"woonkamer": PresenceState(occupied=True)},
             guest_mode=True,
         )
-        assert gates.evaluate(config, world, _zone(config)).reason is Reason.EVERYONE_ASLEEP
+        assert gate_verdict(config, world, _zone(config)).reason is Reason.EVERYONE_ASLEEP
 
     @pytest.mark.parametrize("hour", hours)
     def test_one_resident_still_up_keeps_it_open(self, hour: time) -> None:
@@ -251,7 +250,7 @@ class TestGuestModeStopsAtBedtime:
             presence={"woonkamer": PresenceState(occupied=True)},
             guest_mode=True,
         )
-        assert gates.evaluate(config, world, _zone(config)).allowed
+        assert gate_verdict(config, world, _zone(config)).allowed
 
     @pytest.mark.parametrize("hour", hours)
     def test_an_empty_house_stays_open(self, hour: time) -> None:
@@ -263,7 +262,7 @@ class TestGuestModeStopsAtBedtime:
             presence={"woonkamer": PresenceState(occupied=True)},
             guest_mode=True,
         )
-        assert gates.evaluate(config, world, _zone(config)).allowed
+        assert gate_verdict(config, world, _zone(config)).allowed
 
 
 class TestTheGuestWindow:
@@ -279,7 +278,7 @@ class TestTheGuestWindow:
             presence={"woonkamer": PresenceState(occupied=True)},
             guest_mode=True,
         )
-        assert gates.evaluate(self.config, world, _zone(self.config)).allowed
+        assert gate_verdict(self.config, world, _zone(self.config)).allowed
 
     @pytest.mark.parametrize("hour", [0, 5, 7, 23])
     def test_outside_it_the_empty_house_wins(self, hour: int) -> None:
@@ -289,8 +288,8 @@ class TestTheGuestWindow:
             presence={"woonkamer": PresenceState(occupied=True)},
             guest_mode=True,
         )
-        verdict = gates.evaluate(self.config, world, _zone(self.config))
-        assert verdict.reason is Reason.NOBODY_HOME
+        outcome = gate_verdict(self.config, world, _zone(self.config))
+        assert outcome.reason is Reason.NOBODY_HOME
 
     def test_a_window_crossing_midnight_still_works(self) -> None:
         config = _config(guest_window=TimeWindow(time(22, 0), time(2, 0)))
@@ -301,7 +300,7 @@ class TestTheGuestWindow:
                 presence={"woonkamer": PresenceState(occupied=True)},
                 guest_mode=True,
             )
-            assert gates.evaluate(config, world, _zone(config)).allowed is carried
+            assert gate_verdict(config, world, _zone(config)).allowed is carried
 
 
 class TestHolidayIsSaturdayEverywhere:
@@ -316,7 +315,7 @@ class TestHolidayIsSaturdayEverywhere:
         people = {"danny": _state(True, False), "nancy": _state(True, False)}
         presence = {"woonkamer": PresenceState(occupied=True)}
 
-        holiday = gates.evaluate(
+        holiday = gate_verdict(
             self.config,
             make_world(
                 now=monday + timedelta(days=day),
@@ -326,7 +325,7 @@ class TestHolidayIsSaturdayEverywhere:
             ),
             _zone(self.config),
         )
-        real = gates.evaluate(
+        real = gate_verdict(
             self.config,
             make_world(now=saturday, residents=people, presence=presence),
             _zone(self.config),
@@ -719,7 +718,7 @@ class TestPresenceDrivenZonesAcrossEveryWorld:
         zone = config.zones[0]
         for world in _worlds():
             if not world.presence_of("woonkamer").occupied:
-                assert not gates.evaluate(config, world, zone).allowed
+                assert not gate_verdict(config, world, zone).allowed
 
     def test_an_occupied_room_only_yields_to_the_house_itself(self) -> None:
         """Master, override and an open window; never to a schedule or a bedtime."""
@@ -733,8 +732,8 @@ class TestPresenceDrivenZonesAcrossEveryWorld:
         for world in _worlds():
             if not world.presence_of("woonkamer").occupied:
                 continue
-            verdict = gates.evaluate(config, world, zone)
-            assert verdict.allowed or verdict.reason in allowed_blocks, (verdict, world)
+            outcome = gate_verdict(config, world, zone)
+            assert outcome.allowed or outcome.reason in allowed_blocks, (outcome, world)
 
     def test_people_never_enter_into_it(self) -> None:
         """Two worlds differing only in who is home and awake must agree."""
@@ -752,8 +751,7 @@ class TestPresenceDrivenZonesAcrossEveryWorld:
                 zone_overrides=dict(world.zone_overrides),
             )
             assert (
-                gates.evaluate(config, world, zone).reason
-                == gates.evaluate(config, twin, zone).reason
+                gate_verdict(config, world, zone).reason == gate_verdict(config, twin, zone).reason
             )
 
     def test_it_is_never_stricter_than_the_household_would_be(self) -> None:
@@ -763,8 +761,8 @@ class TestPresenceDrivenZonesAcrossEveryWorld:
         for world in _worlds():
             if not world.presence_of("woonkamer").occupied:
                 continue
-            if gates.evaluate(household, world, household.zones[0]).allowed:
-                assert gates.evaluate(presence_driven, world, presence_driven.zones[0]).allowed
+            if gate_verdict(household, world, household.zones[0]).allowed:
+                assert gate_verdict(presence_driven, world, presence_driven.zones[0]).allowed
 
 
 class TestManualSourcesAcrossEveryPlan:

@@ -20,7 +20,7 @@ from __future__ import annotations
 from datetime import datetime, time
 
 import pytest
-from conftest import awake, make_world
+from conftest import awake, gate_verdict, make_world
 
 from custom_components.climate_director.engine import (
     DirectorConfig,
@@ -31,7 +31,6 @@ from custom_components.climate_director.engine import (
     Source,
     TimeWindow,
     Zone,
-    gates,
 )
 from custom_components.climate_director.engine.serialise import config_from_dict, config_to_dict
 from custom_components.climate_director.engine.world import PresenceState
@@ -83,7 +82,7 @@ def verdict(
         presence={"woonkamer": PresenceState(occupied=True)},
         holiday_mode=holiday,
     )
-    return gates.evaluate(config, world, zone)
+    return gate_verdict(config, world, zone)
 
 
 class TestItBrakesStarting:
@@ -155,7 +154,7 @@ class TestASecondAppliance:
             residents={"danny": awake()},
             presence={"woonkamer": PresenceState(occupied=True)},
         )
-        return gates.evaluate(config, world, zone)
+        return gate_verdict(config, world, zone)
 
     def test_the_second_appliance_lifts_the_brake_too(self) -> None:
         assert self._verdict("off", "heat").allowed
@@ -289,7 +288,7 @@ class TestAnOpenScheduleWins:
             residents={"nancy": awake() if home else away()},
             presence={"woonkamer": PresenceState(occupied=True)},
         )
-        return gates.evaluate(config, world, zone)
+        return gate_verdict(config, world, zone)
 
     def test_her_early_window_beats_the_quiet(self) -> None:
         """Tuesday 06:00: inside the quiet window, but her schedule is open."""

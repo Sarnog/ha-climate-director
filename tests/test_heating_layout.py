@@ -16,7 +16,7 @@ Which one won depended on sort order: chance, not design.
 
 from __future__ import annotations
 
-from conftest import climate, make_world
+from conftest import climate, gate_verdict, make_world
 
 from custom_components.climate_director.engine import (
     MODE_HEAT,
@@ -470,7 +470,6 @@ class TestWhoseRunningItIs:
             Resident,
             TimeWindow,
         )
-        from custom_components.climate_director.engine import gates as gates_module
 
         config = DirectorConfig(
             zones=self.config.zones,
@@ -489,10 +488,10 @@ class TestWhoseRunningItIs:
         living = config.zone("living_room")
         assert bedroom is not None and living is not None
         assert (
-            gates_module.evaluate(config, world, bedroom, self._previous("living_room")).reason
+            gate_verdict(config, world, bedroom, self._previous("living_room")).reason
             is Reason.QUIET_HOURS
         )
-        assert gates_module.evaluate(config, world, living, self._previous("living_room")).allowed
+        assert gate_verdict(config, world, living, self._previous("living_room")).allowed
 
 
 class TestQuietHoursAndASharedBoiler:

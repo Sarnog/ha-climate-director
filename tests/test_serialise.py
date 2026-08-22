@@ -141,8 +141,7 @@ class TestForgivingReads:
                 "seasons": {"source": "vibes"},
             }
         )
-        circuit = config.circuit("c")
-        assert circuit is not None
+        (circuit,) = config.circuits
         assert circuit.conflict_policy is ConflictPolicy.PRIORITY
         assert config.seasons.source is SeasonSource.AUTO
 
@@ -161,8 +160,7 @@ class TestDurations:
 
     def test_and_read_back_as_timedeltas(self) -> None:
         config = config_from_dict({"circuits": [{"circuit_id": "c", "min_cycle_time": 180}]})
-        circuit = config.circuit("c")
-        assert circuit is not None
+        (circuit,) = config.circuits
         assert circuit.min_cycle_time == timedelta(minutes=3)
 
     def test_an_opening_without_a_delay_gets_none(self) -> None:

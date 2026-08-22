@@ -57,12 +57,6 @@ def select(
     return min(eligible, key=lambda source: (source.priority, source.source_id))
 
 
-def candidates(zone: Zone, family: ModeFamily, world: WorldState) -> tuple[Source, ...]:
-    """Return every eligible source for `family`, most preferred first."""
-    eligible = [source for source in zone.sources if _eligible(source, family, world)]
-    return tuple(sorted(eligible, key=lambda source: (source.priority, source.source_id)))
-
-
 def _held(
     zone: Zone,
     family: ModeFamily,

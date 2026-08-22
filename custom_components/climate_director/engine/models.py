@@ -759,19 +759,9 @@ class DirectorConfig:
         """Return the zone with this id, if it exists."""
         return next((zone for zone in self.zones if zone.zone_id == zone_id), None)
 
-    def circuit(self, circuit_id: str) -> Circuit | None:
-        """Return the circuit with this id, if it exists."""
-        return next(
-            (circuit for circuit in self.circuits if circuit.circuit_id == circuit_id), None
-        )
-
     def sources(self) -> tuple[tuple[Zone, Source], ...]:
         """Return every `(zone, source)` pair in the installation."""
         return tuple((zone, source) for zone in self.zones for source in zone.sources)
-
-    def source(self, source_id: str) -> Source | None:
-        """Return the source with this id, if it exists."""
-        return next((source for _, source in self.sources() if source.source_id == source_id), None)
 
     def circuit_for_entity(self, entity_id: str) -> Circuit | None:
         """Return the circuit a climate entity sits on, if any.

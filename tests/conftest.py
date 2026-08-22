@@ -11,6 +11,7 @@ every scenario is a plain data object.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 
 import pytest
@@ -32,7 +33,9 @@ from custom_components.climate_director.engine import (
     SourceRole,
     WorldState,
     Zone,
+    gates,
 )
+from custom_components.climate_director.engine.plan import Reason
 
 # Entiteiten uit de bestaande opstelling, zodat scenario's herkenbaar blijven.
 # Entities from the existing setup, so scenarios stay recognisable.
@@ -43,6 +46,33 @@ BEDROOM = "climate.master_bedroom"
 BACK_DOOR = "binary_sensor.achterdeur_mc_contact"
 
 MONDAY_NOON = datetime(2026, 8, 10, 12, 0)
+
+
+@dataclass(frozen=True, slots=True)
+class Verdict:
+    """Mag deze zone geregeld worden, en zo niet: welke poort noem je dan.
+
+    May this zone be regulated, and if not: which gate do you name.
+
+    Testgereedschap, geen engine. De engine geeft de hele lijst dichte poorten
+    terug, want bij het inrichten wil je ze allemaal zien; deze samenvatting is
+    wat de tests hieronder prettig leest. Hij stond ooit in de engine zelf en
+    werd daar door niets gebruikt.
+
+    Test tooling, not engine. The engine returns the whole list of shut gates,
+    since while setting things up you want to see them all; this summary is what
+    reads pleasantly in the tests below. It used to live in the engine itself,
+    where nothing used it.
+    """
+
+    allowed: bool
+    reason: Reason | None = None
+
+
+def gate_verdict(config, world, zone, previous=None) -> Verdict:
+    """Return whether `zone` may run, naming the gate a user would name first."""
+    reason = next(iter(gates.closed(config, world, zone, previous)), None)
+    return Verdict(reason is None, reason)
 
 
 def at(hour: int = 12, minute: int = 0, *, day: int = 10) -> datetime:

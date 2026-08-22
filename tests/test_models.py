@@ -153,18 +153,21 @@ class TestLookups:
 
     def test_sources_on_circuit_skips_the_boiler(self) -> None:
         config = house()
-        circuit = config.circuit("multisplit")
-        assert circuit is not None
+        circuit = next(item for item in config.circuits if item.circuit_id == "multisplit")
         entities = {source.entity_id for _, source in config.sources_on(circuit)}
         assert GAS not in entities
         assert LIVING in entities
 
-    def test_source_and_zone_lookup(self) -> None:
+    def test_zone_lookup(self) -> None:
         config = house()
         assert config.zone("woonkamer") is not None
         assert config.zone("kelder") is None
-        assert config.source("gasketel") is not None
-        assert config.source("onbekend") is None
+
+    def test_every_source_is_reachable_through_the_pairs(self) -> None:
+        config = house()
+        found = {source.source_id for _, source in config.sources()}
+        assert "gasketel" in found
+        assert "onbekend" not in found
 
 
 class TestValidate:

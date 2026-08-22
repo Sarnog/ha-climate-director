@@ -16,7 +16,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytest
-from conftest import house
+from conftest import gate_verdict, house
 
 from custom_components.climate_director.applier import _is_stop
 from custom_components.climate_director.config_flow import (
@@ -48,7 +48,6 @@ from custom_components.climate_director.engine import (
     UnitCommand,
     ZoneDecision,
     decide,
-    gates,
 )
 from custom_components.climate_director.engine.diff import Change
 from custom_components.climate_director.engine.models import Problem
@@ -238,7 +237,7 @@ class TestScheduleWindowsReachTheEngine:
         zone = config.zone("z")
         assert zone is not None
         world = make_world(now=moment, residents={"danny": awake()})
-        return gates.evaluate(config, world, zone)
+        return gate_verdict(config, world, zone)
 
     def test_inside_the_window(self) -> None:
         config = self._config([0, 1, 2, 3, 4])

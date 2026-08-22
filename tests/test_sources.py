@@ -95,11 +95,6 @@ class TestPreference:
         assert chosen is not None
         assert chosen.source_id == "a"
 
-    def test_candidates_are_returned_most_preferred_first(self) -> None:
-        world = make_world(climates={"climate.a": climate(), "climate.b": climate()})
-        ordered = sources.candidates(self.zone, ModeFamily.HEAT, world)
-        assert [source.source_id for source in ordered] == ["cheap", "expensive"]
-
 
 def test_role_limits_the_offer() -> None:
     zone = Zone(

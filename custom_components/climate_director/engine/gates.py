@@ -12,7 +12,6 @@ allowed", not "is this needed" - the latter belongs to `hysteresis.py`.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from dataclasses import dataclass
 from datetime import datetime
 
 from .families import ModeFamily
@@ -20,37 +19,6 @@ from .hysteresis import source_counts_for
 from .models import HOLIDAY_WEEKDAY, DirectorConfig, Resident, Zone, ZoneGate
 from .plan import Plan, Reason
 from .world import WorldState
-
-
-@dataclass(frozen=True, slots=True)
-class GateVerdict:
-    """Whether a zone may be regulated, and why not when it may not."""
-
-    allowed: bool
-    reason: Reason | None = None
-
-    @staticmethod
-    def allow() -> GateVerdict:
-        """Return a passing verdict."""
-        return GateVerdict(True)
-
-    @staticmethod
-    def block(reason: Reason) -> GateVerdict:
-        """Return a blocking verdict carrying its cause."""
-        return GateVerdict(False, reason)
-
-
-def evaluate(
-    config: DirectorConfig, world: WorldState, zone: Zone, previous: Plan | None = None
-) -> GateVerdict:
-    """Return whether `zone` may be regulated right now.
-
-    Checked from broadest to narrowest, so the reported cause is the one a user
-    would name first: a disabled master switch outranks an open window, which
-    outranks nobody being home.
-    """
-    reason = next(_closed(config, world, zone, previous), None)
-    return GateVerdict.allow() if reason is None else GateVerdict.block(reason)
 
 
 def closed(

@@ -18,7 +18,7 @@ from __future__ import annotations
 from datetime import datetime, time
 
 import pytest
-from conftest import asleep, awake, away, make_world
+from conftest import asleep, awake, away, gate_verdict, make_world
 
 from custom_components.climate_director.engine import (
     DirectorConfig,
@@ -29,7 +29,6 @@ from custom_components.climate_director.engine import (
     Source,
     TimeWindow,
     Zone,
-    gates,
 )
 from custom_components.climate_director.engine.serialise import (
     config_from_dict,
@@ -82,7 +81,7 @@ def _verdict(config: DirectorConfig, moment: datetime, states: dict[str, object]
     zone = config.zone("woonkamer")
     assert zone is not None
     world = make_world(now=moment, residents=states, **flags)  # type: ignore[arg-type]
-    return gates.evaluate(config, world, zone)
+    return gate_verdict(config, world, zone)
 
 
 NANCY_TUESDAY = Resident(
@@ -294,7 +293,7 @@ class TestSomebodyMustBeHome:
             presence_entity="binary_sensor.woonkamer",
         )
         world = make_world(now=at(12, 0), residents={"nancy": away()}, guest_mode=True)
-        assert gates.evaluate(config, world, empty).reason is Reason.ZONE_UNOCCUPIED
+        assert gate_verdict(config, world, empty).reason is Reason.ZONE_UNOCCUPIED
 
 
 class TestOnlyTodaysSchedulesCount:

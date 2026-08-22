@@ -371,10 +371,9 @@ class TestItReachesTheGates:
     """The whole point is that the zone stops being regulated, so check that."""
 
     def test_a_handed_back_zone_is_overridden(self) -> None:
-        from conftest import make_world
+        from conftest import gate_verdict, make_world
 
         from custom_components.climate_director.engine import Reason as GateReason
-        from custom_components.climate_director.engine import gates
 
         item = coordinator(running_plan())
         item._notice_hand(_Event(BEDROOM, "heat", "off"))
@@ -387,8 +386,8 @@ class TestItReachesTheGates:
         bedroom = item.config.zone("slaapkamer")
         living = item.config.zone("woonkamer")
         assert bedroom is not None and living is not None
-        assert gates.evaluate(item.config, world, bedroom).reason is GateReason.MANUAL_OVERRIDE
-        assert gates.evaluate(item.config, world, living).allowed
+        assert gate_verdict(item.config, world, bedroom).reason is GateReason.MANUAL_OVERRIDE
+        assert gate_verdict(item.config, world, living).allowed
 
     def test_the_switch_still_wins(self) -> None:
         """A user switching the override on outranks anything worked out here."""

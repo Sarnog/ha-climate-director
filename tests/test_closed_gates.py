@@ -70,8 +70,19 @@ def test_every_shut_gate_is_named_at_once() -> None:
     )
 
 
-def test_the_first_gate_is_the_reason_the_verdict_gives() -> None:
-    """Two functions, one truth. Drift here and the sensors contradict each other."""
+def test_the_broadest_gate_comes_first() -> None:
+    """De reden die je noemt is de reden die een mens als eerste zou noemen.
+
+    The cause you name is the cause a person would name first.
+
+    Een uitgeschakelde hoofdschakelaar gaat voor een openstaande deur, en die
+    weer voor een leeg huis. Wie de volgorde omdraait, laat de sensor over een
+    open deur klagen terwijl de hele director uitstaat.
+
+    A disabled master switch outranks an open door, which outranks an empty
+    house. Turn the order around and the sensor complains about an open door
+    while the whole director is switched off.
+    """
     config = house()
     world = make_world(
         now=at(12, 1),
@@ -79,8 +90,9 @@ def test_the_first_gate_is_the_reason_the_verdict_gives() -> None:
         master_enabled=False,
         openings={BACK_DOOR: OpeningState(open=True, changed_at=at(12, 0))},
     )
-    zone = living_room(config)
-    assert gates.evaluate(config, world, zone).reason is gates.closed(config, world, zone)[0]
+    shut = gates.closed(config, world, living_room(config))
+    assert shut[0] is Reason.MASTER_DISABLED
+    assert len(shut) > 1, "de andere poorten staan ook dicht en horen erbij"
 
 
 def test_an_empty_house_is_named_once_and_not_three_times() -> None:
