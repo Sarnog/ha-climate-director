@@ -287,6 +287,11 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         """What was actually carried out; always empty in shadow mode."""
 
         self._lock = asyncio.Lock()
+        self._closing = False
+        """Zodra de installatie afgebroken wordt, mag er niets meer naar buiten.
+
+        Once the installation is being torn down, nothing may go out anymore.
+        """
         self._family_since: dict[str, datetime | None] = {}
         self._family_seen: dict[str, ModeFamily] = {}
         self._precipitation_seen_at: datetime | None = None
@@ -722,7 +727,29 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self._schedule_clock_reeval()
 
     async def async_shutdown(self) -> None:
-        """Stop deciding and drop every pending timer."""
+        """Stop deciding and drop every pending timer.
+
+        Eerst de lopende ronde laten uitlopen: die kan service calls hebben
+        uitstaan en schrijft daarna nog naar buiten (meldingen, timers). Wie
+        hier meteen doorging, zag na de unload nog een melding herleven of een
+        timer ontstaan die nooit meer wordt opgeruimd. Een ronde die langer dan
+        dertig seconden blijft hangen, wordt niet langer tegengehouden - dan is
+        het gedrag hetzelfde als vóór deze wacht, en dat is de veilige kant.
+
+        First let the running round finish: it may have service calls out and
+        writes outwards afterwards (notices, timers). Going on immediately let a
+        notice revive or a timer come into being after the unload, never to be
+        cleaned up again. A round hanging around for more than thirty seconds is
+        no longer held up - behaviour is then the same as before this wait, and
+        that is the safe side.
+        """
+        self._closing = True
+        try:
+            async with asyncio.timeout(30):
+                async with self._lock:
+                    pass
+        except TimeoutError:
+            _LOGGER.warning("Een beslisronde liep nog bij het afsluiten van %s", self.name)
         self._cancel_pending_deferral()
         self._cancel_clock_reeval()
         self._cancel_pending_precondition_wake()
@@ -733,6 +760,8 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
 
     async def _async_evaluate(self) -> None:
         """Read the world, decide, apply, and report."""
+        if self._closing:
+            return
         async with self._lock:
             world = self.build_world()
             self._remember_families(world)
@@ -759,6 +788,8 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             except Exception:  # noqa: BLE001 - one bad call must not stop the loop
                 _LOGGER.exception("Applying the climate plan failed")
 
+            if self._closing:
+                return
             self._fire_events(plan)
             self._fire_refusals(plan)
             self._note_waiting(plan)
