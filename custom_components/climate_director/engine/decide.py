@@ -177,26 +177,55 @@ def _apply_exclusive_groups(
     kept = dict(wishes)
     dropped: dict[str, constraints.Request] = {}
     for group in config.exclusive_groups:
+        members = _group_entities(config, group)
         contenders = sorted(
-            (request for request in kept.values() if request.source.source_id in group),
+            (request for request in kept.values() if request.source.entity_id in members),
             key=lambda request: request.rank,
         )
-        holder = _group_holder(config, world, group)
+        holder = _group_holder(config, world, members)
         if holder is None:
-            losers = contenders[1:]
+            winner = contenders[0].source.entity_id if contenders else None
         elif holder[1] is None or not contenders or not _outranks(contenders[0], holder[1]):
-            losers = contenders
+            winner = holder[0]
         else:
-            losers = contenders[1:]
-        for loser in losers:
+            winner = contenders[0].source.entity_id
+        for loser in (item for item in contenders if item.source.entity_id != winner):
             dropped[loser.zone.zone_id] = kept.pop(loser.zone.zone_id)
     return kept, dropped
 
 
+def _group_entities(config: DirectorConfig, group: frozenset[str]) -> frozenset[str]:
+    """Return the appliances an exclusive group covers.
+
+    Een groep wordt bewaard als bron-ID's, want zo kiest de gebruiker ze ook:
+    het scherm toont "Woonkamer - climate.ketel". Maar hetzelfde apparaat staat
+    vaak onder meerdere kamers, en heeft dan per kamer een eigen bron-ID. Wie er
+    één aanvinkt is klaar in zijn hoofd, en de andere kamer startte dat apparaat
+    vervolgens gewoon buiten de groep om - zonder dat er iets over klaagde.
+
+    De groep gaat dus over het apparaat. En daarmee is een tweede kamer die
+    ditzelfde apparaat vraagt geen tegenstander: dat is één apparaat dat draait,
+    en precies dat is wat de groep tot één beperkt.
+
+    A group is stored as source ids, since that is how the user picks them: the
+    screen shows "Living room - climate.ketel". But the same appliance often
+    sits under several rooms, and then has a source id per room. Tick one and
+    you are done in your head, after which the other room simply started that
+    appliance right past the group - with nothing complaining about it.
+
+    So the group is about the appliance. And with that, a second room asking for
+    that same appliance is no rival: that is one appliance running, which is
+    exactly what the group limits things to.
+    """
+    return frozenset(
+        source.entity_id for _, source in config.sources() if source.source_id in group
+    )
+
+
 def _group_holder(
-    config: DirectorConfig, world: WorldState, group: frozenset[str]
+    config: DirectorConfig, world: WorldState, members: frozenset[str]
 ) -> tuple[str, tuple[int, str] | None] | None:
-    """Return the strongest member running in a zone the director leaves alone.
+    """Return the strongest appliance running in a zone the director leaves alone.
 
     Twee soorten bezetten de groep: een unit in een overgedragen zone - daar
     stuurt de director niets naartoe, ook geen uit - en een handbediende bron,
@@ -212,23 +241,23 @@ def _group_holder(
     it comparable to a request.
     """
     strongest: tuple[tuple[int, str], str] | None = None
-    for source_id in group:
+    for entity_id in sorted(members):
         owners = [
-            (zone, source) for zone, source in config.sources() if source.source_id == source_id
+            (zone, source) for zone, source in config.sources() if source.entity_id == entity_id
         ]
         if not owners:
             continue
-        if not world.climate(owners[0][1].entity_id).running:
+        if not world.climate(entity_id).running:
             continue
         if any(world.overridden(zone.zone_id) for zone, _ in owners):
-            return source_id, None
+            return entity_id, None
         if not all(not source.autostart for _, source in owners):
             continue
         rank = min(
             (world.priority_for(zone.zone_id, zone.priority), zone.zone_id) for zone, _ in owners
         )
         if strongest is None or rank < strongest[0]:
-            strongest = (rank, source_id)
+            strongest = (rank, entity_id)
     if strongest is None:
         return None
     return strongest[1], strongest[0]
@@ -455,12 +484,25 @@ def _exclusive_rival(
     source: Source,
     wishes: dict[str, constraints.Request],
 ) -> bool:
-    """Return whether another member of this source's exclusive group wants to run."""
+    """Return whether another appliance in this source's exclusive group wants to run.
+
+    Op apparaat, niet op bron-ID: hetzelfde apparaat onder een andere kamer is
+    geen ander lid maar hetzelfde lid, en die hoeft nergens voor te wijken.
+
+    By appliance rather than by source id: the same appliance under another room
+    is not another member but the same one, and that need not step aside for
+    anything.
+    """
     for group in config.exclusive_groups:
-        if source.source_id not in group:
+        members = _group_entities(config, group)
+        if source.entity_id not in members:
             continue
         for zone_id, request in wishes.items():
-            if zone_id != zone.zone_id and request.source.source_id in group:
+            if (
+                zone_id != zone.zone_id
+                and request.source.entity_id in members
+                and request.source.entity_id != source.entity_id
+            ):
                 return True
     return False
 
