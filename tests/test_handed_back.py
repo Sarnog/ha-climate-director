@@ -570,6 +570,64 @@ class TestAPresenceSensorIsHome:
         assert item._handed_back == {"woonkamer": date.today()}
 
 
+class TestASleepWindowRestrainsTheCharger:
+    """Een oplader midden op de dag is gewoon een oplader.
+
+    De engine legt het slaapvenster over de slaapsensor; de coordinator deed dat
+    niet en beëindigde de dag om drie uur 's middags. Daarmee verdween een
+    handmatige uitzetting net zo hard als bij een leeg huis.
+
+    The engine puts the sleep window on top of the sleep sensor; the coordinator
+    did not and ended the day at three in the afternoon. That wiped a hand-back
+    just as hard as an empty house did.
+    """
+
+    def test_a_charger_at_three_does_not_end_the_day(self) -> None:
+        from datetime import time
+
+        from custom_components.climate_director.engine import Resident, TimeWindow
+
+        cfg = DirectorConfig(
+            zones=config().zones,
+            residents=(
+                Resident(
+                    "danny",
+                    "Danny",
+                    presence_entity="person.danny",
+                    sleep_entity="sensor.danny_lader",
+                    sleep_state="wireless",
+                    sleep_window=TimeWindow(time(21, 0), time(8, 0)),
+                ),
+            ),
+        )
+        item = coordinator(
+            running_plan(),
+            states={"person.danny": "home", "sensor.danny_lader": "wireless"},
+            cfg=cfg,
+        )
+        now = dt_util.now().replace(hour=15, minute=0, second=0, microsecond=0)
+        residents = item._residents()
+        assert residents["danny"].asleep is True
+        assert item._everyone_asleep(now, residents) is False
+
+    def test_without_a_window_the_sensor_still_counts(self) -> None:
+        """Zonder venster betekent 'op de lader' nog steeds 'naar bed'.
+
+        Without a window 'on the charger' still means 'turned in'.
+        """
+        item = coordinator(
+            running_plan(),
+            states={
+                "person.danny": "home",
+                "person.nancy": "not_home",
+                "sensor.danny_charger_type": "wireless",
+            },
+        )
+        now = dt_util.now().replace(hour=15, minute=0, second=0, microsecond=0)
+        residents = item._residents()
+        assert item._everyone_asleep(now, residents) is True
+
+
 class TestItSurvivesARestart:
     """Een besluit van een mens hoort niet in het werkgeheugen alleen.
 

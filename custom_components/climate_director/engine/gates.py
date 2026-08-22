@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from dataclasses import dataclass
+from datetime import datetime
 
 from .families import ModeFamily
 from .hysteresis import source_counts_for
@@ -231,8 +232,8 @@ def _preconditioning(config: DirectorConfig, world: WorldState, zone: Zone) -> b
     return window.contains(world.now.time(), world.now.weekday())
 
 
-def asleep(resident: Resident, world: WorldState) -> bool:
-    """Return whether this resident counts as asleep right now.
+def asleep_at(resident: Resident, is_asleep: bool, now: datetime) -> bool:
+    """Return whether this resident counts as asleep at `now`.
 
     De sensor zegt wat hij ziet; het venster zegt wanneer dat iets betekent.
     Buiten die uren is een oplader gewoon een oplader.
@@ -240,12 +241,17 @@ def asleep(resident: Resident, world: WorldState) -> bool:
     The sensor says what it sees; the window says when that means anything.
     Outside those hours a charger is just a charger.
     """
-    if not world.resident(resident.resident_id).asleep:
+    if not is_asleep:
         return False
     window = resident.sleep_window
     if window is None:
         return True
-    return window.contains(world.now.time(), world.now.weekday())
+    return window.contains(now.time(), now.weekday())
+
+
+def asleep(resident: Resident, world: WorldState) -> bool:
+    """Return whether this resident counts as asleep right now."""
+    return asleep_at(resident, world.resident(resident.resident_id).asleep, world.now)
 
 
 def _up_and_about(resident: Resident, world: WorldState) -> bool:

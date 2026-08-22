@@ -70,6 +70,7 @@ from .engine import (
 from .engine.constraints import active_family
 from .engine.diff import Change, changes
 from .engine.families import family_of
+from .engine.gates import asleep_at
 from .engine.models import SeasonSource
 from .engine.serialise import config_from_dict
 
@@ -631,10 +632,16 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         tot middernacht zou de zone een paar uur langer stil houden dan iemand
         bedoelde, en dat merk je pas de volgende ochtend.
 
+        Het slaapvenster telt hier net zo hard als in de engine: buiten die uren
+        is een oplader gewoon een oplader, en is de dag niet voorbij.
+
         The day is then over, and a zone somebody silenced by hand should join in
         again - exactly as the automations did it. Waiting for midnight would
         hold the zone still a few hours longer than anybody meant, and you only
         notice that the next morning.
+
+        The sleep window counts here exactly as it does in the engine: outside
+        those hours a charger is just a charger, and the day is not over.
         """
         at_home = [
             resident
@@ -644,7 +651,8 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         if not at_home:
             return False
         return all(
-            bool(resident.sleep_entity) and residents[resident.resident_id].asleep
+            bool(resident.sleep_entity)
+            and asleep_at(resident, residents[resident.resident_id].asleep, now)
             for resident in at_home
         )
 
