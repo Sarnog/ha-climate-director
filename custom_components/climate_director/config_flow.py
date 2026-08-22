@@ -171,7 +171,23 @@ def _missing(user_input: dict[str, Any], *fields: str) -> dict[str, str]:
     you have started: you are stuck in a screen you can leave only by finishing
     it, which is not a choice but a trap.
     """
-    return {field: "required" for field in fields if not user_input.get(field)}
+    return {field: "required" for field in fields if not _filled(user_input.get(field))}
+
+
+def _filled(value: Any) -> bool:
+    """Return whether a value counts as filled in.
+
+    Alleen spaties is niet ingevuld. `vol.Required` eist dat het veld er is,
+    niet dat er iets in staat, dus zonder deze regel telt een handvol spaties
+    als een naam.
+
+    Spaces alone is not filled in. `vol.Required` demands the field is there,
+    not that it holds anything, so without this rule a handful of spaces counts
+    as a name.
+    """
+    if isinstance(value, str):
+        return bool(value.strip())
+    return bool(value)
 
 
 def _exit_row() -> selector.SelectSelector:
@@ -245,19 +261,34 @@ class ClimateDirectorConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Ask for a name and create an empty installation."""
+        """Ask for a name and create an empty installation.
+
+        De naam wordt de titel van de installatie, en die titel gaat vooraf aan
+        de naam van elke entiteit die hier uit voortkomt. Leeg laten mocht, want
+        `vol.Required` eist alleen dat het veld er is - en dan sta je met een
+        naamloze installatie vol naamloze entiteiten.
+
+        The name becomes the installation's title, and that title precedes the
+        name of every entity that comes out of it. Leaving it empty was allowed,
+        since `vol.Required` only demands the field is there - and then you end
+        up with a nameless installation full of nameless entities.
+        """
+        errors: dict[str, str] = {}
         if user_input is not None:
-            return self.async_create_entry(
-                title=user_input[CONF_NAME],
-                data={},
-                options={
-                    CONF_INSTALLATION: {},
-                    CONF_SHADOW_MODE: user_input[CONF_SHADOW_MODE],
-                },
-            )
+            errors = _missing(user_input, CONF_NAME)
+            if not errors:
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME].strip(),
+                    data={},
+                    options={
+                        CONF_INSTALLATION: {},
+                        CONF_SHADOW_MODE: user_input[CONF_SHADOW_MODE],
+                    },
+                )
 
         return self.async_show_form(
             step_id="user",
+            errors=errors,
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_NAME, default="Climate Director"): _TEXT,

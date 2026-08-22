@@ -90,6 +90,46 @@ class TestBuildingAnInstallationInTheWizard:
         finally:
             await stop_house(home)
 
+    async def test_an_empty_name_is_refused(self) -> None:
+        """Een installatie zonder naam maakt naamloze entiteiten.
+
+        An installation without a name makes nameless entities.
+
+        `vol.Required` eist alleen dat het veld er is, niet dat er iets in staat.
+        Een lege naam werd dus gewoon de titel, en die titel staat voor de naam
+        van elke entiteit die deze integratie aanmaakt.
+
+        `vol.Required` only demands the field is there, not that it holds
+        anything. An empty name simply became the title, and that title precedes
+        the name of every entity this integration creates.
+        """
+        home = await start_house(simple_installation(), states=cold())
+        try:
+            result = await home.hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": "user"}
+            )
+            result = await home.hass.config_entries.flow.async_configure(
+                result["flow_id"], {"name": "   ", "shadow_mode": True}
+            )
+            assert result["type"] == "form"
+            assert result["errors"] == {"name": "required"}
+        finally:
+            await stop_house(home)
+
+    async def test_the_name_is_stored_without_its_stray_spaces(self) -> None:
+        home = await start_house(simple_installation(), states=cold())
+        try:
+            result = await home.hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": "user"}
+            )
+            result = await home.hass.config_entries.flow.async_configure(
+                result["flow_id"], {"name": "  Tweede huis  ", "shadow_mode": False}
+            )
+            await home.hass.async_block_till_done()
+            assert result["title"] == "Tweede huis"
+        finally:
+            await stop_house(home)
+
     async def test_the_options_flow_builds_a_zone_and_the_entry_reloads(self) -> None:
         """Een kamer met een apparaat erbij zetten, opslaan, en er staan entiteiten.
 

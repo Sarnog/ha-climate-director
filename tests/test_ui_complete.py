@@ -377,8 +377,17 @@ class TestNoScreenCanRefuseToBeLeft:
         guarded = source.count(
             'if not user_input.get("delete"):\n                errors = _missing('
         )
+        # De aanmaakwizard valt hierbuiten: daar valt niets te verwijderen, en
+        # de uitweg is de knop van de flow zelf.
+        #
+        # The creation wizard falls outside this: there is nothing to delete
+        # there, and the way out is the flow's own button.
+        creating = source.count("errors = _missing(user_input, CONF_NAME)")
         assert checks >= 6
-        assert guarded == checks, f"{checks - guarded} controles zonder verwijder-uitzondering"
+        assert creating == 1
+        assert guarded == checks - creating, (
+            f"{checks - creating - guarded} controles zonder verwijder-uitzondering"
+        )
 
 
 class TestTheSaveScreenWarns:
