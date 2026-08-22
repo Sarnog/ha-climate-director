@@ -67,7 +67,9 @@ Kies je taal voor de volledige, stap-voor-stap handleiding:
 
 ### Installeren
 
-**Vereist:** Home Assistant **2025.3** of nieuwer.
+**Vereist:** Home Assistant **2025.3** of nieuwer — de integratie meldt haar entiteiten
+aan met `AddConfigEntryEntitiesCallback`, en die bestaat sinds 2025.3. Op een oudere
+versie laadt ze niet.
 
 Zolang Climate Director nog niet in de standaard HACS-winkel staat, voeg je deze
 repository toe als **custom repository**:
@@ -179,7 +181,9 @@ Pick your language for the full, step-by-step guide:
 
 ### Installing
 
-**Requires:** Home Assistant **2025.3** or newer.
+**Requires:** Home Assistant **2025.3** or newer — the integration registers its entities
+through `AddConfigEntryEntitiesCallback`, which exists from 2025.3 onwards. On an older
+version it does not load.
 
 As long as Climate Director is not yet in the default HACS store, add this
 repository as a **custom repository**:

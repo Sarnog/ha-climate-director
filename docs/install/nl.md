@@ -82,7 +82,8 @@ de integratie zelf.
 ## Stap 1 — Installeren
 
 **Minimale versie:** Home Assistant **2025.3** of nieuwer. De integratie voegt
-haar entiteiten toe met een API die sinds 2025.3 bestaat.
+haar entiteiten toe met `AddConfigEntryEntitiesCallback`, en die API bestaat sinds
+2025.3.
 
 **Via HACS** (aanbevolen):
 

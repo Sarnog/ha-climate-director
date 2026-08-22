@@ -82,7 +82,8 @@ switches and controls itself.
 ## Step 1 — Installing
 
 **Minimum version:** Home Assistant **2025.3** or newer. The integration adds
-its entities through an API available since 2025.3.
+its entities through `AddConfigEntryEntitiesCallback`, an API available since
+2025.3.
 
 **Through HACS** (recommended):
 
