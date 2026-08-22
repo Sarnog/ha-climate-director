@@ -292,7 +292,7 @@ class TestASharedAppliance:
         assert item._handed_back == {}
 
     def test_the_next_day_forgets_every_zone(self) -> None:
-        yesterday = date.today() - timedelta(days=1)
+        yesterday = dt_util.now().date() - timedelta(days=1)
         item = coordinator(running_plan("climate.ketel"), cfg=shared_config())
         item._handed_back = {"woonkamer": yesterday, "zolder": yesterday}
         assert item._zones_handed_back() == set()
@@ -353,17 +353,17 @@ class TestGettingItBack:
     def test_the_next_day(self) -> None:
         """Yesterday's decision should not still be holding this morning."""
         item = coordinator(running_plan())
-        item._handed_back = {"slaapkamer": date.today() - timedelta(days=1)}
+        item._handed_back = {"slaapkamer": dt_util.now().date() - timedelta(days=1)}
         assert item._zones_handed_back() == set()
 
     def test_today_it_still_holds(self) -> None:
         item = coordinator(running_plan())
-        item._handed_back = {"slaapkamer": date.today()}
+        item._handed_back = {"slaapkamer": dt_util.now().date()}
         assert item._zones_handed_back() == {"slaapkamer"}
 
     def test_a_day_older_still_counts_as_over(self) -> None:
         item = coordinator(running_plan())
-        item._handed_back = {"slaapkamer": date.today() - timedelta(days=30)}
+        item._handed_back = {"slaapkamer": dt_util.now().date() - timedelta(days=30)}
         assert item._zones_handed_back() == set()
 
 
@@ -565,9 +565,9 @@ class TestAPresenceSensorIsHome:
 
     def test_a_hand_back_survives_the_round(self) -> None:
         item = self._item()
-        item._handed_back = {"woonkamer": date.today()}
+        item._handed_back = {"woonkamer": dt_util.now().date()}
         assert item._zones_handed_back() == {"woonkamer"}
-        assert item._handed_back == {"woonkamer": date.today()}
+        assert item._handed_back == {"woonkamer": dt_util.now().date()}
 
 
 class TestASleepWindowRestrainsTheCharger:
