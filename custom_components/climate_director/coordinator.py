@@ -826,16 +826,25 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
 
     # -- vooruit verwarmen / pre-conditioning --------------------------------
 
+    def live_preconditions(self) -> dict[str, datetime]:
+        """Return the requests that have not run out, without touching anything.
+
+        Voor wie alleen wil weten hoe het ervoor staat: de diagnose. Die hoort
+        niets te wijzigen aan het huis waar hij een storing van vastlegt.
+
+        For anyone who only wants to know where things stand: the diagnostics.
+        Those should alter nothing about the house whose fault they capture.
+        """
+        now = dt_util.now()
+        return {zone_id: until for zone_id, until in self._precondition.items() if now < until}
+
     def _live_preconditions(self) -> dict[str, datetime]:
         """Return the requests that have not run out, dropping the rest.
 
         Pruned on reading rather than on a timer: an expired request is over
         whether or not anything got round to noticing.
         """
-        now = dt_util.now()
-        self._precondition = {
-            zone_id: until for zone_id, until in self._precondition.items() if now < until
-        }
+        self._precondition = self.live_preconditions()
         self._precondition_bypass &= set(self._precondition)
         return dict(self._precondition)
 

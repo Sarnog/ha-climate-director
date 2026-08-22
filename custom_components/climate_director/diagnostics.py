@@ -50,7 +50,7 @@ async def async_get_config_entry_diagnostics(
             "zone_priorities": dict(coordinator.zone_priorities),
             "precondition_requests": {
                 zone_id: until.isoformat()
-                for zone_id, until in coordinator._live_preconditions().items()
+                for zone_id, until in coordinator.live_preconditions().items()
             },
         },
         "tracked_entities": sorted(coordinator.tracked_entities()),

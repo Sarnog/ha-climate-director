@@ -328,6 +328,7 @@ class TestTheRequestItself:
 
             async_precondition = ClimateDirectorCoordinator.async_precondition
             async_cancel_precondition = ClimateDirectorCoordinator.async_cancel_precondition
+            live_preconditions = ClimateDirectorCoordinator.live_preconditions
             _live_preconditions = ClimateDirectorCoordinator._live_preconditions
             _wake_at_the_first_expiry = ClimateDirectorCoordinator._wake_at_the_first_expiry
 
