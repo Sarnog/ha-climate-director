@@ -395,6 +395,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 user_input.get("holiday_calendars") or ()
             )
             self._installation["stuck_after"] = int(user_input.get("stuck_after") or 0) * 60
+            self._installation["outdoor_hysteresis"] = float(
+                user_input.get("outdoor_hysteresis") or 0
+            )
             self._installation["holiday_keyword"] = (
                 user_input.get("holiday_keyword") or ""
             ).strip()
@@ -429,6 +432,10 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     ): selector.EntitySelector(
                         selector.EntitySelectorConfig(domain=["sensor", "weather"])
                     ),
+                    vol.Required(
+                        "outdoor_hysteresis",
+                        default=float(self._installation.get("outdoor_hysteresis", 0.5)),
+                    ): _BAND,
                     vol.Required(
                         "heating_layout",
                         default=self._installation.get(

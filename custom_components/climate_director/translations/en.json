@@ -40,6 +40,7 @@
         "title": "General settings",
         "data": {
           "outdoor_sensor": "Outdoor temperature sensor",
+          "outdoor_hysteresis": "Outdoor dead band",
           "heating_layout": "Heating system",
           "season_source": "Season source",
           "season_entity": "Season entity",
@@ -67,6 +68,7 @@
           "shadow_mode": "Compute every decision but execute nothing.",
           "require_schedule": "The house then waits for the first scheduled window to open, and keeps waiting while somebody who is home is still asleep before theirs.",
           "outdoor_sensor": "Feeds every outdoor limit, both here and on each source. Without it no threshold on outdoor temperature can ever be met, and the whole installation quietly stands still.",
+          "outdoor_hysteresis": "Indoors every zone has a dead band; outdoors every bound was hard - the one separating a boiler from a heat pump, and the one saying whether this weather allows heating or cooling at all. And the weather hovers around exactly those bounds. What already runs may carry on until one band past its bound; what stands still has to reach the bound itself. Zero switches it off, which makes the changeover chatter with every wobble of the thermometer.",
           "heating_layout": "Central: one heat source for the whole house, which cannot warm one room without warming the rest — a single thermostat, with or without radiator knobs. Per zone: each part of the house can get its heat separately, through a zone valve or a heat source of its own. Radiator knobs alone are not zoning. This changes nothing about who may run; it lets the check warn you when your setup does not match.",
           "require_awake": "Somebody home but asleep does not count. Which entity says they are asleep is set per resident.",
           "holiday_calendars": "A running event on one of these calendars puts the house on holiday. Leave empty to use only the holiday switch.",

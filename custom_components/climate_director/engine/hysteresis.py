@@ -101,24 +101,40 @@ def wanted_target(
     configuration forbids it. Only the first may be told to a user as "it is
     already right".
     """
-    demand = evaluate(zone, world, running_family(config, zone, world, previous))
+    demand = evaluate(
+        zone,
+        world,
+        running_family(config, zone, world, previous),
+        config.outdoor_hysteresis,
+    )
     settings = zone.settings_for(demand.family)
     return demand, settings.target if settings else None
 
 
-def evaluate(zone: Zone, world: WorldState, running: ModeFamily) -> Demand:
+def evaluate(
+    zone: Zone, world: WorldState, running: ModeFamily, outdoor_margin: float = 0.0
+) -> Demand:
     """Return the duty `zone` needs, given the duty it is `running` now.
 
     `running` is what makes the dead band work: a duty already under way keeps
     going until the far edge of the band, while a duty not running yet has to
     reach the near edge before it may start.
+
+    `outdoor_margin` doet hetzelfde voor de buitengrens van deze zone: wat al
+    draait mag doorlopen tot een dode band daarvoorbij, zodat een
+    buitentemperatuur die rond die grens schommelt de zone niet aan en uit laat
+    klapperen.
+
+    `outdoor_margin` does the same for this zone's outdoor bound: what already
+    runs may carry on until one dead band past it, so an outdoor temperature
+    hovering around that bound does not make the zone chatter on and off.
     """
     indoor = world.indoor(zone.zone_id)
     if indoor is None:
         return Demand(ModeFamily.NEUTRAL, Reason.NO_INDOOR_TEMPERATURE)
 
-    heat = _candidate(zone, world, ModeFamily.HEAT, indoor, running)
-    cool = _candidate(zone, world, ModeFamily.COOL, indoor, running)
+    heat = _candidate(zone, world, ModeFamily.HEAT, indoor, running, outdoor_margin)
+    cool = _candidate(zone, world, ModeFamily.COOL, indoor, running, outdoor_margin)
 
     wanted = [demand for demand in (heat, cool) if demand.family is not ModeFamily.NEUTRAL]
     if not wanted:
@@ -144,6 +160,7 @@ def _candidate(
     family: ModeFamily,
     indoor: float,
     running: ModeFamily,
+    outdoor_margin: float = 0.0,
 ) -> Demand:
     """Return whether `family` wants to run in this zone, and why not if it does not."""
     settings = zone.settings_for(family)
@@ -180,14 +197,25 @@ def _candidate(
     #
     # The window per SOURCE does still apply; that one picks the appliance. As
     # do the season, the dead band and everything after them.
+    #
+    # De dode band op de buitentemperatuur werkt hier net als de dode band
+    # binnen: wat al draait mag doorlopen tot een band voorbij de grens. Wie
+    # stilstaat moet de grens gewoon halen, anders verschuift de band de grens
+    # in plaats van hem een breedte te geven.
+    #
+    # The outdoor dead band works here exactly like the indoor one: what already
+    # runs may carry on until one band past the bound. Whatever stands still has
+    # to reach the bound itself, or the band would move the bound rather than
+    # give it a width.
+    running_now = running is family
+    margin = outdoor_margin if running_now else 0.0
     if (
         not world.preconditioning(zone.zone_id)
         and not (world.precipitation and not zone.ignore_precipitation)
-        and not settings.outdoor.contains(world.outdoor_temperature)
+        and not settings.outdoor.contains(world.outdoor_temperature, margin)
     ):
         return Demand(ModeFamily.NEUTRAL, Reason.OUTDOOR_OUTSIDE_WINDOW)
 
-    running_now = running is family
     threshold = _threshold(settings, family, running_now)
 
     # The switch-on point counts as reached, the switch-off point as passed. If

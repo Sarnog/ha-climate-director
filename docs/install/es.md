@@ -146,6 +146,7 @@ hasta que eliges **Guardar y cerrar** en el menú principal.
 | Ajuste | Qué hace |
 |---|---|
 | **Sensor de temperatura exterior** | alimenta cada límite exterior. Sin sensor, todo límite cuenta como no alcanzado y la instalación se queda quieta |
+| **Banda muerta de temperatura exterior** | cuántos grados puede seguir una tarea en marcha más allá de su límite exterior antes de cambiar; 0,5 por defecto, cero la desactiva |
 | **Sistema de calefacción** | *Central* o *Por zona*, ver abajo |
 | **Fuente de la estación** | de dónde sale la estación: el mes, una entidad, o fijada verano/invierno |
 | **Entidad de estación** | solo si la fuente está en *entidad*; la entidad integrada `season.*` también se puede elegir |

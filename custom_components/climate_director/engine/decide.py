@@ -55,7 +55,9 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
     commands, untouched = _build_commands(config, world, grants, reasons, wishes, families)
     return Plan(
         commands=commands,
-        zones=_build_zone_decisions(config, world, wishes, dropped, grants, refusals, shut, woulds),
+        zones=_build_zone_decisions(
+            config, world, wishes, dropped, grants, refusals, shut, woulds, previous
+        ),
         circuits=circuit_decisions,
         deferrals=deferrals,
         untouched=untouched,
@@ -90,10 +92,12 @@ def _collect_wishes(
     shut: dict[str, tuple[Reason, ...]] = {}
     woulds: dict[str, ModeFamily] = {}
 
+    margin = config.outdoor_hysteresis
+
     for zone in config.zones:
         shut[zone.zone_id] = gates.closed(config, world, zone, previous)
         demand = hysteresis.evaluate(
-            zone, world, hysteresis.running_family(config, zone, world, previous)
+            zone, world, hysteresis.running_family(config, zone, world, previous), margin
         )
         woulds[zone.zone_id] = demand.family
         if shut[zone.zone_id]:
@@ -104,7 +108,9 @@ def _collect_wishes(
             refusals[zone.zone_id] = demand.reason
             continue
 
-        source = sources.select(zone, demand.family, world)
+        source = sources.select(
+            zone, demand.family, world, _serving(previous, zone.zone_id), margin
+        )
         if source is None:
             refusals[zone.zone_id] = Reason.NO_SOURCE_AVAILABLE
             continue
@@ -118,6 +124,25 @@ def _collect_wishes(
         )
 
     return wishes, refusals, shut, woulds
+
+
+def _serving(previous: Plan | None, zone_id: str) -> str | None:
+    """Return the source that really delivered this zone last round, if any.
+
+    De dode band op de buitentemperatuur hangt hieraan: alleen wat draaide mag
+    doorlopen tot een band voorbij zijn grens. Een zone die vorige ronde niets
+    kreeg heeft niets vast te houden.
+
+    The outdoor dead band hangs off this: only what ran may carry on until one
+    band past its bound. A zone that got nothing last round has nothing to hold
+    on to.
+    """
+    if previous is None:
+        return None
+    decision = previous.decision_for(zone_id)
+    if decision is None or decision.granted is ModeFamily.NEUTRAL:
+        return None
+    return decision.source_id
 
 
 def _apply_exclusive_groups(
@@ -781,6 +806,7 @@ def _build_zone_decisions(
     refusals: dict[str, Reason],
     shut: dict[str, tuple[Reason, ...]],
     woulds: dict[str, ModeFamily],
+    previous: Plan | None = None,
 ) -> tuple[ZoneDecision, ...]:
     """Return one decision per zone, saying what it asked for and what it got."""
     decisions: list[ZoneDecision] = []
@@ -820,7 +846,13 @@ def _build_zone_decisions(
                 source_id=request.source.source_id,
                 reason=grant.reason if grant is not None else Reason.NO_SOURCE_AVAILABLE,
                 closed_gates=shut.get(zone.zone_id, ()),
-                passed_over=sources.passed_over(zone, request.family, world),
+                passed_over=sources.passed_over(
+                    zone,
+                    request.family,
+                    world,
+                    _serving(previous, zone.zone_id),
+                    config.outdoor_hysteresis,
+                ),
                 would_want=would,
             )
         )

@@ -132,19 +132,32 @@ class OutdoorWindow:
             self.minimum is not None and self.maximum is not None and self.minimum >= self.maximum
         )
 
-    def contains(self, outdoor: float | None) -> bool:
+    def contains(self, outdoor: float | None, margin: float = 0.0) -> bool:
         """Return whether `outdoor` falls inside this window.
 
         An unknown outdoor temperature satisfies an unbounded window but never
         a bounded one - a bound that cannot be checked is not met.
+
+        `margin` verruimt beide grenzen, en is bedoeld voor wat al draait: net
+        als binnen mag een taak doorlopen tot een dode band voorbij zijn grens,
+        zodat een buitentemperatuur die rond die grens schommelt de bron niet
+        heen en weer trekt. Wie stilstaat krijgt hem niet - die moet de grens
+        gewoon halen, anders zou de band de grens simpelweg verschuiven.
+
+        `margin` widens both bounds, and is meant for what already runs: just as
+        indoors, a duty may carry on until one dead band past its bound, so an
+        outdoor temperature hovering around that bound does not drag the source
+        back and forth. Whatever stands still does not get it - that has to
+        reach the bound itself, or the band would merely move the bound.
         """
         if self.unbounded:
             return True
         if outdoor is None:
             return False
-        if self.minimum is not None and outdoor < self.minimum:
+        slack = abs(margin)
+        if self.minimum is not None and outdoor < self.minimum - slack:
             return False
-        return not (self.maximum is not None and outdoor >= self.maximum)
+        return not (self.maximum is not None and outdoor >= self.maximum + slack)
 
 
 @dataclass(frozen=True, slots=True)
@@ -690,6 +703,36 @@ class DirectorConfig:
     outdoor_sensor: str = ""
     """Entity carrying the outdoor temperature. Empty leaves it unknown."""
 
+    outdoor_hysteresis: float = 0.5
+    """Dead band on every outdoor bound, in degrees.
+
+    Binnen heeft elke zone een dode band, want anders pendelt hij op één getal.
+    Buiten was elke grens hard - de grens die de gasketel van de warmtepomp
+    scheidt, en de grens die zegt of dit weer verwarmen of koelen toelaat - en
+    juist daar schommelt het weer omheen. Een gesimuleerde maand rond de omslag
+    van 3,1 graden leverde 296 wisselingen tussen gas en airco op: ruim acht per
+    dag, elk een brander die ontsteekt of een compressor die start. De
+    kortcyclusbescherming ving daar niets van, want die hangt aan een circuit en
+    een gasketel hangt aan geen circuit.
+
+    De band geldt alleen voor wat al draait: die mag doorlopen tot een dode band
+    voorbij zijn grens. Wie stilstaat moet de grens gewoon halen, anders zou de
+    band de grens alleen maar verschuiven. Nul zet hem uit.
+
+    Indoors every zone has a dead band, since otherwise it chatters on a single
+    number. Outdoors every bound was hard - the one separating the boiler from
+    the heat pump, and the one saying whether this weather allows heating or
+    cooling - and that is exactly what the weather hovers around. A simulated
+    month around the 3.1 degree changeover produced 296 swaps between boiler and
+    heat pump: over eight a day, each one a burner igniting or a compressor
+    starting. Short-cycle protection caught none of it, since that hangs on a
+    circuit and a gas boiler hangs on no circuit.
+
+    The band applies only to what already runs: that may carry on until one dead
+    band past its bound. Whatever stands still has to reach the bound itself, or
+    the band would merely move the bound. Zero switches it off.
+    """
+
     stuck_after: timedelta = timedelta(minutes=15)
     """How long a zone may sit on a waiting reason before it counts as stuck.
 
@@ -1077,6 +1120,9 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
 
     if config.stuck_after.total_seconds() < 0:
         problems.append("the stuck-detection time is negative")
+
+    if config.outdoor_hysteresis < 0:
+        problems.append("the outdoor dead band is negative")
 
     if config.gates.max_precondition.total_seconds() <= 0:
         problems.append(

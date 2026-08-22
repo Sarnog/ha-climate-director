@@ -40,6 +40,7 @@
         "title": "Ajustes generales",
         "data": {
           "outdoor_sensor": "Sensor de temperatura exterior",
+          "outdoor_hysteresis": "Banda muerta de temperatura exterior",
           "heating_layout": "Sistema de calefacción",
           "season_source": "Origen de la estación",
           "season_entity": "Entidad de estación",
@@ -67,6 +68,7 @@
           "shadow_mode": "Calcula cada decisión pero no ejecuta nada.",
           "require_schedule": "La casa espera entonces a que se abra la primera franja establecida, y sigue esperando mientras alguien que está en casa aún duerme antes de la suya.",
           "outdoor_sensor": "Alimenta cada límite exterior, tanto aquí como en cada fuente. Sin este sensor ningún umbral de temperatura exterior puede cumplirse, y toda la instalación se queda parada en silencio.",
+          "outdoor_hysteresis": "Dentro, cada zona tiene una banda muerta; fuera, cada límite era duro: el que separa una caldera de una bomba de calor, y el que dice si este tiempo permite calentar o enfriar. Y el tiempo oscila justo alrededor de esos límites. Lo que ya funciona puede seguir hasta una banda más allá de su límite; lo que está parado tiene que alcanzar el límite. Cero lo desactiva, y entonces el cambio traquetea con cada temblor del termómetro.",
           "heating_layout": "Central: una fuente de calor para toda la casa, que no puede calentar una habitación sin el resto — un termostato, con o sin válvulas de radiador. Por zona: cada parte de la casa puede recibir su calor por separado, mediante una válvula de zona o una fuente propia. Las válvulas de radiador por sí solas no son zonificación. Esto no cambia quién puede funcionar; permite que la comprobación avise si tu instalación no encaja.",
           "require_awake": "Alguien en casa pero dormido no cuenta. Qué entidad indica que duerme se ajusta por residente.",
           "holiday_calendars": "Un evento en curso en alguno de estos calendarios pone la casa en vacaciones. Dejarlo vacío usa solo el interruptor de vacaciones.",

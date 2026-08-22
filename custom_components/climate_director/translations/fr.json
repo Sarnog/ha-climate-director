@@ -40,6 +40,7 @@
         "title": "Réglages généraux",
         "data": {
           "outdoor_sensor": "Capteur de température extérieure",
+          "outdoor_hysteresis": "Bande morte de température extérieure",
           "heating_layout": "Système de chauffage",
           "season_source": "Origine de la saison",
           "season_entity": "Entité de saison",
@@ -67,6 +68,7 @@
           "shadow_mode": "Calcule chaque décision mais n'exécute rien.",
           "require_schedule": "La maison attend alors l'ouverture de la première plage réglée, et continue d'attendre tant qu'une personne présente dort encore avant la sienne.",
           "outdoor_sensor": "Alimente chaque limite extérieure, ici comme sur chaque source. Sans ce capteur, aucun seuil de température extérieure ne peut être atteint, et toute l'installation reste à l'arrêt.",
+          "outdoor_hysteresis": "À l'intérieur, chaque zone a une bande morte ; à l'extérieur, chaque limite était nette - celle qui sépare une chaudière d'une pompe à chaleur, et celle qui dit si ce temps permet de chauffer ou de refroidir. Et le temps oscille précisément autour de ces limites. Ce qui tourne déjà peut continuer jusqu'à une bande au-delà de sa limite ; ce qui est à l'arrêt doit atteindre la limite lui-même. Zéro la désactive, et le basculement suit alors le moindre frémissement du thermomètre.",
           "heating_layout": "Central : une seule source de chaleur pour toute la maison, qui ne peut chauffer une pièce sans les autres — un thermostat, avec ou sans robinets thermostatiques. Par zone : chaque partie de la maison peut recevoir sa chaleur séparément, via une vanne de zone ou sa propre source. Des robinets seuls ne constituent pas un zonage. Cela ne change rien à qui peut fonctionner ; cela permet au contrôle de vous avertir si votre installation ne correspond pas.",
           "require_awake": "Une personne présente mais endormie ne compte pas. L'entité qui indique le sommeil se règle par occupant.",
           "holiday_calendars": "Un évènement en cours dans l'un de ces agendas met la maison en vacances. Laisser vide n'utilise que l'interrupteur vacances.",

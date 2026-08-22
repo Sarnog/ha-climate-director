@@ -40,6 +40,7 @@
         "title": "Allgemeine Einstellungen",
         "data": {
           "outdoor_sensor": "Außentemperatursensor",
+          "outdoor_hysteresis": "Totband Außentemperatur",
           "heating_layout": "Heizungsanlage",
           "season_source": "Herkunft der Jahreszeit",
           "season_entity": "Jahreszeit-Entität",
@@ -67,6 +68,7 @@
           "shadow_mode": "Berechnet jede Entscheidung, führt aber nichts aus.",
           "require_schedule": "Das Haus wartet dann auf das erste eingestellte Fenster und wartet weiter, solange jemand zu Hause vor seinem eigenen Fenster noch schläft.",
           "outdoor_sensor": "Speist jede Außengrenze, hier wie auch an jeder Quelle. Ohne diesen Sensor kann keine Schwelle für die Außentemperatur je erfüllt werden, und die gesamte Anlage steht still.",
+          "outdoor_hysteresis": "Innen hat jede Zone ein Totband; außen war jede Grenze hart - die zwischen einem Heizkessel und einer Wärmepumpe, und die, die sagt, ob dieses Wetter Heizen oder Kühlen überhaupt zulässt. Und genau um diese Grenzen schwankt das Wetter. Was schon läuft, darf bis ein Band über seine Grenze hinaus weiterlaufen; was stillsteht, muss die Grenze selbst erreichen. Null schaltet es ab, und dann klappert der Wechsel bei jedem Zittern des Thermometers mit.",
           "heating_layout": "Zentral: eine Wärmequelle für das ganze Haus, die einen Raum nicht ohne die übrigen erwärmen kann — ein Thermostat, mit oder ohne Heizkörperventile. Pro Zone: jeder Hausteil kann seine Wärme getrennt bekommen, über ein Zonenventil oder eine eigene Wärmequelle. Heizkörperventile allein sind keine Zonierung. Das ändert nichts daran, wer laufen darf; es lässt die Prüfung warnen, wenn die Einrichtung nicht dazu passt.",
           "require_awake": "Wer zu Hause ist, aber schläft, zählt nicht. Welche Entität sagt, dass jemand schläft, stellst du pro Bewohner ein.",
           "holiday_calendars": "Ein laufender Termin in einem dieser Kalender versetzt das Haus in den Urlaub. Leer lassen nutzt nur den Urlaubsschalter.",

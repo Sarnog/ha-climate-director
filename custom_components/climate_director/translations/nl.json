@@ -40,6 +40,7 @@
         "title": "Algemene instellingen",
         "data": {
           "outdoor_sensor": "Buitentemperatuursensor",
+          "outdoor_hysteresis": "Dode band buitentemperatuur",
           "heating_layout": "Verwarmingssysteem",
           "season_source": "Herkomst seizoen",
           "season_entity": "Seizoensentiteit",
@@ -67,6 +68,7 @@
           "shadow_mode": "Berekent elke beslissing maar voert niets uit.",
           "require_schedule": "Het huis wacht dan tot het eerste ingestelde venster opengaat, en blijft wachten zolang iemand die thuis is nog slaapt vóór zijn eigen venster.",
           "outdoor_sensor": "Voedt elke buitengrens, zowel hier als op elke bron. Zonder deze sensor kan geen enkele drempel op buitentemperatuur ooit voldaan worden, en staat de hele installatie stilletjes stil.",
+          "outdoor_hysteresis": "Binnen heeft elke zone een dode band; buiten was elke grens hard - de grens tussen een cv-ketel en een warmtepomp, en de grens die zegt of dit weer verwarmen of koelen toelaat. En juist rond die grenzen schommelt het weer. Wat al draait mag doorlopen tot een band voorbij zijn grens; wat stilstaat moet de grens gewoon halen. Nul zet hem uit, en dan klappert de omslag mee met elke trilling van de thermometer.",
           "heating_layout": "Centraal: één warmtebron voor het hele huis, die de ene kamer niet kan verwarmen zonder de rest — één thermostaat, met of zonder radiatorknoppen. Per zone: elk deel van het huis kan zijn warmte apart krijgen, via een zoneventiel of een eigen warmtebron. Radiatorknoppen alleen zijn geen zonering. Dit verandert niets aan wie er mag draaien; het laat de controle waarschuwen als je invulling er niet bij past.",
           "require_awake": "Iemand die thuis is maar slaapt telt niet mee. Welke entiteit zegt dat iemand slaapt stel je per bewoner in.",
           "holiday_calendars": "Een lopend item in een van deze agenda's zet het huis op vakantie. Leeg laten gebruikt alleen de vakantieschakelaar.",

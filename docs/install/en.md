@@ -147,6 +147,7 @@ what you typed is then thrown away. And **nothing** is stored until you pick
 | Setting | What it does |
 |---|---|
 | **Outdoor temperature sensor** | feeds every outdoor limit. Without a sensor every limit counts as not met and the installation stands still |
+| **Outdoor dead band** | how many degrees a running duty may carry on past its outdoor bound before it changes over; 0.5 by default, zero switches it off |
 | **Heating system** | *Central* or *Per zone*, see below |
 | **Season source** | where the season comes from: the month, an entity, or pinned to summer/winter |
 | **Season entity** | only needed when the source is set to *entity*; the built-in `season.*` entity can be picked too |

@@ -147,6 +147,7 @@ je in het hoofdmenu **Opslaan en sluiten** kiest.
 | Instelling | Wat het doet |
 |---|---|
 | **Buitentemperatuursensor** | voedt elke buitengrens. Zonder sensor telt elke ingestelde grens als niet gehaald en staat de installatie stil |
+| **Dode band buitentemperatuur** | hoeveel graden een lopende taak voorbij zijn buitengrens mag doorlopen voordat hij omslaat; standaard 0,5, nul zet hem uit |
 | **Verwarmingssysteem** | *Centraal* of *Per zone*, zie hieronder |
 | **Seizoensbron** | waar het seizoen vandaan komt: de maand, een entiteit, of vast zomer/winter |
 | **Seizoensentiteit** | alleen nodig als de bron op *entiteit* staat; ook de ingebouwde `season.*`-entiteit is kiesbaar |

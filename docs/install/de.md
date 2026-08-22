@@ -149,6 +149,7 @@ wählst.
 | Einstellung | Was sie tut |
 |---|---|
 | **Außentemperatursensor** | speist jede Außengrenze. Ohne Sensor gilt jede gesetzte Grenze als nicht erreicht und die Installation steht still |
+| **Totband Außentemperatur** | wie viele Grad eine laufende Betriebsart über ihre Außengrenze hinaus weiterlaufen darf, bevor gewechselt wird; standardmäßig 0,5, null schaltet es ab |
 | **Heizsystem** | *Zentral* oder *Pro Zone*, siehe unten |
 | **Jahreszeitenquelle** | woher die Jahreszeit kommt: der Monat, eine Entität oder fest Sommer/Winter |
 | **Jahreszeiten-Entität** | nur nötig, wenn die Quelle auf *Entität* steht; auch die eingebaute `season.*`-Entität ist wählbar |

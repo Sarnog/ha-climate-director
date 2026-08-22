@@ -149,6 +149,7 @@ le menu principal.
 | Réglage | Ce qu'il fait |
 |---|---|
 | **Capteur de température extérieure** | alimente chaque limite extérieure. Sans capteur, toute limite compte comme non atteinte et l'installation reste immobile |
+| **Bande morte de température extérieure** | de combien de degrés une tâche en marche peut dépasser sa limite extérieure avant de basculer ; 0,5 par défaut, zéro la désactive |
 | **Système de chauffage** | *Centralisé* ou *Par zone*, voir ci-dessous |
 | **Source de la saison** | d'où vient la saison : le mois, une entité, ou fixée été/hiver |
 | **Entité de saison** | seulement si la source est réglée sur *entité* ; l’entité intégrée `season.*` est aussi sélectionnable |
