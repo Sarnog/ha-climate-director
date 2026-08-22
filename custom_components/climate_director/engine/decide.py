@@ -51,7 +51,8 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
     grants, circuit_decisions, deferrals = _resolve_circuits(config, world, wishes, standing)
     reasons = _zone_reasons(config, grants, dropped, refusals)
 
-    commands, untouched = _build_commands(config, world, grants, reasons, wishes)
+    families = {decision.circuit_id: decision.family for decision in circuit_decisions}
+    commands, untouched = _build_commands(config, world, grants, reasons, wishes, families)
     return Plan(
         commands=commands,
         zones=_build_zone_decisions(config, world, wishes, dropped, grants, refusals, shut, woulds),
@@ -333,20 +334,33 @@ def _manual_conflict(
     zone: Zone,
     source: Source,
     wishes: dict[str, constraints.Request],
+    families: dict[str, ModeFamily],
 ) -> UnitCommand | None:
     """Return the command standing a manual source down, or `None` to leave it.
 
-    Gekeken wordt naar wat de andere kamers *vragen*, niet naar wat ze *kregen*.
-    Dat scheelt een klem: zolang deze unit draait houdt hij het circuit op zijn
-    taak, dus de ander krijgt niets toegekend - en zou hij daarop wachten, dan
-    wachtten ze allebei tot Sint-Juttemis. Wie in de weg staat gaat opzij, ook
-    als de omschakeling nog een pauze te gaan heeft.
+    Draait het circuit een taak, dan is dat het antwoord: deze unit doet mee of
+    hij gaat opzij. Vragen is namelijk niet krijgen - vragen twee kamers om
+    tegengestelde taken, dan wint er één, en wie naar de vraag keek liet deze
+    unit doorkoelen omdat een kamer daarom gevraagd had, terwijl die kamer net
+    was weggestemd en het circuit stond te verwarmen.
 
-    What the other rooms *ask for* is what counts, not what they *got*. That
-    avoids a deadlock: while this unit runs it holds the circuit to its duty, so
-    the other is granted nothing - and were this to wait on that, both would
-    wait forever. Whoever is in the way steps aside, even when the changeover
-    still has a pause to sit out.
+    Krijgt niemand iets toegekend, dan telt de vraag alsnog. Dat scheelt een
+    klem: zolang deze unit draait houdt hij het circuit op zijn taak, dus de
+    ander krijgt niets toegekend - en zou hij daarop wachten, dan wachtten ze
+    allebei tot Sint-Juttemis. Wie in de weg staat gaat opzij, ook als de
+    omschakeling nog een pauze te gaan heeft.
+
+    If the circuit runs a duty, that is the answer: this unit joins in or steps
+    aside. Asking is not getting - when two rooms ask for opposing duties one
+    wins, and whoever looked at the asking let this unit carry on cooling
+    because a room had asked for it, while that room had just been outvoted and
+    the circuit stood there heating.
+
+    When nobody is granted anything the asking counts after all. That avoids a
+    deadlock: while this unit runs it holds the circuit to its duty, so the
+    other is granted nothing - and were this to wait on that, both would wait
+    forever. Whoever is in the way steps aside, even when the changeover still
+    has a pause to sit out.
     """
     running = family_of(world.climate(source.entity_id).hvac_mode)
     if running is ModeFamily.NEUTRAL:
@@ -370,12 +384,39 @@ def _manual_conflict(
     if circuit is None or circuit.simultaneous_heat_cool:
         return None
 
+    # De toegekende taak van het circuit gaat voor: die is de uitkomst, niet de
+    # wens. Is hij neutraal, dan kreeg niemand iets en valt er terug te vallen
+    # op wat er gevraagd wordt.
+    #
+    # The circuit's granted duty comes first: that is the outcome rather than
+    # the wish. If it is neutral nobody was granted anything and there is the
+    # asking to fall back on.
+    running_now = families.get(circuit.circuit_id, ModeFamily.NEUTRAL)
+    if running_now is not ModeFamily.NEUTRAL:
+        if running is running_now:
+            return None
+        return _stand_down(config, world, zone, source, Reason.CIRCUIT_CONFLICT_LOST)
+
+    # Alleen verzoeken die dít circuit aanspreken tellen mee. Een kamer die
+    # ergens een bron op dit circuit heeft staan maar zijn warmte deze ronde
+    # van een ander apparaat krijgt, vraagt hier niets - en mag deze unit dus
+    # ook niet laten blijven staan. Wie dat wel meetelde liet een handbediende
+    # unit doorkoelen omdat een andere kamer "ook koelen wilde", terwijl die
+    # kamer op een reservebron buiten het circuit draaide en het circuit
+    # ondertussen aan een derde kamer werd toegekend om te verwarmen.
+    #
+    # Only requests that address *this* circuit count. A room with a source on
+    # this circuit somewhere but taking its heat from another appliance this
+    # round is asking nothing here - and so may not keep this unit standing.
+    # Counting it did let a hand-operated unit carry on cooling because another
+    # room "wanted cooling too", while that room ran on a reserve source off the
+    # circuit and the circuit was meanwhile granted to a third room to heat.
     wanted = {
         request.family
         for zone_id, request in wishes.items()
         if zone_id != zone.zone_id
         and request.family is not ModeFamily.NEUTRAL
-        and _on_circuit(config, circuit, zone_id)
+        and request.source.entity_id in circuit.units
     }
     if not wanted or running in wanted:
         return None
@@ -413,20 +454,13 @@ def _stand_down(
     )
 
 
-def _on_circuit(config: DirectorConfig, circuit: Circuit, zone_id: str) -> bool:
-    """Return whether any of that zone's sources hangs on this circuit."""
-    zone = config.zone(zone_id)
-    if zone is None:
-        return False
-    return any(source.entity_id in circuit.units for source in zone.sources)
-
-
 def _build_commands(
     config: DirectorConfig,
     world: WorldState,
     grants: dict[str, constraints.Grant],
     reasons: dict[str, Reason],
     wishes: dict[str, constraints.Request],
+    families: dict[str, ModeFamily],
 ) -> tuple[tuple[UnitCommand, ...], tuple[UntouchedSource, ...]]:
     """Return the end state for every managed climate entity, and what is left alone.
 
@@ -483,7 +517,7 @@ def _build_commands(
         # off "to be safe" would turn off exactly the appliance somebody just
         # switched on by hand.
         if not source.autostart:
-            standing_down = _manual_conflict(config, world, zone, source, wishes)
+            standing_down = _manual_conflict(config, world, zone, source, wishes, families)
             if standing_down is not None:
                 commands.append(standing_down)
             else:

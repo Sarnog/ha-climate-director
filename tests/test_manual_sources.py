@@ -565,3 +565,257 @@ class TestTheOverrideHandsTheZoneOver:
         result, _ = self._plan("cool", override=True)
         decision = next(item for item in result.zones if item.zone_id == "woonkamer")
         assert decision.reason is Reason.MANUAL_OVERRIDE
+
+
+class TestItOnlyCountsWhatIsOnItsOwnCircuit:
+    """Wie "hetzelfde wil" maar op een ander apparaat, staat deze unit niet bij.
+
+    Whoever "wants the same" but on another appliance is no ally to this unit.
+
+    Een handbediende unit blijft staan zolang een andere kamer op dat circuit
+    dezelfde taak vraagt - anders zou hij wijken voor niets. Maar er werd
+    gekeken naar élke zone die ergens een bron op dit circuit heeft, ook als
+    het verzoek van die zone naar een heel ander apparaat ging. Vroeg zo'n
+    zone koelen via een reservebron buiten het circuit, dan telde dat als
+    "koelen is hier gewenst" en bleef de handbediende unit koelen - terwijl het
+    circuit ondertussen aan een derde kamer werd toegekend om te verwarmen.
+
+    A hand-operated unit stays put as long as another room on that circuit asks
+    for the same duty - otherwise it would step aside for nothing. But every
+    zone with a source somewhere on this circuit counted, even when that zone's
+    request went to a wholly different appliance. If such a zone asked to cool
+    through a reserve source off the circuit, that counted as "cooling is wanted
+    here" and the hand-operated unit kept cooling - while the circuit was
+    meanwhile granted to a third room to heat.
+    """
+
+    OWN = "climate.eigen"
+    RESERVE = "climate.reserve"
+    OTHER = "climate.andere"
+
+    def config(self) -> DirectorConfig:
+        warm = ModeSettings(21.0, 20.0)
+        chill = ModeSettings(23.0, 24.0)
+        return DirectorConfig(
+            zones=(
+                Zone(
+                    "slaapkamer",
+                    "Slaapkamer",
+                    "sensor.slaapkamer",
+                    sources=(Source("slaap", BEDROOM, autostart=False),),
+                    priority=0,
+                    heat=warm,
+                    cool=chill,
+                ),
+                Zone(
+                    "zolder",
+                    "Zolder",
+                    "sensor.zolder",
+                    sources=(
+                        # De eigen unit hangt aan het circuit maar mag bij deze
+                        # buitentemperatuur niet; de reserve staat er los van.
+                        Source("zolder_eigen", self.OWN, outdoor=OutdoorWindow(minimum=3.1)),
+                        Source("zolder_reserve", self.RESERVE, priority=5),
+                    ),
+                    priority=1,
+                    heat=warm,
+                    cool=chill,
+                ),
+                Zone(
+                    "woonkamer",
+                    "Woonkamer",
+                    "sensor.woonkamer",
+                    sources=(Source("woon", self.OTHER),),
+                    priority=2,
+                    heat=warm,
+                    cool=chill,
+                ),
+            ),
+            circuits=(
+                Circuit(
+                    circuit_id="buiten",
+                    name="Buitenunit",
+                    units=(BEDROOM, self.OWN, self.OTHER),
+                    simultaneous_heat_cool=False,
+                ),
+            ),
+            residents=(Resident("danny", presence_entity="person.danny"),),
+            outdoor_sensor="sensor.buiten",
+        )
+
+    def plan(self):
+        config = self.config()
+        world = make_world(
+            now=NOON,
+            outdoor=-12.0,
+            indoor={"slaapkamer": 22.0, "zolder": 28.0, "woonkamer": 15.0},
+            climates={
+                BEDROOM: "cool",
+                self.OWN: MODE_OFF,
+                self.RESERVE: MODE_OFF,
+                self.OTHER: MODE_OFF,
+            },
+            residents={"danny": awake()},
+        )
+        return config, world, decide(config, world)
+
+    def test_the_configuration_is_sound(self) -> None:
+        assert not validate(self.config())
+
+    def test_the_attic_really_falls_back_off_the_circuit(self) -> None:
+        _config, _world, result = self.plan()
+        decision = result.decision_for("zolder")
+        assert decision is not None
+        assert decision.source_id == "zolder_reserve"
+
+    def test_the_hand_operated_unit_steps_aside(self) -> None:
+        _config, _world, result = self.plan()
+        command = command_for(result, BEDROOM)
+        assert command is not None, "de handbediende unit bleef koelen"
+        assert family_of(command.hvac_mode) is ModeFamily.NEUTRAL
+
+    def test_the_circuit_ends_up_in_one_duty(self) -> None:
+        """Alleen de units op deze buitenunit tellen; de reserve heeft een eigen."""
+        config, world, result = self.plan()
+        units = config.circuits[0].units
+        after = {
+            entity_id: state.hvac_mode
+            for entity_id, state in world.climates.items()
+            if state.available and entity_id in units
+        }
+        for command in result.commands:
+            if command.entity_id in units:
+                after[command.entity_id] = command.hvac_mode
+        duties = {family_of(mode) for mode in after.values()} & {
+            ModeFamily.HEAT,
+            ModeFamily.COOL,
+        }
+        assert len(duties) <= 1, after
+
+
+class TestItFollowsTheDutyTheCircuitActuallyRuns:
+    """Een kamer die het circuit verliest, houdt deze unit niet overeind.
+
+    A room that loses the circuit does not keep this unit standing.
+
+    De unit blijft staan zolang een andere kamer op dit circuit dezelfde taak
+    vraagt. Maar vragen is niet krijgen: vragen er twee kamers om tegengestelde
+    taken, dan wint er één en gaat het circuit op díé taak draaien. De
+    handbediende unit keek naar de vraag en niet naar de uitkomst, dus bleef hij
+    koelen omdat een kamer dat gevraagd had - terwijl diezelfde kamer net was
+    weggestemd en het circuit stond te verwarmen.
+
+    The unit stays put as long as another room on this circuit asks for the same
+    duty. But asking is not getting: when two rooms ask for opposing duties one
+    wins and the circuit runs *that* duty. The hand-operated unit looked at the
+    asking rather than at the outcome, so it kept cooling because a room had
+    asked for it - while that same room had just been outvoted and the circuit
+    stood there heating.
+    """
+
+    HOT = "climate.warme_kamer"
+    COLD = "climate.koude_kamer"
+
+    def config(self) -> DirectorConfig:
+        warm = ModeSettings(21.0, 20.0)
+        chill = ModeSettings(23.0, 24.0)
+        return DirectorConfig(
+            zones=(
+                Zone(
+                    "keuken",
+                    "Keuken",
+                    "sensor.keuken",
+                    sources=(Source("keuken", self.COLD),),
+                    priority=0,
+                    heat=warm,
+                    cool=chill,
+                ),
+                Zone(
+                    "woonkamer",
+                    "Woonkamer",
+                    "sensor.woonkamer",
+                    sources=(Source("woon", self.HOT),),
+                    priority=1,
+                    heat=warm,
+                    cool=chill,
+                ),
+                Zone(
+                    "slaapkamer",
+                    "Slaapkamer",
+                    "sensor.slaapkamer",
+                    sources=(Source("slaap", BEDROOM, autostart=False),),
+                    priority=2,
+                    heat=warm,
+                    cool=chill,
+                ),
+            ),
+            circuits=(
+                Circuit(
+                    circuit_id="buiten",
+                    name="Buitenunit",
+                    units=(self.COLD, self.HOT, BEDROOM),
+                    simultaneous_heat_cool=False,
+                ),
+            ),
+            residents=(Resident("danny", presence_entity="person.danny"),),
+        )
+
+    def plan(self):
+        config = self.config()
+        world = make_world(
+            now=NOON,
+            # De keuken heeft de meeste voorrang en wil verwarmen; de woonkamer
+            # wil koelen en verliest. De slaapkamer staat met de hand op koelen.
+            indoor={"keuken": 15.0, "woonkamer": 30.0, "slaapkamer": 22.0},
+            climates={self.COLD: MODE_OFF, self.HOT: MODE_OFF, BEDROOM: "cool"},
+            residents={"danny": awake()},
+        )
+        return config, world, decide(config, world)
+
+    def test_the_circuit_really_runs_the_other_duty(self) -> None:
+        _config, _world, result = self.plan()
+        circuit = result.circuits[0]
+        assert circuit.family is ModeFamily.HEAT
+        assert circuit.winner_zone_id == "keuken"
+
+    def test_the_losing_room_asked_for_the_same_duty(self) -> None:
+        """Zonder die verliezer bewijst deze test niets."""
+        _config, _world, result = self.plan()
+        decision = result.decision_for("woonkamer")
+        assert decision is not None
+        assert decision.wanted is ModeFamily.COOL
+        assert decision.granted is ModeFamily.NEUTRAL
+
+    def test_the_hand_operated_unit_steps_aside(self) -> None:
+        _config, _world, result = self.plan()
+        command = command_for(result, BEDROOM)
+        assert command is not None, "de handbediende unit bleef koelen"
+        assert family_of(command.hvac_mode) is ModeFamily.NEUTRAL
+        assert command.reason is Reason.CIRCUIT_CONFLICT_LOST
+
+    def test_it_stays_put_when_the_circuit_runs_its_own_duty(self) -> None:
+        """Draait het circuit wél zijn taak, dan hoeft hij nergens voor te wijken."""
+        config = self.config()
+        world = make_world(
+            now=NOON,
+            indoor={"keuken": 30.0, "woonkamer": 30.0, "slaapkamer": 22.0},
+            climates={self.COLD: MODE_OFF, self.HOT: MODE_OFF, BEDROOM: "cool"},
+            residents={"danny": awake()},
+        )
+        result = decide(config, world)
+        assert result.circuits[0].family is ModeFamily.COOL
+        assert command_for(result, BEDROOM) is None
+        assert result.untouched_for(BEDROOM) is not None
+
+    def test_it_stays_put_when_nobody_asks_for_anything(self) -> None:
+        """Een stil circuit is geen reden om iemands airco uit te zetten."""
+        config = self.config()
+        world = make_world(
+            now=NOON,
+            indoor={"keuken": 22.0, "woonkamer": 22.0, "slaapkamer": 22.0},
+            climates={self.COLD: MODE_OFF, self.HOT: MODE_OFF, BEDROOM: "cool"},
+            residents={"danny": awake()},
+        )
+        result = decide(config, world)
+        assert result.circuits[0].family is ModeFamily.NEUTRAL
+        assert command_for(result, BEDROOM) is None
