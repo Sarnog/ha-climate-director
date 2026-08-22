@@ -7,6 +7,7 @@
 homeassistant
 pytest
 pytest-asyncio
+coverage
 ruff
 
 # tests/test_ui_complete.py leest services.yaml uit om elk actieveld na te lopen.
