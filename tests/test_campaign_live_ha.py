@@ -164,6 +164,48 @@ class TestSettingUp:
         assert home.value("last_decision") == "2/2"
 
 
+class TestTheActionsAndTheirLifetime:
+    """De acties horen bij de integratie, dus ze gaan met de laatste mee.
+
+    The actions belong to the integration, so they go with the last one.
+
+    Ze stonden er na het afbreken nog, en dan gebeurt er bij een aanroep niets:
+    de handler loopt over de geladen installaties, en dat zijn er nul. Een actie
+    die er is en niets doet is erger dan een actie die er niet is - dan zegt
+    Home Assistant tenminste dat hij niet bestaat.
+
+    They stood there after tearing down, and then a call does nothing: the
+    handler walks the loaded installations, and there are none. An action that
+    exists and does nothing is worse than an action that does not exist - at
+    least then Home Assistant says so.
+    """
+
+    async def test_the_actions_stand_while_an_installation_is_loaded(self, home: LiveHome) -> None:
+        for name in ("evaluate", "precondition", "cancel_precondition"):
+            assert home.hass.services.has_service("climate_director", name), name
+
+    async def test_the_last_installation_takes_the_actions_with_it(self) -> None:
+        live = await start_house(installation(), states=cold_world(), entry_id="acties")
+        try:
+            await live.hass.config_entries.async_unload(live.entry.entry_id)
+            await live.hass.async_block_till_done()
+            for name in ("evaluate", "precondition", "cancel_precondition"):
+                assert not live.hass.services.has_service("climate_director", name), name
+        finally:
+            await stop_house(live)
+
+    async def test_setting_up_again_brings_them_back(self) -> None:
+        live = await start_house(installation(), states=cold_world(), entry_id="opnieuw")
+        try:
+            await live.hass.config_entries.async_unload(live.entry.entry_id)
+            await live.hass.async_block_till_done()
+            await live.hass.config_entries.async_setup(live.entry.entry_id)
+            await live.hass.async_block_till_done()
+            assert live.hass.services.has_service("climate_director", "evaluate")
+        finally:
+            await stop_house(live)
+
+
 class TestUnloadingDuringARunningRound:
     """Afsluiten wacht de lopende ronde uit, zodat er niets meer achteraan komt.
 

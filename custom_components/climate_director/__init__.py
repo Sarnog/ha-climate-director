@@ -141,6 +141,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -
         # when the last installation does.
         if not hass.config_entries.async_loaded_entries(DOMAIN):
             problems.async_clear_watchers(hass)
+            _async_remove_services(hass)
     return unloaded
 
 
@@ -163,6 +164,26 @@ async def async_remove_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -
 async def _async_reload(hass: HomeAssistant, entry: ClimateDirectorEntry) -> None:
     """Reload after the options changed, since the whole layout may have."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+@callback
+def _async_remove_services(hass: HomeAssistant) -> None:
+    """Take the domain's actions away with the last installation.
+
+    Ze horen bij de integratie, niet bij een entry, dus ze worden ook maar één
+    keer aangemeld. Bleven ze na het afbreken staan, dan deed een aanroep in
+    stilte niets: de handler loopt over de geladen installaties, en dat zijn er
+    dan nul. Een actie die er is en niets doet is erger dan een actie die er
+    niet is - dan zegt Home Assistant tenminste dat hij niet bestaat.
+
+    They belong to the integration rather than to an entry, so they are
+    registered only once. Left standing after tearing down, a call quietly did
+    nothing: the handler walks the loaded installations, and there are none. An
+    action that exists and does nothing is worse than an action that does not
+    exist - at least then Home Assistant says so.
+    """
+    for service in (SERVICE_EVALUATE, SERVICE_PRECONDITION, SERVICE_CANCEL_PRECONDITION):
+        hass.services.async_remove(DOMAIN, service)
 
 
 @callback
