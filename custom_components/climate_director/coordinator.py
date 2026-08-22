@@ -69,7 +69,7 @@ from .engine import (
 )
 from .engine.constraints import active_family
 from .engine.diff import Change, changes
-from .engine.families import family_of
+from .engine.families import family_of, preferred_mode
 from .engine.gates import asleep_at
 from .engine.models import SeasonSource
 from .engine.serialise import config_from_dict
@@ -249,6 +249,11 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         """Sinds wanneer elke ingestelde entiteit onleesbaar is.
 
         Since when each configured entity has been unreadable.
+        """
+        self._unsupported_since: dict[str, datetime] = {}
+        """Sinds wanneer elke bron een stand vraagt die het apparaat niet kan.
+
+        Since when each source asks a mode its appliance cannot run.
         """
         self.zone_overrides: dict[str, bool] = {}
         self._handed_back: dict[str, date] = {}
@@ -794,6 +799,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             self._fire_refusals(plan)
             self._note_waiting(plan)
             self._report_unreadable()
+            self._report_unsupported_modes()
             self._schedule_deferral(plan)
             self.async_set_updated_data(plan)
 
@@ -1166,6 +1172,71 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             for entity_id, state in found.items()
             if now - self._unusable_since[entity_id] >= grace
         }
+
+    # -- ongeschikte standen / unsupported modes ------------------------------
+
+    def unsupported_modes(self) -> dict[str, str]:
+        """Return the sources whose role may ask a mode the appliance cannot run.
+
+        De rol zegt wat de installatie wil, het apparaat wat het kan. Een bron
+        met rol HEAT_COOL op een apparaat dat alleen `heat` en `off` meldt,
+        wordt door de engine voor koelen overgeslagen - en dat is van buiten
+        niet te onderscheiden van een zone die niets hoeft. Onleesbare apparaten
+        blijven hier buiten: die hebben hun eigen melding.
+
+        The role says what the installation wants, the appliance what it can. A
+        source with role HEAT_COOL on an appliance reporting only `heat` and
+        `off` is skipped for cooling by the engine - and from the outside that
+        is indistinguishable from a zone with nothing to do. Unreadable
+        appliances are left out here: they have a notice of their own.
+        """
+        found: dict[str, str] = {}
+        seen: set[str] = set()
+        for _zone, source in self.config.sources():
+            if source.entity_id in seen:
+                continue
+            seen.add(source.entity_id)
+            state = self.hass.states.get(source.entity_id)
+            if state is None or _unreadable(state.state):
+                continue
+            modes = _as_modes(state.attributes.get("hvac_modes"))
+            if modes is None:
+                # Onbekend krijgt het voordeel van de twijfel, precies zoals de
+                # engine dat regelt.
+                continue
+            missing = sorted(
+                preferred_mode(family)
+                for family in (ModeFamily.HEAT, ModeFamily.COOL)
+                if source.supports(family) and preferred_mode(family) not in modes
+            )
+            if missing:
+                found[source.entity_id] = ", ".join(missing)
+        return found
+
+    @callback
+    def _note_unsupported(self) -> dict[str, str]:
+        """Record since when each source has asked an unsupported mode, with grace."""
+        now = dt_util.now()
+        found = self.unsupported_modes()
+        self._unsupported_since = {
+            entity_id: self._unsupported_since.get(entity_id, now) for entity_id in found
+        }
+        grace = timedelta(seconds=UNUSABLE_GRACE_SECONDS)
+        return {
+            entity_id: modes
+            for entity_id, modes in found.items()
+            if now - self._unsupported_since[entity_id] >= grace
+        }
+
+    @callback
+    def _report_unsupported_modes(self) -> None:
+        """Put the roles asking impossible modes under Repairs, or take them away."""
+        problems.async_report_unsupported_modes(
+            self.hass,
+            self.config_entry.entry_id,
+            self.config_entry.title,
+            self._note_unsupported(),
+        )
 
     # -- vastgelopen zones / stuck zones -------------------------------------
 

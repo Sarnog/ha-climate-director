@@ -264,6 +264,53 @@ def async_clear_unreadable(hass: HomeAssistant, entry_id: str) -> None:
     ir.async_delete_issue(hass, DOMAIN, _unreadable_issue_id(entry_id))
 
 
+def _unsupported_modes_issue_id(entry_id: str) -> str:
+    """Return the unsupported-modes notice id for one installation."""
+    return f"unsupported_modes_{entry_id}"
+
+
+def async_report_unsupported_modes(
+    hass: HomeAssistant, entry_id: str, title: str, found: Mapping[str, str]
+) -> None:
+    """Raise or clear the notice about roles asking modes the appliance cannot run.
+
+    Een bron met rol HEAT_COOL op een apparaat dat alleen `heat` en `off` meldt,
+    wordt voor koelen overgeslagen. De zone doet dan in stilte niets - precies
+    de klasse fout waar de onleesbare-entiteitenmelding voor bestaat. Dit is
+    geen apparaatstoring maar een instelfout, en die hoort net zo zichtbaar te
+    zijn.
+
+    A source with role HEAT_COOL on an appliance reporting only `heat` and
+    `off` is skipped for cooling. The zone then silently does nothing - exactly
+    the class of fault the unreadable-entities notice exists for. This is not an
+    appliance fault but a configuration mistake, and it deserves to be just as
+    visible.
+    """
+    if not found:
+        ir.async_delete_issue(hass, DOMAIN, _unsupported_modes_issue_id(entry_id))
+        return
+
+    listed = "\n".join(f"- `{entity_id}` ({modes})" for entity_id, modes in sorted(found.items()))
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        _unsupported_modes_issue_id(entry_id),
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="unsupported_modes",
+        translation_placeholders={
+            "name": title,
+            "count": str(len(found)),
+            "entities": listed,
+        },
+    )
+
+
+def async_clear_unsupported_modes(hass: HomeAssistant, entry_id: str) -> None:
+    """Drop the unsupported-modes notice for one installation."""
+    ir.async_delete_issue(hass, DOMAIN, _unsupported_modes_issue_id(entry_id))
+
+
 #: De melding dat er niemand naar een geweigerd vooruit-verzoek luistert. Eén
 #: melding voor de hele integratie, niet per installatie: de gebeurtenis is
 #: domeinbreed, dus twee identieke meldingen zouden alleen maar herhalen.
