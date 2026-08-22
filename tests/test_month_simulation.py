@@ -381,6 +381,7 @@ class TestTheMonthExercisedTheEngine:
     EXPECTED = (
         Reason.REGULATING,
         Reason.SATISFIED,
+        Reason.WITHIN_DEADBAND,
         Reason.MASTER_DISABLED,
         Reason.MANUAL_OVERRIDE,
         Reason.OPENING_OPEN,

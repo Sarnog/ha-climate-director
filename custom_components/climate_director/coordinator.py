@@ -1386,7 +1386,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         settled = False
         if zone is not None and self.world is not None:
             demand, target = wanted_target(self.config, zone, self.world, self.data)
-            settled = demand.reason is Reason.SATISFIED
+            settled = demand.reason in (Reason.SATISFIED, Reason.WITHIN_DEADBAND)
 
         if indoor is None:
             code = "precondition_confirmed_unknown"

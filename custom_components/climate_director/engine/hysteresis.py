@@ -200,8 +200,31 @@ def _candidate(
         deviation = indoor - threshold
 
     if not needed:
-        return Demand(ModeFamily.NEUTRAL, Reason.SATISFIED)
+        return Demand(ModeFamily.NEUTRAL, _settled(settings, family, indoor, running_now))
     return Demand(family, Reason.REGULATING, max(deviation, 0.0))
+
+
+def _settled(settings: ModeSettings, family: ModeFamily, indoor: float, running: bool) -> Reason:
+    """Return why this duty does not need to run: past the band, or inside it.
+
+    "Al goed" en "in de dode band" zijn twee verschillende antwoorden. Het
+    tweede is de vraag die gebruikers stellen: het is 20,5 en het startpunt
+    staat op 20 - waarom slaat hij niet aan? Omdat hij net gestopt is en pas
+    onder het startpunt opnieuw begint. Een taak die zelf draait staat per
+    definitie op de verre rand en is gewoon tevreden.
+
+    "Already right" and "inside the dead band" are two different answers. The
+    second is the question users actually ask: it is 20.5 and the switch-on
+    point is 20 - why does it not kick in? Because it just stopped and only
+    starts again below the switch-on point. A duty that is running itself sits
+    on the far edge by definition and is simply satisfied.
+    """
+    band = abs(settings.hysteresis)
+    if running or not band:
+        return Reason.SATISFIED
+    far = _threshold(settings, family, True)
+    inside = indoor < far if family is ModeFamily.HEAT else indoor > far
+    return Reason.WITHIN_DEADBAND if inside else Reason.SATISFIED
 
 
 def _threshold(settings: ModeSettings, family: ModeFamily, running: bool) -> float:

@@ -419,7 +419,12 @@ class TestWhoseRunningItIs:
         plan = decide(self.config, world, self._previous("living_room"))
         bedroom = plan.decision_for("bedroom")
         assert bedroom is not None
-        assert bedroom.reason is Reason.SATISFIED
+        # Binnen de band, niet erdoorheen: de slaapkamer ziet zichzelf als
+        # stilstaand, dus zijn startpunt blijft op 20 staan.
+        #
+        # Inside the band, not past it: the bedroom sees itself as not
+        # running, so its switch-on point stays at 20.
+        assert bedroom.reason is Reason.WITHIN_DEADBAND
 
     def test_a_shared_boiler_running_elsewhere_does_not_lift_the_quiet_window(self) -> None:
         """Stiltevenster blijft staan: de ketel brandt voor een andere kamer.

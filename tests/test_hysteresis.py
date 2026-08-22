@@ -48,7 +48,7 @@ class TestHeating:
     def test_does_not_start_inside_the_band(self) -> None:
         demand = evaluate(self.zone, 20.5, ModeFamily.NEUTRAL)
         assert demand.family is ModeFamily.NEUTRAL
-        assert demand.reason is Reason.SATISFIED
+        assert demand.reason is Reason.WITHIN_DEADBAND
 
     def test_keeps_running_inside_the_band(self) -> None:
         assert evaluate(self.zone, 20.5, ModeFamily.HEAT).family is ModeFamily.HEAT
@@ -91,6 +91,47 @@ class TestZeroBandChatters:
     def test_a_band_separates_them(self) -> None:
         banded = zone_with(heat=ModeSettings(target=23.0, start_at=23.0, hysteresis=1.0))
         assert evaluate(banded, 23.0, ModeFamily.HEAT).family is ModeFamily.HEAT
+
+
+class TestWhyNothingHappens:
+    """Binnen de band of eroverheen: twee antwoorden, niet één.
+
+    `satisfied` betekent "de kamer is er voorbij"; `within_deadband` betekent
+    "de kamer ligt in de band en wacht tot het startpunt weer gehaald wordt".
+    Zonder dat onderscheid ziet iemand met 20,5 graden en een startpunt van 20
+    alleen "al goed" staan, terwijl de verwarming juist net gestopt is.
+
+    Inside the band or past it: two answers, not one. `satisfied` means "the
+    room is past it"; `within_deadband` means "the room sits inside the band,
+    waiting for the switch-on point again". Without that distinction somebody
+    at 20.5 degrees with a switch-on point of 20 only sees "already right",
+    while the heating in fact just stopped.
+    """
+
+    heating = zone_with(heat=ModeSettings(target=21.0, start_at=20.0, hysteresis=1.0))
+    cooling = zone_with(cool=ModeSettings(target=22.0, start_at=24.0, hysteresis=1.0))
+
+    def test_heating_past_the_far_edge_is_satisfied(self) -> None:
+        assert evaluate(self.heating, 21.5, ModeFamily.NEUTRAL).reason is Reason.SATISFIED
+        assert evaluate(self.heating, 21.0, ModeFamily.NEUTRAL).reason is Reason.SATISFIED
+
+    def test_heating_inside_the_band_says_so(self) -> None:
+        assert evaluate(self.heating, 20.5, ModeFamily.NEUTRAL).reason is Reason.WITHIN_DEADBAND
+
+    def test_cooling_inside_the_band_says_so(self) -> None:
+        assert evaluate(self.cooling, 23.5, ModeFamily.NEUTRAL).reason is Reason.WITHIN_DEADBAND
+
+    def test_cooling_past_the_far_edge_is_satisfied(self) -> None:
+        assert evaluate(self.cooling, 22.5, ModeFamily.NEUTRAL).reason is Reason.SATISFIED
+
+    def test_a_running_duty_that_stops_is_simply_satisfied(self) -> None:
+        """Wie stopt, staat op de verre rand - niet erbinnen."""
+        assert evaluate(self.heating, 21.0, ModeFamily.HEAT).reason is Reason.SATISFIED
+        assert evaluate(self.cooling, 23.0, ModeFamily.COOL).reason is Reason.SATISFIED
+
+    def test_without_a_band_there_is_nothing_to_sit_inside(self) -> None:
+        zone = zone_with(heat=ModeSettings(target=21.0, start_at=20.0, hysteresis=0.0))
+        assert evaluate(zone, 20.5, ModeFamily.NEUTRAL).reason is Reason.SATISFIED
 
 
 class TestRefusals:
