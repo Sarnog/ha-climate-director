@@ -60,6 +60,7 @@ class StandIn:
     _schedule_deferral = ClimateDirectorCoordinator._schedule_deferral
     _cancel_pending_deferral = ClimateDirectorCoordinator._cancel_pending_deferral
     _live_preconditions = ClimateDirectorCoordinator._live_preconditions
+    _wake_at_the_first_expiry = ClimateDirectorCoordinator._wake_at_the_first_expiry
     _preconditions_expire_at = ClimateDirectorCoordinator._preconditions_expire_at
     _on_precondition_expiry = ClimateDirectorCoordinator._on_precondition_expiry
     _cancel_pending_precondition_wake = ClimateDirectorCoordinator._cancel_pending_precondition_wake

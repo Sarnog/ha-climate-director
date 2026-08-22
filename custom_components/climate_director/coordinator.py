@@ -835,8 +835,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         For anyone who only wants to know where things stand: the diagnostics.
         Those should alter nothing about the house whose fault they capture.
         """
-        now = dt_util.now()
-        return {zone_id: until for zone_id, until in self._precondition.items() if now < until}
+        return _still_running(self._precondition, dt_util.now())
 
     def _live_preconditions(self) -> dict[str, datetime]:
         """Return the requests that have not run out, dropping the rest.
@@ -844,7 +843,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         Pruned on reading rather than on a timer: an expired request is over
         whether or not anything got round to noticing.
         """
-        self._precondition = self.live_preconditions()
+        self._precondition = _still_running(self._precondition, dt_util.now())
         self._precondition_bypass &= set(self._precondition)
         return dict(self._precondition)
 
@@ -1857,6 +1856,19 @@ def _event_data(config: DirectorConfig, plan: Plan, decision: ZoneDecision) -> d
         "temperature": command.temperature if command else None,
         "reason": decision.reason.value,
     }
+
+
+def _still_running(requests: Mapping[str, datetime], now: datetime) -> dict[str, datetime]:
+    """Return the pre-conditioning requests that have not run out at `now`.
+
+    Een gewone functie in plaats van een methode: hij wordt zowel gelezen als
+    opgeruimd aangeroepen, en dan hoort er geen twijfel te bestaan over welke
+    van de twee je krijgt.
+
+    A plain function rather than a method: it is called both to read and to
+    prune, and then there should be no doubt about which of the two you get.
+    """
+    return {zone_id: until for zone_id, until in requests.items() if now < until}
 
 
 def _unreadable(state: str) -> bool:

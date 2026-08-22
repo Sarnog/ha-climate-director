@@ -569,6 +569,8 @@ class _PreconditionStandIn:
     start = ClimateDirectorCoordinator.async_precondition
     cancel = ClimateDirectorCoordinator.async_cancel_precondition
     live = ClimateDirectorCoordinator._live_preconditions
+    _live_preconditions = ClimateDirectorCoordinator._live_preconditions
+    _wake_at_the_first_expiry = ClimateDirectorCoordinator._wake_at_the_first_expiry
 
     @property
     def bypass(self) -> set[str]:

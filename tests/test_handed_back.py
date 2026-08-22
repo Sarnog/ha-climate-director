@@ -666,6 +666,8 @@ class TestItSurvivesARestart:
             def _preconditions_expire_at(self, until) -> None:
                 pass
 
+            _live_preconditions = ClimateDirectorCoordinator._live_preconditions
+            _wake_at_the_first_expiry = ClimateDirectorCoordinator._wake_at_the_first_expiry
             _async_save_state = ClimateDirectorCoordinator._async_save_state
             _async_restore_state = ClimateDirectorCoordinator._async_restore_state
 
