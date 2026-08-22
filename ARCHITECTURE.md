@@ -151,6 +151,13 @@ Kiest per zone en taak het apparaat: geschiktheid (rol), dan beschikbaarheid, da
 voorkeur (`priority`, met `source_id` als tie-break zodat de uitkomst deterministisch
 is).
 
+Daarbovenop ligt de **dode band op de buitentemperatuur**. De grens tussen een
+gasketel en een warmtepomp is een getal, en het weer schommelt daaromheen — zonder
+band wisselde de bron acht keer per dag. De bron die vorige ronde werkelijk leverde
+mag daarom doorlopen tot een band voorbij zijn venster. Alleen die bron, alleen buiten
+zijn venster: ligt hij er gewoon in, dan beslist de voorkeur weer, zodat een uitwijking
+naar een tweede keus terugschuift zodra de eerste keus er weer is.
+
 ### constraints.py — wat mag tegelijk
 
 De circuitregel:
@@ -160,15 +167,21 @@ De circuitregel:
 
 Volgorde van afhandeling:
 
-1. **Vergrendeling door onbeheerde units.** Draait een unit op het circuit die de
-   director niet aanstuurt, dan is de taak van het circuit al bepaald en kan niets dat
-   overrulen.
+1. **Vergrendeling door units die blijven staan.** Draait er een unit op het circuit
+   die de director deze ronde niet wegschakelt, dan is de taak van het circuit al
+   bepaald en kan niets dat overrulen — ook de timers hieronder niet, want er valt dan
+   niets te wisselen. Dat zijn er drie soorten: een unit die in geen enkele zone staat,
+   een unit in een overgedragen zone, en een draaiende unit in een zone waarvan de
+   binnentemperatuur niet te lezen is. Staan er twee taken tegelijk vast — met een
+   afstandsbediening en een override kan dat — dan is er geen taak die dit circuit
+   veilig kan draaien en krijgt niemand iets toegekend.
 2. **Conflictbeleid** (`priority`, `first_come`, `demand`, `season_lock`) kiest de taak
    als zones het oneens zijn. Elk beleid dat niet tot een keuze komt valt terug op
    prioriteit.
 3. **Minimale looptijd** houdt de huidige taak vast als er te kort geleden gewisseld is.
    Ontbreekt de tijdstempel, dan gaat de wissel door: de installatie bevriezen op een
-   onbekende waarde is erger dan iets te vroeg wisselen.
+   onbekende waarde is erger dan iets te vroeg wisselen. Ligt de taak vast (stap 1), dan
+   slaat deze timer over.
 4. **Wisselpauze** stopt eerst de oude taak en start de nieuwe pas na een `Deferral`.
 5. **Capaciteitsgrens** snoeit de winnaars. Elke unit die blijft draaien telt mee, niet
    alleen de units die in geen enkele zone staan: ook een overgedragen zone en een
@@ -185,9 +198,14 @@ eindtoestanden, geen handelingen.
 
 Twee eigenschappen die de rest van het systeem dragen:
 
-- **Elke beheerde bron krijgt een commando**, ook de bronnen die níét gekozen zijn. Die
-  worden expliciet uitgezet. Dát maakt "twee apparaten werken tegen elkaar in"
-  onbereikbaar in plaats van onwaarschijnlijk.
+- **Elke beheerde bron krijgt een commando of een reden om er geen te krijgen.** Wie
+  niet gekozen is wordt expliciet uitgezet; dát maakt "twee apparaten werken tegen
+  elkaar in" onbereikbaar in plaats van onwaarschijnlijk. Drie apparaten krijgen met
+  opzet niets — een onbereikbaar apparaat, een apparaat in een overgedragen zone, en een
+  draaiend apparaat in een zone zonder leesbare binnentemperatuur — en staan als
+  `UntouchedSource` in het plan. Precies díé twee laatste blijven doordraaien, en worden
+  daarom als vergrendeling aan `constraints.py` doorgegeven: zonder dat kon de director
+  de tegengestelde taak op dezelfde buitenunit zetten of er een unit bij aanzetten.
 - **Stoppen staat vóór starten** in de commandovolgorde. Zou je op een circuit dat van
   taak wisselt de nieuwe taak eerst starten, dan delen twee bedrijven één compressor
   zolang de service calls onderweg zijn.
@@ -195,6 +213,11 @@ Twee eigenschappen die de rest van het systeem dragen:
 Elke zone krijgt precies één `Reason`, ook als hij niets doet, zodat een unit die
 uitgaat altijd kan zeggen waaróm — "de warmtepomp bedient deze zone" leest anders dan
 "er is niets te doen".
+
+Een **exclusieve groep** wordt bewaard als bron-ID's maar werkt op apparaten: elk
+bron-ID wordt eerst naar zijn `entity_id` vertaald. Anders ontsnapte een gedeelde ketel
+via het bron-ID van een andere kamer. Twee kamers die om hetzelfde apparaat vragen zijn
+daarbij geen tegenstanders — dat is één apparaat dat draait.
 
 ### plan.py — uitvoer
 
@@ -209,6 +232,12 @@ het staat als `UntouchedSource` genoteerd met de reden waarom niet — overgedra
 handbediende bron, of niet te bereiken. Niets aansturen is een uitkomst en geen leegte, en
 zonder dat onderscheid was "de director laat dit met rust" van buiten hetzelfde als "de
 director doet niets".
+
+`WAITING_REASONS` noemt de redenen die uit zichzelf horen op te lossen; blijft een zone er
+lang op staan, dan is dat een klem en gaat de vastloopmelder aan. Alle drie zijn het timers
+van seconden tot minuten. Een volle buitenunit hoort er níét bij: die loopt pas leeg als een
+andere kamer ophoudt met vragen, en dat kan uren duren zonder dat er iets mis is. De kamer
+die zijn plek niet krijgt staat gewoon als geblokkeerd te boek.
 
 ### serialise.py — opslag
 
@@ -324,6 +353,14 @@ De melding is een waarschuwing, geen fout: `decide()` blijft elke gezonde zone r
 een gebrekkige configuratie verslechtert de installatie zonder hem stil te leggen. Dat is
 precies waarom hij zichtbaar moet zijn - van buiten ziet een fout in de configuratie er
 hetzelfde uit als "de director besluit niets".
+
+Er zijn er drie, met dezelfde reden om te bestaan. Naast de configuratiefout: een eenmalige
+melding over taken die alleen handbediend geleverd kunnen worden, en een melding over
+ingestelde entiteiten die vijf minuten lang niet te lezen zijn. Die laatste is geen fout in
+de configuratie maar in de werkelijkheid — een lege batterij, een apparaat van het net — en
+weegt zwaar omdat de director bij een onleesbare binnentemperatuur een draaiend apparaat met
+rust laat, waarna dat apparaat zijn buitenunit op zijn taak houdt. De wachttijd houdt een
+korte hapering bij een herstart eruit; de teller loopt op de vangnetklok van de coordinator.
 
 ### Nog te bouwen — ontwerpvoorstellen
 
@@ -579,6 +616,13 @@ not kick in?
 Picks the appliance per zone and duty: suitability (role), then availability, then
 preference (`priority`, with `source_id` as tie-break so the outcome is deterministic).
 
+On top of that sits the **dead band on the outdoor temperature**. The bound between a
+gas boiler and a heat pump is a number, and the weather hovers around it — without a
+band the source swapped eight times a day. The source that really delivered last round
+may therefore carry on until one band past its window. Only that source, and only
+outside its window: sitting plainly inside it, preference decides again, so a fallback
+to a second choice moves back the moment the first choice returns.
+
 ### constraints.py — what may run together
 
 The circuit rule:
@@ -588,13 +632,19 @@ The circuit rule:
 
 Order of handling:
 
-1. **Lock by unmanaged units.** If a unit on the circuit the director does not steer is
-   running, the circuit's duty is already settled and nothing can overrule it.
+1. **Lock by units that stay put.** If a unit on the circuit runs that the director does
+   not stand down this round, the circuit's duty is already settled and nothing can
+   overrule it — the timers below included, since there is then no swap to make. Three
+   kinds do that: a unit sitting in no zone at all, a unit in a zone that has been handed
+   over, and a running unit in a zone whose indoor temperature cannot be read. With two
+   duties locked at once — a remote and an override can arrange that — no duty can safely
+   run on this circuit and nobody is granted anything.
 2. **Conflict policy** (`priority`, `first_come`, `demand`, `season_lock`) picks the duty
    when zones disagree. Any policy that cannot decide falls back to priority.
 3. **Minimum run time** holds the current duty when it was swapped too recently. With the
    timestamp missing the swap goes ahead: freezing the installation over an unknown value
-   is worse than swapping a little early.
+   is worse than swapping a little early. When the duty is locked (step 1) this timer is
+   skipped.
 4. **Switch delay** stops the old duty first and starts the new one only after a
    `Deferral`.
 5. **Capacity cap** trims the winners. Every unit that keeps running counts, not only the
@@ -612,9 +662,14 @@ end states, not actions.
 
 Two properties carry the rest of the system:
 
-- **Every managed source gets a command**, including the sources that were *not* chosen.
-  Those are switched off explicitly. That is what makes "two appliances working against
-  each other" unreachable rather than unlikely.
+- **Every managed source gets a command, or a reason for getting none.** Whatever is
+  not chosen is switched off explicitly; that is what makes "two appliances working
+  against each other" unreachable rather than unlikely. Three appliances deliberately
+  get nothing — an unreachable one, one in a zone that has been handed over, and a
+  running one in a zone without a readable indoor temperature — and stand in the plan as
+  an `UntouchedSource`. Those last two keep running, and are therefore handed to
+  `constraints.py` as a lock: without that the director could put the opposing duty on
+  the same outdoor unit, or start yet another unit beside them.
 - **Stops come before starts** in the command order. Starting the new duty first on a
   circuit that is swapping would put two duties on one compressor for as long as the
   service calls take to land.
@@ -622,6 +677,11 @@ Two properties carry the rest of the system:
 Every zone gets exactly one `Reason`, even when it does nothing, so a unit switching off
 can always say *why* — "the heat pump serves this zone" reads differently from "there is
 nothing to do".
+
+An **exclusive group** is stored as source ids but works on appliances: every source id
+is translated to its `entity_id` first. Otherwise a shared boiler escaped through
+another room's source id. Two rooms asking for the same appliance are no rivals in that
+- that is one appliance running.
 
 ### plan.py — output
 
@@ -635,6 +695,12 @@ noted as an `UntouchedSource` with the reason why not - a zone handed over, a ha
 source, or one that cannot be reached. Steering nothing is an outcome rather than a void, and
 without that distinction "the director is leaving this alone" looked, from the outside, the
 same as "the director does nothing".
+
+`WAITING_REASONS` names the reasons that should resolve by themselves; a zone sitting on one
+for long is stuck, and the stuck sensor comes on. All three are timers of seconds to minutes.
+A full outdoor unit is deliberately absent: it only frees up once another room stops asking,
+which may take hours with nothing wrong. The room that does not get its place simply stands
+recorded as blocked.
 
 ### serialise.py — storage
 
@@ -745,6 +811,14 @@ The notice is a warning rather than an error: `decide()` carries on regulating e
 zone, so a flawed configuration degrades the installation without stopping it. That is
 exactly why it has to be visible - from the outside, a mistake in the configuration looks the
 same as "the director decides nothing".
+
+There are three, with the same reason to exist. Besides the configuration mistake: a one-time
+notice about duties only hand-operated sources can deliver, and a notice about configured
+entities that have been unreadable for five minutes. That last one is a mistake in reality
+rather than in the configuration - a flat battery, an appliance off the network - and weighs
+heavily because with an unreadable indoor temperature the director leaves a running appliance
+alone, after which that appliance holds its outdoor unit to its duty. The settling time keeps
+a brief hiccup during a restart out of it; the clock runs on the coordinator's safety net.
 
 ### Still to build — design proposals
 
