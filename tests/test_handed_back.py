@@ -17,7 +17,7 @@ next day - since last night's decision should not still hold this morning.
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import pytest
 from homeassistant.util import dt as dt_util
@@ -174,11 +174,45 @@ def coordinator(
         _notice_hand = ClimateDirectorCoordinator._notice_hand
         _zones_of = ClimateDirectorCoordinator._zones_of
         _we_wanted_it_off = ClimateDirectorCoordinator._we_wanted_it_off
-        _zones_handed_back = ClimateDirectorCoordinator._zones_handed_back
-        _overridden_zones = ClimateDirectorCoordinator._overridden_zones
-        _everyone_asleep = ClimateDirectorCoordinator._everyone_asleep
-        _house_is_empty = ClimateDirectorCoordinator._house_is_empty
+        _resident = ClimateDirectorCoordinator._resident
         _state_is = ClimateDirectorCoordinator._state_is
+
+        def _now(self) -> datetime:
+            return dt_util.now()
+
+        def _residents(self):
+            return {
+                resident.resident_id: ClimateDirectorCoordinator._resident(
+                    self, resident.presence_entity, resident.sleep_entity, resident.sleep_state
+                )
+                for resident in self.config.residents
+            }
+
+        def _zones_handed_back(self, now=None, residents=None):
+            return ClimateDirectorCoordinator._zones_handed_back(
+                self,
+                self._now() if now is None else now,
+                self._residents() if residents is None else residents,
+            )
+
+        def _overridden_zones(self, now=None, residents=None):
+            return ClimateDirectorCoordinator._overridden_zones(
+                self,
+                self._now() if now is None else now,
+                self._residents() if residents is None else residents,
+            )
+
+        def _everyone_asleep(self, now=None, residents=None):
+            return ClimateDirectorCoordinator._everyone_asleep(
+                self,
+                self._now() if now is None else now,
+                self._residents() if residents is None else residents,
+            )
+
+        def _house_is_empty(self, residents=None):
+            return ClimateDirectorCoordinator._house_is_empty(
+                self, self._residents() if residents is None else residents
+            )
 
     return StandIn()
 
@@ -493,6 +527,47 @@ class TestGoingToBedGivesItBack:
         item = coordinator(running_plan())
         item._notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item._zones_handed_back() == {"slaapkamer"}
+
+
+class TestAPresenceSensorIsHome:
+    """Een binary_sensor of input_boolean meldt `on`, nooit `home`.
+
+    De engine leest zulke entiteiten vergevingsgezind, de koppelingslaag las ze
+    tot nu toe letterlijk - en zag het huis leeg terwijl er iemand thuis was.
+    Daarmee verdween een handmatige uitzetting binnen een minuut.
+
+    A binary_sensor or input_boolean reports `on`, never `home`. The engine
+    reads such entities leniently, the binding layer used to read them
+    literally - and saw the house empty while somebody was home. That wiped a
+    hand-back within a minute.
+    """
+
+    def _item(self):
+        from custom_components.climate_director.engine import Resident
+
+        cfg = DirectorConfig(
+            zones=config().zones,
+            residents=(Resident("danny", "Danny", presence_entity="binary_sensor.danny_thuis"),),
+        )
+        return coordinator(
+            running_plan(),
+            states={"binary_sensor.danny_thuis": "on"},
+            cfg=cfg,
+        )
+
+    def test_the_engine_reads_on_as_home(self) -> None:
+        item = self._item()
+        assert item._resident("binary_sensor.danny_thuis", "", "on").home is True
+
+    def test_the_layer_does_not_see_an_empty_house(self) -> None:
+        item = self._item()
+        assert item._house_is_empty() is False
+
+    def test_a_hand_back_survives_the_round(self) -> None:
+        item = self._item()
+        item._handed_back = {"woonkamer": date.today()}
+        assert item._zones_handed_back() == {"woonkamer"}
+        assert item._handed_back == {"woonkamer": date.today()}
 
 
 class TestItSurvivesARestart:

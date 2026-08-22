@@ -588,7 +588,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 return family_of(command.hvac_mode) is ModeFamily.NEUTRAL
         return False
 
-    def _zones_handed_back(self) -> set[str]:
+    def _zones_handed_back(self, now: datetime, residents: dict[str, ResidentState]) -> set[str]:
         """Return the zones a hand stood down today, forgetting yesterday's.
 
         De datum is de hele vervaltermijn. Wie gisteravond de slaapkamer uitzette
@@ -610,20 +610,20 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         not tonight's decision but one you undo. Both were thrown away here, so a
         zone deliberately handed over rejoined on the first night.
         """
-        if self._everyone_asleep() or self._house_is_empty():
+        if self._everyone_asleep(now, residents) or self._house_is_empty(residents):
             if self._handed_back:
                 self._handed_back.clear()
                 self._async_save_state()
             return set()
 
-        today = dt_util.now().date()
+        today = now.date()
         kept = {zone: day for zone, day in self._handed_back.items() if day == today}
         if kept != self._handed_back:
             self._handed_back = kept
             self._async_save_state()
         return set(self._handed_back)
 
-    def _everyone_asleep(self) -> bool:
+    def _everyone_asleep(self, now: datetime, residents: dict[str, ResidentState]) -> bool:
         """Return whether everybody who is home has turned in.
 
         Dan is de dag voorbij en hoort een zone die iemand met de hand stilzette
@@ -639,17 +639,16 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         at_home = [
             resident
             for resident in self.config.residents
-            if resident.presence_entity and self._state_is(resident.presence_entity, "home")
+            if resident.presence_entity and residents[resident.resident_id].home
         ]
         if not at_home:
             return False
         return all(
-            bool(resident.sleep_entity)
-            and self._state_is(resident.sleep_entity, resident.sleep_state)
+            bool(resident.sleep_entity) and residents[resident.resident_id].asleep
             for resident in at_home
         )
 
-    def _house_is_empty(self) -> bool:
+    def _house_is_empty(self, residents: dict[str, ResidentState]) -> bool:
         """Return whether none of the tracked residents is home.
 
         Wie een apparaat met de hand uitzette deed dat voor de kamer waar hij op
@@ -665,7 +664,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         tracked = [resident for resident in self.config.residents if resident.presence_entity]
         if not tracked:
             return False
-        return not any(self._state_is(resident.presence_entity, "home") for resident in tracked)
+        return not any(residents[resident.resident_id].home for resident in tracked)
 
     def _state_is(self, entity_id: str, wanted: str) -> bool:
         """Return whether that entity currently reads exactly that state."""
@@ -1187,21 +1186,33 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         Times are local and timezone-aware throughout. That matters: schedule
         windows are read in local time, while entity timestamps arrive in UTC,
         and mixing the two would put an opening's age hours out.
+
+        De bewoners worden hier als eerste gelezen en daarna doorgegeven: de
+        overridelagen lezen een aanwezigheidsentiteit dan niet zelf nog eens,
+        zodat "is iemand thuis" op precies één plek beantwoord wordt. Twee
+        lezers van dezelfde entiteit mogen het nooit oneens zijn.
+
+        The residents are read first and passed on from here: the override
+        layers below no longer read a presence entity themselves, so "is
+        somebody home" is answered in exactly one place. Two readers of the
+        same entity may never disagree.
         """
+        now = dt_util.now()
+        residents = {
+            resident.resident_id: self._resident(
+                resident.presence_entity, resident.sleep_entity, resident.sleep_state
+            )
+            for resident in self.config.residents
+        }
         return WorldState(
-            now=dt_util.now(),
+            now=now,
             outdoor_temperature=self._temperature(self.config.outdoor_sensor),
             season=self._season(),
             indoor_temperatures={
                 zone.zone_id: self._temperature(zone.indoor_sensor) for zone in self.config.zones
             },
             climates={entity_id: self._climate(entity_id) for entity_id in self._climate_ids()},
-            residents={
-                resident.resident_id: self._resident(
-                    resident.presence_entity, resident.sleep_entity, resident.sleep_state
-                )
-                for resident in self.config.residents
-            },
+            residents=residents,
             openings={
                 opening.entity_id: self._opening(opening.entity_id, opening.open_state)
                 for opening in self.config.openings
@@ -1217,12 +1228,14 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             guest_mode=self.guest_mode,
             precondition_until=self._live_preconditions(),
             precondition_bypass=frozenset(self._precondition_bypass),
-            zone_overrides=self._overridden_zones(),
+            zone_overrides=self._overridden_zones(now, residents),
             zone_priorities=dict(self.zone_priorities),
             precipitation=self._precipitation(),
         )
 
-    def _overridden_zones(self) -> dict[str, bool]:
+    def _overridden_zones(
+        self, now: datetime, residents: dict[str, ResidentState]
+    ) -> dict[str, bool]:
         """Return which zones are handed over, from either of the two ways in.
 
         Er zijn twee manieren waarop een zone van de gebruiker wordt: de
@@ -1240,7 +1253,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         and is off by default: so "switching off yourself" worked nowhere. A
         hand at a shared appliance counts for every zone it serves.
         """
-        handed_back = self._zones_handed_back()
+        handed_back = self._zones_handed_back(now, residents)
         thrown = {zone_id for zone_id, on in self.zone_overrides.items() if on}
         return dict.fromkeys(handed_back | thrown, True)
 

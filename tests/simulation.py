@@ -600,13 +600,25 @@ class _HandStandIn:
     _notice_hand = ClimateDirectorCoordinator._notice_hand
     _zones_of = ClimateDirectorCoordinator._zones_of
     _we_wanted_it_off = ClimateDirectorCoordinator._we_wanted_it_off
-    handed_back = ClimateDirectorCoordinator._zones_handed_back
     _everyone_asleep = ClimateDirectorCoordinator._everyone_asleep
     _house_is_empty = ClimateDirectorCoordinator._house_is_empty
     _state_is = ClimateDirectorCoordinator._state_is
 
     def _async_save_state(self) -> None:
         self.saved += 1
+
+    def handed_back(self):
+        """Return the zones handed back today, on the simulation's clock."""
+        from custom_components.climate_director import coordinator as coordinator_module
+
+        now = coordinator_module.dt_util.now()
+        residents = {
+            resident.resident_id: ClimateDirectorCoordinator._resident(
+                self, resident.presence_entity, resident.sleep_entity, resident.sleep_state
+            )
+            for resident in self.config.residents
+        }
+        return ClimateDirectorCoordinator._zones_handed_back(self, now, residents)
 
     def notice(self, entity_id: str, was: str, now: str) -> None:
         """Feed one hand-operated change into the real bookkeeping."""

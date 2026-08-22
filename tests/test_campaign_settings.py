@@ -39,6 +39,28 @@ BOILER = "climate.ketel"
 VALVE = "climate.keuken_kraan"
 
 
+def handed_back(home) -> set[str]:
+    """Return the zones handed back, through the coordinator's own reader.
+
+    De coordinator leest bewoners sinds 7.0.1 één keer in `build_world` en geeft
+    ze door aan `_zones_handed_back`. Deze helper doet hier hetzelfde, zodat de
+    tests de methode niet met losse, onderling afwijkende argumenten aanroepen.
+
+    The coordinator has read residents once in `build_world` since 7.0.1 and
+    passes them to `_zones_handed_back`. This helper does the same here, so the
+    tests do not call the method with loose, mutually inconsistent arguments.
+    """
+    coordinator = home.coordinator
+    now = coordinator_module.dt_util.now()
+    residents = {
+        resident.resident_id: coordinator._resident(
+            resident.presence_entity, resident.sleep_entity, resident.sleep_state
+        )
+        for resident in coordinator.config.residents
+    }
+    return coordinator._zones_handed_back(now, residents)
+
+
 @pytest.fixture
 def clock(monkeypatch: pytest.MonkeyPatch):
     """Return a handle that moves the integration's clock forward.
@@ -829,7 +851,7 @@ class TestAHandOnTheAppliance:
             home.climate(LIVING, "heat")
             await home.settle()
             await home.evaluate()
-            assert home.coordinator._zones_handed_back() == set()
+            assert handed_back(home) == set()
         finally:
             await stop_house(home)
 
@@ -863,13 +885,11 @@ class TestAHandOnTheAppliance:
 
             home.set(LIVING, gone)
             await home.settle()
-            assert home.coordinator._zones_handed_back() == set(), (
-                "wegvallen is geen hand aan het apparaat"
-            )
+            assert handed_back(home) == set(), "wegvallen is geen hand aan het apparaat"
 
             home.climate(LIVING, "off")
             await home.settle()
-            assert home.coordinator._zones_handed_back() == set(), "terugkomen is dat evenmin"
+            assert handed_back(home) == set(), "terugkomen is dat evenmin"
 
             await home.evaluate()
             assert home.state(LIVING) == "heat", "de kamer hoort gewoon weer geregeld te worden"
@@ -897,11 +917,11 @@ class TestAHandOnTheAppliance:
         try:
             home.climate(LIVING, "off")
             await home.settle()
-            assert home.coordinator._zones_handed_back() == {"woonkamer"}
+            assert handed_back(home) == {"woonkamer"}
 
             home.set(LIVING, gone)
             await home.settle()
-            assert home.coordinator._zones_handed_back() == {"woonkamer"}
+            assert handed_back(home) == {"woonkamer"}
         finally:
             await stop_house(home)
 
@@ -941,7 +961,7 @@ class TestAHandOnTheAppliance:
             # An existing automation switches the appliance off.
             home.climate(LIVING, "off")
             await home.settle()
-            assert home.coordinator._zones_handed_back() == set()
+            assert handed_back(home) == set()
 
             await home.evaluate()
             command = home.coordinator.data.command_for(LIVING)
@@ -986,9 +1006,7 @@ class TestAHandOnTheAppliance:
             await home.evaluate()
             await home.settle()
             assert home.state(LIVING) == "off"
-            assert home.coordinator._zones_handed_back() == set(), (
-                "ons eigen uitzetten mag de zone niet stilleggen"
-            )
+            assert handed_back(home) == set(), "ons eigen uitzetten mag de zone niet stilleggen"
 
             home.set("sensor.woonkamer", "18.0")
             await home.evaluate()
