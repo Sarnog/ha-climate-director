@@ -84,6 +84,14 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 - **Documenteren dat meerdere installaties naast elkaar mogen** — de code en de tests
   ondersteunen al twee config entries in één Home Assistant; de handleidingen zeggen er
   nog niets over.
+- **Gasten- en vooruit-venster per weekdag** — het slaapvenster van een bewoner kent zijn
+  dagen, maar het gastenvenster en het venster waarin vooruit verwarmen mag gelden nog
+  voor elke dag hetzelfde. Wie in het weekend andere uren aanhoudt, kan dat daar niet
+  zetten. Het model kan het al; het formulier en de opslag vragen er niet naar.
+- **Dekkings- en mutatiemeting in de CI** — de suite is groot, maar niets meet welke
+  regels er ongedekt blijven of welke wijziging in de code geen enkele test laat omvallen.
+  Een baan die de dekking rapporteert (en desnoods af en toe een mutatieronde draait) legt
+  dat vast in plaats van het per audit met de hand te moeten zoeken.
 
 ## Would have
 
@@ -175,6 +183,14 @@ The worked-out design proposals for everything below live in
   listed in `ARCHITECTURE.md` under "Still to build".
 - **Document that several installations may sit side by side** — the code and tests already
   support two config entries in one Home Assistant; the manuals say nothing about it yet.
+- **Guest and pre-conditioning window per weekday** — a resident's sleep window knows its
+  days, but the guest window and the window in which pre-conditioning is allowed still
+  apply to every day alike. Anyone keeping different hours at the weekend cannot set that
+  there. The model already supports it; the form and storage do not ask for it.
+- **Coverage and mutation measurement in CI** — the suite is large, but nothing measures
+  which lines stay uncovered or which change to the code breaks no test at all. A job
+  reporting coverage (and running the occasional mutation round) records that instead of
+  having to hunt for it by hand at every audit.
 
 ## Would have
 

@@ -140,6 +140,11 @@ Vragen verwarmen en koelen tegelijk (overlappende setpoints, dus een
 configuratiefout), dan houdt de draaiende taak de zone; anders wint de grootste
 afwijking. In beide gevallen pendelt de zone niet.
 
+Vraagt de zone niets, dan zegt de reden wélk soort niets: `satisfied` als de kamer
+voorbij de verre rand van de band ligt, `within_deadband` als hij erbinnen ligt en wacht
+tot het aanpunt weer gehaald wordt. Dat onderscheid beantwoordt de vraag die gebruikers
+stellen: het is 20,5 en het aanpunt staat op 20, waarom slaat hij niet aan?
+
 ### sources.py — waarmee
 
 Kiest per zone en taak het apparaat: geschiktheid (rol), dan beschikbaarheid, dan
@@ -562,6 +567,12 @@ inclusive, a zero-width band would never let a duty stop.
 If heating and cooling both ask at once (overlapping setpoints, so a configuration
 mistake) the running duty keeps the zone; otherwise the larger deviation wins. Either
 way the zone does not oscillate.
+
+When the zone asks for nothing, the reason says which kind of nothing: `satisfied` when
+the room lies past the far edge of the band, `within_deadband` when it lies inside it,
+waiting for the switch-on point to be reached again. That distinction answers the
+question users actually ask: it is 20.5 and the switch-on point is 20, so why does it
+not kick in?
 
 ### sources.py — with what
 
