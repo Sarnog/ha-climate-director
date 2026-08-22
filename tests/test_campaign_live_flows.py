@@ -17,6 +17,7 @@ the entry as well.
 
 from __future__ import annotations
 
+import pathlib
 from typing import Any
 
 import pytest
@@ -29,8 +30,10 @@ from harness_live import (
     stop_house,
     zone,
 )
+from homeassistant.helpers.storage import Store
 
-from custom_components.climate_director.const import CONF_INSTALLATION, DOMAIN
+from custom_components.climate_director.const import CONF_INSTALLATION, DOMAIN, STORAGE_VERSION
+from custom_components.climate_director.coordinator import storage_key
 
 LIVING = "climate.woonkamer"
 ATTIC = "climate.zolder"
@@ -451,6 +454,39 @@ class TestTheRepairNotice:
 # Wat een herstart moet overleven.
 # What has to survive a restart.
 # ---------------------------------------------------------------------------
+
+
+class TestRemovingAnInstallation:
+    """Wie een installatie weggooit, laat niets achter.
+
+    Removing an installation leaves nothing behind.
+    """
+
+    async def test_the_stored_state_goes_with_it(self) -> None:
+        """Het opslagbestand hangt aan de entry en niets anders leest het.
+
+        Bleef het staan, dan verzamelde `.storage` een bestand per verwijderde
+        installatie dat nooit meer opengaat: een nieuwe installatie krijgt een
+        nieuwe entry_id en pakt het dus niet op.
+
+        The storage file belongs to the entry and nothing else reads it. Left
+        behind, `.storage` collected a file per removed installation that never
+        opens again: a new installation gets a new entry_id and so never picks
+        it up.
+        """
+        home = await start_house(simple_installation(), states=cold())
+        try:
+            key = storage_key(home.entry.entry_id)
+            await Store(home.hass, STORAGE_VERSION, key).async_save({"until": {}, "bypass": []})
+            path = pathlib.Path(home.config_dir) / ".storage" / key
+            assert path.exists()
+
+            await home.hass.config_entries.async_remove(home.entry.entry_id)
+            await home.hass.async_block_till_done()
+
+            assert not path.exists()
+        finally:
+            await stop_house(home)
 
 
 class TestAcrossARestart:

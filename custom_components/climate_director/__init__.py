@@ -19,6 +19,7 @@ import voluptuous as vol
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.start import async_at_started
+from homeassistant.helpers.storage import Store
 from homeassistant.loader import async_get_integration
 
 from . import problems, texts
@@ -33,12 +34,13 @@ from .const import (
     SERVICE_CANCEL_PRECONDITION,
     SERVICE_EVALUATE,
     SERVICE_PRECONDITION,
+    STORAGE_VERSION,
 )
-from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry
+from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry, storage_key
 
 _LOGGER = logging.getLogger(__name__)
 
-__all__ = ["DOMAIN", "async_setup_entry", "async_unload_entry"]
+__all__ = ["DOMAIN", "async_remove_entry", "async_setup_entry", "async_unload_entry"]
 
 _EVALUATE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTRY_ID): vol.All(cv.ensure_list, [cv.string])})
 
@@ -130,6 +132,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -
         if not hass.config_entries.async_loaded_entries(DOMAIN):
             problems.async_clear_watchers(hass)
     return unloaded
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -> None:
+    """Throw away what this installation kept by hand once it is deleted.
+
+    Het opslagbestand hangt aan de entry en niets anders leest het. Blijft het
+    staan, dan verzamelt `.storage` bij elke verwijderde installatie een bestand
+    dat nooit meer opengaat - en een nieuwe installatie krijgt een nieuwe
+    entry_id, dus hergebruikt wordt het ook niet.
+
+    The storage file belongs to the entry and nothing else reads it. Left
+    behind, `.storage` collects a file per deleted installation that never opens
+    again - and a new installation gets a new entry_id, so it is not reused
+    either.
+    """
+    await Store(hass, STORAGE_VERSION, storage_key(entry.entry_id)).async_remove()
 
 
 async def _async_reload(hass: HomeAssistant, entry: ClimateDirectorEntry) -> None:
