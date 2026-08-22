@@ -235,6 +235,36 @@ class TestScheduleWindows:
         assert window.start == time(0, 0)
 
 
+class TestTheWholeDay:
+    """Een vooruit-venster dat de hele dag geldt, moet de opslag overleven.
+
+    A pre-conditioning window that applies all day has to survive storage.
+
+    `None` betekent hier "geen venster, dus altijd". Dat wordt ook als `None`
+    weggeschreven, en wie dat bij het teruglezen niet kan onderscheiden van
+    "er stond nog niets", geeft de gebruiker stilletjes het standaardvenster
+    van 06:00-23:00 terug zodra hij zijn instellingen ergens anders wijzigt.
+
+    `None` here means "no window, so always". It is written away as `None` too,
+    and telling that apart from "nothing was stored yet" is exactly what keeps
+    the user from silently getting the 06:00-23:00 default back the moment they
+    change some other setting.
+    """
+
+    def test_a_fresh_installation_gets_the_default_window(self) -> None:
+        config = config_from_dict({})
+        assert config.gates.precondition_window == TimeWindow(time(6, 0), time(23, 0))
+
+    def test_all_day_survives_a_round_trip(self) -> None:
+        config = replace(house(), gates=replace(house().gates, precondition_window=None))
+        assert config_from_dict(config_to_dict(config)).gates.precondition_window is None
+
+    def test_all_day_survives_a_second_pass(self) -> None:
+        config = replace(house(), gates=replace(house().gates, precondition_window=None))
+        stored = config_to_dict(config)
+        assert config_to_dict(config_from_dict(stored)) == stored
+
+
 class TestSeasons:
     def test_a_summer_only_duty_round_trips(self) -> None:
         config = config_from_dict(config_to_dict(house()))

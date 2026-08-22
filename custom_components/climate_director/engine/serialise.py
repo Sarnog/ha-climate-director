@@ -298,8 +298,20 @@ def _gates(raw: Any) -> GateSettings:
         ),
         require_schedule=_bool(raw.get("require_schedule"), False),
         guest_window=_guest_window(guest if isinstance(guest, dict) else {}),
+        # Een opgeslagen `None` is een keuze: "geen venster, dus de hele dag".
+        # Een ontbrekende sleutel is dat niet - dan is er nog nooit iets over
+        # gezegd en geldt het standaardvenster. Die twee door elkaar halen gaf
+        # de gebruiker zijn hele dag stilletjes terug als 06:00-23:00 zodra hij
+        # ergens anders in het scherm iets wijzigde.
+        #
+        # A stored `None` is a choice: "no window, so all day". A missing key is
+        # not - then nothing has ever been said about it and the default window
+        # applies. Confusing the two quietly handed the user's whole day back as
+        # 06:00-23:00 the moment they changed something else on the screen.
         precondition_window=(
-            _guest_window(precondition) if isinstance(precondition, dict) else default_window
+            _guest_window(precondition)
+            if isinstance(precondition, dict)
+            else (None if "precondition_window" in raw else default_window)
         ),
         max_precondition=_seconds(raw.get("max_precondition"), 7200.0),
     )
