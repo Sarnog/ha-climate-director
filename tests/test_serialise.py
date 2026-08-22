@@ -111,6 +111,29 @@ class TestForgivingReads:
         config = config_from_dict({"zones": ["not a zone", {"zone_id": "z"}, None]})
         assert [zone.zone_id for zone in config.zones] == ["z"]
 
+    def test_summer_months_that_are_not_a_list_do_not_break_the_load(self) -> None:
+        """Een getal of een tekst waar een lijst hoort, valt terug op niets.
+
+        Zo'n waarde werd hier gewoon doorlopen: bij een tekst kwamen er losse
+        letters uit en bij een getal een `TypeError` waarmee de hele
+        installatie niet meer laadde.
+
+        A number or a string where a list belongs falls back on nothing. Such a
+        value used to be iterated all the same: a string yielded loose letters
+        and a number a `TypeError` that stopped the installation from loading.
+        """
+        for junk in (7, "juli", {"maand": 7}):
+            config = config_from_dict({"seasons": {"summer_months": junk}})
+            assert config.seasons.summer_months == frozenset()
+
+    def test_no_summer_months_at_all_keeps_the_default(self) -> None:
+        """Niets ingevuld is iets anders dan onzin ingevuld."""
+        assert config_from_dict({"seasons": {}}).seasons.summer_months == frozenset(range(4, 10))
+
+    def test_junk_between_the_summer_months_is_skipped(self) -> None:
+        config = config_from_dict({"seasons": {"summer_months": [6, "juli", None, 8]}})
+        assert config.seasons.summer_months == frozenset({6, 8})
+
     def test_an_unrecognised_enum_value_falls_back(self) -> None:
         config = config_from_dict(
             {

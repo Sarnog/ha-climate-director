@@ -342,7 +342,16 @@ def _seasons(raw: Any) -> SeasonSettings:
         summer_months=(
             SeasonSettings().summer_months
             if months is None
-            else frozenset(_int(month, 0) for month in months if _is_number(month))
+            # Via `_sequence`, want een opgeslagen waarde die geen lijst blijkt
+            # - een getal, een tekst - werd hier gewoon doorlopen. Bij een tekst
+            # levert dat losse letters op en bij een getal een `TypeError` die
+            # de hele installatie niet meer laat laden.
+            #
+            # Through `_sequence`, since a stored value that turns out not to be
+            # a list - a number, a string - used to be iterated all the same. On
+            # a string that yields loose letters and on a number a `TypeError`
+            # that stops the whole installation from loading.
+            else frozenset(_int(month, 0) for month in _sequence(months) if _is_number(month))
         ),
     )
 
