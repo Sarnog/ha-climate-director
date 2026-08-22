@@ -15,7 +15,7 @@ scale with neither a gap nor an overlap.
 
 from __future__ import annotations
 
-from .families import ModeFamily
+from .families import ModeFamily, preferred_mode
 from .models import Source, Zone
 from .world import WorldState
 
@@ -159,7 +159,18 @@ def _reachable(source: Source, family: ModeFamily, world: WorldState) -> bool:
         return False
     if not source.supports(family):
         return False
-    return world.climate(source.entity_id).available
+    state = world.climate(source.entity_id)
+    # De rol zegt wat de installatie wil, het apparaat wat het kan. Een bron
+    # met rol HEAT_COOL op een apparaat dat alleen `heat` en `off` kent, krijgt
+    # geen `cool`-commando - die call zou toch maar mislukken. Onbekend krijgt
+    # het voordeel van de twijfel, precies zoals `ClimateState.supports` het
+    # regelt.
+    #
+    # The role says what the installation wants, the appliance what it can. A
+    # source with role HEAT_COOL on an appliance knowing only `heat` and `off`
+    # gets no `cool` command - that call would fail anyway. Unknown gets the
+    # benefit of the doubt, exactly as `ClimateState.supports` arranges it.
+    return state.available and state.supports(preferred_mode(family))
 
 
 def _eligible(source: Source, family: ModeFamily, world: WorldState) -> bool:

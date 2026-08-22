@@ -127,3 +127,44 @@ def test_window_on_a_source_narrows_it_further() -> None:
     )
     world = make_world(outdoor=-10.0, climates={"climate.x": climate()})
     assert sources.select(zone, ModeFamily.HEAT, world) is None
+
+
+class TestModesTheApplianceReports:
+    """De rol zegt wat de installatie wil; het apparaat zegt wat het kan.
+
+    The role says what the installation wants; the appliance says what it can.
+    """
+
+    def _zone(self) -> Zone:
+        return Zone(
+            zone_id="z",
+            name="Z",
+            indoor_sensor="sensor.t",
+            sources=(Source("unit", "climate.unit", role=SourceRole.HEAT_COOL),),
+        )
+
+    def test_a_source_that_cannot_cool_is_not_offered_for_cooling(self) -> None:
+        from custom_components.climate_director.engine import ClimateState
+
+        world = make_world(
+            outdoor=28.0,
+            climates={
+                "climate.unit": ClimateState(hvac_mode="off", hvac_modes=frozenset({"heat", "off"}))
+            },
+        )
+        assert sources.select(self._zone(), ModeFamily.COOL, world) is None
+
+    def test_a_source_without_a_listing_gets_the_benefit_of_the_doubt(self) -> None:
+        """Geen opgave betekent onbekend, en dan wordt het commando gewoon gestuurd.
+
+        No listing means unknown, and then the command is simply sent.
+        """
+        from custom_components.climate_director.engine import ClimateState
+
+        world = make_world(
+            outdoor=28.0,
+            climates={"climate.unit": ClimateState(hvac_mode="off", hvac_modes=None)},
+        )
+        chosen = sources.select(self._zone(), ModeFamily.COOL, world)
+        assert chosen is not None
+        assert chosen.source_id == "unit"
