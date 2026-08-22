@@ -115,6 +115,55 @@ class TestItDoesNotBrakeContinuing:
         assert verdict(house(*HIS), 23, "fan_only").reason is Reason.QUIET_HOURS
 
 
+class TestASecondAppliance:
+    """Een kamer met twee apparaten telt ze allebei, niet alleen de eerste.
+
+    Wie alleen naar het eerste apparaat kijkt, zet de rem terug op een kamer
+    waar de tweede unit gewoon staat te draaien - en dan gaat die uit terwijl
+    iemand hem net met de hand aanzette.
+
+    A room with two appliances counts both, not just the first. Looking only at
+    the first puts the brake back on a room whose second unit is running - and
+    then that one goes off just after somebody switched it on by hand.
+    """
+
+    SECOND = "climate.bijzetkachel"
+
+    def _house(self) -> DirectorConfig:
+        return DirectorConfig(
+            zones=(
+                Zone(
+                    "woonkamer",
+                    "Woonkamer",
+                    "sensor.woonkamer",
+                    sources=(Source("w", LIVING), Source("b", self.SECOND)),
+                    heat=ModeSettings(23.0, 22.0),
+                ),
+            ),
+            residents=(Resident("danny", "Danny", presence_entity="person.danny"),),
+            gates=GateSettings(quiet_windows=HIS),
+        )
+
+    def _verdict(self, first: str, second: str):
+        config = self._house()
+        zone = config.zone("woonkamer")
+        assert zone is not None
+        world = make_world(
+            now=datetime(2026, 8, MONDAY, 23, 0),
+            indoor={"woonkamer": 18.0},
+            climates={LIVING: first, self.SECOND: second},
+            residents={"danny": awake()},
+            presence={"woonkamer": PresenceState(occupied=True)},
+        )
+        return gates.evaluate(config, world, zone)
+
+    def test_the_second_appliance_lifts_the_brake_too(self) -> None:
+        assert self._verdict("off", "heat").allowed
+
+    def test_with_both_of_them_off_the_brake_holds(self) -> None:
+        assert self._verdict("off", "off").reason is Reason.QUIET_HOURS
+
+
 class TestWithoutWindows:
     @pytest.mark.parametrize("hour", [0, 3, 12, 23])
     def test_the_brake_is_off(self, hour: int) -> None:

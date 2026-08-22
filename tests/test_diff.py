@@ -36,7 +36,6 @@ def plan_of(*commands: UnitCommand) -> Plan:
 
 class TestNothingToDo:
     def test_a_matching_state_produces_no_change(self) -> None:
-        current = world(**{LIVING: MODE_HEAT})
         current = make_world(
             climates={LIVING: climate(MODE_HEAT, target=23.0)},
         )
@@ -49,6 +48,39 @@ class TestNothingToDo:
         )
         plan = plan_of(UnitCommand(LIVING, MODE_HEAT, 23.0))
         assert changes(plan, current) == ()
+
+    def test_just_inside_the_tolerance_is_equal_and_just_outside_is_not(self) -> None:
+        """De grens van de tolerantie, van beide kanten.
+
+        Precies óp de tolerantie wordt hier niet vastgelegd, en dat is met opzet:
+        bij kamertemperaturen bestaat dat geval niet. `23,05 - 23,0` is in
+        drijvende komma 0,050000000000000710 en dus nooit gelijk aan 0,05. Het
+        verschil tussen `<` en `<=` op deze regel is daarmee niet waar te nemen;
+        wat wél telt is dat de ene kant gelijk heet en de andere niet.
+
+        The tolerance boundary, from both sides. Exactly on the tolerance is
+        deliberately not pinned: at room temperatures that case does not exist.
+        In floating point `23.05 - 23.0` is 0.050000000000000710 and therefore
+        never equal to 0.05. The difference between `<` and `<=` on that line is
+        thus unobservable; what does count is that one side reads as equal and
+        the other does not.
+        """
+        near = make_world(
+            climates={LIVING: climate(MODE_HEAT, target=23.0 + TEMPERATURE_TOLERANCE * 0.9)}
+        )
+        far = make_world(
+            climates={LIVING: climate(MODE_HEAT, target=23.0 + TEMPERATURE_TOLERANCE * 1.1)}
+        )
+        plan = plan_of(UnitCommand(LIVING, MODE_HEAT, 23.0))
+
+        assert changes(plan, near) == ()
+        assert changes(plan, far) != ()
+
+    def test_the_tolerance_counts_in_both_directions(self) -> None:
+        """Een graad te laag is net zo goed een verschil als een graad te hoog."""
+        colder = make_world(climates={LIVING: climate(MODE_HEAT, target=22.0)})
+        plan = plan_of(UnitCommand(LIVING, MODE_HEAT, 23.0))
+        assert changes(plan, colder) != ()
 
     def test_an_already_off_unit_is_left_alone(self) -> None:
         current = make_world(climates={GAS: climate(MODE_OFF)})

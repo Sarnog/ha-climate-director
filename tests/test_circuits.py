@@ -536,6 +536,42 @@ class TestSwitchTiming:
         assert command is not None
         assert command.hvac_mode == MODE_HEAT
 
+    def test_the_minimum_run_time_is_over_the_moment_it_is_reached(self) -> None:
+        """Precies twintig minuten is voorbij, niet nog net niet.
+
+        De grens telt als gehaald: wie hier een `<=` van maakt, houdt de wissel
+        nog een hele ronde tegen zonder dat iemand dat kan zien.
+
+        Exactly twenty minutes is over, not just barely not. The boundary counts
+        as reached: turning this into a `<=` holds the swap back another whole
+        round without anybody being able to see it.
+        """
+        config = self._config(min_family_switch_interval=timedelta(minutes=20))
+        world = make_world(
+            now=at(12, 15),
+            indoor={"woonkamer": WANTS_HEAT, "zolder": 21.0},
+            climates={unit("woonkamer"): climate(MODE_COOL), unit("zolder"): climate(MODE_OFF)},
+            circuit_family_since={"c": at(11, 55)},
+        )
+        plan = decide(config, world)
+        command = plan.command_for(unit("woonkamer"))
+        assert command is not None
+        assert command.hvac_mode == MODE_HEAT
+        assert plan.next_deferral is None
+
+    def test_one_second_short_of_it_still_holds(self) -> None:
+        """En de andere kant van dezelfde grens."""
+        config = self._config(min_family_switch_interval=timedelta(minutes=20))
+        world = make_world(
+            now=at(12, 15) - timedelta(seconds=1),
+            indoor={"woonkamer": WANTS_HEAT, "zolder": 21.0},
+            climates={unit("woonkamer"): climate(MODE_COOL), unit("zolder"): climate(MODE_OFF)},
+            circuit_family_since={"c": at(11, 55)},
+        )
+        plan = decide(config, world)
+        assert plan.next_deferral is not None
+        assert plan.next_deferral.reason is Reason.CIRCUIT_SWITCH_TOO_SOON
+
     def test_unknown_switch_time_does_not_freeze_the_installation(self) -> None:
         config = self._config(min_family_switch_interval=timedelta(minutes=20))
         world = make_world(
@@ -579,6 +615,33 @@ class TestShortCycleProtection:
         command = plan.command_for(unit("woonkamer"))
         assert command is not None
         assert command.hvac_mode == MODE_HEAT
+
+    def test_the_rest_is_over_the_moment_it_is_reached(self) -> None:
+        """Precies drie minuten stil is lang genoeg stil.
+
+        Exactly three minutes idle is idle long enough.
+        """
+        world = make_world(
+            now=at(12, 3),
+            indoor={"woonkamer": WANTS_HEAT},
+            climates={unit("woonkamer"): climate(MODE_OFF, changed_at=at(12, 0))},
+        )
+        plan = decide(self._config(), world)
+        command = plan.command_for(unit("woonkamer"))
+        assert command is not None
+        assert command.hvac_mode == MODE_HEAT
+        assert plan.next_deferral is None
+
+    def test_one_second_short_of_the_rest_still_waits(self) -> None:
+        world = make_world(
+            now=at(12, 3) - timedelta(seconds=1),
+            indoor={"woonkamer": WANTS_HEAT},
+            climates={unit("woonkamer"): climate(MODE_OFF, changed_at=at(12, 0))},
+        )
+        plan = decide(self._config(), world)
+        command = plan.command_for(unit("woonkamer"))
+        assert command is not None
+        assert command.reason is Reason.SHORT_CYCLE_PROTECTION
 
     def test_it_never_delays_a_stop(self) -> None:
         """Protection that could keep a unit running would be a safety problem."""

@@ -295,6 +295,50 @@ class TestReadingTheWorld:
         assert world.opening("binary_sensor.achterdeur").open is False
         assert world.presence_of("zolder").occupied is True
 
+    def test_it_reads_the_modes_an_appliance_says_it_has(self) -> None:
+        """De standenlijst komt mee, want daar kiest de engine op.
+
+        Zonder deze lijst commandeert de engine een stand die het apparaat
+        misschien niet kent; met de lijst kiest hij een stand die er wel is.
+
+        The mode list comes along, since that is what the engine picks on.
+        Without it the engine commands a mode the appliance may not have; with
+        it, it picks one that exists.
+        """
+        states = self._states(
+            **{
+                LIVING: FakeState(
+                    "heat",
+                    {"temperature": 21.0, "hvac_modes": ["off", "heat", "cool", "fan_only"]},
+                )
+            }
+        )
+        world = coordinator(states).build_world()
+
+        assert world.climate(LIVING).hvac_modes == frozenset({"off", "heat", "cool", "fan_only"})
+
+    def test_an_appliance_that_lists_no_modes_gets_the_benefit_of_the_doubt(self) -> None:
+        """Onbekend is niet hetzelfde als geen enkele stand.
+
+        Een lege lijst of een onzinnige waarde betekent "ik weet het niet", en
+        dan stuurt de engine gewoon zoals voordat deze controle bestond. Zou
+        `None` als "kan niets" gelezen worden, dan valt zo'n apparaat stil.
+
+        Unknown is not the same as no modes at all. An empty list or a nonsense
+        value means "I do not know", and the engine then commands exactly as it
+        did before the check existed.
+        """
+        for attributes in ({}, {"hvac_modes": []}, {"hvac_modes": "heat"}):
+            states = self._states(**{LIVING: FakeState("heat", dict(attributes))})
+            assert coordinator(states).build_world().climate(LIVING).hvac_modes is None
+
+    def test_a_mode_list_of_other_types_is_read_as_text(self) -> None:
+        """Een integratie die iets anders dan strings meldt, blokkeert niets."""
+        states = self._states(**{LIVING: FakeState("heat", {"hvac_modes": ("off", 1)})})
+        assert coordinator(states).build_world().climate(LIVING).hvac_modes == frozenset(
+            {"off", "1"}
+        )
+
     def test_a_cover_opening_reads_its_configured_open_state(self) -> None:
         """`cover.dakraam = open` schort de zone op, ook al is 'on' de standaard.
 
