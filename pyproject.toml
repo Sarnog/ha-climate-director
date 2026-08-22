@@ -9,6 +9,17 @@ branch = true
 [tool.coverage.report]
 show_missing = true
 
+# De suite staat op 97%. De drempel ligt er net onder: hij vangt een stuk code
+# dat zonder test binnenkomt, zonder te struikelen over een regel die om een
+# goede reden onbereikbaar blijft. Zakt de dekking, dan hoort de vraag "welke
+# test is hier vergeten" gesteld te worden, niet de drempel verlaagd.
+#
+# The suite sits at 97%. The threshold lies just below it: it catches a piece of
+# code arriving without a test, without tripping over a line that stays
+# unreachable for a good reason. If coverage drops, the question to ask is
+# "which test was forgotten here", not to lower the threshold.
+fail_under = 95
+
 [tool.ruff]
 target-version = "py313"
 line-length = 100

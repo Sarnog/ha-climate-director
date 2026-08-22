@@ -30,7 +30,15 @@ jobs:
         run: python -m ruff format --check .
 
       - name: Pytest
-        run: python -m pytest -q
+        run: python -m coverage run -m pytest -q
+
+      # De drempel staat in pyproject.toml; deze stap laat de baan vallen zodra
+      # de dekking eronder zakt.
+      #
+      # The threshold sits in pyproject.toml; this step drops the job the moment
+      # coverage falls below it.
+      - name: Coverage
+        run: python -m coverage report
 
   # De README, de handleidingen en `hacs.json` beloven Home Assistant 2025.3 als
   # ondergrens. Deze baan draait de suite tegen precies die versie, zodat de
