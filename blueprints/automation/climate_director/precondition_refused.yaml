@@ -2,7 +2,7 @@ blueprint:
   name: Climate Director - geweigerd vooruit-verzoek / refused pre-conditioning
   author: Sarnog
   homeassistant:
-    min_version: "2024.10.0"
+    min_version: "2025.3.0"
   source_url: https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/precondition_refused.yaml
   description: >-
     NL - Je drukte op een vooruit-knop en er gebeurde niets, want er staat een

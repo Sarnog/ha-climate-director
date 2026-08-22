@@ -2,7 +2,7 @@ blueprint:
   name: Climate Director - wat er besloten is / decision notifier
   author: Sarnog
   homeassistant:
-    min_version: "2024.10.0"
+    min_version: "2025.3.0"
   source_url: https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/decisions.yaml
   description: >-
     NL - Meldt na elke beslissing wat de director met een kamer doet, en waarom.

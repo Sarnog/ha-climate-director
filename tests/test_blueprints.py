@@ -83,6 +83,24 @@ class TestEveryBlueprint:
         assert metadata["author"] == "Sarnog"
         assert metadata["homeassistant"]["min_version"]
 
+    def test_it_asks_the_same_version_as_the_integration(self, path: pathlib.Path) -> None:
+        """Deze blueprints horen bij deze integratie, dus bij dezelfde ondergrens.
+
+        These blueprints belong to this integration, so to the same lower bound.
+
+        Ze stonden lager dan de integratie zelf. Wie ze importeerde op een
+        Home Assistant die de integratie niet kan draaien, kreeg een blueprint
+        die netjes laadde en daarna nergens naar kon luisteren.
+
+        They stood lower than the integration itself. Importing them on a Home
+        Assistant that cannot run the integration got you a blueprint that
+        loaded neatly and then had nothing to listen to.
+        """
+        import json
+
+        wanted = json.loads((ROOT / "hacs.json").read_text(encoding="utf-8"))["homeassistant"]
+        assert load(path)["blueprint"]["homeassistant"]["min_version"] == wanted
+
     def test_it_explains_itself_in_both_languages(self, path: pathlib.Path) -> None:
         """A blueprint cannot be translated, so both languages stand in the text."""
         description = load(path)["blueprint"]["description"]
