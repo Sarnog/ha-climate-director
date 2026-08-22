@@ -226,33 +226,39 @@ def _resident(raw: Mapping[str, Any]) -> Resident:
         presence_entity=_text(raw.get("presence_entity")),
         sleep_entity=_text(raw.get("sleep_entity")),
         sleep_state=_text(raw.get("sleep_state")) or "on",
-        sleep_window=_guest_window(
+        sleep_window=_sleep_window(
             raw.get("sleep_window") if isinstance(raw.get("sleep_window"), dict) else {}
         ),
     )
 
 
 def _time_window(raw: Mapping[str, Any]) -> TimeWindow:
-    weekdays = raw.get("weekdays")
     return TimeWindow(
         holiday=_bool(raw.get("holiday"), False),
         start=_time(raw.get("start"), time(0, 0)),
         end=_time(raw.get("end"), time(0, 0)),
-        weekdays=(
-            None
-            if weekdays is None
-            # Een dagnummer buiten 0-6 is onzin en vervalt. Hem terugvouwen op
-            # een geldige dag zou een venster zetten op een dag die de gebruiker
-            # nooit koos, en dat is stiller mis dan hem weglaten.
-            #
-            # A day number outside 0-6 is nonsense and is dropped. Folding it
-            # back onto a valid day would put a window on a day the user never
-            # picked, which is more quietly wrong than leaving it out.
-            else frozenset(
-                _int(day, 0) for day in _sequence(weekdays) if _is_number(day) and 0 <= day <= 6
-            )
-            or None
-        ),
+        weekdays=_weekdays(raw.get("weekdays")),
+    )
+
+
+def _weekdays(raw: Any) -> frozenset[int] | None:
+    """Return the days a window is limited to, or `None` for every day.
+
+    Een dagnummer buiten 0-6 is onzin en vervalt. Hem terugvouwen op een
+    geldige dag zou een venster zetten op een dag die de gebruiker nooit koos,
+    en dat is stiller mis dan hem weglaten. Blijft er niets over, dan geldt het
+    venster weer elke dag - een venster op geen enkele dag bestaat niet.
+
+    A day number outside 0-6 is nonsense and is dropped. Folding it back onto a
+    valid day would put a window on a day the user never picked, which is more
+    quietly wrong than leaving it out. If nothing is left the window applies
+    every day again - a window on no day at all does not exist.
+    """
+    if raw is None:
+        return None
+    return (
+        frozenset(_int(day, 0) for day in _sequence(raw) if _is_number(day) and 0 <= day <= 6)
+        or None
     )
 
 
@@ -307,6 +313,23 @@ def _guest_window(raw: dict[str, Any]) -> TimeWindow | None:
     if not start or not end:
         return None
     return TimeWindow(start=_time(start, time(0, 0)), end=_time(end, time(0, 0)))
+
+
+def _sleep_window(raw: dict[str, Any]) -> TimeWindow | None:
+    """Return the sleep window, days and all.
+
+    Het gastenvenster en het vooruit-venster gelden voor het hele huis en
+    kennen geen dagen; een slaapvenster hangt aan één bewoner, en die heeft in
+    het weekend een ander ritme dan doordeweeks.
+
+    The guest window and the pre-conditioning window apply to the whole house
+    and know no days; a sleep window belongs to one resident, and a resident
+    keeps a different rhythm at the weekend than on a working day.
+    """
+    window = _guest_window(raw)
+    if window is None:
+        return None
+    return TimeWindow(start=window.start, end=window.end, weekdays=_weekdays(raw.get("weekdays")))
 
 
 def _seasons(raw: Any) -> SeasonSettings:
@@ -421,6 +444,11 @@ def _resident_to_dict(resident: Resident) -> dict[str, Any]:
             else {
                 "start": resident.sleep_window.start.isoformat(),
                 "end": resident.sleep_window.end.isoformat(),
+                "weekdays": (
+                    None
+                    if resident.sleep_window.weekdays is None
+                    else sorted(resident.sleep_window.weekdays)
+                ),
             }
         ),
         "windows": [

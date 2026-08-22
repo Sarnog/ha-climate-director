@@ -16,6 +16,7 @@ from custom_components.climate_director.engine import (
     PrecipitationSettings,
     Season,
     SourceRole,
+    TimeWindow,
     validate,
 )
 from custom_components.climate_director.engine.models import SeasonSource
@@ -45,6 +46,31 @@ class TestRoundTrip:
             zones=tuple(
                 replace(zone, ignore_precipitation=True) if zone.zone_id == "zolder" else zone
                 for zone in house().zones
+            ),
+        )
+        assert config_from_dict(config_to_dict(config)) == config
+
+    def test_a_sleep_window_keeps_its_days(self) -> None:
+        """Een weekendritme staat in het slaapvenster, dus het moet blijven staan.
+
+        Zonder dit valt `weekdays` weg bij het opslaan en telt de slaapsensor
+        weer elke dag - precies wat de bewoner net uitzette.
+
+        A weekend rhythm lives in the sleep window, so it has to survive. Without
+        this `weekdays` is dropped on save and the sleep sensor counts every day
+        again - exactly what the resident just switched off.
+        """
+        original = house()
+        config = replace(
+            original,
+            residents=(
+                replace(
+                    original.residents[0],
+                    sleep_window=TimeWindow(
+                        start=time(23, 0), end=time(9, 0), weekdays=frozenset({4, 5})
+                    ),
+                ),
+                *original.residents[1:],
             ),
         )
         assert config_from_dict(config_to_dict(config)) == config

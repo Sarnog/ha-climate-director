@@ -5,7 +5,7 @@ Tests for the gates: is regulating allowed.
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import time, timedelta
 
 from conftest import (
     BACK_DOOR,
@@ -28,6 +28,7 @@ from custom_components.climate_director.engine import (
     Reason,
     Resident,
     Source,
+    TimeWindow,
     Zone,
     gates,
 )
@@ -93,6 +94,42 @@ def test_sleep_gate_can_be_switched_off() -> None:
     )
     world = make_world(residents={"danny": asleep(), "nancy": away()})
     assert gates.evaluate(relaxed, world, living_room(relaxed)).allowed
+
+
+def test_a_sleep_window_only_counts_on_its_own_days() -> None:
+    """Weekendritme: de slaapsensor telt alleen in het weekend mee.
+
+    Doordeweeks is een oplader op zaterdagochtend-uren gewoon een oplader, en
+    dan hoort de slaappoort dicht te blijven.
+
+    A weekend rhythm: the sleep sensor only counts at the weekend. On a working
+    day a charger during those hours is just a charger, and then the sleep gate
+    must stay out of it.
+    """
+    config = house()
+    weekend = frozenset({5, 6})
+    config = DirectorConfig(
+        zones=config.zones,
+        circuits=config.circuits,
+        residents=tuple(
+            Resident(
+                resident_id=person.resident_id,
+                name=person.name,
+                sleep_window=TimeWindow(time(9, 0), time(12, 0), weekdays=weekend),
+                presence_entity=person.presence_entity,
+            )
+            for person in config.residents
+        ),
+        openings=config.openings,
+        gates=config.gates,
+    )
+    # 10 augustus 2026 is een maandag, 15 augustus een zaterdag.
+    # 10 August 2026 is a Monday, 15 August a Saturday.
+    monday = make_world(now=at(10, 0, day=10), residents={"danny": asleep(), "nancy": away()})
+    saturday = make_world(now=at(10, 0, day=15), residents={"danny": asleep(), "nancy": away()})
+
+    assert gates.evaluate(config, monday, living_room(config)).allowed
+    assert gates.evaluate(config, saturday, living_room(config)).reason is Reason.EVERYONE_ASLEEP
 
 
 class TestOpenings:

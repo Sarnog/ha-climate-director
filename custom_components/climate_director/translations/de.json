@@ -300,7 +300,8 @@
           "delete": "Diesen Bewohner löschen",
           "when_done": "Wenn du hier fertig bist",
           "sleep_from": "Schlafsensor zählt ab",
-          "sleep_until": "Schlafsensor zählt bis"
+          "sleep_until": "Schlafsensor zählt bis",
+          "sleep_days": "Tage des Schlaffensters"
         },
         "data_description": {
           "sleep_entity": "Leer lassen, wenn der Schlaf dieser Person nicht erfasst wird.",
@@ -310,7 +311,8 @@
           "delete": "Entfernt den Bewohner samt seinen Zeitplänen.",
           "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst.",
           "sleep_from": "Ein Telefon, das um drei Uhr nachmittags am Ladegerät liegt, heißt nicht, dass jemand ins Bett geht. Zwischen diesen Zeiten zählt der Schlafsensor; außerhalb ist ein Ladegerät nur ein Ladegerät. Beide leer lassen, damit er rund um die Uhr gilt.",
-          "sleep_until": "Ein Telefon, das um drei Uhr nachmittags am Ladegerät liegt, heißt nicht, dass jemand ins Bett geht. Zwischen diesen Zeiten zählt der Schlafsensor; außerhalb ist ein Ladegerät nur ein Ladegerät. Beide leer lassen, damit er rund um die Uhr gilt."
+          "sleep_until": "Ein Telefon, das um drei Uhr nachmittags am Ladegerät liegt, heißt nicht, dass jemand ins Bett geht. Zwischen diesen Zeiten zählt der Schlafsensor; außerhalb ist ein Ladegerät nur ein Ladegerät. Beide leer lassen, damit er rund um die Uhr gilt.",
+          "sleep_days": "Leer lassen für jeden Tag. Ein Fenster über Mitternacht hängt an seinem Starttag, ein Fenster von Freitag 23:00-09:00 zählt also am Samstag um 07:00 noch mit."
         }
       },
       "windows": {

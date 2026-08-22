@@ -300,7 +300,8 @@
           "delete": "Deze bewoner verwijderen",
           "when_done": "Als je hier klaar bent",
           "sleep_from": "Slaapsensor telt vanaf",
-          "sleep_until": "Slaapsensor telt tot"
+          "sleep_until": "Slaapsensor telt tot",
+          "sleep_days": "Dagen van het slaapvenster"
         },
         "data_description": {
           "sleep_entity": "Laat leeg als de slaap van deze persoon niet gevolgd wordt.",
@@ -310,7 +311,8 @@
           "delete": "Verwijdert de bewoner inclusief zijn roosters.",
           "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
           "sleep_from": "Een telefoon die om drie uur 's middags op de lader ligt betekent niet dat er iemand naar bed gaat. Tussen deze tijden telt de slaapsensor mee; daarbuiten is een oplader gewoon een oplader. Laat beide leeg om hem de klok rond te laten gelden.",
-          "sleep_until": "Een telefoon die om drie uur 's middags op de lader ligt betekent niet dat er iemand naar bed gaat. Tussen deze tijden telt de slaapsensor mee; daarbuiten is een oplader gewoon een oplader. Laat beide leeg om hem de klok rond te laten gelden."
+          "sleep_until": "Een telefoon die om drie uur 's middags op de lader ligt betekent niet dat er iemand naar bed gaat. Tussen deze tijden telt de slaapsensor mee; daarbuiten is een oplader gewoon een oplader. Laat beide leeg om hem de klok rond te laten gelden.",
+          "sleep_days": "Laat leeg voor elke dag. Een venster over middernacht hangt aan de dag waarop het begint, dus een venster van vrijdag 23:00-09:00 telt zaterdag om 07:00 nog mee."
         }
       },
       "windows": {

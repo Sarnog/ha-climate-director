@@ -397,6 +397,7 @@ then skipped instead of blocking everything forever.
 | **Sleep sensor** | when this resident is asleep; empty = sleep is not tracked |
 | **State meaning asleep** | the state the sleep sensor reports when asleep |
 | **Sleep sensor counts from / until** | the hours in which that sensor means anything; both empty = around the clock |
+| **Sleep window days** | the days that window applies on; empty = every day |
 
 ### Schedules
 

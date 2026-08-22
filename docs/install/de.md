@@ -404,6 +404,7 @@ Anwesenheitstore werden dann übersprungen, statt alles dauerhaft zu blockieren.
 | **Schlafsensor** | wann dieser Bewohner schläft; leer = Schlaf wird nicht verfolgt |
 | **Status, der Schlafen bedeutet** | der Zustand, den der Schlafsensor beim Schlafen meldet |
 | **Schlafsensor zählt von / bis** | die Stunden, in denen dieser Sensor etwas bedeutet; beide leer = rund um die Uhr |
+| **Tage des Schlaffensters** | an welchen Tagen dieses Fenster gilt; leer = jeden Tag |
 
 ### Zeitpläne
 

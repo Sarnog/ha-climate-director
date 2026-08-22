@@ -396,6 +396,7 @@ presencia se omiten entonces en vez de bloquearlo todo para siempre.
 | **Sensor de sueño** | cuándo duerme este residente; vacío = no se sigue el sueño |
 | **Estado que significa dormido** | el estado que el sensor de sueño informa al dormir |
 | **El sensor de sueño cuenta de / hasta** | las horas en las que ese sensor significa algo; ambos vacíos = todo el día |
+| **Días de la ventana de sueño** | los días en los que se aplica esa ventana; vacío = todos los días |
 
 ### Horarios
 

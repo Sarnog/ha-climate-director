@@ -1356,6 +1356,14 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 "sleep_window": {
                     "start": user_input.get("sleep_from") or "",
                     "end": user_input.get("sleep_until") or "",
+                    # Geen dagen aangevinkt betekent elke dag, net als bij een
+                    # rooster. Een slaapvenster op geen enkele dag zou de
+                    # slaapsensor voorgoed uitzetten.
+                    #
+                    # No days ticked means every day, just like a schedule. A
+                    # sleep window on no day at all would switch the sleep
+                    # sensor off for good.
+                    "weekdays": ([int(day) for day in user_input.get("sleep_days") or ()] or None),
                 },
                 # De roosters van deze bewoner blijven staan; die worden in de
                 # volgende stap bewerkt, niet in dit formulier.
@@ -1371,6 +1379,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 residents[self._resident_index] = person
             return await self.async_step_windows()
 
+        stored_days = (current.get("sleep_window") or {}).get("weekdays")
+        sleep_days = None if stored_days is None else [str(day) for day in stored_days]
         return self.async_show_form(
             step_id="resident",
             errors=errors,
@@ -1406,6 +1416,19 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                             "suggested_value": (current.get("sleep_window") or {}).get("end")
                         },
                     ): _TIME,
+                    vol.Optional(
+                        "sleep_days",
+                        description={"suggested_value": sleep_days},
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[
+                                selector.SelectOptionDict(value=str(number), label=label)
+                                for number, label in enumerate(_WEEKDAYS)
+                            ],
+                            multiple=True,
+                            mode=selector.SelectSelectorMode.LIST,
+                        )
+                    ),
                     vol.Required("delete", default=False): bool,
                     vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
                 }

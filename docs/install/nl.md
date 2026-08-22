@@ -400,6 +400,7 @@ tegenhouden.
 | **Slaapsensor** | wanneer deze bewoner slaapt; leeg = slaap wordt niet bijgehouden |
 | **Status die slapen betekent** | de stand die de slaapsensor meldt bij slapen |
 | **Slaapsensor telt vanaf / tot** | de uren waarin die sensor iets betekent; beide leeg = de klok rond |
+| **Dagen van het slaapvenster** | op welke dagen dat venster geldt; leeg = elke dag |
 
 ### Roosters
 

@@ -403,6 +403,7 @@ sont alors ignorées au lieu de tout bloquer pour toujours.
 | **Capteur de sommeil** | quand ce résident dort ; vide = sommeil non suivi |
 | **État signifiant endormi** | l'état que le capteur de sommeil rapporte pendant le sommeil |
 | **Le capteur de sommeil compte de / jusqu'à** | les heures où ce capteur signifie quelque chose ; les deux vides = toute la journée |
+| **Jours de la fenêtre de sommeil** | les jours où cette fenêtre s'applique ; vide = tous les jours |
 
 ### Emplois du temps
 

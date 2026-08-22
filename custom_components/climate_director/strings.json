@@ -300,7 +300,8 @@
           "delete": "Delete this resident",
           "when_done": "When you are done here",
           "sleep_from": "Sleep sensor counts from",
-          "sleep_until": "Sleep sensor counts until"
+          "sleep_until": "Sleep sensor counts until",
+          "sleep_days": "Sleep window days"
         },
         "data_description": {
           "sleep_entity": "Leave empty if this person's sleep is not tracked.",
@@ -310,7 +311,8 @@
           "delete": "Removes the resident along with their schedules.",
           "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
           "sleep_from": "A phone on the charger at three in the afternoon does not mean somebody is turning in. Between these times the sleep sensor counts; outside them a charger is just a charger. Leave both empty to have it count around the clock.",
-          "sleep_until": "A phone on the charger at three in the afternoon does not mean somebody is turning in. Between these times the sleep sensor counts; outside them a charger is just a charger. Leave both empty to have it count around the clock."
+          "sleep_until": "A phone on the charger at three in the afternoon does not mean somebody is turning in. Between these times the sleep sensor counts; outside them a charger is just a charger. Leave both empty to have it count around the clock.",
+          "sleep_days": "Leave empty for every day. A window running past midnight is anchored on the day it starts, so a Friday 23:00-09:00 window still counts at 07:00 on Saturday."
         }
       },
       "windows": {

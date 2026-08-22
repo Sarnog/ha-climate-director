@@ -164,6 +164,85 @@ class TestBuildingAnInstallationInTheWizard:
         finally:
             await stop_house(home)
 
+    async def test_a_resident_keeps_the_days_of_their_sleep_window(self) -> None:
+        """Een weekendritme: de slaapsensor telt alleen op vrijdag en zaterdag.
+
+        Het venster kon al dagen dragen en de poort leest ze uit, maar het
+        formulier vroeg er niet naar - dus stond er nooit iets in.
+
+        A weekend rhythm: the sleep sensor only counts on Friday and Saturday.
+        The window could already carry days and the gate reads them, but the
+        form never asked for any - so nothing was ever in there.
+        """
+        home = await start_house(simple_installation(), states=cold())
+        try:
+            flow = home.hass.config_entries.options
+            result = await flow.async_init(home.entry.entry_id)
+            result = await flow.async_configure(result["flow_id"], {"next_step_id": "residents"})
+            assert result["step_id"] == "residents"
+
+            result = await flow.async_configure(result["flow_id"], {"resident": "add_new"})
+            assert result["step_id"] == "resident"
+
+            result = await flow.async_configure(
+                result["flow_id"],
+                {
+                    "name": "Danny",
+                    "presence_entity": "person.danny",
+                    "sleep_entity": "binary_sensor.danny_slaapt",
+                    "sleep_state": "on",
+                    "sleep_from": "23:00:00",
+                    "sleep_until": "09:00:00",
+                    "sleep_days": ["4", "5"],
+                    "delete": False,
+                    "when_done": "keep",
+                },
+            )
+            assert result["step_id"] == "windows"
+
+            result = await flow.async_configure(result["flow_id"], {"window": "back_to_menu"})
+            result = await flow.async_configure(result["flow_id"], {"next_step_id": "save"})
+            await home.hass.async_block_till_done()
+            assert result["type"] == "create_entry"
+
+            stored = home.entry.options[CONF_INSTALLATION]["residents"][0]
+            assert stored["sleep_window"] == {
+                "start": "23:00:00",
+                "end": "09:00:00",
+                "weekdays": [4, 5],
+            }
+        finally:
+            await stop_house(home)
+
+    async def test_a_sleep_window_without_days_stays_every_day(self) -> None:
+        """Niets aangevinkt betekent elke dag, niet nooit."""
+        home = await start_house(simple_installation(), states=cold())
+        try:
+            flow = home.hass.config_entries.options
+            result = await flow.async_init(home.entry.entry_id)
+            result = await flow.async_configure(result["flow_id"], {"next_step_id": "residents"})
+            result = await flow.async_configure(result["flow_id"], {"resident": "add_new"})
+            result = await flow.async_configure(
+                result["flow_id"],
+                {
+                    "name": "Nancy",
+                    "presence_entity": "person.nancy",
+                    "sleep_state": "on",
+                    "sleep_from": "22:00:00",
+                    "sleep_until": "08:00:00",
+                    "delete": False,
+                    "when_done": "keep",
+                },
+            )
+            result = await flow.async_configure(result["flow_id"], {"window": "back_to_menu"})
+            result = await flow.async_configure(result["flow_id"], {"next_step_id": "save"})
+            await home.hass.async_block_till_done()
+
+            stored = home.entry.options[CONF_INSTALLATION]["residents"][0]
+            assert stored["sleep_window"]["weekdays"] is None
+        finally:
+            await stop_house(home)
+
     async def test_a_zone_without_a_sensor_is_refused_at_the_screen(self) -> None:
         home = await start_house({"zones": []}, states=cold())
         try:
