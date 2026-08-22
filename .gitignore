@@ -24,3 +24,6 @@ AGENTS.md
 # Lokale instellingen van agent-extensies - machinegebonden, niet publiek
 .claude/
 .deepcode/
+
+# Dekkingsrapport van pytest-cov - lokaal gereedschap, geen broncode
+.coverage

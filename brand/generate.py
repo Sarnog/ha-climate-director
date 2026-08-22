@@ -3,15 +3,17 @@
 Generates Climate Director's brand logo.
 
 Dit script is de enige bron van het icoon: het tekent de figuur één keer en
-schrijft daar zowel de PNG's uit die Home Assistant gebruikt als de SVG die als
+schrijft daar zowel de PNG's uit die Home Assistant gebruikt (in
+`custom_components/climate_director/brand/`) als de SVG die hiernaast als
 vectorbron bewaard blijft. Daardoor kunnen die twee niet uit elkaar lopen.
 
 This script is the icon's only source: it draws the figure once and writes both
-the PNGs Home Assistant uses and the SVG kept as a vector source. The two
-therefore cannot drift apart.
+the PNGs Home Assistant uses (into `custom_components/climate_director/brand/`)
+and the SVG kept beside it as a vector source. The two therefore cannot drift
+apart.
 
     python -m pip install pycairo
-    python generate.py
+    python brand/generate.py
 """
 
 from __future__ import annotations
@@ -22,6 +24,15 @@ from pathlib import Path
 import cairo
 
 HERE = Path(__file__).parent
+
+# De PNG's horen in de integratie, want Home Assistant leest ze daar uit. Dit
+# script en zijn vectorbron horen daar juist niet: die zijn gereedschap en gaan
+# elke gebruiker die de integratie installeert alleen maar mee als ballast.
+#
+# The PNGs belong inside the integration, because that is where Home Assistant
+# reads them. This script and its vector source do not: they are tooling, and
+# would only ride along as ballast with every user who installs the integration.
+ICONS = HERE.parent / "custom_components" / "climate_director" / "brand"
 
 # Alles wordt getekend op een vierkant van 512, en daarna geschaald naar het
 # gevraagde formaat. Elke maat hieronder is dus in die eenheid.
@@ -306,7 +317,7 @@ def main() -> None:
         ("logo.png", 256),
         ("logo@2x.png", 512),
     ):
-        write_png(HERE / name, size)
+        write_png(ICONS / name, size)
         print(f"wrote {name} ({size}x{size})")
 
     write_svg(HERE / "icon-source.svg")
