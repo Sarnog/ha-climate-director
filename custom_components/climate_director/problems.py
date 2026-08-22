@@ -311,6 +311,53 @@ def async_clear_unsupported_modes(hass: HomeAssistant, entry_id: str) -> None:
     ir.async_delete_issue(hass, DOMAIN, _unsupported_modes_issue_id(entry_id))
 
 
+def _command_not_taking_issue_id(entry_id: str) -> str:
+    """Return the command-not-taking notice id for one installation."""
+    return f"command_not_taking_{entry_id}"
+
+
+def async_report_command_not_taking(
+    hass: HomeAssistant, entry_id: str, title: str, found: Mapping[str, str]
+) -> None:
+    """Raise or clear the notice about appliances that never take their command.
+
+    Het verschil tussen het plan en de werkelijkheid wordt elke ronde opnieuw
+    aangeboden zolang het apparaat niet meebeweegt. Neemt het de aanroep aan
+    zonder er iets mee te doen - of zet het zichzelf meteen terug - dan levert
+    dat met de vangnetklok ruim veertienhonderd mislukte aanroepen per dag op,
+    en van buiten ziet dat er precies zo uit als een zone die niets hoeft.
+
+    The difference between the plan and reality is offered again every round for
+    as long as the appliance does not move with it. If it accepts the call
+    without doing anything with it - or puts itself straight back - that adds up
+    to well over fourteen hundred failed calls a day on the safety-net clock,
+    and from the outside it looks exactly like a zone with nothing to do.
+    """
+    if not found:
+        ir.async_delete_issue(hass, DOMAIN, _command_not_taking_issue_id(entry_id))
+        return
+
+    listed = "\n".join(f"- `{entity_id}` ({wanted})" for entity_id, wanted in sorted(found.items()))
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        _command_not_taking_issue_id(entry_id),
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="command_not_taking",
+        translation_placeholders={
+            "name": title,
+            "count": str(len(found)),
+            "entities": listed,
+        },
+    )
+
+
+def async_clear_command_not_taking(hass: HomeAssistant, entry_id: str) -> None:
+    """Drop the command-not-taking notice for one installation."""
+    ir.async_delete_issue(hass, DOMAIN, _command_not_taking_issue_id(entry_id))
+
+
 #: De melding dat er niemand naar een geweigerd vooruit-verzoek luistert. Eén
 #: melding voor de hele integratie, niet per installatie: de gebeurtenis is
 #: domeinbreed, dus twee identieke meldingen zouden alleen maar herhalen.

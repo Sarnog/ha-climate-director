@@ -650,6 +650,10 @@
       "title": "Climate Director: {name} asks a mode that {count} appliance(s) cannot run",
       "description": "These appliances have a role that can ask for a mode they do not report - for example cooling on a unit that only knows `heat` and `off`. The director skips them for that mode, so the zone silently does nothing.\n\n{entities}\n\nCheck the role under Configure, or the appliance's `hvac_modes` under Developer tools. This notice disappears by itself once every appliance reports the modes its role may ask for."
     },
+    "command_not_taking": {
+      "title": "Climate Director: {count} appliance(s) of {name} do not carry out their command",
+      "description": "The director has been asking these appliances for the same thing for a while, and they keep reporting something else - the call is accepted and nothing happens, or the appliance puts itself straight back:\n\n{entities}\n\nFor as long as that lasts the same call goes out again every round, some fourteen hundred a day, and nowhere is anything of it to be seen. Check the appliance under Developer tools: is it reachable, does it accept the mode, and is something else putting it back - a thermostat schedule, another automation? This notice disappears by itself once the appliance follows its command."
+    },
     "precondition_unwatched": {
       "title": "Nobody hears a refused pre-conditioning request",
       "description": "A pre-conditioning request that strands on an open window or door reports itself as the event `climate_director_precondition_refused`, and nowhere else. Nothing is listening for it right now, so such a request fails silently: you press the button and nothing happens, with no way of telling why.\n\nFix it in one of two ways:\n\n1. Import the blueprint **Climate Director - refused pre-conditioning** *and set it up*. Importing alone is not enough - a blueprint without an automation built from it listens to nothing.\n2. Or write an automation of your own on that event. It carries the zone, the open sensors and a ready-made message.\n\nThis notice disappears by itself once something is listening."

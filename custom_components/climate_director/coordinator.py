@@ -82,6 +82,21 @@ type ClimateDirectorEntry = ConfigEntry[ClimateDirectorCoordinator]
 #: States meaning "home" for a presence entity.
 _HOME_STATES = frozenset({"home", "on", "true"})
 
+#: Hoe vaak hetzelfde verschil achter elkaar aangeboden moet zijn voordat er
+#: een reparatiemelding komt. Met de vangnetklok van 60 seconden is dit
+#: ongeveer tien minuten. Het aantal rondes alleen is niet genoeg: de
+#: ontdubbelaar wacht maar een seconde, dus tien beslisrondes kunnen ook binnen
+#: tien seconden voorbij zijn. Daarom geldt `UNUSABLE_GRACE_SECONDS` ernaast,
+#: net als bij de andere twee meldingen.
+#:
+#: How many times the same difference must have been offered in a row before a
+#: repair notice appears. With the 60-second safety-net clock this is about ten
+#: minutes. The round count alone is not enough: the debouncer waits only a
+#: second, so ten decision rounds can just as well be over within ten seconds.
+#: Hence `UNUSABLE_GRACE_SECONDS` applies alongside it, as it does for the other
+#: two notices.
+_COMMAND_NOT_TAKING_ROUNDS = 10
+
 #: Seizoensnamen die uit een entiteit kunnen komen. Nederlands staat er bewust
 #: bij: veel bestaande opstellingen hebben al een seizoenshelper die "Zomer" of
 #: "Winter" rapporteert, en die hoort te blijven werken.
@@ -254,6 +269,11 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         """Sinds wanneer elke bron een stand vraagt die het apparaat niet kan.
 
         Since when each source asks a mode its appliance cannot run.
+        """
+        self._unapplied: dict[str, tuple[tuple[object, ...], int, datetime]] = {}
+        """Hetzelfde verschil per apparaat: hoe vaak achter elkaar, en sinds wanneer.
+
+        The same difference per appliance: how often in a row, and since when.
         """
         self.zone_overrides: dict[str, bool] = {}
         self._handed_back: dict[str, date] = {}
@@ -800,6 +820,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             self._note_waiting(plan)
             self._report_unreadable()
             self._report_unsupported_modes()
+            self._report_command_not_taking()
             self._schedule_deferral(plan)
             self.async_set_updated_data(plan)
 
@@ -1236,6 +1257,63 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             self.config_entry.entry_id,
             self.config_entry.title,
             self._note_unsupported(),
+        )
+
+    # -- commando's die niet aankomen / commands not taking --------------------
+
+    @callback
+    def _note_unapplied(self) -> dict[str, str]:
+        """Count how often each difference was offered without taking effect.
+
+        Een apparaat dat de aanroep aanneemt maar niet uitvoert, of zichzelf
+        terugzet, levert elke ronde hetzelfde verschil op. Na een aantal rondes
+        is dat geen toeval meer en hoort er een melding te komen. In
+        schaduwmodus wordt er niets uitgevoerd, dus daar telt dit nooit - de
+        verschillenlijst is dan per definitie permanent gevuld.
+
+        An appliance that accepts the call but does not carry it out, or resets
+        itself, yields the same difference every round. After a number of rounds
+        that is no longer chance and a notice should appear. In shadow mode
+        nothing is executed, so this never counts there - the difference list is
+        by definition permanently filled then.
+        """
+        if self.shadow:
+            self._unapplied = {}
+            return {}
+
+        now = dt_util.now()
+        offered = {change.entity_id for change in self.last_changes}
+        for entity_id in list(self._unapplied):
+            if entity_id not in offered:
+                del self._unapplied[entity_id]
+
+        grace = timedelta(seconds=UNUSABLE_GRACE_SECONDS)
+        found: dict[str, str] = {}
+        for change in self.last_changes:
+            fingerprint = (
+                change.command.hvac_mode,
+                change.command.temperature,
+                change.set_mode,
+                change.set_temperature,
+            )
+            previous, count, since = self._unapplied.get(change.entity_id, (None, 0, now))
+            if previous == fingerprint:
+                count += 1
+            else:
+                count, since = 1, now
+            self._unapplied[change.entity_id] = (fingerprint, count, since)
+            if count >= _COMMAND_NOT_TAKING_ROUNDS and now - since >= grace:
+                found[change.entity_id] = _wanted(change)
+        return found
+
+    @callback
+    def _report_command_not_taking(self) -> None:
+        """Put appliances that never take their command under Repairs, or take them away."""
+        problems.async_report_command_not_taking(
+            self.hass,
+            self.config_entry.entry_id,
+            self.config_entry.title,
+            self._note_unapplied(),
         )
 
     # -- vastgelopen zones / stuck zones -------------------------------------
@@ -1787,6 +1865,22 @@ def _as_float(raw: Any) -> float | None:
     except (TypeError, ValueError):
         return None
     return value if math.isfinite(value) else None
+
+
+def _wanted(change: Change) -> str:
+    """Return what a change asks for, short enough to read in a notice.
+
+    De stand is er altijd; het setpoint alleen als het meegestuurd wordt. Een
+    apparaat dat uitgezet moet worden krijgt geen temperatuur mee, en die dan
+    toch noemen zou een lezer op het verkeerde been zetten.
+
+    The mode is always there; the setpoint only when it is sent along. An
+    appliance that has to be switched off gets no temperature with it, and
+    naming one anyway would put a reader on the wrong foot.
+    """
+    if change.set_temperature and change.command.temperature is not None:
+        return f"{change.command.hvac_mode}, {change.command.temperature} °C"
+    return change.command.hvac_mode
 
 
 def _as_modes(raw: Any) -> frozenset[str] | None:
