@@ -147,21 +147,23 @@ class ZoneOverrideSwitch(_DirectorSwitch):
         self.coordinator.zone_overrides[self._zone_id] = self._is_on
 
     def _handle_coordinator_update(self) -> None:
-        """Follow the coordinator, and write the lapse away when it lets go.
+        """Follow the coordinator, and write any lapse away when it lets go.
 
-        De noodknop vervalt bij bedtijd en bij een leeg huis: de coordinator
-        gooit `zone_overrides` dan leeg. Zou de schakelaar haar eigen stand
-        houden, dan stond ze aan terwijl de zone allang weer meedraait - en erger:
-        een herstart herstelt die `on` terug de coordinator in, zodat de
-        overgedragen zone herleeft. Daarom wordt de stand hier bijgewerkt én
-        weggeschreven.
+        De overdracht is van de gebruiker en blijft staan tot hij hem zelf
+        uitzet; de coordinator gooit `zone_overrides` niet meer leeg. Deze
+        koppeling blijft toch staan, want ze is de enige die klopt: zou de
+        schakelaar haar eigen stand houden terwijl de coordinator er anders over
+        denkt, dan stond ze aan terwijl de zone allang weer meedraait - en erger:
+        een herstart herstelt die `on` terug de coordinator in, zodat een
+        overdracht herleeft die er niet meer was.
 
-        The emergency handle lapses at bedtime and on an empty house: the
-        coordinator then empties `zone_overrides`. Were the switch to keep its
-        own state it would read on while the zone has long since rejoined - and
-        worse: a restart restores that `on` back into the coordinator, so the
-        handed-over zone revives. Hence the state is both updated and written
-        away here.
+        The handover belongs to the user and holds until they turn it off
+        themselves; the coordinator no longer empties `zone_overrides`. This
+        binding stays all the same, since it is the only one that is right: were
+        the switch to keep its own state while the coordinator thought
+        otherwise, it would read on while the zone has long since rejoined - and
+        worse: a restart restores that `on` back into the coordinator, reviving a
+        handover that was gone.
         """
         self._is_on = self.coordinator.zone_overrides.get(self._zone_id, False)
         self.async_write_ha_state()

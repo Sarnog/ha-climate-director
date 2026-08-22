@@ -494,8 +494,12 @@ dem zuletzt gelesenen Schnappschuss und dem letzten Plan.
   Stichwort werden die Kalender ignoriert.
 - **Override** (`switch.*_<zone>_override`): übergibt eine Zone vollständig an
   dich. Der Director sendet dieser Zone nichts mehr — auch kein Aus. Die
-  Kreislaufregeln gelten für die anderen Räume weiter. Der Override erlischt
-  von selbst, sobald alle Anwesenden ins Bett gehen oder das Haus leer ist.
+  Kreislaufregeln gelten für die anderen Räume weiter. Er bleibt stehen, bis du
+  ihn selbst wieder ausschaltest, auch über die Nacht und über ein leeres Haus
+  hinweg: Es ist eine Entscheidung, die du zurücknimmst, nicht die von heute
+  Abend. Damit lässt sich eine Zone tagelang eigenen Automationen überlassen.
+  Ein Gerät, das du am Gerät *selbst* ausschaltest, erlischt sehr wohl zur
+  Schlafenszeit oder bei leerem Haus; das steht weiter unten.
 - **Vorheiz-Taste** (`button.*_<zone>_pre_condition`) und **Dauer**
   (`number.*_pre_conditioning_duration`): siehe unten.
 

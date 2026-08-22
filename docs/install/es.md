@@ -487,8 +487,12 @@ También hay una exportación de diagnóstico descargable con la configuración,
   clave. Sin palabra clave, los calendarios se ignoran.
 - **Override** (`switch.*_<zone>_override`): devuelve una zona por completo a
   ti. El director no envía nada a esa zona — ni siquiera un apagado. Las reglas
-  del circuito siguen aplicándose a las demás habitaciones. El override expira
-  solo en cuanto todos los presentes se acuestan o la casa queda vacía.
+  del circuito siguen aplicándose a las demás habitaciones. Se mantiene hasta
+  que lo apagues tú mismo, también a través de la noche y de una casa vacía: es
+  una decisión que deshaces, no la decisión de esta noche. Eso es lo que permite
+  dejar una zona a tus propias automatizaciones durante días. Apagar un aparato
+  en el aparato *mismo* sí caduca al acostarse o con la casa vacía; eso está más
+  abajo.
 - **Botón de preacondicionamiento** (`button.*_<zone>_pre_condition`) y
   **duración** (`number.*_pre_conditioning_duration`): ver abajo.
 

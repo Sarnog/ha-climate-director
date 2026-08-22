@@ -488,8 +488,12 @@ last snapshot read and the last plan.
   keyword the calendars are ignored.
 - **Override** (`switch.*_<zone>_override`): hands one zone over to you
   completely. The director sends that zone nothing at all — an off included.
-  The circuit rules do still apply to the other rooms. The override lapses by
-  itself once everybody who is home turns in or the house is empty.
+  The circuit rules do still apply to the other rooms. It holds until you turn
+  it off yourself, through the night and through an empty house as well: it is a
+  decision you undo, not tonight's decision. That is what makes it usable to
+  leave a zone to automations of your own for days. Switching an appliance off
+  at the appliance *itself* does lapse at bedtime or on an empty house; that is
+  below.
 - **Pre-conditioning button** (`button.*_<zone>_pre_condition`) and **duration**
   (`number.*_pre_conditioning_duration`): see below.
 

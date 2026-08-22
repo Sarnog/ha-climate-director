@@ -496,8 +496,12 @@ le dernier instantané lu et le dernier plan.
   mot-clé. Sans mot-clé, les calendriers sont ignorés.
 - **Override** (`switch.*_<zone>_override`) : rend une zone entièrement à vous.
   Le directeur n'envoie plus rien à cette zone — pas même un arrêt. Les règles
-  de circuit s'appliquent toujours aux autres pièces. L'override expire de
-  lui-même dès que tous les présents vont se coucher ou que la maison est vide.
+  de circuit s'appliquent toujours aux autres pièces. Il tient jusqu'à ce que
+  vous l'éteigniez vous-même, y compris à travers la nuit et une maison vide :
+  c'est une décision que vous défaites, pas la décision d'un soir. C'est ce qui
+  permet de laisser une zone à vos propres automatisations pendant des jours.
+  Éteindre un appareil sur l'appareil *lui-même* expire bel et bien au coucher
+  ou sur une maison vide ; c'est plus bas.
 - **Bouton de préchauffage** (`button.*_<zone>_pre_condition`) et **durée**
   (`number.*_pre_conditioning_duration`) : voir ci-dessous.
 

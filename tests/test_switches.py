@@ -2,17 +2,19 @@
 
 The override switch follows the coordinator and survives a restart honestly.
 
-De noodknop vervalt bij bedtijd en bij een leeg huis. De coordinator gooit
-`zone_overrides` dan leeg, maar de schakelaar hield haar laatst geschreven stand
-(`on`) - en een herstart herstelt precies die stand terug de coordinator in. Zo
-herleefde een overgedragen zone na elke herstart, totdat de schakelaar zijn
-verval ook echt wegschrijft.
+De overdracht blijft staan tot de gebruiker hem zelf uitzet, dus de coordinator
+gooit `zone_overrides` niet uit zichzelf leeg. Maar de koppeling moet wel kloppen
+in allebei de richtingen: raakt de stand daar ooit weg, dan hield de schakelaar
+haar laatst geschreven stand (`on`) - en een herstart herstelt precies die stand
+terug de coordinator in, waarmee een overdracht herleeft die er niet meer was.
+Deze tests pinnen die richting vast.
 
-The emergency handle lapses at bedtime and on an empty house. The coordinator
-then empties `zone_overrides`, but the switch kept its last written state (`on`)
-- and a restart restores exactly that state back into the coordinator. A
-handed-over zone revived after every restart until the switch actually wrote its
-lapse away.
+The handover holds until the user turns it off themselves, so the coordinator
+does not empty `zone_overrides` of its own accord. But the binding has to be
+right in both directions: should the state ever go there, the switch kept its
+last written state (`on`) - and a restart restores exactly that state back into
+the coordinator, reviving a handover that was gone. These tests pin that
+direction down.
 """
 
 from __future__ import annotations

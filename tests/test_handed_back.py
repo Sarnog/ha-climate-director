@@ -418,19 +418,65 @@ class TestGoingToBedGivesItBack:
         item._notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item._zones_handed_back() == set()
 
-    def test_the_master_key_lapses_with_it(self) -> None:
-        """The administrator's switch should not stay hanging over an empty house."""
+    def test_the_master_key_survives_an_empty_house(self) -> None:
+        """De schakelaar is geen hand aan het apparaat en vervalt dus niet mee.
+
+        Beide wegen naar een overgedragen zone staan los van elkaar: iemand die
+        bij het apparaat op uit drukt, en de beheerder die de schakelaar omzet.
+        Het eerste is een besluit van vanavond en hoort morgen niet meer te
+        gelden; het tweede is een besluit dat je zelf terugdraait. Ze werden
+        allebei bij bedtijd weggegooid, waardoor een zone die je met opzet had
+        overgedragen de eerste nacht alweer meedeed - en het migratiedraaiboek,
+        dat op die overdracht leunt, niet uitvoerbaar was.
+
+        The switch is not a hand at the appliance and therefore does not lapse
+        along with one. The two ways into a handed-over zone stand apart:
+        somebody pressing off on the appliance, and the administrator throwing
+        the switch. The first is tonight's decision and should not still hold
+        tomorrow; the second is a decision you undo yourself. Both were thrown
+        away at bedtime, so a zone you deliberately handed over rejoined on the
+        first night - leaving the migration plan, which leans on that handover,
+        impossible to carry out.
+        """
         states = self._with(**{"person.danny": "not_home", "person.nancy": "not_home"})
         item = coordinator(running_plan(), states)
         item.zone_overrides["woonkamer"] = True
         item._zones_handed_back()
-        assert item.zone_overrides == {}
+        assert item.zone_overrides == {"woonkamer": True}
+
+    def test_the_master_key_survives_a_night(self) -> None:
+        states = self._with(
+            **{"sensor.danny_charger_type": "wireless", "sensor.nancy_charger_type": "wireless"}
+        )
+        item = coordinator(running_plan(), states)
+        item.zone_overrides["woonkamer"] = True
+        item._zones_handed_back()
+        assert item.zone_overrides == {"woonkamer": True}
 
     def test_the_master_key_survives_a_house_in_use(self) -> None:
         item = coordinator(running_plan(), self.HOME_AWAKE)
         item.zone_overrides["woonkamer"] = True
         item._zones_handed_back()
         assert item.zone_overrides == {"woonkamer": True}
+
+    def test_the_zone_stays_handed_over_through_the_night(self) -> None:
+        """Wat de melders zien: de zone blijft van de beheerder."""
+        states = self._with(
+            **{"sensor.danny_charger_type": "wireless", "sensor.nancy_charger_type": "wireless"}
+        )
+        item = coordinator(running_plan(), states)
+        item.zone_overrides["woonkamer"] = True
+        assert item._overridden_zones() == {"woonkamer": True}
+
+    def test_a_hand_at_the_appliance_still_lapses_beside_it(self) -> None:
+        """De twee wegen staan los: de ene vervalt, de andere niet."""
+        states = self._with(
+            **{"sensor.danny_charger_type": "wireless", "sensor.nancy_charger_type": "wireless"}
+        )
+        item = coordinator(running_plan(), states)
+        item.zone_overrides["woonkamer"] = True
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        assert item._overridden_zones() == {"woonkamer": True}
 
     def test_waking_up_does_not_hand_it_back_again(self) -> None:
         """Once given back it is gone; getting up cannot re-silence the zone."""

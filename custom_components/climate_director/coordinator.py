@@ -595,15 +595,25 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         wil vanochtend niet dat hij nog steeds stilstaat, en een teller van
         vierentwintig uur zou dat wel doen.
 
+        Dit gaat alleen over de hand aan het apparaat. De overrideschakelaar
+        staat daar los van en blijft staan tot iemand hem zelf uitzet: dat is
+        geen besluit van vanavond maar een besluit dat je terugdraait. Ze werden
+        hier allebei weggegooid, waardoor een zone die je met opzet had
+        overgedragen de eerste nacht alweer meedeed.
+
         The date is the whole expiry. Whoever switched the bedroom off last night
         does not want it still standing still this morning, and a twenty-four
         hour timer would do exactly that.
+
+        This is only about the hand at the appliance. The override switch stands
+        apart from it and holds until somebody turns it off themselves: that is
+        not tonight's decision but one you undo. Both were thrown away here, so a
+        zone deliberately handed over rejoined on the first night.
         """
         if self._everyone_asleep() or self._house_is_empty():
             if self._handed_back:
                 self._handed_back.clear()
                 self._async_save_state()
-            self.zone_overrides.clear()
             return set()
 
         today = dt_util.now().date()
@@ -642,15 +652,15 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
     def _house_is_empty(self) -> bool:
         """Return whether none of the tracked residents is home.
 
-        De noodknop van de beheerder hoort niet te blijven hangen. Is er niemand
-        meer, dan is het geval waarvoor hij hem omzette voorbij - en niets is zo
-        vervelend als thuiskomen in een huis dat al dagen niets doet omdat er ooit
-        een schakelaar aan bleef staan.
+        Wie een apparaat met de hand uitzette deed dat voor de kamer waar hij op
+        dat moment in zat. Is er niemand meer, dan is dat geval voorbij, en
+        niets is zo vervelend als thuiskomen in een kamer die al dagen stilstaat
+        omdat er ooit iemand op uit heeft gedrukt.
 
-        The administrator's emergency handle should not stay hanging. With nobody
-        left, the case it was thrown for is over - and nothing is as annoying as
-        coming home to a house that has done nothing for days because a switch
-        was once left on.
+        Whoever switched an appliance off by hand did that for the room they were
+        sitting in at the time. With nobody left, that case is over - and nothing
+        is as annoying as coming home to a room that has stood still for days
+        because somebody once pressed off.
         """
         tracked = [resident for resident in self.config.residents if resident.presence_entity]
         if not tracked:

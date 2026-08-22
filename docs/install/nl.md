@@ -491,8 +491,12 @@ gelezen momentopname en het laatste plan.
   de agenda's buiten beschouwing.
 - **Override** (`switch.*_override_<zone>`): geeft één zone volledig aan jou.
   De director stuurt die zone dan niets meer — ook geen uit. De circuitregels
-  blijven wel gelden voor de andere kamers. De override vervalt vanzelf zodra
-  iedereen die thuis is naar bed gaat of het huis leeg is.
+  blijven wel gelden voor de andere kamers. Hij blijft staan tot je hem zelf
+  weer uitzet, ook door de nacht en door een leeg huis heen: het is een besluit
+  dat je terugdraait, geen besluit van vanavond. Dat maakt hem bruikbaar om een
+  zone dagenlang aan je eigen automatiseringen te laten. Een apparaat dat je
+  bij het apparaat zélf uitzet vervalt wél bij bedtijd of een leeg huis; dat
+  staat hieronder.
 - **Vooruit-knop** (`button.*_<zone>_vooruit`) en **vooruitduur**
   (`number.*_vooruitduur`): zie hieronder.
 
