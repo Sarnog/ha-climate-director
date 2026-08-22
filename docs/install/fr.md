@@ -624,11 +624,14 @@ automatisation repose sur cet événement.
 ## Résoudre les problèmes
 
 - **`binary_sensor.*_stuck`** s'allume quand une zone reste trop longtemps sur
-  le même motif d'attente (15 minutes par défaut), ou quand une entité
-  configurée est illisible — mal tapée, supprimée ou temporairement
-  `unavailable`. Les entités concernées sont dans l'attribut
-  `unusable_entities`. Un capteur lisible mais qui ne donne aucun nombre y
-  figure aussi (`no number`).
+  le même motif d'attente (15 minutes par défaut) — et rien que pour cela. Une
+  unité extérieure pleine ne compte pas : elle ne se libère que lorsqu'une autre
+  pièce cesse de demander, et cela peut durer des heures. Cette pièce est bel et
+  bien enregistrée comme bloquée. L'attribut `unusable_entities` indique en
+  outre quelles entités configurées sont illisibles — mal tapées, supprimées ou
+  temporairement `unavailable`, ainsi qu'un capteur lisible qui ne donne aucun
+  nombre (`no number`). Cela n'allume pas le capteur ; un avis de réparation
+  arrive pour cela après cinq minutes.
 - **`binary_sensor.*_<zone>_on_stand_in`** s'allume quand une zone tourne sur
   une source qui n'était pas le premier choix, parce que le premier choix est
   injoignable. La pièce devient simplement chaude — et c'est exactement

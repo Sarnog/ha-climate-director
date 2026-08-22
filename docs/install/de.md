@@ -621,10 +621,14 @@ Automatisierung auf diesem Ereignis steht.
 ## Probleme lösen
 
 - **`binary_sensor.*_stuck`** geht an, wenn eine Zone zu lange auf demselben
-  Wartegrund sitzt (Standard 15 Minuten) oder wenn eine eingerichtete Entität
-  nicht lesbar ist — vertippt, gelöscht oder vorübergehend `unavailable`.
-  Welche Entitäten es sind, steht im Attribut `unusable_entities`. Ein Sensor,
-  der lesbar ist, aber keine Zahl liefert, steht dort ebenfalls (`no number`).
+  Wartegrund sitzt (Standard 15 Minuten) — und nur dafür. Eine volle
+  Außeneinheit zählt nicht mit: Die wird erst frei, wenn ein anderer Raum
+  aufhört zu fragen, und das darf Stunden dauern. Dieser Raum gilt sehr wohl als
+  blockiert. Im Attribut `unusable_entities` steht daneben, welche
+  eingerichteten Entitäten nicht lesbar sind — vertippt, gelöscht oder
+  vorübergehend `unavailable`, und ebenso ein Sensor, der lesbar ist, aber keine
+  Zahl liefert (`no number`). Das schaltet den Melder nicht ein; dafür kommt
+  nach fünf Minuten ein Reparaturhinweis.
 - **`binary_sensor.*_<zone>_on_stand_in`** geht an, wenn eine Zone auf einer
   Quelle läuft, die nicht die erste Wahl war, weil die erste Wahl unerreichbar
   ist. Der Raum wird einfach warm — und genau deshalb merkst du ohne Melder

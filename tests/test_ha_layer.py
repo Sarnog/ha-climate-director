@@ -822,11 +822,24 @@ class TestTheEntities:
         sensor = _bind(ZoneFallbackSensor, running, _zone_id="woonkamer")
         assert sensor.is_on is False
 
-    def test_the_stuck_sensor_reports_unreadable_entities(self, running) -> None:
-        """Het toestandsregister is hier leeg, dus alles is onleesbaar - en dat mag
-        de melder niet stil laten."""
+    def test_the_stuck_sensor_names_unreadable_entities_without_alarming(self, running) -> None:
+        """Onleesbare entiteiten staan in het attribuut, maar zetten de melder niet aan.
+
+        Het toestandsregister is hier leeg, dus alles is onleesbaar. Daar hoort
+        sinds deze ronde een eigen reparatiemelding bij; de vastloopmelder gaat
+        weer alleen over een zone die te lang op dezelfde wachtreden staat,
+        precies wat zijn naam zegt. De lijst blijft er wel in staan, want de
+        bewakingsblueprint leest hem.
+
+        Unreadable entities sit in the attribute but do not raise the sensor.
+        The state registry is empty here, so everything is unreadable. That has a
+        repair notice of its own as of this round; the stuck sensor is once again
+        only about a zone sitting on the same waiting reason too long, exactly
+        what its name says. The list stays in the attribute, since the monitoring
+        blueprint reads it.
+        """
         sensor = _bind(StuckSensor, running)
-        assert sensor.is_on is True
+        assert sensor.is_on is False
         assert sensor.extra_state_attributes["zones"] == []
         assert sensor.extra_state_attributes["unusable_entities"]
 

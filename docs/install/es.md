@@ -613,11 +613,14 @@ una automatización se apoya en ese evento.
 ## Resolver problemas
 
 - **`binary_sensor.*_stuck`** se enciende cuando una zona lleva demasiado tiempo
-  con el mismo motivo de espera (15 minutos por defecto), o cuando una entidad
-  configurada no se puede leer — mal escrita, borrada o temporalmente
-  `unavailable`. Qué entidades son está en el atributo `unusable_entities`.
-  Un sensor legible pero que no da ningún número también figura ahí
-  (`no number`).
+  con el mismo motivo de espera (15 minutos por defecto) — y solo por eso. Una
+  unidad exterior llena no cuenta: solo se libera cuando otra habitación deja de
+  pedir, y eso puede durar horas. Esa habitación sí queda registrada como
+  bloqueada. El atributo `unusable_entities` indica además qué entidades
+  configuradas no se pueden leer — mal escritas, borradas o temporalmente
+  `unavailable`, y también un sensor legible que no da ningún número
+  (`no number`). Eso no enciende el sensor; para ello llega un aviso de
+  reparación al cabo de cinco minutos.
 - **`binary_sensor.*_<zone>_on_stand_in`** se enciende cuando una zona funciona
   con una fuente que no era la primera opción, porque la primera opción es
   inalcanzable. La habitación simplemente se calienta — y por eso mismo, sin

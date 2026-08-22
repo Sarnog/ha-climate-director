@@ -472,7 +472,14 @@ async def test_the_unusable_list_names_whatever_cannot_be_read(how: str) -> None
     try:
         unusable = home.coordinator.unusable_entities()
         assert unusable.get("sensor.buiten") == ("missing" if how == "missing" else how)
-        assert home.value("stuck") == "on", "een onleesbare entiteit hoort op te vallen"
+        # Opvallen doet hij onder Reparaties (na vijf minuten, zie
+        # test_unreadable_entities.py) en in dit attribuut - niet meer via de
+        # vastloopmelder, die weer alleen over wachtende zones gaat.
+        #
+        # Standing out happens under Repairs (after five minutes, see
+        # test_unreadable_entities.py) and in this attribute - no longer through
+        # the stuck sensor, which is once again only about waiting zones.
+        assert "sensor.buiten" in home.values("stuck")["unusable_entities"]
     finally:
         await stop_house(home)
 
@@ -515,7 +522,7 @@ async def test_an_unrecognised_season_state_is_reported() -> None:
     try:
         unusable = home.coordinator.unusable_entities()
         assert unusable.get("sensor.seizoen") == "unrecognized season: droog"
-        assert home.value("stuck") == "on", "een onherkenbaar seizoen hoort op te vallen"
+        assert "sensor.seizoen" in home.values("stuck")["unusable_entities"]
     finally:
         await stop_house(home)
 
@@ -534,11 +541,11 @@ async def test_a_readable_sensor_without_a_number_is_reported() -> None:
     """Een sensor die bestaat en leesbaar is, maar geen getal geeft.
 
     De zone leest NO_INDOOR_TEMPERATURE en doet niets; de sensor hoort daarom
-    in de onbruikbaarheidslijst te staan, zodat de vastloopmelder aangaat.
+    in de onbruikbaarheidslijst te staan, waar de reparatiemelding hem oppikt.
 
     A sensor that exists and reads fine, but yields no number. The zone reads
     NO_INDOOR_TEMPERATURE and does nothing; the sensor therefore belongs in the
-    unusable list, so the stuck sensor comes on.
+    unusable list, from where the repair notice picks it up.
     """
     states = live_world()
     states["sensor.woonkamer"] = ("warm", {})
@@ -546,7 +553,7 @@ async def test_a_readable_sensor_without_a_number_is_reported() -> None:
     try:
         unusable = home.coordinator.unusable_entities()
         assert unusable.get("sensor.woonkamer") == "no number"
-        assert home.value("stuck") == "on"
+        assert "sensor.woonkamer" in home.values("stuck")["unusable_entities"]
     finally:
         await stop_house(home)
 

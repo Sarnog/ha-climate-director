@@ -617,11 +617,14 @@ automatisering op die gebeurtenis staat.
 ## Problemen oplossen
 
 - **`binary_sensor.*_vastgelopen`** gaat aan als een zone te lang op dezelfde
-  wachtreden staat (standaard na 15 minuten), of als een ingestelde entiteit
-  niet te lezen is — verkeerd getikt, verwijderd, of tijdelijk `unavailable`.
-  Welke entiteiten het zijn staat in het attribuut `unusable_entities`. Een
-  sensor die wel leesbaar is maar geen getal oplevert, staat er ook in
-  (`no number`).
+  wachtreden staat (standaard na 15 minuten) — en alleen daarvoor. Een volle
+  buitenunit telt niet mee: die loopt pas leeg als een andere kamer ophoudt met
+  vragen, en dat mag uren duren. Die kamer staat wél als geblokkeerd te boek.
+  In het attribuut `unusable_entities` staat daarnaast welke ingestelde
+  entiteiten niet te lezen zijn — verkeerd getikt, verwijderd, of tijdelijk
+  `unavailable`, en ook een sensor die wel leesbaar is maar geen getal oplevert
+  (`no number`). Dat zet de melder niet aan; daar komt na vijf minuten een
+  reparatiemelding voor.
 - **`binary_sensor.*_<zone>_op_reserve`** gaat aan als een zone draait op een
   bron die niet de eerste keus was, omdat de eerste keus onbereikbaar is. De
   kamer wordt gewoon warm — en precies daarom merk je zonder melder niets tot

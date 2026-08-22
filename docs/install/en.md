@@ -612,10 +612,13 @@ automation stands on that event.
 ## Troubleshooting
 
 - **`binary_sensor.*_stuck`** comes on when a zone sits on the same waiting
-  reason too long (15 minutes by default), or when a configured entity cannot
-  be read — mistyped, deleted, or temporarily `unavailable`. Which entities
-  they are is in the `unusable_entities` attribute. A sensor that reads fine
-  but yields no number is listed there too (`no number`).
+  reason too long (15 minutes by default) — and only for that. A full outdoor
+  unit does not count: it only frees up once another room stops asking, and that
+  may take hours. That room does stand recorded as blocked. The
+  `unusable_entities` attribute additionally lists which configured entities
+  cannot be read — mistyped, deleted, or temporarily `unavailable`, and a sensor
+  that reads fine but yields no number as well (`no number`). That does not
+  raise the sensor; a repair notice follows for it after five minutes.
 - **`binary_sensor.*_<zone>_on_stand_in`** comes on when a zone runs on a source
   that was not the first choice, because the first choice is unreachable. The
   room simply gets warm — and that is exactly why, without a sensor, you notice

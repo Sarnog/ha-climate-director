@@ -169,11 +169,25 @@ class StuckSensor(ClimateDirectorEntity, BinarySensorEntity):
     klem is van buiten niet te onderscheiden van "de director besluit niets",
     en dat is de stilste manier waarop deze integratie kan falen.
 
+    Hij ging ook aan bij elke ingestelde entiteit die niet te lezen was, en dat
+    is iets anders: een telefoon die uit staat maakt zijn opladersensor
+    onleesbaar, en dan brandde er een melder die "vastgelopen" heet. Daar is nu
+    een eigen reparatiemelding voor. De lijst blijft wel in het attribuut staan,
+    want de bewakingsblueprint leest hem en hij is er meteen - de
+    reparatiemelding wacht vijf minuten.
+
     The other sensors say what is; this one says that something has stopped
     changing. A pause when switching duty should last seconds, so a zone sitting
     on one for a quarter of an hour is no longer waiting - it is stuck. From the
     outside such a deadlock is indistinguishable from "the director decides
     nothing", which is the quietest way this integration can fail.
+
+    It also came on for every configured entity that could not be read, and that
+    is a different thing: a phone that is off makes its charger sensor
+    unreadable, and then a sensor called "stuck" was burning. That has a repair
+    notice of its own now. The list does stay in the attribute, since the
+    monitoring blueprint reads it and it is there at once - the repair notice
+    waits five minutes.
     """
 
     _attr_translation_key = "stuck"
@@ -187,10 +201,10 @@ class StuckSensor(ClimateDirectorEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool | None:
-        """Return whether anything is stuck or unreadable."""
+        """Return whether a zone has been waiting too long."""
         if self.coordinator.data is None:
             return None
-        return bool(self.coordinator.stuck_zones() or self.coordinator.unusable_entities())
+        return bool(self.coordinator.stuck_zones())
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
