@@ -1123,7 +1123,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             )
             for zone in zones
         ]
-        options.append(_back_option("circuit_priority"))
+        options.append(_back_option())
         return self.async_show_form(
             step_id="circuit_priorities",
             data_schema=vol.Schema(
