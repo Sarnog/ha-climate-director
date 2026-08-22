@@ -998,3 +998,39 @@ class TestTheStuckSensorOverTime:
         monkeypatch.setattr(module.dt_util, "now", lambda: NOW + timedelta(minutes=16))
         item._note_waiting(self._plan_with(Reason.CIRCUIT_AT_CAPACITY))
         assert item.stuck_zones() == {}
+
+
+def test_an_unreachable_generator_reads_unreachable_not_left_alone() -> None:
+    """De CommandSensor belooft onderscheid; een kapotte ketel is 'unreachable'.
+
+    The CommandSensor promises a distinction; a broken boiler is 'unreachable'.
+    """
+    from conftest import climate, make_world
+
+    from custom_components.climate_director.engine import MODE_OFF, Generator
+
+    boiler = "climate.ketel"
+    config = DirectorConfig(
+        zones=(
+            Zone(
+                "woonkamer",
+                "Woonkamer",
+                "sensor.woonkamer",
+                sources=(Source("trv", "climate.trv_woonkamer", role=SourceRole.HEAT_ONLY),),
+                heat=ModeSettings(21.0, 20.0),
+            ),
+        ),
+        generators=(Generator("cv", "CV", boiler),),
+    )
+    world = make_world(
+        indoor={"woonkamer": 18.0},
+        climates={"climate.trv_woonkamer": "off", boiler: climate(MODE_OFF, available=False)},
+    )
+    plan = decide(config, world)
+
+    item = coordinator({}, config)
+    item.data = plan
+    item.world = world
+    sensor = _bind(CommandSensor, item, _target=boiler)
+    assert sensor.native_value == "unreachable"
+    assert sensor.extra_state_attributes["reason"] == "source_unreachable"

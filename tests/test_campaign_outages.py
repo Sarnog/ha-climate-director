@@ -239,12 +239,11 @@ class TestWhenEverythingIsGone:
 
         assert plan.commands == ()
         assert len(plan.zones) == len(config.zones)
-        assert {item.entity_id for item in plan.untouched} == {
-            FIRST,
-            SECOND,
-            THIRD,
-            ATTIC,
-        }
+        # Ook de onbereikbare ketel hoort in `untouched`: "elk apparaat komt in
+        # precies één van de twee lijsten" geldt voor generatoren net zo goed.
+        # The unreachable boiler belongs in `untouched` too: "every appliance
+        # lands in exactly one of the two lists" holds for generators as well.
+        assert {item.entity_id for item in plan.untouched} == set(APPLIANCES)
         assert all(item.reason is Reason.SOURCE_UNREACHABLE for item in plan.untouched)
 
     def test_every_zone_says_it_has_nothing_to_work_with(self) -> None:

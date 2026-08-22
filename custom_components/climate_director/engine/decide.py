@@ -642,7 +642,9 @@ def _build_commands(
             )
         )
 
-    commands.extend(_generator_commands(config, world, grants))
+    generator_commands, generator_untouched = _generator_commands(config, world, grants)
+    commands.extend(generator_commands)
+    untouched.extend(generator_untouched)
     commands = _collapse_shared(config, world, commands)
 
     # Een gedeeld apparaat staat onder meerdere zones. Krijgt het via één zone
@@ -722,17 +724,29 @@ def _claim(config: DirectorConfig, world: WorldState, command: UnitCommand) -> t
 
 def _generator_commands(
     config: DirectorConfig, world: WorldState, grants: dict[str, constraints.Grant]
-) -> list[UnitCommand]:
-    """Return the command for each shared heat source.
+) -> tuple[list[UnitCommand], list[UntouchedSource]]:
+    """Return the command for each shared heat source, and the ones left alone.
 
     A generator runs while any zone it serves is being heated, and stops once
     none is. There is nothing to arbitrate here - radiator valves all only ever
     heat - so this is a plain follow-along, not a conflict to resolve.
+
+    De tweede lijst is voor `Plan.untouched`: een onbereikbare ketel hoort daar
+    met `SOURCE_UNREACHABLE` in, niet stilletjes nergens. Een generator hoort
+    bij geen enkele zone, dus zijn `UntouchedSource.zone_id` is leeg - behalve
+    bij een override, waar de zone die de override draagt genoemd wordt.
+
+    The second list feeds `Plan.untouched`: an unreachable boiler belongs there
+    as `SOURCE_UNREACHABLE`, not silently nowhere. A generator belongs to no
+    zone, so its `UntouchedSource.zone_id` is empty - except under an override,
+    where the zone carrying the override is named.
     """
     commands: list[UnitCommand] = []
+    untouched: list[UntouchedSource] = []
 
     for generator in config.generators:
         if not world.climate(generator.entity_id).available:
+            untouched.append(UntouchedSource(generator.entity_id, "", Reason.SOURCE_UNREACHABLE))
             continue
 
         asking = [
@@ -765,10 +779,18 @@ def _generator_commands(
             #
             # Switching on stays allowed: that never clashes with a zone that
             # wants heat. Only the switching off is withheld here.
-            if any(
-                generator.serves(zone.zone_id) and world.overridden(zone.zone_id)
-                for zone in config.zones
-            ):
+            overridden = next(
+                (
+                    zone.zone_id
+                    for zone in config.zones
+                    if generator.serves(zone.zone_id) and world.overridden(zone.zone_id)
+                ),
+                "",
+            )
+            if overridden:
+                untouched.append(
+                    UntouchedSource(generator.entity_id, overridden, Reason.MANUAL_OVERRIDE)
+                )
                 continue
 
             commands.append(
@@ -803,7 +825,7 @@ def _generator_commands(
             )
         )
 
-    return commands
+    return commands, untouched
 
 
 def _idle_mode(config: DirectorConfig, world: WorldState, source: Source, reason: Reason) -> str:

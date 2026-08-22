@@ -133,6 +133,24 @@ class TestASharedBoiler:
         )
         assert decide(house(generator=self.generator), state).command_for(BOILER) is None
 
+    def test_an_unavailable_boiler_says_why_it_gets_nothing(self) -> None:
+        """`Plan.untouched` belooft één lijst per apparaat; een ketel hoort erbij.
+
+        `Plan.untouched` promises one list per appliance; a boiler belongs in it.
+        """
+        from custom_components.climate_director.engine import Reason
+
+        state = world(woonkamer=18.0, keuken=22.0, studeerkamer=22.0)
+        state = make_world(
+            indoor=state.indoor_temperatures,
+            climates=dict(state.climates) | {BOILER: climate(MODE_OFF, available=False)},
+        )
+        plan = decide(house(generator=self.generator), state)
+        assert plan.command_for(BOILER) is None
+        untouched = plan.untouched_for(BOILER)
+        assert untouched is not None
+        assert untouched.reason is Reason.SOURCE_UNREACHABLE
+
 
 class TestAGeneratorServingSomeRooms:
     """A house where only part of the rooms hang off one boiler."""
