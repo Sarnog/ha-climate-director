@@ -527,6 +527,15 @@ class TestTheSeasonAndTheCalendar:
         item._notice_precipitation(self._event("weather.buienradar", "cloudy", "rainy"))
         assert item._precipitation_seen_at == NOW
 
+    def test_the_listener_stays_out_of_it_without_a_source(self) -> None:
+        """Geen neerslagbron ingesteld: geen enkele wijziging noteert iets.
+
+        No precipitation source configured: no change records anything.
+        """
+        item = coordinator({"weather.buienradar": FakeState("cloudy")}, self._config())
+        item._notice_precipitation(self._event("weather.buienradar", "cloudy", "rainy"))
+        assert item._precipitation_seen_at is None
+
     def test_the_listener_ignores_a_change_between_two_dry_states(self) -> None:
         """Bewolkt -> zonnig is geen neerslag en hoort de nalooptijd niet te verlengen.
 

@@ -344,7 +344,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             entities.add(self.config.outdoor_sensor)
         if self.config.seasons.source is SeasonSource.ENTITY and self.config.seasons.entity_id:
             entities.add(self.config.seasons.entity_id)
-        if self.config.precipitation.source:
+        if self.config.precipitation.enabled:
             entities.add(self.config.precipitation.source)
 
         for zone in self.config.zones:
@@ -424,11 +424,11 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         a precipitation state counts; a transition between two dry states
         (cloudy -> sunny) must not extend the grace.
         """
-        source = self.config.precipitation.source
-        if not source or event.data["entity_id"] != source:
+        settings = self.config.precipitation
+        if not settings.enabled or event.data["entity_id"] != settings.source:
             return
         new_state = event.data["new_state"]
-        if new_state is None or new_state.state not in self.config.precipitation.states:
+        if new_state is None or new_state.state not in settings.states:
             return
         self._precipitation_seen_at = dt_util.now()
 
@@ -1237,7 +1237,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         that calls itself "read".
         """
         settings = self.config.precipitation
-        if not settings.source:
+        if not settings.enabled:
             return False
         state = self.hass.states.get(settings.source)
         if state is not None and state.state in settings.states:
@@ -1258,11 +1258,11 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         would be lost - while the reader itself must never write. Besides the
         listener this is the only place that records the moment.
         """
-        source = self.config.precipitation.source
-        if not source:
+        settings = self.config.precipitation
+        if not settings.enabled:
             return
-        state = self.hass.states.get(source)
-        if state is not None and state.state in self.config.precipitation.states:
+        state = self.hass.states.get(settings.source)
+        if state is not None and state.state in settings.states:
             self._precipitation_seen_at = dt_util.now()
 
     # -- circuitgeschiedenis / circuit history -------------------------------

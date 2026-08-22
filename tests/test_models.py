@@ -15,6 +15,7 @@ from custom_components.climate_director.engine import (
     DirectorConfig,
     ModeSettings,
     OutdoorWindow,
+    PrecipitationSettings,
     Resident,
     Season,
     Source,
@@ -127,6 +128,21 @@ class TestModeSettings:
         settings = ModeSettings(21.0, 21.0, seasons=frozenset({Season.SUMMER}))
         assert settings.allowed_in(Season.SUMMER)
         assert not settings.allowed_in(Season.WINTER)
+
+
+class TestPrecipitationSettings:
+    """Zonder bron is de hele neerslagregel uit; dat is één vraag, niet vier.
+
+    Without a source the whole precipitation rule is off; that is one question,
+    not four.
+    """
+
+    def test_without_a_source_it_is_off(self) -> None:
+        assert PrecipitationSettings().enabled is False
+        assert PrecipitationSettings(source="").enabled is False
+
+    def test_with_a_source_it_is_on(self) -> None:
+        assert PrecipitationSettings(source="weather.buienradar").enabled is True
 
 
 class TestLookups:
