@@ -47,7 +47,8 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
     wishes, refusals, shut, woulds = _collect_wishes(config, world, previous)
     wishes, dropped = _apply_exclusive_groups(config, world, wishes)
 
-    grants, circuit_decisions, deferrals = _resolve_circuits(config, world, wishes)
+    standing = _standing_firm(config, world, refusals)
+    grants, circuit_decisions, deferrals = _resolve_circuits(config, world, wishes, standing)
     reasons = _zone_reasons(config, grants, dropped, refusals)
 
     commands, untouched = _build_commands(config, world, grants, reasons, wishes)
@@ -212,8 +213,60 @@ def _outranks(request: constraints.Request, holder_rank: tuple[int, str]) -> boo
     return request.rank < holder_rank
 
 
+def _standing_firm(
+    config: DirectorConfig, world: WorldState, refusals: dict[str, Reason]
+) -> frozenset[str]:
+    """Return the running appliances this round will leave exactly as they are.
+
+    Twee gevallen krijgen niets én draaien door: een unit in een overgedragen
+    zone, en een draaiende unit in een zone waarvan de binnentemperatuur niet
+    te lezen is. Het derde ongemoeide geval - een onbereikbaar apparaat - staat
+    er niet bij: daarvan is niet te zien wat het doet, en de engine leest het
+    als stil.
+
+    Een handbediende bron staat er alleen bij als de zone is overgedragen. Bij
+    een onleesbare thermometer wordt die namelijk niet met rust gelaten maar
+    door `_manual_conflict` beoordeeld, en die kan hem alsnog wegschakelen.
+
+    Een gedeeld apparaat telt alleen mee als élke zone die het bedient het met
+    rust laat. Doet één zone dat niet, dan krijgt het apparaat via die zone
+    gewoon een opdracht en valt er niets vast te houden.
+
+    Two cases get nothing and keep running: a unit in a zone that has been
+    handed over, and a running unit in a zone whose indoor temperature cannot be
+    read. The third untouched case - an unreachable appliance - is absent: there
+    is no telling what it does, and the engine reads it as standing still.
+
+    A hand-operated source only counts when its zone has been handed over. On an
+    unreadable thermometer it is not left alone but judged by `_manual_conflict`,
+    which may stand it down after all.
+
+    A shared appliance counts only when every zone it serves leaves it alone.
+    If one of them does not, the appliance gets a command through that zone and
+    there is nothing to hold on to.
+    """
+
+    def left_alone(zone: Zone, source: Source) -> bool:
+        if world.overridden(zone.zone_id):
+            return True
+        return source.autostart and refusals.get(zone.zone_id) is Reason.NO_INDOOR_TEMPERATURE
+
+    owners: dict[str, list[bool]] = {}
+    for zone, source in config.sources():
+        owners.setdefault(source.entity_id, []).append(left_alone(zone, source))
+
+    return frozenset(
+        entity_id
+        for entity_id, verdicts in owners.items()
+        if world.climate(entity_id).running and all(verdicts)
+    )
+
+
 def _resolve_circuits(
-    config: DirectorConfig, world: WorldState, wishes: dict[str, constraints.Request]
+    config: DirectorConfig,
+    world: WorldState,
+    wishes: dict[str, constraints.Request],
+    standing: frozenset[str] = frozenset(),
 ) -> tuple[dict[str, constraints.Grant], tuple[CircuitDecision, ...], tuple[Deferral, ...]]:
     """Run every circuit's constraints and collect the grants they produce."""
     by_circuit: dict[str, list[constraints.Request]] = {}
@@ -235,7 +288,7 @@ def _resolve_circuits(
     # reported as idle rather than silently omitted.
     for circuit in config.circuits:
         outcome = constraints.resolve(
-            config, world, circuit, tuple(by_circuit.get(circuit.circuit_id, ()))
+            config, world, circuit, tuple(by_circuit.get(circuit.circuit_id, ())), standing
         )
         decisions.append(outcome.decision)
         deferrals.extend(outcome.deferrals)
@@ -243,7 +296,7 @@ def _resolve_circuits(
             grants[grant.zone_id] = grant
 
     for request in solo:
-        outcome = constraints.resolve(config, world, _SOLO, (request,))
+        outcome = constraints.resolve(config, world, _SOLO, (request,), standing)
         deferrals.extend(outcome.deferrals)
         for grant in outcome.grants:
             grants[grant.zone_id] = grant

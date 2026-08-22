@@ -80,11 +80,23 @@ def resolve(
     world: WorldState,
     circuit: Circuit,
     requests: tuple[Request, ...],
+    standing: frozenset[str] = frozenset(),
 ) -> Outcome:
-    """Resolve every request on one circuit into grants the hardware can honour."""
+    """Resolve every request on one circuit into grants the hardware can honour.
+
+    `standing` noemt de draaiende units die de director deze ronde met opzet
+    niets stuurt - ook geen uit. Ze staan er dus nog als het plan geland is, en
+    dat maakt ze voor dit circuit even dwingend als een unit die helemaal buiten
+    de installatie valt.
+
+    `standing` names the running units the director deliberately sends nothing
+    this round - an off included. They are therefore still there once the plan
+    has landed, which makes them as binding for this circuit as a unit outside
+    the installation altogether.
+    """
     ordered = tuple(sorted(requests, key=lambda request: request.rank))
     current = active_family(world, circuit)
-    locked = _unmanaged_family(config, world, circuit)
+    locked = _unmanaged_family(config, world, circuit, standing)
 
     if circuit.simultaneous_heat_cool:
         # Nothing to arbitrate: every unit has its own compressor duty. The
@@ -94,7 +106,7 @@ def resolve(
             for request in ordered
         ]
         label = ordered[0].family if ordered else ModeFamily.NEUTRAL
-        return _finish(config, world, circuit, ordered, granted, label, None, ())
+        return _finish(config, world, circuit, ordered, granted, label, None, (), standing=standing)
 
     chosen, reason = _choose_family(world, circuit, ordered, current, locked)
     deferrals: list[Deferral] = []
@@ -177,6 +189,7 @@ def resolve(
         winner,
         tuple(deferrals),
         reason,
+        standing=standing,
     )
 
 
@@ -196,11 +209,29 @@ def active_family(world: WorldState, circuit: Circuit) -> ModeFamily:
     return ModeFamily.NEUTRAL
 
 
-def _unmanaged_family(config: DirectorConfig, world: WorldState, circuit: Circuit) -> ModeFamily:
-    """Return the duty forced on a circuit by units the director cannot steer."""
+def _unmanaged_family(
+    config: DirectorConfig,
+    world: WorldState,
+    circuit: Circuit,
+    standing: frozenset[str] = frozenset(),
+) -> ModeFamily:
+    """Return the duty forced on a circuit by units the director cannot steer.
+
+    Twee soorten dwingen: een unit die in geen enkele zone staat, en een unit
+    die deze ronde met opzet niets krijgt en gewoon doordraait. Die tweede werd
+    hier niet meegeteld, en daardoor kon de director de tegengestelde taak op
+    dezelfde buitenunit zetten terwijl er nog een unit in de eerste taak stond
+    te draaien - precies de toestand die hier onbereikbaar hoort te zijn.
+
+    Two kinds compel: a unit sitting in no zone at all, and a unit that
+    deliberately gets nothing this round and simply keeps running. That second
+    one was left out here, which let the director put the opposing duty on the
+    same outdoor unit while a unit still ran the first - exactly the state this
+    is meant to make unreachable.
+    """
     managed = {source.entity_id for _, source in config.sources_on(circuit)}
     for entity_id in circuit.units:
-        if entity_id in managed:
+        if entity_id in managed and entity_id not in standing:
             continue
         family = world.climate(entity_id).family
         if family in (ModeFamily.HEAT, ModeFamily.COOL):
@@ -268,9 +299,11 @@ def _finish(
     winner: str | None,
     deferrals: tuple[Deferral, ...],
     reason: Reason = Reason.REGULATING,
+    *,
+    standing: frozenset[str] = frozenset(),
 ) -> Outcome:
     """Apply the capacity and short-cycle limits, then assemble the outcome."""
-    granted = _apply_capacity(config, world, circuit, requests, granted)
+    granted = _apply_capacity(config, world, circuit, requests, granted, standing)
     granted, cycle_deferrals = _apply_short_cycle(world, circuit, requests, granted)
 
     displaced = tuple(grant.zone_id for grant in granted if not grant.granted)
@@ -294,6 +327,7 @@ def _standing_claims(
     world: WorldState,
     circuit: Circuit,
     requests: tuple[Request, ...],
+    standing: frozenset[str] = frozenset(),
 ) -> int:
     """Return how many units keep the compressor whatever this round grants.
 
@@ -330,7 +364,7 @@ def _standing_claims(
         for entity_id in circuit.units
         if entity_id not in asking
         and world.climate(entity_id).running
-        and _keeps_claiming(config, world, circuit, entity_id)
+        and _keeps_claiming(config, world, circuit, entity_id, standing)
     )
 
 
@@ -339,6 +373,7 @@ def _keeps_claiming(
     world: WorldState,
     circuit: Circuit,
     entity_id: str,
+    standing: frozenset[str] = frozenset(),
 ) -> bool:
     """Return whether this running unit holds its place whatever we grant.
 
@@ -364,6 +399,8 @@ def _keeps_claiming(
     opposite mistake - a place too many - puts an outdoor unit to work it was
     not built for, and that does not last one round.
     """
+    if entity_id in standing:
+        return True
     owners = [
         (zone, source)
         for zone, source in config.sources_on(circuit)
@@ -382,13 +419,14 @@ def _apply_capacity(
     circuit: Circuit,
     requests: tuple[Request, ...],
     granted: list[Grant],
+    standing: frozenset[str] = frozenset(),
 ) -> list[Grant]:
     """Trim the winners down to the outdoor unit's capacity."""
     cap = circuit.max_concurrent_units
     if cap is None:
         return granted
 
-    used = _standing_claims(config, world, circuit, requests)
+    used = _standing_claims(config, world, circuit, requests, standing)
 
     rank = {request.zone.zone_id: request.rank for request in requests}
     winners = sorted(
