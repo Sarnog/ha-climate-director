@@ -165,6 +165,21 @@ def season_from_state(raw: str | None) -> Season:
     return _SEASON_NAMES.get(raw.strip().lower(), Season.UNKNOWN)
 
 
+def storage_key(entry_id: str) -> str:
+    """Return the key one installation keeps its by-hand state under.
+
+    Op één plek, want hij wordt op twee plekken gebruikt: de coordinator
+    schrijft hem vol en het verwijderen van een installatie gooit hem weg. Twee
+    keer uitgeschreven zou betekenen dat een hernoeming het opruimen stilletjes
+    laat missen.
+
+    In one place, since it is used in two: the coordinator fills it and removing
+    an installation throws it away. Spelling it out twice would mean a rename
+    quietly makes the cleanup miss.
+    """
+    return f"{DOMAIN}.{entry_id}.precondition"
+
+
 class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
     """Reads the world, runs the engine, applies the outcome."""
 
@@ -225,7 +240,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         # held. Renaming it would throw away the running requests of every
         # existing installation, and a file name is not worth that.
         self._store: Store[dict[str, Any]] = Store(
-            hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}.precondition"
+            hass, STORAGE_VERSION, storage_key(entry.entry_id)
         )
         self._waiting: dict[str, tuple[Reason, datetime]] = {}
         self.zone_overrides: dict[str, bool] = {}
@@ -291,6 +306,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         """
         self._cancel_deferral: CALLBACK_TYPE | None = None
         self._clock_reeval_unsub: CALLBACK_TYPE | None = None
+        self._cancel_precondition_wake: CALLBACK_TYPE | None = None
         self._debouncer = Debouncer(
             hass,
             _LOGGER,
@@ -686,6 +702,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         """Stop deciding and drop every pending timer."""
         self._cancel_pending_deferral()
         self._cancel_clock_reeval()
+        self._cancel_pending_precondition_wake()
         self._debouncer.async_shutdown()
         await super().async_shutdown()
 
@@ -804,7 +821,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
 
         if chosen:
             self._async_save_state()
-            self._preconditions_expire_at(until)
+            self._preconditions_expire_at(min(self._precondition.values()))
             self.async_request_evaluation()
         return dict.fromkeys(chosen, until)
 
@@ -902,7 +919,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 self._handed_back[zone_id] = day
 
         if self._precondition:
-            self._preconditions_expire_at(max(self._precondition.values()))
+            self._preconditions_expire_at(min(self._precondition.values()))
 
     @callback
     def async_cancel_precondition(self, zone_ids: list[str] | None) -> None:
@@ -921,6 +938,16 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             for zone_id in zone_ids:
                 self._precondition.pop(zone_id, None)
                 self._precondition_bypass.discard(zone_id)
+        # De wekker gaat mee met de verzoeken die er nog staan. Is er niets
+        # meer, dan blijft de staande wekker gewoon aflopen: hij vraagt dan een
+        # beslisronde die niets te doen vindt, en een ronde zonder verschil kost
+        # geen service call.
+        #
+        # The alarm follows the requests still standing. With nothing left the
+        # standing alarm simply runs out: it then asks for a round that finds
+        # nothing to do, and a round without a difference costs no service call.
+        if self._precondition:
+            self._preconditions_expire_at(min(self._precondition.values()))
         self._async_save_state()
         self.async_request_evaluation()
 
@@ -931,13 +958,43 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         Zonder dit blijft een lege woning doorstoken tot er toevallig iets
         anders verandert, en op een stille middag gebeurt dat lang niet.
 
+        Er staat er altijd maar één, op het eerstvolgende verzoek dat afloopt;
+        gaat die af, dan zet hij zichzelf op het verzoek daarna. Zonder dat
+        handvat bleef er bij elk verzoek een wekker hangen die na het afsluiten
+        van de installatie alsnog afging, op een coordinator die er niet meer
+        was.
+
         Without this an empty house keeps burning until something else happens
         to change, and on a quiet afternoon that is a long wait.
+
+        There is only ever one, set on the first request to run out; when it
+        fires it sets itself on the next one. Without that handle every request
+        left an alarm hanging that went off after the installation was torn
+        down, on a coordinator that was no longer there.
         """
+        self._cancel_pending_precondition_wake()
         seconds = (until - dt_util.now()).total_seconds()
         if seconds <= 0:
             return
-        async_call_later(self.hass, seconds + 1, lambda _now: self.async_request_evaluation())
+        self._cancel_precondition_wake = async_call_later(
+            self.hass, seconds + 1, self._on_precondition_expiry
+        )
+
+    @callback
+    def _on_precondition_expiry(self, _now: datetime) -> None:
+        """Decide again now a request has run out, and wait for the next one."""
+        self._cancel_precondition_wake = None
+        self.async_request_evaluation()
+        pending = self._live_preconditions()
+        if pending:
+            self._preconditions_expire_at(min(pending.values()))
+
+    @callback
+    def _cancel_pending_precondition_wake(self) -> None:
+        """Drop the scheduled wake-up, if there is one."""
+        if self._cancel_precondition_wake is not None:
+            self._cancel_precondition_wake()
+            self._cancel_precondition_wake = None
 
     # -- onbruikbare entiteiten / unusable entities --------------------------
 
