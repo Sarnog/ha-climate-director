@@ -96,7 +96,7 @@ def resolve(
     """
     ordered = tuple(sorted(requests, key=lambda request: request.rank))
     current = active_family(world, circuit)
-    locked = _unmanaged_family(config, world, circuit, standing)
+    forced = _forced_families(config, world, circuit, standing)
 
     if circuit.simultaneous_heat_cool:
         # Nothing to arbitrate: every unit has its own compressor duty. The
@@ -108,15 +108,26 @@ def resolve(
         label = ordered[0].family if ordered else ModeFamily.NEUTRAL
         return _finish(config, world, circuit, ordered, granted, label, None, (), standing=standing)
 
-    chosen, reason = _choose_family(world, circuit, ordered, current, locked)
+    chosen, reason = _choose_family(world, circuit, ordered, current, forced)
     deferrals: list[Deferral] = []
 
     # A duty may not be swapped out before it has had its minimum run. Missing
     # timing metadata lets the swap through: freezing the installation over an
     # unknown timestamp is worse than swapping a little early.
+    #
+    # Staat de taak vast door een apparaat dat de director niet kan
+    # wegschakelen, dan valt er niets te wisselen en heeft de timer niets te
+    # beschermen. Hem dan toch laten winnen zette de eigen units in de
+    # tegengestelde taak van wat er werkelijk op de buitenunit draait.
+    #
+    # When the duty is fixed by an appliance the director cannot stand down
+    # there is no swap to make and nothing for the timer to protect. Letting it
+    # win anyway put the director's own units in the duty opposing the one
+    # really running on the outdoor unit.
     since = world.circuit_family_since.get(circuit.circuit_id)
     if (
-        chosen is not current
+        not forced
+        and chosen is not current
         and current is not ModeFamily.NEUTRAL
         and circuit.min_family_switch_interval
         and since is not None
@@ -134,7 +145,8 @@ def resolve(
     # Swapping duty means stopping the old one first. With a configured pause,
     # this cycle only stops; the new duty starts on the follow-up evaluation.
     pending = (
-        chosen is not current
+        not forced
+        and chosen is not current
         and current is not ModeFamily.NEUTRAL
         and bool(circuit.family_switch_delay)
         and _any_managed_running(config, world, circuit, current)
@@ -209,13 +221,13 @@ def active_family(world: WorldState, circuit: Circuit) -> ModeFamily:
     return ModeFamily.NEUTRAL
 
 
-def _unmanaged_family(
+def _forced_families(
     config: DirectorConfig,
     world: WorldState,
     circuit: Circuit,
     standing: frozenset[str] = frozenset(),
-) -> ModeFamily:
-    """Return the duty forced on a circuit by units the director cannot steer.
+) -> frozenset[ModeFamily]:
+    """Return the duties forced on a circuit by units the director cannot steer.
 
     Twee soorten dwingen: een unit die in geen enkele zone staat, en een unit
     die deze ronde met opzet niets krijgt en gewoon doordraait. Die tweede werd
@@ -223,20 +235,30 @@ def _unmanaged_family(
     dezelfde buitenunit zetten terwijl er nog een unit in de eerste taak stond
     te draaien - precies de toestand die hier onbereikbaar hoort te zijn.
 
+    Alle taken worden teruggegeven en niet alleen de eerste. Een mens kan met
+    een afstandsbediening en een override twee taken tegelijk op een circuit
+    zetten; wie dan alleen naar de eerste keek, zag de tweede over het hoofd en
+    kon er een derde unit bij aanzetten.
+
     Two kinds compel: a unit sitting in no zone at all, and a unit that
     deliberately gets nothing this round and simply keeps running. That second
     one was left out here, which let the director put the opposing duty on the
     same outdoor unit while a unit still ran the first - exactly the state this
     is meant to make unreachable.
+
+    Every duty is returned rather than only the first. A person can put two
+    duties on one circuit at once with a remote and an override; looking at the
+    first alone missed the second and allowed a third unit to be started beside
+    them.
     """
     managed = {source.entity_id for _, source in config.sources_on(circuit)}
-    for entity_id in circuit.units:
-        if entity_id in managed and entity_id not in standing:
-            continue
-        family = world.climate(entity_id).family
-        if family in (ModeFamily.HEAT, ModeFamily.COOL):
-            return family
-    return ModeFamily.NEUTRAL
+    return frozenset(
+        family
+        for entity_id in circuit.units
+        if entity_id not in managed or entity_id in standing
+        for family in (world.climate(entity_id).family,)
+        if family in (ModeFamily.HEAT, ModeFamily.COOL)
+    )
 
 
 def _choose_family(
@@ -244,7 +266,7 @@ def _choose_family(
     circuit: Circuit,
     requests: tuple[Request, ...],
     current: ModeFamily,
-    locked: ModeFamily,
+    forced: frozenset[ModeFamily],
 ) -> tuple[ModeFamily, Reason]:
     """Return the duty the circuit should run, and why."""
     if not requests:
@@ -252,9 +274,21 @@ def _choose_family(
 
     wanted = {request.family for request in requests}
 
+    # Staan er al twee taken te draaien op apparaten waar de director niet aan
+    # mag komen, dan is er geen taak die dit circuit veilig kan draaien. Zo'n
+    # toestand kan hij niet zelf maken en niet rechtzetten - maar hij hoort er
+    # dan zeker geen unit bij te zetten.
+    #
+    # With two duties already running on appliances the director may not touch,
+    # there is no duty this circuit can safely run. It can neither create nor
+    # put right such a state - but it certainly should not add a unit to it.
+    if len(forced) > 1:
+        return ModeFamily.NEUTRAL, Reason.CIRCUIT_CONFLICT_LOST
+
     # A unit outside the director's control has already claimed the compressor;
     # nothing here can overrule that.
-    if locked is not ModeFamily.NEUTRAL:
+    if forced:
+        locked = next(iter(forced))
         settled = wanted == {locked}
         return locked, Reason.REGULATING if settled else Reason.CIRCUIT_CONFLICT_LOST
 
