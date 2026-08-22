@@ -503,21 +503,41 @@ class TestTheActions:
 
         assert (granted - dt_util.now()).total_seconds() > 7200 - 5
 
-    async def test_calling_with_zero_minutes_does_nothing(self, home: LiveHome) -> None:
-        """Nul minuten is een typefout, geen vrijbrief voor het maximum.
+    async def test_calling_with_zero_minutes_is_refused_by_the_schema(self, home: LiveHome) -> None:
+        """Nul minuten is een typefout, en die hoort te botsen, niet te verdwijnen.
 
-        Zero minutes is a typo, not a licence for the maximum.
+        Zero minutes is a typo, and a typo should hit something rather than
+        vanish.
+
+        Het scherm staat het al niet toe (`min: 1` in services.yaml), dus een
+        nul komt uit een met de hand geschreven aanroep. Die stil laten mislukken
+        is precies verkeerd: je drukt op de knop, er gebeurt niets, en er is geen
+        spoor van waarom.
+
+        The screen already disallows it (`min: 1` in services.yaml), so a zero
+        comes from a hand-written call. Failing that silently is exactly wrong:
+        you press the button, nothing happens, and there is no trace of why.
         """
+        import voluptuous as vol
+
         home.set("person.danny", "not_home")
         await home.evaluate()
         assert home.state(LIVING) == "off"
 
-        await home.call(
-            "climate_director", "precondition", {"zone_ids": ["woonkamer"], "minutes": 0}
-        )
-        await asyncio.sleep(1.4)
-        await home.hass.async_block_till_done()
-        assert home.state(LIVING) == "off"
+        with pytest.raises(vol.Invalid):
+            await home.call(
+                "climate_director", "precondition", {"zone_ids": ["woonkamer"], "minutes": 0}
+            )
+        assert home.coordinator._live_preconditions() == {}
+
+    async def test_zero_minutes_still_grants_nothing_straight_at_the_coordinator(
+        self, home: LiveHome
+    ) -> None:
+        """Ook zonder het schema ertussen blijft nul minuten geen verzoek.
+
+        Without the schema in between, zero minutes still is not a request.
+        """
+        assert home.coordinator.async_precondition(["woonkamer"], 0) == {}
         assert home.coordinator._live_preconditions() == {}
 
     async def test_cancelling_stops_it_again(self, home: LiveHome) -> None:

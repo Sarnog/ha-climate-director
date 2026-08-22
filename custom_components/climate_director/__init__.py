@@ -51,7 +51,14 @@ _PRECONDITION_SCHEMA = vol.Schema(
     {
         **_ENTRIES,
         **_ZONES,
-        vol.Optional(ATTR_MINUTES): vol.All(vol.Coerce(float), vol.Range(min=0)),
+        # Ondergrens 1, gelijk aan `min: 1` in services.yaml. Nul stond het
+        # schema wel toe en werd daarna in stilte weggegooid: je drukt op de
+        # knop, er gebeurt niets, en nergens staat waarom.
+        #
+        # Lower bound 1, matching `min: 1` in services.yaml. Zero passed the
+        # schema and was then quietly thrown away: you press the button, nothing
+        # happens, and nowhere does it say why.
+        vol.Optional(ATTR_MINUTES): vol.All(vol.Coerce(float), vol.Range(min=1)),
         vol.Optional(ATTR_IGNORE_OPENINGS, default=False): cv.boolean,
     }
 )
