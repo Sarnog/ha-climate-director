@@ -54,7 +54,7 @@
           "guest_end": "Guest mode until",
           "precondition_start": "Pre-conditioning from",
           "precondition_end": "Pre-conditioning until",
-          "max_precondition": "Pre-conditioning duration (minutes)",
+          "max_precondition": "Maximum pre-conditioning time (minutes)",
           "when_done": "When you are done here",
           "stuck_after": "Report a zone stuck after (minutes)",
           "precipitation_source": "Precipitation source",
@@ -174,8 +174,8 @@
         },
         "data_description": {
           "priority": "Lower wins when several sources could serve the same duty.",
-          "outdoor_min": "Included in the range.",
-          "outdoor_max": "Excluded from the range.",
+          "outdoor_min": "The source counts from this temperature upwards; this value itself is included.",
+          "outdoor_max": "The source counts up to this temperature; this value itself is not, so it meets a source starting there exactly.",
           "entity_id": "The climate entity this source steers.",
           "role": "Whether this appliance can heat, cool, or both. A boiler is heating only.",
           "delete": "Removes the source from this zone. The appliance itself is left alone.",
@@ -342,8 +342,8 @@
         },
         "data_description": {
           "weekdays": "Leave empty for every day.",
-          "end": "Excluded from the window.",
-          "start": "Included in the window.",
+          "end": "This time falls outside the window, so two windows in a row meet exactly.",
+          "start": "This time falls inside the window.",
           "delete": "Removes this schedule.",
           "holiday": "A holiday window applies only while holiday schedule is on, and then replaces the ordinary windows. Its days of the week are ignored. Without one, a holiday counts as a Saturday.",
           "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
@@ -412,7 +412,7 @@
         },
         "data_description": {
           "sources": "Only one of these may run at once. Fewer than two makes no group.",
-          "delete": "Delete this group",
+          "delete": "Removes the group. The appliances keep working; they simply stop ruling each other out.",
           "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
@@ -440,7 +440,7 @@
           "start": "Between these times the director starts nothing by itself. A window may cross midnight: 21:00 to 09:00 is the night.",
           "end": "Between these times the director starts nothing by itself. A window may cross midnight: 21:00 to 09:00 is the night.",
           "weekdays": "Leave empty for every day.",
-          "delete": "Delete this window",
+          "delete": "Removes this window, so the director may start something during those hours again.",
           "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       }
@@ -535,31 +535,31 @@
     },
     "circuit_priority_list": {
       "options": {
-        "back_to_menu": "< Back to the circuits"
+        "back_to_menu": "← Back to the circuits"
       }
     },
     "when_done": {
       "options": {
         "keep": "Keep these changes and go back",
-        "discard": "< Discard and go back"
+        "discard": "← Discard and go back"
       }
     },
     "save_exit": {
       "options": {
         "keep": "Save anyway",
-        "discard": "< Back to the main menu to change something"
+        "discard": "← Back to the main menu to change something"
       }
     },
     "exclusive_list": {
       "options": {
         "add_new": "+ Add group",
-        "back_to_menu": "< Back to the main menu"
+        "back_to_menu": "← Back to the main menu"
       }
     },
     "quiet_list": {
       "options": {
         "add_new": "+ Add quiet window",
-        "back_to_menu": "< Back to the main menu"
+        "back_to_menu": "← Back to the main menu"
       }
     },
     "heating_layout": {
@@ -695,7 +695,7 @@
       "message": "Pre-conditioning refused"
     },
     "precondition_refused": {
-      "message": "{zone} could not start pre-conditioning. Still open: {openings}. Close it, or let the request run anyway for {minutes} minutes."
+      "message": "{zone} could not start pre-conditioning. Still open: {openings}. Close what is open, or let the request run anyway for {minutes} minutes."
     },
     "precondition_confirmed_title": {
       "message": "Pre-conditioning is running"
@@ -765,7 +765,7 @@
         },
         "zone_ids": {
           "name": "Rooms",
-          "description": "Which rooms to warm up, by their zone id. Leave empty for the whole house."
+          "description": "Which rooms to call the request off for, by their zone id. Leave empty for the whole house."
         }
       }
     }

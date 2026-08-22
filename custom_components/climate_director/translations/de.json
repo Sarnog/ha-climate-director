@@ -54,7 +54,7 @@
           "guest_end": "Gästemodus bis",
           "precondition_start": "Vorheizen ab",
           "precondition_end": "Vorheizen bis",
-          "max_precondition": "Vorheizdauer (Minuten)",
+          "max_precondition": "Maximale Vorheizzeit (Minuten)",
           "when_done": "Wenn du hier fertig bist",
           "stuck_after": "Zone gilt als festgefahren nach (Minuten)",
           "precipitation_source": "Niederschlagsquelle",
@@ -174,8 +174,8 @@
         },
         "data_description": {
           "priority": "Niedriger gewinnt, wenn mehrere Quellen dieselbe Aufgabe erfüllen könnten.",
-          "outdoor_min": "Gehört zum Bereich.",
-          "outdoor_max": "Gehört nicht mehr zum Bereich.",
+          "outdoor_min": "Ab dieser Temperatur zählt die Quelle mit; dieser Wert selbst gehört dazu.",
+          "outdoor_max": "Bis zu dieser Temperatur zählt die Quelle mit; dieser Wert selbst nicht mehr, so schließt sie genau an eine Quelle an, die dort beginnt.",
           "entity_id": "Die Climate-Entität, die diese Quelle steuert.",
           "role": "Ob dieses Gerät heizen, kühlen oder beides kann. Ein Heizkessel kann nur heizen.",
           "delete": "Nimmt die Quelle aus dieser Zone. Das Gerät selbst bleibt unangetastet.",
@@ -342,8 +342,8 @@
         },
         "data_description": {
           "weekdays": "Leer lassen für jeden Tag.",
-          "end": "Gehört nicht mehr zum Fenster.",
-          "start": "Gehört zum Fenster.",
+          "end": "Dieser Zeitpunkt liegt außerhalb des Fensters, so schließen zwei Fenster hintereinander genau aneinander an.",
+          "start": "Dieser Zeitpunkt liegt innerhalb des Fensters.",
           "delete": "Entfernt diesen Zeitplan.",
           "holiday": "Ein Urlaubsfenster gilt nur bei eingeschaltetem Urlaubsplan und ersetzt dann die gewöhnlichen Fenster. Seine Wochentage zählen nicht mit. Ohne eines zählt ein Urlaubstag als Samstag.",
           "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
@@ -412,7 +412,7 @@
         },
         "data_description": {
           "sources": "Davon darf nur eines gleichzeitig laufen. Weniger als zwei ist keine Gruppe.",
-          "delete": "Diese Gruppe löschen",
+          "delete": "Entfernt die Gruppe. Die Geräte laufen weiter; sie schließen einander nur nicht mehr aus.",
           "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       },
@@ -440,7 +440,7 @@
           "start": "Zwischen diesen Zeiten fängt der Director nichts von selbst an. Ein Fenster darf über Mitternacht laufen: 21:00 bis 09:00 ist die Nacht.",
           "end": "Zwischen diesen Zeiten fängt der Director nichts von selbst an. Ein Fenster darf über Mitternacht laufen: 21:00 bis 09:00 ist die Nacht.",
           "weekdays": "Leer lassen gilt jeden Tag.",
-          "delete": "Dieses Fenster löschen",
+          "delete": "Entfernt dieses Fenster, sodass der Director in diesen Stunden wieder etwas beginnen darf.",
           "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       }
@@ -535,31 +535,31 @@
     },
     "circuit_priority_list": {
       "options": {
-        "back_to_menu": "< Zurück zu den Kreisen"
+        "back_to_menu": "← Zurück zu den Kreisläufen"
       }
     },
     "when_done": {
       "options": {
         "keep": "Diese Änderungen behalten und zurück",
-        "discard": "< Verwerfen und zurück"
+        "discard": "← Verwerfen und zurück"
       }
     },
     "save_exit": {
       "options": {
         "keep": "Trotzdem speichern",
-        "discard": "< Zurück zum Hauptmenü, um etwas zu ändern"
+        "discard": "← Zurück zum Hauptmenü, um etwas zu ändern"
       }
     },
     "exclusive_list": {
       "options": {
         "add_new": "+ Gruppe hinzufügen",
-        "back_to_menu": "< Zurück zum Hauptmenü"
+        "back_to_menu": "← Zurück zum Hauptmenü"
       }
     },
     "quiet_list": {
       "options": {
         "add_new": "+ Ruhefenster hinzufügen",
-        "back_to_menu": "< Zurück zum Hauptmenü"
+        "back_to_menu": "← Zurück zum Hauptmenü"
       }
     },
     "heating_layout": {
@@ -695,7 +695,7 @@
       "message": "Vorheizen abgelehnt"
     },
     "precondition_refused": {
-      "message": "{zone} konnte nicht vorheizen. Noch offen: {openings}. Schließen Sie es, oder lassen Sie die Anforderung trotzdem {minutes} Minuten laufen."
+      "message": "{zone} konnte nicht vorheizen. Noch offen: {openings}. Schließen Sie, was offen ist, oder lassen Sie die Anforderung trotzdem {minutes} Minuten laufen."
     },
     "precondition_confirmed_title": {
       "message": "Vorheizen läuft"
@@ -765,7 +765,7 @@
         },
         "zone_ids": {
           "name": "Räume",
-          "description": "Welche Räume vorbereitet werden, mit ihrer Zonen-ID. Leer lassen gilt für das ganze Haus."
+          "description": "Für welche Räume die Anforderung abgebrochen wird, mit ihrer Zonen-ID. Leer lassen gilt für das ganze Haus."
         }
       }
     }

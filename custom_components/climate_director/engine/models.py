@@ -1166,7 +1166,7 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
 def _quiet_problems(config: DirectorConfig) -> list[Problem]:
     """Return a complaint when the quiet windows leave no room to start.
 
-    Een stiltevenster is de omgekeerde van een rooster: het zegt wanneer er
+    Een stiltevenster is het omgekeerde van een rooster: het zegt wanneer er
     níets mag beginnen. Wie dat verkeerd om leest en er vensters in zet die
     samen de klok rondgaan, krijgt een huis dat uit zichzelf nooit meer iets
     doet - en dat ziet er van buiten precies zo uit als een integratie die stuk

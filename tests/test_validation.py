@@ -180,7 +180,7 @@ class TestNegativeTimeouts:
 
 
 class TestAQuietWindowThatSilencesEverything:
-    """Een stiltevenster is de omgekeerde van een rooster, en dat leest verkeerd.
+    """Een stiltevenster is het omgekeerde van een rooster, en dat leest verkeerd.
 
     Wie het leest als "hier mag het huis regelen" en er een venster van de hele
     dag in zet, krijgt een installatie die uit zichzelf nooit meer iets doet.

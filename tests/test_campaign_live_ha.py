@@ -738,7 +738,7 @@ class TestTheTranslationsLive:
             assert refused, "een geweigerd verzoek hoort zichzelf te melden"
             message = refused[-1]["message"]
             assert "kon niet vooruit beginnen" in message, message
-            assert "Staat nog open" in message, message
+            assert "Nog open" in message, message
             assert "120 minuten" in message, message
         finally:
             await stop_house(home)

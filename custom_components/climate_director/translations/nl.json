@@ -54,11 +54,11 @@
           "guest_end": "Gastenmodus tot",
           "precondition_start": "Vooruit verwarmen vanaf",
           "precondition_end": "Vooruit verwarmen tot",
-          "max_precondition": "Vooruitverwarmingsduur (minuten)",
+          "max_precondition": "Maximale vooruitverwarmtijd (minuten)",
           "when_done": "Als je hier klaar bent",
           "stuck_after": "Zone geldt als vastgelopen na (minuten)",
           "precipitation_source": "Neerslagbron",
-          "precipitation_states": "Staten die als neerslag tellen",
+          "precipitation_states": "Toestanden die als neerslag tellen",
           "precipitation_grace": "Hoe lang neerslag blijft tellen (minuten)"
         },
         "data_description": {
@@ -72,7 +72,7 @@
           "heating_layout": "Centraal: één warmtebron voor het hele huis, die de ene kamer niet kan verwarmen zonder de rest — één thermostaat, met of zonder radiatorknoppen. Per zone: elk deel van het huis kan zijn warmte apart krijgen, via een zoneventiel of een eigen warmtebron. Radiatorknoppen alleen zijn geen zonering. Dit verandert niets aan wie er mag draaien; het laat de controle waarschuwen als je invulling er niet bij past.",
           "require_awake": "Iemand die thuis is maar slaapt telt niet mee. Welke entiteit zegt dat iemand slaapt stel je per bewoner in.",
           "holiday_calendars": "Een lopend item in een van deze agenda's zet het huis op vakantie. Leeg laten gebruikt alleen de vakantieschakelaar.",
-          "holiday_keyword": "Alleen items met dit woord tellen mee, bijvoorbeeld 'vakantie'. Hoofdletters en schrijfwijze maken niet uit, en het woord telt ook midden in een langer woord, dus 'Herfstvakantie' en 'Zomervakantie' worden allebei herkend. Laat je het leeg, dan blijven de agenda's helemaal buiten beschouwing en gaat de vakantieschema alleen nog met de schakelaar.",
+          "holiday_keyword": "Alleen items met dit woord tellen mee, bijvoorbeeld 'vakantie'. Hoofdletters en schrijfwijze maken niet uit, en het woord telt ook midden in een langer woord, dus 'Herfstvakantie' en 'Zomervakantie' worden allebei herkend. Laat je het leeg, dan blijven de agenda's helemaal buiten beschouwing en gaat het vakantieschema alleen nog met de schakelaar aan.",
           "guest_start": "De gastenmodus draagt het huis alleen tussen deze tijden. Laat beide leeg om hem de hele dag te laten gelden. Daarbuiten nemen de gewone poorten het over, zodat een schakelaar die niemand uitzette niet de hele nacht doordraait.",
           "guest_end": "De gastenmodus draagt het huis alleen tussen deze tijden. Laat beide leeg om hem de hele dag te laten gelden. Daarbuiten nemen de gewone poorten het over, zodat een schakelaar die niemand uitzette niet de hele nacht doordraait.",
           "precondition_start": "Vooruit verwarmen is het enige dat een leeg huis mag laten draaien, en blijft daarom binnen deze tijden. Daarbuiten telt een verzoek niet mee.",
@@ -81,7 +81,7 @@
           "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
           "stuck_after": "Een pauze bij het wisselen van taak hoort seconden te duren. Een zone die er na deze tijd nog op staat wacht niet meer maar zit vast, en dat lijkt van buiten precies op niets doen. Houd hem ruim boven je langste pauze; een valse melding leert je de melder te negeren. Nul zet de melder uit.",
           "precipitation_source": "Een weather-entiteit of neerslagsensor. Zolang die een van de staten hieronder meldt, wordt de 'zet een raam open'-grens per zone overgeslagen. Laat leeg om de gewone regel altijd te laten gelden.",
-          "precipitation_states": "Komma-gescheiden. Voor een weather-entiteit zijn dit zijn condities; voor een sensor de standen. De standaard dekt regen, sneeuw en hagel.",
+          "precipitation_states": "Komma-gescheiden. Voor een weather-entiteit zijn dit zijn condities; voor een sensor zijn het zijn toestanden. De standaard dekt regen, sneeuw en hagel.",
           "precipitation_grace": "Een bui van vijf minuten hoort de regeling niet te laten stuiteren, dus een meting blijft nog zo lang meetellen nadat de neerslag ophoudt."
         }
       },
@@ -143,7 +143,7 @@
           "cool_hysteresis": "Koelen stopt een band onder het aanpunt. Nul laat de zone pendelen op een enkele temperatuur.",
           "cool_outdoor_min": "Onder deze buitentemperatuur blijft koelen uit. Laat leeg voor geen grens.",
           "cool_summer_only": "Koppelt koelen aan het seizoen dat je bij Algemene instellingen hebt gezet.",
-          "gate": "'household' volgt het rooster, de slaap en of er iemand thuis is; een aanwezigheidssensor knijpt het daarna verder dicht. 'presence' laat de kamer zelf beslissen, zodat een bezette ruimte het rooster overruled - wat een kamer die je af en toe gebruikt nodig heeft. Kiezen hiervoor vereist een aanwezigheidssensor.",
+          "gate": "'household' volgt het rooster, de slaap en of er iemand thuis is; een aanwezigheidssensor knijpt het daarna verder dicht. 'presence' laat de kamer zelf beslissen, zodat een bezette ruimte het rooster overstemt - wat een kamer die je af en toe gebruikt nodig heeft. Kiezen hiervoor vereist een aanwezigheidssensor.",
           "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
@@ -174,8 +174,8 @@
         },
         "data_description": {
           "priority": "Lager wint als meerdere bronnen dezelfde taak kunnen leveren.",
-          "outdoor_min": "Valt binnen het bereik.",
-          "outdoor_max": "Valt buiten het bereik.",
+          "outdoor_min": "Vanaf deze temperatuur telt de bron mee; deze waarde zelf hoort erbij.",
+          "outdoor_max": "Tot deze temperatuur telt de bron mee; deze waarde zelf niet meer, zodat hij precies aansluit op een bron die daar begint.",
           "entity_id": "De climate-entiteit die deze bron aanstuurt.",
           "role": "Of dit apparaat kan verwarmen, koelen, of allebei. Een cv-ketel kan alleen verwarmen.",
           "delete": "Haalt de bron uit deze zone. Het apparaat zelf blijft ongemoeid.",
@@ -342,10 +342,10 @@
         },
         "data_description": {
           "weekdays": "Laat leeg voor elke dag.",
-          "end": "Valt buiten het venster.",
-          "start": "Valt binnen het venster.",
+          "end": "Dit tijdstip valt buiten het venster, zodat twee vensters achter elkaar precies op elkaar aansluiten.",
+          "start": "Dit tijdstip valt binnen het venster.",
           "delete": "Verwijdert dit rooster.",
-          "holiday": "Een vakantievenster geldt alleen als de vakantieschema aan staat, en vervangt dan de gewone vensters. De dagen van de week tellen er niet in mee. Zonder vakantievenster telt een vakantiedag als zaterdag.",
+          "holiday": "Een vakantievenster geldt alleen als het vakantieschema aan staat, en vervangt dan de gewone vensters. De dagen van de week tellen er niet in mee. Zonder vakantievenster telt een vakantiedag als zaterdag.",
           "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
@@ -412,7 +412,7 @@
         },
         "data_description": {
           "sources": "Hiervan mag er maar één tegelijk draaien. Minder dan twee is geen groep.",
-          "delete": "Deze groep verwijderen",
+          "delete": "Verwijdert de groep. De apparaten blijven werken; ze sluiten elkaar alleen niet meer uit.",
           "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
@@ -440,7 +440,7 @@
           "start": "Tussen deze tijden begint de director niets uit zichzelf. Een venster mag over middernacht heen lopen: 21:00 tot 09:00 is de nacht.",
           "end": "Tussen deze tijden begint de director niets uit zichzelf. Een venster mag over middernacht heen lopen: 21:00 tot 09:00 is de nacht.",
           "weekdays": "Leeg laten geldt elke dag.",
-          "delete": "Dit venster verwijderen",
+          "delete": "Verwijdert dit venster, zodat de director in die uren weer iets mag beginnen.",
           "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       }
@@ -515,7 +515,7 @@
     "zone_gate": {
       "options": {
         "household": "Het huishouden: rooster, slaap, iemand thuis",
-        "presence": "De ruimte zelf: de aanwezigheidssensor overruled het rooster"
+        "presence": "De ruimte zelf: de aanwezigheidssensor overstemt het rooster"
       }
     },
     "source_role": {
@@ -535,31 +535,31 @@
     },
     "circuit_priority_list": {
       "options": {
-        "back_to_menu": "< Terug naar de circuits"
+        "back_to_menu": "← Terug naar de circuits"
       }
     },
     "when_done": {
       "options": {
         "keep": "Deze wijzigingen bewaren en teruggaan",
-        "discard": "< Verwerpen en teruggaan"
+        "discard": "← Verwerpen en teruggaan"
       }
     },
     "save_exit": {
       "options": {
         "keep": "Toch opslaan",
-        "discard": "< Terug naar het hoofdmenu om iets aan te passen"
+        "discard": "← Terug naar het hoofdmenu om iets aan te passen"
       }
     },
     "exclusive_list": {
       "options": {
         "add_new": "+ Groep toevoegen",
-        "back_to_menu": "< Terug naar het hoofdmenu"
+        "back_to_menu": "← Terug naar het hoofdmenu"
       }
     },
     "quiet_list": {
       "options": {
         "add_new": "+ Stiltevenster toevoegen",
-        "back_to_menu": "< Terug naar het hoofdmenu"
+        "back_to_menu": "← Terug naar het hoofdmenu"
       }
     },
     "heating_layout": {
@@ -671,7 +671,7 @@
       "message": "Zones {first} en {second} hebben allebei voorrang {priority} op circuit {circuit}. Op één buitenunit laat dat de winnaar aan het toeval over; geef ze elk een eigen nummer."
     },
     "calendars_without_keyword": {
-      "message": "Er staan vakantieagenda's ingesteld maar geen trefwoord, dus geen enkel item kan de vakantieschema aanzetten. Vul het woord in dat een item moet dragen, of haal de agenda's weg."
+      "message": "Er staan vakantieagenda's ingesteld maar geen trefwoord, dus geen enkel item kan het vakantieschema aanzetten. Vul het woord in dat een item moet dragen, of haal de agenda's weg."
     },
     "zone_only_manual_sources": {
       "message": "Zone {zone} wil {mode}, maar elke bron die dat kan heeft automatisch starten uit, dus hij start nooit uit zichzelf."
@@ -695,13 +695,13 @@
       "message": "Vooruit verwarmen geweigerd"
     },
     "precondition_refused": {
-      "message": "{zone} kon niet vooruit beginnen. Staat nog open: {openings}. Doe dicht, of laat het verzoek toch draaien voor {minutes} minuten."
+      "message": "{zone} kon niet vooruit beginnen. Nog open: {openings}. Doe dicht wat openstaat, of laat het verzoek toch nog {minutes} minuten draaien."
     },
     "precondition_confirmed_title": {
       "message": "Vooruit verwarmen loopt"
     },
     "precondition_confirmed": {
-      "message": "{zone} gaat toch door, met {openings} genegeerd. Nu {indoor} graden, streven {target} graden."
+      "message": "{zone} gaat toch door, met {openings} genegeerd. Nu {indoor} graden, op weg naar {target} graden."
     },
     "precondition_confirmed_satisfied": {
       "message": "{zone} gaat toch door, met {openings} genegeerd. Nu {indoor} graden - de kamer ligt al goed, dus er gebeurt voorlopig niets."
@@ -716,7 +716,7 @@
       "message": "{zone} gaat toch door, met {openings} genegeerd. Nu {indoor} graden - deze kamer mag op dit moment niets, dus er gebeurt niets."
     },
     "quiet_covers_the_day": {
-      "message": "De stiltevensters laten op {days} dag(en) minder dan {minutes} minuten over, en niemand heeft een rooster dat ze verslaat. Er kan op die dagen dus niets uit zichzelf beginnen. Een stiltevenster is de omgekeerde van een rooster: het zegt wanneer er níets mag beginnen."
+      "message": "De stiltevensters laten op {days} dag(en) minder dan {minutes} minuten over, en niemand heeft een rooster dat ze verslaat. Er kan op die dagen dus niets uit zichzelf beginnen. Een stiltevenster is het omgekeerde van een rooster: het zegt wanneer er níets mag beginnen."
     },
     "switch_timings_without_a_switch": {
       "message": "Circuit {circuit} kan verwarmen en koelen tegelijk, dus het wisselt nooit van taak. De omschakelpauze en de minimale looptijd voor een taakwissel doen daar dus niets. De kortcyclustijd en de capaciteitsgrens werken wél."
@@ -765,7 +765,7 @@
         },
         "zone_ids": {
           "name": "Ruimtes",
-          "description": "Welke ruimtes vast op temperatuur moeten, met hun zone-id. Leeg laten geldt voor het hele huis."
+          "description": "Voor welke ruimtes het verzoek wordt afgeblazen, met hun zone-id. Leeg laten geldt voor het hele huis."
         }
       }
     }

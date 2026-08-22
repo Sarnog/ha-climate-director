@@ -54,7 +54,7 @@
           "guest_end": "Modo invitados hasta",
           "precondition_start": "Preacondicionamiento desde",
           "precondition_end": "Preacondicionamiento hasta",
-          "max_precondition": "Duración del preacondicionamiento (minutos)",
+          "max_precondition": "Tiempo máximo de preacondicionamiento (minutos)",
           "when_done": "Cuando termines aquí",
           "stuck_after": "Zona se considera atascada tras (minutos)",
           "precipitation_source": "Fuente de precipitaciones",
@@ -174,8 +174,8 @@
         },
         "data_description": {
           "priority": "El más bajo gana cuando varias fuentes podrían cumplir la misma tarea.",
-          "outdoor_min": "Incluida en el rango.",
-          "outdoor_max": "Excluida del rango.",
+          "outdoor_min": "A partir de esta temperatura la fuente cuenta; este valor mismo entra.",
+          "outdoor_max": "Hasta esta temperatura la fuente cuenta; este valor mismo ya no, de modo que enlaza exactamente con una fuente que empieza ahí.",
           "entity_id": "La entidad climate que gobierna esta fuente.",
           "role": "Si este aparato puede calentar, enfriar, o ambas cosas. Una caldera solo calienta.",
           "delete": "Saca la fuente de esta zona. El aparato en sí queda intacto.",
@@ -342,8 +342,8 @@
         },
         "data_description": {
           "weekdays": "Déjalo vacío para todos los días.",
-          "end": "Excluida de la franja.",
-          "start": "Incluida en la franja.",
+          "end": "Esta hora cae fuera de la ventana, de modo que dos ventanas seguidas enlazan exactamente.",
+          "start": "Esta hora cae dentro de la ventana.",
           "delete": "Elimina este horario.",
           "holiday": "Una franja de vacaciones solo se aplica con el horario de vacaciones activo, y entonces sustituye a las franjas ordinarias. Sus días de la semana no cuentan. Sin ella, un día de vacaciones cuenta como un sábado.",
           "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
@@ -412,7 +412,7 @@
         },
         "data_description": {
           "sources": "Solo uno de ellos puede funcionar a la vez. Menos de dos no es un grupo.",
-          "delete": "Eliminar este grupo",
+          "delete": "Elimina el grupo. Los aparatos siguen funcionando; solo dejan de excluirse.",
           "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
@@ -440,7 +440,7 @@
           "start": "Entre estas horas el director no arranca nada por su cuenta. Una franja puede cruzar la medianoche: de 21:00 a 09:00 es la noche.",
           "end": "Entre estas horas el director no arranca nada por su cuenta. Una franja puede cruzar la medianoche: de 21:00 a 09:00 es la noche.",
           "weekdays": "Dejarlo vacío vale todos los días.",
-          "delete": "Eliminar esta franja",
+          "delete": "Elimina esta ventana, de modo que el director pueda volver a empezar algo durante esas horas.",
           "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       }
@@ -535,31 +535,31 @@
     },
     "circuit_priority_list": {
       "options": {
-        "back_to_menu": "< Volver a los circuitos"
+        "back_to_menu": "← Volver a los circuitos"
       }
     },
     "when_done": {
       "options": {
         "keep": "Conservar estos cambios y volver",
-        "discard": "< Descartar y volver"
+        "discard": "← Descartar y volver"
       }
     },
     "save_exit": {
       "options": {
         "keep": "Guardar igualmente",
-        "discard": "< Volver al menú principal para cambiar algo"
+        "discard": "← Volver al menú principal para cambiar algo"
       }
     },
     "exclusive_list": {
       "options": {
         "add_new": "+ Añadir grupo",
-        "back_to_menu": "< Volver al menú principal"
+        "back_to_menu": "← Volver al menú principal"
       }
     },
     "quiet_list": {
       "options": {
         "add_new": "+ Añadir franja de silencio",
-        "back_to_menu": "< Volver al menú principal"
+        "back_to_menu": "← Volver al menú principal"
       }
     },
     "heating_layout": {
@@ -695,7 +695,7 @@
       "message": "Preacondicionamiento rechazado"
     },
     "precondition_refused": {
-      "message": "{zone} no pudo empezar el preacondicionamiento. Sigue abierto: {openings}. Ciérralo, o deja que la petición se ejecute igualmente durante {minutes} minutos."
+      "message": "{zone} no pudo empezar el preacondicionamiento. Lo que sigue abierto: {openings}. Cierra lo que esté abierto, o deja que la petición se ejecute igualmente durante {minutes} minutos."
     },
     "precondition_confirmed_title": {
       "message": "El preacondicionamiento está en marcha"
@@ -765,7 +765,7 @@
         },
         "zone_ids": {
           "name": "Habitaciones",
-          "description": "Qué habitaciones preparar, por su identificador de zona. Dejarlo vacío vale para toda la casa."
+          "description": "Para qué habitaciones se cancela la petición, por su identificador de zona. Dejarlo vacío vale para toda la casa."
         }
       }
     }

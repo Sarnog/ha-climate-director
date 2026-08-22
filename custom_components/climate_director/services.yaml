@@ -18,9 +18,15 @@ precondition:
       example: "[woonkamer, zolder]"
       selector:
         object:
+    # Geen `default`: de beschrijving zegt dat leeglaten het ingestelde maximum
+    # geeft, en een voorgevuld getal in het scherm sprak dat tegen. Wie het veld
+    # niet aanraakt hoort het maximum te krijgen, en dat gebeurt ook.
+    #
+    # No `default`: the description says leaving it empty grants the configured
+    # maximum, and a number pre-filled in the screen contradicted that. Whoever
+    # leaves the field alone should get the maximum, and now does.
     minutes:
       required: false
-      default: 60
       selector:
         number:
           min: 1

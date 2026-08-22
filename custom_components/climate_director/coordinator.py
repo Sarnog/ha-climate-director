@@ -1549,8 +1549,8 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             "message": texts.translated(
                 self.hass,
                 "precondition_refused",
-                "{zone} could not start pre-conditioning. Still open: {openings}. Close it, or "
-                "let the request run anyway for {minutes} minutes.",
+                "{zone} could not start pre-conditioning. Still open: {openings}. Close what is "
+                "open, or let the request run anyway for {minutes} minutes.",
                 **filling,
             ),
             "confirmed_title": texts.translated(

@@ -54,7 +54,7 @@
           "guest_end": "Mode invités jusqu'à",
           "precondition_start": "Préchauffage à partir de",
           "precondition_end": "Préchauffage jusqu'à",
-          "max_precondition": "Durée du préchauffage (minutes)",
+          "max_precondition": "Durée maximale du préchauffage (minutes)",
           "when_done": "Quand vous avez terminé ici",
           "stuck_after": "Zone considérée bloquée après (minutes)",
           "precipitation_source": "Source de précipitations",
@@ -174,8 +174,8 @@
         },
         "data_description": {
           "priority": "Le plus bas l'emporte quand plusieurs sources peuvent assurer la même tâche.",
-          "outdoor_min": "Comprise dans la plage.",
-          "outdoor_max": "Exclue de la plage.",
+          "outdoor_min": "À partir de cette température la source compte ; cette valeur elle-même en fait partie.",
+          "outdoor_max": "Jusqu'à cette température la source compte ; cette valeur elle-même n'en fait plus partie, de sorte qu'elle rejoint exactement une source qui commence là.",
           "entity_id": "L'entité climate que cette source pilote.",
           "role": "Si cet appareil peut chauffer, refroidir, ou les deux. Une chaudière ne fait que chauffer.",
           "delete": "Retire la source de cette zone. L'appareil lui-même reste intact.",
@@ -342,8 +342,8 @@
         },
         "data_description": {
           "weekdays": "Laissez vide pour tous les jours.",
-          "end": "Exclue de la plage.",
-          "start": "Comprise dans la plage.",
+          "end": "Cet horaire tombe en dehors de la fenêtre, de sorte que deux fenêtres à la suite se rejoignent exactement.",
+          "start": "Cet horaire tombe à l'intérieur de la fenêtre.",
           "delete": "Supprime ce planning.",
           "holiday": "Une plage de vacances ne s'applique que lorsque le planning de vacances est actif, et remplace alors les plages ordinaires. Ses jours de la semaine sont ignorés. Sans elle, un jour de vacances compte comme un samedi.",
           "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
@@ -412,7 +412,7 @@
         },
         "data_description": {
           "sources": "Un seul d'entre eux peut fonctionner à la fois. Moins de deux ne fait pas un groupe.",
-          "delete": "Supprimer ce groupe",
+          "delete": "Supprime le groupe. Les appareils continuent de fonctionner ; ils cessent simplement de s'exclure.",
           "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
@@ -440,7 +440,7 @@
           "start": "Entre ces heures le directeur ne démarre rien de lui-même. Une plage peut franchir minuit : 21:00 à 09:00 est la nuit.",
           "end": "Entre ces heures le directeur ne démarre rien de lui-même. Une plage peut franchir minuit : 21:00 à 09:00 est la nuit.",
           "weekdays": "Laisser vide vaut tous les jours.",
-          "delete": "Supprimer cette plage",
+          "delete": "Supprime cette fenêtre, de sorte que le director puisse de nouveau démarrer quelque chose pendant ces heures.",
           "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       }
@@ -535,31 +535,31 @@
     },
     "circuit_priority_list": {
       "options": {
-        "back_to_menu": "< Retour aux circuits"
+        "back_to_menu": "← Retour aux circuits"
       }
     },
     "when_done": {
       "options": {
         "keep": "Conserver ces modifications et revenir",
-        "discard": "< Abandonner et revenir"
+        "discard": "← Abandonner et revenir"
       }
     },
     "save_exit": {
       "options": {
         "keep": "Enregistrer quand même",
-        "discard": "< Retour au menu principal pour modifier quelque chose"
+        "discard": "← Retour au menu principal pour modifier quelque chose"
       }
     },
     "exclusive_list": {
       "options": {
         "add_new": "+ Ajouter un groupe",
-        "back_to_menu": "< Retour au menu principal"
+        "back_to_menu": "← Retour au menu principal"
       }
     },
     "quiet_list": {
       "options": {
         "add_new": "+ Ajouter une plage de silence",
-        "back_to_menu": "< Retour au menu principal"
+        "back_to_menu": "← Retour au menu principal"
       }
     },
     "heating_layout": {
@@ -695,7 +695,7 @@
       "message": "Préchauffage refusé"
     },
     "precondition_refused": {
-      "message": "{zone} n'a pas pu démarrer le préchauffage. Toujours ouvert : {openings}. Fermez-le, ou laissez la demande s'exécuter quand même pendant {minutes} minutes."
+      "message": "{zone} n'a pas pu démarrer le préchauffage. Ce qui reste ouvert : {openings}. Fermez ce qui est ouvert, ou laissez la demande s'exécuter quand même pendant {minutes} minutes."
     },
     "precondition_confirmed_title": {
       "message": "Le préchauffage est en cours"
@@ -765,7 +765,7 @@
         },
         "zone_ids": {
           "name": "Pièces",
-          "description": "Les pièces à préparer, par leur identifiant de zone. Laisser vide vaut pour toute la maison."
+          "description": "Les pièces pour lesquelles la demande est annulée, par leur identifiant de zone. Laisser vide vaut pour toute la maison."
         }
       }
     }
