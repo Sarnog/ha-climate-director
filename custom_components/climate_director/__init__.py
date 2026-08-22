@@ -124,6 +124,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -
         await entry.runtime_data.async_shutdown()
         problems.async_clear(hass, entry.entry_id)
         problems.async_clear_manual_sources(hass, entry.entry_id)
+        problems.async_clear_unreadable(hass, entry.entry_id)
         # De luistermelding is er één voor de hele integratie, dus hij gaat pas
         # weg als de laatste installatie weg is.
         #

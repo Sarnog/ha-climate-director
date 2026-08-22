@@ -613,6 +613,13 @@ automation stands on that event.
 - **Repair notices** under *Repairs* show structural mistakes in the
   configuration. The zones that are sound carry on being regulated; one broken
   zone does not stop the installation.
+- **An entity that cannot be read for five minutes** is listed there too, along
+  with which ones. That is a mistake in reality rather than in the
+  configuration: a sensor with a flat battery, an appliance off the network, or
+  an entity that was renamed. The settling time keeps a brief hiccup during a
+  restart out of it. It counts especially for an unreadable indoor temperature,
+  since the director then leaves a running appliance alone and that appliance
+  holds its outdoor unit to its duty.
 - **The diagnostics** (downloadable at the integration) hold the configuration,
   the last snapshot read and the last plan. With those three, any decision is
   exactly reproducible.

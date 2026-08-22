@@ -615,6 +615,13 @@ una automatización se apoya en ese evento.
 - **Los avisos de reparación** bajo *Reparaciones* muestran errores
   estructurales de la configuración. Las zonas sanas se siguen regulando; una
   zona rota no detiene la instalación.
+- **Una entidad que no se puede leer durante cinco minutos** también aparece
+  ahí, con la lista. No es un error de la configuración sino de la realidad: un
+  sensor con la pila agotada, un aparato fuera de la red, o una entidad
+  renombrada. La espera deja fuera un tropiezo breve durante un reinicio. Cuenta
+  sobre todo con una temperatura interior ilegible, porque entonces el director
+  deja en paz un aparato en marcha y ese aparato mantiene su unidad exterior en
+  su tarea.
 - **El diagnóstico** (descargable en la integración) contiene la configuración,
   la última instantánea leída y el último plan. Con esos tres, cualquier
   decisión es exactamente reproducible.

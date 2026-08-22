@@ -2,13 +2,14 @@
 
 Surfacing quiet problems in Home Assistant itself.
 
-Twee soorten, met dezelfde reden om te bestaan: een fout in de configuratie en
-een gebeurtenis waar niemand naar luistert zien er van buiten allebei hetzelfde
-uit als "de director besluit niets".
+Drie soorten, met dezelfde reden om te bestaan: een fout in de configuratie,
+een entiteit die niet te lezen is, en een gebeurtenis waar niemand naar
+luistert zien er van buiten alle drie hetzelfde uit als "de director besluit
+niets".
 
-Two kinds, with the same reason to exist: a mistake in the configuration and an
-event nobody listens for both look, from the outside, the same as "the director
-decides nothing".
+Three kinds, with the same reason to exist: a mistake in the configuration, an
+entity that cannot be read, and an event nobody listens for all look, from the
+outside, the same as "the director decides nothing".
 
 `validate()` vindt structurele fouten, maar tot nu toe kwamen die alleen in de
 diagnose terecht. Dat is precies verkeerd tijdens een schaduwrun: een zone met
@@ -206,6 +207,61 @@ def async_report_manual_sources(
 def async_clear_manual_sources(hass: HomeAssistant, entry_id: str) -> None:
     """Drop the one-time notice for one installation."""
     ir.async_delete_issue(hass, DOMAIN, _manual_issue_id(entry_id))
+
+
+def _unreadable_issue_id(entry_id: str) -> str:
+    """Return the unreadable-entity notice id for one installation."""
+    return f"unreadable_entities_{entry_id}"
+
+
+def async_report_unreadable(
+    hass: HomeAssistant, entry_id: str, title: str, found: Mapping[str, str]
+) -> None:
+    """Raise or clear the notice about entities that cannot be read.
+
+    Een verkeerd getikte entiteit bestaat niet, en een sensor die wegvalt leest
+    als niets. Er valt dan niets om: de poort die erop leunt gaat dicht, de zone
+    doet niets, en van buiten is dat niet te onderscheiden van een zone die
+    niets hoeft te doen. Tot nu toe stond dat alleen in een attribuut van de
+    vastloopmelder, en daar moest je dus al naar zoeken.
+
+    Juist bij een onleesbare binnentemperatuur laat de director een draaiend
+    apparaat met rust, en houdt dat apparaat zijn circuit bezet. Dat is precies
+    het moment waarop dit hoort op te vallen.
+
+    A mistyped entity does not exist, and a sensor that drops out reads as
+    nothing. Nothing breaks: the gate leaning on it closes, the zone does
+    nothing, and from the outside that is indistinguishable from a zone with
+    nothing to do. Until now that only lived in an attribute of the stuck
+    sensor, which you had to be looking for already.
+
+    With an unreadable indoor temperature in particular the director leaves a
+    running appliance alone, and that appliance holds its circuit. Which is
+    exactly the moment this should stand out.
+    """
+    if not found:
+        ir.async_delete_issue(hass, DOMAIN, _unreadable_issue_id(entry_id))
+        return
+
+    listed = "\n".join(f"- `{entity_id}` ({state})" for entity_id, state in sorted(found.items()))
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        _unreadable_issue_id(entry_id),
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="unreadable_entities",
+        translation_placeholders={
+            "name": title,
+            "count": str(len(found)),
+            "entities": listed,
+        },
+    )
+
+
+def async_clear_unreadable(hass: HomeAssistant, entry_id: str) -> None:
+    """Drop the unreadable-entity notice for one installation."""
+    ir.async_delete_issue(hass, DOMAIN, _unreadable_issue_id(entry_id))
 
 
 #: De melding dat er niemand naar een geweigerd vooruit-verzoek luistert. Eén

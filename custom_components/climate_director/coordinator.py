@@ -35,7 +35,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from . import texts
+from . import problems, texts
 from .applier import apply
 from .const import (
     CLOCK_REEVAL_SECONDS,
@@ -49,6 +49,7 @@ from .const import (
     EVENT_PRECONDITION_REFUSED,
     MIN_DEFERRAL_SECONDS,
     STORAGE_VERSION,
+    UNUSABLE_GRACE_SECONDS,
 )
 from .engine import (
     WAITING_REASONS,
@@ -243,6 +244,11 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             hass, STORAGE_VERSION, storage_key(entry.entry_id)
         )
         self._waiting: dict[str, tuple[Reason, datetime]] = {}
+        self._unusable_since: dict[str, datetime] = {}
+        """Sinds wanneer elke ingestelde entiteit onleesbaar is.
+
+        Since when each configured entity has been unreadable.
+        """
         self.zone_overrides: dict[str, bool] = {}
         self._handed_back: dict[str, date] = {}
         self.zone_priorities: dict[str, int] = {}
@@ -739,6 +745,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             self._fire_events(plan)
             self._fire_refusals(plan)
             self._note_waiting(plan)
+            self._report_unreadable()
             self._schedule_deferral(plan)
             self.async_set_updated_data(plan)
 
@@ -1069,6 +1076,48 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 found[entity_id] = "no number"
 
         return found
+
+    @callback
+    def _report_unreadable(self) -> None:
+        """Put the entities that stay unreadable under Repairs, or take them away."""
+        problems.async_report_unreadable(
+            self.hass,
+            self.config_entry.entry_id,
+            self.config_entry.title,
+            self._note_unusable(),
+        )
+
+    @callback
+    def _note_unusable(self) -> dict[str, str]:
+        """Record since when each entity has been unreadable, and return the lasting ones.
+
+        Geschreven op het beslispad en niet in de lezer: `unusable_entities()`
+        geeft alleen een antwoord, en een lezer met een bijwerking is precies
+        de fout die de neerslagnalooptijd ooit onzichtbaar maakte.
+
+        De teller begint opnieuw zodra een entiteit terugkomt. Wie een minuut
+        wegvalt bij een herstart is geen storing; wie een kwartier weg is wel.
+
+        Written on the decision path rather than in the reader:
+        `unusable_entities()` only gives an answer, and a reader with a side
+        effect is exactly the mistake that once made the precipitation grace
+        invisible.
+
+        The clock restarts the moment an entity returns. Dropping out for a
+        minute during a restart is no fault; being gone for a quarter of an hour
+        is.
+        """
+        now = dt_util.now()
+        found = self.unusable_entities()
+        self._unusable_since = {
+            entity_id: self._unusable_since.get(entity_id, now) for entity_id in found
+        }
+        grace = timedelta(seconds=UNUSABLE_GRACE_SECONDS)
+        return {
+            entity_id: state
+            for entity_id, state in found.items()
+            if now - self._unusable_since[entity_id] >= grace
+        }
 
     # -- vastgelopen zones / stuck zones -------------------------------------
 

@@ -619,6 +619,13 @@ automatisering op die gebeurtenis staat.
 - **Reparatiemeldingen** onder *Reparaties* tonen structurele fouten in de
   configuratie. De zones die kloppen worden ondertussen gewoon geregeld; één
   stukke zone legt de installatie niet stil.
+- **Een entiteit die vijf minuten lang niet te lezen is** komt er ook bij te
+  staan, met de lijst erbij. Dat is geen fout in de configuratie maar in de
+  werkelijkheid: een sensor met een lege batterij, een apparaat van het net, of
+  een entiteit die hernoemd is. De wachttijd houdt een korte hapering bij een
+  herstart eruit. Juist bij een onleesbare binnentemperatuur telt dit, want dan
+  laat de director een draaiend apparaat met rust en houdt dat apparaat zijn
+  buitenunit op zijn taak.
 - **De diagnose** (downloaden bij de integratie) bevat de configuratie, de
   laatst gelezen momentopname en het laatste plan. Met die drie is elke
   beslissing exact na te spelen.

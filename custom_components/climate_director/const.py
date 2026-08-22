@@ -147,3 +147,15 @@ MIN_DEFERRAL_SECONDS = 1.0
 # without a difference costs no service call (engine.diff.changes), so this
 # net is cheap.
 CLOCK_REEVAL_SECONDS = 60.0
+
+# Zo lang moet een ingestelde entiteit onleesbaar zijn voordat er een
+# reparatiemelding van komt. Een entiteit die bij een herstart even wegvalt is
+# geen storing, en een melding die aan en uit knippert leert je hem te negeren.
+# De vangnetklok hierboven zorgt dat de teller ook doorloopt als er verder niets
+# gebeurt.
+#
+# How long a configured entity must stay unreadable before it becomes a repair
+# notice. An entity dropping out briefly during a restart is no fault, and a
+# notice blinking on and off teaches you to ignore it. The safety-net clock above
+# keeps the timer running even when nothing else happens.
+UNUSABLE_GRACE_SECONDS = 300.0

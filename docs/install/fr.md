@@ -626,6 +626,12 @@ automatisation repose sur cet événement.
 - **Les avis de réparation** sous *Réparations* montrent les erreurs
   structurelles de la configuration. Les zones saines continuent d'être
   régulées ; une zone cassée n'arrête pas l'installation.
+- **Une entité illisible pendant cinq minutes** y figure également, avec la
+  liste. Ce n'est pas une erreur de configuration mais de la réalité : un
+  capteur à pile vide, un appareil hors réseau, ou une entité renommée. Le délai
+  écarte un bref hoquet lors d'un redémarrage. Cela compte surtout pour une
+  température intérieure illisible, car le director laisse alors un appareil en
+  marche tranquille et cet appareil retient son unité extérieure sur sa tâche.
 - **Le diagnostic** (téléchargeable sur l'intégration) contient la
   configuration, le dernier instantané lu et le dernier plan. Avec ces trois
   éléments, toute décision est exactement reproductible.

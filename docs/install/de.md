@@ -622,6 +622,13 @@ Automatisierung auf diesem Ereignis steht.
 - **Reparaturhinweise** unter *Reparaturen* zeigen strukturelle Fehler in der
   Konfiguration. Die Zonen, die stimmen, werden derweil normal geregelt; eine
   kaputte Zone legt die Installation nicht still.
+- **Eine Entität, die fünf Minuten lang nicht lesbar ist**, steht ebenfalls
+  dort, samt Liste. Das ist kein Fehler in der Konfiguration, sondern in der
+  Wirklichkeit: ein Sensor mit leerer Batterie, ein Gerät ohne Netz oder eine
+  umbenannte Entität. Die Wartezeit hält ein kurzes Stocken beim Neustart
+  heraus. Besonders bei einer unlesbaren Raumtemperatur zählt das, denn dann
+  lässt der Director ein laufendes Gerät in Ruhe und dieses Gerät hält seine
+  Außeneinheit auf seiner Betriebsart fest.
 - **Die Diagnose** (bei der Integration herunterladbar) enthält die
   Konfiguration, den zuletzt gelesenen Schnappschuss und den letzten Plan. Mit
   diesen dreien ist jede Entscheidung exakt nachvollziehbar.
