@@ -556,7 +556,8 @@ data:
 Zwei Grenzen, die du nicht vergessen kannst:
 
 - **Sie läuft von selbst ab.** Fragst du länger als das eingestellte Maximum,
-  wird deine Anfrage gekürzt. Keine Zeit anzugeben gibt dir das Maximum.
+  wird deine Anfrage gekürzt. Keine Zeit anzugeben gibt dir das Maximum; null
+  oder weniger wird abgelehnt, denn das ist keine Anfrage, sondern ein Tippfehler.
 - **Sie gilt nur innerhalb des Fensters** (Standard 06:00–23:00). Außerhalb
   zählt eine Anfrage nicht.
 
@@ -643,6 +644,19 @@ Automatisierung auf diesem Ereignis steht.
   heraus. Besonders bei einer unlesbaren Raumtemperatur zählt das, denn dann
   lässt der Director ein laufendes Gerät in Ruhe und dieses Gerät hält seine
   Außeneinheit auf seiner Betriebsart fest.
+- **Eine Rolle, die einen Modus verlangt, den das Gerät nicht fahren kann**,
+  erscheint dort nach fünf Minuten ebenfalls. Etwa eine Quelle mit der Rolle
+  *Heizen und Kühlen* an einem Gerät, das nur `heat` und `off` meldet: Der
+  Director überspringt sie fürs Kühlen, und von außen sieht das aus wie ein
+  Raum ohne Bedarf. Prüfe die Rolle unter *Konfigurieren* oder die `hvac_modes`
+  des Geräts unter *Entwicklerwerkzeuge*.
+- **Ein Gerät, das seinen Befehl nicht ausführt**, meldet sich nach etwa zehn
+  Minuten. Der Director verlangt die ganze Zeit dasselbe und das Gerät meldet
+  weiterhin etwas anderes: Der Aufruf wird angenommen und nichts passiert, oder
+  das Gerät stellt sich sofort zurück. Prüfe, ob das Gerät erreichbar ist, ob es
+  den Modus annimmt, und ob etwas anderes es zurückstellt — ein
+  Thermostatzeitplan oder eine andere Automatisierung. Im Schattenmodus kommt
+  diese Meldung nie: Dort wird absichtlich nichts ausgeführt.
 - **Die Diagnose** (bei der Integration herunterladbar) enthält die
   Konfiguration, den zuletzt gelesenen Schnappschuss und den letzten Plan. Mit
   diesen dreien ist jede Entscheidung exakt nachvollziehbar.

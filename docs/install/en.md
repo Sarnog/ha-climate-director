@@ -551,7 +551,8 @@ data:
 Two limits you cannot forget:
 
 - **It expires by itself.** Ask for longer than the configured maximum and your
-  request is shortened. Naming no time gives you the maximum.
+  request is shortened. Naming no time gives you the maximum; zero or less is
+  refused, since that is not a request but a typo.
 - **It applies only inside the window** (06:00–23:00 by default). Outside it a
   request does not count.
 
@@ -633,6 +634,18 @@ automation stands on that event.
   restart out of it. It counts especially for an unreadable indoor temperature,
   since the director then leaves a running appliance alone and that appliance
   holds its outdoor unit to its duty.
+- **A role asking a mode the appliance cannot run** appears there too, after
+  five minutes. Think of a source with the *heating and cooling* role on a unit
+  reporting only `heat` and `off`: the director skips it for cooling, and from
+  the outside that looks like a room with nothing to do. Check the role under
+  *Configure*, or the appliance's `hvac_modes` under *Developer tools*.
+- **An appliance that does not carry out its command** reports itself after
+  about ten minutes. The director has been asking the same thing all that time
+  and the appliance keeps reporting something else: the call is accepted and
+  nothing happens, or the appliance puts itself straight back. Check whether the
+  appliance is reachable, whether it accepts the mode, and whether something
+  else is putting it back — a thermostat schedule or another automation. In
+  shadow mode this notice never appears: nothing is executed there on purpose.
 - **The diagnostics** (downloadable at the integration) hold the configuration,
   the last snapshot read and the last plan. With those three, any decision is
   exactly reproducible.

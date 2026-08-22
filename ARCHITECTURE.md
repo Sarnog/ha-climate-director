@@ -354,13 +354,24 @@ een gebrekkige configuratie verslechtert de installatie zonder hem stil te legge
 precies waarom hij zichtbaar moet zijn - van buiten ziet een fout in de configuratie er
 hetzelfde uit als "de director besluit niets".
 
-Er zijn er drie, met dezelfde reden om te bestaan. Naast de configuratiefout: een eenmalige
+Er zijn er vijf, met dezelfde reden om te bestaan. Naast de configuratiefout: een eenmalige
 melding over taken die alleen handbediend geleverd kunnen worden, en een melding over
 ingestelde entiteiten die vijf minuten lang niet te lezen zijn. Die laatste is geen fout in
 de configuratie maar in de werkelijkheid — een lege batterij, een apparaat van het net — en
 weegt zwaar omdat de director bij een onleesbare binnentemperatuur een draaiend apparaat met
 rust laat, waarna dat apparaat zijn buitenunit op zijn taak houdt. De wachttijd houdt een
 korte hapering bij een herstart eruit; de teller loopt op de vangnetklok van de coordinator.
+
+De laatste twee gaan over hetzelfde gat, van twee kanten. `unsupported_modes` meldt een rol
+die een stand vraagt die het apparaat niet meldt: de engine slaat die bron voor die stand
+over, en van buiten is dat niet te onderscheiden van een kamer die niets hoeft.
+`command_not_taking` meldt het omgekeerde: de bron krijgt zijn commando wel, elke ronde
+opnieuw, en beweegt niet mee. `diff.changes()` biedt hetzelfde verschil aan zolang de
+werkelijkheid niet klopt, dus dat is met de vangnetklok van zestig seconden ruim
+veertienhonderd mislukte aanroepen per dag zonder één zichtbaar spoor. Per apparaat wordt
+geteld hoe vaak hetzelfde verschil achter elkaar is aangeboden; tien gelijke rondes plus
+dezelfde wachttijd van vijf minuten geven de melding. In schaduwmodus telt hij niet — daar
+wordt met opzet niets uitgevoerd, dus de verschillenlijst is per definitie permanent gevuld.
 
 ### Nog te bouwen — ontwerpvoorstellen
 
@@ -812,13 +823,24 @@ zone, so a flawed configuration degrades the installation without stopping it. T
 exactly why it has to be visible - from the outside, a mistake in the configuration looks the
 same as "the director decides nothing".
 
-There are three, with the same reason to exist. Besides the configuration mistake: a one-time
+There are five, with the same reason to exist. Besides the configuration mistake: a one-time
 notice about duties only hand-operated sources can deliver, and a notice about configured
 entities that have been unreadable for five minutes. That last one is a mistake in reality
 rather than in the configuration - a flat battery, an appliance off the network - and weighs
 heavily because with an unreadable indoor temperature the director leaves a running appliance
 alone, after which that appliance holds its outdoor unit to its duty. The settling time keeps
 a brief hiccup during a restart out of it; the clock runs on the coordinator's safety net.
+
+The last two are about the same gap, from either side. `unsupported_modes` reports a role
+asking a mode the appliance does not report: the engine skips that source for that mode, and
+from the outside that is indistinguishable from a room with nothing to do.
+`command_not_taking` reports the reverse: the source does get its command, again every round,
+and does not move with it. `diff.changes()` offers the same difference for as long as reality
+does not match, so on the sixty-second safety-net clock that is well over fourteen hundred
+failed calls a day without a single visible trace. Per appliance it counts how often the same
+difference has been offered in a row; ten identical rounds plus the same five-minute settling
+time raise the notice. In shadow mode it never counts - nothing is executed there on purpose,
+so the difference list is by definition permanently filled.
 
 ### Still to build — design proposals
 

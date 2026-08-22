@@ -550,7 +550,8 @@ data:
 Dos límites imposibles de olvidar:
 
 - **Expira solo.** Pide más del máximo configurado y tu petición se acorta. No
-  indicar tiempo te da el máximo.
+  indicar tiempo te da el máximo; cero o menos se rechaza, porque eso no es una
+  petición sino una errata.
 - **Solo cuenta dentro de la ventana** (06:00–23:00 por defecto). Fuera, una
   petición no cuenta.
 
@@ -635,6 +636,19 @@ una automatización se apoya en ese evento.
   sobre todo con una temperatura interior ilegible, porque entonces el director
   deja en paz un aparato en marcha y ese aparato mantiene su unidad exterior en
   su tarea.
+- **Un rol que pide un modo que el aparato no puede ejecutar** también aparece
+  ahí, tras cinco minutos. Por ejemplo una fuente con el rol *calefacción y
+  refrigeración* en una unidad que solo notifica `heat` y `off`: el director la
+  omite para refrigerar, y desde fuera eso parece una habitación sin necesidad.
+  Comprueba el rol en *Configurar*, o los `hvac_modes` del aparato en
+  *Herramientas de desarrollo*.
+- **Un aparato que no ejecuta su orden** se avisa a sí mismo al cabo de unos
+  diez minutos. El director lleva todo ese tiempo pidiendo lo mismo y el aparato
+  sigue notificando otra cosa: la llamada se acepta y no pasa nada, o el aparato
+  se vuelve a poner como estaba. Comprueba si el aparato está accesible, si
+  acepta el modo, y si algo más lo devuelve a su sitio: un programa del
+  termostato u otra automatización. En modo sombra este aviso no aparece nunca:
+  ahí no se ejecuta nada a propósito.
 - **El diagnóstico** (descargable en la integración) contiene la configuración,
   la última instantánea leída y el último plan. Con esos tres, cualquier
   decisión es exactamente reproducible.

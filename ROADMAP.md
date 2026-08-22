@@ -94,10 +94,10 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   dagen, maar het gastenvenster en het venster waarin vooruit verwarmen mag gelden nog
   voor elke dag hetzelfde. Wie in het weekend andere uren aanhoudt, kan dat daar niet
   zetten. Het model kan het al; het formulier en de opslag vragen er niet naar.
-- **Dekkings- en mutatiemeting in de CI** — de suite is groot, maar niets meet welke
-  regels er ongedekt blijven of welke wijziging in de code geen enkele test laat omvallen.
-  Een baan die de dekking rapporteert (en desnoods af en toe een mutatieronde draait) legt
-  dat vast in plaats van het per audit met de hand te moeten zoeken.
+- **Mutatiemeting in de CI** — de dekking wordt gemeten en bewaakt, maar dekking zegt
+  alleen dat een regel gedraaid is, niet dat er iets omvalt als hij verkeerd wordt. Een
+  mutatieronde, al is het maar wekelijks, laat zien welke wijziging in de code geen enkele
+  test raakt — precies het soort gat waar de bugs van de laatste review in zaten.
 
 ## Would have
 
@@ -199,10 +199,10 @@ The worked-out design proposals for everything below live in
   days, but the guest window and the window in which pre-conditioning is allowed still
   apply to every day alike. Anyone keeping different hours at the weekend cannot set that
   there. The model already supports it; the form and storage do not ask for it.
-- **Coverage and mutation measurement in CI** — the suite is large, but nothing measures
-  which lines stay uncovered or which change to the code breaks no test at all. A job
-  reporting coverage (and running the occasional mutation round) records that instead of
-  having to hunt for it by hand at every audit.
+- **Mutation measurement in CI** — coverage is measured and guarded, but coverage only says
+  a line ran, not that anything breaks when it goes wrong. A mutation round, even a weekly
+  one, shows which change to the code touches no test at all - exactly the kind of gap the
+  bugs of the last review sat in.
 
 ## Would have
 

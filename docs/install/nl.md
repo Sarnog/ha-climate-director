@@ -553,7 +553,8 @@ data:
 Twee grenzen die je niet kunt vergeten:
 
 - **Het verloopt vanzelf.** Vraag je langer dan het ingestelde maximum, dan
-  wordt je verzoek ingekort. Geen tijd opgeven geeft het maximum.
+  wordt je verzoek ingekort. Geen tijd opgeven geeft het maximum; nul of
+  minder wordt geweigerd, want dat is geen verzoek maar een typefout.
 - **Het geldt alleen binnen het venster** (standaard 06:00–23:00). Daarbuiten
   telt een verzoek niet mee.
 
@@ -639,6 +640,19 @@ automatisering op die gebeurtenis staat.
   herstart eruit. Juist bij een onleesbare binnentemperatuur telt dit, want dan
   laat de director een draaiend apparaat met rust en houdt dat apparaat zijn
   buitenunit op zijn taak.
+- **Een rol die een stand vraagt die het apparaat niet kan** komt er na vijf
+  minuten ook bij te staan. Denk aan een bron met rol *verwarmen en koelen* op
+  een unit die alleen `heat` en `off` meldt: de director slaat hem voor koelen
+  over, en van buiten lijkt dat op een kamer die niets hoeft. Controleer de rol
+  bij *Configureren*, of de `hvac_modes` van het apparaat bij
+  *Ontwikkelhulpmiddelen*.
+- **Een apparaat dat zijn commando niet uitvoert** meldt zichzelf na ongeveer
+  tien minuten. De director vraagt dan al die tijd hetzelfde en het apparaat
+  blijft iets anders melden: de aanroep wordt aangenomen en er gebeurt niets, of
+  het apparaat zet zichzelf meteen terug. Kijk of het apparaat bereikbaar is, of
+  het de stand aanneemt, en of iets anders het terugzet — een thermostaatrooster
+  of een andere automatisering. In schaduwmodus komt deze melding nooit: daar
+  wordt met opzet niets uitgevoerd.
 - **De diagnose** (downloaden bij de integratie) bevat de configuratie, de
   laatst gelezen momentopname en het laatste plan. Met die drie is elke
   beslissing exact na te spelen.

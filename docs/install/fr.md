@@ -559,7 +559,8 @@ data:
 Deux limites impossibles à oublier :
 
 - **Cela expire tout seul.** Demandez plus long que le maximum configuré et
-  votre demande est raccourcie. Ne donner aucune durée donne le maximum.
+  votre demande est raccourcie. Ne donner aucune durée donne le maximum ; zéro
+  ou moins est refusé, car ce n'est pas une demande mais une faute de frappe.
 - **Cela ne compte que dans la fenêtre** (06:00–23:00 par défaut). En dehors,
   une demande ne compte pas.
 
@@ -645,6 +646,19 @@ automatisation repose sur cet événement.
   écarte un bref hoquet lors d'un redémarrage. Cela compte surtout pour une
   température intérieure illisible, car le director laisse alors un appareil en
   marche tranquille et cet appareil retient son unité extérieure sur sa tâche.
+- **Un rôle demandant un mode que l'appareil ne peut exécuter** y apparaît
+  aussi, après cinq minutes. Par exemple une source au rôle *chauffage et
+  refroidissement* sur une unité ne signalant que `heat` et `off` : le director
+  la saute pour le refroidissement, et de l'extérieur cela ressemble à une pièce
+  sans besoin. Vérifiez le rôle sous *Configurer*, ou les `hvac_modes` de
+  l'appareil sous *Outils de développement*.
+- **Un appareil qui n'exécute pas sa commande** se signale au bout d'une dizaine
+  de minutes. Le director demande la même chose depuis tout ce temps et
+  l'appareil continue de signaler autre chose : l'appel est accepté et rien ne
+  se passe, ou l'appareil se remet aussitôt comme avant. Vérifiez s'il est
+  joignable, s'il accepte le mode, et si autre chose le remet en place — un
+  programme de thermostat ou une autre automatisation. En mode fantôme cet avis
+  n'apparaît jamais : rien n'y est exécuté, volontairement.
 - **Le diagnostic** (téléchargeable sur l'intégration) contient la
   configuration, le dernier instantané lu et le dernier plan. Avec ces trois
   éléments, toute décision est exactement reproductible.
