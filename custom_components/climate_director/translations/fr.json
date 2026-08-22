@@ -676,9 +676,6 @@
     "zone_only_manual_sources": {
       "message": "La zone {zone} veut {mode}, mais chaque source capable de le fournir a le démarrage automatique désactivé, elle ne démarre donc jamais d’elle-même."
     },
-    "exclusive_overlap": {
-      "message": "{first} et {second} s'excluent mais s'appliquent tous deux {overlap}. Le groupe le rattrape, mais ils se rencontrent au lieu de s'exclure déjà par leurs bornes extérieures. Donnez-leur des bornes contiguës pour les séparer définitivement."
-    },
     "layout_zoned_with_shared_source": {
       "message": "Le chauffage est réglé par zone, mais {entity} est la seule source de chaleur de {count} zones ({zones}). Ces pièces ne peuvent pas être chauffées séparément."
     },

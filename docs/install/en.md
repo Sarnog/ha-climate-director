@@ -361,6 +361,11 @@ the gas boiler to stay out of every air conditioner's way, while two air
 conditioners on the same circuit may still cool together, make one group per
 pair — gas with the one, gas with the other.
 
+A group is about the **appliance**, not about the room. If the same boiler
+sits under three rooms you only have to tick it once - wherever you pick it
+from, it counts everywhere. And two rooms asking for that same boiler are not in
+each other's way: that is one appliance running.
+
 A group also binds appliances you switch on yourself: when another member of the
 group gets its turn, the hand-operated appliance goes off. And the other way
 round: when such an appliance is already running it occupies the group, and

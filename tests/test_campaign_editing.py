@@ -455,9 +455,9 @@ class TestTheCheckBeforeSaving:
 
     async def test_a_problem_is_shown_before_saving(self) -> None:
         installation = two_rooms()
-        # Twee bronnen die elkaar uitsluiten maar allebei bij elk weer mogen:
-        # dan moet er altijd eentje wijken, en dat meldt de controle.
-        installation["exclusive_groups"] = [["woonkamer_airco", "zolder_airco"]]
+        # Een groep die een bron noemt die niet bestaat: die kan nooit iets
+        # uitsluiten, en dat meldt de controle.
+        installation["exclusive_groups"] = [["woonkamer_airco", "bestaatniet"]]
         home = await start_house(installation, states=cold())
         try:
             flow = home.hass.config_entries.options
@@ -466,14 +466,14 @@ class TestTheCheckBeforeSaving:
 
             assert result["type"] == "form"
             assert result["step_id"] == "save"
-            assert "exclusive" in result["description_placeholders"]["problems"]
+            assert "unknown source" in result["description_placeholders"]["problems"]
         finally:
             await stop_house(home)
 
     async def test_discarding_at_the_warning_goes_back_to_the_menu(self) -> None:
         """Wie schrikt van de melding, hoort terug te kunnen naar de instellingen."""
         installation = two_rooms()
-        installation["exclusive_groups"] = [["woonkamer_airco", "zolder_airco"]]
+        installation["exclusive_groups"] = [["woonkamer_airco", "bestaatniet"]]
         home = await start_house(installation, states=cold())
         try:
             flow = home.hass.config_entries.options

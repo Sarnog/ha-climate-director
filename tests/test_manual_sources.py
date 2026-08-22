@@ -327,48 +327,46 @@ class TestExclusiveGroupsRuleEachOtherOut:
             exclusive_groups=() if group is None else (frozenset(group),),
         )
 
-    def _overlaps(self, config) -> list[str]:
-        return [item for item in validate(config) if "exclusive" in item and "apply" in item]
+    def test_overlapping_bounds_are_no_complaint(self) -> None:
+        """Elkaar kunnen tegenkomen is de reden dat de groep bestaat.
 
-    def test_bounds_that_meet_are_reported(self) -> None:
-        """The real mistake: one unit left at 3.0 while the rest moved to 3.1."""
-        found = self._overlaps(self._config(attic_from=3.0))
-        assert found
-        assert "between 3.0 and 3.1" in found[0]
+        Hier stond de omgekeerde eis: buitengrenzen die elkaar raken werden
+        gemeld, met het advies ze aansluitend te maken. Dat advies maakt de
+        groep juist zinloos - hij bestaat om te kiezen tussen apparaten die
+        elkaar wel kunnen tegenkomen, en de eigen jaartest moest die melding al
+        wegfilteren.
 
-    def test_bounds_that_line_up_are_silent(self) -> None:
-        assert not self._overlaps(self._config(attic_from=3.1))
+        Being able to meet is the reason the group exists. The opposite demand
+        stood here: outdoor bounds that touch were reported, advising you to
+        make them adjacent. That advice is what makes the group pointless - it
+        exists to choose between appliances that can meet, and the year test had
+        to filter that notice out already.
+        """
+        assert not validate(self._config(attic_from=3.0))
 
-    def test_without_a_group_nothing_is_checked(self) -> None:
-        """Overlapping bounds are perfectly normal until you declare exclusivity."""
-        assert not self._overlaps(self._config(attic_from=3.0, group=None))
+    def test_bounds_that_line_up_are_no_complaint_either(self) -> None:
+        assert not validate(self._config(attic_from=3.1))
 
-    def test_two_unbounded_sources_are_reported(self) -> None:
-        from custom_components.climate_director.engine import OutdoorWindow
+    def test_the_group_still_rules_them_out(self) -> None:
+        """Geen melding betekent niet dat de groep niets doet."""
+        from conftest import awake, make_world
 
-        config = self._config(attic_from=3.1)
-        loose = DirectorConfig(
-            zones=(
-                Zone(
-                    "a",
-                    "A",
-                    "sensor.a",
-                    sources=(Source("one", "climate.one", outdoor=OutdoorWindow()),),
-                    heat=ModeSettings(21.0, 20.0),
-                ),
-                Zone(
-                    "b",
-                    "B",
-                    "sensor.b",
-                    sources=(Source("two", "climate.two", outdoor=OutdoorWindow()),),
-                    heat=ModeSettings(21.0, 20.0),
-                ),
-            ),
-            exclusive_groups=(frozenset({"one", "two"}),),
+        from custom_components.climate_director.engine.families import family_of
+
+        config = self._config(attic_from=3.0)
+        world = make_world(
+            now=NOON,
+            outdoor=5.0,
+            indoor={"woonkamer": 15.0, "zolder": 15.0},
+            climates={LIVING: MODE_OFF, "climate.zolder": MODE_OFF},
+            residents={"danny": awake()},
         )
-        assert not self._overlaps(config)
-        found = self._overlaps(loose)
-        assert found and "every outdoor temperature" in found[0]
+        started = [
+            command
+            for command in decide(config, world).commands
+            if family_of(command.hvac_mode) is not ModeFamily.NEUTRAL
+        ]
+        assert len(started) <= 1, started
 
 
 class TestAnExclusiveGroupBindsAManualSource:

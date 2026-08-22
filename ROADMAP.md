@@ -28,6 +28,12 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 
 ## Could have
 
+- **Een controle op exclusieve groepen die wél klopt** — er stond er een die waarschuwde
+  zodra de buitengrenzen van twee groepsleden elkaar overlapten, met het advies ze
+  aansluitend te maken. Dat advies maakt de groep juist zinloos: hij bestaat om te kiezen
+  tussen apparaten die elkaar kunnen tegenkomen. Die controle is weg. Wat wél te melden
+  valt, is een groep die niets kan uitsluiten — twee bronnen in dezelfde kamer bijvoorbeeld,
+  die elkaar toch al uitsluiten omdat een zone maar één bron kiest.
 - **Huisbreed vermogensplafond** — een maximum in watt over de hele installatie, in plaats
   van alleen een maximum aantal units per circuit. Een grens in stuks zegt niets over wat
   er werkelijk uit de meter loopt: drie kleine units zijn iets heel anders dan één ketel.
@@ -130,6 +136,12 @@ The worked-out design proposals for everything below live in
 
 ## Could have
 
+- **A check on exclusive groups that actually holds** — there used to be one warning as soon
+  as two members' outdoor bounds overlapped, advising you to make them adjacent. That advice
+  is what makes the group pointless: it exists to choose between appliances that can meet.
+  That check has gone. What would be worth reporting is a group that cannot rule anything
+  out — two sources in the same room, say, which already rule each other out because a zone
+  only ever picks one source.
 - **A house-wide power ceiling** — a maximum in watts across the whole installation, rather
   than only a maximum number of units per circuit. A limit in units says nothing about what
   actually leaves the meter: three small units are a very different thing from one boiler.

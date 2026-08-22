@@ -439,24 +439,22 @@ def _scenario(
 
 
 def _real_problems(config: DirectorConfig) -> list[str]:
-    """Return the problems that are really problems in this house.
+    """Return the problems this house has, which should be none at all.
 
-    De controle waarschuwt dat de twee apparaten in de uitsluitende groep
-    elkaar bij elk weer kunnen tegenkomen. Dat is hier de bedoeling: ze delen
-    een groep juist omdat ze aan dezelfde meterkast hangen, en de groep is er
-    om die keuze te maken. De README noemt die melding dan ook uitdrukkelijk
-    geen fout.
+    Hier stond ooit een filter: de controle waarschuwde dat de twee apparaten
+    in de uitsluitende groep elkaar bij elk weer konden tegenkomen, terwijl dat
+    hier juist de bedoeling was - ze delen een groep omdat ze aan dezelfde
+    meterkast hangen, en de groep is er om die keuze te maken. Een
+    waarschuwing die je in je eigen testset moet wegfilteren is geen
+    waarschuwing meer, en die controle is dus weg.
 
-    The check warns that the two appliances in the exclusive group can meet in
-    any weather. That is the point here: they share a group precisely because
-    they hang on the same fuse, and the group exists to make that choice. The
-    README expressly calls that notice no error.
+    A filter used to stand here: the check warned that the two appliances in
+    the exclusive group could meet in any weather, while that was exactly the
+    point - they share a group because they hang on the same fuse, and the
+    group exists to make that choice. A warning you have to filter out of your
+    own test suite is no warning any more, and that check has gone.
     """
-    return [
-        problem
-        for problem in validate(config)
-        if getattr(problem, "code", "") != "exclusive_overlap"
-    ]
+    return list(validate(config))
 
 
 @pytest.fixture(scope="module")

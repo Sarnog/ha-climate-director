@@ -366,6 +366,11 @@ der Gaskessel keiner Klimaanlage im Weg stehen, während zwei Klimaanlagen am
 selben Kreislauf durchaus gemeinsam kühlen dürfen, dann mach eine Gruppe pro
 Paar — Gas mit der einen, Gas mit der anderen.
 
+Eine Gruppe betrifft das **Gerät**, nicht den Raum. Hängt derselbe Kessel
+unter drei Räumen, musst du ihn nur einmal ankreuzen - woher du ihn auch wählst,
+er zählt überall. Und zwei Räume, die denselben Kessel anfordern, stehen sich
+nicht im Weg: das ist ein Gerät, das läuft.
+
 Eine Gruppe bindet auch Geräte, die du selbst einschaltest: Kommt ein anderes
 Mitglied der Gruppe an die Reihe, geht das handbediente Gerät aus. Und
 umgekehrt: Läuft so ein Gerät schon, belegt es die Gruppe, und ein anderes

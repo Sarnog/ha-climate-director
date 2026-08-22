@@ -676,9 +676,6 @@
     "zone_only_manual_sources": {
       "message": "Zone {zone} möchte {mode}, aber jede Quelle, die das kann, hat automatisches Starten aus, daher startet sie nie von selbst."
     },
-    "exclusive_overlap": {
-      "message": "{first} und {second} schließen sich aus, gelten aber beide {overlap}. Die Gruppe fängt das ab, doch sie begegnen einander, statt sich schon durch ihre Außengrenzen auszuschließen. Gib ihnen angrenzende Grenzen, um sie endgültig zu trennen."
-    },
     "layout_zoned_with_shared_source": {
       "message": "Die Heizung steht auf pro Zone, aber {entity} ist die einzige Wärmequelle von {count} Zonen ({zones}). Diese Räume lassen sich nicht getrennt erwärmen."
     },

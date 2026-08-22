@@ -363,6 +363,11 @@ dat de gasketel geen enkele airco in de weg zit, maar dat twee airco's op
 hetzelfde circuit wél samen mogen koelen, maak dan één groep per paar — gas met
 de ene airco, gas met de andere.
 
+Een groep gaat over het **apparaat**, niet over de kamer. Staat dezelfde
+ketel onder drie kamers, dan hoef je hem maar één keer aan te vinken - waar je
+hem ook vandaan kiest, hij telt overal. En twee kamers die om diezelfde ketel
+vragen zitten elkaar niet in de weg: dat is één apparaat dat draait.
+
 Een groep geldt ook voor apparaten die je zelf aanzet: komt een ander lid van de
 groep aan de beurt, dan gaat het handbediende apparaat uit. En andersom: draait
 zo’n apparaat al, dan bezet het de groep en wacht een ander lid.

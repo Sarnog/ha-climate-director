@@ -676,9 +676,6 @@
     "zone_only_manual_sources": {
       "message": "Zone {zone} wants {mode} but every source able to deliver it has automatic start off, so it never starts by itself."
     },
-    "exclusive_overlap": {
-      "message": "{first} and {second} are exclusive but both apply {overlap}. The group does catch it, but they meet rather than ruling each other out by their outdoor bounds. Give them adjacent bounds to keep them apart for good."
-    },
     "layout_zoned_with_shared_source": {
       "message": "Heating is set to per zone, but {entity} is the only heat source of {count} zones ({zones}). Those rooms cannot be warmed apart from each other."
     },

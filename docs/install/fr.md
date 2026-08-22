@@ -364,6 +364,11 @@ vous voulez que la chaudière à gaz ne gêne aucun climatiseur, tandis que deux
 climatiseurs du même circuit peuvent refroidir ensemble, faites un groupe par
 paire — le gaz avec l'un, le gaz avec l'autre.
 
+Un groupe porte sur l'**appareil**, pas sur la pièce. Si la même chaudière
+se trouve sous trois pièces, il suffit de la cocher une fois - d'où que vous la
+choisissiez, elle compte partout. Et deux pièces qui demandent cette même
+chaudière ne se gênent pas : c'est un seul appareil qui tourne.
+
 Un groupe lie aussi les appareils que vous allumez vous-même : quand un autre
 membre du groupe vient à son tour, l'appareil manuel s'éteint. Et dans
 l'autre sens : quand un tel appareil tourne déjà, il occupe le groupe et un

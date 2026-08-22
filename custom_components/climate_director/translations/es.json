@@ -676,9 +676,6 @@
     "zone_only_manual_sources": {
       "message": "La zona {zone} quiere {mode}, pero toda fuente capaz de dárselo tiene el arranque automático apagado, así que nunca arranca por sí misma."
     },
-    "exclusive_overlap": {
-      "message": "{first} y {second} se excluyen pero ambos aplican {overlap}. El grupo lo recoge, pero se encuentran en lugar de excluirse ya por sus límites exteriores. Dales límites contiguos para separarlos del todo."
-    },
     "layout_zoned_with_shared_source": {
       "message": "La calefacción está en por zona, pero {entity} es la única fuente de calor de {count} zonas ({zones}). Esas estancias no se pueden calentar por separado."
     },

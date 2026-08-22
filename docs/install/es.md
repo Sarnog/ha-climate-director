@@ -359,6 +359,11 @@ quieres que la caldera de gas no estorbe a ningún aire acondicionado, mientras
 que dos aires del mismo circuito sí pueden enfriar juntos, haz un grupo por
 pareja — el gas con uno, el gas con el otro.
 
+Un grupo trata del **aparato**, no de la habitación. Si la misma caldera
+está bajo tres habitaciones, basta con marcarla una vez: la elijas desde donde
+la elijas, cuenta en todas partes. Y dos habitaciones que piden esa misma
+caldera no se estorban: es un solo aparato funcionando.
+
 Un grupo también ata a los aparatos que enciendes tú mismo: cuando le toca a
 otro miembro del grupo, el aparato manual se apaga. Y al revés: cuando un
 aparato así ya está en marcha, ocupa el grupo y otro miembro espera.
