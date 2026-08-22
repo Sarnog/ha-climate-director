@@ -643,7 +643,7 @@ def _build_commands(
         )
 
     commands.extend(_generator_commands(config, world, grants))
-    commands = _collapse_shared(config, commands)
+    commands = _collapse_shared(config, world, commands)
 
     # Een gedeeld apparaat staat onder meerdere zones. Krijgt het via één zone
     # toch een opdracht, dan wordt het niet met rust gelaten - hoe de andere
@@ -672,7 +672,9 @@ def _first_per_entity(untouched: list[UntouchedSource]) -> list[UntouchedSource]
     return list(seen.values())
 
 
-def _collapse_shared(config: DirectorConfig, commands: list[UnitCommand]) -> list[UnitCommand]:
+def _collapse_shared(
+    config: DirectorConfig, world: WorldState, commands: list[UnitCommand]
+) -> list[UnitCommand]:
     """Return one command per appliance, so a shared source never gets two.
 
     Bij een centrale verwarming staat dezelfde thermostaat als bron onder
@@ -685,7 +687,9 @@ def _collapse_shared(config: DirectorConfig, commands: list[UnitCommand]) -> lis
     Vraag wint van stilte: een gesloten systeem heeft nu eenmaal geen manier om
     de ene kamer wel en de andere niet te verwarmen. Vragen er meer zones
     tegelijk, dan volgt het apparaat de zone met de meeste voorrang - net zoals
-    een gewone thermostaat de leidende kamer volgt.
+    een gewone thermostaat de leidende kamer volgt. Die voorrang is de live
+    waarde, niet de ingestelde: een automatisering die `number.<zone>_prioriteit`
+    verzet hoort de gedeelde ketel net zo goed te sturen als de rest.
 
     With central heating the same thermostat sits as a source under several
     zones. Commands are built per zone, so such an appliance got one from each -
@@ -696,21 +700,24 @@ def _collapse_shared(config: DirectorConfig, commands: list[UnitCommand]) -> lis
     Demand beats silence: a closed system simply has no way to heat one room and
     not the other. If several zones ask at once, the appliance follows the zone
     with the most claim - just as an ordinary thermostat follows the leading
-    room.
+    room. That claim is the live priority, not the configured one: an automation
+    moving `number.<zone>_priority` should steer the shared boiler just as much
+    as the rest.
     """
     ranked: dict[str, UnitCommand] = {}
     for command in commands:
         sitting = ranked.get(command.entity_id)
-        if sitting is None or _claim(config, command) < _claim(config, sitting):
+        if sitting is None or _claim(config, world, command) < _claim(config, world, sitting):
             ranked[command.entity_id] = command
     return list(ranked.values())
 
 
-def _claim(config: DirectorConfig, command: UnitCommand) -> tuple[int, int, str]:
+def _claim(config: DirectorConfig, world: WorldState, command: UnitCommand) -> tuple[int, int, str]:
     """Return how strong a command's claim on its appliance is; lower wins."""
     running = command.hvac_mode not in (MODE_OFF, MODE_FAN_ONLY)
     zone = config.zone(command.zone_id) if command.zone_id else None
-    return (0 if running else 1, zone.priority if zone else 0, command.zone_id or "")
+    priority = world.priority_for(command.zone_id, zone.priority) if zone else 0
+    return (0 if running else 1, priority, command.zone_id or "")
 
 
 def _generator_commands(

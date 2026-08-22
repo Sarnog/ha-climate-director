@@ -105,6 +105,35 @@ class TestOneAppliance:
         command = next(c for c in plan.commands if c.entity_id == THERMOSTAT)
         assert command.zone_id == "living_room"
 
+    def test_the_live_priority_beats_the_configured_one(self) -> None:
+        """Een automatisering die de voorrang omzet, stuurt de gedeelde ketel.
+
+        A automation that flips the priorities steers the shared boiler.
+        """
+        bedroom = Zone(
+            zone_id="bedroom",
+            name="bedroom",
+            indoor_sensor="sensor.bedroom",
+            priority=1,
+            sources=(shared("central_br"),),
+            heat=ModeSettings(target=23.0, start_at=22.0, hysteresis=1.0),
+        )
+        config = DirectorConfig(
+            zones=(zone("living_room", shared("central_lr"), priority=0), bedroom),
+            heating_layout=HeatingLayout.CENTRAL,
+        )
+        world = make_world(
+            indoor={"living_room": 18.0, "bedroom": 18.0},
+            outdoor=5.0,
+            climates={THERMOSTAT: climate("off")},
+            zone_priorities={"living_room": 9, "bedroom": 0},
+        )
+        plan = decide(config, world)
+        command = plan.command_for(THERMOSTAT)
+        assert command is not None
+        assert command.zone_id == "bedroom"
+        assert command.temperature == 23.0
+
 
 class TestTheChoiceIsRecorded:
     """The setting survives a save, and an old installation is not guessed at twice."""
