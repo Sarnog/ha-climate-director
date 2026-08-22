@@ -42,6 +42,7 @@ SETTLED = [
     Reason.MASTER_DISABLED,
     Reason.NOBODY_HOME,
     Reason.CIRCUIT_CONFLICT_LOST,
+    Reason.CIRCUIT_AT_CAPACITY,
 ]
 
 
@@ -187,6 +188,72 @@ class TestTheDeadlockItWasBuiltFor:
         item._note_waiting(plan_with(Reason.REGULATING))
         assert item.stuck_zones() == {}
         assert item.waiting_seconds() == {}
+
+
+class TestAFullOutdoorUnitIsNoDeadlock:
+    """Vol is geen klem: er wacht niemand op iets dat niet komt.
+
+    Full is no deadlock: nobody is waiting for something that is not coming.
+
+    De andere wachtredenen zijn timers die in seconden of minuten aflopen - een
+    omschakelpauze, een minimale looptijd, een kortcyclusrust. Een volle
+    buitenunit is dat niet: die loopt pas leeg als een andere kamer ophoudt met
+    vragen, en dat kan uren duren zonder dat er iets mis is. Een handbediende
+    slaapkamerairco die de hele avond aanstaat is precies het geval waar de
+    instelling voor bedoeld is.
+
+    Stond het er wel bij, dan ging de melder in een gesimuleerd jaar 352 keer af
+    - bijna elke dag een keer, en nooit ergens voor. Precies wat de eigen regel
+    verbiedt: een valse melding leert je de melder te negeren.
+
+    De kamer die zijn plek niet krijgt hoort het nog steeds: die staat als
+    geblokkeerd te boek, want hij vroeg meer dan hij kreeg.
+
+    The other waiting reasons are timers running out in seconds or minutes - a
+    changeover pause, a minimum run, a short-cycle rest. A full outdoor unit is
+    not: it only frees up once another room stops asking, and that may take
+    hours with nothing wrong. A hand-operated bedroom unit left on all evening
+    is exactly the case the setting exists for.
+
+    Listed there, the sensor went off 352 times in a simulated year - nearly one
+    a day, and never for anything. Precisely what its own rule forbids: a false
+    alarm teaches you to ignore the alarm.
+
+    The room that does not get its place still hears about it: it stands
+    recorded as blocked, since it asked for more than it got.
+    """
+
+    def test_it_is_not_a_waiting_reason(self) -> None:
+        assert Reason.CIRCUIT_AT_CAPACITY not in WAITING_REASONS
+
+    def test_a_whole_evening_at_capacity_raises_nothing(self) -> None:
+        item = coordinator(minutes=15)
+        # Vier uur lang elke ronde hetzelfde: de buitenunit blijft vol.
+        # Four hours of the same every round: the outdoor unit stays full.
+        for _ in range(240):
+            item._note_waiting(plan_with(Reason.CIRCUIT_AT_CAPACITY))
+        assert item.waiting_seconds() == {}
+        assert item.stuck_zones() == {}
+
+    def test_the_other_three_are_still_watched(self) -> None:
+        """De timers die wél horen af te lopen, blijven bewaakt."""
+        assert set(WAITING_REASONS) == {
+            Reason.CIRCUIT_SWITCH_PENDING,
+            Reason.CIRCUIT_SWITCH_TOO_SOON,
+            Reason.SHORT_CYCLE_PROTECTION,
+        }
+
+    def test_the_zone_still_reports_being_blocked(self) -> None:
+        """Niet melden als klem is iets anders dan verzwijgen."""
+        from custom_components.climate_director.engine.plan import ZoneDecision as Decision
+
+        decision = Decision(
+            zone_id="woonkamer",
+            wanted=ModeFamily.HEAT,
+            granted=ModeFamily.NEUTRAL,
+            reason=Reason.CIRCUIT_AT_CAPACITY,
+        )
+        assert decision.blocked
 
 
 class TestTheSetting:

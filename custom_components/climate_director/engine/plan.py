@@ -61,14 +61,30 @@ class Reason(StrEnum):
 #: Redenen die uit zichzelf horen op te lossen. Een zone die er lang op blijft
 #: staan wacht op iets dat niet komt, en dat is een fout en geen toestand.
 #:
+#: Alle drie zijn het timers die in seconden of minuten aflopen. Een volle
+#: buitenunit (`CIRCUIT_AT_CAPACITY`) stond er ook bij en hoort er niet: die
+#: loopt pas leeg als een andere kamer ophoudt met vragen, en dat kan uren
+#: duren zonder dat er iets mis is - een handbediende slaapkamerairco die de
+#: hele avond aanstaat is precies waar die instelling voor bestaat. De melder
+#: ging daardoor in een gesimuleerd jaar 352 keer af zonder aanleiding, en een
+#: valse melding leert je de melder te negeren. De kamer die zijn plek niet
+#: krijgt staat nog steeds als geblokkeerd te boek.
+#:
 #: Reasons that should resolve by themselves. A zone sitting on one for long is
 #: waiting for something that is not coming, which is a fault and not a state.
+#:
+#: All three are timers running out in seconds or minutes. A full outdoor unit
+#: (`CIRCUIT_AT_CAPACITY`) used to be listed here and does not belong: it only
+#: frees up once another room stops asking, which may take hours with nothing
+#: wrong - a hand-operated bedroom unit left on all evening is exactly what that
+#: setting exists for. The sensor therefore went off 352 times in a simulated
+#: year for no cause, and a false alarm teaches you to ignore the alarm. The room
+#: that does not get its place still stands recorded as blocked.
 WAITING_REASONS = frozenset(
     {
         Reason.CIRCUIT_SWITCH_PENDING,
         Reason.CIRCUIT_SWITCH_TOO_SOON,
         Reason.SHORT_CYCLE_PROTECTION,
-        Reason.CIRCUIT_AT_CAPACITY,
     }
 )
 

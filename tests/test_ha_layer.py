@@ -950,8 +950,14 @@ class TestTheStuckSensorOverTime:
 
     def test_a_waiting_reason_starts_the_clock(self) -> None:
         item = coordinator({})
-        item._note_waiting(self._plan_with(Reason.CIRCUIT_AT_CAPACITY))
+        item._note_waiting(self._plan_with(Reason.SHORT_CYCLE_PROTECTION))
         assert "woonkamer" in item.waiting_seconds()
+
+    def test_a_full_outdoor_unit_does_not(self) -> None:
+        """Vol is een toestand, geen wacht: die mag uren duren zonder alarm."""
+        item = coordinator({})
+        item._note_waiting(self._plan_with(Reason.CIRCUIT_AT_CAPACITY))
+        assert item.waiting_seconds() == {}
 
     def test_an_ordinary_reason_does_not(self) -> None:
         item = coordinator({})
