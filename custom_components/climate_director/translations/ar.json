@@ -578,7 +578,15 @@
         "name": "مصدر {zone}"
       },
       "would_command": {
-        "name": "سيوجّه {entity}"
+        "name": "سيوجّه {entity}",
+        "state": {
+          "off": "إيقاف",
+          "heat": "تدفئة",
+          "cool": "تبريد",
+          "fan_only": "مروحة فقط",
+          "left_alone": "مُترَك دون تدخل",
+          "unreachable": "غير قابل للوصول"
+        }
       },
       "mismatch": {
         "name": "الفروق"

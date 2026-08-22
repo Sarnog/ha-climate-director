@@ -578,7 +578,15 @@
         "name": "Fuente {zone}"
       },
       "would_command": {
-        "name": "Gobernaría {entity}"
+        "name": "Gobernaría {entity}",
+        "state": {
+          "off": "Apagado",
+          "heat": "Calefacción",
+          "cool": "Refrigeración",
+          "fan_only": "Solo ventilador",
+          "left_alone": "Sin tocar",
+          "unreachable": "Inaccesible"
+        }
       },
       "mismatch": {
         "name": "Discrepancias"

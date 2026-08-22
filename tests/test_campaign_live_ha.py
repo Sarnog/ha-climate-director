@@ -860,6 +860,60 @@ class TestTheReporting:
         assert home.value("mismatch") == "0"
         assert home.values("mismatch")["differences"] == []
 
+    async def test_the_command_sensor_is_an_enum_over_every_state_it_can_take(
+        self, home: LiveHome
+    ) -> None:
+        """De standen zijn een vaste lijst, dus Home Assistant mag ze vertalen.
+
+        The states are a fixed list, so Home Assistant may translate them.
+
+        Bij een `enum` logt Home Assistant een fout zodra er een waarde langskomt
+        die niet in `options` staat. De lijst wordt daarom afgeleid uit
+        `preferred_mode`, niet met de hand opgeschreven: wie daar ooit een stand
+        aan toevoegt, hoeft deze lijst niet te onthouden.
+
+        On an `enum` Home Assistant logs an error the moment a value appears that
+        is not in `options`. The list is therefore derived from `preferred_mode`
+        rather than written out by hand: whoever adds a mode there need not
+        remember this list too.
+        """
+        from custom_components.climate_director.engine.families import (
+            MODE_FAN_ONLY,
+            MODE_OFF,
+            ModeFamily,
+            preferred_mode,
+        )
+        from custom_components.climate_director.sensor import (
+            STATE_LEFT_ALONE,
+            STATE_UNREACHABLE,
+        )
+
+        attributes = home.values(f"command_{LIVING}")
+        assert attributes["device_class"] == "enum"
+        options = set(attributes["options"])
+
+        reachable = {preferred_mode(family) for family in ModeFamily}
+        reachable |= {MODE_OFF, MODE_FAN_ONLY, STATE_LEFT_ALONE, STATE_UNREACHABLE}
+        assert reachable <= options, sorted(reachable - options)
+        assert home.value(f"command_{LIVING}") in options
+
+    async def test_every_command_state_is_translated(self) -> None:
+        """Een stand zonder tekst laat Home Assistant de kale sleutel tonen.
+
+        A state without wording makes Home Assistant show the bare key.
+        """
+        import json
+        from pathlib import Path
+
+        from custom_components.climate_director.sensor import COMMAND_STATES
+
+        component = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
+        files = [component / "strings.json", *sorted((component / "translations").glob("*.json"))]
+        for path in files:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            states = data["entity"]["sensor"]["would_command"]["state"]
+            assert sorted(states) == sorted(COMMAND_STATES), path.name
+
     async def test_the_mismatch_sensor_carries_no_unit(self, home: LiveHome) -> None:
         """Een telling is geen meting met een eenheid.
 

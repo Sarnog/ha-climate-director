@@ -578,7 +578,15 @@
         "name": "Source {zone}"
       },
       "would_command": {
-        "name": "Commanderait {entity}"
+        "name": "Commanderait {entity}",
+        "state": {
+          "off": "Arrêt",
+          "heat": "Chauffage",
+          "cool": "Refroidissement",
+          "fan_only": "Ventilation seule",
+          "left_alone": "Laissé tranquille",
+          "unreachable": "Injoignable"
+        }
       },
       "mismatch": {
         "name": "Écarts"

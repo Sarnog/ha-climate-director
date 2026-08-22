@@ -578,7 +578,15 @@
         "name": "{zone} source"
       },
       "would_command": {
-        "name": "Would command {entity}"
+        "name": "Would command {entity}",
+        "state": {
+          "off": "Off",
+          "heat": "Heating",
+          "cool": "Cooling",
+          "fan_only": "Fan only",
+          "left_alone": "Left alone",
+          "unreachable": "Unreachable"
+        }
       },
       "mismatch": {
         "name": "Mismatch"

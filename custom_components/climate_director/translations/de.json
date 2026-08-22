@@ -578,7 +578,15 @@
         "name": "Quelle {zone}"
       },
       "would_command": {
-        "name": "Würde {entity} ansteuern"
+        "name": "Würde {entity} ansteuern",
+        "state": {
+          "off": "Aus",
+          "heat": "Heizen",
+          "cool": "Kühlen",
+          "fan_only": "Nur Lüften",
+          "left_alone": "In Ruhe gelassen",
+          "unreachable": "Nicht erreichbar"
+        }
       },
       "mismatch": {
         "name": "Abweichungen"

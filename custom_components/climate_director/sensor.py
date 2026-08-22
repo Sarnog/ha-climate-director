@@ -15,12 +15,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry
-from .engine import Reason
+from .engine import ModeFamily, Reason
+from .engine.families import MODE_FAN_ONLY, MODE_OFF, preferred_mode
 from .entity import ClimateDirectorEntity
 
 #: De toestand van een apparaat dat de director met opzet met rust laat: een
@@ -46,6 +47,22 @@ STATE_LEFT_ALONE = "left_alone"
 #: The state of an appliance that cannot be reached. There is nothing to steer,
 #: so there is no command either - which is not the same as leaving it alone.
 STATE_UNREACHABLE = "unreachable"
+
+#: Elke stand die de commando-sensor kan aannemen. Afgeleid in plaats van
+#: opgeschreven: `preferred_mode` bepaalt wat de engine voor een taak vraagt, en
+#: wie daar ooit een stand aan toevoegt hoort hem hier niet te hoeven onthouden.
+#: Home Assistant logt een fout bij een waarde die niet in deze lijst staat, dus
+#: een vergeten stand kost je een logregel per beslisronde.
+#:
+#: Every state the command sensor can take. Derived rather than written out:
+#: `preferred_mode` settles what the engine asks for a duty, and whoever adds a
+#: mode there should not have to remember this list too. Home Assistant logs an
+#: error on a value missing from this list, so a forgotten mode costs you a log
+#: line per decision round.
+COMMAND_STATES: list[str] = sorted(
+    {preferred_mode(family) for family in ModeFamily}
+    | {MODE_OFF, MODE_FAN_ONLY, STATE_LEFT_ALONE, STATE_UNREACHABLE}
+)
 
 
 async def async_setup_entry(
@@ -151,6 +168,8 @@ class CommandSensor(ClimateDirectorEntity, SensorEntity):
 
     _attr_translation_key = "would_command"
     _attr_icon = "mdi:script-text-outline"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = COMMAND_STATES
 
     def __init__(self, coordinator: ClimateDirectorCoordinator, entity_id: str) -> None:
         """Set up the sensor for one steered appliance."""

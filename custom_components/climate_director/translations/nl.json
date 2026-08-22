@@ -578,7 +578,15 @@
         "name": "Bron {zone}"
       },
       "would_command": {
-        "name": "Zou {entity} aansturen"
+        "name": "Zou {entity} aansturen",
+        "state": {
+          "off": "Uit",
+          "heat": "Verwarmen",
+          "cool": "Koelen",
+          "fan_only": "Alleen ventileren",
+          "left_alone": "Met rust gelaten",
+          "unreachable": "Niet bereikbaar"
+        }
       },
       "mismatch": {
         "name": "Afwijkingen"
