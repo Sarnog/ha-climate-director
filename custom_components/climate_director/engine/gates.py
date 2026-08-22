@@ -334,11 +334,16 @@ def _zone_running(
 ) -> bool:
     """Return whether any appliance that counts for this zone is doing something.
 
-    Een gedeeld apparaat telt alleen voor de zone die het commando kreeg, zodat
-    een ketel die voor een andere kamer brandt dit stiltevenster niet opheft.
+    Een gedeeld apparaat telt alleen voor de zone die het vorige plan een
+    draaicommando gaf, zodat een ketel die voor een andere kamer brandt dit
+    stiltevenster niet opheft. Kreeg niemand zo'n commando - na een herstart,
+    of omdat iemand hem met de hand aanzette - dan draait hij voor het hele huis
+    en heft hij het stiltevenster wél op.
 
-    A shared appliance counts only for the zone that got the command, so a
-    boiler burning for another room does not lift this quiet window.
+    A shared appliance counts only for the zone that got a running command in
+    the previous plan, so a boiler burning for another room does not lift this
+    quiet window. With no such command - after a restart, or because somebody
+    switched it on by hand - it runs for the whole house and does lift it.
     """
     return any(
         source_counts_for(config, zone, source, previous)

@@ -39,28 +39,36 @@ def source_counts_for(
     """Return whether a running source counts as this zone's own.
 
     Een bron die maar in deze zone staat, telt gewoon op zijn toestand. Een
-    gedeeld apparaat telt alleen voor de zone die het commando kreeg; zonder
-    eerder plan telt het voor geen enkele zone. Wie de ketel alleen uitleest,
-    laat de dode band van elke kamer meeschuiven zodra één kamer warmte kreeg.
+    gedeeld apparaat telt alleen voor de zone die het vorige plan een
+    draaicommando gaf; kreeg niemand er een, dan draait hij voor het hele huis
+    en telt hij voor elke zone. Zo schuift de dode band niet mee met een ketel
+    die voor een andere kamer brandt, en gaat een ketel die na een herstart of
+    met de hand draait niet onterecht uit.
 
-    A source sitting in this zone alone simply counts on its own state. A shared
-    appliance counts only for the zone that got the command; without a previous
-    plan it counts for no zone. Reading the boiler alone would shift every
-    room's dead band the moment one room got heat.
+    A source that sits in this zone alone simply counts on its own state. A
+    shared appliance counts only for the zone that got a running command in the
+    previous plan; with no such command it runs for the whole house and counts
+    for every zone. That keeps the dead band from following a boiler burning for
+    another room, and keeps a boiler running after a restart or by hand from
+    being switched off unjustly.
     """
     owners = {
         owner.zone_id for owner, item in config.sources() if item.entity_id == source.entity_id
     }
     if len(owners) <= 1:
         return True
-    if previous is None:
-        return False
-    return any(
-        command.entity_id == source.entity_id
-        and command.zone_id == zone.zone_id
+    claimed = [
+        command
+        for command in (previous.commands if previous else ())
+        if command.entity_id == source.entity_id
         and family_of(command.hvac_mode) is not ModeFamily.NEUTRAL
-        for command in previous.commands
-    )
+    ]
+    if not claimed:
+        # Niemand kreeg opdracht hem te laten draaien. Draait hij toch - na een
+        # herstart, of omdat iemand hem met de hand aanzette - dan doet hij dat
+        # voor het hele huis, en niet namens één kamer.
+        return True
+    return any(command.zone_id == zone.zone_id for command in claimed)
 
 
 def running_family(

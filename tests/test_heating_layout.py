@@ -464,3 +464,96 @@ class TestWhoseRunningItIs:
             is Reason.QUIET_HOURS
         )
         assert gates_module.evaluate(config, world, living, self._previous("living_room")).allowed
+
+
+class TestQuietHoursAndASharedBoiler:
+    """Stiltevenster x gedeelde ketel: een rem op beginnen, niet op doorgaan.
+
+    Zonder vorig plan mag een brandende gedeelde ketel niet uitgaan; hij draait
+    voor het hele huis en niet namens één kamer. De eerste test hieronder is de
+    regressiebewaker voor het solo-geval, de andere twee pinnen de gedeelde
+    variant vast.
+
+    With no previous plan a burning shared boiler must not be switched off; it
+    runs for the whole house and not on one room's behalf. The first test below
+    is the regression guard for the solo case, the other two pin down the shared
+    one.
+    """
+
+    def _config(self) -> DirectorConfig:
+        from datetime import time
+
+        from custom_components.climate_director.engine import GateSettings, TimeWindow
+
+        return DirectorConfig(
+            zones=(
+                zone("woonkamer", shared("central_woonkamer"), priority=0),
+                zone("zolder", shared("central_zolder"), priority=1),
+            ),
+            heating_layout=HeatingLayout.CENTRAL,
+            gates=GateSettings(quiet_windows=(TimeWindow(time(21, 0), time(9, 0)),)),
+        )
+
+    def _world(self, *, boiler: str = MODE_HEAT):
+        from datetime import datetime
+
+        return make_world(
+            now=datetime(2026, 8, 17, 22, 0),
+            indoor={"woonkamer": 18.0, "zolder": 18.0},
+            outdoor=5.0,
+            climates={THERMOSTAT: climate(boiler)},
+        )
+
+    def test_a_solo_appliance_keeps_running_without_a_previous_plan(self) -> None:
+        """Eén zone op een eigen bron: zonder vorig plan blijft hij gewoon draaien.
+
+        A zone on its own appliance keeps running without a previous plan.
+        """
+        from datetime import time
+
+        from custom_components.climate_director.engine import GateSettings, ModeFamily, TimeWindow
+
+        config = DirectorConfig(
+            zones=(
+                zone(
+                    "zolder",
+                    Source(source_id="eigen", entity_id=THERMOSTAT, role=SourceRole.HEAT_ONLY),
+                ),
+            ),
+            gates=GateSettings(quiet_windows=(TimeWindow(time(21, 0), time(9, 0)),)),
+        )
+        plan = decide(config, self._world(), None)
+        decision = plan.decision_for("zolder")
+        assert decision is not None
+        assert decision.granted is ModeFamily.HEAT
+        command = plan.command_for(THERMOSTAT)
+        assert command is not None
+        assert command.hvac_mode == MODE_HEAT
+
+    def test_a_shared_appliance_stays_on_without_a_previous_plan(self) -> None:
+        """Gedeelde ketel, geen vorig plan: hij blijft draaien in plaats van uit te gaan.
+
+        A shared boiler with no previous plan keeps running instead of being
+        switched off.
+        """
+        from custom_components.climate_director.engine import Reason
+
+        plan = decide(self._config(), self._world(), None)
+        woonkamer = plan.decision_for("woonkamer")
+        assert woonkamer is not None
+        assert Reason.QUIET_HOURS not in woonkamer.closed_gates
+        command = plan.command_for(THERMOSTAT)
+        assert command is not None
+        assert command.hvac_mode == MODE_HEAT
+
+    def test_and_switching_it_on_by_hand_keeps_it_on(self) -> None:
+        """Met de hand aangezet blijft hij aan: de volgende ronde draait hem niet terug.
+
+        Switched on by hand it stays on: the next round does not turn it back.
+        """
+        config = self._config()
+        first = decide(config, self._world(), None)
+        second = decide(config, self._world(), first)
+        command = second.command_for(THERMOSTAT)
+        assert command is not None
+        assert command.hvac_mode == MODE_HEAT
