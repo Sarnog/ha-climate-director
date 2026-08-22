@@ -221,7 +221,13 @@ class MismatchSensor(ClimateDirectorEntity, SensorEntity):
 
     _attr_translation_key = "mismatch"
     _attr_icon = "mdi:not-equal-variant"
-    _attr_native_unit_of_measurement = "appliances"
+    # Geen eenheid: dit is een aantal, geen meting. Er stond `appliances`, en
+    # Home Assistant zet zo'n eenheid letterlijk achter het getal - onvertaald,
+    # dus in elke taal in het Engels.
+    #
+    # No unit: this is a count, not a measurement. It read `appliances`, and
+    # Home Assistant prints such a unit verbatim behind the number -
+    # untranslated, so in English whatever language you read.
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, coordinator: ClimateDirectorCoordinator) -> None:

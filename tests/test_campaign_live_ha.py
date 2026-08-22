@@ -860,6 +860,21 @@ class TestTheReporting:
         assert home.value("mismatch") == "0"
         assert home.values("mismatch")["differences"] == []
 
+    async def test_the_mismatch_sensor_carries_no_unit(self, home: LiveHome) -> None:
+        """Een telling is geen meting met een eenheid.
+
+        A count is not a measurement with a unit.
+
+        Er stond `appliances` als eenheid, onvertaald en in het Engels, achter
+        een getal dat gewoon een aantal is. Home Assistant zet dat er letterlijk
+        achter, dus in het Nederlands stond er "2 appliances".
+
+        The unit read `appliances`, untranslated and in English, behind a number
+        that is simply a count. Home Assistant prints that verbatim, so in Dutch
+        it said "2 appliances".
+        """
+        assert "unit_of_measurement" not in home.values("mismatch")
+
     async def test_the_decision_event_carries_the_outcome(self, home: LiveHome) -> None:
         fired = home.fired("climate_director_decision")
         assert fired, "er hoort na de eerste beslissing een event te zijn"
