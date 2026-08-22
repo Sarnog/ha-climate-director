@@ -16,6 +16,7 @@ for a user too.
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
 from typing import Any
 
 import pytest
@@ -623,6 +624,49 @@ class TestTheActions:
 # De bedieningsentiteiten.
 # The control entities.
 # ---------------------------------------------------------------------------
+
+
+class TestTheAlarmUnderAPreConditioningRequest:
+    """Een afgelopen verzoek mag de wekker van een lopend verzoek niet doven.
+
+    A request that has run out must not put out the alarm of a running one.
+
+    Er staat altijd maar een wekker, op het eerstvolgende verzoek dat afloopt.
+    Werd die gezet op de ruwe lijst, dan koos hij een verzoek dat al voorbij was,
+    zag "dat moment ligt achter ons" en zette helemaal niets. Het lopende verzoek
+    liep daarna af zonder dat iemand het merkte, en op een stille middag stookt
+    een leeg huis dan door tot er toevallig iets anders verandert.
+
+    There is only ever one alarm, set on the first request to run out. Set from
+    the raw list, it picked a request that was already over, saw "that moment is
+    behind us" and set nothing at all. The running request then ran out with
+    nobody noticing, and on a quiet afternoon an empty house keeps burning until
+    something else happens to change.
+    """
+
+    async def test_a_stale_request_does_not_swallow_the_alarm(
+        self, home: LiveHome, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from homeassistant.util import dt as dt_util
+
+        from custom_components.climate_director import coordinator as module
+
+        home.coordinator.async_precondition(["woonkamer"], 30)
+        assert home.coordinator._cancel_precondition_wake is not None
+
+        # Een uur verder is dat eerste verzoek allang voorbij, maar niemand
+        # heeft het gelezen, dus het staat er nog.
+        #
+        # An hour on that first request is long over, but nobody has read it, so
+        # it is still there.
+        later = dt_util.now() + timedelta(hours=1)
+        monkeypatch.setattr(module.dt_util, "now", lambda: later)
+        home.coordinator._cancel_pending_precondition_wake()
+
+        home.coordinator.async_precondition(["zolder"], 60)
+        assert home.coordinator._cancel_precondition_wake is not None, (
+            "het lopende verzoek hoort zijn eigen wekker te krijgen"
+        )
 
 
 class TestTheControls:

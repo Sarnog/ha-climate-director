@@ -903,7 +903,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
 
         if chosen:
             self._async_save_state()
-            self._preconditions_expire_at(min(self._precondition.values()))
+            self._wake_at_the_first_expiry()
             self.async_request_evaluation()
         return dict.fromkeys(chosen, until)
 
@@ -1000,8 +1000,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             if day == today:
                 self._handed_back[zone_id] = day
 
-        if self._precondition:
-            self._preconditions_expire_at(min(self._precondition.values()))
+        self._wake_at_the_first_expiry()
 
     @callback
     def async_cancel_precondition(self, zone_ids: list[str] | None) -> None:
@@ -1028,10 +1027,27 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         # The alarm follows the requests still standing. With nothing left the
         # standing alarm simply runs out: it then asks for a round that finds
         # nothing to do, and a round without a difference costs no service call.
-        if self._precondition:
-            self._preconditions_expire_at(min(self._precondition.values()))
+        self._wake_at_the_first_expiry()
         self._async_save_state()
         self.async_request_evaluation()
+
+    @callback
+    def _wake_at_the_first_expiry(self) -> None:
+        """Set the alarm on the first request that is still to run out.
+
+        Op de opgeschoonde lijst, niet op de ruwe. Een verzoek dat er nog in
+        staat maar allang voorbij is, wint anders de `min()`, waarna
+        `_preconditions_expire_at` ziet dat dat moment achter ons ligt en
+        helemaal geen wekker zet - ook niet voor het verzoek dat wel loopt.
+
+        On the pruned list, not on the raw one. A request still sitting there
+        but long since over otherwise wins the `min()`, after which
+        `_preconditions_expire_at` sees that moment lies behind us and sets no
+        alarm at all - not even for the request that is running.
+        """
+        pending = self._live_preconditions()
+        if pending:
+            self._preconditions_expire_at(min(pending.values()))
 
     @callback
     def _preconditions_expire_at(self, until: datetime) -> None:
@@ -1067,9 +1083,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         """Decide again now a request has run out, and wait for the next one."""
         self._cancel_precondition_wake = None
         self.async_request_evaluation()
-        pending = self._live_preconditions()
-        if pending:
-            self._preconditions_expire_at(min(pending.values()))
+        self._wake_at_the_first_expiry()
 
     @callback
     def _cancel_pending_precondition_wake(self) -> None:
