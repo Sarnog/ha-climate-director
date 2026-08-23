@@ -470,7 +470,7 @@ class TestZoneFromForm:
 
     def test_editing_keeps_the_id_and_the_sources(self) -> None:
         current = {"zone_id": "living", "sources": [{"source_id": "s", "entity_id": "climate.x"}]}
-        zone = _zone_from_form(self.form, current)
+        zone = _zone_from_form(self.form, current, stored_id=current.get("zone_id"))
         assert zone["zone_id"] == "living"
         assert zone["sources"] == current["sources"]
 
@@ -497,7 +497,7 @@ class TestZoneFromForm:
                 "seasons": ["summer"],
             },
         }
-        zone = _zone_from_form(self.form, current)
+        zone = _zone_from_form(self.form, current, stored_id=current.get("zone_id"))
         assert zone["heat"]["outdoor"]["minimum"] == 5.0
         assert zone["heat"]["outdoor"]["maximum"] == 19.0
         assert zone["heat"]["seasons"] == ["winter", "summer"]
@@ -513,7 +513,7 @@ class TestZoneFromForm:
             "zone_id": "living",
             "sources": [{"source_id": "s", "entity_id": "climate.x"}],
         }
-        zone = _zone_from_form(self.form, current)
+        zone = _zone_from_form(self.form, current, stored_id=current.get("zone_id"))
         assert zone["heat"]["outdoor"]["minimum"] is None
         assert zone["heat"]["seasons"] is None
         assert zone["cool"]["outdoor"]["maximum"] is None

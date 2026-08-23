@@ -800,6 +800,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         """Edit one zone's comfort settings."""
         zones = self._list("zones")
         current = zones[self._zone_index] if self._zone_index is not None else {}
+        stored_id = current.get("zone_id") if self._zone_index is not None else None
 
         errors: dict[str, str] = {}
 
@@ -817,7 +818,12 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 self._zone_index = None
                 return await self.async_step_init()
 
-            zone = _zone_from_form(user_input, current)
+            taken = [
+                item.get("zone_id")
+                for index, item in enumerate(zones)
+                if index != self._zone_index and item.get("zone_id")
+            ]
+            zone = _zone_from_form(user_input, current, taken, stored_id=stored_id)
             errors |= _zone_errors(zone)
             if self._priority_clash(zone["zone_id"], zone["priority"]):
                 errors["priority"] = "duplicate_priority"
@@ -1770,7 +1776,24 @@ def _zone_errors(zone: dict[str, Any]) -> dict[str, str]:
     be forgotten. What passes here should pass `validate()` -
     `test_random_installations.py` pins down exactly that, in both directions.
     """
-    return _band_errors(zone) | _gate_errors(zone) | _mode_errors(zone)
+    return _name_errors(zone) | _band_errors(zone) | _gate_errors(zone) | _mode_errors(zone)
+
+
+def _name_errors(zone: dict[str, Any]) -> dict[str, str]:
+    """Return an error when the name cannot carry a zone id.
+
+    De naam bepaalt het id van een nieuwe zone, dus hij moet iets opleveren om
+    te sluggen. Een lege naam valt terug op `zone`, en twee van zulke zones
+    botsen alsnog op hetzelfde id - precies wat de unieke-id-stap hierboven
+    hoort te voorkomen.
+
+    The name decides a new zone's id, so it must yield something to slug. An
+    empty name falls back to `zone`, and two such zones still collide on the
+    same id - exactly what the unique-id step above is there to prevent.
+    """
+    if slugify(zone.get("name") or ""):
+        return {}
+    return {"name": "required"}
 
 
 def _mode_errors(zone: dict[str, Any]) -> dict[str, str]:
@@ -1863,7 +1886,13 @@ def _band_errors(zone: dict[str, Any]) -> dict[str, str]:
     return errors
 
 
-def _zone_from_form(user_input: dict[str, Any], current: dict[str, Any]) -> dict[str, Any]:
+def _zone_from_form(
+    user_input: dict[str, Any],
+    current: dict[str, Any],
+    taken: list[str] | None = None,
+    *,
+    stored_id: str | None = None,
+) -> dict[str, Any]:
     """Return the stored zone described by a submitted zone form.
 
     Het formulier toont maar één kant van elke buitengrens en geen
@@ -1910,7 +1939,20 @@ def _zone_from_form(user_input: dict[str, Any], current: dict[str, Any]) -> dict
         else None
     )
     return {
-        "zone_id": current.get("zone_id") or slugify(user_input[CONF_NAME]) or "zone",
+        # Een bestaande zone houdt zijn id: achteraf hernoemen kost de
+        # entiteitsgeschiedenis van die zone. Een nieuwe zone krijgt een id uit
+        # zijn naam, en bij een al bestaande id een oplopend achtervoegsel -
+        # precies zoals bronnen, circuits, generatoren en bewoners dat doen.
+        #
+        # An existing zone keeps its id: renaming one afterwards costs that
+        # zone's entity history. A new zone gets an id from its name, and when
+        # that id already exists a counting suffix - exactly as sources,
+        # circuits, generators and residents do.
+        "zone_id": (
+            stored_id
+            if stored_id is not None
+            else _unique_id(user_input[CONF_NAME], taken or [])
+        ),
         "name": user_input[CONF_NAME],
         "indoor_sensor": user_input["indoor_sensor"],
         "priority": int(user_input["priority"]),

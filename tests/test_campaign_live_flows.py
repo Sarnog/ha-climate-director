@@ -446,6 +446,199 @@ class TestBuildingAnInstallationInTheWizard:
 
 
 # ---------------------------------------------------------------------------
+# Elk scherm twee keer met identieke invoer.
+# Every screen twice with identical input.
+# ---------------------------------------------------------------------------
+
+
+class TestSavingTheSameInputTwice:
+    """De spiegel van de kruistest: scherm A twee keer in plaats van A naast B.
+
+    The mirror of the cross test: screen A twice instead of A next to B.
+    """
+
+    async def _add_zone(self, flow, entry_id: str, name: str, sensor: str, entity_id: str) -> None:
+        result = await flow.async_init(entry_id)
+        result = await flow.async_configure(result["flow_id"], {"next_step_id": "zones"})
+        result = await flow.async_configure(result["flow_id"], {"zone": "add_new"})
+        result = await flow.async_configure(
+            result["flow_id"],
+            {
+                "name": name,
+                "indoor_sensor": sensor,
+                "priority": 0,
+                "gate": "household",
+                "presence_state": "on",
+                "enable_heat": True,
+                "heat_target": 21.0,
+                "heat_start_at": 20.0,
+                "heat_hysteresis": 1.0,
+                "enable_cool": False,
+                "cool_target": 23.0,
+                "cool_start_at": 24.0,
+                "cool_hysteresis": 1.0,
+                "cool_summer_only": True,
+                "delete": False,
+                "when_done": "keep",
+            },
+        )
+        assert result["step_id"] == "sources"
+        result = await flow.async_configure(result["flow_id"], {"source": "add_new"})
+        result = await flow.async_configure(
+            result["flow_id"],
+            {
+                "entity_id": entity_id,
+                "role": "heat_only",
+                "autostart": True,
+                "priority": 0,
+                "delete": False,
+                "when_done": "keep",
+            },
+        )
+        result = await flow.async_configure(result["flow_id"], {"source": "back_to_menu"})
+        result = await flow.async_configure(result["flow_id"], {"next_step_id": "save"})
+        if result["type"] == "form":
+            result = await flow.async_configure(result["flow_id"], {"when_done": "keep"})
+        assert result["type"] == "create_entry"
+
+    async def _add_circuit(self, flow, entry_id: str, name: str, units: list[str]) -> None:
+        result = await flow.async_init(entry_id)
+        result = await flow.async_configure(result["flow_id"], {"next_step_id": "circuits"})
+        result = await flow.async_configure(result["flow_id"], {"circuit": "add_new"})
+        result = await flow.async_configure(
+            result["flow_id"],
+            {
+                "name": name,
+                "units": units,
+                "simultaneous_heat_cool": False,
+                "conflict_policy": "priority",
+                "allow_fan_only_during_conflict": False,
+                "family_switch_delay": 0,
+                "min_family_switch_interval": 0,
+                "min_cycle_time": 180,
+                "delete": False,
+                "when_done": "keep",
+            },
+        )
+        assert result["step_id"] == "circuit_priorities"
+        result = await flow.async_configure(result["flow_id"], {"zone": "back_to_menu"})
+        result = await flow.async_configure(result["flow_id"], {"next_step_id": "save"})
+        if result["type"] == "form":
+            result = await flow.async_configure(result["flow_id"], {"when_done": "keep"})
+        assert result["type"] == "create_entry"
+
+    async def _add_resident(self, flow, entry_id: str, name: str, presence: str) -> None:
+        result = await flow.async_init(entry_id)
+        result = await flow.async_configure(result["flow_id"], {"next_step_id": "residents"})
+        result = await flow.async_configure(result["flow_id"], {"resident": "add_new"})
+        result = await flow.async_configure(
+            result["flow_id"],
+            {
+                "name": name,
+                "presence_entity": presence,
+                "sleep_entity": "binary_sensor.slaapt",
+                "sleep_state": "on",
+                "sleep_from": "23:00:00",
+                "sleep_until": "09:00:00",
+                "delete": False,
+                "when_done": "keep",
+            },
+        )
+        assert result["step_id"] == "windows"
+        result = await flow.async_configure(result["flow_id"], {"window": "back_to_menu"})
+        result = await flow.async_configure(result["flow_id"], {"next_step_id": "save"})
+        if result["type"] == "form":
+            result = await flow.async_configure(result["flow_id"], {"when_done": "keep"})
+        assert result["type"] == "create_entry"
+
+    async def _add_quiet(self, flow, entry_id: str) -> None:
+        result = await flow.async_init(entry_id)
+        result = await flow.async_configure(result["flow_id"], {"next_step_id": "quiets"})
+        result = await flow.async_configure(result["flow_id"], {"quiet": "add_new"})
+        result = await flow.async_configure(
+            result["flow_id"],
+            {"start": "22:00:00", "end": "07:00:00", "delete": False, "when_done": "keep"},
+        )
+        assert result["step_id"] == "quiets"
+        result = await flow.async_configure(result["flow_id"], {"quiet": "back_to_menu"})
+        result = await flow.async_configure(result["flow_id"], {"next_step_id": "save"})
+        if result["type"] == "form":
+            result = await flow.async_configure(result["flow_id"], {"when_done": "keep"})
+        assert result["type"] == "create_entry"
+
+    async def _add_opening(self, flow, entry_id: str) -> None:
+        result = await flow.async_init(entry_id)
+        result = await flow.async_configure(result["flow_id"], {"next_step_id": "openings"})
+        result = await flow.async_configure(result["flow_id"], {"opening": "add_new"})
+        result = await flow.async_configure(
+            result["flow_id"],
+            {
+                "entity_id": "binary_sensor.raam",
+                "open_state": "on",
+                "delay": 0,
+                "delete": False,
+                "when_done": "keep",
+            },
+        )
+        assert result["type"] == "menu"
+        result = await flow.async_configure(result["flow_id"], {"next_step_id": "save"})
+        if result["type"] == "form":
+            result = await flow.async_configure(result["flow_id"], {"when_done": "keep"})
+        assert result["type"] == "create_entry"
+
+    async def test_no_screen_makes_a_duplicate_id_or_entity(self, caplog) -> None:
+        """Twee keer dezelfde invoer: geen dubbel ID, geen dubbel entiteitenlog.
+
+        The same input twice: no duplicate id, no duplicate-entity log line.
+        """
+        states = {
+            "sensor.badkamer_boven": ("18.0", {}),
+            "sensor.badkamer_beneden": ("18.0", {}),
+            LIVING: ("off", {"hvac_modes": ["heat", "off"]}),
+            ATTIC: ("off", {"hvac_modes": ["heat", "off"]}),
+            "person.danny": ("home", {}),
+            "person.nancy": ("home", {}),
+        }
+        home = await start_house({"zones": []}, states=states)
+        try:
+            flow = home.hass.config_entries.options
+            entry_id = home.entry.entry_id
+
+            await self._add_zone(flow, entry_id, "Badkamer", "sensor.badkamer_boven", LIVING)
+            await self._add_zone(flow, entry_id, "Badkamer", "sensor.badkamer_beneden", ATTIC)
+
+            await self._add_circuit(flow, entry_id, "Multi-split", [LIVING])
+            await self._add_circuit(flow, entry_id, "Multi-split", [ATTIC])
+
+            await self._add_resident(flow, entry_id, "Bewoner", "person.danny")
+            await self._add_resident(flow, entry_id, "Bewoner", "person.nancy")
+
+            await self._add_quiet(flow, entry_id)
+            await self._add_quiet(flow, entry_id)
+
+            await self._add_opening(flow, entry_id)
+            await self._add_opening(flow, entry_id)
+
+            await home.hass.async_block_till_done()
+            stored = home.entry.options[CONF_INSTALLATION]
+
+            zone_ids = [item["zone_id"] for item in stored["zones"]]
+            assert len(zone_ids) == len(set(zone_ids)) == 2, zone_ids
+            circuit_ids = [item["circuit_id"] for item in stored["circuits"]]
+            assert len(circuit_ids) == len(set(circuit_ids)) == 2, circuit_ids
+            resident_ids = [item["resident_id"] for item in stored["residents"]]
+            assert len(resident_ids) == len(set(resident_ids)) == 2, resident_ids
+            assert len(stored["gates"]["quiet_windows"]) == 2
+            assert len(stored["openings"]) == 2
+
+            entity_ids = [item.entity_id for item in home.hass.states.async_all()]
+            assert len(entity_ids) == len(set(entity_ids))
+            assert "does not generate unique IDs" not in caplog.text
+        finally:
+            await stop_house(home)
+
+
+# ---------------------------------------------------------------------------
 # De reparatiemelding.
 # The repair notice.
 # ---------------------------------------------------------------------------
