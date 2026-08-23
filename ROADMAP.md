@@ -34,6 +34,17 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   tussen apparaten die elkaar kunnen tegenkomen. Die controle is weg. Wat wél te melden
   valt, is een groep die niets kan uitsluiten — twee bronnen in dezelfde kamer bijvoorbeeld,
   die elkaar toch al uitsluiten omdat een zone maar één bron kiest.
+- **Een huisbrede stop die ook een handbediend apparaat pakt** — de lijst apparaten die
+  stilvallen zodra ergens een opening openstaat, stuurt alleen wat de director toch al
+  stuurt. Een handbediende bron en een zone met een override blijven met rust, precies
+  zoals bij de gewone raampoort. Voor wie een handbediende airco in die lijst zet is dat
+  niet wat hij verwacht; wat ontbreekt is een keuze tussen "alleen wat ik stuur" en "ook
+  wat ik met de hand aanzet".
+- **Een huisbreed stilgezette bron als uitwijking melden** — staat de cv-ketel stil door
+  een openstaande deur en neemt de airco het over, dan verwarmt de kamer elektrisch
+  zonder dat `binary_sensor.…_op_reserve` daar iets over zegt: `passed_over` telt alleen
+  bronnen die onbereikbaar zijn, en een stilgezette bron is dat niet. Een aparte melding
+  zou dat zichtbaar maken zonder de melder bij elke openstaande deur te laten knipperen.
 - **Huisbreed vermogensplafond** — een maximum in watt over de hele installatie, in plaats
   van alleen een maximum aantal units per circuit. Een grens in stuks zegt niets over wat
   er werkelijk uit de meter loopt: drie kleine units zijn iets heel anders dan één ketel.
@@ -142,6 +153,17 @@ The worked-out design proposals for everything below live in
   That check has gone. What would be worth reporting is a group that cannot rule anything
   out — two sources in the same room, say, which already rule each other out because a zone
   only ever picks one source.
+- **A house-wide stop that catches a hand-operated appliance too** — the list of
+  appliances that stop the moment an opening stands open anywhere steers only what the
+  director steers already. A hand-operated source and a zone under override are left
+  alone, exactly as with the ordinary window gate. For anyone putting a hand-operated air
+  conditioner on that list this is not what they expect; what is missing is a choice
+  between "only what I steer" and "what I switch on by hand as well".
+- **Report a house-wide stopped source as a fallback** — with the boiler stopped by an
+  open door and the air conditioner taking over, the room heats electrically without
+  `binary_sensor.…_on_fallback` saying anything about it: `passed_over` counts only
+  sources that are unreachable, and a stopped source is not. A separate report would make
+  that visible without leaving the sensor blinking at every open door.
 - **A house-wide power ceiling** — a maximum in watts across the whole installation, rather
   than only a maximum number of units per circuit. A limit in units says nothing about what
   actually leaves the meter: three small units are a very different thing from one boiler.

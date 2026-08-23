@@ -438,6 +438,29 @@ Una apertura abierta el tiempo suficiente suspende las zonas afectadas.
 | **Zonas afectadas** | vacío = toda la instalación |
 | **Retardo antes de suspender** | vacío o 0 = en el momento de abrirse |
 
+**Un aparato compartido sigue la demanda, no el silencio.** Cuando la misma
+caldera figura como fuente en varias zonas, no se detiene en cuanto una de ellas
+queda suspendida: si otra zona pide calor en ese momento, esa demanda gana y la
+caldera sigue funcionando. Un sistema cerrado sencillamente no tiene forma de
+calentar una habitación y la otra no.
+
+Para eso, la pantalla de lista de aberturas ofrece un segundo campo:
+
+| Campo | Significado |
+| --- | --- |
+| **Aparatos que se detienen con cualquier abertura** | vacío = todo sigue regulado por zona |
+
+Lo que marques ahí se detiene en cuanto cualquier abertura de la instalación
+queda abierta, esté donde esté y con su propio retardo, mientras todo lo demás
+sigue regulándose por zona. Pensado justamente para la caldera: vincular esa
+abertura a **todas** las zonas detiene también los aires acondicionados de esas
+habitaciones, todo el año, cuando esos corresponden al ajuste por habitación. Si
+lo dejas vacío, no cambia nada de cómo se comporta hoy tu instalación.
+
+La habitación indica entonces `opening_open_elsewhere` como motivo, para que
+veas por qué no ocurre nada. Dos cosas siguen como siempre: una zona con
+anulación y una fuente manual no se gobiernan, tampoco por esta lista.
+
 ## Paso 12 — Guardar y cerrar
 
 Elige **✅ Guardar y cerrar** en el menú principal. Solo entonces se escribe la

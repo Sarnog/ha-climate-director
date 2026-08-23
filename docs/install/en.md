@@ -439,6 +439,29 @@ An opening standing open long enough suspends the zones it affects.
 | **Zones affected** | empty = the whole installation |
 | **Delay before suspending** | empty or 0 = the moment it opens |
 
+**A shared appliance follows demand, not silence.** When the same boiler sits
+as a source under several zones, it does not stop the moment one of those zones
+is suspended: if another zone is asking for heat right then, that demand wins
+and the boiler keeps running. A closed system simply has no way to heat one room
+and not the other.
+
+For that there is a second field on the openings list screen:
+
+| Field | Meaning |
+| --- | --- |
+| **Appliances that stop for any opening** | empty = everything stays governed per zone |
+
+Whatever you tick there stops the moment any opening in the installation stands
+open, wherever it is and with its own delay — while everything else carries on
+being governed per zone. Meant precisely for the boiler: linking that opening to
+**every** zone stops the air conditioners in those rooms too, all year round,
+while those belong under per-room control. Leave it empty and nothing about how
+your installation behaves today changes.
+
+The room then names `opening_open_elsewhere` as its reason, so you can see why
+nothing is happening. Two things stay as they always were: a zone under override
+and a hand-operated source are not steered, by this list either.
+
 ## Step 12 — Save and close
 
 Pick **✅ Save and close** in the main menu. Only then is the installation

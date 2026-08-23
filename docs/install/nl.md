@@ -442,6 +442,30 @@ Een opening die lang genoeg openstaat, zet de gekoppelde zones stil.
 | **Zones die het raakt** | leeg = de hele installatie |
 | **Vertraging voor het stilzetten** | leeg of 0 = meteen bij openen |
 
+**Een gedeeld apparaat volgt de vraag, niet de stilte.** Staat dezelfde ketel
+als bron onder meerdere zones, dan stopt hij niet zodra één van die zones
+stilgezet wordt: vraagt een andere zone op dat moment warmte, dan wint die vraag
+en blijft de ketel branden. Een gesloten systeem heeft nu eenmaal geen manier om
+de ene kamer wel te verwarmen en de andere niet.
+
+Daarvoor staat op het lijstscherm van de openingen een tweede veld:
+
+| Veld | Betekenis |
+| --- | --- |
+| **Apparaten die bij elke opening stilvallen** | leeg = alles blijft per zone geregeld |
+
+Wat je daar aanvinkt valt stil zodra wélke opening in de installatie dan ook
+openstaat, waar hij ook zit en met zijn eigen vertraging — terwijl al het andere
+gewoon per zone geregeld blijft. Precies bedoeld voor de cv-ketel: die opening
+aan **álle** zones koppelen zet ook de airco's in die kamers stil, het hele jaar
+door, terwijl die per kamer horen te werken. Laat je het leeg, dan verandert er
+niets aan hoe je installatie zich nu gedraagt.
+
+De kamer noemt dan `opening_open_elsewhere` als reden, zodat je ziet waarom er
+niets gebeurt. Twee dingen blijven zoals ze altijd waren: een zone met een
+override en een handbediende bron worden niet aangestuurd, ook niet door deze
+lijst.
+
 ## Stap 12 — Opslaan en sluiten
 
 Kies in het hoofdmenu **✅ Opslaan en sluiten**. Pas op dat moment wordt de

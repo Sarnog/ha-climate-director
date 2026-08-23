@@ -446,6 +446,29 @@ Eine Öffnung, die lange genug offen steht, legt die betroffenen Zonen still.
 | **Betroffene Zonen** | leer = die ganze Installation |
 | **Verzögerung vor dem Stilllegen** | leer oder 0 = sofort beim Öffnen |
 
+**Ein geteiltes Gerät folgt der Anforderung, nicht der Stille.** Steht derselbe
+Kessel als Quelle unter mehreren Zonen, hält er nicht an, sobald eine dieser
+Zonen stillgelegt wird: Fordert eine andere Zone in diesem Moment Wärme an,
+gewinnt diese Anforderung und der Kessel läuft weiter. Ein geschlossenes System
+kann nun einmal nicht den einen Raum heizen und den anderen nicht.
+
+Dafür gibt es auf der Listenansicht der Öffnungen ein zweites Feld:
+
+| Feld | Bedeutung |
+| --- | --- |
+| **Geräte, die bei jeder Öffnung stillstehen** | leer = alles bleibt pro Zone geregelt |
+
+Was du dort ankreuzt, steht still, sobald irgendeine Öffnung der Anlage offen
+steht, wo auch immer und mit ihrer eigenen Verzögerung — während alles Übrige
+weiter pro Zone geregelt wird. Genau für den Kessel gedacht: diese Öffnung mit
+**allen** Zonen zu verknüpfen legt auch die Klimageräte in jenen Räumen still,
+das ganze Jahr über, obwohl die pro Raum gehören. Lässt du es leer, ändert sich
+nichts am heutigen Verhalten deiner Anlage.
+
+Der Raum nennt dann `opening_open_elsewhere` als Grund, sodass du siehst, warum
+nichts geschieht. Zwei Dinge bleiben wie immer: Eine Zone mit Übersteuerung und
+eine handbediente Quelle werden nicht gesteuert, auch von dieser Liste nicht.
+
 ## Schritt 12 — Speichern und schließen
 
 Wähle im Hauptmenü **✅ Speichern und schließen**. Erst dann wird die

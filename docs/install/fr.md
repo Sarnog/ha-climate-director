@@ -446,6 +446,31 @@ Une ouverture restée ouverte assez longtemps suspend les zones concernées.
 | **Zones concernées** | vide = toute l'installation |
 | **Délai avant suspension** | vide ou 0 = dès l'ouverture |
 
+**Un appareil partagé suit la demande, pas le silence.** Lorsque la même
+chaudière figure comme source sous plusieurs zones, elle ne s'arrête pas dès
+qu'une de ces zones est suspendue : si une autre zone demande de la chaleur à ce
+moment-là, cette demande l'emporte et la chaudière continue de fonctionner. Un
+système fermé n'a tout simplement aucun moyen de chauffer une pièce et pas
+l'autre.
+
+Pour cela, l'écran de liste des ouvertures propose un second champ :
+
+| Champ | Signification |
+| --- | --- |
+| **Appareils qui s'arrêtent à toute ouverture** | vide = tout reste réglé par zone |
+
+Ce que vous y cochez s'arrête dès qu'une ouverture de l'installation reste
+ouverte, où qu'elle soit et avec son propre délai — tandis que tout le reste
+continue d'être réglé par zone. Prévu précisément pour la chaudière : lier cette
+ouverture à **toutes** les zones arrête aussi les climatiseurs de ces pièces,
+toute l'année, alors qu'ils relèvent du réglage par pièce. Laissez le champ vide
+et rien ne change au comportement actuel de votre installation.
+
+La pièce indique alors `opening_open_elsewhere` comme motif, pour que vous
+voyiez pourquoi rien ne se passe. Deux choses restent comme toujours : une zone
+sous dérogation et une source manuelle ne sont pas pilotées, pas davantage par
+cette liste.
+
 ## Étape 12 — Enregistrer et fermer
 
 Choisissez **✅ Enregistrer et fermer** dans le menu principal. C'est seulement

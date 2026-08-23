@@ -129,6 +129,15 @@ tijdstempel blokkeert direct: opschorten is de onschadelijke richting om fout in
 zitten, en weigeren te handelen op een onbekende leeftijd zou een openstaande kamer
 blijven verwarmen.
 
+Daarnaast staat hier `house_wide_blocked()`: de apparaten uit
+`DirectorConfig.house_wide_openings` die stil moeten vallen zodra wélke opening in de
+installatie dan ook openstaat. Bewust zónder het `affects()`-filter — deze lijst bestaat
+juist voor het apparaat dat het hele huis bedient, en dan valt niet uit te leggen dat de
+voordeur wel telt en het slaapkamerraam niet. De instelling hangt aan het apparaat en
+niet aan de opening: zo hoeft de ketel niet bij elke deur opnieuw aangevinkt te worden,
+en telt een raam dat er later bij komt vanzelf mee. Leeg geeft een lege verzameling, dus
+een installatie die dit niet gebruikt merkt er niets van.
+
 ### hysteresis.py — moet het
 
 Bepaalt de gevraagde taak uit de binnentemperatuur, het seizoen en het
@@ -157,6 +166,14 @@ band wisselde de bron acht keer per dag. De bron die vorige ronde werkelijk leve
 mag daarom doorlopen tot een band voorbij zijn venster. Alleen die bron, alleen buiten
 zijn venster: ligt hij er gewoon in, dan beslist de voorkeur weer, zodat een uitwijking
 naar een tweede keus terugschuift zodra de eerste keus er weer is.
+
+`select()` neemt ook de huisbreed stilgezette apparaten mee (`blocked`) en laat die als
+kandidaat vallen — inclusief de vasthoudgreep van de dode band, want wat stil moet staan
+mag ook niet doorlopen. Dat gebeurt hier en niet pas bij het commando: zou het plan zo'n
+bron toch toewijzen, dan noemt `sensor.…_bron_<zone>` een apparaat dat vervolgens uitgaat.
+De zone kijkt zo netjes door naar zijn volgende bron, en heeft hij die niet, dan komt hij
+op neutraal uit met `opening_open_elsewhere` als reden in plaats van het misleidende
+`no_source_available`.
 
 ### constraints.py — wat mag tegelijk
 
@@ -218,6 +235,15 @@ Een **exclusieve groep** wordt bewaard als bron-ID's maar werkt op apparaten: el
 bron-ID wordt eerst naar zijn `entity_id` vertaald. Anders ontsnapte een gedeelde ketel
 via het bron-ID van een andere kamer. Twee kamers die om hetzelfde apparaat vragen zijn
 daarbij geen tegenstanders — dat is één apparaat dat draait.
+
+Ná `_collapse_shared` staat `_stop_blocked`: het vangnet dat een huisbreed stilgezet
+apparaat (zie `gates.house_wide_blocked`) hoe dan ook op `off` zet. De bronkeuze liet het
+al vallen, dus in de gewone gang van zaken doet dit niets; het bestaat voor de paden die
+buiten die keuze omgaan — een gedeelde ketel die zijn commando van een andere zone kreeg,
+en de generator, die helemaal geen bronkeuze doorloopt. Eén uitzondering gaat erdoorheen:
+een vooruit-verzoek waarbij iemand uitdrukkelijk "toch doen" zei, precies zoals dat langs
+de gewone raampoort gaat. Wat de director met rust laat blijft met rust: een overgedragen
+zone en een handbediende bron krijgen geen commando en komen hier dus niet langs.
 
 ### plan.py — uitvoer
 
@@ -605,6 +631,15 @@ house. An opening without a
 timestamp blocks immediately: suspending is the harmless direction to be wrong in, and
 refusing to act on an unknown age would keep heating an open room.
 
+Alongside that sits `house_wide_blocked()`: the appliances from
+`DirectorConfig.house_wide_openings` that must stand still the moment any opening in the
+installation stands open. Deliberately *without* the `affects()` filter — this list
+exists precisely for the appliance serving the whole house, and there is no explaining
+why the front door would count and the bedroom window would not. The setting hangs on the
+appliance rather than on the opening: the boiler need not be ticked again at every door,
+and a window added later counts by itself. Empty yields an empty set, so an installation
+not using this notices nothing.
+
 ### hysteresis.py — is it needed
 
 Derives the requested duty from indoor temperature, season and outdoor window. It
@@ -633,6 +668,13 @@ band the source swapped eight times a day. The source that really delivered last
 may therefore carry on until one band past its window. Only that source, and only
 outside its window: sitting plainly inside it, preference decides again, so a fallback
 to a second choice moves back the moment the first choice returns.
+
+`select()` also takes the house-wide stopped appliances (`blocked`) and drops them as
+candidates — the dead band's grip included, since what must stand still may not carry on
+either. That happens here rather than at command level: were the plan to grant such a
+source anyway, `sensor.…_source_<zone>` would name an appliance that then goes off. The
+zone thus looks neatly on to its next source, and having none it lands on neutral with
+`opening_open_elsewhere` as its reason instead of the misleading `no_source_available`.
 
 ### constraints.py — what may run together
 
@@ -693,6 +735,16 @@ An **exclusive group** is stored as source ids but works on appliances: every so
 is translated to its `entity_id` first. Otherwise a shared boiler escaped through
 another room's source id. Two rooms asking for the same appliance are no rivals in that
 - that is one appliance running.
+
+After `_collapse_shared` comes `_stop_blocked`: the safety net forcing an appliance
+stopped house-wide (see `gates.house_wide_blocked`) to `off` whatever happens. Source
+selection already dropped it, so in the ordinary run of things this does nothing; it
+exists for the paths going round that choice — a shared boiler that got its command from
+another zone, and the generator, which never runs through source selection at all. One
+exception passes through: a pre-conditioning request on which somebody expressly said "do
+it anyway", exactly as that passes the ordinary window gate. Whatever the director leaves
+alone stays left alone: a zone handed over and a hand-operated source get no command and
+therefore never come past here.
 
 ### plan.py — output
 
