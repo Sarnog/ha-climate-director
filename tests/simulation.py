@@ -605,7 +605,6 @@ class _HandStandIn:
     _we_wanted_it_off = ClimateDirectorCoordinator._we_wanted_it_off
     _everyone_asleep = ClimateDirectorCoordinator._everyone_asleep
     _house_is_empty = ClimateDirectorCoordinator._house_is_empty
-    _state_is = ClimateDirectorCoordinator._state_is
 
     def _async_save_state(self) -> None:
         self.saved += 1

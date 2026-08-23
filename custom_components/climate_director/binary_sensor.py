@@ -194,6 +194,12 @@ class StuckSensor(ClimateDirectorEntity, BinarySensorEntity):
     _attr_icon = "mdi:progress-alert"
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    # De wachttijden zijn alleen voor wie nu kijkt; de recorder bewaart de
+    # aan/uit-stand al.
+    #
+    # The waiting times are for whoever looks right now; the recorder already
+    # keeps the on/off state.
+    _unrecorded_attributes = frozenset({"waiting_seconds"})
 
     def __init__(self, coordinator: ClimateDirectorCoordinator) -> None:
         """Set up the installation-wide stuck sensor."""
@@ -211,7 +217,7 @@ class StuckSensor(ClimateDirectorEntity, BinarySensorEntity):
         """Return which zones are stuck, on what, and for how long."""
         stuck = self.coordinator.stuck_zones()
         return {
-            "unusable_entities": self.coordinator.unusable_entities(),
+            "unusable_entities": self.coordinator._unusable_latest,
             "zones": sorted(stuck),
             "reasons": {zone_id: reason.value for zone_id, reason in sorted(stuck.items())},
             "waiting_seconds": {

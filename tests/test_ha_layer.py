@@ -204,6 +204,7 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
             self.shadow = False
             self.last_changes = ()
             self.last_applied = ()
+            self._unusable_latest = self.unusable_entities()
 
         build_world = ClimateDirectorCoordinator.build_world
         _overridden_zones = ClimateDirectorCoordinator._overridden_zones
@@ -226,7 +227,6 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
         _live_preconditions = ClimateDirectorCoordinator._live_preconditions
         _everyone_asleep = ClimateDirectorCoordinator._everyone_asleep
         _house_is_empty = ClimateDirectorCoordinator._house_is_empty
-        _state_is = ClimateDirectorCoordinator._state_is
         _fire_events = ClimateDirectorCoordinator._fire_events
         _fire_refusals = ClimateDirectorCoordinator._fire_refusals
         _refusal_data = ClimateDirectorCoordinator._refusal_data

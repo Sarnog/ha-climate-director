@@ -176,7 +176,6 @@ def coordinator(
         _zones_of = ClimateDirectorCoordinator._zones_of
         _we_wanted_it_off = ClimateDirectorCoordinator._we_wanted_it_off
         _resident = ClimateDirectorCoordinator._resident
-        _state_is = ClimateDirectorCoordinator._state_is
 
         def _now(self) -> datetime:
             return dt_util.now()

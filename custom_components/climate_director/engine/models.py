@@ -327,7 +327,15 @@ class Circuit:
     """Rest a unit must take after stopping before it may start again.
 
     Only ever delays starting, never stopping - short-cycle protection must not
-    be able to keep a unit running.
+    be able to keep a unit running. The rest is measured from the entity's
+    `last_changed`; right after a Home Assistant restart that reads the restart
+    moment, so the protection is then on the safe side.
+
+    Alleen starts worden uitgesteld, nooit stops - kortcyclusbeveiliging mag een
+    unit nooit aan het draaien kunnen houden. De rust wordt gemeten vanaf
+    `last_changed` van de entiteit; vlak na een herstart van Home Assistant is
+    dat het moment van de herstart, dus dan is de beveiliging aan de veilige
+    kant.
     """
 
     max_concurrent_units: int | None = None

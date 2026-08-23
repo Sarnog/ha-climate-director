@@ -276,6 +276,11 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         )
         self._waiting: dict[str, tuple[Reason, datetime]] = {}
         self._unusable_since: dict[str, datetime] = {}
+        self._unusable_latest: dict[str, str] = {}
+        """De onleesbare entiteiten van de laatste beslissingsronde.
+
+        The unreadable entities of the latest decision round.
+        """
         """Sinds wanneer elke ingestelde entiteit onleesbaar is.
 
         Since when each configured entity has been unreadable.
@@ -764,11 +769,6 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             return False
         return not any(residents[resident.resident_id].home for resident in tracked)
 
-    def _state_is(self, entity_id: str, wanted: str) -> bool:
-        """Return whether that entity currently reads exactly that state."""
-        state = self.hass.states.get(entity_id)
-        return state is not None and state.state == wanted
-
     @callback
     def async_request_evaluation(self) -> None:
         """Ask for a fresh decision, from a switch or a service call."""
@@ -947,6 +947,18 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         since the gate is judged afresh every time.
         """
         ceiling = self.config.gates.max_precondition
+        if ceiling.total_seconds() <= 0:
+            # De instellingen laten dit niet toe, maar een met de hand bewerkte
+            # configuratie kan het wel. Dan mag de knop niet in stilte niets
+            # doen - de validate()-waarschuwing op het bewaarscherm noemt het,
+            # en dit logbericht legt het vast voor wie de melding wegklikte.
+            #
+            # The settings do not allow this, but a hand-edited configuration
+            # can. The button then may not silently do nothing - the validate()
+            # warning on the save screen names it, and this log line records it
+            # for whoever dismissed the notice.
+            _LOGGER.warning("Pre-conditioning is disabled: max_precondition is zero or negative")
+            return {}
         if minutes is None:
             length = ceiling
         else:
@@ -1329,6 +1341,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         """
         now = dt_util.now()
         found = self.unusable_entities()
+        self._unusable_latest = found
         self._unusable_since = {
             entity_id: self._unusable_since.get(entity_id, now) for entity_id in found
         }
@@ -1668,8 +1681,20 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         state = self.hass.states.get(entity_id)
         if state is None:
             return OpeningState()
+        # Een cover die onderweg is (`opening`/`closing`) staat niet dicht en
+        # telt dus als open; een raamcontact kent die tussenstanden niet en
+        # vergelijkt gewoon letterlijk.
+        #
+        # A cover that is on its way (`opening`/`closing`) is not closed and so
+        # counts as open; a window contact has no such in-between states and is
+        # simply compared literally.
+        reported = state.state
+        if open_state == "open":
+            is_open = reported in ("open", "opening", "closing")
+        else:
+            is_open = reported == open_state
         return OpeningState(
-            open=state.state == open_state,
+            open=is_open,
             changed_at=dt_util.as_local(state.last_changed),
         )
 
@@ -1825,12 +1850,12 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             if decision.zone_id in self._refused:
                 continue
             self.hass.bus.async_fire(
-                EVENT_PRECONDITION_REFUSED, self._refusal_data(decision.zone_id)
+                EVENT_PRECONDITION_REFUSED, self._refusal_data(decision.zone_id, plan)
             )
 
         self._refused = refused
 
-    def _refusal_data(self, zone_id: str) -> dict[str, Any]:
+    def _refusal_data(self, zone_id: str, plan: Plan | None) -> dict[str, Any]:
         """Return the payload of one refusal, the sentences included.
 
         De zinnen worden hier al gemaakt, in de taal van de interface. Een
@@ -1863,7 +1888,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         target: float | None = None
         settled = False
         if zone is not None and self.world is not None:
-            demand, target = wanted_target(self.config, zone, self.world, self.data)
+            demand, target = wanted_target(self.config, zone, self.world, plan)
             settled = demand.reason in (Reason.SATISFIED, Reason.WITHIN_DEADBAND)
 
         if indoor is None:

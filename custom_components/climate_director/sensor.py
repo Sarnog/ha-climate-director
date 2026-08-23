@@ -104,6 +104,12 @@ class DecisionSensor(ClimateDirectorEntity, SensorEntity):
 
     _attr_translation_key = "last_decision"
     _attr_icon = "mdi:clipboard-text-clock"
+    # Het volledige plan is alleen voor wie nu kijkt; de recorder hoeft er niet
+    # per minuut een kopie van te bewaren.
+    #
+    # The full plan is for whoever looks right now; the recorder does not need
+    # to keep a copy of it every minute.
+    _unrecorded_attributes = frozenset({"deferrals"})
 
     def __init__(self, coordinator: ClimateDirectorCoordinator) -> None:
         """Set up the summary sensor."""
@@ -248,6 +254,11 @@ class MismatchSensor(ClimateDirectorEntity, SensorEntity):
     # Home Assistant prints such a unit verbatim behind the number -
     # untranslated, so in English whatever language you read.
     _attr_state_class = SensorStateClass.MEASUREMENT
+    # Het verschil is alleen voor wie nu kijkt; de recorder bewaart de teller.
+    #
+    # The differences are for whoever looks right now; the recorder keeps the
+    # count.
+    _unrecorded_attributes = frozenset({"differences"})
 
     def __init__(self, coordinator: ClimateDirectorCoordinator) -> None:
         """Set up the mismatch sensor."""
