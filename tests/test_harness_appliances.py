@@ -63,7 +63,8 @@ async def test_the_obedient_kind_moves_the_mode_through_set_temperature() -> Non
 
 async def test_the_stubborn_kind_ignores_the_mode_in_set_temperature() -> None:
     """Zoals melcloud: `set_temperature` verzet het setpoint, niet de stand."""
-    home = await start_house(installation(), states=cold(), appliance="stubborn")
+    warm = {"sensor.woonkamer": ("22.0", {}), LIVING: ("off", {})}
+    home = await start_house(installation(), states=warm, appliance="stubborn")
     try:
         await home.call(
             "climate",

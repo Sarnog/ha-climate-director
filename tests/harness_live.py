@@ -263,7 +263,7 @@ async def start_house(
     title: str = "Climate Director",
     entry_id: str = "live",
     config_dir: str | None = None,
-    appliance: str = DEFAULT_APPLIANCE,
+    appliance: str | None = None,
 ) -> LiveHome:
     """Return a running Home Assistant with this installation loaded.
 
@@ -343,7 +343,7 @@ async def start_house(
     )
 
     home = LiveHome(hass, entry)
-    home.appliance = dict(APPLIANCE_TYPES[appliance])
+    home.appliance = dict(APPLIANCE_TYPES[appliance or DEFAULT_APPLIANCE])
     _register_climate(home)
     _watch_events(home)
 

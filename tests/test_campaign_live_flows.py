@@ -58,6 +58,14 @@ def cold() -> dict[str, tuple[str, dict[str, Any]]]:
     return {"sensor.woonkamer": ("18.0", {}), LIVING: ("off", {})}
 
 
+@pytest.fixture(params=["obedient", "stubborn"], autouse=True)
+def appliance(request, monkeypatch):
+    """Run every test against both appliance kinds the harness knows."""
+    import harness_live
+
+    monkeypatch.setattr(harness_live, "DEFAULT_APPLIANCE", request.param)
+
+
 # ---------------------------------------------------------------------------
 # De wizard.
 # The wizard.

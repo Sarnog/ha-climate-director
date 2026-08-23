@@ -91,6 +91,14 @@ def cold_world() -> dict[str, tuple[str, dict[str, Any]]]:
     }
 
 
+@pytest.fixture(params=["obedient", "stubborn"], autouse=True)
+def appliance(request, monkeypatch):
+    """Run every test against both appliance kinds the harness knows."""
+    import harness_live
+
+    monkeypatch.setattr(harness_live, "DEFAULT_APPLIANCE", request.param)
+
+
 @pytest.fixture
 async def home():
     """Return a running house that wants heat, torn down afterwards."""

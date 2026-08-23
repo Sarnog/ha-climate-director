@@ -617,17 +617,21 @@ class TestTheApplier:
         )
         return changes(decide(config, world), world)
 
-    async def test_a_start_carries_its_setpoint_in_one_call(self) -> None:
-        """Twee aanroepen zouden de unit even op de nieuwe stand met het oude doel zetten."""
+    async def test_a_start_sends_the_mode_first_and_the_setpoint_after(self) -> None:
+        """De stand gaat als eigen aanroep, vóór het setpoint."""
         hass = FakeHass()
         pending = self._changes({LIVING: "off", BACKUP: "off", ATTIC: "off"})
         await apply(hass, pending, shadow=False)
 
-        assert hass.services.calls, "er ging geen enkele aanroep uit"
+        assert len(hass.services.calls) == 2
         domain, service, data = hass.services.calls[0]
         assert domain == "climate"
-        assert service == "set_temperature"
+        assert service == "set_hvac_mode"
         assert data["hvac_mode"] == "heat"
+
+        domain, service, data = hass.services.calls[1]
+        assert domain == "climate"
+        assert service == "set_temperature"
         assert data["temperature"] == 21.0
 
     async def test_shadow_mode_sends_nothing(self) -> None:

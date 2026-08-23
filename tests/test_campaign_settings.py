@@ -787,9 +787,8 @@ class TestTheSharedBoiler:
         )
         try:
             ordered = [data["entity_id"] for _name, data in home.climate_calls()]
-            assert ordered.index(BOILER) == len(ordered) - 1, (
-                "de ketel hoort als laatste aan de beurt te zijn"
-            )
+            assert ordered[-1] == BOILER, "de ketel hoort als laatste aan de beurt te zijn"
+            assert ordered.index(BOILER) > ordered.index(VALVE)
         finally:
             await stop_house(home)
 

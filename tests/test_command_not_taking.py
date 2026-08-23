@@ -136,7 +136,8 @@ class TestAnApplianceThatNeverTakesItsCommand:
     async def test_the_command_really_is_offered_again_every_round(self, home: LiveHome) -> None:
         home.clear_calls()
         await rounds(home, 3)
-        assert len(home.climate_calls()) == 3
+        # Elke ronde twee aanroepen: eerst de stand, dan het setpoint.
+        assert len(home.climate_calls()) == 6
 
     async def test_a_few_rounds_report_nothing_yet(self, home: LiveHome) -> None:
         await rounds(home, 3)

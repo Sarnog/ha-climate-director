@@ -92,11 +92,29 @@ def _is_stop(change: Change) -> bool:
 async def _execute(hass: HomeAssistant, change: Change) -> None:
     """Issue the service calls one change needs.
 
-    `climate.set_temperature` carries `hvac_mode` as well, so a unit that needs
-    both a mode and a setpoint is served by a single call - two calls would
-    briefly leave it running the new mode on the old setpoint.
+    De stand gaat als eigen aanroep, vóór het setpoint. Home Assistant geeft
+    `hvac_mode` in `climate.set_temperature` alleen door aan de entiteit en doet
+    er zelf niets mee: sommige entiteiten verzetten de stand dan wel
+    (matter, melcloud's AtaDeviceClimate), andere negeren hem (core's
+    `generic_thermostat`, melcloud's AtwDeviceZoneClimate). Eén seconde op het
+    oude setpoint weegt niet op tegen een apparaat dat nooit aangaat.
+
+    The mode goes as its own call, before the setpoint. Home Assistant only
+    passes `hvac_mode` inside `climate.set_temperature` on to the entity and
+    does nothing with it itself: some entities do move the mode then (matter,
+    melcloud's AtaDeviceClimate), others ignore it (core's
+    `generic_thermostat`, melcloud's AtwDeviceZoneClimate). One second on the
+    old setpoint does not weigh up against an appliance that never turns on.
     """
     command = change.command
+
+    if change.set_mode:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: command.entity_id, ATTR_HVAC_MODE: command.hvac_mode},
+            blocking=True,
+        )
 
     if change.set_temperature:
         await hass.services.async_call(
@@ -105,16 +123,6 @@ async def _execute(hass: HomeAssistant, change: Change) -> None:
             {
                 ATTR_ENTITY_ID: command.entity_id,
                 ATTR_TEMPERATURE: command.temperature,
-                ATTR_HVAC_MODE: command.hvac_mode,
             },
-            blocking=True,
-        )
-        return
-
-    if change.set_mode:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: command.entity_id, ATTR_HVAC_MODE: command.hvac_mode},
             blocking=True,
         )
