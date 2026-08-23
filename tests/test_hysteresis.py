@@ -163,7 +163,7 @@ class TestRefusals:
     def test_bounded_window_needs_a_known_outdoor_temperature(self) -> None:
         zone = zone_with(heat=ModeSettings(21.0, 20.0, outdoor=OutdoorWindow(maximum=19.0)))
         demand = evaluate(zone, 15.0, ModeFamily.NEUTRAL, outdoor=None)
-        assert demand.reason is Reason.OUTDOOR_OUTSIDE_WINDOW
+        assert demand.reason is Reason.NO_OUTDOOR_TEMPERATURE
 
 
 class TestOverlappingSetpoints:

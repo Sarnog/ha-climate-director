@@ -119,6 +119,39 @@ def serving(plan) -> str | None:
     return decision.source_id
 
 
+def test_an_unreadable_outdoor_sensor_keeps_the_running_boiler_on() -> None:
+    """Vorst of niet: zonder buitentemperatuur mag een brandende ketel niet uit.
+
+    De buitengrens is een begrensde grens, en een grens die je niet kunt
+    controleren is niet gehaald. Dat gaf `outdoor_outside_window`, en die reden
+    zet een draaiend apparaat gewoon uit - alsof de ketel bij vorst uit mag
+    omdat de buitensensor het even niet doet. Dat is de enige fout die je kunt
+    maken, dus een brandende ketel hoort met rust gelaten te worden, net als
+    bij een onleesbare binnentemperatuur.
+
+    Frost or not: without an outdoor temperature a burning boiler must not go
+    off. The outdoor bound is a bounded one, and a bound you cannot check is not
+    met. That used to give `outdoor_outside_window`, and that reason simply
+    switches a running appliance off - as if the boiler may go off in frost
+    because the outdoor sensor is down for a moment. That is the one mistake to
+    make, so a burning boiler should be left alone, just as with an unreadable
+    indoor temperature.
+    """
+    world = make_world(
+        now=NOON,
+        outdoor=None,
+        indoor={"woonkamer": 15.0},
+        climates={AIRCO: "off", BOILER: "heat"},
+        residents={"danny": awake()},
+    )
+    plan = decide(house(), world, None)
+
+    assert plan.command_for(BOILER) is None, "een brandende ketel hoort niet uit te gaan"
+    left = plan.untouched_for(BOILER)
+    assert left is not None and left.reason is Reason.NO_OUTDOOR_TEMPERATURE
+    assert plan.decision_for("woonkamer").reason is Reason.NO_OUTDOOR_TEMPERATURE
+
+
 class TestTheSettingItself:
     def test_it_defaults_to_half_a_degree(self) -> None:
         assert DirectorConfig().outdoor_hysteresis == 0.5

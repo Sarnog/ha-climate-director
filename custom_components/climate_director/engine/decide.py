@@ -288,13 +288,14 @@ def _standing_firm(
     gewoon een opdracht en valt er niets vast te houden.
 
     Two cases get nothing and keep running: a unit in a zone that has been
-    handed over, and a running unit in a zone whose indoor temperature cannot be
-    read. The third untouched case - an unreachable appliance - is absent: there
-    is no telling what it does, and the engine reads it as standing still.
+    handed over, and a running unit in a zone whose indoor or outdoor
+    temperature cannot be read. The third untouched case - an unreachable
+    appliance - is absent: there is no telling what it does, and the engine
+    reads it as standing still.
 
-    A hand-operated source only counts when its zone has been handed over. On an
-    unreadable thermometer it is not left alone but judged by `_manual_conflict`,
-    which may stand it down after all.
+    A hand-operated source only counts when its zone has been handed over. On
+    an unreadable thermometer it is not left alone but judged by
+    `_manual_conflict`, which may stand it down after all.
 
     A shared appliance counts only when every zone it serves leaves it alone.
     If one of them does not, the appliance gets a command through that zone and
@@ -304,7 +305,10 @@ def _standing_firm(
     def left_alone(zone: Zone, source: Source) -> bool:
         if world.overridden(zone.zone_id):
             return True
-        return source.autostart and refusals.get(zone.zone_id) is Reason.NO_INDOOR_TEMPERATURE
+        return source.autostart and refusals.get(zone.zone_id) in (
+            Reason.NO_INDOOR_TEMPERATURE,
+            Reason.NO_OUTDOOR_TEMPERATURE,
+        )
 
     owners: dict[str, list[bool]] = {}
     for zone, source in config.sources():
@@ -614,21 +618,21 @@ def _build_commands(
             Reason.OTHER_SOURCE_CHOSEN if served else reasons.get(zone.zone_id, Reason.SATISFIED)
         )
 
-        # Zonder leesbare binnentemperatuur valt er niets te beslissen, en dan
-        # is uitzetten de enige fout die je kunt maken: een draaiend apparaat
-        # zou uitgaan omdat de sensor kapot is. Dat apparaat wordt met rust
-        # gelaten; wie uit staat krijgt gewoon zijn uit-commando, want "elke
-        # beheerde bron krijgt een commando" blijft gelden.
+        # Zonder leesbare binnen- of buitentemperatuur valt er niets te
+        # beslissen, en dan is uitzetten de enige fout die je kunt maken: een
+        # draaiend apparaat zou uitgaan omdat de sensor kapot is. Dat apparaat
+        # wordt met rust gelaten; wie uit staat krijgt gewoon zijn uit-commando,
+        # want "elke beheerde bron krijgt een commando" blijft gelden.
         #
-        # Without a readable indoor temperature there is nothing to decide, and
-        # switching off is the only mistake to make then: a running appliance
-        # would go off because the sensor is broken. That appliance is left
-        # alone; one that is off simply gets its off command, since "every
+        # Without a readable indoor or outdoor temperature there is nothing to
+        # decide, and switching off is the only mistake to make then: a running
+        # appliance would go off because the sensor is broken. That appliance is
+        # left alone; one that is off simply gets its off command, since "every
         # managed source gets a command" still holds.
-        if reason is Reason.NO_INDOOR_TEMPERATURE and world.climate(source.entity_id).running:
-            untouched.append(
-                UntouchedSource(source.entity_id, zone.zone_id, Reason.NO_INDOOR_TEMPERATURE)
-            )
+        if reason in (Reason.NO_INDOOR_TEMPERATURE, Reason.NO_OUTDOOR_TEMPERATURE) and (
+            world.climate(source.entity_id).running
+        ):
+            untouched.append(UntouchedSource(source.entity_id, zone.zone_id, reason))
             continue
 
         commands.append(

@@ -41,6 +41,7 @@ class Reason(StrEnum):
     QUIET_HOURS = "quiet_hours"
 
     NO_INDOOR_TEMPERATURE = "no_indoor_temperature"
+    NO_OUTDOOR_TEMPERATURE = "no_outdoor_temperature"
     SEASON_BLOCKS_MODE = "season_blocks_mode"
     OUTDOOR_OUTSIDE_WINDOW = "outdoor_outside_window"
     MODE_NOT_CONFIGURED = "mode_not_configured"

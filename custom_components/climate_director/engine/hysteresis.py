@@ -217,12 +217,24 @@ def _candidate(
     # give it a width.
     running_now = running is family
     margin = outdoor_margin if running_now else 0.0
-    if (
-        not world.preconditioning(zone.zone_id)
-        and not (world.precipitation and not zone.ignore_precipitation)
-        and not settings.outdoor.contains(world.outdoor_temperature, margin)
+    if not world.preconditioning(zone.zone_id) and not (
+        world.precipitation and not zone.ignore_precipitation
     ):
-        return Demand(ModeFamily.NEUTRAL, Reason.OUTDOOR_OUTSIDE_WINDOW)
+        # Zonder buitentemperatuur valt over een begrensde grens niets te
+        # zeggen, en is "buiten het venster" een leugen: de ketel zou bij vorst
+        # uitgaan omdat de sensor het even niet doet. Dat is de enige fout die
+        # je kunt maken, dus een brandende bron hoort met rust gelaten te
+        # worden - net als bij een onleesbare binnentemperatuur.
+        #
+        # Without an outdoor temperature a bounded window says nothing, and
+        # "outside the window" is a lie: the boiler would go off in frost
+        # because the sensor is down for a moment. That is the one mistake to
+        # make, so a burning source should be left alone - just as with an
+        # unreadable indoor temperature.
+        if world.outdoor_temperature is None and not settings.outdoor.unbounded:
+            return Demand(ModeFamily.NEUTRAL, Reason.NO_OUTDOOR_TEMPERATURE)
+        if not settings.outdoor.contains(world.outdoor_temperature, margin):
+            return Demand(ModeFamily.NEUTRAL, Reason.OUTDOOR_OUTSIDE_WINDOW)
 
     threshold = _threshold(settings, family, running_now)
 
