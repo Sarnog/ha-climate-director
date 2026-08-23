@@ -27,7 +27,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .families import ModeFamily
+from .families import ACTIVE_FAMILIES, ModeFamily
 from .models import Circuit, ConflictPolicy, DirectorConfig, Season, Source, Zone
 from .plan import CircuitDecision, Deferral, Reason
 from .world import WorldState
@@ -216,7 +216,7 @@ def active_family(world: WorldState, circuit: Circuit) -> ModeFamily:
     """
     for entity_id in circuit.units:
         family = world.climate(entity_id).family
-        if family in (ModeFamily.HEAT, ModeFamily.COOL):
+        if family in ACTIVE_FAMILIES:
             return family
     return ModeFamily.NEUTRAL
 
@@ -257,7 +257,7 @@ def _forced_families(
         for entity_id in circuit.units
         if entity_id not in managed or entity_id in standing
         for family in (world.climate(entity_id).family,)
-        if family in (ModeFamily.HEAT, ModeFamily.COOL)
+        if family in ACTIVE_FAMILIES
     )
 
 

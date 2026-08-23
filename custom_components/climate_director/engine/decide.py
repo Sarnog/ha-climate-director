@@ -14,7 +14,15 @@ detection after the fact - it simply never comes out.
 from __future__ import annotations
 
 from . import constraints, gates, hysteresis, sources
-from .families import MODE_FAN_ONLY, MODE_HEAT, MODE_OFF, ModeFamily, family_of, preferred_mode
+from .families import (
+    MODE_FAN_ONLY,
+    MODE_HEAT,
+    MODE_OFF,
+    ModeFamily,
+    family_of,
+    is_compatible,
+    preferred_mode,
+)
 from .models import Circuit, DirectorConfig, Source, Zone
 from .plan import (
     CircuitDecision,
@@ -451,7 +459,15 @@ def _manual_conflict(
     # asking to fall back on.
     running_now = families.get(circuit.circuit_id, ModeFamily.NEUTRAL)
     if running_now is not ModeFamily.NEUTRAL:
-        if running is running_now:
+        # De kernregel uit `families.is_compatible`: alleen de actieve taak van
+        # het circuit - plus `off`/`fan_only` - mag blijven draaien. Dit is de
+        # enige plek waar een draaiende handbediende unit tegen de toegekende
+        # taak gehouden wordt.
+        #
+        # The core rule from `families.is_compatible`: only the circuit's active
+        # duty - plus `off`/`fan_only` - may keep running. This is the one place
+        # where a running hand-operated unit is held against the granted duty.
+        if is_compatible(world.climate(source.entity_id).hvac_mode, running_now):
             return None
         return _stand_down(config, world, zone, source, Reason.CIRCUIT_CONFLICT_LOST)
 
