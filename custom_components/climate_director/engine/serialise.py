@@ -375,13 +375,24 @@ def _precipitation(raw: Any) -> PrecipitationSettings:
     if not isinstance(raw, Mapping):
         return PrecipitationSettings()
     states = raw.get("states")
+    if states is None:
+        chosen = PrecipitationSettings().states
+    else:
+        chosen = frozenset(item for item in _strings(states) if item.strip())
+        # Het instellingenscherm schrijft een leeg tekstveld als `[]`. Dat is
+        # iets anders dan een opzet die neerslag nooit telt: wie het veld
+        # leeghaalt bedoelt "doe maar gewoon", niet "zet de regenuitzondering
+        # stilletjes uit terwijl de bron nog ingevuld staat".
+        #
+        # The settings screen writes an empty text field as `[]`. That is
+        # different from a setup that should never count precipitation: clearing
+        # the field means "just the usual", not "silently disable the rain
+        # exception while the source still stands filled in".
+        if not chosen:
+            chosen = PrecipitationSettings().states
     return PrecipitationSettings(
         source=_text(raw.get("source")),
-        states=(
-            PrecipitationSettings().states
-            if states is None
-            else frozenset(item for item in _strings(states) if item.strip())
-        ),
+        states=chosen,
         grace=_seconds(raw.get("grace"), 900.0),
     )
 

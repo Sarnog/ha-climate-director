@@ -153,6 +153,32 @@ class TestForgivingReads:
         assert zone.priority == 0
 
 
+class TestPrecipitationStates:
+    def test_an_empty_states_list_falls_back_on_the_default(self) -> None:
+        """Het instellingenscherm schrijft `[]`; dat hoort de standaardset te zijn.
+
+        The settings screen writes `[]`; that should be the default set.
+        """
+        config = config_from_dict({"precipitation": {"source": "weather.buienradar", "states": []}})
+        assert config.precipitation.states == PrecipitationSettings().states
+
+    def test_whitespace_only_states_fall_back_on_the_default(self) -> None:
+        config = config_from_dict(
+            {"precipitation": {"source": "weather.buienradar", "states": ["", "  "]}}
+        )
+        assert config.precipitation.states == PrecipitationSettings().states
+
+    def test_a_missing_states_key_keeps_the_default(self) -> None:
+        config = config_from_dict({"precipitation": {"source": "weather.buienradar"}})
+        assert config.precipitation.states == PrecipitationSettings().states
+
+    def test_an_explicit_set_survives(self) -> None:
+        config = config_from_dict(
+            {"precipitation": {"source": "weather.buienradar", "states": ["rainy"]}}
+        )
+        assert config.precipitation.states == frozenset({"rainy"})
+
+
 class TestDurations:
     def test_durations_are_stored_as_seconds(self) -> None:
         stored = config_to_dict(house())
