@@ -64,12 +64,30 @@ async def async_get_config_entry_diagnostics(
         "would_change": [change.entity_id for change in coordinator.last_changes],
         "did_change": [change.entity_id for change in coordinator.last_applied],
     }
-    # `home`/`asleep` zitten in de wereldmomentopname, `windows`/`sleep_window`
-    # in de installatie: precies het bewonersprofiel dat hierboven benoemd is.
+    # `home`/`asleep` zitten in de wereldmomentopname, `presence` (met
+    # `occupied` en tijdstempel) ook, en `presence_entity`/`sleep_entity`/
+    # `windows`/`sleep_window` in de installatie: precies het bewonersprofiel
+    # dat hierboven benoemd is. `occupied` staat er apart bij voor het geval
+    # kameraanwezigheid ooit buiten `presence` om wordt weggeschreven.
     #
-    # `home`/`asleep` sit in the world snapshot, `windows`/`sleep_window` in the
-    # installation: exactly the resident profile named above.
-    return async_redact_data(found, ["home", "asleep", "windows", "sleep_window"])
+    # `home`/`asleep` sit in the world snapshot, `presence` (with `occupied`
+    # and its timestamp) too, and `presence_entity`/`sleep_entity`/`windows`/
+    # `sleep_window` in the installation: exactly the resident profile named
+    # above. `occupied` is listed separately in case room presence is ever
+    # written outside `presence`.
+    return async_redact_data(
+        found,
+        [
+            "home",
+            "asleep",
+            "presence",
+            "occupied",
+            "presence_entity",
+            "sleep_entity",
+            "windows",
+            "sleep_window",
+        ],
+    )
 
 
 def _world(world: WorldState | None) -> dict[str, Any] | None:

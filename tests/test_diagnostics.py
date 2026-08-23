@@ -134,6 +134,104 @@ class TestThePlanIsComplete:
         assert data["untouched"] == []
 
 
+def _sensitive_installation() -> dict:
+    """Return an installation carrying every resident-related field."""
+    return {
+        "zones": [
+            {
+                "zone_id": "woonkamer",
+                "name": "Woonkamer",
+                "indoor_sensor": "sensor.woonkamer",
+                "sources": [{"source_id": "s", "entity_id": "climate.huiskamer"}],
+                "heat": {"target": 21.0, "start_at": 20.0},
+                "presence_entity": "binary_sensor.woonkamer_bezet",
+            }
+        ],
+        "residents": [
+            {
+                "resident_id": "danny",
+                "name": "Danny",
+                "presence_entity": "person.danny",
+                "sleep_entity": "sensor.danny_lader",
+                "sleep_state": "wireless",
+                "sleep_window": {"start": "23:00:00", "end": "09:00:00"},
+                "windows": [{"start": "08:00:00", "end": "18:00:00"}],
+            }
+        ],
+    }
+
+
+class TestThePrivacyRedaction:
+    """De diagnose lakt het volledige bewonersprofiel weg, niet vier namen.
+
+    The diagnostics redact the full resident profile, not four names.
+    """
+
+    async def test_the_full_presence_profile_is_redacted(self) -> None:
+        from custom_components.climate_director.const import CONF_SHADOW_MODE
+        from custom_components.climate_director.diagnostics import (
+            async_get_config_entry_diagnostics,
+        )
+        from custom_components.climate_director.engine.serialise import config_from_dict
+
+        class Coordinator:
+            config = config_from_dict(_sensitive_installation())
+            master_enabled = True
+            holiday_mode = False
+            guest_mode = False
+            season_override = None
+            zone_overrides: dict[str, bool] = {}
+            zone_priorities: dict[str, int] = {}
+            world = _full_world()
+            data = _full_plan()
+            last_changes: tuple = ()
+            last_applied: tuple = ()
+
+            def live_preconditions(self) -> dict:
+                return {}
+
+            def tracked_entities(self) -> set[str]:
+                return {"sensor.woonkamer", "person.danny"}
+
+        class Entry:
+            runtime_data = Coordinator()
+            options = {CONF_SHADOW_MODE: False}
+
+        data = await async_get_config_entry_diagnostics(None, Entry())  # type: ignore[arg-type]
+
+        # Het volledige veldenoverzicht van de wereldmomentopname: een nieuw
+        # veld valt zo meteen op in plaats van automatisch ongelakt te blijven.
+        # The full field overview of the world snapshot: a new field stands out
+        # at once instead of automatically staying unredacted.
+        assert set(data["world"]) == {
+            "now",
+            "outdoor_temperature",
+            "season",
+            "indoor_temperatures",
+            "climates",
+            "residents",
+            "openings",
+            "presence",
+            "precondition_until",
+            "precondition_bypass",
+            "guest_mode",
+            "precipitation",
+            "zone_priorities",
+            "circuit_family_since",
+            "master_enabled",
+            "holiday_mode",
+            "zone_overrides",
+        }
+        from homeassistant.components.diagnostics.util import REDACTED
+
+        assert data["world"]["presence"] == REDACTED
+        assert data["world"]["residents"] == {"danny": {"home": REDACTED, "asleep": REDACTED}}
+        assert data["installation"]["zones"][0]["presence_entity"] == REDACTED
+        resident = data["installation"]["residents"][0]
+        for key in ("presence_entity", "sleep_entity", "sleep_window", "windows"):
+            assert resident[key] == REDACTED, key
+
+
 class TestEmptyInputs:
     def test_a_missing_world_stays_none(self) -> None:
         assert _world(None) is None
