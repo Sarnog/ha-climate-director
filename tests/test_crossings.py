@@ -211,9 +211,21 @@ class TestPresenceOnSomethingOtherThanAPerson:
             await live.evaluate()
             assert live.state(ATTIC_AIRCO) == "heat"
 
-            # Iemand drukt op het apparaat zelf op uit.
-            # Somebody presses off on the appliance itself.
+            # Iemand drukt op het apparaat zelf op uit. Eerst uitlopen: de
+            # coordinator merkt de hand op in een luisteraar bij de
+            # toestandswijziging, en die draait pas als de lus aan de beurt
+            # komt. Meteen doorbeslissen is een race die op de ene machine wél
+            # en op de andere niet goed valt - deze test viel daardoor lokaal
+            # groen en in de CI rood.
+            #
+            # Somebody presses off on the appliance itself. Let it run out
+            # first: the coordinator notices the hand in a listener on the state
+            # change, and that only runs once the loop gets round to it.
+            # Deciding straight away is a race that lands one way on one machine
+            # and another way elsewhere - this test was green locally and red in
+            # CI because of it.
             live.set(ATTIC_AIRCO, "off", hvac_modes=["heat", "off"])
+            await live.settle()
             await live.evaluate()
             assert live.state(ATTIC_AIRCO) == "off", "de hand houdt tot de volgende dag"
 
