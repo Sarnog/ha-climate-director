@@ -1,0 +1,469 @@
+"""Apparaten die stilvallen zodra ergens in huis een opening openstaat.
+
+Appliances that stop the moment an opening anywhere in the house stands open.
+
+Een opening werkt op zones. Bij een gedeelde ketel klopt dat niet: die staat als
+bron onder alle zones, en zolang een andere zone warmte vraagt blijft hij
+branden met de deur open, want vraag wint van stilte. Deze tests pinnen beide
+kanten vast - het oude gedrag met een lege lijst, en het nieuwe zodra het
+apparaat erin staat.
+
+An opening acts on zones. For a shared boiler that is wrong: it sits as a source
+under every zone, and as long as another zone asks for heat it keeps running
+with the door open, because demand beats silence. These tests pin both sides
+down - the old behaviour with an empty list, and the new one the moment the
+appliance is listed.
+"""
+
+from __future__ import annotations
+
+from dataclasses import replace
+from datetime import timedelta
+
+import pytest
+from conftest import at, climate, everyone_up, make_world
+
+from custom_components.climate_director.engine import (
+    DirectorConfig,
+    Generator,
+    ModeSettings,
+    Opening,
+    OpeningState,
+    OutdoorWindow,
+    Reason,
+    Source,
+    SourceRole,
+    Zone,
+    decide,
+    serialise,
+    validate,
+)
+
+GAS = "climate.cv_ketel"
+LIVING_AIRCO = "climate.woonkamer_airco"
+BACK_DOOR = "binary_sensor.achterdeur"
+SKYLIGHT = "binary_sensor.dakraam"
+
+#: Ruim voorbij de vertraging van elke opening hieronder.
+#: Comfortably past the delay of every opening below.
+OPENED_AT = at(11, 0)
+
+
+def warmth() -> ModeSettings:
+    """Return heating settings that want heat at 18 degrees indoors."""
+    return ModeSettings(target=21.0, start_at=20.0, hysteresis=1.0)
+
+
+def shared_boiler(**overrides: object) -> DirectorConfig:
+    """Return two rooms on one boiler, with a skylight on the attic only.
+
+    De opening raakt alleen de zolder. De woonkamer vraagt gewoon warmte, en dat
+    is precies het geval waarin de ketel met het dakraam open bleef branden.
+
+    The opening affects the attic only. The living room simply asks for heat,
+    which is exactly the case in which the boiler kept burning with the skylight
+    open.
+    """
+    living = Zone(
+        zone_id="woonkamer",
+        name="Woonkamer",
+        indoor_sensor="sensor.woonkamer",
+        priority=0,
+        sources=(Source(source_id="ketel_woonkamer", entity_id=GAS, role=SourceRole.HEAT_ONLY),),
+        heat=warmth(),
+    )
+    attic = Zone(
+        zone_id="zolder",
+        name="Zolder",
+        indoor_sensor="sensor.zolder",
+        priority=1,
+        sources=(Source(source_id="ketel_zolder", entity_id=GAS, role=SourceRole.HEAT_ONLY),),
+        heat=warmth(),
+    )
+    return DirectorConfig(
+        zones=(living, attic),
+        openings=(Opening(entity_id=SKYLIGHT, zone_ids=("zolder",), delay=timedelta(minutes=5)),),
+        **overrides,  # type: ignore[arg-type]
+    )
+
+
+def cold_house(**overrides: object) -> object:
+    """Return a world in which both rooms are cold and the skylight is open."""
+    settings: dict[str, object] = {
+        "now": at(12, 0),
+        "outdoor": 5.0,
+        "indoor": {"woonkamer": 18.0, "zolder": 18.0},
+        "climates": {GAS: climate("heat"), LIVING_AIRCO: climate("off")},
+        "residents": everyone_up(),
+        "openings": {SKYLIGHT: OpeningState(open=True, changed_at=OPENED_AT)},
+    }
+    settings.update(overrides)
+    return make_world(**settings)  # type: ignore[arg-type]
+
+
+def command_for(plan, entity_id: str):
+    """Return the command issued to `entity_id`, or None if there is none."""
+    return next((item for item in plan.commands if item.entity_id == entity_id), None)
+
+
+def decision_for(plan, zone_id: str):
+    """Return the decision for `zone_id`."""
+    decision = plan.decision_for(zone_id)
+    assert decision is not None
+    return decision
+
+
+# ---------------------------------------------------------------------------
+# Het gedrag dat dit oplost / the behaviour this settles
+# ---------------------------------------------------------------------------
+
+
+def test_a_shared_boiler_keeps_burning_without_the_setting() -> None:
+    """Dit is het gedrag van vóór deze instelling, en het blijft zo."""
+    plan = decide(shared_boiler(), cold_house())
+
+    boiler = command_for(plan, GAS)
+    assert boiler is not None
+    assert boiler.hvac_mode == "heat"
+    assert boiler.zone_id == "woonkamer"
+
+
+def test_a_listed_boiler_stops_while_any_opening_stands_open() -> None:
+    plan = decide(shared_boiler(house_wide_openings=(GAS,)), cold_house())
+
+    boiler = command_for(plan, GAS)
+    assert boiler is not None
+    assert boiler.hvac_mode == "off"
+    assert boiler.reason is Reason.OPENING_OPEN_ELSEWHERE
+
+
+def test_the_room_says_why_instead_of_blaming_the_configuration() -> None:
+    """`no_source_available` zou de gebruiker de configuratie in sturen."""
+    plan = decide(shared_boiler(house_wide_openings=(GAS,)), cold_house())
+
+    living = decision_for(plan, "woonkamer")
+    assert living.reason is Reason.OPENING_OPEN_ELSEWHERE
+    assert Reason.OPENING_OPEN_ELSEWHERE in living.closed_gates
+    # De "geblokkeerd"-melder van die kamer hoort te branden: hij wilde warmte
+    # en staat stil door een deur elders.
+    assert living.held_back
+
+
+def test_a_room_with_no_source_at_all_still_says_no_source_available() -> None:
+    """De nieuwe reden mag de oude niet overnemen zodra hij eenmaal bestaat."""
+    config = shared_boiler(house_wide_openings=(GAS,))
+    world = cold_house(climates={GAS: climate("heat", available=False)})
+
+    living = decision_for(decide(config, world), "woonkamer")
+    assert living.reason is Reason.NO_SOURCE_AVAILABLE
+
+
+def test_everything_else_stays_governed_per_zone() -> None:
+    """De airco van de woonkamer blijft koelen terwijl de ketel stilstaat."""
+    config = shared_boiler(house_wide_openings=(GAS,))
+    living = config.zones[0]
+    with_airco = replace(
+        living,
+        sources=(
+            *living.sources,
+            Source(
+                source_id="woonkamer_airco",
+                entity_id=LIVING_AIRCO,
+                role=SourceRole.HEAT_COOL,
+                priority=1,
+            ),
+        ),
+    )
+    config = replace(config, zones=(with_airco, config.zones[1]))
+
+    plan = decide(config, cold_house())
+
+    boiler = command_for(plan, GAS)
+    airco = command_for(plan, LIVING_AIRCO)
+    assert boiler is not None and boiler.hvac_mode == "off"
+    # De zone kijkt door naar zijn volgende bron in plaats van op neutraal uit
+    # te komen: alleen de ketel staat stil, de kamer niet.
+    assert airco is not None
+    assert airco.hvac_mode == "heat"
+    assert decision_for(plan, "woonkamer").source_id == "woonkamer_airco"
+
+
+# ---------------------------------------------------------------------------
+# De grenzen van de stop / the bounds of the stop
+# ---------------------------------------------------------------------------
+
+
+def test_an_empty_list_changes_nothing_at_all() -> None:
+    """Een installatie die deze instelling niet gebruikt merkt er niets van."""
+    world = cold_house()
+    assert decide(shared_boiler(), world) == decide(shared_boiler(house_wide_openings=()), world)
+
+
+def test_a_closed_house_leaves_the_listed_appliance_alone() -> None:
+    plan = decide(shared_boiler(house_wide_openings=(GAS,)), cold_house(openings={}))
+
+    boiler = command_for(plan, GAS)
+    assert boiler is not None
+    assert boiler.hvac_mode == "heat"
+
+
+@pytest.mark.parametrize(
+    ("minutes", "stopped"),
+    [(1, False), (4, False), (5, True), (30, True)],
+)
+def test_the_openings_own_delay_applies(minutes: int, stopped: bool) -> None:
+    """Vijf minuten vertraging op het dakraam geldt ook voor de huisbrede stop."""
+    world = cold_house(
+        openings={
+            SKYLIGHT: OpeningState(open=True, changed_at=at(12, 0) - timedelta(minutes=minutes))
+        }
+    )
+
+    boiler = command_for(decide(shared_boiler(house_wide_openings=(GAS,)), world), GAS)
+    assert boiler is not None
+    assert (boiler.hvac_mode == "off") is stopped
+
+
+def test_an_opening_without_a_timestamp_counts_as_open_long_enough() -> None:
+    """Gelijk aan de gewone raampoort: onbekende ouderdom telt als open."""
+    world = cold_house(openings={SKYLIGHT: OpeningState(open=True, changed_at=None)})
+
+    boiler = command_for(decide(shared_boiler(house_wide_openings=(GAS,)), world), GAS)
+    assert boiler is not None
+    assert boiler.hvac_mode == "off"
+
+
+def test_every_opening_counts_whichever_zone_it_names() -> None:
+    """Een achterdeur die aan geen enkele zone hangt telt net zo goed mee."""
+    config = shared_boiler(house_wide_openings=(GAS,))
+    config = replace(
+        config,
+        openings=(Opening(entity_id=BACK_DOOR, zone_ids=("woonkamer",), delay=timedelta(0)),),
+    )
+    world = cold_house(openings={BACK_DOOR: OpeningState(open=True, changed_at=OPENED_AT)})
+
+    boiler = command_for(decide(config, world), GAS)
+    assert boiler is not None
+    assert boiler.hvac_mode == "off"
+
+
+def test_an_appliance_not_on_the_list_is_untouched_by_it() -> None:
+    config = shared_boiler(house_wide_openings=("climate.iets_anders",))
+
+    boiler = command_for(decide(config, cold_house()), GAS)
+    assert boiler is not None
+    assert boiler.hvac_mode == "heat"
+
+
+# ---------------------------------------------------------------------------
+# Wat de director met rust laat, blijft met rust
+# What the director leaves alone stays left alone
+# ---------------------------------------------------------------------------
+
+
+def test_an_override_still_wins_over_the_house_wide_stop() -> None:
+    """De override is een hoofdsleutel; deze instelling gaat er niet overheen."""
+    config = shared_boiler(house_wide_openings=(GAS,))
+    world = cold_house(zone_overrides={"woonkamer": True, "zolder": True})
+
+    plan = decide(config, world)
+    assert command_for(plan, GAS) is None
+    assert [item.reason for item in plan.untouched] == [Reason.MANUAL_OVERRIDE]
+
+
+def test_a_hand_operated_source_is_left_alone_as_ever() -> None:
+    """Precies zoals een openstaand raam een handbediende airco niet uitzet."""
+    config = shared_boiler(house_wide_openings=(GAS,))
+    manual = tuple(
+        replace(zone, sources=tuple(replace(item, autostart=False) for item in zone.sources))
+        for zone in config.zones
+    )
+    config = replace(config, zones=manual)
+
+    plan = decide(config, cold_house())
+    assert command_for(plan, GAS) is None
+    assert [item.reason for item in plan.untouched] == [Reason.MANUAL_SOURCE]
+
+
+def test_a_precondition_told_to_ignore_openings_passes_through() -> None:
+    """Dezelfde uitzondering als op de gewone raampoort, op één plek geregeld."""
+    config = shared_boiler(house_wide_openings=(GAS,))
+    world = cold_house(
+        precondition_until={"woonkamer": at(14, 0)},
+        precondition_bypass=frozenset({"woonkamer"}),
+    )
+
+    boiler = command_for(decide(config, world), GAS)
+    assert boiler is not None
+    assert boiler.hvac_mode == "heat"
+
+
+def test_a_precondition_without_that_bypass_does_not_pass_through() -> None:
+    config = shared_boiler(house_wide_openings=(GAS,))
+    world = cold_house(precondition_until={"woonkamer": at(14, 0)})
+
+    boiler = command_for(decide(config, world), GAS)
+    assert boiler is not None
+    assert boiler.hvac_mode == "off"
+
+
+# ---------------------------------------------------------------------------
+# De gedeelde warmtebron / the shared heat source
+# ---------------------------------------------------------------------------
+
+
+def generator_house(**overrides: object) -> DirectorConfig:
+    """Return two rooms with valves of their own and one boiler behind them."""
+    config = shared_boiler(**overrides)
+    valves = tuple(
+        replace(
+            zone,
+            sources=(
+                Source(
+                    source_id=f"{zone.zone_id}_kraan",
+                    entity_id=f"climate.{zone.zone_id}_kraan",
+                    role=SourceRole.HEAT_ONLY,
+                ),
+            ),
+        )
+        for zone in config.zones
+    )
+    return replace(
+        config,
+        zones=valves,
+        generators=(Generator(generator_id="cv", name="CV-ketel", entity_id=GAS),),
+    )
+
+
+def valve_world(**overrides: object) -> object:
+    """Return the generator house cold, with both valves and the boiler off."""
+    settings: dict[str, object] = {
+        "climates": {
+            GAS: climate("heat"),
+            "climate.woonkamer_kraan": climate("off"),
+            "climate.zolder_kraan": climate("off"),
+        }
+    }
+    settings.update(overrides)
+    return cold_house(**settings)
+
+
+def test_a_generator_on_the_list_stops_too() -> None:
+    """De generator loopt geen bronkeuze door; het vangnet moet hem pakken."""
+    plan = decide(generator_house(house_wide_openings=(GAS,)), valve_world())
+
+    boiler = command_for(plan, GAS)
+    assert boiler is not None
+    assert boiler.hvac_mode == "off"
+    assert boiler.reason is Reason.OPENING_OPEN_ELSEWHERE
+
+
+def test_a_generator_not_on_the_list_keeps_following_demand() -> None:
+    boiler = command_for(decide(generator_house(), valve_world()), GAS)
+    assert boiler is not None
+    assert boiler.hvac_mode == "heat"
+
+
+def test_a_generator_follows_a_precondition_that_ignores_openings() -> None:
+    world = valve_world(
+        precondition_until={"woonkamer": at(14, 0)},
+        precondition_bypass=frozenset({"woonkamer"}),
+    )
+
+    boiler = command_for(decide(generator_house(house_wide_openings=(GAS,)), world), GAS)
+    assert boiler is not None
+    assert boiler.hvac_mode == "heat"
+
+
+# ---------------------------------------------------------------------------
+# Opslag / storage
+# ---------------------------------------------------------------------------
+
+
+def test_the_list_survives_a_round_trip() -> None:
+    config = shared_boiler(house_wide_openings=(GAS, LIVING_AIRCO))
+
+    back = serialise.config_from_dict(serialise.config_to_dict(config))
+    assert back.house_wide_openings == (GAS, LIVING_AIRCO)
+    assert back == config
+
+
+def test_an_installation_stored_before_this_setting_reads_as_empty() -> None:
+    stored = serialise.config_to_dict(shared_boiler())
+    del stored["house_wide_openings"]
+
+    assert serialise.config_from_dict(stored).house_wide_openings == ()
+
+
+def test_an_unreadable_list_reads_as_empty_rather_than_falling_over() -> None:
+    stored = serialise.config_to_dict(shared_boiler())
+    stored["house_wide_openings"] = "climate.cv_ketel"
+
+    assert serialise.config_from_dict(stored).house_wide_openings == ()
+
+
+# ---------------------------------------------------------------------------
+# De controle / the check
+# ---------------------------------------------------------------------------
+
+
+def codes(config: DirectorConfig) -> set[str]:
+    """Return the codes of everything `validate()` complains about."""
+    return {item.code for item in validate(config) if hasattr(item, "code")}
+
+
+def test_a_correct_setup_draws_no_complaint() -> None:
+    assert "house_wide_without_openings" not in codes(shared_boiler(house_wide_openings=(GAS,)))
+    assert "house_wide_unmanaged" not in codes(shared_boiler(house_wide_openings=(GAS,)))
+
+
+def test_a_list_without_any_opening_is_reported() -> None:
+    """Anders staat de instelling er en gebeurt er nooit iets."""
+    config = replace(shared_boiler(house_wide_openings=(GAS,)), openings=())
+
+    assert "house_wide_without_openings" in codes(config)
+
+
+def test_an_appliance_nobody_steers_is_reported() -> None:
+    config = shared_boiler(house_wide_openings=("climate.los_kacheltje",))
+
+    assert "house_wide_unmanaged" in codes(config)
+
+
+def test_a_generator_counts_as_steered() -> None:
+    assert "house_wide_unmanaged" not in codes(generator_house(house_wide_openings=(GAS,)))
+
+
+def test_the_outdoor_dead_band_does_not_hold_a_stopped_appliance() -> None:
+    """De band houdt vast wat draait; wat stil moet staan mag niet doorlopen.
+
+    Zonder deze grens hield de dode band op de buitentemperatuur de ketel vast:
+    hij lag buiten zijn venster maar binnen de band, en dat is precies de greep
+    die een draaiende bron laat doorlopen - ook een die stil hoorde te vallen.
+    """
+    boiler = Source(
+        source_id="ketel_woonkamer",
+        entity_id=GAS,
+        role=SourceRole.HEAT_ONLY,
+        outdoor=OutdoorWindow(maximum=3.0),
+    )
+    config = shared_boiler(house_wide_openings=(GAS,))
+    config = replace(config, zones=(replace(config.zones[0], sources=(boiler,)), config.zones[1]))
+
+    # Ronde 1: binnen het venster, deur dicht - de ketel levert deze zone.
+    running = decide(config, cold_house(outdoor=2.0, openings={}))
+    assert decision_for(running, "woonkamer").source_id == "ketel_woonkamer"
+
+    # Ronde 2: buiten het venster maar binnen de dode band van 0,5, deur open.
+    plan = decide(config, cold_house(outdoor=3.2), running)
+
+    # Het commando is uit - maar dat zegt het vangnet ook zonder deze grens.
+    # Waar het om gaat is dat het plan de ketel niet meer toewijst: anders
+    # noemt `sensor.…_bron_<zone>` een apparaat dat vervolgens uitgaat.
+    living = decision_for(plan, "woonkamer")
+    assert living.source_id is None
+    assert living.reason is Reason.OPENING_OPEN_ELSEWHERE
+
+    command = command_for(plan, GAS)
+    assert command is not None
+    assert command.hvac_mode == "off"

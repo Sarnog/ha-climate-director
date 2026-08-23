@@ -705,6 +705,37 @@ class DirectorConfig:
     circuits: tuple[Circuit, ...] = ()
     residents: tuple[Resident, ...] = ()
     openings: tuple[Opening, ...] = ()
+
+    house_wide_openings: tuple[str, ...] = ()
+    """Appliances that stop while any opening in the installation stands open.
+
+    Een opening werkt op zones: raakt hij een zone, dan valt daar alles stil.
+    Bij een centraal geregelde verwarming klopt dat niet. De ketel staat als
+    bron onder alle zones, en zolang één andere zone warmte vraagt blijft hij
+    branden met de deur open, want vraag wint van stilte (`_collapse_shared` in
+    `decide.py`). De opening aan álle zones koppelen lost de ketel op, maar zet
+    daarmee ook de airco's in die kamers stil - het hele jaar door, terwijl die
+    per kamer geregeld horen te worden.
+
+    Deze lijst hangt daarom aan het apparaat en niet aan de opening: dan hoeft
+    de ketel niet bij elke deur opnieuw aangevinkt te worden, en telt een raam
+    dat er later bij komt vanzelf mee. Leeg is het gedrag van vóór deze
+    instelling, dus een gezoneerde cv blijft gewoon per zone geregeld.
+
+    An opening acts on zones: once it affects a zone, everything there stops.
+    For centrally controlled heating that is wrong. The boiler sits as a source
+    under every zone, and as long as one other zone asks for heat it keeps
+    running with the door open, because demand beats silence (`_collapse_shared`
+    in `decide.py`). Linking the opening to *every* zone settles the boiler, but
+    it also stops the air conditioners in those rooms - all year round, while
+    those belong under per-room control.
+
+    This list therefore hangs on the appliance rather than on the opening: the
+    boiler need not be ticked again at every door, and a window added later
+    counts by itself. Empty is the behaviour from before this setting, so a
+    zoned boiler stays governed per zone.
+    """
+
     generators: tuple[Generator, ...] = ()
     exclusive_groups: tuple[frozenset[str], ...] = ()
     """Source-id groups of which at most one member may run at a time."""
@@ -1134,6 +1165,43 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
         problems.append(
             "the maximum pre-conditioning time is zero or negative, so no request can ever run"
         )
+
+    # Een apparaat dat huisbreed stil hoort te vallen terwijl er niets is dat
+    # het ooit stilzet, is een instelling die er staat en niets doet. Beide
+    # helften zijn los te vergeten: de openingen kunnen ontbreken, en het
+    # apparaat kan bij geen enkele zone of gedeelde warmtebron horen - dan
+    # stuurt de director er nooit iets heen en valt er dus ook niets stil te
+    # zetten.
+    #
+    # An appliance meant to stop house-wide while nothing can ever stop it is a
+    # setting that sits there doing nothing. Both halves can be forgotten
+    # separately: the openings may be missing, and the appliance may belong to
+    # no zone and no shared heat source - the director then never sends it
+    # anything, so there is nothing to stop either.
+    if config.house_wide_openings and not config.openings:
+        problems += [
+            Problem(
+                "house_wide_without_openings",
+                f"appliance {entity_id} is set to stop while an opening stands open, "
+                "but the installation has no openings at all",
+                entity=entity_id,
+            )
+            for entity_id in config.house_wide_openings
+        ]
+
+    steered = {source.entity_id for _, source in config.sources()} | {
+        generator.entity_id for generator in config.generators
+    }
+    problems += [
+        Problem(
+            "house_wide_unmanaged",
+            f"appliance {entity_id} is set to stop while an opening stands open, but no "
+            "zone and no shared heat source uses it, so the director never steers it",
+            entity=entity_id,
+        )
+        for entity_id in config.house_wide_openings
+        if entity_id not in steered
+    ]
 
     if config.holiday_calendars and not config.holiday_keyword.strip():
         problems.append(

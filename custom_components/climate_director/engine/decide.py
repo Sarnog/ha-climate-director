@@ -52,7 +52,8 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
     the appliance state does not say that: it counts only for the zone that got
     the command.
     """
-    wishes, refusals, shut, woulds = _collect_wishes(config, world, previous)
+    blocked = gates.house_wide_blocked(config, world)
+    wishes, refusals, shut, woulds = _collect_wishes(config, world, previous, blocked)
     wishes, dropped = _apply_exclusive_groups(config, world, wishes)
 
     standing = _standing_firm(config, world, refusals)
@@ -60,11 +61,11 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
     reasons = _zone_reasons(config, grants, dropped, refusals)
 
     families = {decision.circuit_id: decision.family for decision in circuit_decisions}
-    commands, untouched = _build_commands(config, world, grants, reasons, wishes, families)
+    commands, untouched = _build_commands(config, world, grants, reasons, wishes, families, blocked)
     return Plan(
         commands=commands,
         zones=_build_zone_decisions(
-            config, world, wishes, dropped, grants, refusals, shut, woulds, previous
+            config, world, wishes, dropped, grants, refusals, shut, woulds, previous, blocked
         ),
         circuits=circuit_decisions,
         deferrals=deferrals,
@@ -73,7 +74,10 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
 
 
 def _collect_wishes(
-    config: DirectorConfig, world: WorldState, previous: Plan | None
+    config: DirectorConfig,
+    world: WorldState,
+    previous: Plan | None,
+    blocked: frozenset[str] = frozenset(),
 ) -> tuple[
     dict[str, constraints.Request],
     dict[str, Reason],
@@ -116,11 +120,38 @@ def _collect_wishes(
             refusals[zone.zone_id] = demand.reason
             continue
 
-        source = sources.select(
-            zone, demand.family, world, _serving(previous, zone.zone_id), margin
-        )
+        # Een vooruit-verzoek waarbij iemand uitdrukkelijk "toch doen" zei, gaat
+        # langs de huisbrede stop heen - precies zoals het langs de gewone
+        # raampoort hierboven gaat. Een uitzondering, op een plek.
+        #
+        # A pre-conditioning request on which somebody expressly said "do it
+        # anyway" passes the house-wide stop - exactly as it passes the ordinary
+        # window gate above. One exception, in one place.
+        serving = _serving(previous, zone.zone_id)
+        stopped = frozenset() if world.precondition_ignores_openings(zone.zone_id) else blocked
+        source = sources.select(zone, demand.family, world, serving, margin, stopped)
         if source is None:
-            refusals[zone.zone_id] = Reason.NO_SOURCE_AVAILABLE
+            # Was er zonder de huisbrede stop wel een bron geweest, dan is dat de
+            # reden, en niet "geen bron beschikbaar" - die laatste stuurt de
+            # gebruiker de configuratie in terwijl er alleen een deur openstaat.
+            #
+            # Had there been a source without the house-wide stop, that is the
+            # reason, and not "no source available" - the latter sends the user
+            # off into the configuration while all that is wrong is an open door.
+            elsewhere = bool(stopped) and (
+                sources.select(zone, demand.family, world, serving, margin) is not None
+            )
+            reason = Reason.OPENING_OPEN_ELSEWHERE if elsewhere else Reason.NO_SOURCE_AVAILABLE
+            refusals[zone.zone_id] = reason
+            if elsewhere:
+                # De poortenlijst draagt de "geblokkeerd"-melder per kamer.
+                # Zonder deze regel meldt de kamer niets, terwijl hij wel
+                # degelijk warmte wilde en door een deur elders stilstaat.
+                #
+                # The gate list carries the per-room "blocked" sensor. Without
+                # this line the room reports nothing, while it did want heat and
+                # stands still because of a door elsewhere.
+                shut[zone.zone_id] = (*shut[zone.zone_id], reason)
             continue
 
         wishes[zone.zone_id] = constraints.Request(
@@ -548,6 +579,7 @@ def _build_commands(
     reasons: dict[str, Reason],
     wishes: dict[str, constraints.Request],
     families: dict[str, ModeFamily],
+    blocked: frozenset[str] = frozenset(),
 ) -> tuple[tuple[UnitCommand, ...], tuple[UntouchedSource, ...]]:
     """Return the end state for every managed climate entity, and what is left alone.
 
@@ -669,6 +701,7 @@ def _build_commands(
     commands.extend(generator_commands)
     untouched.extend(generator_untouched)
     commands = _collapse_shared(config, world, commands)
+    commands = _stop_blocked(config, world, grants, blocked, commands)
 
     # Een gedeeld apparaat staat onder meerdere zones. Krijgt het via één zone
     # toch een opdracht, dan wordt het niet met rust gelaten - hoe de andere
@@ -687,6 +720,87 @@ def _build_commands(
     # as long as the calls take to land.
     ordered = tuple(sorted(commands, key=lambda command: _command_order(config, command)))
     return ordered, left_alone
+
+
+def _stop_blocked(
+    config: DirectorConfig,
+    world: WorldState,
+    grants: dict[str, constraints.Grant],
+    blocked: frozenset[str],
+    commands: list[UnitCommand],
+) -> list[UnitCommand]:
+    """Return the commands with every house-wide stopped appliance forced off.
+
+    De bronkeuze laat een stilgezet apparaat al vallen, dus in de gewone gang
+    van zaken verandert dit niets. Het staat er voor de paden die buiten die
+    keuze omgaan - een gedeelde ketel die zijn commando van een andere zone
+    kreeg, en de generator, die helemaal geen bronkeuze doorloopt. Zo kan er
+    langs geen enkele weg alsnog een `heat` uitkomen.
+
+    Wat de director met rust laat blijft met rust: een overgedragen zone en een
+    handbediende bron krijgen geen commando, en die staan hier dus ook niet in.
+    Deze instelling stuurt wat de director stuurt; hij is geen uitknop die over
+    een override heen gaat.
+
+    Source selection already drops a stopped appliance, so in the ordinary run
+    of things this changes nothing. It is here for the paths going round that
+    choice - a shared boiler that got its command from another zone, and the
+    generator, which never runs through source selection at all. That way no
+    route can let a `heat` come out after all.
+
+    Whatever the director leaves alone stays left alone: a zone handed over and
+    a hand-operated source get no command, and are therefore absent here too.
+    This setting steers what the director steers; it is no off switch reaching
+    over an override.
+    """
+    if not blocked:
+        return commands
+    return [
+        command
+        if command.entity_id not in blocked
+        or command.hvac_mode == MODE_OFF
+        or _ignores_openings(config, world, grants, command)
+        else UnitCommand(
+            entity_id=command.entity_id,
+            hvac_mode=MODE_OFF,
+            temperature=None,
+            zone_id=command.zone_id,
+            source_id=command.source_id,
+            reason=Reason.OPENING_OPEN_ELSEWHERE,
+        )
+        for command in commands
+    ]
+
+
+def _ignores_openings(
+    config: DirectorConfig,
+    world: WorldState,
+    grants: dict[str, constraints.Grant],
+    command: UnitCommand,
+) -> bool:
+    """Return whether this command carries a pre-conditioning "do it anyway".
+
+    Een zonecommando draagt zijn eigen zone. Een generator hoort bij geen zone,
+    dus daar telt of een van de zones die hij bedient dat verzoek draagt en op
+    dit moment ook echt bediend wordt - anders zou een uitzondering in een kamer
+    die niets krijgt de ketel alsnog laten branden.
+
+    A zone command carries its own zone. A generator belongs to no zone, so
+    there it counts whether one of the zones it serves carries that request and
+    is actually being served right now - otherwise an exception in a room
+    getting nothing would keep the boiler burning after all.
+    """
+    if command.zone_id:
+        return world.precondition_ignores_openings(command.zone_id)
+    return any(
+        world.precondition_ignores_openings(zone.zone_id)
+        and (grant := grants.get(zone.zone_id)) is not None
+        and grant.granted
+        for generator in config.generators
+        if generator.entity_id == command.entity_id
+        for zone in config.zones
+        if generator.serves(zone.zone_id)
+    )
 
 
 def _first_per_entity(untouched: list[UntouchedSource]) -> list[UntouchedSource]:
@@ -923,6 +1037,7 @@ def _build_zone_decisions(
     shut: dict[str, tuple[Reason, ...]],
     woulds: dict[str, ModeFamily],
     previous: Plan | None = None,
+    blocked: frozenset[str] = frozenset(),
 ) -> tuple[ZoneDecision, ...]:
     """Return one decision per zone, saying what it asked for and what it got."""
     decisions: list[ZoneDecision] = []
@@ -968,6 +1083,7 @@ def _build_zone_decisions(
                     world,
                     _serving(previous, zone.zone_id),
                     config.outdoor_hysteresis,
+                    blocked,
                 ),
                 would_want=would,
             )

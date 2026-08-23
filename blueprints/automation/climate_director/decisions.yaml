@@ -17,8 +17,8 @@ blueprint:
 
     Redenen zijn stabiele identifiers, dus je kunt erop filteren:
     `regulating`, `satisfied`, `within_deadband`, `master_disabled`,
-    `manual_override`, `opening_open`, `nobody_home`, `everyone_asleep`,
-    `outside_schedule`, `zone_unoccupied`, `quiet_hours`,
+    `manual_override`, `opening_open`, `opening_open_elsewhere`, `nobody_home`,
+    `everyone_asleep`, `outside_schedule`, `zone_unoccupied`, `quiet_hours`,
     `no_indoor_temperature`, `no_outdoor_temperature`, `season_blocks_mode`,
     `outdoor_outside_window`,
     `mode_not_configured`, `no_source_available`, `other_source_chosen`,

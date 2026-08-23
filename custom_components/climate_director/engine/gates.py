@@ -16,7 +16,7 @@ from datetime import datetime
 
 from .families import ModeFamily
 from .hysteresis import source_counts_for
-from .models import HOLIDAY_WEEKDAY, DirectorConfig, Resident, Zone, ZoneGate
+from .models import HOLIDAY_WEEKDAY, DirectorConfig, Opening, Resident, Zone, ZoneGate
 from .plan import Plan, Reason
 from .world import WorldState
 
@@ -355,20 +355,50 @@ def _room_occupied(world: WorldState, zone: Zone) -> bool:
 
 def _any_opening_open(config: DirectorConfig, world: WorldState, zone: Zone) -> bool:
     """Return whether an opening has suspended this zone long enough."""
-    for opening in config.openings:
-        if not opening.affects(zone.zone_id):
-            continue
-        state = world.opening(opening.entity_id)
-        if not state.open:
-            continue
-        # An open sensor without a timestamp counts as open long enough:
-        # suspending climate control is the harmless direction to be wrong in,
-        # and refusing to act on an unknown age would keep heating an open room.
-        if state.changed_at is None:
-            return True
-        if world.now - state.changed_at >= opening.delay:
-            return True
-    return False
+    return any(
+        _standing_open(opening, world)
+        for opening in config.openings
+        if opening.affects(zone.zone_id)
+    )
+
+
+def _standing_open(opening: Opening, world: WorldState) -> bool:
+    """Return whether this opening has stood open past its own delay."""
+    state = world.opening(opening.entity_id)
+    if not state.open:
+        return False
+    # An open sensor without a timestamp counts as open long enough:
+    # suspending climate control is the harmless direction to be wrong in,
+    # and refusing to act on an unknown age would keep heating an open room.
+    if state.changed_at is None:
+        return True
+    return world.now - state.changed_at >= opening.delay
+
+
+def house_wide_blocked(config: DirectorConfig, world: WorldState) -> frozenset[str]:
+    """Return the appliances that must stand still while any opening is open.
+
+    Het `affects()`-filter ontbreekt hier met opzet: deze lijst bestaat juist
+    voor het apparaat dat het hele huis bedient, en dan is het niet uit te
+    leggen dat de voordeur wel telt en het slaapkamerraam niet. Elke opening in
+    de installatie telt dus mee, met zijn eigen vertraging.
+
+    Een lege lijst geeft een lege verzameling, en daarmee verandert er niets
+    aan het gedrag van een installatie die deze instelling niet gebruikt.
+
+    The `affects()` filter is deliberately absent: this list exists precisely
+    for the appliance serving the whole house, and there is no explaining why
+    the front door would count and the bedroom window would not. Every opening
+    in the installation therefore counts, each with its own delay.
+
+    An empty list yields an empty set, so nothing changes for an installation
+    not using this setting.
+    """
+    if not config.house_wide_openings:
+        return frozenset()
+    if not any(_standing_open(opening, world) for opening in config.openings):
+        return frozenset()
+    return frozenset(config.house_wide_openings)
 
 
 def _schedule_open(config: DirectorConfig, world: WorldState) -> bool:

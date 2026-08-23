@@ -34,6 +34,7 @@ class Reason(StrEnum):
     MASTER_DISABLED = "master_disabled"
     MANUAL_OVERRIDE = "manual_override"
     OPENING_OPEN = "opening_open"
+    OPENING_OPEN_ELSEWHERE = "opening_open_elsewhere"
     NOBODY_HOME = "nobody_home"
     EVERYONE_ASLEEP = "everyone_asleep"
     OUTSIDE_SCHEDULE = "outside_schedule"
@@ -101,6 +102,7 @@ WAITING_REASONS = frozenset(
 HOLDING_GATES = frozenset(
     {
         Reason.OPENING_OPEN,
+        Reason.OPENING_OPEN_ELSEWHERE,
         Reason.QUIET_HOURS,
         Reason.ZONE_UNOCCUPIED,
         Reason.NOBODY_HOME,

@@ -26,6 +26,7 @@ def select(
     world: WorldState,
     serving: str | None = None,
     margin: float = 0.0,
+    blocked: frozenset[str] = frozenset(),
 ) -> Source | None:
     """Return the source that should deliver `family` in `zone`.
 
@@ -47,9 +48,21 @@ def select(
     heat pump back and forth. If it sits plainly inside its window, preference
     counts as ever: a fallback to a second choice should move back the moment
     the first choice returns.
+
+    `blocked` zijn de apparaten die op dit moment stil moeten staan omdat er
+    ergens in huis een opening openstaat. Ze vallen hier af in plaats van bij
+    het commando: zou het plan zo'n bron toch toewijzen, dan noemt
+    `sensor.…_bron_<zone>` een apparaat dat vervolgens uitgaat, en dat is een
+    leugen die de `command_not_taking`-melding er niet duidelijker op maakt.
+
+    `blocked` are the appliances that must stand still right now because an
+    opening somewhere in the house stands open. They drop out here rather than
+    at command level: were the plan to grant such a source anyway,
+    `sensor.…_source_<zone>` would name an appliance that then goes off, a lie
+    that does the `command_not_taking` report no favours either.
     """
-    eligible = [source for source in zone.sources if _eligible(source, family, world)]
-    held = _held(zone, family, world, serving, margin, eligible)
+    eligible = [source for source in zone.sources if _eligible(source, family, world, blocked)]
+    held = _held(zone, family, world, serving, margin, eligible, blocked)
     if held is not None:
         return held
     if not eligible:
@@ -64,6 +77,7 @@ def _held(
     serving: str | None,
     margin: float,
     eligible: list[Source],
+    blocked: frozenset[str] = frozenset(),
 ) -> Source | None:
     """Return the running source the dead band keeps in place, if there is one.
 
@@ -82,6 +96,13 @@ def _held(
     source = next((item for item in zone.sources if item.source_id == serving), None)
     if source is None or source in eligible:
         return None
+    # De dode band houdt vast wat draait; een huisbreed stilgezet apparaat is
+    # precies wat niet meer mag draaien, dus die vasthoudgreep geldt daar niet.
+    #
+    # The dead band holds on to what runs; an appliance stopped house-wide is
+    # exactly what may no longer run, so that grip does not apply there.
+    if source.entity_id in blocked:
+        return None
     if not _reachable(source, family, world):
         return None
     return source if source.outdoor.contains(world.outdoor_temperature, margin) else None
@@ -93,6 +114,7 @@ def passed_over(
     world: WorldState,
     serving: str | None = None,
     margin: float = 0.0,
+    blocked: frozenset[str] = frozenset(),
 ) -> tuple[str, ...]:
     """Return the preferred sources this duty had to skip because they are unreachable.
 
@@ -117,7 +139,7 @@ def passed_over(
     what is running now. What was not chosen because another appliance simply
     fits better is therefore absent - that is no fault.
     """
-    chosen = select(zone, family, world, serving, margin)
+    chosen = select(zone, family, world, serving, margin, blocked)
     if chosen is None:
         return ()
     rank = (chosen.priority, chosen.source_id)
@@ -167,8 +189,12 @@ def _reachable(source: Source, family: ModeFamily, world: WorldState) -> bool:
     return state.available and state.supports(preferred_mode(family))
 
 
-def _eligible(source: Source, family: ModeFamily, world: WorldState) -> bool:
+def _eligible(
+    source: Source, family: ModeFamily, world: WorldState, blocked: frozenset[str] = frozenset()
+) -> bool:
     """Return whether a source can serve this duty under current conditions."""
+    if source.entity_id in blocked:
+        return False
     if not _reachable(source, family, world):
         return False
     return source.outdoor.contains(world.outdoor_temperature)

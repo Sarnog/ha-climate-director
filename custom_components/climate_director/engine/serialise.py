@@ -59,6 +59,7 @@ def config_from_dict(raw: Mapping[str, Any]) -> DirectorConfig:
         circuits=tuple(_circuit(item) for item in _items(raw, "circuits")),
         residents=tuple(_resident(item) for item in _items(raw, "residents")),
         openings=tuple(_opening(item) for item in _items(raw, "openings")),
+        house_wide_openings=tuple(_strings(raw.get("house_wide_openings"))),
         generators=tuple(_generator(item) for item in _items(raw, "generators")),
         exclusive_groups=tuple(
             frozenset(_strings(group)) for group in _sequence(raw.get("exclusive_groups"))
@@ -87,6 +88,7 @@ def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
         "circuits": [_circuit_to_dict(circuit) for circuit in config.circuits],
         "residents": [_resident_to_dict(resident) for resident in config.residents],
         "openings": [_opening_to_dict(opening) for opening in config.openings],
+        "house_wide_openings": list(config.house_wide_openings),
         "generators": [_generator_to_dict(item) for item in config.generators],
         "exclusive_groups": [sorted(group) for group in config.exclusive_groups],
         "gates": {
