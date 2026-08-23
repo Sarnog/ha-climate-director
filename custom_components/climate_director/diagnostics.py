@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE
@@ -28,12 +29,16 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return everything needed to reproduce the current decision.
 
-    Nothing is redacted: an installation holds entity ids, temperatures and
-    room names, none of which is more sensitive than what a screenshot of the
-    dashboard would already show.
+    Aanwezigheids- en slaapgegevens worden weggelakt: een diagnose gaat routineus
+    een GitHub-issue in, en wie er thuis is, slaapt, en wanneer, is een
+    inbraakprofiel. Alles wat een beslissing naspeelt blijft staan.
+
+    Presence and sleep data are redacted: a diagnostics download routinely ends
+    up in a GitHub issue, and who is home, asleep, and when, is a burglary
+    profile. Everything that replays a decision stays in.
     """
     coordinator = entry.runtime_data
-    return {
+    found = {
         "shadow_mode": entry.options.get(CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE),
         "installation": config_to_dict(coordinator.config),
         "problems": list(validate(coordinator.config)),
@@ -59,6 +64,12 @@ async def async_get_config_entry_diagnostics(
         "would_change": [change.entity_id for change in coordinator.last_changes],
         "did_change": [change.entity_id for change in coordinator.last_applied],
     }
+    # `home`/`asleep` zitten in de wereldmomentopname, `windows`/`sleep_window`
+    # in de installatie: precies het bewonersprofiel dat hierboven benoemd is.
+    #
+    # `home`/`asleep` sit in the world snapshot, `windows`/`sleep_window` in the
+    # installation: exactly the resident profile named above.
+    return async_redact_data(found, ["home", "asleep", "windows", "sleep_window"])
 
 
 def _world(world: WorldState | None) -> dict[str, Any] | None:
