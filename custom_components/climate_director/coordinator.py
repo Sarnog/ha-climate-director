@@ -609,6 +609,18 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         # not a hand at the appliance, and would otherwise silence the zone for
         # good.
         if self._we_wanted_it_off(entity_id):
+            # Ons uit-commando is nu aangekomen: de notitie die de late melding
+            # moest verklaren is verbruikt. Een volgende `off` - nadat wij hem
+            # zelf weer hebben aangezet - is dus weer gewoon een hand aan het
+            # apparaat. Het venster blijft alleen nog als vangnet voor een
+            # melding die nóóit aankomt.
+            #
+            # Our off command has now arrived: the note that had to explain the
+            # late report is spent. A next `off` - after we switched it back on
+            # ourselves - is therefore an ordinary hand at the appliance again.
+            # The window remains only as a safety net for a report that never
+            # arrives.
+            self._commanded_off.pop(entity_id, None)
             return
 
         today = dt_util.now().date()
@@ -652,7 +664,27 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         """
         now = dt_util.now()
         for change in applied:
-            if family_of(change.command.hvac_mode) is ModeFamily.NEUTRAL:
+            if family_of(change.command.hvac_mode) is not ModeFamily.NEUTRAL:
+                continue
+            reported = self.hass.states.get(change.entity_id)
+            if (
+                reported is not None
+                and not _unreadable(reported.state)
+                and family_of(reported.state) is ModeFamily.NEUTRAL
+            ):
+                # Het apparaat meldt ons uit-commando al: er is geen late
+                # melding meer te verklaren, en een oude notitie is daarmee ook
+                # verbruikt. `_notice_hand` kan deze notitie niet zelf opruimen
+                # op dit moment, want die liep al tijdens `apply` - vóórdat
+                # deze boekhouding geschreven werd.
+                #
+                # The appliance already reports our off command: there is no
+                # late report left to explain, and any old note is spent with
+                # it. `_notice_hand` cannot clear it here itself, because it
+                # already ran during `apply` - before this bookkeeping was
+                # written.
+                self._commanded_off.pop(change.entity_id, None)
+            else:
                 self._commanded_off[change.entity_id] = now
 
     def _we_wanted_it_off(self, entity_id: str) -> bool:

@@ -365,6 +365,65 @@ class TestWhatDoesNotCount:
         assert item._zones_handed_back() == {"slaapkamer"}
 
 
+class TestAnArrivedOffCommandExplainsOnlyItself:
+    """Een aangekomen uit-commando verklaart precies één waarneming.
+
+    Zolang ons eigen `off` alleen is uitgezonden maar nog niet gemeld, mag een
+    late melding niet als hand tellen. Zodra die melding er is, is de notitie
+    verbruikt: een volgende uitzetting is wél een hand aan het apparaat, óók
+    ruim binnen het kwartiersvenster dat de late melding moet afdekken.
+
+    Our own `off`, sent but not yet reported, may be reported late without
+    reading as a hand at the appliance. Once that report has arrived the note
+    is spent: the next switch-off is a hand, even well inside the quarter-hour
+    window that exists to cover the late report.
+    """
+
+    @staticmethod
+    def _freeze(monkeypatch, now: datetime) -> None:
+        monkeypatch.setattr(dt_util, "now", lambda: now)
+
+    @pytest.mark.parametrize("minutes", [1, 5, 14, 16])
+    def test_a_hand_after_our_off_arrived_is_a_hand(self, monkeypatch, minutes: int) -> None:
+        """Na `off -> aan -> hand op uit` telt de hand, ongeacht het venster.
+
+        The plan already wants heat again, so only the bookkeeping could still
+        explain this switch-off away. It must not: our off arrived long ago.
+        """
+        now = dt_util.now()
+        self._freeze(monkeypatch, now)
+        item = coordinator(running_plan())
+
+        # Ons eigen uit-commando is uitgezonden en komt nu aan.
+        # Our own off command was sent and now arrives.
+        item._commanded_off[BEDROOM] = now
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        assert item._zones_handed_back() == set()
+
+        # De director zet hem daarna zelf weer aan.
+        # The director then switches it back on itself.
+        item._notice_hand(_Event(BEDROOM, "off", "heat"))
+
+        # Minuten later drukt iemand bij het apparaat op uit. Dat is een hand.
+        # Minutes later somebody presses off at the appliance. That is a hand.
+        self._freeze(monkeypatch, now + timedelta(minutes=minutes))
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        assert item._zones_handed_back() == {"slaapkamer"}
+
+    def test_a_late_report_of_our_own_off_consumes_the_note(self, monkeypatch) -> None:
+        """De late melding blijft geen hand, maar verbruikt de notitie wél.
+
+        The late report still is not a hand, but it does consume the note.
+        """
+        now = dt_util.now()
+        self._freeze(monkeypatch, now)
+        item = coordinator(running_plan())
+        item._commanded_off[BEDROOM] = now
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        assert item._zones_handed_back() == set()
+        assert item._commanded_off == {}
+
+
 class TestGettingItBack:
     def test_switching_it_on_again_by_hand(self) -> None:
         item = coordinator(running_plan())
