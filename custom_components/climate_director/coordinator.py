@@ -510,14 +510,18 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         """Remember the moment the precipitation source reports precipitation.
 
         Het moment hoort hier thuis, in de toestandswijziging van de bron zelf -
-        niet in `_precipitation()`, dat alleen een antwoord teruggeeft. Alleen
-        een overgang náár een neerslagstand telt; een overgang tussen twee droge
+        niet in `_precipitation()`, dat alleen een antwoord teruggeeft. Elke
+        nieuwe stand die neerslag is telt - dus ook een overgang tussen twee
+        neerslagstanden (regen -> plensbui), want dan duurt de neerslag voort
+        en hoort de nalooptijd mee te schuiven. Een overgang tussen twee droge
         standen (bewolkt -> zonnig) mag de nalooptijd niet verlengen.
 
         The moment belongs here, in the source's own state change - not in
-        `_precipitation()`, which only returns an answer. Only a transition INTO
-        a precipitation state counts; a transition between two dry states
-        (cloudy -> sunny) must not extend the grace.
+        `_precipitation()`, which only returns an answer. Every new state that
+        is precipitation counts - so also a transition between two
+        precipitation states (rain -> pouring), since the precipitation then
+        continues and the grace should move along. A transition between two dry
+        states (cloudy -> sunny) must not extend the grace.
         """
         settings = self.config.precipitation
         if not settings.enabled or event.data["entity_id"] != settings.source:
