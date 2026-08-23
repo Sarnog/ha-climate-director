@@ -596,6 +596,7 @@ class _HandStandIn:
         self.shadow = False
         self.zone_overrides: dict[str, bool] = {}
         self._handed_back: dict[str, object] = {}
+        self._commanded_off: dict[str, object] = {}
         self.saved = 0
         self.hass = _Hass(sim)
 

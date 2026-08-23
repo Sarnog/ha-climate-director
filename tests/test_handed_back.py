@@ -155,6 +155,7 @@ def coordinator(
             self.config = cfg or config(with_residents=bool(states))
             self.zone_overrides: dict[str, bool] = {}
             self._handed_back: dict[str, date] = {}
+            self._commanded_off: dict[str, datetime] = {}
             # `data` is het gepubliceerde besluit, `_issued` het besluit dat op
             # tafel ligt. Tijdens het uitvoeren zijn dat er twee; hier gaat het
             # om het plan dat de director net gaf, dus staan ze gelijk.
@@ -304,6 +305,35 @@ class TestWhatDoesNotCount:
         item = coordinator(idle_plan())
         item._notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item._zones_handed_back() == set()
+
+    def test_a_late_report_of_our_own_off_is_not_a_hand(self) -> None:
+        """Het plan is alweer omgeslagen; ons eigen `off` meldt zich pas nu.
+
+        Sommige integraties melden de stand pas een poll later. Tegen de tijd
+        dat het apparaat `off` rapporteert, wil het plan alweer warmte; wie dan
+        alleen naar het huidige plan kijkt, boekt ons eigen uitzetcommando als
+        een hand aan het apparaat en de zone valt de rest van de dag stil. De
+        boekhouding van wat er écht is uitgezonden hoort dat te voorkomen.
+
+        The plan has already flipped back; our own `off` only reports now. Some
+        integrations report the state one poll late. By the time the appliance
+        reports `off`, the plan already wants heat; whoever looks only at the
+        current plan then books our own switch-off as a hand at the appliance
+        and the zone falls silent for the rest of the day. The bookkeeping of
+        what was really sent should prevent that.
+        """
+        item = coordinator(running_plan())
+        item._commanded_off[BEDROOM] = dt_util.now()
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        assert item._zones_handed_back() == set()
+
+    def test_an_old_off_command_no_longer_explains_a_hand(self) -> None:
+        """Na het venster telt een hand weer gewoon als een hand."""
+        stale = dt_util.now() - timedelta(hours=1)
+        item = coordinator(running_plan())
+        item._commanded_off[BEDROOM] = stale
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        assert item._zones_handed_back() == {"slaapkamer"}
 
     def test_an_appliance_the_director_does_not_drive(self) -> None:
         item = coordinator(running_plan())

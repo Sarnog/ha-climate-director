@@ -99,6 +99,19 @@ _HOME_STATES = frozenset({"home", "on", "true"})
 #: two notices.
 _COMMAND_NOT_TAKING_ROUNDS = 10
 
+#: Hoe lang een eigen uit-commando geldt als verklaring voor een laat gemelde
+#: `off`. Sommige integraties (melcloud) melden de stand pas een poll later;
+#: meldt het apparaat dan alsnog `off`, dan is dat ons eigen commando en geen
+#: hand aan het apparaat. Een kwartier dekt een trage poll ruimschoots, en is
+#: kort genoeg dat een échte hand erna niet de hele dag onzichtbaar blijft.
+#:
+#: How long our own off command counts as the explanation for a late-reported
+#: `off`. Some integrations (melcloud) report the state only a poll later; when
+#: the appliance then reports `off`, that is our own command and not a hand at
+#: the appliance. A quarter of an hour covers a slow poll amply, and is short
+#: enough that a real hand afterwards does not stay invisible all day.
+_COMMANDED_OFF_WINDOW = timedelta(minutes=15)
+
 #: Seizoensnamen die uit een entiteit kunnen komen. Nederlands staat er bewust
 #: bij: veel bestaande opstellingen hebben al een seizoenshelper die "Zomer" of
 #: "Winter" rapporteert, en die hoort te blijven werken.
@@ -276,6 +289,11 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         """Hetzelfde verschil per apparaat: hoe vaak achter elkaar, en sinds wanneer.
 
         The same difference per appliance: how often in a row, and since when.
+        """
+        self._commanded_off: dict[str, datetime] = {}
+        """Sinds wanneer elk apparaat voor het laatst een uit-commando kreeg.
+
+        Since when each appliance last received an off command.
         """
         self.zone_overrides: dict[str, bool] = {}
         self._handed_back: dict[str, date] = {}
@@ -612,24 +630,47 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             zone.zone_id for zone, source in self.config.sources() if source.entity_id == entity_id
         )
 
-    def _we_wanted_it_off(self, entity_id: str) -> bool:
-        """Return whether the plan being carried out has this appliance standing still.
+    def _note_commanded_off(self, applied: tuple[Change, ...]) -> None:
+        """Remember when we last told each appliance to stand down.
 
-        Het plan dat op tafel ligt, niet het plan dat af is. Een apparaat meldt
-        zijn nieuwe stand terwijl de service call nog loopt, en op dat moment
-        staat het gepubliceerde besluit nog op de vorige ronde. Wie dáárin
-        keek, zag "wij wilden hem aan" en boekte het eigen uitzetcommando als
-        een hand aan het apparaat - waarna de zone de rest van de dag stil
-        bleef staan. Dat is precies de fout die deze controle hoort te
-        voorkomen.
+        `_we_wanted_it_off` kijkt hierin in plaats van alleen naar het plan dat
+        nú op tafel ligt: een apparaat dat zijn stand pas een poll later meldt,
+        rapporteert ons eigen `off` soms pas nadat het plan alweer is
+        omgeslagen. Het plan zegt dan \"we wilden hem aan\", en zonder deze
+        boekhouding las dat late bericht als een hand aan het apparaat.
 
-        The plan on the table, not the plan that is finished. An appliance
-        reports its new state while the service call is still running, and at
-        that moment the published decision is still the previous round's.
-        Looking there saw "we wanted it on" and recorded our own switch-off as a
-        hand at the appliance - after which the zone stood still for the rest of
-        the day. That is exactly the mistake this check exists to prevent.
+        `_we_wanted_it_off` looks here rather than only at the plan on the
+        table right now: an appliance reporting its state one poll late
+        sometimes reports our own `off` only after the plan has flipped back.
+        The plan then says \"we wanted it on\", and without this bookkeeping
+        that late report read as a hand at the appliance.
         """
+        now = dt_util.now()
+        for change in applied:
+            if family_of(change.command.hvac_mode) is ModeFamily.NEUTRAL:
+                self._commanded_off[change.entity_id] = now
+
+    def _we_wanted_it_off(self, entity_id: str) -> bool:
+        """Return whether we told this appliance to stand down, or meant to.
+
+        Eerst de boekhouding van wat er écht is uitgezonden: die dekt ook het
+        apparaat dat zijn stand pas een poll later meldt, wanneer het plan
+        alweer is omgeslagen. Daarna het plan dat op tafel ligt, niet het plan
+        dat af is - een apparaat meldt zijn nieuwe stand terwijl de service
+        call nog loopt, en op dat moment staat het gepubliceerde besluit nog op
+        de vorige ronde.
+
+        First the bookkeeping of what was really sent: that also covers the
+        appliance reporting its state one poll late, when the plan has already
+        flipped back. Then the plan on the table, not the plan that is
+        finished - an appliance reports its new state while the service call is
+        still running, and at that moment the published decision is still the
+        previous round's.
+        """
+        when = self._commanded_off.get(entity_id)
+        if when is not None and dt_util.now() - when <= _COMMANDED_OFF_WINDOW:
+            return True
+
         plan = self._issued or self.data
         if plan is None:
             return False
@@ -831,6 +872,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 self.last_applied = await apply(self.hass, self.last_changes, shadow=self.shadow)
             except Exception:  # noqa: BLE001 - one bad call must not stop the loop
                 _LOGGER.exception("Applying the climate plan failed")
+            self._note_commanded_off(self.last_applied)
 
             if self._closing:
                 return
