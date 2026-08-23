@@ -38,6 +38,7 @@ import tempfile
 from datetime import datetime
 from typing import Any
 
+from homeassistant import auth as auth_module
 from homeassistant import loader
 from homeassistant.config_entries import ConfigEntries, ConfigEntry
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall
@@ -294,7 +295,27 @@ async def start_house(
 
     for module in (area_registry, device_registry, entity_registry, issue_registry, restore_state):
         await module.async_load(hass)
+    # `repairs` (een manifest-afhankelijkheid van de integratie) sleept `http`
+    # binnen, en dat vraagt om een auth-manager. Echte Home Assistant bouwt die
+    # tijdens het opstarten; dit harnas doet het hier, met een lege lijst
+    # providers - er hoeft niemand in te loggen in een testhuis. Ná het laden
+    # van de registers, want de auth-store raakt ze zelf ook aan.
+    #
+    # `repairs` (a manifest dependency of the integration) drags in `http`,
+    # which asks for an auth manager. Real Home Assistant builds one during
+    # startup; this harness does it here, with an empty provider list - nobody
+    # needs to log in to a test house. After loading the registries, because
+    # the auth store touches them itself too.
+    hass.auth = await auth_module.auth_manager_from_config(hass, [], [])
     await async_setup_component(hass, "homeassistant", {})
+    # `climate` is een manifest-afhankelijkheid; HA zet het domein dan zelf op en
+    # overschrijft daarmee de stand-in-acties van dit harnas. Het echte domein
+    # eerst opzetten en daarna pas de stand-ins registreren houdt de lus rond.
+    #
+    # `climate` is a manifest dependency; HA then sets the domain up itself and
+    # overwrites this harness's stand-in actions. Setting the real domain up
+    # first and only then registering the stand-ins keeps the loop closed.
+    await async_setup_component(hass, "climate", {})
 
     # De integratie hangt haar eerste beslissing aan `async_at_started`, en dat
     # kijkt naar `hass.state`. In een echte Home Assistant staat die op
@@ -356,6 +377,37 @@ async def start_house(
         await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     return home
+
+
+async def start_bare_house(
+    states: dict[str, tuple[str, dict[str, Any]]] | None = None,
+) -> HomeAssistant:
+    """Return a Home Assistant with the integration copied, without an entry.
+
+    De wizardtests hebben een lopende installatie nodig om de config-flow te
+    laden, maar met `single_config_entry` kan er geen tweede entry bij. Dit
+    harnas levert daarom hetzelfde huis, maar dan zonder entry.
+
+    The wizard tests need a running installation to load the config flow, but
+    with `single_config_entry` no second entry can be added. This harness
+    therefore supplies the same house, but without an entry.
+    """
+    hass = HomeAssistant(new_config_dir())
+    loader.async_setup(hass)
+    hass.config_entries = ConfigEntries(hass, {})
+    await hass.config_entries.async_initialize()
+    prepare = getattr(device_registry, "async_setup", None)
+    if prepare is not None:
+        prepare(hass)
+    for module in (area_registry, device_registry, entity_registry, issue_registry, restore_state):
+        await module.async_load(hass)
+    hass.auth = await auth_module.auth_manager_from_config(hass, [], [])
+    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "climate", {})
+    hass.set_state(CoreState.running)
+    for entity_id, (state, attributes) in (states or {}).items():
+        hass.states.async_set(entity_id, state, attributes)
+    return hass
 
 
 async def stop_house(home: LiveHome) -> None:

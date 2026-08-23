@@ -5,6 +5,11 @@
     "@Sarnog"
   ],
   "config_flow": true,
+  "single_config_entry": true,
+  "dependencies": [
+    "climate",
+    "repairs"
+  ],
   "documentation": "https://github.com/Sarnog/ha-climate-director",
   "integration_type": "service",
   "iot_class": "calculated",

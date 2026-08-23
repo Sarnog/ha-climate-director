@@ -27,6 +27,7 @@ from harness_live import (
     new_config_dir,
     settings,
     source,
+    start_bare_house,
     start_house,
     stop_house,
     zone,
@@ -79,23 +80,45 @@ class TestBuildingAnInstallationInTheWizard:
     """
 
     async def test_the_config_flow_creates_an_empty_installation(self) -> None:
-        home = await start_house(simple_installation(), states=cold())
+        hass = await start_bare_house(states=cold())
         try:
-            result = await home.hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": "user"}
-            )
+            result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
             assert result["type"] == "form"
             assert result["step_id"] == "user"
 
-            result = await home.hass.config_entries.flow.async_configure(
+            result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {"name": "Tweede huis", "shadow_mode": True}
             )
-            await home.hass.async_block_till_done()
+            await hass.async_block_till_done()
 
             assert result["type"] == "create_entry"
             assert result["title"] == "Tweede huis"
             assert result["options"][CONF_INSTALLATION] == {}
             assert result["options"]["shadow_mode"] is True
+        finally:
+            await hass.async_stop()
+
+    async def test_a_second_installation_is_refused(self) -> None:
+        """Eén installatie per huis: een tweede aanmelding wordt geweigerd.
+
+        Twee installaties op dezelfde apparaten zouden elke ronde allebei een
+        commando aan hetzelfde apparaat geven - precies de toestand waarvan het
+        ontwerp zegt dat hij nooit voorkomt. Het manifest zegt daarom
+        `single_config_entry`, en Home Assistant weigert de tweede.
+
+        One installation per house: a second sign-up is refused. Two
+        installations on the same appliances would both command the same
+        appliance every round - exactly the state the design says never occurs.
+        The manifest therefore says `single_config_entry`, and Home Assistant
+        refuses the second.
+        """
+        home = await start_house(simple_installation(), states=cold())
+        try:
+            result = await home.hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": "user"}
+            )
+            assert result["type"] == "abort"
+            assert result["reason"] == "single_instance_allowed"
         finally:
             await stop_house(home)
 
@@ -112,32 +135,28 @@ class TestBuildingAnInstallationInTheWizard:
         anything. An empty name simply became the title, and that title precedes
         the name of every entity this integration creates.
         """
-        home = await start_house(simple_installation(), states=cold())
+        home = await start_bare_house(states=cold())
         try:
-            result = await home.hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": "user"}
-            )
-            result = await home.hass.config_entries.flow.async_configure(
+            result = await home.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+            result = await home.config_entries.flow.async_configure(
                 result["flow_id"], {"name": "   ", "shadow_mode": True}
             )
             assert result["type"] == "form"
             assert result["errors"] == {"name": "required"}
         finally:
-            await stop_house(home)
+            await home.async_stop()
 
     async def test_the_name_is_stored_without_its_stray_spaces(self) -> None:
-        home = await start_house(simple_installation(), states=cold())
+        home = await start_bare_house(states=cold())
         try:
-            result = await home.hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": "user"}
-            )
-            result = await home.hass.config_entries.flow.async_configure(
+            result = await home.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+            result = await home.config_entries.flow.async_configure(
                 result["flow_id"], {"name": "  Tweede huis  ", "shadow_mode": False}
             )
-            await home.hass.async_block_till_done()
+            await home.async_block_till_done()
             assert result["title"] == "Tweede huis"
         finally:
-            await stop_house(home)
+            await home.async_stop()
 
     async def test_the_options_flow_builds_a_zone_and_the_entry_reloads(self) -> None:
         """Een kamer met een apparaat erbij zetten, opslaan, en er staan entiteiten.
