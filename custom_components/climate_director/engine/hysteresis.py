@@ -217,24 +217,33 @@ def _candidate(
     # give it a width.
     running_now = running is family
     margin = outdoor_margin if running_now else 0.0
-    if not world.preconditioning(zone.zone_id) and not (
-        world.precipitation and not zone.ignore_precipitation
+
+    # Zonder buitentemperatuur is een begrensde grens niet te controleren, of
+    # die nu op de zone staat of op een van haar bronnen. "Buiten het venster"
+    # zou dan een leugen zijn en een brandend apparaat kan uitgaan omdat de
+    # sensor het even niet doet - de enige fout die je niet mag maken. De
+    # controle staat vóór de neerslag- en vooruit-uitzondering, want ook dan
+    # blijft het bronvenster gelden en valt er zonder meting niets te kiezen.
+    #
+    # Without an outdoor temperature a bounded window cannot be checked,
+    # whether it sits on the zone or on one of its sources. "Outside the
+    # window" would then be a lie, and a burning appliance could go off because
+    # the sensor is down for a moment - the one mistake that must not be made.
+    # The check sits before the precipitation and pre-conditioning exceptions,
+    # since the source window still applies there and nothing can be chosen
+    # without a reading.
+    if world.outdoor_temperature is None and (
+        not settings.outdoor.unbounded
+        or any(not source.outdoor.unbounded for source in zone.sources)
     ):
-        # Zonder buitentemperatuur valt over een begrensde grens niets te
-        # zeggen, en is "buiten het venster" een leugen: de ketel zou bij vorst
-        # uitgaan omdat de sensor het even niet doet. Dat is de enige fout die
-        # je kunt maken, dus een brandende bron hoort met rust gelaten te
-        # worden - net als bij een onleesbare binnentemperatuur.
-        #
-        # Without an outdoor temperature a bounded window says nothing, and
-        # "outside the window" is a lie: the boiler would go off in frost
-        # because the sensor is down for a moment. That is the one mistake to
-        # make, so a burning source should be left alone - just as with an
-        # unreadable indoor temperature.
-        if world.outdoor_temperature is None and not settings.outdoor.unbounded:
-            return Demand(ModeFamily.NEUTRAL, Reason.NO_OUTDOOR_TEMPERATURE)
-        if not settings.outdoor.contains(world.outdoor_temperature, margin):
-            return Demand(ModeFamily.NEUTRAL, Reason.OUTDOOR_OUTSIDE_WINDOW)
+        return Demand(ModeFamily.NEUTRAL, Reason.NO_OUTDOOR_TEMPERATURE)
+
+    if (
+        not world.preconditioning(zone.zone_id)
+        and not (world.precipitation and not zone.ignore_precipitation)
+        and not settings.outdoor.contains(world.outdoor_temperature, margin)
+    ):
+        return Demand(ModeFamily.NEUTRAL, Reason.OUTDOOR_OUTSIDE_WINDOW)
 
     threshold = _threshold(settings, family, running_now)
 

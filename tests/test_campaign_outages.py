@@ -373,7 +373,129 @@ class TestOutdoorWindowsAndOutages:
             climates={FIRST: climate("off"), SECOND: climate("off")},
         )
         plan = decide(config, world)
-        assert plan.decision_for("woonkamer").reason is Reason.NO_SOURCE_AVAILABLE
+        decision = plan.decision_for("woonkamer")
+        assert decision is not None
+        assert decision.granted is ModeFamily.NEUTRAL
+        assert decision.reason is Reason.NO_OUTDOOR_TEMPERATURE
+        # "Elke beheerde bron krijgt een commando": wie uitstaat krijgt off.
+        # "Every managed source gets a command": one that is off gets its off.
+        assert plan.command_for(FIRST).hvac_mode == "off"
+        assert plan.command_for(SECOND).hvac_mode == "off"
+
+
+class TestAnUnreadableOutdoorSensorNeverStopsARunningAppliance:
+    """Zonder buitentemperatuur gaat er nooit een uit-commando naar een draaiend
+    apparaat, ongeacht wáár de buitengrens staat.
+
+    Without an outdoor temperature no off command ever goes to a running
+    appliance, wherever the outdoor bound sits.
+    """
+
+    @pytest.mark.parametrize(
+        "placement",
+        ["zone_heat", "zone_cool", "source", "source_and_zone"],
+    )
+    def test_a_running_appliance_is_left_alone(self, placement: str) -> None:
+        config, running, other, duty = _bounded_placement(placement)
+        indoor = {"woonkamer": 26.0} if duty == "cool" else {"woonkamer": 17.0}
+        climates = {running: climate(duty)}
+        if other != running:
+            climates[other] = climate("off")
+        world = make_world(
+            outdoor=None,
+            season=Season.SUMMER if duty == "cool" else Season.WINTER,
+            indoor=indoor,
+            climates=climates,
+        )
+        plan = decide(config, world)
+        assert plan.command_for(running) is None, (
+            f"{placement}: draaiend apparaat kreeg een opdracht"
+        )
+        left = plan.untouched_for(running)
+        assert left is not None, f"{placement}: draaiend apparaat staat in geen van beide lijsten"
+        assert left.reason is Reason.NO_OUTDOOR_TEMPERATURE
+
+
+def _bounded_placement(placement: str) -> tuple[DirectorConfig, str, str, str]:
+    """Return (config, running appliance, other appliance, duty) per placement.
+
+    De vier plekken waar een buitengrens kan staan:
+    (a) zone-heat, (b) zone-cool, (c) de bron, (d) bron én zone.
+
+    The four places an outdoor bound can sit:
+    (a) zone heat, (b) zone cool, (c) the source, (d) source and zone.
+    """
+    gas = "climate.gasketel"
+    airco = "climate.airco"
+
+    if placement == "zone_heat":
+        zone_ = Zone(
+            "woonkamer",
+            "Woonkamer",
+            "sensor.woonkamer",
+            sources=(Source("gas", gas, role=SourceRole.HEAT_ONLY),),
+            heat=ModeSettings(21.0, 20.0, outdoor=OutdoorWindow(maximum=19.0)),
+        )
+        return DirectorConfig(zones=(zone_,), outdoor_sensor="sensor.buiten"), gas, gas, "heat"
+
+    if placement == "zone_cool":
+        zone_ = Zone(
+            "woonkamer",
+            "Woonkamer",
+            "sensor.woonkamer",
+            sources=(Source("airco", airco, role=SourceRole.HEAT_COOL),),
+            cool=ModeSettings(23.0, 24.0, outdoor=OutdoorWindow(minimum=24.0)),
+        )
+        return DirectorConfig(zones=(zone_,), outdoor_sensor="sensor.buiten"), airco, airco, "cool"
+
+    if placement == "source":
+        zone_ = Zone(
+            "woonkamer",
+            "Woonkamer",
+            "sensor.woonkamer",
+            sources=(
+                Source(
+                    "gas",
+                    gas,
+                    role=SourceRole.HEAT_ONLY,
+                    priority=1,
+                    outdoor=OutdoorWindow(maximum=3.1),
+                ),
+                Source(
+                    "airco",
+                    airco,
+                    role=SourceRole.HEAT_COOL,
+                    priority=0,
+                    outdoor=OutdoorWindow(minimum=3.1),
+                ),
+            ),
+            heat=ModeSettings(21.0, 20.0),
+        )
+        return DirectorConfig(zones=(zone_,), outdoor_sensor="sensor.buiten"), gas, airco, "heat"
+
+    zone_ = Zone(
+        "woonkamer",
+        "Woonkamer",
+        "sensor.woonkamer",
+        sources=(
+            Source(
+                "gas",
+                gas,
+                role=SourceRole.HEAT_ONLY,
+                priority=1,
+                outdoor=OutdoorWindow(maximum=3.1),
+            ),
+            Source(
+                "airco",
+                airco,
+                role=SourceRole.HEAT_COOL,
+                priority=0,
+                outdoor=OutdoorWindow(minimum=3.1),
+            ),
+        ),
+        heat=ModeSettings(21.0, 20.0, outdoor=OutdoorWindow(maximum=19.0)),
+    )
+    return DirectorConfig(zones=(zone_,), outdoor_sensor="sensor.buiten"), gas, airco, "heat"
 
 
 # ---------------------------------------------------------------------------
@@ -598,5 +720,128 @@ async def test_an_appliance_that_comes_back_is_picked_up_again() -> None:
         assert home.state(LIVE_FIRST) == "heat"
         assert home.state(LIVE_SECOND) == "off"
         assert home.value("zone_woonkamer_fallback") == "off"
+    finally:
+        await stop_house(home)
+
+
+# ---------------------------------------------------------------------------
+# Een onleesbare buitensensor, met de grens op elke denkbare plek.
+# An unreadable outdoor sensor, with the bound on every conceivable place.
+# ---------------------------------------------------------------------------
+
+OUTDOOR_UNREADABLE = ("unavailable", "unknown", "NaN", "missing")
+OUTDOOR_PLACEMENTS = ("zone_heat", "zone_cool", "source", "source_and_zone")
+
+
+def _live_bounded_placement(placement: str) -> tuple[dict[str, Any], str, str, str, float]:
+    """Return (installation, running appliance, other appliance, duty, indoor)."""
+    gas = "climate.gasketel"
+    airco = "climate.airco"
+
+    if placement == "zone_heat":
+        return (
+            {
+                "zones": [
+                    zone(
+                        "woonkamer",
+                        sources=[source("gas", gas, role="heat_only")],
+                        indoor_sensor="sensor.woonkamer",
+                        heat=settings(21.0, 20.0, outdoor={"minimum": None, "maximum": 19.0}),
+                    )
+                ],
+                "outdoor_sensor": "sensor.buiten",
+            },
+            gas,
+            gas,
+            "heat",
+            18.0,
+        )
+
+    if placement == "zone_cool":
+        return (
+            {
+                "zones": [
+                    zone(
+                        "woonkamer",
+                        sources=[source("airco", airco, role="heat_cool")],
+                        indoor_sensor="sensor.woonkamer",
+                        cool=settings(23.0, 24.0, outdoor={"minimum": 24.0, "maximum": None}),
+                    )
+                ],
+                "outdoor_sensor": "sensor.buiten",
+            },
+            airco,
+            airco,
+            "cool",
+            26.0,
+        )
+
+    sources = [
+        source(
+            "gas",
+            gas,
+            role="heat_only",
+            priority=1,
+            outdoor={"minimum": None, "maximum": 3.1},
+        ),
+        source(
+            "airco",
+            airco,
+            role="heat_cool",
+            priority=0,
+            outdoor={"minimum": 3.1, "maximum": None},
+        ),
+    ]
+    heat = (
+        settings(21.0, 20.0, outdoor={"minimum": None, "maximum": 19.0})
+        if placement == "source_and_zone"
+        else settings(21.0, 20.0)
+    )
+    return (
+        {
+            "zones": [
+                zone(
+                    "woonkamer",
+                    sources=sources,
+                    indoor_sensor="sensor.woonkamer",
+                    heat=heat,
+                )
+            ],
+            "outdoor_sensor": "sensor.buiten",
+        },
+        gas,
+        airco,
+        "heat",
+        18.0,
+    )
+
+
+@pytest.mark.parametrize("placement", OUTDOOR_PLACEMENTS)
+@pytest.mark.parametrize("how", OUTDOOR_UNREADABLE)
+async def test_an_unreadable_outdoor_sensor_leaves_a_running_appliance_alone(
+    placement: str, how: str
+) -> None:
+    """Vier plekken voor de grens, vier manieren onleesbaar: nooit iets uitzetten.
+
+    Four places for the bound, four ways to be unreadable: never switch
+    anything off.
+    """
+    installation, running, other, duty, indoor = _live_bounded_placement(placement)
+    states: dict[str, tuple[str, dict[str, Any]]] = {
+        "sensor.woonkamer": (str(indoor), {}),
+        running: (duty, {"hvac_modes": ["heat", "cool", "off"]}),
+    }
+    if other != running:
+        states[other] = ("off", {"hvac_modes": ["heat", "cool", "off"]})
+    if how == "missing":
+        states.pop("sensor.buiten", None)
+    else:
+        states["sensor.buiten"] = (how, {})
+
+    home = await start_house(installation, states=states)
+    try:
+        assert home.state(running) == duty, f"{placement}/{how}: draaiend apparaat ging uit"
+        reason = home.values("zone_woonkamer_source").get("reason")
+        assert reason == "no_outdoor_temperature", f"{placement}/{how}: reden is {reason}"
     finally:
         await stop_house(home)
