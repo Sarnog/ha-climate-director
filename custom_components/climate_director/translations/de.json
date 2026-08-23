@@ -354,11 +354,13 @@
         "description": "Eine Öffnung, die lange genug offen steht, setzt die betroffenen Zonen aus.",
         "data": {
           "opening": "Öffnung",
-          "when_done": "Wenn du hier fertig bist"
+          "when_done": "Wenn du hier fertig bist",
+          "house_wide_openings": "Geräte, die bei jeder Öffnung stillstehen"
         },
         "data_description": {
           "opening": "Wähle eine zum Ändern, oder füge eine neue hinzu.",
-          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst.",
+          "house_wide_openings": "Diese stehen still, sobald irgendeine Öffnung der Anlage offen steht, wo auch immer. Gedacht für einen Kessel, den alle Zonen teilen: diese Öffnung mit allen Zonen zu verknüpfen würde auch die Klimageräte in jenen Räumen stilllegen, das ganze Jahr über. Leer lassen, damit alles weiter pro Zone geregelt wird. Eine Zone mit Übersteuerung und eine handbediente Quelle bleiben unangetastet, wie immer."
         }
       },
       "opening": {
@@ -742,6 +744,12 @@
     },
     "switch_timings_without_a_switch": {
       "message": "Kreis {circuit} kann beide Betriebsarten gleichzeitig fahren, wechselt also nie die Aufgabe. Seine Umschaltpause und die Mindestlaufzeit vor dem Wechsel greifen nie. Die Taktsperre und die Kapazitätsgrenze wirken sehr wohl."
+    },
+    "house_wide_without_openings": {
+      "message": "{entity} soll stillstehen, sobald eine Öffnung offen steht, aber die Anlage hat überhaupt keine Öffnungen, also kann nie etwas stillstehen."
+    },
+    "house_wide_unmanaged": {
+      "message": "{entity} soll stillstehen, sobald eine Öffnung offen steht, aber keine Zone und keine gemeinsame Wärmequelle nutzt ihn, also steuert der Director ihn nie."
     }
   },
   "services": {

@@ -355,7 +355,30 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         Everything is written here and nowhere else. Saving a setting halfway
         through would reload the entry while the user is still editing, which
         pulls the ground out from under the flow they are standing in.
+
+        De huisbrede stoplijst wordt hier opgeschoond in plaats van bij elke
+        verwijderknop apart. Een apparaat verdwijnt langs meerdere wegen - een
+        zone weg, een bron weg, een gedeelde warmtebron weg - en een van die
+        wegen vergeten levert een verwijzing op die niets meer aanwijst. Eén
+        plek die het altijd doet is de enige die niet uit de pas kan lopen, en
+        hij staat vóór de controle zodat er niet geklaagd wordt over iets dat
+        hier net opgeruimd wordt.
+
+        The house-wide stop list is tidied here rather than at every delete
+        button separately. An appliance disappears along several routes - a zone
+        gone, a source gone, a shared heat source gone - and forgetting one of
+        them leaves a reference pointing at nothing. One place that always does
+        it is the only one that cannot drift, and it sits before the check so
+        nothing is reported that is being cleaned up right here.
         """
+        steered = _managed_entities(self._installation)
+        if self._installation.get("house_wide_openings"):
+            self._installation["house_wide_openings"] = [
+                entity_id
+                for entity_id in self._installation["house_wide_openings"]
+                if entity_id in steered
+            ]
+
         found = validate(config_from_dict(self._installation))
         if found and user_input is None:
             await texts.async_prepare(self.hass)
@@ -1602,9 +1625,23 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
     async def async_step_openings(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Pick an opening to edit, or add one."""
+        """Pick an opening to edit, or add one, and set the house-wide stops."""
         openings = self._list("openings")
         if user_input is not None:
+            # De huisbrede lijst hoort bij dit scherm en niet bij een losse
+            # opening: hij hangt aan het apparaat, zodat een raam dat er later
+            # bij komt vanzelf meetelt. Hij wordt daarom bij elke uitgang van
+            # dit scherm weggeschreven, ook als je alleen doorklikt naar een
+            # opening - anders was de keuze weg zodra je er nog iets naast deed.
+            #
+            # The house-wide list belongs to this screen rather than to a single
+            # opening: it hangs on the appliance, so a window added later counts
+            # by itself. It is therefore written on every way out of this
+            # screen, including clicking through to an opening - otherwise the
+            # choice would be gone the moment you did anything else beside it.
+            self._installation["house_wide_openings"] = list(
+                user_input.get("house_wide_openings") or ()
+            )
             choice = user_input["opening"]
             if choice == _BACK:
                 return await self.async_step_init()
@@ -1617,6 +1654,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         ]
         options.append(_add_option("opening"))
         options.append(_back_option())
+        managed = _managed_entities(self._installation)
         return self.async_show_form(
             step_id="openings",
             data_schema=vol.Schema(
@@ -1627,7 +1665,27 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                             mode=selector.SelectSelectorMode.LIST,
                             translation_key="opening_list",
                         )
-                    )
+                    ),
+                    # Alleen apparaten die deze installatie ook echt aanstuurt.
+                    # Een vrije keuzelijst zou een apparaat toelaten waar de
+                    # director nooit een commando aan geeft, en dan doet de
+                    # instelling stilletjes niets - precies het soort val dat
+                    # niemand terugvindt.
+                    #
+                    # Only appliances this installation actually steers. A free
+                    # picker would allow one the director never commands, and
+                    # then the setting quietly does nothing - exactly the kind
+                    # of trap nobody ever traces back.
+                    vol.Optional(
+                        "house_wide_openings",
+                        description={
+                            "suggested_value": self._installation.get("house_wide_openings") or None
+                        },
+                    ): selector.EntitySelector(
+                        selector.EntitySelectorConfig(
+                            domain="climate", multiple=True, include_entities=managed
+                        )
+                    ),
                 }
             ),
         )
@@ -2036,6 +2094,19 @@ def _window_label(window: dict[str, Any]) -> str:
     if not weekdays:
         return f"{start} - {end}, every day"
     return f"{start} - {end}, {', '.join(_WEEKDAYS[day][:3] for day in sorted(weekdays))}"
+
+
+def _managed_entities(installation: dict[str, Any]) -> list[str]:
+    """Return every climate entity this installation steers, sources first."""
+    found: list[str] = []
+    for zone in installation.get("zones") or []:
+        for source in zone.get("sources") or []:
+            if source.get("entity_id"):
+                found.append(source["entity_id"])
+    for generator in installation.get("generators") or []:
+        if generator.get("entity_id"):
+            found.append(generator["entity_id"])
+    return list(dict.fromkeys(found))
 
 
 def _all_source_ids(installation: dict[str, Any]) -> list[str]:

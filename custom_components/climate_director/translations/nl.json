@@ -354,11 +354,13 @@
         "description": "Een opening die lang genoeg openstaat schort de zones op waar hij bij hoort.",
         "data": {
           "opening": "Opening",
-          "when_done": "Als je hier klaar bent"
+          "when_done": "Als je hier klaar bent",
+          "house_wide_openings": "Apparaten die bij elke opening stilvallen"
         },
         "data_description": {
           "opening": "Kies er een om aan te passen, of voeg er een toe.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
+          "house_wide_openings": "Deze vallen stil zodra welke opening in de installatie dan ook openstaat, waar hij ook zit. Bedoeld voor een ketel die alle zones delen: die opening aan alle zones koppelen zou ook de airco's in die kamers stilzetten, het hele jaar door. Laat leeg om alles per zone geregeld te houden. Een zone met een override en een handbediende bron blijven met rust, zoals altijd."
         }
       },
       "opening": {
@@ -742,6 +744,12 @@
     },
     "switch_timings_without_a_switch": {
       "message": "Circuit {circuit} kan verwarmen en koelen tegelijk, dus het wisselt nooit van taak. De omschakelpauze en de minimale looptijd voor een taakwissel doen daar dus niets. De kortcyclustijd en de capaciteitsgrens werken wél."
+    },
+    "house_wide_without_openings": {
+      "message": "{entity} moet stilvallen zodra er een opening openstaat, maar de installatie heeft helemaal geen openingen, dus er kan nooit iets stilvallen."
+    },
+    "house_wide_unmanaged": {
+      "message": "{entity} moet stilvallen zodra er een opening openstaat, maar geen enkele zone en geen enkele gedeelde warmtebron gebruikt hem, dus de director stuurt hem nooit."
     }
   },
   "services": {

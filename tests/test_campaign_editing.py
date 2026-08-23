@@ -209,6 +209,69 @@ class TestAddingThroughEveryScreen:
         finally:
             await stop_house(home)
 
+    async def test_the_house_wide_stops_are_written_from_the_openings_screen(self) -> None:
+        """De lijst hangt aan het apparaat, dus hij staat op het lijstscherm."""
+        home = await start_house(two_rooms(), states=cold())
+        try:
+            flow = home.hass.config_entries.options
+            result = await menu(home, "openings")
+
+            result = await flow.async_configure(
+                result["flow_id"],
+                {"opening": "back_to_menu", "house_wide_openings": [LIVING]},
+            )
+            stored = await save(home, result["flow_id"])
+
+            assert stored["house_wide_openings"] == [LIVING]
+        finally:
+            await stop_house(home)
+
+    async def test_the_house_wide_stops_survive_walking_into_an_opening(self) -> None:
+        """Doorklikken naar een opening mag de zojuist gemaakte keuze niet wissen."""
+        home = await start_house(two_rooms(), states=cold())
+        try:
+            flow = home.hass.config_entries.options
+            result = await menu(home, "openings")
+
+            result = await flow.async_configure(
+                result["flow_id"],
+                {"opening": "add_new", "house_wide_openings": [LIVING]},
+            )
+            assert result["step_id"] == "opening"
+
+            result = await flow.async_configure(
+                result["flow_id"],
+                {
+                    "entity_id": "binary_sensor.achterdeur",
+                    "zone_ids": ["woonkamer"],
+                    "delete": False,
+                    "when_done": "keep",
+                },
+            )
+            stored = await save(home, result["flow_id"])
+
+            assert stored["house_wide_openings"] == [LIVING]
+            assert stored["openings"][0]["entity_id"] == "binary_sensor.achterdeur"
+        finally:
+            await stop_house(home)
+
+    async def test_the_house_wide_stops_can_be_cleared_again(self) -> None:
+        installation = two_rooms()
+        installation["house_wide_openings"] = [LIVING]
+        home = await start_house(installation, states=cold())
+        try:
+            flow = home.hass.config_entries.options
+            result = await menu(home, "openings")
+
+            result = await flow.async_configure(
+                result["flow_id"], {"opening": "back_to_menu", "house_wide_openings": []}
+            )
+            stored = await save(home, result["flow_id"])
+
+            assert stored["house_wide_openings"] == []
+        finally:
+            await stop_house(home)
+
     async def test_a_quiet_window_is_added_with_its_days(self) -> None:
         home = await start_house(two_rooms(), states=cold())
         try:
@@ -924,6 +987,27 @@ class TestDeletingAZoneCleansItsReferences:
 
     A deleted zone should no longer appear anywhere.
     """
+
+    async def test_the_house_wide_stop_list_loses_a_removed_appliance(self) -> None:
+        """Een verwijzing die niets meer aanwijst hoort niet te blijven staan."""
+        installation = {
+            **two_rooms(),
+            "openings": [{"entity_id": "binary_sensor.raam"}],
+            "house_wide_openings": [LIVING, ATTIC],
+        }
+        home = await start_house(installation, states=cold())
+        try:
+            flow = home.hass.config_entries.options
+            result = await menu(home, "zones")
+            result = await flow.async_configure(result["flow_id"], {"zone": "0"})
+            result = await flow.async_configure(
+                result["flow_id"], {"delete": True, "when_done": "keep"}
+            )
+
+            stored = await save(home, result["flow_id"])
+            assert stored["house_wide_openings"] == [ATTIC]
+        finally:
+            await stop_house(home)
 
     async def test_openings_generators_and_groups_are_cleaned(self) -> None:
         installation = {

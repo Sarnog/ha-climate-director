@@ -354,11 +354,13 @@
         "description": "Una abertura que permanece abierta el tiempo suficiente suspende las zonas afectadas.",
         "data": {
           "opening": "Abertura",
-          "when_done": "Cuando termines aquí"
+          "when_done": "Cuando termines aquí",
+          "house_wide_openings": "Aparatos que se detienen con cualquier abertura"
         },
         "data_description": {
           "opening": "Elige una para cambiarla, o añade una nueva.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
+          "house_wide_openings": "Estos se detienen en cuanto cualquier abertura de la instalación queda abierta, esté donde esté. Pensado para una caldera que comparten todas las zonas: vincular esa abertura a todas las zonas detendría también los aires acondicionados de esas habitaciones, todo el año. Déjalo vacío para que todo siga regulado por zona. Una zona con anulación y una fuente manual siguen intactas, como siempre."
         }
       },
       "opening": {
@@ -742,6 +744,12 @@
     },
     "switch_timings_without_a_switch": {
       "message": "El circuito {circuit} puede hacer ambas funciones a la vez, así que nunca cambia de función. Su pausa de conmutación y su tiempo mínimo antes de cambiar no se aplican nunca. El tiempo anticiclado y el límite de capacidad sí funcionan."
+    },
+    "house_wide_without_openings": {
+      "message": "{entity} debe detenerse en cuanto haya una abertura abierta, pero la instalación no tiene ninguna abertura, así que nunca puede detenerse nada."
+    },
+    "house_wide_unmanaged": {
+      "message": "{entity} debe detenerse en cuanto haya una abertura abierta, pero ninguna zona ni fuente de calor compartida lo usa, así que el director nunca lo gobierna."
     }
   },
   "services": {

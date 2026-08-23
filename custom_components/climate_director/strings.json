@@ -354,11 +354,13 @@
         "description": "An opening standing open long enough suspends the zones it affects.",
         "data": {
           "opening": "Opening",
-          "when_done": "When you are done here"
+          "when_done": "When you are done here",
+          "house_wide_openings": "Appliances that stop for any opening"
         },
         "data_description": {
           "opening": "Pick one to change it, or add a new one.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
+          "house_wide_openings": "These stop the moment any opening in the installation stands open, wherever it is. Meant for a boiler every zone shares: linking that opening to all zones would stop those rooms' air conditioners too, all year round. Leave empty to keep everything governed per zone. A zone under override and a hand-operated source stay untouched, as they always are."
         }
       },
       "opening": {
@@ -742,6 +744,12 @@
     },
     "switch_timings_without_a_switch": {
       "message": "Circuit {circuit} can run both duties at once, so it never switches duty. Its switch pause and minimum run before switching never apply. The short-cycle time and the capacity limit do still work."
+    },
+    "house_wide_without_openings": {
+      "message": "{entity} is set to stop while an opening stands open, but the installation has no openings at all, so nothing can ever stop it."
+    },
+    "house_wide_unmanaged": {
+      "message": "{entity} is set to stop while an opening stands open, but no zone and no shared heat source uses it, so the director never steers it."
     }
   },
   "services": {

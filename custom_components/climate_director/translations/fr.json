@@ -354,11 +354,13 @@
         "description": "Une ouverture restée ouverte assez longtemps suspend les zones concernées.",
         "data": {
           "opening": "Ouverture",
-          "when_done": "Quand vous avez terminé ici"
+          "when_done": "Quand vous avez terminé ici",
+          "house_wide_openings": "Appareils qui s'arrêtent à toute ouverture"
         },
         "data_description": {
           "opening": "Choisissez-en une à modifier, ou ajoutez-en une nouvelle.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
+          "house_wide_openings": "Ceux-ci s'arrêtent dès qu'une ouverture de l'installation reste ouverte, où qu'elle soit. Prévu pour une chaudière partagée par toutes les zones : lier cette ouverture à toutes les zones arrêterait aussi les climatiseurs de ces pièces, toute l'année. Laissez vide pour que tout reste réglé par zone. Une zone sous dérogation et une source manuelle restent intouchées, comme toujours."
         }
       },
       "opening": {
@@ -742,6 +744,12 @@
     },
     "switch_timings_without_a_switch": {
       "message": "Le circuit {circuit} peut assurer les deux fonctions à la fois, il ne change donc jamais de fonction. Sa pause de commutation et sa durée minimale avant changement ne s'appliquent jamais. Le temps anti-court-cycle et la limite de capacité fonctionnent bien, eux."
+    },
+    "house_wide_without_openings": {
+      "message": "{entity} doit s'arrêter dès qu'une ouverture est ouverte, mais l'installation n'a aucune ouverture, donc rien ne peut jamais l'arrêter."
+    },
+    "house_wide_unmanaged": {
+      "message": "{entity} doit s'arrêter dès qu'une ouverture est ouverte, mais aucune zone ni source de chaleur partagée ne l'utilise, donc le director ne le pilote jamais."
     }
   },
   "services": {
