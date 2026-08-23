@@ -210,7 +210,7 @@ def _circuit(raw: Mapping[str, Any]) -> Circuit:
         circuit_id=_text(raw.get("circuit_id")),
         name=_text(raw.get("name")),
         units=tuple(_strings(raw.get("units"))),
-        simultaneous_heat_cool=_bool(raw.get("simultaneous_heat_cool"), True),
+        simultaneous_heat_cool=_bool(raw.get("simultaneous_heat_cool"), False),
         conflict_policy=_enum(ConflictPolicy, raw.get("conflict_policy"), ConflictPolicy.PRIORITY),
         allow_fan_only_during_conflict=_bool(raw.get("allow_fan_only_during_conflict"), False),
         family_switch_delay=_seconds(raw.get("family_switch_delay")),

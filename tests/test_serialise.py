@@ -145,6 +145,14 @@ class TestForgivingReads:
         assert circuit.conflict_policy is ConflictPolicy.PRIORITY
         assert config.seasons.source is SeasonSource.AUTO
 
+    def test_a_circuit_without_the_flag_is_a_multi_split(self) -> None:
+        """Zonder sleutel geldt de veilige kant: één taak tegelijk.
+
+        Without the key the safe side applies: one duty at a time.
+        """
+        config = config_from_dict({"circuits": [{"circuit_id": "c", "name": "C"}]})
+        assert config.circuits[0].simultaneous_heat_cool is False
+
     def test_a_boolean_is_not_read_as_a_number(self) -> None:
         """`True` is an `int` in Python; a priority of `True` would be a silent 1."""
         config = config_from_dict({"zones": [{"zone_id": "z", "priority": True, "sources": []}]})

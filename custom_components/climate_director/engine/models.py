@@ -304,13 +304,21 @@ class Circuit:
     compressor, so its duty has to be taken into account.
     """
 
-    simultaneous_heat_cool: bool = True
+    simultaneous_heat_cool: bool = False
     """`False` for an ordinary multi-split: one duty at a time across all units.
 
     `True` for a single split (its own outdoor unit) and for three-pipe VRF
     with heat recovery, which genuinely does both at once. Deliberately a flag
     rather than something derived from a unit count, so heat-recovery systems
     are not crippled by a blanket rule.
+
+    De standaard is `False`, de veilige kant: een circuit dat beide kanten op
+    mag terwijl de buitenunit dat niet aankan, is precies de toestand die dit
+    ontwerp onbereikbaar hoort te maken.
+
+    The default is `False`, the safe side: a circuit allowed to do both while
+    the outdoor unit cannot is exactly the state this design is meant to make
+    unreachable.
     """
 
     conflict_policy: ConflictPolicy = ConflictPolicy.PRIORITY
