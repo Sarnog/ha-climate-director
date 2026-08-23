@@ -614,6 +614,20 @@ class TestTheActions:
             )
         assert home.coordinator._live_preconditions() == {}
 
+    async def test_an_unknown_zone_is_refused_with_an_error(self, home: LiveHome) -> None:
+        """Een typefout in `zone_ids` hoort te botsen, niet alleen te loggen.
+
+        A typo in `zone_ids` should hit something, not just log a warning.
+        """
+        from homeassistant.exceptions import ServiceValidationError
+
+        with pytest.raises(ServiceValidationError):
+            await home.call(
+                "climate_director", "precondition", {"zone_ids": ["woonkamr"], "minutes": 30}
+            )
+        with pytest.raises(ServiceValidationError):
+            await home.call("climate_director", "cancel_precondition", {"zone_ids": ["woonkamr"]})
+
     async def test_zero_minutes_still_grants_nothing_straight_at_the_coordinator(
         self, home: LiveHome
     ) -> None:

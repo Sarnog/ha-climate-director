@@ -17,6 +17,7 @@ import logging
 
 import voluptuous as vol
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
@@ -207,7 +208,9 @@ def _async_register_services(hass: HomeAssistant) -> None:
 
     async def _async_precondition(call: ServiceCall) -> None:
         """Warm zones up for somebody on their way home."""
-        for entry in _chosen(call):
+        entries = _chosen(call)
+        _refuse_unknown_zones(call.data.get(ATTR_ZONE_IDS), entries)
+        for entry in entries:
             entry.runtime_data.async_precondition(
                 call.data.get(ATTR_ZONE_IDS),
                 call.data.get(ATTR_MINUTES),
@@ -216,8 +219,30 @@ def _async_register_services(hass: HomeAssistant) -> None:
 
     async def _async_cancel_precondition(call: ServiceCall) -> None:
         """Call a running pre-conditioning request off."""
-        for entry in _chosen(call):
+        entries = _chosen(call)
+        _refuse_unknown_zones(call.data.get(ATTR_ZONE_IDS), entries)
+        for entry in entries:
             entry.runtime_data.async_cancel_precondition(call.data.get(ATTR_ZONE_IDS))
+
+    def _refuse_unknown_zones(zone_ids, entries) -> None:
+        """Raise when a requested zone does not exist, instead of only logging.
+
+        Een typefout in `zone_ids` verdween tot nu toe met alleen een
+        logregel: je drukt op de knop, er gebeurt niets, en nergens staat
+        waarom. Een service die de zone niet kent hoort te botsen, precies
+        zoals een onbekende entiteit dat doet.
+
+        A typo in `zone_ids` used to vanish with only a log line: you press the
+        button, nothing happens, and nowhere does it say why. A service that
+        does not know the zone should collide, exactly like an unknown entity
+        does.
+        """
+        if not zone_ids:
+            return
+        known = {zone.zone_id for entry in entries for zone in entry.runtime_data.config.zones}
+        unknown = sorted(set(zone_ids) - known)
+        if unknown:
+            raise ServiceValidationError(f"unknown zones: {', '.join(unknown)}")
 
     def _chosen(call: ServiceCall):
         wanted = set(call.data.get(ATTR_ENTRY_ID) or ())

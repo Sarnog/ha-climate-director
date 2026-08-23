@@ -17,7 +17,8 @@ precondition:
       required: false
       example: "[woonkamer, zolder]"
       selector:
-        object:
+        text:
+          multiple: true
     # Geen `default`: de beschrijving zegt dat leeglaten het ingestelde maximum
     # geeft, en een voorgevuld getal in het scherm sprak dat tegen. Wie het veld
     # niet aanraakt hoort het maximum te krijgen, en dat gebeurt ook.
@@ -50,4 +51,5 @@ cancel_precondition:
       required: false
       example: "[woonkamer]"
       selector:
-        object:
+        text:
+          multiple: true
