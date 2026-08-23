@@ -107,6 +107,24 @@ class TestSomethingToDo:
         result = changes(plan_of(UnitCommand(LIVING, MODE_HEAT, 23.0)), current)
         assert result[0].set_temperature
 
+    def test_an_unknown_current_setpoint_is_sent_once(self) -> None:
+        """Zonder meting tegenover het setpoint: één keer sturen, dan zwijgen.
+
+        With no measurement to hold against the setpoint: send it once, then
+        stay quiet.
+        """
+        current = make_world(climates={LIVING: climate(MODE_HEAT, target=None)})
+        plan = plan_of(UnitCommand(LIVING, MODE_HEAT, 23.0))
+        first = changes(plan, current)
+        assert first[0].set_temperature
+        assert changes(plan, current, previous=plan) == ()
+
+    def test_a_changed_setpoint_is_sent_again_despite_the_missing_reading(self) -> None:
+        current = make_world(climates={LIVING: climate(MODE_HEAT, target=None)})
+        previous = plan_of(UnitCommand(LIVING, MODE_HEAT, 23.0))
+        result = changes(plan_of(UnitCommand(LIVING, MODE_HEAT, 22.0)), current, previous=previous)
+        assert result[0].set_temperature
+
 
 class TestSwitchingOff:
     def test_switching_off_never_pushes_a_setpoint(self) -> None:

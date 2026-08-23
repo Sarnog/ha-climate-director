@@ -910,7 +910,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             # execute. In shadow mode this is exactly "what the director would
             # have done while something else steers the house" - the number the
             # whole shadow phase is about.
-            self.last_changes = changes(plan, world)
+            self.last_changes = changes(plan, world, self.data)
             self.last_applied = ()
 
             try:

@@ -136,8 +136,13 @@ class TestAnApplianceThatNeverTakesItsCommand:
     async def test_the_command_really_is_offered_again_every_round(self, home: LiveHome) -> None:
         home.clear_calls()
         await rounds(home, 3)
-        # Elke ronde twee aanroepen: eerst de stand, dan het setpoint.
-        assert len(home.climate_calls()) == 6
+        calls = home.climate_calls()
+        # Elke ronde de stand; het setpoint zonder terugmelding wordt één keer
+        # meegestuurd en daarna als ongewijzigd behandeld (zie M5).
+        # The mode every round; the setpoint without a reading is sent once and
+        # then treated as unchanged (see M5).
+        assert sum(1 for call in calls if call[0] == "set_hvac_mode") == 3
+        assert sum(1 for call in calls if call[0] == "set_temperature") == 1
 
     async def test_a_few_rounds_report_nothing_yet(self, home: LiveHome) -> None:
         await rounds(home, 3)
