@@ -105,9 +105,47 @@ async def test_a_delayed_report_lands_one_round_later() -> None:
         await stop_house(home)
 
 
-async def test_the_installation_runs_on_both_kinds() -> None:
-    """De integratie zelf start op beide typen; de campagnes draaien er straks tegen."""
-    for kind in ("obedient", "stubborn"):
+async def test_the_no_temperature_kind_reports_no_setpoint_back() -> None:
+    """Zoals een bereikthermostaat: de aanroep telt, het setpoint meldt niets terug.
+
+    Like a range thermostat: the call counts, the setpoint reports nothing back.
+    """
+    home = await start_house(installation(), states=cold(), appliance="no_temperature")
+    try:
+        await home.call(
+            "climate",
+            "set_temperature",
+            {"entity_id": LIVING, "temperature": 21.0, "hvac_mode": "heat"},
+        )
+        assert home.state(LIVING) == "heat"
+        assert "temperature" not in home.attributes(LIVING)
+    finally:
+        await stop_house(home)
+
+
+async def test_the_late_reporter_kind_lands_every_report_one_round_late() -> None:
+    """Zoals melcloud: elke stand komt pas een poll later aan.
+
+    Like melcloud: every state arrives one poll late.
+    """
+    warm = {"sensor.woonkamer": ("22.0", {}), LIVING: ("off", {})}
+    home = await start_house(installation(), states=warm, appliance="late_reporter")
+    try:
+        await home.call("climate", "set_hvac_mode", {"entity_id": LIVING, "hvac_mode": "heat"})
+        assert home.state(LIVING) == "off", "de melding hoort nog uit te staan"
+        await home.settle()
+        assert home.state(LIVING) == "heat", "na één ronde hoort de melding er te zijn"
+    finally:
+        await stop_house(home)
+
+
+async def test_the_installation_runs_on_every_kind() -> None:
+    """De integratie zelf start op alle typen; de campagnes kunnen er tegen draaien.
+
+    The integration itself starts on every kind; the campaigns can run against
+    them.
+    """
+    for kind in ("obedient", "stubborn", "no_temperature", "late_reporter"):
         home = await start_house(installation(), states=cold(), appliance=kind)
         try:
             assert home.entry.options[CONF_INSTALLATION]["zones"][0]["zone_id"] == "woonkamer"

@@ -73,14 +73,44 @@ APPLIANCE_TYPES: dict[str, dict[str, Any]] = {
     "obedient": {
         "honours_hvac_mode_in_set_temperature": True,
         "report_delay_rounds": 0,
+        "reports_temperature": True,
         "min_temp": None,
         "max_temp": None,
     },
     "stubborn": {
         "honours_hvac_mode_in_set_temperature": False,
         "report_delay_rounds": 0,
+        "reports_temperature": True,
         "min_temp": 10.0,
         "max_temp": 30.0,
+    },
+    #: Een bereikthermostaat meldt geen `temperature`, alleen `target_temp_high`
+    #: en `target_temp_low`. Het harnas accepteert de setpoint-aanroep maar zet
+    #: geen `temperature`-attribuut, zodat de lezer `None` ziet - precies M5.
+    #
+    #: A range thermostat reports no `temperature`, only `target_temp_high` and
+    #: `target_temp_low`. The harness accepts the setpoint call but writes no
+    #: `temperature` attribute, so the reader sees `None` - exactly M5.
+    "no_temperature": {
+        "honours_hvac_mode_in_set_temperature": True,
+        "report_delay_rounds": 0,
+        "reports_temperature": False,
+        "min_temp": None,
+        "max_temp": None,
+    },
+    #: Een apparaat dat zijn stand pas een poll later meldt (melcloud). Het
+    #: harnas stelt elke terugmelding één ronde uit - precies het late bericht
+    #: waar `_commanded_off` voor bestaat (H1).
+    #
+    #: An appliance reporting its state one poll late (melcloud). The harness
+    #: delays every report by one round - exactly the late report
+    #: `_commanded_off` exists for (H1).
+    "late_reporter": {
+        "honours_hvac_mode_in_set_temperature": True,
+        "report_delay_rounds": 1,
+        "reports_temperature": True,
+        "min_temp": None,
+        "max_temp": None,
     },
 }
 
@@ -524,7 +554,7 @@ def _apply(home: LiveHome, entity_id: str, mode: str | None, temperature: float 
     """Write one appliance's new state now."""
     current = home.hass.states.get(entity_id)
     attributes = dict(current.attributes) if current else {}
-    if temperature is not None:
+    if temperature is not None and home.appliance.get("reports_temperature", True):
         attributes["temperature"] = temperature
     state = mode if mode is not None else (current.state if current else "off")
     home.hass.states.async_set(entity_id, state, attributes)
