@@ -816,8 +816,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
 
         if user_input is not None and not errors:
             if user_input.get("delete") and self._zone_index is not None:
-                zones.pop(self._zone_index)
+                removed = zones.pop(self._zone_index)
                 self._zone_index = None
+                self._drop_zone_references(removed)
                 return await self.async_step_init()
 
             taken = [
@@ -1706,6 +1707,40 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
     def _list(self, key: str) -> list[dict[str, Any]]:
         """Return the editable list stored under `key`, creating it if needed."""
         return self._installation.setdefault(key, [])
+
+    def _drop_zone_references(self, removed: dict[str, Any]) -> None:
+        """Remove a deleted zone from every list that can point at it.
+
+        Openingen en generatoren wijzen met `zone_ids` naar zones, en
+        uitsluitende groepen met `source_id`s naar de bronnen van een zone.
+        Zonder deze schoonmaak bleven die verwijzingen achter en klaagde
+        `validate()` achteraf over onbekende zones en bronnen.
+
+        Openings and generators point at zones through `zone_ids`, and exclusive
+        groups at a zone's sources through `source_id`s. Without this cleanup
+        those references stayed behind and `validate()` complained afterwards
+        about unknown zones and sources.
+        """
+        zone_id = removed.get("zone_id")
+        if zone_id:
+            for opening in self._list("openings"):
+                opening["zone_ids"] = [
+                    item for item in opening.get("zone_ids") or [] if item != zone_id
+                ]
+            for generator in self._list("generators"):
+                generator["zone_ids"] = [
+                    item for item in generator.get("zone_ids") or [] if item != zone_id
+                ]
+
+        source_ids = {
+            source.get("source_id")
+            for source in removed.get("sources") or []
+            if source.get("source_id")
+        }
+        if source_ids:
+            groups = self._list("exclusive_groups")
+            cleaned = [[item for item in group if item not in source_ids] for group in groups]
+            groups[:] = [group for group in cleaned if group]
 
     def _priority_clash(self, zone_id: str, priority: int) -> bool:
         """Return whether another zone on the same circuit already holds this number.

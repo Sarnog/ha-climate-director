@@ -917,3 +917,44 @@ class TestEveryScreenSurvivesItsNeighbour:
             self._check_quiet(stored)
         finally:
             await stop_house(home)
+
+
+class TestDeletingAZoneCleansItsReferences:
+    """Een verwijderde zone hoort nergens meer in voor te komen.
+
+    A deleted zone should no longer appear anywhere.
+    """
+
+    async def test_openings_generators_and_groups_are_cleaned(self) -> None:
+        installation = {
+            **two_rooms(),
+            "openings": [{"entity_id": "binary_sensor.raam", "zone_ids": ["woonkamer", "zolder"]}],
+            "generators": [
+                {
+                    "generator_id": "cv",
+                    "name": "CV",
+                    "entity_id": "climate.ketel",
+                    "zone_ids": ["woonkamer", "zolder"],
+                }
+            ],
+            "exclusive_groups": [["woonkamer_airco", "zolder_airco"]],
+        }
+        home = await start_house(installation, states=cold())
+        try:
+            flow = home.hass.config_entries.options
+            result = await menu(home, "zones")
+            assert result["step_id"] == "zones"
+
+            result = await flow.async_configure(result["flow_id"], {"zone": "0"})
+            assert result["step_id"] == "zone"
+            result = await flow.async_configure(
+                result["flow_id"], {"delete": True, "when_done": "keep"}
+            )
+            assert result["type"] == "menu"
+
+            stored = await save(home, result["flow_id"])
+            assert stored["openings"][0]["zone_ids"] == ["zolder"]
+            assert stored["generators"][0]["zone_ids"] == ["zolder"]
+            assert all("woonkamer_airco" not in group for group in stored["exclusive_groups"])
+        finally:
+            await stop_house(home)
