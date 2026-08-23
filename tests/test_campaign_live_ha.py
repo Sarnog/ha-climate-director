@@ -153,6 +153,27 @@ class TestSettingUp:
         finally:
             await stop_house(live)
 
+    async def test_a_hand_at_a_shared_boiler_is_noticed(self) -> None:
+        """Wie de ketel bij het toestel uitzet, wordt niet meteen overstemd.
+
+        Whoever switches the boiler off at the appliance is not overruled at
+        once.
+        """
+        live = await start_house(
+            installation(generators=[{"generator_id": "cv", "name": "CV", "entity_id": BOILER}]),
+            states={**cold_world(), BOILER: ("off", {"temperature": 19.0})},
+        )
+        try:
+            assert live.state(BOILER) == "heat"
+            live.set(BOILER, "off", hvac_modes=["heat", "off"])
+            await live.settle()
+            await live.evaluate()
+            assert live.state(BOILER) == "off", "de director zet de ketel meteen weer aan"
+            assert "woonkamer" in live.coordinator._handed_back
+            assert "zolder" in live.coordinator._handed_back
+        finally:
+            await stop_house(live)
+
     async def test_no_two_entities_share_a_unique_id(self, home: LiveHome) -> None:
         registered = home.registered()
         assert len(registered) == len(set(registered.values()))

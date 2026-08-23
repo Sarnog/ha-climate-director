@@ -424,6 +424,44 @@ class TestAnArrivedOffCommandExplainsOnlyItself:
         assert item._commanded_off == {}
 
 
+class TestAGeneratorCountsForItsZones:
+    """Een hand aan een gedeelde warmtebron telt voor de zones die hij bedient.
+
+    A hand at a shared heat source counts for the zones it serves.
+    """
+
+    def test_the_served_zones_are_reported(self) -> None:
+        from custom_components.climate_director.engine import Generator
+
+        cfg = DirectorConfig(
+            zones=config().zones,
+            generators=(Generator("ketel", "Ketel", "climate.ketel", zone_ids=("woonkamer",)),),
+        )
+        item = coordinator(running_plan("climate.ketel"), cfg=cfg)
+        assert item._zones_of("climate.ketel") == ("woonkamer",)
+
+    def test_a_generator_serving_every_zone_reports_every_zone(self) -> None:
+        from custom_components.climate_director.engine import Generator
+
+        cfg = DirectorConfig(
+            zones=config().zones,
+            generators=(Generator("ketel", "Ketel", "climate.ketel"),),
+        )
+        item = coordinator(running_plan("climate.ketel"), cfg=cfg)
+        assert item._zones_of("climate.ketel") == ("woonkamer", "slaapkamer")
+
+    def test_a_hand_at_the_generator_hands_the_served_zones_back(self) -> None:
+        from custom_components.climate_director.engine import Generator
+
+        cfg = DirectorConfig(
+            zones=config().zones,
+            generators=(Generator("ketel", "Ketel", "climate.ketel", zone_ids=("woonkamer",)),),
+        )
+        item = coordinator(running_plan("climate.ketel"), cfg=cfg)
+        item._notice_hand(_Event("climate.ketel", "heat", "off"))
+        assert item._zones_handed_back() == {"woonkamer"}
+
+
 class TestGettingItBack:
     def test_switching_it_on_again_by_hand(self) -> None:
         item = coordinator(running_plan())

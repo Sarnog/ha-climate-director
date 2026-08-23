@@ -636,16 +636,29 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         apparaat zelf op uit drukt zegt iets over dat apparaat, niet over de
         eerste zone die het toevallig bedient - dus elke zone die eraan hangt
         hoort stil te vallen, anders zet de overgeslagen zone het apparaat meteen
-        weer aan.
+        weer aan. Een generator staat niet tussen de bronnen maar bedient
+        dezelfde zones; ook die hoort mee te tellen, anders wordt een hand aan
+        de gedeelde ketel nooit opgemerkt.
 
         A shared boiler sits under more than one zone. Somebody pressing off on
         such an appliance says something about the appliance, not about whichever
         zone happens to be listed first - so every zone hanging off it should fall
-        silent, otherwise the skipped zone switches it straight back on.
+        silent, otherwise the skipped zone switches it straight back on. A
+        generator is not listed among the sources but serves the same zones; it
+        has to count too, otherwise a hand at the shared boiler is never noticed.
         """
-        return tuple(
+        zones = [
             zone.zone_id for zone, source in self.config.sources() if source.entity_id == entity_id
-        )
+        ]
+        for generator in self.config.generators:
+            if generator.entity_id != entity_id:
+                continue
+            zones.extend(
+                zone.zone_id
+                for zone in self.config.zones
+                if generator.serves(zone.zone_id) and zone.zone_id not in zones
+            )
+        return tuple(zones)
 
     def _note_commanded_off(self, applied: tuple[Change, ...]) -> None:
         """Remember when we last told each appliance to stand down.
