@@ -107,6 +107,7 @@ class TestARoleAskingAnImpossibleMode:
         home.set(LIVING, "off", hvac_modes=["heat", "cool", "off"])
         await home.evaluate()
         assert issue_for(home) is None
+        assert home.coordinator._unsupported_since == {}
 
 
 class TestTearingDown:

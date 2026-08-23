@@ -143,6 +143,7 @@ class TestASensorThatDropsOut:
         home.set("sensor.woonkamer", "18.0")
         await home.evaluate()
         assert issue_for(home) is None
+        assert home.coordinator._unusable_since == {}
 
     async def test_the_clock_restarts_after_a_return(self, home: LiveHome) -> None:
         """Wie terugkomt en weer wegvalt, krijgt opnieuw de volle wachttijd."""
