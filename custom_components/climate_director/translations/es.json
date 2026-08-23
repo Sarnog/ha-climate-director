@@ -662,6 +662,10 @@
       "title": "Climate Director: {count} aparato(s) de {name} no ejecuta su orden",
       "description": "El director lleva un tiempo pidiendo lo mismo a estos aparatos, y siguen notificando otra cosa - la llamada se acepta y no pasa nada, o el aparato se vuelve a poner como estaba:\n\n{entities}\n\nMientras eso dure, la misma llamada sale de nuevo en cada ronda, unas mil cuatrocientas al día, y en ninguna parte se ve nada. Comprueba el aparato en Herramientas de desarrollo: ¿está accesible, acepta el modo, y hay algo más que lo devuelve a su sitio, un programa del termostato u otra automatización? Este aviso desaparece por sí solo en cuanto el aparato siga su orden."
     },
+    "corrupt_storage": {
+      "title": "Climate Director: {name} tuvo que apartar su estado guardado",
+      "description": "El archivo donde esta instalación guarda sus peticiones de preacondicionamiento en curso y sus apagados manuales era ilegible y se ha renombrado a `{path}`. El director empieza con un estado vacío: las peticiones y apagados de antes del reinicio se han perdido.\n\nSi quieres recuperarlos, restaura el archivo desde una copia de seguridad y recarga la integración. El archivo renombrado sigue en la carpeta `.storage` de Home Assistant."
+    },
     "precondition_unwatched": {
       "title": "Nadie escucha una petición de preacondicionamiento rechazada",
       "description": "Una petición de preacondicionamiento que encalla en una ventana o puerta abierta se anuncia como el evento `climate_director_precondition_refused`, y en ningún otro sitio. Ahora mismo nada lo escucha, así que una petición así falla en silencio: pulsas el botón y no pasa nada, sin poder ver por qué.\n\nSe arregla de una de estas dos maneras:\n\n1. Importa el blueprint **Climate Director - preacondicionamiento rechazado** *y configúralo*. Importarlo no basta: un blueprint sin una automatización construida sobre él no escucha nada.\n2. O escribe tu propia automatización sobre ese evento. Lleva la zona, los sensores abiertos y un mensaje ya preparado.\n\nEste aviso desaparece solo en cuanto algo escuche."

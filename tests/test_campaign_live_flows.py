@@ -17,6 +17,7 @@ the entry as well.
 
 from __future__ import annotations
 
+import json
 import pathlib
 from typing import Any
 
@@ -611,6 +612,82 @@ class TestAcrossARestart:
         assert resolve_initial(configured=2, last_value=4, last_configured=2) == 4
         assert resolve_initial(configured=3, last_value=4, last_configured=2) == 3
         assert resolve_initial(configured=3, last_value=None, last_configured=None) == 3
+
+
+# ---------------------------------------------------------------------------
+# Een kapot opslagbestand mag de director niet stilleggen.
+# A broken storage file must not silence the director.
+# ---------------------------------------------------------------------------
+
+
+def _write_store(config_dir: str, entry_id: str, data: Any) -> pathlib.Path:
+    """Write one store file the way Home Assistant's `Store` would."""
+    key = storage_key(entry_id)
+    store_dir = pathlib.Path(config_dir) / ".storage"
+    store_dir.mkdir(parents=True, exist_ok=True)
+    path = store_dir / key
+    path.write_text(
+        json.dumps({"version": 1, "minor_version": 1, "key": key, "data": data}),
+        encoding="utf-8",
+    )
+    return path
+
+
+class TestAStartupWithBrokenStorage:
+    """Het bewaarde werk van een herstart mag nooit het opstarten verhinderen.
+
+    The saved work from a restart must never stop the startup.
+    """
+
+    async def test_a_wrong_shaped_stored_state_is_skipped_not_fatal(self) -> None:
+        """Velden met een onleesbare vorm worden overgeslagen, de rest draait.
+
+        Fields with an unreadable shape are skipped, the rest just runs.
+        """
+        config_dir = new_config_dir()
+        path = _write_store(
+            config_dir,
+            "vorm",
+            {
+                "until": ["geen", "dict"],
+                "bypass": 42,
+                "handed_back": ["ook", "geen", "dict"],
+            },
+        )
+        home = await start_house(
+            simple_installation(), states=cold(), config_dir=config_dir, entry_id="vorm"
+        )
+        try:
+            assert home.state(LIVING) == "heat", "de director hoort gewoon te beslissen"
+            assert home.coordinator._clock_reeval_unsub is not None, "de klok hoort te staan"
+            assert path.exists(), "een leesbaar bestand met vreemde velden hoort te blijven staan"
+        finally:
+            await stop_house(home)
+
+    async def test_an_unreadable_stored_state_is_quarantined_and_director_decides(self) -> None:
+        """Een bestand dat nergens op lijkt gaat opzij, met melding, en de director draait.
+
+        A file shaped like nothing goes aside, with a notice, and the director runs.
+        """
+        config_dir = new_config_dir()
+        path = _write_store(config_dir, "kapot", [1, 2, 3])
+        home = await start_house(
+            simple_installation(), states=cold(), config_dir=config_dir, entry_id="kapot"
+        )
+        try:
+            assert home.state(LIVING) == "heat", "de director hoort met een lege staat te beginnen"
+            assert home.coordinator._clock_reeval_unsub is not None, "de klok hoort te staan"
+            assert not path.exists(), "het onleesbare bestand hoort opzij gezet te zijn"
+            assert list(path.parent.glob(path.name + ".corrupt*")), (
+                "er hoort een .corrupt-bestand te staan"
+            )
+
+            from homeassistant.helpers import issue_registry as ir
+
+            registry = ir.async_get(home.hass)
+            assert ("climate_director", "corrupt_storage_kapot") in registry.issues
+        finally:
+            await stop_house(home)
 
 
 # ---------------------------------------------------------------------------

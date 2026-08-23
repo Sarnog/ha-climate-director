@@ -662,6 +662,10 @@
       "title": "Climate Director : {count} appareil(s) de {name} n'exécute pas sa commande",
       "description": "Le directeur demande la même chose à ces appareils depuis un moment, et ils continuent de signaler autre chose - l'appel est accepté et rien ne se passe, ou l'appareil se remet aussitôt comme avant :\n\n{entities}\n\nTant que cela dure, le même appel repart à chaque tour, soit environ quatorze cents par jour, et rien ne le montre nulle part. Vérifiez l'appareil sous Outils de développement : est-il joignable, accepte-t-il le mode, et y a-t-il autre chose qui le remet en place - un programme de thermostat, une autre automatisation ? Cet avis disparaît de lui-même dès que l'appareil suit sa commande."
     },
+    "corrupt_storage": {
+      "title": "Climate Director : {name} a dû mettre son état sauvegardé de côté",
+      "description": "Le fichier dans lequel cette installation conserve ses demandes de préchauffage en cours et ses extinctions manuelles était illisible et a été renommé en `{path}`. Le director repart d'un état vide : les demandes et extinctions d'avant le redémarrage sont perdues.\n\nPour les récupérer, restaurez le fichier depuis une sauvegarde et rechargez l'intégration. Le fichier renommé reste dans le dossier `.storage` de Home Assistant."
+    },
     "precondition_unwatched": {
       "title": "Personne n'entend une demande de préchauffage refusée",
       "description": "Une demande de préchauffage qui échoue sur une fenêtre ou une porte ouverte se signale par l'événement `climate_director_precondition_refused`, et nulle part ailleurs. Rien ne l'écoute actuellement, donc une telle demande échoue en silence : vous appuyez sur le bouton et rien ne se passe, sans savoir pourquoi.\n\nÀ corriger de deux façons :\n\n1. Importez le blueprint **Climate Director - préchauffage refusé** *et configurez-le*. L'importer ne suffit pas - un blueprint sans automatisation construite dessus n'écoute rien.\n2. Ou écrivez votre propre automatisation sur cet événement. Il transporte la zone, les capteurs ouverts et un message tout prêt.\n\nCet avis disparaît de lui-même dès que quelque chose écoute."

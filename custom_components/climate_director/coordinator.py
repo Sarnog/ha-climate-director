@@ -20,9 +20,11 @@ from __future__ import annotations
 import asyncio
 import logging
 import math
+import os
 from collections.abc import Mapping
 from dataclasses import replace
 from datetime import date, datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -378,11 +380,28 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self.config_entry.async_on_unload(async_at_started(self.hass, self._async_on_hass_started))
 
     async def _async_on_hass_started(self, _hass: HomeAssistant) -> None:
-        """Restore what a restart left behind, decide once, and arm the clock."""
-        await self._async_restore_state()
-        self._note_precipitation_now()
-        await self._async_evaluate()
-        self._schedule_clock_reeval()
+        """Restore what a restart left behind, decide once, and arm the clock.
+
+        Herstellen, neerslag noteren en beslissen zijn drie stappen op één pad.
+        Slaat er één om, dan is de schade het grootst als daardoor ook de
+        vangnetklok nooit loopt: dan wacht elke tijdregel op een toevallige
+        wijziging die nooit komt. De klok wordt daarom hoe dan ook gezet, en de
+        uitzondering wordt gelogd in plaats van de integratie stil te leggen.
+
+        Restoring, noting precipitation and deciding are three steps on one
+        path. When one falls over the damage is greatest if the safety-net clock
+        never starts either: every time rule then waits for a chance change that
+        never comes. The clock is therefore armed no matter what, and the
+        exception is logged rather than silencing the integration.
+        """
+        try:
+            await self._async_restore_state()
+            self._note_precipitation_now()
+            await self._async_evaluate()
+        except Exception:
+            _LOGGER.exception("The first decision of %s failed", self.name)
+        finally:
+            self._schedule_clock_reeval()
 
     def tracked_entities(self) -> set[str]:
         """Return every entity whose change could alter a decision.
@@ -980,6 +999,11 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         niets, dus de opslagversie hoeft er niet voor omhoog: er valt niets te
         migreren aan een sleutel die er niet was.
 
+        Elk veld wordt net zo vergevingsgezind gelezen als `serialise.py`: een
+        waarde met een andere vorm dan verwacht telt als afwezig, niet als
+        reden om de hele integratie stil te leggen. Alleen een bestand dat in
+        het geheel niet te lezen is wordt opzij gezet.
+
         Expired requests do not come back: time ran on while Home Assistant was
         away, and carrying out yesterday's request after the fact is worse than
         forgetting it. Yesterday's hand-back lapses for the same reason - the
@@ -988,27 +1012,84 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         An older file carries no `handed_back` yet. That simply reads as
         nothing, so the storage version need not go up for it: there is nothing
         to migrate about a key that was never there.
+
+        Every field is read as forgivingly as `serialise.py`: a value of a
+        different shape than expected counts as absent, not as a reason to
+        silence the whole integration. Only a file that cannot be read at all
+        is put aside.
         """
-        stored = await self._store.async_load()
+        try:
+            stored = await self._store.async_load()
+        except Exception:
+            _LOGGER.exception("Reading the stored state of %s failed", self.name)
+            await self._quarantine_storage()
+            return
+
         if not stored:
             return
 
-        now = dt_util.now()
-        for zone_id, raw in (stored.get("until") or {}).items():
-            until = dt_util.parse_datetime(str(raw))
-            if until is not None and now < until:
-                self._precondition[zone_id] = until
-        self._precondition_bypass = {
-            zone_id for zone_id in (stored.get("bypass") or ()) if zone_id in self._precondition
-        }
+        if not isinstance(stored, Mapping):
+            _LOGGER.error("The stored state of %s has no readable shape", self.name)
+            await self._quarantine_storage()
+            return
 
-        today = now.date()
-        for zone_id, raw in (stored.get("handed_back") or {}).items():
-            day = dt_util.parse_date(str(raw))
-            if day == today:
-                self._handed_back[zone_id] = day
+        now = dt_util.now()
+
+        until_raw = stored.get("until")
+        if isinstance(until_raw, Mapping):
+            for zone_id, raw in until_raw.items():
+                until = dt_util.parse_datetime(str(raw))
+                if until is not None and now < until:
+                    self._precondition[zone_id] = until
+
+        bypass_raw = stored.get("bypass")
+        if isinstance(bypass_raw, (list, tuple, set)):
+            self._precondition_bypass = {
+                zone_id for zone_id in bypass_raw if zone_id in self._precondition
+            }
+
+        handed_raw = stored.get("handed_back")
+        if isinstance(handed_raw, Mapping):
+            today = now.date()
+            for zone_id, raw in handed_raw.items():
+                day = dt_util.parse_date(str(raw))
+                if day == today:
+                    self._handed_back[zone_id] = day
 
         self._wake_at_the_first_expiry()
+
+    async def _quarantine_storage(self) -> None:
+        """Move an unreadable state file aside and tell the user.
+
+        Het bestand is onleesbaar of heeft een vorm die nergens op lijkt. De
+        director begint dan met een lege staat - verzoeken en handmatige
+        uitzettingen van voor de herstart zijn weg - en het bestand gaat opzij
+        zodat elke volgende herstart er niet opnieuw over struikelt. De melding
+        zegt dat het gebeurd is; het bestand zelf blijft staan voor wie het uit
+        een back-up terug wil zetten.
+
+        The file is unreadable or shaped like nothing at all. The director then
+        starts with an empty state - requests and hand-backs from before the
+        restart are gone - and the file is moved aside so every next restart
+        does not trip over it again. The notice says it happened; the file
+        itself stays for anyone wanting to put it back from a backup.
+        """
+        path = Path(self._store.path)
+        # Geen `isoformat()`: de dubbele punten daarin mogen niet in een
+        # Windows-bestandsnaam. Not `isoformat()`: its colons are not allowed
+        # in a Windows file name.
+        stamp = dt_util.utcnow().strftime("%Y%m%dT%H%M%S%f")
+        corrupt = path.with_name(f"{path.name}.corrupt.{stamp}")
+        try:
+            await self.hass.async_add_executor_job(os.rename, path, corrupt)
+        except OSError:
+            _LOGGER.exception("Moving the unreadable state file %s aside failed", path)
+        problems.async_report_corrupt_storage(
+            self.hass,
+            self.config_entry.entry_id,
+            self.config_entry.title,
+            str(corrupt),
+        )
 
     @callback
     def async_cancel_precondition(self, zone_ids: list[str] | None) -> None:

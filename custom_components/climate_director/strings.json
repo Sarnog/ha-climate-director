@@ -662,6 +662,10 @@
       "title": "Climate Director: {count} appliance(s) of {name} do not carry out their command",
       "description": "The director has been asking these appliances for the same thing for a while, and they keep reporting something else - the call is accepted and nothing happens, or the appliance puts itself straight back:\n\n{entities}\n\nFor as long as that lasts the same call goes out again every round, some fourteen hundred a day, and nowhere is anything of it to be seen. Check the appliance under Developer tools: is it reachable, does it accept the mode, and is something else putting it back - a thermostat schedule, another automation? This notice disappears by itself once the appliance follows its command."
     },
+    "corrupt_storage": {
+      "title": "Climate Director: {name} had to set its saved state aside",
+      "description": "The file where this installation keeps its running pre-conditioning requests and manual switch-offs was unreadable, so it has been renamed to `{path}`. The director starts with an empty state: requests and switch-offs from before the restart are gone.\n\nIf you want them back, restore the file from a backup and reload the integration. The renamed file itself remains in Home Assistant's `.storage` folder."
+    },
     "precondition_unwatched": {
       "title": "Nobody hears a refused pre-conditioning request",
       "description": "A pre-conditioning request that strands on an open window or door reports itself as the event `climate_director_precondition_refused`, and nowhere else. Nothing is listening for it right now, so such a request fails silently: you press the button and nothing happens, with no way of telling why.\n\nFix it in one of two ways:\n\n1. Import the blueprint **Climate Director - refused pre-conditioning** *and set it up*. Importing alone is not enough - a blueprint without an automation built from it listens to nothing.\n2. Or write an automation of your own on that event. It carries the zone, the open sensors and a ready-made message.\n\nThis notice disappears by itself once something is listening."

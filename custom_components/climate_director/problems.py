@@ -358,6 +358,42 @@ def async_clear_command_not_taking(hass: HomeAssistant, entry_id: str) -> None:
     ir.async_delete_issue(hass, DOMAIN, _command_not_taking_issue_id(entry_id))
 
 
+def _corrupt_storage_issue_id(entry_id: str) -> str:
+    """Return the corrupt-storage notice id for one installation."""
+    return f"corrupt_storage_{entry_id}"
+
+
+def async_report_corrupt_storage(hass: HomeAssistant, entry_id: str, title: str, path: str) -> None:
+    """Raise the notice that a by-hand state file had to be put aside.
+
+    De melding is geen fout die de gebruiker kan repareren: het bestand was
+    onleesbaar en is hernoemd, en de director draait gewoon verder met een lege
+    staat. De melding vertelt dát het gebeurd is, want verzoeken en handmatige
+    uitzettingen van vóór de herstart zijn daarmee weg - anders ziet dat er van
+    buiten uit als een integratie die ze stilletjes vergat.
+
+    The notice is not a mistake the user can repair: the file was unreadable
+    and has been renamed, and the director simply carries on with an empty
+    state. The notice tells that it happened, because requests and hand-backs
+    from before the restart are gone - otherwise that looks, from the outside,
+    like an integration that quietly forgot them.
+    """
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        _corrupt_storage_issue_id(entry_id),
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="corrupt_storage",
+        translation_placeholders={"name": title, "path": path},
+    )
+
+
+def async_clear_corrupt_storage(hass: HomeAssistant, entry_id: str) -> None:
+    """Drop the corrupt-storage notice for one installation."""
+    ir.async_delete_issue(hass, DOMAIN, _corrupt_storage_issue_id(entry_id))
+
+
 #: De melding dat er niemand naar een geweigerd vooruit-verzoek luistert. Eén
 #: melding voor de hele integratie, niet per installatie: de gebeurtenis is
 #: domeinbreed, dus twee identieke meldingen zouden alleen maar herhalen.

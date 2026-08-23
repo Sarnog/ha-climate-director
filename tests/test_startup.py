@@ -32,6 +32,7 @@ class _Entry:
 class StandIn:
     def __init__(self) -> None:
         self.hass = object()
+        self.name = "stand-in"
         self.config_entry = _Entry()
         self.restored = 0
         self.evaluated = 0
@@ -88,3 +89,31 @@ async def test_the_first_decision_waits_for_hass_to_start(monkeypatch) -> None:
     assert item.precipitation_noted == 1
     assert item.evaluated == 1
     assert item.clock_armed == 1
+
+
+async def test_an_exception_from_the_first_decision_still_arms_the_clock() -> None:
+    """Eén kapotte eerste beslissing mag de vangnetklok niet tegenhouden.
+
+    Herstellen, beslissen en de klok zetten zijn vier stappen op één pad. Slaat
+    de beslissing om, dan is de schade het grootst als daardoor ook de klok
+    nooit loopt: dan wacht elke tijdregel op een toevallige wijziging die nooit
+    komt. De klok hoort dus hoe dan ook gezet te worden, en de uitzondering
+    hoort gelogd te worden in plaats van de integratie stil te leggen.
+
+    One broken first decision must not hold the safety-net clock back.
+    Restoring, deciding and arming the clock are four steps on one path. When
+    the decision falls over the damage is greatest if the clock never starts
+    either: every time rule then waits for a chance change that never comes.
+    The clock therefore has to be armed no matter what, and the exception has
+    to be logged rather than silencing the integration.
+    """
+    item = StandIn()
+
+    async def broken_evaluate() -> None:
+        raise RuntimeError("kapotte eerste beslissing")
+
+    item._async_evaluate = broken_evaluate  # type: ignore[method-assign]
+
+    await item._async_on_hass_started(item.hass)  # type: ignore[arg-type]
+
+    assert item.clock_armed == 1, "de vangnetklok hoort ondanks de fout te lopen"

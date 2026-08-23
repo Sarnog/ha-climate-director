@@ -662,6 +662,10 @@
       "title": "Climate Director: {count} apparaat/apparaten van {name} voert zijn commando niet uit",
       "description": "De director vraagt deze apparaten al een tijd hetzelfde, en ze blijven iets anders melden - de aanroep wordt aangenomen en er gebeurt niets, of het apparaat zet zichzelf meteen terug:\n\n{entities}\n\nZolang dat duurt gaat dezelfde aanroep elke ronde opnieuw de deur uit, zo'n veertienhonderd per dag, en nergens is daar iets van te zien. Controleer het apparaat bij Ontwikkelhulpmiddelen: is het bereikbaar, neemt het de stand aan, en zet iets anders het terug - een thermostaatrooster, een andere automatisering? Deze melding verdwijnt vanzelf zodra het apparaat zijn commando volgt."
     },
+    "corrupt_storage": {
+      "title": "Climate Director: {name} moest zijn bewaarde toestand opzij zetten",
+      "description": "Het bestand waarin deze installatie haar lopende vooruit-verzoeken en handmatige uitzettingen bewaart was onleesbaar en is hernoemd naar `{path}`. De director begint met een lege toestand: verzoeken en uitzettingen van vóór de herstart zijn weg.\n\nWil je ze terug, zet het bestand dan terug vanuit een back-up en herlaad de integratie. Het hernoemde bestand zelf blijft in de `.storage`-map van Home Assistant staan."
+    },
     "precondition_unwatched": {
       "title": "Niemand hoort een geweigerd vooruit-verzoek",
       "description": "Een vooruit-verzoek dat strandt op een openstaand raam of een openstaande deur meldt zichzelf als de gebeurtenis `climate_director_precondition_refused`, en verder nergens. Daar luistert op dit moment niets naar, dus zo'n verzoek mislukt in stilte: je drukt op de knop en er gebeurt niets, zonder dat je kunt zien waarom.\n\nLos het op een van deze twee manieren op:\n\n1. Importeer de blueprint **Climate Director - geweigerd vooruit-verzoek** *en stel hem in*. Alleen importeren is niet genoeg - een blueprint zonder automatisering die erop gebouwd is luistert nergens naar.\n2. Of maak zelf een automatisering op die gebeurtenis. Hij draagt de zone, de openstaande sensoren en een kant-en-klaar bericht mee.\n\nDeze melding verdwijnt vanzelf zodra er iets luistert."
