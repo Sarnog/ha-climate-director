@@ -346,6 +346,49 @@ class TestBuildingAnInstallationInTheWizard:
         finally:
             await stop_house(home)
 
+    async def test_the_quiet_window_screen_keeps_the_holiday_flag(self) -> None:
+        """Een stiltevenster met vakantievlag verliest hem niet in het scherm.
+
+        A quiet window with the holiday flag does not lose it in the screen.
+        """
+        installation = {
+            **simple_installation(),
+            "gates": {
+                "quiet_windows": [
+                    {"start": "22:00:00", "end": "07:00:00", "weekdays": None, "holiday": True}
+                ]
+            },
+        }
+        home = await start_house(installation, states=cold())
+        try:
+            flow = home.hass.config_entries.options
+            result = await flow.async_init(home.entry.entry_id)
+            result = await flow.async_configure(result["flow_id"], {"next_step_id": "quiets"})
+            assert result["step_id"] == "quiets"
+            result = await flow.async_configure(result["flow_id"], {"quiet": "0"})
+            assert result["step_id"] == "quiet"
+            result = await flow.async_configure(
+                result["flow_id"],
+                {
+                    "start": "22:00:00",
+                    "end": "07:00:00",
+                    "holiday": True,
+                    "delete": False,
+                    "when_done": "keep",
+                },
+            )
+            assert result["step_id"] == "quiets"
+            result = await flow.async_configure(result["flow_id"], {"quiet": "back_to_menu"})
+            result = await flow.async_configure(result["flow_id"], {"next_step_id": "save"})
+            if result["type"] == "form":
+                result = await flow.async_configure(result["flow_id"], {"when_done": "keep"})
+            assert result["type"] == "create_entry"
+            await home.hass.async_block_till_done()
+            stored = home.entry.options[CONF_INSTALLATION]
+            assert stored["gates"]["quiet_windows"][0]["holiday"] is True
+        finally:
+            await stop_house(home)
+
     async def test_the_settings_step_writes_the_shadow_mode_through(self) -> None:
         home = await start_house(simple_installation(), states=cold())
         try:

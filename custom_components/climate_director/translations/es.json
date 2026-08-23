@@ -434,14 +434,16 @@
           "end": "Silencio hasta",
           "weekdays": "Días en que se aplica",
           "delete": "Eliminar esta franja",
-          "when_done": "Cuando termines aquí"
+          "when_done": "Cuando termines aquí",
+          "holiday": "Esta es una franja de vacaciones"
         },
         "data_description": {
           "start": "Entre estas horas el director no arranca nada por su cuenta. Una franja puede cruzar la medianoche: de 21:00 a 09:00 es la noche.",
           "end": "Entre estas horas el director no arranca nada por su cuenta. Una franja puede cruzar la medianoche: de 21:00 a 09:00 es la noche.",
           "weekdays": "Dejarlo vacío vale todos los días.",
           "delete": "Elimina esta ventana, de modo que el director pueda volver a empezar algo durante esas horas.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
+          "holiday": "Una franja de vacaciones solo se aplica con el horario de vacaciones activo, y entonces sustituye a las franjas ordinarias. Sus días de la semana no cuentan. Sin ella, un día de vacaciones cuenta como un sábado."
         }
       }
     },

@@ -725,6 +725,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     "start": user_input["start"],
                     "end": user_input["end"],
                     "weekdays": ([int(day) for day in user_input.get("weekdays") or ()] or None),
+                    "holiday": user_input.get("holiday", False),
                 }
                 if self._index is None:
                     windows.append(window)
@@ -738,6 +739,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             step_id="quiet",
             data_schema=vol.Schema(
                 {
+                    vol.Required("holiday", default=current.get("holiday", False)): bool,
                     vol.Required("start", default=current.get("start", "21:00:00")): _TIME,
                     vol.Required("end", default=current.get("end", "09:00:00")): _TIME,
                     vol.Optional(
@@ -1949,9 +1951,7 @@ def _zone_from_form(
         # that id already exists a counting suffix - exactly as sources,
         # circuits, generators and residents do.
         "zone_id": (
-            stored_id
-            if stored_id is not None
-            else _unique_id(user_input[CONF_NAME], taken or [])
+            stored_id if stored_id is not None else _unique_id(user_input[CONF_NAME], taken or [])
         ),
         "name": user_input[CONF_NAME],
         "indoor_sensor": user_input["indoor_sensor"],

@@ -434,14 +434,16 @@
           "end": "Silence jusqu'à",
           "weekdays": "Jours concernés",
           "delete": "Supprimer cette plage",
-          "when_done": "Quand vous avez terminé ici"
+          "when_done": "Quand vous avez terminé ici",
+          "holiday": "Ceci est une plage de vacances"
         },
         "data_description": {
           "start": "Entre ces heures le directeur ne démarre rien de lui-même. Une plage peut franchir minuit : 21:00 à 09:00 est la nuit.",
           "end": "Entre ces heures le directeur ne démarre rien de lui-même. Une plage peut franchir minuit : 21:00 à 09:00 est la nuit.",
           "weekdays": "Laisser vide vaut tous les jours.",
           "delete": "Supprime cette fenêtre, de sorte que le director puisse de nouveau démarrer quelque chose pendant ces heures.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
+          "holiday": "Une plage de vacances ne s'applique que lorsque le planning de vacances est actif, et remplace alors les plages ordinaires. Ses jours de la semaine sont ignorés. Sans elle, un jour de vacances compte comme un samedi."
         }
       }
     },

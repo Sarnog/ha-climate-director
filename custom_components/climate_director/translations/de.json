@@ -434,14 +434,16 @@
           "end": "Ruhe bis",
           "weekdays": "Tage, an denen das gilt",
           "delete": "Dieses Fenster löschen",
-          "when_done": "Wenn du hier fertig bist"
+          "when_done": "Wenn du hier fertig bist",
+          "holiday": "Dies ist ein Urlaubsfenster"
         },
         "data_description": {
           "start": "Zwischen diesen Zeiten fängt der Director nichts von selbst an. Ein Fenster darf über Mitternacht laufen: 21:00 bis 09:00 ist die Nacht.",
           "end": "Zwischen diesen Zeiten fängt der Director nichts von selbst an. Ein Fenster darf über Mitternacht laufen: 21:00 bis 09:00 ist die Nacht.",
           "weekdays": "Leer lassen gilt jeden Tag.",
           "delete": "Entfernt dieses Fenster, sodass der Director in diesen Stunden wieder etwas beginnen darf.",
-          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst.",
+          "holiday": "Ein Urlaubsfenster gilt nur bei eingeschaltetem Urlaubsplan und ersetzt dann die gewöhnlichen Fenster. Seine Wochentage zählen nicht mit. Ohne eines zählt ein Urlaubstag als Samstag."
         }
       }
     },

@@ -434,14 +434,16 @@
           "end": "Quiet until",
           "weekdays": "Days this applies",
           "delete": "Delete this window",
-          "when_done": "When you are done here"
+          "when_done": "When you are done here",
+          "holiday": "This is a holiday window"
         },
         "data_description": {
           "start": "Between these times the director starts nothing by itself. A window may cross midnight: 21:00 to 09:00 is the night.",
           "end": "Between these times the director starts nothing by itself. A window may cross midnight: 21:00 to 09:00 is the night.",
           "weekdays": "Leave empty for every day.",
           "delete": "Removes this window, so the director may start something during those hours again.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
+          "holiday": "A holiday window applies only while holiday schedule is on, and then replaces the ordinary windows. Its days of the week are ignored. Without one, a holiday counts as a Saturday."
         }
       }
     },

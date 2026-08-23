@@ -235,7 +235,12 @@ class TestAddingThroughEveryScreen:
             stored = await save(home, result["flow_id"])
 
             assert stored["gates"]["quiet_windows"] == [
-                {"start": "21:00:00", "end": "09:00:00", "weekdays": [0, 1, 2, 3, 6]}
+                {
+                    "start": "21:00:00",
+                    "end": "09:00:00",
+                    "weekdays": [0, 1, 2, 3, 6],
+                    "holiday": False,
+                }
             ]
         finally:
             await stop_house(home)
@@ -661,7 +666,12 @@ class TestEveryScreenSurvivesItsNeighbour:
             stored = await save(home, result["flow_id"])
 
             assert stored["gates"]["quiet_windows"] == [
-                {"start": "21:00:00", "end": "09:00:00", "weekdays": [0, 1, 2, 3, 4]}
+                {
+                    "start": "21:00:00",
+                    "end": "09:00:00",
+                    "weekdays": [0, 1, 2, 3, 4],
+                    "holiday": False,
+                }
             ]
         finally:
             await stop_house(home)
@@ -789,7 +799,7 @@ class TestEveryScreenSurvivesItsNeighbour:
     @staticmethod
     def _check_quiet(stored: dict[str, Any]) -> None:
         assert stored["gates"]["quiet_windows"] == [
-            {"start": "21:00:00", "end": "09:00:00", "weekdays": [0, 1, 2, 3, 4]}
+            {"start": "21:00:00", "end": "09:00:00", "weekdays": [0, 1, 2, 3, 4], "holiday": False}
         ]
 
     async def _fill_resident(self, flow: Any, flow_id: str) -> dict[str, Any]:

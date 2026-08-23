@@ -434,14 +434,16 @@
           "end": "Stilte tot",
           "weekdays": "Dagen waarop dit geldt",
           "delete": "Dit venster verwijderen",
-          "when_done": "Als je hier klaar bent"
+          "when_done": "Als je hier klaar bent",
+          "holiday": "Dit is een vakantievenster"
         },
         "data_description": {
           "start": "Tussen deze tijden begint de director niets uit zichzelf. Een venster mag over middernacht heen lopen: 21:00 tot 09:00 is de nacht.",
           "end": "Tussen deze tijden begint de director niets uit zichzelf. Een venster mag over middernacht heen lopen: 21:00 tot 09:00 is de nacht.",
           "weekdays": "Leeg laten geldt elke dag.",
           "delete": "Verwijdert dit venster, zodat de director in die uren weer iets mag beginnen.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
+          "holiday": "Een vakantievenster geldt alleen als het vakantieschema aan staat, en vervangt dan de gewone vensters. De dagen van de week tellen er niet in mee. Zonder vakantievenster telt een vakantiedag als zaterdag."
         }
       }
     },
