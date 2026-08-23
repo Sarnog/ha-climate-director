@@ -608,3 +608,59 @@ class TestDiscardingAndDeleting:
             assert stored["generators"] == []
         finally:
             await stop_house(home)
+
+
+class TestEveryScreenSurvivesItsNeighbour:
+    """Schermen die in dezelfde sleutel schrijven horen elkaar te laten staan.
+
+    Screens that write into the same key must leave each other alone.
+    """
+
+    async def test_a_quiet_window_survives_a_settings_save(self) -> None:
+        """Een stiltevenster zetten, daarna de instellingen bewaren: het venster blijft.
+
+        Het instellingenscherm bouwt `gates` opnieuw op en wist daarmee de
+        stiltevensters die het aparte stiltevensterscherm in diezelfde sleutel
+        heeft gezet. Wie niets aan de instellingen verandert, mag dus niets
+        kwijtraken.
+
+        The settings screen rebuilds `gates` and thereby erases the quiet
+        windows the separate quiet-window screen put into that same key. Saving
+        the settings unchanged therefore must not lose anything.
+        """
+        home = await start_house(two_rooms(), states=cold())
+        try:
+            flow = home.hass.config_entries.options
+            result = await menu(home, "quiets")
+            assert result["step_id"] == "quiets"
+
+            result = await flow.async_configure(result["flow_id"], {"quiet": "add_new"})
+            assert result["step_id"] == "quiet"
+
+            result = await flow.async_configure(
+                result["flow_id"],
+                {
+                    "start": "21:00:00",
+                    "end": "09:00:00",
+                    "weekdays": ["0", "1", "2", "3", "4"],
+                    "delete": False,
+                    "when_done": "keep",
+                },
+            )
+            assert result["step_id"] == "quiets"
+            result = await flow.async_configure(result["flow_id"], {"quiet": "back_to_menu"})
+            assert result["type"] == "menu"
+
+            result = await flow.async_configure(result["flow_id"], {"next_step_id": "settings"})
+            assert result["step_id"] == "settings"
+
+            # Niets veranderen, alleen bewaren; de defaults vullen de rest in.
+            # Change nothing, only save; the defaults fill in the rest.
+            result = await flow.async_configure(result["flow_id"], {"when_done": "keep"})
+            stored = await save(home, result["flow_id"])
+
+            assert stored["gates"]["quiet_windows"] == [
+                {"start": "21:00:00", "end": "09:00:00", "weekdays": [0, 1, 2, 3, 4]}
+            ]
+        finally:
+            await stop_house(home)

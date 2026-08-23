@@ -409,19 +409,29 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     _SUMMER_SOUTH if user_input["hemisphere"] == "south" else _SUMMER_NORTH
                 ),
             }
-            self._installation["gates"] = {
-                "require_awake": user_input["require_awake"],
-                "require_schedule": user_input["require_schedule"],
-                "guest_window": {
-                    "start": user_input.get("guest_start") or "",
-                    "end": user_input.get("guest_end") or "",
-                },
-                "precondition_window": {
-                    "start": user_input.get("precondition_start") or "",
-                    "end": user_input.get("precondition_end") or "",
-                },
-                "max_precondition": int(user_input.get("max_precondition") or 0) * 60,
-            }
+            # `gates` wordt bewust bijgewerkt in plaats van vervangen: het
+            # stiltevensterscherm schrijft in dezelfde sleutel (`quiet_windows`),
+            # en een compleet nieuw dict zou dat werk stilletjes wissen.
+            #
+            # `gates` is deliberately updated rather than replaced: the quiet
+            # window screen writes into the same key (`quiet_windows`), and a
+            # brand-new dict would silently erase that work.
+            gates = self._installation.setdefault("gates", {})
+            gates.update(
+                {
+                    "require_awake": user_input["require_awake"],
+                    "require_schedule": user_input["require_schedule"],
+                    "guest_window": {
+                        "start": user_input.get("guest_start") or "",
+                        "end": user_input.get("guest_end") or "",
+                    },
+                    "precondition_window": {
+                        "start": user_input.get("precondition_start") or "",
+                        "end": user_input.get("precondition_end") or "",
+                    },
+                    "max_precondition": int(user_input.get("max_precondition") or 0) * 60,
+                }
+            )
             self._installation["holiday_calendars"] = list(
                 user_input.get("holiday_calendars") or ()
             )
