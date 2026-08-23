@@ -701,6 +701,55 @@ class TestCapacity:
         assert attic is not None
         assert attic.hvac_mode == MODE_OFF
 
+    def test_a_shared_appliance_occupies_one_capacity_slot(self) -> None:
+        """Eén apparaat onder twee zones telt één keer, niet per zone.
+
+        One appliance under two zones counts once, not per zone.
+        """
+        shared = "climate.ketel"
+        config = DirectorConfig(
+            zones=(
+                Zone(
+                    "woonkamer",
+                    "Woonkamer",
+                    "sensor.woonkamer",
+                    priority=0,
+                    sources=(Source("w", shared),),
+                    heat=HEAT_SETTINGS,
+                ),
+                Zone(
+                    "zolder",
+                    "Zolder",
+                    "sensor.zolder",
+                    priority=1,
+                    sources=(Source("z", shared),),
+                    heat=HEAT_SETTINGS,
+                ),
+            ),
+            circuits=(
+                Circuit(
+                    circuit_id="c",
+                    name="C",
+                    units=(shared,),
+                    simultaneous_heat_cool=False,
+                    max_concurrent_units=1,
+                ),
+            ),
+        )
+        world = make_world(
+            indoor={"woonkamer": WANTS_HEAT, "zolder": WANTS_HEAT},
+            climates={shared: climate(MODE_OFF)},
+        )
+        plan = decide(config, world)
+        command = plan.command_for(shared)
+        assert command is not None
+        assert command.hvac_mode == MODE_HEAT
+        for zone_id in ("woonkamer", "zolder"):
+            decision = plan.decision_for(zone_id)
+            assert decision is not None
+            assert decision.granted is ModeFamily.HEAT
+            assert decision.reason is not Reason.CIRCUIT_AT_CAPACITY
+
     def _house_with_a_third_unit(self, **source_kwargs: object) -> DirectorConfig:
         """Return three rooms on one outdoor unit that can drive two."""
         return DirectorConfig(

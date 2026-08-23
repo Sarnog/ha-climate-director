@@ -468,10 +468,30 @@ def _apply_capacity(
         key=lambda grant: rank.get(grant.zone_id, (0, grant.zone_id)),
     )
 
+    # De grens telt draaiende apparaten, niet zones: een gedeeld apparaat onder
+    # twee zones op één circuit levert één draaiende binnenunit op, niet twee.
+    # Tel je per zone, dan krijgt de tweede kamer onterecht
+    # `CIRCUIT_AT_CAPACITY` terwijl hetzelfde apparaat toch al draait.
+    #
+    # The limit counts running appliances, not zones: a shared appliance under
+    # two zones on one circuit is one running indoor unit, not two. Counting per
+    # zone would wrongly hand the second room `CIRCUIT_AT_CAPACITY` while that
+    # very appliance runs anyway.
+    entity_by_zone = {request.zone.zone_id: request.source.entity_id for request in requests}
+
     denied: set[str] = set()
-    for position, grant in enumerate(winners):
-        if used + position >= cap:
+    slots = used
+    seen_entities: set[str] = set()
+    for grant in winners:
+        entity_id = entity_by_zone.get(grant.zone_id)
+        if entity_id is not None:
+            if entity_id in seen_entities:
+                continue
+            seen_entities.add(entity_id)
+        if slots >= cap:
             denied.add(grant.zone_id)
+        else:
+            slots += 1
 
     return [
         Grant(grant.zone_id, grant.source_id, ModeFamily.NEUTRAL, Reason.CIRCUIT_AT_CAPACITY)
