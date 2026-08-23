@@ -15,5 +15,5 @@
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/Sarnog/ha-climate-director/issues",
   "requirements": [],
-  "version": "7.1.1"
+  "version": "7.1.2"
 }
