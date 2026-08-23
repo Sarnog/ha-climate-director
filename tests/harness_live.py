@@ -41,6 +41,7 @@ from typing import Any
 from homeassistant import loader
 from homeassistant.config_entries import ConfigEntries, ConfigEntry
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     area_registry,
     device_registry,
@@ -57,6 +58,32 @@ from custom_components.climate_director.const import (
 )
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+#: De twee apparaattypen die dit harnas kan nadoen. Het gehoorzame type schrijft
+#: elke aanroep meteen terug - de oude stand-in. Het koppige type doet wat echte
+#: integraties zoals melcloud óók doen: `set_temperature` verzet de stand niet,
+#: en het setpoint moet binnen het bereik van het apparaat vallen.
+#:
+#: The two appliance kinds this harness can mimic. The obedient kind writes every
+#: call straight back - the old stand-in. The stubborn kind does what real
+#: integrations such as melcloud also do: `set_temperature` does not move the
+#: mode, and the setpoint has to fall inside the appliance's range.
+APPLIANCE_TYPES: dict[str, dict[str, Any]] = {
+    "obedient": {
+        "honours_hvac_mode_in_set_temperature": True,
+        "report_delay_rounds": 0,
+        "min_temp": None,
+        "max_temp": None,
+    },
+    "stubborn": {
+        "honours_hvac_mode_in_set_temperature": False,
+        "report_delay_rounds": 0,
+        "min_temp": 10.0,
+        "max_temp": 30.0,
+    },
+}
+
+DEFAULT_APPLIANCE = "obedient"
 
 _own_config_dirs: list[str] = []
 
@@ -122,6 +149,8 @@ class LiveHome:
         self.config_dir = hass.config.config_dir
         self.calls: list[tuple[str, dict[str, Any]]] = []
         self.events: list[tuple[str, dict[str, Any]]] = []
+        self.appliance = dict(APPLIANCE_TYPES[DEFAULT_APPLIANCE])
+        self._pending_reports: dict[str, list[tuple[str | None, float | None, int]]] = {}
 
     # -- de wereld zetten / setting the world --------------------------------
 
@@ -198,11 +227,13 @@ class LiveHome:
 
     async def evaluate(self) -> None:
         """Decide once, right now, without waiting for the debouncer."""
+        _flush_reports(self)
         await self.coordinator._async_evaluate()
         await self.hass.async_block_till_done()
 
     async def settle(self) -> None:
         """Let every queued task finish, the debouncer included."""
+        _flush_reports(self)
         await asyncio.sleep(0)
         await self.hass.async_block_till_done()
 
@@ -232,6 +263,7 @@ async def start_house(
     title: str = "Climate Director",
     entry_id: str = "live",
     config_dir: str | None = None,
+    appliance: str = DEFAULT_APPLIANCE,
 ) -> LiveHome:
     """Return a running Home Assistant with this installation loaded.
 
@@ -311,6 +343,7 @@ async def start_house(
     )
 
     home = LiveHome(hass, entry)
+    home.appliance = dict(APPLIANCE_TYPES[appliance])
     _register_climate(home)
     _watch_events(home)
 
@@ -356,39 +389,108 @@ def _register_climate(home: LiveHome) -> None:
     als een apparaat verdwenen is, maar niet wat we hier willen meten. Ze
     schrijven de toestand terug, zodat de volgende ronde ziet wat er gebeurd is.
 
+    Hoe ze dat doen hangt af van het apparaattype. Het gehoorzame type verzet
+    de stand ook via `set_temperature`; het koppige niet - dat is precies het
+    verschil dat bij echte integraties de kop opsteekt, en dat het oude harnas
+    met zijn enkele, altijd gehoorzame type nooit liet zien.
+
     Without these two `climate.set_hvac_mode` does not exist and Home Assistant
     raises a `ServiceNotFound` - exactly what happens to a user when an appliance
     has gone, but not what we want to measure here. They write the state back, so
     the next round sees what happened.
+
+    How they do that depends on the appliance kind. The obedient kind moves the
+    mode through `set_temperature` too; the stubborn one does not - which is
+    exactly the difference that surfaces with real integrations, and that the
+    old harness with its single, always-obedient kind never showed.
     """
 
     async def _set_mode(call: ServiceCall) -> None:
         home.calls.append(("set_hvac_mode", dict(call.data)))
-        _write(home, call.data["entity_id"], call.data["hvac_mode"])
-
-    async def _set_temperature(call: ServiceCall) -> None:
-        home.calls.append(("set_temperature", dict(call.data)))
         _write(
             home,
             call.data["entity_id"],
-            call.data.get("hvac_mode"),
-            call.data.get("temperature"),
+            call.data["hvac_mode"],
+            None,
+            delay_rounds=home.appliance["report_delay_rounds"],
+        )
+
+    async def _set_temperature(call: ServiceCall) -> None:
+        home.calls.append(("set_temperature", dict(call.data)))
+        entity_id = call.data["entity_id"]
+        temperature = call.data.get("temperature")
+        _check_temperature(home, entity_id, temperature)
+        mode = (
+            call.data.get("hvac_mode")
+            if home.appliance["honours_hvac_mode_in_set_temperature"]
+            else None
+        )
+        _write(
+            home,
+            entity_id,
+            mode,
+            temperature,
+            delay_rounds=home.appliance["report_delay_rounds"],
         )
 
     home.hass.services.async_register("climate", "set_hvac_mode", _set_mode)
     home.hass.services.async_register("climate", "set_temperature", _set_temperature)
 
 
+def _check_temperature(home: LiveHome, entity_id: str, temperature: Any) -> None:
+    """Refuse a setpoint outside the appliance's own range, like HA does."""
+    if temperature is None:
+        return
+    minimum = home.appliance["min_temp"]
+    maximum = home.appliance["max_temp"]
+    if minimum is not None and temperature < minimum:
+        raise ServiceValidationError(
+            f"Temperature {temperature} is below {entity_id}'s minimum {minimum}"
+        )
+    if maximum is not None and temperature > maximum:
+        raise ServiceValidationError(
+            f"Temperature {temperature} is above {entity_id}'s maximum {maximum}"
+        )
+
+
 def _write(
-    home: LiveHome, entity_id: str, mode: str | None, temperature: float | None = None
+    home: LiveHome,
+    entity_id: str,
+    mode: str | None,
+    temperature: float | None = None,
+    *,
+    delay_rounds: int = 0,
 ) -> None:
     """Write one appliance's new state, keeping what the call did not name."""
+    if delay_rounds > 0:
+        home._pending_reports.setdefault(entity_id, []).append((mode, temperature, delay_rounds))
+        return
+    _apply(home, entity_id, mode, temperature)
+
+
+def _apply(home: LiveHome, entity_id: str, mode: str | None, temperature: float | None) -> None:
+    """Write one appliance's new state now."""
     current = home.hass.states.get(entity_id)
     attributes = dict(current.attributes) if current else {}
     if temperature is not None:
         attributes["temperature"] = temperature
     state = mode if mode is not None else (current.state if current else "off")
     home.hass.states.async_set(entity_id, state, attributes)
+
+
+def _flush_reports(home: LiveHome) -> None:
+    """Apply appliance reports whose delay has run out, one round per call."""
+    for entity_id in list(home._pending_reports):
+        remaining: list[tuple[str | None, float | None, int]] = []
+        for mode, temperature, rounds in home._pending_reports[entity_id]:
+            if rounds <= 1:
+                _apply(home, entity_id, mode, temperature)
+            else:
+                remaining.append((mode, temperature, rounds - 1))
+        if remaining:
+            home._pending_reports[entity_id] = remaining
+        else:
+            del home._pending_reports[entity_id]
 
 
 def _watch_events(home: LiveHome) -> None:
