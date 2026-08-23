@@ -863,19 +863,24 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         uitstaan en schrijft daarna nog naar buiten (meldingen, timers). Wie
         hier meteen doorging, zag na de unload nog een melding herleven of een
         timer ontstaan die nooit meer wordt opgeruimd. Een ronde die langer dan
-        dertig seconden blijft hangen, wordt niet langer tegengehouden - dan is
+        vijf seconden blijft hangen, wordt niet langer tegengehouden - dan is
         het gedrag hetzelfde als vóór deze wacht, en dat is de veilige kant.
 
         First let the running round finish: it may have service calls out and
         writes outwards afterwards (notices, timers). Going on immediately let a
         notice revive or a timer come into being after the unload, never to be
-        cleaned up again. A round hanging around for more than thirty seconds is
+        cleaned up again. A round hanging around for more than five seconds is
         no longer held up - behaviour is then the same as before this wait, and
         that is the safe side.
         """
         self._closing = True
         try:
-            async with asyncio.timeout(30):
+            # Vijf seconden is genoeg voor een lopende ronde; langer wachten
+            # bevriest de configuratiepagina tijdens een herlaadbeurt.
+            #
+            # Five seconds is enough for a running round; waiting longer freezes
+            # the configuration page during a reload.
+            async with asyncio.timeout(5):
                 async with self._lock:
                     pass
         except TimeoutError:
