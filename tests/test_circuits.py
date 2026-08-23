@@ -750,6 +750,21 @@ class TestCapacity:
             assert decision.granted is ModeFamily.HEAT
             assert decision.reason is not Reason.CIRCUIT_AT_CAPACITY
 
+    def test_a_zero_capacity_means_no_limit_not_a_permanent_block(self) -> None:
+        """Een met de hand bewerkte nul legt het circuit niet voorgoed stil.
+
+        A hand-edited zero must not silence the circuit for good.
+        """
+        config = DirectorConfig(
+            zones=rooms("woonkamer"),
+            circuits=(multi_split("c", "woonkamer", max_concurrent_units=0),),
+        )
+        modes, plan = run(config, {"woonkamer": WANTS_HEAT})
+        assert modes[unit("woonkamer")] == MODE_HEAT
+        decision = plan.decision_for("woonkamer")
+        assert decision is not None
+        assert decision.reason is not Reason.CIRCUIT_AT_CAPACITY
+
     def _house_with_a_third_unit(self, **source_kwargs: object) -> DirectorConfig:
         """Return three rooms on one outdoor unit that can drive two."""
         return DirectorConfig(

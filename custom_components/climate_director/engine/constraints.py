@@ -457,7 +457,14 @@ def _apply_capacity(
 ) -> list[Grant]:
     """Trim the winners down to the outdoor unit's capacity."""
     cap = circuit.max_concurrent_units
-    if cap is None:
+    if cap is None or cap < 1:
+        # Een met de hand bewerkte nul of negatief getal betekent geen grens,
+        # niet "niemand mag ooit draaien". `validate()` meldt de configuratie;
+        # de engine weigert hem niet in stilte.
+        #
+        # A hand-edited zero or negative number means no limit, not "nobody may
+        # ever run". `validate()` reports the configuration; the engine does not
+        # silently refuse it.
         return granted
 
     used = _standing_claims(config, world, circuit, requests, standing)
