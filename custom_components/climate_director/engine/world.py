@@ -31,6 +31,10 @@ class ClimateState:
     target_temperature: float | None = None
     hvac_modes: frozenset[str] | None = None
     """Which modes the entity reports it can run; `None` means unknown."""
+    min_temp: float | None = None
+    """The lowest setpoint the entity accepts; `None` means unknown."""
+    max_temp: float | None = None
+    """The highest setpoint the entity accepts; `None` means unknown."""
     available: bool = True
     changed_at: datetime | None = None
     """When this entity last changed state, for short-cycle protection."""

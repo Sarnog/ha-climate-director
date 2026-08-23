@@ -1342,42 +1342,56 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
     # -- ongeschikte standen / unsupported modes ------------------------------
 
     def unsupported_modes(self) -> dict[str, str]:
-        """Return the sources whose role may ask a mode the appliance cannot run.
+        """Return the sources whose role asks what the appliance cannot deliver.
 
         De rol zegt wat de installatie wil, het apparaat wat het kan. Een bron
         met rol HEAT_COOL op een apparaat dat alleen `heat` en `off` meldt,
         wordt door de engine voor koelen overgeslagen - en dat is van buiten
-        niet te onderscheiden van een zone die niets hoeft. Onleesbare apparaten
-        blijven hier buiten: die hebben hun eigen melding.
+        niet te onderscheiden van een zone die niets hoeft. Hetzelfde geldt voor
+        een setpoint buiten `min_temp`/`max_temp`: de engine klemt het dan naar
+        de dichtstbijzijnde grens, maar de gevraagde temperatuur wordt nooit
+        gehaald. Onleesbare apparaten blijven hier buiten: die hebben hun eigen
+        melding.
 
         The role says what the installation wants, the appliance what it can. A
         source with role HEAT_COOL on an appliance reporting only `heat` and
         `off` is skipped for cooling by the engine - and from the outside that
-        is indistinguishable from a zone with nothing to do. Unreadable
+        is indistinguishable from a zone with nothing to do. The same holds for
+        a setpoint outside `min_temp`/`max_temp`: the engine clamps it to the
+        nearest bound, but the asked temperature is never reached. Unreadable
         appliances are left out here: they have a notice of their own.
         """
-        found: dict[str, str] = {}
+        found: dict[str, set[str]] = {}
         seen: set[str] = set()
-        for _zone, source in self.config.sources():
-            if source.entity_id in seen:
-                continue
-            seen.add(source.entity_id)
+        for zone, source in self.config.sources():
             state = self.hass.states.get(source.entity_id)
             if state is None or _unreadable(state.state):
                 continue
-            modes = _as_modes(state.attributes.get("hvac_modes"))
-            if modes is None:
-                # Onbekend krijgt het voordeel van de twijfel, precies zoals de
-                # engine dat regelt.
-                continue
-            missing = sorted(
-                preferred_mode(family)
-                for family in (ModeFamily.HEAT, ModeFamily.COOL)
-                if source.supports(family) and preferred_mode(family) not in modes
-            )
-            if missing:
-                found[source.entity_id] = ", ".join(missing)
-        return found
+            complaints: set[str] = set()
+            if source.entity_id not in seen:
+                seen.add(source.entity_id)
+                modes = _as_modes(state.attributes.get("hvac_modes"))
+                if modes is not None:
+                    complaints.update(
+                        preferred_mode(family)
+                        for family in (ModeFamily.HEAT, ModeFamily.COOL)
+                        if source.supports(family) and preferred_mode(family) not in modes
+                    )
+            minimum = _as_float(state.attributes.get("min_temp"))
+            maximum = _as_float(state.attributes.get("max_temp"))
+            for family in (ModeFamily.HEAT, ModeFamily.COOL):
+                if not source.supports(family):
+                    continue
+                settings = zone.settings_for(family)
+                if settings is None:
+                    continue
+                if minimum is not None and settings.target < minimum:
+                    complaints.add(f"{preferred_mode(family)} {settings.target}° < {minimum}°")
+                if maximum is not None and settings.target > maximum:
+                    complaints.add(f"{preferred_mode(family)} {settings.target}° > {maximum}°")
+            if complaints:
+                found.setdefault(source.entity_id, set()).update(complaints)
+        return {entity_id: ", ".join(sorted(parts)) for entity_id, parts in found.items()}
 
     @callback
     def _note_unsupported(self) -> dict[str, str]:
@@ -1612,6 +1626,8 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             current_temperature=_as_float(state.attributes.get("current_temperature")),
             target_temperature=_as_float(state.attributes.get("temperature")),
             hvac_modes=_as_modes(state.attributes.get("hvac_modes")),
+            min_temp=_as_float(state.attributes.get("min_temp")),
+            max_temp=_as_float(state.attributes.get("max_temp")),
             available=True,
             changed_at=dt_util.as_local(state.last_changed),
         )

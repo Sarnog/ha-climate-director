@@ -25,7 +25,7 @@ from .plan import (
     UntouchedSource,
     ZoneDecision,
 )
-from .world import WorldState
+from .world import ClimateState, WorldState
 
 #: Solo circuit standing in for a source with an outdoor unit to itself.
 _SOLO = Circuit(circuit_id="", name="", units=(), simultaneous_heat_cool=True)
@@ -603,7 +603,10 @@ def _build_commands(
                 UnitCommand(
                     entity_id=source.entity_id,
                     hvac_mode=preferred_mode(grant.family),
-                    temperature=settings.target if settings else None,
+                    temperature=_clamped_target(
+                        settings.target if settings else None,
+                        world.climate(source.entity_id),
+                    ),
                     zone_id=zone.zone_id,
                     source_id=source.source_id,
                     reason=Reason.REGULATING,
@@ -823,7 +826,7 @@ def _generator_commands(
             UnitCommand(
                 entity_id=generator.entity_id,
                 hvac_mode=MODE_HEAT,
-                temperature=setpoint,
+                temperature=_clamped_target(setpoint, world.climate(generator.entity_id)),
                 source_id=generator.generator_id,
                 reason=Reason.REGULATING,
             )
@@ -851,6 +854,28 @@ def _idle_mode(config: DirectorConfig, world: WorldState, source: Source, reason
     ):
         return MODE_FAN_ONLY
     return MODE_OFF
+
+
+def _clamped_target(target: float | None, state: ClimateState) -> float | None:
+    """Clamp a setpoint to what the appliance says it accepts.
+
+    Home Assistant weigert een setpoint buiten `min_temp`/`max_temp` met een
+    `ServiceValidationError`, en de stand ging dan nooit meer mee. Beter: vraag
+    het dichtstbijzijnde setpoint dat het apparaat wél aanneemt, zodat de stand
+    gewoon landt. Geen opgave betekent onbekend, en onbekend wordt doorgelaten.
+
+    Home Assistant refuses a setpoint outside `min_temp`/`max_temp` with a
+    `ServiceValidationError`, and the mode then never went along. Better: ask
+    for the nearest setpoint the appliance does accept, so the mode simply
+    lands. No listing means unknown, and unknown is passed through.
+    """
+    if target is None:
+        return None
+    if state.min_temp is not None and target < state.min_temp:
+        return state.min_temp
+    if state.max_temp is not None and target > state.max_temp:
+        return state.max_temp
+    return target
 
 
 def _command_order(config: DirectorConfig, command: UnitCommand) -> tuple[int, str]:

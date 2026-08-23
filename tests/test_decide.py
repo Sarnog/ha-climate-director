@@ -533,3 +533,38 @@ def test_an_idle_appliance_still_gets_its_off_command_when_the_temperature_is_un
     assert command is not None
     assert command.hvac_mode == MODE_OFF
     assert command.reason is Reason.NO_INDOOR_TEMPERATURE
+
+
+def test_a_setpoint_outside_the_appliance_range_is_clamped() -> None:
+    """Het setpoint gaat naar de dichtstbijzijnde grens, zodat de stand gewoon landt.
+
+    Home Assistant weigert een setpoint buiten `min_temp`/`max_temp` met een
+    `ServiceValidationError`, en dan ging de stand nooit meer mee. De engine
+    klemt daarom naar wat het apparaat wél aanneemt.
+
+    The setpoint moves to the nearest bound, so the mode simply lands. Home
+    Assistant refuses a setpoint outside `min_temp`/`max_temp` with a
+    `ServiceValidationError`, and the mode then never went along. The engine
+    therefore clamps to what the appliance does accept.
+    """
+    from custom_components.climate_director.engine.world import ClimateState
+
+    config = DirectorConfig(
+        zones=(
+            Zone(
+                "woonkamer",
+                "Woonkamer",
+                "sensor.woonkamer",
+                sources=(Source("airco", LIVING, role=SourceRole.HEAT_COOL),),
+                heat=ModeSettings(target=35.0, start_at=20.0),
+            ),
+        ),
+    )
+    world = make_world(
+        indoor={"woonkamer": 15.0},
+        climates={LIVING: ClimateState(hvac_mode=MODE_OFF, min_temp=10.0, max_temp=30.0)},
+    )
+    command = decide(config, world).command_for(LIVING)
+    assert command is not None
+    assert command.hvac_mode == MODE_HEAT
+    assert command.temperature == 30.0
