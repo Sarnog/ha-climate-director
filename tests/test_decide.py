@@ -86,10 +86,13 @@ class TestEveryEntityIsCommanded:
         assert command is not None
         assert command.reason is Reason.OTHER_SOURCE_CHOSEN
 
-    def test_a_gate_blocked_zone_passes_its_cause_to_the_command(self) -> None:
-        command = decide(house(), cold_house(master_enabled=False)).command_for(GAS)
-        assert command is not None
-        assert command.reason is Reason.MASTER_DISABLED
+    def test_a_master_off_zone_leaves_its_appliances_alone(self) -> None:
+        """De hoofdschakelaar is een noodknop: geen commando, ook geen uit."""
+        plan = decide(house(), cold_house(master_enabled=False))
+        assert plan.command_for(GAS) is None
+        untouched = plan.untouched_for(GAS)
+        assert untouched is not None
+        assert untouched.reason is Reason.MASTER_DISABLED
 
     def test_every_zone_gets_a_decision(self) -> None:
         plan = decide(house(), cold_house())
@@ -233,7 +236,8 @@ class TestBlockedZones:
         assert decision is not None
         assert decision.reason is Reason.MASTER_DISABLED
 
-    def test_a_blocked_zone_is_switched_off(self) -> None:
+    def test_a_master_off_zone_is_left_alone(self) -> None:
+        """Een draaiende ketel blijft draaien: de noodknop zet niets uit."""
         world = cold_house(
             master_enabled=False,
             climates={
@@ -243,9 +247,11 @@ class TestBlockedZones:
                 BEDROOM: climate(MODE_OFF),
             },
         )
-        command = decide(house(), world).command_for(GAS)
-        assert command is not None
-        assert command.hvac_mode == MODE_OFF
+        plan = decide(house(), world)
+        assert plan.command_for(GAS) is None
+        untouched = plan.untouched_for(GAS)
+        assert untouched is not None
+        assert untouched.reason is Reason.MASTER_DISABLED
 
 
 class TestExclusiveGroups:

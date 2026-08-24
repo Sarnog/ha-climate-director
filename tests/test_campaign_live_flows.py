@@ -808,7 +808,9 @@ class TestAcrossARestart:
             assert home.state(LIVING) == "heat"
             await home.call("switch", "turn_off", {"entity_id": home.by_key("master")})
             await home.evaluate()
-            assert home.state(LIVING) == "off"
+            # Noodknop: de director stuurt niets, dus de airco blijft draaien.
+            # Emergency stop: the director sends nothing, so the airco keeps running.
+            assert home.state(LIVING) == "heat"
         finally:
             await stop_house(home)
 
@@ -817,7 +819,12 @@ class TestAcrossARestart:
         )
         try:
             assert again.value("master") == "off", "de hoofdschakelaar hoort uit te blijven"
-            assert again.state(LIVING) == "off", "en het huis hoort dus niets te doen"
+            # Ook na een herstart stuurt de noodknop niets: het apparaat blijft
+            # zoals het opgestart is.
+            # After a restart too the emergency stop sends nothing: the appliance
+            # stays as it started up.
+            assert again.state(LIVING) == "off"
+            assert not again.climate_calls(), "een uitgezette noodknop hoort niets te sturen"
         finally:
             await stop_house(again)
 

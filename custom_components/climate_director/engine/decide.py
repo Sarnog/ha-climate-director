@@ -647,6 +647,22 @@ def _build_commands(
             )
             continue
 
+        # De hoofdschakelaar uit is een noodknop, geen uitknop: de director laat
+        # álles los, ook het uitzetten. Zette hij een apparaat toch uit, dan zou
+        # een hand aan de ketel binnen een seconde overstemd worden en was de
+        # schakelaar een slot in plaats van een handvat.
+        #
+        # The master switch off is an emergency stop, not an off switch: the
+        # director lets go of everything, switching off included. Were it to
+        # switch an appliance off anyway, a hand at the boiler would be
+        # overruled within a second and the switch would be a lock rather than
+        # a handle.
+        if not world.master_enabled:
+            untouched.append(
+                UntouchedSource(source.entity_id, zone.zone_id, Reason.MASTER_DISABLED)
+            )
+            continue
+
         # Een zone met een override is van de beheerder, niet van de director.
         # Overnemen betekent hier: niet aansturen - ook niet uitzetten. Wie de
         # noodknop gebruikt wil het apparaat zelf zetten en houden, ongeacht
@@ -1009,6 +1025,15 @@ def _generator_commands(
     for generator in config.generators:
         if not world.climate(generator.entity_id).available:
             untouched.append(UntouchedSource(generator.entity_id, "", Reason.SOURCE_UNREACHABLE))
+            continue
+
+        # Ook voor een gedeelde warmtebron is de hoofdschakelaar een noodknop:
+        # niets sturen, ook geen uit.
+        #
+        # For a shared heat source too the master switch is an emergency stop:
+        # issue nothing, not even an off.
+        if not world.master_enabled:
+            untouched.append(UntouchedSource(generator.entity_id, "", Reason.MASTER_DISABLED))
             continue
 
         asking = [

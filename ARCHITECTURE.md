@@ -234,6 +234,14 @@ Twee eigenschappen die de rest van het systeem dragen:
   taak wisselt de nieuwe taak eerst starten, dan delen twee bedrijven één compressor
   zolang de service calls onderweg zijn.
 
+De **hoofdschakelaar is een noodknop**, geen uitknop (besloten na reviewronde 4, H1):
+met `MASTER_DISABLED` stuurt de director helemaal niets — ook geen `off`. Elk beheerd
+apparaat staat dan als `UntouchedSource` in het plan, precies zoals een overgedragen
+zone. Wie de ketel daarna met de hand aanzet houdt hem aan; zou de director hem tóch
+uitzetten, dan was de noodknop een slot. De handleiding ("uit = de director doet
+helemaal niets") klopt daarmee weer, en de schakelaar is bruikbaar als handvat in het
+migratiedraaiboek.
+
 Elke zone krijgt precies één `Reason`, ook als hij niets doet, zodat een unit die
 uitgaat altijd kan zeggen waaróm — "de warmtepomp bedient deze zone" leest anders dan
 "er is niets te doen".
@@ -752,6 +760,14 @@ Two properties carry the rest of the system:
 - **Stops come before starts** in the command order. Starting the new duty first on a
   circuit that is swapping would put two duties on one compressor for as long as the
   service calls take to land.
+
+The **master switch is an emergency stop, not an off switch** (decided after review
+round 4, H1): under `MASTER_DISABLED` the director sends nothing at all — an `off`
+included. Every managed appliance then stands in the plan as an `UntouchedSource`,
+exactly like a handed-over zone. Whoever switches the boiler on by hand afterwards keeps
+it on; were the director to switch it off anyway, the emergency stop would be a lock.
+The manual ("off = the director does nothing at all") matches again, and the switch is
+usable as a handle in the migration script.
 
 Every zone gets exactly one `Reason`, even when it does nothing, so a unit switching off
 can always say *why* — "the heat pump serves this zone" reads differently from "there is
