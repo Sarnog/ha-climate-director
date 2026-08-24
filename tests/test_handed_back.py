@@ -424,6 +424,41 @@ class TestAnArrivedOffCommandExplainsOnlyItself:
         assert item._commanded_off == {}
 
 
+class TestAnOwnStartConsumesTheOffNote:
+    """Een eigen start verbruikt de uit-notitie, hoe het `off` ook binnenkwam.
+
+    Our own start consumes the off note, however the `off` arrived.
+    """
+
+    @staticmethod
+    def _freeze(monkeypatch, now: datetime) -> None:
+        monkeypatch.setattr(dt_util, "now", lambda: now)
+
+    @pytest.mark.parametrize("route", ["direct", "late", "unavailable"])
+    def test_a_hand_after_an_own_start_is_seen(self, monkeypatch, route: str) -> None:
+        now = dt_util.now()
+        self._freeze(monkeypatch, now)
+        item = coordinator(idle_plan() if route == "direct" else running_plan())
+        item._commanded_off[BEDROOM] = now
+
+        if route == "unavailable":
+            item._notice_hand(_Event(BEDROOM, "heat", "unavailable"))
+            item._notice_hand(_Event(BEDROOM, "unavailable", "off"))
+        else:
+            item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        assert item._zones_handed_back() == set()
+
+        self._freeze(monkeypatch, now + timedelta(minutes=5))
+        item._notice_hand(_Event(BEDROOM, "off", "heat"))
+        assert item._commanded_off == {}, "een eigen start verbruikt de uit-notitie niet"
+
+        if route == "direct":
+            item.data = item._issued = running_plan()
+        self._freeze(monkeypatch, now + timedelta(minutes=6))
+        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        assert item._zones_handed_back() == {"slaapkamer"}
+
+
 class TestAGeneratorCountsForItsZones:
     """Een hand aan een gedeelde warmtebron telt voor de zones die hij bedient.
 

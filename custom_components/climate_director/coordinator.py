@@ -611,7 +611,15 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
 
         if now is not ModeFamily.NEUTRAL:
             # Weer aangezet, met de hand of door ons: hoe dan ook meedoen.
-            # Switched on again, by hand or by us: taking part either way.
+            # Zodra het apparaat op eigen kracht weer een actieve stand meldt,
+            # is de verklaring "ons uit-commando" per definitie verbruikt - hoe
+            # het `off` ertussenin ook gemeld is, ook via `unavailable`.
+            #
+            # Switched on again, by hand or by us: taking part either way. Once
+            # the appliance reports an active mode on its own again, the "our
+            # off command" explanation is spent by definition - however the
+            # `off` in between was reported, `unavailable` included.
+            self._commanded_off.pop(entity_id, None)
             cleared = False
             for zone in zones:
                 cleared = self._handed_back.pop(zone, None) is not None or cleared
