@@ -627,3 +627,17 @@ class TestEveryLanguageStandsUp:
             if isinstance(text, str) and len(text) > 25 and text == english.get(key)
         ]
         assert not left, f"{path.name} is hier nog Engels: {sorted(left)[:8]}"
+
+
+class TestTheManifest:
+    """hassfest eist domain, name en daarna alfabetische sleutels."""
+
+    def test_the_keys_are_sorted_the_way_hassfest_wants(self) -> None:
+        manifest = load(COMPONENT / "manifest.json")
+        keys = list(manifest)
+        assert keys[:2] == ["domain", "name"]
+        assert keys[2:] == sorted(keys[2:]), keys
+
+    def test_the_version_is_there(self) -> None:
+        manifest = load(COMPONENT / "manifest.json")
+        assert manifest.get("version")

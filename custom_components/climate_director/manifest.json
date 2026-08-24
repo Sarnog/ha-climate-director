@@ -5,7 +5,6 @@
     "@Sarnog"
   ],
   "config_flow": true,
-  "single_config_entry": true,
   "dependencies": [
     "climate",
     "repairs"
@@ -15,5 +14,6 @@
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/Sarnog/ha-climate-director/issues",
   "requirements": [],
+  "single_config_entry": true,
   "version": "7.1.3"
 }
