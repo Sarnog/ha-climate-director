@@ -603,9 +603,77 @@ def test_the_restart_waits_one_rest_time_after_closing() -> None:
     assert deferral is not None
     assert deferral.subject == GAS
     assert deferral.reason is Reason.SHORT_CYCLE_PROTECTION
-    assert deferral.until == at(12, 2) + gates.HOUSE_WIDE_MIN_REST
+    assert deferral.until == at(12, 2) + gates.OPENING_MIN_REST
 
     resumed = decide(config, flap_world(minute=5, door_open=False), waiting)
+    resumed_command = command_for(resumed, GAS)
+    assert resumed_command is not None
+    assert resumed_command.hvac_mode == "heat"
+
+
+def own_boiler() -> DirectorConfig:
+    """Return one room heated by a boiler that hangs on no circuit.
+
+    De opening raakt de kamer zelf; de ketel staat niet op de huisbrede lijst.
+    Vóór P3 kon deze ketel klapperen zodra zijn eigen deur openging, want de
+    rusttijd gold alleen voor de huisbrede stop.
+
+    The opening affects the room itself; the boiler is not on the house-wide
+    list. Before P3 this boiler could flap once its own door opened, because the
+    rest only applied to the house-wide stop.
+    """
+    room = Zone(
+        zone_id="woonkamer",
+        name="Woonkamer",
+        indoor_sensor="sensor.woonkamer",
+        priority=0,
+        sources=(Source(source_id="ketel", entity_id=GAS, role=SourceRole.HEAT_ONLY),),
+        heat=warmth(),
+    )
+    return DirectorConfig(
+        zones=(room,),
+        openings=(Opening(entity_id=BACK_DOOR, zone_ids=("woonkamer",)),),
+        outdoor_sensor="sensor.buiten",
+    )
+
+
+def own_door_world(*, minute: int, door_open: bool) -> object:
+    """Return a world at 12:`minute` with the room cold and its own door as given."""
+    return make_world(
+        now=at(12, minute),
+        outdoor=2.0,
+        indoor={"woonkamer": 18.0},
+        climates={GAS: climate("off")},
+        openings={BACK_DOOR: OpeningState(open=door_open, changed_at=at(12, minute))},
+    )
+
+
+def test_a_zone_door_stop_rests_a_circuit_less_boiler_too() -> None:
+    """De rusttijd geldt voor élke openingsstop van een apparaat zonder circuit.
+
+    The rest applies to every opening stop of an appliance without a circuit.
+    """
+    config = own_boiler()
+
+    stopped = decide(config, own_door_world(minute=1, door_open=True))
+    stopped_command = command_for(stopped, GAS)
+    assert stopped_command is not None
+    assert stopped_command.hvac_mode == "off"
+    assert stopped_command.reason is Reason.OPENING_OPEN
+
+    waiting = decide(config, own_door_world(minute=2, door_open=False), stopped)
+    waiting_command = command_for(waiting, GAS)
+    assert waiting_command is not None
+    assert waiting_command.hvac_mode == "off"
+    assert waiting_command.reason is Reason.SHORT_CYCLE_PROTECTION
+
+    deferral = waiting.next_deferral
+    assert deferral is not None
+    assert deferral.subject == GAS
+    assert deferral.reason is Reason.SHORT_CYCLE_PROTECTION
+    assert deferral.until == at(12, 2) + gates.OPENING_MIN_REST
+
+    resumed = decide(config, own_door_world(minute=5, door_open=False), waiting)
     resumed_command = command_for(resumed, GAS)
     assert resumed_command is not None
     assert resumed_command.hvac_mode == "heat"

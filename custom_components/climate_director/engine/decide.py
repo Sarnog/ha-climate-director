@@ -161,7 +161,9 @@ def _collect_wishes(
             refusals[zone.zone_id] = Reason.NO_SOURCE_AVAILABLE
             continue
 
-        rest_until = gates.house_wide_rest_until(config, world, previous, source.entity_id)
+        rest_until = None
+        if not world.precondition_ignores_openings(zone.zone_id):
+            rest_until = gates.opening_rest_until(config, world, previous, source.entity_id)
         if rest_until is not None and world.now < rest_until:
             # De stop is voorbij, maar het apparaat mag nog niet aan. Precies
             # zoals een circuit dat doet: de zone wacht met een
@@ -984,7 +986,9 @@ def _generator_commands(
             targets = [zone.heat.target for zone in asking if zone.heat]
             setpoint = max(targets) if targets else None
 
-        rest_until = gates.house_wide_rest_until(config, world, previous, generator.entity_id)
+        rest_until = None
+        if not any(world.precondition_ignores_openings(zone.zone_id) for zone in asking):
+            rest_until = gates.opening_rest_until(config, world, previous, generator.entity_id)
         if rest_until is not None and world.now < rest_until:
             # De huisbrede stop geldt ook voor een generator; de herstart wacht
             # dezelfde rusttijd als een bron zonder circuit.

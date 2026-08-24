@@ -20,16 +20,19 @@ from .models import HOLIDAY_WEEKDAY, DirectorConfig, Opening, Resident, Zone, Zo
 from .plan import Plan, Reason
 from .world import WorldState
 
-#: Hoe lang een huisbreed stilgezet apparaat minstens stil moet staan voordat
-#: het weer mag starten. Kortcyclusbescherming hangt aan een circuit, en een
-#: gasketel hangt aan geen circuit - dus dit is de rem die dat pad miste. De
-#: stop zelf wordt hier nooit mee uitgesteld, alleen de herstart.
+#: Hoe lang een door een opening stilgezet apparaat zonder circuit minstens stil
+#: moet staan voordat het weer mag starten. Kortcyclusbescherming hangt aan een
+#: circuit, en een gasketel hangt aan geen circuit - dus dit is de rem die dat
+#: pad miste, eerst alleen voor de huisbrede stop en sinds P3 voor élke
+#: openingsstop. De stop zelf wordt hier nooit mee uitgesteld, alleen de
+#: herstart.
 #:
-#: How long a house-wide stopped appliance must at least stand still before it
-#: may start again. Short-cycle protection hangs on a circuit, and a boiler
-#: hangs on no circuit - so this is the brake that path was missing. This never
-#: delays the stop itself, only the restart.
-HOUSE_WIDE_MIN_REST = timedelta(minutes=3)
+#: How long an opening-stopped appliance without a circuit must at least stand
+#: still before it may start again. Short-cycle protection hangs on a circuit,
+#: and a boiler hangs on no circuit - so this is the brake that path was
+#: missing, first only for the house-wide stop and since P3 for every opening
+#: stop. This never delays the stop itself, only the restart.
+OPENING_MIN_REST = timedelta(minutes=3)
 
 
 def closed(
@@ -412,42 +415,46 @@ def house_wide_blocked(config: DirectorConfig, world: WorldState) -> frozenset[s
     return frozenset(config.house_wide_openings)
 
 
-def house_wide_rest_until(
+def opening_rest_until(
     config: DirectorConfig, world: WorldState, previous: Plan | None, entity_id: str
 ) -> datetime | None:
-    """Return when a house-wide stopped appliance may start again, if held.
+    """Return when an opening-stopped appliance without a circuit may start again.
 
     De kortcyclusbescherming van een circuit kijkt naar `last_changed` van het
-    apparaat. Een huisbreed stilgezet apparaat kan daaraan niet hangen: een
-    gasketel heeft geen circuit, en de stop zelf wordt veroorzaakt door een
-    opening, niet door het apparaat. Dit leest daarom het vorige plan: stond het
-    apparaat daarop uit met `OPENING_OPEN_ELSEWHERE`, dan is de stop net voorbij
+    apparaat en de `min_cycle_time` van het circuit. Een apparaat zonder circuit
+    - bij dit ontwerp per definitie de gasketel - mist dat vangnet op élk pad:
+    de huisbrede stop kreeg het in H2, maar de gewone raampoort van zijn eigen
+    zone niet. Dit leest daarom het vorige plan: stond het apparaat daarop uit
+    met `OPENING_OPEN` of `OPENING_OPEN_ELSEWHERE`, dan is de stop net voorbij
     en begint de rusttijd nu te lopen; stond het uit met
     `SHORT_CYCLE_PROTECTION`, dan loopt de eerder uitgerekende rusttijd door.
 
-    Alleen herstarts worden uitgesteld, nooit de stop zelf: de stop hangt aan
-    `house_wide_blocked` en die kent deze rem niet.
+    Alleen herstarts worden uitgesteld, nooit de stop zelf: de stop hangt aan de
+    poorten, en die kennen deze rem niet.
 
-    A circuit's short-cycle protection reads the appliance's `last_changed`. A
-    house-wide stopped appliance cannot lean on that: a boiler has no circuit,
-    and the stop itself is caused by an opening rather than by the appliance.
+    A circuit's short-cycle protection reads the appliance's `last_changed` and
+    the circuit's `min_cycle_time`. An appliance without a circuit - by this
+    design, the boiler - lacks that safety net on every path: the house-wide
+    stop got it in H2, but the ordinary window gate of its own zone did not.
     This reads the previous plan instead: if the appliance stood off there with
-    `OPENING_OPEN_ELSEWHERE`, the stop has just ended and the rest starts now; if
-    it stood off with `SHORT_CYCLE_PROTECTION`, the rest computed earlier keeps
-    running.
+    `OPENING_OPEN` or `OPENING_OPEN_ELSEWHERE`, the stop has just ended and the
+    rest starts now; if it stood off with `SHORT_CYCLE_PROTECTION`, the rest
+    computed earlier keeps running.
 
-    Only restarts are delayed, never the stop itself: the stop hangs on
-    `house_wide_blocked`, which knows nothing of this brake.
+    Only restarts are delayed, never the stop itself: the stop hangs on the
+    gates, which know nothing of this brake.
     """
-    if entity_id not in config.house_wide_openings or previous is None:
+    if previous is None:
+        return None
+    if any(entity_id in circuit.units for circuit in config.circuits):
         return None
     previous_command = previous.command_for(entity_id)
     if previous_command is None:
         return None
     if family_of(previous_command.hvac_mode) is not ModeFamily.NEUTRAL:
         return None
-    if previous_command.reason is Reason.OPENING_OPEN_ELSEWHERE:
-        return world.now + HOUSE_WIDE_MIN_REST
+    if previous_command.reason in (Reason.OPENING_OPEN, Reason.OPENING_OPEN_ELSEWHERE):
+        return world.now + OPENING_MIN_REST
     if previous_command.reason is Reason.SHORT_CYCLE_PROTECTION:
         return next(
             (
