@@ -166,7 +166,6 @@ def two_room_house(*, attic_unbounded: bool) -> DirectorConfig:
         ),
         gates=GateSettings(
             require_awake=True,
-            precondition_window=TimeWindow(time(5, 0), time(23, 0)),
             max_precondition=timedelta(hours=2),
             guest_window=TimeWindow(time(8, 0), time(23, 0)),
         ),
@@ -213,7 +212,6 @@ def one_room_house() -> DirectorConfig:
         ),
         gates=GateSettings(
             require_awake=True,
-            precondition_window=TimeWindow(time(5, 0), time(23, 0)),
             max_precondition=timedelta(hours=2),
             guest_window=TimeWindow(time(8, 0), time(23, 0)),
         ),

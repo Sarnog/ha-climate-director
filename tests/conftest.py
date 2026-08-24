@@ -113,7 +113,6 @@ def make_world(
     guest_mode: bool = False,
     precondition_until: dict[str, datetime] | None = None,
     precondition_bypass: frozenset[str] = frozenset(),
-    precondition_window: TimeWindow | None = None,
     zone_overrides: dict[str, bool] | None = None,
     zone_priorities: dict[str, int] | None = None,
     precipitation: bool = False,
@@ -138,7 +137,6 @@ def make_world(
         guest_mode=guest_mode,
         precondition_until=dict(precondition_until or {}),
         precondition_bypass=precondition_bypass,
-        precondition_window=precondition_window,
         zone_overrides=dict(zone_overrides or {}),
         zone_priorities=dict(zone_priorities or {}),
         precipitation=precipitation,
@@ -329,7 +327,6 @@ def config() -> DirectorConfig:
 
 def office_hours() -> tuple:
     """Return a weekday 08:00-18:00 schedule window."""
-    from custom_components.climate_director.engine import TimeWindow
 
     return (TimeWindow(time(8, 0), time(18, 0), frozenset({0, 1, 2, 3, 4})),)
 

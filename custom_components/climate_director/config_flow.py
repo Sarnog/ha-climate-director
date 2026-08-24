@@ -448,13 +448,17 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         "start": user_input.get("guest_start") or "",
                         "end": user_input.get("guest_end") or "",
                     },
-                    "precondition_window": {
-                        "start": user_input.get("precondition_start") or "",
-                        "end": user_input.get("precondition_end") or "",
-                    },
                     "max_precondition": int(user_input.get("max_precondition") or 0) * 60,
                 }
             )
+            # Het vooruit-venster bestaat niet meer. Een installatie die het
+            # ooit opsloeg houdt de dode sleutel niet langer vast zodra er hier
+            # iets gewijzigd wordt.
+            #
+            # The pre-conditioning window no longer exists. An installation
+            # that once stored it no longer keeps the dead key once anything is
+            # changed here.
+            gates.pop("precondition_window", None)
             self._installation["holiday_calendars"] = list(
                 user_input.get("holiday_calendars") or ()
             )
@@ -482,7 +486,6 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         seasons = self._installation.get("seasons") or {}
         gates = self._installation.get("gates") or {}
         guest = gates.get("guest_window") or {}
-        precondition = gates.get("precondition_window") or {}
         precipitation = self._installation.get("precipitation") or {}
         return self.async_show_form(
             step_id="settings",
@@ -539,26 +542,6 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                             "suggested_value": self._installation.get("holiday_keyword") or None
                         },
                     ): str,
-                    # Een echte standaard en geen suggestie. Bleef het veld
-                    # leeg, dan schreef de flow een leeg venster weg, en dat
-                    # leest de integratie als "de hele dag" - precies het
-                    # tegenovergestelde van de bedoeling, want vooruit
-                    # verwarmen is het enige dat een leeg huis mag laten
-                    # draaien.
-                    #
-                    # A real default rather than a suggestion. If the field was
-                    # left empty the flow wrote an empty window, which the
-                    # integration reads as "all day" - the exact opposite of
-                    # the intent, since pre-conditioning is the only thing
-                    # allowed to run an empty house.
-                    vol.Required(
-                        "precondition_start",
-                        default=precondition.get("start") or "06:00:00",
-                    ): _TIME,
-                    vol.Required(
-                        "precondition_end",
-                        default=precondition.get("end") or "23:00:00",
-                    ): _TIME,
                     vol.Required(
                         "max_precondition",
                         default=int(gates.get("max_precondition", 7200)) // 60,

@@ -358,11 +358,8 @@ class TestTheClockCatchesUp:
         assert delay_over.decision_for("woonkamer").reason is Reason.OPENING_OPEN
 
 
-PRECONDITION_WINDOW = TimeWindow(time(6, 0), time(23, 0))
-
-
 def _one_room_with_a_door() -> DirectorConfig:
-    """Return one room without residents, a door, and the standard request window."""
+    """Return one room without residents and a door of its own."""
     return DirectorConfig(
         zones=(
             Zone(
@@ -375,41 +372,45 @@ def _one_room_with_a_door() -> DirectorConfig:
         ),
         residents=(),
         openings=house().openings,
-        gates=GateSettings(precondition_window=PRECONDITION_WINDOW),
     )
 
 
-class TestTheRequestWindowBoundsEveryException:
-    """Buiten het venster gedraagt een verzoek zich alsof het er niet is.
+class TestARequestCountsAtEveryHour:
+    """Geen venster meer: op elk uur telt alleen de raampoort.
 
-    Outside the window a request behaves as though it did not exist.
+    No window anymore: at every hour only the door gate counts.
     """
 
     @pytest.mark.parametrize(
-        ("hour", "bypass", "door_open", "expected"),
+        ("hour", "minute", "bypass", "door_open", "expected"),
         [
-            # Binnen het venster opent een bypass de raampoort.
-            (12, True, True, ()),
-            # Buiten het venster geldt de raampoort weer, bypass of niet.
-            (3, True, True, (Reason.OPENING_OPEN,)),
-            (3, False, True, (Reason.OPENING_OPEN,)),
-            # En zonder open raam is er binnen én buiten niets aan de hand.
-            (12, False, False, ()),
-            (3, True, False, ()),
+            (3, 0, True, True, ()),
+            (3, 0, False, True, (Reason.OPENING_OPEN,)),
+            (3, 0, False, False, ()),
+            (12, 0, True, True, ()),
+            (12, 0, False, True, (Reason.OPENING_OPEN,)),
+            (12, 0, False, False, ()),
+            (23, 30, True, True, ()),
+            (23, 30, False, True, (Reason.OPENING_OPEN,)),
+            (23, 30, False, False, ()),
         ],
         ids=lambda value: str(value) if not isinstance(value, int) else f"u{value}",
     )
     def test_the_door_gate(
-        self, hour: int, bypass: bool, door_open: bool, expected: tuple[Reason, ...]
+        self,
+        hour: int,
+        minute: int,
+        bypass: bool,
+        door_open: bool,
+        expected: tuple[Reason, ...],
     ) -> None:
-        now = at(hour, 0)
+        now = at(hour, minute)
         world = make_world(
             now=now,
             indoor={"woonkamer": 15.0},
             openings={BACK_DOOR: OpeningState(open=door_open, changed_at=now - timedelta(hours=1))},
             precondition_until={"woonkamer": now + timedelta(minutes=30)},
             precondition_bypass=frozenset({"woonkamer"}) if bypass else frozenset(),
-            precondition_window=PRECONDITION_WINDOW,
         )
         config = _one_room_with_a_door()
         assert gates.closed(config, world, config.zones[0]) == expected

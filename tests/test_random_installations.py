@@ -372,7 +372,6 @@ def _installation(rng: random.Random) -> dict:
             # `validate()` rightly complains about.
             "require_schedule": scheduled and rng.random() < 0.5,
             "max_precondition": rng.choice([1800, 7200, 14400]),
-            "precondition_window": rng.choice([None, _window(rng)]),
             "guest_window": rng.choice([None, _window(rng)]),
             "quiet_windows": [_quiet_window(rng) for _ in range(rng.randrange(0, 3))],
         },

@@ -244,7 +244,6 @@ def house() -> DirectorConfig:
             require_awake=True,
             require_schedule=False,
             max_precondition=timedelta(hours=2),
-            precondition_window=TimeWindow(time(6, 0), time(23, 0)),
             guest_window=TimeWindow(time(8, 0), time(23, 0)),
             quiet_windows=(
                 TimeWindow(time(21, 0), time(9, 0), WEEK),

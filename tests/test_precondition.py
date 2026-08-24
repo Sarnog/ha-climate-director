@@ -4,15 +4,17 @@ Pre-conditioning: the only thing allowed to run an empty house.
 
 Alles in deze integratie is erop gebouwd dat een leeg huis met rust gelaten
 wordt. Deze ene uitzondering doorbreekt dat met opzet, en is daarom de plek waar
-het meeste mis kan gaan. Twee grenzen houden hem in toom, en geen van beide is
-te vergeten: het verzoek verloopt vanzelf, en buiten het venster telt het niet
-mee. Er is geen schakelaar die aan kan blijven staan - dat is het hele punt.
+het meeste mis kan gaan. Eén grens houdt hem in toom, en die is niet te
+vergeten: het verzoek verloopt vanzelf. Er is geen venster meer; een handmatig
+verzoek gaat altijd voor, ongeacht het uur. Er is geen schakelaar die aan kan
+blijven staan - dat is het hele punt.
 
 Everything in this integration is built on leaving an empty house alone. This
 one exception breaks that on purpose, and is therefore where most can go wrong.
-Two bounds hold it in check, and neither can be forgotten: the request expires
-by itself, and outside the window it does not count. There is no switch here
-that can be left on - which is the whole point.
+One bound holds it in check, and it cannot be forgotten: the request expires by
+itself. There is no window anymore; a hand-given request always outranks the
+automation, whatever the hour. There is no switch here that can be left on -
+which is the whole point.
 """
 
 from __future__ import annotations
@@ -77,13 +79,6 @@ def house(**gate_kwargs: object) -> DirectorConfig:
 def verdict(config: DirectorConfig, **kwargs: object):
     zone = config.zone("woonkamer")
     assert zone is not None
-    # Net als de koppelingslaag: het venster uit de configuratie gaat mee in de
-    # momentopname, want daar hoort de ene definitie van "er loopt een verzoek".
-    #
-    # Just like the binding layer: the window from the configuration travels in
-    # the snapshot, because that is where the one definition of "a request is
-    # running" lives.
-    kwargs.setdefault("precondition_window", config.gates.precondition_window)
     return gate_verdict(config, make_world(**kwargs), zone)  # type: ignore[arg-type]
 
 
@@ -149,25 +144,39 @@ class TestItRunsOut:
         assert result.reason is Reason.NOBODY_HOME
 
 
-class TestTheWindow:
-    """Six in the morning until eleven at night, and nothing outside it."""
+class TestARequestCountsAtEveryHour:
+    """Geen venster meer: een verzoek gedraagt zich op elk uur hetzelfde.
 
-    @pytest.mark.parametrize("hour", [6, 12, 22])
-    def test_inside_it_a_request_counts(self, hour: int) -> None:
-        assert verdict(house(), **empty_house(at(hour), at(hour) + timedelta(hours=1))).allowed
+    No window anymore: a request behaves the same at every hour.
+    """
 
-    @pytest.mark.parametrize("hour", [0, 3, 5, 23])
-    def test_outside_it_a_request_does_not(self, hour: int) -> None:
-        result = verdict(house(), **empty_house(at(hour), at(hour) + timedelta(hours=1)))
-        assert result.reason is Reason.NOBODY_HOME
-
-    def test_the_hours_are_settable(self) -> None:
-        config = house(precondition_window=TimeWindow(time(0, 0), time(23, 59)))
-        assert verdict(config, **empty_house(at(3), at(4))).allowed
-
-    def test_no_window_means_all_day(self) -> None:
-        config = house(precondition_window=None)
-        assert verdict(config, **empty_house(at(3), at(4))).allowed
+    @pytest.mark.parametrize(("hour", "minute"), [(3, 0), (12, 0), (23, 30)])
+    @pytest.mark.parametrize(
+        ("bypass", "door_open"),
+        [(True, True), (False, True), (False, False)],
+        ids=["bypass_open", "geen_bypass_open", "geen_bypass_dicht"],
+    )
+    def test_the_door_gate_is_the_only_bound(
+        self, hour: int, minute: int, bypass: bool, door_open: bool
+    ) -> None:
+        moment = at(hour, minute)
+        result = verdict(
+            house(),
+            **empty_house(
+                moment,
+                moment + timedelta(hours=1),
+                precondition_bypass=frozenset({"woonkamer"}) if bypass else frozenset(),
+                openings=(
+                    {"binary_sensor.raam": OpeningState(open=True, changed_at=None)}
+                    if door_open
+                    else {}
+                ),
+            ),
+        )
+        if door_open and not bypass:
+            assert result.reason is Reason.OPENING_OPEN
+        else:
+            assert result.allowed
 
 
 class TestWhatItStillObeys:
@@ -228,8 +237,12 @@ class TestSomebodyComesHome:
         )
         assert result.reason is Reason.NOBODY_HOME
 
-    def test_it_does_not_wake_a_sleeping_household(self) -> None:
-        """Nobody asks to be pre-conditioned at three; the window sees to that."""
+    def test_a_request_at_night_goes_through_even_while_everyone_sleeps(self) -> None:
+        """Geen venster meer: een handmatig verzoek om 03:00 gaat gewoon voor.
+
+        No window anymore: a hand-given request at 03:00 simply outranks the
+        automation.
+        """
         result = verdict(
             house(),
             now=at(3),
@@ -237,7 +250,7 @@ class TestSomebodyComesHome:
             presence={"woonkamer": PresenceState(occupied=True)},
             precondition_until={"woonkamer": at(4)},
         )
-        assert result.reason is Reason.EVERYONE_ASLEEP
+        assert result.allowed
 
 
 class TestPresenceDrivenZonesTakeItToo:
@@ -262,19 +275,22 @@ class TestPresenceDrivenZonesTakeItToo:
 
 class TestTheSettingsSurvive:
     def test_they_round_trip(self) -> None:
-        config = house(
-            precondition_window=TimeWindow(time(7, 0), time(21, 0)),
-            max_precondition=timedelta(minutes=45),
-        )
+        config = house(max_precondition=timedelta(minutes=45))
         assert config_from_dict(config_to_dict(config)) == config
 
-    def test_older_options_get_the_default_hours(self) -> None:
-        """Configurations stored before this existed must not open up the night."""
-        config = config_from_dict({})
-        window = config.gates.precondition_window
-        assert window is not None
-        assert (window.start, window.end) == (time(6, 0), time(23, 0))
+    def test_older_options_with_a_window_are_forgiven(self) -> None:
+        """Een opgeslagen venster wordt genegeerd; de sleutel is gewoon onbekend.
+
+        A stored window is ignored; the key is simply unknown.
+        """
+        stored = config_to_dict(house())
+        stored["gates"]["precondition_window"] = {
+            "start": "06:00:00",
+            "end": "23:00:00",
+        }
+        config = config_from_dict(stored)
         assert config.gates.max_precondition == timedelta(hours=2)
+        assert config_from_dict(config_to_dict(config)) == config
 
     def test_a_maximum_of_zero_is_reported(self) -> None:
         config = DirectorConfig(

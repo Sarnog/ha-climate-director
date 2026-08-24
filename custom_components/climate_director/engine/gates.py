@@ -199,14 +199,12 @@ def _preconditioning(world: WorldState, zone: Zone) -> bool:
     """Return whether a live request is warming this zone up for somebody's return.
 
     Eén definitie van "er loopt een verzoek", en die staat in
-    `WorldState.preconditioning()`: daar zitten zowel de klok van het verzoek
-    zelf als het ingestelde venster in. Hier nog een tweede venstercontrole
-    zouden twee definities naast elkaar leggen, en die lopen vanzelf uit elkaar.
+    `WorldState.preconditioning()`: daar zit de klok van het verzoek zelf in.
+    Een tweede definitie hier zou alleen maar uit elkaar kunnen lopen.
 
     One definition of "a request is running", and it lives in
-    `WorldState.preconditioning()`: both the request's own clock and the
-    configured window sit there. A second window check here would put two
-    definitions side by side, and those drift apart by themselves.
+    `WorldState.preconditioning()`: the request's own clock sits there. A
+    second definition here could only drift apart.
     """
     return world.preconditioning(zone.zone_id)
 

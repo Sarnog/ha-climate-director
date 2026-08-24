@@ -166,7 +166,6 @@ def house() -> DirectorConfig:
         gates=GateSettings(
             require_awake=True,
             max_precondition=timedelta(hours=2),
-            precondition_window=TimeWindow(time(6, 0), time(23, 0)),
             quiet_windows=(TimeWindow(time(23, 0), time(6, 0)),),
         ),
         seasons=SeasonSettings(),

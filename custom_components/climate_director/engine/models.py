@@ -572,20 +572,6 @@ class GateSettings:
     starting, not on continuing. Leaving it empty releases the brake.
     """
 
-    precondition_window: TimeWindow | None = field(
-        default_factory=lambda: TimeWindow(time(6, 0), time(23, 0))
-    )
-    """Hours in which a pre-conditioning request may run. `None` means all day.
-
-    Vooruit verwarmen is het enige dat een leeg huis mag laten draaien, en dus
-    het enige dat 's nachts echt geld kan kosten. Standaard 06:00 tot 23:00, en
-    daarbuiten telt een verzoek eenvoudig niet mee.
-
-    Pre-conditioning is the only thing allowed to run an empty house, and so the
-    only thing that can really cost money overnight. 06:00 to 23:00 by default,
-    and outside it a request simply does not count.
-    """
-
     max_precondition: timedelta = timedelta(hours=2)
     """Longest a single request may last, however long somebody asks for.
 

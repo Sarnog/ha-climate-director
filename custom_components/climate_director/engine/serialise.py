@@ -110,14 +110,6 @@ def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
                 for window in config.gates.quiet_windows
             ],
             "require_schedule": config.gates.require_schedule,
-            "precondition_window": (
-                None
-                if config.gates.precondition_window is None
-                else {
-                    "start": config.gates.precondition_window.start.isoformat(),
-                    "end": config.gates.precondition_window.end.isoformat(),
-                }
-            ),
             "max_precondition": int(config.gates.max_precondition.total_seconds()),
             "guest_window": (
                 None
@@ -289,8 +281,6 @@ def _gates(raw: Any) -> GateSettings:
     if not isinstance(raw, Mapping):
         return GateSettings()
     guest = raw.get("guest_window")
-    precondition = raw.get("precondition_window")
-    default_window = TimeWindow(time(6, 0), time(23, 0))
     return GateSettings(
         require_awake=_bool(raw.get("require_awake"), True),
         quiet_windows=tuple(
@@ -300,21 +290,6 @@ def _gates(raw: Any) -> GateSettings:
         ),
         require_schedule=_bool(raw.get("require_schedule"), False),
         guest_window=_guest_window(guest if isinstance(guest, dict) else {}),
-        # Een opgeslagen `None` is een keuze: "geen venster, dus de hele dag".
-        # Een ontbrekende sleutel is dat niet - dan is er nog nooit iets over
-        # gezegd en geldt het standaardvenster. Die twee door elkaar halen gaf
-        # de gebruiker zijn hele dag stilletjes terug als 06:00-23:00 zodra hij
-        # ergens anders in het scherm iets wijzigde.
-        #
-        # A stored `None` is a choice: "no window, so all day". A missing key is
-        # not - then nothing has ever been said about it and the default window
-        # applies. Confusing the two quietly handed the user's whole day back as
-        # 06:00-23:00 the moment they changed something else on the screen.
-        precondition_window=(
-            _guest_window(precondition)
-            if isinstance(precondition, dict)
-            else (None if "precondition_window" in raw else default_window)
-        ),
         max_precondition=_seconds(raw.get("max_precondition"), 7200.0),
     )
 

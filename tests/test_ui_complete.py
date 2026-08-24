@@ -3,16 +3,18 @@
 Every piece of UI a user sees, in every language.
 
 Een veld zonder vertaling valt niet om: Home Assistant zet er gewoon de sleutel
-neer. Je krijgt dan `precondition_start` op je scherm in plaats van "Vooruit
-verwarmen vanaf", en niets in de code merkt daar iets van. Dat is precies het
-soort fout dat pas opvalt als iemand het scherm openslaat - dus lezen we het
-formulier uit de broncode en leggen we het naast elk vertaalbestand.
+neer. Je krijgt dan `max_precondition` op je scherm in plaats van "Maximum
+pre-conditioning time (minutes)", en niets in de code merkt daar iets van. Dat
+is precies het soort fout dat pas opvalt als iemand het scherm openslaat - dus
+lezen we het formulier uit de broncode en leggen we het naast elk
+vertaalbestand.
 
 A field without a translation does not break anything: Home Assistant simply
-prints the key. You get `precondition_start` on screen instead of
-"Pre-conditioning from", and nothing in the code notices. That is exactly the
-kind of fault that only shows when somebody opens the screen - so we read the
-form out of the source and lay it beside every translation file.
+prints the key. You get `max_precondition` on screen instead of
+"Maximum pre-conditioning time (minutes)", and nothing in the code notices.
+That is exactly the kind of fault that only shows when somebody opens the
+screen - so we read the form out of the source and lay it beside every
+translation file.
 """
 
 from __future__ import annotations

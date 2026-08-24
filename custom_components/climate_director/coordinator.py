@@ -1719,7 +1719,6 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             guest_mode=self.guest_mode,
             precondition_until=self._live_preconditions(),
             precondition_bypass=frozenset(self._precondition_bypass),
-            precondition_window=self.config.gates.precondition_window,
             zone_overrides=self._overridden_zones(now, residents),
             zone_priorities=dict(self.zone_priorities),
             precipitation=self._precipitation(),

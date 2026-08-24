@@ -157,7 +157,6 @@ je in het hoofdmenu **Opslaan en sluiten** kiest.
 | **Het rooster van een bewoner moet openstaan** | aan = het huis wacht op het eerste roostervenster; uit = alleen aanwezigheid telt |
 | **Vakantieagenda's** | welke agenda's een vakantie mogen aankondigen; meerdere toegestaan |
 | **Woord dat vakantie aangeeft** | het trefwoord dat een agenda-item moet dragen; leeg = agenda's worden genegeerd |
-| **Vooruit verwarmen vanaf / tot** | het venster waarin een vooruit-verzoek meetelt; standaard 06:00–23:00 |
 | **Vooruitverwarmingsduur** | het plafond op één verzoek; standaard 120 minuten |
 | **Gastenmodus vanaf / tot** | het venster waarin de gastenmodus geldt; beide leeg = de hele dag |
 | **Meld een zone vastgelopen na** | na hoeveel minuten wachten een zone als vastgelopen geldt; 0 zet de melder uit |
@@ -574,13 +573,13 @@ data:
   ignore_openings: true
 ```
 
-Twee grenzen die je niet kunt vergeten:
+Eén grens die je niet kunt vergeten: **het verloopt vanzelf.** Vraag je langer
+dan het ingestelde maximum, dan wordt je verzoek ingekort. Geen tijd opgeven
+geeft het maximum; nul of minder wordt geweigerd, want dat is geen verzoek maar
+een typefout.
 
-- **Het verloopt vanzelf.** Vraag je langer dan het ingestelde maximum, dan
-  wordt je verzoek ingekort. Geen tijd opgeven geeft het maximum; nul of
-  minder wordt geweigerd, want dat is geen verzoek maar een typefout.
-- **Het geldt alleen binnen het venster** (standaard 06:00–23:00). Daarbuiten
-  telt een verzoek niet mee.
+Een verzoek gaat altijd voor, op elk uur van de dag. Alleen een openstaande
+deur vraagt om bevestiging: zonder *Toch doen* weigert de deur het verzoek.
 
 Afblazen kan met `climate_director.cancel_precondition`.
 

@@ -261,7 +261,6 @@ def villa(policy: ConflictPolicy) -> DirectorConfig:
             require_schedule=True,
             quiet_windows=(TimeWindow(time(23, 30), time(6, 0)),),
             guest_window=TimeWindow(time(8, 0), time(23, 0)),
-            precondition_window=TimeWindow(time(5, 0), time(23, 0)),
             max_precondition=timedelta(hours=2),
         ),
         seasons=SeasonSettings(),

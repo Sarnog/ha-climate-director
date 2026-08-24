@@ -157,7 +157,6 @@ what you typed is then thrown away. And **nothing** is stored until you pick
 | **A resident's schedule must be open** | on = the house waits for the first schedule window; off = presence alone decides |
 | **Holiday calendars** | which calendars may announce a holiday; several allowed |
 | **Word that marks a holiday** | the keyword an event must carry; empty = calendars are ignored |
-| **Pre-conditioning from / until** | the window in which a pre-conditioning request counts; default 06:00–23:00 |
 | **Pre-conditioning duration** | the ceiling on a single request; default 120 minutes |
 | **Guest mode from / until** | the window in which guest mode applies; both empty = all day |
 | **Report a zone stuck after** | after how many minutes of waiting a zone counts as stuck; 0 switches the sensor off |
@@ -571,13 +570,12 @@ data:
   ignore_openings: true
 ```
 
-Two limits you cannot forget:
+One limit you cannot forget: **it expires by itself.** Ask for longer than the
+configured maximum and your request is shortened. Naming no time gives you the
+maximum; zero or less is refused, since that is not a request but a typo.
 
-- **It expires by itself.** Ask for longer than the configured maximum and your
-  request is shortened. Naming no time gives you the maximum; zero or less is
-  refused, since that is not a request but a typo.
-- **It applies only inside the window** (06:00–23:00 by default). Outside it a
-  request does not count.
+A request always outranks the automation, whatever the hour. Only an open door
+asks for confirmation: without *Do it anyway* the door refuses the request.
 
 Call it off with `climate_director.cancel_precondition`.
 
