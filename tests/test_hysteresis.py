@@ -5,8 +5,10 @@ Tests for the dead band: when a duty starts and stops.
 
 from __future__ import annotations
 
+from datetime import time, timedelta
+
 import pytest
-from conftest import house, living_room_cool, living_room_heat, make_world
+from conftest import at, house, living_room_cool, living_room_heat, make_world
 
 from custom_components.climate_director.engine import (
     ModeFamily,
@@ -16,6 +18,7 @@ from custom_components.climate_director.engine import (
     Season,
     Source,
     SourceRole,
+    TimeWindow,
     Zone,
     hysteresis,
 )
@@ -262,3 +265,37 @@ def test_living_room_settings_match_the_original_thresholds() -> None:
     assert hysteresis.evaluate(zone, world(22.5), ModeFamily.NEUTRAL).family is ModeFamily.NEUTRAL
     assert hysteresis.evaluate(zone, world(22.5), ModeFamily.HEAT).family is ModeFamily.HEAT
     assert hysteresis.evaluate(zone, world(23.0), ModeFamily.HEAT).family is ModeFamily.NEUTRAL
+
+
+class TestTheRequestWindowBoundsTheOutdoorException:
+    """Buiten zijn venster slaat een verzoek de buitengrens niet over.
+
+    Outside its window a request does not skip the outdoor bound.
+    """
+
+    zone = zone_with(heat=ModeSettings(21.0, 20.0, outdoor=OutdoorWindow(maximum=19.0)))
+
+    def test_inside_the_window_the_bound_is_skipped(self) -> None:
+        now = at(12, 0)
+        world = make_world(
+            now=now,
+            outdoor=25.0,
+            indoor={"z": 15.0},
+            precondition_until={"z": now + timedelta(minutes=30)},
+            precondition_window=TimeWindow(time(6, 0), time(23, 0)),
+        )
+        demand = hysteresis.evaluate(self.zone, world, ModeFamily.NEUTRAL)
+        assert demand.family is ModeFamily.HEAT
+
+    def test_outside_the_window_the_bound_applies_again(self) -> None:
+        now = at(3, 0)
+        world = make_world(
+            now=now,
+            outdoor=25.0,
+            indoor={"z": 15.0},
+            precondition_until={"z": now + timedelta(minutes=30)},
+            precondition_window=TimeWindow(time(6, 0), time(23, 0)),
+        )
+        demand = hysteresis.evaluate(self.zone, world, ModeFamily.NEUTRAL)
+        assert demand.family is ModeFamily.NEUTRAL
+        assert demand.reason is Reason.OUTDOOR_OUTSIDE_WINDOW

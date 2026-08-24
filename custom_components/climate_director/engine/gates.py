@@ -92,7 +92,7 @@ def _closed(
     # Pre-conditioning: somebody asked for this by hand and a timer is running.
     # This is the only thing allowed to run an empty house, so it sits after the
     # window and the override, and before everything about people.
-    if _preconditioning(config, world, zone):
+    if _preconditioning(world, zone):
         return
 
     # De stiltevensters remmen het beginnen, niet het doorgaan. Een zone die al
@@ -195,23 +195,20 @@ def _household(config: DirectorConfig, world: WorldState) -> Iterator[Reason]:
         yield Reason.OUTSIDE_SCHEDULE
 
 
-def _preconditioning(config: DirectorConfig, world: WorldState, zone: Zone) -> bool:
+def _preconditioning(world: WorldState, zone: Zone) -> bool:
     """Return whether a live request is warming this zone up for somebody's return.
 
-    Twee grenzen maken dit veilig, en geen van beide is te vergeten: het verzoek
-    verloopt vanzelf, en buiten het ingestelde venster telt het niet mee. Er is
-    geen schakelaar die aan kan blijven staan.
+    Eén definitie van "er loopt een verzoek", en die staat in
+    `WorldState.preconditioning()`: daar zitten zowel de klok van het verzoek
+    zelf als het ingestelde venster in. Hier nog een tweede venstercontrole
+    zouden twee definities naast elkaar leggen, en die lopen vanzelf uit elkaar.
 
-    Two bounds make this safe, and neither can be forgotten: the request expires
-    by itself, and outside the configured window it does not count. There is no
-    switch here that can be left on.
+    One definition of "a request is running", and it lives in
+    `WorldState.preconditioning()`: both the request's own clock and the
+    configured window sit there. A second window check here would put two
+    definitions side by side, and those drift apart by themselves.
     """
-    if not world.preconditioning(zone.zone_id):
-        return False
-    window = config.gates.precondition_window
-    if window is None:
-        return True
-    return window.contains(world.now.time(), world.now.weekday())
+    return world.preconditioning(zone.zone_id)
 
 
 def asleep_at(resident: Resident, is_asleep: bool, now: datetime) -> bool:

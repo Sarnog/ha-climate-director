@@ -77,6 +77,13 @@ def house(**gate_kwargs: object) -> DirectorConfig:
 def verdict(config: DirectorConfig, **kwargs: object):
     zone = config.zone("woonkamer")
     assert zone is not None
+    # Net als de koppelingslaag: het venster uit de configuratie gaat mee in de
+    # momentopname, want daar hoort de ene definitie van "er loopt een verzoek".
+    #
+    # Just like the binding layer: the window from the configuration travels in
+    # the snapshot, because that is where the one definition of "a request is
+    # running" lives.
+    kwargs.setdefault("precondition_window", config.gates.precondition_window)
     return gate_verdict(config, make_world(**kwargs), zone)  # type: ignore[arg-type]
 
 

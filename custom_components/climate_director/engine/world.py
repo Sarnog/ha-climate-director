@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from .families import MODE_OFF, ModeFamily, family_of
-from .models import Season
+from .models import Season, TimeWindow
 
 
 @dataclass(frozen=True, slots=True)
@@ -149,6 +149,17 @@ class WorldState:
     took a while. There is no way for this to quietly stay alive.
     """
 
+    precondition_window: TimeWindow | None = None
+    """The window a pre-conditioning request only counts inside; `None` means all day.
+
+    This makes "there is a live request" one definition in one place: the
+    request's own expiry bounds how long it may run, and this window bounds
+    when it may exist at all. Every exception that hangs off a request - the
+    window gate, the house-wide stop, the opening rest and the outdoor bound -
+    reads `preconditioning()` / `precondition_ignores_openings()`, so they all
+    inherit both bounds.
+    """
+
     guest_mode: bool = False
     """Keeps the house running while the tracked people are away.
 
@@ -208,9 +219,24 @@ class WorldState:
         return self.preconditioning(zone_id) and zone_id in self.precondition_bypass
 
     def preconditioning(self, zone_id: str) -> bool:
-        """Return whether a live pre-conditioning request covers this zone."""
+        """Return whether a live pre-conditioning request covers this zone.
+
+        Twee grenzen, en beide horen hier: de klok van het verzoek zelf (tot
+        wanneer het loopt) én het ingestelde venster (wanneer het überhaupt mag
+        bestaan). Alles wat aan een verzoek hangt leest deze ene definitie, dus
+        een verzoek buiten zijn venster geeft nergens een uitzondering.
+
+        Two bounds, and both belong here: the request's own clock (until when it
+        runs) and the configured window (when it may exist at all). Everything
+        hanging off a request reads this one definition, so a request outside
+        its window grants no exception anywhere.
+        """
         until = self.precondition_until.get(zone_id)
-        return until is not None and self.now < until
+        if until is None or self.now >= until:
+            return False
+        if self.precondition_window is None:
+            return True
+        return self.precondition_window.contains(self.now.time(), self.now.weekday())
 
     def overridden(self, zone_id: str) -> bool:
         """Return whether a manual override holds this zone."""
