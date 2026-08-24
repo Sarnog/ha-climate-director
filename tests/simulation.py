@@ -52,6 +52,7 @@ from custom_components.climate_director.engine import (
 from custom_components.climate_director.engine.constraints import active_family
 from custom_components.climate_director.engine.diff import changes
 from custom_components.climate_director.engine.families import MODE_OFF, family_of
+from custom_components.climate_director.engine.plan import OPENING_MIN_REST
 
 STEP = timedelta(minutes=10)
 
@@ -170,6 +171,12 @@ class Simulation:
         self.commanded: Counter[str] = Counter()
         self.duty_by_month: Counter[tuple[int, str]] = Counter()
         self.fallbacks = 0
+        # Wanneer elk apparaat van stil naar actief ging, om de ontstekingsgrens
+        # over de hele maand te kunnen handhaven.
+        #
+        # When each appliance went from still to active, to be able to hold the
+        # ignition limit across the whole month.
+        self.starts: dict[str, list[datetime]] = {entity: [] for entity in self.appliances}
 
         # De echte actiecode en de echte boekhouding, gedreven in plaats van
         # nagebouwd, zodat de maand ook díe code raakt.
@@ -400,13 +407,19 @@ class Simulation:
 
     def _apply(self, plan) -> None:
         """Carry out what the plan wants, the way the applier would."""
-        for change in changes(plan, self.world()):
+        world = self.world()
+        for change in changes(plan, world):
             command = change.command
             if not self.reachable.get(command.entity_id, False):
                 continue
             self._set(command.entity_id, command.hvac_mode)
             self.commanded[command.hvac_mode] += 1
             self.duty_by_month[(self.now.month, command.hvac_mode)] += 1
+            if (
+                family_of(command.hvac_mode) in (ModeFamily.HEAT, ModeFamily.COOL)
+                and not world.climate(command.entity_id).running
+            ):
+                self.starts[command.entity_id].append(self.now)
 
     def _drift(self) -> None:
         """Let every room follow its appliances and the weather."""
@@ -433,6 +446,45 @@ class Simulation:
             leak = (self.outdoor - temperature) * scenario.leak_rate
             self.indoor[zone.zone_id] = round(
                 temperature + leak + duty + self.random.uniform(-0.05, 0.05), 2
+            )
+
+    def _ignition_limit(self, entity_id: str) -> int | None:
+        """Return how many starts per hour the built-in brakes allow at most.
+
+        Een apparaat zonder circuit kent alleen de openingsrust van drie
+        minuten; een apparaat op een circuit kent `min_cycle_time`. Zonder
+        rem geldt er geen grens.
+
+        An appliance without a circuit knows only the three-minute opening
+        rest; an appliance on a circuit knows `min_cycle_time`. Without a brake
+        there is no limit.
+        """
+        for circuit in self.config.circuits:
+            if entity_id in circuit.units:
+                seconds = circuit.min_cycle_time.total_seconds()
+                return None if seconds <= 0 else int(3600 // seconds)
+        return int(3600 // OPENING_MIN_REST.total_seconds())
+
+    def _check_ignition_limits(self) -> None:
+        """Hold the ignition invariant over the whole month.
+
+        Dit is de opgetilde vorm van de flappende-deur-test: niet één scenario,
+        maar élk apparaat in élke simulatie mag hoogstens zo vaak van stil naar
+        actief als zijn ingebouwde rem toestaat.
+
+        This is the lifted form of the flapping-door test: not one scenario, but
+        every appliance in every simulation may go from still to active at most
+        as often as its built-in brake allows.
+        """
+        window_start = self.now - timedelta(hours=1)
+        for entity_id, starts in self.starts.items():
+            fresh = [when for when in starts if when > window_start]
+            self.starts[entity_id] = fresh
+            limit = self._ignition_limit(entity_id)
+            if limit is None:
+                continue
+            assert len(fresh) <= limit, (
+                f"{entity_id} ontstak {len(fresh)} keer in het afgelopen uur, terwijl {limit} mag"
             )
 
     def _remember_families(self, world: WorldState) -> None:
@@ -488,6 +540,7 @@ class Simulation:
         self.plan = plan
         self.hand.data = plan
         self._apply(plan)
+        self._check_ignition_limits()
         self._drift()
 
     def run(self) -> Simulation:
