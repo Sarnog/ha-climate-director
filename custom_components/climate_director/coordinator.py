@@ -1606,6 +1606,19 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             for zone_id, (_reason, since) in self._waiting.items()
         }
 
+    def unusable_latest(self) -> dict[str, str]:
+        """Return the unreadable entities of the latest decision round.
+
+        De entiteitenlaag hoort niet aan `_unusable_latest` te zitten: dat is
+        een privéveld van de coordinator en de grens van wat hij naar buiten
+        brengt verandert mee met hem. Dit is de publieke lezer.
+
+        The entity layer should not touch `_unusable_latest`: that is a private
+        coordinator field, and the boundary of what it exposes moves with it.
+        This is the public reader.
+        """
+        return self._unusable_latest
+
     def stuck_zones(self) -> dict[str, Reason]:
         """Return the zones that have waited longer than the installation allows.
 

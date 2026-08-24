@@ -217,7 +217,7 @@ class StuckSensor(ClimateDirectorEntity, BinarySensorEntity):
         """Return which zones are stuck, on what, and for how long."""
         stuck = self.coordinator.stuck_zones()
         return {
-            "unusable_entities": self.coordinator._unusable_latest,
+            "unusable_entities": self.coordinator.unusable_latest(),
             "zones": sorted(stuck),
             "reasons": {zone_id: reason.value for zone_id, reason in sorted(stuck.items())},
             "waiting_seconds": {

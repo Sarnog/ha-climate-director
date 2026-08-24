@@ -212,6 +212,7 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
         unusable_entities = ClimateDirectorCoordinator.unusable_entities
         stuck_zones = ClimateDirectorCoordinator.stuck_zones
         waiting_seconds = ClimateDirectorCoordinator.waiting_seconds
+        unusable_latest = ClimateDirectorCoordinator.unusable_latest
         _note_waiting = ClimateDirectorCoordinator._note_waiting
         _climate_ids = ClimateDirectorCoordinator._climate_ids
         _climate = ClimateDirectorCoordinator._climate
