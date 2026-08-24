@@ -304,17 +304,21 @@ def _never_the_wrong_appliance(config, world, plan, where: str) -> None:
             assert family is not ModeFamily.HEAT, f"{where}: airco {command.entity_id} moet stoken"
 
     # De ketel stookt nooit als het buiten al warm is: dat is de buitengrens
-    # waar elke knop op staat.
+    # waar elke knop op staat. De dode band op de buitentemperatuur mag een
+    # draaiende ketel nog tot één band voorbij die grens laten doorlopen; dat
+    # is precies waarom die band bestaat.
     #
     # The boiler never fires while it is already warm outside: that is the
-    # outdoor bound every valve carries.
+    # outdoor bound every valve carries. The dead band on the outdoor
+    # temperature may let a running boiler carry on up to one band past that
+    # bound; that is exactly why the band exists.
     boiler = plan.command_for(BOILER)
     if (
         boiler is not None
         and family_of(boiler.hvac_mode) is ModeFamily.HEAT
         and world.outdoor_temperature is not None
     ):
-        assert world.outdoor_temperature < HEAT_UNTIL, (
+        assert world.outdoor_temperature < HEAT_UNTIL + config.outdoor_hysteresis, (
             f"{where}: de ketel stookt bij {world.outdoor_temperature} graden buiten"
         )
 

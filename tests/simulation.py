@@ -119,6 +119,24 @@ class Scenario:
     boiler_rate: float = 0.30
     leak_rate: float = 0.02
 
+    #: De tijdstap van deze simulatie. Tien minuten is genoeg voor de maand- en
+    #: jaarsimulaties; de ontstekingsgrens van een apparaat zonder circuit is
+    #: alleen met een fijnere stap (één minuut) waar te nemen.
+    #:
+    #: This simulation's time step. Ten minutes suffices for the month and year
+    #: simulations; the ignition boundary of an appliance without a circuit can
+    #: only be observed with a finer step (one minute).
+    step: timedelta = STEP
+
+    #: Vinkt de ontstekingsgrens voor deze simulatie aan: kan de gekozen
+    #: tijdstap een overtreding van een rem niet waarnemen, dan faalt de run in
+    #: plaats van stilzwijgend groen te zijn.
+    #:
+    #: Opts this simulation in to the ignition boundary: if the chosen time step
+    #: cannot observe a violation of a brake, the run fails instead of silently
+    #: passing.
+    check_ignition_brakes: bool = False
+
 
 class Simulation:
     """One scenario, stepped ten minutes at a time, checking itself as it goes."""
@@ -129,6 +147,7 @@ class Simulation:
         self.config = scenario.config
         self.random = random.Random(seed)
         self.now = scenario.start
+        self.time_step = scenario.step
 
         self.units = tuple(
             dict.fromkeys(
@@ -448,43 +467,58 @@ class Simulation:
                 temperature + leak + duty + self.random.uniform(-0.05, 0.05), 2
             )
 
-    def _ignition_limit(self, entity_id: str) -> int | None:
-        """Return how many starts per hour the built-in brakes allow at most.
+    def _ignition_brake(self, entity_id: str) -> timedelta | None:
+        """Return the shortest rest this appliance's built-in brakes enforce, if any.
 
         Een apparaat zonder circuit kent alleen de openingsrust van drie
-        minuten; een apparaat op een circuit kent `min_cycle_time`. Zonder
-        rem geldt er geen grens.
+        minuten; een apparaat op een circuit kent `min_cycle_time`, en nul op
+        een circuit is bewust geen rem. Zonder rem geldt er geen grens.
 
         An appliance without a circuit knows only the three-minute opening
-        rest; an appliance on a circuit knows `min_cycle_time`. Without a brake
-        there is no limit.
+        rest; an appliance on a circuit knows `min_cycle_time`, and zero on a
+        circuit is deliberately no brake. Without a brake there is no limit.
         """
         for circuit in self.config.circuits:
             if entity_id in circuit.units:
-                seconds = circuit.min_cycle_time.total_seconds()
-                return None if seconds <= 0 else int(3600 // seconds)
-        return int(3600 // OPENING_MIN_REST.total_seconds())
+                return circuit.min_cycle_time or None
+        return OPENING_MIN_REST
 
     def _check_ignition_limits(self) -> None:
-        """Hold the ignition invariant over the whole month.
+        """Hold the ignition invariant over the whole run.
 
-        Dit is de opgetilde vorm van de flappende-deur-test: niet één scenario,
-        maar élk apparaat in élke simulatie mag hoogstens zo vaak van stil naar
-        actief als zijn ingebouwde rem toestaat.
+        De invariant is de afstand tussen twee opeenvolgende ontstekingen, niet
+        het aantal per uur: twee ontstekingen twee minuten na elkaar zijn geen
+        "meer dan twintig per uur". Kan de gekozen tijdstap een overtreding van
+        een rem niet waarnemen, dan slaat deze controle over — behalve bij een
+        scenario dat `check_ignition_brakes` heeft aangevinkt: dan faalt de run
+        in plaats van stilzwijgend groen te zijn. De fijnmazige simulatie in
+        `test_ignition_gaps.py` is de levende controle voor de openingsrust.
 
-        This is the lifted form of the flapping-door test: not one scenario, but
-        every appliance in every simulation may go from still to active at most
-        as often as its built-in brake allows.
+        The invariant is the gap between two successive ignitions, not the count
+        per hour: two ignitions two minutes apart are not "more than twenty per
+        hour". If the chosen time step cannot observe a violation of a brake,
+        this check skips it — except for a scenario that opted in via
+        `check_ignition_brakes`: then the run fails instead of silently passing.
+        The fine-grained simulation in `test_ignition_gaps.py` is the live check
+        for the opening rest.
         """
-        window_start = self.now - timedelta(hours=1)
         for entity_id, starts in self.starts.items():
-            fresh = [when for when in starts if when > window_start]
-            self.starts[entity_id] = fresh
-            limit = self._ignition_limit(entity_id)
-            if limit is None:
+            brake = self._ignition_brake(entity_id)
+            if brake is None or len(starts) < 2:
                 continue
-            assert len(fresh) <= limit, (
-                f"{entity_id} ontstak {len(fresh)} keer in het afgelopen uur, terwijl {limit} mag"
+            if self.scenario.step * 2 >= brake:
+                if self.scenario.check_ignition_brakes:
+                    import pytest
+
+                    pytest.fail(
+                        f"{entity_id} heeft een rem van {brake}, maar een tijdstap van "
+                        f"{self.scenario.step} kan een overtreding daarvan niet waarnemen: "
+                        f"de ontstekingsgrens zou loos zijn"
+                    )
+                continue
+            gap = starts[-1] - starts[-2]
+            assert gap >= brake, (
+                f"{entity_id} ontsteekt {gap} na de vorige start, terwijl {brake} rust moet"
             )
 
     def _remember_families(self, world: WorldState) -> None:
@@ -500,8 +534,8 @@ class Simulation:
     # -- de ronde zelf / the round itself ------------------------------------
 
     def step(self) -> None:
-        """Move ten minutes, decide, carry it out, and check the promises."""
-        self.now += STEP
+        """Move one step, decide, carry it out, and check the promises."""
+        self.now += self.time_step
         self.outdoor, self.season = self.scenario.weather(self.now, self.random)
         self._people_move()
         self._openings_move()
@@ -515,8 +549,8 @@ class Simulation:
         self._remember_families(world)
         world = replace(world, circuit_family_since=dict(self.family_since))
 
-        plan = decide(self.config, world)
-        assert decide(self.config, world) == plan, f"niet deterministisch op {self.now}"
+        plan = decide(self.config, world, self.plan)
+        assert decide(self.config, world, self.plan) == plan, f"niet deterministisch op {self.now}"
 
         where = f"{self.scenario.name} {self.now}"
         assert_plan_holds(self.config, world, plan, where=where)
@@ -545,7 +579,7 @@ class Simulation:
 
     def run(self) -> Simulation:
         """Step through the whole month and return itself."""
-        for _ in range(int(timedelta(days=self.scenario.days) / STEP)):
+        for _ in range(int(timedelta(days=self.scenario.days) / self.time_step)):
             self.step()
         return self
 
@@ -729,7 +763,7 @@ def run_month(scenario: Scenario, *, seed: int) -> Simulation:
     with pytest.MonkeyPatch.context() as patch:
         holder = {"now": scenario.start}
         patch.setattr(coordinator_module.dt_util, "now", lambda: holder["now"])
-        for _ in range(int(timedelta(days=scenario.days) / STEP)):
-            holder["now"] = simulation.now + STEP
+        for _ in range(int(timedelta(days=scenario.days) / scenario.step)):
+            holder["now"] = simulation.now + scenario.step
             simulation.step()
     return simulation
