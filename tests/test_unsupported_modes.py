@@ -110,6 +110,42 @@ class TestARoleAskingAnImpossibleMode:
         assert home.coordinator._unsupported_since == {}
 
 
+class TestTheSameApplianceInTwoRoles:
+    async def test_the_cool_role_in_the_second_zone_is_checked(self) -> None:
+        """Hetzelfde apparaat, twee zones, twee rollen: beide rollen tellen.
+
+        The same appliance, two zones, two roles: both roles count.
+        """
+        installation = {
+            "zones": [
+                zone(
+                    "woonkamer",
+                    sources=[source("wk_heat", LIVING, role="heat_only")],
+                    indoor_sensor="sensor.woonkamer",
+                    heat=settings(21.0, 20.0),
+                ),
+                zone(
+                    "zolder",
+                    sources=[source("z_airco", LIVING, role="heat_cool")],
+                    indoor_sensor="sensor.zolder",
+                    heat=settings(21.0, 20.0),
+                    cool=settings(23.0, 24.0),
+                ),
+            ],
+            "outdoor_sensor": "sensor.buiten",
+        }
+        live = await start_house(installation, states=world())
+        try:
+            await live.evaluate()
+            await age(live, 10)
+            issue = issue_for(live)
+            assert issue is not None
+            placeholders = issue.translation_placeholders or {}
+            assert "cool" in placeholders["entities"]
+        finally:
+            await stop_house(live)
+
+
 class TestTearingDown:
     async def test_unloading_takes_the_notice_with_it(self) -> None:
         live = await start_house(installation(), states=world(), entry_id="afbreken")

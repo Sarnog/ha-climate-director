@@ -1456,21 +1456,27 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         appliances are left out here: they have a notice of their own.
         """
         found: dict[str, set[str]] = {}
-        seen: set[str] = set()
         for zone, source in self.config.sources():
             state = self.hass.states.get(source.entity_id)
             if state is None or _unreadable(state.state):
                 continue
             complaints: set[str] = set()
-            if source.entity_id not in seen:
-                seen.add(source.entity_id)
-                modes = _as_modes(state.attributes.get("hvac_modes"))
-                if modes is not None:
-                    complaints.update(
-                        preferred_mode(family)
-                        for family in (ModeFamily.HEAT, ModeFamily.COOL)
-                        if source.supports(family) and preferred_mode(family) not in modes
-                    )
+            # De rol hangt aan de bron, niet aan het apparaat. Hetzelfde apparaat
+            # kan in kamer A HEAT_ONLY zijn en in kamer B HEAT_COOL; een wacht
+            # op het apparaat sloeg de koelrol van kamer B dan over. De set
+            # hieronder ontdubbelt toch al.
+            #
+            # The role hangs on the source, not on the appliance. The same
+            # appliance can be HEAT_ONLY in room A and HEAT_COOL in room B; a
+            # guard on the appliance then skipped room B's cool role. The set
+            # below deduplicates anyway.
+            modes = _as_modes(state.attributes.get("hvac_modes"))
+            if modes is not None:
+                complaints.update(
+                    preferred_mode(family)
+                    for family in (ModeFamily.HEAT, ModeFamily.COOL)
+                    if source.supports(family) and preferred_mode(family) not in modes
+                )
             minimum = _as_float(state.attributes.get("min_temp"))
             maximum = _as_float(state.attributes.get("max_temp"))
             for family in (ModeFamily.HEAT, ModeFamily.COOL):
