@@ -353,6 +353,54 @@ def test_an_appliance_not_on_the_list_is_untouched_by_it() -> None:
     assert boiler.hvac_mode == "heat"
 
 
+def test_the_house_wide_stop_keeps_fan_only_and_off() -> None:
+    """R8: alleen actieve standen gaan uit; `off` en `fan_only` blijven staan.
+
+    R8: only active modes are stopped; `off` and `fan_only` stay as they are.
+    """
+    from custom_components.climate_director.engine.decide import _stop_blocked
+    from custom_components.climate_director.engine.plan import UnitCommand
+
+    config = shared_boiler(house_wide_openings=(GAS, LIVING_AIRCO))
+    world = cold_house()
+    commands = [
+        UnitCommand(
+            entity_id=GAS,
+            hvac_mode="fan_only",
+            temperature=None,
+            zone_id="zolder",
+            source_id="ketel_zolder",
+            reason=Reason.CIRCUIT_CONFLICT_LOST,
+        ),
+        UnitCommand(
+            entity_id=LIVING_AIRCO,
+            hvac_mode="off",
+            temperature=None,
+            zone_id="woonkamer",
+            source_id="woonkamer_airco",
+            reason=Reason.SATISFIED,
+        ),
+        UnitCommand(
+            entity_id="climate.reserve",
+            hvac_mode="heat",
+            temperature=21.0,
+            zone_id="woonkamer",
+            source_id="reserve",
+            reason=Reason.REGULATING,
+        ),
+    ]
+    blocked = frozenset({GAS, LIVING_AIRCO, "climate.reserve"})
+
+    result = _stop_blocked(config, world, {}, blocked, commands)
+    by_entity = {command.entity_id: command for command in result}
+
+    assert by_entity[GAS].hvac_mode == "fan_only"
+    assert by_entity[GAS].reason is Reason.CIRCUIT_CONFLICT_LOST
+    assert by_entity[LIVING_AIRCO].hvac_mode == "off"
+    assert by_entity["climate.reserve"].hvac_mode == "off"
+    assert by_entity["climate.reserve"].reason is Reason.OPENING_OPEN_ELSEWHERE
+
+
 # ---------------------------------------------------------------------------
 # Wat de director met rust laat, blijft met rust
 # What the director leaves alone stays left alone

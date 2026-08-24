@@ -918,7 +918,7 @@ def _stop_blocked(
     return [
         command
         if command.entity_id not in blocked
-        or command.hvac_mode == MODE_OFF
+        or command.hvac_mode in (MODE_OFF, MODE_FAN_ONLY)
         or _ignores_openings(config, world, grants, command)
         else UnitCommand(
             entity_id=command.entity_id,
