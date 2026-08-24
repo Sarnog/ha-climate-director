@@ -810,6 +810,9 @@
     "negative_stuck_time": {
       "message": "Die Blockade-Erkennungszeit ist negativ."
     },
+    "stuck_after_below_opening_rest": {
+      "message": "Die Blockade-Erkennungszeit ist kürzer als die eingebaute Öffnungsruhe, sodass die Öffnungsruhe falsche Blockade-Meldungen auslösen kann."
+    },
     "negative_outdoor_deadband": {
       "message": "Das Totband der Außentemperatur ist negativ."
     },

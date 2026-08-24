@@ -810,6 +810,9 @@
     "negative_stuck_time": {
       "message": "زمن اكتشاف التعطل سالب."
     },
+    "stuck_after_below_opening_rest": {
+      "message": "زمن اكتشاف التعطل أقصر من راحة الفتح المدمجة، ولذلك قد تُطلق راحة الفتح إنذارات تعطل كاذبة."
+    },
     "negative_outdoor_deadband": {
       "message": "النطاق الميت لدرجة الحرارة الخارجية سالب."
     },

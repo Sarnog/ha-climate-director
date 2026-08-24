@@ -810,6 +810,9 @@
     "negative_stuck_time": {
       "message": "De vastloopdetectietijd is negatief."
     },
+    "stuck_after_below_opening_rest": {
+      "message": "De vastloopdetectietijd is korter dan de ingebouwde openingsrust, waardoor de openingsrust valse vastloopmeldingen kan geven."
+    },
     "negative_outdoor_deadband": {
       "message": "De dode band op de buitentemperatuur is negatief."
     },

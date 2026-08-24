@@ -97,6 +97,32 @@ def test_the_existing_installation_is_still_sound() -> None:
     assert validate(house()) == ()
 
 
+def test_a_stuck_time_below_the_opening_rest_is_reported() -> None:
+    """De openingsrust duurt drie minuten; een kortere vastlooptijd meldt vals.
+
+    The opening rest takes three minutes; a shorter stuck time reports false
+    alarms.
+    """
+    from dataclasses import replace
+
+    config = replace(house(), stuck_after=timedelta(minutes=2))
+    assert problem(config, "below the built-in opening rest")
+
+
+def test_the_opening_rest_itself_is_not_reported() -> None:
+    from dataclasses import replace
+
+    config = replace(house(), stuck_after=timedelta(minutes=3))
+    assert not problem(config, "below the built-in opening rest")
+
+
+def test_a_switched_off_stuck_sensor_is_not_reported() -> None:
+    from dataclasses import replace
+
+    config = replace(house(), stuck_after=timedelta(0))
+    assert not problem(config, "below the built-in opening rest")
+
+
 class TestSharedPriority:
     """Two rooms on one outdoor unit must not hold the same number."""
 

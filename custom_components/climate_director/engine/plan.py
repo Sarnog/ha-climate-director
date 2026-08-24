@@ -14,10 +14,21 @@ same moment never produces extra service calls.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import StrEnum
 
 from .families import ModeFamily
+
+#: Hoe lang een door een opening stilgezet apparaat zonder circuit minstens stil
+#: moet staan voordat het weer mag starten. Kortcyclusbescherming hangt aan een
+#: circuit, en een gasketel hangt aan geen circuit - dus dit is de rem die dat
+#: pad miste. De stop zelf wordt hier nooit mee uitgesteld, alleen de herstart.
+#:
+#: How long an opening-stopped appliance without a circuit must at least stand
+#: still before it may start again. Short-cycle protection hangs on a circuit,
+#: and a boiler hangs on no circuit - so this is the brake that path was
+#: missing. This never delays the stop itself, only the restart.
+OPENING_MIN_REST = timedelta(minutes=3)
 
 
 class Reason(StrEnum):

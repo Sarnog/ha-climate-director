@@ -31,6 +31,7 @@ from datetime import time, timedelta
 from enum import StrEnum
 
 from .families import ModeFamily
+from .plan import OPENING_MIN_REST
 
 #: Een vakantiedag telt als zaterdag, tenzij er een eigen vakantierooster is.
 #: A holiday counts as a Saturday, unless a holiday schedule says otherwise.
@@ -1242,6 +1243,24 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
 
     if config.stuck_after.total_seconds() < 0:
         problems.append(Problem("negative_stuck_time", "the stuck-detection time is negative"))
+
+    # De openingsrust is een ingebouwde timer van drie minuten, en
+    # `SHORT_CYCLE_PROTECTION` staat in `WAITING_REASONS`. Staat de
+    # vastlooptijd korter, dan kan de melder op die rust vals afgaan. Nul is
+    # uitgezonderd: dat is de schakelaar die de melder uitzet.
+    #
+    # The opening rest is a built-in three-minute timer, and
+    # `SHORT_CYCLE_PROTECTION` sits in `WAITING_REASONS`. With the stuck time
+    # shorter, the sensor can cry wolf on that rest. Zero is exempt: that is
+    # the switch turning the sensor off.
+    stuck_seconds = config.stuck_after.total_seconds()
+    if 0 < stuck_seconds < OPENING_MIN_REST.total_seconds():
+        problems.append(
+            Problem(
+                "stuck_after_below_opening_rest",
+                "the stuck-detection time is below the built-in opening rest",
+            )
+        )
 
     if config.outdoor_hysteresis < 0:
         problems.append(Problem("negative_outdoor_deadband", "the outdoor dead band is negative"))

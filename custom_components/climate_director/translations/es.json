@@ -810,6 +810,9 @@
     "negative_stuck_time": {
       "message": "El tiempo de detección de bloqueo es negativo."
     },
+    "stuck_after_below_opening_rest": {
+      "message": "El tiempo de detección de bloqueo es más corto que el reposo de apertura integrado, por lo que este puede dar falsas alarmas de bloqueo."
+    },
     "negative_outdoor_deadband": {
       "message": "La banda muerta de temperatura exterior es negativa."
     },

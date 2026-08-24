@@ -12,27 +12,13 @@ allowed", not "is this needed" - the latter belongs to `hysteresis.py`.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from .families import ModeFamily
 from .hysteresis import source_counts_for
 from .models import HOLIDAY_WEEKDAY, DirectorConfig, Opening, Resident, Zone, ZoneGate
-from .plan import Plan, Reason
+from .plan import OPENING_MIN_REST, Plan, Reason
 from .world import WorldState
-
-#: Hoe lang een door een opening stilgezet apparaat zonder circuit minstens stil
-#: moet staan voordat het weer mag starten. Kortcyclusbescherming hangt aan een
-#: circuit, en een gasketel hangt aan geen circuit - dus dit is de rem die dat
-#: pad miste, eerst alleen voor de huisbrede stop en sinds P3 voor élke
-#: openingsstop. De stop zelf wordt hier nooit mee uitgesteld, alleen de
-#: herstart.
-#:
-#: How long an opening-stopped appliance without a circuit must at least stand
-#: still before it may start again. Short-cycle protection hangs on a circuit,
-#: and a boiler hangs on no circuit - so this is the brake that path was
-#: missing, first only for the house-wide stop and since P3 for every opening
-#: stop. This never delays the stop itself, only the restart.
-OPENING_MIN_REST = timedelta(minutes=3)
 
 
 def closed(
