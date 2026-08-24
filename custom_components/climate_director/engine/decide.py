@@ -66,7 +66,7 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
 
     families = {decision.circuit_id: decision.family for decision in circuit_decisions}
     commands, untouched, generator_deferrals, stopped_now = _build_commands(
-        config, world, grants, reasons, wishes, families, blocked, previous
+        config, world, grants, reasons, wishes, refusals, families, blocked, previous
     )
     stopped_by_opening, opening_rest_until = _opening_rest_bookkeeping(
         config, world, previous, commands, stopped_now, rest_deferrals, generator_deferrals
@@ -612,6 +612,7 @@ def _build_commands(
     grants: dict[str, constraints.Grant],
     reasons: dict[str, Reason],
     wishes: dict[str, constraints.Request],
+    refusals: dict[str, Reason],
     families: dict[str, ModeFamily],
     blocked: frozenset[str] = frozenset(),
     previous: Plan | None = None,
@@ -754,7 +755,7 @@ def _build_commands(
         )
 
     generator_commands, generator_untouched, generator_deferrals = _generator_commands(
-        config, world, grants, previous
+        config, world, grants, refusals, blocked, previous
     )
     commands.extend(generator_commands)
     untouched.extend(generator_untouched)
@@ -1000,6 +1001,8 @@ def _generator_commands(
     config: DirectorConfig,
     world: WorldState,
     grants: dict[str, constraints.Grant],
+    refusals: dict[str, Reason],
+    blocked: frozenset[str] = frozenset(),
     previous: Plan | None = None,
 ) -> tuple[list[UnitCommand], list[UntouchedSource], tuple[Deferral, ...]]:
     """Return the command for each shared heat source, and the ones left alone.
@@ -1080,12 +1083,43 @@ def _generator_commands(
                 )
                 continue
 
+            # Waarom vraagt niemand? Zijn álle zones die deze generator bedient
+            # door een opening geweigerd, dan is deze stop een openingsstop en
+            # hoort de generator dezelfde rust te krijgen als elke andere bron
+            # zonder circuit - anders ontsteekt hij zodra de deur weer dicht is.
+            # Is er ook maar één zone om een andere reden stil (tevreden, buiten
+            # het seizoen), dan is dit een gewone vraagloze stop en rust hij niet.
+            # De huisbrede stop gaat voor: die noemt zijn eigen reden.
+            #
+            # Why is nobody asking? If every zone this generator serves was
+            # refused by an opening, this stop is an opening stop and the
+            # generator deserves the same rest as any other source without a
+            # circuit - otherwise it re-ignites the moment the door closes again.
+            # If even one zone is silent for another reason (satisfied, out of
+            # season), this is an ordinary no-demand stop and it does not rest.
+            # The house-wide stop comes first: it names its own reason.
+            served = [zone.zone_id for zone in config.zones if generator.serves(zone.zone_id)]
+            refused_by_opening = bool(served) and all(
+                refusals.get(zone_id) in (Reason.OPENING_OPEN, Reason.OPENING_OPEN_ELSEWHERE)
+                for zone_id in served
+            )
+            if generator.entity_id in blocked:
+                reason = Reason.OPENING_OPEN_ELSEWHERE
+            elif refused_by_opening:
+                reason = (
+                    Reason.OPENING_OPEN
+                    if any(refusals.get(zone_id) is Reason.OPENING_OPEN for zone_id in served)
+                    else Reason.OPENING_OPEN_ELSEWHERE
+                )
+            else:
+                reason = Reason.SATISFIED
+
             commands.append(
                 UnitCommand(
                     entity_id=generator.entity_id,
                     hvac_mode=MODE_OFF,
                     source_id=generator.generator_id,
-                    reason=Reason.SATISFIED,
+                    reason=reason,
                 )
             )
             continue

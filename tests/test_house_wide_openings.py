@@ -24,6 +24,7 @@ import pytest
 from conftest import at, climate, everyone_up, make_world
 
 from custom_components.climate_director.engine import (
+    Circuit,
     DirectorConfig,
     Generator,
     ModeFamily,
@@ -407,6 +408,214 @@ def test_a_generator_follows_a_precondition_that_ignores_openings() -> None:
     boiler = command_for(decide(generator_house(house_wide_openings=(GAS,)), world), GAS)
     assert boiler is not None
     assert boiler.hvac_mode == "heat"
+
+
+def wet_house(**overrides: object) -> DirectorConfig:
+    """Return two valve rooms behind one boiler; the door touches both rooms.
+
+    De deur heeft geen `zone_ids`, dus hij raakt beide kamers. De generator
+    bedient beide kamers en hangt aan geen circuit: precies het apparaat dat
+    zonder R1 nooit openingsrust kreeg. De kleppen hangen wél aan een circuit
+    (zonder minimale looptijd), zodat hun eigen openingsrust het beeld niet
+    maskeert: zodra de deur dicht is vragen zij meteen weer warmte.
+
+    The door has no `zone_ids`, so it affects both rooms. The generator serves
+    both rooms and hangs on no circuit: exactly the appliance that never got an
+    opening rest before R1. The valves do sit on a circuit (with no minimum run
+    time), so their own opening rest does not mask the picture: the moment the
+    door closes they ask for heat again at once.
+    """
+    heat = ModeSettings(target=21.0, start_at=20.0, hysteresis=1.0)
+    return DirectorConfig(
+        zones=(
+            Zone(
+                zone_id="woonkamer",
+                name="Woonkamer",
+                indoor_sensor="sensor.woonkamer",
+                priority=0,
+                sources=(
+                    Source(
+                        source_id="woonkamer_kraan",
+                        entity_id="climate.woonkamer_kraan",
+                        role=SourceRole.HEAT_ONLY,
+                    ),
+                ),
+                heat=heat,
+            ),
+            Zone(
+                zone_id="slaapkamer",
+                name="Slaapkamer",
+                indoor_sensor="sensor.slaapkamer",
+                priority=1,
+                sources=(
+                    Source(
+                        source_id="slaapkamer_kraan",
+                        entity_id="climate.slaapkamer_kraan",
+                        role=SourceRole.HEAT_ONLY,
+                    ),
+                ),
+                heat=heat,
+            ),
+        ),
+        circuits=(
+            Circuit(
+                circuit_id="kleppen",
+                name="Kleppen",
+                units=("climate.woonkamer_kraan", "climate.slaapkamer_kraan"),
+                min_cycle_time=timedelta(0),
+            ),
+        ),
+        generators=(Generator(generator_id="cv", name="CV-ketel", entity_id=GAS),),
+        openings=(Opening(entity_id=BACK_DOOR),),
+        **overrides,  # type: ignore[arg-type]
+    )
+
+
+def wet_world(*, minute: int, door_open: bool, indoor: dict[str, float], boiler: str) -> object:
+    """Return the valve house at 12:`minute` with both valves off and the door as given."""
+    return make_world(
+        now=at(12, minute),
+        outdoor=2.0,
+        indoor=indoor,
+        climates={
+            GAS: climate(boiler, changed_at=at(12, max(0, minute - 1))),
+            "climate.woonkamer_kraan": climate("off"),
+            "climate.slaapkamer_kraan": climate("off"),
+        },
+        openings={BACK_DOOR: OpeningState(open=door_open, changed_at=at(12, minute))},
+    )
+
+
+COLD = {"woonkamer": 18.0, "slaapkamer": 18.0}
+
+
+class TestTheGeneratorTakesPartInTheOpeningRest:
+    """R1: ook een gedeelde warmtebron rust na een openingsstop.
+
+    R1: a shared heat source rests after an opening stop too.
+    """
+
+    @pytest.mark.parametrize(
+        ("stop_door_open", "opening_zone_ids", "stop_indoor", "rests"),
+        [
+            (True, (), {"woonkamer": 18.0, "slaapkamer": 18.0}, True),
+            (True, ("woonkamer",), {"woonkamer": 18.0, "slaapkamer": 23.0}, False),
+            (False, ("woonkamer",), {"woonkamer": 23.0, "slaapkamer": 23.0}, False),
+        ],
+        ids=["elke_zone_geweigerd", "een_zone_tevreden", "alle_zones_tevreden"],
+    )
+    def test_only_a_stop_by_opening_rests_the_generator(
+        self,
+        stop_door_open: bool,
+        opening_zone_ids: tuple[str, ...],
+        stop_indoor: dict[str, float],
+        rests: bool,
+    ) -> None:
+        config = wet_house()
+        if opening_zone_ids:
+            config = replace(
+                config,
+                openings=(Opening(entity_id=BACK_DOOR, zone_ids=opening_zone_ids),),
+            )
+
+        burning = decide(
+            config,
+            wet_world(minute=1, door_open=False, indoor=COLD, boiler="off"),
+        )
+        assert command_for(burning, GAS).hvac_mode == "heat"
+
+        stopped = decide(
+            config,
+            wet_world(minute=2, door_open=stop_door_open, indoor=stop_indoor, boiler="heat"),
+            burning,
+        )
+        stopped_command = command_for(stopped, GAS)
+        assert stopped_command is not None
+        assert stopped_command.hvac_mode == "off"
+        if rests:
+            assert stopped_command.reason is Reason.OPENING_OPEN
+            assert GAS in stopped.stopped_by_opening
+        else:
+            assert GAS not in stopped.stopped_by_opening
+
+        again = decide(
+            config,
+            wet_world(minute=3, door_open=False, indoor=COLD, boiler="off"),
+            stopped,
+        )
+        again_command = command_for(again, GAS)
+        assert again_command is not None
+        if rests:
+            assert again_command.hvac_mode == "off"
+            assert again_command.reason is Reason.SHORT_CYCLE_PROTECTION
+        else:
+            assert again_command.hvac_mode == "heat"
+
+    def test_a_house_wide_listed_generator_rests_too(self) -> None:
+        config = wet_house(house_wide_openings=(GAS,))
+
+        burning = decide(
+            config,
+            wet_world(minute=1, door_open=False, indoor=COLD, boiler="off"),
+        )
+        assert command_for(burning, GAS).hvac_mode == "heat"
+
+        stopped = decide(
+            config,
+            wet_world(minute=2, door_open=True, indoor=COLD, boiler="heat"),
+            burning,
+        )
+        stopped_command = command_for(stopped, GAS)
+        assert stopped_command is not None
+        assert stopped_command.hvac_mode == "off"
+        assert stopped_command.reason is Reason.OPENING_OPEN_ELSEWHERE
+        assert GAS in stopped.stopped_by_opening
+
+        again = decide(
+            config,
+            wet_world(minute=3, door_open=False, indoor=COLD, boiler="off"),
+            stopped,
+        )
+        again_command = command_for(again, GAS)
+        assert again_command is not None
+        assert again_command.hvac_mode == "off"
+        assert again_command.reason is Reason.SHORT_CYCLE_PROTECTION
+
+    def test_a_flapping_door_ignites_the_generator_at_most_once(self) -> None:
+        config = wet_house()
+        issued: list[str] = []
+        previous = None
+        boiler = "off"
+        for minute, door_open in (
+            (0, False),
+            (1, True),
+            (2, False),
+            (3, True),
+            (4, False),
+            (5, True),
+            (6, False),
+            (7, True),
+            (8, False),
+            (9, True),
+            (10, False),
+        ):
+            plan = decide(
+                config,
+                wet_world(minute=minute, door_open=door_open, indoor=COLD, boiler=boiler),
+                previous,
+            )
+            command = command_for(plan, GAS)
+            assert command is not None
+            issued.append(command.hvac_mode)
+            boiler = command.hvac_mode
+            previous = plan
+
+        starts = sum(
+            1
+            for before, after in zip(issued, issued[1:], strict=False)
+            if before == "off" and after == "heat"
+        )
+        assert starts <= 1, f"de brander werd {starts} keer opnieuw ontstoken: {issued}"
 
 
 # ---------------------------------------------------------------------------
