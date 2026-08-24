@@ -136,29 +136,29 @@ def _collect_wishes(
         # window gate above. One exception, in one place.
         serving = _serving(previous, zone.zone_id)
         stopped = frozenset() if world.precondition_ignores_openings(zone.zone_id) else blocked
-        source = sources.select(zone, demand.family, world, serving, margin, stopped)
-        if source is None:
-            # Was er zonder de huisbrede stop wel een bron geweest, dan is dat de
-            # reden, en niet "geen bron beschikbaar" - die laatste stuurt de
-            # gebruiker de configuratie in terwijl er alleen een deur openstaat.
+        first_choice = sources.select(zone, demand.family, world, serving, margin)
+        if first_choice is not None and first_choice.entity_id in stopped:
+            # De huisbrede stop stopt de zone, niet alleen het apparaat. Zou de
+            # bronkeuze de stilgezette eerste keus gewoon overslaan, dan gleed
+            # de kamer stilletjes door naar de tweede keus en stond de airco
+            # elektrisch te verwarmen omdat er elders een deur openstaat -
+            # precies wat je pas op de energierekening merkt. De "geblokkeerd"-
+            # melder hoort hier dus te branden, net als bij de gewone raampoort.
             #
-            # Had there been a source without the house-wide stop, that is the
-            # reason, and not "no source available" - the latter sends the user
-            # off into the configuration while all that is wrong is an open door.
-            elsewhere = bool(stopped) and (
-                sources.select(zone, demand.family, world, serving, margin) is not None
-            )
-            reason = Reason.OPENING_OPEN_ELSEWHERE if elsewhere else Reason.NO_SOURCE_AVAILABLE
-            refusals[zone.zone_id] = reason
-            if elsewhere:
-                # De poortenlijst draagt de "geblokkeerd"-melder per kamer.
-                # Zonder deze regel meldt de kamer niets, terwijl hij wel
-                # degelijk warmte wilde en door een deur elders stilstaat.
-                #
-                # The gate list carries the per-room "blocked" sensor. Without
-                # this line the room reports nothing, while it did want heat and
-                # stands still because of a door elsewhere.
-                shut[zone.zone_id] = (*shut[zone.zone_id], reason)
+            # The house-wide stop stops the zone, not just the appliance. Were
+            # source selection to simply skip the stopped first choice, the room
+            # would slide silently onto the second choice and the air
+            # conditioner would be heating electrically because a door stands
+            # open elsewhere - exactly what you only notice on the energy bill.
+            # The "blocked" sensor should therefore burn here, just as with the
+            # ordinary window gate.
+            refusals[zone.zone_id] = Reason.OPENING_OPEN_ELSEWHERE
+            shut[zone.zone_id] = (*shut[zone.zone_id], Reason.OPENING_OPEN_ELSEWHERE)
+            continue
+
+        source = first_choice
+        if source is None:
+            refusals[zone.zone_id] = Reason.NO_SOURCE_AVAILABLE
             continue
 
         rest_until = gates.house_wide_rest_until(config, world, previous, source.entity_id)

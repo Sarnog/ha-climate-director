@@ -26,6 +26,7 @@ from conftest import at, climate, everyone_up, make_world
 from custom_components.climate_director.engine import (
     DirectorConfig,
     Generator,
+    ModeFamily,
     ModeSettings,
     Opening,
     OpeningState,
@@ -159,14 +160,19 @@ def test_a_room_with_no_source_at_all_still_says_no_source_available() -> None:
     assert living.reason is Reason.NO_SOURCE_AVAILABLE
 
 
-def test_everything_else_stays_governed_per_zone() -> None:
-    """De airco van de woonkamer blijft koelen terwijl de ketel stilstaat."""
+def boiler_with_a_reserve() -> DirectorConfig:
+    """Return the shared-boiler house with an airco reserve in the living room."""
     config = shared_boiler(house_wide_openings=(GAS,))
     living = config.zones[0]
-    with_airco = replace(
+    with_reserve = replace(
         living,
         sources=(
-            *living.sources,
+            Source(
+                source_id="ketel_woonkamer",
+                entity_id=GAS,
+                role=SourceRole.HEAT_ONLY,
+                priority=0,
+            ),
             Source(
                 source_id="woonkamer_airco",
                 entity_id=LIVING_AIRCO,
@@ -175,18 +181,45 @@ def test_everything_else_stays_governed_per_zone() -> None:
             ),
         ),
     )
-    config = replace(config, zones=(with_airco, config.zones[1]))
+    return replace(config, zones=(with_reserve, config.zones[1]))
 
-    plan = decide(config, cold_house())
+
+def test_a_blocked_first_choice_stops_the_zone_instead_of_using_the_reserve() -> None:
+    """De instelling heet "apparaat valt stil", niet "kamer wijkt uit".
+
+    The setting reads "appliance stops", not "room moves to another appliance".
+    """
+    plan = decide(boiler_with_a_reserve(), cold_house())
 
     boiler = command_for(plan, GAS)
     airco = command_for(plan, LIVING_AIRCO)
     assert boiler is not None and boiler.hvac_mode == "off"
-    # De zone kijkt door naar zijn volgende bron in plaats van op neutraal uit
-    # te komen: alleen de ketel staat stil, de kamer niet.
     assert airco is not None
-    assert airco.hvac_mode == "heat"
-    assert decision_for(plan, "woonkamer").source_id == "woonkamer_airco"
+    assert airco.hvac_mode == "off"
+
+    living = decision_for(plan, "woonkamer")
+    assert living.reason is Reason.OPENING_OPEN_ELSEWHERE
+    assert living.granted is ModeFamily.NEUTRAL
+    assert living.source_id is None
+
+
+def test_an_unreachable_first_choice_still_falls_back_visibly() -> None:
+    """Alleen een écht onbereikbare eerste keus telt als uitwijking.
+
+    Only a genuinely unreachable first choice counts as a fallback.
+    """
+    config = boiler_with_a_reserve()
+    world = cold_house(
+        climates={GAS: climate("off", available=False), LIVING_AIRCO: climate("off")}
+    )
+
+    plan = decide(config, world)
+
+    airco = command_for(plan, LIVING_AIRCO)
+    assert airco is not None and airco.hvac_mode == "heat"
+    living = decision_for(plan, "woonkamer")
+    assert living.on_fallback
+    assert living.source_id == "woonkamer_airco"
 
 
 # ---------------------------------------------------------------------------
