@@ -652,6 +652,83 @@ class TestDiscardingAndDeleting:
         finally:
             await stop_house(home)
 
+    async def test_deleting_a_source_cleans_its_exclusive_group(self) -> None:
+        """M2: een verwijderde bron laat geen verweesd bron-ID achter."""
+        installation = {
+            "zones": [
+                zone(
+                    "woonkamer",
+                    sources=[
+                        source("woonkamer_airco", LIVING, role="heat_cool"),
+                        source("woonkamer_ketel", "climate.gas", role="heat_only", priority=1),
+                    ],
+                    heat=settings(21.0, 20.0),
+                )
+            ],
+            "exclusive_groups": [["woonkamer_airco", "woonkamer_ketel"]],
+        }
+        states = {
+            "sensor.woonkamer": ("18.0", {}),
+            LIVING: ("off", {}),
+            "climate.gas": ("off", {}),
+        }
+        home = await start_house(installation, states=states)
+        try:
+            flow = home.hass.config_entries.options
+            result = await menu(home, "zones")
+            result = await flow.async_configure(result["flow_id"], {"zone": "0"})
+            assert result["step_id"] == "zone"
+            result = await flow.async_configure(
+                result["flow_id"],
+                {
+                    "name": "Woonkamer",
+                    "indoor_sensor": "sensor.woonkamer",
+                    "priority": 0,
+                    "gate": "household",
+                    "presence_state": "on",
+                    "ignore_precipitation": False,
+                    "enable_heat": True,
+                    "heat_target": 21.0,
+                    "heat_start_at": 20.0,
+                    "heat_hysteresis": 1.0,
+                    "enable_cool": False,
+                    "cool_target": 23.0,
+                    "cool_start_at": 24.0,
+                    "cool_hysteresis": 1.0,
+                    "cool_summer_only": False,
+                    "delete": False,
+                    "when_done": "keep",
+                },
+            )
+            assert result["step_id"] == "sources"
+
+            result = await flow.async_configure(result["flow_id"], {"source": "1"})
+            assert result["step_id"] == "source"
+            result = await flow.async_configure(
+                result["flow_id"],
+                {
+                    "entity_id": "climate.gas",
+                    "role": "heat_only",
+                    "autostart": True,
+                    "priority": 1,
+                    "delete": True,
+                    "when_done": "keep",
+                },
+            )
+            assert result["step_id"] == "sources"
+            result = await flow.async_configure(result["flow_id"], {"source": "back_to_menu"})
+            stored = await save(home, result["flow_id"])
+
+            dangling = [
+                source_id
+                for group in stored.get("exclusive_groups") or []
+                for source_id in group
+                if source_id == "woonkamer_ketel"
+            ]
+            assert not dangling, f"verweesde groep bleef staan: {stored.get('exclusive_groups')}"
+        finally:
+            await stop_house(home)
+
     async def test_a_shared_heat_source_can_be_deleted_again(self) -> None:
         installation = two_rooms()
         installation["generators"] = [

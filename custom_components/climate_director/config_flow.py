@@ -996,6 +996,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
 
         if user_input is not None and not errors:
             if user_input.get("delete") and self._source_index is not None:
+                removed_source_id = sources[self._source_index].get("source_id")
+                self._drop_source_references({removed_source_id} if removed_source_id else set())
                 sources.pop(self._source_index)
             else:
                 source = {
@@ -1813,10 +1815,26 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             for source in removed.get("sources") or []
             if source.get("source_id")
         }
-        if source_ids:
-            groups = self._list("exclusive_groups")
-            cleaned = [[item for item in group if item not in source_ids] for group in groups]
-            groups[:] = [group for group in cleaned if group]
+        self._drop_source_references(source_ids)
+
+    def _drop_source_references(self, source_ids: set[str]) -> None:
+        """Remove deleted source ids from every list that can point at them.
+
+        Exclusieve groepen wijzen met `source_id`s naar bronnen. Wordt één bron
+        verwijderd, dan hoort zijn ID daar weg te zijn — anders valt het
+        apparaat uit de groep (`_group_entities` vindt het bron-ID niet meer)
+        en klaagt `validate()` over `exclusive_group_unknown_source`.
+
+        Exclusive groups point at sources through `source_id`s. When one source
+        is deleted its id belongs out of there — otherwise the appliance drops
+        out of the group (`_group_entities` no longer finds the source id) and
+        `validate()` complains about `exclusive_group_unknown_source`.
+        """
+        if not source_ids:
+            return
+        groups = self._list("exclusive_groups")
+        cleaned = [[item for item in group if item not in source_ids] for group in groups]
+        groups[:] = [group for group in cleaned if group]
 
     def _priority_clash(self, zone_id: str, priority: int) -> bool:
         """Return whether another zone on the same circuit already holds this number.
