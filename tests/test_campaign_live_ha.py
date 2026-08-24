@@ -175,6 +175,66 @@ class TestSettingUp:
         registered = home.registered()
         assert len(registered) == len(set(registered.values()))
 
+    @pytest.mark.parametrize("with_second_zone", [False, True], ids=["een_zone", "twee_zones"])
+    @pytest.mark.parametrize(
+        "with_generator", [False, True], ids=["zonder_generator", "met_generator"]
+    )
+    async def test_every_registered_key_is_a_wanted_key(
+        self, with_second_zone: bool, with_generator: bool
+    ) -> None:
+        """De opruiming wist nooit een entiteit die een platform wél aanmaakt.
+
+        `_async_remove_stale_entities` verwijdert elke sleutel die niet in
+        `_wanted_entity_keys` staat. Vergeet iemand ooit één sleutel in die
+        verzameling, dan wist de opruiming die entiteit bij élke start — met
+        zijn bewaarde stand erbij. Deze test legt de verzameling daarom naast
+        het echte entiteitenregister, over vier installaties.
+
+        The cleanup never wipes an entity a platform actually creates.
+
+        `_async_remove_stale_entities` removes every key not in
+        `_wanted_entity_keys`. Were a key ever forgotten from that set, the
+        cleanup would wipe that entity on every start — stored state included.
+        This test therefore holds the set against the real entity registry,
+        across four installations.
+        """
+        from custom_components.climate_director import _wanted_entity_keys
+
+        if with_second_zone:
+            house: dict[str, Any] = installation()
+        else:
+            house = {
+                "zones": [
+                    zone(
+                        "woonkamer",
+                        sources=[source("kraan", "climate.kraan", role="heat_only")],
+                        heat=settings(21.0, 20.0),
+                    )
+                ]
+            }
+        states: dict[str, tuple[str, dict[str, Any]]]
+        if with_second_zone:
+            states = cold_world()
+        else:
+            states = {
+                "sensor.woonkamer": ("18.0", {}),
+                "climate.kraan": ("off", {"temperature": 19.0}),
+            }
+        if with_generator:
+            house["generators"] = [{"generator_id": "cv", "name": "CV", "entity_id": BOILER}]
+            states = {**states, BOILER: ("off", {"temperature": 19.0})}
+
+        live = await start_house(house, states=states)
+        try:
+            wanted = _wanted_entity_keys(live.entry.runtime_data.config)
+            registered = set(live.registered())
+            assert registered == wanted, (
+                f"alleen in het register: {sorted(registered - wanted)}; "
+                f"alleen gewenst: {sorted(wanted - registered)}"
+            )
+        finally:
+            await stop_house(live)
+
     async def test_a_removed_zone_leaves_no_entities_behind(self, home: LiveHome) -> None:
         """Zes entiteiten per zone, en een verwijderde zone ruimt ze alle zes op.
 
