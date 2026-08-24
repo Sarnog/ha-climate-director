@@ -178,6 +178,80 @@ class TestSettingUp:
         registered = home.registered()
         assert len(registered) == len(set(registered.values()))
 
+    async def test_a_removed_zone_leaves_no_entities_behind(self, home: LiveHome) -> None:
+        """Zes entiteiten per zone, en een verwijderde zone ruimt ze alle zes op.
+
+        Six entities per zone, and a removed zone clears all six away.
+        """
+        from custom_components.climate_director.const import (
+            CONF_INSTALLATION,
+            CONF_SHADOW_MODE,
+        )
+
+        before = home.registered()
+        assert {"zone_woonkamer_blocked", "zone_zolder_blocked"} <= set(before)
+
+        single = installation()
+        single["zones"] = [single["zones"][0]]
+        home.hass.config_entries.async_update_entry(
+            home.entry,
+            options={CONF_INSTALLATION: single, CONF_SHADOW_MODE: False},
+        )
+        assert await home.hass.config_entries.async_reload(home.entry.entry_id)
+        await home.hass.async_block_till_done()
+
+        after = home.registered()
+        suffixes = ("_override", "_priority", "_precondition", "_source", "_blocked", "_fallback")
+        for suffix in suffixes:
+            assert f"zone_zolder{suffix}" not in after, suffix
+        assert "zone_woonkamer_blocked" in after
+
+    async def test_a_refusing_platform_still_stops_the_coordinator(
+        self, home: LiveHome, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Weigert een platform, dan stopt de coordinator tóch — anders blijft hij draaien.
+
+        When a platform refuses, the coordinator still stops — otherwise it keeps running.
+        """
+        from custom_components.climate_director import async_unload_entry
+
+        async def _refuse(*_args: object, **_kwargs: object) -> bool:
+            return False
+
+        monkeypatch.setattr(home.hass.config_entries, "async_unload_platforms", _refuse)
+        assert await async_unload_entry(home.hass, home.entry) is False
+        assert home.coordinator._closing is True
+
+    async def test_the_stuck_sensor_reads_through_the_public_reader(
+        self, home: LiveHome, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """De sensor hangt aan de publieke lezer, niet aan het privéveld.
+
+        The sensor hangs off the public reader, not the private field.
+        """
+        monkeypatch.setattr(home.coordinator, "unusable_latest", lambda: {"sensor.via_reader": "x"})
+        home.coordinator._unusable_latest = {"sensor.via_private": "y"}
+        await home.evaluate()
+        assert home.values("stuck")["unusable_entities"] == {"sensor.via_reader": "x"}
+
+    async def test_a_throwing_notice_still_publishes_the_plan(
+        self, home: LiveHome, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Gooit een melding, dan wordt het plan tóch gepubliceerd.
+
+        When a notice raises, the plan is still published.
+        """
+
+        def _boom(*_args: object, **_kwargs: object) -> None:
+            raise RuntimeError("kapot")
+
+        monkeypatch.setattr(home.coordinator, "_fire_events", _boom)
+        before = home.coordinator.data
+        with pytest.raises(RuntimeError):
+            await home.evaluate()
+        assert home.coordinator.data is not None
+        assert home.coordinator.data is not before
+
     async def test_the_actions_are_registered(self, home: LiveHome) -> None:
         available = home.hass.services.async_services().get("climate_director", {})
         assert set(available) == {"evaluate", "precondition", "cancel_precondition"}
@@ -985,6 +1059,35 @@ class TestTheReporting:
         await home.evaluate()
         assert len(home.fired("climate_director_decision")) == before
 
+    async def test_a_house_wide_stop_refuses_a_precondition_by_name(self) -> None:
+        """De huisbrede weigering noemt de deur, ook als die in een andere zone staat.
+
+        The house-wide refusal names the door, even when it stands in another zone.
+        """
+        live = await start_house(
+            installation(
+                house_wide_openings=[LIVING],
+                openings=[
+                    {"entity_id": "binary_sensor.achterdeur", "delay": 0, "zone_ids": ["zolder"]}
+                ],
+            ),
+            states=cold_world(),
+        )
+        try:
+            live.set("binary_sensor.achterdeur", "on")
+            await live.settle()
+            await live.call(
+                "climate_director", "precondition", {"zone_ids": ["woonkamer"], "minutes": 45}
+            )
+            await asyncio.sleep(1.4)
+            await live.hass.async_block_till_done()
+
+            fired = live.fired("climate_director_precondition_refused")
+            assert fired, "de weigering is nooit gemeld"
+            assert "achterdeur" in fired[-1]["opening_names"][0]
+        finally:
+            await stop_house(live)
+
 
 # ---------------------------------------------------------------------------
 # Wat er over een herstart heen hoort te komen.
@@ -1119,6 +1222,67 @@ class TestHandingBackLifecycle:
         try:
             # Eerste ronde: de kamer is warm, dus ons eigen uit-commando.
             # First round: the room is warm, so our own off command.
+            assert live.state(LIVING) == "off"
+
+            live.set("sensor.woonkamer", "18.0")
+            await live.settle()
+            await live.evaluate()
+            assert live.state(LIVING) == "heat"
+
+            live.set(LIVING, "off", hvac_modes=["heat", "off"], temperature=21.0)
+            await live.settle()
+            await live.evaluate()
+            assert live.state(LIVING) == "off", "de director zet de hand weer aan"
+            assert "woonkamer" in live.coordinator._handed_back
+        finally:
+            await stop_house(live)
+
+
+class TestTheHarnessApplianceKinds:
+    """De nieuwe apparaattypes van het harnas leggen M2 en M3 live vast.
+
+    The harness's new appliance kinds pin M2 and M3 down live.
+    """
+
+    async def test_a_refused_setpoint_is_offered_again(self) -> None:
+        """Een geweigerd setpoint wordt de volgende ronde opnieuw aangeboden.
+
+        A refused setpoint is offered again the next round.
+        """
+        live = await start_house(
+            installation(), states=cold_world(), appliance="refuses_set_temperature"
+        )
+        try:
+            await live.evaluate()
+            offered = [call for name, call in live.calls if name == "set_temperature"]
+            assert offered, "het setpoint is nooit aangeboden"
+
+            await live.settle()
+            await live.evaluate()
+            offered = [call for name, call in live.calls if name == "set_temperature"]
+            assert len(offered) >= 2, "het geweigerde setpoint is niet opnieuw aangeboden"
+        finally:
+            await stop_house(live)
+
+    async def test_a_drop_out_off_then_own_start_then_a_hand_is_noticed(self) -> None:
+        """Ons uit via unavailable, zelf weer aan, dan een hand: die is een hand.
+
+        Our off via unavailable, on again by us, then a hand: that is a hand.
+        """
+        states = {
+            "sensor.woonkamer": ("22.0", {}),
+            "sensor.zolder": ("22.0", {}),
+            "sensor.buiten": ("4.0", {}),
+            LIVING: ("heat", {"hvac_modes": ["heat", "off"], "temperature": 21.0}),
+            SPARE: ("off", {"hvac_modes": ["heat", "off"]}),
+            ATTIC: ("off", {"hvac_modes": ["heat", "off"]}),
+            "person.danny": ("home", {}),
+            "sensor.danny_lader": ("none", {}),
+            "binary_sensor.achterdeur": ("off", {}),
+        }
+        live = await start_house(installation(), states=states, appliance="drops_out_on_off")
+        try:
+            await live.settle()
             assert live.state(LIVING) == "off"
 
             live.set("sensor.woonkamer", "18.0")

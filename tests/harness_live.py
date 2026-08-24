@@ -112,6 +112,34 @@ APPLIANCE_TYPES: dict[str, dict[str, Any]] = {
         "min_temp": None,
         "max_temp": None,
     },
+    #: Een apparaat dat de setpoint-aanroep weigert, zoals een cloud-integratie
+    #: dat kan doen. De aanroep komt aan en faalt alsnog; `applier.apply()` vangt
+    #: dat en de volgende ronde moet hem opnieuw aanbieden (M2).
+    #:
+    #: An appliance refusing the setpoint call, as a cloud integration can. The
+    #: call arrives and still fails; `applier.apply()` catches that and the next
+    #: round must offer it again (M2).
+    "refuses_set_temperature": {
+        "honours_hvac_mode_in_set_temperature": True,
+        "report_delay_rounds": 0,
+        "reports_temperature": False,
+        "refuses_set_temperature": True,
+        "min_temp": None,
+        "max_temp": None,
+    },
+    #: Een apparaat dat tussen twee standen even `unavailable` meldt, precies de
+    #: cloud-drop-out van M3: heat -> unavailable -> off.
+    #:
+    #: An appliance briefly reporting `unavailable` between two states, exactly
+    #: the M3 cloud drop-out: heat -> unavailable -> off.
+    "drops_out_on_off": {
+        "honours_hvac_mode_in_set_temperature": True,
+        "report_delay_rounds": 0,
+        "reports_temperature": True,
+        "drops_out_on_off": True,
+        "min_temp": None,
+        "max_temp": None,
+    },
 }
 
 DEFAULT_APPLIANCE = "obedient"
@@ -502,6 +530,13 @@ def _register_climate(home: LiveHome) -> None:
         entity_id = call.data["entity_id"]
         temperature = call.data.get("temperature")
         _check_temperature(home, entity_id, temperature)
+        if home.appliance.get("refuses_set_temperature"):
+            # M2: de aanroep komt aan en faalt alsnog. De applier vangt dat en
+            # de volgende ronde moet hem opnieuw aanbieden.
+            #
+            # M2: the call arrives and still fails. The applier catches that,
+            # and the next round must offer it again.
+            raise ServiceValidationError(f"{entity_id} refuses the setpoint call")
         mode = (
             call.data.get("hvac_mode")
             if home.appliance["honours_hvac_mode_in_set_temperature"]
@@ -544,6 +579,21 @@ def _write(
     delay_rounds: int = 0,
 ) -> None:
     """Write one appliance's new state, keeping what the call did not name."""
+    if home.appliance.get("drops_out_on_off"):
+        current = home.hass.states.get(entity_id)
+        if (
+            mode == "off"
+            and current is not None
+            and current.state not in ("off", "unavailable", "unknown")
+        ):
+            # M3: eerst even onleesbaar, dan pas uit - precies de cloud-drop-out
+            # waar `_commanded_off` doorheen moet kijken.
+            #
+            # M3: briefly unreadable first, then off - exactly the cloud
+            # drop-out `_commanded_off` must see through.
+            home.hass.states.async_set(entity_id, "unavailable", {})
+            home._pending_reports.setdefault(entity_id, []).append((mode, temperature, 1))
+            return
     if delay_rounds > 0:
         home._pending_reports.setdefault(entity_id, []).append((mode, temperature, delay_rounds))
         return
