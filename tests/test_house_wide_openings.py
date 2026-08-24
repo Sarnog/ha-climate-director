@@ -764,3 +764,37 @@ class TestTheOpeningRestBelongsToTheAppliance:
         resumed_command = command_for(resumed, GAS)
         assert resumed_command is not None
         assert resumed_command.hvac_mode == "heat"
+
+
+def test_the_rest_survives_one_satisfied_round() -> None:
+    """M3: één ronde met een andere uit-reden doet de openingsrust niet vergeten.
+
+    The M3 property: one round with another off reason does not forget the
+    opening rest.
+    """
+    config = own_boiler()
+
+    stopped = decide(config, own_door_world(minute=0, door_open=True))
+    stopped_command = command_for(stopped, GAS)
+    assert stopped_command is not None
+    assert stopped_command.reason is Reason.OPENING_OPEN
+
+    settled = decide(
+        config,
+        make_world(
+            now=at(12, 1),
+            outdoor=2.0,
+            indoor={"woonkamer": 25.0},
+            climates={GAS: climate("off")},
+            openings={BACK_DOOR: OpeningState(open=False, changed_at=at(12, 1))},
+        ),
+        stopped,
+    )
+    assert command_for(settled, GAS).hvac_mode == "off"
+
+    resumed = decide(config, own_door_world(minute=2, door_open=False), settled)
+    resumed_command = command_for(resumed, GAS)
+    assert resumed_command is not None
+    assert resumed_command.hvac_mode != "heat", (
+        f"de ketel ontsteekt binnen de rusttijd: {resumed_command}"
+    )
