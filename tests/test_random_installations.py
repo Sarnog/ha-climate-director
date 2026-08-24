@@ -299,6 +299,22 @@ def _installation(rng: random.Random) -> dict:
         for index in range(rng.randrange(0, 3))
     ]
 
+    # De huisbrede stop hoort net zo goed door de sweep heen te lopen als de
+    # rest: hij raakt de bronkeuze, het vangnet en de openingsrust. Alleen
+    # apparaten die de director echt bestuurt komen op de lijst, en alleen
+    # wanneer er openingen zijn - anders klaagt `validate()` terecht.
+    #
+    # The house-wide stop has to run through the sweep just like the rest: it
+    # touches the source choice, the safety net and the opening rest. Only
+    # appliances the director actually steers make the list, and only when
+    # openings exist - otherwise `validate()` rightly complains.
+    house_wide: list[str] = []
+    if openings and rng.random() < 0.5:
+        candidates = [source["entity_id"] for zone in zones for source in zone["sources"]]
+        candidates += [item["entity_id"] for item in generators]
+        if candidates:
+            house_wide = [rng.choice(candidates)]
+
     # Een uitsluitende groep tussen twee bronnen die elkaar bij hetzelfde weer
     # allebei mogen, is een configuratiefout - `validate()` zegt dat ook. De
     # zinnige vorm is de vorm uit een echt huis: een airco vanaf 3,1 graden
@@ -360,6 +376,7 @@ def _installation(rng: random.Random) -> dict:
         "generators": generators,
         "residents": residents,
         "openings": openings,
+        "house_wide_openings": house_wide,
         "exclusive_groups": groups,
         "gates": {
             "require_awake": rng.random() < 0.7,
