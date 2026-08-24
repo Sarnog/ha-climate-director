@@ -1297,6 +1297,18 @@ def _build_zone_decisions(
             continue
 
         grant = grants.get(zone.zone_id)
+        # De uitwijkmelder moet met dezelfde stop rekenen als het plan. Voor
+        # een zone met een bypass-verzoek is de huisbrede stop overgeslagen in
+        # `_collect_wishes`; gaven we hem hier tóch mee, dan kon de melder een
+        # andere bron als "gekozen" aannemen en een onbereikbare tweede keus
+        # melden die helemaal niet aan de beurt was.
+        #
+        # The fallback reporter must reckon with the same stop as the plan.
+        # For a zone with a bypassing request the house-wide stop was skipped
+        # in `_collect_wishes`; handing it over here anyway would let the
+        # reporter assume another source was chosen and name an unreachable
+        # second choice that never got its turn.
+        zone_blocked = frozenset() if world.precondition_ignores_openings(zone.zone_id) else blocked
         decisions.append(
             ZoneDecision(
                 zone_id=zone.zone_id,
@@ -1311,7 +1323,7 @@ def _build_zone_decisions(
                     world,
                     _serving(previous, zone.zone_id),
                     config.outdoor_hysteresis,
-                    blocked,
+                    zone_blocked,
                 ),
                 would_want=would,
             )

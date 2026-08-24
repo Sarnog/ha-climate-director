@@ -223,6 +223,69 @@ def test_an_unreachable_first_choice_still_falls_back_visibly() -> None:
     assert living.source_id == "woonkamer_airco"
 
 
+def boiler_with_a_broken_reserve() -> DirectorConfig:
+    """Return the blocked-first-choice house with a broken middle choice.
+
+    De eerste keus is de huisbreed stilgezette ketel, de tweede een onbereikbare
+    airco en de derde een gezonde reserve. Met een bypass-verzoek kiest het plan
+    de ketel; de uitwijkmelder hoort dan niets te melden, want er is niets
+    overgeslagen.
+
+    The first choice is the house-wide stopped boiler, the second an unreachable
+    air conditioner and the third a sound reserve. With a bypassing request the
+    plan picks the boiler; the fallback reporter should then stay silent, since
+    nothing was skipped.
+    """
+    config = boiler_with_a_reserve()
+    living = config.zones[0]
+    with_third = replace(
+        living,
+        sources=(
+            Source(
+                source_id="ketel_woonkamer",
+                entity_id=GAS,
+                role=SourceRole.HEAT_ONLY,
+                priority=0,
+            ),
+            Source(
+                source_id="kapotte_airco",
+                entity_id=LIVING_AIRCO,
+                role=SourceRole.HEAT_COOL,
+                priority=1,
+            ),
+            Source(
+                source_id="reserve",
+                entity_id="climate.reserve",
+                role=SourceRole.HEAT_ONLY,
+                priority=2,
+            ),
+        ),
+    )
+    return replace(config, zones=(with_third, config.zones[1]))
+
+
+def test_a_bypassed_request_reports_no_false_fallback() -> None:
+    """R5: de uitwijkmelder rekent met dezelfde stop als het plan.
+
+    R5: the fallback reporter reckons with the same stop as the plan.
+    """
+    config = boiler_with_a_broken_reserve()
+    world = cold_house(
+        climates={
+            GAS: climate("heat"),
+            LIVING_AIRCO: climate("off", available=False),
+            "climate.reserve": climate("off"),
+        },
+        precondition_until={"woonkamer": at(14, 0)},
+        precondition_bypass=frozenset({"woonkamer"}),
+    )
+
+    plan = decide(config, world)
+    living = decision_for(plan, "woonkamer")
+    assert living.source_id == "ketel_woonkamer"
+    assert living.passed_over == ()
+
+
 # ---------------------------------------------------------------------------
 # De grenzen van de stop / the bounds of the stop
 # ---------------------------------------------------------------------------
