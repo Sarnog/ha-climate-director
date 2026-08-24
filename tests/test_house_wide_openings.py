@@ -700,6 +700,7 @@ class TestTheGeneratorTakesPartInTheOpeningRest:
         issued: list[str] = []
         previous = None
         boiler = "off"
+        ignitions: list[int] = []
         for minute, door_open in (
             (0, False),
             (1, True),
@@ -721,15 +722,15 @@ class TestTheGeneratorTakesPartInTheOpeningRest:
             command = command_for(plan, GAS)
             assert command is not None
             issued.append(command.hvac_mode)
+            if boiler == "off" and command.hvac_mode == "heat":
+                ignitions.append(minute)
             boiler = command.hvac_mode
             previous = plan
 
-        starts = sum(
-            1
-            for before, after in zip(issued, issued[1:], strict=False)
-            if before == "off" and after == "heat"
-        )
-        assert starts <= 1, f"de brander werd {starts} keer opnieuw ontstoken: {issued}"
+        for first, second in zip(ignitions, ignitions[1:], strict=False):
+            assert second - first >= 3, (
+                f"de brander ontsteekt elke {second - first} minuten: {issued}"
+            )
 
     @pytest.mark.parametrize(
         "opening_zone_ids", [(), ("woonkamer",)], ids=["huisbreed", "een_zone"]
@@ -960,13 +961,15 @@ def flap_world(*, minute: int, door_open: bool, boiler: str = "off") -> object:
 
 
 def test_a_door_that_keeps_opening_and_closing_ignites_the_burner_at_most_once() -> None:
-    """Tien keer open en dicht in tien minuten, hoogstens één ontsteking.
+    """Tien keer open en dicht in tien minuten, hoogstens één ontsteking per rusttijd.
 
-    The door flapping ten times in ten minutes must not ignite the burner twice.
+    Ten flaps in ten minutes must not ignite the burner twice within one rest.
     """
     config = flapping_config()
     issued: list[str] = []
     previous = None
+    boiler = "off"
+    ignitions: list[int] = []
     for minute, door_open in (
         (0, False),
         (1, True),
@@ -984,14 +987,13 @@ def test_a_door_that_keeps_opening_and_closing_ignites_the_burner_at_most_once()
         command = command_for(plan, GAS)
         assert command is not None
         issued.append(command.hvac_mode)
+        if boiler == "off" and command.hvac_mode == "heat":
+            ignitions.append(minute)
+        boiler = command.hvac_mode
         previous = plan
 
-    starts = sum(
-        1
-        for before, after in zip(issued, issued[1:], strict=False)
-        if before == "off" and after == "heat"
-    )
-    assert starts <= 1, f"de brander werd {starts} keer opnieuw ontstoken: {issued}"
+    for first, second in zip(ignitions, ignitions[1:], strict=False):
+        assert second - first >= 3, f"de brander ontsteekt elke {second - first} minuten: {issued}"
 
 
 def test_a_door_that_stays_open_keeps_the_boiler_off() -> None:
@@ -1006,8 +1008,8 @@ def test_a_door_that_stays_open_keeps_the_boiler_off() -> None:
     assert command_for(later, GAS).hvac_mode == "off"
 
 
-def test_the_restart_waits_one_rest_time_after_closing() -> None:
-    """De herstart wacht de rusttijd uit, en de deferral staat er ook echt."""
+def test_the_restart_waits_until_one_rest_time_after_the_stop() -> None:
+    """De herstart wacht de rusttijd vanaf de stop uit, en de deferral staat er ook echt."""
     config = flapping_config()
 
     stopped = decide(config, flap_world(minute=1, door_open=True, boiler="heat"))
@@ -1026,9 +1028,9 @@ def test_the_restart_waits_one_rest_time_after_closing() -> None:
     assert deferral is not None
     assert deferral.subject == GAS
     assert deferral.reason is Reason.SHORT_CYCLE_PROTECTION
-    assert deferral.until == at(12, 2) + gates.OPENING_MIN_REST
+    assert deferral.until == at(12, 1) + gates.OPENING_MIN_REST
 
-    resumed = decide(config, flap_world(minute=5, door_open=False), waiting)
+    resumed = decide(config, flap_world(minute=4, door_open=False), waiting)
     resumed_command = command_for(resumed, GAS)
     assert resumed_command is not None
     assert resumed_command.hvac_mode == "heat"
@@ -1094,12 +1096,64 @@ def test_a_zone_door_stop_rests_a_circuit_less_boiler_too() -> None:
     assert deferral is not None
     assert deferral.subject == GAS
     assert deferral.reason is Reason.SHORT_CYCLE_PROTECTION
-    assert deferral.until == at(12, 2) + gates.OPENING_MIN_REST
+    assert deferral.until == at(12, 1) + gates.OPENING_MIN_REST
 
     resumed = decide(config, own_door_world(minute=5, door_open=False), waiting)
     resumed_command = command_for(resumed, GAS)
     assert resumed_command is not None
     assert resumed_command.hvac_mode == "heat"
+
+
+class TestTheRestCountsFromTheStop:
+    """R15: de rusttijd telt vanaf de stop, niet vanaf het sluiten van de deur.
+
+    R15: the rest counts from the stop, not from the door closing again.
+    """
+
+    @pytest.mark.parametrize(
+        "gap_minutes", [0, 1, 3, 30, 8 * 60], ids=["nul", "een", "drie", "half_uur", "acht_uur"]
+    )
+    @pytest.mark.parametrize("was_running", [True, False], ids=["draaiend", "al_uit"])
+    def test_the_rest_counts_from_the_stop(self, gap_minutes: int, was_running: bool) -> None:
+        """Alleen onder de drie minuten ná de stop wordt de herstart opgehouden.
+
+        Only within three minutes after the stop is the restart still held back.
+        """
+        config = own_boiler()
+        boiler = "heat" if was_running else "off"
+
+        stopped = decide(config, own_door_world(minute=1, door_open=True, boiler=boiler))
+        stopped_command = command_for(stopped, GAS)
+        assert stopped_command is not None
+        assert stopped_command.hvac_mode == "off"
+        if was_running:
+            assert stopped_command.reason is Reason.OPENING_OPEN
+            assert GAS in stopped.stopped_by_opening
+        else:
+            assert GAS not in stopped.stopped_by_opening
+
+        closed_now = at(12, 1) + timedelta(minutes=gap_minutes)
+        closed = decide(
+            config,
+            make_world(
+                now=closed_now,
+                outdoor=2.0,
+                indoor={"woonkamer": 18.0},
+                climates={GAS: climate("off")},
+                openings={BACK_DOOR: OpeningState(open=False, changed_at=closed_now)},
+            ),
+            stopped,
+        )
+        closed_command = command_for(closed, GAS)
+        assert closed_command is not None
+        if was_running and gap_minutes < 3:
+            assert closed_command.hvac_mode == "off"
+            assert closed_command.reason is Reason.SHORT_CYCLE_PROTECTION
+        else:
+            assert closed_command.hvac_mode == "heat", (
+                f"gap {gap_minutes}m, draaiend {was_running}: "
+                f"{closed_command.hvac_mode}/{closed_command.reason.value}"
+            )
 
 
 BEDROOM_WINDOW = "binary_sensor.slaapkamerraam"

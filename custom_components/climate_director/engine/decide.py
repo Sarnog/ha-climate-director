@@ -27,6 +27,7 @@ from .families import (
 )
 from .models import Circuit, DirectorConfig, Source, Zone
 from .plan import (
+    OPENING_MIN_REST,
     CircuitDecision,
     Deferral,
     Plan,
@@ -849,25 +850,22 @@ def _opening_rest_bookkeeping(
     """Return this plan's per-appliance opening-rest bookkeeping.
 
     De rust hangt aan het apparaat, niet aan de reden van het vorige commando.
-    `stopped_by_opening` noemt de apparaten die deze ronde door een opening
-    zijn stilgezet; `opening_rest_until` draagt de eindtijden van al lopende
-    rusten mee zolang het apparaat niet draait. Zo overleeft de rust een
-    collapse die een andere reden liet winnen én een tussenronde waarin het
-    apparaat om een andere reden uit stond.
+    `opening_rest_until` draagt de eindtijd van elke rust, gerekend vanaf de
+    stop zelf (anker 5): een verse openingsstop krijgt meteen
+    `world.now + OPENING_MIN_REST`, en die eindtijd wordt ronde na ronde
+    meegedragen zolang het apparaat niet draait. `stopped_by_opening` noemt
+    alleen nog de apparaten die déze ronde door een opening zijn stilgezet —
+    de rust zelf heeft geen tweede veld meer nodig.
 
     The rest hangs on the appliance, not on the previous command's reason.
-    `stopped_by_opening` names the appliances an opening stopped this round;
-    `opening_rest_until` carries the deadlines of already running rests while
-    the appliance stays off. That way the rest survives a collapse that let
-    another reason win, and an intermediate round in which the appliance stood
-    off for another reason.
+    `opening_rest_until` carries each rest's deadline, counted from the stop
+    itself (anchor 5): a fresh opening stop gets `world.now + OPENING_MIN_REST`
+    at once, and that deadline is carried round after round while the appliance
+    stays off. `stopped_by_opening` only names the appliances an opening stopped
+    this round — the rest itself no longer needs a second field.
     """
     if previous is None:
-        return stopped_now, dict(
-            (deferral.subject, deferral.until)
-            for deferral in (*rest_deferrals, *generator_deferrals)
-            if deferral.reason is Reason.SHORT_CYCLE_PROTECTION
-        )
+        return stopped_now, {entity: world.now + OPENING_MIN_REST for entity in stopped_now}
 
     commanded_running = {
         command.entity_id
@@ -875,29 +873,19 @@ def _opening_rest_bookkeeping(
         if command.hvac_mode not in (MODE_OFF, MODE_FAN_ONLY)
     }
     commanded = {command.entity_id for command in commands}
-    carried_stopped = set(previous.stopped_by_opening)
     carried_until = dict(previous.opening_rest_until)
     dropped = {
         entity
-        for entity in (*carried_stopped, *carried_until)
+        for entity in carried_until
         if entity in commanded_running
         or (entity not in commanded and world.climate(entity).running)
     }
 
-    fresh_until = {
-        deferral.subject: deferral.until
-        for deferral in (*rest_deferrals, *generator_deferrals)
-        if deferral.reason is Reason.SHORT_CYCLE_PROTECTION
-    }
     opening_rest_until = {
         entity: until for entity, until in carried_until.items() if entity not in dropped
     }
-    opening_rest_until.update(fresh_until)
-    stopped_by_opening = frozenset(
-        ({entity for entity in carried_stopped if entity not in dropped} | set(stopped_now))
-        - set(fresh_until)
-    )
-    return stopped_by_opening, opening_rest_until
+    opening_rest_until.update({entity: world.now + OPENING_MIN_REST for entity in stopped_now})
+    return frozenset(stopped_now), opening_rest_until
 
 
 def _stop_blocked(

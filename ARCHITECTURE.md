@@ -35,7 +35,8 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
    commando: een collapse kan die reden overschrijven. Hij staat in
    `Plan.stopped_by_opening` en `Plan.opening_rest_until`, geldt voor élk
    apparaat zonder circuit dat werkelijk draaide toen de stop kwam — een gedeelde
-   warmtebron inbegrepen — en is een vaste `OPENING_MIN_REST` van drie minuten.
+   warmtebron inbegrepen — en is een vaste `OPENING_MIN_REST` van drie minuten,
+   gerekend vanaf de stop.
    Bewust geen instelling: één knop minder om verkeerd te zetten, en drie minuten
    is veilig voor elke brander.
 6. **De hoofdschakelaar uit** betekent: de director laat alles los en stuurt
@@ -177,7 +178,7 @@ een installatie die dit niet gebruikt merkt er niets van.
 
 Bij een herstart na een openingsstop remt `opening_rest_until()` het weer aangaan van
 elk apparaat **zonder circuit** — en dat is bij dit ontwerp per definitie de gasketel:
-het apparaat wacht `OPENING_MIN_REST` (drie minuten) vanaf het einde van de stop, met een
+het apparaat wacht `OPENING_MIN_REST` (drie minuten) vanaf de stop, met een
 `Deferral` (`SHORT_CYCLE_PROTECTION`) waar de coordinator vanzelf op terugkomt. De stop
 zelf wordt nooit uitgesteld, en een vooruit-verzoek waarop iemand uitdrukkelijk "toch
 doen" zei passeert de rem, precies zoals het de poort zelf passeert.
@@ -305,9 +306,9 @@ de gewone raampoort gaat. Wat de director met rust laat blijft met rust: een ove
 zone en een handbediende bron krijgen geen commando en komen hier dus niet langs.
 
 Rond de bronkeuze en de generatorcommando's zit de openingsrusttijd voor elk apparaat
-zonder circuit: is de stop net voorbij, dan wordt een start nog `OPENING_MIN_REST` lang
-vastgehouden met een `Deferral` (`SHORT_CYCLE_PROTECTION`), precies zoals een circuit dat
-doet. Alleen herstarts wachten, nooit de stop zelf.
+zonder circuit: een start binnen `OPENING_MIN_REST` ná de stop wordt vastgehouden met een
+`Deferral` (`SHORT_CYCLE_PROTECTION`), precies zoals een circuit dat doet. Alleen
+herstarts wachten, nooit de stop zelf.
 
 ### plan.py — uitvoer
 
@@ -603,7 +604,7 @@ them without changing them here first.
    `Plan.stopped_by_opening` and `Plan.opening_rest_until`, applies to every
    appliance without a circuit that really was running when the stop came — a
    shared heat source included — and is a fixed `OPENING_MIN_REST` of three
-   minutes. Deliberately not a setting: one knob fewer to get wrong, and three
+   minutes, counted from the stop. Deliberately not a setting: one knob fewer to get wrong, and three
    minutes is safe for any burner.
 6. **The master switch off** means: the director lets go of everything and issues
    nothing, an `off` included — just like an override. Whoever wants everything
@@ -742,7 +743,7 @@ not using this notices nothing.
 
 On restart after an opening stop `opening_rest_until()` brakes the switching back on of
 every appliance **without a circuit** — and by this design that is the boiler: the
-appliance waits `OPENING_MIN_REST` (three minutes) from the end of the stop, with a
+appliance waits `OPENING_MIN_REST` (three minutes) from the stop, with a
 `Deferral` (`SHORT_CYCLE_PROTECTION`) the coordinator returns on by itself. The stop
 itself is never delayed, and a pre-conditioning request on which somebody expressly said
 "do it anyway" passes the brake, exactly as it passes the gate itself.
@@ -869,9 +870,9 @@ alone stays left alone: a zone handed over and a hand-operated source get no com
 therefore never come past here.
 
 Around source selection and the generator commands sits the opening rest for every
-appliance without a circuit: once the stop has just ended, a start is held for
-`OPENING_MIN_REST` more with a `Deferral` (`SHORT_CYCLE_PROTECTION`), exactly as a
-circuit does. Only restarts wait, never the stop itself.
+appliance without a circuit: a start within `OPENING_MIN_REST` after the stop is held
+with a `Deferral` (`SHORT_CYCLE_PROTECTION`), exactly as a circuit does. Only restarts
+wait, never the stop itself.
 
 ### plan.py — output
 

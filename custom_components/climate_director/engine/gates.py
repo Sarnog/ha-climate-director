@@ -17,7 +17,7 @@ from datetime import datetime
 from .families import ModeFamily
 from .hysteresis import source_counts_for
 from .models import HOLIDAY_WEEKDAY, DirectorConfig, Opening, Resident, Zone, ZoneGate
-from .plan import OPENING_MIN_REST, Plan, Reason
+from .plan import OPENING_MIN_REST, Plan, Reason  # noqa: F401  # OPENING_MIN_REST is a re-export
 from .world import WorldState
 
 
@@ -405,10 +405,10 @@ def opening_rest_until(
     apparaat en de `min_cycle_time` van het circuit. Een apparaat zonder circuit
     - bij dit ontwerp per definitie de gasketel - mist dat vangnet op élk pad:
     de huisbrede stop kreeg het in H2, maar de gewone raampoort van zijn eigen
-    zone niet. Dit leest daarom de boekhouding van het vorige plan: stond het
-    apparaat daarop in `stopped_by_opening`, dan is de stop net voorbij en
-    begint de rusttijd nu te lopen; liep er al een rusttijd, dan geldt de
-    meegedragen eindtijd uit `opening_rest_until` verder.
+    zone niet. Dit leest daarom alleen de eindtijd die `_opening_rest_bookkeeping`
+    bij de stop zelf heeft vastgelegd (`world.now + OPENING_MIN_REST`, anker 5:
+    gerekend vanaf de stop). Een verlopen eindtijd geeft `None`; een apparaat dat
+    al langer dan drie minuten stilstaat heeft gerust en start meteen.
 
     De boekhouding hangt aan het apparaat en niet aan de reden van het vorige
     commando: bij een gedeeld apparaat overleeft de reden van de zone met de
@@ -421,10 +421,10 @@ def opening_rest_until(
     the circuit's `min_cycle_time`. An appliance without a circuit - by this
     design, the boiler - lacks that safety net on every path: the house-wide
     stop got it in H2, but the ordinary window gate of its own zone did not.
-    This reads the previous plan's bookkeeping instead: if the appliance stood
-    in `stopped_by_opening` there, the stop has just ended and the rest starts
-    now; if a rest was already running, the carried deadline from
-    `opening_rest_until` keeps applying.
+    This reads only the deadline that `_opening_rest_bookkeeping` recorded at
+    the stop itself (`world.now + OPENING_MIN_REST`, anchor 5: counted from the
+    stop). An expired deadline yields `None`; an appliance that has stood still
+    for longer than three minutes has rested and starts at once.
 
     The bookkeeping hangs on the appliance and not on the previous command's
     reason: on a shared appliance the reason of the highest-priority zone
@@ -438,11 +438,9 @@ def opening_rest_until(
     if any(entity_id in circuit.units for circuit in config.circuits):
         return None
     deadline = previous.opening_rest_until.get(entity_id)
-    if deadline is not None:
-        return deadline if world.now < deadline else None
-    if entity_id in previous.stopped_by_opening:
-        return world.now + OPENING_MIN_REST
-    return None
+    if deadline is None:
+        return None
+    return deadline if world.now < deadline else None
 
 
 def _schedule_open(config: DirectorConfig, world: WorldState) -> bool:
