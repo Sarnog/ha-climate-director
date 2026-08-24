@@ -29,6 +29,7 @@ from custom_components.climate_director.engine import (
     Source,
     Zone,
 )
+from custom_components.climate_director.engine.diff import Change
 from custom_components.climate_director.engine.plan import Plan, Reason, UnitCommand
 
 LIVING = "climate.huiskamer"
@@ -174,6 +175,7 @@ def coordinator(
             self.saved += 1
 
         _notice_hand = ClimateDirectorCoordinator._notice_hand
+        _note_commanded_off = ClimateDirectorCoordinator._note_commanded_off
         _zones_of = ClimateDirectorCoordinator._zones_of
         _we_wanted_it_off = ClimateDirectorCoordinator._we_wanted_it_off
         _resident = ClimateDirectorCoordinator._resident
@@ -423,6 +425,47 @@ class TestAnArrivedOffCommandExplainsOnlyItself:
         item._notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item._zones_handed_back() == set()
         assert item._commanded_off == {}
+
+
+class TestTheOffBookkeepingCoversBothOrders:
+    """De uit-boekhouding wordt ná `apply()` geschreven; de handmelder liep al.
+
+    `_note_commanded_off` schrijft na `apply()`, terwijl `_notice_hand` tijdens
+    de `await`s ertussen al gedraaid kan hebben. Beide volgordes moeten goed
+    uitkomen, en dat is de eigenschap, niet het losse scenario.
+
+    `_note_commanded_off` writes after `apply()`, while `_notice_hand` may
+    already have run during the awaits in between. Either order must come out
+    right - the property, not the individual scenario.
+    """
+
+    @pytest.mark.parametrize("reported", ["off", "heat"])
+    def test_an_off_command_is_booked_for_what_was_not_yet_reported(self, reported: str) -> None:
+        """Melding vóór of ná het boeken: beide keren klopt de boekhouding.
+
+        Reported before or after the booking: the bookkeeping is right either way.
+        """
+        item = coordinator(running_plan(), states={BEDROOM: reported})
+        item._sent_setpoints[BEDROOM] = ("heat", 21.0)
+        item._commanded_off[BEDROOM] = dt_util.now()
+
+        item._note_commanded_off(
+            (Change(UnitCommand(entity_id=BEDROOM, hvac_mode="off"), True, False),)
+        )
+
+        # Het setpoint mag nooit blijven hangen: bij de volgende start moet het
+        # opnieuw mee. / The setpoint must never stick: it has to be sent again
+        # at the next start.
+        assert BEDROOM not in item._sent_setpoints
+        if reported == "off":
+            # De melding is er al: er valt niets meer te verklaren, dus de
+            # oude notitie is verbruikt. / The report already arrived: nothing
+            # left to explain, so the old note is spent.
+            assert item._commanded_off == {}
+        else:
+            # De melding komt nog: de notitie dekt het late rapport.
+            # The report is still coming: the note covers the late report.
+            assert BEDROOM in item._commanded_off
 
 
 class TestAnOwnStartConsumesTheOffNote:
@@ -829,6 +872,7 @@ class TestItSurvivesARestart:
 
             _live_preconditions = ClimateDirectorCoordinator._live_preconditions
             _wake_at_the_first_expiry = ClimateDirectorCoordinator._wake_at_the_first_expiry
+            _store_payload = ClimateDirectorCoordinator._store_payload
             _async_save_state = ClimateDirectorCoordinator._async_save_state
             _async_restore_state = ClimateDirectorCoordinator._async_restore_state
 
