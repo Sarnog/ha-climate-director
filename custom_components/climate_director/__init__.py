@@ -19,6 +19,7 @@ import voluptuous as vol
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.loader import async_get_integration
@@ -84,6 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) ->
     )
 
     _async_register_services(hass)
+    _async_remove_stale_zone_entities(hass, entry)
 
     # De platforms gaan eerst omhoog, zodat de schakelaars hun bewaarde stand
     # al hersteld hebben voordat er voor het eerst besloten wordt. Anders zou
@@ -125,11 +127,68 @@ def _async_watch_for_listeners(hass: HomeAssistant, entry: ClimateDirectorEntry)
     entry.async_on_unload(hass.bus.async_listen(EVENT_AUTOMATION_RELOADED, _recheck))
 
 
+#: De zes zone-entiteiten, elk met het zone-id in hun sleutel.
+#:
+#: The six zone entities, each with the zone id in their key.
+_ZONE_ENTITY_SUFFIXES = (
+    "_override",
+    "_priority",
+    "_precondition",
+    "_source",
+    "_blocked",
+    "_fallback",
+)
+
+
+@callback
+def _async_remove_stale_zone_entities(hass: HomeAssistant, entry: ClimateDirectorEntry) -> None:
+    """Remove zone entities whose zone no longer exists.
+
+    Een verwijderde zone verdwijnt uit de configuratie, maar zijn zes
+    entiteiten blijven in het entiteitenregister staan als `unavailable`, en
+    die komen nooit meer vanzelf weg. Ze hangen allemaal aan het ene apparaat
+    van de installatie, dus `async_remove_config_entry_device` kan hier niets:
+    opruimen op basis van de sleutel is de enige weg. Dit gebeurt bij het
+    opzetten, zodat een herstart of herlaadbeurt ze opruimt voordat de
+    platforms de zones van nu opnieuw aanmaken.
+
+    A removed zone disappears from the configuration, but its six entities
+    stay in the entity registry as `unavailable`, and they never go away by
+    themselves. They all hang off the installation's single device, so
+    `async_remove_config_entry_device` cannot help here: cleaning by key is the
+    only way. This runs at setup, so a restart or reload clears them before
+    the platforms re-create today's zones.
+    """
+    registry = er.async_get(hass)
+    wanted = {
+        f"{entry.entry_id}_zone_{zone.zone_id}{suffix}"
+        for zone in entry.runtime_data.config.zones
+        for suffix in _ZONE_ENTITY_SUFFIXES
+    }
+    prefix = f"{entry.entry_id}_zone_"
+    for entity in list(registry.entities.values()):
+        if (
+            entity.config_entry_id == entry.entry_id
+            and entity.unique_id.startswith(prefix)
+            and entity.unique_id not in wanted
+        ):
+            registry.async_remove(entity.entity_id)
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -> bool:
     """Tear one installation down."""
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    # De coordinator stopt altijd, ook als een platform weigerde uit te laden.
+    # Zijn timers horen bij de coordinator en mogen niet doordraaien terwijl
+    # de entry afgebroken wordt; dat zou een dode coordinator elke ronde
+    # beslissingen laten nemen.
+    #
+    # The coordinator always stops, even when a platform refused to unload. Its
+    # timers belong to the coordinator and must not keep running while the entry
+    # is being torn down; that would leave a dead coordinator deciding round
+    # after round.
+    await entry.runtime_data.async_shutdown()
     if unloaded:
-        await entry.runtime_data.async_shutdown()
         problems.async_clear(hass, entry.entry_id)
         problems.async_clear_manual_sources(hass, entry.entry_id)
         problems.async_clear_unreadable(hass, entry.entry_id)
