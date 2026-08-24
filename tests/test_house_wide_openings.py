@@ -610,10 +610,13 @@ class TestTheGeneratorTakesPartInTheOpeningRest:
         ("stop_door_open", "opening_zone_ids", "stop_indoor", "rests"),
         [
             (True, (), {"woonkamer": 18.0, "slaapkamer": 18.0}, True),
-            (True, ("woonkamer",), {"woonkamer": 18.0, "slaapkamer": 23.0}, False),
+            # R14: één zone door een opening geweigerd + één gewoon tevreden is
+            # óók een openingsstop: de generator draaide, en de opening nam de
+            # vraag weg die hij bediende.
+            (True, ("woonkamer",), {"woonkamer": 18.0, "slaapkamer": 23.0}, True),
             (False, ("woonkamer",), {"woonkamer": 23.0, "slaapkamer": 23.0}, False),
         ],
-        ids=["elke_zone_geweigerd", "een_zone_tevreden", "alle_zones_tevreden"],
+        ids=["elke_zone_geweigerd", "een_zone_geweigerd_een_tevreden", "alle_zones_tevreden"],
     )
     def test_only_a_stop_by_opening_rests_the_generator(
         self,
@@ -727,6 +730,106 @@ class TestTheGeneratorTakesPartInTheOpeningRest:
             if before == "off" and after == "heat"
         )
         assert starts <= 1, f"de brander werd {starts} keer opnieuw ontstoken: {issued}"
+
+    @pytest.mark.parametrize(
+        "opening_zone_ids", [(), ("woonkamer",)], ids=["huisbreed", "een_zone"]
+    )
+    def test_a_generator_that_was_already_off_does_not_rest(
+        self, opening_zone_ids: tuple[str, ...]
+    ) -> None:
+        """Anker 5: alleen een apparaat dat werkelijk draaide hoeft te rusten.
+
+        Anchor 5: only an appliance that really was running has to rest.
+        """
+        config = wet_house()
+        if opening_zone_ids:
+            config = replace(
+                config,
+                openings=(Opening(entity_id=BACK_DOOR, zone_ids=opening_zone_ids),),
+            )
+
+        warm = {"woonkamer": 23.0, "slaapkamer": 23.0}
+        idle = decide(
+            config,
+            wet_world(minute=1, door_open=False, indoor=warm, boiler="off"),
+        )
+        idle_command = command_for(idle, GAS)
+        assert idle_command is not None
+        assert idle_command.hvac_mode == "off"
+
+        stopped = decide(
+            config,
+            wet_world(
+                minute=2,
+                door_open=True,
+                indoor={"woonkamer": 18.0, "slaapkamer": 23.0},
+                boiler="off",
+            ),
+            idle,
+        )
+        stopped_command = command_for(stopped, GAS)
+        assert stopped_command is not None
+        assert stopped_command.hvac_mode == "off"
+        assert stopped_command.reason is Reason.SATISFIED
+        assert GAS not in stopped.stopped_by_opening
+
+        again = decide(
+            config,
+            wet_world(minute=3, door_open=False, indoor=COLD, boiler="off"),
+            stopped,
+        )
+        again_command = command_for(again, GAS)
+        assert again_command is not None
+        assert again_command.hvac_mode == "heat", "een uitstaande ketel hoeft niet te rusten"
+
+    @pytest.mark.parametrize(
+        ("refused_zone", "heated_zone"),
+        [("woonkamer", "slaapkamer"), ("slaapkamer", "woonkamer")],
+        ids=["woonkamer_geweigerd", "slaapkamer_geweigerd"],
+    )
+    def test_a_refused_zone_that_never_got_heat_does_not_make_an_opening_stop(
+        self, refused_zone: str, heated_zone: str
+    ) -> None:
+        """De openingsstop telt alleen voor een zone die vórige ronde warmte kreeg.
+
+        Only a zone that really received heat last round can turn a stop into an
+        opening stop: a stop whose demand really fell away stays `SATISFIED`,
+        even with a window standing open.
+        """
+        config = replace(
+            wet_house(),
+            openings=(Opening(entity_id=BACK_DOOR, zone_ids=(refused_zone,)),),
+        )
+        burning_indoor = {refused_zone: 23.0, heated_zone: 18.0}
+        stop_indoor = {refused_zone: 18.0, heated_zone: 23.0}
+
+        burning = decide(
+            config,
+            wet_world(minute=1, door_open=False, indoor=burning_indoor, boiler="off"),
+        )
+        assert command_for(burning, GAS).hvac_mode == "heat"
+        decision = decision_for(burning, refused_zone)
+        assert decision.granted is not ModeFamily.HEAT
+
+        stopped = decide(
+            config,
+            wet_world(minute=2, door_open=True, indoor=stop_indoor, boiler="heat"),
+            burning,
+        )
+        stopped_command = command_for(stopped, GAS)
+        assert stopped_command is not None
+        assert stopped_command.hvac_mode == "off"
+        assert stopped_command.reason is Reason.SATISFIED
+        assert GAS not in stopped.stopped_by_opening
+
+        again = decide(
+            config,
+            wet_world(minute=3, door_open=False, indoor=COLD, boiler="off"),
+            stopped,
+        )
+        again_command = command_for(again, GAS)
+        assert again_command is not None
+        assert again_command.hvac_mode == "heat", "de vraag viel écht weg, dus geen rust"
 
 
 # ---------------------------------------------------------------------------

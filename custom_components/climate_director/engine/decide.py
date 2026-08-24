@@ -627,6 +627,24 @@ def _was_running(world: WorldState, previous: Plan | None, entity_id: str) -> bo
     return command is not None and command.hvac_mode not in (MODE_OFF, MODE_FAN_ONLY)
 
 
+def _received_heat(previous: Plan | None, zone_id: str) -> bool:
+    """Return whether this zone really received heat last round.
+
+    Beslissing 1 bij R14: een openingsstop telt alleen voor een zone die de
+    vórige ronde werkelijk warmte kreeg. Zo blijft een stop waarbij de vraag
+    écht wegviel `SATISFIED` heten, ook als er toevallig ergens een raam
+    openstond.
+
+    Decision 1 at R14: an opening stop only counts for a zone that really
+    received heat last round. That keeps a stop whose demand really fell away
+    named `SATISFIED`, even with a window standing open somewhere.
+    """
+    if previous is None:
+        return False
+    decision = previous.decision_for(zone_id)
+    return decision is not None and decision.granted is ModeFamily.HEAT
+
+
 def _build_commands(
     config: DirectorConfig,
     world: WorldState,
@@ -1105,24 +1123,35 @@ def _generator_commands(
                 )
                 continue
 
-            # Waarom vraagt niemand? Zijn álle zones die deze generator bedient
-            # door een opening geweigerd, dan is deze stop een openingsstop en
-            # hoort de generator dezelfde rust te krijgen als elke andere bron
-            # zonder circuit - anders ontsteekt hij zodra de deur weer dicht is.
-            # Is er ook maar één zone om een andere reden stil (tevreden, buiten
-            # het seizoen), dan is dit een gewone vraagloze stop en rust hij niet.
-            # De huisbrede stop gaat voor: die noemt zijn eigen reden.
+            # Waarom vraagt niemand? Is minstens één zone die vórige ronde
+            # werkelijk warmte kreeg nu door een opening geweigerd, dan is deze
+            # stop een openingsstop en hoort de generator dezelfde rust te
+            # krijgen als elke andere bron zonder circuit - anders ontsteekt hij
+            # zodra de deur weer dicht is. Eén tevreden kamer ernaast verandert
+            # dat niet: de opening nam de vraag weg die deze generator bediende.
+            # Vraagt niemand omdat elke zone om een andere reden stil is
+            # (tevreden, buiten het seizoen), dan is dit een gewone vraagloze
+            # stop en rust hij niet. Een generator die al uit stond rust ook
+            # niet: anker 5 geldt alleen voor een apparaat dat werkelijk
+            # draaide toen de stop kwam. De huisbrede stop gaat voor: die noemt
+            # zijn eigen reden.
             #
-            # Why is nobody asking? If every zone this generator serves was
-            # refused by an opening, this stop is an opening stop and the
-            # generator deserves the same rest as any other source without a
-            # circuit - otherwise it re-ignites the moment the door closes again.
-            # If even one zone is silent for another reason (satisfied, out of
-            # season), this is an ordinary no-demand stop and it does not rest.
-            # The house-wide stop comes first: it names its own reason.
+            # Why is nobody asking? If at least one zone that really received
+            # heat last round is now refused by an opening, this stop is an
+            # opening stop and the generator deserves the same rest as any other
+            # source without a circuit - otherwise it re-ignites the moment the
+            # door closes again. One satisfied room next to it does not change
+            # that: the opening took away the demand this generator was serving.
+            # If nobody asks because every zone is silent for another reason
+            # (satisfied, out of season), this is an ordinary no-demand stop and
+            # it does not rest. A generator that was already off does not rest
+            # either: anchor 5 only covers an appliance that really was running
+            # when the stop came. The house-wide stop comes first: it names its
+            # own reason.
             served = [zone.zone_id for zone in config.zones if generator.serves(zone.zone_id)]
-            refused_by_opening = bool(served) and all(
+            refused_by_opening = _was_running(world, previous, generator.entity_id) and any(
                 refusals.get(zone_id) in (Reason.OPENING_OPEN, Reason.OPENING_OPEN_ELSEWHERE)
+                and _received_heat(previous, zone_id)
                 for zone_id in served
             )
             if generator.entity_id in blocked:
