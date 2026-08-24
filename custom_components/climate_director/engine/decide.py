@@ -606,6 +606,27 @@ def _stand_down(
     )
 
 
+def _was_running(world: WorldState, previous: Plan | None, entity_id: str) -> bool:
+    """Return whether the appliance really was running when the stop came.
+
+    Anker 5: alleen een apparaat dat werkelijk draaide toen de stop kwam hoeft
+    te rusten. De wereld zegt het direct; het vorige plan is het vangnet voor
+    een harnas of apparaat dat zijn stand nog niet teruggemeld heeft - stond er
+    vorige ronde een actief commando, dan telt het apparaat als draaiend.
+
+    Anchor 5: only an appliance that really was running when the stop came has
+    to rest. The world says so directly; the previous plan is the safety net
+    for a harness or appliance that has not reported its mode back yet - with
+    an active command last round, the appliance counts as running.
+    """
+    if world.climate(entity_id).running:
+        return True
+    if previous is None:
+        return False
+    command = previous.command_for(entity_id)
+    return command is not None and command.hvac_mode not in (MODE_OFF, MODE_FAN_ONLY)
+
+
 def _build_commands(
     config: DirectorConfig,
     world: WorldState,
@@ -776,6 +797,7 @@ def _build_commands(
         for command in (*pre_collapse, *commands)
         if command.reason in (Reason.OPENING_OPEN, Reason.OPENING_OPEN_ELSEWHERE)
         and command.hvac_mode == MODE_OFF
+        and _was_running(world, previous, command.entity_id)
     )
 
     # Een gedeeld apparaat staat onder meerdere zones. Krijgt het via één zone

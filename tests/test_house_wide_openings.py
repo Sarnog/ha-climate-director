@@ -18,7 +18,7 @@ appliance is listed.
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import pytest
 from conftest import at, climate, everyone_up, make_world
@@ -733,13 +733,13 @@ def flapping_config() -> DirectorConfig:
     )
 
 
-def flap_world(*, minute: int, door_open: bool) -> object:
+def flap_world(*, minute: int, door_open: bool, boiler: str = "off") -> object:
     """Return a world at 12:`minute` with the door as given and both rooms cold."""
     return make_world(
         now=at(12, minute),
         outdoor=2.0,
         indoor={"woonkamer": 18.0, "zolder": 18.0},
-        climates={GAS: climate("off")},
+        climates={GAS: climate(boiler)},
         residents=everyone_up(),
         openings={SKYLIGHT: OpeningState(open=door_open, changed_at=at(12, minute))},
     )
@@ -796,7 +796,7 @@ def test_the_restart_waits_one_rest_time_after_closing() -> None:
     """De herstart wacht de rusttijd uit, en de deferral staat er ook echt."""
     config = flapping_config()
 
-    stopped = decide(config, flap_world(minute=1, door_open=True))
+    stopped = decide(config, flap_world(minute=1, door_open=True, boiler="heat"))
     stopped_command = command_for(stopped, GAS)
     assert stopped_command is not None
     assert stopped_command.hvac_mode == "off"
@@ -846,13 +846,13 @@ def own_boiler() -> DirectorConfig:
     )
 
 
-def own_door_world(*, minute: int, door_open: bool) -> object:
+def own_door_world(*, minute: int, door_open: bool, boiler: str = "off") -> object:
     """Return a world at 12:`minute` with the room cold and its own door as given."""
     return make_world(
         now=at(12, minute),
         outdoor=2.0,
         indoor={"woonkamer": 18.0},
-        climates={GAS: climate("off")},
+        climates={GAS: climate(boiler)},
         openings={BACK_DOOR: OpeningState(open=door_open, changed_at=at(12, minute))},
     )
 
@@ -864,7 +864,7 @@ def test_a_zone_door_stop_rests_a_circuit_less_boiler_too() -> None:
     """
     config = own_boiler()
 
-    stopped = decide(config, own_door_world(minute=1, door_open=True))
+    stopped = decide(config, own_door_world(minute=1, door_open=True, boiler="heat"))
     stopped_command = command_for(stopped, GAS)
     assert stopped_command is not None
     assert stopped_command.hvac_mode == "off"
@@ -983,7 +983,7 @@ def test_the_rest_survives_one_satisfied_round() -> None:
     """
     config = own_boiler()
 
-    stopped = decide(config, own_door_world(minute=0, door_open=True))
+    stopped = decide(config, own_door_world(minute=0, door_open=True, boiler="heat"))
     stopped_command = command_for(stopped, GAS)
     assert stopped_command is not None
     assert stopped_command.reason is Reason.OPENING_OPEN
@@ -1007,3 +1007,63 @@ def test_the_rest_survives_one_satisfied_round() -> None:
     assert resumed_command.hvac_mode != "heat", (
         f"de ketel ontsteekt binnen de rusttijd: {resumed_command}"
     )
+
+
+def rest_world(*, now: datetime, door_open: bool, door_since: datetime, boiler_mode: str) -> object:
+    """Return the own-boiler world with the door and the boiler exactly as given."""
+    return make_world(
+        now=now,
+        outdoor=2.0,
+        indoor={"woonkamer": 18.0},
+        climates={GAS: climate(boiler_mode, changed_at=at(1, 0))},
+        openings={BACK_DOOR: OpeningState(open=door_open, changed_at=door_since)},
+    )
+
+
+class TestOnlyARunningApplianceRestsAfterAnOpening:
+    """R3: alleen een apparaat dat werkelijk draaide hoeft na een opening te rusten.
+
+    R3: only an appliance that really was running has to rest after an opening.
+    """
+
+    @pytest.mark.parametrize(
+        ("door_since", "boiler_mode", "rests"),
+        [
+            (at(1, 0), "off", False),
+            (at(6, 59), "off", False),
+            (at(1, 0), "heat", True),
+            (at(6, 59), "heat", True),
+        ],
+        ids=["uren_open_koud", "minuut_open_koud", "uren_open_draaiend", "minuut_open_draaiend"],
+    )
+    def test_the_rest_requires_a_running_appliance(
+        self, door_since: datetime, boiler_mode: str, rests: bool
+    ) -> None:
+        config = own_boiler()
+
+        stopped = decide(
+            config,
+            rest_world(
+                now=at(7, 0), door_open=True, door_since=door_since, boiler_mode=boiler_mode
+            ),
+        )
+        stopped_command = command_for(stopped, GAS)
+        assert stopped_command is not None
+        assert stopped_command.hvac_mode == "off"
+        if rests:
+            assert GAS in stopped.stopped_by_opening
+        else:
+            assert GAS not in stopped.stopped_by_opening
+
+        resumed = decide(
+            config,
+            rest_world(now=at(7, 1), door_open=False, door_since=at(7, 1), boiler_mode="off"),
+            stopped,
+        )
+        resumed_command = command_for(resumed, GAS)
+        assert resumed_command is not None
+        if rests:
+            assert resumed_command.hvac_mode == "off"
+            assert resumed_command.reason is Reason.SHORT_CYCLE_PROTECTION
+        else:
+            assert resumed_command.hvac_mode == "heat"
