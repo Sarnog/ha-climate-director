@@ -72,7 +72,7 @@ from .engine import (
 from .engine.constraints import active_family
 from .engine.diff import Change, changes
 from .engine.families import family_of, preferred_mode
-from .engine.gates import asleep_at
+from .engine.gates import asleep_at, house_wide_blocked
 from .engine.models import SeasonSource
 from .engine.serialise import config_from_dict
 
@@ -1895,7 +1895,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         """
         refused: set[str] = set()
         for decision in plan.zones:
-            if decision.reason is not Reason.OPENING_OPEN:
+            if decision.reason not in (Reason.OPENING_OPEN, Reason.OPENING_OPEN_ELSEWHERE):
                 continue
             if not self._precondition.get(decision.zone_id):
                 continue
@@ -1934,7 +1934,18 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         """
         zone = self.config.zone(zone_id)
         name = zone.name if zone else zone_id
-        openings = self._open_openings(zone_id)
+        decision = plan.decision_for(zone_id) if plan is not None else None
+        held_elsewhere = decision is not None and (
+            decision.reason is Reason.OPENING_OPEN_ELSEWHERE
+            or Reason.OPENING_OPEN_ELSEWHERE in decision.closed_gates
+        )
+        house_wide = held_elsewhere or (
+            zone is not None
+            and any(source.entity_id in self.config.house_wide_openings for source in zone.sources)
+            and self.world is not None
+            and bool(house_wide_blocked(self.config, self.world))
+        )
+        openings = self._open_openings(zone_id, house_wide=house_wide)
         listed = ", ".join(self._friendly(entity_id) for entity_id in openings) or "-"
         minutes = round(self.config.gates.max_precondition.total_seconds() / 60)
 
@@ -2018,10 +2029,27 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         state = self.hass.states.get(entity_id)
         return state.name if state is not None else entity_id
 
-    def _open_openings(self, zone_id: str) -> list[str]:
-        """Return the entity ids standing open for one zone, so the notice can name them."""
+    def _open_openings(self, zone_id: str, *, house_wide: bool = False) -> list[str]:
+        """Return the entity ids standing open, so the notice can name them.
+
+        Met `house_wide` telt élke openstaande opening mee in plaats van alleen
+        die van de zone. De deur die een huisbreed stilgezet apparaat stopt hoort
+        per definitie bij een andere kamer, dus de gewone zonefilter zou een
+        gerepareerd event alsnog `openings: "-"` laten melden.
+
+        With `house_wide` every opening standing open counts rather than only the
+        zone's own. The door stopping a house-wide stopped appliance belongs to
+        another room by definition, so the ordinary zone filter would still have a
+        repaired event report `openings: "-"`.
+        """
         if self.world is None:
             return []
+        if house_wide:
+            return sorted(
+                opening.entity_id
+                for opening in self.config.openings
+                if self.world.opening(opening.entity_id).open
+            )
         return sorted(
             opening.entity_id
             for opening in self.config.openings

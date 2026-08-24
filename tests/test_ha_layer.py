@@ -748,6 +748,122 @@ class TestTheEvents:
         assert len(item.hass.bus.fired) == 1
 
 
+BOILER = "climate.cv_ketel"
+LIVING_WINDOW = "binary_sensor.raam_woonkamer"
+FRONT_DOOR = "binary_sensor.voordeur"
+
+
+class TestTheHouseWideRefusal:
+    """Een verzoek dat op de huisbrede stop strandt, meldt zich net zo goed.
+
+    A request stranded on the house-wide stop reports itself just the same.
+    """
+
+    def _config(self) -> DirectorConfig:
+        """Return two rooms sharing one boiler, each with a door of its own."""
+
+        def warmth() -> ModeSettings:
+            return ModeSettings(target=21.0, start_at=20.0, hysteresis=1.0)
+
+        living = Zone(
+            zone_id="woonkamer",
+            name="Woonkamer",
+            indoor_sensor="sensor.woonkamer",
+            priority=0,
+            sources=(Source("ketel_wk", BOILER, role=SourceRole.HEAT_ONLY),),
+            heat=warmth(),
+        )
+        hall = Zone(
+            zone_id="hal",
+            name="Hal",
+            indoor_sensor="sensor.hal",
+            priority=1,
+            sources=(Source("ketel_hal", BOILER, role=SourceRole.HEAT_ONLY),),
+            heat=warmth(),
+        )
+        return DirectorConfig(
+            zones=(living, hall),
+            openings=(
+                Opening(entity_id=LIVING_WINDOW, zone_ids=("woonkamer",)),
+                Opening(entity_id=FRONT_DOOR, zone_ids=("hal",)),
+            ),
+            house_wide_openings=(BOILER,),
+        )
+
+    def _world(self, *, open_living: bool, open_front: bool, bypass: bool = False):
+        from conftest import OpeningState, awake, make_world
+
+        openings: dict[str, OpeningState] = {}
+        if open_living:
+            openings[LIVING_WINDOW] = OpeningState(open=True, changed_at=NOW - timedelta(minutes=5))
+        if open_front:
+            openings[FRONT_DOOR] = OpeningState(open=True, changed_at=NOW - timedelta(minutes=5))
+        return make_world(
+            now=NOW,
+            outdoor=5.0,
+            indoor={"woonkamer": 18.0, "hal": 22.0},
+            climates={BOILER: "off"},
+            residents={"danny": awake()},
+            openings=openings,
+            precondition_until={"woonkamer": NOW + timedelta(hours=1)},
+            precondition_bypass=frozenset({"woonkamer"}) if bypass else frozenset(),
+        )
+
+    def _fired(self, *, open_living: bool, open_front: bool):
+        config = self._config()
+        world = self._world(open_living=open_living, open_front=open_front)
+        plan = decide(config, world)
+        item = coordinator({}, config)
+        item.world = world
+        item._precondition = {"woonkamer": NOW + timedelta(hours=1)}
+        item._fire_refusals(plan)
+        return item
+
+    @pytest.mark.parametrize(
+        ("open_living", "open_front", "expected"),
+        [
+            (True, False, [LIVING_WINDOW]),
+            (False, True, [FRONT_DOOR]),
+            (True, True, [LIVING_WINDOW, FRONT_DOOR]),
+        ],
+    )
+    def test_the_event_names_every_opening_that_holds_the_request_back(
+        self, open_living: bool, open_front: bool, expected: list[str]
+    ) -> None:
+        item = self._fired(open_living=open_living, open_front=open_front)
+
+        assert item.hass.bus.fired, "een geweigerd verzoek meldde zichzelf niet"
+        event, data = item.hass.bus.fired[0]
+        assert event == "climate_director_precondition_refused"
+        assert data["openings"] == expected
+
+    def test_a_request_told_to_ignore_openings_fires_nothing(self) -> None:
+        config = self._config()
+        world = self._world(open_living=False, open_front=True, bypass=True)
+        plan = decide(config, world)
+        item = coordinator({}, config)
+        item.world = world
+        item._precondition = {"woonkamer": NOW + timedelta(hours=1)}
+        item._fire_refusals(plan)
+
+        assert item.hass.bus.fired == []
+
+    def test_a_refusal_that_changes_reason_still_fires_once(self) -> None:
+        config = self._config()
+        item = coordinator({}, config)
+        item._precondition = {"woonkamer": NOW + timedelta(hours=1)}
+
+        world = self._world(open_living=False, open_front=True)
+        item.world = world
+        item._fire_refusals(decide(config, world))
+
+        world = self._world(open_living=True, open_front=True)
+        item.world = world
+        item._fire_refusals(decide(config, world))
+
+        assert len(item.hass.bus.fired) == 1
+
+
 # ---------------------------------------------------------------------------
 # De entiteiten die de gebruiker ziet.
 # The entities the user sees.
