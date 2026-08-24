@@ -12,13 +12,24 @@ allowed", not "is this needed" - the latter belongs to `hysteresis.py`.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from .families import ModeFamily
+from .families import ModeFamily, family_of
 from .hysteresis import source_counts_for
 from .models import HOLIDAY_WEEKDAY, DirectorConfig, Opening, Resident, Zone, ZoneGate
 from .plan import Plan, Reason
 from .world import WorldState
+
+#: Hoe lang een huisbreed stilgezet apparaat minstens stil moet staan voordat
+#: het weer mag starten. Kortcyclusbescherming hangt aan een circuit, en een
+#: gasketel hangt aan geen circuit - dus dit is de rem die dat pad miste. De
+#: stop zelf wordt hier nooit mee uitgesteld, alleen de herstart.
+#:
+#: How long a house-wide stopped appliance must at least stand still before it
+#: may start again. Short-cycle protection hangs on a circuit, and a boiler
+#: hangs on no circuit - so this is the brake that path was missing. This never
+#: delays the stop itself, only the restart.
+HOUSE_WIDE_MIN_REST = timedelta(minutes=3)
 
 
 def closed(
@@ -399,6 +410,55 @@ def house_wide_blocked(config: DirectorConfig, world: WorldState) -> frozenset[s
     if not any(_standing_open(opening, world) for opening in config.openings):
         return frozenset()
     return frozenset(config.house_wide_openings)
+
+
+def house_wide_rest_until(
+    config: DirectorConfig, world: WorldState, previous: Plan | None, entity_id: str
+) -> datetime | None:
+    """Return when a house-wide stopped appliance may start again, if held.
+
+    De kortcyclusbescherming van een circuit kijkt naar `last_changed` van het
+    apparaat. Een huisbreed stilgezet apparaat kan daaraan niet hangen: een
+    gasketel heeft geen circuit, en de stop zelf wordt veroorzaakt door een
+    opening, niet door het apparaat. Dit leest daarom het vorige plan: stond het
+    apparaat daarop uit met `OPENING_OPEN_ELSEWHERE`, dan is de stop net voorbij
+    en begint de rusttijd nu te lopen; stond het uit met
+    `SHORT_CYCLE_PROTECTION`, dan loopt de eerder uitgerekende rusttijd door.
+
+    Alleen herstarts worden uitgesteld, nooit de stop zelf: de stop hangt aan
+    `house_wide_blocked` en die kent deze rem niet.
+
+    A circuit's short-cycle protection reads the appliance's `last_changed`. A
+    house-wide stopped appliance cannot lean on that: a boiler has no circuit,
+    and the stop itself is caused by an opening rather than by the appliance.
+    This reads the previous plan instead: if the appliance stood off there with
+    `OPENING_OPEN_ELSEWHERE`, the stop has just ended and the rest starts now; if
+    it stood off with `SHORT_CYCLE_PROTECTION`, the rest computed earlier keeps
+    running.
+
+    Only restarts are delayed, never the stop itself: the stop hangs on
+    `house_wide_blocked`, which knows nothing of this brake.
+    """
+    if entity_id not in config.house_wide_openings or previous is None:
+        return None
+    previous_command = previous.command_for(entity_id)
+    if previous_command is None:
+        return None
+    if family_of(previous_command.hvac_mode) is not ModeFamily.NEUTRAL:
+        return None
+    if previous_command.reason is Reason.OPENING_OPEN_ELSEWHERE:
+        return world.now + HOUSE_WIDE_MIN_REST
+    if previous_command.reason is Reason.SHORT_CYCLE_PROTECTION:
+        return next(
+            (
+                deferral.until
+                for deferral in previous.deferrals
+                if deferral.subject == entity_id
+                and deferral.reason is Reason.SHORT_CYCLE_PROTECTION
+            ),
+            None,
+        )
+    return None
 
 
 def _schedule_open(config: DirectorConfig, world: WorldState) -> bool:

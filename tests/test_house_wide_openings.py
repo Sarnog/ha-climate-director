@@ -35,6 +35,7 @@ from custom_components.climate_director.engine import (
     SourceRole,
     Zone,
     decide,
+    gates,
     serialise,
     validate,
 )
@@ -467,3 +468,111 @@ def test_the_outdoor_dead_band_does_not_hold_a_stopped_appliance() -> None:
     command = command_for(plan, GAS)
     assert command is not None
     assert command.hvac_mode == "off"
+
+
+# ---------------------------------------------------------------------------
+# Kortcyclusbescherming op de huisbrede stop
+# Short-cycle protection on the house-wide stop
+# ---------------------------------------------------------------------------
+
+
+def flapping_config() -> DirectorConfig:
+    """Return the shared boiler house with a door that acts at once.
+
+    `shared_boiler` geeft zijn dakraam vijf minuten vertraging; een klapperende
+    deur heeft die niet, dus hier geldt de standaardvertraging van nul.
+
+    `shared_boiler` gives its skylight a five-minute delay; a flapping door has
+    none, so here the default delay of zero applies.
+    """
+    return replace(
+        shared_boiler(house_wide_openings=(GAS,)),
+        openings=(Opening(entity_id=SKYLIGHT, zone_ids=("zolder",)),),
+    )
+
+
+def flap_world(*, minute: int, door_open: bool) -> object:
+    """Return a world at 12:`minute` with the door as given and both rooms cold."""
+    return make_world(
+        now=at(12, minute),
+        outdoor=2.0,
+        indoor={"woonkamer": 18.0, "zolder": 18.0},
+        climates={GAS: climate("off")},
+        residents=everyone_up(),
+        openings={SKYLIGHT: OpeningState(open=door_open, changed_at=at(12, minute))},
+    )
+
+
+def test_a_door_that_keeps_opening_and_closing_ignites_the_burner_at_most_once() -> None:
+    """Tien keer open en dicht in tien minuten, hoogstens één ontsteking.
+
+    The door flapping ten times in ten minutes must not ignite the burner twice.
+    """
+    config = flapping_config()
+    issued: list[str] = []
+    previous = None
+    for minute, door_open in (
+        (0, False),
+        (1, True),
+        (2, False),
+        (3, True),
+        (4, False),
+        (5, True),
+        (6, False),
+        (7, True),
+        (8, False),
+        (9, True),
+        (10, False),
+    ):
+        plan = decide(config, flap_world(minute=minute, door_open=door_open), previous)
+        command = command_for(plan, GAS)
+        assert command is not None
+        issued.append(command.hvac_mode)
+        previous = plan
+
+    starts = sum(
+        1
+        for before, after in zip(issued, issued[1:], strict=False)
+        if before == "off" and after == "heat"
+    )
+    assert starts <= 1, f"de brander werd {starts} keer opnieuw ontstoken: {issued}"
+
+
+def test_a_door_that_stays_open_keeps_the_boiler_off() -> None:
+    """De stop zelf wordt nooit uitgesteld, alleen de herstart."""
+    config = flapping_config()
+    world = flap_world(minute=1, door_open=True)
+
+    plan = decide(config, world)
+    assert command_for(plan, GAS).hvac_mode == "off"
+
+    later = decide(config, flap_world(minute=20, door_open=True), plan)
+    assert command_for(later, GAS).hvac_mode == "off"
+
+
+def test_the_restart_waits_one_rest_time_after_closing() -> None:
+    """De herstart wacht de rusttijd uit, en de deferral staat er ook echt."""
+    config = flapping_config()
+
+    stopped = decide(config, flap_world(minute=1, door_open=True))
+    stopped_command = command_for(stopped, GAS)
+    assert stopped_command is not None
+    assert stopped_command.hvac_mode == "off"
+    assert stopped_command.reason is Reason.OPENING_OPEN_ELSEWHERE
+
+    waiting = decide(config, flap_world(minute=2, door_open=False), stopped)
+    waiting_command = command_for(waiting, GAS)
+    assert waiting_command is not None
+    assert waiting_command.hvac_mode == "off"
+    assert waiting_command.reason is Reason.SHORT_CYCLE_PROTECTION
+
+    deferral = waiting.next_deferral
+    assert deferral is not None
+    assert deferral.subject == GAS
+    assert deferral.reason is Reason.SHORT_CYCLE_PROTECTION
+    assert deferral.until == at(12, 2) + gates.HOUSE_WIDE_MIN_REST
+
+    resumed = decide(config, flap_world(minute=5, door_open=False), waiting)
+    resumed_command = command_for(resumed, GAS)
+    assert resumed_command is not None
+    assert resumed_command.hvac_mode == "heat"

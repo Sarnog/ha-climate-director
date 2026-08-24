@@ -53,7 +53,9 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
     the command.
     """
     blocked = gates.house_wide_blocked(config, world)
-    wishes, refusals, shut, woulds = _collect_wishes(config, world, previous, blocked)
+    wishes, refusals, shut, woulds, rest_deferrals = _collect_wishes(
+        config, world, previous, blocked
+    )
     wishes, dropped = _apply_exclusive_groups(config, world, wishes)
 
     standing = _standing_firm(config, world, refusals)
@@ -61,14 +63,16 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
     reasons = _zone_reasons(config, grants, dropped, refusals)
 
     families = {decision.circuit_id: decision.family for decision in circuit_decisions}
-    commands, untouched = _build_commands(config, world, grants, reasons, wishes, families, blocked)
+    commands, untouched, generator_deferrals = _build_commands(
+        config, world, grants, reasons, wishes, families, blocked, previous
+    )
     return Plan(
         commands=commands,
         zones=_build_zone_decisions(
             config, world, wishes, dropped, grants, refusals, shut, woulds, previous, blocked
         ),
         circuits=circuit_decisions,
-        deferrals=deferrals,
+        deferrals=(*deferrals, *rest_deferrals, *generator_deferrals),
         untouched=untouched,
     )
 
@@ -83,9 +87,11 @@ def _collect_wishes(
     dict[str, Reason],
     dict[str, tuple[Reason, ...]],
     dict[str, ModeFamily],
+    tuple[Deferral, ...],
 ]:
     """Return each zone's request, its refusal reason, every gate shut on it,
-    and the duty it would want regardless of those gates.
+    the duty it would want regardless of those gates, and the house-wide rest
+    deferrals.
 
     De dichte poorten worden voor elke zone opgehaald, ook voor de zones die
     gewoon doorlopen: dan staat er een lege lijst, en dat is precies wat een
@@ -103,6 +109,7 @@ def _collect_wishes(
     refusals: dict[str, Reason] = {}
     shut: dict[str, tuple[Reason, ...]] = {}
     woulds: dict[str, ModeFamily] = {}
+    rest_deferrals: list[Deferral] = []
 
     margin = config.outdoor_hysteresis
 
@@ -154,6 +161,24 @@ def _collect_wishes(
                 shut[zone.zone_id] = (*shut[zone.zone_id], reason)
             continue
 
+        rest_until = gates.house_wide_rest_until(config, world, previous, source.entity_id)
+        if rest_until is not None and world.now < rest_until:
+            # De stop is voorbij, maar het apparaat mag nog niet aan. Precies
+            # zoals een circuit dat doet: de zone wacht met een
+            # `SHORT_CYCLE_PROTECTION`, en de vangnetklok in de koppelingslaag
+            # krijgt de deferral en komt vanzelf terug zodra de rusttijd om is.
+            #
+            # The stop has ended but the appliance may not start yet. Exactly
+            # like a circuit: the zone waits with `SHORT_CYCLE_PROTECTION`, and
+            # the binding layer's safety clock gets the deferral and returns on
+            # its own once the rest has passed.
+            refusals[zone.zone_id] = Reason.SHORT_CYCLE_PROTECTION
+            shut[zone.zone_id] = (*shut[zone.zone_id], Reason.SHORT_CYCLE_PROTECTION)
+            deferral = Deferral(source.entity_id, rest_until, Reason.SHORT_CYCLE_PROTECTION)
+            if deferral not in rest_deferrals:
+                rest_deferrals.append(deferral)
+            continue
+
         wishes[zone.zone_id] = constraints.Request(
             zone=zone,
             source=source,
@@ -162,7 +187,7 @@ def _collect_wishes(
             priority=world.priority_for(zone.zone_id, zone.priority),
         )
 
-    return wishes, refusals, shut, woulds
+    return wishes, refusals, shut, woulds, tuple(rest_deferrals)
 
 
 def _serving(previous: Plan | None, zone_id: str) -> str | None:
@@ -580,7 +605,8 @@ def _build_commands(
     wishes: dict[str, constraints.Request],
     families: dict[str, ModeFamily],
     blocked: frozenset[str] = frozenset(),
-) -> tuple[tuple[UnitCommand, ...], tuple[UntouchedSource, ...]]:
+    previous: Plan | None = None,
+) -> tuple[tuple[UnitCommand, ...], tuple[UntouchedSource, ...], tuple[Deferral, ...]]:
     """Return the end state for every managed climate entity, and what is left alone.
 
     Sources that were not chosen are commanded off explicitly rather than left
@@ -697,7 +723,9 @@ def _build_commands(
             )
         )
 
-    generator_commands, generator_untouched = _generator_commands(config, world, grants)
+    generator_commands, generator_untouched, generator_deferrals = _generator_commands(
+        config, world, grants, previous
+    )
     commands.extend(generator_commands)
     untouched.extend(generator_untouched)
     commands = _collapse_shared(config, world, commands)
@@ -719,7 +747,7 @@ def _build_commands(
     # one before the old has let go would put two duties on one compressor for
     # as long as the calls take to land.
     ordered = tuple(sorted(commands, key=lambda command: _command_order(config, command)))
-    return ordered, left_alone
+    return ordered, left_alone, generator_deferrals
 
 
 def _stop_blocked(
@@ -860,8 +888,11 @@ def _claim(config: DirectorConfig, world: WorldState, command: UnitCommand) -> t
 
 
 def _generator_commands(
-    config: DirectorConfig, world: WorldState, grants: dict[str, constraints.Grant]
-) -> tuple[list[UnitCommand], list[UntouchedSource]]:
+    config: DirectorConfig,
+    world: WorldState,
+    grants: dict[str, constraints.Grant],
+    previous: Plan | None = None,
+) -> tuple[list[UnitCommand], list[UntouchedSource], tuple[Deferral, ...]]:
     """Return the command for each shared heat source, and the ones left alone.
 
     A generator runs while any zone it serves is being heated, and stops once
@@ -880,6 +911,7 @@ def _generator_commands(
     """
     commands: list[UnitCommand] = []
     untouched: list[UntouchedSource] = []
+    deferrals: list[Deferral] = []
 
     for generator in config.generators:
         if not world.climate(generator.entity_id).available:
@@ -952,6 +984,26 @@ def _generator_commands(
             targets = [zone.heat.target for zone in asking if zone.heat]
             setpoint = max(targets) if targets else None
 
+        rest_until = gates.house_wide_rest_until(config, world, previous, generator.entity_id)
+        if rest_until is not None and world.now < rest_until:
+            # De huisbrede stop geldt ook voor een generator; de herstart wacht
+            # dezelfde rusttijd als een bron zonder circuit.
+            #
+            # The house-wide stop covers a generator too; the restart waits the
+            # same rest as a source without a circuit.
+            commands.append(
+                UnitCommand(
+                    entity_id=generator.entity_id,
+                    hvac_mode=MODE_OFF,
+                    source_id=generator.generator_id,
+                    reason=Reason.SHORT_CYCLE_PROTECTION,
+                )
+            )
+            deferral = Deferral(generator.entity_id, rest_until, Reason.SHORT_CYCLE_PROTECTION)
+            if deferral not in deferrals:
+                deferrals.append(deferral)
+            continue
+
         commands.append(
             UnitCommand(
                 entity_id=generator.entity_id,
@@ -962,7 +1014,7 @@ def _generator_commands(
             )
         )
 
-    return commands, untouched
+    return commands, untouched, tuple(deferrals)
 
 
 def _idle_mode(config: DirectorConfig, world: WorldState, source: Source, reason: Reason) -> str:
