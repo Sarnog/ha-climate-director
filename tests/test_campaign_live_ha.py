@@ -1335,6 +1335,33 @@ class TestTheHarnessApplianceKinds:
         finally:
             await stop_house(live)
 
+    async def test_a_forgotten_setpoint_is_sent_again_on_the_next_start(self) -> None:
+        """Een apparaat dat zijn setpoint bij `off` vergeet, krijgt het opnieuw.
+
+        An appliance forgetting its setpoint on `off` gets it again at the next
+        start.
+        """
+        live = await start_house(installation(), states=cold_world(), appliance="forgets_setpoint")
+        try:
+            await live.settle()
+            assert live.state(LIVING) == "heat"
+            assert live.attributes(LIVING).get("temperature") == 21.0
+
+            live.set("sensor.woonkamer", "23.0")
+            await live.settle()
+            await live.evaluate()
+            assert live.state(LIVING) == "off"
+            assert "temperature" not in live.attributes(LIVING)
+
+            live.set("sensor.woonkamer", "18.0")
+            await live.settle()
+            await live.evaluate()
+            assert live.state(LIVING) == "heat"
+            offered = [call for name, call in live.calls if name == "set_temperature"]
+            assert offered, "het vergeten setpoint is niet opnieuw meegestuurd"
+        finally:
+            await stop_house(live)
+
     async def test_a_drop_out_off_then_own_start_then_a_hand_is_noticed(self) -> None:
         """Ons uit via unavailable, zelf weer aan, dan een hand: die is een hand.
 

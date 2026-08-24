@@ -140,6 +140,23 @@ APPLIANCE_TYPES: dict[str, dict[str, Any]] = {
         "min_temp": None,
         "max_temp": None,
     },
+    #: Een apparaat dat bij `off` zijn setpoint vergeet, zoals sommige
+    #: thermostaten doen. Bij de volgende start moet de director het setpoint
+    #: opnieuw meesturen - precies het pad dat `_note_commanded_off` met
+    #: `_sent_setpoints` openhoudt.
+    #:
+    #: An appliance forgetting its setpoint when switched off, as some
+    #: thermostats do. At the next start the director must send the setpoint
+    #: again - exactly the path `_note_commanded_off` keeps open through
+    #: `_sent_setpoints`.
+    "forgets_setpoint": {
+        "honours_hvac_mode_in_set_temperature": True,
+        "report_delay_rounds": 0,
+        "reports_temperature": True,
+        "forgets_setpoint_when_off": True,
+        "min_temp": None,
+        "max_temp": None,
+    },
 }
 
 DEFAULT_APPLIANCE = "obedient"
@@ -606,6 +623,8 @@ def _apply(home: LiveHome, entity_id: str, mode: str | None, temperature: float 
     attributes = dict(current.attributes) if current else {}
     if temperature is not None and home.appliance.get("reports_temperature", True):
         attributes["temperature"] = temperature
+    if mode == "off" and home.appliance.get("forgets_setpoint_when_off"):
+        attributes.pop("temperature", None)
     state = mode if mode is not None else (current.state if current else "off")
     home.hass.states.async_set(entity_id, state, attributes)
 
