@@ -750,6 +750,78 @@
     },
     "house_wide_unmanaged": {
       "message": "{entity} يجب أن يتوقف فور وجود فتحة مفتوحة، لكن لا توجد منطقة ولا مصدر حرارة مشترك يستخدمه، فلا يوجّهه المنظّم أبداً."
+    },
+    "duplicate_zone_id": {
+      "message": "غرفتان تتشاركان المعرّف {zone}. يجب أن تكون معرّفات الغرف فريدة، لأن كل كيانات الغرفة وسجلّها تعتمد عليه."
+    },
+    "duplicate_circuit_id": {
+      "message": "دائرتان تتشاركان المعرّف {circuit}. يجب أن تكون معرّفات الدوائر فريدة."
+    },
+    "duplicate_source_id": {
+      "message": "مصدران يتشاركان المعرّف {source}. يجب أن تكون معرّفات المصادر فريدة داخل الغرفة."
+    },
+    "unit_on_two_circuits": {
+      "message": "الوحدة {unit} موجودة على الدائرة {first} والدائرة {second}. لا يمكن للوحدة الخارجية أن تنتمي إلا إلى دائرة واحدة."
+    },
+    "zone_neither_heats_nor_cools": {
+      "message": "المنطقة {zone} لا تستطيع التدفئة ولا التبريد، فلا يوجد شيء للتحكم به."
+    },
+    "zone_negative_presence_timeout": {
+      "message": "المنطقة {zone} لديها مهلة حضور سالبة."
+    },
+    "zone_cools_at_or_below_heats": {
+      "message": "المنطقة {zone} تبدأ التبريد عند أو تحت النقطة التي تبدأ عندها التدفئة، فيطلب الواجبان الغرفة نفسها في آنٍ واحد."
+    },
+    "source_window_admits_nothing": {
+      "message": "المصدر {source} له نافذة خارجية لا تسمح بشيء، لذا لا يمكنه العمل أبدًا."
+    },
+    "source_outdoor_without_sensor": {
+      "message": "المصدر {source} مقيّد بدرجة الحرارة الخارجية، لكن لا يوجد مستشعر خارجي."
+    },
+    "zone_negative_hysteresis": {
+      "message": "المنطقة {zone} لديها تباطؤ {mode} سالب."
+    },
+    "zone_window_admits_nothing": {
+      "message": "المنطقة {zone} لديها نافذة خارجية لـ{mode} لا تسمح بشيء."
+    },
+    "zone_outdoor_without_sensor": {
+      "message": "المنطقة {zone} تقيّد {mode} بدرجة الحرارة الخارجية، لكن لا يوجد مستشعر خارجي."
+    },
+    "zone_no_source_for_mode": {
+      "message": "المنطقة {zone} تريد {mode} لكن لا مصدر لها لذلك."
+    },
+    "generator_also_a_source": {
+      "message": "مصدر الحرارة المشترك {generator} يستخدم {entity}، وهو مصدر منطقة بالفعل."
+    },
+    "generator_unknown_zone": {
+      "message": "مصدر الحرارة المشترك {generator} يسمّي منطقة مجهولة {zone}."
+    },
+    "circuit_allows_no_unit": {
+      "message": "الدائرة {circuit} لا تسمح بتشغيل أي وحدة."
+    },
+    "circuit_negative_timing": {
+      "message": "الدائرة {circuit} لديها {label} سالب."
+    },
+    "opening_unknown_zone": {
+      "message": "الفتحة {opening} تسمّي منطقة مجهولة {zone}."
+    },
+    "opening_negative_delay": {
+      "message": "الفتحة {opening} لديها تأخير سالب."
+    },
+    "schedule_gate_without_schedules": {
+      "message": "بوابة الجدول مفعّلة لكن لا أحد لديه جدول، فلا يمكن لشيء أن يبدأ أبدًا."
+    },
+    "negative_stuck_time": {
+      "message": "زمن اكتشاف التعطل سالب."
+    },
+    "negative_outdoor_deadband": {
+      "message": "النطاق الميت لدرجة الحرارة الخارجية سالب."
+    },
+    "nonpositive_max_precondition": {
+      "message": "الحد الأقصى لزمن التدفئة المسبقة صفر أو سالب، فلا يمكن لأي طلب أن يعمل."
+    },
+    "exclusive_group_unknown_source": {
+      "message": "مجموعة حصرية تسمّي مصدرًا مجهولًا {source}."
     }
   },
   "services": {

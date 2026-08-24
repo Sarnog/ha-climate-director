@@ -903,13 +903,22 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
     problems: list[str] = []
 
     zone_ids = [zone.zone_id for zone in config.zones]
-    problems += [f"duplicate zone id: {zone_id}" for zone_id in _duplicates(zone_ids)]
+    problems += [
+        Problem("duplicate_zone_id", f"duplicate zone id: {zone_id}", zone=zone_id)
+        for zone_id in _duplicates(zone_ids)
+    ]
 
     circuit_ids = [circuit.circuit_id for circuit in config.circuits]
-    problems += [f"duplicate circuit id: {circuit_id}" for circuit_id in _duplicates(circuit_ids)]
+    problems += [
+        Problem("duplicate_circuit_id", f"duplicate circuit id: {circuit_id}", circuit=circuit_id)
+        for circuit_id in _duplicates(circuit_ids)
+    ]
 
     source_ids = [source.source_id for _, source in config.sources()]
-    problems += [f"duplicate source id: {source_id}" for source_id in _duplicates(source_ids)]
+    problems += [
+        Problem("duplicate_source_id", f"duplicate source id: {source_id}", source=source_id)
+        for source_id in _duplicates(source_ids)
+    ]
 
     # Hetzelfde apparaat twee keer in EEN kamer is onzin: welke van de twee
     # bronnen wint, is dan willekeurig, en er valt niets te kiezen. Over
@@ -969,8 +978,14 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
         for unit in circuit.units:
             if unit in seen_units:
                 problems.append(
-                    f"unit {unit} sits on both circuit {seen_units[unit]} "
-                    f"and circuit {circuit.circuit_id}"
+                    Problem(
+                        "unit_on_two_circuits",
+                        f"unit {unit} sits on both circuit {seen_units[unit]} "
+                        f"and circuit {circuit.circuit_id}",
+                        unit=unit,
+                        first=seen_units[unit],
+                        second=circuit.circuit_id,
+                    )
                 )
             else:
                 seen_units[unit] = circuit.circuit_id
@@ -1004,7 +1019,13 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
                 )
             )
         if zone.heat is None and zone.cool is None:
-            problems.append(f"zone {zone.zone_id} may neither heat nor cool")
+            problems.append(
+                Problem(
+                    "zone_neither_heats_nor_cools",
+                    f"zone {zone.zone_id} may neither heat nor cool",
+                    zone=zone.zone_id,
+                )
+            )
         if zone.gate is ZoneGate.PRESENCE and not zone.presence_entity:
             problems.append(
                 Problem(
@@ -1015,7 +1036,13 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
                 )
             )
         if zone.presence_timeout.total_seconds() < 0:
-            problems.append(f"zone {zone.zone_id} has a negative presence timeout")
+            problems.append(
+                Problem(
+                    "zone_negative_presence_timeout",
+                    f"zone {zone.zone_id} has a negative presence timeout",
+                    zone=zone.zone_id,
+                )
+            )
         if (
             zone.heat is not None
             and zone.cool is not None
@@ -1029,36 +1056,71 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
             # engine still picks deterministically, but getting there is a
             # mistake nobody can have meant.
             problems.append(
-                f"zone {zone.zone_id} starts cooling at or below where it starts heating"
+                Problem(
+                    "zone_cools_at_or_below_heats",
+                    f"zone {zone.zone_id} starts cooling at or below where it starts heating",
+                    zone=zone.zone_id,
+                )
             )
         for source in zone.sources:
             if source.outdoor.empty:
                 problems.append(
-                    f"source {source.source_id} has an outdoor window that admits nothing"
+                    Problem(
+                        "source_window_admits_nothing",
+                        f"source {source.source_id} has an outdoor window that admits nothing",
+                        source=source.source_id,
+                    )
                 )
             elif not outdoor_known and not source.outdoor.unbounded:
                 problems.append(
-                    f"source {source.source_id} is limited by outdoor temperature, "
-                    "but no outdoor sensor is set"
+                    Problem(
+                        "source_outdoor_without_sensor",
+                        f"source {source.source_id} is limited by outdoor temperature, "
+                        "but no outdoor sensor is set",
+                        source=source.source_id,
+                    )
                 )
         for family in (ModeFamily.HEAT, ModeFamily.COOL):
             settings = zone.settings_for(family)
             if settings is None:
                 continue
             if settings.hysteresis < 0:
-                problems.append(f"zone {zone.zone_id} has a negative {family.value} hysteresis")
+                problems.append(
+                    Problem(
+                        "zone_negative_hysteresis",
+                        f"zone {zone.zone_id} has a negative {family.value} hysteresis",
+                        zone=zone.zone_id,
+                        mode=family.value,
+                    )
+                )
             if settings.outdoor.empty:
                 problems.append(
-                    f"zone {zone.zone_id} has a {family.value} outdoor window that admits nothing"
+                    Problem(
+                        "zone_window_admits_nothing",
+                        f"zone {zone.zone_id} has a {family.value} outdoor window "
+                        "that admits nothing",
+                        zone=zone.zone_id,
+                        mode=family.value,
+                    )
                 )
             elif not outdoor_known and not settings.outdoor.unbounded:
                 problems.append(
-                    f"zone {zone.zone_id} limits {family.value} by outdoor temperature, "
-                    "but no outdoor sensor is set"
+                    Problem(
+                        "zone_outdoor_without_sensor",
+                        f"zone {zone.zone_id} limits {family.value} by outdoor temperature, "
+                        "but no outdoor sensor is set",
+                        zone=zone.zone_id,
+                        mode=family.value,
+                    )
                 )
             if not any(source.supports(family) for source in zone.sources):
                 problems.append(
-                    f"zone {zone.zone_id} wants {family.value} but has no source for it"
+                    Problem(
+                        "zone_no_source_for_mode",
+                        f"zone {zone.zone_id} wants {family.value} but has no source for it",
+                        zone=zone.zone_id,
+                        mode=family.value,
+                    )
                 )
 
             # De streeftemperatuur is wat het apparaat te horen krijgt; het
@@ -1094,12 +1156,22 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
     for generator in config.generators:
         if generator.entity_id in source_entities:
             problems.append(
-                f"generator {generator.generator_id} uses climate entity "
-                f"{generator.entity_id}, which is already a zone's source"
+                Problem(
+                    "generator_also_a_source",
+                    f"generator {generator.generator_id} uses climate entity "
+                    f"{generator.entity_id}, which is already a zone's source",
+                    generator=generator.generator_id,
+                    entity=generator.entity_id,
+                )
             )
         unknown = [zone_id for zone_id in generator.zone_ids if zone_id not in set(zone_ids)]
         problems += [
-            f"generator {generator.generator_id} names unknown zone {zone_id}"
+            Problem(
+                "generator_unknown_zone",
+                f"generator {generator.generator_id} names unknown zone {zone_id}",
+                generator=generator.generator_id,
+                zone=zone_id,
+            )
             for zone_id in unknown
         ]
 
@@ -1131,39 +1203,69 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
                 seen[zone.priority] = zone.zone_id
 
         if circuit.max_concurrent_units is not None and circuit.max_concurrent_units < 1:
-            problems.append(f"circuit {circuit.circuit_id} allows no unit to run at all")
+            problems.append(
+                Problem(
+                    "circuit_allows_no_unit",
+                    f"circuit {circuit.circuit_id} allows no unit to run at all",
+                    circuit=circuit.circuit_id,
+                )
+            )
         for label, span in (
             ("family switch delay", circuit.family_switch_delay),
             ("minimum switch interval", circuit.min_family_switch_interval),
             ("minimum cycle time", circuit.min_cycle_time),
         ):
             if span.total_seconds() < 0:
-                problems.append(f"circuit {circuit.circuit_id} has a negative {label}")
+                problems.append(
+                    Problem(
+                        "circuit_negative_timing",
+                        f"circuit {circuit.circuit_id} has a negative {label}",
+                        circuit=circuit.circuit_id,
+                        label=label,
+                    )
+                )
 
     known_zones = set(zone_ids)
     for opening in config.openings:
         problems += [
-            f"opening {opening.entity_id} names unknown zone {zone_id}"
+            Problem(
+                "opening_unknown_zone",
+                f"opening {opening.entity_id} names unknown zone {zone_id}",
+                opening=opening.entity_id,
+                zone=zone_id,
+            )
             for zone_id in opening.zone_ids
             if zone_id not in known_zones
         ]
         if opening.delay.total_seconds() < 0:
-            problems.append(f"opening {opening.entity_id} has a negative delay")
+            problems.append(
+                Problem(
+                    "opening_negative_delay",
+                    f"opening {opening.entity_id} has a negative delay",
+                    opening=opening.entity_id,
+                )
+            )
 
     if config.gates.require_schedule and not any(resident.windows for resident in config.residents):
         problems.append(
-            "the schedule gate is on but nobody has a schedule, so nothing can ever run"
+            Problem(
+                "schedule_gate_without_schedules",
+                "the schedule gate is on but nobody has a schedule, so nothing can ever run",
+            )
         )
 
     if config.stuck_after.total_seconds() < 0:
-        problems.append("the stuck-detection time is negative")
+        problems.append(Problem("negative_stuck_time", "the stuck-detection time is negative"))
 
     if config.outdoor_hysteresis < 0:
-        problems.append("the outdoor dead band is negative")
+        problems.append(Problem("negative_outdoor_deadband", "the outdoor dead band is negative"))
 
     if config.gates.max_precondition.total_seconds() <= 0:
         problems.append(
-            "the maximum pre-conditioning time is zero or negative, so no request can ever run"
+            Problem(
+                "nonpositive_max_precondition",
+                "the maximum pre-conditioning time is zero or negative, so no request can ever run",
+            )
         )
 
     # Een apparaat dat huisbreed stil hoort te vallen terwijl er niets is dat
@@ -1226,7 +1328,11 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
 
     for group in config.exclusive_groups:
         problems += [
-            f"exclusive group names unknown source {source_id}"
+            Problem(
+                "exclusive_group_unknown_source",
+                f"exclusive group names unknown source {source_id}",
+                source=source_id,
+            )
             for source_id in sorted(group - known_sources)
         ]
 

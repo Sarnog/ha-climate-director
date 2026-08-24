@@ -750,6 +750,78 @@
     },
     "house_wide_unmanaged": {
       "message": "{entity} debe detenerse en cuanto haya una abertura abierta, pero ninguna zona ni fuente de calor compartida lo usa, así que el director nunca lo gobierna."
+    },
+    "duplicate_zone_id": {
+      "message": "Dos habitaciones comparten el id {zone}. Los id de habitación deben ser únicos, porque todas las entidades y el historial de una habitación dependen de él."
+    },
+    "duplicate_circuit_id": {
+      "message": "Dos circuitos comparten el id {circuit}. Los id de circuito deben ser únicos."
+    },
+    "duplicate_source_id": {
+      "message": "Dos fuentes comparten el id {source}. Los id de fuente deben ser únicos dentro de una habitación."
+    },
+    "unit_on_two_circuits": {
+      "message": "{unit} está en el circuito {first} y en el circuito {second}. Una unidad exterior solo puede pertenecer a un circuito."
+    },
+    "zone_neither_heats_nor_cools": {
+      "message": "La zona {zone} no puede calentar ni enfriar, así que no hay nada que controlar."
+    },
+    "zone_negative_presence_timeout": {
+      "message": "La zona {zone} tiene un tiempo de presencia negativo."
+    },
+    "zone_cools_at_or_below_heats": {
+      "message": "La zona {zone} empieza a enfriar en el punto donde empieza a calentar o por debajo, así que ambas tareas piden la misma habitación a la vez."
+    },
+    "source_window_admits_nothing": {
+      "message": "La fuente {source} tiene una ventana exterior que no admite nada y nunca podrá funcionar."
+    },
+    "source_outdoor_without_sensor": {
+      "message": "La fuente {source} está limitada por la temperatura exterior, pero no hay sensor exterior configurado."
+    },
+    "zone_negative_hysteresis": {
+      "message": "La zona {zone} tiene una histéresis de {mode} negativa."
+    },
+    "zone_window_admits_nothing": {
+      "message": "La zona {zone} tiene una ventana exterior de {mode} que no admite nada."
+    },
+    "zone_outdoor_without_sensor": {
+      "message": "La zona {zone} limita {mode} por la temperatura exterior, pero no hay sensor exterior configurado."
+    },
+    "zone_no_source_for_mode": {
+      "message": "La zona {zone} quiere {mode} pero no tiene fuente para ello."
+    },
+    "generator_also_a_source": {
+      "message": "La fuente de calor compartida {generator} usa {entity}, que ya es una fuente de una zona."
+    },
+    "generator_unknown_zone": {
+      "message": "La fuente de calor compartida {generator} nombra una zona desconocida {zone}."
+    },
+    "circuit_allows_no_unit": {
+      "message": "El circuito {circuit} no deja funcionar ninguna unidad."
+    },
+    "circuit_negative_timing": {
+      "message": "El circuito {circuit} tiene un {label} negativo."
+    },
+    "opening_unknown_zone": {
+      "message": "La abertura {opening} nombra una zona desconocida {zone}."
+    },
+    "opening_negative_delay": {
+      "message": "La abertura {opening} tiene un retardo negativo."
+    },
+    "schedule_gate_without_schedules": {
+      "message": "La puerta de horario está activada pero nadie tiene horario, así que nada puede arrancar nunca."
+    },
+    "negative_stuck_time": {
+      "message": "El tiempo de detección de bloqueo es negativo."
+    },
+    "negative_outdoor_deadband": {
+      "message": "La banda muerta de temperatura exterior es negativa."
+    },
+    "nonpositive_max_precondition": {
+      "message": "El tiempo máximo de precalentamiento es cero o negativo, así que una petición nunca puede ejecutarse."
+    },
+    "exclusive_group_unknown_source": {
+      "message": "Un grupo exclusivo nombra una fuente desconocida {source}."
     }
   },
   "services": {

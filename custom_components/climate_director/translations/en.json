@@ -750,6 +750,78 @@
     },
     "house_wide_unmanaged": {
       "message": "{entity} is set to stop while an opening stands open, but no zone and no shared heat source uses it, so the director never steers it."
+    },
+    "duplicate_zone_id": {
+      "message": "Two rooms share the id {zone}. Room ids must be unique, because every room's entities and history hang on it."
+    },
+    "duplicate_circuit_id": {
+      "message": "Two circuits share the id {circuit}. Circuit ids must be unique."
+    },
+    "duplicate_source_id": {
+      "message": "Two sources share the id {source}. Source ids must be unique within a room."
+    },
+    "unit_on_two_circuits": {
+      "message": "{unit} sits on both circuit {first} and circuit {second}. One outdoor unit can only belong to one circuit."
+    },
+    "zone_neither_heats_nor_cools": {
+      "message": "Zone {zone} may neither heat nor cool, so there is nothing to steer."
+    },
+    "zone_negative_presence_timeout": {
+      "message": "Zone {zone} has a negative presence timeout."
+    },
+    "zone_cools_at_or_below_heats": {
+      "message": "Zone {zone} starts cooling at or below where it starts heating, so both duties ask for the same room at once."
+    },
+    "source_window_admits_nothing": {
+      "message": "Source {source} has an outdoor window that admits nothing, so it can never run."
+    },
+    "source_outdoor_without_sensor": {
+      "message": "Source {source} is limited by outdoor temperature, but no outdoor sensor is set."
+    },
+    "zone_negative_hysteresis": {
+      "message": "Zone {zone} has a negative {mode} hysteresis."
+    },
+    "zone_window_admits_nothing": {
+      "message": "Zone {zone} has a {mode} outdoor window that admits nothing."
+    },
+    "zone_outdoor_without_sensor": {
+      "message": "Zone {zone} limits {mode} by outdoor temperature, but no outdoor sensor is set."
+    },
+    "zone_no_source_for_mode": {
+      "message": "Zone {zone} wants {mode} but has no source for it."
+    },
+    "generator_also_a_source": {
+      "message": "Shared heat source {generator} uses {entity}, which is already a zone's source."
+    },
+    "generator_unknown_zone": {
+      "message": "Shared heat source {generator} names unknown zone {zone}."
+    },
+    "circuit_allows_no_unit": {
+      "message": "Circuit {circuit} allows no unit to run at all."
+    },
+    "circuit_negative_timing": {
+      "message": "Circuit {circuit} has a negative {label}."
+    },
+    "opening_unknown_zone": {
+      "message": "Opening {opening} names unknown zone {zone}."
+    },
+    "opening_negative_delay": {
+      "message": "Opening {opening} has a negative delay."
+    },
+    "schedule_gate_without_schedules": {
+      "message": "The schedule gate is on but nobody has a schedule, so nothing can ever run."
+    },
+    "negative_stuck_time": {
+      "message": "The stuck-detection time is negative."
+    },
+    "negative_outdoor_deadband": {
+      "message": "The outdoor dead band is negative."
+    },
+    "nonpositive_max_precondition": {
+      "message": "The maximum pre-conditioning time is zero or negative, so no request can ever run."
+    },
+    "exclusive_group_unknown_source": {
+      "message": "An exclusive group names unknown source {source}."
     }
   },
   "services": {

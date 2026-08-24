@@ -26,6 +26,8 @@ from custom_components.climate_director.engine import (
     GateSettings,
     ModeSettings,
     Opening,
+    OutdoorWindow,
+    Problem,
     Resident,
     Source,
     TimeWindow,
@@ -38,6 +40,46 @@ from custom_components.climate_director.engine import (
 def problem(config: DirectorConfig, fragment: str) -> bool:
     """Return whether any reported problem mentions `fragment`."""
     return any(fragment in item for item in validate(config))
+
+
+def test_every_complaint_carries_a_translation_code() -> None:
+    """Elke melding draagt een code, zodat `problems.readable()` kan vertalen.
+
+    Every complaint carries a code, so `problems.readable()` can translate it.
+    """
+    config = DirectorConfig(
+        zones=(
+            zone("dubbel", indoor_sensor="", sources=(), heat=None, cool=None),
+            zone(
+                "dubbel",
+                sources=(
+                    Source("s", "climate.x", outdoor=OutdoorWindow(minimum=5.0, maximum=3.0)),
+                ),
+                heat=ModeSettings(21.0, 20.0, hysteresis=-1.0),
+                cool=ModeSettings(19.0, 20.0),
+                presence_timeout=timedelta(seconds=-1),
+            ),
+        ),
+        circuits=(
+            Circuit(
+                "c",
+                "C",
+                units=(),
+                min_cycle_time=timedelta(seconds=-1),
+                max_concurrent_units=0,
+            ),
+        ),
+        openings=(
+            Opening("binary_sensor.deur", zone_ids=("nergens",), delay=timedelta(seconds=-1)),
+        ),
+        gates=GateSettings(require_schedule=True, max_precondition=timedelta(0)),
+        stuck_after=timedelta(seconds=-1),
+        outdoor_hysteresis=-1.0,
+    )
+    found = validate(config)
+    assert found, "dit scenario hoort meerdere problemen op te leveren"
+    for complaint in found:
+        assert isinstance(complaint, Problem) and complaint.code, complaint
 
 
 def zone(zone_id: str, **kwargs: object) -> Zone:

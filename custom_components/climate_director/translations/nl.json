@@ -750,6 +750,78 @@
     },
     "house_wide_unmanaged": {
       "message": "{entity} moet stilvallen zodra er een opening openstaat, maar geen enkele zone en geen enkele gedeelde warmtebron gebruikt hem, dus de director stuurt hem nooit."
+    },
+    "duplicate_zone_id": {
+      "message": "Twee kamers delen het id {zone}. Kamer-id's moeten uniek zijn, want alle entiteiten en geschiedenis van een kamer hangen eraan."
+    },
+    "duplicate_circuit_id": {
+      "message": "Twee circuits delen het id {circuit}. Circuit-id's moeten uniek zijn."
+    },
+    "duplicate_source_id": {
+      "message": "Twee bronnen delen het id {source}. Bron-id's moeten uniek zijn binnen een kamer."
+    },
+    "unit_on_two_circuits": {
+      "message": "{unit} zit op zowel circuit {first} als circuit {second}. Eén buitenunit kan maar bij één circuit horen."
+    },
+    "zone_neither_heats_nor_cools": {
+      "message": "Zone {zone} kan niet verwarmen en niet koelen, dus er valt niets aan te sturen."
+    },
+    "zone_negative_presence_timeout": {
+      "message": "Zone {zone} heeft een negatieve aanwezigheids-nalooptijd."
+    },
+    "zone_cools_at_or_below_heats": {
+      "message": "Zone {zone} begint met koelen op of onder de temperatuur waarop hij begint met verwarmen, zodat beide taken tegelijk om dezelfde kamer vragen."
+    },
+    "source_window_admits_nothing": {
+      "message": "Bron {source} heeft een buitenvenster dat niets toelaat, dus hij kan nooit draaien."
+    },
+    "source_outdoor_without_sensor": {
+      "message": "Bron {source} wordt begrensd door de buitentemperatuur, maar er is geen buitensensor ingesteld."
+    },
+    "zone_negative_hysteresis": {
+      "message": "Zone {zone} heeft een negatieve {mode}-hysteresis."
+    },
+    "zone_window_admits_nothing": {
+      "message": "Zone {zone} heeft een {mode}-buitenvenster dat niets toelaat."
+    },
+    "zone_outdoor_without_sensor": {
+      "message": "Zone {zone} begrenst {mode} door de buitentemperatuur, maar er is geen buitensensor ingesteld."
+    },
+    "zone_no_source_for_mode": {
+      "message": "Zone {zone} wil {mode} maar heeft er geen bron voor."
+    },
+    "generator_also_a_source": {
+      "message": "Gedeelde warmtebron {generator} gebruikt {entity}, en dat is al een bron van een zone."
+    },
+    "generator_unknown_zone": {
+      "message": "Gedeelde warmtebron {generator} noemt onbekende zone {zone}."
+    },
+    "circuit_allows_no_unit": {
+      "message": "Circuit {circuit} laat geen enkele unit draaien."
+    },
+    "circuit_negative_timing": {
+      "message": "Circuit {circuit} heeft een negatieve {label}."
+    },
+    "opening_unknown_zone": {
+      "message": "Opening {opening} noemt onbekende zone {zone}."
+    },
+    "opening_negative_delay": {
+      "message": "Opening {opening} heeft een negatieve vertraging."
+    },
+    "schedule_gate_without_schedules": {
+      "message": "De roosterpoort staat aan, maar niemand heeft een rooster, dus er kan nooit iets starten."
+    },
+    "negative_stuck_time": {
+      "message": "De vastloopdetectietijd is negatief."
+    },
+    "negative_outdoor_deadband": {
+      "message": "De dode band op de buitentemperatuur is negatief."
+    },
+    "nonpositive_max_precondition": {
+      "message": "De maximale vooruit-verwarmingstijd is nul of negatief, dus een verzoek kan nooit lopen."
+    },
+    "exclusive_group_unknown_source": {
+      "message": "Een uitsluitende groep noemt onbekende bron {source}."
     }
   },
   "services": {

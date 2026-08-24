@@ -750,6 +750,78 @@
     },
     "house_wide_unmanaged": {
       "message": "{entity} soll stillstehen, sobald eine Öffnung offen steht, aber keine Zone und keine gemeinsame Wärmequelle nutzt ihn, also steuert der Director ihn nie."
+    },
+    "duplicate_zone_id": {
+      "message": "Zwei Räume teilen die ID {zone}. Raum-IDs müssen eindeutig sein, denn alle Entitäten und der Verlauf eines Raums hängen daran."
+    },
+    "duplicate_circuit_id": {
+      "message": "Zwei Kreisläufe teilen die ID {circuit}. Kreislauf-IDs müssen eindeutig sein."
+    },
+    "duplicate_source_id": {
+      "message": "Zwei Quellen teilen die ID {source}. Quell-IDs müssen innerhalb eines Raums eindeutig sein."
+    },
+    "unit_on_two_circuits": {
+      "message": "{unit} hängt sowohl an Kreislauf {first} als auch an Kreislauf {second}. Ein Außengerät kann nur zu einem Kreislauf gehören."
+    },
+    "zone_neither_heats_nor_cools": {
+      "message": "Zone {zone} kann weder heizen noch kühlen, also gibt es nichts zu steuern."
+    },
+    "zone_negative_presence_timeout": {
+      "message": "Zone {zone} hat eine negative Anwesenheits-Nachlaufzeit."
+    },
+    "zone_cools_at_or_below_heats": {
+      "message": "Zone {zone} beginnt bei oder unter der Heiz-Starttemperatur zu kühlen, sodass beide Aufgaben gleichzeitig denselben Raum verlangen."
+    },
+    "source_window_admits_nothing": {
+      "message": "Quelle {source} hat ein Außenfenster, das nichts zulässt, und kann daher nie laufen."
+    },
+    "source_outdoor_without_sensor": {
+      "message": "Quelle {source} ist durch die Außentemperatur begrenzt, aber es ist kein Außensensor eingestellt."
+    },
+    "zone_negative_hysteresis": {
+      "message": "Zone {zone} hat eine negative {mode}-Hysterese."
+    },
+    "zone_window_admits_nothing": {
+      "message": "Zone {zone} hat ein {mode}-Außenfenster, das nichts zulässt."
+    },
+    "zone_outdoor_without_sensor": {
+      "message": "Zone {zone} begrenzt {mode} durch die Außentemperatur, aber es ist kein Außensensor eingestellt."
+    },
+    "zone_no_source_for_mode": {
+      "message": "Zone {zone} möchte {mode}, hat aber keine Quelle dafür."
+    },
+    "generator_also_a_source": {
+      "message": "Gemeinsame Wärmequelle {generator} nutzt {entity}, das bereits eine Quelle einer Zone ist."
+    },
+    "generator_unknown_zone": {
+      "message": "Gemeinsame Wärmequelle {generator} nennt unbekannte Zone {zone}."
+    },
+    "circuit_allows_no_unit": {
+      "message": "Kreislauf {circuit} lässt kein einziges Gerät laufen."
+    },
+    "circuit_negative_timing": {
+      "message": "Kreislauf {circuit} hat eine negative {label}."
+    },
+    "opening_unknown_zone": {
+      "message": "Öffnung {opening} nennt unbekannte Zone {zone}."
+    },
+    "opening_negative_delay": {
+      "message": "Öffnung {opening} hat eine negative Verzögerung."
+    },
+    "schedule_gate_without_schedules": {
+      "message": "Das Zeitplan-Tor ist an, aber niemand hat einen Zeitplan, also kann nie etwas starten."
+    },
+    "negative_stuck_time": {
+      "message": "Die Blockade-Erkennungszeit ist negativ."
+    },
+    "negative_outdoor_deadband": {
+      "message": "Das Totband der Außentemperatur ist negativ."
+    },
+    "nonpositive_max_precondition": {
+      "message": "Die maximale Vorheizzeit ist null oder negativ, also kann ein Wunsch nie laufen."
+    },
+    "exclusive_group_unknown_source": {
+      "message": "Eine exklusive Gruppe nennt unbekannte Quelle {source}."
     }
   },
   "services": {
