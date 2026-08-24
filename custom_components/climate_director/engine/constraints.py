@@ -252,6 +252,20 @@ def _forced_families(
     them.
     """
     managed = {source.entity_id for _, source in config.sources_on(circuit)}
+    # Een generator die in dit circuit staat is óók beheerd: de director stuurt
+    # hem via `_generator_commands` net zo goed uit als een gewone bron. Hem als
+    # "onbeheerd" meetellen zette het circuit op zijn taak vast, terwijl de
+    # director hem juist kán uitzetten.
+    #
+    # A generator sitting on this circuit is managed too: the director stands it
+    # down through `_generator_commands` just like an ordinary source. Counting
+    # it as "unmanaged" pinned the circuit to its duty even though the director
+    # can switch it off.
+    managed |= {
+        generator.entity_id
+        for generator in config.generators
+        if generator.entity_id in circuit.units
+    }
     return frozenset(
         family
         for entity_id in circuit.units

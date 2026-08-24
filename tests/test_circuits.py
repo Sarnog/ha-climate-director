@@ -27,6 +27,7 @@ from custom_components.climate_director.engine import (
     ClimateState,
     ConflictPolicy,
     DirectorConfig,
+    Generator,
     ModeFamily,
     ModeSettings,
     Reason,
@@ -867,6 +868,32 @@ def test_active_family_reads_unmanaged_units_too() -> None:
         climates={unit("woonkamer"): climate(MODE_OFF), unit("zolder"): climate(MODE_COOL)}
     )
     assert constraints.active_family(world, circuit) is ModeFamily.COOL
+
+
+def test_a_generator_on_the_circuit_does_not_force_the_duty() -> None:
+    """Een gedeelde ketel is óók aanstuurbaar, dus hij dwingt het circuit niet.
+
+    A shared boiler is steerable too, so it does not force the circuit.
+    """
+    config = DirectorConfig(
+        zones=rooms("woonkamer"),
+        circuits=(multi_split("c", "woonkamer", "ketel"),),
+        generators=(
+            Generator(
+                generator_id="cv",
+                name="CV",
+                entity_id=unit("ketel"),
+                zone_ids=("woonkamer",),
+            ),
+        ),
+    )
+    world = make_world(
+        indoor={"woonkamer": WANTS_COOL},
+        climates={unit("woonkamer"): climate(MODE_OFF), unit("ketel"): climate(MODE_HEAT)},
+    )
+    plan = decide(config, world)
+    assert plan.command_for(unit("woonkamer")).hvac_mode == MODE_COOL
+    assert plan.command_for(unit("ketel")).hvac_mode == MODE_OFF
 
 
 @pytest.mark.parametrize("mode", [MODE_OFF, MODE_FAN_ONLY])
