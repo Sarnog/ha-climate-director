@@ -241,9 +241,16 @@ bron-ID wordt eerst naar zijn `entity_id` vertaald. Anders ontsnapte een gedeeld
 via het bron-ID van een andere kamer. Twee kamers die om hetzelfde apparaat vragen zijn
 daarbij geen tegenstanders — dat is één apparaat dat draait.
 
+In de bronkeuze stopt de huisbrede stop de **zone**, niet alleen het apparaat: is de
+eerste keus van de zone een huisbreed stilgezet apparaat, dan weigert de zone met
+`OPENING_OPEN_ELSEWHERE` in plaats van stilletjes door te schuiven naar de tweede keus —
+anders stond de airco elektrisch te verwarmen omdat er elders een deur openstaat, en dat
+merk je pas op de energierekening. Alleen een écht onbereikbare eerste keus telt nog als
+uitwijking (`passed_over`).
+
 Ná `_collapse_shared` staat `_stop_blocked`: het vangnet dat een huisbreed stilgezet
-apparaat (zie `gates.house_wide_blocked`) hoe dan ook op `off` zet. De bronkeuze liet het
-al vallen, dus in de gewone gang van zaken doet dit niets; het bestaat voor de paden die
+apparaat (zie `gates.house_wide_blocked`) hoe dan ook op `off` zet. De bronkeuze weigert
+de zone al, dus in de gewone gang van zaken doet dit niets; het bestaat voor de paden die
 buiten die keuze omgaan — een gedeelde ketel die zijn commando van een andere zone kreeg,
 en de generator, die helemaal geen bronkeuze doorloopt. Eén uitzondering gaat erdoorheen:
 een vooruit-verzoek waarbij iemand uitdrukkelijk "toch doen" zei, precies zoals dat langs
@@ -751,9 +758,16 @@ is translated to its `entity_id` first. Otherwise a shared boiler escaped throug
 another room's source id. Two rooms asking for the same appliance are no rivals in that
 - that is one appliance running.
 
+In source selection the house-wide stop stops the **zone**, not just the appliance: when
+the zone's first choice is a house-wide stopped appliance, the zone refuses with
+`OPENING_OPEN_ELSEWHERE` instead of sliding silently onto its second choice — otherwise
+the air conditioner would be heating electrically because a door stands open elsewhere,
+which you only notice on the energy bill. Only a genuinely unreachable first choice still
+counts as a fallback (`passed_over`).
+
 After `_collapse_shared` comes `_stop_blocked`: the safety net forcing an appliance
 stopped house-wide (see `gates.house_wide_blocked`) to `off` whatever happens. Source
-selection already dropped it, so in the ordinary run of things this does nothing; it
+selection already refuses the zone, so in the ordinary run of things this does nothing; it
 exists for the paths going round that choice — a shared boiler that got its command from
 another zone, and the generator, which never runs through source selection at all. One
 exception passes through: a pre-conditioning request on which somebody expressly said "do
