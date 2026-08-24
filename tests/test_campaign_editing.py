@@ -836,6 +836,56 @@ class TestEveryScreenSurvivesItsNeighbour:
         finally:
             await stop_house(home)
 
+    async def test_a_zone_error_keeps_the_typed_temperatures(self) -> None:
+        """Bij een fout toont het zoneformulier de ingetypte temperaturen, niet de oude.
+
+        On an error the zone form keeps the temperatures just typed, not the
+        stored ones.
+        """
+        home = await start_house(two_rooms(), states=cold())
+        try:
+            flow = home.hass.config_entries.options
+            result = await menu(home, "zones")
+            result = await flow.async_configure(result["flow_id"], {"zone": "0"})
+            assert result["step_id"] == "zone"
+
+            result = await flow.async_configure(
+                result["flow_id"],
+                {
+                    "name": "Woonkamer X",
+                    "priority": 0,
+                    "gate": "household",
+                    "presence_state": "on",
+                    "enable_heat": True,
+                    "heat_target": 24.0,
+                    "heat_start_at": 23.0,
+                    "heat_hysteresis": 2.0,
+                    "enable_cool": False,
+                    "cool_target": 23.0,
+                    "cool_start_at": 24.0,
+                    "cool_hysteresis": 1.0,
+                    "cool_summer_only": False,
+                    "delete": False,
+                    "when_done": "keep",
+                },
+            )
+            assert result["step_id"] == "zone"
+            assert result["errors"] == {"indoor_sensor": "required"}
+
+            result = await flow.async_configure(
+                result["flow_id"], {"indoor_sensor": "sensor.woonkamer", "when_done": "keep"}
+            )
+            assert result["step_id"] == "sources"
+            result = await flow.async_configure(result["flow_id"], {"source": "back_to_menu"})
+            stored = await save(home, result["flow_id"])
+
+            woonkamer = next(item for item in stored["zones"] if item["zone_id"] == "woonkamer")
+            assert woonkamer["name"] == "Woonkamer X"
+            assert woonkamer["heat"]["target"] == 24.0
+            assert woonkamer["heat"]["start_at"] == 23.0
+        finally:
+            await stop_house(home)
+
     async def _fill_zone(self, flow: Any, flow_id: str) -> dict[str, Any]:
         result = await flow.async_configure(flow_id, {"zone": "add_new"})
         assert result["step_id"] == "zone"

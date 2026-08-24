@@ -838,6 +838,16 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 errors = _missing(user_input, "indoor_sensor")
             if errors:
                 current = {**current, **user_input}
+                # De defaults lezen `current.get("heat")`/`current.get("cool")`,
+                # en die sleutels zitten niet in `user_input`. Zonder deze stap
+                # toonde het formulier na een fout de nieuwe naam naast de oude
+                # temperaturen.
+                #
+                # The defaults read `current.get("heat")`/`current.get("cool")`,
+                # and those keys are not in `user_input`. Without this step the
+                # form showed the new name beside the old temperatures after an
+                # error.
+                current["heat"], current["cool"] = _heat_cool_from_form(user_input, current)
 
         if user_input is not None and not errors:
             if user_input.get("delete") and self._zone_index is not None:
@@ -2019,14 +2029,10 @@ def _band_errors(zone: dict[str, Any]) -> dict[str, str]:
     return errors
 
 
-def _zone_from_form(
-    user_input: dict[str, Any],
-    current: dict[str, Any],
-    taken: list[str] | None = None,
-    *,
-    stored_id: str | None = None,
-) -> dict[str, Any]:
-    """Return the stored zone described by a submitted zone form.
+def _heat_cool_from_form(
+    user_input: dict[str, Any], current: dict[str, Any]
+) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    """Return the stored heat and cool blocks described by a submitted zone form.
 
     Het formulier toont maar één kant van elke buitengrens en geen
     verwarmingsseizoenen. Wie die waarden eerder instelde - via een oudere
@@ -2071,6 +2077,30 @@ def _zone_from_form(
         if user_input["enable_cool"]
         else None
     )
+    return heat, cool
+
+
+def _zone_from_form(
+    user_input: dict[str, Any],
+    current: dict[str, Any],
+    taken: list[str] | None = None,
+    *,
+    stored_id: str | None = None,
+) -> dict[str, Any]:
+    """Return the stored zone described by a submitted zone form.
+
+    Het formulier toont maar één kant van elke buitengrens en geen
+    verwarmingsseizoenen. Wie die waarden eerder instelde - via een oudere
+    versie of een met de hand bewerkte configuratie - mag ze bij een gewone
+    formulierbewerking niet kwijtraken: wat het formulier niet toont, blijft
+    staan.
+
+    The form shows only one side of each outdoor bound and no heating seasons.
+    Whoever set those values earlier - through an older version or a hand-edited
+    configuration - should not lose them on an ordinary form edit: what the form
+    does not show stays.
+    """
+    heat, cool = _heat_cool_from_form(user_input, current)
     return {
         # Een bestaande zone houdt zijn id: achteraf hernoemen kost de
         # entiteitsgeschiedenis van die zone. Een nieuwe zone krijgt een id uit
