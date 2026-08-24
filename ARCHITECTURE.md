@@ -138,6 +138,11 @@ niet aan de opening: zo hoeft de ketel niet bij elke deur opnieuw aangevinkt te 
 en telt een raam dat er later bij komt vanzelf mee. Leeg geeft een lege verzameling, dus
 een installatie die dit niet gebruikt merkt er niets van.
 
+Bij een herstart na zo'n stop remt `house_wide_rest_until()` het weer aangaan: het
+apparaat wacht `HOUSE_WIDE_MIN_REST` (drie minuten) vanaf het einde van de stop, met een
+`Deferral` (`SHORT_CYCLE_PROTECTION`) waar de coordinator vanzelf op terugkomt. De stop
+zelf wordt nooit uitgesteld.
+
 ### hysteresis.py — moet het
 
 Bepaalt de gevraagde taak uit de binnentemperatuur, het seizoen en het
@@ -244,6 +249,11 @@ en de generator, die helemaal geen bronkeuze doorloopt. Eén uitzondering gaat e
 een vooruit-verzoek waarbij iemand uitdrukkelijk "toch doen" zei, precies zoals dat langs
 de gewone raampoort gaat. Wat de director met rust laat blijft met rust: een overgedragen
 zone en een handbediende bron krijgen geen commando en komen hier dus niet langs.
+
+Rond de bronkeuze en de generatorcommando's zit de huisbrede rusttijd: is de stop net
+voorbij, dan wordt een start nog `HOUSE_WIDE_MIN_REST` lang vastgehouden met een
+`Deferral` (`SHORT_CYCLE_PROTECTION`), precies zoals een circuit dat doet. Alleen
+herstarts wachten, nooit de stop zelf.
 
 ### plan.py — uitvoer
 
@@ -640,6 +650,11 @@ appliance rather than on the opening: the boiler need not be ticked again at eve
 and a window added later counts by itself. Empty yields an empty set, so an installation
 not using this notices nothing.
 
+On restart after such a stop `house_wide_rest_until()` brakes the switching back on: the
+appliance waits `HOUSE_WIDE_MIN_REST` (three minutes) from the end of the stop, with a
+`Deferral` (`SHORT_CYCLE_PROTECTION`) the coordinator returns on by itself. The stop
+itself is never delayed.
+
 ### hysteresis.py — is it needed
 
 Derives the requested duty from indoor temperature, season and outdoor window. It
@@ -745,6 +760,11 @@ exception passes through: a pre-conditioning request on which somebody expressly
 it anyway", exactly as that passes the ordinary window gate. Whatever the director leaves
 alone stays left alone: a zone handed over and a hand-operated source get no command and
 therefore never come past here.
+
+Around source selection and the generator commands sits the house-wide rest: once the
+stop has just ended, a start is held for `HOUSE_WIDE_MIN_REST` more with a `Deferral`
+(`SHORT_CYCLE_PROTECTION`), exactly as a circuit does. Only restarts wait, never the stop
+itself.
 
 ### plan.py — output
 
