@@ -15,6 +15,7 @@ from custom_components.climate_director.engine import (
     Reason,
     Season,
     Source,
+    SourceRole,
     Zone,
     hysteresis,
 )
@@ -164,6 +165,72 @@ class TestRefusals:
         zone = zone_with(heat=ModeSettings(21.0, 20.0, outdoor=OutdoorWindow(maximum=19.0)))
         demand = evaluate(zone, 15.0, ModeFamily.NEUTRAL, outdoor=None)
         assert demand.reason is Reason.NO_OUTDOOR_TEMPERATURE
+
+
+class TestAnOutdoorBoundOnlyHoldsBackItsOwnDuty:
+    """Een grens op koelen mag verwarmen niet stilleggen, en omgekeerd.
+
+    An outdoor bound on cooling must not silence heating, and vice versa.
+    """
+
+    @staticmethod
+    def zone_with_bound(bound_on: str) -> Zone:
+        """Return a zone with a heat and a cool source, one of which carries a bound."""
+        heat_outdoor = OutdoorWindow(maximum=19.0) if bound_on == "zone_heat" else OutdoorWindow()
+        cool_outdoor = OutdoorWindow(maximum=19.0) if bound_on == "zone_cool" else OutdoorWindow()
+        heat_source_outdoor = (
+            OutdoorWindow(maximum=19.0) if bound_on == "heat_source" else OutdoorWindow()
+        )
+        cool_source_outdoor = (
+            OutdoorWindow(maximum=19.0) if bound_on == "cool_source" else OutdoorWindow()
+        )
+        return Zone(
+            zone_id="z",
+            name="Z",
+            indoor_sensor="sensor.t",
+            sources=(
+                Source(
+                    "heat_s",
+                    "climate.heat_s",
+                    role=SourceRole.HEAT_ONLY,
+                    outdoor=heat_source_outdoor,
+                ),
+                Source(
+                    "cool_s",
+                    "climate.cool_s",
+                    role=SourceRole.COOL_ONLY,
+                    outdoor=cool_source_outdoor,
+                ),
+            ),
+            heat=ModeSettings(21.0, 20.0, outdoor=heat_outdoor),
+            cool=ModeSettings(23.0, 24.0, outdoor=cool_outdoor),
+        )
+
+    @pytest.mark.parametrize(
+        ("bound_on", "family", "indoor", "refused"),
+        [
+            ("zone_heat", ModeFamily.HEAT, 15.0, True),
+            ("zone_heat", ModeFamily.COOL, 26.0, False),
+            ("zone_cool", ModeFamily.HEAT, 15.0, False),
+            ("zone_cool", ModeFamily.COOL, 26.0, True),
+            ("heat_source", ModeFamily.HEAT, 15.0, True),
+            ("heat_source", ModeFamily.COOL, 26.0, False),
+            ("cool_source", ModeFamily.HEAT, 15.0, False),
+            ("cool_source", ModeFamily.COOL, 26.0, True),
+        ],
+        ids=lambda value: value.value if isinstance(value, ModeFamily) else str(value),
+    )
+    def test_the_bound_only_refuses_its_own_duty(
+        self, bound_on: str, family: ModeFamily, indoor: float, refused: bool
+    ) -> None:
+        zone = self.zone_with_bound(bound_on)
+        world = make_world(indoor={"z": indoor}, outdoor=None)
+        demand = hysteresis._candidate(zone, world, family, indoor, ModeFamily.NEUTRAL)
+        if refused:
+            assert demand.reason is Reason.NO_OUTDOOR_TEMPERATURE
+        else:
+            assert demand.reason is not Reason.NO_OUTDOOR_TEMPERATURE
+            assert demand.family is family
 
 
 class TestOverlappingSetpoints:

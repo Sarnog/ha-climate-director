@@ -234,7 +234,7 @@ def _candidate(
     # without a reading.
     if world.outdoor_temperature is None and (
         not settings.outdoor.unbounded
-        or any(not source.outdoor.unbounded for source in zone.sources)
+        or any(not source.outdoor.unbounded for source in zone.sources if source.supports(family))
     ):
         return Demand(ModeFamily.NEUTRAL, Reason.NO_OUTDOOR_TEMPERATURE)
 
