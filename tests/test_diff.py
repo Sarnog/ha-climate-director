@@ -117,12 +117,56 @@ class TestSomethingToDo:
         plan = plan_of(UnitCommand(LIVING, MODE_HEAT, 23.0))
         first = changes(plan, current)
         assert first[0].set_temperature
-        assert changes(plan, current, previous=plan) == ()
+        assert changes(plan, current, already_sent={LIVING: (MODE_HEAT, 23.0)}) == ()
 
     def test_a_changed_setpoint_is_sent_again_despite_the_missing_reading(self) -> None:
         current = make_world(climates={LIVING: climate(MODE_HEAT, target=None)})
-        previous = plan_of(UnitCommand(LIVING, MODE_HEAT, 23.0))
-        result = changes(plan_of(UnitCommand(LIVING, MODE_HEAT, 22.0)), current, previous=previous)
+        result = changes(
+            plan_of(UnitCommand(LIVING, MODE_HEAT, 22.0)),
+            current,
+            already_sent={LIVING: (MODE_HEAT, 23.0)},
+        )
+        assert result[0].set_temperature
+
+
+class TestAgainstWhatWasReallySent:
+    """`already_sent` betekent uitgevoerd, niet gepland.
+
+    `already_sent` means executed, not planned.
+    """
+
+    def test_without_bookkeeping_the_setpoint_is_offered(self) -> None:
+        """De koppelingslaag vult de boekhouding alleen vanuit `last_applied`;
+        een mislukte aanroep laat haar dus leeg.
+
+        The binding layer fills the bookkeeping only from `last_applied`, so a
+        failed call leaves it empty.
+        """
+        current = make_world(climates={LIVING: climate(MODE_HEAT, target=None)})
+        plan = plan_of(UnitCommand(LIVING, MODE_HEAT, 23.0))
+        first = changes(plan, current)
+        assert first[0].set_temperature
+        assert changes(plan, current, already_sent={}) == first
+
+    def test_an_executed_setpoint_is_not_offered_again(self) -> None:
+        current = make_world(climates={LIVING: climate(MODE_HEAT, target=None)})
+        plan = plan_of(UnitCommand(LIVING, MODE_HEAT, 23.0))
+        assert changes(plan, current, already_sent={LIVING: (MODE_HEAT, 23.0)}) == ()
+
+    def test_the_mode_must_match_too(self) -> None:
+        """Hetzelfde getal in een andere stand is niet hetzelfde setpoint.
+
+        The same number in another mode is not the same setpoint.
+        """
+        current = make_world(climates={LIVING: climate(MODE_HEAT, target=None)})
+        plan = plan_of(UnitCommand(LIVING, MODE_HEAT, 23.0))
+        result = changes(plan, current, already_sent={LIVING: (MODE_COOL, 23.0)})
+        assert result[0].set_temperature
+
+    def test_a_different_setpoint_is_offered_again(self) -> None:
+        current = make_world(climates={LIVING: climate(MODE_HEAT, target=None)})
+        plan = plan_of(UnitCommand(LIVING, MODE_HEAT, 22.0))
+        result = changes(plan, current, already_sent={LIVING: (MODE_HEAT, 23.0)})
         assert result[0].set_temperature
 
 

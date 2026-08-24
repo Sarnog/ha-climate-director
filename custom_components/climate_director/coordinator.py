@@ -336,6 +336,19 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self.last_applied: tuple[Change, ...] = ()
         """What was actually carried out; always empty in shadow mode."""
 
+        self._sent_setpoints: dict[str, tuple[str, float]] = {}
+        """Het laatst werkelijk uitgevoerde `(hvac_mode, temperature)` per apparaat.
+
+        `engine.diff.changes()` gebruikt dit als "al verstuurd" voor een apparaat
+        dat geen setpoint terugmeldt. Alleen wat `apply()` écht heeft uitgevoerd
+        komt erin; een setpoint waarvan de aanroep mislukte dus niet.
+
+        The last really executed `(hvac_mode, temperature)` per appliance.
+        `engine.diff.changes()` uses this as "already sent" for an appliance that
+        reports no setpoint. Only what `apply()` really executed enters it, so a
+        setpoint whose call failed does not.
+        """
+
         self._lock = asyncio.Lock()
         self._closing = False
         """Zodra de installatie afgebroken wordt, mag er niets meer naar buiten.
@@ -919,7 +932,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             # execute. In shadow mode this is exactly "what the director would
             # have done while something else steers the house" - the number the
             # whole shadow phase is about.
-            self.last_changes = changes(plan, world, self.data)
+            self.last_changes = changes(plan, world, self._sent_setpoints)
             self.last_applied = ()
 
             try:
@@ -927,6 +940,12 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             except Exception:  # noqa: BLE001 - one bad call must not stop the loop
                 _LOGGER.exception("Applying the climate plan failed")
             self._note_commanded_off(self.last_applied)
+            for change in self.last_applied:
+                if change.set_temperature and change.command.temperature is not None:
+                    self._sent_setpoints[change.entity_id] = (
+                        change.command.hvac_mode,
+                        change.command.temperature,
+                    )
 
             if self._closing:
                 return

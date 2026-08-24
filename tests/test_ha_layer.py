@@ -664,6 +664,57 @@ class TestTheApplier:
         assert len(stopped_at) <= len(pending)
 
 
+class TestAFailedSetpointComesBack:
+    """Een mislukte `set_temperature` wordt de volgende ronde opnieuw aangeboden.
+
+    A failed `set_temperature` is offered again the next round.
+    """
+
+    async def test_the_retry_runs_until_the_call_lands(self) -> None:
+        from conftest import climate as state
+        from conftest import make_world
+
+        from custom_components.climate_director.engine import Plan
+        from custom_components.climate_director.engine.plan import UnitCommand
+
+        command = UnitCommand(entity_id=LIVING, hvac_mode="heat", temperature=21.0)
+        plan = Plan(commands=(command,))
+        world = make_world(climates={LIVING: state("heat", target=None)})
+        sent: dict[str, tuple[str, float]] = {}
+
+        def remember(executed: tuple) -> None:
+            for change in executed:
+                if change.set_temperature and change.command.temperature is not None:
+                    sent[change.entity_id] = (
+                        change.command.hvac_mode,
+                        change.command.temperature,
+                    )
+
+        # Ronde 1: het setpoint wordt aangeboden, maar de aanroep mislukt.
+        # Round 1: the setpoint is offered, but the call fails.
+        failing = FakeHass(failing={LIVING})
+        first = changes(plan, world, sent)
+        assert first and first[0].set_temperature
+        executed = await apply(failing, first, shadow=False)
+        assert executed == ()
+        remember(executed)
+
+        # Ronde 2: zonder "uitgevoerd" in de boekhouding wordt het opnieuw
+        # aangeboden, en nu komt de aanroep aan.
+        # Round 2: with nothing "executed" in the bookkeeping it is offered
+        # again, and now the call lands.
+        healed = FakeHass()
+        second = changes(plan, world, sent)
+        assert second and second[0].set_temperature
+        executed = await apply(healed, second, shadow=False)
+        assert [change.entity_id for change in executed] == [LIVING]
+        remember(executed)
+
+        # Ronde 3: het setpoint is uitgevoerd, dus er valt niets meer te doen.
+        # Round 3: the setpoint was executed, so nothing remains to do.
+        assert changes(plan, world, sent) == ()
+
+
 # ---------------------------------------------------------------------------
 # Naar buiten: gebeurtenissen.
 # Outward: events.

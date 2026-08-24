@@ -13,6 +13,7 @@ needed depends on two data objects alone, not on Home Assistant.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from .families import MODE_OFF
@@ -38,22 +39,33 @@ class Change:
         return self.command.entity_id
 
 
-def changes(plan: Plan, world: WorldState, previous: Plan | None = None) -> tuple[Change, ...]:
+def changes(
+    plan: Plan,
+    world: WorldState,
+    already_sent: Mapping[str, tuple[str, float]] | None = None,
+) -> tuple[Change, ...]:
     """Return the commands that would actually alter something.
 
     A command matching reality produces nothing, so deciding again without
     anything having moved is free. That is what keeps the director from
     re-issuing the same call on every state change of every tracked entity.
 
-    `previous` is het plan van de vorige ronde. Een apparaat dat geen setpoint
-    terugmeldt, kan zijn huidige setpoint niet laten zien; zonder `previous`
-    zou zo'n setpoint elke ronde opnieuw verstuurd worden. Met `previous` telt
-    het als ongewijzigd zodra ditzelfde setpoint de vorige ronde al bevolen is.
+    `already_sent` is de boekhouding van wat de koppelingslaag werkelijk heeft
+    uitgevoerd: per apparaat het laatst uitgevoerde `(hvac_mode, temperature)`.
+    Een apparaat dat geen setpoint terugmeldt, kan zijn huidige setpoint niet
+    laten zien; zonder deze boekhouding zou zo'n setpoint elke ronde opnieuw
+    verstuurd worden. Met deze boekhouding telt het als ongewijzigd zodra
+    ditzelfde setpoint écht is uitgevoerd. Een setpoint dat alleen in het plan
+    stond maar waarvan de aanroep mislukte, staat er dus niet in: "al
+    verstuurd" betekent uitgevoerd, niet gepland.
 
-    `previous` is the previous round's plan. An appliance that reports no
-    setpoint cannot show its current one; without `previous` such a setpoint
-    would be re-sent every round. With `previous` it counts as unchanged once
-    this same setpoint was already commanded last round.
+    `already_sent` is the binding layer's bookkeeping of what was really
+    executed: per appliance the last executed `(hvac_mode, temperature)`. An
+    appliance that reports no setpoint cannot show its current one; without
+    this bookkeeping such a setpoint would be re-sent every round. With it the
+    setpoint counts as unchanged once this same setpoint was really executed.
+    A setpoint that only stood in the plan but whose call failed is therefore
+    absent: "already sent" means executed, not planned.
     """
     result: list[Change] = []
 
@@ -70,7 +82,7 @@ def changes(plan: Plan, world: WorldState, previous: Plan | None = None) -> tupl
         set_temperature = wants_temperature and not _close(
             state.target_temperature,
             command.temperature,
-            already_sent=_already_sent(previous, command),
+            already_sent=_already_sent(already_sent, command),
         )
 
         if set_mode or set_temperature:
@@ -79,16 +91,16 @@ def changes(plan: Plan, world: WorldState, previous: Plan | None = None) -> tupl
     return tuple(result)
 
 
-def _already_sent(previous: Plan | None, command: UnitCommand) -> bool:
-    """Return whether the previous plan already commanded this exact state."""
-    if previous is None:
+def _already_sent(
+    already_sent: Mapping[str, tuple[str, float]] | None, command: UnitCommand
+) -> bool:
+    """Return whether this exact state was really executed before."""
+    if already_sent is None:
         return False
-    return any(
-        old.entity_id == command.entity_id
-        and old.hvac_mode == command.hvac_mode
-        and old.temperature == command.temperature
-        for old in previous.commands
-    )
+    sent = already_sent.get(command.entity_id)
+    if sent is None:
+        return False
+    return sent[0] == command.hvac_mode and sent[1] == command.temperature
 
 
 def _close(current: float | None, wanted: float | None, *, already_sent: bool = False) -> bool:
