@@ -425,12 +425,31 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             # behaviour change, not a repair.
             self._installation["outdoor_sensor"] = user_input.get("outdoor_sensor", "")
             self._installation["heating_layout"] = user_input["heating_layout"]
+            # Een handmatige zomermaandenlijst is een bewuste keuze; het
+            # halfrond-veld is alleen de snelle manier om een van de twee
+            # standaardlijsten te kiezen. Wijst de opgeslagen lijst af van
+            # beide standaarden, dan blijft hij staan; anders volgt hij het
+            # halfrond zoals altijd.
+            #
+            # A hand-picked summer-months list is a deliberate choice; the
+            # hemisphere field is only the quick way to pick one of the two
+            # default lists. If the stored list differs from both defaults it
+            # stays; otherwise it follows the hemisphere as ever.
+            stored_seasons = self._installation.get("seasons") or {}
+            stored_months = stored_seasons.get("summer_months")
+            if stored_months and frozenset(int(month) for month in stored_months) not in (
+                _SUMMER_NORTH,
+                _SUMMER_SOUTH,
+            ):
+                summer_months = sorted(int(month) for month in stored_months)
+            else:
+                summer_months = sorted(
+                    _SUMMER_SOUTH if user_input["hemisphere"] == "south" else _SUMMER_NORTH
+                )
             self._installation["seasons"] = {
                 "source": user_input["season_source"],
                 "entity_id": user_input.get("season_entity", ""),
-                "summer_months": sorted(
-                    _SUMMER_SOUTH if user_input["hemisphere"] == "south" else _SUMMER_NORTH
-                ),
+                "summer_months": summer_months,
             }
             # `gates` wordt bewust bijgewerkt in plaats van vervangen: het
             # stiltevensterscherm schrijft in dezelfde sleutel (`quiet_windows`),

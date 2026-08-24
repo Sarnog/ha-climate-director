@@ -816,6 +816,26 @@ class TestEveryScreenSurvivesItsNeighbour:
         finally:
             await stop_house(home)
 
+    async def test_a_hand_picked_summer_list_survives_a_settings_save(self) -> None:
+        """Een handmatige zomermaandenlijst overleeft het instellingenscherm.
+
+        A hand-picked summer-months list survives the settings screen.
+        """
+        data = two_rooms()
+        data["seasons"] = {"source": "auto", "summer_months": [4, 5, 6, 7, 8, 9, 10]}
+        home = await start_house(data, states=cold())
+        try:
+            flow = home.hass.config_entries.options
+            result = await menu(home, "settings")
+            assert result["step_id"] == "settings"
+
+            result = await flow.async_configure(result["flow_id"], {"when_done": "keep"})
+            stored = await save(home, result["flow_id"])
+
+            assert stored["seasons"]["summer_months"] == [4, 5, 6, 7, 8, 9, 10]
+        finally:
+            await stop_house(home)
+
     async def _fill_zone(self, flow: Any, flow_id: str) -> dict[str, Any]:
         result = await flow.async_configure(flow_id, {"zone": "add_new"})
         assert result["step_id"] == "zone"
