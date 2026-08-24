@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry
-from .engine import ModeFamily, Reason
+from .engine import DirectorConfig, ModeFamily, Reason
 from .engine.families import MODE_FAN_ONLY, MODE_OFF, preferred_mode
 from .entity import ClimateDirectorEntity
 
@@ -97,6 +97,18 @@ async def async_setup_entry(
     steered.extend(item.entity_id for item in coordinator.config.generators if item.entity_id)
     entities.extend(CommandSensor(coordinator, entity_id) for entity_id in dict.fromkeys(steered))
     async_add_entities(entities)
+
+
+def wanted_entity_keys(config: DirectorConfig) -> set[str]:
+    """Return every unique-id key this platform will create for `config`."""
+    steered = [source.entity_id for _, source in config.sources() if source.entity_id]
+    steered.extend(item.entity_id for item in config.generators if item.entity_id)
+    return {
+        "last_decision",
+        "mismatch",
+        *(f"zone_{zone.zone_id}_source" for zone in config.zones),
+        *(f"command_{entity_id}" for entity_id in dict.fromkeys(steered)),
+    }
 
 
 class DecisionSensor(ClimateDirectorEntity, SensorEntity):

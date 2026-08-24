@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry
+from .engine import DirectorConfig
 from .entity import ClimateDirectorEntity
 
 
@@ -32,6 +33,15 @@ async def async_setup_entry(
         entities.append(ZoneFallbackSensor(coordinator, zone.zone_id))
     entities.append(StuckSensor(coordinator))
     async_add_entities(entities)
+
+
+def wanted_entity_keys(config: DirectorConfig) -> set[str]:
+    """Return every unique-id key this platform will create for `config`."""
+    return {
+        "stuck",
+        *(f"zone_{zone.zone_id}_blocked" for zone in config.zones),
+        *(f"zone_{zone.zone_id}_fallback" for zone in config.zones),
+    }
 
 
 class ZoneBlockedSensor(ClimateDirectorEntity, BinarySensorEntity):

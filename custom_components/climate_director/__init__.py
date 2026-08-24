@@ -24,7 +24,28 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.loader import async_get_integration
 
-from . import problems, texts
+from . import (
+    binary_sensor as binary_sensor_platform,
+)
+from . import (
+    button as button_platform,
+)
+from . import (
+    number as number_platform,
+)
+from . import (
+    problems,
+    texts,
+)
+from . import (
+    select as select_platform,
+)
+from . import (
+    sensor as sensor_platform,
+)
+from . import (
+    switch as switch_platform,
+)
 from .const import (
     ATTR_ENTRY_ID,
     ATTR_IGNORE_OPENINGS,
@@ -39,6 +60,7 @@ from .const import (
     STORAGE_VERSION,
 )
 from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry, storage_key
+from .engine import DirectorConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) ->
     )
 
     _async_register_services(hass)
-    _async_remove_stale_zone_entities(hass, entry)
+    _async_remove_stale_entities(hass, entry)
 
     # De platforms gaan eerst omhoog, zodat de schakelaars hun bewaarde stand
     # al hersteld hebben voordat er voor het eerst besloten wordt. Anders zou
@@ -127,50 +149,58 @@ def _async_watch_for_listeners(hass: HomeAssistant, entry: ClimateDirectorEntry)
     entry.async_on_unload(hass.bus.async_listen(EVENT_AUTOMATION_RELOADED, _recheck))
 
 
-#: De zes zone-entiteiten, elk met het zone-id in hun sleutel.
-#:
-#: The six zone entities, each with the zone id in their key.
-_ZONE_ENTITY_SUFFIXES = (
-    "_override",
-    "_priority",
-    "_precondition",
-    "_source",
-    "_blocked",
-    "_fallback",
-)
+def _wanted_entity_keys(config: DirectorConfig) -> set[str]:
+    """Return every unique-id key the platforms will create for `config`.
+
+    Opgebouwd uit de platforms zelf, niet uit een lijstje achtervoegsels: komt
+    er een entiteit bij of vervalt er een, dan verandert deze verzameling mee
+    in plaats van stilletjes achter te lopen.
+
+    Built from the platforms themselves rather than from a list of suffixes:
+    when an entity is added or dropped this set moves with it instead of
+    quietly falling behind.
+    """
+    keys: set[str] = set()
+    for builder in (
+        binary_sensor_platform.wanted_entity_keys,
+        button_platform.wanted_entity_keys,
+        number_platform.wanted_entity_keys,
+        select_platform.wanted_entity_keys,
+        sensor_platform.wanted_entity_keys,
+        switch_platform.wanted_entity_keys,
+    ):
+        keys.update(builder(config))
+    return keys
 
 
 @callback
-def _async_remove_stale_zone_entities(hass: HomeAssistant, entry: ClimateDirectorEntry) -> None:
-    """Remove zone entities whose zone no longer exists.
+def _async_remove_stale_entities(hass: HomeAssistant, entry: ClimateDirectorEntry) -> None:
+    """Remove entities of this entry whose key the platforms no longer create.
 
-    Een verwijderde zone verdwijnt uit de configuratie, maar zijn zes
-    entiteiten blijven in het entiteitenregister staan als `unavailable`, en
-    die komen nooit meer vanzelf weg. Ze hangen allemaal aan het ene apparaat
-    van de installatie, dus `async_remove_config_entry_device` kan hier niets:
-    opruimen op basis van de sleutel is de enige weg. Dit gebeurt bij het
-    opzetten, zodat een herstart of herlaadbeurt ze opruimt voordat de
-    platforms de zones van nu opnieuw aanmaken.
+    Een verwijderde zone of een verwijderd apparaat verdwijnt uit de
+    configuratie, maar zijn entiteiten blijven in het entiteitenregister staan
+    als `unavailable`, en die komen nooit meer vanzelf weg. Ze hangen allemaal
+    aan het ene apparaat van de installatie, dus
+    `async_remove_config_entry_device` kan hier niets: opruimen op basis van de
+    sleutel is de enige weg. Dit gebeurt bij het opzetten, zodat een herstart
+    of herlaadbeurt ze opruimt voordat de platforms de entiteiten van nu
+    opnieuw aanmaken.
 
-    A removed zone disappears from the configuration, but its six entities
-    stay in the entity registry as `unavailable`, and they never go away by
-    themselves. They all hang off the installation's single device, so
-    `async_remove_config_entry_device` cannot help here: cleaning by key is the
-    only way. This runs at setup, so a restart or reload clears them before
-    the platforms re-create today's zones.
+    A removed zone or a removed appliance disappears from the configuration,
+    but its entities stay in the entity registry as `unavailable`, and they
+    never go away by themselves. They all hang off the installation's single
+    device, so `async_remove_config_entry_device` cannot help here: cleaning by
+    key is the only way. This runs at setup, so a restart or reload clears them
+    before the platforms re-create today's entities.
     """
     registry = er.async_get(hass)
-    wanted = {
-        f"{entry.entry_id}_zone_{zone.zone_id}{suffix}"
-        for zone in entry.runtime_data.config.zones
-        for suffix in _ZONE_ENTITY_SUFFIXES
-    }
-    prefix = f"{entry.entry_id}_zone_"
+    wanted = _wanted_entity_keys(entry.runtime_data.config)
+    prefix = f"{entry.entry_id}_"
     for entity in list(registry.entities.values()):
         if (
             entity.config_entry_id == entry.entry_id
             and entity.unique_id.startswith(prefix)
-            and entity.unique_id not in wanted
+            and entity.unique_id[len(prefix) :] not in wanted
         ):
             registry.async_remove(entity.entity_id)
 

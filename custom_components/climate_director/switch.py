@@ -21,6 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry
+from .engine import DirectorConfig
 from .entity import ClimateDirectorEntity
 
 
@@ -40,6 +41,16 @@ async def async_setup_entry(
         ZoneOverrideSwitch(coordinator, zone.zone_id) for zone in coordinator.config.zones
     )
     async_add_entities(entities)
+
+
+def wanted_entity_keys(config: DirectorConfig) -> set[str]:
+    """Return every unique-id key this platform will create for `config`."""
+    return {
+        "master",
+        "holiday",
+        "guest",
+        *(f"zone_{zone.zone_id}_override" for zone in config.zones),
+    }
 
 
 class _DirectorSwitch(ClimateDirectorEntity, SwitchEntity, RestoreEntity):

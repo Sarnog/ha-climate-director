@@ -28,6 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry
+from .engine import DirectorConfig
 from .entity import ClimateDirectorEntity
 
 
@@ -41,6 +42,11 @@ async def async_setup_entry(
     async_add_entities(
         ZonePreconditionButton(coordinator, zone.zone_id) for zone in coordinator.config.zones
     )
+
+
+def wanted_entity_keys(config: DirectorConfig) -> set[str]:
+    """Return every unique-id key this platform will create for `config`."""
+    return {f"zone_{zone.zone_id}_precondition" for zone in config.zones}
 
 
 class ZonePreconditionButton(ClimateDirectorEntity, ButtonEntity):

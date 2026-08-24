@@ -203,6 +203,41 @@ class TestSettingUp:
             assert f"zone_zolder{suffix}" not in after, suffix
         assert "zone_woonkamer_blocked" in after
 
+    async def test_a_removed_appliance_leaves_no_command_sensor_behind(self) -> None:
+        """Een verwijderde bron of gedeelde warmtebron ruimt zijn commando-sensor op.
+
+        A removed source or shared heat source clears its command sensor away.
+        """
+        from custom_components.climate_director.const import CONF_INSTALLATION
+
+        live = await start_house(
+            installation(generators=[{"generator_id": "cv", "name": "CV", "entity_id": BOILER}]),
+            states={**cold_world(), BOILER: ("off", {"temperature": 19.0})},
+        )
+        try:
+            before = live.registered()
+            assert f"command_{SPARE}" in before
+            assert f"command_{BOILER}" in before
+
+            options = dict(live.entry.options)
+            data = dict(options[CONF_INSTALLATION])
+            data["zones"] = [
+                {**data["zones"][0], "sources": [data["zones"][0]["sources"][0]]},
+                data["zones"][1],
+            ]
+            data["generators"] = []
+            options[CONF_INSTALLATION] = data
+            live.hass.config_entries.async_update_entry(live.entry, options=options)
+            assert await live.hass.config_entries.async_reload(live.entry.entry_id)
+            await live.hass.async_block_till_done()
+
+            after = live.registered()
+            assert f"command_{SPARE}" not in after
+            assert f"command_{BOILER}" not in after
+            assert f"command_{LIVING}" in after
+        finally:
+            await stop_house(live)
+
     async def test_a_refusing_platform_still_stops_the_coordinator(
         self, home: LiveHome, monkeypatch: pytest.MonkeyPatch
     ) -> None:

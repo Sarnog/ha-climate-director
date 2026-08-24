@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry
-from .engine import Season
+from .engine import DirectorConfig, Season
 from .entity import ClimateDirectorEntity
 
 OPTIONS = ("auto", "summer", "winter")
@@ -37,6 +37,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the season select for one installation."""
     async_add_entities([SeasonSelect(entry.runtime_data)])
+
+
+def wanted_entity_keys(config: DirectorConfig) -> set[str]:
+    """Return every unique-id key this platform will create for `config`."""
+    return {"season"}
 
 
 class SeasonSelect(ClimateDirectorEntity, SelectEntity, RestoreEntity):

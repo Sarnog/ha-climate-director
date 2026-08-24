@@ -31,6 +31,7 @@ from .const import (
     MIN_PRECONDITION_MINUTES,
 )
 from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry
+from .engine import DirectorConfig
 from .entity import ClimateDirectorEntity
 
 #: Bewaard naast de stand, zodat een latere wijziging in de configuratie te
@@ -89,6 +90,14 @@ async def async_setup_entry(
     ]
     entities.append(PreconditionMinutesNumber(coordinator))
     async_add_entities(entities)
+
+
+def wanted_entity_keys(config: DirectorConfig) -> set[str]:
+    """Return every unique-id key this platform will create for `config`."""
+    return {
+        "precondition_minutes",
+        *(f"zone_{zone.zone_id}_priority" for zone in config.zones),
+    }
 
 
 class ZonePriorityNumber(ClimateDirectorEntity, NumberEntity, RestoreEntity):
