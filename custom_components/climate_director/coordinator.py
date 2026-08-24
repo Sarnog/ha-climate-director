@@ -627,6 +627,15 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 self._async_save_state()
             return
 
+        # Ook een hand die het apparaat uitzet verbruikt het setpoint: bij de
+        # volgende start hoort het opnieuw mee te gaan, want niemand weet wat
+        # het apparaat in de tussentijd met zijn eigen setpoint deed.
+        #
+        # A hand switching the appliance off spends the setpoint too: the next
+        # start must carry it again, since nobody knows what the appliance did
+        # with its own setpoint in the meantime.
+        self._sent_setpoints.pop(entity_id, None)
+
         # Alleen als wíj hem niet net hebben uitgezet. Ons eigen commando is
         # geen handmatige ingreep, en zou de zone anders permanent stilleggen.
         #
@@ -704,6 +713,16 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         for change in applied:
             if family_of(change.command.hvac_mode) is not ModeFamily.NEUTRAL:
                 continue
+            # Het apparaat gaat uit: een setpoint dat bij het uitzetten vergeten
+            # wordt (of met de hand verzet) hoort bij de volgende start gewoon
+            # opnieuw te gaan. Anders bleef "al verstuurd" eeuwig staan en kwam
+            # het setpoint nooit meer mee.
+            #
+            # The appliance is going off: a setpoint forgotten on the way out
+            # (or moved by hand) must simply be sent again at the next start.
+            # Otherwise "already sent" stood forever and the setpoint never
+            # came along again.
+            self._sent_setpoints.pop(change.entity_id, None)
             reported = self.hass.states.get(change.entity_id)
             if (
                 reported is not None

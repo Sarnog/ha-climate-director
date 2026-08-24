@@ -156,6 +156,7 @@ def coordinator(
             self.zone_overrides: dict[str, bool] = {}
             self._handed_back: dict[str, date] = {}
             self._commanded_off: dict[str, datetime] = {}
+            self._sent_setpoints: dict[str, tuple[str, float]] = {}
             # `data` is het gepubliceerde besluit, `_issued` het besluit dat op
             # tafel ligt. Tijdens het uitvoeren zijn dat er twee; hier gaat het
             # om het plan dat de director net gaf, dus staan ze gelijk.

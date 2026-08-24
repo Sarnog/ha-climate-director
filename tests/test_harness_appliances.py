@@ -123,6 +123,35 @@ async def test_the_no_temperature_kind_reports_no_setpoint_back() -> None:
         await stop_house(home)
 
 
+async def test_the_setpoint_comes_along_again_after_the_appliance_was_off() -> None:
+    """M1: een uit-cyclus maakt de "al verstuurd"-notitie ongedaan.
+
+    The M1 fix: an off cycle undoes the "already sent" note, so a
+    `no_temperature` appliance gets its setpoint again after it was off.
+    """
+    home = await start_house(installation(), states=cold(), appliance="no_temperature")
+    try:
+        await home.evaluate()
+        first = [call for call in home.climate_calls() if call[0] == "set_temperature"]
+        assert first, "ronde 1 stuurde geen setpoint"
+
+        home.set("sensor.woonkamer", "22.0")
+        await home.settle()
+        await home.evaluate()
+        assert home.state(LIVING) == "off"
+
+        home.clear_calls()
+        home.set("sensor.woonkamer", "15.0")
+        await home.settle()
+        await home.evaluate()
+
+        assert home.state(LIVING) == "heat"
+        again = [call for call in home.climate_calls() if call[0] == "set_temperature"]
+        assert again, f"het setpoint werd nooit opnieuw verstuurd: {home.climate_calls()}"
+    finally:
+        await stop_house(home)
+
+
 async def test_the_late_reporter_kind_lands_every_report_one_round_late() -> None:
     """Zoals melcloud: elke stand komt pas een poll later aan.
 
