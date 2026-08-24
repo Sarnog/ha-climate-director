@@ -426,6 +426,29 @@ class TestUnloadingDuringARunningRound:
             with contextlib.suppress(Exception):
                 await stop_house(live)
 
+    async def test_a_pending_store_save_does_not_resurrect_a_removed_file(self) -> None:
+        """P1: een uitgestelde opslag mag een verwijderd bestand niet terugschrijven.
+
+        P1: a delayed store write must not resurrect a removed file.
+        """
+        from homeassistant.helpers.storage import Store
+
+        from custom_components.climate_director.const import STORAGE_VERSION
+        from custom_components.climate_director.coordinator import storage_key
+
+        live = await start_house(installation(), states=self._warm_house())
+        try:
+            store = Store(live.hass, STORAGE_VERSION, storage_key(live.entry.entry_id))
+            live.coordinator._async_save_state()
+            await live.coordinator.async_shutdown()
+
+            await store.async_remove()
+            await asyncio.sleep(1.1)
+            await live.hass.async_block_till_done()
+            assert await store.async_load() is None
+        finally:
+            await stop_house(live)
+
     async def test_reload_does_not_let_the_old_plan_land_after_the_new_one(self) -> None:
         import contextlib
 

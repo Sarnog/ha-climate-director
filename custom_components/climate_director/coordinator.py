@@ -933,6 +933,20 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self._cancel_clock_reeval()
         self._cancel_pending_precondition_wake()
         self._debouncer.async_shutdown()
+        # Een uitgestelde opslag kan nog uitstaan: de store schrijft één seconde
+        # na de laatste wijziging. Bij een herlaadbeurt is dat geen bezwaar, maar
+        # bij een verwijdering zou die schrijfactie het bestand terugschrijven ná
+        # `async_remove_entry`. Daarom hier zelf wegschrijven en de uitgestelde
+        # schrijfactie afbreken, zodat het bestand na een verwijdering echt weg
+        # blijft.
+        #
+        # A delayed store write may still be pending: the store writes one second
+        # after the last change. On a reload that is fine, but on a removal that
+        # write would resurrect the file after `async_remove_entry`. So write it
+        # away here and cancel the delayed write, so the file really stays gone
+        # after a removal.
+        await self._store.async_save(self._store_payload())
+        self._store._async_cleanup_delay_listener()  # noqa: SLF001 - HA's Store has no public cancel
         await super().async_shutdown()
 
     # -- beslissen / deciding ------------------------------------------------
@@ -1102,6 +1116,14 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
 
     # -- met de hand gegeven, dus bewaren / given by hand, so kept ----------
 
+    def _store_payload(self) -> dict[str, Any]:
+        """Return the hand-given state worth keeping across a restart."""
+        return {
+            "until": {zone_id: until.isoformat() for zone_id, until in self._precondition.items()},
+            "bypass": sorted(self._precondition_bypass),
+            "handed_back": {zone_id: day.isoformat() for zone_id, day in self._handed_back.items()},
+        }
+
     @callback
     def _async_save_state(self) -> None:
         """Write away wat een mens met de hand heeft gezegd.
@@ -1140,18 +1162,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         second costs an appliance one extra pause at worst. Both temporary, and
         both on the safe side.
         """
-        self._store.async_delay_save(
-            lambda: {
-                "until": {
-                    zone_id: until.isoformat() for zone_id, until in self._precondition.items()
-                },
-                "bypass": sorted(self._precondition_bypass),
-                "handed_back": {
-                    zone_id: day.isoformat() for zone_id, day in self._handed_back.items()
-                },
-            },
-            1,
-        )
+        self._store.async_delay_save(self._store_payload, 1)
 
     async def _async_restore_state(self) -> None:
         """Read back what was standing before the restart.
