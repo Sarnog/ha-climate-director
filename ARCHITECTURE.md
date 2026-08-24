@@ -5,6 +5,43 @@
 Technisch ontwerpdocument voor wie aan de code werkt (geen gebruikershandleiding —
 dat is [`README.md`](README.md)). Elke laag heeft precies één verantwoordelijkheid.
 
+### De ankers — lees dit eerst
+
+Een uitspraak in deze engine hangt altijd aan één ding, en welk ding dat is, is
+een ontwerpbesluit. Waar dat besluit niet opgeschreven stond, is het in vier
+achtereenvolgende reparatierondes telkens één stap opgeschoven — smal, dan te
+breed, dan weer terug. Deze zes ankers staan daarom hier, vóór alle modules.
+Wijk er niet van af zonder ze hier eerst te wijzigen.
+
+1. **Een lopend vooruit-verzoek** is één begrip in de hele engine:
+   `world.preconditioning(zone_id)`. Het passeert álles behalve de
+   hoofdschakelaar, een override, en een openstaande opening waarvoor niemand
+   "toch doen" heeft gezegd. Er is geen tijdvenster: een handmatig verzoek gaat
+   altijd boven de automatisering, ongeacht het uur, voor de volledige
+   `max_precondition`. De begrenzing is de looptijd van het verzoek zelf plus de
+   bevestiging bij een openstaande deur — hetzelfde principe als: wie laat
+   opblijft, houdt zijn verwarming.
+2. **Een onleesbare buitentemperatuur** weigert een taak alleen als díe taak zelf
+   een begrensd venster moet passeren — op de zone, of op een bron die deze taak
+   kan leveren. Vensters van bronnen die de taak niet leveren tellen niet mee:
+   dan valt er wél iets te kiezen.
+3. **"Al verstuurd"** betekent: deze exacte `(stand, setpoint)` is werkelijk
+   uitgevoerd én er is sindsdien geen uit-commando geweest. Een uit-commando wist
+   de notitie, want een apparaat dat uitgaat mag zijn setpoint vergeten.
+4. **Een uit-commando verklaart precies één waarneming.** De notitie vervalt
+   zodra die waarneming binnen is, zodra het apparaat op eigen kracht weer een
+   actieve stand meldt, of na het venster. De klok is het vangnet, niet het anker.
+5. **De openingsrust hangt aan het apparaat**, niet aan de reden van het vorige
+   commando: een collapse kan die reden overschrijven. Hij staat in
+   `Plan.stopped_by_opening` en `Plan.opening_rest_until`, geldt voor élk
+   apparaat zonder circuit dat werkelijk draaide toen de stop kwam — een gedeelde
+   warmtebron inbegrepen — en is een vaste `OPENING_MIN_REST` van drie minuten.
+   Bewust geen instelling: één knop minder om verkeerd te zetten, en drie minuten
+   is veilig voor elke brander.
+6. **De hoofdschakelaar uit** betekent: de director laat alles los en stuurt
+   niets, ook geen `off` — net als een override. Wie alles uit wil, zet het zelf
+   uit; de director laat het dan staan.
+
 ### De belangrijkste scheidslijn
 
 Het project bestaat uit twee helften met een harde grens ertussen:
@@ -535,6 +572,42 @@ Assistant te maken heeft hoort per definitie in `engine/`, met tests ernaast.
 
 Technical design document for anyone working on the code (not a user manual —
 that is [`README.md`](README.md)). Each layer has exactly one responsibility.
+
+### The anchors — read this first
+
+A statement in this engine always hangs on one thing, and which thing that is, is
+a design decision. Wherever that decision was not written down, it shifted by one
+step in four successive repair rounds — narrow, then too broad, then back again.
+These six anchors therefore sit here, ahead of every module. Do not depart from
+them without changing them here first.
+
+1. **A running pre-conditioning request** is one concept throughout the engine:
+   `world.preconditioning(zone_id)`. It passes everything except the master
+   switch, an override, and an opening standing open that nobody said "do it
+   anyway" to. There is no time window: a hand-given request always outranks the
+   automation, whatever the hour, for the full `max_precondition`. The bounds are
+   the request's own expiry plus the confirmation on an open door — the same
+   principle as: whoever stays up late keeps their heating.
+2. **An unreadable outdoor temperature** refuses a duty only when that duty
+   itself has to pass a bounded window — on the zone, or on a source able to
+   deliver this duty. Windows of sources that do not deliver the duty do not
+   count: there is something to choose then.
+3. **"Already sent"** means: this exact `(mode, setpoint)` really was executed and
+   there has been no off command since. An off command clears the note, since an
+   appliance that switches off may forget its setpoint.
+4. **An off command explains exactly one observation.** The note lapses once that
+   observation arrives, once the appliance reports an active mode on its own
+   again, or after the window. The clock is the safety net, not the anchor.
+5. **The opening rest hangs on the appliance**, not on the previous command's
+   reason: a collapse can overwrite that reason. It lives in
+   `Plan.stopped_by_opening` and `Plan.opening_rest_until`, applies to every
+   appliance without a circuit that really was running when the stop came — a
+   shared heat source included — and is a fixed `OPENING_MIN_REST` of three
+   minutes. Deliberately not a setting: one knob fewer to get wrong, and three
+   minutes is safe for any burner.
+6. **The master switch off** means: the director lets go of everything and issues
+   nothing, an `off` included — just like an override. Whoever wants everything
+   off switches it off themselves; the director then leaves it be.
 
 ### The most important dividing line
 
