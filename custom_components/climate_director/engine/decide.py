@@ -13,6 +13,8 @@ detection after the fact - it simply never comes out.
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from . import constraints, gates, hysteresis, sources
 from .families import (
     MODE_FAN_ONLY,
@@ -63,8 +65,11 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
     reasons = _zone_reasons(config, grants, dropped, refusals)
 
     families = {decision.circuit_id: decision.family for decision in circuit_decisions}
-    commands, untouched, generator_deferrals = _build_commands(
+    commands, untouched, generator_deferrals, stopped_now = _build_commands(
         config, world, grants, reasons, wishes, families, blocked, previous
+    )
+    stopped_by_opening, opening_rest_until = _opening_rest_bookkeeping(
+        config, world, previous, commands, stopped_now, rest_deferrals, generator_deferrals
     )
     return Plan(
         commands=commands,
@@ -74,6 +79,8 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
         circuits=circuit_decisions,
         deferrals=(*deferrals, *rest_deferrals, *generator_deferrals),
         untouched=untouched,
+        stopped_by_opening=stopped_by_opening,
+        opening_rest_until=opening_rest_until,
     )
 
 
@@ -608,7 +615,12 @@ def _build_commands(
     families: dict[str, ModeFamily],
     blocked: frozenset[str] = frozenset(),
     previous: Plan | None = None,
-) -> tuple[tuple[UnitCommand, ...], tuple[UntouchedSource, ...], tuple[Deferral, ...]]:
+) -> tuple[
+    tuple[UnitCommand, ...],
+    tuple[UntouchedSource, ...],
+    tuple[Deferral, ...],
+    frozenset[str],
+]:
     """Return the end state for every managed climate entity, and what is left alone.
 
     Sources that were not chosen are commanded off explicitly rather than left
@@ -730,8 +742,24 @@ def _build_commands(
     )
     commands.extend(generator_commands)
     untouched.extend(generator_untouched)
+    pre_collapse = list(commands)
     commands = _collapse_shared(config, world, commands)
     commands = _stop_blocked(config, world, grants, blocked, commands)
+    # De openingsstop hangt aan het apparaat, niet aan de reden die de collapse
+    # overleefde. Bij een gedeelde ketel wint de reden van de zone met de meeste
+    # voorrang, en dat is niet altijd de opening; de pre-collapse-opdrachten
+    # weten nog wél welke apparaten erdoor stilgezet werden.
+    #
+    # The opening stop hangs on the appliance, not on the reason that survived
+    # the collapse. On a shared boiler the reason of the highest-priority zone
+    # wins, and that is not always the opening; the pre-collapse commands still
+    # know which appliances it stopped.
+    stopped_now = frozenset(
+        command.entity_id
+        for command in (*pre_collapse, *commands)
+        if command.reason in (Reason.OPENING_OPEN, Reason.OPENING_OPEN_ELSEWHERE)
+        and command.hvac_mode == MODE_OFF
+    )
 
     # Een gedeeld apparaat staat onder meerdere zones. Krijgt het via één zone
     # toch een opdracht, dan wordt het niet met rust gelaten - hoe de andere
@@ -749,7 +777,70 @@ def _build_commands(
     # one before the old has let go would put two duties on one compressor for
     # as long as the calls take to land.
     ordered = tuple(sorted(commands, key=lambda command: _command_order(config, command)))
-    return ordered, left_alone, generator_deferrals
+    return ordered, left_alone, generator_deferrals, stopped_now
+
+
+def _opening_rest_bookkeeping(
+    config: DirectorConfig,
+    world: WorldState,
+    previous: Plan | None,
+    commands: tuple[UnitCommand, ...],
+    stopped_now: frozenset[str],
+    rest_deferrals: tuple[Deferral, ...],
+    generator_deferrals: tuple[Deferral, ...],
+) -> tuple[frozenset[str], dict[str, datetime]]:
+    """Return this plan's per-appliance opening-rest bookkeeping.
+
+    De rust hangt aan het apparaat, niet aan de reden van het vorige commando.
+    `stopped_by_opening` noemt de apparaten die deze ronde door een opening
+    zijn stilgezet; `opening_rest_until` draagt de eindtijden van al lopende
+    rusten mee zolang het apparaat niet draait. Zo overleeft de rust een
+    collapse die een andere reden liet winnen én een tussenronde waarin het
+    apparaat om een andere reden uit stond.
+
+    The rest hangs on the appliance, not on the previous command's reason.
+    `stopped_by_opening` names the appliances an opening stopped this round;
+    `opening_rest_until` carries the deadlines of already running rests while
+    the appliance stays off. That way the rest survives a collapse that let
+    another reason win, and an intermediate round in which the appliance stood
+    off for another reason.
+    """
+    if previous is None:
+        return stopped_now, dict(
+            (deferral.subject, deferral.until)
+            for deferral in (*rest_deferrals, *generator_deferrals)
+            if deferral.reason is Reason.SHORT_CYCLE_PROTECTION
+        )
+
+    commanded_running = {
+        command.entity_id
+        for command in commands
+        if command.hvac_mode not in (MODE_OFF, MODE_FAN_ONLY)
+    }
+    commanded = {command.entity_id for command in commands}
+    carried_stopped = set(previous.stopped_by_opening)
+    carried_until = dict(previous.opening_rest_until)
+    dropped = {
+        entity
+        for entity in (*carried_stopped, *carried_until)
+        if entity in commanded_running
+        or (entity not in commanded and world.climate(entity).running)
+    }
+
+    fresh_until = {
+        deferral.subject: deferral.until
+        for deferral in (*rest_deferrals, *generator_deferrals)
+        if deferral.reason is Reason.SHORT_CYCLE_PROTECTION
+    }
+    opening_rest_until = {
+        entity: until for entity, until in carried_until.items() if entity not in dropped
+    }
+    opening_rest_until.update(fresh_until)
+    stopped_by_opening = frozenset(
+        ({entity for entity in carried_stopped if entity not in dropped} | set(stopped_now))
+        - set(fresh_until)
+    )
+    return stopped_by_opening, opening_rest_until
 
 
 def _stop_blocked(

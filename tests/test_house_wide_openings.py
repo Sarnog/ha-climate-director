@@ -677,3 +677,90 @@ def test_a_zone_door_stop_rests_a_circuit_less_boiler_too() -> None:
     resumed_command = command_for(resumed, GAS)
     assert resumed_command is not None
     assert resumed_command.hvac_mode == "heat"
+
+
+BEDROOM_WINDOW = "binary_sensor.slaapkamerraam"
+
+
+def central_boiler(living_priority: int, bedroom_priority: int) -> DirectorConfig:
+    """Return one boiler under two rooms; the window belongs to the bedroom only.
+
+    De woonkamer ligt in de dode band, dus die levert `within_deadband`. Staat
+    het slaapkamerraam open, dan levert de slaapkamer `opening_open`; de
+    collapse kiest de reden van de zone met de meeste voorrang, en met de
+    woonkamer op voorrang 0 overleeft `within_deadband` — precies waar H3 de
+    openingsrust verliest.
+
+    The living room sits inside its dead band, so it delivers `within_deadband`.
+    With the bedroom window open, the bedroom delivers `opening_open`; the
+    collapse keeps the reason of the highest-priority zone, and with the living
+    room on priority 0 `within_deadband` survives — exactly where H3 loses the
+    opening rest.
+    """
+    heat = ModeSettings(target=21.0, start_at=20.0, hysteresis=1.0)
+    return DirectorConfig(
+        zones=(
+            Zone(
+                zone_id="woonkamer",
+                name="Woonkamer",
+                indoor_sensor="sensor.woonkamer",
+                priority=living_priority,
+                sources=(Source(source_id="wk", entity_id=GAS, role=SourceRole.HEAT_ONLY),),
+                heat=heat,
+            ),
+            Zone(
+                zone_id="slaapkamer",
+                name="Slaapkamer",
+                indoor_sensor="sensor.slaapkamer",
+                priority=bedroom_priority,
+                sources=(Source(source_id="sk", entity_id=GAS, role=SourceRole.HEAT_ONLY),),
+                heat=heat,
+            ),
+        ),
+        openings=(Opening(entity_id=BEDROOM_WINDOW, zone_ids=("slaapkamer",)),),
+    )
+
+
+def central_world(*, minute: int, window_open: bool, boiler: str) -> object:
+    """Return a world at 12:`minute`: living in the dead band, bedroom cold."""
+    return make_world(
+        now=at(12, minute),
+        indoor={"woonkamer": 20.5, "slaapkamer": 16.0},
+        climates={GAS: climate(boiler, changed_at=at(12, minute - 1))},
+        openings={BEDROOM_WINDOW: OpeningState(open=window_open, changed_at=at(12, minute))},
+    )
+
+
+class TestTheOpeningRestBelongsToTheAppliance:
+    """De openingsrust hangt aan het apparaat, niet aan de collapsewinnaar.
+
+    The opening rest belongs to the appliance, not to the collapse winner.
+    """
+
+    @pytest.mark.parametrize(
+        ("living_priority", "bedroom_priority"),
+        [(0, 1), (1, 0)],
+        ids=["deadband_wins", "opening_wins"],
+    )
+    def test_a_flapping_bedroom_window_does_not_re_ignite_the_shared_boiler(
+        self, living_priority: int, bedroom_priority: int
+    ) -> None:
+        config = central_boiler(living_priority, bedroom_priority)
+
+        burning = decide(config, central_world(minute=1, window_open=False, boiler="off"))
+        assert command_for(burning, GAS).hvac_mode == "heat"
+
+        stopped = decide(config, central_world(minute=2, window_open=True, boiler="heat"), burning)
+        assert command_for(stopped, GAS).hvac_mode == "off"
+
+        again = decide(config, central_world(minute=3, window_open=False, boiler="off"), stopped)
+        again_command = command_for(again, GAS)
+        assert again_command is not None
+        assert again_command.hvac_mode != "heat", (
+            f"de brander ontsteekt één minuut na de stop: {again_command}"
+        )
+
+        resumed = decide(config, central_world(minute=6, window_open=False, boiler="off"), again)
+        resumed_command = command_for(resumed, GAS)
+        assert resumed_command is not None
+        assert resumed_command.hvac_mode == "heat"

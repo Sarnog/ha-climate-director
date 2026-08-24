@@ -14,7 +14,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import datetime, timedelta
 
-from .families import ModeFamily, family_of
+from .families import ModeFamily
 from .hysteresis import source_counts_for
 from .models import HOLIDAY_WEEKDAY, DirectorConfig, Opening, Resident, Zone, ZoneGate
 from .plan import Plan, Reason
@@ -424,10 +424,14 @@ def opening_rest_until(
     apparaat en de `min_cycle_time` van het circuit. Een apparaat zonder circuit
     - bij dit ontwerp per definitie de gasketel - mist dat vangnet op élk pad:
     de huisbrede stop kreeg het in H2, maar de gewone raampoort van zijn eigen
-    zone niet. Dit leest daarom het vorige plan: stond het apparaat daarop uit
-    met `OPENING_OPEN` of `OPENING_OPEN_ELSEWHERE`, dan is de stop net voorbij
-    en begint de rusttijd nu te lopen; stond het uit met
-    `SHORT_CYCLE_PROTECTION`, dan loopt de eerder uitgerekende rusttijd door.
+    zone niet. Dit leest daarom de boekhouding van het vorige plan: stond het
+    apparaat daarop in `stopped_by_opening`, dan is de stop net voorbij en
+    begint de rusttijd nu te lopen; liep er al een rusttijd, dan geldt de
+    meegedragen eindtijd uit `opening_rest_until` verder.
+
+    De boekhouding hangt aan het apparaat en niet aan de reden van het vorige
+    commando: bij een gedeeld apparaat overleeft de reden van de zone met de
+    meeste voorrang de collapse, en die is niet per se de opening.
 
     Alleen herstarts worden uitgesteld, nooit de stop zelf: de stop hangt aan de
     poorten, en die kennen deze rem niet.
@@ -436,10 +440,14 @@ def opening_rest_until(
     the circuit's `min_cycle_time`. An appliance without a circuit - by this
     design, the boiler - lacks that safety net on every path: the house-wide
     stop got it in H2, but the ordinary window gate of its own zone did not.
-    This reads the previous plan instead: if the appliance stood off there with
-    `OPENING_OPEN` or `OPENING_OPEN_ELSEWHERE`, the stop has just ended and the
-    rest starts now; if it stood off with `SHORT_CYCLE_PROTECTION`, the rest
-    computed earlier keeps running.
+    This reads the previous plan's bookkeeping instead: if the appliance stood
+    in `stopped_by_opening` there, the stop has just ended and the rest starts
+    now; if a rest was already running, the carried deadline from
+    `opening_rest_until` keeps applying.
+
+    The bookkeeping hangs on the appliance and not on the previous command's
+    reason: on a shared appliance the reason of the highest-priority zone
+    survives the collapse, and that need not be the opening.
 
     Only restarts are delayed, never the stop itself: the stop hangs on the
     gates, which know nothing of this brake.
@@ -448,23 +456,11 @@ def opening_rest_until(
         return None
     if any(entity_id in circuit.units for circuit in config.circuits):
         return None
-    previous_command = previous.command_for(entity_id)
-    if previous_command is None:
-        return None
-    if family_of(previous_command.hvac_mode) is not ModeFamily.NEUTRAL:
-        return None
-    if previous_command.reason in (Reason.OPENING_OPEN, Reason.OPENING_OPEN_ELSEWHERE):
+    deadline = previous.opening_rest_until.get(entity_id)
+    if deadline is not None:
+        return deadline if world.now < deadline else None
+    if entity_id in previous.stopped_by_opening:
         return world.now + OPENING_MIN_REST
-    if previous_command.reason is Reason.SHORT_CYCLE_PROTECTION:
-        return next(
-            (
-                deferral.until
-                for deferral in previous.deferrals
-                if deferral.subject == entity_id
-                and deferral.reason is Reason.SHORT_CYCLE_PROTECTION
-            ),
-            None,
-        )
     return None
 
 
