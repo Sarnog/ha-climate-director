@@ -1655,6 +1655,24 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         options.append(_add_option("opening"))
         options.append(_back_option())
         managed = _managed_entities(self._installation)
+        # De huisbrede lijst wordt hier al opgeschoond en niet pas bij
+        # `async_step_save`: dit scherm toont hem als voorgestelde waarde, en
+        # een verwijderde bron of generator zou het veld een waarde laten tonen
+        # die zijn eigen schema (`include_entities`) afkeurt. Dan weigert élke
+        # inzending, "terug" inbegrepen, en kom je het scherm alleen nog uit
+        # door de hele flow af te breken.
+        #
+        # The house-wide list is tidied here rather than only at
+        # `async_step_save`: this screen shows it as the suggested value, and a
+        # removed source or generator would make the field show a value its own
+        # schema (`include_entities`) rejects. Every submission would then be
+        # refused, "back" included, leaving no way out but aborting the flow.
+        if self._installation.get("house_wide_openings"):
+            self._installation["house_wide_openings"] = [
+                entity_id
+                for entity_id in self._installation["house_wide_openings"]
+                if entity_id in managed
+            ]
         return self.async_show_form(
             step_id="openings",
             data_schema=vol.Schema(

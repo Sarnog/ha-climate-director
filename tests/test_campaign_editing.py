@@ -1009,6 +1009,41 @@ class TestDeletingAZoneCleansItsReferences:
         finally:
             await stop_house(home)
 
+    async def test_the_openings_screen_shows_no_stale_house_wide_value(self) -> None:
+        """Een scherm dat je binnenkomt, moet je ook weer kunnen verlaten.
+
+        A screen you can enter, you must be able to leave again.
+        """
+        installation = {
+            **two_rooms(),
+            "openings": [{"entity_id": "binary_sensor.raam"}],
+            "house_wide_openings": [LIVING],
+        }
+        home = await start_house(installation, states=cold())
+        try:
+            flow = home.hass.config_entries.options
+            result = await menu(home, "zones")
+            result = await flow.async_configure(result["flow_id"], {"zone": "0"})
+            result = await flow.async_configure(
+                result["flow_id"], {"delete": True, "when_done": "keep"}
+            )
+            assert result["type"] == "menu"
+
+            result = await flow.async_configure(result["flow_id"], {"next_step_id": "openings"})
+            assert result["step_id"] == "openings"
+            field = next(
+                key for key in result["data_schema"].schema if str(key) == "house_wide_openings"
+            )
+            assert field.description["suggested_value"] is None
+
+            result = await flow.async_configure(
+                result["flow_id"], {"opening": "back_to_menu", "house_wide_openings": []}
+            )
+            stored = await save(home, result["flow_id"])
+            assert stored["house_wide_openings"] == []
+        finally:
+            await stop_house(home)
+
     async def test_openings_generators_and_groups_are_cleaned(self) -> None:
         installation = {
             **two_rooms(),
