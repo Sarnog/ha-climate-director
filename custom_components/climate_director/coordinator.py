@@ -957,14 +957,26 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
 
             if self._closing:
                 return
-            self._fire_events(plan)
-            self._fire_refusals(plan)
-            self._note_waiting(plan)
-            self._report_unreadable()
-            self._report_unsupported_modes()
-            self._report_command_not_taking()
-            self._schedule_deferral(plan)
-            self.async_set_updated_data(plan)
+            # Het publiceren van het plan hoort altijd te gebeuren, ook als een
+            # van de meldingen eromheen een uitzondering gooit. Gebeurde dat
+            # niet, dan bleef elke entiteit ronde na ronde op het vorige plan
+            # staan terwijl de lus gewoon doordraaide - de stilste manier om
+            # een huis te bevriezen.
+            #
+            # Publishing the plan must always happen, even when one of the
+            # notices around it raises. Otherwise every entity stayed on the
+            # previous plan round after round while the loop kept running - the
+            # quietest way to freeze a house.
+            try:
+                self._fire_events(plan)
+                self._fire_refusals(plan)
+                self._note_waiting(plan)
+                self._report_unreadable()
+                self._report_unsupported_modes()
+                self._report_command_not_taking()
+                self._schedule_deferral(plan)
+            finally:
+                self.async_set_updated_data(plan)
 
     # -- vooruit verwarmen / pre-conditioning --------------------------------
 
