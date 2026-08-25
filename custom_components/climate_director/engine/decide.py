@@ -69,9 +69,7 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
     commands, untouched, generator_deferrals, stopped_now = _build_commands(
         config, world, grants, reasons, wishes, refusals, families, blocked, previous
     )
-    opening_rest_until = _opening_rest_bookkeeping(
-        config, world, previous, commands, stopped_now, rest_deferrals, generator_deferrals
-    )
+    opening_rest_until = _opening_rest_bookkeeping(world, previous, commands, stopped_now)
     return Plan(
         commands=commands,
         zones=_build_zone_decisions(
@@ -838,13 +836,10 @@ def _build_commands(
 
 
 def _opening_rest_bookkeeping(
-    config: DirectorConfig,
     world: WorldState,
     previous: Plan | None,
     commands: tuple[UnitCommand, ...],
     stopped_now: frozenset[str],
-    rest_deferrals: tuple[Deferral, ...],
-    generator_deferrals: tuple[Deferral, ...],
 ) -> dict[str, datetime]:
     """Return this plan's per-appliance opening-rest bookkeeping.
 
