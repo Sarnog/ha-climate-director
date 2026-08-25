@@ -114,6 +114,33 @@ class TestTemperatureFromState:
     def test_an_entity_reporting_nothing_usable(self) -> None:
         assert temperature_from_state("sensor.woonkamer", "unknown", {}) is None
 
+    def test_a_sensor_reads_in_the_unit_it_reports(self) -> None:
+        """`unit_of_measurement` wint van het systeemstelsel.
+
+        A `sensor` without a temperature device class is not converted by Home
+        Assistant, so its own attribute says what it means: 21 °C stays 21 °C on
+        an imperial system, and 70 °F is read as 21.1 °C on a metric one.
+        """
+        assert (
+            temperature_from_state(
+                "sensor.woonkamer", "21", {"unit_of_measurement": "°C"}, unit="°F"
+            )
+            == 21.0
+        )
+        assert temperature_from_state(
+            "sensor.woonkamer", "70", {"unit_of_measurement": "°F"}, unit="°C"
+        ) == pytest.approx(21.111111, rel=1e-6)
+
+    def test_a_sensor_without_a_unit_follows_the_system_unit(self) -> None:
+        """Zonder eigen eenheid is het systeemstelsel de waarheid.
+
+        Without its own unit the system unit is the truth.
+        """
+        assert temperature_from_state("sensor.woonkamer", "70", {}, unit="°F") == pytest.approx(
+            21.111111, rel=1e-6
+        )
+        assert temperature_from_state("sensor.woonkamer", "21", {}, unit="°C") == 21.0
+
 
 class TestAsFloat:
     @pytest.mark.parametrize(("raw", "expected"), [("21.5", 21.5), (3, 3.0), (2.5, 2.5)])

@@ -178,16 +178,25 @@ def temperature_from_state(
     is the *setpoint*, not the measurement. Reading that as the room temperature
     would make every zone believe it had already reached its target.
 
+    `unit` is het eenhedenstelsel van de gebruiker; de waarde komt terug in
+    graden Celsius. Een entiteit die haar eigen eenheid noemt in
+    `unit_of_measurement` wordt in díe eenheid gelezen: een sensor zonder
+    temperatuur-deviceclass rekent Home Assistant niet om, dus het systeemstelsel
+    zou haar verkeerd lezen.
+
     `unit` is the user's temperature unit, as Home Assistant reports it; the
     value is returned in degrees Celsius. `None` means the caller already works
-    in Celsius.
+    in Celsius. An entity that names its own unit in `unit_of_measurement` is
+    read in that unit: a sensor without a temperature device class is not
+    converted by Home Assistant, so the system unit would misread it.
     """
+    reported = str(attributes.get("unit_of_measurement") or unit or "")
     value = _as_float(state)
     if value is not None:
-        return to_celsius(value, unit or "")
+        return to_celsius(value, reported)
     if entity_id.startswith("weather."):
-        return to_celsius(_as_float(attributes.get("temperature")), unit or "")
-    return to_celsius(_as_float(attributes.get("current_temperature")), unit or "")
+        return to_celsius(_as_float(attributes.get("temperature")), reported)
+    return to_celsius(_as_float(attributes.get("current_temperature")), reported)
 
 
 def _user_temperature_unit(coordinator: Any) -> str:
