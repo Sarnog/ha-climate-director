@@ -1034,6 +1034,33 @@ def test_idle_modes_do_not_claim_a_circuit(mode: str) -> None:
     assert constraints.active_family(world, circuit) is ModeFamily.NEUTRAL
 
 
+def test_a_managed_unit_on_auto_does_not_hold_its_own_command_back() -> None:
+    """De omschakelrem wacht niet op een unit die deze ronde gewoon een commando krijgt.
+
+    De unit staat op `auto`, dus `current` is `AMBIGUOUS`; de remmen kijken naar
+    `ACTIVE_FAMILIES` en laten de wissel door, want de director stuurt deze unit
+    deze ronde zelf aan.
+
+    The switch brake does not wait for a unit that simply gets a command this
+    round. The unit runs `auto`, so `current` is `AMBIGUOUS`; the brakes look at
+    `ACTIVE_FAMILIES` and let the swap through, because the director steers this
+    unit itself this round.
+    """
+    config = DirectorConfig(
+        zones=rooms("woonkamer"),
+        circuits=(multi_split("c", "woonkamer", family_switch_delay=timedelta(minutes=5)),),
+    )
+    world = make_world(
+        indoor={"woonkamer": WANTS_HEAT},
+        climates={unit("woonkamer"): climate("auto")},
+    )
+    plan = decide(config, world)
+    decision = plan.decision_for("woonkamer")
+    assert decision is not None
+    assert decision.reason is Reason.REGULATING
+    assert plan.command_for(unit("woonkamer")).hvac_mode == MODE_HEAT
+
+
 class TestAmbiguousModesLockTheCircuit:
     """Een stand die de director niet kan lezen claimt de compressor (D1).
 
