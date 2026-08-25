@@ -509,6 +509,40 @@ class TestUnloadingDuringARunningRound:
         finally:
             await stop_house(live)
 
+    async def test_shutdown_does_not_reach_into_the_stores_private_cleanup(
+        self, monkeypatch
+    ) -> None:
+        """L3: `async_save` ruimt zijn eigen uitgestelde schrijfactie al op.
+
+        De coordinator hoeft de private `_async_cleanup_delay_listener` van HA's
+        `Store` niet aan te roepen; `async_save` doet dat zelf. Wie hem direct
+        aanroept steunt op een implementatiedetail dat elke HA-versie mag
+        veranderen.
+
+        `async_save` clears its own delayed write. The coordinator must not call
+        HA `Store`'s private `_async_cleanup_delay_listener`; `async_save` does
+        that itself, and calling it directly leans on an implementation detail
+        any HA version may change.
+        """
+        live = await start_house(installation(), states=self._warm_house())
+        try:
+            store = live.coordinator._store
+            saved: list[object] = []
+
+            async def fake_save(payload: object) -> None:
+                saved.append(payload)
+
+            def boom() -> None:
+                raise AssertionError("the private Store cleanup was called directly")
+
+            monkeypatch.setattr(store, "async_save", fake_save)
+            monkeypatch.setattr(store, "_async_cleanup_delay_listener", boom)
+
+            await live.coordinator.async_shutdown()
+            assert saved == [live.coordinator._store_payload()]
+        finally:
+            await stop_house(live)
+
     async def test_reload_does_not_let_the_old_plan_land_after_the_new_one(self) -> None:
         import contextlib
 

@@ -134,6 +134,39 @@ class TestTheFacts:
         assert coordinator().refusal_data("zolder")["override_minutes"] == 120
 
 
+class TestWhichOpeningsAreNamed:
+    """Alleen openingen die écht tegenhouden komen in de melding.
+
+    Only openings really holding the zone back make it into the notice.
+    """
+
+    def _opening(self, *, delay: timedelta, changed_at: datetime | None) -> object:
+        from dataclasses import replace
+
+        item = coordinator()
+        item.config = replace(item.config, openings=(Opening(entity_id=WINDOW, delay=delay),))
+        item.world = make_world(
+            now=NOON,
+            outdoor=8.0,
+            indoor={"zolder": 15.0},
+            climates={ATTIC: "off"},
+            openings={WINDOW: OpeningState(open=True, changed_at=changed_at)},
+        )
+        return item
+
+    def test_an_opening_inside_its_delay_is_not_named(self) -> None:
+        item = self._opening(delay=timedelta(minutes=5), changed_at=NOON)
+        assert item._open_openings("zolder") == []
+
+    def test_an_opening_past_its_delay_is_named(self) -> None:
+        item = self._opening(delay=timedelta(minutes=5), changed_at=NOON - timedelta(minutes=6))
+        assert item._open_openings("zolder") == [WINDOW]
+
+    def test_an_opening_with_an_unknown_age_is_named(self) -> None:
+        item = self._opening(delay=timedelta(minutes=5), changed_at=None)
+        assert item._open_openings("zolder") == [WINDOW]
+
+
 class TestTheRefusalSentence:
     def test_it_says_what_could_not_start_and_what_is_open(self) -> None:
         data = coordinator().refusal_data("zolder")

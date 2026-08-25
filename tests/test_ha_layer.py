@@ -378,6 +378,48 @@ class TestReadingTheWorld:
         world = coordinator(states, config).build_world()
         assert world.opening("binary_sensor.achterdeur").open is True
 
+    def test_an_opening_that_predates_the_start_counts_as_open_long_enough(self) -> None:
+        """Na een herstart telt een al openstaand raam direct mee, niet pas na de delay.
+
+        `last_changed` leest na een herstart het herstartmoment; wie de delay
+        vanaf dat moment zou tellen stookt nog `delay` lang met een raam open.
+        Daarom: wie vóór het opstartmoment openstond geldt als open lange tijd.
+
+        After a restart `last_changed` reads the restart moment; counting the
+        delay from that moment would keep heating with a window open for
+        `delay` more. Hence: whatever stood open before the start moment counts
+        as open long enough.
+        """
+        config = DirectorConfig(
+            zones=house().zones,
+            openings=(Opening(entity_id="binary_sensor.achterdeur", delay=timedelta(minutes=5)),),
+        )
+        item = coordinator(
+            self._states(
+                **{
+                    "binary_sensor.achterdeur": FakeState(
+                        "on", last_changed=NOW - timedelta(minutes=30)
+                    )
+                }
+            ),
+            config,
+        )
+        item._started_at = NOW
+        assert item._opening("binary_sensor.achterdeur", "on").changed_at is None
+
+    def test_an_opening_that_changed_after_the_start_keeps_its_timestamp(self) -> None:
+        """Wie pas na het opstartmoment openging houdt zijn gewone delay."""
+        config = DirectorConfig(
+            zones=house().zones,
+            openings=(Opening(entity_id="binary_sensor.achterdeur", delay=timedelta(minutes=5)),),
+        )
+        item = coordinator(
+            self._states(**{"binary_sensor.achterdeur": FakeState("on", last_changed=NOW)}),
+            config,
+        )
+        item._started_at = NOW - timedelta(minutes=10)
+        assert item._opening("binary_sensor.achterdeur", "on").changed_at == NOW
+
     def test_an_unavailable_appliance_reads_as_nothing(self) -> None:
         """Niet als "uit": als onbereikbaar, want dan valt er niets over te zeggen."""
         world = coordinator(self._states(**{LIVING: FakeState("unavailable")})).build_world()

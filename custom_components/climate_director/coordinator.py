@@ -72,7 +72,7 @@ from .engine import (
 from .engine.constraints import active_family
 from .engine.diff import Change, changes
 from .engine.families import family_of, preferred_mode
-from .engine.gates import asleep_at, house_wide_blocked
+from .engine.gates import asleep_at, house_wide_blocked, opening_standing
 from .engine.models import SeasonSource
 from .engine.serialise import config_from_dict
 from .units import to_celsius
@@ -250,6 +250,11 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         """De eenheid waarin Home Assistant temperaturen aanlevert en verwacht.
 
         The unit in which Home Assistant supplies and expects temperatures.
+        """
+        self._started_at = dt_util.now()
+        """Het opstartmoment; openingen die daarvoor al openstonden tellen direct.
+
+        The start moment; openings already open before it count immediately.
         """
         self.shadow: bool = entry.options.get(CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE)
         self.version: str = ""
@@ -960,17 +965,14 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         # Een uitgestelde opslag kan nog uitstaan: de store schrijft één seconde
         # na de laatste wijziging. Bij een herlaadbeurt is dat geen bezwaar, maar
         # bij een verwijdering zou die schrijfactie het bestand terugschrijven ná
-        # `async_remove_entry`. Daarom hier zelf wegschrijven en de uitgestelde
-        # schrijfactie afbreken, zodat het bestand na een verwijdering echt weg
-        # blijft.
+        # `async_remove_entry`. Daarom hier zelf wegschrijven; `async_save` ruimt
+        # de uitgestelde schrijfactie zelf al op.
         #
         # A delayed store write may still be pending: the store writes one second
         # after the last change. On a reload that is fine, but on a removal that
         # write would resurrect the file after `async_remove_entry`. So write it
-        # away here and cancel the delayed write, so the file really stays gone
-        # after a removal.
+        # away here; `async_save` clears the delayed write itself.
         await self._store.async_save(self._store_payload())
-        self._store._async_cleanup_delay_listener()  # noqa: SLF001 - HA's Store has no public cancel
         await super().async_shutdown()
 
     # -- beslissen / deciding ------------------------------------------------
@@ -1880,9 +1882,26 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             is_open = reported in ("open", "opening", "closing")
         else:
             is_open = reported == open_state
+        changed_at = dt_util.as_local(state.last_changed)
+        # Na een herstart leest `last_changed` het herstartmoment, en een raam
+        # dat al uren openstond zou dan als "net geopend" tellen - de zone
+        # stookte nog `delay` lang door. Wie voor het opstartmoment openstaat
+        # telt daarom als open lange tijd: de veilige kant, precies zoals
+        # `min_cycle_time` zijn rust na een herstart ook aan de veilige kant
+        # meet.
+        #
+        # After a restart `last_changed` reads the restart moment, and a window
+        # that stood open for hours would then count as "just opened" - the zone
+        # would keep heating for `delay` more. Whatever was open before the
+        # start moment therefore counts as open long enough: the safe side,
+        # exactly as `min_cycle_time` measures its rest after a restart on the
+        # safe side too.
+        started_at = getattr(self, "_started_at", None)
+        if started_at is not None and changed_at is not None and changed_at < started_at:
+            changed_at = None
         return OpeningState(
             open=is_open,
-            changed_at=dt_util.as_local(state.last_changed),
+            changed_at=changed_at,
         )
 
     def _presence(self, entity_id: str, occupied_state: str) -> PresenceState:
@@ -2181,13 +2200,13 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             return sorted(
                 opening.entity_id
                 for opening in self.config.openings
-                if self.world.opening(opening.entity_id).open
+                if opening_standing(opening, self.world)
             )
         return sorted(
             opening.entity_id
             for opening in self.config.openings
             if (not opening.zone_ids or zone_id in opening.zone_ids)
-            and self.world.opening(opening.entity_id).open
+            and opening_standing(opening, self.world)
         )
 
     def _schedule_deferral(self, plan: Plan) -> None:

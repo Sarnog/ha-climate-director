@@ -370,6 +370,20 @@ def _standing_open(opening: Opening, world: WorldState) -> bool:
     return world.now - state.changed_at >= opening.delay
 
 
+def opening_standing(opening: Opening, world: WorldState) -> bool:
+    """Return whether this opening counts as standing open, delay included.
+
+    De publieke lezer voor de koppelingslaag: die noemt in de
+    weigeringsmelding alleen de openingen die de zone écht tegenhouden, en een
+    raam binnen zijn vertraging hoort daar niet bij.
+
+    The public reader for the binding layer: the refusal notice names only the
+    openings really holding the zone back, and a window inside its delay does
+    not belong there.
+    """
+    return _standing_open(opening, world)
+
+
 def house_wide_blocked(config: DirectorConfig, world: WorldState) -> frozenset[str]:
     """Return the appliances that must stand still while any opening is open.
 

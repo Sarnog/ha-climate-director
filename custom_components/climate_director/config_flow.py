@@ -387,6 +387,15 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         self._resident_index: int | None = None
         self._window_index: int | None = None
         self._index: int | None = None
+        self._renamed_house_wide: set[str] = set()
+        """Apparaten die via een bronbewerking van de huisbrede stoplijst los zijn
+        geraakt; die hoort het opslaanscherm te melden in plaats van stilletjes
+        op te ruimen.
+
+        Appliances that lost their place on the house-wide stop list through a
+        source edit; the save screen should report those instead of tidying them
+        away silently.
+        """
 
     # -- ingang / entry point ------------------------------------------------
 
@@ -420,29 +429,23 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         through would reload the entry while the user is still editing, which
         pulls the ground out from under the flow they are standing in.
 
-        De huisbrede stoplijst wordt hier opgeschoond in plaats van bij elke
-        verwijderknop apart. Een apparaat verdwijnt langs meerdere wegen - een
-        zone weg, een bron weg, een gedeelde warmtebron weg - en een van die
-        wegen vergeten levert een verwijzing op die niets meer aanwijst. Eén
-        plek die het altijd doet is de enige die niet uit de pas kan lopen, en
-        hij staat vóór de controle zodat er niet geklaagd wordt over iets dat
-        hier net opgeruimd wordt.
+        De huisbrede stoplijst wordt hier opgeschoond, maar een apparaat dat via
+        een bronbewerking van de lijst los is geraakt blijft staan: het
+        opslaanscherm moet hem via `validate()` kunnen melden in plaats van hem
+        stilletjes te laten vallen.
 
-        The house-wide stop list is tidied here rather than at every delete
-        button separately. An appliance disappears along several routes - a zone
-        gone, a source gone, a shared heat source gone - and forgetting one of
-        them leaves a reference pointing at nothing. One place that always does
-        it is the only one that cannot drift, and it sits before the check so
-        nothing is reported that is being cleaned up right here.
+        The house-wide stop list is tidied here, but an appliance that lost its
+        place on the list through a source edit stays: the save screen must be
+        able to report it via `validate()` rather than let it drop without a
+        word.
         """
         steered = _managed_entities(self._installation)
         if self._installation.get("house_wide_openings"):
             self._installation["house_wide_openings"] = [
                 entity_id
                 for entity_id in self._installation["house_wide_openings"]
-                if entity_id in steered
+                if entity_id in steered or entity_id in self._renamed_house_wide
             ]
-
         found = validate(config_from_dict(self._installation))
         if found and user_input is None:
             await texts.async_prepare(self.hass)
@@ -1113,6 +1116,25 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 self._drop_source_references({removed_source_id} if removed_source_id else set())
                 sources.pop(self._source_index)
             else:
+                # Een gewijzigd apparaat dat op de huisbrede stoplijst staat, wordt
+                # niet stilletjes gewist: het opslaanscherm moet het oude id kunnen
+                # melden. Daarom wordt het hier onthouden, zodat de opruiming in
+                # `async_step_save` het laat staan tot de gebruiker het openingsscherm
+                # bevestigt.
+                #
+                # A changed appliance that sits on the house-wide stop list is not
+                # silently wiped: the save screen must be able to report the old id.
+                # It is therefore remembered here, so the tidy-up in
+                # `async_step_save` leaves it until the user confirms the openings
+                # screen.
+                if self._source_index is not None:
+                    old_entity_id = sources[self._source_index].get("entity_id")
+                    if (
+                        old_entity_id
+                        and old_entity_id != user_input["entity_id"]
+                        and old_entity_id in (self._installation.get("house_wide_openings") or ())
+                    ):
+                        self._renamed_house_wide.add(old_entity_id)
                 source = {
                     "source_id": current.get("source_id")
                     or _unique_id(
@@ -1784,24 +1806,24 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         options.append(_add_option("opening"))
         options.append(_back_option())
         managed = _managed_entities(self._installation)
-        # De huisbrede lijst wordt hier al opgeschoond en niet pas bij
-        # `async_step_save`: dit scherm toont hem als voorgestelde waarde, en
-        # een verwijderde bron of generator zou het veld een waarde laten tonen
-        # die zijn eigen schema (`include_entities`) afkeurt. Dan weigert élke
-        # inzending, "terug" inbegrepen, en kom je het scherm alleen nog uit
-        # door de hele flow af te breken.
+        # De huisbrede lijst wordt hier alleen voor het scherm gefilterd en niet
+        # weggeschreven: het veld zou anders een waarde tonen die zijn eigen
+        # schema (`include_entities`) afkeurt, en dan weigert élke inzending,
+        # "terug" inbegrepen. De opgeslagen lijst houdt het oude id, zodat het
+        # opslaanscherm het via `validate()` kan melden; dit scherm bevestigen
+        # schrijft wat het toont en haalt het er zo zelf uit.
         #
-        # The house-wide list is tidied here rather than only at
-        # `async_step_save`: this screen shows it as the suggested value, and a
-        # removed source or generator would make the field show a value its own
-        # schema (`include_entities`) rejects. Every submission would then be
-        # refused, "back" included, leaving no way out but aborting the flow.
-        if self._installation.get("house_wide_openings"):
-            self._installation["house_wide_openings"] = [
-                entity_id
-                for entity_id in self._installation["house_wide_openings"]
-                if entity_id in managed
-            ]
+        # The house-wide list is filtered for this screen only and not written
+        # away: the field would otherwise show a value its own schema
+        # (`include_entities`) rejects, and then every submission would be
+        # refused, "back" included. The stored list keeps the old id, so the
+        # save screen can report it via `validate()`; confirming this screen
+        # writes what it shows and thereby removes it by hand.
+        suggested = [
+            entity_id
+            for entity_id in (self._installation.get("house_wide_openings") or ())
+            if entity_id in managed
+        ]
         return self.async_show_form(
             step_id="openings",
             data_schema=vol.Schema(
@@ -1825,9 +1847,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     # of trap nobody ever traces back.
                     vol.Optional(
                         "house_wide_openings",
-                        description={
-                            "suggested_value": self._installation.get("house_wide_openings") or None
-                        },
+                        description={"suggested_value": suggested or None},
                     ): selector.EntitySelector(
                         selector.EntitySelectorConfig(
                             domain="climate", multiple=True, include_entities=managed
