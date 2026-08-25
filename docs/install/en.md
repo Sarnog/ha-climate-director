@@ -79,8 +79,9 @@ for you.
 You need to create no helpers for any of this. The integration makes all its
 switches and controls itself.
 
-**Units:** the integration assumes a Home Assistant running in the metric system:
-all temperatures are degrees Celsius and are not converted.
+**Units:** the integration follows Home Assistant's unit system. You need to
+convert nothing: readings and setpoints appear in the unit you configured in
+Home Assistant.
 
 ## Step 1 — Installing
 

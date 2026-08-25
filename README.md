@@ -71,8 +71,9 @@ Kies je taal voor de volledige, stap-voor-stap handleiding:
 aan met `AddConfigEntryEntitiesCallback`, en die bestaat sinds 2025.3. Op een oudere
 versie laadt ze niet.
 
-**Eenheden:** de integratie gaat uit van een Home Assistant in het metrieke stelsel:
-alle temperaturen zijn graden Celsius en worden niet omgerekend.
+**Eenheden:** de integratie volgt het eenhedenstelsel van Home Assistant. De
+engine rekent intern in graden Celsius; de koppelingslaag rekent metingen en
+setpoints om naar de eenheid die je in Home Assistant hebt ingesteld.
 
 Zolang Climate Director nog niet in de standaard HACS-winkel staat, voeg je deze
 repository toe als **custom repository**:
@@ -188,8 +189,9 @@ Pick your language for the full, step-by-step guide:
 through `AddConfigEntryEntitiesCallback`, which exists from 2025.3 onwards. On an older
 version it does not load.
 
-**Units:** the integration assumes a Home Assistant running in the metric system:
-all temperatures are degrees Celsius and are not converted.
+**Units:** the integration follows Home Assistant's unit system. The engine
+works in degrees Celsius internally; the binding layer converts readings and
+setpoints into the unit you configured in Home Assistant.
 
 As long as Climate Director is not yet in the default HACS store, add this
 repository as a **custom repository**:

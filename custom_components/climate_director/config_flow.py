@@ -18,6 +18,7 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.util import slugify
@@ -37,6 +38,13 @@ from .engine.models import (
     ZoneGate,
 )
 from .engine.serialise import config_from_dict
+from .units import (
+    delta_from_celsius,
+    delta_to_celsius,
+    from_celsius,
+    temperature_unit_of,
+    to_celsius,
+)
 
 CONF_NAME = "name"
 
@@ -91,12 +99,68 @@ def _hemisphere(months: Any) -> str:
         return "north"
 
 
-_TEMPERATURE = selector.NumberSelector(
-    selector.NumberSelectorConfig(min=-20, max=40, step=0.5, mode=selector.NumberSelectorMode.BOX)
-)
-_BAND = selector.NumberSelector(
-    selector.NumberSelectorConfig(min=0, max=10, step=0.1, mode=selector.NumberSelectorMode.BOX)
-)
+def _temperature(unit: str) -> selector.NumberSelector:
+    """Return a temperature selector in the user's unit.
+
+    De engine bewaart alles in graden Celsius; het formulier toont de eenheid
+    van Home Assistant. In Fahrenheit is hetzelfde zinnige bereik -20..40 °C
+    precies -4..104 °F.
+
+    The engine stores everything in degrees Celsius; the form shows Home
+    Assistant's unit. In Fahrenheit the same sensible -20..40 °C range is
+    exactly -4..104 °F.
+    """
+    if unit == UnitOfTemperature.FAHRENHEIT:
+        return selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=-4,
+                max=104,
+                step=1,
+                unit_of_measurement="°F",
+                mode=selector.NumberSelectorMode.BOX,
+            )
+        )
+    return selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=-20,
+            max=40,
+            step=0.5,
+            unit_of_measurement="°C",
+            mode=selector.NumberSelectorMode.BOX,
+        )
+    )
+
+
+def _band(unit: str) -> selector.NumberSelector:
+    """Return a temperature-band selector in the user's unit.
+
+    Een band is een verschil, dus in Fahrenheit telt alleen de schaalfactor:
+    0..10 °C is 0..18 °F.
+
+    A band is a difference, so in Fahrenheit only the scale factor counts:
+    0..10 °C is 0..18 °F.
+    """
+    if unit == UnitOfTemperature.FAHRENHEIT:
+        return selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=0,
+                max=18,
+                step=0.2,
+                unit_of_measurement="°F",
+                mode=selector.NumberSelectorMode.BOX,
+            )
+        )
+    return selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=0,
+            max=10,
+            step=0.1,
+            unit_of_measurement="°C",
+            mode=selector.NumberSelectorMode.BOX,
+        )
+    )
+
+
 _MINUTES_OR_OFF = selector.NumberSelector(
     selector.NumberSelectorConfig(
         min=0, max=240, step=1, unit_of_measurement="min", mode=selector.NumberSelectorMode.BOX
@@ -483,7 +547,10 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             )
             self._installation["stuck_after"] = int(user_input.get("stuck_after") or 0) * 60
             self._installation["outdoor_hysteresis"] = float(
-                user_input.get("outdoor_hysteresis") or 0
+                delta_to_celsius(
+                    user_input.get("outdoor_hysteresis"), temperature_unit_of(self.hass)
+                )
+                or 0
             )
             self._installation["holiday_keyword"] = (
                 user_input.get("holiday_keyword") or ""
@@ -520,8 +587,11 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     ),
                     vol.Required(
                         "outdoor_hysteresis",
-                        default=float(self._installation.get("outdoor_hysteresis", 0.5)),
-                    ): _BAND,
+                        default=delta_from_celsius(
+                            float(self._installation.get("outdoor_hysteresis", 0.5)),
+                            temperature_unit_of(self.hass),
+                        ),
+                    ): _band(temperature_unit_of(self.hass)),
                     vol.Required(
                         "heating_layout",
                         default=self._installation.get(
@@ -847,7 +917,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 # and those keys are not in `user_input`. Without this step the
                 # form showed the new name beside the old temperatures after an
                 # error.
-                current["heat"], current["cool"] = _heat_cool_from_form(user_input, current)
+                current["heat"], current["cool"] = _heat_cool_from_form(
+                    user_input, current, unit=temperature_unit_of(self.hass)
+                )
 
         if user_input is not None and not errors:
             if user_input.get("delete") and self._zone_index is not None:
@@ -861,7 +933,13 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 for index, item in enumerate(zones)
                 if index != self._zone_index and item.get("zone_id")
             ]
-            zone = _zone_from_form(user_input, current, taken, stored_id=stored_id)
+            zone = _zone_from_form(
+                user_input,
+                current,
+                taken,
+                stored_id=stored_id,
+                unit=temperature_unit_of(self.hass),
+            )
             errors |= _zone_errors(zone)
             if self._priority_clash(zone["zone_id"], zone["priority"]):
                 errors["priority"] = "duplicate_priority"
@@ -887,6 +965,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         heat = current.get("heat") or {}
         cool = current.get("cool") or {}
         priority = current.get("priority", _next_priority(zones))
+        unit = temperature_unit_of(self.hass)
         return self.async_show_form(
             step_id="zone",
             errors=errors,
@@ -923,21 +1002,43 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         default=current.get("ignore_precipitation", False),
                     ): bool,
                     vol.Required("enable_heat", default=bool(heat)): bool,
-                    vol.Required("heat_target", default=heat.get("target", 21.0)): _TEMPERATURE,
-                    vol.Required("heat_start_at", default=heat.get("start_at", 20.0)): _TEMPERATURE,
-                    vol.Required("heat_hysteresis", default=heat.get("hysteresis", 1.0)): _BAND,
+                    vol.Required(
+                        "heat_target", default=from_celsius(heat.get("target", 21.0), unit)
+                    ): _temperature(unit),
+                    vol.Required(
+                        "heat_start_at", default=from_celsius(heat.get("start_at", 20.0), unit)
+                    ): _temperature(unit),
+                    vol.Required(
+                        "heat_hysteresis",
+                        default=delta_from_celsius(heat.get("hysteresis", 1.0), unit),
+                    ): _band(unit),
                     vol.Optional(
                         "heat_outdoor_max",
-                        description={"suggested_value": (heat.get("outdoor") or {}).get("maximum")},
-                    ): _TEMPERATURE,
+                        description={
+                            "suggested_value": from_celsius(
+                                (heat.get("outdoor") or {}).get("maximum"), unit
+                            )
+                        },
+                    ): _temperature(unit),
                     vol.Required("enable_cool", default=bool(cool)): bool,
-                    vol.Required("cool_target", default=cool.get("target", 23.0)): _TEMPERATURE,
-                    vol.Required("cool_start_at", default=cool.get("start_at", 24.0)): _TEMPERATURE,
-                    vol.Required("cool_hysteresis", default=cool.get("hysteresis", 1.0)): _BAND,
+                    vol.Required(
+                        "cool_target", default=from_celsius(cool.get("target", 23.0), unit)
+                    ): _temperature(unit),
+                    vol.Required(
+                        "cool_start_at", default=from_celsius(cool.get("start_at", 24.0), unit)
+                    ): _temperature(unit),
+                    vol.Required(
+                        "cool_hysteresis",
+                        default=delta_from_celsius(cool.get("hysteresis", 1.0), unit),
+                    ): _band(unit),
                     vol.Optional(
                         "cool_outdoor_min",
-                        description={"suggested_value": (cool.get("outdoor") or {}).get("minimum")},
-                    ): _TEMPERATURE,
+                        description={
+                            "suggested_value": from_celsius(
+                                (cool.get("outdoor") or {}).get("minimum"), unit
+                            )
+                        },
+                    ): _temperature(unit),
                     vol.Required(
                         "cool_summer_only",
                         default=Season.SUMMER.value in (cool.get("seasons") or []),
@@ -1023,8 +1124,14 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     "autostart": user_input["autostart"],
                     "priority": int(user_input["priority"]),
                     "outdoor": {
-                        "minimum": user_input.get("outdoor_min"),
-                        "maximum": user_input.get("outdoor_max"),
+                        "minimum": to_celsius(
+                            user_input.get("outdoor_min"),
+                            temperature_unit_of(self.hass),
+                        ),
+                        "maximum": to_celsius(
+                            user_input.get("outdoor_max"),
+                            temperature_unit_of(self.hass),
+                        ),
                     },
                 }
                 if self._source_index is None:
@@ -1035,6 +1142,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             return await self.async_step_sources()
 
         outdoor = current.get("outdoor") or {}
+        unit = temperature_unit_of(self.hass)
         return self.async_show_form(
             step_id="source",
             errors=errors,
@@ -1051,12 +1159,12 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Required("priority", default=current.get("priority", 0)): _RANK,
                     vol.Optional(
                         "outdoor_min",
-                        description={"suggested_value": outdoor.get("minimum")},
-                    ): _TEMPERATURE,
+                        description={"suggested_value": from_celsius(outdoor.get("minimum"), unit)},
+                    ): _temperature(unit),
                     vol.Optional(
                         "outdoor_max",
-                        description={"suggested_value": outdoor.get("maximum")},
-                    ): _TEMPERATURE,
+                        description={"suggested_value": from_celsius(outdoor.get("maximum"), unit)},
+                    ): _temperature(unit),
                     vol.Required("delete", default=False): bool,
                     vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
                 }
@@ -1337,7 +1445,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     "name": user_input[CONF_NAME],
                     "entity_id": user_input["entity_id"],
                     "zone_ids": user_input.get("zone_ids") or [],
-                    "setpoint": user_input.get("setpoint"),
+                    "setpoint": to_celsius(
+                        user_input.get("setpoint"), temperature_unit_of(self.hass)
+                    ),
                 }
                 if self._index is None:
                     generators.append(item)
@@ -1369,8 +1479,13 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         selector.SelectSelectorConfig(options=zone_options, multiple=True)
                     ),
                     vol.Optional(
-                        "setpoint", description={"suggested_value": current.get("setpoint")}
-                    ): _TEMPERATURE,
+                        "setpoint",
+                        description={
+                            "suggested_value": from_celsius(
+                                current.get("setpoint"), temperature_unit_of(self.hass)
+                            )
+                        },
+                    ): _temperature(temperature_unit_of(self.hass)),
                     vol.Required("delete", default=False): bool,
                     vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
                 }
@@ -2030,7 +2145,7 @@ def _band_errors(zone: dict[str, Any]) -> dict[str, str]:
 
 
 def _heat_cool_from_form(
-    user_input: dict[str, Any], current: dict[str, Any]
+    user_input: dict[str, Any], current: dict[str, Any], *, unit: str | None = None
 ) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
     """Return the stored heat and cool blocks described by a submitted zone form.
 
@@ -2040,10 +2155,16 @@ def _heat_cool_from_form(
     formulierbewerking niet kwijtraken: wat het formulier niet toont, blijft
     staan.
 
+    `unit` is de eenheid waarin het formulier de temperaturen aanleverde; de
+    engine bewaart alles in graden Celsius.
+
     The form shows only one side of each outdoor bound and no heating seasons.
     Whoever set those values earlier - through an older version or a hand-edited
     configuration - should not lose them on an ordinary form edit: what the form
     does not show stays.
+
+    `unit` is the unit the form supplied the temperatures in; the engine stores
+    everything in degrees Celsius.
     """
     stored_heat = current.get("heat") or {}
     stored_cool = current.get("cool") or {}
@@ -2051,12 +2172,12 @@ def _heat_cool_from_form(
     stored_cool_outdoor = stored_cool.get("outdoor") or {}
     heat = (
         {
-            "target": user_input["heat_target"],
-            "start_at": user_input["heat_start_at"],
-            "hysteresis": user_input["heat_hysteresis"],
+            "target": to_celsius(user_input["heat_target"], unit or ""),
+            "start_at": to_celsius(user_input["heat_start_at"], unit or ""),
+            "hysteresis": delta_to_celsius(user_input["heat_hysteresis"], unit or ""),
             "outdoor": {
                 "minimum": stored_heat_outdoor.get("minimum"),
-                "maximum": user_input.get("heat_outdoor_max"),
+                "maximum": to_celsius(user_input.get("heat_outdoor_max"), unit or ""),
             },
             "seasons": stored_heat.get("seasons"),
         }
@@ -2065,11 +2186,11 @@ def _heat_cool_from_form(
     )
     cool = (
         {
-            "target": user_input["cool_target"],
-            "start_at": user_input["cool_start_at"],
-            "hysteresis": user_input["cool_hysteresis"],
+            "target": to_celsius(user_input["cool_target"], unit or ""),
+            "start_at": to_celsius(user_input["cool_start_at"], unit or ""),
+            "hysteresis": delta_to_celsius(user_input["cool_hysteresis"], unit or ""),
             "outdoor": {
-                "minimum": user_input.get("cool_outdoor_min"),
+                "minimum": to_celsius(user_input.get("cool_outdoor_min"), unit or ""),
                 "maximum": stored_cool_outdoor.get("maximum"),
             },
             "seasons": [Season.SUMMER.value] if user_input["cool_summer_only"] else None,
@@ -2086,6 +2207,7 @@ def _zone_from_form(
     taken: list[str] | None = None,
     *,
     stored_id: str | None = None,
+    unit: str | None = None,
 ) -> dict[str, Any]:
     """Return the stored zone described by a submitted zone form.
 
@@ -2100,7 +2222,7 @@ def _zone_from_form(
     configuration - should not lose them on an ordinary form edit: what the form
     does not show stays.
     """
-    heat, cool = _heat_cool_from_form(user_input, current)
+    heat, cool = _heat_cool_from_form(user_input, current, unit=unit)
     return {
         # Een bestaande zone houdt zijn id: achteraf hernoemen kost de
         # entiteitsgeschiedenis van die zone. Een nieuwe zone krijgt een id uit

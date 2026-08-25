@@ -26,6 +26,7 @@ from homeassistant.core import HomeAssistant
 
 from .engine import MODE_FAN_ONLY, MODE_OFF
 from .engine.diff import Change
+from .units import from_celsius, temperature_unit_of
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,12 +46,17 @@ async def apply(
         return ()
 
     if shadow:
+        unit = temperature_unit_of(hass)
         for change in pending:
             _LOGGER.info(
                 "Shadow mode: would set %s to %s%s (%s)",
                 change.entity_id,
                 change.command.hvac_mode,
-                (f" at {change.command.temperature}" if change.set_temperature else ""),
+                (
+                    f" at {from_celsius(change.command.temperature, unit)}"
+                    if change.set_temperature
+                    else ""
+                ),
                 change.command.reason.value,
             )
         return ()
@@ -122,7 +128,7 @@ async def _execute(hass: HomeAssistant, change: Change) -> None:
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: command.entity_id,
-                ATTR_TEMPERATURE: command.temperature,
+                ATTR_TEMPERATURE: from_celsius(command.temperature, temperature_unit_of(hass)),
             },
             blocking=True,
         )

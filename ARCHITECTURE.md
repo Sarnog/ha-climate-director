@@ -5,8 +5,12 @@
 Technisch ontwerpdocument voor wie aan de code werkt (geen gebruikershandleiding —
 dat is [`README.md`](README.md)). Elke laag heeft precies één verantwoordelijkheid.
 
-**Eenheden:** de integratie gaat uit van een Home Assistant in het metrieke stelsel:
-alle temperaturen zijn graden Celsius en worden nergens omgerekend.
+**Eenheden:** de engine en de opgeslagen configuratie rekenen in graden Celsius
+— dat is de bewuste keuze (beslissing 3 van 2026-08-25: de eenheid van Home
+Assistant volgen, niet de engine er een tweede stelsel bij geven). De
+koppelingslaag is de enige plek die omrekent: de coordinator leest
+HA-temperaturen om naar Celsius, de applier zet setpoints terug naar de eenheid
+van de gebruiker, en het formulier toont en leest in diezelfde eenheid.
 
 ### De ankers — lees dit eerst
 
@@ -580,8 +584,12 @@ Assistant te maken heeft hoort per definitie in `engine/`, met tests ernaast.
 Technical design document for anyone working on the code (not a user manual —
 that is [`README.md`](README.md)). Each layer has exactly one responsibility.
 
-**Units:** the integration assumes a Home Assistant running in the metric system:
-all temperatures are degrees Celsius and are not converted anywhere.
+**Units:** the engine and the stored configuration work in degrees Celsius —
+that is the deliberate choice (decision 3 of 2026-08-25: follow Home
+Assistant's unit rather than giving the engine a second system). The binding
+layer is the one place that converts: the coordinator reads HA temperatures
+into Celsius, the applier turns setpoints back into the user's unit, and the
+form shows and reads in that same unit.
 
 ### The anchors — read this first
 

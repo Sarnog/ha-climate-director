@@ -340,6 +340,7 @@ async def start_house(
     entry_id: str = "live",
     config_dir: str | None = None,
     appliance: str | None = None,
+    unit_system: Any | None = None,
 ) -> LiveHome:
     """Return a running Home Assistant with this installation loaded.
 
@@ -347,10 +348,18 @@ async def start_house(
     beslissing een volledige wereld ziet - net als bij een herstart van een huis
     dat al draait.
 
+    `unit_system` is optioneel en wordt gezet vóór de entry opgezet wordt, zodat
+    de coordinator de eenheid van meet af aan leest.
+
     States are set before the entry is set up, so the first decision sees a full
     world - just as on a restart of a house already running.
+
+    `unit_system` is optional and is applied before the entry is set up, so the
+    coordinator reads the unit from the start.
     """
     hass = HomeAssistant(config_dir or new_config_dir())
+    if unit_system is not None:
+        hass.config.units = unit_system
     loader.async_setup(hass)
     hass.config_entries = ConfigEntries(hass, {})
     await hass.config_entries.async_initialize()

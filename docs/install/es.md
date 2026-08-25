@@ -78,9 +78,9 @@ unidades van juntas y resuelve ese conflicto por ti.
 No necesitas crear ningún helper. La integración fabrica ella misma todos sus
 interruptores y controles.
 
-**Unidad:** la integración presupone una instalación de Home Assistant en el
-sistema métrico: todas las temperaturas están en grados Celsius y no se
-convierten.
+**Unidad:** la integración sigue el sistema de unidades de Home Assistant. No
+tienes que convertir nada: las mediciones y las consignas aparecen en la unidad
+que configuraste en Home Assistant.
 
 ## Paso 1 — Instalar
 

@@ -79,8 +79,9 @@ conflict voor je op.
 Helpers hoef je nergens voor aan te maken. Alle schakelaars en regelaars maakt
 de integratie zelf.
 
-**Eenheden:** de integratie gaat uit van een Home Assistant in het metrieke
-stelsel: alle temperaturen zijn graden Celsius en worden niet omgerekend.
+**Eenheden:** de integratie volgt het eenhedenstelsel van Home Assistant. Je
+hoeft niets om te rekenen: metingen en setpoints verschijnen in de eenheid die
+je in Home Assistant hebt ingesteld.
 
 ## Stap 1 — Installeren
 

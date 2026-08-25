@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import CALLBACK_TYPE, Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
@@ -75,6 +75,7 @@ from .engine.families import family_of, preferred_mode
 from .engine.gates import asleep_at, house_wide_blocked
 from .engine.models import SeasonSource
 from .engine.serialise import config_from_dict
+from .units import to_celsius
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -160,7 +161,7 @@ _SEASON_NAMES: dict[str, Season] = {
 
 
 def temperature_from_state(
-    entity_id: str, state: str, attributes: Mapping[str, Any]
+    entity_id: str, state: str, attributes: Mapping[str, Any], *, unit: str | None = None
 ) -> float | None:
     """Return the temperature an entity reports, or `None` when it reports none.
 
@@ -176,13 +177,31 @@ def temperature_from_state(
     The domain check matters: on a `climate` entity the `temperature` attribute
     is the *setpoint*, not the measurement. Reading that as the room temperature
     would make every zone believe it had already reached its target.
+
+    `unit` is the user's temperature unit, as Home Assistant reports it; the
+    value is returned in degrees Celsius. `None` means the caller already works
+    in Celsius.
     """
     value = _as_float(state)
     if value is not None:
-        return value
+        return to_celsius(value, unit or "")
     if entity_id.startswith("weather."):
-        return _as_float(attributes.get("temperature"))
-    return _as_float(attributes.get("current_temperature"))
+        return to_celsius(_as_float(attributes.get("temperature")), unit or "")
+    return to_celsius(_as_float(attributes.get("current_temperature")), unit or "")
+
+
+def _user_temperature_unit(coordinator: Any) -> str:
+    """Return the unit this coordinator's Home Assistant reports in.
+
+    De zes nagebouwde coordinators in de testset lenen losse methodes en kennen
+    niet elk veld van de echte; wie hier rechtstreeks `self.temperature_unit`
+    leest breekt hen op afstand. Celsius is de veilige terugval.
+
+    The six stand-in coordinators in the test set borrow individual methods and
+    do not know every field of the real one; reading `self.temperature_unit`
+    directly here breaks them at a distance. Celsius is the safe fallback.
+    """
+    return getattr(coordinator, "temperature_unit", UnitOfTemperature.CELSIUS)
 
 
 def season_from_state(raw: str | None) -> Season:
@@ -227,6 +246,11 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self.config: DirectorConfig = config_from_dict(
             entry.options.get(CONF_INSTALLATION) or entry.data.get(CONF_INSTALLATION) or {}
         )
+        self.temperature_unit: str = hass.config.units.temperature_unit
+        """De eenheid waarin Home Assistant temperaturen aanlevert en verwacht.
+
+        The unit in which Home Assistant supplies and expects temperatures.
+        """
         self.shadow: bool = entry.options.get(CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE)
         self.version: str = ""
         """Het geinstalleerde versienummer, voor in het apparaatpaneel.
@@ -1427,7 +1451,12 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             if state is None or _unreadable(state.state):
                 continue
             attributes = getattr(state, "attributes", {})
-            if temperature_from_state(entity_id, state.state, attributes) is None:
+            if (
+                temperature_from_state(
+                    entity_id, state.state, attributes, unit=_user_temperature_unit(self)
+                )
+                is None
+            ):
                 found[entity_id] = "no number"
 
         return found
@@ -1519,8 +1548,12 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                     for family in (ModeFamily.HEAT, ModeFamily.COOL)
                     if source.supports(family) and preferred_mode(family) not in modes
                 )
-            minimum = _as_float(state.attributes.get("min_temp"))
-            maximum = _as_float(state.attributes.get("max_temp"))
+            minimum = to_celsius(
+                _as_float(state.attributes.get("min_temp")), _user_temperature_unit(self)
+            )
+            maximum = to_celsius(
+                _as_float(state.attributes.get("max_temp")), _user_temperature_unit(self)
+            )
             for family in (ModeFamily.HEAT, ModeFamily.COOL):
                 if not source.supports(family):
                     continue
@@ -1778,11 +1811,21 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             return ClimateState(available=False)
         return ClimateState(
             hvac_mode=state.state,
-            current_temperature=_as_float(state.attributes.get("current_temperature")),
-            target_temperature=_as_float(state.attributes.get("temperature")),
+            current_temperature=to_celsius(
+                _as_float(state.attributes.get("current_temperature")),
+                _user_temperature_unit(self),
+            ),
+            target_temperature=to_celsius(
+                _as_float(state.attributes.get("temperature")),
+                _user_temperature_unit(self),
+            ),
             hvac_modes=_as_modes(state.attributes.get("hvac_modes")),
-            min_temp=_as_float(state.attributes.get("min_temp")),
-            max_temp=_as_float(state.attributes.get("max_temp")),
+            min_temp=to_celsius(
+                _as_float(state.attributes.get("min_temp")), _user_temperature_unit(self)
+            ),
+            max_temp=to_celsius(
+                _as_float(state.attributes.get("max_temp")), _user_temperature_unit(self)
+            ),
             available=True,
             changed_at=dt_util.as_local(state.last_changed),
         )
@@ -1794,7 +1837,9 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         state = self.hass.states.get(entity_id)
         if state is None:
             return None
-        return temperature_from_state(entity_id, state.state, state.attributes)
+        return temperature_from_state(
+            entity_id, state.state, state.attributes, unit=_user_temperature_unit(self)
+        )
 
     def _resident(self, presence: str, sleep: str, asleep_state: str) -> ResidentState:
         home = False
