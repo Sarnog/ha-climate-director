@@ -33,14 +33,13 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
    actieve stand meldt, of na het venster. De klok is het vangnet, niet het anker.
 5. **De openingsrust hangt aan het apparaat**, niet aan de reden van het vorige
    commando: een collapse kan die reden overschrijven. Hij staat in
-   `Plan.stopped_by_opening` en `Plan.opening_rest_until`, geldt voor élk
-   apparaat zonder circuit dat werkelijk draaide toen de stop kwam — een gedeelde
-   warmtebron inbegrepen — en is een vaste `OPENING_MIN_REST` van drie minuten,
-   gerekend vanaf de stop. Direct na een herstart is er geen vorig plan: een
-   gewone bron die de wereld als draaiend kent rust dan nog steeds (`_was_running`
-   leest de wereld), maar een gedeelde warmtebron rust niet, want zijn stop telt
-   alleen met een vorig plan dat zegt welke zone werkelijk warmte kreeg
-   (`_received_heat`).
+   `Plan.opening_rest_until`, geldt voor élk apparaat zonder circuit dat
+   werkelijk draaide toen de stop kwam — een gedeelde warmtebron inbegrepen — en
+   is een vaste `OPENING_MIN_REST` van drie minuten, gerekend vanaf de stop.
+   Direct na een herstart is er geen vorig plan: een gewone bron die de wereld
+   als draaiend kent rust dan nog steeds (`_was_running` leest de wereld), maar
+   een gedeelde warmtebron rust niet, want zijn stop telt alleen met een vorig
+   plan dat zegt welke zone werkelijk warmte kreeg (`_received_heat`).
    Bewust geen instelling: één knop minder om verkeerd te zetten, en drie minuten
    is veilig voor elke brander.
 6. **De hoofdschakelaar uit** betekent: de director laat alles los en stuurt
@@ -605,15 +604,14 @@ them without changing them here first.
    again, or after the window. The clock is the safety net, not the anchor.
 5. **The opening rest hangs on the appliance**, not on the previous command's
    reason: a collapse can overwrite that reason. It lives in
-   `Plan.stopped_by_opening` and `Plan.opening_rest_until`, applies to every
-   appliance without a circuit that really was running when the stop came — a
-   shared heat source included — and is a fixed `OPENING_MIN_REST` of three
-   minutes, counted from the stop. Right after a restart there is no previous
-   plan: an ordinary source the world knows as running still rests
-   (`_was_running` reads the world), but a shared heat source does not, since
-   its stop only counts with a previous plan saying which zone really received
-   heat (`_received_heat`). Deliberately not a setting: one knob fewer to get wrong, and three
-   minutes is safe for any burner.
+   `Plan.opening_rest_until`, applies to every appliance without a circuit that
+   really was running when the stop came — a shared heat source included — and is
+   a fixed `OPENING_MIN_REST` of three minutes, counted from the stop. Right
+   after a restart there is no previous plan: an ordinary source the world knows
+   as running still rests (`_was_running` reads the world), but a shared heat
+   source does not, since its stop only counts with a previous plan saying which
+   zone really received heat (`_received_heat`). Deliberately not a setting: one
+   knob fewer to get wrong, and three minutes is safe for any burner.
 6. **The master switch off** means: the director lets go of everything and issues
    nothing, an `off` included — just like an override. Whoever wants everything
    off switches it off themselves; the director then leaves it be.

@@ -303,16 +303,6 @@ class Plan:
     or it stands here with the reason why not.
     """
 
-    stopped_by_opening: frozenset[str] = frozenset()
-    """The appliances this plan stopped because an opening stood open.
-
-    Gevuld vóór `_collapse_shared`, zodat een gedeeld apparaat niet zijn
-    openingsstop verliest aan de reden van de zone die de collapse won.
-
-    Filled before `_collapse_shared`, so a shared appliance does not lose its
-    opening stop to the reason of the zone that won the collapse.
-    """
-
     opening_rest_until: dict[str, datetime] = field(default_factory=dict)
     """Per appliance until when an already running opening rest holds the restart.
 

@@ -69,7 +69,7 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
     commands, untouched, generator_deferrals, stopped_now = _build_commands(
         config, world, grants, reasons, wishes, refusals, families, blocked, previous
     )
-    stopped_by_opening, opening_rest_until = _opening_rest_bookkeeping(
+    opening_rest_until = _opening_rest_bookkeeping(
         config, world, previous, commands, stopped_now, rest_deferrals, generator_deferrals
     )
     return Plan(
@@ -80,7 +80,6 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
         circuits=circuit_decisions,
         deferrals=(*deferrals, *rest_deferrals, *generator_deferrals),
         untouched=untouched,
-        stopped_by_opening=stopped_by_opening,
         opening_rest_until=opening_rest_until,
     )
 
@@ -846,26 +845,23 @@ def _opening_rest_bookkeeping(
     stopped_now: frozenset[str],
     rest_deferrals: tuple[Deferral, ...],
     generator_deferrals: tuple[Deferral, ...],
-) -> tuple[frozenset[str], dict[str, datetime]]:
+) -> dict[str, datetime]:
     """Return this plan's per-appliance opening-rest bookkeeping.
 
     De rust hangt aan het apparaat, niet aan de reden van het vorige commando.
     `opening_rest_until` draagt de eindtijd van elke rust, gerekend vanaf de
     stop zelf (anker 5): een verse openingsstop krijgt meteen
     `world.now + OPENING_MIN_REST`, en die eindtijd wordt ronde na ronde
-    meegedragen zolang het apparaat niet draait. `stopped_by_opening` noemt
-    alleen nog de apparaten die déze ronde door een opening zijn stilgezet —
-    de rust zelf heeft geen tweede veld meer nodig.
+    meegedragen zolang het apparaat niet draait.
 
     The rest hangs on the appliance, not on the previous command's reason.
     `opening_rest_until` carries each rest's deadline, counted from the stop
     itself (anchor 5): a fresh opening stop gets `world.now + OPENING_MIN_REST`
     at once, and that deadline is carried round after round while the appliance
-    stays off. `stopped_by_opening` only names the appliances an opening stopped
-    this round — the rest itself no longer needs a second field.
+    stays off.
     """
     if previous is None:
-        return stopped_now, {entity: world.now + OPENING_MIN_REST for entity in stopped_now}
+        return {entity: world.now + OPENING_MIN_REST for entity in stopped_now}
 
     commanded_running = {
         command.entity_id
@@ -885,7 +881,7 @@ def _opening_rest_bookkeeping(
         entity: until for entity, until in carried_until.items() if entity not in dropped
     }
     opening_rest_until.update({entity: world.now + OPENING_MIN_REST for entity in stopped_now})
-    return frozenset(stopped_now), opening_rest_until
+    return opening_rest_until
 
 
 def _stop_blocked(

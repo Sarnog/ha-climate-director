@@ -648,9 +648,9 @@ class TestTheGeneratorTakesPartInTheOpeningRest:
         assert stopped_command.hvac_mode == "off"
         if rests:
             assert stopped_command.reason is Reason.OPENING_OPEN
-            assert GAS in stopped.stopped_by_opening
+            assert stopped.opening_rest_until.get(GAS) == at(12, 2) + gates.OPENING_MIN_REST
         else:
-            assert GAS not in stopped.stopped_by_opening
+            assert GAS not in stopped.opening_rest_until
 
         again = decide(
             config,
@@ -683,7 +683,7 @@ class TestTheGeneratorTakesPartInTheOpeningRest:
         assert stopped_command is not None
         assert stopped_command.hvac_mode == "off"
         assert stopped_command.reason is Reason.OPENING_OPEN_ELSEWHERE
-        assert GAS in stopped.stopped_by_opening
+        assert stopped.opening_rest_until.get(GAS) == at(12, 2) + gates.OPENING_MIN_REST
 
         again = decide(
             config,
@@ -772,7 +772,7 @@ class TestTheGeneratorTakesPartInTheOpeningRest:
         assert stopped_command is not None
         assert stopped_command.hvac_mode == "off"
         assert stopped_command.reason is Reason.SATISFIED
-        assert GAS not in stopped.stopped_by_opening
+        assert GAS not in stopped.opening_rest_until
 
         again = decide(
             config,
@@ -821,7 +821,7 @@ class TestTheGeneratorTakesPartInTheOpeningRest:
         assert stopped_command is not None
         assert stopped_command.hvac_mode == "off"
         assert stopped_command.reason is Reason.SATISFIED
-        assert GAS not in stopped.stopped_by_opening
+        assert GAS not in stopped.opening_rest_until
 
         again = decide(
             config,
@@ -1128,9 +1128,9 @@ class TestTheRestCountsFromTheStop:
         assert stopped_command.hvac_mode == "off"
         if was_running:
             assert stopped_command.reason is Reason.OPENING_OPEN
-            assert GAS in stopped.stopped_by_opening
+            assert stopped.opening_rest_until.get(GAS) == at(12, 1) + gates.OPENING_MIN_REST
         else:
-            assert GAS not in stopped.stopped_by_opening
+            assert GAS not in stopped.opening_rest_until
 
         closed_now = at(12, 1) + timedelta(minutes=gap_minutes)
         closed = decide(
@@ -1319,9 +1319,9 @@ class TestOnlyARunningApplianceRestsAfterAnOpening:
         assert stopped_command is not None
         assert stopped_command.hvac_mode == "off"
         if rests:
-            assert GAS in stopped.stopped_by_opening
+            assert stopped.opening_rest_until.get(GAS) == at(7, 0) + gates.OPENING_MIN_REST
         else:
-            assert GAS not in stopped.stopped_by_opening
+            assert GAS not in stopped.opening_rest_until
 
         resumed = decide(
             config,
