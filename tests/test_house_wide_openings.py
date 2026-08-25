@@ -1335,3 +1335,57 @@ class TestOnlyARunningApplianceRestsAfterAnOpening:
             assert resumed_command.reason is Reason.SHORT_CYCLE_PROTECTION
         else:
             assert resumed_command.hvac_mode == "heat"
+
+
+class TestWithoutAPreviousPlanTheRestIsPinnedDown:
+    """Beslissing 1 (2026-08-25): na een herstart rust alleen de gewone bron.
+
+    Decision 1 (2026-08-25): after a restart only the ordinary source rests.
+    """
+
+    def test_a_running_source_rests_after_a_restart(self) -> None:
+        """`_was_running` leest de wereld, dus de bron rust ook zonder vorig plan.
+
+        `_was_running` reads the world, so the source rests without a previous
+        plan too.
+        """
+        config = own_boiler()
+        world = make_world(
+            now=at(12, 0),
+            outdoor=2.0,
+            indoor={"woonkamer": 18.0},
+            climates={GAS: climate("heat", changed_at=at(11, 30))},
+            openings={BACK_DOOR: OpeningState(open=True, changed_at=at(12, 0))},
+        )
+
+        plan = decide(config, world, None)
+        command = command_for(plan, GAS)
+        assert command is not None
+        assert command.hvac_mode == "off"
+        assert command.reason is Reason.OPENING_OPEN
+        assert plan.opening_rest_until.get(GAS) == at(12, 0) + gates.OPENING_MIN_REST
+
+    def test_a_running_generator_does_not_rest_after_a_restart(self) -> None:
+        """`_received_heat` heeft een vorig plan nodig, dus de generator rust niet.
+
+        `_received_heat` needs a previous plan, so the generator does not rest.
+        """
+        config = wet_house()
+        world = make_world(
+            now=at(12, 0),
+            outdoor=2.0,
+            indoor={"woonkamer": 18.0, "slaapkamer": 18.0},
+            climates={
+                GAS: climate("heat", changed_at=at(11, 30)),
+                "climate.woonkamer_kraan": climate("off"),
+                "climate.slaapkamer_kraan": climate("off"),
+            },
+            openings={BACK_DOOR: OpeningState(open=True, changed_at=at(12, 0))},
+        )
+
+        plan = decide(config, world, None)
+        command = command_for(plan, GAS)
+        assert command is not None
+        assert command.hvac_mode == "off"
+        assert command.reason is Reason.SATISFIED
+        assert GAS not in plan.opening_rest_until
