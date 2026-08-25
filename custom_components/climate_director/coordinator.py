@@ -1188,6 +1188,15 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         second costs an appliance one extra pause at worst. Both temporary, and
         both on the safe side.
         """
+        # P1: een ronde die bij het afsluiten nog doorloopt - `apply` wacht op
+        # cloud-integraties - mag na de flush geen nieuwe uitgestelde schrijfactie
+        # meer plannen; die zou het bestand ná `async_remove_entry` terugschrijven.
+        #
+        # P1: a round still running during shutdown - `apply` waits on cloud
+        # integrations - must not schedule a new delayed write after the flush;
+        # that would resurrect the file after `async_remove_entry`.
+        if getattr(self, "_closing", False):
+            return
         self._store.async_delay_save(self._store_payload, 1)
 
     async def _async_restore_state(self) -> None:

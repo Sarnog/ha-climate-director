@@ -884,6 +884,27 @@ class TestItSurvivesARestart:
         item._async_save_state()
         assert item._store.written["handed_back"] == {"slaapkamer": "2026-08-18"}
 
+    def test_a_closing_coordinator_does_not_schedule_a_new_save(self) -> None:
+        """P1: ná de flush mag een nog lopende ronde geen opslag meer plannen.
+
+        De goedkoopste dekking voor het opslagvenster uit ronde 8: zodra
+        `_closing` waar is, is de uitgestelde schrijfactie van `_async_save_state`
+        verboden. Anders zou een ronde die de vijf-seconden-time-out van
+        `async_shutdown` overleeft het bestand ná `async_remove_entry`
+        terugschrijven.
+
+        P1: after the flush a still-running round must not schedule another save.
+        The cheapest cover for the storage window from round 8: once `_closing`
+        is true, the delayed write of `_async_save_state` is forbidden.
+        Otherwise a round that outlives the five-second `async_shutdown` timeout
+        would resurrect the file after `async_remove_entry`.
+        """
+        item = self._coordinator()
+        item._closing = True
+        item._handed_back = {"slaapkamer": date(2026, 8, 18)}
+        item._async_save_state()
+        assert item._store.written is None
+
     async def test_today_comes_back(self) -> None:
         today = dt_util.now().date()
         item = self._coordinator({"handed_back": {"slaapkamer": today.isoformat()}})

@@ -49,6 +49,10 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   van alleen een maximum aantal units per circuit. Een grens in stuks zegt niets over wat
   er werkelijk uit de meter loopt: drie kleine units zijn iets heel anders dan één ketel.
   Vraagt een vermogen per bron en een rangorde bij het afkappen.
+- **De onleesbare-entiteitenmelding kan dagelijks knipperen** — `unusable_entities()`
+  loopt over álle gevolgde entiteiten, cloud-`climate` en agenda's inbegrepen. Een meting
+  in de echte installatie ontbreekt nog; beoordeel tijdens de controleronde of de melder
+  knippert en of er een demping of een aparte melding nodig is.
 - **Neerslagintensiteit als drempel** — neerslag telt nu als ja/nee: een ingestelde staat
   heft de buitengrens op, hoe licht de neerslag ook is. Wie bij een miezerbui de ramen
   gewoon open wil houden, zou een ondergrens moeten kunnen opgeven (een sensor met mm/h en
