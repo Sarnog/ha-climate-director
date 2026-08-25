@@ -75,7 +75,7 @@ from .engine.families import family_of, preferred_mode
 from .engine.gates import asleep_at, house_wide_blocked, opening_standing
 from .engine.models import SeasonSource
 from .engine.serialise import config_from_dict
-from .units import to_celsius
+from .units import display_temperature, from_celsius, to_celsius
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1565,16 +1565,24 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             maximum = to_celsius(
                 _as_float(state.attributes.get("max_temp")), _user_temperature_unit(self)
             )
+            unit = _user_temperature_unit(self)
             for family in (ModeFamily.HEAT, ModeFamily.COOL):
                 if not source.supports(family):
                     continue
                 settings = zone.settings_for(family)
                 if settings is None:
                     continue
+                target = from_celsius(settings.target, unit)
                 if minimum is not None and settings.target < minimum:
-                    complaints.add(f"{preferred_mode(family)} {settings.target}° < {minimum}°")
+                    complaints.add(
+                        f"{preferred_mode(family)} {display_temperature(target, unit)}"
+                        f" < {display_temperature(from_celsius(minimum, unit), unit)}"
+                    )
                 if maximum is not None and settings.target > maximum:
-                    complaints.add(f"{preferred_mode(family)} {settings.target}° > {maximum}°")
+                    complaints.add(
+                        f"{preferred_mode(family)} {display_temperature(target, unit)}"
+                        f" > {display_temperature(from_celsius(maximum, unit), unit)}"
+                    )
             if complaints:
                 found.setdefault(source.entity_id, set()).update(complaints)
         return {entity_id: ", ".join(sorted(parts)) for entity_id, parts in found.items()}
@@ -2033,7 +2041,10 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         for decision in plan.zones:
             if previous.get(decision.zone_id) == decision:
                 continue
-            self.hass.bus.async_fire(EVENT_DECISION, _event_data(self.config, plan, decision))
+            self.hass.bus.async_fire(
+                EVENT_DECISION,
+                _event_data(self.config, plan, decision, _user_temperature_unit(self)),
+            )
 
     def _fire_refusals(self, plan: Plan) -> None:
         """Say so when a pre-conditioning request strands on an open window.
@@ -2248,8 +2259,22 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             self._cancel_deferral = None
 
 
-def _event_data(config: DirectorConfig, plan: Plan, decision: ZoneDecision) -> dict[str, Any]:
-    """Return the payload of one `climate_director_decision` event."""
+def _event_data(
+    config: DirectorConfig,
+    plan: Plan,
+    decision: ZoneDecision,
+    unit: str = UnitOfTemperature.CELSIUS,
+) -> dict[str, Any]:
+    """Return the payload of one `climate_director_decision` event.
+
+    `temperature` wordt gepubliceerd in de eenheid van de gebruiker, met
+    `temperature_unit` ernaast, zodat een automatisering die op het getal
+    templatet weet waarin ze rekent.
+
+    `temperature` is published in the user's unit, with `temperature_unit`
+    alongside it, so an automation templating on the number knows what it is
+    counting in.
+    """
     zone = config.zone(decision.zone_id)
     command = next((item for item in plan.commands if item.source_id == decision.source_id), None)
     return {
@@ -2260,7 +2285,8 @@ def _event_data(config: DirectorConfig, plan: Plan, decision: ZoneDecision) -> d
         "source_id": decision.source_id,
         "entity_id": command.entity_id if command else None,
         "hvac_mode": command.hvac_mode if command else None,
-        "temperature": command.temperature if command else None,
+        "temperature": from_celsius(command.temperature, unit) if command else None,
+        "temperature_unit": unit,
         "reason": decision.reason.value,
     }
 

@@ -47,6 +47,23 @@ def temperature_unit_of(hass: object) -> str:
     return getattr(units, "temperature_unit", UnitOfTemperature.CELSIUS)
 
 
+def display_temperature(value: float | None, unit: str) -> str:
+    """Return a rounded temperature with its unit, in the user's system.
+
+    De reparatiemeldingen zijn voor de gebruiker, dus daar staat geen kale
+    `°` en geen onafgeronde float. Fahrenheit telt zonder decimalen - een
+    omgerekende 21 °C is 69,8 °F en dat leest niemand als 69.8.
+
+    The repair notices are for the user, so they carry no bare `°` and no
+    unrounded float. Fahrenheit counts without decimals - a converted 21 °C is
+    69.8 °F and nobody reads that as 69.8.
+    """
+    if value is None:
+        return "?"
+    decimals = 0 if unit == UnitOfTemperature.FAHRENHEIT else 1
+    return f"{round(value, decimals)} {unit}"
+
+
 def delta_to_celsius(value: float | None, unit: str) -> float | None:
     """Return a temperature *difference* read in `unit` as degrees Celsius.
 

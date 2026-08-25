@@ -83,3 +83,66 @@ class TestTheIntegrationFollowsTheUsersUnit:
             assert ("set_hvac_mode", {"entity_id": LIVING, "hvac_mode": "heat"}) not in calls
         finally:
             await stop_house(live)
+
+
+class TestWhatTheUserSeesUsesTheUsersUnit:
+    async def test_sensor_attributes_speak_fahrenheit(self) -> None:
+        """De attributen van de waarneemsensoren volgen de eenheid van de gebruiker.
+
+        In schaduwmodus blijft de wereld staan waar hij stond, zodat ook de
+        actuele setpoint-attributen voorspelbaar zijn.
+
+        The observation sensors' attributes follow the user's unit. In shadow
+        mode the world stays where it was, so the actual-setpoint attributes are
+        predictable too.
+        """
+        live = await start_house(
+            installation(),
+            states=fahrenheit_world(65.0),
+            appliance="obedient",
+            unit_system=IMPERIAL_SYSTEM,
+            shadow=True,
+        )
+        try:
+            await live.evaluate()
+            commands = live.values("last_decision")["commands"]
+            assert commands and commands[0]["temperature"] == 68.0
+            command = live.values(f"command_{LIVING}")
+            assert command["temperature"] == 68.0
+            assert command["actual_temperature"] == 66.0
+            differences = live.values("mismatch")["differences"]
+            assert differences and differences[0]["wanted_temperature"] == 68.0
+            assert differences[0]["actual_temperature"] == 66.0
+        finally:
+            await stop_house(live)
+
+    async def test_the_decision_event_carries_the_unit(self) -> None:
+        live = await _house(65.0)
+        try:
+            await live.evaluate()
+            events = live.fired("climate_director_decision")
+            assert events, "geen decision-event gevuurd"
+            assert events[0]["temperature"] == 68.0
+            assert events[0]["temperature_unit"] == "°F"
+        finally:
+            await stop_house(live)
+
+    async def test_a_metric_installation_reports_celsius(self) -> None:
+        live = await start_house(
+            installation(),
+            states={
+                "sensor.woonkamer": ("18.5", {"unit_of_measurement": "°C"}),
+                LIVING: ("off", {"temperature": 20.0, "current_temperature": 18.5}),
+                "person.danny": ("home", {}),
+            },
+            appliance="obedient",
+        )
+        try:
+            await live.evaluate()
+            events = live.fired("climate_director_decision")
+            assert events, "geen decision-event gevuurd"
+            assert events[0]["temperature"] == 20.0
+            assert events[0]["temperature_unit"] == "°C"
+            assert live.values("last_decision")["commands"][0]["temperature"] == 20.0
+        finally:
+            await stop_house(live)

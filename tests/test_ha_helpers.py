@@ -138,6 +138,7 @@ class TestEventData:
         assert data["reason"] == decision.reason.value
         assert data["hvac_mode"] == "heat"
         assert data["temperature"] == 23.0
+        assert data["temperature_unit"] == "°C"
 
     def test_a_zone_without_a_command_still_produces_an_event(self) -> None:
         config = house()

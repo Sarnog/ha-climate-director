@@ -10,7 +10,11 @@ dat is [`README.md`](README.md)). Elke laag heeft precies één verantwoordelijk
 Assistant volgen, niet de engine er een tweede stelsel bij geven). De
 koppelingslaag is de enige plek die omrekent: de coordinator leest
 HA-temperaturen om naar Celsius, de applier zet setpoints terug naar de eenheid
-van de gebruiker, en het formulier toont en leest in diezelfde eenheid.
+van de gebruiker, het formulier toont en leest in diezelfde eenheid, en de
+sensorattributen en het `climate_director_decision`-event publiceren in de
+eenheid van de gebruiker (het event met een veld `temperature_unit` erbij).
+**De diagnose blijft Celsius**: dat is een ontwikkelaarsdump, geen
+gebruikersweergave.
 
 ### De ankers — lees dit eerst
 
@@ -588,8 +592,11 @@ that is [`README.md`](README.md)). Each layer has exactly one responsibility.
 that is the deliberate choice (decision 3 of 2026-08-25: follow Home
 Assistant's unit rather than giving the engine a second system). The binding
 layer is the one place that converts: the coordinator reads HA temperatures
-into Celsius, the applier turns setpoints back into the user's unit, and the
-form shows and reads in that same unit.
+into Celsius, the applier turns setpoints back into the user's unit, the form
+shows and reads in that same unit, and the sensor attributes and the
+`climate_director_decision` event publish in the user's unit (the event with a
+`temperature_unit` field alongside). **The diagnostics stay Celsius**: that is
+a developer dump, not a user-facing display.
 
 ### The anchors — read this first
 

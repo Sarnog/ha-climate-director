@@ -84,11 +84,12 @@ blueprint:
       name: Bericht / Message
       description: >-
         NL - Een sjabloon. Beschikbaar: `zone_name`, `zone_id`, `wanted`,
-        `granted`, `source_id`, `entity_id`, `hvac_mode`, `temperature` en
-        `reason`.
+        `granted`, `source_id`, `entity_id`, `hvac_mode`, `temperature`,
+        `temperature_unit` en `reason`.
 
         EN - A template. Available: `zone_name`, `zone_id`, `wanted`, `granted`,
-        `source_id`, `entity_id`, `hvac_mode`, `temperature` and `reason`.
+        `source_id`, `entity_id`, `hvac_mode`, `temperature`,
+        `temperature_unit` and `reason`.
       default: >-
         {{ trigger.event.data.zone_name }}: {{ trigger.event.data.granted }} via
         {{ trigger.event.data.source_id or 'nothing' }} ({{
