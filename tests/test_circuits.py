@@ -752,6 +752,125 @@ class TestCapacity:
             assert decision.granted is ModeFamily.HEAT
             assert decision.reason is not Reason.CIRCUIT_AT_CAPACITY
 
+    def _shared_house(self, cap: int, pre_occupied: bool, order: str) -> DirectorConfig:
+        """Return solo + shared-on-two-zones on one circuit of `cap` places."""
+        shared = "climate.shared"
+        solo = unit("solo")
+        units = (solo, shared, unit("stranger")) if pre_occupied else (solo, shared)
+        if order == "zolder_eerst":
+            second = Zone(
+                "zolder",
+                "Zolder",
+                "sensor.zolder",
+                priority=1,
+                sources=(Source("zolder_src", shared),),
+                cool=COOL_SETTINGS,
+            )
+            third = Zone(
+                "slaapkamer",
+                "Slaapkamer",
+                "sensor.slaapkamer",
+                priority=2,
+                sources=(Source("slaapkamer_src", shared),),
+                cool=COOL_SETTINGS,
+            )
+        else:
+            second = Zone(
+                "slaapkamer",
+                "Slaapkamer",
+                "sensor.slaapkamer",
+                priority=1,
+                sources=(Source("slaapkamer_src", shared),),
+                cool=COOL_SETTINGS,
+            )
+            third = Zone(
+                "zolder",
+                "Zolder",
+                "sensor.zolder",
+                priority=2,
+                sources=(Source("zolder_src", shared),),
+                cool=COOL_SETTINGS,
+            )
+        return DirectorConfig(
+            zones=(
+                Zone(
+                    "woonkamer",
+                    "Woonkamer",
+                    "sensor.woonkamer",
+                    priority=0,
+                    sources=(Source("woonkamer_src", solo),),
+                    cool=COOL_SETTINGS,
+                ),
+                second,
+                third,
+            ),
+            circuits=(
+                Circuit(
+                    circuit_id="c",
+                    name="C",
+                    units=units,
+                    simultaneous_heat_cool=False,
+                    max_concurrent_units=cap,
+                ),
+            ),
+        )
+
+    def _shared_world(self, pre_occupied: bool):
+        shared = "climate.shared"
+        solo = unit("solo")
+        climates = {solo: climate(MODE_OFF), shared: climate(MODE_OFF)}
+        if pre_occupied:
+            climates[unit("stranger")] = climate(MODE_COOL)
+        return make_world(
+            indoor={"woonkamer": WANTS_COOL, "zolder": WANTS_COOL, "slaapkamer": WANTS_COOL},
+            climates=climates,
+            season=Season.SUMMER,
+        )
+
+    @pytest.mark.parametrize("cap", [1, 2])
+    @pytest.mark.parametrize("pre_occupied", [False, True])
+    @pytest.mark.parametrize("order", ["zolder_eerst", "slaapkamer_eerst"])
+    def test_a_shared_appliance_takes_one_slot_or_none(
+        self, cap: int, pre_occupied: bool, order: str
+    ) -> None:
+        """De grens beslist per apparaat, niet per toekenning (D2).
+
+        The cap is decided per appliance, not per grant (D2).
+        """
+        config = self._shared_house(cap, pre_occupied, order)
+        world = self._shared_world(pre_occupied)
+        plan = decide(config, world)
+
+        assert_plan_holds(config, world, plan)
+
+        circuit = config.circuits[0]
+        commanded = {command.entity_id for command in plan.commands}
+        running = {
+            command.entity_id
+            for command in plan.commands
+            if command.entity_id in circuit.units
+            and family_of(command.hvac_mode) in (ModeFamily.HEAT, ModeFamily.COOL)
+        } | {
+            entity_id
+            for entity_id in circuit.units
+            if entity_id not in commanded and world.climate(entity_id).running
+        }
+        assert len(running) <= cap, running
+
+        shared_zones = ("zolder", "slaapkamer")
+        shared_decisions = [plan.decision_for(zone_id) for zone_id in shared_zones]
+        assert all(decision is not None for decision in shared_decisions)
+
+        if pre_occupied or cap == 1:
+            for decision in shared_decisions:
+                assert decision.granted is ModeFamily.NEUTRAL
+                assert decision.reason is Reason.CIRCUIT_AT_CAPACITY
+        else:
+            assert all(decision.granted is ModeFamily.COOL for decision in shared_decisions)
+            assert all(
+                decision.reason is not Reason.CIRCUIT_AT_CAPACITY for decision in shared_decisions
+            )
+
     def test_a_zero_capacity_means_no_limit_not_a_permanent_block(self) -> None:
         """Een met de hand bewerkte nul legt het circuit niet voorgoed stil.
 

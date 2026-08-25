@@ -508,28 +508,48 @@ def _apply_capacity(
 
     # De grens telt draaiende apparaten, niet zones: een gedeeld apparaat onder
     # twee zones op één circuit levert één draaiende binnenunit op, niet twee.
-    # Tel je per zone, dan krijgt de tweede kamer onterecht
-    # `CIRCUIT_AT_CAPACITY` terwijl hetzelfde apparaat toch al draait.
+    # Beslis daarom per apparaat in plaats van per toekenning. Een apparaat
+    # neemt hoogstens één plek in, op de beste rang van de zones die erom
+    # vragen - of het krijgt geen plek, en dan wordt elke zone erop geweigerd.
+    # Anders zou de tweede zone op een geweigerd gedeeld apparaat haar
+    # toekenning houden en het apparaat alsnog aanzetten.
     #
     # The limit counts running appliances, not zones: a shared appliance under
-    # two zones on one circuit is one running indoor unit, not two. Counting per
-    # zone would wrongly hand the second room `CIRCUIT_AT_CAPACITY` while that
-    # very appliance runs anyway.
+    # two zones on one circuit is one running indoor unit, not two. So decide
+    # per appliance rather than per grant. An appliance takes at most one slot,
+    # at the best rank of the zones asking for it - or it gets none, and then
+    # every zone on it is refused. Otherwise the second zone on a refused shared
+    # appliance kept its grant and started the appliance after all.
     entity_by_zone = {request.zone.zone_id: request.source.entity_id for request in requests}
 
-    denied: set[str] = set()
-    slots = used
-    seen_entities: set[str] = set()
+    def key_of_zone(zone_id: str) -> tuple[int, str]:
+        return rank.get(zone_id, (0, zone_id))
+
+    best_rank: dict[str, tuple[int, str]] = {}
+    ordered_entities: list[str] = []
     for grant in winners:
-        entity_id = entity_by_zone.get(grant.zone_id)
-        if entity_id is not None:
-            if entity_id in seen_entities:
-                continue
-            seen_entities.add(entity_id)
+        entity_id = entity_by_zone.get(grant.zone_id) or f"\0{grant.zone_id}"
+        if entity_id not in best_rank:
+            ordered_entities.append(entity_id)
+            best_rank[entity_id] = key_of_zone(grant.zone_id)
+        elif key_of_zone(grant.zone_id) < best_rank[entity_id]:
+            best_rank[entity_id] = key_of_zone(grant.zone_id)
+
+    ordered_entities.sort(key=lambda entity_id: best_rank[entity_id])
+
+    slots = used
+    chosen: set[str] = set()
+    for entity_id in ordered_entities:
         if slots >= cap:
-            denied.add(grant.zone_id)
-        else:
-            slots += 1
+            break
+        chosen.add(entity_id)
+        slots += 1
+
+    denied = {
+        grant.zone_id
+        for grant in winners
+        if (entity_by_zone.get(grant.zone_id) or f"\0{grant.zone_id}") not in chosen
+    }
 
     return [
         Grant(grant.zone_id, grant.source_id, ModeFamily.NEUTRAL, Reason.CIRCUIT_AT_CAPACITY)
