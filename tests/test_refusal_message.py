@@ -154,17 +154,20 @@ class TestWhichOpeningsAreNamed:
         )
         return item
 
-    def test_an_opening_inside_its_delay_is_not_named(self) -> None:
+    @pytest.mark.parametrize("house_wide", [False, True], ids=["zone", "house_wide"])
+    def test_an_opening_inside_its_delay_is_not_named(self, house_wide: bool) -> None:
         item = self._opening(delay=timedelta(minutes=5), changed_at=NOON)
-        assert item._open_openings("zolder") == []
+        assert item._open_openings("zolder", house_wide=house_wide) == []
 
-    def test_an_opening_past_its_delay_is_named(self) -> None:
+    @pytest.mark.parametrize("house_wide", [False, True], ids=["zone", "house_wide"])
+    def test_an_opening_past_its_delay_is_named(self, house_wide: bool) -> None:
         item = self._opening(delay=timedelta(minutes=5), changed_at=NOON - timedelta(minutes=6))
-        assert item._open_openings("zolder") == [WINDOW]
+        assert item._open_openings("zolder", house_wide=house_wide) == [WINDOW]
 
-    def test_an_opening_with_an_unknown_age_is_named(self) -> None:
+    @pytest.mark.parametrize("house_wide", [False, True], ids=["zone", "house_wide"])
+    def test_an_opening_with_an_unknown_age_is_named(self, house_wide: bool) -> None:
         item = self._opening(delay=timedelta(minutes=5), changed_at=None)
-        assert item._open_openings("zolder") == [WINDOW]
+        assert item._open_openings("zolder", house_wide=house_wide) == [WINDOW]
 
 
 class TestTheRefusalSentence:
