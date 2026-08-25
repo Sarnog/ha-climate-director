@@ -79,6 +79,10 @@ und löst diesen Konflikt für dich.
 Helfer musst du dafür nirgends anlegen. Alle Schalter und Regler erstellt die
 Integration selbst.
 
+**Einheit:** Die Integration setzt eine Home Assistant-Installation im
+metrischen System voraus: alle Temperaturen sind Grad Celsius und werden nicht
+umgerechnet.
+
 ## Schritt 1 — Installieren
 
 **Mindestversion:** Home Assistant **2025.3** oder neuer. Die Integration fügt

@@ -5,6 +5,9 @@
 Technisch ontwerpdocument voor wie aan de code werkt (geen gebruikershandleiding —
 dat is [`README.md`](README.md)). Elke laag heeft precies één verantwoordelijkheid.
 
+**Eenheden:** de integratie gaat uit van een Home Assistant in het metrieke stelsel:
+alle temperaturen zijn graden Celsius en worden nergens omgerekend.
+
 ### De ankers — lees dit eerst
 
 Een uitspraak in deze engine hangt altijd aan één ding, en welk ding dat is, is
@@ -576,6 +579,9 @@ Assistant te maken heeft hoort per definitie in `engine/`, met tests ernaast.
 
 Technical design document for anyone working on the code (not a user manual —
 that is [`README.md`](README.md)). Each layer has exactly one responsibility.
+
+**Units:** the integration assumes a Home Assistant running in the metric system:
+all temperatures are degrees Celsius and are not converted anywhere.
 
 ### The anchors — read this first
 

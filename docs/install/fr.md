@@ -79,6 +79,10 @@ Director sait quelles unités vont ensemble et résout ce conflit pour vous.
 Vous n'avez aucun helper à créer. L'intégration fabrique elle-même tous ses
 interrupteurs et réglages.
 
+**Unité :** l'intégration suppose une installation Home Assistant en système
+métrique : toutes les températures sont en degrés Celsius et ne sont pas
+converties.
+
 ## Étape 1 — Installation
 
 **Version minimale :** Home Assistant **2025.3** ou plus récent. L'intégration

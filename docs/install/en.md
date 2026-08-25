@@ -79,6 +79,9 @@ for you.
 You need to create no helpers for any of this. The integration makes all its
 switches and controls itself.
 
+**Units:** the integration assumes a Home Assistant running in the metric system:
+all temperatures are degrees Celsius and are not converted.
+
 ## Step 1 — Installing
 
 **Minimum version:** Home Assistant **2025.3** or newer. The integration adds
