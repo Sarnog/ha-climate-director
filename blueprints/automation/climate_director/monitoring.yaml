@@ -113,7 +113,10 @@ triggers:
   - trigger: state
     id: problem
     entity_id: !input problem_sensors
-    from: "off"
+    from:
+      - "off"
+      - unknown
+      - unavailable
     to: "on"
     for: !input settle
   - trigger: state

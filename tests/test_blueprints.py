@@ -171,3 +171,28 @@ class TestTheyMatchTheIntegration:
         text = self._text("precondition_refused.yaml")
         assert "ignore_openings: true" in text
         assert "minutes:" not in text.split("actions:")[-1]
+
+    def test_the_monitoring_trigger_sees_problems_present_right_after_a_restart(self) -> None:
+        """`unknown -> on` is de vorm van een probleem dat er na een herstart al is.
+
+        `unknown -> on` is the shape of a problem already present after a restart.
+        """
+        data = load(FOLDER / "monitoring.yaml")
+        problem = next(trigger for trigger in data["triggers"] if trigger.get("id") == "problem")
+        assert problem["to"] == "on"
+        starts = problem["from"] if isinstance(problem["from"], list) else [problem["from"]]
+        assert {"off", "unknown", "unavailable"} <= set(starts)
+
+    def test_the_recovery_trigger_keeps_requiring_a_reported_problem(self) -> None:
+        """Herstel meldt alleen wat eerst als probleem gemeld is; anders knippert het
+        bij elke start.
+
+        Recovery reports only what was reported as a problem first; otherwise it
+        blinks on every start-up.
+        """
+        data = load(FOLDER / "monitoring.yaml")
+        recovered = next(
+            trigger for trigger in data["triggers"] if trigger.get("id") == "recovered"
+        )
+        assert recovered["from"] == "on"
+        assert recovered["to"] == "off"
