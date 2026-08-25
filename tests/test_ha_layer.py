@@ -426,6 +426,16 @@ class TestReadingTheWorld:
         assert world.climate(LIVING).available is False
         assert world.climate(LIVING).running is False
 
+    def test_an_unavailable_appliance_with_an_active_mode_claims_nothing(self) -> None:
+        """De guard in `ClimateState.running` geldt ook met een actieve stand.
+
+        The guard in `ClimateState.running` holds even with an active mode.
+        """
+        from custom_components.climate_director.engine import ClimateState
+
+        assert ClimateState(hvac_mode="heat", available=False).running is False
+        assert ClimateState(hvac_mode="heat").running is True
+
     def test_an_unknown_appliance_reads_the_same(self) -> None:
         world = coordinator(self._states(**{LIVING: FakeState("unknown")})).build_world()
         assert world.climate(LIVING).available is False
