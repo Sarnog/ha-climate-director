@@ -1924,7 +1924,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             if self._family_seen.get(circuit.circuit_id) != current:
                 self._family_seen[circuit.circuit_id] = current
                 self._family_since[circuit.circuit_id] = (
-                    world.now if current is not ModeFamily.NEUTRAL else None
+                    world.now if current in (ModeFamily.HEAT, ModeFamily.COOL) else None
                 )
 
     def _with_family_history(self, world: WorldState) -> WorldState:

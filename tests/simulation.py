@@ -528,7 +528,7 @@ class Simulation:
             if self.family_seen.get(circuit.circuit_id) != current:
                 self.family_seen[circuit.circuit_id] = current
                 self.family_since[circuit.circuit_id] = (
-                    world.now if current is not ModeFamily.NEUTRAL else None
+                    world.now if current in (ModeFamily.HEAT, ModeFamily.COOL) else None
                 )
 
     # -- de ronde zelf / the round itself ------------------------------------

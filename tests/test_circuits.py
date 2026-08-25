@@ -16,7 +16,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 import pytest
-from conftest import at, climate, make_world
+from conftest import assert_plan_holds, at, climate, make_world
 
 from custom_components.climate_director.engine import (
     MODE_COOL,
@@ -36,6 +36,7 @@ from custom_components.climate_director.engine import (
     Zone,
     constraints,
     decide,
+    family_of,
 )
 
 HEAT_SETTINGS = ModeSettings(target=21.0, start_at=20.0, hysteresis=1.0)
@@ -901,6 +902,135 @@ def test_idle_modes_do_not_claim_a_circuit(mode: str) -> None:
     circuit = multi_split("c", "woonkamer")
     world = make_world(climates={unit("woonkamer"): climate(mode)})
     assert constraints.active_family(world, circuit) is ModeFamily.NEUTRAL
+
+
+class TestAmbiguousModesLockTheCircuit:
+    """Een stand die de director niet kan lezen claimt de compressor (D1).
+
+    A mode the director cannot read claims the compressor (D1).
+    """
+
+    AMBIGUOUS_MODES = ["auto", "heat_cool", "onbekend"]
+
+    def _house(self, situation: str) -> DirectorConfig:
+        warm = Zone(
+            zone_id="woonkamer",
+            name="Woonkamer",
+            indoor_sensor="sensor.woonkamer",
+            priority=0,
+            sources=(Source(source_id="woonkamer_airco", entity_id=unit("woonkamer")),),
+            heat=HEAT_SETTINGS,
+            cool=COOL_SETTINGS,
+        )
+        if situation == "unit_in_no_zone":
+            return DirectorConfig(
+                zones=(warm,),
+                circuits=(multi_split("multisplit", "woonkamer", "stranger"),),
+            )
+        other = Zone(
+            zone_id="slaapkamer",
+            name="Slaapkamer",
+            indoor_sensor="sensor.slaapkamer",
+            priority=1,
+            sources=(
+                Source(
+                    source_id="slaapkamer_airco",
+                    entity_id=unit("slaapkamer"),
+                    autostart=situation != "handbediend",
+                ),
+            ),
+            heat=HEAT_SETTINGS,
+            cool=COOL_SETTINGS,
+        )
+        return DirectorConfig(
+            zones=(warm, other),
+            circuits=(multi_split("multisplit", "woonkamer", "slaapkamer"),),
+        )
+
+    def _world(self, situation: str, mode: str, wanted: str):
+        season = Season.WINTER if wanted == "heat" else Season.SUMMER
+        indoor = {"woonkamer": WANTS_HEAT if wanted == "heat" else WANTS_COOL}
+        climates = {unit("woonkamer"): climate("off")}
+        if situation == "unit_in_no_zone":
+            climates[unit("stranger")] = climate(mode)
+        else:
+            indoor["slaapkamer"] = None if situation == "onleesbare_sensor" else 21.0
+            climates[unit("slaapkamer")] = climate(mode)
+        return make_world(
+            now=at(14),
+            indoor=indoor,
+            climates=climates,
+            season=season,
+            zone_overrides={"slaapkamer": True} if situation == "overgedragen" else None,
+        )
+
+    @pytest.mark.parametrize("mode", AMBIGUOUS_MODES)
+    @pytest.mark.parametrize(
+        "situation",
+        ["unit_in_no_zone", "overgedragen", "onleesbare_sensor", "handbediend"],
+    )
+    @pytest.mark.parametrize("wanted", ["heat", "cool"])
+    def test_no_duty_is_put_beside_an_unreadable_claim(
+        self, mode: str, situation: str, wanted: str
+    ) -> None:
+        """Zolang de onleesbare stand draait, komt er geen concrete taak naast.
+
+        As long as the unreadable mode keeps running, no concrete duty joins it.
+        """
+        config = self._house(situation)
+        world = self._world(situation, mode, wanted)
+        plan = decide(config, world)
+
+        assert_plan_holds(config, world, plan)
+
+        claimed = unit("stranger") if situation == "unit_in_no_zone" else unit("slaapkamer")
+        assert world.climate(claimed).family is ModeFamily.AMBIGUOUS
+
+        claimed_command = plan.command_for(claimed)
+        claimed_keeps_running = (
+            claimed_command is None
+            or family_of(claimed_command.hvac_mode) is not ModeFamily.NEUTRAL
+        )
+        if claimed_keeps_running:
+            concrete = {
+                family_of(command.hvac_mode)
+                for command in plan.commands
+                if command.entity_id in config.circuits[0].units
+            } & {ModeFamily.HEAT, ModeFamily.COOL}
+            assert not concrete, concrete
+
+    def test_fan_only_holds_nothing_back(self) -> None:
+        """`fan_only` claimt niets, dus de director mag er gewoon naast starten."""
+        config = self._house("unit_in_no_zone")
+        world = self._world("unit_in_no_zone", "fan_only", "cool")
+        plan = decide(config, world)
+        command = plan.command_for(unit("woonkamer"))
+        assert command is not None
+        assert family_of(command.hvac_mode) is ModeFamily.COOL
+
+    def test_a_simultaneous_circuit_keeps_both_duties_free(self) -> None:
+        """Een buitenunit die beide taken aankan kent deze beperking niet."""
+        config = DirectorConfig(
+            zones=rooms("woonkamer"),
+            circuits=(
+                Circuit(
+                    circuit_id="multisplit",
+                    name="Multi-split",
+                    units=(unit("woonkamer"), unit("stranger")),
+                    simultaneous_heat_cool=True,
+                ),
+            ),
+        )
+        world = make_world(
+            now=at(14),
+            indoor={"woonkamer": WANTS_COOL},
+            climates={unit("woonkamer"): climate("off"), unit("stranger"): climate("auto")},
+            season=Season.SUMMER,
+        )
+        plan = decide(config, world)
+        command = plan.command_for(unit("woonkamer"))
+        assert command is not None
+        assert family_of(command.hvac_mode) is ModeFamily.COOL
 
 
 class TestFanOnlySupport:

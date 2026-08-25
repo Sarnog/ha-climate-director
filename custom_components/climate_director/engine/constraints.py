@@ -27,7 +27,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .families import ACTIVE_FAMILIES, ModeFamily
+from .families import ACTIVE_FAMILIES, ModeFamily, claims_compressor
 from .models import Circuit, ConflictPolicy, DirectorConfig, Season, Source, Zone
 from .plan import CircuitDecision, Deferral, Reason
 from .world import WorldState
@@ -128,7 +128,7 @@ def resolve(
     if (
         not forced
         and chosen is not current
-        and current is not ModeFamily.NEUTRAL
+        and current in ACTIVE_FAMILIES
         and circuit.min_family_switch_interval
         and since is not None
         and world.now - since < circuit.min_family_switch_interval
@@ -147,7 +147,7 @@ def resolve(
     pending = (
         not forced
         and chosen is not current
-        and current is not ModeFamily.NEUTRAL
+        and current in ACTIVE_FAMILIES
         and bool(circuit.family_switch_delay)
         and _any_managed_running(config, world, circuit, current)
     )
@@ -209,14 +209,16 @@ def active_family(world: WorldState, circuit: Circuit) -> ModeFamily:
     """Return the duty a circuit is running right now.
 
     Reads every entity on the circuit, including indoor units the director does
-    not manage: an unmanaged unit still claims the compressor. Modes that leave
-    the duty to the unit itself (`heat_cool`, `auto`) carry no readable duty and
-    are skipped. On the contradictory reading of two units in opposing duties,
-    the first in configured order wins, so the answer stays deterministic.
+    not manage: an unmanaged unit still claims the compressor. A mode that
+    claims the compressor without naming its duty (`heat_cool`, `auto`, or an
+    unknown mode) is reported as `AMBIGUOUS` - it locks the circuit against a
+    duty the director would put beside it, even though it cannot be used as a
+    concrete label. On the contradictory reading of two claiming units, the
+    first in configured order wins, so the answer stays deterministic.
     """
     for entity_id in circuit.units:
         family = world.climate(entity_id).family
-        if family in ACTIVE_FAMILIES:
+        if claims_compressor(family):
             return family
     return ModeFamily.NEUTRAL
 
@@ -238,7 +240,9 @@ def _forced_families(
     Alle taken worden teruggegeven en niet alleen de eerste. Een mens kan met
     een afstandsbediening en een override twee taken tegelijk op een circuit
     zetten; wie dan alleen naar de eerste keek, zag de tweede over het hoofd en
-    kon er een derde unit bij aanzetten.
+    kon er een derde unit bij aanzetten. `AMBIGUOUS` telt net zo hard mee als
+    een concrete taak: wie op `auto` draait claimt de compressor, en zolang de
+    director die taak niet kan lezen zet hij er niets naast.
 
     Two kinds compel: a unit sitting in no zone at all, and a unit that
     deliberately gets nothing this round and simply keeps running. That second
@@ -249,7 +253,9 @@ def _forced_families(
     Every duty is returned rather than only the first. A person can put two
     duties on one circuit at once with a remote and an override; looking at the
     first alone missed the second and allowed a third unit to be started beside
-    them.
+    them. `AMBIGUOUS` counts just as hard as a concrete duty: a unit running
+    `auto` claims the compressor, and as long as the director cannot read that
+    duty it puts nothing beside it.
     """
     managed = {source.entity_id for _, source in config.sources_on(circuit)}
     # Een generator die in dit circuit staat is óók beheerd: de director stuurt
@@ -271,7 +277,7 @@ def _forced_families(
         for entity_id in circuit.units
         if entity_id not in managed or entity_id in standing
         for family in (world.climate(entity_id).family,)
-        if family in ACTIVE_FAMILIES
+        if claims_compressor(family)
     )
 
 
@@ -299,8 +305,19 @@ def _choose_family(
     if len(forced) > 1:
         return ModeFamily.NEUTRAL, Reason.CIRCUIT_CONFLICT_LOST
 
+    # Een unit buiten de greep van de director heeft de compressor al geclaimd;
+    # daar kan niets hier overheen. Een claim die de director niet kán lezen
+    # (`auto`, `heat_cool`, onbekend) zet het circuit vast zonder een taak te
+    # noemen: geen enkele concrete taak kan er veilig naast draaien, dus krijgt
+    # geen enkele zone er een.
+    #
     # A unit outside the director's control has already claimed the compressor;
-    # nothing here can overrule that.
+    # nothing here can overrule that. A claim the director cannot read (`auto`,
+    # `heat_cool`, unknown) locks the circuit without naming a duty: no concrete
+    # duty can safely run beside it, so no zone gets one.
+    if ModeFamily.AMBIGUOUS in forced:
+        return ModeFamily.NEUTRAL, Reason.CIRCUIT_CONFLICT_LOST
+
     if forced:
         locked = next(iter(forced))
         settled = wanted == {locked}

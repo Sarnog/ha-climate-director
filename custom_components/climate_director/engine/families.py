@@ -62,9 +62,24 @@ _FAMILY_BY_MODE: dict[str, ModeFamily] = {
     MODE_AUTO: ModeFamily.AMBIGUOUS,
 }
 
-#: Duties that actually claim the compressor, in the order the engine reports
-#: them. `NEUTRAL` and `AMBIGUOUS` are deliberately absent.
+#: Concrete duties the engine can read and command. `NEUTRAL` runs nothing,
+#: and `AMBIGUOUS` claims the compressor without saying which duty it runs;
+#: both are deliberately absent.
 ACTIVE_FAMILIES: tuple[ModeFamily, ...] = (ModeFamily.HEAT, ModeFamily.COOL)
+
+
+def claims_compressor(family: ModeFamily) -> bool:
+    """Return whether this duty claims the compressor, `AMBIGUOUS` included.
+
+    Een stand die deze engine niet kent kan de compressor net zo goed laten
+    draaien; hem als onschuldig behandelen is de schadelijkere vergissing.
+    Alleen `NEUTRAL` (`off`, `fan_only`) draait niets.
+
+    A mode this engine does not know may run the compressor just the same;
+    treating it as harmless is the more damaging way to be wrong. Only
+    `NEUTRAL` (`off`, `fan_only`) runs nothing.
+    """
+    return family is not ModeFamily.NEUTRAL
 
 
 def family_of(mode: str) -> ModeFamily:

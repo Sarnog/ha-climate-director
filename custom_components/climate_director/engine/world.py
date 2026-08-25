@@ -18,7 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from .families import MODE_OFF, ModeFamily, family_of
+from .families import MODE_OFF, ModeFamily, claims_compressor, family_of
 from .models import Season
 
 
@@ -46,8 +46,17 @@ class ClimateState:
 
     @property
     def running(self) -> bool:
-        """Return whether this entity currently claims the compressor."""
-        return self.family in (ModeFamily.HEAT, ModeFamily.COOL, ModeFamily.AMBIGUOUS)
+        """Return whether this entity currently claims the compressor.
+
+        Een onbeschikbaar apparaat claimt niets: wat je niet kunt uitlezen kun
+        je ook niet aan een taak houden. De echte koppelingslaag bouwt een
+        onbeschikbaar apparaat bovendien altijd met een neutrale stand.
+
+        An unavailable appliance claims nothing: what you cannot read you cannot
+        hold to a duty either. The real binding layer moreover always builds an
+        unavailable appliance with a neutral mode.
+        """
+        return self.available and claims_compressor(self.family)
 
     def supports(self, mode: str) -> bool:
         """Return whether this entity reports it can run `mode`.
