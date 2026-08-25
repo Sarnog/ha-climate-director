@@ -242,7 +242,23 @@ def _installation(rng: random.Random) -> dict:
 
     circuits = []
     if count > 1 and rng.random() < 0.8:
-        members = units[: rng.randrange(2, count + 1)]
+        members = list(units[: rng.randrange(2, count + 1)])
+        # De gedeelde bron hoort ook eens op een buitenunit te staan: een
+        # gedeeld apparaat op een circuit met een capaciteitsgrens is precies
+        # de vorm die `assert_plan_holds` moet bewaken. Alleen als hij ook
+        # werkelijk in een zone staat - anders klaagt `validate()` terecht over
+        # een unit die in geen enkele zone staat.
+        #
+        # The shared source should sit on an outdoor unit every now and then: a
+        # shared appliance on a circuit with a capacity cap is exactly the shape
+        # `assert_plan_holds` has to police. Only when it really sits in a zone
+        # - otherwise `validate()` rightly complains about a unit in no zone.
+        if (
+            shared is not None
+            and any(source["entity_id"] == shared for zone in zones for source in zone["sources"])
+            and rng.random() < 0.5
+        ):
+            members.append(shared)
         # Een buitenunit die beide taken tegelijk aankan wisselt nooit van
         # taak, dus omschakeltijden horen daar niet bij - `validate()` zegt dat
         # ook, en dan hoort een generator van geldige huizen ze niet te maken.
