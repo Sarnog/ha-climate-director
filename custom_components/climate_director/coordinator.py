@@ -75,7 +75,7 @@ from .engine.families import family_of, preferred_mode
 from .engine.gates import asleep_at, house_wide_blocked, opening_standing
 from .engine.models import SeasonSource
 from .engine.serialise import config_from_dict
-from .units import display_temperature, from_celsius, to_celsius
+from .units import display_temperature, from_celsius, temperature_unit_of, to_celsius
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -255,11 +255,6 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         self.config: DirectorConfig = config_from_dict(
             entry.options.get(CONF_INSTALLATION) or entry.data.get(CONF_INSTALLATION) or {}
         )
-        self.temperature_unit: str = hass.config.units.temperature_unit
-        """De eenheid waarin Home Assistant temperaturen aanlevert en verwacht.
-
-        The unit in which Home Assistant supplies and expects temperatures.
-        """
         self._started_at = dt_util.now()
         """Het opstartmoment; openingen die daarvoor al openstonden tellen direct.
 
@@ -427,6 +422,20 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             immediate=False,
             function=self._async_evaluate,
         )
+
+    @property
+    def temperature_unit(self) -> str:
+        """De eenheid waarin Home Assistant nu temperaturen aanlevert en verwacht.
+
+        Elke keer opnieuw gelezen, net als in `applier.py` en `config_flow.py`:
+        wisselt de gebruiker het stelsel, dan volgt de coordinator meteen in
+        plaats van pas na een herstart.
+
+        Read afresh every time, like `applier.py` and `config_flow.py` do: when
+        the user switches systems the coordinator follows at once instead of only
+        after a restart.
+        """
+        return temperature_unit_of(self.hass)
 
     # -- opzetten / setting up ----------------------------------------------
 
@@ -1892,6 +1901,16 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         A window contact reports `on` when open, a cover reports `open`. The
         state is configured per opening and defaults to `on`, so existing
         installations keep reading the same thing.
+
+        `_started_at` schuift bij elke reload op: een raam dat vlak vóór een
+        wijziging in de options flow openging telt daarna meteen als lang genoeg
+        open en slaat zijn `delay` over. Dat is de veilige kant, precies zoals
+        L2 van ronde 8 al vastlegde.
+
+        `_started_at` moves with every reload: a window that opened just before
+        an options-flow change counts as open long enough right away and skips
+        its `delay`. That is the safe side, exactly as L2 of round 8 already
+        recorded.
         """
         state = self.hass.states.get(entity_id)
         if state is None:

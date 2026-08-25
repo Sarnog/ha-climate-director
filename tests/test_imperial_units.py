@@ -16,7 +16,7 @@ from __future__ import annotations
 from typing import Any
 
 from harness_live import LiveHome, settings, source, start_house, stop_house, zone
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 LIVING = "climate.woonkamer"
 
@@ -60,6 +60,19 @@ class TestTheIntegrationFollowsTheUsersUnit:
         live = await _house(65.0)
         try:
             assert live.coordinator.temperature_unit == "°F"
+        finally:
+            await stop_house(live)
+
+    async def test_the_coordinator_follows_a_unit_change_without_a_restart(self) -> None:
+        """De eenheid wordt elke keer opnieuw gelezen, niet alleen bij het opzetten.
+
+        The unit is read afresh every time, not only at setup.
+        """
+        live = await _house(65.0)
+        try:
+            assert live.coordinator.temperature_unit == "°F"
+            live.hass.config.units = METRIC_SYSTEM
+            assert live.coordinator.temperature_unit == "°C"
         finally:
             await stop_house(live)
 

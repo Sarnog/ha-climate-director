@@ -303,6 +303,12 @@ bron-ID wordt eerst naar zijn `entity_id` vertaald. Anders ontsnapte een gedeeld
 via het bron-ID van een andere kamer. Twee kamers die om hetzelfde apparaat vragen zijn
 daarbij geen tegenstanders — dat is één apparaat dat draait.
 
+Staan een handbediend apparaat én zijn groepstegenstander op hetzelfde circuit, dan
+bezet het handbediende apparaat zelf de plek (`_keeps_claiming` telt hem mee) en krijgt
+de tegenstander blijvend `CIRCUIT_AT_CAPACITY`; per beslissing 2 van 2026-08-25 blijft
+dat zo. Een exclusieve groep waarvan de leden dezelfde buitenunit delen kan zichzelf dus
+klemzetten — gebruik groepen alleen voor apparaten die geen buitenunit delen.
+
 In de bronkeuze stopt de huisbrede stop de **zone**, niet alleen het apparaat: is de
 eerste keus van de zone een huisbreed stilgezet apparaat, dan weigert de zone met
 `OPENING_OPEN_ELSEWHERE` in plaats van stilletjes door te schuiven naar de tweede keus —
@@ -878,6 +884,12 @@ An **exclusive group** is stored as source ids but works on appliances: every so
 is translated to its `entity_id` first. Otherwise a shared boiler escaped through
 another room's source id. Two rooms asking for the same appliance are no rivals in that
 - that is one appliance running.
+
+When a hand-operated appliance and its group rival sit on the same circuit, the
+hand-operated appliance occupies the slot itself (`_keeps_claiming` counts it), the rival
+gets `CIRCUIT_AT_CAPACITY` for good, and per decision 2 of 2026-08-25 that stays. An
+exclusive group whose members share an outdoor unit can therefore clamp itself shut —
+use groups only for appliances that do not share an outdoor unit.
 
 In source selection the house-wide stop stops the **zone**, not just the appliance: when
 the zone's first choice is a house-wide stopped appliance, the zone refuses with
