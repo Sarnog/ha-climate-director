@@ -147,16 +147,20 @@ class TestTheFineSimulationChecksIgnitionGaps:
             )
 
 
-def fine_generator_house(satisfied: str, cold: str) -> DirectorConfig:
+def fine_generator_house(cold: str) -> DirectorConfig:
     """Return two rooms on one multi-split, plus a shared heat source.
 
     R14 zat uitsluitend in het generatorpad: één kamer op temperatuur, de deur
     bij de koude kamer, en een gedeelde warmtebron die beide kamers bedient. De
     fijne simulatie hierboven kent geen generator, dus zij zag dat pad niet.
+    Alleen de koude kamer telt hier: waar de opening hangt; de tevreden kamer
+    bepaalt de beginstanden, niet dit huis.
 
     R14 lived solely in the generator path: one room at temperature, the door at
     the cold room, and a shared heat source serving both rooms. The fine
-    simulation above has no generator, so it could not see that path.
+    simulation above has no generator, so it could not see that path. Only the
+    cold room counts here: where the opening hangs; the satisfied room decides
+    the starting temperatures, not this house.
     """
 
     def room(zone_id: str, unit: str, priority: int) -> Zone:
@@ -215,7 +219,7 @@ class TestTheFineSimulationSeesTheGeneratorsOpeningRest:
     def test_a_flapping_door_holds_the_generators_gap(self, satisfied: str, cold: str) -> None:
         scenario = Scenario(
             name=f"fijne-ontstekingsstap-generator-{satisfied}-tevreden",
-            config=fine_generator_house(satisfied=satisfied, cold=cold),
+            config=fine_generator_house(cold=cold),
             start=START,
             start_indoor={satisfied: 21.5, cold: 18.5},
             weather=fine_weather,
