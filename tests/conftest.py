@@ -423,6 +423,29 @@ def assert_plan_holds(config, world, plan, where: str = "") -> None:
         } & {ModeFamily.HEAT, ModeFamily.COOL}
         assert len(ordered) <= 1, f"{mark}{circuit.circuit_id} krijgt {ordered} tegelijk"
 
+        # Een unit die deze ronde géén commando krijgt en doordraait, houdt het
+        # circuit vast - AMBIGUOUS inbegrepen: een stand die de engine niet kent
+        # kan de compressor net zo goed laten draaien. De director mag er geen
+        # taak naast zetten die daarmee botst.
+        #
+        # A unit that gets no command this round and keeps running holds the
+        # circuit - AMBIGUOUS included: a mode the engine does not know may run
+        # the compressor just the same. The director may not put a duty beside
+        # it that clashes.
+        commanded = {
+            command.entity_id for command in plan.commands if command.entity_id in circuit.units
+        }
+        standing_families = {
+            world.climate(entity_id).family
+            for entity_id in circuit.units
+            if entity_id not in commanded and world.climate(entity_id).running
+        } - {ModeFamily.NEUTRAL}
+        if ordered and standing_families:
+            assert standing_families <= ordered, (
+                f"{mark}{circuit.circuit_id} draait {sorted(standing_families)} terwijl "
+                f"de director {sorted(ordered)} opdraagt"
+            )
+
         if circuit.max_concurrent_units is None:
             continue
 
