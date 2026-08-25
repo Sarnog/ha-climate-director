@@ -817,3 +817,179 @@ class TestItFollowsTheDutyTheCircuitActuallyRuns:
         result = decide(config, world)
         assert result.circuits[0].family is ModeFamily.NEUTRAL
         assert command_for(result, BEDROOM) is None
+
+
+class TestAManualSourceDoesNotYieldToAWaitingRival:
+    """Een handbediend apparaat wijkt voor de vraag, niet voor een timer (D4).
+
+    A hand-operated appliance yields to the asking, not to a timer (D4).
+    """
+
+    HELPER = "climate.helper"
+
+    def _bedroom(self) -> Zone:
+        return Zone(
+            "slaapkamer",
+            "Slaapkamer",
+            "sensor.slaapkamer",
+            priority=2,
+            sources=(Source("s", BEDROOM, autostart=False),),
+            heat=ModeSettings(21.0, 20.0),
+            cool=ModeSettings(23.0, 24.0),
+        )
+
+    def _config(self, circuit: Circuit, *, living_priority: int = 0) -> DirectorConfig:
+        return DirectorConfig(
+            zones=(
+                Zone(
+                    "woonkamer",
+                    "Woonkamer",
+                    "sensor.woonkamer",
+                    priority=living_priority,
+                    sources=(Source("w", LIVING),),
+                    heat=ModeSettings(21.0, 20.0),
+                    cool=ModeSettings(23.0, 24.0),
+                ),
+                self._bedroom(),
+            ),
+            circuits=(
+                circuit,
+                Circuit("bedroom", "Bedroom", units=(BEDROOM,), simultaneous_heat_cool=True),
+            ),
+            exclusive_groups=(frozenset({"w", "s"}),),
+            residents=(Resident("danny", "Danny", presence_entity="person.danny"),),
+        )
+
+    def _config_with_helper(
+        self, circuit: Circuit, *, living_priority: int, helper_priority: int
+    ) -> DirectorConfig:
+        return DirectorConfig(
+            zones=(
+                Zone(
+                    "woonkamer",
+                    "Woonkamer",
+                    "sensor.woonkamer",
+                    priority=living_priority,
+                    sources=(Source("w", LIVING),),
+                    heat=ModeSettings(21.0, 20.0),
+                    cool=ModeSettings(23.0, 24.0),
+                ),
+                Zone(
+                    "helper",
+                    "Helper",
+                    "sensor.helper",
+                    priority=helper_priority,
+                    sources=(Source("h", self.HELPER),),
+                    heat=ModeSettings(21.0, 20.0),
+                    cool=ModeSettings(23.0, 24.0),
+                ),
+                self._bedroom(),
+            ),
+            circuits=(
+                circuit,
+                Circuit("bedroom", "Bedroom", units=(BEDROOM,), simultaneous_heat_cool=True),
+            ),
+            exclusive_groups=(frozenset({"w", "s"}),),
+            residents=(Resident("danny", "Danny", presence_entity="person.danny"),),
+        )
+
+    def _plan(
+        self,
+        config: DirectorConfig,
+        *,
+        living_mode: str = "off",
+        living_changed_at: datetime | None = None,
+        helper_mode: str = "off",
+        indoor: dict[str, float] | None = None,
+        extra_climates: dict[str, str] | None = None,
+    ):
+        from conftest import climate
+
+        temperatures = {
+            "woonkamer": 15.0,
+            "slaapkamer": 21.5,
+            "helper": 21.5,
+            **(indoor or {}),
+        }
+        world = make_world(
+            now=NOON,
+            indoor=temperatures,
+            climates={
+                LIVING: climate(living_mode, changed_at=living_changed_at),
+                BEDROOM: climate("heat"),
+                self.HELPER: climate(helper_mode),
+                **(extra_climates or {}),
+            },
+            residents={"danny": awake()},
+        )
+        return decide(config, world)
+
+    def test_a_rival_held_by_short_cycle_protection_does_not_push_it_away(self) -> None:
+        circuit = Circuit(
+            "living",
+            "Living",
+            units=(LIVING,),
+            simultaneous_heat_cool=True,
+            min_cycle_time=timedelta(minutes=10),
+        )
+        plan = self._plan(
+            self._config(circuit),
+            living_mode="off",
+            living_changed_at=NOON - timedelta(minutes=1),
+        )
+        assert plan.untouched_for(BEDROOM) is not None
+        living = command_for(plan, LIVING)
+        assert living is not None and living.hvac_mode == MODE_OFF
+
+    def test_a_rival_held_by_a_switch_pause_does_not_push_it_away(self) -> None:
+        circuit = Circuit(
+            "living",
+            "Living",
+            units=(LIVING, self.HELPER),
+            simultaneous_heat_cool=False,
+            family_switch_delay=timedelta(minutes=5),
+        )
+        config = self._config_with_helper(circuit, living_priority=0, helper_priority=1)
+        plan = self._plan(
+            config,
+            living_mode="off",
+            helper_mode="heat",
+            indoor={"woonkamer": 30.0, "helper": 21.5},
+        )
+        assert plan.untouched_for(BEDROOM) is not None
+
+    def test_a_rival_without_a_place_does_not_push_it_away(self) -> None:
+        circuit = Circuit(
+            "living",
+            "Living",
+            units=(LIVING, "climate.stranger"),
+            simultaneous_heat_cool=False,
+            max_concurrent_units=1,
+        )
+        config = self._config(circuit)
+        plan = self._plan(
+            config,
+            living_mode="off",
+            helper_mode="off",
+            indoor={"woonkamer": 30.0},
+            extra_climates={"climate.stranger": "cool"},
+        )
+        assert plan.untouched_for(BEDROOM) is not None
+
+    def test_a_real_duty_conflict_still_pushes_it_away(self) -> None:
+        circuit = Circuit(
+            "living",
+            "Living",
+            units=(LIVING, self.HELPER),
+            simultaneous_heat_cool=False,
+        )
+        config = self._config_with_helper(circuit, living_priority=1, helper_priority=0)
+        plan = self._plan(
+            config,
+            living_mode="off",
+            helper_mode="off",
+            indoor={"woonkamer": 15.0, "helper": 30.0},
+        )
+        bedroom = command_for(plan, BEDROOM)
+        assert bedroom is not None and bedroom.hvac_mode == MODE_OFF
+        assert bedroom.reason is Reason.EXCLUSIVE_GROUP_LOST

@@ -464,6 +464,7 @@ def _manual_conflict(
     source: Source,
     wishes: dict[str, constraints.Request],
     families: dict[str, ModeFamily],
+    grants: dict[str, constraints.Grant],
 ) -> UnitCommand | None:
     """Return the command standing a manual source down, or `None` to leave it.
 
@@ -506,7 +507,7 @@ def _manual_conflict(
     # when they do the same thing and share no outdoor unit. Without this a
     # hand-operated appliance would ignore the group with impunity, since it
     # never files a request of its own - leaving the group a rule on paper.
-    if _exclusive_rival(config, zone, source, wishes):
+    if _exclusive_rival(config, zone, source, wishes, grants):
         return _stand_down(config, world, zone, source, Reason.EXCLUSIVE_GROUP_LOST)
 
     circuit = config.circuit_for_entity(source.entity_id)
@@ -566,15 +567,30 @@ def _exclusive_rival(
     zone: Zone,
     source: Source,
     wishes: dict[str, constraints.Request],
+    grants: dict[str, constraints.Grant],
 ) -> bool:
     """Return whether another appliance in this source's exclusive group wants to run.
 
     Op apparaat, niet op bron-ID: hetzelfde apparaat onder een andere kamer is
     geen ander lid maar hetzelfde lid, en die hoeft nergens voor te wijken.
 
+    Wijken voor de vraag, niet voor een timer: een tegenstander die alleen op
+    een timer of op een volle buitenunit wacht gaat deze ronde niet draaien, dus
+    een handbediend apparaat hoeft er niet voor opzij - de director start hem
+    nooit uit zichzelf, dus zo'n uit-commando was een blijvende instelling kwijt.
+    Bij een echt taakconflict wijkt hij wél, anders wachten beide leden op
+    elkaar tot Sint-Juttemis.
+
     By appliance rather than by source id: the same appliance under another room
     is not another member but the same one, and that need not step aside for
     anything.
+
+    Yield to the asking, not to a timer: a rival that is only waiting on a timer
+    or on a full outdoor unit will not run this round, so a hand-operated
+    appliance need not step aside for it - the director never starts it of its
+    own accord, so such an off command would lose a permanent setting. On a real
+    duty conflict it does yield, otherwise both members wait for each other
+    forever.
     """
     for group in config.exclusive_groups:
         members = _group_entities(config, group)
@@ -586,6 +602,13 @@ def _exclusive_rival(
                 and request.source.entity_id in members
                 and request.source.entity_id != source.entity_id
             ):
+                rival_grant = grants.get(zone_id)
+                if rival_grant is not None and rival_grant.reason in (
+                    Reason.SHORT_CYCLE_PROTECTION,
+                    Reason.CIRCUIT_SWITCH_PENDING,
+                    Reason.CIRCUIT_AT_CAPACITY,
+                ):
+                    continue
                 return True
     return False
 
@@ -730,7 +753,7 @@ def _build_commands(
         # off "to be safe" would turn off exactly the appliance somebody just
         # switched on by hand.
         if not source.autostart:
-            standing_down = _manual_conflict(config, world, zone, source, wishes, families)
+            standing_down = _manual_conflict(config, world, zone, source, wishes, families, grants)
             if standing_down is not None:
                 commands.append(standing_down)
             else:
