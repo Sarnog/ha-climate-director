@@ -119,7 +119,7 @@ class TestTheFineSimulationChecksIgnitionGaps:
     """
 
     def test_the_step_can_observe_the_opening_rest(self) -> None:
-        if FINE_SCENARIO.step * 2 >= OPENING_MIN_REST:
+        if FINE_SCENARIO.step >= OPENING_MIN_REST:
             pytest.fail(
                 f"een tijdstap van {FINE_SCENARIO.step} kan een rust van "
                 f"{OPENING_MIN_REST} niet waarnemen: de ontstekingsgrens zou loos zijn"

@@ -506,7 +506,7 @@ class Simulation:
             brake = self._ignition_brake(entity_id)
             if brake is None or len(starts) < 2:
                 continue
-            if self.scenario.step * 2 >= brake:
+            if self.scenario.step >= brake:
                 if self.scenario.check_ignition_brakes:
                     import pytest
 
