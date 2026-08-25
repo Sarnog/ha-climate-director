@@ -990,6 +990,17 @@ def test_active_family_reads_unmanaged_units_too() -> None:
     assert constraints.active_family(world, circuit) is ModeFamily.COOL
 
 
+@pytest.mark.parametrize("mode", ["auto", "heat_cool"])
+def test_active_family_reports_ambiguous_for_unreadable_duties(mode: str) -> None:
+    """Een stand die de compressor claimt zonder zijn taak te noemen is AMBIGUOUS.
+
+    A mode that claims the compressor without naming its duty is AMBIGUOUS.
+    """
+    circuit = multi_split("c", "woonkamer")
+    world = make_world(climates={unit("woonkamer"): climate(mode)})
+    assert constraints.active_family(world, circuit) is ModeFamily.AMBIGUOUS
+
+
 def test_a_generator_on_the_circuit_does_not_force_the_duty() -> None:
     """Een gedeelde ketel is óók aanstuurbaar, dus hij dwingt het circuit niet.
 

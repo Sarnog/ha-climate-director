@@ -256,6 +256,15 @@ def _forced_families(
     them. `AMBIGUOUS` counts just as hard as a concrete duty: a unit running
     `auto` claims the compressor, and as long as the director cannot read that
     duty it puts nothing beside it.
+
+    De hele D1-eigenschap hangt aan de filter `claims_compressor(family)`
+    hieronder; haal die regel nooit als "opruiming" weg. De twee andere
+    D1-bewerkingen (`active_family` en de `AMBIGUOUS`-tak van `_choose_family`)
+    zijn aantoonbaar equivalent.
+
+    The whole D1 property hangs on the `claims_compressor(family)` filter below;
+    never remove that line as a cleanup. The two other D1 edits (`active_family`
+    and the `AMBIGUOUS` branch of `_choose_family`) are provably equivalent.
     """
     managed = {source.entity_id for _, source in config.sources_on(circuit)}
     # Een generator die in dit circuit staat is óók beheerd: de director stuurt
