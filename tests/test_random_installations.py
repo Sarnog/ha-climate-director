@@ -240,6 +240,53 @@ def _installation(rng: random.Random) -> dict:
 
     zones = [_zone(rng, index, units, shared) for index in range(count)]
 
+    # De D2-vorm: twee kamers delen één binnenunit, een derde kamer heeft een
+    # eigen unit, en de buitenunit heeft plaats voor één. Dat is de enige vorm
+    # waarin een gedeeld apparaat op een volle buitenunit geweigerd moet worden
+    # - en precies de vorm die `assert_plan_holds` hoort te bewaken. De eigen
+    # bron krijgt daarom geen buitengrens en voorrang 0, zodat beide kamers hem
+    # werkelijk kiezen; een reservebron erachter houdt de layout geldig voor
+    # `validate()`.
+    #
+    # The D2 shape: two rooms share one indoor unit, a third room has its own,
+    # and the outdoor unit has room for one. That is the only shape in which a
+    # shared appliance on a full outdoor unit has to be refused - and exactly
+    # the shape `assert_plan_holds` has to police. The own source therefore has
+    # no outdoor bound and priority 0, so both rooms actually pick it; a reserve
+    # source behind it keeps the layout sound for `validate()`.
+    d2_shape = count >= 3 and rng.random() < 0.5
+    if d2_shape:
+        for index in (0, 1, 2):
+            zone = zones[index]
+            own = zone["sources"][0]
+            own.update(
+                {
+                    "entity_id": units[0] if index == 0 else units[1],
+                    "role": SourceRole.HEAT_ONLY.value,
+                    "priority": 0,
+                    "autostart": True,
+                    "outdoor": {"minimum": None, "maximum": None},
+                }
+            )
+            zone["sources"] = [
+                own,
+                {
+                    "source_id": f"z{index}_reserve",
+                    "entity_id": f"climate.reserve{index}",
+                    "role": SourceRole.HEAT_ONLY.value,
+                    "priority": 5,
+                    "autostart": True,
+                    "outdoor": {"minimum": None, "maximum": None},
+                },
+            ]
+            heat = _mode_settings(rng, heating=True)
+            heat["outdoor"] = {"minimum": None, "maximum": None}
+            heat["seasons"] = None
+            zone["heat"] = heat
+            zone["cool"] = None
+            zone["gate"] = ZoneGate.HOUSEHOLD.value
+            zone["presence_entity"] = ""
+
     circuits = []
     if count > 1 and rng.random() < 0.8:
         members = list(units[: rng.randrange(2, count + 1)])
@@ -281,6 +328,27 @@ def _installation(rng: random.Random) -> dict:
                 "max_concurrent_units": rng.choice([None, 1, 2, len(members)]),
             }
         )
+
+    if d2_shape:
+        # Eén buitenunit, plaats voor één: zo moet de tweede kamer op het
+        # gedeelde apparaat geweigerd worden zodra de eerste al geweigerd is.
+        #
+        # One outdoor unit, room for one: that is how the second room on the
+        # shared appliance has to be refused once the first was refused too.
+        circuits = [
+            {
+                "circuit_id": "buiten",
+                "name": "Buitenunit",
+                "units": [units[0], units[1]],
+                "simultaneous_heat_cool": False,
+                "conflict_policy": ConflictPolicy.PRIORITY.value,
+                "allow_fan_only_during_conflict": False,
+                "family_switch_delay": 0,
+                "min_family_switch_interval": 0,
+                "min_cycle_time": 0,
+                "max_concurrent_units": 1,
+            }
+        ]
 
     generators = []
     if shared is not None and rng.random() < 0.3:
