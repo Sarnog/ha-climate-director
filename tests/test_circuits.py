@@ -1099,6 +1099,21 @@ class TestAmbiguousModesLockTheCircuit:
             heat=HEAT_SETTINGS,
             cool=COOL_SETTINGS,
         )
+        if situation == "handbediend":
+            # Geen taakconflict: de handbediende unit deelt geen buitenunit met
+            # de woonkamer, dus de director mag hem niet wegschakelen. Alleen dan
+            # blijft hij werkelijk draaien en komt de assertie erop aan.
+            #
+            # No duty conflict: the hand-operated unit shares no outdoor unit
+            # with the living room, so the director may not stand it down. Only
+            # then does it really keep running and the assertion gets its turn.
+            return DirectorConfig(
+                zones=(warm, other),
+                circuits=(
+                    multi_split("wooncircuit", "woonkamer"),
+                    multi_split("slaapcircuit", "slaapkamer"),
+                ),
+            )
         return DirectorConfig(
             zones=(warm, other),
             circuits=(multi_split("multisplit", "woonkamer", "slaapkamer"),),
@@ -1144,15 +1159,24 @@ class TestAmbiguousModesLockTheCircuit:
         assert world.climate(claimed).family is ModeFamily.AMBIGUOUS
 
         claimed_command = plan.command_for(claimed)
+        if situation == "handbediend":
+            # De handbediende unit wordt met rust gelaten - dat is precies de
+            # opstelling die de oude parametrisatie nooit bereikte.
+            #
+            # The hand-operated unit is left alone - exactly the setup the old
+            # parametrisation never reached.
+            assert claimed_command is None, claimed_command
         claimed_keeps_running = (
             claimed_command is None
             or family_of(claimed_command.hvac_mode) is not ModeFamily.NEUTRAL
         )
         if claimed_keeps_running:
+            claimed_circuit = config.circuit_for_entity(claimed)
+            assert claimed_circuit is not None
             concrete = {
                 family_of(command.hvac_mode)
                 for command in plan.commands
-                if command.entity_id in config.circuits[0].units
+                if command.entity_id in claimed_circuit.units
             } & {ModeFamily.HEAT, ModeFamily.COOL}
             assert not concrete, concrete
 
