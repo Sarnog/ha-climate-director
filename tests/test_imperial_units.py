@@ -159,3 +159,36 @@ class TestWhatTheUserSeesUsesTheUsersUnit:
             assert live.values("last_decision")["commands"][0]["temperature"] == 20.0
         finally:
             await stop_house(live)
+
+    async def test_outgoing_temperatures_are_rounded_to_one_decimal(self) -> None:
+        """16,1 °C is 60,98 °F; de uitgaande kant toont 61,0, niet de ruis.
+
+        16.1 °C is 60.98 °F; the outgoing side shows 61.0, not the noise.
+        """
+        live = await start_house(
+            {
+                "zones": [
+                    zone(
+                        "woonkamer",
+                        sources=[source("woonkamer_airco", LIVING, role="heat_cool")],
+                        heat=settings(16.1, 15.1),
+                    )
+                ],
+                "residents": [
+                    {"resident_id": "danny", "name": "Danny", "presence_entity": "person.danny"}
+                ],
+            },
+            states=fahrenheit_world(58.0),
+            appliance="obedient",
+            unit_system=IMPERIAL_SYSTEM,
+        )
+        try:
+            await live.evaluate()
+            events = live.fired("climate_director_decision")
+            assert events and events[0]["temperature"] == 61.0
+            commands = live.values("last_decision")["commands"]
+            assert commands and commands[0]["temperature"] == 61.0
+            command = live.values(f"command_{LIVING}")
+            assert command["temperature"] == 61.0
+        finally:
+            await stop_house(live)

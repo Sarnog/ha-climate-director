@@ -15,7 +15,9 @@ sensorattributen en het `climate_director_decision`-event publiceren in de
 eenheid van de gebruiker (het event met een veld `temperature_unit` erbij).
 Een bron wordt gelezen in de eenheid die hij zélf meldt: `unit_of_measurement`
 bij een sensor, `temperature_unit` bij een weersbron, en pas anders in het
-systeemstelsel.
+systeemstelsel. De uitgaande kant — sensorattributen en het event — rondt af
+op één decimaal, in beide stelsels; de engine en de applier rekenen
+ongeafgerond verder.
 **De diagnose blijft Celsius**: dat is een ontwikkelaarsdump, geen
 gebruikersweergave.
 
@@ -606,7 +608,9 @@ shows and reads in that same unit, and the sensor attributes and the
 `climate_director_decision` event publish in the user's unit (the event with a
 `temperature_unit` field alongside). A source is read in the unit it reports
 itself: `unit_of_measurement` on a sensor, `temperature_unit` on a weather
-source, and only otherwise in the system unit.
+source, and only otherwise in the system unit. The outgoing side — sensor
+attributes and the event — rounds to one decimal, in both systems; the engine
+and the applier keep computing unrounded.
 **The diagnostics stay Celsius**: that is a developer dump, not a user-facing
 display.
 

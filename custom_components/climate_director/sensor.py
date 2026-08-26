@@ -19,11 +19,11 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, Sen
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry, _user_temperature_unit
+from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry
 from .engine import DirectorConfig, ModeFamily, Reason
 from .engine.families import MODE_FAN_ONLY, MODE_OFF, preferred_mode
 from .entity import ClimateDirectorEntity
-from .units import from_celsius
+from .units import rounded_from_celsius, unit_of_coordinator
 
 #: De toestand van een apparaat dat de director met opzet met rust laat: een
 #: overgedragen zone, of een handbediend apparaat dat niemand in de weg staat.
@@ -149,8 +149,8 @@ class DecisionSensor(ClimateDirectorEntity, SensorEntity):
                 {
                     "entity_id": command.entity_id,
                     "hvac_mode": command.hvac_mode,
-                    "temperature": from_celsius(
-                        command.temperature, _user_temperature_unit(self.coordinator)
+                    "temperature": rounded_from_celsius(
+                        command.temperature, unit_of_coordinator(self.coordinator)
                     ),
                     "zone_id": command.zone_id,
                     "reason": command.reason.value,
@@ -238,7 +238,7 @@ class CommandSensor(ClimateDirectorEntity, SensorEntity):
         return {
             "target_entity": self._target,
             "temperature": (
-                from_celsius(command.temperature, _user_temperature_unit(self.coordinator))
+                rounded_from_celsius(command.temperature, unit_of_coordinator(self.coordinator))
                 if command
                 else None
             ),
@@ -246,7 +246,9 @@ class CommandSensor(ClimateDirectorEntity, SensorEntity):
             "reason": (command.reason.value if command else (left.reason.value if left else None)),
             "actual_hvac_mode": actual.hvac_mode if actual and actual.available else None,
             "actual_temperature": (
-                from_celsius(actual.target_temperature, _user_temperature_unit(self.coordinator))
+                rounded_from_celsius(
+                    actual.target_temperature, unit_of_coordinator(self.coordinator)
+                )
                 if actual
                 else None
             ),
@@ -304,16 +306,16 @@ class MismatchSensor(ClimateDirectorEntity, SensorEntity):
                 {
                     "entity_id": change.entity_id,
                     "wanted_hvac_mode": change.command.hvac_mode,
-                    "wanted_temperature": from_celsius(
-                        change.command.temperature, _user_temperature_unit(self.coordinator)
+                    "wanted_temperature": rounded_from_celsius(
+                        change.command.temperature, unit_of_coordinator(self.coordinator)
                     ),
                     "actual_hvac_mode": (
                         world.climate(change.entity_id).hvac_mode if world else None
                     ),
                     "actual_temperature": (
-                        from_celsius(
+                        rounded_from_celsius(
                             world.climate(change.entity_id).target_temperature,
-                            _user_temperature_unit(self.coordinator),
+                            unit_of_coordinator(self.coordinator),
                         )
                         if world
                         else None

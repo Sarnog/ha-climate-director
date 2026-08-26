@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfTemperature
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import CALLBACK_TYPE, Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
@@ -75,7 +75,14 @@ from .engine.families import family_of, preferred_mode
 from .engine.gates import asleep_at, house_wide_blocked, opening_standing
 from .engine.models import SeasonSource
 from .engine.serialise import config_from_dict
-from .units import display_temperature, from_celsius, temperature_unit_of, to_celsius
+from .units import (
+    display_temperature,
+    from_celsius,
+    rounded_from_celsius,
+    temperature_unit_of,
+    to_celsius,
+    unit_of_coordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -203,20 +210,6 @@ def temperature_from_state(
     if entity_id.startswith("weather."):
         return to_celsius(_as_float(attributes.get("temperature")), reported)
     return to_celsius(_as_float(attributes.get("current_temperature")), reported)
-
-
-def _user_temperature_unit(coordinator: Any) -> str:
-    """Return the unit this coordinator's Home Assistant reports in.
-
-    De zes nagebouwde coordinators in de testset lenen losse methodes en kennen
-    niet elk veld van de echte; wie hier rechtstreeks `self.temperature_unit`
-    leest breekt hen op afstand. Celsius is de veilige terugval.
-
-    The six stand-in coordinators in the test set borrow individual methods and
-    do not know every field of the real one; reading `self.temperature_unit`
-    directly here breaks them at a distance. Celsius is the safe fallback.
-    """
-    return getattr(coordinator, "temperature_unit", UnitOfTemperature.CELSIUS)
 
 
 def season_from_state(raw: str | None) -> Season:
@@ -1488,7 +1481,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             attributes = getattr(state, "attributes", {})
             if (
                 temperature_from_state(
-                    entity_id, state.state, attributes, unit=_user_temperature_unit(self)
+                    entity_id, state.state, attributes, unit=unit_of_coordinator(self)
                 )
                 is None
             ):
@@ -1584,12 +1577,12 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                     if source.supports(family) and preferred_mode(family) not in modes
                 )
             minimum = to_celsius(
-                _as_float(state.attributes.get("min_temp")), _user_temperature_unit(self)
+                _as_float(state.attributes.get("min_temp")), unit_of_coordinator(self)
             )
             maximum = to_celsius(
-                _as_float(state.attributes.get("max_temp")), _user_temperature_unit(self)
+                _as_float(state.attributes.get("max_temp")), unit_of_coordinator(self)
             )
-            unit = _user_temperature_unit(self)
+            unit = unit_of_coordinator(self)
             for family in (ModeFamily.HEAT, ModeFamily.COOL):
                 if not source.supports(family):
                     continue
@@ -1856,18 +1849,18 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             hvac_mode=state.state,
             current_temperature=to_celsius(
                 _as_float(state.attributes.get("current_temperature")),
-                _user_temperature_unit(self),
+                unit_of_coordinator(self),
             ),
             target_temperature=to_celsius(
                 _as_float(state.attributes.get("temperature")),
-                _user_temperature_unit(self),
+                unit_of_coordinator(self),
             ),
             hvac_modes=_as_modes(state.attributes.get("hvac_modes")),
             min_temp=to_celsius(
-                _as_float(state.attributes.get("min_temp")), _user_temperature_unit(self)
+                _as_float(state.attributes.get("min_temp")), unit_of_coordinator(self)
             ),
             max_temp=to_celsius(
-                _as_float(state.attributes.get("max_temp")), _user_temperature_unit(self)
+                _as_float(state.attributes.get("max_temp")), unit_of_coordinator(self)
             ),
             available=True,
             changed_at=dt_util.as_local(state.last_changed),
@@ -1881,7 +1874,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         if state is None:
             return None
         return temperature_from_state(
-            entity_id, state.state, state.attributes, unit=_user_temperature_unit(self)
+            entity_id, state.state, state.attributes, unit=unit_of_coordinator(self)
         )
 
     def _resident(self, presence: str, sleep: str, asleep_state: str) -> ResidentState:
@@ -2077,7 +2070,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 continue
             self.hass.bus.async_fire(
                 EVENT_DECISION,
-                _event_data(self.config, plan, decision, _user_temperature_unit(self)),
+                _event_data(self.config, plan, decision, unit_of_coordinator(self)),
             )
 
     def _fire_refusals(self, plan: Plan) -> None:
@@ -2297,17 +2290,17 @@ def _event_data(
     config: DirectorConfig,
     plan: Plan,
     decision: ZoneDecision,
-    unit: str = UnitOfTemperature.CELSIUS,
+    unit: str,
 ) -> dict[str, Any]:
     """Return the payload of one `climate_director_decision` event.
 
-    `temperature` wordt gepubliceerd in de eenheid van de gebruiker, met
-    `temperature_unit` ernaast, zodat een automatisering die op het getal
-    templatet weet waarin ze rekent.
+    `temperature` wordt gepubliceerd in de eenheid van de gebruiker, afgerond
+    op één decimaal, met `temperature_unit` ernaast, zodat een automatisering
+    die op het getal templatet weet waarin ze rekent.
 
-    `temperature` is published in the user's unit, with `temperature_unit`
-    alongside it, so an automation templating on the number knows what it is
-    counting in.
+    `temperature` is published in the user's unit, rounded to one decimal, with
+    `temperature_unit` alongside it, so an automation templating on the number
+    knows what it is counting in.
     """
     zone = config.zone(decision.zone_id)
     command = next((item for item in plan.commands if item.source_id == decision.source_id), None)
@@ -2319,7 +2312,7 @@ def _event_data(
         "source_id": decision.source_id,
         "entity_id": command.entity_id if command else None,
         "hvac_mode": command.hvac_mode if command else None,
-        "temperature": from_celsius(command.temperature, unit) if command else None,
+        "temperature": rounded_from_celsius(command.temperature, unit) if command else None,
         "temperature_unit": unit,
         "reason": decision.reason.value,
     }

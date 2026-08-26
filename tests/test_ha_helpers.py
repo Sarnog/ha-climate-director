@@ -195,7 +195,7 @@ class TestEventData:
         decision = plan.decision_for("woonkamer")
         assert decision is not None
 
-        data = _event_data(config, plan, decision)
+        data = _event_data(config, plan, decision, "°C")
         assert data["zone_id"] == "woonkamer"
         assert data["zone_name"] == "Woonkamer"
         assert data["reason"] == decision.reason.value
@@ -206,13 +206,13 @@ class TestEventData:
     def test_a_zone_without_a_command_still_produces_an_event(self) -> None:
         config = house()
         decision = ZoneDecision("woonkamer", Season.UNKNOWN, Season.UNKNOWN)  # type: ignore[arg-type]
-        data = _event_data(config, Plan(), decision)
+        data = _event_data(config, Plan(), decision, "°C")
         assert data["entity_id"] is None
         assert data["hvac_mode"] is None
 
     def test_an_unknown_zone_falls_back_on_its_id(self) -> None:
         decision = ZoneDecision("kelder", Season.UNKNOWN, Season.UNKNOWN)  # type: ignore[arg-type]
-        data = _event_data(house(), Plan(), decision)
+        data = _event_data(house(), Plan(), decision, "°C")
         assert data["zone_name"] == "kelder"
 
 
