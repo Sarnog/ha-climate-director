@@ -179,35 +179,40 @@ class TestTheNoticeNamesTheUsersUnit:
             "outdoor_sensor": "sensor.buiten",
         }
 
-    def _states(self, unit: str, max_temp: float) -> dict[str, tuple[str, dict[str, Any]]]:
+    def _states(self, unit: str, **extra: Any) -> dict[str, tuple[str, dict[str, Any]]]:
         return {
             "sensor.woonkamer": ("18.0", {"unit_of_measurement": unit}),
             "sensor.buiten": ("4.0", {"unit_of_measurement": unit}),
-            LIVING: ("off", {"hvac_modes": ["heat", "off"], "max_temp": max_temp}),
+            LIVING: ("off", {"hvac_modes": ["heat", "off"], **extra}),
         }
 
     @pytest.mark.parametrize(
-        ("unit_system", "max_temp", "expected"),
+        ("unit_system", "bound", "value", "expected"),
         [
-            (IMPERIAL_SYSTEM, 61.0, "heat 70.0 °F > 61.0 °F"),
-            (METRIC_SYSTEM, 16.0, "heat 21.0 °C > 16.0 °C"),
+            # Streven bóven wat het apparaat kan / target above what the appliance can
+            (IMPERIAL_SYSTEM, "max_temp", 61.0, "heat 70.0 °F > 61.0 °F"),
+            (METRIC_SYSTEM, "max_temp", 16.0, "heat 21.0 °C > 16.0 °C"),
+            # Streven ónder wat het apparaat kan / target below what the appliance can
+            (IMPERIAL_SYSTEM, "min_temp", 72.0, "heat 70.0 °F < 72.0 °F"),
+            (METRIC_SYSTEM, "min_temp", 22.0, "heat 21.0 °C < 22.0 °C"),
         ],
     )
     async def test_the_setpoint_complaint_names_the_unit(
-        self, unit_system, max_temp: float, expected: str
+        self, unit_system, bound: str, value: float, expected: str
     ) -> None:
-        """21 °C is 70 °F; het apparaat meldt een maximum dat lager ligt.
+        """Beide takken van de melding noemen de eenheid van de gebruiker.
 
-        De melding hoort de eenheid van de gebruiker te noemen, afgerond, in
-        plaats van een kale graad met de engine-waarde erin.
+        F1 voegde deze test toe maar bewaakte alleen de `max_temp`-tak; de
+        `min_temp`-tak - de helft die de gebruiker ziet als hij een streven
+        onder het bereik van zijn apparaat zet - bleef onbewaakt.
 
-        21 °C is 70 °F; the appliance reports a maximum below that. The notice
-        should name the user's unit, rounded, rather than a bare degree with
-        the engine value in it.
+        F1 added this test but only guarded the `max_temp` branch; the
+        `min_temp` branch - the half the user sees when setting a target below
+        their appliance's range - stayed unguarded.
         """
         live = await start_house(
             self._installation(),
-            states=self._states(unit_system.temperature_unit, max_temp),
+            states=self._states(unit_system.temperature_unit, **{bound: value}),
             unit_system=unit_system,
         )
         try:
