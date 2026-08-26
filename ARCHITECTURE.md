@@ -27,6 +27,7 @@ in plaats van het te moeten hopen. Elke zin hieronder zet Celsius om met
 `display_temperature` — afgerond, met de eenheid erachter:
 
 - `coordinator._wanted` — de reparatiemelding `command_not_taking`;
+- `coordinator.unsupported_modes` — de reparatiemelding `unsupported_modes`;
 - `engine/models.py` `target_outside_band` — de placeholders blijven Celsius in
   de engine; `problems.readable` rekent `start` en `target` om. Wélke
   placeholder bij welke `Problem`-code een temperatuur is staat op één plek:
@@ -639,6 +640,7 @@ Each sentence below converts Celsius with `display_temperature` — rounded, wit
 the unit behind it:
 
 - `coordinator._wanted` — the `command_not_taking` repair notice;
+- `coordinator.unsupported_modes` — the `unsupported_modes` repair notice;
 - `engine/models.py` `target_outside_band` — the placeholders stay Celsius in
   the engine; `problems.readable` converts `start` and `target`. Which
   placeholder of which `Problem` code is a temperature lives in one place:
