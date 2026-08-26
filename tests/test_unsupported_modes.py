@@ -23,6 +23,7 @@ from typing import Any
 import pytest
 from harness_live import LiveHome, settings, source, start_house, stop_house, zone
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 from custom_components.climate_director.const import DOMAIN
 
@@ -157,3 +158,64 @@ class TestTearingDown:
         await live.hass.async_block_till_done()
         assert issue_for(live) is None
         await stop_house(live)
+
+
+class TestTheNoticeNamesTheUsersUnit:
+    """De reparatiemelding noemt de eenheid waarin de gebruiker rekent.
+
+    The repair notice names the unit the user counts in.
+    """
+
+    def _installation(self) -> dict[str, Any]:
+        return {
+            "zones": [
+                zone(
+                    "woonkamer",
+                    sources=[source("woonkamer_airco", LIVING, role="heat_only")],
+                    indoor_sensor="sensor.woonkamer",
+                    heat=settings(21.0, 20.0),
+                )
+            ],
+            "outdoor_sensor": "sensor.buiten",
+        }
+
+    def _states(self, unit: str, max_temp: float) -> dict[str, tuple[str, dict[str, Any]]]:
+        return {
+            "sensor.woonkamer": ("18.0", {"unit_of_measurement": unit}),
+            "sensor.buiten": ("4.0", {"unit_of_measurement": unit}),
+            LIVING: ("off", {"hvac_modes": ["heat", "off"], "max_temp": max_temp}),
+        }
+
+    @pytest.mark.parametrize(
+        ("unit_system", "max_temp", "expected"),
+        [
+            (IMPERIAL_SYSTEM, 61.0, "heat 70.0 °F > 61.0 °F"),
+            (METRIC_SYSTEM, 16.0, "heat 21.0 °C > 16.0 °C"),
+        ],
+    )
+    async def test_the_setpoint_complaint_names_the_unit(
+        self, unit_system, max_temp: float, expected: str
+    ) -> None:
+        """21 °C is 70 °F; het apparaat meldt een maximum dat lager ligt.
+
+        De melding hoort de eenheid van de gebruiker te noemen, afgerond, in
+        plaats van een kale graad met de engine-waarde erin.
+
+        21 °C is 70 °F; the appliance reports a maximum below that. The notice
+        should name the user's unit, rounded, rather than a bare degree with
+        the engine value in it.
+        """
+        live = await start_house(
+            self._installation(),
+            states=self._states(unit_system.temperature_unit, max_temp),
+            unit_system=unit_system,
+        )
+        try:
+            await live.evaluate()
+            await age(live, 10)
+            issue = issue_for(live)
+            assert issue is not None
+            placeholders = issue.translation_placeholders or {}
+            assert expected in placeholders["entities"]
+        finally:
+            await stop_house(live)
