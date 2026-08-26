@@ -141,6 +141,42 @@ class TestTemperatureFromState:
         )
         assert temperature_from_state("sensor.woonkamer", "21", {}, unit="°C") == 21.0
 
+    @pytest.mark.parametrize(
+        ("entity_id", "state", "attributes", "unit", "expected"),
+        [
+            # eigen eenheid = stelsel / own unit equals the system
+            ("sensor.woonkamer", "21", {"unit_of_measurement": "°C"}, "°C", 21.0),
+            ("weather.thuis", "sunny", {"temperature": 21.0, "temperature_unit": "°C"}, "°C", 21.0),
+            # eigen eenheid overschreven / own unit overridden
+            ("sensor.woonkamer", "21", {"unit_of_measurement": "°C"}, "°F", 21.0),
+            ("weather.thuis", "sunny", {"temperature": 41.0, "temperature_unit": "°F"}, "°C", 5.0),
+            # geen eigen eenheid / no own unit
+            ("sensor.woonkamer", "70", {}, "°F", 21.111111),
+            ("weather.thuis", "sunny", {"temperature": 70.0}, "°F", 21.111111),
+        ],
+    )
+    def test_a_source_reads_in_the_unit_it_reports(
+        self, entity_id: str, state: str, attributes: dict, unit: str, expected: float
+    ) -> None:
+        """Een sensor noemt zijn eenheid als `unit_of_measurement`, een weersbron als
+        `temperature_unit`; zonder eigen eenheid volgt het systeemstelsel.
+
+        A sensor names its unit as `unit_of_measurement`, a weather source as
+        `temperature_unit`; without an own unit the system unit follows.
+        """
+        assert temperature_from_state(entity_id, state, attributes, unit=unit) == pytest.approx(
+            expected, rel=1e-6
+        )
+
+    def test_a_climate_entity_follows_the_system_unit(self) -> None:
+        """Een climate-entiteit publiceert geen eigen eenheid en rekent zelf al om.
+
+        A climate entity publishes no own unit and converts itself already.
+        """
+        assert temperature_from_state(
+            "climate.huiskamer", "heat", {"current_temperature": 70.0}, unit="°F"
+        ) == pytest.approx(21.111111, rel=1e-6)
+
 
 class TestAsFloat:
     @pytest.mark.parametrize(("raw", "expected"), [("21.5", 21.5), (3, 3.0), (2.5, 2.5)])

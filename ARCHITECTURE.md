@@ -13,6 +13,9 @@ HA-temperaturen om naar Celsius, de applier zet setpoints terug naar de eenheid
 van de gebruiker, het formulier toont en leest in diezelfde eenheid, en de
 sensorattributen en het `climate_director_decision`-event publiceren in de
 eenheid van de gebruiker (het event met een veld `temperature_unit` erbij).
+Een bron wordt gelezen in de eenheid die hij zélf meldt: `unit_of_measurement`
+bij een sensor, `temperature_unit` bij een weersbron, en pas anders in het
+systeemstelsel.
 **De diagnose blijft Celsius**: dat is een ontwikkelaarsdump, geen
 gebruikersweergave.
 
@@ -601,8 +604,11 @@ layer is the one place that converts: the coordinator reads HA temperatures
 into Celsius, the applier turns setpoints back into the user's unit, the form
 shows and reads in that same unit, and the sensor attributes and the
 `climate_director_decision` event publish in the user's unit (the event with a
-`temperature_unit` field alongside). **The diagnostics stay Celsius**: that is
-a developer dump, not a user-facing display.
+`temperature_unit` field alongside). A source is read in the unit it reports
+itself: `unit_of_measurement` on a sensor, `temperature_unit` on a weather
+source, and only otherwise in the system unit.
+**The diagnostics stay Celsius**: that is a developer dump, not a user-facing
+display.
 
 ### The anchors — read this first
 

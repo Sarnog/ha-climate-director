@@ -180,17 +180,23 @@ def temperature_from_state(
 
     `unit` is het eenhedenstelsel van de gebruiker; de waarde komt terug in
     graden Celsius. Een entiteit die haar eigen eenheid noemt in
-    `unit_of_measurement` wordt in díe eenheid gelezen: een sensor zonder
-    temperatuur-deviceclass rekent Home Assistant niet om, dus het systeemstelsel
-    zou haar verkeerd lezen.
+    `unit_of_measurement` (een sensor) of `temperature_unit` (een weersbron)
+    wordt in díe eenheid gelezen: een sensor zonder temperatuur-deviceclass
+    rekent Home Assistant niet om, dus het systeemstelsel zou haar verkeerd
+    lezen. Een `climate`-entiteit publiceert geen van beide en rekent zelf al
+    om naar het systeemstelsel.
 
     `unit` is the user's temperature unit, as Home Assistant reports it; the
     value is returned in degrees Celsius. `None` means the caller already works
-    in Celsius. An entity that names its own unit in `unit_of_measurement` is
-    read in that unit: a sensor without a temperature device class is not
-    converted by Home Assistant, so the system unit would misread it.
+    in Celsius. An entity that names its own unit in `unit_of_measurement` (a
+    sensor) or `temperature_unit` (a weather source) is read in that unit: a
+    sensor without a temperature device class is not converted by Home
+    Assistant, so the system unit would misread it. A `climate` entity
+    publishes neither and already converts to the system unit itself.
     """
-    reported = str(attributes.get("unit_of_measurement") or unit or "")
+    reported = str(
+        attributes.get("unit_of_measurement") or attributes.get("temperature_unit") or unit or ""
+    )
     value = _as_float(state)
     if value is not None:
         return to_celsius(value, reported)
