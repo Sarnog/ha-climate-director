@@ -706,7 +706,7 @@
       "message": "Zone {zone} uses {entity} for more than one source. Two sources on the same appliance leave nothing to choose between; remove one of them."
     },
     "target_outside_band": {
-      "message": "Zone {zone} starts {mode} at {start}° but aims for {target}°. The appliance is then set to a temperature it need do nothing for, which looks like it is refusing."
+      "message": "Zone {zone} starts {mode} at {start} but aims for {target}. The appliance is then set to a temperature it need do nothing for, which looks like it is refusing."
     },
     "and_n_more": {
       "message": "- ... and {remaining} more"
@@ -721,10 +721,10 @@
       "message": "Pre-conditioning is running"
     },
     "precondition_confirmed": {
-      "message": "{zone} is going ahead, ignoring {openings}. Now {indoor} degrees, aiming for {target} degrees."
+      "message": "{zone} is going ahead, ignoring {openings}. Now {indoor}, aiming for {target}."
     },
     "precondition_confirmed_satisfied": {
-      "message": "{zone} is going ahead, ignoring {openings}. Now {indoor} degrees - the room is already right, so nothing happens for the moment."
+      "message": "{zone} is going ahead, ignoring {openings}. Now {indoor} - the room is already right, so nothing happens for the moment."
     },
     "precondition_confirmed_unknown": {
       "message": "{zone} is going ahead, ignoring {openings}. The room temperature cannot be read, so nothing will happen until it can."
@@ -733,7 +733,7 @@
       "message": "Do it anyway"
     },
     "precondition_confirmed_idle": {
-      "message": "{zone} is going ahead, ignoring {openings}. Now {indoor} degrees - there is nothing this room may do at the moment, so nothing happens."
+      "message": "{zone} is going ahead, ignoring {openings}. Now {indoor} - there is nothing this room may do at the moment, so nothing happens."
     },
     "quiet_covers_the_day": {
       "message": "The quiet windows leave under {minutes} minutes on {days} day(s), and nobody has a schedule that beats them. Nothing can start by itself on those days. A quiet window is the inverse of a schedule: it says when nothing may begin."

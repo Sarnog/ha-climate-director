@@ -706,7 +706,7 @@
       "message": "Zone {zone} verwendet {entity} für mehr als eine Quelle. Zwei Quellen auf demselben Gerät lassen keine Wahl; entfernen Sie eine davon."
     },
     "target_outside_band": {
-      "message": "Zone {zone} beginnt mit {mode} bei {start}°, strebt aber {target}° an. Das Gerät erhält dann eine Temperatur, für die es nichts tun muss - das sieht aus, als würde es sich weigern."
+      "message": "Zone {zone} beginnt mit {mode} bei {start}, strebt aber {target} an. Das Gerät erhält dann eine Temperatur, für die es nichts tun muss - das sieht aus, als würde es sich weigern."
     },
     "and_n_more": {
       "message": "- ... und {remaining} weitere"
@@ -721,10 +721,10 @@
       "message": "Vorheizen läuft"
     },
     "precondition_confirmed": {
-      "message": "{zone} läuft trotzdem, {openings} wird ignoriert. Jetzt {indoor} Grad, Ziel {target} Grad."
+      "message": "{zone} läuft trotzdem, {openings} wird ignoriert. Jetzt {indoor}, Ziel {target}."
     },
     "precondition_confirmed_satisfied": {
-      "message": "{zone} läuft trotzdem, {openings} wird ignoriert. Jetzt {indoor} Grad - der Raum passt bereits, also geschieht vorerst nichts."
+      "message": "{zone} läuft trotzdem, {openings} wird ignoriert. Jetzt {indoor} - der Raum passt bereits, also geschieht vorerst nichts."
     },
     "precondition_confirmed_unknown": {
       "message": "{zone} läuft trotzdem, {openings} wird ignoriert. Die Raumtemperatur ist nicht lesbar, also geschieht nichts, solange das so bleibt."
@@ -733,7 +733,7 @@
       "message": "Trotzdem starten"
     },
     "precondition_confirmed_idle": {
-      "message": "{zone} läuft trotzdem, {openings} wird ignoriert. Jetzt {indoor} Grad - dieser Raum darf derzeit nichts, also geschieht nichts."
+      "message": "{zone} läuft trotzdem, {openings} wird ignoriert. Jetzt {indoor} - dieser Raum darf derzeit nichts, also geschieht nichts."
     },
     "quiet_covers_the_day": {
       "message": "Die Ruhefenster lassen an {days} Tag(en) weniger als {minutes} Minuten übrig, und niemand hat einen Zeitplan, der sie schlägt. An diesen Tagen kann von selbst nichts starten. Ein Ruhefenster ist die Umkehrung eines Zeitplans: es sagt, wann nichts beginnen darf."

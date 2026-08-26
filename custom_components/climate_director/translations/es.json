@@ -706,7 +706,7 @@
       "message": "La zona {zone} usa {entity} para más de una fuente. Dos fuentes en el mismo aparato no dejan nada que elegir; elimina una de ellas."
     },
     "target_outside_band": {
-      "message": "La zona {zone} empieza a {mode} a {start}° pero aspira a {target}°. El aparato recibe entonces una temperatura para la que no tiene que hacer nada, y parece que se niega."
+      "message": "La zona {zone} empieza a {mode} a {start} pero aspira a {target}. El aparato recibe entonces una temperatura para la que no tiene que hacer nada, y parece que se niega."
     },
     "and_n_more": {
       "message": "- ... y {remaining} más"
@@ -721,10 +721,10 @@
       "message": "El preacondicionamiento está en marcha"
     },
     "precondition_confirmed": {
-      "message": "{zone} sigue adelante, ignorando {openings}. Ahora {indoor} grados, objetivo {target} grados."
+      "message": "{zone} sigue adelante, ignorando {openings}. Ahora {indoor}, objetivo {target}."
     },
     "precondition_confirmed_satisfied": {
-      "message": "{zone} sigue adelante, ignorando {openings}. Ahora {indoor} grados: la habitación ya está bien, así que de momento no pasa nada."
+      "message": "{zone} sigue adelante, ignorando {openings}. Ahora {indoor}: la habitación ya está bien, así que de momento no pasa nada."
     },
     "precondition_confirmed_unknown": {
       "message": "{zone} sigue adelante, ignorando {openings}. La temperatura de la habitación no se puede leer, así que no pasará nada mientras siga así."
@@ -733,7 +733,7 @@
       "message": "Hacerlo igualmente"
     },
     "precondition_confirmed_idle": {
-      "message": "{zone} sigue adelante, ignorando {openings}. Ahora {indoor} grados: esta habitación no puede hacer nada en este momento, así que no pasa nada."
+      "message": "{zone} sigue adelante, ignorando {openings}. Ahora {indoor}: esta habitación no puede hacer nada en este momento, así que no pasa nada."
     },
     "quiet_covers_the_day": {
       "message": "Las ventanas de silencio dejan menos de {minutes} minutos en {days} día(s), y nadie tiene un horario que las supere. Esos días no puede arrancar nada por sí solo. Una ventana de silencio es lo contrario de un horario: dice cuándo no debe empezar nada."

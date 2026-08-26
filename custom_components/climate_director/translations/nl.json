@@ -706,7 +706,7 @@
       "message": "Zone {zone} gebruikt {entity} voor meer dan één bron. Twee bronnen op hetzelfde apparaat laten niets te kiezen over; haal er één weg."
     },
     "target_outside_band": {
-      "message": "Zone {zone} begint met {mode} bij {start}° maar streeft naar {target}°. Het apparaat krijgt dan een temperatuur waar het niets voor hoeft te doen, wat eruitziet alsof het weigert."
+      "message": "Zone {zone} begint met {mode} bij {start} maar streeft naar {target}. Het apparaat krijgt dan een temperatuur waar het niets voor hoeft te doen, wat eruitziet alsof het weigert."
     },
     "and_n_more": {
       "message": "- ... en nog {remaining} meer"
@@ -721,10 +721,10 @@
       "message": "Vooruit verwarmen loopt"
     },
     "precondition_confirmed": {
-      "message": "{zone} gaat toch door, met {openings} genegeerd. Nu {indoor} graden, op weg naar {target} graden."
+      "message": "{zone} gaat toch door, met {openings} genegeerd. Nu {indoor}, op weg naar {target}."
     },
     "precondition_confirmed_satisfied": {
-      "message": "{zone} gaat toch door, met {openings} genegeerd. Nu {indoor} graden - de kamer ligt al goed, dus er gebeurt voorlopig niets."
+      "message": "{zone} gaat toch door, met {openings} genegeerd. Nu {indoor} - de kamer ligt al goed, dus er gebeurt voorlopig niets."
     },
     "precondition_confirmed_unknown": {
       "message": "{zone} gaat toch door, met {openings} genegeerd. De kamertemperatuur is niet te lezen, dus er gebeurt niets zolang dat zo blijft."
@@ -733,7 +733,7 @@
       "message": "Toch doen"
     },
     "precondition_confirmed_idle": {
-      "message": "{zone} gaat toch door, met {openings} genegeerd. Nu {indoor} graden - deze kamer mag op dit moment niets, dus er gebeurt niets."
+      "message": "{zone} gaat toch door, met {openings} genegeerd. Nu {indoor} - deze kamer mag op dit moment niets, dus er gebeurt niets."
     },
     "quiet_covers_the_day": {
       "message": "De stiltevensters laten op {days} dag(en) minder dan {minutes} minuten over, en niemand heeft een rooster dat ze verslaat. Er kan op die dagen dus niets uit zichzelf beginnen. Een stiltevenster is het omgekeerde van een rooster: het zegt wanneer er níets mag beginnen."

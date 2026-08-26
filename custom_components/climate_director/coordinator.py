@@ -1673,7 +1673,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 count, since = 1, now
             self._unapplied[change.entity_id] = (fingerprint, count, since)
             if count >= _COMMAND_NOT_TAKING_ROUNDS and now - since >= grace:
-                found[change.entity_id] = _wanted(change)
+                found[change.entity_id] = _wanted(change, unit_of_coordinator(self))
         return found
 
     @callback
@@ -2155,6 +2155,14 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             demand, target = wanted_target(self.config, zone, self.world, plan)
             settled = demand.reason in (Reason.SATISFIED, Reason.WITHIN_DEADBAND)
 
+        # De engine-wereld rekent in Celsius; de zin op de telefoon hoort de
+        # eenheid van de gebruiker te noemen, afgerond. `texts.number` weet van
+        # geen eenheden en gaf tot nu toe de kale engine-float.
+        #
+        # The engine world counts in Celsius; the sentence on the phone should
+        # name the user's unit, rounded. `texts.number` knows no units and used
+        # to hand out the bare engine float.
+        unit = unit_of_coordinator(self)
         if indoor is None:
             code = "precondition_confirmed_unknown"
             fallback = (
@@ -2164,13 +2172,12 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         elif target is not None:
             code = "precondition_confirmed"
             fallback = (
-                "{zone} is going ahead, ignoring {openings}. Now {indoor} degrees, aiming for "
-                "{target} degrees."
+                "{zone} is going ahead, ignoring {openings}. Now {indoor}, aiming for {target}."
             )
         elif settled:
             code = "precondition_confirmed_satisfied"
             fallback = (
-                "{zone} is going ahead, ignoring {openings}. Now {indoor} degrees - the room is "
+                "{zone} is going ahead, ignoring {openings}. Now {indoor} - the room is "
                 "already right, so nothing happens for the moment."
             )
         else:
@@ -2183,15 +2190,15 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             # lie to somebody sitting at fifteen degrees.
             code = "precondition_confirmed_idle"
             fallback = (
-                "{zone} is going ahead, ignoring {openings}. Now {indoor} degrees - there is "
+                "{zone} is going ahead, ignoring {openings}. Now {indoor} - there is "
                 "nothing this room may do at the moment, so nothing happens."
             )
 
         filling = {
             "zone": name,
             "openings": listed,
-            "indoor": texts.number(indoor),
-            "target": texts.number(target),
+            "indoor": display_temperature(from_celsius(indoor, unit), unit),
+            "target": display_temperature(from_celsius(target, unit), unit),
             "minutes": minutes,
         }
         return {
@@ -2362,19 +2369,26 @@ def _as_float(raw: Any) -> float | None:
     return value if math.isfinite(value) else None
 
 
-def _wanted(change: Change) -> str:
+def _wanted(change: Change, unit: str) -> str:
     """Return what a change asks for, short enough to read in a notice.
 
     De stand is er altijd; het setpoint alleen als het meegestuurd wordt. Een
     apparaat dat uitgezet moet worden krijgt geen temperatuur mee, en die dan
-    toch noemen zou een lezer op het verkeerde been zetten.
+    toch noemen zou een lezer op het verkeerde been zetten. Het setpoint wordt
+    in de eenheid van de gebruiker getoond, afgerond - geen kale `°C` en geen
+    onafgeronde engine-float.
 
     The mode is always there; the setpoint only when it is sent along. An
     appliance that has to be switched off gets no temperature with it, and
-    naming one anyway would put a reader on the wrong foot.
+    naming one anyway would put a reader on the wrong foot. The setpoint is
+    shown in the user's unit, rounded - no bare `°C` and no unrounded engine
+    float.
     """
     if change.set_temperature and change.command.temperature is not None:
-        return f"{change.command.hvac_mode}, {change.command.temperature} °C"
+        return (
+            f"{change.command.hvac_mode}, "
+            f"{display_temperature(from_celsius(change.command.temperature, unit), unit)}"
+        )
     return change.command.hvac_mode
 
 

@@ -200,8 +200,8 @@ class TestTheSentenceAfterTheButton:
         data = coordinator().refusal_data("zolder")
         assert data["confirmed_title"] == "Pre-conditioning is running"
         assert "Dakraam" in data["confirmed_message"]
-        assert "15 degrees" in data["confirmed_message"]
-        assert "21 degrees" in data["confirmed_message"]
+        assert "15.0 °C" in data["confirmed_message"]
+        assert "21.0 °C" in data["confirmed_message"]
 
     def test_a_room_that_is_already_right_says_so(self) -> None:
         """Nothing will happen, and that is not a shortcoming - so say it."""
@@ -246,7 +246,7 @@ class TestTheSentenceAfterTheButton:
         assert data["target_temperature"] is None
         assert "already right" not in data["confirmed_message"]
         assert "nothing this room may do" in data["confirmed_message"]
-        assert "15 degrees" in data["confirmed_message"]
+        assert "15.0 °C" in data["confirmed_message"]
 
 
 class TestTheNumberFormatting:

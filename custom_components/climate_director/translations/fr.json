@@ -706,7 +706,7 @@
       "message": "La zone {zone} utilise {entity} pour plus d'une source. Deux sources sur le même appareil ne laissent aucun choix ; supprimez-en une."
     },
     "target_outside_band": {
-      "message": "La zone {zone} démarre {mode} à {start}° mais vise {target}°. L'appareil reçoit alors une température pour laquelle il n'a rien à faire, ce qui donne l'impression qu'il refuse."
+      "message": "La zone {zone} démarre {mode} à {start} mais vise {target}. L'appareil reçoit alors une température pour laquelle il n'a rien à faire, ce qui donne l'impression qu'il refuse."
     },
     "and_n_more": {
       "message": "- ... et {remaining} de plus"
@@ -721,10 +721,10 @@
       "message": "Le préchauffage est en cours"
     },
     "precondition_confirmed": {
-      "message": "{zone} démarre quand même, {openings} est ignoré. Actuellement {indoor} degrés, objectif {target} degrés."
+      "message": "{zone} démarre quand même, {openings} est ignoré. Actuellement {indoor}, objectif {target}."
     },
     "precondition_confirmed_satisfied": {
-      "message": "{zone} démarre quand même, {openings} est ignoré. Actuellement {indoor} degrés - la pièce est déjà au bon niveau, donc rien ne se passe pour l'instant."
+      "message": "{zone} démarre quand même, {openings} est ignoré. Actuellement {indoor} - la pièce est déjà au bon niveau, donc rien ne se passe pour l'instant."
     },
     "precondition_confirmed_unknown": {
       "message": "{zone} démarre quand même, {openings} est ignoré. La température de la pièce est illisible, donc rien ne se passera tant que cela dure."
@@ -733,7 +733,7 @@
       "message": "Le faire quand même"
     },
     "precondition_confirmed_idle": {
-      "message": "{zone} démarre quand même, {openings} est ignoré. Actuellement {indoor} degrés - cette pièce n'a rien le droit de faire pour le moment, donc rien ne se passe."
+      "message": "{zone} démarre quand même, {openings} est ignoré. Actuellement {indoor} - cette pièce n'a rien le droit de faire pour le moment, donc rien ne se passe."
     },
     "quiet_covers_the_day": {
       "message": "Les fenêtres de silence laissent moins de {minutes} minutes sur {days} jour(s), et personne n'a d'horaire qui les emporte. Rien ne peut démarrer de lui-même ces jours-là. Une fenêtre de silence est l'inverse d'un horaire : elle dit quand rien ne doit commencer."

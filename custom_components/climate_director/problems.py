@@ -35,6 +35,22 @@ from homeassistant.helpers import issue_registry as ir
 from . import texts
 from .const import CONF_MANUAL_SOURCES_SEEN, DOMAIN, EVENT_PRECONDITION_REFUSED
 from .engine import DirectorConfig, Problem, manual_only_problems, validate
+from .units import display_temperature, from_celsius, temperature_unit_of
+
+#: Welke placeholders van welke `Problem`-code temperaturen zijn. De engine
+#: kent geen Home Assistant en vult ze in graden Celsius; `readable()` rekent
+#: alleen de hier genoemde placeholders om, met `display_temperature`, zodat
+#: de gebruiker zijn eigen eenheid ziet en de engine geen `hass` hoeft te
+#: kennen. Dit lijstje is de enige plek waar die kennis staat.
+#:
+#: Which placeholders of which `Problem` code are temperatures. The engine knows
+#: no Home Assistant and fills them in degrees Celsius; `readable()` converts
+#: only the placeholders named here, with `display_temperature`, so the user
+#: sees their own unit and the engine need not know `hass`. This list is the one
+#: place carrying that knowledge.
+TEMPERATURE_PLACEHOLDERS: dict[str, tuple[str, ...]] = {
+    "target_outside_band": ("start", "target"),
+}
 
 #: Hoeveel problemen er hoogstens in de melding zelf komen te staan. De rest
 #: staat in de diagnose; een reparatiemelding van dertig regels leest niemand.
@@ -103,18 +119,48 @@ def async_report(
     return problems
 
 
+def _converted_params(hass: HomeAssistant, problem: str) -> dict[str, str]:
+    """Return the complaint's placeholders with temperatures in the user's unit.
+
+    De engine vult temperatuur-placeholders als Celsius-strings (bijvoorbeeld
+    `:g`-geformatteerd); de lezer hoort zijn eigen eenheid te zien, afgerond.
+    Placeholders die niet in `TEMPERATURE_PLACEHOLDERS` staan, of die geen
+    getal zijn, blijven ongewijzigd.
+
+    The engine fills temperature placeholders as Celsius strings (for instance
+    `:g`-formatted); the reader should see their own unit, rounded. Placeholders
+    not in `TEMPERATURE_PLACEHOLDERS`, or that are no number, stay unchanged.
+    """
+    params = dict(getattr(problem, "params", {}))
+    unit = temperature_unit_of(hass)
+    for key in TEMPERATURE_PLACEHOLDERS.get(getattr(problem, "code", ""), ()):
+        raw = params.get(key)
+        if raw is None:
+            continue
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            continue
+        params[key] = display_temperature(from_celsius(value, unit), unit)
+    return params
+
+
 def readable(hass: HomeAssistant, problem: str) -> str:
     """Return one complaint in the user's language, or its English text.
 
     De engine kent geen Home Assistant en schrijft dus Engels. Draagt een
     melding een code, dan zoeken we die hier op; zo niet, dan blijft de Engelse
     zin staan. Een melding zonder vertaling is daarmee nooit slechter af dan hij
-    was - en beter half vertaald dan een lijst die half Nederlands is.
+    was - en beter half vertaald dan een lijst die half Nederlands is. Temperatuur-
+    placeholders worden vóór het invullen omgerekend naar de eenheid van de
+    gebruiker; zie `TEMPERATURE_PLACEHOLDERS`.
 
     The engine knows no Home Assistant and therefore writes English. If a
     complaint carries a code we look it up here; if not, the English sentence
     stays. A complaint without a translation is thereby never worse off than it
-    was - and better than a list that is half translated.
+    was - and better than a list that is half translated. Temperature
+    placeholders are converted to the user's unit before filling; see
+    `TEMPERATURE_PLACEHOLDERS`.
     """
     code = getattr(problem, "code", "")
     if not code:
@@ -123,7 +169,7 @@ def readable(hass: HomeAssistant, problem: str) -> str:
     if template is None:
         return str(problem)
     try:
-        return template.format(**getattr(problem, "params", {}))
+        return template.format(**_converted_params(hass, problem))
     except (KeyError, IndexError, ValueError):
         return str(problem)
 

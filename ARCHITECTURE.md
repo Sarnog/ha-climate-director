@@ -21,6 +21,25 @@ ongeafgerond verder.
 **De diagnose blijft Celsius**: dat is een ontwikkelaarsdump, geen
 gebruikersweergave.
 
+**Inventarisatielijst "elke tekst voor de gebruiker noemt zijn eenheid"**
+(ronde 11, G1): een volgende ronde kan aan deze lijst zíén of hij compleet is
+in plaats van het te moeten hopen. Elke zin hieronder zet Celsius om met
+`display_temperature` — afgerond, met de eenheid erachter:
+
+- `coordinator._wanted` — de reparatiemelding `command_not_taking`;
+- `engine/models.py` `target_outside_band` — de placeholders blijven Celsius in
+  de engine; `problems.readable` rekent `start` en `target` om. Wélke
+  placeholder bij welke `Problem`-code een temperatuur is staat op één plek:
+  `problems.TEMPERATURE_PLACEHOLDERS`;
+- `coordinator._refusal_data` — de zin die met een vooruit-verzoek meegaat en
+  via de blueprint op de telefoon belandt (`precondition_confirmed`,
+  `_satisfied`, `_idle`), in alle zes talen.
+
+De sensorattributen en het `climate_director_decision`-event gebruiken
+`rounded_from_celsius` (één decimaal, machineleesbaar); de diagnose blijft
+Celsius. Die twee horen niet in deze lijst: het ene is geen zin, het andere
+geen gebruikersweergave.
+
 ### De ankers — lees dit eerst
 
 Een uitspraak in deze engine hangt altijd aan één ding, en welk ding dat is, is
@@ -613,6 +632,25 @@ attributes and the event — rounds to one decimal, in both systems; the engine
 and the applier keep computing unrounded.
 **The diagnostics stay Celsius**: that is a developer dump, not a user-facing
 display.
+
+**Inventory list "every user-facing text names its unit"** (round 11, G1): a
+next round can *see* whether this list is complete instead of having to hope so.
+Each sentence below converts Celsius with `display_temperature` — rounded, with
+the unit behind it:
+
+- `coordinator._wanted` — the `command_not_taking` repair notice;
+- `engine/models.py` `target_outside_band` — the placeholders stay Celsius in
+  the engine; `problems.readable` converts `start` and `target`. Which
+  placeholder of which `Problem` code is a temperature lives in one place:
+  `problems.TEMPERATURE_PLACEHOLDERS`;
+- `coordinator._refusal_data` — the sentence travelling with a pre-conditioning
+  request and landing on the phone via the blueprint (`precondition_confirmed`,
+  `_satisfied`, `_idle`), in all six languages.
+
+The sensor attributes and the `climate_director_decision` event use
+`rounded_from_celsius` (one decimal, machine-readable); the diagnostics stay
+Celsius. Those two do not belong on this list: the one is no sentence, the
+other no user-facing display.
 
 ### The anchors — read this first
 
