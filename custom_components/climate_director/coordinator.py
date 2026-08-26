@@ -2156,12 +2156,10 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             settled = demand.reason in (Reason.SATISFIED, Reason.WITHIN_DEADBAND)
 
         # De engine-wereld rekent in Celsius; de zin op de telefoon hoort de
-        # eenheid van de gebruiker te noemen, afgerond. `texts.number` weet van
-        # geen eenheden en gaf tot nu toe de kale engine-float.
+        # eenheid van de gebruiker te noemen, afgerond — geen kale engine-float.
         #
         # The engine world counts in Celsius; the sentence on the phone should
-        # name the user's unit, rounded. `texts.number` knows no units and used
-        # to hand out the bare engine float.
+        # name the user's unit, rounded — not the bare engine float.
         unit = unit_of_coordinator(self)
         if indoor is None:
             code = "precondition_confirmed_unknown"

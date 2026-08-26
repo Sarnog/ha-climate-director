@@ -26,7 +26,9 @@ typo in the configuration.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -145,33 +147,71 @@ def _converted_params(hass: HomeAssistant, problem: str) -> dict[str, str]:
     return params
 
 
+_ENGLISH_TEMPLATES: dict[str, str] | None = None
+
+
+def _english_template(code: str) -> str | None:
+    """Return the English template for `code` from `strings.json`, if there is one.
+
+    De tweede terugval van `readable()`: wanneer de vertaalcache leeg is — het
+    laden is misgegaan bij het opzetten — blijft er nog steeds een Engelse zin
+    over die door `_converted_params` gaat, zodat ook dán de eenheid van de
+    gebruiker genoemd wordt. Alleen de rauwe engine-tekst is de allerlaatste
+    terugval.
+
+    The second fallback of `readable()`: when the translation cache is empty —
+    loading went wrong at setup — an English sentence still remains that passes
+    through `_converted_params`, so even then the user's unit is named. Only the
+    raw engine text is the very last fallback.
+    """
+    global _ENGLISH_TEMPLATES
+    if _ENGLISH_TEMPLATES is None:
+        templates: dict[str, str] = {}
+        try:
+            data = json.loads(Path(__file__).with_name("strings.json").read_text(encoding="utf-8"))
+            exceptions = data.get("exceptions") if isinstance(data, dict) else None
+            if isinstance(exceptions, dict):
+                for key, value in exceptions.items():
+                    message = value.get("message") if isinstance(value, dict) else None
+                    if message:
+                        templates[key] = message
+        except (OSError, ValueError):
+            pass
+        _ENGLISH_TEMPLATES = templates
+    return _ENGLISH_TEMPLATES.get(code)
+
+
 def readable(hass: HomeAssistant, problem: str) -> str:
     """Return one complaint in the user's language, or its English text.
 
     De engine kent geen Home Assistant en schrijft dus Engels. Draagt een
     melding een code, dan zoeken we die hier op; zo niet, dan blijft de Engelse
-    zin staan. Een melding zonder vertaling is daarmee nooit slechter af dan hij
-    was - en beter half vertaald dan een lijst die half Nederlands is. Temperatuur-
-    placeholders worden vóór het invullen omgerekend naar de eenheid van de
-    gebruiker; zie `TEMPERATURE_PLACEHOLDERS`.
+    zin staan. Kan de vertaling niet worden geladen — de cache is leeg, of een
+    vertaling loopt uit de pas met de code — dan valt de zin terug op de
+    Engelse sjabloon uit `strings.json`, en pas daarna op de rauwe tekst van de
+    melding. Temperatuur-placeholders worden vóór het invullen omgerekend naar
+    de eenheid van de gebruiker; zie `TEMPERATURE_PLACEHOLDERS`.
 
     The engine knows no Home Assistant and therefore writes English. If a
     complaint carries a code we look it up here; if not, the English sentence
-    stays. A complaint without a translation is thereby never worse off than it
-    was - and better than a list that is half translated. Temperature
-    placeholders are converted to the user's unit before filling; see
-    `TEMPERATURE_PLACEHOLDERS`.
+    stays. When the translation cannot be loaded — the cache is empty, or a
+    translation has drifted from the code — the sentence falls back to the
+    English template from `strings.json`, and only then to the complaint's raw
+    text. Temperature placeholders are converted to the user's unit before
+    filling; see `TEMPERATURE_PLACEHOLDERS`.
     """
     code = getattr(problem, "code", "")
     if not code:
         return str(problem)
-    template = texts.lookup(hass, code)
-    if template is None:
-        return str(problem)
-    try:
-        return template.format(**_converted_params(hass, problem))
-    except (KeyError, IndexError, ValueError):
-        return str(problem)
+    params = _converted_params(hass, problem)
+    for template in (texts.lookup(hass, code), _english_template(code)):
+        if not template:
+            continue
+        try:
+            return template.format(**params)
+        except (KeyError, IndexError, ValueError):
+            continue
+    return str(problem)
 
 
 def summarise(hass: HomeAssistant, problems: tuple[str, ...]) -> str:

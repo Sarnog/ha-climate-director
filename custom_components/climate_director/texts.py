@@ -85,15 +85,3 @@ def translated(hass: HomeAssistant, code: str, fallback: str, **params: Any) -> 
         except (KeyError, IndexError, ValueError):
             continue
     return fallback
-
-
-def number(value: float | None) -> str:
-    """Return a temperature as it should read in a sentence, or a dash.
-
-    `21.5` in plaats van `21.5000`, en `21` in plaats van `21.0`. Een streepje
-    bij niets, want "Nu None graden" is geen zin.
-
-    `21.5` rather than `21.5000`, and `21` rather than `21.0`. A dash for
-    nothing, since "Now None degrees" is not a sentence.
-    """
-    return "-" if value is None else f"{value:g}"

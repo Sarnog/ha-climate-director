@@ -496,13 +496,78 @@ class TestProblemSummary:
     ) -> None:
         """Een kapotte vertaling mag een melding niet breken; dan blijft Engels staan.
 
+        Sinds H4 is dat de Engelse sjabloon uit `strings.json`, die nog door de
+        placeholders en de eenheidomrekening gaat — niet de rauwe engine-tekst.
+
         A broken translation may not break a notice; the English sentence stays.
+        Since H4 that is the English template from `strings.json`, which still
+        passes through the placeholders and the unit conversion — not the raw
+        engine text.
         """
         from custom_components.climate_director import texts
 
         monkeypatch.setattr(texts, "lookup", lambda hass, code: "{zone:d}")
         problem = Problem("zone_without_sources", "zone z has no sources", zone="z")
-        assert readable(_no_hass(), problem) == "zone z has no sources"
+        assert readable(_no_hass(), problem) == (
+            "Zone z has no appliance at all, so there is nothing to steer. Add a source."
+        )
+
+
+class TestTheEnglishTemplateIsTheSecondFallback:
+    """`readable()` valt terug via de Engelse zin uit `strings.json`.
+
+    `readable()` falls back through the English sentence from `strings.json`.
+    """
+
+    def _hass(self, unit: str):
+        class Units:
+            temperature_unit = unit
+
+        class Config:
+            language = "en"
+            units = Units()
+
+        class Hass:
+            config = Config()
+            data = {}
+
+        return Hass()
+
+    @pytest.mark.parametrize(
+        ("unit", "expected_parts"),
+        [
+            ("°C", ("20.0 °C", "19.8 °C")),
+            ("°F", ("68.0 °F", "67.6 °F")),
+        ],
+    )
+    def test_an_empty_translation_cache_still_names_the_unit(
+        self, monkeypatch: pytest.MonkeyPatch, unit: str, expected_parts: tuple[str, str]
+    ) -> None:
+        """H4: met een lege vertaalcache noemt de zin nog steeds de eenheid.
+
+        De vertaalcache is leeg als het laden bij het opzetten is misgegaan;
+        dan blijft de Engelse sjabloon uit `strings.json` over, en die gaat nog
+        steeds door de omrekening naar de eenheid van de gebruiker.
+
+        H4: with an empty translation cache the sentence still names the unit.
+        The cache is empty when loading went wrong at setup; the English
+        template from `strings.json` remains, and it still passes through the
+        conversion into the user's unit.
+        """
+        from custom_components.climate_director import texts
+
+        monkeypatch.setattr(texts, "lookup", lambda hass, code: None)
+        problem = Problem(
+            "target_outside_band",
+            "zone woonkamer starts heat at 20 but aims for 19.8",
+            zone="Woonkamer",
+            mode="heat",
+            start="20",
+            target="19.8",
+        )
+        sentence = readable(self._hass(unit), problem)
+        for part in expected_parts:
+            assert part in sentence
 
 
 class TestDeepCopy:

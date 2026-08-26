@@ -247,14 +247,3 @@ class TestTheSentenceAfterTheButton:
         assert "already right" not in data["confirmed_message"]
         assert "nothing this room may do" in data["confirmed_message"]
         assert "15.0 °C" in data["confirmed_message"]
-
-
-class TestTheNumberFormatting:
-    def test_a_whole_degree_loses_its_decimal(self) -> None:
-        assert texts.number(21.0) == "21"
-
-    def test_half_a_degree_keeps_it(self) -> None:
-        assert texts.number(21.5) == "21.5"
-
-    def test_nothing_reads_as_a_dash(self) -> None:
-        assert texts.number(None) == "-"
