@@ -13,6 +13,7 @@ be able to verify real API signatures), but not against a running `hass`. See
 
 from __future__ import annotations
 
+import inspect
 from datetime import datetime
 
 import pytest
@@ -214,6 +215,17 @@ class TestEventData:
         decision = ZoneDecision("kelder", Season.UNKNOWN, Season.UNKNOWN)  # type: ignore[arg-type]
         data = _event_data(house(), Plan(), decision, "°C")
         assert data["zone_name"] == "kelder"
+
+    def test_the_unit_parameter_has_no_default(self) -> None:
+        """F4 maakte `unit` verplicht; een teruggezette default zou weer stil
+        Celsius-getallen met het label `°C` op een imperiale installatie
+        publiceren, en geen test zou het merken.
+
+        F4 made `unit` required; a reinstated default would silently publish
+        Celsius numbers labelled `°C` on an imperial installation again, and no
+        test would notice.
+        """
+        assert inspect.signature(_event_data).parameters["unit"].default is inspect.Parameter.empty
 
 
 def _warm_world():

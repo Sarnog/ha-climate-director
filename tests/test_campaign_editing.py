@@ -22,6 +22,7 @@ from typing import Any
 
 import pytest
 from harness_live import LiveHome, settings, source, start_house, stop_house, zone
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from custom_components.climate_director.const import CONF_INSTALLATION
 
@@ -1222,5 +1223,114 @@ class TestDeletingAZoneCleansItsReferences:
             assert stored["openings"][0]["zone_ids"] == ["zolder"]
             assert stored["generators"][0]["zone_ids"] == ["zolder"]
             assert all("woonkamer_airco" not in group for group in stored["exclusive_groups"])
+        finally:
+            await stop_house(home)
+
+
+class TestTheFormShowsRoundedValues:
+    """G4: het formulier toont afgeronde waarden, de opslag blijft ongeafgerond.
+
+    G4: the form shows rounded values, storage stays unrounded.
+    """
+
+    def _installation(self) -> dict[str, Any]:
+        return {
+            **two_rooms(),
+            "outdoor_hysteresis": 0.1,
+        }
+
+    def _imperial_world(self) -> dict[str, tuple[str, dict[str, Any]]]:
+        return {
+            "sensor.woonkamer": ("61.0", {"unit_of_measurement": "°F"}),
+            "sensor.zolder": ("61.0", {"unit_of_measurement": "°F"}),
+            LIVING: ("off", {}),
+            ATTIC: ("off", {}),
+        }
+
+    @staticmethod
+    def _default(schema: Any, key_name: str) -> float | None:
+        field = next(key for key in schema.schema if str(key) == key_name)
+        default = field.default
+        return default() if callable(default) else default
+
+    async def test_temperature_defaults_are_rounded(self) -> None:
+        """16,1 °C is 60,980000000000004 °F; het veld hoort 61.0 te tonen."""
+        installation = self._installation()
+        installation["zones"][0]["heat"] = settings(16.1, 15.1, hysteresis=0.1)
+        home = await start_house(
+            installation,
+            states=self._imperial_world(),
+            unit_system=IMPERIAL_SYSTEM,
+        )
+        try:
+            flow = home.hass.config_entries.options
+            result = await menu(home, "zones")
+            result = await flow.async_configure(result["flow_id"], {"zone": "0"})
+            assert result["step_id"] == "zone"
+            schema = result["data_schema"]
+            assert self._default(schema, "heat_target") == 61.0
+            assert self._default(schema, "heat_hysteresis") == 0.2
+        finally:
+            await stop_house(home)
+
+    async def test_the_dead_band_default_is_rounded(self) -> None:
+        """0,1 °C is 0,18000000000000002 °F; de dode band hoort 0.2 te tonen."""
+        home = await start_house(
+            self._installation(),
+            states=self._imperial_world(),
+            unit_system=IMPERIAL_SYSTEM,
+        )
+        try:
+            result = await menu(home, "settings")
+            assert result["step_id"] == "settings"
+            assert self._default(result["data_schema"], "outdoor_hysteresis") == 0.2
+        finally:
+            await stop_house(home)
+
+    async def test_saving_keeps_storage_unrounded(self) -> None:
+        """De opslag gaat ongeafgerond door `to_celsius`; anders kruipt de
+        configuratie bij elke bewerking weg.
+
+        Storage passes through `to_celsius` unrounded; otherwise the
+        configuration creeps away on every edit.
+        """
+        installation = self._installation()
+        installation["zones"][0]["heat"] = settings(16.1, 15.1)
+        home = await start_house(
+            installation,
+            states=self._imperial_world(),
+            unit_system=IMPERIAL_SYSTEM,
+        )
+        try:
+            flow = home.hass.config_entries.options
+            result = await menu(home, "zones")
+            result = await flow.async_configure(result["flow_id"], {"zone": "0"})
+            result = await flow.async_configure(
+                result["flow_id"],
+                {
+                    "name": "Woonkamer",
+                    "indoor_sensor": "sensor.woonkamer",
+                    "priority": 0,
+                    "gate": "household",
+                    "presence_state": "on",
+                    "ignore_precipitation": False,
+                    "enable_heat": True,
+                    "heat_target": 61.0,
+                    "heat_start_at": 59.0,
+                    "heat_hysteresis": 1.8,
+                    "enable_cool": False,
+                    "cool_target": 73.0,
+                    "cool_start_at": 75.0,
+                    "cool_hysteresis": 1.8,
+                    "cool_summer_only": False,
+                    "delete": False,
+                    "when_done": "keep",
+                },
+            )
+            result = await flow.async_configure(result["flow_id"], {"source": "back_to_menu"})
+            stored = await save(home, result["flow_id"])
+            heat = stored["zones"][0]["heat"]
+            assert heat["target"] == pytest.approx(16.11111111111111)
+            assert heat["hysteresis"] == pytest.approx(1.0)
         finally:
             await stop_house(home)

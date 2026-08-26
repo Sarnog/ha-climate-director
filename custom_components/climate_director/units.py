@@ -115,3 +115,22 @@ def delta_from_celsius(value: float | None, unit: str) -> float | None:
     if value is None or unit != UnitOfTemperature.FAHRENHEIT:
         return value
     return value * 9.0 / 5.0
+
+
+def rounded_delta_from_celsius(value: float | None, unit: str) -> float | None:
+    """Return a Celsius temperature *difference* in the user's `unit`, rounded.
+
+    Het formulier toont dode band en hysterese in de eenheid van de gebruiker;
+    ook een verschil kan drijvendekomma-ruis dragen (0,1 °C is
+    0,18000000000000002 °F) en past dan niet bij zijn eigen selectorstap.
+    Alleen de weergave rondt af; de opslag gaat ongeafgerond door
+    `delta_to_celsius`, anders kruipt de configuratie bij elke bewerking weg.
+
+    The form shows dead band and hysteresis in the user's unit; a difference
+    can carry floating-point noise too (0.1 °C is 0.18000000000000002 °F) and
+    then does not fit its own selector step. Only the display rounds; storage
+    passes unrounded through `delta_to_celsius`, otherwise the configuration
+    creeps away on every edit.
+    """
+    converted = delta_from_celsius(value, unit)
+    return None if converted is None else round(converted, 1)

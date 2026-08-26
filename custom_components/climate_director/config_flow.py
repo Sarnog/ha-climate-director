@@ -39,9 +39,9 @@ from .engine.models import (
 )
 from .engine.serialise import config_from_dict
 from .units import (
-    delta_from_celsius,
     delta_to_celsius,
-    from_celsius,
+    rounded_delta_from_celsius,
+    rounded_from_celsius,
     temperature_unit_of,
     to_celsius,
 )
@@ -590,7 +590,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     ),
                     vol.Required(
                         "outdoor_hysteresis",
-                        default=delta_from_celsius(
+                        default=rounded_delta_from_celsius(
                             float(self._installation.get("outdoor_hysteresis", 0.5)),
                             temperature_unit_of(self.hass),
                         ),
@@ -1006,38 +1006,40 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     ): bool,
                     vol.Required("enable_heat", default=bool(heat)): bool,
                     vol.Required(
-                        "heat_target", default=from_celsius(heat.get("target", 21.0), unit)
+                        "heat_target", default=rounded_from_celsius(heat.get("target", 21.0), unit)
                     ): _temperature(unit),
                     vol.Required(
-                        "heat_start_at", default=from_celsius(heat.get("start_at", 20.0), unit)
+                        "heat_start_at",
+                        default=rounded_from_celsius(heat.get("start_at", 20.0), unit),
                     ): _temperature(unit),
                     vol.Required(
                         "heat_hysteresis",
-                        default=delta_from_celsius(heat.get("hysteresis", 1.0), unit),
+                        default=rounded_delta_from_celsius(heat.get("hysteresis", 1.0), unit),
                     ): _band(unit),
                     vol.Optional(
                         "heat_outdoor_max",
                         description={
-                            "suggested_value": from_celsius(
+                            "suggested_value": rounded_from_celsius(
                                 (heat.get("outdoor") or {}).get("maximum"), unit
                             )
                         },
                     ): _temperature(unit),
                     vol.Required("enable_cool", default=bool(cool)): bool,
                     vol.Required(
-                        "cool_target", default=from_celsius(cool.get("target", 23.0), unit)
+                        "cool_target", default=rounded_from_celsius(cool.get("target", 23.0), unit)
                     ): _temperature(unit),
                     vol.Required(
-                        "cool_start_at", default=from_celsius(cool.get("start_at", 24.0), unit)
+                        "cool_start_at",
+                        default=rounded_from_celsius(cool.get("start_at", 24.0), unit),
                     ): _temperature(unit),
                     vol.Required(
                         "cool_hysteresis",
-                        default=delta_from_celsius(cool.get("hysteresis", 1.0), unit),
+                        default=rounded_delta_from_celsius(cool.get("hysteresis", 1.0), unit),
                     ): _band(unit),
                     vol.Optional(
                         "cool_outdoor_min",
                         description={
-                            "suggested_value": from_celsius(
+                            "suggested_value": rounded_from_celsius(
                                 (cool.get("outdoor") or {}).get("minimum"), unit
                             )
                         },
@@ -1181,11 +1183,15 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Required("priority", default=current.get("priority", 0)): _RANK,
                     vol.Optional(
                         "outdoor_min",
-                        description={"suggested_value": from_celsius(outdoor.get("minimum"), unit)},
+                        description={
+                            "suggested_value": rounded_from_celsius(outdoor.get("minimum"), unit)
+                        },
                     ): _temperature(unit),
                     vol.Optional(
                         "outdoor_max",
-                        description={"suggested_value": from_celsius(outdoor.get("maximum"), unit)},
+                        description={
+                            "suggested_value": rounded_from_celsius(outdoor.get("maximum"), unit)
+                        },
                     ): _temperature(unit),
                     vol.Required("delete", default=False): bool,
                     vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
@@ -1503,7 +1509,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Optional(
                         "setpoint",
                         description={
-                            "suggested_value": from_celsius(
+                            "suggested_value": rounded_from_celsius(
                                 current.get("setpoint"), temperature_unit_of(self.hass)
                             )
                         },
