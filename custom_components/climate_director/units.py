@@ -83,17 +83,25 @@ def display_temperature(value: float | None, unit: str) -> str:
     """Return a rounded temperature with its unit, in the user's system.
 
     De reparatiemeldingen zijn voor de gebruiker, dus daar staat geen kale
-    `°` en geen onafgeronde float. Fahrenheit telt zonder decimalen - een
-    omgerekende 21 °C is 69,8 °F en dat leest niemand als 69.8.
+    `°` en geen onafgeronde float. Eén decimaal, in beide stelsels
+    (beslissing 1 van ronde 12): liggen twee getallen minder dan één graad
+    Fahrenheit uit elkaar, dan blijven ze zo in de zin van elkaar te
+    onderscheiden (`67.6 °F` tegenover `68.0 °F`) in plaats van na afronding
+    op hele graden hetzelfde te lezen. Dat een melding op Fahrenheit iets
+    langer wordt (`69.8 °F` in plaats van `70 °F`) is de bewuste prijs voor
+    één afrondingsregel die overal geldt.
 
     The repair notices are for the user, so they carry no bare `°` and no
-    unrounded float. Fahrenheit counts without decimals - a converted 21 °C is
-    69.8 °F and nobody reads that as 69.8.
+    unrounded float. One decimal, in both systems (decision 1 of round 12):
+    when two numbers sit less than one degree Fahrenheit apart they stay
+    distinguishable in the sentence (`67.6 °F` versus `68.0 °F`) instead of
+    reading the same after rounding to whole degrees. A Fahrenheit notice
+    becoming slightly longer (`69.8 °F` instead of `70 °F`) is the accepted
+    price for one rounding rule that holds everywhere.
     """
     if value is None:
         return "?"
-    decimals = 0 if unit == UnitOfTemperature.FAHRENHEIT else 1
-    return f"{round(value, decimals)} {unit}"
+    return f"{round(value, 1)} {unit}"
 
 
 def delta_to_celsius(value: float | None, unit: str) -> float | None:

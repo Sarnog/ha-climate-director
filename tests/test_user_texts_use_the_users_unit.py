@@ -55,7 +55,7 @@ class TestTheCommandNotTakingNotice:
     @pytest.mark.parametrize(
         ("unit", "temperature", "expected"),
         [
-            ("°F", 21.0, "heat, 70.0 °F"),
+            ("°F", 21.0, "heat, 69.8 °F"),
             # Een installatie die ooit in Fahrenheit was ingericht bewaart
             # 21,111... °C; de melding hoort dat af te ronden, niet te lekken.
             # An installation once set up in Fahrenheit stores 21.111... °C;
@@ -80,16 +80,16 @@ class TestTheValidationComplaint:
     """Plek B: `target_outside_band` — placeholders blijven Celsius in de engine,
     `problems.readable` rekent ze om."""
 
-    def _installation(self) -> dict[str, Any]:
-        # Streven 19 onder aanpunt 20: verwarmen begint en doet dan niets.
-        # Target 19 below switch-on 20: heating starts and then does nothing.
+    def _installation(self, target: float = 19.0) -> dict[str, Any]:
+        # Streven onder aanpunt 20: verwarmen begint en doet dan niets.
+        # Target below switch-on 20: heating starts and then does nothing.
         return {
             "zones": [
                 zone(
                     "woonkamer",
                     sources=[source("woonkamer_airco", LIVING, role="heat_cool")],
                     indoor_sensor="sensor.woonkamer",
-                    heat=settings(19.0, 20.0),
+                    heat=settings(target, 20.0),
                 )
             ],
             "outdoor_sensor": "sensor.buiten",
@@ -98,7 +98,7 @@ class TestTheValidationComplaint:
     @pytest.mark.parametrize(
         ("unit_system", "unit", "expected_parts"),
         [
-            (IMPERIAL_SYSTEM, "°F", ("68.0 °F", "66.0 °F")),
+            (IMPERIAL_SYSTEM, "°F", ("68.0 °F", "66.2 °F")),
             (METRIC_SYSTEM, "°C", ("20.0 °C", "19.0 °C")),
         ],
     )
@@ -107,6 +107,44 @@ class TestTheValidationComplaint:
     ) -> None:
         live = await start_house(
             self._installation(),
+            states={
+                "sensor.woonkamer": ("68.0", {"unit_of_measurement": unit}),
+                "sensor.buiten": ("40.0", {"unit_of_measurement": unit}),
+                LIVING: ("off", {"hvac_modes": ["heat", "cool", "off"]}),
+            },
+            unit_system=unit_system,
+        )
+        try:
+            issue = issue_for(live, "invalid_config")
+            assert issue is not None
+            placeholders = issue.translation_placeholders or {}
+            for part in expected_parts:
+                assert part in placeholders["problems"], placeholders["problems"]
+        finally:
+            await stop_house(live)
+
+    @pytest.mark.parametrize(
+        ("unit_system", "unit", "expected_parts"),
+        [
+            (IMPERIAL_SYSTEM, "°F", ("68.0 °F", "67.6 °F")),
+            (METRIC_SYSTEM, "°C", ("20.0 °C", "19.8 °C")),
+        ],
+    )
+    async def test_two_band_temperatures_less_than_a_degree_fahrenheit_apart_stay_distinct(
+        self, unit_system, unit: str, expected_parts: tuple[str, str]
+    ) -> None:
+        """De twee getallen in de zin verschillen in beide stelsels.
+
+        H2: liggen aanpunt en streven minder dan één graad Fahrenheit uit
+        elkaar, dan tonen ze na afronding op hele graden hetzelfde getal en
+        spreekt de zin zichzelf tegen. Eén decimaal op °F houdt ze uit elkaar.
+
+        H2: when switch-on point and target sit less than one degree Fahrenheit
+        apart, rounding to whole degrees shows the same number twice and the
+        sentence contradicts itself. One decimal on °F keeps them apart.
+        """
+        live = await start_house(
+            self._installation(target=19.8),
             states={
                 "sensor.woonkamer": ("68.0", {"unit_of_measurement": unit}),
                 "sensor.buiten": ("40.0", {"unit_of_measurement": unit}),
@@ -196,7 +234,7 @@ class TestThePhoneSentence:
     @pytest.mark.parametrize(
         ("unit", "expected"),
         [
-            ("°F", "Now 59.0 °F, aiming for 70.0 °F."),
+            ("°F", "Now 59.0 °F, aiming for 69.8 °F."),
             ("°C", "Now 15.0 °C, aiming for 21.0 °C."),
         ],
     )
@@ -207,7 +245,7 @@ class TestThePhoneSentence:
     def test_the_satisfied_sentence_names_the_unit_too(self) -> None:
         """Alleen `{indoor}` komt voorbij; ook die hoort zijn eenheid te noemen."""
         data = self._coordinator("°F", indoor=21.5).refusal_data("zolder")
-        assert "Now 71.0 °F" in data["confirmed_message"]
+        assert "Now 70.7 °F" in data["confirmed_message"]
 
     def test_the_idle_sentence_names_the_unit_too(self) -> None:
         """De idlekant noemt hetzelfde getal, in dezelfde eenheid."""

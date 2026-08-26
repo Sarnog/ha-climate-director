@@ -16,8 +16,15 @@ eenheid van de gebruiker (het event met een veld `temperature_unit` erbij).
 Een bron wordt gelezen in de eenheid die hij zélf meldt: `unit_of_measurement`
 bij een sensor, `temperature_unit` bij een weersbron, en pas anders in het
 systeemstelsel. De uitgaande kant — sensorattributen en het event — rondt af
-op één decimaal, in beide stelsels; de engine en de applier rekenen
-ongeafgerond verder.
+op één decimaal, in beide stelsels. De weergave voor de gebruiker
+(`display_temperature`) rondt eveneens af op één decimaal, in beide stelsels
+(beslissing 1 van ronde 12, 2026-08-26): zo blijven twee getallen die minder
+dan één graad Fahrenheit uit elkaar liggen in de zin van elkaar te
+onderscheiden (`67.6 °F` tegenover `68.0 °F`) in plaats van na afronding op
+hele graden hetzelfde te lezen en de zin met zichzelf in tegenspraak te
+brengen. Eén afrondingsregel voor de hele weergave; een tweede ernaast is
+precies de vorm waar dit project zes keer op is gestruikeld. De engine en de
+applier rekenen ongeafgerond verder.
 **De diagnose blijft Celsius**: dat is een ontwikkelaarsdump, geen
 gebruikersweergave.
 
@@ -629,8 +636,14 @@ shows and reads in that same unit, and the sensor attributes and the
 `temperature_unit` field alongside). A source is read in the unit it reports
 itself: `unit_of_measurement` on a sensor, `temperature_unit` on a weather
 source, and only otherwise in the system unit. The outgoing side — sensor
-attributes and the event — rounds to one decimal, in both systems; the engine
-and the applier keep computing unrounded.
+attributes and the event — rounds to one decimal, in both systems. The display
+for the user (`display_temperature`) also rounds to one decimal, in both
+systems (decision 1 of round 12, 2026-08-26): two numbers less than one degree
+Fahrenheit apart stay distinguishable in the sentence (`67.6 °F` versus
+`68.0 °F`) instead of reading the same after rounding to whole degrees and
+making the sentence contradict itself. One rounding rule for the whole display;
+a second one next to it is exactly the shape this project has tripped over six
+times. The engine and the applier keep computing unrounded.
 **The diagnostics stay Celsius**: that is a developer dump, not a user-facing
 display.
 

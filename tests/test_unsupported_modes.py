@@ -190,10 +190,10 @@ class TestTheNoticeNamesTheUsersUnit:
         ("unit_system", "bound", "value", "expected"),
         [
             # Streven bóven wat het apparaat kan / target above what the appliance can
-            (IMPERIAL_SYSTEM, "max_temp", 61.0, "heat 70.0 °F > 61.0 °F"),
+            (IMPERIAL_SYSTEM, "max_temp", 61.0, "heat 69.8 °F > 61.0 °F"),
             (METRIC_SYSTEM, "max_temp", 16.0, "heat 21.0 °C > 16.0 °C"),
             # Streven ónder wat het apparaat kan / target below what the appliance can
-            (IMPERIAL_SYSTEM, "min_temp", 72.0, "heat 70.0 °F < 72.0 °F"),
+            (IMPERIAL_SYSTEM, "min_temp", 72.0, "heat 69.8 °F < 72.0 °F"),
             (METRIC_SYSTEM, "min_temp", 22.0, "heat 21.0 °C < 22.0 °C"),
         ],
     )
