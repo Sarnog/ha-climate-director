@@ -1093,27 +1093,11 @@ class TestAmbiguousModesLockTheCircuit:
                 Source(
                     source_id="slaapkamer_airco",
                     entity_id=unit("slaapkamer"),
-                    autostart=situation != "handbediend",
                 ),
             ),
             heat=HEAT_SETTINGS,
             cool=COOL_SETTINGS,
         )
-        if situation == "handbediend":
-            # Geen taakconflict: de handbediende unit deelt geen buitenunit met
-            # de woonkamer, dus de director mag hem niet wegschakelen. Alleen dan
-            # blijft hij werkelijk draaien en komt de assertie erop aan.
-            #
-            # No duty conflict: the hand-operated unit shares no outdoor unit
-            # with the living room, so the director may not stand it down. Only
-            # then does it really keep running and the assertion gets its turn.
-            return DirectorConfig(
-                zones=(warm, other),
-                circuits=(
-                    multi_split("wooncircuit", "woonkamer"),
-                    multi_split("slaapcircuit", "slaapkamer"),
-                ),
-            )
         return DirectorConfig(
             zones=(warm, other),
             circuits=(multi_split("multisplit", "woonkamer", "slaapkamer"),),
@@ -1139,7 +1123,7 @@ class TestAmbiguousModesLockTheCircuit:
     @pytest.mark.parametrize("mode", AMBIGUOUS_MODES)
     @pytest.mark.parametrize(
         "situation",
-        ["unit_in_no_zone", "overgedragen", "onleesbare_sensor", "handbediend"],
+        ["unit_in_no_zone", "overgedragen", "onleesbare_sensor"],
     )
     @pytest.mark.parametrize("wanted", ["heat", "cool"])
     def test_no_duty_is_put_beside_an_unreadable_claim(
@@ -1159,13 +1143,6 @@ class TestAmbiguousModesLockTheCircuit:
         assert world.climate(claimed).family is ModeFamily.AMBIGUOUS
 
         claimed_command = plan.command_for(claimed)
-        if situation == "handbediend":
-            # De handbediende unit wordt met rust gelaten - dat is precies de
-            # opstelling die de oude parametrisatie nooit bereikte.
-            #
-            # The hand-operated unit is left alone - exactly the setup the old
-            # parametrisation never reached.
-            assert claimed_command is None, claimed_command
         claimed_keeps_running = (
             claimed_command is None
             or family_of(claimed_command.hvac_mode) is not ModeFamily.NEUTRAL
@@ -1179,6 +1156,71 @@ class TestAmbiguousModesLockTheCircuit:
                 if command.entity_id in claimed_circuit.units
             } & {ModeFamily.HEAT, ModeFamily.COOL}
             assert not concrete, concrete
+
+    @pytest.mark.parametrize("mode", AMBIGUOUS_MODES)
+    @pytest.mark.parametrize("wanted", ["heat", "cool"])
+    def test_a_hand_operated_unit_blocking_a_shared_circuit_is_stood_down(
+        self, mode: str, wanted: str
+    ) -> None:
+        """Een handbediende unit op `auto` die een gedeeld circuit blokkeert wordt
+        weggeschakeld - dat is beslissing 2 van ronde 8.
+
+        A hand-operated unit on `auto` blocking a shared circuit is stood down -
+        that is decision 2 of round 8.
+        """
+        warm = Zone(
+            zone_id="woonkamer",
+            name="Woonkamer",
+            indoor_sensor="sensor.woonkamer",
+            priority=0,
+            sources=(Source(source_id="woonkamer_airco", entity_id=unit("woonkamer")),),
+            heat=HEAT_SETTINGS,
+            cool=COOL_SETTINGS,
+        )
+        other = Zone(
+            zone_id="slaapkamer",
+            name="Slaapkamer",
+            indoor_sensor="sensor.slaapkamer",
+            priority=1,
+            sources=(
+                Source(
+                    source_id="slaapkamer_airco",
+                    entity_id=unit("slaapkamer"),
+                    autostart=False,
+                ),
+            ),
+            heat=HEAT_SETTINGS,
+            cool=COOL_SETTINGS,
+        )
+        config = DirectorConfig(
+            zones=(warm, other),
+            circuits=(multi_split("multisplit", "woonkamer", "slaapkamer"),),
+        )
+        world = make_world(
+            now=at(14),
+            indoor={
+                "woonkamer": WANTS_HEAT if wanted == "heat" else WANTS_COOL,
+                "slaapkamer": 21.0,
+            },
+            climates={
+                unit("woonkamer"): climate("off"),
+                unit("slaapkamer"): climate(mode),
+            },
+            season=Season.WINTER if wanted == "heat" else Season.SUMMER,
+        )
+        plan = decide(config, world)
+
+        assert_plan_holds(config, world, plan)
+
+        stand_down = plan.command_for(unit("slaapkamer"))
+        assert stand_down is not None
+        assert family_of(stand_down.hvac_mode) is ModeFamily.NEUTRAL
+        assert stand_down.reason is Reason.CIRCUIT_CONFLICT_LOST
+
+        served = plan.command_for(unit("woonkamer"))
+        assert served is not None
+        wanted_family = ModeFamily.HEAT if wanted == "heat" else ModeFamily.COOL
+        assert family_of(served.hvac_mode) is wanted_family
 
     def test_fan_only_holds_nothing_back(self) -> None:
         """`fan_only` claimt niets, dus de director mag er gewoon naast starten."""
