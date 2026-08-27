@@ -446,14 +446,6 @@ Een verlopen cursor (bijvoorbeeld naar een zone die net verwijderd is) stuurt te
 het menu in plaats van een uitzondering te gooien: een config flow die crasht laat een half
 opgebouwde installatie achter zonder weg terug.
 
-**Eigenschap (H8):** een scherm dat je binnen kunt, kun je ook weer uit — ongeacht wat er
-in de velden staat of juist niet staat. "Verwerpen en teruggaan" komt **altijd** aan.
-Home Assistant valideert het formulier vóórdat de stap draait, dus elk optioneel veld
-moet een leeggemaakte waarde (`None` of `""`) doorlaten: `_optional()` is de enige manier
-waarop een optioneel veld in het schema mag staan. Een ingevuld veld gaat nog steeds door
-de selector en wordt dus nog steeds gevalideerd; een lege waarde mag nooit als zodanig de
-configuratie in (`_blank_to_none`).
-
 ### Entiteiten
 
 Eén device per installatie. De sensoren zijn bewust uitgebreid: in schaduwmodus zijn zij de
@@ -1062,13 +1054,6 @@ the user is still editing, pulling the ground out from under the flow they are s
 A stale cursor (to a zone just deleted, say) sends the user back to the menu rather than
 raising: a config flow that crashes leaves a half-built installation behind with no way back
 into it.
-
-**Property (H8):** a screen you can enter, you can leave again — whatever the fields hold
-or do not hold. "Discard and go back" **always** arrives. Home Assistant validates the form
-before the step runs, so every optional field must let a cleared value (`None` or `""`)
-through: `_optional()` is the only way an optional field may appear in the schema. A
-filled-in value still goes through the selector and is therefore still validated; an empty
-value must never land in the configuration as such (`_blank_to_none`).
 
 ### Entities
 

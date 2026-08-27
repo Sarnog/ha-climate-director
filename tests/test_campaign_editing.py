@@ -22,7 +22,9 @@ from typing import Any
 
 import pytest
 import voluptuous as vol
+import voluptuous_serialize
 from harness_live import LiveHome, settings, source, start_house, stop_house, zone
+from homeassistant.helpers import config_validation as cv
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from custom_components.climate_director.const import CONF_INSTALLATION
@@ -86,6 +88,103 @@ async def save(home: LiveHome, flow_id: str) -> dict[str, Any]:
     await home.hass.async_block_till_done()
     assert result["type"] == "create_entry"
     return home.entry.options[CONF_INSTALLATION]
+
+
+async def open_screen(home: LiveHome, screen: str) -> tuple[str, dict[str, Any], str | None]:
+    """Walk into `screen`; return `(flow_id, its form result, parent)`.
+
+    `parent` is the step id of the list the screen returns to when discarded, or
+    `None` when discarding lands back on the main menu (`settings` and
+    `openings`). The navigation lives here so every test that walks the flow
+    uses the same paths, and the screens cannot drift apart between tests.
+    """
+    flow = home.hass.config_entries.options
+    if screen == "settings":
+        result = await menu(home, "settings")
+        return result["flow_id"], result, None
+    if screen == "openings":
+        result = await menu(home, "openings")
+        return result["flow_id"], result, None
+    if screen in ("zone", "zone_existing"):
+        result = await menu(home, "zones")
+        choice = "add_new" if screen == "zone" else "0"
+        result = await flow.async_configure(result["flow_id"], {"zone": choice})
+        assert result["step_id"] == "zone"
+        return result["flow_id"], result, "zones"
+    if screen == "source":
+        result = await menu(home, "zones")
+        result = await flow.async_configure(result["flow_id"], {"zone": "0"})
+        result = await flow.async_configure(
+            result["flow_id"],
+            {"name": "Woonkamer", "indoor_sensor": "sensor.woonkamer", "when_done": "keep"},
+        )
+        assert result["step_id"] == "sources"
+        result = await flow.async_configure(result["flow_id"], {"source": "add_new"})
+        assert result["step_id"] == "source"
+        return result["flow_id"], result, "sources"
+    if screen == "circuit":
+        result = await menu(home, "circuits")
+        result = await flow.async_configure(result["flow_id"], {"circuit": "add_new"})
+        assert result["step_id"] == "circuit"
+        return result["flow_id"], result, "circuits"
+    if screen == "circuit_priority":
+        result = await menu(home, "circuits")
+        result = await flow.async_configure(result["flow_id"], {"circuit": "add_new"})
+        result = await flow.async_configure(
+            result["flow_id"],
+            {
+                "name": "Buitenunit",
+                "units": [LIVING, ATTIC],
+                "simultaneous_heat_cool": False,
+                "conflict_policy": "priority",
+                "allow_fan_only_during_conflict": False,
+                "family_switch_delay": 0,
+                "min_family_switch_interval": 0,
+                "min_cycle_time": 180,
+                "when_done": "keep",
+            },
+        )
+        assert result["step_id"] == "circuit_priorities"
+        result = await flow.async_configure(result["flow_id"], {"zone": "woonkamer"})
+        assert result["step_id"] == "circuit_priority"
+        return result["flow_id"], result, "circuit_priorities"
+    if screen == "generator":
+        result = await menu(home, "generators")
+        result = await flow.async_configure(result["flow_id"], {"generator": "add_new"})
+        assert result["step_id"] == "generator"
+        return result["flow_id"], result, "generators"
+    if screen == "resident":
+        result = await menu(home, "residents")
+        result = await flow.async_configure(result["flow_id"], {"resident": "add_new"})
+        assert result["step_id"] == "resident"
+        return result["flow_id"], result, "residents"
+    if screen == "window":
+        result = await menu(home, "residents")
+        result = await flow.async_configure(result["flow_id"], {"resident": "add_new"})
+        result = await flow.async_configure(
+            result["flow_id"],
+            {"name": "Danny", "presence_entity": "person.danny", "when_done": "keep"},
+        )
+        assert result["step_id"] == "windows"
+        result = await flow.async_configure(result["flow_id"], {"window": "add_new"})
+        assert result["step_id"] == "window"
+        return result["flow_id"], result, "windows"
+    if screen == "opening":
+        result = await menu(home, "openings")
+        result = await flow.async_configure(result["flow_id"], {"opening": "add_new"})
+        assert result["step_id"] == "opening"
+        return result["flow_id"], result, "openings"
+    if screen == "quiet":
+        result = await menu(home, "quiets")
+        result = await flow.async_configure(result["flow_id"], {"quiet": "add_new"})
+        assert result["step_id"] == "quiet"
+        return result["flow_id"], result, "quiets"
+    if screen == "exclusive":
+        result = await menu(home, "exclusives")
+        result = await flow.async_configure(result["flow_id"], {"group": "add_new"})
+        assert result["step_id"] == "exclusive"
+        return result["flow_id"], result, "exclusives"
+    raise AssertionError(f"unknown screen {screen}")
 
 
 class TestAddingThroughEveryScreen:
@@ -1338,23 +1437,24 @@ class TestTheFormShowsRoundedValues:
 
 
 class TestDiscardArrivesOnEveryScreen:
-    """H8: "verwerpen en teruggaan" komt op elk scherm aan, wat er ook in de velden staat.
+    """H8/K1: "verwerpen en teruggaan" komt op elk scherm aan, ook met leeggemaakte velden.
 
-    Home Assistant valideert het formulier vóórdat de stap draait. Een leeggemaakt
-    optioneel veld komt als `None` (getal, entiteit, tijd) of als `""` (tekst)
-    binnen, en een selector weigerde beide - waardoor de "discard"-tak nooit werd
-    bereikt en je vastzat. Deze test stuurt op elk bewerkingsscherm álle optionele
-    velden tegelijk leeg/`None`/ingevuld en eist dat "verwerpen en teruggaan"
-    overal aankomt op de lijst erboven.
+    Home Assistant valideert het formulier vóórdat de stap draait. De interface
+    stuurt een leeggemaakt optioneel veld als **ontbrekende sleutel** door — niet
+    als `None` of `""` (die aanname kostte 7.2.1 de interface; zie
+    `TestEveryFormIsDrawable`). Deze test laat daarom op elk bewerkingsscherm
+    álle optionele velden weg en eist dat "verwerpen en teruggaan" aankomt op de
+    lijst erboven; daarna vult hij dezelfde velden met geldige voorbeeldwaarden
+    en eist hetzelfde.
 
-    H8: "discard and go back" arrives on every screen, whatever the fields hold.
+    H8/K1: "discard and go back" arrives on every screen, even with cleared fields.
 
-    Home Assistant validates the form before the step runs. A cleared optional
-    field arrives as `None` (number, entity, time) or as `""` (text), and a
-    selector refused both - so the "discard" branch was never reached and you
-    were stuck. This test submits every optional field on every edit screen at
-    once as empty/`None`/filled and requires "discard and go back" to arrive on
-    the list above everywhere.
+    Home Assistant validates the form before the step runs. The frontend sends a
+    cleared optional field as a **missing key** — not as `None` or `""` (that
+    assumption cost 7.2.1 its interface; see `TestEveryFormIsDrawable`). This
+    test therefore omits every optional field on every edit screen and requires
+    "discard and go back" to arrive on the list above; then it fills those same
+    fields with valid example values and requires the same.
     """
 
     _OPTIONAL: dict[str, dict[str, Any]] = {
@@ -1404,96 +1504,6 @@ class TestDiscardArrivesOnEveryScreen:
         },
     }
 
-    async def _open(self, home: LiveHome, screen: str) -> tuple[str, str, str]:
-        """Walk into `screen`; return `(flow_id, result_type, parent)`.
-
-        `result_type` is `"menu"` when discarding lands on the main menu
-        (settings), otherwise `"form"` with `parent` as the list above.
-        """
-        flow = home.hass.config_entries.options
-        if screen == "settings":
-            result = await menu(home, "settings")
-            return result["flow_id"], "menu", "init"
-        if screen == "zone":
-            result = await menu(home, "zones")
-            result = await flow.async_configure(result["flow_id"], {"zone": "add_new"})
-            assert result["step_id"] == "zone"
-            return result["flow_id"], "form", "zones"
-        if screen == "source":
-            result = await menu(home, "zones")
-            result = await flow.async_configure(result["flow_id"], {"zone": "0"})
-            result = await flow.async_configure(
-                result["flow_id"],
-                {"name": "Woonkamer", "indoor_sensor": "sensor.woonkamer", "when_done": "keep"},
-            )
-            assert result["step_id"] == "sources"
-            result = await flow.async_configure(result["flow_id"], {"source": "add_new"})
-            assert result["step_id"] == "source"
-            return result["flow_id"], "form", "sources"
-        if screen == "circuit":
-            result = await menu(home, "circuits")
-            result = await flow.async_configure(result["flow_id"], {"circuit": "add_new"})
-            assert result["step_id"] == "circuit"
-            return result["flow_id"], "form", "circuits"
-        if screen == "circuit_priority":
-            result = await menu(home, "circuits")
-            result = await flow.async_configure(result["flow_id"], {"circuit": "add_new"})
-            result = await flow.async_configure(
-                result["flow_id"],
-                {
-                    "name": "Buitenunit",
-                    "units": [LIVING, ATTIC],
-                    "simultaneous_heat_cool": False,
-                    "conflict_policy": "priority",
-                    "allow_fan_only_during_conflict": False,
-                    "family_switch_delay": 0,
-                    "min_family_switch_interval": 0,
-                    "min_cycle_time": 180,
-                    "when_done": "keep",
-                },
-            )
-            assert result["step_id"] == "circuit_priorities"
-            result = await flow.async_configure(result["flow_id"], {"zone": "woonkamer"})
-            assert result["step_id"] == "circuit_priority"
-            return result["flow_id"], "form", "circuit_priorities"
-        if screen == "generator":
-            result = await menu(home, "generators")
-            result = await flow.async_configure(result["flow_id"], {"generator": "add_new"})
-            assert result["step_id"] == "generator"
-            return result["flow_id"], "form", "generators"
-        if screen == "resident":
-            result = await menu(home, "residents")
-            result = await flow.async_configure(result["flow_id"], {"resident": "add_new"})
-            assert result["step_id"] == "resident"
-            return result["flow_id"], "form", "residents"
-        if screen == "window":
-            result = await menu(home, "residents")
-            result = await flow.async_configure(result["flow_id"], {"resident": "add_new"})
-            result = await flow.async_configure(
-                result["flow_id"],
-                {"name": "Danny", "presence_entity": "person.danny", "when_done": "keep"},
-            )
-            assert result["step_id"] == "windows"
-            result = await flow.async_configure(result["flow_id"], {"window": "add_new"})
-            assert result["step_id"] == "window"
-            return result["flow_id"], "form", "windows"
-        if screen == "opening":
-            result = await menu(home, "openings")
-            result = await flow.async_configure(result["flow_id"], {"opening": "add_new"})
-            assert result["step_id"] == "opening"
-            return result["flow_id"], "form", "openings"
-        if screen == "quiet":
-            result = await menu(home, "quiets")
-            result = await flow.async_configure(result["flow_id"], {"quiet": "add_new"})
-            assert result["step_id"] == "quiet"
-            return result["flow_id"], "form", "quiets"
-        if screen == "exclusive":
-            result = await menu(home, "exclusives")
-            result = await flow.async_configure(result["flow_id"], {"group": "add_new"})
-            assert result["step_id"] == "exclusive"
-            return result["flow_id"], "form", "exclusives"
-        raise AssertionError(f"unknown screen {screen}")
-
     @pytest.mark.parametrize(
         ("screen", "variant"),
         [
@@ -1511,7 +1521,7 @@ class TestDiscardArrivesOnEveryScreen:
                 "exclusive",
                 "settings",
             ]
-            for variant in ["empty", "none", "filled"]
+            for variant in ["omitted", "filled"]
         ],
     )
     async def test_discard_arrives(self, screen: str, variant: str) -> None:
@@ -1521,16 +1531,13 @@ class TestDiscardArrivesOnEveryScreen:
         """
         home = await start_house(two_rooms(), states=cold())
         try:
-            flow_id, result_type, parent = await self._open(home, screen)
-            optional = dict(self._OPTIONAL[screen])
-            if variant == "empty":
-                optional = {key: "" for key in optional}
-            elif variant == "none":
-                optional = {key: None for key in optional}
-            result = await home.hass.config_entries.options.async_configure(
-                flow_id, {**optional, "when_done": "discard"}
-            )
-            if result_type == "menu":
+            flow_id, _, parent = await open_screen(home, screen)
+            payload: dict[str, Any] = {}
+            if variant == "filled":
+                payload.update(self._OPTIONAL[screen])
+            payload["when_done"] = "discard"
+            result = await home.hass.config_entries.options.async_configure(flow_id, payload)
+            if parent is None:
                 assert result["type"] == "menu"
             else:
                 assert result["step_id"] == parent
@@ -1544,7 +1551,7 @@ class TestDiscardArrivesOnEveryScreen:
         """
         home = await start_house(two_rooms(), states=cold())
         try:
-            flow_id, _, _ = await self._open(home, "generator")
+            flow_id, _, _ = await open_screen(home, "generator")
             with pytest.raises(vol.Invalid):
                 await home.hass.config_entries.options.async_configure(
                     flow_id,
@@ -1555,5 +1562,61 @@ class TestDiscardArrivesOnEveryScreen:
                         "when_done": "discard",
                     },
                 )
+        finally:
+            await stop_house(home)
+
+
+class TestEveryFormIsDrawable:
+    """K1: élk formulier van de options flow is naar de interface te tekenen.
+
+    Home Assistant tekent een formulier pas nadat
+    `FlowManagerView._prepare_result_json` het schema door
+    `voluptuous_serialize.convert(schema, custom_serializer=cv.custom_serializer)`
+    heeft gehaald. Een `vol.Any(...)` om een selector heen is voor die omzetter
+    geen selector meer en gooit `ValueError` — het scherm wordt nooit getekend
+    en de gebruiker kan de configuratie niet meer verlaten (7.2.1). Deze test
+    loopt elk scherm in en eist dat de omzetter het schema aankan; zonder deze
+    test is die hele laag over één ronde opnieuw mogelijk, want geen enkele
+    andere test raakt hem.
+
+    K1: every options-flow form can be drawn by the frontend.
+
+    Home Assistant only draws a form after `FlowManagerView._prepare_result_json`
+    has pushed the schema through `voluptuous_serialize.convert(schema,
+    custom_serializer=cv.custom_serializer)`. A `vol.Any(...)` around a selector
+    is no longer a selector to that converter and raises `ValueError` — the
+    screen is never drawn and the user can no longer leave the configuration
+    (7.2.1). This test walks into every screen and requires the converter to
+    handle its schema; without it that whole layer is possible again within one
+    round, because no other test touches it.
+    """
+
+    @pytest.mark.parametrize(
+        "screen",
+        [
+            "settings",
+            "zone",
+            "zone_existing",
+            "source",
+            "circuit",
+            "circuit_priority",
+            "generator",
+            "resident",
+            "window",
+            "opening",
+            "quiet",
+            "exclusive",
+            "openings",
+        ],
+    )
+    async def test_the_schema_converts_for_the_frontend(self, screen: str) -> None:
+        home = await start_house(two_rooms(), states=cold())
+        try:
+            _, result, _ = await open_screen(home, screen)
+            assert result["type"] == "form"
+            serialized = voluptuous_serialize.convert(
+                result["data_schema"], custom_serializer=cv.custom_serializer
+            )
+            assert serialized
         finally:
             await stop_house(home)
