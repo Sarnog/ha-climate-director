@@ -254,6 +254,52 @@ def _filled(value: Any) -> bool:
     return bool(value)
 
 
+def _optional(validator: Any) -> vol.Any:
+    """Return a schema that treats an empty optional field as absent.
+
+    Een optioneel veld dat de gebruiker leegmaakt komt als `None` binnen (een
+    leeg getal-, entiteit- of tijdveld) of als `""` (een leeg tekstveld), en
+    een selector weigert beide. Home Assistant valideert het formulier vóórdat
+    de stap draait, dus zonder deze regel gooit élke inzending met een
+    leeggemaakt veld een `InvalidData` - en dan wordt de tak
+    "verwerpen en teruggaan" nooit bereikt, ook al staat die keurig bovenaan.
+    Dat is precies wat H8 meldde.
+
+    Een leeggemaakt veld wordt dus doorgelaten als `None`/`""`; `_missing()` en
+    de opslagkant lezen dat als "niet ingevuld". Een ingevuld veld gaat gewoon
+    door de selector en wordt dus nog steeds gevalideerd: een setpoint van
+    500 °C wordt nog steeds geweigerd.
+
+    An optional field the user clears arrives as `None` (a cleared number,
+    entity or time field) or as `""` (a cleared text field), and a selector
+    refuses both. Home Assistant validates the form before the step runs, so
+    without this rule every submission with a cleared field raises
+    `InvalidData` - and then the "discard and go back" branch is never
+    reached, even though it sits neatly at the top. That is exactly what H8
+    reported.
+
+    A cleared field is therefore let through as `None`/`""`; `_missing()` and
+    the storage side read that as "not filled in". A filled-in value goes
+    through the selector as usual and is therefore still validated: a setpoint
+    of 500 °C is still refused.
+    """
+    return vol.Any(None, "", validator)
+
+
+def _blank_to_none(value: Any) -> Any:
+    """Return `None` for an empty form value, the value itself otherwise.
+
+    De opslagkant mag nooit `""` in de configuratie schrijven voor een veld dat
+    een getal of een entiteit hoort te zijn. Alleen `None` en `""` tellen als
+    leeg; `0` en een lege lijst zijn echte waarden en blijven staan.
+
+    The storage side must never write `""` into the configuration for a field
+    that is supposed to hold a number or an entity. Only `None` and `""` count
+    as empty; `0` and an empty list are real values and stay.
+    """
+    return None if value is None or value == "" else value
+
+
 def _exit_row() -> selector.SelectSelector:
     """Return the row that closes a form, keeping or discarding what is on it.
 
@@ -490,7 +536,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             # arrives empty. Turning this into "absent = keep" would stop users
             # from clearing the outdoor sensor and the precipitation source - a
             # behaviour change, not a repair.
-            self._installation["outdoor_sensor"] = user_input.get("outdoor_sensor", "")
+            self._installation["outdoor_sensor"] = user_input.get("outdoor_sensor") or ""
             self._installation["heating_layout"] = user_input["heating_layout"]
             # Een handmatige zomermaandenlijst is een bewuste keuze; het
             # halfrond-veld is alleen de snelle manier om een van de twee
@@ -515,7 +561,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 )
             self._installation["seasons"] = {
                 "source": user_input["season_source"],
-                "entity_id": user_input.get("season_entity", ""),
+                "entity_id": user_input.get("season_entity") or "",
                 "summer_months": summer_months,
             }
             # `gates` wordt bewust bijgewerkt in plaats van vervangen: het
@@ -585,8 +631,10 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         description={
                             "suggested_value": self._installation.get("outdoor_sensor") or None
                         },
-                    ): selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain=["sensor", "weather"])
+                    ): _optional(
+                        selector.EntitySelector(
+                            selector.EntitySelectorConfig(domain=["sensor", "weather"])
+                        )
                     ),
                     vol.Required(
                         "outdoor_hysteresis",
@@ -607,9 +655,11 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Optional(
                         "season_entity",
                         description={"suggested_value": seasons.get("entity_id") or None},
-                    ): selector.EntitySelector(
-                        selector.EntitySelectorConfig(
-                            domain=["sensor", "input_select", "select", "season"]
+                    ): _optional(
+                        selector.EntitySelector(
+                            selector.EntitySelectorConfig(
+                                domain=["sensor", "input_select", "select", "season"]
+                            )
                         )
                     ),
                     vol.Required(
@@ -625,15 +675,17 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         description={
                             "suggested_value": self._installation.get("holiday_calendars") or None
                         },
-                    ): selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain="calendar", multiple=True)
+                    ): _optional(
+                        selector.EntitySelector(
+                            selector.EntitySelectorConfig(domain="calendar", multiple=True)
+                        )
                     ),
                     vol.Optional(
                         "holiday_keyword",
                         description={
                             "suggested_value": self._installation.get("holiday_keyword") or None
                         },
-                    ): str,
+                    ): _optional(str),
                     vol.Required(
                         "max_precondition",
                         default=int(gates.get("max_precondition", 7200)) // 60,
@@ -641,11 +693,11 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Optional(
                         "guest_start",
                         description={"suggested_value": guest.get("start") or None},
-                    ): _TIME,
+                    ): _optional(_TIME),
                     vol.Optional(
                         "guest_end",
                         description={"suggested_value": guest.get("end") or None},
-                    ): _TIME,
+                    ): _optional(_TIME),
                     vol.Required(
                         "stuck_after",
                         default=int(self._installation.get("stuck_after", 900)) // 60,
@@ -653,8 +705,10 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Optional(
                         "precipitation_source",
                         description={"suggested_value": precipitation.get("source") or None},
-                    ): selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain=["weather", "sensor"])
+                    ): _optional(
+                        selector.EntitySelector(
+                            selector.EntitySelectorConfig(domain=["weather", "sensor"])
+                        )
                     ),
                     vol.Required(
                         "precipitation_states",
@@ -754,11 +808,13 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 {
                     vol.Optional(
                         "sources", description={"suggested_value": list(current) or None}
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=_source_options(self),
-                            mode=selector.SelectSelectorMode.LIST,
-                            multiple=True,
+                    ): _optional(
+                        selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=_source_options(self),
+                                mode=selector.SelectSelectorMode.LIST,
+                                multiple=True,
+                            )
                         )
                     ),
                     vol.Required("delete", default=False): bool,
@@ -847,14 +903,16 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                                 None if weekdays is None else [str(day) for day in weekdays]
                             )
                         },
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=[
-                                selector.SelectOptionDict(value=str(number), label=label)
-                                for number, label in enumerate(_WEEKDAYS)
-                            ],
-                            multiple=True,
-                            mode=selector.SelectSelectorMode.LIST,
+                    ): _optional(
+                        selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=[
+                                    selector.SelectOptionDict(value=str(number), label=label)
+                                    for number, label in enumerate(_WEEKDAYS)
+                                ],
+                                multiple=True,
+                                mode=selector.SelectSelectorMode.LIST,
+                            )
                         )
                     ),
                     vol.Required("delete", default=False): bool,
@@ -978,8 +1036,10 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Optional(
                         "indoor_sensor",
                         description={"suggested_value": current.get("indoor_sensor") or None},
-                    ): selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain=["sensor", "climate"])
+                    ): _optional(
+                        selector.EntitySelector(
+                            selector.EntitySelectorConfig(domain=["sensor", "climate"])
+                        )
                     ),
                     vol.Required("priority", default=priority): _RANK,
                     vol.Required(
@@ -988,9 +1048,11 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Optional(
                         "presence_entity",
                         description={"suggested_value": current.get("presence_entity") or None},
-                    ): selector.EntitySelector(
-                        selector.EntitySelectorConfig(
-                            domain=["binary_sensor", "sensor", "input_boolean"]
+                    ): _optional(
+                        selector.EntitySelector(
+                            selector.EntitySelectorConfig(
+                                domain=["binary_sensor", "sensor", "input_boolean"]
+                            )
                         )
                     ),
                     vol.Required(
@@ -999,7 +1061,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Optional(
                         "presence_timeout",
                         description={"suggested_value": current.get("presence_timeout") or None},
-                    ): _SECONDS,
+                    ): _optional(_SECONDS),
                     vol.Required(
                         "ignore_precipitation",
                         default=current.get("ignore_precipitation", False),
@@ -1023,7 +1085,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                                 (heat.get("outdoor") or {}).get("maximum"), unit
                             )
                         },
-                    ): _temperature(unit),
+                    ): _optional(_temperature(unit)),
                     vol.Required("enable_cool", default=bool(cool)): bool,
                     vol.Required(
                         "cool_target", default=rounded_from_celsius(cool.get("target", 23.0), unit)
@@ -1043,7 +1105,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                                 (cool.get("outdoor") or {}).get("minimum"), unit
                             )
                         },
-                    ): _temperature(unit),
+                    ): _optional(_temperature(unit)),
                     vol.Required(
                         "cool_summer_only",
                         default=Season.SUMMER.value in (cool.get("seasons") or []),
@@ -1149,11 +1211,11 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     "priority": int(user_input["priority"]),
                     "outdoor": {
                         "minimum": to_celsius(
-                            user_input.get("outdoor_min"),
+                            _blank_to_none(user_input.get("outdoor_min")),
                             temperature_unit_of(self.hass),
                         ),
                         "maximum": to_celsius(
-                            user_input.get("outdoor_max"),
+                            _blank_to_none(user_input.get("outdoor_max")),
                             temperature_unit_of(self.hass),
                         ),
                     },
@@ -1175,7 +1237,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Optional(
                         "entity_id",
                         description={"suggested_value": current.get("entity_id") or None},
-                    ): _CLIMATE,
+                    ): _optional(_CLIMATE),
                     vol.Required(
                         "role", default=current.get("role", SourceRole.HEAT_COOL.value)
                     ): _choices([item.value for item in SourceRole], "source_role"),
@@ -1186,13 +1248,13 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         description={
                             "suggested_value": rounded_from_celsius(outdoor.get("minimum"), unit)
                         },
-                    ): _temperature(unit),
+                    ): _optional(_temperature(unit)),
                     vol.Optional(
                         "outdoor_max",
                         description={
                             "suggested_value": rounded_from_celsius(outdoor.get("maximum"), unit)
                         },
-                    ): _temperature(unit),
+                    ): _optional(_temperature(unit)),
                     vol.Required("delete", default=False): bool,
                     vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
                 }
@@ -1273,7 +1335,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 "family_switch_delay": user_input["family_switch_delay"],
                 "min_family_switch_interval": user_input["min_family_switch_interval"],
                 "min_cycle_time": user_input["min_cycle_time"],
-                "max_concurrent_units": user_input.get("max_concurrent_units"),
+                "max_concurrent_units": _blank_to_none(user_input.get("max_concurrent_units")),
             }
             if self._circuit_index is None:
                 circuits.append(circuit)
@@ -1290,7 +1352,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Required(CONF_NAME, default=current.get("name", "")): _TEXT,
                     vol.Optional(
                         "units", description={"suggested_value": current.get("units") or []}
-                    ): _CLIMATE_MULTI,
+                    ): _optional(_CLIMATE_MULTI),
                     vol.Required(
                         "simultaneous_heat_cool",
                         default=current.get("simultaneous_heat_cool", False),
@@ -1316,7 +1378,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Optional(
                         "max_concurrent_units",
                         description={"suggested_value": current.get("max_concurrent_units")},
-                    ): _RANK,
+                    ): _optional(_RANK),
                     vol.Required("delete", default=False): bool,
                     vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
                 }
@@ -1474,7 +1536,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     "entity_id": user_input["entity_id"],
                     "zone_ids": user_input.get("zone_ids") or [],
                     "setpoint": to_celsius(
-                        user_input.get("setpoint"), temperature_unit_of(self.hass)
+                        _blank_to_none(user_input.get("setpoint")),
+                        temperature_unit_of(self.hass),
                     ),
                 }
                 if self._index is None:
@@ -1499,12 +1562,14 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Optional(
                         "entity_id",
                         description={"suggested_value": current.get("entity_id") or None},
-                    ): _CLIMATE,
+                    ): _optional(_CLIMATE),
                     vol.Optional(
                         "zone_ids",
                         description={"suggested_value": current.get("zone_ids") or []},
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(options=zone_options, multiple=True)
+                    ): _optional(
+                        selector.SelectSelector(
+                            selector.SelectSelectorConfig(options=zone_options, multiple=True)
+                        )
                     ),
                     vol.Optional(
                         "setpoint",
@@ -1513,7 +1578,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                                 current.get("setpoint"), temperature_unit_of(self.hass)
                             )
                         },
-                    ): _temperature(temperature_unit_of(self.hass)),
+                    ): _optional(_temperature(temperature_unit_of(self.hass))),
                     vol.Required("delete", default=False): bool,
                     vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
                 }
@@ -1588,7 +1653,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 ),
                 "name": user_input[CONF_NAME],
                 "presence_entity": user_input["presence_entity"],
-                "sleep_entity": user_input.get("sleep_entity", ""),
+                "sleep_entity": user_input.get("sleep_entity") or "",
                 "sleep_state": user_input.get("sleep_state") or "on",
                 "sleep_window": {
                     "start": user_input.get("sleep_from") or "",
@@ -1627,17 +1692,26 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Optional(
                         "presence_entity",
                         description={"suggested_value": current.get("presence_entity") or None},
-                    ): selector.EntitySelector(
-                        selector.EntitySelectorConfig(
-                            domain=["person", "device_tracker", "binary_sensor", "input_boolean"]
+                    ): _optional(
+                        selector.EntitySelector(
+                            selector.EntitySelectorConfig(
+                                domain=[
+                                    "person",
+                                    "device_tracker",
+                                    "binary_sensor",
+                                    "input_boolean",
+                                ]
+                            )
                         )
                     ),
                     vol.Optional(
                         "sleep_entity",
                         description={"suggested_value": current.get("sleep_entity") or None},
-                    ): selector.EntitySelector(
-                        selector.EntitySelectorConfig(
-                            domain=["binary_sensor", "sensor", "input_boolean"]
+                    ): _optional(
+                        selector.EntitySelector(
+                            selector.EntitySelectorConfig(
+                                domain=["binary_sensor", "sensor", "input_boolean"]
+                            )
                         )
                     ),
                     vol.Required("sleep_state", default=current.get("sleep_state", "on")): _TEXT,
@@ -1646,24 +1720,26 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         description={
                             "suggested_value": (current.get("sleep_window") or {}).get("start")
                         },
-                    ): _TIME,
+                    ): _optional(_TIME),
                     vol.Optional(
                         "sleep_until",
                         description={
                             "suggested_value": (current.get("sleep_window") or {}).get("end")
                         },
-                    ): _TIME,
+                    ): _optional(_TIME),
                     vol.Optional(
                         "sleep_days",
                         description={"suggested_value": sleep_days},
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=[
-                                selector.SelectOptionDict(value=str(number), label=label)
-                                for number, label in enumerate(_WEEKDAYS)
-                            ],
-                            multiple=True,
-                            mode=selector.SelectSelectorMode.LIST,
+                    ): _optional(
+                        selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=[
+                                    selector.SelectOptionDict(value=str(number), label=label)
+                                    for number, label in enumerate(_WEEKDAYS)
+                                ],
+                                multiple=True,
+                                mode=selector.SelectSelectorMode.LIST,
+                            )
                         )
                     ),
                     vol.Required("delete", default=False): bool,
@@ -1761,14 +1837,16 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                                 None if weekdays is None else [str(day) for day in weekdays]
                             )
                         },
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=[
-                                selector.SelectOptionDict(value=str(number), label=label)
-                                for number, label in enumerate(_WEEKDAYS)
-                            ],
-                            multiple=True,
-                            mode=selector.SelectSelectorMode.LIST,
+                    ): _optional(
+                        selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=[
+                                    selector.SelectOptionDict(value=str(number), label=label)
+                                    for number, label in enumerate(_WEEKDAYS)
+                                ],
+                                multiple=True,
+                                mode=selector.SelectSelectorMode.LIST,
+                            )
                         )
                     ),
                     vol.Required("delete", default=False): bool,
@@ -1854,9 +1932,11 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Optional(
                         "house_wide_openings",
                         description={"suggested_value": suggested or None},
-                    ): selector.EntitySelector(
-                        selector.EntitySelectorConfig(
-                            domain="climate", multiple=True, include_entities=managed
+                    ): _optional(
+                        selector.EntitySelector(
+                            selector.EntitySelectorConfig(
+                                domain="climate", multiple=True, include_entities=managed
+                            )
                         )
                     ),
                 }
@@ -1911,22 +1991,28 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Optional(
                         "entity_id",
                         description={"suggested_value": current.get("entity_id") or None},
-                    ): selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain=["binary_sensor", "cover", "sensor"])
+                    ): _optional(
+                        selector.EntitySelector(
+                            selector.EntitySelectorConfig(
+                                domain=["binary_sensor", "cover", "sensor"]
+                            )
+                        )
                     ),
                     vol.Optional(
                         "open_state",
                         description={"suggested_value": current.get("open_state") or "on"},
-                    ): _TEXT,
+                    ): _optional(_TEXT),
                     vol.Optional(
                         "zone_ids",
                         description={"suggested_value": current.get("zone_ids") or []},
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(options=zone_options, multiple=True)
+                    ): _optional(
+                        selector.SelectSelector(
+                            selector.SelectSelectorConfig(options=zone_options, multiple=True)
+                        )
                     ),
                     vol.Optional(
                         "delay", description={"suggested_value": current.get("delay") or None}
-                    ): _SECONDS,
+                    ): _optional(_SECONDS),
                     vol.Required("delete", default=False): bool,
                     vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
                 }
@@ -2203,7 +2289,9 @@ def _heat_cool_from_form(
             "hysteresis": delta_to_celsius(user_input["heat_hysteresis"], unit or ""),
             "outdoor": {
                 "minimum": stored_heat_outdoor.get("minimum"),
-                "maximum": to_celsius(user_input.get("heat_outdoor_max"), unit or ""),
+                "maximum": to_celsius(
+                    _blank_to_none(user_input.get("heat_outdoor_max")), unit or ""
+                ),
             },
             "seasons": stored_heat.get("seasons"),
         }
@@ -2216,7 +2304,9 @@ def _heat_cool_from_form(
             "start_at": to_celsius(user_input["cool_start_at"], unit or ""),
             "hysteresis": delta_to_celsius(user_input["cool_hysteresis"], unit or ""),
             "outdoor": {
-                "minimum": to_celsius(user_input.get("cool_outdoor_min"), unit or ""),
+                "minimum": to_celsius(
+                    _blank_to_none(user_input.get("cool_outdoor_min")), unit or ""
+                ),
                 "maximum": stored_cool_outdoor.get("maximum"),
             },
             "seasons": [Season.SUMMER.value] if user_input["cool_summer_only"] else None,

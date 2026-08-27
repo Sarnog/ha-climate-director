@@ -21,6 +21,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+import voluptuous as vol
 from harness_live import LiveHome, settings, source, start_house, stop_house, zone
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
@@ -1332,5 +1333,227 @@ class TestTheFormShowsRoundedValues:
             heat = stored["zones"][0]["heat"]
             assert heat["target"] == pytest.approx(16.11111111111111)
             assert heat["hysteresis"] == pytest.approx(1.0)
+        finally:
+            await stop_house(home)
+
+
+class TestDiscardArrivesOnEveryScreen:
+    """H8: "verwerpen en teruggaan" komt op elk scherm aan, wat er ook in de velden staat.
+
+    Home Assistant valideert het formulier vóórdat de stap draait. Een leeggemaakt
+    optioneel veld komt als `None` (getal, entiteit, tijd) of als `""` (tekst)
+    binnen, en een selector weigerde beide - waardoor de "discard"-tak nooit werd
+    bereikt en je vastzat. Deze test stuurt op elk bewerkingsscherm álle optionele
+    velden tegelijk leeg/`None`/ingevuld en eist dat "verwerpen en teruggaan"
+    overal aankomt op de lijst erboven.
+
+    H8: "discard and go back" arrives on every screen, whatever the fields hold.
+
+    Home Assistant validates the form before the step runs. A cleared optional
+    field arrives as `None` (number, entity, time) or as `""` (text), and a
+    selector refused both - so the "discard" branch was never reached and you
+    were stuck. This test submits every optional field on every edit screen at
+    once as empty/`None`/filled and requires "discard and go back" to arrive on
+    the list above everywhere.
+    """
+
+    _OPTIONAL: dict[str, dict[str, Any]] = {
+        "zone": {
+            "indoor_sensor": "sensor.woonkamer",
+            "presence_entity": "sensor.aanwezig",
+            "presence_timeout": 60,
+            "heat_outdoor_max": 25.0,
+            "cool_outdoor_min": 15.0,
+        },
+        "source": {
+            "entity_id": "climate.gas",
+            "outdoor_min": -5.0,
+            "outdoor_max": 20.0,
+        },
+        "circuit": {"units": [LIVING, ATTIC], "max_concurrent_units": 2},
+        "circuit_priority": {},
+        "generator": {
+            "entity_id": "climate.gas",
+            "zone_ids": ["woonkamer"],
+            "setpoint": 21.5,
+        },
+        "resident": {
+            "presence_entity": "person.danny",
+            "sleep_entity": "binary_sensor.slaap",
+            "sleep_from": "22:00:00",
+            "sleep_until": "07:00:00",
+            "sleep_days": ["0", "1"],
+        },
+        "window": {"weekdays": ["0", "1"]},
+        "opening": {
+            "entity_id": "binary_sensor.achterdeur",
+            "open_state": "open",
+            "zone_ids": ["woonkamer"],
+            "delay": 60,
+        },
+        "quiet": {"weekdays": ["0", "1"]},
+        "exclusive": {"sources": ["woonkamer_airco", "zolder_airco"]},
+        "settings": {
+            "outdoor_sensor": "sensor.buiten",
+            "season_entity": "sensor.seizoen",
+            "holiday_calendars": ["calendar.danny"],
+            "holiday_keyword": "vakantie",
+            "guest_start": "08:00:00",
+            "guest_end": "23:00:00",
+            "precipitation_source": "sensor.regen",
+        },
+    }
+
+    async def _open(self, home: LiveHome, screen: str) -> tuple[str, str, str]:
+        """Walk into `screen`; return `(flow_id, result_type, parent)`.
+
+        `result_type` is `"menu"` when discarding lands on the main menu
+        (settings), otherwise `"form"` with `parent` as the list above.
+        """
+        flow = home.hass.config_entries.options
+        if screen == "settings":
+            result = await menu(home, "settings")
+            return result["flow_id"], "menu", "init"
+        if screen == "zone":
+            result = await menu(home, "zones")
+            result = await flow.async_configure(result["flow_id"], {"zone": "add_new"})
+            assert result["step_id"] == "zone"
+            return result["flow_id"], "form", "zones"
+        if screen == "source":
+            result = await menu(home, "zones")
+            result = await flow.async_configure(result["flow_id"], {"zone": "0"})
+            result = await flow.async_configure(
+                result["flow_id"],
+                {"name": "Woonkamer", "indoor_sensor": "sensor.woonkamer", "when_done": "keep"},
+            )
+            assert result["step_id"] == "sources"
+            result = await flow.async_configure(result["flow_id"], {"source": "add_new"})
+            assert result["step_id"] == "source"
+            return result["flow_id"], "form", "sources"
+        if screen == "circuit":
+            result = await menu(home, "circuits")
+            result = await flow.async_configure(result["flow_id"], {"circuit": "add_new"})
+            assert result["step_id"] == "circuit"
+            return result["flow_id"], "form", "circuits"
+        if screen == "circuit_priority":
+            result = await menu(home, "circuits")
+            result = await flow.async_configure(result["flow_id"], {"circuit": "add_new"})
+            result = await flow.async_configure(
+                result["flow_id"],
+                {
+                    "name": "Buitenunit",
+                    "units": [LIVING, ATTIC],
+                    "simultaneous_heat_cool": False,
+                    "conflict_policy": "priority",
+                    "allow_fan_only_during_conflict": False,
+                    "family_switch_delay": 0,
+                    "min_family_switch_interval": 0,
+                    "min_cycle_time": 180,
+                    "when_done": "keep",
+                },
+            )
+            assert result["step_id"] == "circuit_priorities"
+            result = await flow.async_configure(result["flow_id"], {"zone": "woonkamer"})
+            assert result["step_id"] == "circuit_priority"
+            return result["flow_id"], "form", "circuit_priorities"
+        if screen == "generator":
+            result = await menu(home, "generators")
+            result = await flow.async_configure(result["flow_id"], {"generator": "add_new"})
+            assert result["step_id"] == "generator"
+            return result["flow_id"], "form", "generators"
+        if screen == "resident":
+            result = await menu(home, "residents")
+            result = await flow.async_configure(result["flow_id"], {"resident": "add_new"})
+            assert result["step_id"] == "resident"
+            return result["flow_id"], "form", "residents"
+        if screen == "window":
+            result = await menu(home, "residents")
+            result = await flow.async_configure(result["flow_id"], {"resident": "add_new"})
+            result = await flow.async_configure(
+                result["flow_id"],
+                {"name": "Danny", "presence_entity": "person.danny", "when_done": "keep"},
+            )
+            assert result["step_id"] == "windows"
+            result = await flow.async_configure(result["flow_id"], {"window": "add_new"})
+            assert result["step_id"] == "window"
+            return result["flow_id"], "form", "windows"
+        if screen == "opening":
+            result = await menu(home, "openings")
+            result = await flow.async_configure(result["flow_id"], {"opening": "add_new"})
+            assert result["step_id"] == "opening"
+            return result["flow_id"], "form", "openings"
+        if screen == "quiet":
+            result = await menu(home, "quiets")
+            result = await flow.async_configure(result["flow_id"], {"quiet": "add_new"})
+            assert result["step_id"] == "quiet"
+            return result["flow_id"], "form", "quiets"
+        if screen == "exclusive":
+            result = await menu(home, "exclusives")
+            result = await flow.async_configure(result["flow_id"], {"group": "add_new"})
+            assert result["step_id"] == "exclusive"
+            return result["flow_id"], "form", "exclusives"
+        raise AssertionError(f"unknown screen {screen}")
+
+    @pytest.mark.parametrize(
+        ("screen", "variant"),
+        [
+            (screen, variant)
+            for screen in [
+                "zone",
+                "source",
+                "circuit",
+                "circuit_priority",
+                "generator",
+                "resident",
+                "window",
+                "opening",
+                "quiet",
+                "exclusive",
+                "settings",
+            ]
+            for variant in ["empty", "none", "filled"]
+        ],
+    )
+    async def test_discard_arrives(self, screen: str, variant: str) -> None:
+        """Elk scherm, elke variant: verwerpen en teruggaan komt aan.
+
+        Every screen, every variant: discard and go back arrives.
+        """
+        home = await start_house(two_rooms(), states=cold())
+        try:
+            flow_id, result_type, parent = await self._open(home, screen)
+            optional = dict(self._OPTIONAL[screen])
+            if variant == "empty":
+                optional = {key: "" for key in optional}
+            elif variant == "none":
+                optional = {key: None for key in optional}
+            result = await home.hass.config_entries.options.async_configure(
+                flow_id, {**optional, "when_done": "discard"}
+            )
+            if result_type == "menu":
+                assert result["type"] == "menu"
+            else:
+                assert result["step_id"] == parent
+        finally:
+            await stop_house(home)
+
+    async def test_an_invalid_filled_value_is_still_refused(self) -> None:
+        """Een ingevuld veld gaat nog steeds door de selector: 500 °C wordt geweigerd.
+
+        A filled-in value still goes through the selector: 500 °C is refused.
+        """
+        home = await start_house(two_rooms(), states=cold())
+        try:
+            flow_id, _, _ = await self._open(home, "generator")
+            with pytest.raises(vol.Invalid):
+                await home.hass.config_entries.options.async_configure(
+                    flow_id,
+                    {
+                        "name": "Ketel",
+                        "entity_id": "climate.gas",
+                        "setpoint": 500,
+                        "when_done": "discard",
+                    },
+                )
         finally:
             await stop_house(home)
