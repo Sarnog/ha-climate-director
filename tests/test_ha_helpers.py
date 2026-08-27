@@ -625,46 +625,57 @@ class TestTheEnglishTemplatesLiveInTheCache:
             "Zone z has no appliance at all, so there is nothing to steer. Add a source."
         )
 
-    def test_problems_has_no_disk_access_at_all(self) -> None:
-        """J1: `problems.py` kent geen `Path`, `open` of `json` meer.
+    def test_readable_never_opens_a_file(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """L2: `readable()` doet nooit schijftoegang, hoe de module ook geschreven is.
 
-        De gedragstest hierboven is volgordeafhankelijk: draait er eerder in deze
-        module een test die de oude, zichzelf vullende modulecache van
-        `problems.py` al gevuld heeft, dan gaat een teruggedraaide
-        `Path(...).read_text` nooit meer naar de schijf en blijft hij groen. Deze
-        test pint daarom de eigenschap zelf vast, niet het gedrag: de module mag
-        geen enkele verwijzing naar de schijf meer bevatten. Zo wordt een
-        teruggedraaide `problems.py` rood in een volledige run, ongeacht de
-        volgorde.
+        Een audithook op `open` ziet élke bestandsopening, óók via `pathlib` of
+        een hulpmodule; de vorige bewaking verbood drie namen en liet een
+        herschrijving als `json_loads(pathlib.Path(...).read_text(...))` erlangs.
+        De caches worden leeggemaakt, zodat het pad dat ooit naar de schijf ging
+        werkelijk doorlopen wordt; de uitkomst is dan de rauwe engine-tekst, de
+        allerlaatste terugval.
 
-        J1: `problems.py` no longer knows `Path`, `open` or `json`.
+        L2: `readable()` never touches the disk, however the module is written.
 
-        The behavioural test above is order-dependent: if an earlier test in this
-        module has already filled the old, self-filling module cache of
-        `problems.py`, a reverted `Path(...).read_text` never reaches the disk and
-        stays green. This test therefore pins the property itself, not the
-        behaviour: the module may no longer contain any reference to the disk. A
-        reverted `problems.py` thereby turns red in a full run, whatever the
-        order.
+        An audit hook on `open` sees every file open, also through `pathlib` or a
+        helper module; the previous guard banned three names and let a rewrite
+        such as `json_loads(pathlib.Path(...).read_text(...))` pass. The caches
+        are emptied, so the path that once went to disk is actually walked; the
+        outcome is then the raw engine text, the very last fallback.
         """
-        import ast
-        from pathlib import Path
+        import sys
 
-        from custom_components.climate_director import problems
+        from custom_components.climate_director import problems, texts
 
-        tree = ast.parse(Path(problems.__file__).read_text(encoding="utf-8"))
-        imported = {
-            alias.name
-            for node in ast.walk(tree)
-            if isinstance(node, (ast.Import, ast.ImportFrom))
-            for alias in node.names
-        }
-        names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
-        forbidden = {"Path", "open", "json"}
-        assert not (imported & forbidden), (
-            f"verboden imports in problems.py: {imported & forbidden}"
-        )
-        assert not (names & forbidden), f"verboden namen in problems.py: {names & forbidden}"
+        opened: list[str] = []
+        watching = False
+
+        def _audit(event: str, args: tuple[object, ...]) -> None:
+            if event == "open" and watching and args:
+                opened.append(str(args[0]))
+
+        sys.addaudithook(_audit)
+
+        # Maak elke modulecache leeg waar de terugval zich achter zou kunnen
+        # verschuilen. De huidige code kent er maar één (in `texts`); de oude
+        # vorm had er zelf een in `problems`.
+        #
+        # Empty every module cache the fallback could hide behind. The current
+        # code has only one (in `texts`); the old shape had its own in `problems`.
+        if hasattr(problems, "_ENGLISH_TEMPLATES"):
+            problems._ENGLISH_TEMPLATES = None
+        texts._ENGLISH_TEMPLATES = None
+
+        monkeypatch.setattr(texts, "lookup", lambda hass, code: None)
+        problem = Problem("zone_without_sources", "zone z has no sources", zone="z")
+        try:
+            watching = True
+            sentence = readable(_no_hass(), problem)
+        finally:
+            watching = False
+
+        assert not opened, f"readable() opende bestanden / opened files: {opened}"
+        assert sentence == "zone z has no sources"
 
     def test_every_problem_code_has_an_english_template(self) -> None:
         """Elke `Problem`-code staat in `strings.json["exceptions"]`.
