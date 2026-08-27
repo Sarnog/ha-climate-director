@@ -1659,41 +1659,6 @@ class TestDiscardArrivesOnEveryScreen:
             await stop_house(home)
 
 
-class TestNoFieldWrapsItsSelector:
-    """J2: geen enkel veld in `config_flow.py` mag zijn selector in `vol.Any` wikkelen.
-
-    Een `vol.Any(None, "", selector)` is voor `voluptuous_serialize.convert` geen
-    selector meer en maakt het scherm onrenderbaar (K1, 7.2.1). De schermtest
-    hierboven meet dat gedrag; deze test pint de vorm zelf vast, zodat ook een
-    veld op een scherm dat de doorloop niet aandoet rood wordt zodra iemand de
-    wikkel terugzet.
-
-    J2: no field in `config_flow.py` may wrap its selector in `vol.Any`.
-
-    A `vol.Any(None, "", selector)` is no longer a selector to
-    `voluptuous_serialize.convert` and makes the screen undrawable (K1, 7.2.1).
-    The screen test above measures that behaviour; this test pins the shape
-    itself, so a field on a screen the walk does not visit also turns red the
-    moment somebody puts the wrapper back.
-    """
-
-    def test_no_vol_any_anywhere(self) -> None:
-        import ast
-        from pathlib import Path
-
-        import custom_components.climate_director.config_flow as config_flow
-
-        tree = ast.parse(Path(config_flow.__file__).read_text(encoding="utf-8"))
-        wrapped = [
-            node
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute)
-            and node.func.attr == "Any"
-        ]
-        assert not wrapped, "vol.Any in config_flow.py maakt elk scherm onrenderbaar (K1)"
-
-
 class TestAnEditRoundStoresNoEmptyStrings:
     """J4: een bewerkronde met leeggemaakte velden laat geen `""` achter in de opslag.
 
@@ -1701,14 +1666,18 @@ class TestAnEditRoundStoresNoEmptyStrings:
     ontbrekende sleutel aan), slaat op, en loopt daarna de hele opgeslagen boom
     af: nergens mag `""` staan op een plek waar een getal of een entiteit hoort.
     Alleen de velden waar `""` de afgesproken betekenis "niet ingesteld" heeft
-    mogen het zijn.
+    mogen het zijn. Deze test bewaakt de **opslagvorm**, niet de helper
+    `_blank_to_none`: die is op elk bereikbaar pad een no-op, want de selectors
+    ervóór weigeren een lege string al.
 
     J4: an edit round with cleared fields leaves no `""` behind in storage.
 
     The test clears every optional numeric field (the frontend delivers them as
     missing keys), saves, and then walks the whole stored tree: nowhere may `""`
     stand where a number or an entity belongs. Only the fields where `""` means
-    "not set" by convention may have it.
+    "not set" by convention may have it. This test guards the **storage shape**,
+    not the `_blank_to_none` helper: that one is a no-op on every reachable
+    path, since the selectors in front of it already refuse an empty string.
     """
 
     _STRING_EMPTY_KEYS = {

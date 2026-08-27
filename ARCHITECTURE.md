@@ -448,13 +448,21 @@ opgebouwde installatie achter zonder weg terug.
 
 **Eigenschap:** een scherm dat je binnen kunt, kun je ook weer uit — ongeacht wat er in
 de **optionele** velden staat of juist niet staat. "Verwerpen en teruggaan" komt aan zodra
-de verplichte velden geldig zijn. De interface stuurt een leeggemaakt optioneel veld als
-ontbrekende sleutel door; daarom staat elk optioneel veld als kale selector in het schema,
-nooit gewikkeld in `vol.Any(...)` — zo'n wikkel maakt het scherm onrenderbaar (7.2.1). Een
-ingevuld veld gaat gewoon door de selector en wordt dus nog steeds gevalideerd; verplichte
-velden vallen bewust buiten deze belofte (een leeggemaakt verplicht getalveld kan het
-scherm nog steeds op slot zetten), en een lege waarde mag nooit als zodanig de configuratie
-in (`_blank_to_none`).
+de verplichte velden geldig zijn. Elk optioneel veld staat daarom als kale selector in het
+schema. De omzetter kent maar één `vol.Any`-vorm: `vol.Any(None, validator)` — dat is wat
+`vol.Maybe(validator)` oplevert — en maakt daar `allow_none: true` van; élke andere vorm
+(een derde tak, een lege string) maakt het scherm onrenderbaar, en dat was 7.2.1. De
+huidige keuze voor kale selectors is daarmee **smaller** dan wat de bibliotheek toestaat:
+`vol.Maybe(selector)` zou ook tekenen, maar is overbodig zolang de aanname hieronder klopt
+en zou alleen het scenario dekken waarin de interface een leeggemaakt veld als `None`
+doorgeeft. Dát is een **aanname over de interface, geen meting**: de frontend stuurt een
+leeggemaakt optioneel veld door als ontbrekende sleutel. Klopt die aanname niet, dan
+weigeren 31 van de 33 optionele velden zowel `None` als `""` — alleen de twee tekstvelden
+komen erdoor — en is het 7.2.1-symptoom in volle omvang terug. Een ingevuld veld gaat
+gewoon door de selector en wordt dus nog steeds gevalideerd; verplichte velden vallen
+bewust buiten deze belofte (een leeggemaakt verplicht getalveld kan het scherm nog steeds
+op slot zetten), en een lege waarde mag nooit als zodanig de configuratie in
+(`_blank_to_none`).
 
 ### Entiteiten
 
@@ -1067,12 +1075,20 @@ into it.
 
 **Property:** a screen you can enter, you can leave again — whatever the **optional**
 fields hold or do not hold. "Discard and go back" arrives whenever the required fields are
-valid. The frontend sends a cleared optional field as a missing key; therefore every
-optional field stands as a plain selector in the schema, never wrapped in `vol.Any(...)` —
-such a wrapper makes the screen undrawable (7.2.1). A filled-in value still goes through
-the selector and is therefore still validated; required fields are deliberately outside
-this promise (a cleared required numeric field can still lock the screen), and an empty
-value must never land in the configuration as such (`_blank_to_none`).
+valid. Every optional field therefore stands as a plain selector in the schema. The
+converter knows exactly one `vol.Any` shape: `vol.Any(None, validator)` — which is what
+`vol.Maybe(validator)` produces — and turns it into `allow_none: true`; every other shape
+(a third branch, an empty string) makes the screen undrawable, and that was 7.2.1. The
+current choice of plain selectors is therefore **narrower** than the library allows:
+`vol.Maybe(selector)` would draw too, but is redundant as long as the assumption below
+holds and would only cover the scenario where the frontend hands in a cleared field as
+`None`. That is an **assumption about the frontend, not a measurement**: the frontend
+sends a cleared optional field as a missing key. Should that assumption fail, 31 of the 33
+optional fields refuse both `None` and `""` — only the two text fields get through — and
+the 7.2.1 symptom is back in full. A filled-in value still goes through the selector and
+is therefore still validated; required fields are deliberately outside this promise (a
+cleared required numeric field can still lock the screen), and an empty value must never
+land in the configuration as such (`_blank_to_none`).
 
 ### Entities
 

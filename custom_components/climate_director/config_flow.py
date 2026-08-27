@@ -259,11 +259,17 @@ def _blank_to_none(value: Any) -> Any:
 
     De opslagkant mag nooit `""` in de configuratie schrijven voor een veld dat
     een getal of een entiteit hoort te zijn. Alleen `None` en `""` tellen als
-    leeg; `0` en een lege lijst zijn echte waarden en blijven staan.
+    leeg; `0` en een lege lijst zijn echte waarden en blijven staan. De
+    `""`-tak is vandaag op elk bereikbaar pad onbereikbaar — de selectors
+    ervóór weigeren een lege string al — maar blijft staan als vangnet voor een
+    route die de interface nog niet neemt.
 
     The storage side must never write `""` into the configuration for a field
     that is supposed to hold a number or an entity. Only `None` and `""` count
-    as empty; `0` and an empty list are real values and stay.
+    as empty; `0` and an empty list are real values and stay. The `""` branch
+    is unreachable on every reachable path today — the selectors in front of it
+    already refuse an empty string — but stays as a safety net for a route the
+    frontend does not take yet.
     """
     return None if value is None or value == "" else value
 
