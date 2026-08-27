@@ -187,6 +187,61 @@ async def open_screen(home: LiveHome, screen: str) -> tuple[str, dict[str, Any],
     raise AssertionError(f"unknown screen {screen}")
 
 
+def _optional_fields_by_step() -> dict[str, list[str]]:
+    """Return the `vol.Optional` keys per `async_show_form` step, from the source.
+
+    De lijst komt uit de bron van `config_flow.py` (AST), niet uit een met de
+    hand bijgehouden kaart, zodat een nieuw optioneel veld automatisch meedoet
+    in plaats van stilletjes te ontbreken — precies wat er met
+    `house_wide_openings` op het openingenlijstscherm misging.
+
+    The map comes from the source of `config_flow.py` (AST), not from a
+    hand-kept map, so a new optional field joins in automatically instead of
+    quietly missing — exactly what went wrong with `house_wide_openings` on the
+    openings screen.
+    """
+    import ast
+    from pathlib import Path
+
+    import custom_components.climate_director.config_flow as config_flow
+
+    tree = ast.parse(Path(config_flow.__file__).read_text(encoding="utf-8"))
+    found: dict[str, list[str]] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+            continue
+        if node.func.attr != "async_show_form":
+            continue
+        step_id = None
+        schema = None
+        for keyword in node.keywords:
+            if keyword.arg == "step_id" and isinstance(keyword.value, ast.Constant):
+                step_id = keyword.value.value
+            if keyword.arg == "data_schema":
+                schema = keyword.value
+        if step_id is None or schema is None:
+            continue
+        found[step_id] = [
+            sub.args[0].value
+            for sub in ast.walk(schema)
+            if isinstance(sub, ast.Call)
+            and isinstance(sub.func, ast.Attribute)
+            and sub.func.attr == "Optional"
+            and sub.args
+            and isinstance(sub.args[0], ast.Constant)
+            and isinstance(sub.args[0].value, str)
+        ]
+    return found
+
+
+def _optional_fields(screen: str) -> list[str]:
+    """Return the `vol.Optional` keys of one form, failing on an unknown step."""
+    found = _optional_fields_by_step()
+    if screen not in found:
+        raise AssertionError(f"geen async_show_form met step_id {screen!r} gevonden")
+    return found[screen]
+
+
 class TestAddingThroughEveryScreen:
     """Alles wat je erbij kunt zetten, komt er ook echt bij te staan.
 
@@ -1457,7 +1512,7 @@ class TestDiscardArrivesOnEveryScreen:
     fields with valid example values and requires the same.
     """
 
-    _OPTIONAL: dict[str, dict[str, Any]] = {
+    _VALUES: dict[str, dict[str, Any]] = {
         "zone": {
             "indoor_sensor": "sensor.woonkamer",
             "presence_entity": "sensor.aanwezig",
@@ -1502,7 +1557,22 @@ class TestDiscardArrivesOnEveryScreen:
             "guest_end": "23:00:00",
             "precipitation_source": "sensor.regen",
         },
+        "openings": {"house_wide_openings": [LIVING]},
     }
+
+    @staticmethod
+    def _discard(screen: str) -> dict[str, Any]:
+        """Return the payload that leaves `screen` without saving anything.
+
+        `openings` kent geen "when_done"-regel; de uitgang daar is de
+        "terug"-keuze in de openingenlijst zelf.
+
+        `openings` has no "when_done" row; its exit is the "back" choice in the
+        opening list itself.
+        """
+        if screen == "openings":
+            return {"opening": "back_to_menu"}
+        return {"when_done": "discard"}
 
     @pytest.mark.parametrize(
         ("screen", "variant"),
@@ -1520,6 +1590,7 @@ class TestDiscardArrivesOnEveryScreen:
                 "quiet",
                 "exclusive",
                 "settings",
+                "openings",
             ]
             for variant in ["omitted", "filled"]
         ],
@@ -1532,10 +1603,9 @@ class TestDiscardArrivesOnEveryScreen:
         home = await start_house(two_rooms(), states=cold())
         try:
             flow_id, _, parent = await open_screen(home, screen)
-            payload: dict[str, Any] = {}
+            payload = self._discard(screen)
             if variant == "filled":
-                payload.update(self._OPTIONAL[screen])
-            payload["when_done"] = "discard"
+                payload.update(self._VALUES[screen])
             result = await home.hass.config_entries.options.async_configure(flow_id, payload)
             if parent is None:
                 assert result["type"] == "menu"
@@ -1543,6 +1613,31 @@ class TestDiscardArrivesOnEveryScreen:
                 assert result["step_id"] == parent
         finally:
             await stop_house(home)
+
+    def test_the_example_values_cover_exactly_the_schema(self) -> None:
+        """J2: elke voorbeeldwaarde dekt precies de optionele velden van zijn scherm.
+
+        De veldenlijst komt uit de bron; deze test eist dat de voorbeeldkaart
+        niet uit de pas loopt — geen ontbrekend veld en geen overbodige waarde.
+        Zo groeit de doorloop vanzelf mee met een nieuw veld in plaats van het
+        stilletjes over te slaan.
+
+        J2: every example value covers exactly its screen's optional fields.
+
+        The field list comes from the source; this test requires the example map
+        not to drift — no missing field, no superfluous value, and no screen
+        with optional fields left uncovered. That way the walk grows along with
+        a new field instead of silently skipping it.
+        """
+        all_steps = _optional_fields_by_step()
+        with_fields = {screen for screen, keys in all_steps.items() if keys}
+        uncovered = with_fields - set(self._VALUES)
+        assert not uncovered, f"schermen zonder voorbeeldkaart: {sorted(uncovered)}"
+        for screen, values in self._VALUES.items():
+            assert set(values) == set(_optional_fields(screen)), (
+                f"scheef voor {screen}: waarden {sorted(values)}, "
+                f"schema {sorted(_optional_fields(screen))}"
+            )
 
     async def test_an_invalid_filled_value_is_still_refused(self) -> None:
         """Een ingevuld veld gaat nog steeds door de selector: 500 °C wordt geweigerd.
@@ -1618,5 +1713,221 @@ class TestEveryFormIsDrawable:
                 result["data_schema"], custom_serializer=cv.custom_serializer
             )
             assert serialized
+        finally:
+            await stop_house(home)
+
+
+class TestNoFieldWrapsItsSelector:
+    """J2: geen enkel veld in `config_flow.py` mag zijn selector in `vol.Any` wikkelen.
+
+    Een `vol.Any(None, "", selector)` is voor `voluptuous_serialize.convert` geen
+    selector meer en maakt het scherm onrenderbaar (K1, 7.2.1). De schermtest
+    hierboven meet dat gedrag; deze test pint de vorm zelf vast, zodat ook een
+    veld op een scherm dat de doorloop niet aandoet rood wordt zodra iemand de
+    wikkel terugzet.
+
+    J2: no field in `config_flow.py` may wrap its selector in `vol.Any`.
+
+    A `vol.Any(None, "", selector)` is no longer a selector to
+    `voluptuous_serialize.convert` and makes the screen undrawable (K1, 7.2.1).
+    The screen test above measures that behaviour; this test pins the shape
+    itself, so a field on a screen the walk does not visit also turns red the
+    moment somebody puts the wrapper back.
+    """
+
+    def test_no_vol_any_anywhere(self) -> None:
+        import ast
+        from pathlib import Path
+
+        import custom_components.climate_director.config_flow as config_flow
+
+        tree = ast.parse(Path(config_flow.__file__).read_text(encoding="utf-8"))
+        wrapped = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "Any"
+        ]
+        assert not wrapped, "vol.Any in config_flow.py maakt elk scherm onrenderbaar (K1)"
+
+
+class TestAnEditRoundStoresNoEmptyStrings:
+    """J4: een bewerkronde met leeggemaakte velden laat geen `""` achter in de opslag.
+
+    De test maakt alle optionele getalvelden leeg (de interface levert ze als
+    ontbrekende sleutel aan), slaat op, en loopt daarna de hele opgeslagen boom
+    af: nergens mag `""` staan op een plek waar een getal of een entiteit hoort.
+    Alleen de velden waar `""` de afgesproken betekenis "niet ingesteld" heeft
+    mogen het zijn.
+
+    J4: an edit round with cleared fields leaves no `""` behind in storage.
+
+    The test clears every optional numeric field (the frontend delivers them as
+    missing keys), saves, and then walks the whole stored tree: nowhere may `""`
+    stand where a number or an entity belongs. Only the fields where `""` means
+    "not set" by convention may have it.
+    """
+
+    _STRING_EMPTY_KEYS = {
+        "presence_entity",
+        "outdoor_sensor",
+        "season_entity",
+        "sleep_entity",
+        "holiday_keyword",
+        "precipitation_source",
+        "guest_start",
+        "guest_end",
+        "sleep_from",
+        "sleep_until",
+    }
+
+    @staticmethod
+    def _empty_string_keys(value: Any) -> list[str]:
+        """Return the key under which every `""` value sits, list parents included."""
+        found: list[str] = []
+
+        def walk(item: Any, key: str) -> None:
+            if isinstance(item, dict):
+                for name, child in item.items():
+                    walk(child, name)
+            elif isinstance(item, list):
+                for child in item:
+                    walk(child, key)
+            elif item == "":
+                found.append(key)
+
+        walk(value, "$")
+        return found
+
+    async def test_cleared_optional_fields_land_as_none(self) -> None:
+        installation = two_rooms()
+        installation["zones"][0]["heat"] = settings(21.0, 20.0, outdoor={"maximum": 25.0})
+        installation["zones"][0]["sources"][0] = source(
+            "woonkamer_airco",
+            LIVING,
+            role="heat_cool",
+            outdoor={"minimum": 5.0, "maximum": 25.0},
+        )
+        installation["circuits"] = [
+            {
+                "circuit_id": "buitenunit",
+                "name": "Buitenunit",
+                "units": [LIVING, ATTIC],
+                "simultaneous_heat_cool": False,
+                "conflict_policy": "priority",
+                "allow_fan_only_during_conflict": False,
+                "family_switch_delay": 0,
+                "min_family_switch_interval": 0,
+                "min_cycle_time": 180,
+                "max_concurrent_units": 2,
+            }
+        ]
+        installation["generators"] = [
+            {
+                "generator_id": "ketel",
+                "name": "Ketel",
+                "entity_id": "climate.gas",
+                "zone_ids": ["woonkamer"],
+                "setpoint": 21.5,
+            }
+        ]
+        installation["house_wide_openings"] = [LIVING]
+        home = await start_house(installation, states=cold())
+        try:
+            flow = home.hass.config_entries.options
+            result = await menu(home, "zones")
+            flow_id = result["flow_id"]
+
+            # Zone bewerken: beide buitengrenzen leegmaken (ontbrekende sleutels).
+            # Edit the zone: clear both outdoor bounds (missing keys).
+            result = await flow.async_configure(flow_id, {"zone": "0"})
+            result = await flow.async_configure(
+                flow_id,
+                {
+                    "name": "Woonkamer",
+                    "indoor_sensor": "sensor.woonkamer",
+                    "enable_heat": True,
+                    "enable_cool": True,
+                    "when_done": "keep",
+                },
+            )
+            assert result["step_id"] == "sources"
+
+            # Bron bewerken: beide buitengrenzen leegmaken.
+            # Edit the source: clear both outdoor bounds.
+            result = await flow.async_configure(flow_id, {"source": "0"})
+            result = await flow.async_configure(
+                flow_id,
+                {
+                    "entity_id": LIVING,
+                    "role": "heat_cool",
+                    "autostart": True,
+                    "priority": 0,
+                    "when_done": "keep",
+                },
+            )
+            assert result["step_id"] == "sources"
+            result = await flow.async_configure(flow_id, {"source": "back_to_menu"})
+            assert result["type"] == "menu"
+
+            # Circuit bewerken: de capaciteitsgrens leegmaken.
+            # Edit the circuit: clear the capacity limit.
+            result = await flow.async_configure(flow_id, {"next_step_id": "circuits"})
+            result = await flow.async_configure(flow_id, {"circuit": "0"})
+            result = await flow.async_configure(
+                flow_id,
+                {
+                    "name": "Buitenunit",
+                    "units": [LIVING, ATTIC],
+                    "simultaneous_heat_cool": False,
+                    "conflict_policy": "priority",
+                    "allow_fan_only_during_conflict": False,
+                    "family_switch_delay": 0,
+                    "min_family_switch_interval": 0,
+                    "min_cycle_time": 180,
+                    "when_done": "keep",
+                },
+            )
+            assert result["step_id"] == "circuit_priorities"
+            result = await flow.async_configure(flow_id, {"zone": "back_to_menu"})
+            assert result["type"] == "menu"
+
+            # Gedeelde warmtebron bewerken: het setpoint leegmaken.
+            # Edit the shared heat source: clear the setpoint.
+            result = await flow.async_configure(flow_id, {"next_step_id": "generators"})
+            result = await flow.async_configure(flow_id, {"generator": "0"})
+            result = await flow.async_configure(
+                flow_id,
+                {
+                    "name": "Ketel",
+                    "entity_id": "climate.gas",
+                    "zone_ids": ["woonkamer"],
+                    "when_done": "keep",
+                },
+            )
+            assert result["type"] == "menu"
+
+            # Openingen bevestigen zonder huisbrede lijst.
+            # Confirm the openings screen without the house-wide list.
+            result = await flow.async_configure(flow_id, {"next_step_id": "openings"})
+            result = await flow.async_configure(flow_id, {"opening": "back_to_menu"})
+            assert result["type"] == "menu"
+
+            stored = await save(home, flow_id)
+
+            zone_0 = stored["zones"][0]
+            assert zone_0["heat"]["outdoor"]["maximum"] is None
+            assert zone_0["cool"]["outdoor"]["minimum"] is None
+            assert zone_0["sources"][0]["outdoor"]["minimum"] is None
+            assert zone_0["sources"][0]["outdoor"]["maximum"] is None
+            assert stored["circuits"][0]["max_concurrent_units"] is None
+            assert stored["generators"][0]["setpoint"] is None
+            assert stored["house_wide_openings"] == []
+
+            offenders = [
+                key for key in self._empty_string_keys(stored) if key not in self._STRING_EMPTY_KEYS
+            ]
+            assert not offenders, f"lege strings op onverwachte plekken: {offenders}"
         finally:
             await stop_house(home)

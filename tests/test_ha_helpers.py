@@ -24,6 +24,7 @@ from custom_components.climate_director.config_flow import (
     ClimateDirectorOptionsFlow,
     _all_source_ids,
     _band_errors,
+    _blank_to_none,
     _deep_copy,
     _next_priority,
     _unique_id,
@@ -814,6 +815,33 @@ def test_all_source_ids_walks_every_zone() -> None:
         "zolder_airco",
         "slaapkamer_airco",
     }
+
+
+class TestBlankToNone:
+    """J4: `_blank_to_none` is het contract dat leeg nooit als `""` opslaat.
+
+    Sinds K1 kan de interface een leeggemaakt veld alleen nog als ontbrekende
+    sleutel aanleveren, en de schemavalidatie weigert `""` voor de getalvelden
+    die `_blank_to_none` bewaakt. Het contract van de helper zelf blijft het
+    vangnet voor elke route die er ooit wél een `""` heen stuurt, en wordt
+    daarom hier als eigenschap vastgepind.
+
+    J4: `_blank_to_none` is the contract that never stores empty as `""`.
+
+    Since K1 the frontend can only deliver a cleared field as a missing key, and
+    schema validation refuses `""` for the numeric fields `_blank_to_none`
+    guards. The helper's own contract remains the safety net for any route that
+    ever does send a `""` there, and is therefore pinned as a property here.
+    """
+
+    def test_none_and_an_empty_string_become_none(self) -> None:
+        assert _blank_to_none(None) is None
+        assert _blank_to_none("") is None
+
+    def test_real_values_stay(self) -> None:
+        assert _blank_to_none(0) == 0
+        assert _blank_to_none([]) == []
+        assert _blank_to_none("open") == "open"
 
 
 class TestOptionsFlowCursors:
