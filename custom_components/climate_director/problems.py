@@ -26,9 +26,7 @@ typo in the configuration.
 
 from __future__ import annotations
 
-import json
-from collections.abc import Mapping
-from pathlib import Path
+from collections.abc import Iterator, Mapping
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -147,11 +145,8 @@ def _converted_params(hass: HomeAssistant, problem: str) -> dict[str, str]:
     return params
 
 
-_ENGLISH_TEMPLATES: dict[str, str] | None = None
-
-
 def _english_template(code: str) -> str | None:
-    """Return the English template for `code` from `strings.json`, if there is one.
+    """Return the English template for `code` from the cache `texts` filled.
 
     De tweede terugval van `readable()`: wanneer de vertaalcache leeg is — het
     laden is misgegaan bij het opzetten — blijft er nog steeds een Engelse zin
@@ -159,26 +154,24 @@ def _english_template(code: str) -> str | None:
     gebruiker genoemd wordt. Alleen de rauwe engine-tekst is de allerlaatste
     terugval.
 
+    De bestandslezing zelf hoort thuis in `texts.async_prepare` (die hem via
+    `async_add_executor_job` buiten de event loop doet); hier wordt alleen de
+    modulecache gelezen, zodat `readable()` synchroon kan blijven en nooit
+    blokkeert.
+
     The second fallback of `readable()`: when the translation cache is empty —
     loading went wrong at setup — an English sentence still remains that passes
     through `_converted_params`, so even then the user's unit is named. Only the
     raw engine text is the very last fallback.
+
+    The file read itself belongs in `texts.async_prepare` (which does it through
+    `async_add_executor_job` off the event loop); here only the module cache is
+    read, so `readable()` can stay synchronous and never blocks.
     """
-    global _ENGLISH_TEMPLATES
-    if _ENGLISH_TEMPLATES is None:
-        templates: dict[str, str] = {}
-        try:
-            data = json.loads(Path(__file__).with_name("strings.json").read_text(encoding="utf-8"))
-            exceptions = data.get("exceptions") if isinstance(data, dict) else None
-            if isinstance(exceptions, dict):
-                for key, value in exceptions.items():
-                    message = value.get("message") if isinstance(value, dict) else None
-                    if message:
-                        templates[key] = message
-        except (OSError, ValueError):
-            pass
-        _ENGLISH_TEMPLATES = templates
-    return _ENGLISH_TEMPLATES.get(code)
+    templates = texts.english_templates()
+    if not templates:
+        return None
+    return templates.get(code)
 
 
 def readable(hass: HomeAssistant, problem: str) -> str:
@@ -192,6 +185,9 @@ def readable(hass: HomeAssistant, problem: str) -> str:
     melding. Temperatuur-placeholders worden vóór het invullen omgerekend naar
     de eenheid van de gebruiker; zie `TEMPERATURE_PLACEHOLDERS`.
 
+    De tweede terugval is lui: zolang de vertaling zelf al slaagt, wordt de
+    Engelse cache niet eens geraadpleegd.
+
     The engine knows no Home Assistant and therefore writes English. If a
     complaint carries a code we look it up here; if not, the English sentence
     stays. When the translation cannot be loaded — the cache is empty, or a
@@ -199,12 +195,20 @@ def readable(hass: HomeAssistant, problem: str) -> str:
     English template from `strings.json`, and only then to the complaint's raw
     text. Temperature placeholders are converted to the user's unit before
     filling; see `TEMPERATURE_PLACEHOLDERS`.
+
+    The second fallback is lazy: as long as the translation itself succeeds the
+    English cache is not even consulted.
     """
     code = getattr(problem, "code", "")
     if not code:
         return str(problem)
     params = _converted_params(hass, problem)
-    for template in (texts.lookup(hass, code), _english_template(code)):
+
+    def _templates() -> Iterator[str | None]:
+        yield texts.lookup(hass, code)
+        yield _english_template(code)
+
+    for template in _templates():
         if not template:
             continue
         try:

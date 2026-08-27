@@ -23,12 +23,68 @@ to whatever it likes.
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
 
 from .const import DOMAIN
+
+#: De Engelse uitzonderingszinnen, één keer uit `strings.json` gelezen. De
+#: bestandslezing zelf gebeurt in `async_prepare`, nooit in `lookup`/`readable`:
+#: een synchrone `read_text` in de event loop is een blokkerende aanroep die
+#: Home Assistant met naam en toenaam in het logboek meldt.
+#:
+#: The English exception sentences, read once from `strings.json`. The file read
+#: itself happens in `async_prepare`, never in `lookup`/`readable`: a synchronous
+#: `read_text` in the event loop is a blocking call Home Assistant reports in the
+#: log by name.
+_ENGLISH_TEMPLATES: dict[str, str] | None = None
+
+
+def english_templates() -> dict[str, str] | None:
+    """Return the cached English exception templates, or `None` before loading.
+
+    De lezer is bewust alleen-lezen: hij mag nooit zelf naar de schijf gaan,
+    anders is `readable()` weer blokkerend zodra iemand hem op een pad aanroept
+    waarop de cache nog leeg is. `None` betekent simpelweg "geen tweede
+    terugval", en `readable()` valt dan door naar de rauwe engine-tekst.
+
+    The reader is deliberately read-only: it must never go to disk itself,
+    otherwise `readable()` becomes blocking again the moment somebody calls it on
+    a path where the cache is still empty. `None` simply means "no second
+    fallback", and `readable()` then falls through to the raw engine text.
+    """
+    return _ENGLISH_TEMPLATES
+
+
+def _read_english_templates() -> dict[str, str]:
+    """Read every English exception template out of `strings.json`.
+
+    Puur bestandswerk, bedoeld om via `async_add_executor_job` buiten de event
+    loop te draaien. Een onleesbaar of onverwacht gevormd bestand levert een lege
+    dict op, nooit een uitzondering: de tweede terugval mag het scherm niet
+    laten omvallen, hij is er juist voor het geval de vertaling ontbreekt.
+
+    Pure file work, meant to run through `async_add_executor_job` off the event
+    loop. An unreadable or unexpectedly shaped file yields an empty dict, never
+    an exception: the second fallback must not bring the screen down, it exists
+    precisely for the case the translation is missing.
+    """
+    templates: dict[str, str] = {}
+    try:
+        data = json.loads(Path(__file__).with_name("strings.json").read_text(encoding="utf-8"))
+        exceptions = data.get("exceptions") if isinstance(data, dict) else None
+        if isinstance(exceptions, dict):
+            for key, value in exceptions.items():
+                message = value.get("message") if isinstance(value, dict) else None
+                if message:
+                    templates[key] = message
+    except (OSError, ValueError):
+        pass
+    return templates
 
 
 async def async_prepare(hass: HomeAssistant) -> None:
@@ -39,12 +95,25 @@ async def async_prepare(hass: HomeAssistant) -> None:
     stil terug op Engels. Laden is asynchroon en opzoeken niet, dus dit moet
     gebeuren op de plek die vroeg genoeg is - één keer, bij het opzetten.
 
+    Daarnaast worden de Engelse sjablonen hier uit `strings.json` gelezen, via
+    `async_add_executor_job` zodat de bestandslezing niet in de event loop
+    gebeurt. `problems._english_template` leest daarna alleen nog deze cache en
+    kan nooit meer blokkeren.
+
     `async_get_cached_translations` reads a cache and no more: if the category
     was never loaded it returns an empty dictionary and every sentence quietly
     falls back to English. Loading is asynchronous and looking up is not, so
     this has to happen somewhere early enough - once, while setting up.
+
+    On top of that the English templates are read here from `strings.json`,
+    through `async_add_executor_job` so the file read does not happen on the
+    event loop. `problems._english_template` then only reads this cache and can
+    never block again.
     """
     await translation.async_load_integrations(hass, {DOMAIN})
+    global _ENGLISH_TEMPLATES
+    if _ENGLISH_TEMPLATES is None:
+        _ENGLISH_TEMPLATES = await hass.async_add_executor_job(_read_english_templates)
 
 
 def lookup(hass: HomeAssistant, code: str) -> str | None:

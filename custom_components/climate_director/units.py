@@ -88,7 +88,7 @@ def display_temperature(value: float | None, unit: str) -> str:
     Fahrenheit uit elkaar, dan blijven ze zo in de zin van elkaar te
     onderscheiden (`67.6 °F` tegenover `68.0 °F`) in plaats van na afronding
     op hele graden hetzelfde te lezen. Dat een melding op Fahrenheit iets
-    langer wordt (`69.8 °F` in plaats van `70 °F`) is de bewuste prijs voor
+    langer wordt (`69.8 °F` in plaats van `70.0 °F`) is de bewuste prijs voor
     één afrondingsregel die overal geldt.
 
     The repair notices are for the user, so they carry no bare `°` and no
@@ -96,7 +96,7 @@ def display_temperature(value: float | None, unit: str) -> str:
     when two numbers sit less than one degree Fahrenheit apart they stay
     distinguishable in the sentence (`67.6 °F` versus `68.0 °F`) instead of
     reading the same after rounding to whole degrees. A Fahrenheit notice
-    becoming slightly longer (`69.8 °F` instead of `70 °F`) is the accepted
+    becoming slightly longer (`69.8 °F` instead of `70.0 °F`) is the accepted
     price for one rounding rule that holds everywhere.
     """
     if value is None:

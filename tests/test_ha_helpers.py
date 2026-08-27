@@ -57,6 +57,28 @@ from custom_components.climate_director.number import resolve_initial
 from custom_components.climate_director.problems import MAX_LISTED, readable, summarise
 
 
+@pytest.fixture(autouse=True)
+def _seed_english_templates() -> None:
+    """Fill the English-template cache, the way production does off the event loop.
+
+    De productie vult deze cache in `texts.async_prepare` via
+    `async_add_executor_job`; de synchrone tests hieronder hebben geen draaiende
+    Home Assistant en vullen hem daarom met dezelfde pure lezer. Zo loopt
+    `readable()` in de tests precies het pad dat het in productie loopt: alleen
+    de cache lezen, nooit de schijf.
+
+    Production fills this cache in `texts.async_prepare` through
+    `async_add_executor_job`; the synchronous tests below have no running Home
+    Assistant and therefore fill it with the same pure reader. That keeps
+    `readable()` on exactly the path it takes in production: only reading the
+    cache, never the disk.
+    """
+    from custom_components.climate_director import texts
+
+    if texts.english_templates() is None:
+        texts._ENGLISH_TEMPLATES = texts._read_english_templates()
+
+
 class TestSeasonFromState:
     @pytest.mark.parametrize(
         ("raw", "season"),
@@ -568,6 +590,77 @@ class TestTheEnglishTemplateIsTheSecondFallback:
         sentence = readable(self._hass(unit), problem)
         for part in expected_parts:
             assert part in sentence
+
+
+class TestTheEnglishTemplatesLiveInTheCache:
+    """H5: de Engelse terugval leest alleen de cache, nooit de schijf.
+
+    H5: the English fallback reads only the cache, never the disk.
+    """
+
+    def test_a_filled_cache_never_goes_to_disk(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Zodra de cache gevuld is, gaat `readable()` niet meer naar de schijf.
+
+        `Path.read_text` gooit hier; zou `readable()` er toch aankomen, dan faalt
+        de test met een `AssertionError`. De cache is gevuld door de autouse
+        fixture hierboven, net zoals `texts.async_prepare` dat in productie doet.
+
+        Once the cache is filled, `readable()` no longer goes to disk.
+        `Path.read_text` raises here; if `readable()` still reached it, the test
+        would fail with an `AssertionError`. The cache is filled by the autouse
+        fixture above, just as `texts.async_prepare` does in production.
+        """
+        from pathlib import Path
+
+        from custom_components.climate_director import texts
+
+        def _boom(*args: object, **kwargs: object) -> str:
+            raise AssertionError("readable() ging naar de schijf / readable() went to disk")
+
+        monkeypatch.setattr(Path, "read_text", _boom)
+        monkeypatch.setattr(texts, "lookup", lambda hass, code: None)
+        problem = Problem("zone_without_sources", "zone z has no sources", zone="z")
+        assert readable(_no_hass(), problem) == (
+            "Zone z has no appliance at all, so there is nothing to steer. Add a source."
+        )
+
+    def test_every_problem_code_has_an_english_template(self) -> None:
+        """Elke `Problem`-code staat in `strings.json["exceptions"]`.
+
+        De Engelse terugval dekt élke code; mist er één, dan valt die ene melding
+        terug op de rauwe engine-tekst zonder eenheidomrekening. De codes worden
+        met een AST-loop uit de engine verzameld, niet uit een met de hand
+        bijgehouden lijst; `41` is de telling die de loop vandaag moet vinden en
+        bewaakt dat de loop zelf nog werkt.
+
+        Every `Problem` code is in `strings.json["exceptions"]`.
+        The English fallback covers every code; if one is missing, that one
+        notice falls back to the raw engine text without unit conversion. The
+        codes are gathered from the engine with an AST walk, not from a
+        hand-kept list; `41` is the count the walk must find today and guards
+        that the walk itself still works.
+        """
+        import ast
+        from pathlib import Path
+
+        from custom_components.climate_director import texts
+        from custom_components.climate_director.engine import models as engine_models
+
+        tree = ast.parse(Path(engine_models.__file__).read_text(encoding="utf-8"))
+        codes = [
+            node.args[0].value
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "Problem"
+            and node.args
+            and isinstance(node.args[0], ast.Constant)
+        ]
+        assert len(codes) == 41
+        templates = texts.english_templates()
+        assert templates is not None
+        missing = [code for code in codes if code not in templates]
+        assert not missing, f"missing English templates: {missing}"
 
 
 class TestDeepCopy:
