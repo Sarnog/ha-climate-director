@@ -624,6 +624,47 @@ class TestTheEnglishTemplatesLiveInTheCache:
             "Zone z has no appliance at all, so there is nothing to steer. Add a source."
         )
 
+    def test_problems_has_no_disk_access_at_all(self) -> None:
+        """J1: `problems.py` kent geen `Path`, `open` of `json` meer.
+
+        De gedragstest hierboven is volgordeafhankelijk: draait er eerder in deze
+        module een test die de oude, zichzelf vullende modulecache van
+        `problems.py` al gevuld heeft, dan gaat een teruggedraaide
+        `Path(...).read_text` nooit meer naar de schijf en blijft hij groen. Deze
+        test pint daarom de eigenschap zelf vast, niet het gedrag: de module mag
+        geen enkele verwijzing naar de schijf meer bevatten. Zo wordt een
+        teruggedraaide `problems.py` rood in een volledige run, ongeacht de
+        volgorde.
+
+        J1: `problems.py` no longer knows `Path`, `open` or `json`.
+
+        The behavioural test above is order-dependent: if an earlier test in this
+        module has already filled the old, self-filling module cache of
+        `problems.py`, a reverted `Path(...).read_text` never reaches the disk and
+        stays green. This test therefore pins the property itself, not the
+        behaviour: the module may no longer contain any reference to the disk. A
+        reverted `problems.py` thereby turns red in a full run, whatever the
+        order.
+        """
+        import ast
+        from pathlib import Path
+
+        from custom_components.climate_director import problems
+
+        tree = ast.parse(Path(problems.__file__).read_text(encoding="utf-8"))
+        imported = {
+            alias.name
+            for node in ast.walk(tree)
+            if isinstance(node, (ast.Import, ast.ImportFrom))
+            for alias in node.names
+        }
+        names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+        forbidden = {"Path", "open", "json"}
+        assert not (imported & forbidden), (
+            f"verboden imports in problems.py: {imported & forbidden}"
+        )
+        assert not (names & forbidden), f"verboden namen in problems.py: {names & forbidden}"
+
     def test_every_problem_code_has_an_english_template(self) -> None:
         """Elke `Problem`-code staat in `strings.json["exceptions"]`.
 
