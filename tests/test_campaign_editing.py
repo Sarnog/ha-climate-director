@@ -1494,18 +1494,20 @@ class TestDiscardArrivesOnEveryScreen:
 
     Home Assistant valideert het formulier vóórdat de stap draait. De interface
     stuurt een leeggemaakt optioneel veld als **ontbrekende sleutel** door — niet
-    als `None` of `""` (die aanname kostte 7.2.1 de interface; zie
-    `TestEveryFormIsDrawable`). Deze test laat daarom op elk bewerkingsscherm
-    álle optionele velden weg en eist dat "verwerpen en teruggaan" aankomt op de
-    lijst erboven; daarna vult hij dezelfde velden met geldige voorbeeldwaarden
-    en eist hetzelfde.
+    als `None` of `""` (die aanname kostte 7.2.1 de interface; de fixture
+    `every_drawn_form_must_serialize` in `conftest.py` bewaakt dat elk scherm
+    tekenbaar blijft). Deze test laat daarom op elk bewerkingsscherm álle
+    optionele velden weg en eist dat "verwerpen en teruggaan" aankomt op de lijst
+    erboven; daarna vult hij dezelfde velden met geldige voorbeeldwaarden en eist
+    hetzelfde.
 
     H8/K1: "discard and go back" arrives on every screen, even with cleared fields.
 
     Home Assistant validates the form before the step runs. The frontend sends a
     cleared optional field as a **missing key** — not as `None` or `""` (that
-    assumption cost 7.2.1 its interface; see `TestEveryFormIsDrawable`). This
-    test therefore omits every optional field on every edit screen and requires
+    assumption cost 7.2.1 its interface; the `every_drawn_form_must_serialize`
+    fixture in `conftest.py` guards that every screen stays drawable). This test
+    therefore omits every optional field on every edit screen and requires
     "discard and go back" to arrive on the list above; then it fills those same
     fields with valid example values and requires the same.
     """
