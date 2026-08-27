@@ -446,6 +446,16 @@ Een verlopen cursor (bijvoorbeeld naar een zone die net verwijderd is) stuurt te
 het menu in plaats van een uitzondering te gooien: een config flow die crasht laat een half
 opgebouwde installatie achter zonder weg terug.
 
+**Eigenschap:** een scherm dat je binnen kunt, kun je ook weer uit — ongeacht wat er in
+de **optionele** velden staat of juist niet staat. "Verwerpen en teruggaan" komt aan zodra
+de verplichte velden geldig zijn. De interface stuurt een leeggemaakt optioneel veld als
+ontbrekende sleutel door; daarom staat elk optioneel veld als kale selector in het schema,
+nooit gewikkeld in `vol.Any(...)` — zo'n wikkel maakt het scherm onrenderbaar (7.2.1). Een
+ingevuld veld gaat gewoon door de selector en wordt dus nog steeds gevalideerd; verplichte
+velden vallen bewust buiten deze belofte (een leeggemaakt verplicht getalveld kan het
+scherm nog steeds op slot zetten), en een lege waarde mag nooit als zodanig de configuratie
+in (`_blank_to_none`).
+
 ### Entiteiten
 
 Eén device per installatie. De sensoren zijn bewust uitgebreid: in schaduwmodus zijn zij de
@@ -1054,6 +1064,15 @@ the user is still editing, pulling the ground out from under the flow they are s
 A stale cursor (to a zone just deleted, say) sends the user back to the menu rather than
 raising: a config flow that crashes leaves a half-built installation behind with no way back
 into it.
+
+**Property:** a screen you can enter, you can leave again — whatever the **optional**
+fields hold or do not hold. "Discard and go back" arrives whenever the required fields are
+valid. The frontend sends a cleared optional field as a missing key; therefore every
+optional field stands as a plain selector in the schema, never wrapped in `vol.Any(...)` —
+such a wrapper makes the screen undrawable (7.2.1). A filled-in value still goes through
+the selector and is therefore still validated; required fields are deliberately outside
+this promise (a cleared required numeric field can still lock the screen), and an empty
+value must never land in the configuration as such (`_blank_to_none`).
 
 ### Entities
 
