@@ -325,6 +325,45 @@ def config() -> DirectorConfig:
     return house()
 
 
+@pytest.fixture(autouse=True)
+def every_drawn_form_must_serialize(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Haal élk formulier dat de suite tekent door de frontend-omzetter.
+
+    Home Assistant tekent een formulier pas nadat
+    `FlowManagerView._prepare_result_json` het schema door
+    `voluptuous_serialize.convert(schema, custom_serializer=cv.custom_serializer)`
+    heeft gehaald. Deze fixture onderschept `FlowHandler.async_show_form` en
+    doet diezelfde omzetting op élk formulierresultaat — de wizard, het
+    bewaarscherm en elke foutherhaling inbegrepen. Zo is élk scherm dat de suite
+    ergens tekent aantoonbaar te tekenen, en groeit de bewaking vanzelf mee met
+    de tests in plaats van een met de hand bijgehouden lijst van schermen.
+
+    Push every form the suite draws through the frontend converter.
+
+    Home Assistant only draws a form after `FlowManagerView._prepare_result_json`
+    has pushed the schema through `voluptuous_serialize.convert(schema,
+    custom_serializer=cv.custom_serializer)`. This fixture intercepts
+    `FlowHandler.async_show_form` and does that same conversion on every form
+    result — the wizard, the save screen and every error re-display included.
+    Every screen the suite draws somewhere is thereby provably drawable, and the
+    guard grows with the tests instead of a hand-kept list of screens.
+    """
+    import voluptuous_serialize
+    from homeassistant.data_entry_flow import FlowHandler, FlowResultType
+    from homeassistant.helpers import config_validation as cv
+
+    original = FlowHandler.async_show_form
+
+    def checked(self, **kwargs):
+        result = original(self, **kwargs)
+        schema = result.get("data_schema") if result.get("type") == FlowResultType.FORM else None
+        if schema is not None:
+            voluptuous_serialize.convert(schema, custom_serializer=cv.custom_serializer)
+        return result
+
+    monkeypatch.setattr(FlowHandler, "async_show_form", checked)
+
+
 def office_hours() -> tuple:
     """Return a weekday 08:00-18:00 schedule window."""
 

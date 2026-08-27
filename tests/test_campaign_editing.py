@@ -22,9 +22,7 @@ from typing import Any
 
 import pytest
 import voluptuous as vol
-import voluptuous_serialize
 from harness_live import LiveHome, settings, source, start_house, stop_house, zone
-from homeassistant.helpers import config_validation as cv
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from custom_components.climate_director.const import CONF_INSTALLATION
@@ -1657,62 +1655,6 @@ class TestDiscardArrivesOnEveryScreen:
                         "when_done": "discard",
                     },
                 )
-        finally:
-            await stop_house(home)
-
-
-class TestEveryFormIsDrawable:
-    """K1: élk formulier van de options flow is naar de interface te tekenen.
-
-    Home Assistant tekent een formulier pas nadat
-    `FlowManagerView._prepare_result_json` het schema door
-    `voluptuous_serialize.convert(schema, custom_serializer=cv.custom_serializer)`
-    heeft gehaald. Een `vol.Any(...)` om een selector heen is voor die omzetter
-    geen selector meer en gooit `ValueError` — het scherm wordt nooit getekend
-    en de gebruiker kan de configuratie niet meer verlaten (7.2.1). Deze test
-    loopt elk scherm in en eist dat de omzetter het schema aankan; zonder deze
-    test is die hele laag over één ronde opnieuw mogelijk, want geen enkele
-    andere test raakt hem.
-
-    K1: every options-flow form can be drawn by the frontend.
-
-    Home Assistant only draws a form after `FlowManagerView._prepare_result_json`
-    has pushed the schema through `voluptuous_serialize.convert(schema,
-    custom_serializer=cv.custom_serializer)`. A `vol.Any(...)` around a selector
-    is no longer a selector to that converter and raises `ValueError` — the
-    screen is never drawn and the user can no longer leave the configuration
-    (7.2.1). This test walks into every screen and requires the converter to
-    handle its schema; without it that whole layer is possible again within one
-    round, because no other test touches it.
-    """
-
-    @pytest.mark.parametrize(
-        "screen",
-        [
-            "settings",
-            "zone",
-            "zone_existing",
-            "source",
-            "circuit",
-            "circuit_priority",
-            "generator",
-            "resident",
-            "window",
-            "opening",
-            "quiet",
-            "exclusive",
-            "openings",
-        ],
-    )
-    async def test_the_schema_converts_for_the_frontend(self, screen: str) -> None:
-        home = await start_house(two_rooms(), states=cold())
-        try:
-            _, result, _ = await open_screen(home, screen)
-            assert result["type"] == "form"
-            serialized = voluptuous_serialize.convert(
-                result["data_schema"], custom_serializer=cv.custom_serializer
-            )
-            assert serialized
         finally:
             await stop_house(home)
 
