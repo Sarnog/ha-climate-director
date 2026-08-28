@@ -335,8 +335,14 @@ def every_drawn_form_must_serialize(monkeypatch: pytest.MonkeyPatch) -> None:
     heeft gehaald. Deze fixture onderschept `FlowHandler.async_show_form` en
     doet diezelfde omzetting op élk formulierresultaat — de wizard, het
     bewaarscherm en elke foutherhaling inbegrepen. Zo is élk scherm dat de suite
-    ergens tekent aantoonbaar te tekenen, en groeit de bewaking vanzelf mee met
-    de tests in plaats van een met de hand bijgehouden lijst van schermen.
+    ergens tekent aantoonbaar te tekenen.
+
+    De dekking volgt daarmee wat de tests toevallig aandoen; deze fixture
+    bewaakt dus de getekende schermen, foutherhalingen en tussenschermen die een
+    expliciete doorloop mist. Dat élk scherm uit de bron ook een doorloop heeft,
+    bewaakt `TestEveryFormInTheSourceIsWalkedTo` in
+    `tests/test_campaign_editing.py` — samen bewaken ze twee verschillende
+    dingen, niet dezelfde invariant twee keer.
 
     Push every form the suite draws through the frontend converter.
 
@@ -345,8 +351,14 @@ def every_drawn_form_must_serialize(monkeypatch: pytest.MonkeyPatch) -> None:
     custom_serializer=cv.custom_serializer)`. This fixture intercepts
     `FlowHandler.async_show_form` and does that same conversion on every form
     result — the wizard, the save screen and every error re-display included.
-    Every screen the suite draws somewhere is thereby provably drawable, and the
-    guard grows with the tests instead of a hand-kept list of screens.
+    Every screen the suite draws somewhere is thereby provably drawable.
+
+    Its coverage follows whatever the tests happen to touch; this fixture
+    guards the drawn screens, error re-displays and intermediate screens an
+    explicit walk misses. That every screen from the source also has a walk is
+    guarded by `TestEveryFormInTheSourceIsWalkedTo` in
+    `tests/test_campaign_editing.py` — together they guard two different
+    things, not the same invariant twice.
     """
     import voluptuous_serialize
     from homeassistant.data_entry_flow import FlowHandler, FlowResultType

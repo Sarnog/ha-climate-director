@@ -22,10 +22,10 @@ from typing import Any
 
 import pytest
 import voluptuous as vol
-from harness_live import LiveHome, settings, source, start_house, stop_house, zone
+from harness_live import LiveHome, settings, source, start_bare_house, start_house, stop_house, zone
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
-from custom_components.climate_director.const import CONF_INSTALLATION
+from custom_components.climate_director.const import CONF_INSTALLATION, DOMAIN
 
 LIVING = "climate.woonkamer"
 ATTIC = "climate.zolder"
@@ -91,41 +91,49 @@ async def save(home: LiveHome, flow_id: str) -> dict[str, Any]:
 async def open_screen(home: LiveHome, screen: str) -> tuple[str, dict[str, Any], str | None]:
     """Walk into `screen`; return `(flow_id, its form result, parent)`.
 
+    `parent` is de step_id van de lijst waar het scherm bij "verwerpen" naar
+    terugkeert, of `None` wanneer verwerpen op het hoofdmenu landt (`settings`,
+    `openings`, de lijstschermen en `save`). De navigatie staat hier zodat elke
+    test die de flow doorloopt dezelfde paden gebruikt en de schermen niet
+    tussen tests uit de pas kunnen lopen. `TestEveryFormInTheSourceIsWalkedTo`
+    loopt de broninventarisatie af tegen precies deze functie; een step_id die
+    hier geen tak heeft, maakt die test rood.
+
     `parent` is the step id of the list the screen returns to when discarded, or
-    `None` when discarding lands back on the main menu (`settings` and
-    `openings`). The navigation lives here so every test that walks the flow
-    uses the same paths, and the screens cannot drift apart between tests.
+    `None` when discarding lands back on the main menu (`settings`, `openings`,
+    the list screens and `save`). The navigation lives here so every test that
+    walks the flow uses the same paths, and the screens cannot drift apart
+    between tests. `TestEveryFormInTheSourceIsWalkedTo` walks the source
+    inventory against exactly this function; a step id without a branch here
+    turns that test red.
     """
     flow = home.hass.config_entries.options
-    if screen == "settings":
-        result = await menu(home, "settings")
-        return result["flow_id"], result, None
-    if screen == "openings":
-        result = await menu(home, "openings")
-        return result["flow_id"], result, None
-    if screen in ("zone", "zone_existing"):
+
+    async def into(step: str) -> dict[str, Any]:
+        """Walk into a main-menu entry and return its form result."""
+        result = await menu(home, step)
+        assert result["step_id"] == step
+        return result
+
+    async def into_zone(choice: str) -> dict[str, Any]:
+        """Walk into the zone form, choosing an existing room or the add-row."""
         result = await menu(home, "zones")
-        choice = "add_new" if screen == "zone" else "0"
         result = await flow.async_configure(result["flow_id"], {"zone": choice})
         assert result["step_id"] == "zone"
-        return result["flow_id"], result, "zones"
-    if screen == "source":
-        result = await menu(home, "zones")
-        result = await flow.async_configure(result["flow_id"], {"zone": "0"})
+        return result
+
+    async def into_sources() -> dict[str, Any]:
+        """Walk through room zero into its list of sources."""
+        result = await into_zone("0")
         result = await flow.async_configure(
             result["flow_id"],
             {"name": "Woonkamer", "indoor_sensor": "sensor.woonkamer", "when_done": "keep"},
         )
         assert result["step_id"] == "sources"
-        result = await flow.async_configure(result["flow_id"], {"source": "add_new"})
-        assert result["step_id"] == "source"
-        return result["flow_id"], result, "sources"
-    if screen == "circuit":
-        result = await menu(home, "circuits")
-        result = await flow.async_configure(result["flow_id"], {"circuit": "add_new"})
-        assert result["step_id"] == "circuit"
-        return result["flow_id"], result, "circuits"
-    if screen == "circuit_priority":
+        return result
+
+    async def into_circuit_priorities() -> dict[str, Any]:
+        """Create a priority-based circuit and land on its per-room priorities."""
         result = await menu(home, "circuits")
         result = await flow.async_configure(result["flow_id"], {"circuit": "add_new"})
         result = await flow.async_configure(
@@ -143,6 +151,54 @@ async def open_screen(home: LiveHome, screen: str) -> tuple[str, dict[str, Any],
             },
         )
         assert result["step_id"] == "circuit_priorities"
+        return result
+
+    async def into_windows() -> dict[str, Any]:
+        """Create a resident and land on its list of schedules."""
+        result = await menu(home, "residents")
+        result = await flow.async_configure(result["flow_id"], {"resident": "add_new"})
+        result = await flow.async_configure(
+            result["flow_id"],
+            {"name": "Danny", "presence_entity": "person.danny", "when_done": "keep"},
+        )
+        assert result["step_id"] == "windows"
+        return result
+
+    if screen in (
+        "settings",
+        "openings",
+        "zones",
+        "circuits",
+        "generators",
+        "residents",
+        "quiets",
+        "exclusives",
+        "save",
+    ):
+        result = await into(screen)
+        return result["flow_id"], result, None
+    if screen in ("zone", "zone_existing"):
+        choice = "add_new" if screen == "zone" else "0"
+        result = await into_zone(choice)
+        return result["flow_id"], result, "zones"
+    if screen == "sources":
+        result = await into_sources()
+        return result["flow_id"], result, None
+    if screen == "source":
+        result = await into_sources()
+        result = await flow.async_configure(result["flow_id"], {"source": "add_new"})
+        assert result["step_id"] == "source"
+        return result["flow_id"], result, "sources"
+    if screen == "circuit":
+        result = await menu(home, "circuits")
+        result = await flow.async_configure(result["flow_id"], {"circuit": "add_new"})
+        assert result["step_id"] == "circuit"
+        return result["flow_id"], result, "circuits"
+    if screen == "circuit_priorities":
+        result = await into_circuit_priorities()
+        return result["flow_id"], result, None
+    if screen == "circuit_priority":
+        result = await into_circuit_priorities()
         result = await flow.async_configure(result["flow_id"], {"zone": "woonkamer"})
         assert result["step_id"] == "circuit_priority"
         return result["flow_id"], result, "circuit_priorities"
@@ -156,14 +212,11 @@ async def open_screen(home: LiveHome, screen: str) -> tuple[str, dict[str, Any],
         result = await flow.async_configure(result["flow_id"], {"resident": "add_new"})
         assert result["step_id"] == "resident"
         return result["flow_id"], result, "residents"
+    if screen == "windows":
+        result = await into_windows()
+        return result["flow_id"], result, None
     if screen == "window":
-        result = await menu(home, "residents")
-        result = await flow.async_configure(result["flow_id"], {"resident": "add_new"})
-        result = await flow.async_configure(
-            result["flow_id"],
-            {"name": "Danny", "presence_entity": "person.danny", "when_done": "keep"},
-        )
-        assert result["step_id"] == "windows"
+        result = await into_windows()
         result = await flow.async_configure(result["flow_id"], {"window": "add_new"})
         assert result["step_id"] == "window"
         return result["flow_id"], result, "windows"
@@ -238,6 +291,96 @@ def _optional_fields(screen: str) -> list[str]:
     if screen not in found:
         raise AssertionError(f"geen async_show_form met step_id {screen!r} gevonden")
     return found[screen]
+
+
+def _show_form_steps() -> set[str]:
+    """Return every `async_show_form(step_id=...)` in the source, from the AST.
+
+    Dezelfde inventarisatie als `_optional_fields_by_step`, maar dan alleen de
+    step_id's: dit is de schermenlijst waartegen de doorloop hieronder zich
+    bindt, zodat een nieuw scherm zonder doorloop zichtbaar rood wordt.
+
+    The same inventory as `_optional_fields_by_step`, but just the step ids:
+    this is the list of screens the walk below binds itself to, so a new screen
+    without a walk turns visibly red.
+    """
+    return set(_optional_fields_by_step())
+
+
+class TestEveryFormInTheSourceIsWalkedTo:
+    """M1: elk formulier in de bron heeft een expliciete doorloop.
+
+    De tekenfixture in `conftest.py` bewaakt élk formulier dat de suite werkelijk
+    tekent — foutherhalingen en tussenschermen inbegrepen — maar zijn dekking
+    volgt wat de tests toevallig aandoen. Deze test bindt die dekking aan de
+    bron: hij loopt de AST-inventarisatie van `async_show_form(step_id=...)` af
+    en loopt élk scherm binnen via `open_screen`, dat hard faalt op een step_id
+    waarvoor geen navigatie bestaat. Zo is een nieuw scherm zonder test
+    zichtbaar rood in plaats van stilletjes onbewaakt; samen bewaken deze twee
+    dus twee verschillende dingen.
+
+    M1: every form in the source has an explicit walk.
+
+    The draw fixture in `conftest.py` guards every form the suite actually
+    draws — error re-displays and intermediate screens included — but its
+    coverage follows whatever the tests happen to touch. This test binds that
+    coverage to the source: it walks the AST inventory of
+    `async_show_form(step_id=...)` and walks into every screen through
+    `open_screen`, which hard-fails on a step id without navigation. A new
+    screen without a test is thereby visibly red instead of silently
+    unguarded; together the two guard two different things.
+    """
+
+    async def test_every_step_id_in_the_source_opens(self) -> None:
+        """Elke step_id uit de bron is via `open_screen` werkelijk te openen.
+
+        Every step id from the source can really be opened through `open_screen`.
+        """
+        steps = _show_form_steps()
+        assert "user" in steps, "de AST-loop vindt het wizardscherm niet"
+        home = await start_house(_installation_with_a_problem(), states=cold())
+        try:
+            for screen in sorted(steps - {"user"}):
+                _, result, _ = await open_screen(home, screen)
+                assert result["step_id"] == screen, (
+                    f"open_screen liep naar {result['step_id']!r} in plaats van {screen!r}"
+                )
+        finally:
+            await stop_house(home)
+
+        # De wizard hoort bij de config flow, niet bij de options flow; die heeft
+        # dus een huis zonder entry nodig en zijn eigen, kleinere doorloop.
+        #
+        # The wizard belongs to the config flow, not the options flow; it needs
+        # a house without an entry and its own, smaller walk.
+        hass = await start_bare_house(states=cold())
+        try:
+            result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+            assert result["type"] == "form"
+            assert result["step_id"] == "user"
+        finally:
+            await hass.async_stop()
+
+        assert len(steps) == 23, (
+            f"de bron heeft {len(steps)} schermen; de doorloop hierboven hoort ze "
+            f"allemaal te openen — {sorted(steps)}"
+        )
+
+
+def _installation_with_a_problem() -> dict[str, Any]:
+    """Return two rooms plus one deliberate validation problem.
+
+    Het bewaarscherm (`save`) toont zich alleen als formulier wanneer
+    `validate()` iets vindt; een huisbrede stop zonder openingen is zo'n
+    melding en laat alle andere schermen gewoon openen.
+
+    The save screen only shows itself as a form when `validate()` finds
+    something; a house-wide stop without openings is such a problem and leaves
+    every other screen openable.
+    """
+    installation = two_rooms()
+    installation["house_wide_openings"] = [LIVING]
+    return installation
 
 
 class TestAddingThroughEveryScreen:
