@@ -241,35 +241,25 @@ async def open_screen(home: LiveHome, screen: str) -> tuple[str, dict[str, Any],
 def _optional_fields_by_step() -> dict[str, list[str]]:
     """Return the `vol.Optional` keys per `async_show_form` step, from the source.
 
-    De lijst komt uit de bron van `config_flow.py` (AST), niet uit een met de
-    hand bijgehouden kaart, zodat een nieuw optioneel veld automatisch meedoet
-    in plaats van stilletjes te ontbreken — precies wat er met
-    `house_wide_openings` op het openingenlijstscherm misging.
+    De lijst komt uit de bron van de héle integratie (AST over álle `*.py` onder
+    `custom_components/climate_director/`), niet uit een met de hand bijgehouden
+    kaart of uit `config_flow.py` alleen. Een nieuw optioneel veld — in welk
+    bestand dan ook — doet zo automatisch mee in plaats van stilletjes te
+    ontbreken; precies wat er met `house_wide_openings` op het
+    openingenlijstscherm misging.
 
-    The map comes from the source of `config_flow.py` (AST), not from a
-    hand-kept map, so a new optional field joins in automatically instead of
-    quietly missing — exactly what went wrong with `house_wide_openings` on the
-    openings screen.
+    The map comes from the source of the whole integration (AST over every
+    `*.py` under `custom_components/climate_director/`), not from a hand-kept
+    map or from `config_flow.py` alone. A new optional field — in whatever file —
+    joins in automatically instead of quietly missing; exactly what went wrong
+    with `house_wide_openings` on the openings screen.
     """
     import ast
-    from pathlib import Path
 
-    import custom_components.climate_director.config_flow as config_flow
+    from conftest import async_show_form_calls
 
-    tree = ast.parse(Path(config_flow.__file__).read_text(encoding="utf-8"))
     found: dict[str, list[str]] = {}
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
-            continue
-        if node.func.attr != "async_show_form":
-            continue
-        step_id = None
-        schema = None
-        for keyword in node.keywords:
-            if keyword.arg == "step_id" and isinstance(keyword.value, ast.Constant):
-                step_id = keyword.value.value
-            if keyword.arg == "data_schema":
-                schema = keyword.value
+    for _module, step_id, schema in async_show_form_calls():
         if step_id is None or schema is None:
             continue
         found[step_id] = [
@@ -296,15 +286,19 @@ def _optional_fields(screen: str) -> list[str]:
 def _show_form_steps() -> set[str]:
     """Return every `async_show_form(step_id=...)` in the source, from the AST.
 
-    Dezelfde inventarisatie als `_optional_fields_by_step`, maar dan alleen de
-    step_id's: dit is de schermenlijst waartegen de doorloop hieronder zich
-    bindt, zodat een nieuw scherm zonder doorloop zichtbaar rood wordt.
+    Een eigen loop, los van de veldenkaart: een scherm zonder `data_schema`
+    (een kale bevestiging) hoort evengoed een doorloopplicht te hebben. De
+    inventarisatie loopt over de héle integratie, niet over `config_flow.py`
+    alleen; het reparatiescherm (`init` in `repairs.py`) hoort er dus bij.
 
-    The same inventory as `_optional_fields_by_step`, but just the step ids:
-    this is the list of screens the walk below binds itself to, so a new screen
-    without a walk turns visibly red.
+    Its own loop, separate from the field map: a screen without a `data_schema`
+    (a bare confirmation) deserves a walk duty just the same. The inventory
+    walks the whole integration, not `config_flow.py` alone; the repair screen
+    (`init` in `repairs.py`) therefore belongs to it.
     """
-    return set(_optional_fields_by_step())
+    from conftest import async_show_form_calls
+
+    return {step_id for _module, step_id, _schema in async_show_form_calls() if step_id is not None}
 
 
 class TestEveryFormInTheSourceIsWalkedTo:
@@ -319,6 +313,14 @@ class TestEveryFormInTheSourceIsWalkedTo:
     zichtbaar rood in plaats van stilletjes onbewaakt; samen bewaken deze twee
     dus twee verschillende dingen.
 
+    Het **bestaan** van een scherm werd al afgedwongen door drie bewakingen die
+    niets met deze doorloop te maken hebben: `TestEveryFormField` (labels én
+    uitleg, zeven talen),
+    `TestEveryScreenCanBeLeft.test_each_one_offers_a_way_back` en
+    `TestDiscardArrivesOnEveryScreen.test_the_example_values_cover_exactly_the_schema`.
+    De **dekking** van álle formulieren — deze doorloop inbegrepen — ligt bij
+    `tests/test_zz_coverage.py`.
+
     M1: every form in the source has an explicit walk.
 
     The draw fixture in `conftest.py` guards every form the suite actually
@@ -329,6 +331,13 @@ class TestEveryFormInTheSourceIsWalkedTo:
     `open_screen`, which hard-fails on a step id without navigation. A new
     screen without a test is thereby visibly red instead of silently
     unguarded; together the two guard two different things.
+
+    A screen's **existence** was already forced by three guards unrelated to
+    this walk: `TestEveryFormField` (labels and explanations, seven languages),
+    `TestEveryScreenCanBeLeft.test_each_one_offers_a_way_back` and
+    `TestDiscardArrivesOnEveryScreen.test_the_example_values_cover_exactly_the_schema`.
+    The **coverage** of all forms — this walk included — lies with
+    `tests/test_zz_coverage.py`.
     """
 
     async def test_every_step_id_in_the_source_opens(self) -> None:
@@ -338,13 +347,32 @@ class TestEveryFormInTheSourceIsWalkedTo:
         """
         steps = _show_form_steps()
         assert "user" in steps, "de AST-loop vindt het wizardscherm niet"
+        assert "init" in steps, "de AST-loop vindt het reparatiescherm niet"
         home = await start_house(_installation_with_a_problem(), states=cold())
         try:
-            for screen in sorted(steps - {"user"}):
+            for screen in sorted(steps - {"user", "init"}):
                 _, result, _ = await open_screen(home, screen)
                 assert result["step_id"] == screen, (
                     f"open_screen liep naar {result['step_id']!r} in plaats van {screen!r}"
                 )
+
+            # Het reparatiescherm hoort bij de oplosflow van de handbediend-melding,
+            # niet bij de options flow; die heeft dus een losse flow nodig, net
+            # zoals de wizard hieronder een huis zonder entry nodig heeft.
+            #
+            # The repair screen belongs to the fix flow of the hand-operated
+            # notice, not to the options flow; it therefore needs its own flow,
+            # just as the wizard below needs a house without an entry.
+            from custom_components.climate_director.repairs import ManualSourcesFlow
+
+            flow = ManualSourcesFlow()
+            flow.hass = home.hass
+            flow.handler = DOMAIN
+            flow.issue_id = "manual_sources_live"
+            flow.data = {"entry_id": home.entry.entry_id, "signature": "x"}
+            result = await flow.async_step_init(None)
+            assert result["type"] == "form"
+            assert result["step_id"] == "init"
         finally:
             await stop_house(home)
 
@@ -361,7 +389,32 @@ class TestEveryFormInTheSourceIsWalkedTo:
         finally:
             await hass.async_stop()
 
-        assert len(steps) == 23, (
+        assert steps == {
+            "user",
+            "settings",
+            "exclusives",
+            "exclusive",
+            "quiets",
+            "quiet",
+            "zones",
+            "zone",
+            "sources",
+            "source",
+            "circuits",
+            "circuit",
+            "circuit_priorities",
+            "circuit_priority",
+            "generators",
+            "generator",
+            "residents",
+            "resident",
+            "windows",
+            "window",
+            "openings",
+            "opening",
+            "save",
+            "init",
+        }, (
             f"de bron heeft {len(steps)} schermen; de doorloop hierboven hoort ze "
             f"allemaal te openen — {sorted(steps)}"
         )
