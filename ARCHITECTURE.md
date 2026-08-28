@@ -451,11 +451,14 @@ de **optionele** velden staat of juist niet staat. "Verwerpen en teruggaan" komt
 de verplichte velden geldig zijn. Elk optioneel veld staat daarom als kale selector in het
 schema. De omzetter kent maar één `vol.Any`-vorm: `vol.Any(None, validator)` — dat is wat
 `vol.Maybe(validator)` oplevert — en maakt daar `allow_none: true` van; élke andere vorm
-(een derde tak, een lege string) maakt het scherm onrenderbaar, en dat was 7.2.1. De
+(een derde tak, een lege string) maakt het scherm onrenderbaar, en dat was 7.2.1. Die ene
+vorm gooit alsnog wanneer de binnenste validator een mapping-schema is
+(`vol.Maybe(vol.Schema({...}))`), en de omgekeerde volgorde `vol.Any(validator, None)`
+serialiseert niet — de volgorde in het anker is dus niet toevallig. De
 huidige keuze voor kale selectors is daarmee **smaller** dan wat de bibliotheek toestaat:
 `vol.Maybe(selector)` zou ook tekenen, maar is overbodig zolang de aanname hieronder klopt
 en zou alleen het scenario dekken waarin de interface een leeggemaakt veld als `None`
-doorgeeft. Dát is een **aanname over de interface, geen meting**: de frontend stuurt een
+doorgeeft. Dát is een **aanname over de interface, geen meting**: de interface stuurt een
 leeggemaakt optioneel veld door als ontbrekende sleutel. Klopt die aanname niet, dan
 weigeren 31 van de 33 optionele velden zowel `None` als `""` — alleen de twee tekstvelden
 komen erdoor — en is het 7.2.1-symptoom in volle omvang terug. Een ingevuld veld gaat
@@ -1078,7 +1081,10 @@ fields hold or do not hold. "Discard and go back" arrives whenever the required 
 valid. Every optional field therefore stands as a plain selector in the schema. The
 converter knows exactly one `vol.Any` shape: `vol.Any(None, validator)` — which is what
 `vol.Maybe(validator)` produces — and turns it into `allow_none: true`; every other shape
-(a third branch, an empty string) makes the screen undrawable, and that was 7.2.1. The
+(a third branch, an empty string) makes the screen undrawable, and that was 7.2.1. That
+one shape still throws when the inner validator is a mapping schema
+(`vol.Maybe(vol.Schema({...}))`), and the reversed order `vol.Any(validator, None)` does
+not serialize — the order in the anchor is therefore not accidental. The
 current choice of plain selectors is therefore **narrower** than the library allows:
 `vol.Maybe(selector)` would draw too, but is redundant as long as the assumption below
 holds and would only cover the scenario where the frontend hands in a cleared field as
