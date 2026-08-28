@@ -541,7 +541,9 @@ De handbediend-melding (`manual_sources`) is de énige met een oplosflow. De
 `description` op meldingsniveau blijft staan voor de reparatiekaart; het dialoog zelf
 krijgt zijn tekst uit `issues.manual_sources.fix_flow.step.init` (titel én beschrijving,
 alle zeven talen), zodat de uitleg staat op de plek waar Home Assistant hem bij een
-fixable melding toont.
+fixable melding toont. Het dialoog verschijnt ook echt: de openingsaanroep van de
+flow-manager (`{"issue_id": ...}`) telt niet als bevestiging, pas de tweede aanroep —
+hetzelfde patroon als `ConfirmRepairFlow` uit core.
 
 ### Nog te bouwen — ontwerpvoorstellen
 
@@ -1175,6 +1177,9 @@ The hand-operated notice (`manual_sources`) is the only one with a fix flow. Its
 notice-level `description` stays for the repair card; the dialog itself takes its text
 from `issues.manual_sources.fix_flow.step.init` (title and description, all seven
 languages), so the explanation sits where Home Assistant shows it for a fixable notice.
+The dialog really appears: the flow manager's opening call (`{"issue_id": ...}`) does not
+count as a confirmation, only the second call does — the same pattern as core's
+`ConfirmRepairFlow`.
 
 ### Still to build — design proposals
 

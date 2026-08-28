@@ -29,9 +29,31 @@ from .const import CONF_MANUAL_SOURCES_SEEN
 class ManualSourcesFlow(RepairsFlow):
     """Ask for a confirmation and remember it in the configuration."""
 
+    def __init__(self) -> None:
+        """Track whether the first call (which opens the form) has happened."""
+        super().__init__()
+        self._shown = False
+
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> dict[str, Any]:
-        """Show the confirmation, then store it on submit."""
-        if user_input is not None:
+        """Show the confirmation, then store it on submit.
+
+        De flow-manager van Home Assistant opent de fix-flow door
+        `async_step_init` met `{"issue_id": ...}` aan te roepen. Zonder deze
+        wacht zou die openingsaanroep als bevestiging tellen en verdween de
+        melding zonder dat er ooit een dialoog verscheen — precies wat
+        `ConfirmRepairFlow` uit core omzeilt door de openingsaanroep te negeren.
+        Hier gebeurt hetzelfde in één stap: de eerste aanroep toont het
+        formulier, de tweede (met `user_input`) bevestigt.
+
+        Home Assistant's flow manager opens the fix flow by calling
+        `async_step_init` with `{"issue_id": ...}`. Without this guard that
+        opening call would count as a confirmation and the notice would
+        disappear without a dialog ever appearing — exactly what core's
+        `ConfirmRepairFlow` avoids by ignoring the opening call. The same
+        happens here in a single step: the first call shows the form, the
+        second (with `user_input`) confirms.
+        """
+        if self._shown and user_input is not None:
             data = self.data or {}
             entry_id = data.get("entry_id")
             signature = data.get("signature") or ""
@@ -42,6 +64,7 @@ class ManualSourcesFlow(RepairsFlow):
                 self.hass.config_entries.async_update_entry(entry, options=options)
             return self.async_create_entry(data={})
 
+        self._shown = True
         issue_registry = ir.async_get(self.hass)
         description_placeholders = None
         if issue := issue_registry.async_get_issue(self.handler, self.issue_id):

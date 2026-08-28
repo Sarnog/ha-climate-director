@@ -6,9 +6,17 @@ De flow repareert niets maar bewaart een handtekening in de entry-opties,
 zodat dezelfde situatie zich niet opnieuw meldt. Deze tests pinnen dat vast
 zonder heel Home Assistant op te tuigen.
 
+De flow-manager van Home Assistant opent de flow met `{"issue_id": ...}` als
+eerste `user_input`; sinds 7.2.3 telt alleen de tweede aanroep als bevestiging,
+zodat het dialoog eerst echt verschijnt.
+
 The flow fixes nothing but stores a signature in the entry options, so the same
 situation does not report itself again. These tests pin that down without
 setting up a whole Home Assistant.
+
+Home Assistant's flow manager opens the flow with `{"issue_id": ...}` as its
+first `user_input`; since 7.2.3 only the second call counts as a confirmation,
+so the dialog really appears first.
 """
 
 from __future__ import annotations
@@ -60,34 +68,55 @@ def make_flow(entry: FakeEntry | None) -> tuple[ManualSourcesFlow, FakeConfigEnt
     return flow, entries
 
 
-async def test_submitting_stores_the_signature_in_the_entry_options() -> None:
+def _fake_issue_registry(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Let the form branch run without a real issue registry."""
+    import custom_components.climate_director.repairs as repairs_module
+
+    class FakeIssueRegistry:
+        def async_get_issue(self, handler: str, issue_id: str) -> None:
+            return None
+
+    monkeypatch.setattr(repairs_module.ir, "async_get", lambda hass: FakeIssueRegistry())
+
+
+async def test_submitting_stores_the_signature_in_the_entry_options(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _fake_issue_registry(monkeypatch)
     entry = FakeEntry("live")
     flow, entries = make_flow(entry)
 
+    assert (await flow.async_step_init(None))["type"] == "form"
     result = await flow.async_step_init({})
 
     assert result["type"] == "create_entry"
     assert entries.updated == {CONF_MANUAL_SOURCES_SEEN: "ketel;airco"}
 
 
-async def test_submitting_without_an_entry_still_finishes() -> None:
+async def test_submitting_without_an_entry_still_finishes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Een verwijderde entry mag de oplosflow niet laten hangen.
 
     A deleted entry must not hang the fix flow.
     """
+    _fake_issue_registry(monkeypatch)
     flow, entries = make_flow(None)
 
+    assert (await flow.async_step_init(None))["type"] == "form"
     result = await flow.async_step_init({})
 
     assert result["type"] == "create_entry"
     assert entries.updated is None
 
 
-async def test_a_missing_entry_id_is_tolerated() -> None:
+async def test_a_missing_entry_id_is_tolerated(monkeypatch: pytest.MonkeyPatch) -> None:
+    _fake_issue_registry(monkeypatch)
     entry = FakeEntry("live")
     flow, entries = make_flow(entry)
     flow.data = {"signature": "ketel"}
 
+    assert (await flow.async_step_init(None))["type"] == "form"
     result = await flow.async_step_init({})
 
     assert result["type"] == "create_entry"
@@ -112,13 +141,7 @@ async def test_opening_the_fix_flow_returns_the_form(monkeypatch: pytest.MonkeyP
     `test_zz_coverage.py`: the repair screen (`init` in `repairs.py`) is really
     drawn here, rather than only exercised on its submit branch.
     """
-    import custom_components.climate_director.repairs as repairs_module
-
-    class FakeIssueRegistry:
-        def async_get_issue(self, handler: str, issue_id: str) -> None:
-            return None
-
-    monkeypatch.setattr(repairs_module.ir, "async_get", lambda hass: FakeIssueRegistry())
+    _fake_issue_registry(monkeypatch)
     entry = FakeEntry("live")
     flow, _entries = make_flow(entry)
 

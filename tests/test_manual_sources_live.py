@@ -22,7 +22,6 @@ from typing import Any
 from harness_live import settings, source, start_house, stop_house, zone
 
 from custom_components.climate_director.const import CONF_MANUAL_SOURCES_SEEN, DOMAIN
-from custom_components.climate_director.repairs import async_create_fix_flow
 
 LIVING = "climate.woonkamer"
 ENTRY_ID = "handbediend"
@@ -64,17 +63,16 @@ async def test_the_hand_operated_notice_runs_the_whole_chain() -> None:
         assert issue.translation_placeholders["count"] == "1"
         assert issue.translation_placeholders["problems"]
 
-        flow = await async_create_fix_flow(home.hass, issue.issue_id, issue.data)
-        flow.hass = home.hass
-        flow.handler = DOMAIN
-        flow.issue_id = issue.issue_id
-        flow.data = issue.data
+        from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 
-        result = await flow.async_step_init(None)
-        assert result["type"] == "form"
+        flow_manager = home.hass.data[REPAIRS_DOMAIN]["flow_manager"]
+        result = await flow_manager.async_init(DOMAIN, data={"issue_id": issue.issue_id})
+        assert result["type"] == "form", (
+            "de échte flow-manager hoort het reparatiedialoog te tonen, niet meteen te sluiten"
+        )
         assert result["step_id"] == "init"
 
-        result = await flow.async_step_init({})
+        result = await flow_manager.async_configure(result["flow_id"], {})
         assert result["type"] == "create_entry"
         await home.hass.async_block_till_done()
 

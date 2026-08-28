@@ -27,6 +27,7 @@ import pytest
 from custom_components.climate_director import problems
 from custom_components.climate_director.const import (
     CONF_MANUAL_SOURCES_SEEN,
+    DOMAIN,
     EVENT_PRECONDITION_REFUSED,
 )
 from custom_components.climate_director.engine import (
@@ -218,11 +219,25 @@ class TestTheHandOperatedFixFlow:
 
         return entries, Hass()
 
-    async def test_confirming_stores_the_fingerprint(self) -> None:
+    def _fake_issue_registry(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Let the form branch run without a real issue registry."""
+        import custom_components.climate_director.repairs as repairs_module
+
+        class FakeIssueRegistry:
+            def async_get_issue(self, handler: str, issue_id: str) -> None:
+                return None
+
+        monkeypatch.setattr(repairs_module.ir, "async_get", lambda hass: FakeIssueRegistry())
+
+    async def test_confirming_stores_the_fingerprint(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._fake_issue_registry(monkeypatch)
         entries, hass = self._hass()
         flow = ManualSourcesFlow()
         flow.hass = hass
+        flow.handler = DOMAIN
+        flow.issue_id = "manual_sources_abc"
         flow.data = {"entry_id": "abc", "signature": "slaapkamer:cool,slaapkamer:heat"}
+        assert (await flow.async_step_init(user_input=None))["type"] == "form"
         result = await flow.async_step_init(user_input={})
         assert result["type"] == "create_entry"
         assert entries.updated == {
@@ -230,12 +245,16 @@ class TestTheHandOperatedFixFlow:
             CONF_MANUAL_SOURCES_SEEN: "slaapkamer:cool,slaapkamer:heat",
         }
 
-    async def test_an_unknown_entry_still_finishes(self) -> None:
+    async def test_an_unknown_entry_still_finishes(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._fake_issue_registry(monkeypatch)
         entries, hass = self._hass()
         entries.entry = None
         flow = ManualSourcesFlow()
         flow.hass = hass
+        flow.handler = DOMAIN
+        flow.issue_id = "manual_sources_missing"
         flow.data = {"entry_id": "missing", "signature": "x"}
+        assert (await flow.async_step_init(user_input=None))["type"] == "form"
         result = await flow.async_step_init(user_input={})
         assert result["type"] == "create_entry"
         assert entries.updated is None
