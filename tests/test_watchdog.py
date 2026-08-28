@@ -17,6 +17,7 @@ refused: half a feature is no feature.
 
 from __future__ import annotations
 
+import ast
 import json
 import pathlib
 import re
@@ -268,3 +269,122 @@ class TestTheNoticeIsUsable:
             re.sub(r"[^a-z0-9 -]", "", heading.lower()).replace(" ", "-") for heading in headings
         }
         assert anchor in slugs
+
+
+class TestTheFixFlowHasTextInEveryLanguage:
+    """L1: het reparatiedialoog van de handbediend-melding heeft in elke taal tekst.
+
+    De bewaking pint de eigenschap vast, niet een naam: hij leest met een AST
+    uit `problems.py` welke meldingen `is_fixable=True` zijn, uit `repairs.py`
+    welke stappen de fix-flow kent, en eist dan dat elke combinatie in alle
+    zeven bestanden een `fix_flow.step.<step>`-blok heeft met een niet-lege
+    titel én beschrijving. De placeholders in die beschrijving moeten een
+    deelverzameling zijn van wat de code werkelijk meegeeft, zodat een
+    `{typefout}` niet stil doorglipt.
+
+    L1: the hand-operated notice's repair dialog has text in every language.
+
+    The guard pins the property, not a name: it reads with an AST from
+    `problems.py` which notices are `is_fixable=True`, from `repairs.py` which
+    steps the fix flow knows, and then requires every combination to have a
+    `fix_flow.step.<step>` block with a non-empty title and description in all
+    seven files. The placeholders in that description must be a subset of what
+    the code really passes, so a `{typo}` does not slip through silently.
+    """
+
+    def _translation_files(self) -> list[pathlib.Path]:
+        return [COMPONENT / "strings.json", *sorted((COMPONENT / "translations").glob("*.json"))]
+
+    def _fixable_keys(self) -> set[str]:
+        """Return every `translation_key` whose `async_create_issue` is fixable."""
+        source = (COMPONENT / "problems.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        found: set[str] = set()
+        for node in ast.walk(tree):
+            if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)):
+                continue
+            if node.func.attr != "async_create_issue":
+                continue
+            keywords = {keyword.arg: keyword.value for keyword in node.keywords}
+            fixable = keywords.get("is_fixable")
+            key = keywords.get("translation_key")
+            if (
+                isinstance(fixable, ast.Constant)
+                and fixable.value is True
+                and isinstance(key, ast.Constant)
+                and isinstance(key.value, str)
+            ):
+                found.add(key.value)
+        return found
+
+    def _fix_flow_steps(self) -> set[str]:
+        """Return every `step_id` the fix flow can draw, from `repairs.py`."""
+        source = (COMPONENT / "repairs.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        found: set[str] = set()
+        for node in ast.walk(tree):
+            if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)):
+                continue
+            if node.func.attr != "async_show_form":
+                continue
+            for keyword in node.keywords:
+                if keyword.arg == "step_id" and isinstance(keyword.value, ast.Constant):
+                    found.add(keyword.value.value)
+        return found
+
+    def _placeholders_passed(self, key: str) -> set[str]:
+        """Return the placeholder names the code really passes for `key`."""
+        source = (COMPONENT / "problems.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        for node in ast.walk(tree):
+            if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)):
+                continue
+            if node.func.attr != "async_create_issue":
+                continue
+            keywords = {keyword.arg: keyword.value for keyword in node.keywords}
+            key_node = keywords.get("translation_key")
+            if not (isinstance(key_node, ast.Constant) and key_node.value == key):
+                continue
+            placeholders = keywords.get("translation_placeholders")
+            if not isinstance(placeholders, ast.Dict):
+                continue
+            return {
+                item.value
+                for item in placeholders.keys
+                if isinstance(item, ast.Constant) and isinstance(item.value, str)
+            }
+        return set()
+
+    def test_every_fixable_notice_has_a_dialog_in_every_language(self) -> None:
+        fixable = self._fixable_keys()
+        steps = self._fix_flow_steps()
+        assert fixable == {"manual_sources"}, f"verwachte fixable meldingen: {sorted(fixable)}"
+        assert steps == {"init"}, f"verwachte fix-flow-stappen: {sorted(steps)}"
+
+        for key in fixable:
+            passed = self._placeholders_passed(key)
+            assert passed, f"de code geeft geen placeholders mee voor {key}"
+            for path in self._translation_files():
+                for step in steps:
+                    block = (
+                        json.loads(path.read_text(encoding="utf-8"))
+                        .get("issues", {})
+                        .get(key, {})
+                        .get("fix_flow", {})
+                        .get("step", {})
+                        .get(step)
+                    )
+                    assert block, f"{path.name}: geen fix_flow.step.{step} voor {key}"
+                    title = block.get("title", "")
+                    description = block.get("description", "")
+                    assert title.strip(), f"{path.name}: lege fix_flow-titel voor {key}.{step}"
+                    assert description.strip(), (
+                        f"{path.name}: lege fix_flow-beschrijving voor {key}.{step}"
+                    )
+                    used = set(re.findall(r"{(\w+)}", title)) | set(
+                        re.findall(r"{(\w+)}", description)
+                    )
+                    assert used <= passed, (
+                        f"{path.name}: {sorted(used - passed)} worden niet meegegeven "
+                        f"door de code voor {key}.{step}"
+                    )

@@ -648,7 +648,15 @@
     },
     "manual_sources": {
       "title": "Climate Director : {name} a des tâches manuelles",
-      "description": "{count} tâche(s) ne peut être assurée que par une source avec démarrage automatique désactivé, elle ne démarre donc jamais seule :\n\n{problems}\n\nC’est peut-être exactement ce que vous voulez - un appareil que vous allumez vous-même est un très bon choix. Confirmez cet avis une fois et il ne reviendra pas, même après un redémarrage. Si vous préférez que le director s’en charge aussi, ouvrez l’intégration, choisissez Configurer et activez le démarrage automatique sur une source."
+      "description": "{count} tâche(s) ne peut être assurée que par une source avec démarrage automatique désactivé, elle ne démarre donc jamais seule :\n\n{problems}\n\nC’est peut-être exactement ce que vous voulez - un appareil que vous allumez vous-même est un très bon choix. Confirmez cet avis une fois et il ne reviendra pas, même après un redémarrage. Si vous préférez que le director s’en charge aussi, ouvrez l’intégration, choisissez Configurer et activez le démarrage automatique sur une source.",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "title": "Tâches manuelles dans {name}",
+            "description": "{count} tâche(s) ne peut être assurée qu’à la main :\n\n{problems}\n\nConfirmez pour laisser les choses en l’état. L’avis ne reviendra plus, même après un redémarrage."
+          }
+        }
+      }
     },
     "unreadable_entities": {
       "title": "Climate Director : {name} ne peut pas lire {count} entité(s)",

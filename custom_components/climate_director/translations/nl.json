@@ -648,7 +648,15 @@
     },
     "manual_sources": {
       "title": "Climate Director: {name} heeft handbediende taken",
-      "description": "{count} taak/taken kan alleen geleverd worden door een bron met automatisch starten uit, dus die start nooit uit zichzelf:\n\n{problems}\n\nDat mag precies de bedoeling zijn - een unit die je zelf aanzet is een prima keuze. Bevestig deze melding één keer en hij blijft weg, ook na een herstart. Wil je dat de director deze taken ook zelf oppakt, open dan de integratie, kies Configureren en zet automatisch starten bij één bron aan."
+      "description": "{count} taak/taken kan alleen geleverd worden door een bron met automatisch starten uit, dus die start nooit uit zichzelf:\n\n{problems}\n\nDat mag precies de bedoeling zijn - een unit die je zelf aanzet is een prima keuze. Bevestig deze melding één keer en hij blijft weg, ook na een herstart. Wil je dat de director deze taken ook zelf oppakt, open dan de integratie, kies Configureren en zet automatisch starten bij één bron aan.",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "title": "Handbediende taken in {name}",
+            "description": "{count} taak/taken kan alleen met de hand geleverd worden:\n\n{problems}\n\nBevestig om dit zo te laten. De melding blijft daarna weg, ook na een herstart."
+          }
+        }
+      }
     },
     "unreadable_entities": {
       "title": "Climate Director: {name} kan {count} entiteit(en) niet lezen",

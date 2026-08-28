@@ -537,6 +537,12 @@ geteld hoe vaak hetzelfde verschil achter elkaar is aangeboden; tien gelijke ron
 dezelfde wachttijd van vijf minuten geven de melding. In schaduwmodus telt hij niet — daar
 wordt met opzet niets uitgevoerd, dus de verschillenlijst is per definitie permanent gevuld.
 
+De handbediend-melding (`manual_sources`) is de énige met een oplosflow. De
+`description` op meldingsniveau blijft staan voor de reparatiekaart; het dialoog zelf
+krijgt zijn tekst uit `issues.manual_sources.fix_flow.step.init` (titel én beschrijving,
+alle zeven talen), zodat de uitleg staat op de plek waar Home Assistant hem bij een
+fixable melding toont.
+
 ### Nog te bouwen — ontwerpvoorstellen
 
 De ideeënbus staat in [`ROADMAP.md`](ROADMAP.md); hier staat per idee het ontwerp, zodat
@@ -1164,6 +1170,11 @@ failed calls a day without a single visible trace. Per appliance it counts how o
 difference has been offered in a row; ten identical rounds plus the same five-minute settling
 time raise the notice. In shadow mode it never counts - nothing is executed there on purpose,
 so the difference list is by definition permanently filled.
+
+The hand-operated notice (`manual_sources`) is the only one with a fix flow. Its
+notice-level `description` stays for the repair card; the dialog itself takes its text
+from `issues.manual_sources.fix_flow.step.init` (title and description, all seven
+languages), so the explanation sits where Home Assistant shows it for a fixable notice.
 
 ### Still to build — design proposals
 
