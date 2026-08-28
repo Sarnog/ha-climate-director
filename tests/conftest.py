@@ -48,6 +48,17 @@ BACK_DOOR = "binary_sensor.achterdeur_mc_contact"
 
 MONDAY_NOON = datetime(2026, 8, 10, 12, 0)
 
+#: (module, step_id) van elk formulier dat de suite werkelijk getekend heeft.
+#: Sessieduur: de autouse-fixture `every_drawn_form_must_serialize` vult deze
+#: verzameling, niemand maakt hem leeg. `tests/test_zz_coverage.py` houdt hem
+#: aan het eind van de run tegen de bron.
+#:
+#: (module, step_id) of every form the suite really drew. Session-lifetime:
+#: the autouse fixture `every_drawn_form_must_serialize` fills this set, nobody
+#: empties it. `tests/test_zz_coverage.py` holds it against the source at the
+#: end of the run.
+DRAWN_FORMS: set[tuple[str, str]] = set()
+
 
 @dataclass(frozen=True, slots=True)
 class Verdict:
@@ -377,12 +388,129 @@ def every_drawn_form_must_serialize(monkeypatch: pytest.MonkeyPatch) -> None:
             "custom_components.climate_director."
         ):
             result_type = result.get("type")
+            if result_type == FlowResultType.FORM:
+                DRAWN_FORMS.add((module, result.get("step_id")))
             schema = result.get("data_schema") if result_type == FlowResultType.FORM else None
             if schema is not None:
                 voluptuous_serialize.convert(schema, custom_serializer=cv.custom_serializer)
         return result
 
     monkeypatch.setattr(FlowHandler, "async_show_form", checked)
+
+
+def _module_of(root, path) -> str:
+    """Return the dotted module name of one integration source file."""
+    parts = list(path.relative_to(root).with_suffix("").parts)
+    if parts and parts[-1] == "__init__":
+        parts = parts[:-1]
+    return "custom_components.climate_director" + (f".{'.'.join(parts)}" if parts else "")
+
+
+def async_show_form_calls() -> list[tuple[str, str | None, object | None]]:
+    """Return every `async_show_form(step_id=...)` call in the integration source.
+
+    `(module, step_id, data_schema)` — `step_id` is `None` when it is not a
+    literal, `data_schema` is the AST node or `None` when the call carries none.
+    De loop gaat over álle `*.py` onder `custom_components/climate_director/`,
+    ongeacht of er een `data_schema=` bij staat en ongeacht of de aanroep
+    `self.`-gebonden is.
+
+    `(module, step_id, data_schema)` — `step_id` is `None` when it is not a
+    literal, `data_schema` is the AST node or `None` when the call carries none.
+    The walk covers every `*.py` under `custom_components/climate_director/`,
+    whether or not a `data_schema=` is present and whether or not the call is
+    bound to `self.`.
+    """
+    import ast
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
+    found: list[tuple[str, str | None, object | None]] = []
+    for path in sorted(root.rglob("*.py")):
+        module = _module_of(root, path)
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+                continue
+            if node.func.attr != "async_show_form":
+                continue
+            step_id: str | None = None
+            schema: object | None = None
+            for keyword in node.keywords:
+                if keyword.arg == "step_id" and isinstance(keyword.value, ast.Constant):
+                    step_id = keyword.value.value
+                if keyword.arg == "data_schema":
+                    schema = keyword.value
+            found.append((module, step_id, schema))
+    return found
+
+
+def integration_forms() -> set[tuple[str, str]]:
+    """Return every `(module, step_id)` the integration can draw, from the AST."""
+    return {
+        (module, step_id)
+        for module, step_id, _schema in async_show_form_calls()
+        if step_id is not None
+    }
+
+
+def coverage_skip_reason(session: pytest.Session) -> str | None:
+    """Return why the coverage guard must stand down, or `None` when it may run.
+
+    De dekkingsbewaking is per definitie volgorde- en selectiegevoelig: een
+    gedeeltelijke run tekent niet elk formulier, en dan zou de test vals rood
+    staan. De bewaking staat daarom alleen aan wanneer de run compleet is —
+    geen `-k`/`-m` en élk `tests/test_*.py` verzameld.
+
+    The coverage guard is by definition order- and selection-sensitive: a
+    partial run does not draw every form, and the test would then stand falsely
+    red. The guard therefore only runs when the run is complete — no `-k`/`-m`
+    and every `tests/test_*.py` collected.
+    """
+    from pathlib import Path
+
+    if session.config.option.keyword:
+        return "er is een `-k`-filter gezet"
+    if session.config.option.markexpr:
+        return "er is een `-m`-filter gezet"
+    tests_dir = Path(__file__).resolve().parent
+    expected = {path.name for path in tests_dir.glob("test_*.py")}
+    collected = {Path(item.path).name for item in session.items}
+    if collected != expected:
+        return (
+            f"de run is niet compleet: {len(collected)} van de {len(expected)} "
+            "testbestanden verzameld"
+        )
+    return None
+
+
+def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
+    """Meld zichtbaar wanneer de dekkingsbewaking niet eens verzameld is.
+
+    Bij `pytest tests/test_gates.py` wordt `test_zz_coverage.py` niet verzameld;
+    zonder deze melding zag zo'n run eruit alsof de bewaking groen was terwijl
+    hij helemaal niet draaide. Deze hook schrijft daarom één zichtbare regel
+    wanneer de run niet compleet is én de bewaking zelf niet verzameld is (is
+    hij wél verzameld, dan meldt de test zijn eigen skip).
+
+    With `pytest tests/test_gates.py` `test_zz_coverage.py` is not collected;
+    without this note such a run would look like the guard was green while it
+    never ran at all. This hook therefore writes one visible line when the run
+    is incomplete and the guard itself was not collected (when it is collected,
+    the test reports its own skip).
+    """
+    from pathlib import Path
+
+    reason = coverage_skip_reason(session)
+    if reason is None:
+        return
+    if any(Path(item.path).name == "test_zz_coverage.py" for item in session.items):
+        return
+    reporter = session.config.pluginmanager.get_plugin("terminalreporter")
+    if reporter is not None:
+        reporter.write_line(
+            f"SKIPPED: de dekkingsbewaking (test_zz_coverage.py) is overgeslagen: {reason}"
+        )
 
 
 def office_hours() -> tuple:

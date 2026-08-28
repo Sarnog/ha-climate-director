@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
+
 from custom_components.climate_director.const import CONF_MANUAL_SOURCES_SEEN, DOMAIN
 from custom_components.climate_director.repairs import (
     ManualSourcesFlow,
@@ -95,3 +97,32 @@ async def test_a_missing_entry_id_is_tolerated() -> None:
 async def test_the_fix_flow_factory_returns_the_manual_sources_flow() -> None:
     flow = await async_create_fix_flow(None, "manual_sources_live", None)  # type: ignore[arg-type]
     assert isinstance(flow, ManualSourcesFlow)
+
+
+async def test_opening_the_fix_flow_returns_the_form(monkeypatch: pytest.MonkeyPatch) -> None:
+    """De formuliertak tekent het scherm, zodat de tekenfixture eroverheen loopt.
+
+    Deze test is het tekenbewijs voor de sessiebrede dekkingsbewaking in
+    `test_zz_coverage.py`: het reparatiescherm (`init` in `repairs.py`) wordt
+    hier werkelijk getekend, in plaats van alleen op de opslagtak getest.
+
+    The form branch draws the screen, so the draw fixture walks over it.
+
+    This test is the drawing evidence for the session-wide coverage guard in
+    `test_zz_coverage.py`: the repair screen (`init` in `repairs.py`) is really
+    drawn here, rather than only exercised on its submit branch.
+    """
+    import custom_components.climate_director.repairs as repairs_module
+
+    class FakeIssueRegistry:
+        def async_get_issue(self, handler: str, issue_id: str) -> None:
+            return None
+
+    monkeypatch.setattr(repairs_module.ir, "async_get", lambda hass: FakeIssueRegistry())
+    entry = FakeEntry("live")
+    flow, _entries = make_flow(entry)
+
+    result = await flow.async_step_init(None)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
