@@ -140,7 +140,15 @@ def manual_house(*, autostart: bool = False) -> DirectorConfig:
 class TestTheHandOperatedNotice:
     """De eenmalige melding voor taken die alleen handbediend kunnen.
 
+    Deze stand-in-tests bewaken de **logica** van de melding; de **keten** — de
+    échte `issue_registry`, het formulier, de bevestiging en de herstart — wordt
+    bewaakt door `tests/test_manual_sources_live.py`.
+
     The one-time notice for duties that can only be delivered by hand.
+
+    These stand-in tests guard the **logic** of the notice; the **chain** — the
+    real `issue_registry`, the form, the confirmation and the restart — is
+    guarded by `tests/test_manual_sources_live.py`.
     """
 
     @pytest.fixture(autouse=True)
