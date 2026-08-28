@@ -658,13 +658,17 @@ class TestTheEnglishTemplatesLiveInTheCache:
 
         # Maak elke modulecache leeg waar de terugval zich achter zou kunnen
         # verschuilen. De huidige code kent er maar één (in `texts`); de oude
-        # vorm had er zelf een in `problems`.
+        # vorm had er zelf een in `problems`, en die ontbreekt vandaag dus
+        # (`raising=False`). `monkeypatch` zet de caches na de test terug, zodat
+        # de test geen spoor achterlaat in de sessie.
         #
         # Empty every module cache the fallback could hide behind. The current
-        # code has only one (in `texts`); the old shape had its own in `problems`.
-        if hasattr(problems, "_ENGLISH_TEMPLATES"):
-            problems._ENGLISH_TEMPLATES = None
-        texts._ENGLISH_TEMPLATES = None
+        # code has only one (in `texts`); the old shape had its own in
+        # `problems`, which is therefore absent today (`raising=False`).
+        # `monkeypatch` restores the caches after the test, so the test leaves
+        # no trace in the session.
+        monkeypatch.setattr(problems, "_ENGLISH_TEMPLATES", None, raising=False)
+        monkeypatch.setattr(texts, "_ENGLISH_TEMPLATES", None)
 
         monkeypatch.setattr(texts, "lookup", lambda hass, code: None)
         problem = Problem("zone_without_sources", "zone z has no sources", zone="z")

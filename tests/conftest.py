@@ -334,8 +334,10 @@ def every_drawn_form_must_serialize(monkeypatch: pytest.MonkeyPatch) -> None:
     `voluptuous_serialize.convert(schema, custom_serializer=cv.custom_serializer)`
     heeft gehaald. Deze fixture onderschept `FlowHandler.async_show_form` en
     doet diezelfde omzetting op élk formulierresultaat — de wizard, het
-    bewaarscherm en elke foutherhaling inbegrepen. Zo is élk scherm dat de suite
-    ergens tekent aantoonbaar te tekenen.
+    bewaarscherm en elke foutherhaling inbegrepen. De omzetting geldt alleen voor
+    flows van deze integratie, zodat een vreemde flow in de testomgeving dit
+    project niet rood kan zetten. Zo is élk scherm van deze integratie dat de
+    suite ergens tekent aantoonbaar te tekenen.
 
     De dekking volgt daarmee wat de tests toevallig aandoen; deze fixture
     bewaakt dus de getekende schermen, foutherhalingen en tussenschermen die een
@@ -351,7 +353,9 @@ def every_drawn_form_must_serialize(monkeypatch: pytest.MonkeyPatch) -> None:
     custom_serializer=cv.custom_serializer)`. This fixture intercepts
     `FlowHandler.async_show_form` and does that same conversion on every form
     result — the wizard, the save screen and every error re-display included.
-    Every screen the suite draws somewhere is thereby provably drawable.
+    The conversion applies only to flows of this integration, so a foreign flow
+    in the test environment cannot turn this project red. Every screen of this
+    integration the suite draws somewhere is thereby provably drawable.
 
     Its coverage follows whatever the tests happen to touch; this fixture
     guards the drawn screens, error re-displays and intermediate screens an
@@ -368,9 +372,14 @@ def every_drawn_form_must_serialize(monkeypatch: pytest.MonkeyPatch) -> None:
 
     def checked(self, **kwargs):
         result = original(self, **kwargs)
-        schema = result.get("data_schema") if result.get("type") == FlowResultType.FORM else None
-        if schema is not None:
-            voluptuous_serialize.convert(schema, custom_serializer=cv.custom_serializer)
+        module = type(self).__module__
+        if module == "custom_components.climate_director" or module.startswith(
+            "custom_components.climate_director."
+        ):
+            result_type = result.get("type")
+            schema = result.get("data_schema") if result_type == FlowResultType.FORM else None
+            if schema is not None:
+                voluptuous_serialize.convert(schema, custom_serializer=cv.custom_serializer)
         return result
 
     monkeypatch.setattr(FlowHandler, "async_show_form", checked)
