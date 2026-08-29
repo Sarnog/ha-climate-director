@@ -132,14 +132,16 @@ async def test_opening_the_fix_flow_returns_the_form(monkeypatch: pytest.MonkeyP
     """De formuliertak tekent het scherm, zodat de tekenfixture eroverheen loopt.
 
     Deze test is het tekenbewijs voor de sessiebrede dekkingsbewaking in
-    `test_zz_coverage.py`: het reparatiescherm (`init` in `repairs.py`) wordt
-    hier werkelijk getekend, in plaats van alleen op de opslagtak getest.
+    `pytest_sessionfinish` (`conftest.py`): het reparatiescherm (`init` in
+    `repairs.py`) wordt hier werkelijk getekend, in plaats van alleen op de
+    opslagtak getest.
 
     The form branch draws the screen, so the draw fixture walks over it.
 
     This test is the drawing evidence for the session-wide coverage guard in
-    `test_zz_coverage.py`: the repair screen (`init` in `repairs.py`) is really
-    drawn here, rather than only exercised on its submit branch.
+    `pytest_sessionfinish` (`conftest.py`): the repair screen (`init` in
+    `repairs.py`) is really drawn here, rather than only exercised on its
+    submit branch.
     """
     _fake_issue_registry(monkeypatch)
     entry = FakeEntry("live")

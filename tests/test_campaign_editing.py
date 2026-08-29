@@ -319,7 +319,7 @@ class TestEveryFormInTheSourceIsWalkedTo:
     `TestEveryScreenCanBeLeft.test_each_one_offers_a_way_back` en
     `TestDiscardArrivesOnEveryScreen.test_the_example_values_cover_exactly_the_schema`.
     De **dekking** van álle formulieren — deze doorloop inbegrepen — ligt bij
-    `tests/test_zz_coverage.py`.
+    `pytest_sessionfinish` in `conftest.py`.
 
     M1: every form in the source has an explicit walk.
 
@@ -337,7 +337,7 @@ class TestEveryFormInTheSourceIsWalkedTo:
     `TestEveryScreenCanBeLeft.test_each_one_offers_a_way_back` and
     `TestDiscardArrivesOnEveryScreen.test_the_example_values_cover_exactly_the_schema`.
     The **coverage** of all forms — this walk included — lies with
-    `tests/test_zz_coverage.py`.
+    `pytest_sessionfinish` in `conftest.py`.
     """
 
     async def test_every_step_id_in_the_source_opens(self) -> None:

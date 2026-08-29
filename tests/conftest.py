@@ -50,14 +50,26 @@ MONDAY_NOON = datetime(2026, 8, 10, 12, 0)
 
 #: (module, step_id) van elk formulier dat de suite werkelijk getekend heeft.
 #: Sessieduur: de autouse-fixture `every_drawn_form_must_serialize` vult deze
-#: verzameling, niemand maakt hem leeg. `tests/test_zz_coverage.py` houdt hem
-#: aan het eind van de run tegen de bron.
+#: verzameling, niemand maakt hem leeg. `pytest_sessionfinish` hieronder houdt
+#: hem aan het eind van de run tegen de bron.
 #:
 #: (module, step_id) of every form the suite really drew. Session-lifetime:
 #: the autouse fixture `every_drawn_form_must_serialize` fills this set, nobody
-#: empties it. `tests/test_zz_coverage.py` holds it against the source at the
+#: empties it. `pytest_sessionfinish` below holds it against the source at the
 #: end of the run.
 DRAWN_FORMS: set[tuple[str, str]] = set()
+
+#: Welke `tests/test_*.py` pytest deze sessie werkelijk geprobeerd heeft te
+#: verzamelen. `pytest_collectreport` vult deze verzameling per modulebestand;
+#: samen met `session.items` maakt dat zichtbaar of een bestand zonder ook maar
+#: één test de bewaking hieronder stilletjes zou uitzetten (dat hoort een fout
+#: te zijn, geen skip).
+#:
+#: Which `tests/test_*.py` pytest actually tried to collect this session.
+#: `pytest_collectreport` fills this set per module file; together with
+#: `session.items` it makes visible whether a file without a single test would
+#: silently disarm the guard below (that should be an error, not a skip).
+ATTEMPTED_TEST_FILES: set[str] = set()
 
 
 @dataclass(frozen=True, slots=True)
@@ -457,15 +469,23 @@ def integration_forms() -> set[tuple[str, str]]:
 def coverage_skip_reason(session: pytest.Session) -> str | None:
     """Return why the coverage guard must stand down, or `None` when it may run.
 
-    De dekkingsbewaking is per definitie volgorde- en selectiegevoelig: een
-    gedeeltelijke run tekent niet elk formulier, en dan zou de test vals rood
-    staan. De bewaking staat daarom alleen aan wanneer de run compleet is —
-    geen `-k`/`-m` en élk `tests/test_*.py` verzameld.
+    De dekkingsbewaking is per definitie selectiegevoelig: een gedeeltelijke run
+    tekent niet elk formulier, en dan zou de bewaking vals rood staan. De
+    bewaking staat daarom alleen aan wanneer de run compleet is — geen
+    `-k`/`-m`/`--lf`/`--deselect`, en pytest heeft werkelijk élk
+    `tests/test_*.py` geprobeerd te verzamelen. Of een verzameld bestand ook
+    minstens één test opgeleverd heeft, is hier bewust géén skipreden: een leeg
+    testbestand hoort de bewaking niet uit te zetten, het hoort zelf een fout te
+    zijn — dat doet `pytest_sessionfinish`.
 
-    The coverage guard is by definition order- and selection-sensitive: a
-    partial run does not draw every form, and the test would then stand falsely
-    red. The guard therefore only runs when the run is complete — no `-k`/`-m`
-    and every `tests/test_*.py` collected.
+    The coverage guard is by definition selection-sensitive: a partial run does
+    not draw every form, and the guard would then stand falsely red. The guard
+    therefore only runs when the run is complete — no
+    `-k`/`-m`/`--lf`/`--deselect`, and pytest really tried to collect every
+    `tests/test_*.py`. Whether a collected file also yielded at least one test
+    is deliberately no skip reason here: an empty test file should not disarm
+    the guard, it should itself be an error — that is what
+    `pytest_sessionfinish` does.
     """
     from pathlib import Path
 
@@ -473,44 +493,108 @@ def coverage_skip_reason(session: pytest.Session) -> str | None:
         return "er is een `-k`-filter gezet"
     if session.config.option.markexpr:
         return "er is een `-m`-filter gezet"
+    if getattr(session.config.option, "lf", False):
+        return "`--lf` draait alleen de laatst gefaalde tests"
+    if getattr(session.config.option, "deselect", None):
+        return "er is een `--deselect`-filter gezet"
+    if getattr(session.config.option, "collectonly", False):
+        return "`--collect-only` verzamelt alleen en tekent geen formulier"
     tests_dir = Path(__file__).resolve().parent
     expected = {path.name for path in tests_dir.glob("test_*.py")}
-    collected = {Path(item.path).name for item in session.items}
-    if collected != expected:
+    if expected != ATTEMPTED_TEST_FILES:
         return (
-            f"de run is niet compleet: {len(collected)} van de {len(expected)} "
-            "testbestanden verzameld"
+            f"de run is niet compleet: {len(ATTEMPTED_TEST_FILES)} van de "
+            f"{len(expected)} testbestanden verzameld"
         )
     return None
 
 
-def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
-    """Meld zichtbaar wanneer de dekkingsbewaking niet eens verzameld is.
+def pytest_collectreport(report) -> None:
+    """Onthoud welke `tests/test_*.py` pytest werkelijk probeert te verzamelen.
 
-    Bij `pytest tests/test_gates.py` wordt `test_zz_coverage.py` niet verzameld;
-    zonder deze melding zag zo'n run eruit alsof de bewaking groen was terwijl
-    hij helemaal niet draaide. Deze hook schrijft daarom één zichtbare regel
-    wanneer de run niet compleet is én de bewaking zelf niet verzameld is (is
-    hij wél verzameld, dan meldt de test zijn eigen skip).
+    Deze verzameling is de tegenhanger van `session.items`: een bestand dat
+    pytest wél bezoekt maar dat geen enkel item oplevert — een leeg bestand, een
+    module-level skip, een bestand waarvan de laatste test net verwijderd is —
+    staat wél in `ATTEMPTED_TEST_FILES` maar niet tussen de verzamelde items.
+    Zonder dit onderscheid zou zo'n bestand de dekkingsbewaking stilletjes op
+    skip zetten; nu wordt het in `pytest_sessionfinish` een fout.
 
-    With `pytest tests/test_gates.py` `test_zz_coverage.py` is not collected;
-    without this note such a run would look like the guard was green while it
-    never ran at all. This hook therefore writes one visible line when the run
-    is incomplete and the guard itself was not collected (when it is collected,
-    the test reports its own skip).
+    Remember which `tests/test_*.py` pytest really tried to collect.
+
+    This set is the counterpart of `session.items`: a file pytest does visit but
+    that yields no item at all — an empty file, a module-level skip, a file
+    whose last test was just removed — is in `ATTEMPTED_TEST_FILES` but not
+    among the collected items. Without that distinction such a file would
+    silently put the coverage guard on skip; now it becomes an error in
+    `pytest_sessionfinish`.
     """
     from pathlib import Path
 
-    reason = coverage_skip_reason(session)
-    if reason is None:
+    path = getattr(report, "fspath", None)
+    if path is None:
         return
-    if any(Path(item.path).name == "test_zz_coverage.py" for item in session.items):
-        return
+    name = Path(path).name
+    if name.startswith("test_") and name.endswith(".py"):
+        ATTEMPTED_TEST_FILES.add(name)
+
+
+def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
+    """Velt het dekkings-oordeel aan het eind van de run, niet als test.
+
+    Deze bewaking stond ooit in `tests/test_zz_coverage.py`, een test die op de
+    bestandsnaam vertrouwde om als laatste te draaien. Een ordeningsplugin die
+    de itemlijst omdraait zette hem daardoor vals rood; een leeg testbestand
+    zette hem stilletjes op skip. Daarom is het nu deze hook: die draait per
+    constructie als laatste, dus de volgorde van de items doet er niet meer toe,
+    en een bestand zonder items is zelf een fout in plaats van een skip.
+
+    Bewust geaccepteerd gevolg: de dekkingsbewaking is géén test meer. Hij telt
+    niet mee in de suitetelling (2355 → 2354) en is niet met `-k` te draaien.
+    Zoek dus geen `test_zz_coverage.py`; de bewaking staat hier, en een
+    gedeeltelijke run meldt hieronder zichtbaar dat hij overgeslagen is.
+
+    Passes the coverage verdict at the end of the run, not as a test.
+
+    This guard used to live in `tests/test_zz_coverage.py`, a test that relied
+    on its filename to run last. An ordering plugin that reverses the item list
+    made it falsely red; an empty test file silently put it on skip. Hence it is
+    now this hook: it runs last by construction, so item order no longer
+    matters, and a file without items is itself an error rather than a skip.
+
+    Deliberately accepted consequence: the coverage guard is no longer a test.
+    It does not count in the suite total (2355 → 2354) and cannot be run with
+    `-k`. So do not look for `test_zz_coverage.py`; the guard lives here, and a
+    partial run visibly reports below that it stood down.
+    """
+    from pathlib import Path
+
     reporter = session.config.pluginmanager.get_plugin("terminalreporter")
-    if reporter is not None:
-        reporter.write_line(
-            f"SKIPPED: de dekkingsbewaking (test_zz_coverage.py) is overgeslagen: {reason}"
-        )
+
+    reason = coverage_skip_reason(session)
+    if reason is not None:
+        if reporter is not None:
+            reporter.write_line(
+                f"SKIPPED: de dekkingsbewaking (pytest_sessionfinish) is overgeslagen: {reason}"
+            )
+        return
+
+    collected = {Path(item.path).name for item in session.items}
+    empty = sorted(ATTEMPTED_TEST_FILES - collected)
+    if empty:
+        names = ", ".join(empty)
+        if reporter is not None:
+            reporter.write_line(f"FAILED: deze testbestanden leveren geen enkele test op: {names}")
+        session.exitstatus = pytest.ExitCode.TESTS_FAILED
+        return
+
+    missing = integration_forms() - DRAWN_FORMS
+    if missing:
+        names = sorted(name for _module, name in missing)
+        if reporter is not None:
+            reporter.write_line(
+                f"FAILED: deze formulieren uit de bron zijn door geen enkele test getekend: {names}"
+            )
+        session.exitstatus = pytest.ExitCode.TESTS_FAILED
 
 
 def office_hours() -> tuple:
