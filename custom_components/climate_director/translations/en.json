@@ -648,12 +648,11 @@
     },
     "manual_sources": {
       "title": "Climate Director: {name} has hand-operated duties",
-      "description": "{count} duty(ies) can only be delivered by a source with automatic start off, so they never start by themselves:\n\n{problems}\n\nThat may be exactly what you want - a unit you switch on yourself is a fine choice. Confirm this notice once and it stays away, even after a restart. If you would rather the director drive these duties too, open the integration, choose Configure and switch automatic start on for one source.",
       "fix_flow": {
         "step": {
           "init": {
             "title": "Hand-operated duties in {name}",
-            "description": "{count} duty(ies) can only be delivered by hand:\n\n{problems}\n\nConfirm to keep this as it is. The notice then stays away, even after a restart."
+            "description": "{count} duty(ies) can only be delivered by a source with automatic start off, so they never start by themselves:\n\n{problems}\n\nThat may be exactly what you want - a unit you switch on yourself is a fine choice. Confirm this notice once and it stays away, even after a restart. If you would rather the director drive these duties too, open the integration, choose Configure and switch automatic start on for one source."
           }
         }
       }

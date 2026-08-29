@@ -648,12 +648,11 @@
     },
     "manual_sources": {
       "title": "Climate Director: {name} tiene tareas manuales",
-      "description": "{count} tarea(s) solo puede ser realizada por una fuente con arranque automático apagado, así que nunca arranca sola:\n\n{problems}\n\nPuede ser exactamente lo que quieres - un aparato que enciendes tú mismo es una buena elección. Confirma este aviso una vez y no volverá, ni siquiera tras un reinicio. Si prefieres que el director también se encargue de estas tareas, abre la integración, elige Configurar y activa el arranque automático en una fuente.",
       "fix_flow": {
         "step": {
           "init": {
             "title": "Tareas manuales en {name}",
-            "description": "{count} tarea(s) solo puede realizarse a mano:\n\n{problems}\n\nConfirma para dejarlo así. El aviso no volverá, ni siquiera tras un reinicio."
+            "description": "{count} tarea(s) solo puede ser realizada por una fuente con arranque automático apagado, así que nunca arranca sola:\n\n{problems}\n\nPuede ser exactamente lo que quieres - un aparato que enciendes tú mismo es una buena elección. Confirma este aviso una vez y no volverá, ni siquiera tras un reinicio. Si prefieres que el director también se encargue de estas tareas, abre la integración, elige Configurar y activa el arranque automático en una fuente."
           }
         }
       }

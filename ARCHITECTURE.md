@@ -537,13 +537,13 @@ geteld hoe vaak hetzelfde verschil achter elkaar is aangeboden; tien gelijke ron
 dezelfde wachttijd van vijf minuten geven de melding. In schaduwmodus telt hij niet — daar
 wordt met opzet niets uitgevoerd, dus de verschillenlijst is per definitie permanent gevuld.
 
-De handbediend-melding (`manual_sources`) is de énige met een oplosflow. De
-`description` op meldingsniveau blijft staan voor de reparatiekaart; het dialoog zelf
-krijgt zijn tekst uit `issues.manual_sources.fix_flow.step.init` (titel én beschrijving,
-alle zeven talen), zodat de uitleg staat op de plek waar Home Assistant hem bij een
-fixable melding toont. Het dialoog verschijnt ook echt: de openingsaanroep van de
-flow-manager (`{"issue_id": ...}`) telt niet als bevestiging, pas de tweede aanroep —
-hetzelfde patroon als `ConfirmRepairFlow` uit core.
+De handbediend-melding (`manual_sources`) is de énige met een oplosflow. De lange
+uitleg staat in `issues.manual_sources.fix_flow.step.init` (titel én beschrijving,
+alle zeven talen) — de plek waar Home Assistant hem bij een fixable melding toont;
+een `description` op meldingsniveau mag daar niet naast staan, want hassfest sluit
+beide voor fixable meldingen uit. Het dialoog verschijnt ook echt: de openingsaanroep
+van de flow-manager (`{"issue_id": ...}`) telt niet als bevestiging, pas de tweede
+aanroep — hetzelfde patroon als `ConfirmRepairFlow` uit core.
 
 ### Nog te bouwen — ontwerpvoorstellen
 
@@ -1173,13 +1173,13 @@ difference has been offered in a row; ten identical rounds plus the same five-mi
 time raise the notice. In shadow mode it never counts - nothing is executed there on purpose,
 so the difference list is by definition permanently filled.
 
-The hand-operated notice (`manual_sources`) is the only one with a fix flow. Its
-notice-level `description` stays for the repair card; the dialog itself takes its text
-from `issues.manual_sources.fix_flow.step.init` (title and description, all seven
-languages), so the explanation sits where Home Assistant shows it for a fixable notice.
-The dialog really appears: the flow manager's opening call (`{"issue_id": ...}`) does not
-count as a confirmation, only the second call does — the same pattern as core's
-`ConfirmRepairFlow`.
+The hand-operated notice (`manual_sources`) is the only one with a fix flow. The long
+explanation lives in `issues.manual_sources.fix_flow.step.init` (title and description,
+all seven languages) — the place where Home Assistant shows it for a fixable notice; a
+notice-level `description` may not sit beside it, because hassfest excludes the two for
+fixable notices. The dialog really appears: the flow manager's opening call
+(`{"issue_id": ...}`) does not count as a confirmation, only the second call does — the
+same pattern as core's `ConfirmRepairFlow`.
 
 ### Still to build — design proposals
 

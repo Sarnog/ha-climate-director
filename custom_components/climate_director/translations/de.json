@@ -648,12 +648,11 @@
     },
     "manual_sources": {
       "title": "Climate Director: {name} hat handbediente Aufgaben",
-      "description": "{count} Aufgabe(n) kann nur von einer Quelle mit automatischem Start aus erledigt werden und startet daher nie von selbst:\n\n{problems}\n\nDas darf genau so beabsichtigt sein - ein Gerät, das du selbst einschaltest, ist eine gute Wahl. Bestätige diesen Hinweis einmal und er bleibt weg, auch nach einem Neustart. Soll der Director auch diese Aufgaben übernehmen, öffne die Integration, wähle Konfigurieren und schalte automatisches Starten bei einer Quelle ein.",
       "fix_flow": {
         "step": {
           "init": {
             "title": "Handbediente Aufgaben in {name}",
-            "description": "{count} Aufgabe(n) kann nur von Hand erledigt werden:\n\n{problems}\n\nBestätige, um es so zu lassen. Der Hinweis bleibt danach weg, auch nach einem Neustart."
+            "description": "{count} Aufgabe(n) kann nur von einer Quelle mit automatischem Start aus erledigt werden und startet daher nie von selbst:\n\n{problems}\n\nDas darf genau so beabsichtigt sein - ein Gerät, das du selbst einschaltest, ist eine gute Wahl. Bestätige diesen Hinweis einmal und er bleibt weg, auch nach einem Neustart. Soll der Director auch diese Aufgaben übernehmen, öffne die Integration, wähle Konfigurieren und schalte automatisches Starten bei einer Quelle ein."
           }
         }
       }
