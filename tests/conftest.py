@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
+from pathlib import Path
 
 import pytest
 
@@ -385,12 +386,12 @@ def every_drawn_form_must_serialize(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(FlowHandler, "async_show_form", checked)
 
 
-def _module_of(root, path) -> str:
-    """Return the dotted module name of one integration source file."""
+def _module_of(root, path, package: str = "custom_components.climate_director") -> str:
+    """Return the dotted module name of one source file under `root`."""
     parts = list(path.relative_to(root).with_suffix("").parts)
     if parts and parts[-1] == "__init__":
         parts = parts[:-1]
-    return "custom_components.climate_director" + (f".{'.'.join(parts)}" if parts else "")
+    return package + (f".{'.'.join(parts)}" if parts else "")
 
 
 def async_show_form_calls() -> list[tuple[str, str | None, object | None]]:
@@ -472,33 +473,53 @@ def fixable_issue_keys() -> set[str]:
     return found
 
 
-def fix_flow_steps() -> set[str]:
+def fix_flow_steps(root: Path | None = None, package: str | None = None) -> set[str]:
     """Return every `step_id` a repairs fix-flow can draw, from the whole tree.
 
-    De loop gaat over álle `*.py` onder `custom_components/climate_director/`
-    en filtert op de klasse in plaats van op een bestandsnaam: élke klasse die
-    van `RepairsFlow` erft, draagt bij met zijn
-    `async_show_form(step_id=...)`-aanroepen. Een tweede fix-flow in een nieuw
-    bestand doet dus vanzelf mee.
+    De loop gaat over álle `*.py` onder de gegeven boom (standaard
+    `custom_components/climate_director/`), importeert elke module en bepaalt
+    met `issubclass(obj, RepairsFlow)` welke klassen een fix-flow zijn — geen
+    naam en geen schrijfwijze van de basisklasse meer om aan te hangen, en een
+    subklasse van een subklasse doet vanzelf mee. De AST wordt daarna alleen nog
+    gebruikt om per klasse de `async_show_form(step_id=...)`-aanroepen op te
+    halen. Kan een module niet importeren, dan is dat een duidelijke fout, geen
+    module die stilletjes overgeslagen wordt.
 
-    The walk covers every `*.py` under `custom_components/climate_director/`
-    and filters on the class rather than on a filename: every class inheriting
-    `RepairsFlow` contributes its `async_show_form(step_id=...)` calls. A
-    second fix flow in a new file therefore joins in by itself.
+    The walk covers every `*.py` under the given tree (by default
+    `custom_components/climate_director/`), imports every module and decides
+    with `issubclass(obj, RepairsFlow)` which classes are fix flows — no name
+    and no spelling of the base class left to hang on, and a subclass of a
+    subclass joins in by itself. The AST is then only used to collect each
+    class's `async_show_form(step_id=...)` calls. If a module cannot be
+    imported, that is a clear error, not a module silently skipped.
     """
     import ast
+    import importlib
+    import inspect
     from pathlib import Path
 
-    root = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
+    from homeassistant.components.repairs.models import RepairsFlow
+
+    if root is None:
+        root = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
+    if package is None:
+        package = "custom_components.climate_director"
+
     found: set[str] = set()
     for path in sorted(root.rglob("*.py")):
+        module_name = _module_of(root, path, package)
+        try:
+            module = importlib.import_module(module_name)
+        except Exception as exc:
+            raise AssertionError(
+                f"{path}: kon {module_name} niet importeren voor fix_flow_steps: {exc}"
+            ) from exc
         tree = ast.parse(path.read_text(encoding="utf-8"))
-        for node in ast.walk(tree):
+        for node in tree.body:
             if not isinstance(node, ast.ClassDef):
                 continue
-            if not any(
-                isinstance(base, ast.Name) and base.id == "RepairsFlow" for base in node.bases
-            ):
+            obj = getattr(module, node.name, None)
+            if not inspect.isclass(obj) or not issubclass(obj, RepairsFlow):
                 continue
             for method in node.body:
                 if not isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef)):
