@@ -261,6 +261,31 @@ class TestTheHandOperatedFixFlow:
         assert entries.updated is None
 
 
+class TestTheManualSignatureIsAStorageFormat:
+    """De handtekening is een opslagformaat, geen toevallige string.
+
+    Hij belandt in `entry.options[manual_sources_seen]` en overleeft herstarts;
+    een reformat van `_manual_signature` maakt elke opgeslagen bevestiging
+    ongeldig en geeft iedereen die de melding ooit heeft weggeklikt hem opnieuw.
+    Daarom wordt het formaat hier letterlijk vastgepind — niet met de functie
+    zelf, want dan vergelijkt de test de functie met zichzelf.
+
+    The signature is a storage format, not an incidental string.
+
+    It lands in `entry.options[manual_sources_seen]` and survives restarts; a
+    reformat of `_manual_signature` invalidates every stored confirmation and
+    gives everyone who ever dismissed the notice a new one. Hence the format is
+    pinned literally here — not against the function itself, since then the
+    test compares the function with itself.
+    """
+
+    def test_a_known_installation_has_the_literal_signature(self) -> None:
+        config = manual_house()
+        assert problems._manual_signature(manual_only_problems(config)) == (
+            "slaapkamer:cool,slaapkamer:heat"
+        )
+
+
 class TestTheNoticeIsUsable:
     """Een melding die niet zegt wat je moet doen is een melding die blijft staan.
 
