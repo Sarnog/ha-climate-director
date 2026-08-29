@@ -515,6 +515,71 @@ def fix_flow_steps() -> set[str]:
     return found
 
 
+def notice_key_pair_error(path_name: str, key: str, block: dict) -> str | None:
+    """Return the hassfest key-pair error for one notice block, or `None`.
+
+    De regel van hassfest zelf: `gen_issues_schema` in
+    `script/hassfest/translations.py` luidt
+    `vol.All(cv.has_at_least_one_key("description", "fix_flow"),
+    vol.Schema({Required title, Exclusive description/"fixable",
+    Exclusive fix_flow/"fixable"}))` — een melding heeft precies één van
+    `description` en `fix_flow`, niet nul en niet twee.
+
+    hassfest's own rule: `gen_issues_schema` in
+    `script/hassfest/translations.py` reads
+    `vol.All(cv.has_at_least_one_key("description", "fix_flow"),
+    vol.Schema({Required title, Exclusive description/"fixable",
+    Exclusive fix_flow/"fixable"}))` — a notice carries exactly one of
+    `description` and `fix_flow`, not zero and not two.
+    """
+    has_description = "description" in block
+    has_fix_flow = "fix_flow" in block
+    if has_description == has_fix_flow:
+        return (
+            f"{path_name}: {key}: een melding hoort precies één van description "
+            "en fix_flow te hebben, niet nul en niet twee"
+        )
+    return None
+
+
+def notice_fixable_kind_error(
+    path_name: str, key: str, block: dict, fixable: set[str]
+) -> str | None:
+    """Return the is_fixable cross-check error for one notice block, or `None`.
+
+    De eigen, strengere eis bovenop hassfest: welke van `description` en
+    `fix_flow` een melding heeft, volgt uit `is_fixable` in de bron
+    (`fixable_issue_keys()`). hassfest eist die koppeling niet letterlijk — hij
+    sluit alleen een `description` op meldingsniveau uit bij een fixable
+    melding en een `fix_flow` bij een niet-fixable. hassfest in de CI houdt het
+    laatste woord.
+
+    This repo's own, stricter requirement on top of hassfest: which of
+    `description` and `fix_flow` a notice carries follows from `is_fixable` in
+    the source (`fixable_issue_keys()`). hassfest does not require that link
+    literally — it only excludes a notice-level `description` for a fixable
+    notice and a `fix_flow` for a non-fixable one. hassfest in CI keeps the
+    final word.
+    """
+    if key in fixable:
+        if "fix_flow" not in block:
+            return f"{path_name}: {key}: een oplosbare melding hoort een fix_flow te hebben"
+        if "description" in block:
+            return (
+                f"{path_name}: {key}: een oplosbare melding hoort geen description "
+                "op meldingsniveau te hebben"
+            )
+    else:
+        if "description" not in block:
+            return (
+                f"{path_name}: {key}: een niet-oplosbare melding hoort een "
+                "description op meldingsniveau te hebben"
+            )
+        if "fix_flow" in block:
+            return f"{path_name}: {key}: een niet-oplosbare melding hoort geen fix_flow te hebben"
+    return None
+
+
 def office_hours() -> tuple:
     """Return a weekday 08:00-18:00 schedule window."""
 

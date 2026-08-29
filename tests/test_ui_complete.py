@@ -632,29 +632,43 @@ class TestEveryLanguageStandsUp:
 
 
 class TestEveryNoticeFollowsTheHassfestFixFlowRule:
-    """Een description op meldingsniveau naast een fix_flow wijst hassfest af.
+    """Elke melding heeft precies één van `description` en `fix_flow`.
 
-    Bij een oplosbare melding hoort de uitleg in
-    `fix_flow.step.<step>.description`, niet naast de titel op meldingsniveau;
-    bij een niet-oplosbare melding hoort de uitleg juist wél op meldingsniveau.
-    Deze test is een tweede kopie van die regel: Home Assistant beheert hem in
-    de `issues`-tak van hassfest, en die baan in de CI houdt het laatste woord.
-    De "oplosbaar"-kant komt uit de bron — dezelfde AST over `problems.py` als
-    L1 — niet uit een handkaart.
+    De regel van hassfest gaat over het sleutelpaar, niet over `is_fixable`:
+    `gen_issues_schema` in `script/hassfest/translations.py` luidt
+    `vol.All(cv.has_at_least_one_key("description", "fix_flow"),
+    vol.Schema({Required title, Exclusive description/"fixable",
+    Exclusive fix_flow/"fixable"}))` — precies één van beide, niet nul en niet
+    twee. De baan `Validate with hassfest` in de CI houdt het laatste woord.
 
-    A notice-level description beside a fix_flow is rejected by hassfest.
+    Daar bovenop komt de eigen, strengere eis: welke van de twee een melding
+    heeft, volgt uit `is_fixable` in de bron (`fixable_issue_keys()`).
 
-    For a fixable notice the explanation belongs in
-    `fix_flow.step.<step>.description`, not beside the title at notice level;
-    for a non-fixable notice the explanation does belong at notice level. This
-    test is a second copy of that rule: Home Assistant owns it in the `issues`
-    branch of hassfest, and that CI job has the final word. The "fixable" side
-    comes from the source — the same AST over `problems.py` as L1 — not from a
-    hand-kept map.
+    Every notice has exactly one of `description` and `fix_flow`.
+
+    hassfest's rule is about the key pair, not about `is_fixable`:
+    `gen_issues_schema` in `script/hassfest/translations.py` reads
+    `vol.All(cv.has_at_least_one_key("description", "fix_flow"),
+    vol.Schema({Required title, Exclusive description/"fixable",
+    Exclusive fix_flow/"fixable"}))` — exactly one of the two, not zero and not
+    two. The `Validate with hassfest` CI job has the final word.
+
+    On top of that comes this repo's own, stricter requirement: which of the
+    two a notice carries follows from `is_fixable` in the source
+    (`fixable_issue_keys()`).
     """
 
-    def test_each_notice_has_the_description_hassfest_expects(self) -> None:
-        from conftest import fixable_issue_keys
+    def test_each_notice_has_exactly_one_of_description_and_fix_flow(self) -> None:
+        from conftest import notice_key_pair_error
+
+        for path in FILES:
+            issues = load(path).get("issues", {})
+            for key, block in issues.items():
+                error = notice_key_pair_error(path.name, key, block)
+                assert error is None, error
+
+    def test_the_kind_follows_is_fixable_from_the_source(self) -> None:
+        from conftest import fixable_issue_keys, notice_fixable_kind_error
 
         fixable = fixable_issue_keys()
         assert fixable, "de AST vond geen oplosbare meldingen in problems.py"
@@ -662,16 +676,8 @@ class TestEveryNoticeFollowsTheHassfestFixFlowRule:
         for path in FILES:
             issues = load(path).get("issues", {})
             for key, block in issues.items():
-                if key in fixable:
-                    assert "description" not in block, (
-                        f"{path.name}: {key}: een oplosbare melding hoort geen "
-                        "description op meldingsniveau te hebben naast zijn fix_flow"
-                    )
-                else:
-                    assert "description" in block, (
-                        f"{path.name}: {key}: een niet-oplosbare melding hoort "
-                        "een description op meldingsniveau te hebben"
-                    )
+                error = notice_fixable_kind_error(path.name, key, block, fixable)
+                assert error is None, error
 
 
 class TestTheManifest:
