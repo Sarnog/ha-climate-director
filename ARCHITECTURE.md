@@ -650,6 +650,20 @@ Nieuwe poorten, bronrollen, conflictbeleiden en circuitbeperkingen haken elk op 
 bestaande module aan zonder de pijplijn te wijzigen. Nieuwe kunde die niets met Home
 Assistant te maken heeft hoort per definitie in `engine/`, met tests ernaast.
 
+### De bewakingen bewaken — en daar houdt het op
+
+De testset bewaakt de integratie; `tests/test_the_guards_themselves.py` bewaakt
+de bewakingen. Daar houdt het op: er komt geen bewaking op de bewaking van de
+bewaking, want die regressie is oneindig. Wie een bewaking wijzigt, wijzigt
+haar unittests mee; wie een bewaking alleen met een losse mutatierun valideert,
+heeft haar niet gevalideerd.
+
+**Stopregel** (beslissing 4, 2026-08-29): ná ronde 19 telt iets alleen nog als
+bevinding wanneer het gedrag raakt dat een gebruiker merkt, óf met een
+gedraaide mutatie in deze repo bereikbaar is zónder een plugin te installeren
+die niet in `requirements_test.txt` staat. Randen in de testset zonder
+bereikbaar scenario gaan naar `ROADMAP.md`, niet naar een nieuwe restlijst.
+
 ## EN
 
 Technical design document for anyone working on the code (not a user manual —
@@ -1285,3 +1299,17 @@ practice.
 New gates, source roles, conflict policies and circuit constraints each plug into one
 existing module without changing the pipeline. New logic with nothing to do with Home
 Assistant belongs in `engine/` by definition, with tests alongside it.
+
+### The guards are guarded — and there it stops
+
+The test suite guards the integration; `tests/test_the_guards_themselves.py`
+guards the guards. There it stops: there will be no guard on the guard of the
+guard, because that regression is infinite. Whoever changes a guard changes
+its unit tests along with it; whoever validates a guard only with an ad-hoc
+mutation run has not validated it.
+
+**Stop rule** (decision 4, 2026-08-29): after round 19 something only counts
+as a finding when it touches behaviour a user notices, or when it can be
+reached with a mutation run in this repo without installing a plugin that is
+not in `requirements_test.txt`. Test-suite edges without a reachable scenario
+go to `ROADMAP.md`, not to a new rest list.

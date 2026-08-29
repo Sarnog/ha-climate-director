@@ -394,25 +394,27 @@ def _module_of(root, path, package: str = "custom_components.climate_director") 
     return package + (f".{'.'.join(parts)}" if parts else "")
 
 
-def async_show_form_calls() -> list[tuple[str, str | None, object | None]]:
-    """Return every `async_show_form(step_id=...)` call in the integration source.
+def async_show_form_calls(
+    root: Path | None = None,
+) -> list[tuple[str, str | None, object | None]]:
+    """Return every `async_show_form(step_id=...)` call in the source tree.
 
     `(module, step_id, data_schema)` — `step_id` is `None` when it is not a
     literal, `data_schema` is the AST node or `None` when the call carries none.
-    De loop gaat over álle `*.py` onder `custom_components/climate_director/`,
-    ongeacht of er een `data_schema=` bij staat en ongeacht of de aanroep
-    `self.`-gebonden is.
+    De loop gaat over álle `*.py` onder de gegeven boom (standaard
+    `custom_components/climate_director/`), ongeacht of er een `data_schema=`
+    bij staat en ongeacht of de aanroep `self.`-gebonden is.
 
     `(module, step_id, data_schema)` — `step_id` is `None` when it is not a
     literal, `data_schema` is the AST node or `None` when the call carries none.
-    The walk covers every `*.py` under `custom_components/climate_director/`,
-    whether or not a `data_schema=` is present and whether or not the call is
-    bound to `self.`.
+    The walk covers every `*.py` under the given tree (by default
+    `custom_components/climate_director/`), whether or not a `data_schema=` is
+    present and whether or not the call is bound to `self.`.
     """
     import ast
-    from pathlib import Path
 
-    root = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
+    if root is None:
+        root = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
     found: list[tuple[str, str | None, object | None]] = []
     for path in sorted(root.rglob("*.py")):
         module = _module_of(root, path)
@@ -433,23 +435,25 @@ def async_show_form_calls() -> list[tuple[str, str | None, object | None]]:
     return found
 
 
-def fixable_issue_keys() -> set[str]:
+def fixable_issue_keys(root: Path | None = None) -> set[str]:
     """Return every `translation_key` whose `async_create_issue` is fixable.
 
     Uit `problems.py`, met een AST: de bron, geen handkaart. Een
     `is_fixable=True` waarvan de `translation_key` geen letterlijke string is,
     valt niet stilzwijgend uit de inventarisatie — dat is een duidelijke fout,
-    want dan is de bewaking blind voor precies die melding.
+    want dan is de bewaking blind voor precies die melding. De boom is optioneel
+    mee te geven (standaard `custom_components/climate_director/`).
 
     From `problems.py`, with an AST: the source, not a hand-kept map. An
     `is_fixable=True` whose `translation_key` is not a literal string does not
     silently drop out of the inventory — it is a clear error, since the guard
-    would then be blind to exactly that notice.
+    would then be blind to exactly that notice. The tree is optional (by default
+    `custom_components/climate_director/`).
     """
     import ast
-    from pathlib import Path
 
-    root = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
+    if root is None:
+        root = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
     source = (root / "problems.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
     found: set[str] = set()
