@@ -631,6 +631,49 @@ class TestEveryLanguageStandsUp:
         assert not left, f"{path.name} is hier nog Engels: {sorted(left)[:8]}"
 
 
+class TestEveryNoticeFollowsTheHassfestFixFlowRule:
+    """Een description op meldingsniveau naast een fix_flow wijst hassfest af.
+
+    Bij een oplosbare melding hoort de uitleg in
+    `fix_flow.step.<step>.description`, niet naast de titel op meldingsniveau;
+    bij een niet-oplosbare melding hoort de uitleg juist wél op meldingsniveau.
+    Deze test is een tweede kopie van die regel: Home Assistant beheert hem in
+    de `issues`-tak van hassfest, en die baan in de CI houdt het laatste woord.
+    De "oplosbaar"-kant komt uit de bron — dezelfde AST over `problems.py` als
+    L1 — niet uit een handkaart.
+
+    A notice-level description beside a fix_flow is rejected by hassfest.
+
+    For a fixable notice the explanation belongs in
+    `fix_flow.step.<step>.description`, not beside the title at notice level;
+    for a non-fixable notice the explanation does belong at notice level. This
+    test is a second copy of that rule: Home Assistant owns it in the `issues`
+    branch of hassfest, and that CI job has the final word. The "fixable" side
+    comes from the source — the same AST over `problems.py` as L1 — not from a
+    hand-kept map.
+    """
+
+    def test_each_notice_has_the_description_hassfest_expects(self) -> None:
+        from conftest import fixable_issue_keys
+
+        fixable = fixable_issue_keys()
+        assert fixable, "de AST vond geen oplosbare meldingen in problems.py"
+
+        for path in FILES:
+            issues = load(path).get("issues", {})
+            for key, block in issues.items():
+                if key in fixable:
+                    assert "description" not in block, (
+                        f"{path.name}: {key}: een oplosbare melding hoort geen "
+                        "description op meldingsniveau te hebben naast zijn fix_flow"
+                    )
+                else:
+                    assert "description" in block, (
+                        f"{path.name}: {key}: een niet-oplosbare melding hoort "
+                        "een description op meldingsniveau te hebben"
+                    )
+
+
 class TestTheManifest:
     """hassfest eist domain, name en daarna alfabetische sleutels."""
 
