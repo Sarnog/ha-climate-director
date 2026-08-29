@@ -466,6 +466,89 @@ def integration_forms() -> set[tuple[str, str]]:
     }
 
 
+def fixable_issue_keys() -> set[str]:
+    """Return every `translation_key` whose `async_create_issue` is fixable.
+
+    Uit `problems.py`, met een AST: de bron, geen handkaart. Een
+    `is_fixable=True` waarvan de `translation_key` geen letterlijke string is,
+    valt niet stilzwijgend uit de inventarisatie — dat is een duidelijke fout,
+    want dan is de bewaking blind voor precies die melding.
+
+    From `problems.py`, with an AST: the source, not a hand-kept map. An
+    `is_fixable=True` whose `translation_key` is not a literal string does not
+    silently drop out of the inventory — it is a clear error, since the guard
+    would then be blind to exactly that notice.
+    """
+    import ast
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
+    source = (root / "problems.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    found: set[str] = set()
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)):
+            continue
+        if node.func.attr != "async_create_issue":
+            continue
+        keywords = {keyword.arg: keyword.value for keyword in node.keywords}
+        fixable = keywords.get("is_fixable")
+        if not (isinstance(fixable, ast.Constant) and fixable.value is True):
+            continue
+        key = keywords.get("translation_key")
+        if isinstance(key, ast.Constant) and isinstance(key.value, str):
+            found.add(key.value)
+        else:
+            raise AssertionError(
+                f"problems.py:{node.lineno}: is_fixable=True maar de "
+                "translation_key is geen letterlijke string"
+            )
+    return found
+
+
+def fix_flow_steps() -> set[str]:
+    """Return every `step_id` a repairs fix-flow can draw, from the whole tree.
+
+    De loop gaat over álle `*.py` onder `custom_components/climate_director/`
+    en filtert op de klasse in plaats van op een bestandsnaam: élke klasse die
+    van `RepairsFlow` erft, draagt bij met zijn
+    `async_show_form(step_id=...)`-aanroepen. Een tweede fix-flow in een nieuw
+    bestand doet dus vanzelf mee.
+
+    The walk covers every `*.py` under `custom_components/climate_director/`
+    and filters on the class rather than on a filename: every class inheriting
+    `RepairsFlow` contributes its `async_show_form(step_id=...)` calls. A
+    second fix flow in a new file therefore joins in by itself.
+    """
+    import ast
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
+    found: set[str] = set()
+    for path in sorted(root.rglob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ClassDef):
+                continue
+            if not any(
+                isinstance(base, ast.Name) and base.id == "RepairsFlow" for base in node.bases
+            ):
+                continue
+            for method in node.body:
+                if not isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    continue
+                for sub in ast.walk(method):
+                    if (
+                        isinstance(sub, ast.Call)
+                        and isinstance(sub.func, ast.Attribute)
+                        and sub.func.attr == "async_show_form"
+                    ):
+                        for keyword in sub.keywords:
+                            if keyword.arg == "step_id" and isinstance(keyword.value, ast.Constant):
+                                found.add(keyword.value.value)
+    return found
+
+
 def coverage_skip_reason(session: pytest.Session) -> str | None:
     """Return why the coverage guard must stand down, or `None` when it may run.
 

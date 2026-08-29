@@ -23,6 +23,7 @@ import pathlib
 import re
 
 import pytest
+from conftest import fix_flow_steps, fixable_issue_keys
 
 from custom_components.climate_director import problems
 from custom_components.climate_director.const import (
@@ -302,21 +303,28 @@ class TestTheFixFlowHasTextInEveryLanguage:
     """L1: het reparatiedialoog van de handbediend-melding heeft in elke taal tekst.
 
     De bewaking pint de eigenschap vast, niet een naam: hij leest met een AST
-    uit `problems.py` welke meldingen `is_fixable=True` zijn, uit `repairs.py`
-    welke stappen de fix-flow kent, en eist dan dat elke combinatie in alle
-    zeven bestanden een `fix_flow.step.<step>`-blok heeft met een niet-lege
-    titel én beschrijving. De placeholders in die beschrijving moeten een
-    deelverzameling zijn van wat de code werkelijk meegeeft, zodat een
-    `{typefout}` niet stil doorglipt.
+    uit `problems.py` welke meldingen `is_fixable=True` zijn, uit de héle
+    integratieboom welke stappen de fix-flows kennen (gefilterd op klassen die
+    van `RepairsFlow` erven, niet op een bestandsnaam), en eist dan dat elke
+    combinatie in alle zeven bestanden een `fix_flow.step.<step>`-blok heeft met
+    een niet-lege titel én beschrijving. De placeholders in die beschrijving
+    moeten een deelverzameling zijn van wat de code werkelijk meegeeft, zodat
+    een `{typefout}` niet stil doorglipt. En een `is_fixable=True` met een
+    niet-letterlijke `translation_key` is een duidelijke fout, geen melding die
+    stilletjes uit de inventarisatie valt.
 
     L1: the hand-operated notice's repair dialog has text in every language.
 
     The guard pins the property, not a name: it reads with an AST from
-    `problems.py` which notices are `is_fixable=True`, from `repairs.py` which
-    steps the fix flow knows, and then requires every combination to have a
-    `fix_flow.step.<step>` block with a non-empty title and description in all
-    seven files. The placeholders in that description must be a subset of what
-    the code really passes, so a `{typo}` does not slip through silently.
+    `problems.py` which notices are `is_fixable=True`, from the whole
+    integration tree which steps the fix flows know (filtered on classes
+    inheriting `RepairsFlow`, not on a filename), and then requires every
+    combination to have a `fix_flow.step.<step>` block with a non-empty title
+    and description in all seven files. The placeholders in that description
+    must be a subset of what the code really passes, so a `{typo}` does not
+    slip through silently. And an `is_fixable=True` with a non-literal
+    `translation_key` is a clear error, not a notice that silently drops out of
+    the inventory.
     """
 
     def _translation_files(self) -> list[pathlib.Path]:
@@ -324,40 +332,11 @@ class TestTheFixFlowHasTextInEveryLanguage:
 
     def _fixable_keys(self) -> set[str]:
         """Return every `translation_key` whose `async_create_issue` is fixable."""
-        source = (COMPONENT / "problems.py").read_text(encoding="utf-8")
-        tree = ast.parse(source)
-        found: set[str] = set()
-        for node in ast.walk(tree):
-            if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)):
-                continue
-            if node.func.attr != "async_create_issue":
-                continue
-            keywords = {keyword.arg: keyword.value for keyword in node.keywords}
-            fixable = keywords.get("is_fixable")
-            key = keywords.get("translation_key")
-            if (
-                isinstance(fixable, ast.Constant)
-                and fixable.value is True
-                and isinstance(key, ast.Constant)
-                and isinstance(key.value, str)
-            ):
-                found.add(key.value)
-        return found
+        return fixable_issue_keys()
 
     def _fix_flow_steps(self) -> set[str]:
-        """Return every `step_id` the fix flow can draw, from `repairs.py`."""
-        source = (COMPONENT / "repairs.py").read_text(encoding="utf-8")
-        tree = ast.parse(source)
-        found: set[str] = set()
-        for node in ast.walk(tree):
-            if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)):
-                continue
-            if node.func.attr != "async_show_form":
-                continue
-            for keyword in node.keywords:
-                if keyword.arg == "step_id" and isinstance(keyword.value, ast.Constant):
-                    found.add(keyword.value.value)
-        return found
+        """Return every `step_id` a repairs fix-flow can draw, from the whole tree."""
+        return fix_flow_steps()
 
     def _placeholders_passed(self, key: str) -> set[str]:
         """Return the placeholder names the code really passes for `key`."""
