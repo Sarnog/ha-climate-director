@@ -71,6 +71,10 @@ async def test_the_hand_operated_notice_runs_the_whole_chain() -> None:
             "de échte flow-manager hoort het reparatiedialoog te tonen, niet meteen te sluiten"
         )
         assert result["step_id"] == "init"
+        assert result["description_placeholders"] == issue.translation_placeholders, (
+            "het reparatiedialoog hoort de placeholders van zijn melding door te geven"
+        )
+        assert set(issue.translation_placeholders) == {"name", "count", "problems"}
 
         result = await flow_manager.async_configure(result["flow_id"], {})
         assert result["type"] == "create_entry"
