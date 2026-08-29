@@ -318,8 +318,11 @@ class TestEveryFormInTheSourceIsWalkedTo:
     uitleg, zeven talen),
     `TestEveryScreenCanBeLeft.test_each_one_offers_a_way_back` en
     `TestDiscardArrivesOnEveryScreen.test_the_example_values_cover_exactly_the_schema`.
-    De **dekking** van álle formulieren — deze doorloop inbegrepen — ligt bij
-    `pytest_sessionfinish` in `conftest.py`.
+    De **dekking** van álle formulieren ligt bij deze test zelf: hij leest zijn
+    lijst uit de bron, niet uit een handkaart. Sinds ronde 19 is dit de **enige**
+    bewaking op de formulierdekking; er stond er een tweede naast in
+    `pytest_sessionfinish` (`conftest.py`), en die is geschrapt omdat hij dezelfde
+    invariant bewaakte met een extra aanname over de runconditie.
 
     M1: every form in the source has an explicit walk.
 
@@ -336,8 +339,11 @@ class TestEveryFormInTheSourceIsWalkedTo:
     this walk: `TestEveryFormField` (labels and explanations, seven languages),
     `TestEveryScreenCanBeLeft.test_each_one_offers_a_way_back` and
     `TestDiscardArrivesOnEveryScreen.test_the_example_values_cover_exactly_the_schema`.
-    The **coverage** of all forms — this walk included — lies with
-    `pytest_sessionfinish` in `conftest.py`.
+    The **coverage** of all forms lies with this test itself: it reads its list
+    from the source, not from a hand-kept map. Since round 19 this is the **only**
+    guard on the form coverage; a second one used to stand beside it in
+    `pytest_sessionfinish` (`conftest.py`), and it was removed because it guarded
+    the same invariant with an extra assumption about the run condition.
     """
 
     async def test_every_step_id_in_the_source_opens(self) -> None:

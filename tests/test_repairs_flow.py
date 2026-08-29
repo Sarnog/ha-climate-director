@@ -131,17 +131,16 @@ async def test_the_fix_flow_factory_returns_the_manual_sources_flow() -> None:
 async def test_opening_the_fix_flow_returns_the_form(monkeypatch: pytest.MonkeyPatch) -> None:
     """De formuliertak tekent het scherm, zodat de tekenfixture eroverheen loopt.
 
-    Deze test is het tekenbewijs voor de sessiebrede dekkingsbewaking in
-    `pytest_sessionfinish` (`conftest.py`): het reparatiescherm (`init` in
-    `repairs.py`) wordt hier werkelijk getekend, in plaats van alleen op de
-    opslagtak getest.
+    Deze test tekent het reparatiescherm (`init` in `repairs.py`) werkelijk, in
+    plaats van alleen de opslagtak te testen. De dekking van álle formulieren
+    ligt bij `TestEveryFormInTheSourceIsWalkedTo`, die zijn lijst uit de bron
+    leest.
 
     The form branch draws the screen, so the draw fixture walks over it.
 
-    This test is the drawing evidence for the session-wide coverage guard in
-    `pytest_sessionfinish` (`conftest.py`): the repair screen (`init` in
-    `repairs.py`) is really drawn here, rather than only exercised on its
-    submit branch.
+    This test really draws the repair screen (`init` in `repairs.py`), rather
+    than only exercising its submit branch. The coverage of all forms lies with
+    `TestEveryFormInTheSourceIsWalkedTo`, which reads its list from the source.
     """
     _fake_issue_registry(monkeypatch)
     entry = FakeEntry("live")
