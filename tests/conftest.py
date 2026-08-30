@@ -521,6 +521,11 @@ def fix_flow_steps(root: Path | None = None, package: str | None = None) -> set[
     het bestand doet er niet toe). Die tweede weg kent wél een schrijfwijze; hij
     is er alleen voor de klassen die de eerste niet kan bereiken.
 
+    De eenheid is de **klassenaam binnen één bestand**, niet de klasse zelf:
+    twee klassen met dezelfde naam in hetzelfde bestand gelden hier als één. Dat
+    is bewust — de AST-bases kennen alleen namen — en het valt de veilige kant
+    op: hoogstens telt een stap te veel mee, nooit een stap te weinig.
+
     The walk covers every `*.py` under the given tree (by default
     `custom_components/climate_director/`), imports every module and decides
     with `issubclass(obj, RepairsFlow)` which classes are fix flows — no name
@@ -537,6 +542,11 @@ def fix_flow_steps(root: Path | None = None, package: str | None = None) -> set[
     fixed point, so the order within the file does not matter). That second
     route does know a spelling; it exists only for the classes the first cannot
     reach.
+
+    The unit is the **class name within one file**, not the class itself: two
+    classes with the same name in the same file count as one here. That is
+    deliberate — AST bases only know names — and it errs on the safe side: at
+    worst one step too many is counted, never one too few.
     """
     import ast
     import importlib
