@@ -181,6 +181,76 @@ class TestFixFlowSteps:
         )
         assert fix_flow_steps(root=root, package="guardpkg_outside") == {"inside"}
 
+    def test_it_sees_a_flow_that_is_not_at_module_level(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Een fix-flow die in een functie staat hoort ook mee te tellen.
+
+        Ronde 20, B2: de loop ging over `tree.body` en zag daardoor alleen
+        klassen op modulehoogte; een fabrieksfunctie die een `RepairsFlow`
+        teruggeeft viel er stil uit.
+
+        A fix flow defined inside a function must count too. Round 20, B2: the
+        loop walked `tree.body` and therefore saw only module-level classes; a
+        factory function returning a `RepairsFlow` silently dropped out.
+        """
+        root = _write_package(
+            monkeypatch,
+            tmp_path,
+            "guardpkg_nested",
+            {
+                "flow.py": (
+                    "import voluptuous as vol\n"
+                    "from homeassistant.components.repairs.models import RepairsFlow\n"
+                    "\n"
+                    "\n"
+                    "def maak_flow():\n"
+                    "    class NestedFlow(RepairsFlow):\n"
+                    "        async def async_step_init(self, user_input=None):\n"
+                    '            return self.async_show_form(step_id="nested",'
+                    " data_schema=vol.Schema({}))\n"
+                    "\n"
+                    "    return NestedFlow\n"
+                ),
+            },
+        )
+        assert fix_flow_steps(root=root, package="guardpkg_nested") == {"nested"}
+
+    def test_it_sees_a_nested_flow_that_is_never_bound_to_a_module_name(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Ook zonder modulenaam blijft de tweede, zwakkere weg over.
+
+        `getattr(module, ...)` vindt deze klasse niet, dus hier telt de basis
+        uit de AST. Dat is bewust zwakker — zie de docstring van
+        `fix_flow_steps()`.
+
+        Without a module-level name the second, weaker route remains.
+        `getattr(module, ...)` cannot find this class, so here the AST base
+        counts. That is deliberately weaker — see `fix_flow_steps()`.
+        """
+        root = _write_package(
+            monkeypatch,
+            tmp_path,
+            "guardpkg_unbound",
+            {
+                "flow.py": (
+                    "import voluptuous as vol\n"
+                    "from homeassistant.components.repairs import models\n"
+                    "\n"
+                    "\n"
+                    "def registreer(register):\n"
+                    "    class Verborgen(models.RepairsFlow):\n"
+                    "        async def async_step_init(self, user_input=None):\n"
+                    '            return self.async_show_form(step_id="verborgen",'
+                    " data_schema=vol.Schema({}))\n"
+                    "\n"
+                    "    register.append(Verborgen)\n"
+                ),
+            },
+        )
+        assert fix_flow_steps(root=root, package="guardpkg_unbound") == {"verborgen"}
+
     def test_it_sees_a_flow_in_a_file_that_did_not_exist_yesterday(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:

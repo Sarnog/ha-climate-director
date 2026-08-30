@@ -477,6 +477,29 @@ def fixable_issue_keys(root: Path | None = None) -> set[str]:
     return found
 
 
+def _base_names(node) -> set[str]:
+    """Return the last name component of every base of one class definition.
+
+    `class A(RepairsFlow)`, `class A(models.RepairsFlow)` en
+    `class A(repairs.models.RepairsFlow)` leveren alle drie `RepairsFlow` op.
+    Een basis die geen naam is (een subscript zoals `Generic[T]`, een aanroep)
+    levert niets op.
+
+    `class A(RepairsFlow)`, `class A(models.RepairsFlow)` and
+    `class A(repairs.models.RepairsFlow)` all yield `RepairsFlow`. A base that
+    is not a name (a subscript such as `Generic[T]`, a call) yields nothing.
+    """
+    import ast
+
+    names: set[str] = set()
+    for base in node.bases:
+        if isinstance(base, ast.Name):
+            names.add(base.id)
+        elif isinstance(base, ast.Attribute):
+            names.add(base.attr)
+    return names
+
+
 def fix_flow_steps(root: Path | None = None, package: str | None = None) -> set[str]:
     """Return every `step_id` a repairs fix-flow can draw, from the whole tree.
 
@@ -489,6 +512,15 @@ def fix_flow_steps(root: Path | None = None, package: str | None = None) -> set[
     halen. Kan een module niet importeren, dan is dat een duidelijke fout, geen
     module die stilletjes overgeslagen wordt.
 
+    De klassen komen uit `ast.walk`, niet uit `tree.body`: een fix-flow hoeft
+    niet op modulehoogte te staan. Staat hij dat niet én is hij nergens aan een
+    modulenaam gebonden, dan valt hij buiten `getattr` — daarvoor is er een
+    tweede, uitdrukkelijk zwakkere weg: een basis waarvan het **laatste
+    naamdeel** `RepairsFlow` is, of die een klasse noemt die in dit bestand al
+    als fix-flow herkend is (transitief, tot een vast punt, dus de volgorde in
+    het bestand doet er niet toe). Die tweede weg kent wél een schrijfwijze; hij
+    is er alleen voor de klassen die de eerste niet kan bereiken.
+
     The walk covers every `*.py` under the given tree (by default
     `custom_components/climate_director/`), imports every module and decides
     with `issubclass(obj, RepairsFlow)` which classes are fix flows — no name
@@ -496,6 +528,15 @@ def fix_flow_steps(root: Path | None = None, package: str | None = None) -> set[
     subclass joins in by itself. The AST is then only used to collect each
     class's `async_show_form(step_id=...)` calls. If a module cannot be
     imported, that is a clear error, not a module silently skipped.
+
+    The classes come from `ast.walk`, not from `tree.body`: a fix flow need not
+    sit at module level. When it does not, and is bound to no module-level name
+    either, it is out of `getattr`'s reach — hence a second, deliberately weaker
+    route: a base whose **last name component** is `RepairsFlow`, or that names
+    a class already recognised as a fix flow in this file (transitively, to a
+    fixed point, so the order within the file does not matter). That second
+    route does know a spelling; it exists only for the classes the first cannot
+    reach.
     """
     import ast
     import importlib
@@ -519,11 +560,27 @@ def fix_flow_steps(root: Path | None = None, package: str | None = None) -> set[
                 f"{path}: kon {module_name} niet importeren voor fix_flow_steps: {exc}"
             ) from exc
         tree = ast.parse(path.read_text(encoding="utf-8"))
-        for node in tree.body:
-            if not isinstance(node, ast.ClassDef):
-                continue
-            obj = getattr(module, node.name, None)
-            if not inspect.isclass(obj) or not issubclass(obj, RepairsFlow):
+        classes = [node for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
+
+        flows = {
+            node.name
+            for node in classes
+            if inspect.isclass(getattr(module, node.name, None))
+            and issubclass(getattr(module, node.name), RepairsFlow)
+        }
+        while True:
+            grown = {
+                node.name
+                for node in classes
+                if node.name not in flows
+                and any(base in flows or base == "RepairsFlow" for base in _base_names(node))
+            }
+            if not grown:
+                break
+            flows |= grown
+
+        for node in classes:
+            if node.name not in flows:
                 continue
             for method in node.body:
                 if not isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef)):
