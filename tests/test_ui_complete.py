@@ -667,6 +667,27 @@ class TestEveryNoticeFollowsTheHassfestFixFlowRule:
                 error = notice_key_pair_error(path.name, key, block)
                 assert error is None, error
 
+    def test_each_notice_has_a_title(self) -> None:
+        """De derde eis van `gen_issues_schema`: `vol.Required("title")`.
+
+        Zonder deze test is een melding zonder titel lokaal groen en in de CI
+        rood — dezelfde vorm die de baan `Validate with hassfest` al twee keer
+        heeft laten omvallen, één sleutel verderop.
+
+        The third requirement of `gen_issues_schema`: `vol.Required("title")`.
+
+        Without this test a notice without a title is green locally and red in
+        CI — the same shape that has toppled the `Validate with hassfest` job
+        twice already, one key further along.
+        """
+        from conftest import notice_title_error
+
+        for path in FILES:
+            issues = load(path).get("issues", {})
+            for key, block in issues.items():
+                error = notice_title_error(path.name, key, block)
+                assert error is None, error
+
     def test_the_kind_follows_is_fixable_from_the_source(self) -> None:
         from conftest import fixable_issue_keys, notice_fixable_kind_error
 

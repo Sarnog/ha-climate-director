@@ -27,6 +27,7 @@ from conftest import (
     fixable_issue_keys,
     notice_fixable_kind_error,
     notice_key_pair_error,
+    notice_title_error,
 )
 
 REPO = Path(__file__).resolve().parents[1]
@@ -355,6 +356,18 @@ class TestTheHassfestKeyPairRule:
     def test_neither_is_an_error(self) -> None:
         error = notice_key_pair_error("bestand", "melding", {})
         assert error is not None and "precies één" in error
+
+    def test_a_notice_with_a_title_passes(self) -> None:
+        assert notice_title_error("bestand", "melding", {"title": "Iets"}) is None
+
+    def test_a_missing_title_is_an_error(self) -> None:
+        error = notice_title_error("bestand", "melding", {"description": "uitleg"})
+        assert error is not None and "title te hebben" in error
+
+    @pytest.mark.parametrize("title", ["", "   ", None, 3])
+    def test_a_title_that_says_nothing_is_an_error(self, title: object) -> None:
+        error = notice_title_error("bestand", "melding", {"title": title})
+        assert error is not None and "niet leeg" in error
 
     def test_the_fixable_cross_check_holds_both_ways(self) -> None:
         fixable = {"fixbare"}

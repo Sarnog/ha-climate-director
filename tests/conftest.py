@@ -556,6 +556,12 @@ def notice_key_pair_error(path_name: str, key: str, block: dict) -> str | None:
     vol.Schema({Required title, Exclusive description/"fixable",
     Exclusive fix_flow/"fixable"}))` — a notice carries exactly one of
     `description` and `fix_flow`, not zero and not two.
+
+    Deze functie dekt het **sleutelpaar** van dat schema. De derde eis,
+    `vol.Required("title")`, staat in `notice_title_error()`.
+
+    This function covers the **key pair** of that schema. Its third
+    requirement, `vol.Required("title")`, lives in `notice_title_error()`.
     """
     has_description = "description" in block
     has_fix_flow = "fix_flow" in block
@@ -567,6 +573,33 @@ def notice_key_pair_error(path_name: str, key: str, block: dict) -> str | None:
     return None
 
 
+def notice_title_error(path_name: str, key: str, block: dict) -> str | None:
+    """Return the title error for one notice block, or `None`.
+
+    Van hassfest komt de **aanwezigheid**: `gen_issues_schema` zet
+    `vol.Required("title")` in het schema, dus een melding zonder titel maakt de
+    baan `Validate with hassfest` rood. Strenger dan hassfest is de eis dat die
+    titel ook werkelijk **iets zegt**: hassfest keurt een lege string goed
+    (`translation_value_validator` verbiedt HTML, URL's en losse spaties, maar
+    niet de lege string), en een melding met een lege titel is in de interface
+    een lege regel.
+
+    From hassfest comes the **presence**: `gen_issues_schema` puts
+    `vol.Required("title")` in the schema, so a notice without a title turns the
+    `Validate with hassfest` job red. Stricter than hassfest is the requirement
+    that the title actually **says something**: hassfest accepts an empty string
+    (`translation_value_validator` forbids HTML, URLs and stray spaces, but not
+    the empty string), and a notice with an empty title is a blank line in the
+    interface.
+    """
+    if "title" not in block:
+        return f"{path_name}: {key}: een melding hoort een title te hebben"
+    title = block["title"]
+    if not isinstance(title, str) or not title.strip():
+        return f"{path_name}: {key}: de title van een melding hoort niet leeg te zijn"
+    return None
+
+
 def notice_fixable_kind_error(
     path_name: str, key: str, block: dict, fixable: set[str]
 ) -> str | None:
@@ -574,17 +607,19 @@ def notice_fixable_kind_error(
 
     De eigen, strengere eis bovenop hassfest: welke van `description` en
     `fix_flow` een melding heeft, volgt uit `is_fixable` in de bron
-    (`fixable_issue_keys()`). hassfest eist die koppeling niet letterlijk — hij
-    sluit alleen een `description` op meldingsniveau uit bij een fixable
-    melding en een `fix_flow` bij een niet-fixable. hassfest in de CI houdt het
-    laatste woord.
+    (`fixable_issue_keys()`). **hassfest kent `is_fixable` helemaal niet**: zijn
+    `Exclusive`-groep sluit `description` en `fix_flow` wederzijds uit ongeacht
+    of de melding oplosbaar is, en hij leest `problems.py` niet. Deze hele
+    functie is dus de strengere helft; hassfest in de CI houdt het laatste
+    woord over de helft die hij wél kent.
 
     This repo's own, stricter requirement on top of hassfest: which of
     `description` and `fix_flow` a notice carries follows from `is_fixable` in
-    the source (`fixable_issue_keys()`). hassfest does not require that link
-    literally — it only excludes a notice-level `description` for a fixable
-    notice and a `fix_flow` for a non-fixable one. hassfest in CI keeps the
-    final word.
+    the source (`fixable_issue_keys()`). **hassfest knows nothing of
+    `is_fixable`**: its `Exclusive` group rules out `description` and `fix_flow`
+    together whether or not the notice is fixable, and it never reads
+    `problems.py`. This whole function is therefore the stricter half; hassfest
+    in CI keeps the final word on the half it does know.
     """
     if key in fixable:
         if "fix_flow" not in block:
