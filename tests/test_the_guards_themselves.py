@@ -30,8 +30,6 @@ from conftest import (
     notice_title_error,
 )
 
-REPO = Path(__file__).resolve().parents[1]
-
 
 def _write_package(
     monkeypatch: pytest.MonkeyPatch,
@@ -469,15 +467,32 @@ class TestTheWalkGuard:
         with pytest.raises(AssertionError, match="unknown screen verzonnen_scherm"):
             await open_screen(_DummyHome(), "verzonnen_scherm")
 
-    def test_the_walk_compares_the_returned_step_id(self) -> None:
-        source = (REPO / "tests" / "test_campaign_editing.py").read_text(encoding="utf-8")
-        assert 'assert result["step_id"] == step' in source, (
-            "open_screen hoort elke menu-stap tegen de gevraagde step_id te houden"
-        )
-        assert 'assert result["step_id"] == screen' in source, (
-            "de doorlooptest hoort de teruggekregen step_id te vergelijken, "
-            "niet alleen te kijken of er iets terugkomt"
-        )
-        assert 'raise AssertionError(f"unknown screen {screen}")' in source, (
-            "een step_id zonder tak in open_screen hoort 'unknown screen ...' te geven"
-        )
+    async def test_the_walk_fails_when_the_navigation_lands_on_another_screen(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Een leugenachtige `open_screen` hoort de doorlooptest rood te maken.
+
+        Dit is de eigenschap waar het schrappen van de dekkingsbewaking (ronde
+        19, V1) op leunt: de doorloop vergelijkt de **teruggekregen** step_id
+        met de gevraagde, en kijkt niet alleen of er íets terugkomt. Hier wordt
+        dat met een gedraaide meting vastgepind in plaats van met een zoekactie
+        in de brontekst — die laatste vorm ging rood zodra iemand dezelfde
+        assertie anders opschreef (ronde 20, B3).
+
+        A lying `open_screen` must turn the walk test red. This is the property
+        the removal of the coverage guard (round 19, V1) leans on: the walk
+        compares the **returned** step id with the requested one, and does not
+        merely check that something came back. It is pinned here with a real
+        measurement instead of a search through the source text — that earlier
+        form went red as soon as anyone wrote the same assertion differently
+        (round 20, B3).
+        """
+        import test_campaign_editing as walk
+
+        async def lying_open_screen(home: object, screen: str):
+            return "flow", {"type": "form", "step_id": "een_ander_scherm"}, None
+
+        monkeypatch.setattr(walk, "open_screen", lying_open_screen)
+
+        with pytest.raises(AssertionError, match="open_screen liep naar"):
+            await walk.TestEveryFormInTheSourceIsWalkedTo().test_every_step_id_in_the_source_opens()
