@@ -589,8 +589,8 @@ Afblazen kan met `climate_director.cancel_precondition`.
 
 - **Een apparaat zelf uitzetten** (bij het apparaat of op de afstandsbediening)
   zet die zone stil. De director zet hem niet twee seconden later weer aan. De
-  zone doet weer mee zodra je hem zelf aanzet, zodra iedereen die thuis is naar
-  bed gaat, of zodra het de volgende dag is.
+  zone doet weer mee zodra je hem zelf aanzet, zodra er iemand thuis komt in een leeg huis,
+  zodra iedereen die thuis is naar bed gaat, of zodra het de volgende dag is (na middernacht).
 - **Een apparaat een paar uur met de hand aanzetten** kan gewoon met een script
   ernaast, mits je die zone zolang met de override aan jezelf teruggeeft. Zonder
   override rekent de director bij de eerstvolgende evaluatie zijn eigen plan
