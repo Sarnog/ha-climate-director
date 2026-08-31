@@ -189,8 +189,6 @@ bij neerslag gelden.
 
 ### Verwarmingssysteem: centraal of per zone
 
-### Verwarmingssysteem: centraal of per zone
-
 | Keuze | Wat het betekent | Zo vul je het in |
 |---|---|---|
 | **Centraal** | Eén warmtebron voor het hele huis. Aanzetten voor één kamer verwarmt de rest mee. Denk aan één slimme thermostaat, met of zonder radiatorknoppen. | Zet **dezelfde** thermostaat als bron onder elke zone |
