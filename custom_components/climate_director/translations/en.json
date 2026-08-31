@@ -299,7 +299,9 @@
           "when_done": "When you are done here",
           "sleep_from": "Sleep sensor counts from",
           "sleep_until": "Sleep sensor counts until",
-          "sleep_days": "Sleep window days"
+          "sleep_days": "Sleep window days",
+          "wake_by": "Wait for this sleeper until",
+          "wake_days": "Days that waiting applies"
         },
         "data_description": {
           "sleep_entity": "Leave empty if this person's sleep is not tracked.",
@@ -310,7 +312,9 @@
           "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
           "sleep_from": "A phone on the charger at three in the afternoon does not mean somebody is turning in. Between these times the sleep sensor counts; outside them a charger is just a charger. Leave both empty to have it count around the clock.",
           "sleep_until": "A phone on the charger at three in the afternoon does not mean somebody is turning in. Between these times the sleep sensor counts; outside them a charger is just a charger. Leave both empty to have it count around the clock.",
-          "sleep_days": "Leave empty for every day. A window running past midnight is anchored on the day it starts, so a Friday 23:00-09:00 window still counts at 07:00 on Saturday."
+          "sleep_days": "Leave empty for every day. A window running past midnight is anchored on the day it starts, so a Friday 23:00-09:00 window still counts at 07:00 on Saturday.",
+          "wake_by": "With somebody up while this resident is still asleep at home, the house waits. Past this time it no longer does: it then follows whoever is up. Leave empty to have this resident hold nobody back.",
+          "wake_days": "Leave empty for every day. A holiday counts as a Saturday."
         }
       },
       "windows": {

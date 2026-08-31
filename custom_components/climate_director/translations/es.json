@@ -299,7 +299,9 @@
           "when_done": "Cuando termines aquí",
           "sleep_from": "El sensor de sueño cuenta desde",
           "sleep_until": "El sensor de sueño cuenta hasta",
-          "sleep_days": "Días de la ventana de sueño"
+          "sleep_days": "Días de la ventana de sueño",
+          "wake_by": "Esperar a esta persona dormida hasta",
+          "wake_days": "Días en los que se espera"
         },
         "data_description": {
           "sleep_entity": "Déjalo vacío si no se sigue el sueño de esta persona.",
@@ -310,7 +312,9 @@
           "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
           "sleep_from": "Un teléfono en el cargador a las tres de la tarde no significa que alguien se acueste. Entre estas horas el sensor de sueño cuenta; fuera de ellas un cargador es solo un cargador. Deja ambas vacías para que valga a todas horas.",
           "sleep_until": "Un teléfono en el cargador a las tres de la tarde no significa que alguien se acueste. Entre estas horas el sensor de sueño cuenta; fuera de ellas un cargador es solo un cargador. Deja ambas vacías para que valga a todas horas.",
-          "sleep_days": "Déjalo vacío para todos los días. Una ventana que cruza la medianoche se ancla en el día en que empieza: una ventana del viernes 23:00-09:00 sigue contando el sábado a las 07:00."
+          "sleep_days": "Déjalo vacío para todos los días. Una ventana que cruza la medianoche se ancla en el día en que empieza: una ventana del viernes 23:00-09:00 sigue contando el sábado a las 07:00.",
+          "wake_by": "Si alguien está levantado mientras este residente sigue durmiendo en casa, la casa espera. Pasada esta hora ya no: entonces sigue a quien esté levantado. Déjalo vacío para que este residente no retenga a nadie.",
+          "wake_days": "Déjalo vacío para todos los días. Un día festivo cuenta como sábado."
         }
       },
       "windows": {

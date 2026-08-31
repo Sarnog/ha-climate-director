@@ -213,6 +213,14 @@ tijdstempel blokkeert direct: opschorten is de onschadelijke richting om fout in
 zitten, en weigeren te handelen op een onbekende leeftijd zou een openstaande kamer
 blijven verwarmen.
 
+De slaappoort kent twee standen. Is er niemand op, dan is dat `EVERYONE_ASLEEP`. Staat er
+wél iemand op terwijl een ander thuis nog slaapt, dan geldt de uiterste opsta-tijd van die
+slaper (`Resident.wake_deadline`): vóór dat tijdstip houdt hij het huis tegen met
+`WAITING_FOR_SLEEPER`, daarna niet meer. Geen uiterste tijd is de stand van vóór die
+instelling — dan opent de eerste die opstaat het huis. De tijd staat met opzet los van het
+rooster: een roostervenster zegt óók wanneer het huis weer uit moet, deze tijd zegt alleen
+tot wanneer je op iemand wacht.
+
 Daarnaast staat hier `house_wide_blocked()`: de apparaten uit
 `DirectorConfig.house_wide_openings` die stil moeten vallen zodra wélke opening in de
 installatie dan ook openstaat. Bewust zónder het `affects()`-filter — deze lijst bestaat
@@ -870,6 +878,14 @@ pass. The room gate still applies there: it is about the room, not about who is 
 house. An opening without a
 timestamp blocks immediately: suspending is the harmless direction to be wrong in, and
 refusing to act on an unknown age would keep heating an open room.
+
+The sleep gate has two states. With nobody up, that is `EVERYONE_ASLEEP`. With somebody up
+while another is still asleep at home, that sleeper's wake deadline
+(`Resident.wake_deadline`) decides: before it they hold the house back with
+`WAITING_FOR_SLEEPER`, after it they no longer do. No deadline is the state from before
+that setting — the first one up then opens the house. The time stands deliberately apart
+from the schedule: a schedule window also says when the house should go off again, this
+time only says how long you wait for somebody.
 
 Alongside that sits `house_wide_blocked()`: the appliances from
 `DirectorConfig.house_wide_openings` that must stand still the moment any opening in the

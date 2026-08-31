@@ -151,14 +151,13 @@ def _household(config: DirectorConfig, world: WorldState) -> Iterator[Reason]:
         at_home = [
             resident for resident in config.residents if world.resident(resident.resident_id).home
         ]
-        if (
-            at_home
-            and gates.require_awake
-            and not any(
+        if at_home and gates.require_awake:
+            if not any(
                 world.resident(resident.resident_id).present_and_awake for resident in at_home
-            )
-        ):
-            yield Reason.EVERYONE_ASLEEP
+            ):
+                yield Reason.EVERYONE_ASLEEP
+            elif any(_still_in_bed(resident, world) for resident in at_home):
+                yield Reason.WAITING_FOR_SLEEPER
         return
 
     # Een leeg huis maakt de twee poorten hieronder betekenisloos: niemand kan
@@ -172,10 +171,20 @@ def _household(config: DirectorConfig, world: WorldState) -> Iterator[Reason]:
         yield Reason.NOBODY_HOME
         return
 
-    if gates.require_awake and not any(
-        _up_and_about(resident, world) for resident in config.residents
-    ):
-        yield Reason.EVERYONE_ASLEEP
+    # Eerst: is er überhaupt iemand op. Zo niet, dan is dát de reden, en de
+    # uitslaper hieronder noemen zou een gevolg voor een oorzaak aanzien.
+    # Staat er wél iemand op, dan telt wie nog ligt: het huis wacht op de
+    # laatste slaper tot diens uiterste tijd, en daarna niet meer.
+    #
+    # First: is anybody up at all. If not, that is the reason, and naming the
+    # late riser below would mistake a consequence for a cause. With somebody
+    # up, whoever is still in bed counts: the house waits for the last sleeper
+    # until their deadline, and no longer than that.
+    if gates.require_awake:
+        if not any(_up_and_about(resident, world) for resident in config.residents):
+            yield Reason.EVERYONE_ASLEEP
+        elif any(_still_in_bed(resident, world) for resident in config.residents):
+            yield Reason.WAITING_FOR_SLEEPER
 
     if gates.require_schedule and not _schedule_open(config, world):
         yield Reason.OUTSIDE_SCHEDULE
@@ -220,6 +229,32 @@ def asleep(resident: Resident, world: WorldState) -> bool:
 def _up_and_about(resident: Resident, world: WorldState) -> bool:
     """Return whether this resident is home and not asleep."""
     return world.resident(resident.resident_id).home and not asleep(resident, world)
+
+
+def _still_in_bed(resident: Resident, world: WorldState) -> bool:
+    """Return whether this sleeper still holds the house back.
+
+    Drie dingen moeten tegelijk waar zijn: thuis, slapend, en vóór de uiterste
+    tijd van vandaag. Wie geen uiterste tijd heeft ingevuld houdt nooit iemand
+    tegen - dat is de stand van vóór deze instelling, en die blijft voor elke
+    installatie die er niets mee doet precies zo.
+
+    Wie weg is telt niet mee: slapen bij iemand anders is geen reden om dit
+    huis koud te laten. Dat is dezelfde regel als bij de hand aan het apparaat.
+
+    Three things must hold at once: home, asleep, and before today's deadline.
+    Whoever filled in no deadline never holds anybody back - that is the state
+    from before this setting, and it stays exactly that for every installation
+    not using it.
+
+    Somebody away does not count: sleeping at somebody else's place is no
+    reason to leave this house cold. That is the same rule as for the hand at
+    the appliance.
+    """
+    if not world.resident(resident.resident_id).home or not asleep(resident, world):
+        return False
+    until = resident.waits_until(world.now.weekday(), holiday=world.holiday_mode)
+    return until is not None and world.now.time() < until
 
 
 def _guests_carry_the_house(config: DirectorConfig, world: WorldState) -> bool:

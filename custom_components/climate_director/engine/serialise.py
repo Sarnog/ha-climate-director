@@ -47,6 +47,7 @@ from .models import (
     Source,
     SourceRole,
     TimeWindow,
+    WakeDeadline,
     Zone,
     ZoneGate,
 )
@@ -225,7 +226,28 @@ def _resident(raw: Mapping[str, Any]) -> Resident:
         sleep_window=_sleep_window(
             raw.get("sleep_window") if isinstance(raw.get("sleep_window"), dict) else {}
         ),
+        wake_deadline=_wake_deadline(
+            raw.get("wake_deadline") if isinstance(raw.get("wake_deadline"), dict) else {}
+        ),
     )
+
+
+def _wake_deadline(raw: dict[str, Any]) -> WakeDeadline | None:
+    """Return the wake deadline, or `None` when no time was filled in.
+
+    Geen tijd betekent: deze bewoner houdt niemand tegen. Een half ingevuld
+    veld - wel dagen, geen tijd - is dus geen uiterste tijd, en niet een
+    uiterste tijd om middernacht: dat laatste zou het huis stilzetten op een
+    uur dat de gebruiker nooit koos.
+
+    No time means: this resident holds nobody back. A half-filled field - days
+    but no time - is therefore no deadline, rather than a deadline at midnight:
+    that last would hold the house on an hour the user never picked.
+    """
+    at = raw.get("at")
+    if not at:
+        return None
+    return WakeDeadline(at=_time(at, time(0, 0)), weekdays=_weekdays(raw.get("weekdays")))
 
 
 def _time_window(raw: Mapping[str, Any]) -> TimeWindow:
@@ -459,6 +481,18 @@ def _resident_to_dict(resident: Resident) -> dict[str, Any]:
                     None
                     if resident.sleep_window.weekdays is None
                     else sorted(resident.sleep_window.weekdays)
+                ),
+            }
+        ),
+        "wake_deadline": (
+            None
+            if resident.wake_deadline is None
+            else {
+                "at": resident.wake_deadline.at.isoformat(),
+                "weekdays": (
+                    None
+                    if resident.wake_deadline.weekdays is None
+                    else sorted(resident.wake_deadline.weekdays)
                 ),
             }
         ),

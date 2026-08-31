@@ -17,6 +17,7 @@ from custom_components.climate_director.engine import (
     Season,
     SourceRole,
     TimeWindow,
+    WakeDeadline,
     validate,
 )
 from custom_components.climate_director.engine.models import SeasonSource
@@ -74,6 +75,39 @@ class TestRoundTrip:
             ),
         )
         assert config_from_dict(config_to_dict(config)) == config
+
+    def test_a_wake_deadline_round_trips_with_its_days(self) -> None:
+        """De uiterste opsta-tijd hoort bij de bewoner en moet blijven staan.
+
+        Valt hij bij het opslaan weg, dan wacht het huis nergens meer op en
+        begint het weer zodra de eerste opstaat - stil, en pas in het weekend
+        te merken.
+
+        The wake deadline belongs to the resident and has to survive. Dropped on
+        save, the house waits for nobody any more and starts the moment the first
+        one is up - quietly, and only noticeable at the weekend.
+        """
+        original = house()
+        config = replace(
+            original,
+            residents=(
+                replace(
+                    original.residents[0],
+                    wake_deadline=WakeDeadline(at=time(11, 0), weekdays=frozenset({5, 6})),
+                ),
+                *original.residents[1:],
+            ),
+        )
+        assert config_from_dict(config_to_dict(config)) == config
+
+    def test_a_resident_without_a_deadline_stays_without_one(self) -> None:
+        """Geen tijd is geen middernacht: dat zou het huis om 00:00 stilzetten.
+
+        No time is not midnight: that would hold the house at 00:00.
+        """
+        stored = config_to_dict(house())
+        stored["residents"][0]["wake_deadline"] = {"at": "", "weekdays": [5, 6]}
+        assert config_from_dict(stored).residents[0].wake_deadline is None
 
     def test_the_stored_form_is_plain_json_types(self) -> None:
         """A config entry stores JSON; a timedelta or an enum would not survive."""

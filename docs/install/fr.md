@@ -72,7 +72,7 @@ Director sait quelles unités vont ensemble et résout ce conflit pour vous.
 | `person.*` ou `device_tracker.*` par résident | oui, dès que vous configurez des résidents | sinon ce résident ne peut jamais être présent |
 | Un capteur de sommeil par résident | non | sans lui, personne ne compte jamais comme endormi |
 | `binary_sensor.*` présence par zone | seulement si une zone fonctionne sur *la pièce elle-même* | c'est alors la seule porte de la zone |
-| `binary_sensor.*` porte ou fenêtre | non | suspend les zones liées tant qu'il est ouvert |
+| `binary_sensor.*`, `cover.*` ou `sensor.*` porte, fenêtre ou velux | non | suspend les zones liées tant qu'il est ouvert |
 | `calendar.*` | non | active le programme vacances tout seul ; ne fonctionne qu'avec un mot-clé |
 | Une entité de saison | non | seulement si vous ne voulez pas déduire la saison du mois |
 
@@ -83,10 +83,16 @@ interrupteurs et réglages.
 n'avez rien à convertir : les mesures et les consignes s'affichent dans l'unité
 que vous avez configurée dans Home Assistant.
 
+Une entité qui annonce sa propre unité est lue dans cette unité — un capteur via
+`unit_of_measurement`, une source météo via `temperature_unit`. C'est exactement
+ce qu'il faut pour un capteur sans `device_class: temperature` : celui-là, Home
+Assistant ne le convertit pas lui-même.
+
 ## Étape 1 — Installation
 
 **Version minimale :** Home Assistant **2025.3** ou plus récent. L'intégration
-ajoute ses entités via une API disponible depuis 2025.3.
+ajoute ses entités via `AddConfigEntryEntitiesCallback`, une API disponible
+depuis 2025.3.
 
 **Via HACS** (recommandé) :
 
@@ -163,7 +169,6 @@ le menu principal.
 | **L'emploi du temps d'un résident doit être ouvert** | activé = la maison attend la première fenêtre d'emploi du temps ; désactivé = la présence seule décide |
 | **Calendriers de vacances** | quels calendriers peuvent annoncer des vacances ; plusieurs autorisés |
 | **Mot qui marque des vacances** | le mot-clé que doit porter un événement ; vide = calendriers ignorés |
-| **Préchauffage de / jusqu'à** | la fenêtre dans laquelle une demande de préchauffage compte ; par défaut 06:00–23:00 |
 | **Durée de préchauffage** | le plafond d'une seule demande ; par défaut 120 minutes |
 | **Mode invités de / jusqu'à** | la fenêtre où le mode invités s'applique ; les deux vides = toute la journée |
 | **Signaler une zone bloquée après** | après combien de minutes d'attente une zone compte comme bloquée ; 0 éteint le capteur |
@@ -246,9 +251,10 @@ degré de bande est un bon début.
 
 ### Ce que l'écran refuse
 
-Trois combinaisons sont refusées à l'enregistrement, car elles produisent une
-zone qui existe mais ne fait jamais rien :
+Quatre choses sont refusées à l'enregistrement, car chacune produit une zone
+qui existe mais ne fait jamais rien :
 
+- un **nom vide** — le nom détermine l'identifiant interne d'une nouvelle zone ;
 - une **cible du mauvais côté du point de démarrage** — l'appareil reçoit alors
   une température pour laquelle il n'a rien à faire ;
 - un **refroidissement qui démarre au niveau ou sous le point où le chauffage
@@ -339,6 +345,18 @@ extérieure. Si chaque unité a la sienne, laissez vide.
 | **Demande** | l'écart le plus grand à la consigne gagne |
 | **Saison** | la saison dicte la fonction ; tout ce qui va dans l'autre sens s'efface |
 
+### La priorité, depuis le circuit
+
+Enregistrez un circuit et vous arrivez sur **Priorités sur ce circuit** : les
+zones présentes sur cette unité extérieure, dans l'ordre où elles gagnent
+actuellement, avec leur numéro derrière. Choisissez-en une pour changer sa
+priorité.
+
+C'est le **même champ** que *Priorité sur une unité extérieure partagée* sur
+l'écran de zone — deux entrées, un seul réglage, les deux ne peuvent donc jamais
+se contredire. Ici, vous voyez simplement tout de suite qui s'oppose à qui. Deux
+zones d'un même circuit ne peuvent pas partager un numéro ; l'écran le refuse.
+
 ## Étape 7 — Sources de chaleur partagées
 
 Une chaudière ou pompe à chaleur sur laquelle plusieurs pièces tirent via leurs
@@ -401,6 +419,11 @@ deux :
 
 Sans fenêtre réglée, le frein n'agit pas.
 
+Chaque plage porte en outre une case **Ceci est une plage de vacances**. Une
+telle plage ne s'applique que lorsque le planning de vacances est actif, et
+remplace alors les plages ordinaires ; ses jours de la semaine sont ignorés.
+N'en définissez aucune et un jour de vacances compte comme un samedi.
+
 ## Étape 10 — Résidents
 
 Laissez vide pour un bâtiment où personne n'est suivi ; les portes de présence
@@ -414,6 +437,31 @@ sont alors ignorées au lieu de tout bloquer pour toujours.
 | **État signifiant endormi** | l'état que le capteur de sommeil rapporte pendant le sommeil |
 | **Le capteur de sommeil compte de / jusqu'à** | les heures où ce capteur signifie quelque chose ; les deux vides = toute la journée |
 | **Jours de la fenêtre de sommeil** | les jours où cette fenêtre s'applique ; vide = tous les jours |
+| **Attendre ce dormeur jusqu'à** | jusqu'à quelle heure cet occupant retient la maison pendant son sommeil ; vide = il ne retient personne |
+| **Jours où l'attente s'applique** | les jours où cette heure s'applique ; vide = tous les jours |
+
+### Attendre le dernier dormeur
+
+Sans heure limite, la maison démarre dès que le premier occupant est levé. Avec
+une heure, la maison attend : si quelqu'un est levé alors que cet occupant dort
+encore à la maison, rien ne se passe. Passé l'heure indiquée, l'attente cesse et
+la maison suit celles et ceux qui sont levés.
+
+Deux occupants qui indiquent tous deux 11:00 le samedi et le dimanche obtiennent
+donc : l'un est levé à 10:00 et rien ne se passe ; si l'autre se réveille à
+10:30, cela démarre à 10:30 ; s'il dort encore, cela démarre à 11:00. Cela
+fonctionne dans les deux sens - peu importe lequel des deux fait la grasse
+matinée.
+
+C'est indépendant de l'horaire. Un horaire dit aussi quand la maison doit se
+*couper* ; cette heure dit seulement quand il n'est plus nécessaire d'attendre
+quelqu'un. Tant que tous les présents dorment, la maison reste éteinte - c'est
+la porte du sommeil, pas cette heure. Un jour férié compte comme un samedi.
+
+Attention à la fenêtre de sommeil : si l'heure limite tombe en dehors, cet
+occupant n'est de toute façon plus considéré comme endormi à ce moment-là et ne
+retient personne. Faites donc courir la fenêtre de sommeil au-delà de l'heure
+limite.
 
 ### Emplois du temps
 
@@ -446,9 +494,13 @@ Une ouverture restée ouverte assez longtemps suspend les zones concernées.
 
 | Réglage | Ce qu'il fait |
 |---|---|
-| **Capteur** | le contact de porte ou de fenêtre ; ouvert compte comme `on` |
+| **Capteur** | le contact de porte, de fenêtre ou de velux ; un `binary_sensor.*`, `cover.*` ou `sensor.*` |
+| **État qui signifie ouvert** | en général `on` pour un contact de fenêtre, `open` pour un velux ou un volet ; `on` par défaut |
 | **Zones concernées** | vide = toute l'installation |
 | **Délai avant suspension** | vide ou 0 = dès l'ouverture |
+
+Choisissez `open` comme état ouvert et `opening` et `closing` comptent eux aussi
+comme ouverts : un volet en mouvement n'est pas fermé.
 
 **Un appareil partagé suit la demande, pas le silence.** Lorsque la même
 chaudière figure comme source sous plusieurs zones, elle ne s'arrête pas dès
@@ -508,6 +560,12 @@ Un appareil par installation, avec en dessous :
 | `number.*_<zone>_priority` | la préséance de cette zone ; réglable aussi depuis une automatisation |
 | `number.*_pre_conditioning_duration` | combien de temps dure un appui sur un bouton de préchauffage |
 | `button.*_<zone>_pre_condition` | préchauffe ou pré-refroidit cette zone |
+| `select.*_season` | règle la saison à la main sur Automatique, Été ou Hiver |
+
+Les noms de ces entités sont traduits, et Home Assistant déduit l'identifiant
+d'entité du nom. Si votre Home Assistant est dans une autre langue, elles s'y
+appellent autrement ; cherchez alors le nom tel qu'il apparaît dans
+l'interface.
 
 Il existe aussi un export de diagnostic téléchargeable avec la configuration,
 le dernier instantané lu et le dernier plan.
@@ -515,7 +573,9 @@ le dernier instantané lu et le dernier plan.
 ## Les interrupteurs et boutons
 
 - **Interrupteur principal** (`switch.*_director`) : éteint = le directeur ne
-  fait rien du tout.
+  fait rien du tout. Il lâche tout et n'envoie plus rien — pas même un arrêt. Ce
+  qui tourne à ce moment-là continue donc simplement ; si vous voulez tout
+  éteindre, éteignez-le vous-même.
 - **Mode invités** (`switch.*_guest_mode`) : quelqu'un de non suivi loge là,
   donc « maison vide » ne dit rien. Le sommeil des présents s'applique toujours,
   et hors de la fenêtre invités, les portes ordinaires reprennent le relais.
@@ -585,13 +645,14 @@ data:
   ignore_openings: true
 ```
 
-Deux limites impossibles à oublier :
+Une seule limite impossible à oublier : **cela expire tout seul.** Demandez plus
+long que le maximum configuré et votre demande est raccourcie. Ne donner aucune
+durée donne le maximum ; zéro ou moins est refusé, car ce n'est pas une demande
+mais une faute de frappe.
 
-- **Cela expire tout seul.** Demandez plus long que le maximum configuré et
-  votre demande est raccourcie. Ne donner aucune durée donne le maximum ; zéro
-  ou moins est refusé, car ce n'est pas une demande mais une faute de frappe.
-- **Cela ne compte que dans la fenêtre** (06:00–23:00 par défaut). En dehors,
-  une demande ne compte pas.
+Une demande passe toujours en premier, à n'importe quelle heure. Seule une porte
+ouverte demande confirmation : sans *Faites-le quand même*, la porte refuse la
+demande.
 
 Annulez avec `climate_director.cancel_precondition`.
 
@@ -599,8 +660,9 @@ Annulez avec `climate_director.cancel_precondition`.
 
 - **Éteindre un appareil vous-même** (sur l'appareil ou la télécommande) met la
   zone en silence. Le directeur ne le rallume pas deux secondes plus tard. La
-  zone reprend dès que vous la rallumez, dès que tous les présents vont se
-  coucher, ou dès le lendemain.
+  zone reprend dès que vous la rallumez, dès que quelqu'un rentre dans une
+  maison vide, dès que tous les présents vont se coucher, ou dès le lendemain
+  (après minuit).
 - **Allumer un appareil à la main pour quelques heures** fonctionne avec un
   script à côté, à condition de vous rendre la zone avec l'override pendant la
   durée. Sans override, le directeur recalcule son propre plan à la prochaine
@@ -688,6 +750,12 @@ automatisation repose sur cet événement.
   joignable, s'il accepte le mode, et si autre chose le remet en place — un
   programme de thermostat ou une autre automatisation. En mode fantôme cet avis
   n'apparaît jamais : rien n'y est exécuté, volontairement.
+- **Un état sauvegardé mis de côté** se signale lui aussi sous *Réparations*.
+  Ce fichier contient les demandes de préchauffage en cours et les appareils que
+  vous avez éteints à la main. S'il est illisible, il est renommé et le
+  directeur repart d'un état vide : ces demandes et extinctions sont perdues, le
+  reste de votre installation non. Pour les récupérer, restaurez le fichier
+  depuis une sauvegarde et rechargez l'intégration.
 - **Le diagnostic** (téléchargeable sur l'intégration) contient la
   configuration, le dernier instantané lu et le dernier plan. Avec ces trois
   éléments, toute décision est exactement reproductible.

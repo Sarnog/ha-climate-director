@@ -72,7 +72,7 @@ for you.
 | `person.*` or `device_tracker.*` per resident | yes, once you configure residents | otherwise that resident can never be home |
 | A sleep sensor per resident | no | without one nobody ever counts as asleep |
 | `binary_sensor.*` presence per zone | only when a zone runs on *the room itself* | then it is the only gate the zone has |
-| `binary_sensor.*` door or window | no | suspends the attached zones while it is open |
+| `binary_sensor.*`, `cover.*` or `sensor.*` door, window or skylight | no | suspends the attached zones while it is open |
 | `calendar.*` | no | switches the holiday schedule on by itself; works only with a keyword |
 | A season entity | no | only if you do not want the season derived from the month |
 
@@ -82,6 +82,11 @@ switches and controls itself.
 **Units:** the integration follows Home Assistant's unit system. You need to
 convert nothing: readings and setpoints appear in the unit you configured in
 Home Assistant.
+
+An entity that names its own unit is read in that unit — a sensor through
+`unit_of_measurement`, a weather source through `temperature_unit`. That is
+exactly what you need for a sensor without `device_class: temperature`: Home
+Assistant does not convert that one itself.
 
 ## Step 1 — Installing
 
@@ -239,9 +244,10 @@ is a sensible start.
 
 ### What the screen refuses
 
-Three combinations are refused on saving, because they produce a zone that is
-there but never does anything:
+Four things are refused on saving, because each produces a zone that is there
+but never does anything:
 
+- an **empty name** — the name settles the internal id of a new zone;
 - a **target on the wrong side of the start point** — the appliance is then set
   to a temperature it need do nothing for;
 - **cooling that starts at or below where heating starts** — the two then ask
@@ -306,11 +312,6 @@ once under *Repairs*. Confirm the notice and it stays away — across restarts
 too. If the zone later gains a new hand-operated duty, one fresh notice
 follows.
 
-If a duty can only be done by such an appliance, the integration reports that
-once under *Repairs*. Confirm the notice and it stays away — across restarts
-too. If the zone later gains a new hand-operated duty, one fresh notice
-follows.
-
 ## Step 6 — Air conditioning circuits
 
 Only needed when indoor units share an outdoor unit. If every unit has its own,
@@ -336,6 +337,17 @@ leave this empty.
 | **First come** | the duty already running keeps the circuit; a new request waits |
 | **Demand** | the largest deviation from the setpoint wins |
 | **Season** | the season dictates the duty; anything opposing it stands down |
+
+### Precedence, from the circuit
+
+Save a circuit and you land on **Priorities on this circuit**: the zones sitting
+on this outdoor unit, in the order they currently win in, with their number
+behind them. Pick one to change its precedence.
+
+That is the **same field** as *Precedence on a shared outdoor unit* on the zone
+screen — two ways in, one setting, so the two can never disagree. Here you
+simply see at once who stands against whom. Two zones on one circuit may not
+share a number; the screen refuses that.
 
 ## Step 7 — Shared heat sources
 
@@ -395,6 +407,11 @@ weekdays and at eleven at weekends sets two:
 
 Set no windows and the brake does not apply.
 
+Every window also carries a **This is a holiday window** tick. Such a window
+applies only while the holiday schedule is on, and then replaces the ordinary
+ones; its days of the week are ignored. Set none at all and a holiday counts as
+a Saturday.
+
 ## Step 10 — Residents
 
 Leave this empty for a building where nobody is tracked; the presence gates are
@@ -408,6 +425,29 @@ then skipped instead of blocking everything forever.
 | **State meaning asleep** | the state the sleep sensor reports when asleep |
 | **Sleep sensor counts from / until** | the hours in which that sensor means anything; both empty = around the clock |
 | **Sleep window days** | the days that window applies on; empty = every day |
+| **Wait for this sleeper until** | how late this resident holds the house back while asleep; empty = they hold nobody back |
+| **Days that waiting applies** | the days that deadline applies on; empty = every day |
+
+### Waiting for the last sleeper
+
+Without a deadline the house starts the moment the first resident is up. Fill
+one in and the house waits: with somebody up while this resident is still asleep
+at home, nothing happens. Past the time you filled in the waiting lapses, and
+the house follows whoever is up.
+
+Two residents who both fill in 11:00 for Saturday and Sunday therefore get: one
+is up at 10:00 and nothing happens; if the other wakes at 10:30 it starts at
+10:30; if they sleep on it starts at 11:00. It works both ways round - which of
+the two sleeps in makes no difference.
+
+This stands apart from the schedule. A schedule also says when the house should
+go *off* again; this time only says when you need no longer wait for somebody.
+While everybody home is asleep the house stays off - that is the sleep gate, not
+this time. A holiday counts as a Saturday.
+
+Mind the sleep window: with the deadline falling outside it, this resident no
+longer counts as asleep at that moment anyway and holds nobody back. So let the
+sleep window run on past the deadline.
 
 ### Schedules
 
@@ -438,9 +478,13 @@ An opening standing open long enough suspends the zones it affects.
 
 | Setting | What it does |
 |---|---|
-| **Sensor** | the door or window contact; open counts as `on` |
+| **Sensor** | the door, window or skylight contact; a `binary_sensor.*`, `cover.*` or `sensor.*` |
+| **State that means open** | usually `on` for a window contact, `open` for a skylight or shutter; `on` by default |
 | **Zones affected** | empty = the whole installation |
 | **Delay before suspending** | empty or 0 = the moment it opens |
+
+Pick `open` as the open state and `opening` and `closing` count as open too: a
+shutter on its way is not shut.
 
 **A shared appliance follows demand, not silence.** When the same boiler sits
 as a source under several zones, it does not stop the moment one of those zones
@@ -497,6 +541,11 @@ One device per installation, holding:
 | `number.*_<zone>_priority` | this zone's precedence; settable from an automation too |
 | `number.*_pre_conditioning_duration` | how long one press of a pre-conditioning button lasts |
 | `button.*_<zone>_pre_condition` | pre-conditions this zone |
+| `select.*_season` | sets the season by hand to Automatic, Summer or Winter |
+
+The names of these entities are translated, and Home Assistant derives the
+entity id from the name. With Home Assistant in another language they are
+called something else there; look for the name as it appears in the interface.
 
 There is also a downloadable diagnostics export with the configuration, the
 last snapshot read and the last plan.
@@ -504,7 +553,9 @@ last snapshot read and the last plan.
 ## The switches and buttons
 
 - **Master switch** (`switch.*_director`): off = the director does nothing at
-  all.
+  all. It lets go of everything and sends nothing — not even an off command.
+  Whatever is running at that moment simply keeps running; if you want it all
+  off, switch it off yourself.
 - **Guest mode** (`switch.*_guest_mode`): somebody untracked is staying, so
   "house empty" says nothing. Sleep of those who are home still applies, and
   outside the guest window the ordinary gates take over.
@@ -587,8 +638,9 @@ Call it off with `climate_director.cancel_precondition`.
 
 - **Switching an appliance off yourself** (at the appliance or on the remote)
   silences that zone. The director does not put it back on two seconds later.
-  The zone takes part again once you switch it back on, once everybody who is
-  home turns in, or once it is the next day.
+  The zone takes part again once you switch it back on, once somebody comes
+  home to an empty house, once everybody who is home turns in, or once it is
+  the next day (past midnight).
 - **Switching an appliance on by hand for a few hours** works with a script
   beside it, as long as you hand that zone back to yourself with the override
   for the duration. Without the override the director works out its own plan at
@@ -671,6 +723,12 @@ automation stands on that event.
   appliance is reachable, whether it accepts the mode, and whether something
   else is putting it back — a thermostat schedule or another automation. In
   shadow mode this notice never appears: nothing is executed there on purpose.
+- **A saved state that had to be set aside** reports itself under *Repairs*
+  too. That file holds the running pre-conditioning requests and the appliances
+  you switched off by hand. When it turns out unreadable it is renamed and the
+  director starts with an empty state: those requests and switch-offs are gone,
+  the rest of your installation is not. To get them back, restore the file from
+  a backup and reload the integration.
 - **The diagnostics** (downloadable at the integration) hold the configuration,
   the last snapshot read and the last plan. With those three, any decision is
   exactly reproducible.

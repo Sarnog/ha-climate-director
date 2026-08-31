@@ -1377,6 +1377,8 @@ class TestEveryScreenSurvivesItsNeighbour:
                 "name": "Danny",
                 "presence_entity": "person.danny",
                 "sleep_state": "on",
+                "wake_by": "11:00:00",
+                "wake_days": ["5", "6"],
                 "delete": False,
                 "when_done": "keep",
             },
@@ -1389,6 +1391,7 @@ class TestEveryScreenSurvivesItsNeighbour:
     @staticmethod
     def _check_resident(stored: dict[str, Any]) -> None:
         assert stored["residents"][0]["name"] == "Danny"
+        assert stored["residents"][0]["wake_deadline"] == {"at": "11:00:00", "weekdays": [5, 6]}
 
     async def _fill_opening(self, flow: Any, flow_id: str) -> dict[str, Any]:
         result = await flow.async_configure(flow_id, {"opening": "add_new"})
@@ -1740,6 +1743,8 @@ class TestDiscardArrivesOnEveryScreen:
             "sleep_from": "22:00:00",
             "sleep_until": "07:00:00",
             "sleep_days": ["0", "1"],
+            "wake_by": "11:00:00",
+            "wake_days": ["5", "6"],
         },
         "window": {"weekdays": ["0", "1"]},
         "opening": {

@@ -420,6 +420,46 @@ class TimeWindow:
 
 
 @dataclass(frozen=True, slots=True)
+class WakeDeadline:
+    """The hour from which one resident's sleep stops holding the house back.
+
+    Een huis met twee slapers hoort niet te beginnen zodra de eerste opstaat:
+    wie nog ligt, ligt er nog. Maar eindeloos wachten is net zo fout - dan
+    houdt één uitslaper de rest van het huis de hele dag koud. Deze tijd is de
+    uiterste: daarna telt de slaper niet meer mee, en gaat het huis mee met wie
+    wél op is.
+
+    Los van het rooster, met opzet. Een roostervenster zegt wanneer iemand
+    klimaat wil en zet het aan het eind ook weer uit; deze tijd zegt alleen
+    wanneer je niet langer op hem hoeft te wachten. Ze in één getal vangen zou
+    de vroegste starttijd en de uiterste wachttijd aan elkaar knopen, en dat
+    zijn twee verschillende dingen.
+
+    A house with two sleepers should not start the moment the first one is up:
+    whoever is still in bed is still in bed. But waiting forever is just as
+    wrong - one late riser would then keep the rest of the house cold all day.
+    This time is the outside limit: past it the sleeper no longer counts, and
+    the house follows whoever is up.
+
+    Deliberately apart from the schedule. A schedule window says when somebody
+    wants climate control and switches it off again at its end; this time only
+    says when you need no longer wait for them. Catching both in one number
+    would tie the earliest start to the longest wait, and those are two
+    different things.
+    """
+
+    at: time
+    """The moment sleep stops counting. Before it a sleeper holds the house."""
+
+    weekdays: frozenset[int] | None = None
+    """`datetime.weekday()` numbers (Monday is 0). `None` means every day."""
+
+    def applies_on(self, weekday: int) -> bool:
+        """Return whether this deadline is set for that weekday."""
+        return self.weekdays is None or weekday in self.weekdays
+
+
+@dataclass(frozen=True, slots=True)
 class Resident:
     """Someone whose presence and sleep gate the installation."""
 
@@ -441,6 +481,18 @@ class Resident:
 
     windows: tuple[TimeWindow, ...] = ()
     """Times this resident wants climate control. Empty means always."""
+
+    wake_deadline: WakeDeadline | None = None
+    """Until when this resident's sleep holds the house back. `None` means never.
+
+    Leeg laten houdt het gedrag zoals het was: wie slaapt houdt niemand tegen,
+    en de eerste die opstaat zet het huis aan. Pas wie hier een tijd invult
+    vraagt om wachten - en zegt er in dezelfde adem bij tot hoe laat.
+
+    Leaving it empty keeps behaviour as it was: a sleeper holds nobody back, and
+    the first one up sets the house going. Only whoever fills in a time here is
+    asking to be waited for - and says in the same breath until when.
+    """
 
     presence_entity: str = ""
     """Entity saying whether this person is home, usually a `person`."""
@@ -501,6 +553,31 @@ class Resident:
         which is not a schedule but a lock.
         """
         return bool(self.windows_for(holiday=holiday, weekday=weekday))
+
+    def waits_until(self, weekday: int, *, holiday: bool = False) -> time | None:
+        """Return the time this resident's sleep stops holding the house back.
+
+        `None` betekent: deze bewoner houdt vandaag niemand tegen. Dat is de
+        stand zonder instelling, en ook de stand op een dag die niet in de
+        dagen van de uiterste tijd staat - wie alleen in het weekend uitslaapt,
+        houdt het huis doordeweeks niet op.
+
+        Een vakantiedag telt als zaterdag, net als bij de roosters, zodat een
+        weekendafspraak vanzelf ook op een vrije dag geldt.
+
+        `None` means: this resident holds nobody back today. That is the state
+        without the setting, and the state on a day outside the deadline's own
+        days - whoever sleeps in at the weekend only does not hold the house up
+        on a working day.
+
+        A holiday counts as a Saturday, exactly as the schedules do, so a
+        weekend arrangement covers a day off on its own.
+        """
+        deadline = self.wake_deadline
+        if deadline is None:
+            return None
+        day = HOLIDAY_WEEKDAY if holiday else weekday
+        return deadline.at if deadline.applies_on(day) else None
 
     def wants_climate_at(self, moment: time, weekday: int, *, holiday: bool = False) -> bool:
         """Return whether this resident's schedule is open at that moment."""

@@ -1622,6 +1622,18 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     # sensor off for good.
                     "weekdays": ([int(day) for day in user_input.get("sleep_days") or ()] or None),
                 },
+                # Geen tijd betekent geen uiterste tijd: dan houdt deze
+                # slaper niemand tegen, precies zoals vóór deze instelling.
+                # De dagen blijven wel staan, zodat een tijd terugzetten niet
+                # ook de dagen opnieuw vraagt.
+                #
+                # No time means no deadline: this sleeper then holds nobody
+                # back, exactly as before this setting. The days are kept, so
+                # putting a time back does not ask for the days again.
+                "wake_deadline": {
+                    "at": user_input.get("wake_by") or "",
+                    "weekdays": ([int(day) for day in user_input.get("wake_days") or ()] or None),
+                },
                 # De roosters van deze bewoner blijven staan; die worden in de
                 # volgende stap bewerkt, niet in dit formulier.
                 #
@@ -1638,6 +1650,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
 
         stored_days = (current.get("sleep_window") or {}).get("weekdays")
         sleep_days = None if stored_days is None else [str(day) for day in stored_days]
+        stored_wake_days = (current.get("wake_deadline") or {}).get("weekdays")
+        wake_days = None if stored_wake_days is None else [str(day) for day in stored_wake_days]
         return self.async_show_form(
             step_id="resident",
             errors=errors,
@@ -1676,6 +1690,25 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Optional(
                         "sleep_days",
                         description={"suggested_value": sleep_days},
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[
+                                selector.SelectOptionDict(value=str(number), label=label)
+                                for number, label in enumerate(_WEEKDAYS)
+                            ],
+                            multiple=True,
+                            mode=selector.SelectSelectorMode.LIST,
+                        )
+                    ),
+                    vol.Optional(
+                        "wake_by",
+                        description={
+                            "suggested_value": (current.get("wake_deadline") or {}).get("at")
+                        },
+                    ): _TIME,
+                    vol.Optional(
+                        "wake_days",
+                        description={"suggested_value": wake_days},
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=[

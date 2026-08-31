@@ -299,7 +299,9 @@
           "when_done": "Quand vous avez terminé ici",
           "sleep_from": "Le capteur de sommeil compte à partir de",
           "sleep_until": "Le capteur de sommeil compte jusqu'à",
-          "sleep_days": "Jours de la fenêtre de sommeil"
+          "sleep_days": "Jours de la fenêtre de sommeil",
+          "wake_by": "Attendre ce dormeur jusqu'à",
+          "wake_days": "Jours où l'attente s'applique"
         },
         "data_description": {
           "sleep_entity": "Laissez vide si le sommeil de cette personne n'est pas suivi.",
@@ -310,7 +312,9 @@
           "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
           "sleep_from": "Un téléphone sur le chargeur à trois heures de l'après-midi ne veut pas dire que quelqu'un se couche. Entre ces heures le capteur de sommeil compte ; en dehors, un chargeur n'est qu'un chargeur. Laisser les deux vides pour qu'il vaille en permanence.",
           "sleep_until": "Un téléphone sur le chargeur à trois heures de l'après-midi ne veut pas dire que quelqu'un se couche. Entre ces heures le capteur de sommeil compte ; en dehors, un chargeur n'est qu'un chargeur. Laisser les deux vides pour qu'il vaille en permanence.",
-          "sleep_days": "Laissez vide pour tous les jours. Une fenêtre qui passe minuit est rattachée à son jour de début : une fenêtre du vendredi 23:00-09:00 compte encore à 07:00 le samedi."
+          "sleep_days": "Laissez vide pour tous les jours. Une fenêtre qui passe minuit est rattachée à son jour de début : une fenêtre du vendredi 23:00-09:00 compte encore à 07:00 le samedi.",
+          "wake_by": "Si quelqu'un est levé alors que cet occupant dort encore à la maison, la maison attend. Passé cette heure, elle n'attend plus : elle suit alors celles et ceux qui sont levés. Laissez vide pour que cet occupant ne retienne personne.",
+          "wake_days": "Laissez vide pour tous les jours. Un jour férié compte comme un samedi."
         }
       },
       "windows": {

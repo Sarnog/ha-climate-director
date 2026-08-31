@@ -72,7 +72,7 @@ und löst diesen Konflikt für dich.
 | `person.*` oder `device_tracker.*` pro Bewohner | ja, sobald du Bewohner anlegst | sonst kann dieser Bewohner nie zu Hause sein |
 | Ein Schlafsensor pro Bewohner | nein | ohne ihn zählt niemand jemals als schlafend |
 | `binary_sensor.*` Anwesenheit pro Zone | nur wenn eine Zone auf *den Raum selbst* läuft | dann ist es das einzige Tor der Zone |
-| `binary_sensor.*` Tür oder Fenster | nein | setzt die verbundenen Zonen aus, solange es offen ist |
+| `binary_sensor.*`, `cover.*` oder `sensor.*` Tür, Fenster oder Dachfenster | nein | setzt die verbundenen Zonen aus, solange es offen ist |
 | `calendar.*` | nein | schaltet den Ferienplan von selbst ein; funktioniert nur mit einem Stichwort |
 | Eine Jahreszeiten-Entität | nein | nur wenn du die Jahreszeit nicht aus dem Monat ableiten willst |
 
@@ -83,10 +83,16 @@ Integration selbst.
 musst nichts umrechnen: Messwerte und Sollwerte erscheinen in der Einheit, die
 du in Home Assistant eingestellt hast.
 
+Eine Entität, die ihre eigene Einheit nennt, wird in dieser Einheit gelesen —
+ein Sensor über `unit_of_measurement`, eine Wetterquelle über
+`temperature_unit`. Genau das brauchst du bei einem Sensor ohne
+`device_class: temperature`: den rechnet Home Assistant selbst nicht um.
+
 ## Schritt 1 — Installieren
 
 **Mindestversion:** Home Assistant **2025.3** oder neuer. Die Integration fügt
-ihre Entitäten über eine API hinzu, die es seit 2025.3 gibt.
+ihre Entitäten über `AddConfigEntryEntitiesCallback` hinzu, und diese API gibt
+es seit 2025.3.
 
 **Über HACS** (empfohlen):
 
@@ -163,7 +169,6 @@ wählst.
 | **Der Zeitplan eines Bewohners muss offen sein** | an = das Haus wartet auf das erste Zeitfenster; aus = Anwesenheit allein entscheidet |
 | **Ferienkalender** | welche Kalender Ferien ankündigen dürfen; mehrere erlaubt |
 | **Wort, das Ferien kennzeichnet** | das Stichwort, das ein Ereignis tragen muss; leer = Kalender werden ignoriert |
-| **Vorheizen von / bis** | das Fenster, in dem eine Vorheiz-Anfrage zählt; Standard 06:00–23:00 |
 | **Vorheizdauer** | die Obergrenze einer einzelnen Anfrage; Standard 120 Minuten |
 | **Gastmodus von / bis** | das Fenster, in dem der Gastmodus gilt; beide leer = den ganzen Tag |
 | **Zone nach … Minuten als festgefahren melden** | nach wie vielen Minuten Wartezeit eine Zone als festgefahren gilt; 0 schaltet den Sensor aus |
@@ -243,9 +248,10 @@ Totzone ist ein vernünftiger Anfang.
 
 ### Was der Bildschirm verweigert
 
-Drei Kombinationen werden beim Speichern abgelehnt, weil sie eine Zone
-ergeben, die zwar da ist, aber nie etwas tut:
+Vier Dinge werden beim Speichern abgelehnt, weil sie eine Zone ergeben, die
+zwar da ist, aber nie etwas tut:
 
+- ein **leerer Name** — der Name legt die interne ID einer neuen Zone fest;
 - eine **Zieltemperatur auf der falschen Seite des Startpunkts** — das Gerät
   bekommt dann eine Temperatur, für die es nichts tun muss;
 - **Kühlen, das am oder unter dem Punkt startet, an dem Heizen startet** — dann
@@ -310,11 +316,6 @@ Integration das einmal unter *Reparaturen*. Bestätigst du den Hinweis, bleibt
 er weg — auch nach einem Neustart. Kommt später eine neue handbediente Aufgabe
 in der Zone dazu, folgt ein neuer Hinweis.
 
-Kann eine Aufgabe nur von so einem Gerät erledigt werden, meldet die
-Integration das einmal unter *Reparaturen*. Bestätigst du den Hinweis, bleibt
-er weg — auch nach einem Neustart. Kommt später eine neue handbediente Aufgabe
-in der Zone dazu, folgt ein neuer Hinweis.
-
 ## Schritt 6 — Klimakreisläufe
 
 Nur nötig, wenn Innengeräte sich ein Außengerät teilen. Hat jedes Gerät sein
@@ -340,6 +341,19 @@ eigenes Außengerät, lass das leer.
 | **Wer zuerst kam** | die bereits laufende Aufgabe behält den Kreislauf; eine neue Anfrage wartet |
 | **Größte Abweichung** | die größte Abweichung vom Sollwert gewinnt |
 | **Jahreszeit** | die Jahreszeit bestimmt die Aufgabe; alles in die andere Richtung tritt ab |
+
+### Der Vorrang, vom Kreislauf aus
+
+Speicherst du einen Kreislauf, landest du auf **Prioritäten auf diesem
+Kreislauf**: die Zonen an diesem Außengerät, in der Reihenfolge, in der sie
+derzeit gewinnen, mit ihrer Nummer dahinter. Wähle eine aus, um ihren Vorrang
+zu ändern.
+
+Das ist **dasselbe Feld** wie *Vorrang an einem gemeinsamen Außengerät* auf dem
+Zonenbildschirm — zwei Wege hinein, eine Einstellung, die beiden können sich
+also nie widersprechen. Hier siehst du nur sofort, wer gegen wen steht. Zwei
+Zonen auf einem Kreislauf dürfen nicht dieselbe Nummer haben; der Bildschirm
+lehnt das ab.
 
 ## Schritt 7 — Gemeinsame Wärmequellen
 
@@ -402,6 +416,11 @@ werktags um neun ins Bett geht und am Wochenende um elf, setzt zwei:
 
 Setzt du keine Fenster, greift die Bremse nicht.
 
+Jedes Fenster hat außerdem ein Häkchen **Dies ist ein Urlaubsfenster**. So ein
+Fenster gilt nur bei eingeschaltetem Urlaubsplan und ersetzt dann die
+gewöhnlichen; seine Wochentage zählen nicht mit. Setzt du gar keines, zählt ein
+Urlaubstag als Samstag.
+
 ## Schritt 10 — Bewohner
 
 Lass das leer für ein Gebäude, in dem niemand verfolgt wird; die
@@ -415,6 +434,29 @@ Anwesenheitstore werden dann übersprungen, statt alles dauerhaft zu blockieren.
 | **Status, der Schlafen bedeutet** | der Zustand, den der Schlafsensor beim Schlafen meldet |
 | **Schlafsensor zählt von / bis** | die Stunden, in denen dieser Sensor etwas bedeutet; beide leer = rund um die Uhr |
 | **Tage des Schlaffensters** | an welchen Tagen dieses Fenster gilt; leer = jeden Tag |
+| **Auf diese schlafende Person warten bis** | bis wann diese Person das Haus im Schlaf aufhält; leer = sie hält niemanden auf |
+| **Tage, an denen gewartet wird** | an welchen Tagen diese Uhrzeit gilt; leer = jeden Tag |
+
+### Auf den letzten Schläfer warten
+
+Ohne Uhrzeit beginnt das Haus, sobald der erste Bewohner auf ist. Mit einer
+Uhrzeit wartet das Haus: Ist jemand auf, während diese Person zu Hause noch
+schläft, passiert nichts. Nach der eingetragenen Uhrzeit entfällt das Warten,
+und das Haus richtet sich nach denen, die auf sind.
+
+Zwei Bewohner, die beide 11:00 für Samstag und Sonntag eintragen, bekommen also:
+Einer ist um 10:00 auf und nichts passiert; wacht der andere um 10:30 auf,
+beginnt es um 10:30; schläft er weiter, beginnt es um 11:00. Es wirkt in beide
+Richtungen - wer von beiden ausschläft, spielt keine Rolle.
+
+Das steht getrennt vom Zeitplan. Ein Zeitplan sagt auch, wann das Haus wieder
+*aus* soll; diese Uhrzeit sagt nur, wann man nicht länger auf jemanden warten
+muss. Schlafen alle Anwesenden, bleibt das Haus aus - das ist das Schlaftor,
+nicht diese Uhrzeit. Ein Feiertag zählt als Samstag.
+
+Achten Sie auf das Schlaffenster: Liegt die Uhrzeit außerhalb, gilt diese Person
+ohnehin nicht mehr als schlafend und hält niemanden auf. Lassen Sie das
+Schlaffenster also über die Uhrzeit hinaus laufen.
 
 ### Zeitpläne
 
@@ -446,9 +488,13 @@ Eine Öffnung, die lange genug offen steht, legt die betroffenen Zonen still.
 
 | Einstellung | Was sie tut |
 |---|---|
-| **Sensor** | der Tür- oder Fensterkontakt; offen zählt als `on` |
+| **Sensor** | der Tür-, Fenster- oder Dachfensterkontakt; ein `binary_sensor.*`, `cover.*` oder `sensor.*` |
+| **Zustand, der „offen“ bedeutet** | bei einem Fensterkontakt meist `on`, bei einem Dachfenster oder Rollladen `open`; Standard `on` |
 | **Betroffene Zonen** | leer = die ganze Installation |
 | **Verzögerung vor dem Stilllegen** | leer oder 0 = sofort beim Öffnen |
+
+Wählst du `open` als Offen-Zustand, zählen auch `opening` und `closing` als
+offen: Ein Rollladen unterwegs ist nicht zu.
 
 **Ein geteiltes Gerät folgt der Anforderung, nicht der Stille.** Steht derselbe
 Kessel als Quelle unter mehreren Zonen, hält er nicht an, sobald eine dieser
@@ -505,6 +551,12 @@ Ein Gerät pro Installation, darunter:
 | `number.*_<zone>_priority` | der Vorrang dieser Zone; auch aus einer Automatisierung setzbar |
 | `number.*_pre_conditioning_duration` | wie lange ein Druck auf eine Vorheiz-Taste dauert |
 | `button.*_<zone>_pre_condition` | heizt oder kühlt diese Zone vor |
+| `select.*_season` | stellt die Jahreszeit von Hand auf Automatisch, Sommer oder Winter |
+
+Die Namen dieser Entitäten werden übersetzt, und Home Assistant leitet die
+Entitäts-ID vom Namen ab. Steht dein Home Assistant in einer anderen Sprache,
+heißen sie dort anders; suche dann nach dem Namen, wie er in der Oberfläche
+steht.
 
 Außerdem gibt es einen herunterladbaren Diagnose-Export mit der Konfiguration,
 dem zuletzt gelesenen Schnappschuss und dem letzten Plan.
@@ -512,6 +564,8 @@ dem zuletzt gelesenen Schnappschuss und dem letzten Plan.
 ## Die Schalter und Tasten
 
 - **Hauptschalter** (`switch.*_director`): aus = der Director tut gar nichts.
+  Er lässt alles los und sendet nichts mehr — auch kein Aus. Was in dem Moment
+  läuft, läuft also einfach weiter; willst du alles aus, schalte es selbst aus.
 - **Gastmodus** (`switch.*_guest_mode`): Jemand Unverfolgtes wohnt da, also
   sagt „Haus leer“ nichts. Schlaf der Anwesenden gilt weiter, und außerhalb des
   Gastfensters übernehmen die normalen Tore.
@@ -580,13 +634,13 @@ data:
   ignore_openings: true
 ```
 
-Zwei Grenzen, die du nicht vergessen kannst:
+Eine Grenze, die du nicht vergessen kannst: **sie läuft von selbst ab.** Fragst
+du länger als das eingestellte Maximum, wird deine Anfrage gekürzt. Keine Zeit
+anzugeben gibt dir das Maximum; null oder weniger wird abgelehnt, denn das ist
+keine Anfrage, sondern ein Tippfehler.
 
-- **Sie läuft von selbst ab.** Fragst du länger als das eingestellte Maximum,
-  wird deine Anfrage gekürzt. Keine Zeit anzugeben gibt dir das Maximum; null
-  oder weniger wird abgelehnt, denn das ist keine Anfrage, sondern ein Tippfehler.
-- **Sie gilt nur innerhalb des Fensters** (Standard 06:00–23:00). Außerhalb
-  zählt eine Anfrage nicht.
+Eine Anfrage geht immer vor, zu jeder Stunde des Tages. Nur eine offene Tür
+verlangt eine Bestätigung: ohne *Trotzdem tun* weist die Tür die Anfrage ab.
 
 Abbrechen geht mit `climate_director.cancel_precondition`.
 
@@ -595,7 +649,8 @@ Abbrechen geht mit `climate_director.cancel_precondition`.
 - **Ein Gerät selbst ausschalten** (am Gerät oder auf der Fernbedienung) legt
   diese Zone still. Der Director schaltet es nicht zwei Sekunden später wieder
   ein. Die Zone macht wieder mit, sobald du sie selbst einschaltest, sobald
-  alle Anwesenden ins Bett gehen oder sobald der nächste Tag ist.
+  jemand in ein leeres Haus zurückkommt, sobald alle Anwesenden ins Bett gehen
+  oder sobald der nächste Tag ist (nach Mitternacht).
 - **Ein Gerät für ein paar Stunden von Hand einschalten** geht mit einem
   Script daneben, solange du diese Zone für die Dauer mit dem Override an dich
   zurückgibst. Ohne Override rechnet der Director bei der nächsten Auswertung
@@ -684,6 +739,13 @@ Automatisierung auf diesem Ereignis steht.
   den Modus annimmt, und ob etwas anderes es zurückstellt — ein
   Thermostatzeitplan oder eine andere Automatisierung. Im Schattenmodus kommt
   diese Meldung nie: Dort wird absichtlich nichts ausgeführt.
+- **Ein gespeicherter Zustand, der beiseitegelegt werden musste**, meldet sich
+  ebenfalls unter *Reparaturen*. In dieser Datei stehen die laufenden
+  Vorheiz-Anfragen und die Geräte, die du von Hand ausgeschaltet hast. Ist sie
+  unlesbar, wird sie umbenannt und der Director beginnt mit leerem Zustand:
+  diese Anfragen und Abschaltungen sind weg, der Rest deiner Anlage nicht.
+  Willst du sie zurück, stelle die Datei aus einem Backup wieder her und lade
+  die Integration neu.
 - **Die Diagnose** (bei der Integration herunterladbar) enthält die
   Konfiguration, den zuletzt gelesenen Schnappschuss und den letzten Plan. Mit
   diesen dreien ist jede Entscheidung exakt nachvollziehbar.

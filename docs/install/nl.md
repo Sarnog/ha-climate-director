@@ -72,7 +72,7 @@ conflict voor je op.
 | `person.*` of `device_tracker.*` per bewoner | ja, zodra je bewoners instelt | anders kan die bewoner nooit thuis zijn |
 | Een slaapsensor per bewoner | nee | zonder deze telt niemand ooit als slapend |
 | `binary_sensor.*` aanwezigheid per zone | alleen als een zone op *de ruimte zelf* draait | dan is het de enige poort die de zone heeft |
-| `binary_sensor.*` deur of raam | nee | schort de gekoppelde zones op zolang het openstaat |
+| `binary_sensor.*`, `cover.*` of `sensor.*` deur, raam of dakraam | nee | schort de gekoppelde zones op zolang het openstaat |
 | `calendar.*` | nee | zet het vakantieschema vanzelf aan; werkt alleen met een trefwoord |
 | Een seizoensentiteit | nee | alleen als je het seizoen niet uit de maand wilt afleiden |
 
@@ -82,6 +82,11 @@ de integratie zelf.
 **Eenheden:** de integratie volgt het eenhedenstelsel van Home Assistant. Je
 hoeft niets om te rekenen: metingen en setpoints verschijnen in de eenheid die
 je in Home Assistant hebt ingesteld.
+
+Een entiteit die haar eigen eenheid noemt wordt in díe eenheid gelezen — een
+sensor via `unit_of_measurement`, een weersbron via `temperature_unit`. Dat is
+precies wat je nodig hebt bij een sensor zonder `device_class: temperature`:
+die rekent Home Assistant zelf niet om.
 
 ## Stap 1 — Installeren
 
@@ -239,9 +244,10 @@ een verstandig begin.
 
 ### Wat het scherm weigert
 
-Drie combinaties worden bij het opslaan geweigerd, omdat ze een zone opleveren
-die er wel staat maar nooit iets doet:
+Vier dingen worden bij het opslaan geweigerd, omdat ze een zone opleveren die
+er wel staat maar nooit iets doet:
 
+- een **lege naam** — de naam bepaalt het interne id van een nieuwe zone;
 - een **streeftemperatuur aan de verkeerde kant van het startpunt** — het
   apparaat krijgt dan een temperatuur waar het niets voor hoeft te doen;
 - **koelen dat start op of onder het punt waar verwarmen start** — dan vragen
@@ -305,11 +311,6 @@ keer onder *Reparaties*. Bevestig je die melding, dan blijft hij weg — ook na
 een herstart. Krijgt de zone er later een nieuwe handbediende taak bij, dan
 volgt er opnieuw één melding.
 
-Zit er een taak die alleen zo’n apparaat kan, dan meldt de integratie dat één
-keer onder *Reparaties*. Bevestig je die melding, dan blijft hij weg — ook na
-een herstart. Krijgt de zone er later een nieuwe handbediende taak bij, dan
-volgt er opnieuw één melding.
-
 ## Stap 6 — Airco-circuits
 
 Alleen nodig als binnenunits een buitenunit delen. Heeft elke unit zijn eigen
@@ -335,6 +336,17 @@ buitenunit, laat dit dan leeg.
 | **Wie eerst was** | de taak die al draait houdt het circuit; een nieuwe aanvraag wacht |
 | **Grootste afwijking** | de grootste afwijking van het setpoint wint |
 | **Seizoen** | het seizoen bepaalt de taak; alles wat de andere kant op wil staat af |
+
+### De voorrang, vanaf het circuit
+
+Sla je een circuit op, dan kom je op **Prioriteiten op dit circuit**: de zones
+die op deze buitenunit zitten, in de volgorde waarin ze nu winnen, met hun
+nummer erachter. Kies er een om zijn voorrang te wijzigen.
+
+Dat is **hetzelfde veld** als *Voorrang op een gedeelde buitenunit* op het
+zonescherm — twee ingangen, één instelling, dus de twee kunnen het nooit
+oneens zijn. Hier zie je alleen meteen wie er tegenover wie staat. Twee zones
+op één circuit mogen niet hetzelfde nummer hebben; het scherm weigert dat.
 
 ## Stap 7 — Gedeelde warmtebronnen
 
@@ -395,6 +407,11 @@ twee:
 
 Stel je geen vensters in, dan doet de rem niet mee.
 
+Elk venster heeft daarnaast een vinkje **Dit is een vakantievenster**. Zo'n
+venster geldt alleen zolang het vakantieschema aan staat, en vervangt dan de
+gewone vensters; de weekdagen tellen er niet in mee. Zet je er geen enkel,
+dan telt een vakantiedag als zaterdag.
+
 ## Stap 10 — Bewoners
 
 Laat dit leeg voor een gebouw waar niemand gevolgd wordt; de
@@ -409,6 +426,29 @@ tegenhouden.
 | **Status die slapen betekent** | de stand die de slaapsensor meldt bij slapen |
 | **Slaapsensor telt vanaf / tot** | de uren waarin die sensor iets betekent; beide leeg = de klok rond |
 | **Dagen van het slaapvenster** | op welke dagen dat venster geldt; leeg = elke dag |
+| **Wacht op deze slaper tot** | tot hoe laat deze bewoner het huis tegenhoudt terwijl hij slaapt; leeg = hij houdt niemand tegen |
+| **Dagen waarop gewacht wordt** | op welke dagen die uiterste tijd geldt; leeg = elke dag |
+
+### Wachten op de laatste slaper
+
+Zonder uiterste tijd begint het huis zodra de eerste bewoner opstaat. Vul je er
+een in, dan wacht het huis: staat er iemand op terwijl deze bewoner thuis nog
+slaapt, dan gebeurt er niets. Na het ingevulde tijdstip vervalt dat wachten en
+gaat het huis mee met wie wél op is.
+
+Twee bewoners die allebei 11:00 invullen op zaterdag en zondag krijgen dus: de
+een staat om 10:00 op en er gebeurt niets; wordt de ander om 10:30 wakker, dan
+begint het om 10:30; slaapt die door, dan begint het om 11:00. Het werkt beide
+kanten op — wie van de twee uitslaapt maakt niet uit.
+
+Dit staat los van het rooster. Een rooster zegt ook wanneer het huis weer *uit*
+moet; deze tijd zegt alleen wanneer je niet langer op iemand hoeft te wachten.
+Slaapt iedereen die thuis is, dan blijft het huis uit — dat is de slaappoort,
+niet deze tijd. Een vakantiedag telt als zaterdag.
+
+Let op het slaapvenster: valt de uiterste tijd erbuiten, dan telt deze bewoner
+op dat moment sowieso niet meer als slapend en houdt hij niemand tegen. Laat het
+slaapvenster dus doorlopen tot na de uiterste tijd.
 
 ### Roosters
 
@@ -439,9 +479,13 @@ Een opening die lang genoeg openstaat, zet de gekoppelde zones stil.
 
 | Instelling | Wat het doet |
 |---|---|
-| **Sensor** | het deur- of raamcontact; open telt als `on` |
+| **Sensor** | het deur-, raam- of dakraamcontact; een `binary_sensor.*`, `cover.*` of `sensor.*` |
+| **Toestand die 'open' betekent** | voor een raamcontact meestal `on`, voor een dakraam of rolluik `open`; standaard `on` |
 | **Zones die het raakt** | leeg = de hele installatie |
 | **Vertraging voor het stilzetten** | leeg of 0 = meteen bij openen |
+
+Kies je `open` als openstand, dan tellen ook `opening` en `closing` als open:
+een rolluik dat onderweg is staat niet dicht.
 
 **Een gedeeld apparaat volgt de vraag, niet de stilte.** Staat dezelfde ketel
 als bron onder meerdere zones, dan stopt hij niet zodra één van die zones
@@ -499,6 +543,11 @@ Eén device per installatie, met daaronder:
 | `number.*_prioriteit_<zone>` | de voorrang van deze zone; ook vanuit een automatisering te wijzigen |
 | `number.*_vooruitduur` | hoe lang één druk op een vooruit-knop duurt |
 | `button.*_<zone>_vooruit` | laat deze zone vooruit verwarmen of koelen |
+| `select.*_seizoen` | zet het seizoen met de hand op Automatisch, Zomer of Winter |
+
+De namen van deze entiteiten worden vertaald, en Home Assistant leidt de
+entiteit-ID van de naam af. Staat je Home Assistant in een andere taal, dan
+heten ze daar anders; zoek dan op de naam zoals hij in de interface staat.
 
 Daarnaast is er een downloadbare diagnose met de configuratie, de laatst
 gelezen momentopname en het laatste plan.
@@ -506,7 +555,9 @@ gelezen momentopname en het laatste plan.
 ## De schakelaars en knoppen
 
 - **Hoofdschakelaar** (`switch.*_director`): uit = de director doet helemaal
-  niets.
+  niets. Hij laat alles los en stuurt niets meer — ook geen uit-commando. Wat
+  op dat moment draait blijft dus gewoon draaien; wil je alles uit, zet het
+  dan zelf uit.
 - **Gastenmodus** (`switch.*_gastenmodus`): er logeert iemand die niet gevolgd
   wordt, dus "huis leeg" zegt niets. Slaap van wie thuis is blijft gelden, en
   buiten het gastenvenster nemen de gewone poorten het over.
@@ -589,8 +640,9 @@ Afblazen kan met `climate_director.cancel_precondition`.
 
 - **Een apparaat zelf uitzetten** (bij het apparaat of op de afstandsbediening)
   zet die zone stil. De director zet hem niet twee seconden later weer aan. De
-  zone doet weer mee zodra je hem zelf aanzet, zodra er iemand thuis komt in een leeg huis,
-  zodra iedereen die thuis is naar bed gaat, of zodra het de volgende dag is (na middernacht).
+  zone doet weer mee zodra je hem zelf aanzet, zodra er iemand thuiskomt in een
+  leeg huis, zodra iedereen die thuis is naar bed gaat, of zodra het de volgende
+  dag is (na middernacht).
 - **Een apparaat een paar uur met de hand aanzetten** kan gewoon met een script
   ernaast, mits je die zone zolang met de override aan jezelf teruggeeft. Zonder
   override rekent de director bij de eerstvolgende evaluatie zijn eigen plan
@@ -678,6 +730,12 @@ automatisering op die gebeurtenis staat.
   het de stand aanneemt, en of iets anders het terugzet — een thermostaatrooster
   of een andere automatisering. In schaduwmodus komt deze melding nooit: daar
   wordt met opzet niets uitgevoerd.
+- **Een bewaarde toestand die opzij is gezet** meldt zich ook onder
+  *Reparaties*. In het opslagbestand staan de lopende vooruit-verzoeken en de
+  apparaten die je met de hand hebt uitgezet. Is dat bestand onleesbaar, dan
+  wordt het hernoemd en begint de director met een lege toestand: die
+  verzoeken en uitzettingen zijn weg, de rest van je installatie niet. Wil je
+  ze terug, zet het bestand dan uit een back-up terug en herlaad de integratie.
 - **De diagnose** (downloaden bij de integratie) bevat de configuratie, de
   laatst gelezen momentopname en het laatste plan. Met die drie is elke
   beslissing exact na te spelen.

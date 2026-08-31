@@ -48,6 +48,7 @@ class Reason(StrEnum):
     OPENING_OPEN_ELSEWHERE = "opening_open_elsewhere"
     NOBODY_HOME = "nobody_home"
     EVERYONE_ASLEEP = "everyone_asleep"
+    WAITING_FOR_SLEEPER = "waiting_for_sleeper"
     OUTSIDE_SCHEDULE = "outside_schedule"
     ZONE_UNOCCUPIED = "zone_unoccupied"
     QUIET_HOURS = "quiet_hours"
@@ -118,6 +119,7 @@ HOLDING_GATES = frozenset(
         Reason.ZONE_UNOCCUPIED,
         Reason.NOBODY_HOME,
         Reason.EVERYONE_ASLEEP,
+        Reason.WAITING_FOR_SLEEPER,
         Reason.OUTSIDE_SCHEDULE,
     }
 )
