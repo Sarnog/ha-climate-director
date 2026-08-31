@@ -454,6 +454,23 @@ class WakeDeadline:
     weekdays: frozenset[int] | None = None
     """`datetime.weekday()` numbers (Monday is 0). `None` means every day."""
 
+    holiday: bool = False
+    """Whether this deadline also applies on a holiday, whatever the weekday.
+
+    Een vakantiedag telt bij de roosters als zaterdag, want een vrije dag lijkt
+    op een zaterdag. Voor een uiterste opsta-tijd gaat die vergelijking niet
+    op: een vakantie van de één is een gewone werkdag van de ander, en dan
+    houdt de uitslaper het huis op terwijl er iemand zit te werken. De dagen
+    betekenen hier dus wat er staat, en wie ook op een vakantiedag gewacht wil
+    worden zegt dat hier met zoveel woorden.
+
+    A holiday counts as a Saturday for the schedules, since a day off resembles
+    a Saturday. For a wake deadline that comparison does not hold: one person's
+    holiday is another's working day, and the late riser then holds the house up
+    while somebody is working. So the days here mean what they say, and whoever
+    wants to be waited for on a holiday too says so in as many words.
+    """
+
     def applies_on(self, weekday: int) -> bool:
         """Return whether this deadline is set for that weekday."""
         return self.weekdays is None or weekday in self.weekdays
@@ -562,22 +579,27 @@ class Resident:
         dagen van de uiterste tijd staat - wie alleen in het weekend uitslaapt,
         houdt het huis doordeweeks niet op.
 
-        Een vakantiedag telt als zaterdag, net als bij de roosters, zodat een
-        weekendafspraak vanzelf ook op een vrije dag geldt.
+        Een vakantiedag telt hier **niet** vanzelf als zaterdag - anders houdt
+        de schoolvakantie van de één het huis op terwijl de ander gewoon thuis
+        zit te werken. Wie ook op een vakantiedag gewacht wil worden, vinkt dat
+        bij de uiterste tijd zelf aan.
 
         `None` means: this resident holds nobody back today. That is the state
         without the setting, and the state on a day outside the deadline's own
         days - whoever sleeps in at the weekend only does not hold the house up
         on a working day.
 
-        A holiday counts as a Saturday, exactly as the schedules do, so a
-        weekend arrangement covers a day off on its own.
+        A holiday does **not** count as a Saturday here - otherwise one person's
+        school holiday holds the house up while the other is simply working from
+        home. Whoever wants to be waited for on a holiday too ticks that on the
+        deadline itself.
         """
         deadline = self.wake_deadline
         if deadline is None:
             return None
-        day = HOLIDAY_WEEKDAY if holiday else weekday
-        return deadline.at if deadline.applies_on(day) else None
+        if holiday and deadline.holiday:
+            return deadline.at
+        return deadline.at if deadline.applies_on(weekday) else None
 
     def wants_climate_at(self, moment: time, weekday: int, *, holiday: bool = False) -> bool:
         """Return whether this resident's schedule is open at that moment."""

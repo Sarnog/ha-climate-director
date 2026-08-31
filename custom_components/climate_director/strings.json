@@ -301,7 +301,8 @@
           "sleep_until": "Sleep sensor counts until",
           "sleep_days": "Sleep window days",
           "wake_by": "Wait for this sleeper until",
-          "wake_days": "Days that waiting applies"
+          "wake_days": "Days that waiting applies",
+          "wake_holiday": "Wait for this sleeper on holidays too"
         },
         "data_description": {
           "sleep_entity": "Leave empty if this person's sleep is not tracked.",
@@ -314,7 +315,8 @@
           "sleep_until": "A phone on the charger at three in the afternoon does not mean somebody is turning in. Between these times the sleep sensor counts; outside them a charger is just a charger. Leave both empty to have it count around the clock.",
           "sleep_days": "Leave empty for every day. A window running past midnight is anchored on the day it starts, so a Friday 23:00-09:00 window still counts at 07:00 on Saturday.",
           "wake_by": "With somebody up while this resident is still asleep at home, the house waits. Past this time it no longer does: it then follows whoever is up. Leave empty to have this resident hold nobody back.",
-          "wake_days": "Leave empty for every day. A holiday counts as a Saturday."
+          "wake_days": "Leave empty for every day. A holiday counts as a Saturday.",
+          "wake_holiday": "A holiday counts as a Saturday for the schedules, but not for this time: one person's holiday is another's working day, and the late riser would hold the house up while somebody is working. Tick this when you do want to be waited for on a holiday - then it applies whatever the weekday."
         }
       },
       "windows": {
@@ -570,6 +572,33 @@
       "options": {
         "central": "Central - one source for the whole house",
         "per_zone": "Per zone - zone valves or several heat sources"
+      }
+    },
+    "weekday": {
+      "options": {
+        "0": "Monday",
+        "1": "Tuesday",
+        "2": "Wednesday",
+        "3": "Thursday",
+        "4": "Friday",
+        "5": "Saturday",
+        "6": "Sunday"
+      }
+    },
+    "weekday_short": {
+      "options": {
+        "0": "Mon",
+        "1": "Tue",
+        "2": "Wed",
+        "3": "Thu",
+        "4": "Fri",
+        "5": "Sat",
+        "6": "Sun"
+      }
+    },
+    "weekday_summary": {
+      "options": {
+        "every_day": "every day"
       }
     }
   },

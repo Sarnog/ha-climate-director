@@ -93,7 +93,9 @@ class TestRoundTrip:
             residents=(
                 replace(
                     original.residents[0],
-                    wake_deadline=WakeDeadline(at=time(11, 0), weekdays=frozenset({5, 6})),
+                    wake_deadline=WakeDeadline(
+                        at=time(11, 0), weekdays=frozenset({5, 6}), holiday=True
+                    ),
                 ),
                 *original.residents[1:],
             ),

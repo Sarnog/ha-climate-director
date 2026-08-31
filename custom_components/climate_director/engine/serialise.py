@@ -247,7 +247,11 @@ def _wake_deadline(raw: dict[str, Any]) -> WakeDeadline | None:
     at = raw.get("at")
     if not at:
         return None
-    return WakeDeadline(at=_time(at, time(0, 0)), weekdays=_weekdays(raw.get("weekdays")))
+    return WakeDeadline(
+        at=_time(at, time(0, 0)),
+        weekdays=_weekdays(raw.get("weekdays")),
+        holiday=_bool(raw.get("holiday"), False),
+    )
 
 
 def _time_window(raw: Mapping[str, Any]) -> TimeWindow:
@@ -494,6 +498,7 @@ def _resident_to_dict(resident: Resident) -> dict[str, Any]:
                     if resident.wake_deadline.weekdays is None
                     else sorted(resident.wake_deadline.weekdays)
                 ),
+                "holiday": resident.wake_deadline.holiday,
             }
         ),
         "windows": [

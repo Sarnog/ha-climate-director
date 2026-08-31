@@ -301,7 +301,8 @@
           "sleep_until": "Le capteur de sommeil compte jusqu'à",
           "sleep_days": "Jours de la fenêtre de sommeil",
           "wake_by": "Attendre ce dormeur jusqu'à",
-          "wake_days": "Jours où l'attente s'applique"
+          "wake_days": "Jours où l'attente s'applique",
+          "wake_holiday": "Attendre ce dormeur aussi les jours fériés"
         },
         "data_description": {
           "sleep_entity": "Laissez vide si le sommeil de cette personne n'est pas suivi.",
@@ -314,7 +315,8 @@
           "sleep_until": "Un téléphone sur le chargeur à trois heures de l'après-midi ne veut pas dire que quelqu'un se couche. Entre ces heures le capteur de sommeil compte ; en dehors, un chargeur n'est qu'un chargeur. Laisser les deux vides pour qu'il vaille en permanence.",
           "sleep_days": "Laissez vide pour tous les jours. Une fenêtre qui passe minuit est rattachée à son jour de début : une fenêtre du vendredi 23:00-09:00 compte encore à 07:00 le samedi.",
           "wake_by": "Si quelqu'un est levé alors que cet occupant dort encore à la maison, la maison attend. Passé cette heure, elle n'attend plus : elle suit alors celles et ceux qui sont levés. Laissez vide pour que cet occupant ne retienne personne.",
-          "wake_days": "Laissez vide pour tous les jours. Un jour férié compte comme un samedi."
+          "wake_days": "Laissez vide pour tous les jours. Un jour férié compte comme un samedi.",
+          "wake_holiday": "Un jour férié compte comme un samedi pour les horaires, mais pas pour cette heure : le congé de l'un est la journée de travail de l'autre, et le lève-tard retiendrait alors la maison pendant que quelqu'un travaille. Cochez ceci si vous voulez qu'on vous attende aussi un jour férié - l'heure s'applique alors tous les jours."
         }
       },
       "windows": {
@@ -570,6 +572,33 @@
       "options": {
         "central": "Central - une source pour toute la maison",
         "per_zone": "Par zone - vannes de zone ou plusieurs sources"
+      }
+    },
+    "weekday": {
+      "options": {
+        "0": "lundi",
+        "1": "mardi",
+        "2": "mercredi",
+        "3": "jeudi",
+        "4": "vendredi",
+        "5": "samedi",
+        "6": "dimanche"
+      }
+    },
+    "weekday_short": {
+      "options": {
+        "0": "lun",
+        "1": "mar",
+        "2": "mer",
+        "3": "jeu",
+        "4": "ven",
+        "5": "sam",
+        "6": "dim"
+      }
+    },
+    "weekday_summary": {
+      "options": {
+        "every_day": "tous les jours"
       }
     }
   },

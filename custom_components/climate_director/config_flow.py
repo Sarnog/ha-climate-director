@@ -67,8 +67,15 @@ _ADD_FALLBACK = {
 }
 
 #: Maandag is 0, gelijk aan `datetime.weekday()`, dat de engine ook gebruikt.
-#: Monday is 0, matching `datetime.weekday()`, which the engine uses too.
-_WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+#: Deze Engelse namen zijn alleen de terugval in het schema: de keuzevelden
+#: dragen `translation_key="weekday"`, dus de interface zet er de taal van de
+#: gebruiker neer. Ze staan in `texts.py`, want de lijstregels lezen ze ook.
+#:
+#: Monday is 0, matching `datetime.weekday()`, which the engine uses too. These
+#: English names are only the schema's fallback: the pickers carry
+#: `translation_key="weekday"`, so the interface puts the user's language there.
+#: They live in `texts.py`, since the list lines read them too.
+_WEEKDAYS = texts.WEEKDAYS
 
 #: Zomermaanden per halfrond, als maandnummers 1-12. De engine telt
 #: april-september als zomer; wie op het zuidelijk halfrond woont, krijgt
@@ -805,8 +812,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             self._index = None if choice == _ADD else int(choice)
             return await self.async_step_quiet()
 
+        selector_texts = await texts.async_selector_texts(self.hass)
         options = [
-            selector.SelectOptionDict(value=str(index), label=_window_label(window))
+            selector.SelectOptionDict(value=str(index), label=_window_label(window, selector_texts))
             for index, window in enumerate(windows)
         ]
         options.append(_add_option("quiet"))
@@ -875,6 +883,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                             ],
                             multiple=True,
                             mode=selector.SelectSelectorMode.LIST,
+                            translation_key="weekday",
                         )
                     ),
                     vol.Required("delete", default=False): bool,
@@ -1633,6 +1642,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 "wake_deadline": {
                     "at": user_input.get("wake_by") or "",
                     "weekdays": ([int(day) for day in user_input.get("wake_days") or ()] or None),
+                    "holiday": user_input.get("wake_holiday", False),
                 },
                 # De roosters van deze bewoner blijven staan; die worden in de
                 # volgende stap bewerkt, niet in dit formulier.
@@ -1698,6 +1708,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                             ],
                             multiple=True,
                             mode=selector.SelectSelectorMode.LIST,
+                            translation_key="weekday",
                         )
                     ),
                     vol.Optional(
@@ -1706,6 +1717,10 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                             "suggested_value": (current.get("wake_deadline") or {}).get("at")
                         },
                     ): _TIME,
+                    vol.Required(
+                        "wake_holiday",
+                        default=(current.get("wake_deadline") or {}).get("holiday", False),
+                    ): bool,
                     vol.Optional(
                         "wake_days",
                         description={"suggested_value": wake_days},
@@ -1717,6 +1732,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                             ],
                             multiple=True,
                             mode=selector.SelectSelectorMode.LIST,
+                            translation_key="weekday",
                         )
                     ),
                     vol.Required("delete", default=False): bool,
@@ -1743,8 +1759,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             self._window_index = None if choice == _ADD else int(choice)
             return await self.async_step_window()
 
+        selector_texts = await texts.async_selector_texts(self.hass)
         options = [
-            selector.SelectOptionDict(value=str(index), label=_window_label(window))
+            selector.SelectOptionDict(value=str(index), label=_window_label(window, selector_texts))
             for index, window in enumerate(windows)
         ]
         options.append(_add_option("window"))
@@ -1822,6 +1839,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                             ],
                             multiple=True,
                             mode=selector.SelectSelectorMode.LIST,
+                            translation_key="weekday",
                         )
                     ),
                     vol.Required("delete", default=False): bool,
@@ -2350,7 +2368,7 @@ def _next_priority(zones: list[dict[str, Any]]) -> int:
     return max(used) + 1 if used else 0
 
 
-def _window_label(window: dict[str, Any]) -> str:
+def _window_label(window: dict[str, Any], selector_texts: dict[str, str]) -> str:
     """Return a one-line summary of a schedule window for the picker."""
     start = str(window.get("start", "?"))[:5]
     end = str(window.get("end", "?"))[:5]
@@ -2365,8 +2383,9 @@ def _window_label(window: dict[str, Any]) -> str:
         if isinstance(day, int) and not isinstance(day, bool) and 0 <= day < 7
     ]
     if not weekdays:
-        return f"{start} - {end}, every day"
-    return f"{start} - {end}, {', '.join(_WEEKDAYS[day][:3] for day in sorted(weekdays))}"
+        return f"{start} - {end}, {texts.every_day(selector_texts)}"
+    names = texts.weekday_names(selector_texts, short=True)
+    return f"{start} - {end}, {', '.join(names[day] for day in sorted(weekdays))}"
 
 
 def _managed_entities(installation: dict[str, Any]) -> list[str]:

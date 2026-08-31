@@ -406,16 +406,65 @@ class TestWaitingForSleeper:
         world = make_world(now=at(10, 0, day=10), residents={"danny": awake(), "nancy": asleep()})
         assert gate_verdict(config, world, living_room(config)).allowed
 
-    def test_a_holiday_counts_as_a_saturday(self) -> None:
+    def test_a_holiday_weekday_is_not_a_saturday(self) -> None:
+        """De schoolvakantie van de één is de werkdag van de ander.
+
+        Telde een vakantiedag hier als zaterdag, dan hield de uitslaper het huis
+        op terwijl de ander gewoon thuis zat te werken. De dagen betekenen dus
+        wat er staat; wie ook op een vakantiedag gewacht wil worden, vinkt dat
+        aan - zie de test hieronder.
+
+        One person's school holiday is another's working day. Were a holiday to
+        count as a Saturday here, the late riser would hold the house up while
+        the other was simply working from home. So the days mean what they say;
+        whoever wants to be waited for on a holiday too ticks that - see the
+        test below.
+        """
         config = self._weekend_house()
         world = make_world(
             now=at(10, 0, day=10),
             residents={"danny": awake(), "nancy": asleep()},
             holiday_mode=True,
         )
-        assert gate_verdict(config, world, living_room(config)).reason is (
+        assert gate_verdict(config, world, living_room(config)).allowed
+
+    def test_a_holiday_saturday_is_still_a_saturday(self) -> None:
+        """Anders zou een vakantieweek het weekend anders laten werken.
+
+        Otherwise a week off would make the weekend behave differently.
+        """
+        config = self._weekend_house()
+        for holiday in (False, True):
+            world = make_world(
+                now=at(10, 0, day=15),
+                residents={"danny": awake(), "nancy": asleep()},
+                holiday_mode=holiday,
+            )
+            assert gate_verdict(config, world, living_room(config)).reason is (
+                Reason.WAITING_FOR_SLEEPER
+            ), holiday
+
+    def test_the_holiday_tick_makes_it_count_on_any_holiday(self) -> None:
+        """Wie ook op een vrije doordeweekse dag gewacht wil worden, zegt dat.
+
+        Whoever wants to be waited for on a weekday off says so.
+        """
+        eleven = WakeDeadline(at=time(11, 0), weekdays=frozenset({5, 6}), holiday=True)
+        config = self._with_deadlines(house(), danny=eleven, nancy=eleven)
+        monday = make_world(
+            now=at(10, 0, day=10),
+            residents={"danny": awake(), "nancy": asleep()},
+            holiday_mode=True,
+        )
+        assert gate_verdict(config, monday, living_room(config)).reason is (
             Reason.WAITING_FOR_SLEEPER
         )
+        # Zonder vakantie blijft de maandag een gewone maandag.
+        # Without a holiday the Monday stays an ordinary Monday.
+        ordinary = make_world(
+            now=at(10, 0, day=10), residents={"danny": awake(), "nancy": asleep()}
+        )
+        assert gate_verdict(config, ordinary, living_room(config)).allowed
 
     def test_one_resident_may_be_waited_for_and_the_other_not(self) -> None:
         config = self._with_deadlines(house(), nancy=WakeDeadline(at=time(11, 0)), danny=None)

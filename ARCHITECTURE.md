@@ -221,6 +221,15 @@ instelling — dan opent de eerste die opstaat het huis. De tijd staat met opzet
 rooster: een roostervenster zegt óók wanneer het huis weer uit moet, deze tijd zegt alleen
 tot wanneer je op iemand wacht.
 
+**Een vakantiedag telt voor deze tijd niet als zaterdag**, anders dan bij de roosters. Dat
+is een bewuste versmalling: de vakantie van de één is de werkdag van de ander, en telde een
+schoolvakantie als zaterdag, dan hield de uitslaper het hele huis op terwijl de ander thuis
+zat te werken — inclusief de kamer waar diegene zat. De dagen van `WakeDeadline` betekenen
+dus letterlijk wat er staat. De andere kant wordt gedekt door `WakeDeadline.holiday`: wie
+ook op een vrije doordeweekse dag gewacht wil worden, zet die vlag, en dan geldt de tijd op
+elke vakantiedag ongeacht de weekdag. Een vakantie-zaterdag blijft in beide gevallen een
+zaterdag, want die dag ís een zaterdag.
+
 Daarnaast staat hier `house_wide_blocked()`: de apparaten uit
 `DirectorConfig.house_wide_openings` die stil moeten vallen zodra wélke opening in de
 installatie dan ook openstaat. Bewust zónder het `affects()`-filter — deze lijst bestaat
@@ -886,6 +895,15 @@ while another is still asleep at home, that sleeper's wake deadline
 that setting — the first one up then opens the house. The time stands deliberately apart
 from the schedule: a schedule window also says when the house should go off again, this
 time only says how long you wait for somebody.
+
+**A holiday does not count as a Saturday for this time**, unlike for the schedules. That is
+a deliberate narrowing: one person's holiday is another's working day, and were a school
+holiday to count as a Saturday, the late riser would hold up the whole house while the
+other was working from home - including the very room they were sitting in. The days of
+`WakeDeadline` therefore mean literally what they say. The other side is covered by
+`WakeDeadline.holiday`: whoever wants to be waited for on a weekday off sets that flag, and
+the time then applies on every holiday whatever the weekday. A holiday Saturday stays a
+Saturday either way, because that day *is* a Saturday.
 
 Alongside that sits `house_wide_blocked()`: the appliances from
 `DirectorConfig.house_wide_openings` that must stand still the moment any opening in the

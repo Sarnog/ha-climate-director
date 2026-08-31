@@ -427,6 +427,7 @@ then skipped instead of blocking everything forever.
 | **Sleep window days** | the days that window applies on; empty = every day |
 | **Wait for this sleeper until** | how late this resident holds the house back while asleep; empty = they hold nobody back |
 | **Days that waiting applies** | the days that deadline applies on; empty = every day |
+| **Wait for this sleeper on holidays too** | off = the days above are read literally; on = the time applies on every holiday |
 
 ### Waiting for the last sleeper
 
@@ -443,7 +444,15 @@ the two sleeps in makes no difference.
 This stands apart from the schedule. A schedule also says when the house should
 go *off* again; this time only says when you need no longer wait for somebody.
 While everybody home is asleep the house stays off - that is the sleep gate, not
-this time. A holiday counts as a Saturday.
+this time, so the house only starts once the first person really gets up.
+
+**A holiday does not count as a Saturday here**, unlike in the schedules. One
+person's holiday is another's working day: were a school holiday to count as a
+Saturday, the late riser would hold the house up while the other was working
+from home. So the days here mean literally what they say. Whoever wants to be
+waited for on a weekday off as well ticks *Wait for this sleeper on holidays
+too*; the time then applies on every holiday, whatever the weekday. A holiday
+Saturday stays a Saturday either way.
 
 Mind the sleep window: with the deadline falling outside it, this resident no
 longer counts as asleep at that moment anyway and holds nobody back. So let the

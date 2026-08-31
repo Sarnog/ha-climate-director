@@ -436,6 +436,7 @@ Anwesenheitstore werden dann übersprungen, statt alles dauerhaft zu blockieren.
 | **Tage des Schlaffensters** | an welchen Tagen dieses Fenster gilt; leer = jeden Tag |
 | **Auf diese schlafende Person warten bis** | bis wann diese Person das Haus im Schlaf aufhält; leer = sie hält niemanden auf |
 | **Tage, an denen gewartet wird** | an welchen Tagen diese Uhrzeit gilt; leer = jeden Tag |
+| **Auch an Feiertagen auf diese Person warten** | aus = die Tage oben gelten wörtlich; ein = die Uhrzeit gilt an jedem Feiertag |
 
 ### Auf den letzten Schläfer warten
 
@@ -452,7 +453,17 @@ Richtungen - wer von beiden ausschläft, spielt keine Rolle.
 Das steht getrennt vom Zeitplan. Ein Zeitplan sagt auch, wann das Haus wieder
 *aus* soll; diese Uhrzeit sagt nur, wann man nicht länger auf jemanden warten
 muss. Schlafen alle Anwesenden, bleibt das Haus aus - das ist das Schlaftor,
-nicht diese Uhrzeit. Ein Feiertag zählt als Samstag.
+nicht diese Uhrzeit, und das Haus beginnt somit erst, wenn der Erste wirklich
+aufsteht.
+
+**Ein Feiertag zählt hier nicht von selbst als Samstag**, anders als bei den
+Zeitplänen. Der freie Tag des einen ist der Arbeitstag des anderen: Zählten die
+Schulferien als Samstag, hielte der Langschläfer das Haus auf, während der
+andere zu Hause arbeitet. Die Tage bedeuten hier also wörtlich, was dort steht.
+Wer auch an einem freien Wochentag erwartet werden möchte, setzt das Häkchen
+*Auch an Feiertagen auf diese Person warten*; dann gilt die Uhrzeit an jedem
+Feiertag, unabhängig vom Wochentag. Ein Feiertag, der auf einen Samstag fällt,
+bleibt in jedem Fall ein Samstag.
 
 Achten Sie auf das Schlaffenster: Liegt die Uhrzeit außerhalb, gilt diese Person
 ohnehin nicht mehr als schlafend und hält niemanden auf. Lassen Sie das

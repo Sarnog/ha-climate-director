@@ -66,13 +66,15 @@ async def async_get_config_entry_diagnostics(
     }
     # `home`/`asleep` zitten in de wereldmomentopname, `presence` (met
     # `occupied` en tijdstempel) ook, en `presence_entity`/`sleep_entity`/
-    # `windows`/`sleep_window` in de installatie: precies het bewonersprofiel
+    # `windows`/`sleep_window`/`wake_deadline` in de installatie: precies het
+    # bewonersprofiel
     # dat hierboven benoemd is. `occupied` staat er apart bij voor het geval
     # kameraanwezigheid ooit buiten `presence` om wordt weggeschreven.
     #
     # `home`/`asleep` sit in the world snapshot, `presence` (with `occupied`
     # and its timestamp) too, and `presence_entity`/`sleep_entity`/`windows`/
-    # `sleep_window` in the installation: exactly the resident profile named
+    # `sleep_window`/`wake_deadline` in the installation: exactly the resident
+    # profile named
     # above. `occupied` is listed separately in case room presence is ever
     # written outside `presence`.
     return async_redact_data(
@@ -86,6 +88,7 @@ async def async_get_config_entry_diagnostics(
             "sleep_entity",
             "windows",
             "sleep_window",
+            "wake_deadline",
         ],
     )
 

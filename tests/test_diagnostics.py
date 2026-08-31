@@ -155,6 +155,7 @@ def _sensitive_installation() -> dict:
                 "sleep_entity": "sensor.danny_lader",
                 "sleep_state": "wireless",
                 "sleep_window": {"start": "23:00:00", "end": "09:00:00"},
+                "wake_deadline": {"at": "11:00:00", "weekdays": [5, 6]},
                 "windows": [{"start": "08:00:00", "end": "18:00:00"}],
             }
         ],
@@ -228,7 +229,13 @@ class TestThePrivacyRedaction:
         assert data["world"]["residents"] == {"danny": {"home": REDACTED, "asleep": REDACTED}}
         assert data["installation"]["zones"][0]["presence_entity"] == REDACTED
         resident = data["installation"]["residents"][0]
-        for key in ("presence_entity", "sleep_entity", "sleep_window", "windows"):
+        for key in (
+            "presence_entity",
+            "sleep_entity",
+            "sleep_window",
+            "wake_deadline",
+            "windows",
+        ):
             assert resident[key] == REDACTED, key
 
 

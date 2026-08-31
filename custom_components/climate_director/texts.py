@@ -116,6 +116,54 @@ async def async_prepare(hass: HomeAssistant) -> None:
         _ENGLISH_TEMPLATES = await hass.async_add_executor_job(_read_english_templates)
 
 
+#: De Engelse dagnamen, in de volgorde van `datetime.weekday()` (maandag is 0).
+#: Ze zijn de terugval wanneer een taal geen vertaling heeft; de vertalingen
+#: zelf wonen onder `selector`, waar de keuzevelden ze ook vandaan halen.
+#:
+#: The English day names, in `datetime.weekday()` order (Monday is 0). They are
+#: the fallback for a language without a translation; the translations
+#: themselves live under `selector`, where the pickers read them too.
+WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+
+
+async def async_selector_texts(hass: HomeAssistant) -> dict[str, str]:
+    """Return this integration's selector translations in the user's language.
+
+    De keuzevelden zelf vertaalt Home Assistant: die dragen een
+    `translation_key` en de interface zoekt de tekst er zelf bij. Maar een
+    lijstregel als "08:00 - 15:00, za, zo" wordt hier in Python opgebouwd, en
+    daar komt geen interface aan te pas. Dus halen we dezelfde teksten op waar
+    het keuzeveld ze ook vandaan haalt - één bron, geen tweede lijst die uit de
+    pas kan lopen.
+
+    Home Assistant translates the pickers themselves: those carry a
+    `translation_key` and the interface looks the text up. But a list line like
+    "08:00 - 15:00, Sat, Sun" is built here in Python, where no interface is
+    involved. So we fetch the same texts the picker reads - one source, no
+    second list to drift apart.
+    """
+    return await translation.async_get_translations(
+        hass, hass.config.language, "selector", {DOMAIN}
+    )
+
+
+def weekday_names(texts: dict[str, str], *, short: bool = False) -> tuple[str, ...]:
+    """Return the seven day names, abbreviated on request."""
+    key = "weekday_short" if short else "weekday"
+    prefix = f"component.{DOMAIN}.selector.{key}.options."
+    names = []
+    for day in range(7):
+        fallback = WEEKDAYS[day][:3] if short else WEEKDAYS[day]
+        names.append(texts.get(f"{prefix}{day}") or fallback)
+    return tuple(names)
+
+
+def every_day(texts: dict[str, str]) -> str:
+    """Return the words that stand for a window without days."""
+    key = f"component.{DOMAIN}.selector.weekday_summary.options.every_day"
+    return texts.get(key) or "every day"
+
+
 def lookup(hass: HomeAssistant, code: str) -> str | None:
     """Return the translated template for one code, if there is one.
 

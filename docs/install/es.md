@@ -432,6 +432,7 @@ presencia se omiten entonces en vez de bloquearlo todo para siempre.
 | **Días de la ventana de sueño** | los días en los que se aplica esa ventana; vacío = todos los días |
 | **Esperar a esta persona dormida hasta** | hasta qué hora este residente retiene la casa mientras duerme; vacío = no retiene a nadie |
 | **Días en los que se espera** | los días en los que se aplica esa hora; vacío = todos los días |
+| **Esperar a esta persona también en días festivos** | desmarcado = los días de arriba se leen literalmente; marcado = la hora se aplica en todos los días festivos |
 
 ### Esperar al último que duerme
 
@@ -448,7 +449,17 @@ ambos sentidos: da igual cuál de los dos se quede en la cama.
 Esto es independiente del horario. Un horario también dice cuándo debe
 *apagarse* la casa; esta hora solo dice cuándo ya no hace falta esperar a
 alguien. Mientras todos los presentes duermen, la casa sigue apagada: eso es la
-puerta del sueño, no esta hora. Un día festivo cuenta como sábado.
+puerta del sueño, no esta hora, así que la casa solo arranca cuando la primera
+persona se levanta de verdad.
+
+**Aquí un día festivo no cuenta como sábado**, a diferencia de los horarios. El
+día libre de uno es el día laboral del otro: si unas vacaciones escolares
+contaran como sábado, quien se levanta tarde retendría la casa mientras el otro
+trabaja desde casa. Los días significan literalmente lo que dicen. Quien quiera
+que también le esperen en un día libre entre semana marca *Esperar a esta
+persona también en días festivos*; entonces la hora se aplica en todos los días
+festivos, sea cual sea el día de la semana. Un día festivo que caiga en sábado
+sigue siendo un sábado.
 
 Ojo con la ventana de sueño: si la hora límite cae fuera de ella, este residente
 ya no cuenta como dormido en ese momento y no retiene a nadie. Deja que la

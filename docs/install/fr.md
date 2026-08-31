@@ -439,6 +439,7 @@ sont alors ignorées au lieu de tout bloquer pour toujours.
 | **Jours de la fenêtre de sommeil** | les jours où cette fenêtre s'applique ; vide = tous les jours |
 | **Attendre ce dormeur jusqu'à** | jusqu'à quelle heure cet occupant retient la maison pendant son sommeil ; vide = il ne retient personne |
 | **Jours où l'attente s'applique** | les jours où cette heure s'applique ; vide = tous les jours |
+| **Attendre ce dormeur aussi les jours fériés** | décoché = les jours ci-dessus se lisent littéralement ; coché = l'heure s'applique tous les jours fériés |
 
 ### Attendre le dernier dormeur
 
@@ -456,7 +457,17 @@ matinée.
 C'est indépendant de l'horaire. Un horaire dit aussi quand la maison doit se
 *couper* ; cette heure dit seulement quand il n'est plus nécessaire d'attendre
 quelqu'un. Tant que tous les présents dorment, la maison reste éteinte - c'est
-la porte du sommeil, pas cette heure. Un jour férié compte comme un samedi.
+la porte du sommeil, pas cette heure, et la maison ne démarre donc qu'au moment
+où la première personne se lève vraiment.
+
+**Un jour férié ne compte pas ici comme un samedi**, contrairement aux horaires.
+Le congé de l'un est la journée de travail de l'autre : si des vacances
+scolaires comptaient comme un samedi, le lève-tard retiendrait la maison pendant
+que l'autre travaille chez lui. Les jours signifient donc littéralement ce qui
+est écrit. Si vous voulez qu'on vous attende aussi un jour de congé en semaine,
+cochez *Attendre ce dormeur aussi les jours fériés* ; l'heure s'applique alors
+tous les jours fériés, quel que soit le jour de la semaine. Un jour férié tombant
+un samedi reste de toute façon un samedi.
 
 Attention à la fenêtre de sommeil : si l'heure limite tombe en dehors, cet
 occupant n'est de toute façon plus considéré comme endormi à ce moment-là et ne

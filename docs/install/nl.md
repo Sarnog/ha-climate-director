@@ -428,6 +428,7 @@ tegenhouden.
 | **Dagen van het slaapvenster** | op welke dagen dat venster geldt; leeg = elke dag |
 | **Wacht op deze slaper tot** | tot hoe laat deze bewoner het huis tegenhoudt terwijl hij slaapt; leeg = hij houdt niemand tegen |
 | **Dagen waarop gewacht wordt** | op welke dagen die uiterste tijd geldt; leeg = elke dag |
+| **Ook op vakantiedagen op deze slaper wachten** | uit = de dagen hierboven gelden letterlijk; aan = de tijd geldt op elke vakantiedag |
 
 ### Wachten op de laatste slaper
 
@@ -444,7 +445,16 @@ kanten op — wie van de twee uitslaapt maakt niet uit.
 Dit staat los van het rooster. Een rooster zegt ook wanneer het huis weer *uit*
 moet; deze tijd zegt alleen wanneer je niet langer op iemand hoeft te wachten.
 Slaapt iedereen die thuis is, dan blijft het huis uit — dat is de slaappoort,
-niet deze tijd. Een vakantiedag telt als zaterdag.
+niet deze tijd, en het huis begint dus pas wanneer de eerste werkelijk opstaat.
+
+**Een vakantiedag telt hier niet vanzelf als zaterdag**, anders dan bij de
+roosters. De vakantie van de één is namelijk de werkdag van de ander: telde een
+schoolvakantie als zaterdag, dan hield de uitslaper het huis op terwijl de ander
+thuis zat te werken. De dagen betekenen hier dus letterlijk wat er staat. Wie
+ook op een vrije doordeweekse dag gewacht wil worden, vinkt *Ook op
+vakantiedagen op deze slaper wachten* aan; dan geldt de tijd op elke
+vakantiedag, ongeacht de weekdag. Een vakantie-zaterdag blijft hoe dan ook een
+zaterdag.
 
 Let op het slaapvenster: valt de uiterste tijd erbuiten, dan telt deze bewoner
 op dat moment sowieso niet meer als slapend en houdt hij niemand tegen. Laat het

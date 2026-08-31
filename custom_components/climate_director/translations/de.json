@@ -301,7 +301,8 @@
           "sleep_until": "Schlafsensor zählt bis",
           "sleep_days": "Tage des Schlaffensters",
           "wake_by": "Auf diese schlafende Person warten bis",
-          "wake_days": "Tage, an denen gewartet wird"
+          "wake_days": "Tage, an denen gewartet wird",
+          "wake_holiday": "Auch an Feiertagen auf diese Person warten"
         },
         "data_description": {
           "sleep_entity": "Leer lassen, wenn der Schlaf dieser Person nicht erfasst wird.",
@@ -314,7 +315,8 @@
           "sleep_until": "Ein Telefon, das um drei Uhr nachmittags am Ladegerät liegt, heißt nicht, dass jemand ins Bett geht. Zwischen diesen Zeiten zählt der Schlafsensor; außerhalb ist ein Ladegerät nur ein Ladegerät. Beide leer lassen, damit er rund um die Uhr gilt.",
           "sleep_days": "Leer lassen für jeden Tag. Ein Fenster über Mitternacht hängt an seinem Starttag, ein Fenster von Freitag 23:00-09:00 zählt also am Samstag um 07:00 noch mit.",
           "wake_by": "Ist jemand auf, während diese Person zu Hause noch schläft, wartet das Haus. Nach dieser Uhrzeit nicht mehr: dann richtet es sich nach denen, die auf sind. Leer lassen, damit diese Person niemanden aufhält.",
-          "wake_days": "Leer lassen gilt für jeden Tag. Ein Feiertag zählt als Samstag."
+          "wake_days": "Leer lassen gilt für jeden Tag. Ein Feiertag zählt als Samstag.",
+          "wake_holiday": "Ein Feiertag zählt bei den Zeitplänen als Samstag, bei dieser Uhrzeit aber nicht: Der freie Tag des einen ist der Arbeitstag des anderen, und dann hält der Langschläfer das Haus auf, während jemand arbeitet. Setzen Sie das Häkchen, wenn auch an einem Feiertag auf Sie gewartet werden soll - dann gilt die Uhrzeit an jedem Wochentag."
         }
       },
       "windows": {
@@ -570,6 +572,33 @@
       "options": {
         "central": "Zentral - eine Quelle für das ganze Haus",
         "per_zone": "Pro Zone - Zonenventile oder mehrere Wärmequellen"
+      }
+    },
+    "weekday": {
+      "options": {
+        "0": "Montag",
+        "1": "Dienstag",
+        "2": "Mittwoch",
+        "3": "Donnerstag",
+        "4": "Freitag",
+        "5": "Samstag",
+        "6": "Sonntag"
+      }
+    },
+    "weekday_short": {
+      "options": {
+        "0": "Mo",
+        "1": "Di",
+        "2": "Mi",
+        "3": "Do",
+        "4": "Fr",
+        "5": "Sa",
+        "6": "So"
+      }
+    },
+    "weekday_summary": {
+      "options": {
+        "every_day": "täglich"
       }
     }
   },

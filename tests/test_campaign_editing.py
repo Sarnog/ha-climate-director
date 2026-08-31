@@ -1379,6 +1379,7 @@ class TestEveryScreenSurvivesItsNeighbour:
                 "sleep_state": "on",
                 "wake_by": "11:00:00",
                 "wake_days": ["5", "6"],
+                "wake_holiday": True,
                 "delete": False,
                 "when_done": "keep",
             },
@@ -1391,7 +1392,11 @@ class TestEveryScreenSurvivesItsNeighbour:
     @staticmethod
     def _check_resident(stored: dict[str, Any]) -> None:
         assert stored["residents"][0]["name"] == "Danny"
-        assert stored["residents"][0]["wake_deadline"] == {"at": "11:00:00", "weekdays": [5, 6]}
+        assert stored["residents"][0]["wake_deadline"] == {
+            "at": "11:00:00",
+            "weekdays": [5, 6],
+            "holiday": True,
+        }
 
     async def _fill_opening(self, flow: Any, flow_id: str) -> dict[str, Any]:
         result = await flow.async_configure(flow_id, {"opening": "add_new"})
@@ -2051,3 +2056,63 @@ class TestAnEditRoundStoresNoEmptyStrings:
             assert not offenders, f"lege strings op onverwachte plekken: {offenders}"
         finally:
             await stop_house(home)
+
+
+class TestEveryDayFieldSpeaksTheUsersLanguage:
+    """De dagen van de week staan in de taal van de interface, niet in het Engels.
+
+    Een keuzeveld dat zijn labels als letterlijke tekst meegeeft, toont die tekst
+    onvertaald: Home Assistant heeft dan niets om op te zoeken. De vertaling
+    hangt aan `translation_key`, en die eigenschap pinnen we hier vast op het
+    **getekende** formulier - niet op hoe het in de bron geschreven staat.
+
+    The days of the week appear in the language of the interface, not in English.
+    A picker handing its labels as literal text shows that text untranslated:
+    Home Assistant then has nothing to look up. The translation hangs on
+    `translation_key`, and that property is pinned here against the **drawn**
+    form - not against how it reads in the source.
+    """
+
+    @staticmethod
+    def _day_fields(schema: Any) -> list[Any]:
+        """Return every selector in `schema` that offers the seven weekdays."""
+        found = []
+        for validator in schema.schema.values():
+            config = getattr(validator, "config", None)
+            if config is None:
+                continue
+            options = config.get("options") or ()
+            values = [option["value"] for option in options if isinstance(option, dict)]
+            if values == [str(day) for day in range(7)]:
+                found.append(config)
+        return found
+
+    @pytest.mark.parametrize(("screen", "fields"), [("resident", 2), ("window", 1), ("quiet", 1)])
+    async def test_the_day_pickers_carry_a_translation_key(self, screen: str, fields: int) -> None:
+        home = await start_house(_installation_with_a_problem(), states=cold())
+        try:
+            _, result, _ = await open_screen(home, screen)
+            found = self._day_fields(result["data_schema"])
+            assert len(found) == fields, f"{screen} heeft {len(found)} dagenvelden"
+            for config in found:
+                assert config.get("translation_key") == "weekday"
+        finally:
+            await stop_house(home)
+
+    def test_the_list_line_uses_the_translated_days(self) -> None:
+        from custom_components.climate_director.config_flow import _window_label
+
+        dutch = {
+            "component.climate_director.selector.weekday_short.options.5": "za",
+            "component.climate_director.selector.weekday_short.options.6": "zo",
+            "component.climate_director.selector.weekday_summary.options.every_day": "elke dag",
+        }
+        window = {"start": "08:00:00", "end": "15:00:00", "weekdays": [5, 6]}
+        assert _window_label(window, dutch) == "08:00 - 15:00, za, zo"
+        assert _window_label({**window, "weekdays": None}, dutch) == "08:00 - 15:00, elke dag"
+
+    def test_it_falls_back_on_english_without_a_translation(self) -> None:
+        from custom_components.climate_director.config_flow import _window_label
+
+        window = {"start": "08:00:00", "end": "15:00:00", "weekdays": [5, 6]}
+        assert _window_label(window, {}) == "08:00 - 15:00, Sat, Sun"

@@ -301,7 +301,8 @@
           "sleep_until": "Slaapsensor telt tot",
           "sleep_days": "Dagen van het slaapvenster",
           "wake_by": "Wacht op deze slaper tot",
-          "wake_days": "Dagen waarop gewacht wordt"
+          "wake_days": "Dagen waarop gewacht wordt",
+          "wake_holiday": "Ook op vakantiedagen op deze slaper wachten"
         },
         "data_description": {
           "sleep_entity": "Laat leeg als de slaap van deze persoon niet gevolgd wordt.",
@@ -314,7 +315,8 @@
           "sleep_until": "Een telefoon die om drie uur 's middags op de lader ligt betekent niet dat er iemand naar bed gaat. Tussen deze tijden telt de slaapsensor mee; daarbuiten is een oplader gewoon een oplader. Laat beide leeg om hem de klok rond te laten gelden.",
           "sleep_days": "Laat leeg voor elke dag. Een venster over middernacht hangt aan de dag waarop het begint, dus een venster van vrijdag 23:00-09:00 telt zaterdag om 07:00 nog mee.",
           "wake_by": "Staat er iemand op terwijl deze bewoner thuis nog slaapt, dan wacht het huis. Na dit tijdstip niet meer: dan gaat het huis mee met wie wél op is. Leeg laten betekent dat deze bewoner niemand tegenhoudt.",
-          "wake_days": "Leeg laten geldt elke dag. Een vakantiedag telt als zaterdag."
+          "wake_days": "Leeg laten geldt elke dag. Een vakantiedag telt als zaterdag.",
+          "wake_holiday": "Een vakantiedag telt bij de roosters als zaterdag, maar bij deze tijd niet: de vakantie van de één is de werkdag van de ander, en dan houdt de uitslaper het huis op terwijl er iemand zit te werken. Vink dit aan als je ook op een vakantiedag gewacht wilt worden - dan geldt de tijd op elke weekdag."
         }
       },
       "windows": {
@@ -570,6 +572,33 @@
       "options": {
         "central": "Centraal - één bron voor het hele huis",
         "per_zone": "Per zone - zoneventielen of meerdere warmtebronnen"
+      }
+    },
+    "weekday": {
+      "options": {
+        "0": "maandag",
+        "1": "dinsdag",
+        "2": "woensdag",
+        "3": "donderdag",
+        "4": "vrijdag",
+        "5": "zaterdag",
+        "6": "zondag"
+      }
+    },
+    "weekday_short": {
+      "options": {
+        "0": "ma",
+        "1": "di",
+        "2": "wo",
+        "3": "do",
+        "4": "vr",
+        "5": "za",
+        "6": "zo"
+      }
+    },
+    "weekday_summary": {
+      "options": {
+        "every_day": "elke dag"
       }
     }
   },

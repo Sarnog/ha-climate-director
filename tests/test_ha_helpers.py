@@ -289,21 +289,32 @@ class TestUniqueId:
 
 
 class TestWindowLabel:
+    """De regel valt terug op het Engels zodra een taal hem niet vertaalt.
+
+    Een lege vertaalkaart is precies dat geval, en het is ook wat de tests
+    hieronder gebruiken: zo blijft de terugval gemeten in plaats van aangenomen.
+
+    The line falls back on English as soon as a language does not translate it.
+    An empty translation map is exactly that case, and it is what the tests
+    below use: that keeps the fallback measured rather than assumed.
+    """
+
     def test_a_window_without_days_reads_as_every_day(self) -> None:
-        assert _window_label({"start": "08:00:00", "end": "18:00:00"}) == "08:00 - 18:00, every day"
+        label = _window_label({"start": "08:00:00", "end": "18:00:00"}, {})
+        assert label == "08:00 - 18:00, every day"
 
     def test_an_empty_day_list_also_reads_as_every_day(self) -> None:
         """No days ticked means every day, not never."""
-        label = _window_label({"start": "08:00:00", "end": "18:00:00", "weekdays": []})
+        label = _window_label({"start": "08:00:00", "end": "18:00:00", "weekdays": []}, {})
         assert label == "08:00 - 18:00, every day"
 
     def test_days_are_named_and_sorted(self) -> None:
         window = {"start": "06:30:00", "end": "12:00:00", "weekdays": [4, 2]}
-        assert _window_label(window) == "06:30 - 12:00, Wed, Fri"
+        assert _window_label(window, {}) == "06:30 - 12:00, Wed, Fri"
 
     def test_nonsense_days_do_not_produce_a_dangling_comma(self) -> None:
         window = {"start": "08:00", "end": "18:00", "weekdays": [99, "maandag"]}
-        assert _window_label(window) == "08:00 - 18:00, every day"
+        assert _window_label(window, {}) == "08:00 - 18:00, every day"
 
 
 class TestScheduleWindowsReachTheEngine:
