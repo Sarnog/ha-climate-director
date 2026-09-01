@@ -1156,6 +1156,36 @@ def _generator_commands(
                 and _received_heat(previous, zone_id)
                 for zone_id in served
             )
+            # Zonder leesbare binnen- of buitentemperatuur valt er niets te
+            # beslissen, en dan is uitzetten de enige fout die je kunt maken.
+            # Voor een zone-bron staat die bewaking in `_build_commands`; een
+            # generator kent geen zone-bron-tak en krijgt zijn reden uit
+            # `refusals`, dus die bewaking hoort hier nog eens. Wie al uit
+            # stond krijgt gewoon zijn uit-commando ("elke beheerde bron krijgt
+            # een commando" blijft gelden); de huisbrede stop en de openingsstop
+            # houden voorrang en noemen hun eigen reden. Is de buitentemperatuur
+            # voor minstens één bediende zone onleesbaar, dan noemt de generator
+            # die reden; de binnentemperatuur is het tweede antwoord, zodat de
+            # uitkomst niet van de zonevolgorde afhangt.
+            #
+            # Without a readable indoor or outdoor temperature there is nothing
+            # to decide, and switching off is the only mistake to make then.
+            # For a zone source that guard lives in `_build_commands`; a
+            # generator has no zone-source branch and takes its reason from
+            # `refusals`, so the guard belongs here too. One that was already
+            # off simply gets its off command ("every managed source gets a
+            # command" still holds); the house-wide stop and the opening stop
+            # keep precedence and name their own reason. When the outdoor
+            # temperature is unreadable for at least one served zone the
+            # generator names that reason; the indoor temperature is the second
+            # answer, so the outcome does not depend on the zone order.
+            blind = (
+                Reason.NO_OUTDOOR_TEMPERATURE
+                if any(refusals.get(zone_id) is Reason.NO_OUTDOOR_TEMPERATURE for zone_id in served)
+                else Reason.NO_INDOOR_TEMPERATURE
+                if any(refusals.get(zone_id) is Reason.NO_INDOOR_TEMPERATURE for zone_id in served)
+                else None
+            )
             if generator.entity_id in blocked:
                 reason = Reason.OPENING_OPEN_ELSEWHERE
             elif refused_by_opening:
@@ -1164,6 +1194,9 @@ def _generator_commands(
                     if any(refusals.get(zone_id) is Reason.OPENING_OPEN for zone_id in served)
                     else Reason.OPENING_OPEN_ELSEWHERE
                 )
+            elif blind is not None and world.climate(generator.entity_id).running:
+                untouched.append(UntouchedSource(generator.entity_id, "", blind))
+                continue
             else:
                 reason = Reason.SATISFIED
 

@@ -28,21 +28,27 @@ the season can drop out too.
 
 from __future__ import annotations
 
+from dataclasses import replace
+from datetime import datetime
 from itertools import combinations
 from typing import Any
 
 import pytest
-from conftest import assert_plan_holds, climate, make_world
+from conftest import assert_plan_holds, awake, climate, make_world
 from harness_live import settings, source, start_house, stop_house, zone
 
 from custom_components.climate_director.engine import (
     Circuit,
     DirectorConfig,
+    GateSettings,
     Generator,
     ModeFamily,
     ModeSettings,
+    Opening,
+    OpeningState,
     OutdoorWindow,
     Reason,
+    Resident,
     Season,
     Source,
     SourceRole,
@@ -845,3 +851,143 @@ async def test_an_unreadable_outdoor_sensor_leaves_a_running_appliance_alone(
         assert reason == "no_outdoor_temperature", f"{placement}/{how}: reden is {reason}"
     finally:
         await stop_house(home)
+
+
+# ---------------------------------------------------------------------------
+# Een dode thermometer en een gedeelde warmtebron.
+# A dead thermometer and a shared heat source.
+# ---------------------------------------------------------------------------
+
+BLIND_BOILER = ("binnen", "buiten")
+VALVE = "climate.badkamer_kraan"
+
+
+def _blind_boiler_house() -> DirectorConfig:
+    """Eén kamer met een radiatorkraan en een gedeelde ketel eronder."""
+    zone = Zone(
+        zone_id="badkamer",
+        name="Badkamer",
+        indoor_sensor="sensor.badkamer",
+        sources=(Source("kraan", VALVE, role=SourceRole.HEAT_ONLY),),
+        heat=ModeSettings(
+            target=22.0,
+            start_at=21.0,
+            hysteresis=1.0,
+            outdoor=OutdoorWindow(maximum=19.0),
+        ),
+    )
+    return DirectorConfig(
+        zones=(zone,),
+        generators=(Generator("cv", "CV", BOILER, zone_ids=("badkamer",)),),
+        residents=(Resident("danny", "Danny", presence_entity="person.danny"),),
+        gates=GateSettings(require_awake=True),
+        outdoor_sensor="sensor.buiten",
+    )
+
+
+def _blind_boiler_world(*, which: str, running: bool):
+    indoor = None if which == "binnen" else 17.0
+    outdoor = None if which == "buiten" else -5.0
+    boiler = "heat" if running else "off"
+    return make_world(
+        now=datetime(2026, 1, 12, 10, 0),
+        outdoor=outdoor,
+        indoor={"badkamer": indoor},
+        climates={
+            VALVE: climate("heat", changed_at=datetime(2026, 1, 12, 9, 0)),
+            BOILER: climate(boiler, changed_at=datetime(2026, 1, 12, 9, 0)),
+        },
+        residents={"danny": awake()},
+    )
+
+
+@pytest.mark.parametrize("which", BLIND_BOILER)
+@pytest.mark.parametrize("running", (True, False), ids=("draait", "stond_uit"))
+def test_a_blind_shared_boiler_is_left_alone(which: str, running: bool) -> None:
+    """Zonder leesbare temperatuur gaat er nooit een brandende ketel uit.
+
+    Anker 2 geldt voor élk apparaat dat de director aanstuurt: een draaiende
+    gedeelde warmtebron hoort bij een dode binnen- of buitensensor in
+    `untouched` met de reden van die weigering, niet uit. Wie al uit stond
+    krijgt gewoon zijn uit-commando, want "elke beheerde bron krijgt een
+    commando" blijft gelden.
+
+    Anchor 2 covers every appliance the director steers: with a dead indoor or
+    outdoor sensor a running shared heat source belongs in `untouched` with
+    that refusal's reason, not off. One that was already off simply gets its
+    off command, since "every managed source gets a command" still holds.
+    """
+    config = _blind_boiler_house()
+    world = _blind_boiler_world(which=which, running=running)
+    plan = decide(config, world)
+
+    expected = Reason.NO_OUTDOOR_TEMPERATURE if which == "buiten" else Reason.NO_INDOOR_TEMPERATURE
+
+    if running:
+        left = plan.untouched_for(BOILER)
+        assert left is not None, f"{which}: de ketel verdween uit beeld"
+        assert left.reason is expected, f"{which}: ketelreden is {left.reason}"
+        assert plan.command_for(BOILER) is None, f"{which}: de ketel kreeg toch een commando"
+        valve = plan.untouched_for(VALVE)
+        assert valve is not None and valve.reason is expected, f"{which}: de kraan meldt {valve}"
+    else:
+        command = plan.command_for(BOILER)
+        assert command is not None, f"{which}: een stilstaande ketel kreeg geen commando"
+        assert command.hvac_mode == "off", f"{which}: stilstaande ketel kreeg {command.hvac_mode}"
+        assert command.reason is Reason.SATISFIED, (
+            f"{which}: stilstaande ketel meldt {command.reason}"
+        )
+        valve = plan.untouched_for(VALVE)
+        assert valve is not None and valve.reason is expected, f"{which}: de kraan meldt {valve}"
+
+
+def test_the_house_wide_stop_outranks_a_blind_shared_boiler() -> None:
+    """De huisbrede stop wint van een dode thermometer, niet andersom.
+
+    Zonder deze volgorde zou een brandende ketel op de huisbrede stoplijst bij
+    een kapotte buitensensor tóch blijven draaien, terwijl een open deur hem
+    hoort stil te zetten. De openingsstop en de huisbrede stop noemen hun eigen
+    reden; de blind-reden is pas daarna aan de beurt.
+
+    The house-wide stop outranks a dead thermometer, not the other way round.
+    Without this order a burning boiler on the house-wide stop list would keep
+    running on a broken outdoor sensor while an open door should stop it. The
+    opening stop and the house-wide stop name their own reason; the blind reason
+    only gets a turn after them.
+    """
+    config = _blind_boiler_house()
+    attic = Zone(
+        zone_id="zolder",
+        name="Zolder",
+        indoor_sensor="sensor.zolder",
+        sources=(Source("kachel", "climate.zolder_kachel", role=SourceRole.HEAT_ONLY),),
+        heat=ModeSettings(target=20.0, start_at=19.0, hysteresis=1.0),
+    )
+    config = replace(
+        config,
+        zones=(config.zones[0], attic),
+        openings=(Opening("binary_sensor.achterdeur", zone_ids=("zolder",)),),
+        house_wide_openings=(BOILER,),
+    )
+    world = make_world(
+        now=datetime(2026, 1, 12, 10, 0),
+        outdoor=None,
+        indoor={"badkamer": 17.0, "zolder": 17.0},
+        climates={
+            VALVE: climate("heat", changed_at=datetime(2026, 1, 12, 9, 0)),
+            BOILER: climate("heat", changed_at=datetime(2026, 1, 12, 9, 0)),
+            "climate.zolder_kachel": climate("off", changed_at=datetime(2026, 1, 12, 9, 0)),
+        },
+        residents={"danny": awake()},
+        openings={
+            "binary_sensor.achterdeur": OpeningState(
+                open=True, changed_at=datetime(2026, 1, 12, 9, 30)
+            )
+        },
+    )
+    plan = decide(config, world)
+    command = plan.command_for(BOILER)
+    assert command is not None, "de ketel verdween uit beeld"
+    assert command.hvac_mode == "off", f"de ketel kreeg {command.hvac_mode}"
+    assert command.reason is Reason.OPENING_OPEN_ELSEWHERE, f"ketelreden is {command.reason}"
+    assert plan.untouched_for(BOILER) is None, "de ketel werd met rust gelaten"
