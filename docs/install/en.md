@@ -425,9 +425,47 @@ then skipped instead of blocking everything forever.
 | **State meaning asleep** | the state the sleep sensor reports when asleep |
 | **Sleep sensor counts from / until** | the hours in which that sensor means anything; both empty = around the clock |
 | **Sleep window days** | the days that window applies on; empty = every day |
+| **Sleeping in until** | how late the sleep sensor still counts in the morning; empty = the sleep window is the whole story |
+| **Mornings you may sleep in** | the mornings themselves, not the evenings before; empty = every day |
+| **Sleep in on holidays too** | on = applies on every day your holiday calendar marks |
 | **Wait for this sleeper until** | how late this resident holds the house back while asleep; empty = they hold nobody back |
 | **Days that waiting applies** | the days that deadline applies on; empty = every day |
 | **Wait for this sleeper on holidays too** | off = the days above are read literally; on = the time applies on every holiday |
+
+### Sleeping in, and why that is not simply a longer sleep window
+
+The sleep window does two jobs at once: it says when "phone on the charger"
+means somebody is in bed, and it thereby switches the house off in the evening
+once everybody who is home has turned in.
+
+Stretch that window to one in the afternoon and the charger counts as sleep on
+an ordinary Wednesday too: whoever comes home at ten, or is working from home,
+gets a cold house. Cut the window back to the weekend only and nothing switches
+the house off at night on a working day, so it burns on until somebody leaves.
+
+That is why sleeping in lives on its own. The sleep window stays the night - for
+most people something like 21:00-08:00, every day. *Sleeping in until* stretches
+only the morning, on the mornings you tick. Mind that difference: a sleep window
+runs past midnight and therefore hangs on the day it starts, but sleeping in
+hangs on the morning itself. Sleeping in on Saturday is Saturday.
+
+With the **Sleep in on holidays too** tick it applies on every day your holiday
+calendar marks. You put *holiday* in your calendar and sleeping in follows along,
+without switching anything anywhere.
+
+Sleeping in and the *wake deadline* do different work and complement each other:
+sleeping in says how long the sleep sensor is believed, the deadline how long the
+house waits for a sleeper. If you both sleep on, the house stays off until the
+first person really gets up - the deadline then does nothing, since there is
+nobody to wait for.
+
+### Coming home is not sleeping
+
+The sleep sensor knows getting up, not coming home. Walk in with your phone still
+on the car charger and that reading is older than your arrival, so it says
+nothing about now. The integration therefore only counts a sleep reading that
+postdates the arrival: whoever comes in is awake, until they put their phone back
+on the charger at home.
 
 ### Waiting for the last sleeper
 

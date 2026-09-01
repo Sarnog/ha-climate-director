@@ -437,9 +437,49 @@ sont alors ignorées au lieu de tout bloquer pour toujours.
 | **État signifiant endormi** | l'état que le capteur de sommeil rapporte pendant le sommeil |
 | **Le capteur de sommeil compte de / jusqu'à** | les heures où ce capteur signifie quelque chose ; les deux vides = toute la journée |
 | **Jours de la fenêtre de sommeil** | les jours où cette fenêtre s'applique ; vide = tous les jours |
+| **Faire la grasse matinée jusqu'à** | jusqu'à quelle heure le capteur de sommeil compte encore le matin ; vide = la fenêtre de sommeil dit tout |
+| **Matins où vous faites la grasse matinée** | les matins eux-mêmes, pas les soirs précédents ; vide = tous les jours |
+| **Faire la grasse matinée aussi les jours fériés** | coché = s'applique tous les jours marqués par votre calendrier de vacances |
 | **Attendre ce dormeur jusqu'à** | jusqu'à quelle heure cet occupant retient la maison pendant son sommeil ; vide = il ne retient personne |
 | **Jours où l'attente s'applique** | les jours où cette heure s'applique ; vide = tous les jours |
 | **Attendre ce dormeur aussi les jours fériés** | décoché = les jours ci-dessus se lisent littéralement ; coché = l'heure s'applique tous les jours fériés |
+
+### La grasse matinée, et pourquoi ce n'est pas une fenêtre de sommeil plus longue
+
+La fenêtre de sommeil fait deux choses à la fois : elle dit quand « téléphone sur
+le chargeur » signifie que quelqu'un est au lit, et elle éteint ainsi la maison
+le soir dès que tous les présents sont couchés.
+
+Étendez cette fenêtre jusqu'à treize heures et le chargeur compte aussi comme du
+sommeil un mercredi ordinaire : qui rentre à dix heures, ou travaille depuis chez
+lui, trouve une maison froide. Réduisez la fenêtre au seul week-end et plus rien
+n'éteint la maison la nuit en semaine : elle chauffe jusqu'à ce que quelqu'un
+parte.
+
+C'est pourquoi la grasse matinée est à part. La fenêtre de sommeil reste la nuit
+- chez la plupart, quelque chose comme 21:00-08:00, tous les jours. *Faire la
+grasse matinée jusqu'à* n'étend que le matin, les matins que vous cochez. Notez
+la différence : une fenêtre de sommeil traverse minuit et dépend donc du jour où
+elle commence, tandis que la grasse matinée dépend du matin lui-même. La grasse
+matinée du samedi, c'est samedi.
+
+Avec la case **Faire la grasse matinée aussi les jours fériés**, elle s'applique
+tous les jours marqués par votre calendrier de vacances. Vous inscrivez
+*vacances* dans l'agenda et la grasse matinée suit d'elle-même.
+
+La grasse matinée et l'*heure limite de lever* font un travail différent et se
+complètent : la première dit combien de temps le capteur est cru, la seconde
+combien de temps la maison attend un dormeur. Si vous dormez tous les deux, la
+maison reste éteinte jusqu'à ce que le premier se lève vraiment - l'heure limite
+ne fait alors rien, puisqu'il n'y a personne à attendre.
+
+### Rentrer n'est pas dormir
+
+Le capteur de sommeil connaît le lever, pas le retour. Si vous entrez avec votre
+téléphone encore sur le chargeur de la voiture, cette information est antérieure
+à votre arrivée et ne dit rien du moment présent. L'intégration ne compte donc
+une information de sommeil que si elle est postérieure à l'arrivée : qui rentre
+est éveillé, jusqu'à ce qu'il repose son téléphone sur le chargeur chez lui.
 
 ### Attendre le dernier dormeur
 

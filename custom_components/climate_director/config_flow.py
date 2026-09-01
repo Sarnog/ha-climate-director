@@ -1631,6 +1631,20 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     # sensor off for good.
                     "weekdays": ([int(day) for day in user_input.get("sleep_days") or ()] or None),
                 },
+                # Geen tijd betekent geen uitslapen: het slaapvenster is dan
+                # het hele verhaal. De dagen zijn hier de ochtenden waarop je
+                # uitslaapt, niet de avonden ervoor.
+                #
+                # No time means no sleeping in: the sleep window is then the
+                # whole story. The days here are the mornings you sleep in on,
+                # not the evenings before.
+                "sleep_in": {
+                    "until": user_input.get("sleep_in_until") or "",
+                    "weekdays": (
+                        [int(day) for day in user_input.get("sleep_in_days") or ()] or None
+                    ),
+                    "holiday": user_input.get("sleep_in_holiday", False),
+                },
                 # Geen tijd betekent geen uiterste tijd: dan houdt deze
                 # slaper niemand tegen, precies zoals vóór deze instelling.
                 # De dagen blijven wel staan, zodat een tijd terugzetten niet
@@ -1660,6 +1674,10 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
 
         stored_days = (current.get("sleep_window") or {}).get("weekdays")
         sleep_days = None if stored_days is None else [str(day) for day in stored_days]
+        stored_sleep_in_days = (current.get("sleep_in") or {}).get("weekdays")
+        sleep_in_days = (
+            None if stored_sleep_in_days is None else [str(day) for day in stored_sleep_in_days]
+        )
         stored_wake_days = (current.get("wake_deadline") or {}).get("weekdays")
         wake_days = None if stored_wake_days is None else [str(day) for day in stored_wake_days]
         return self.async_show_form(
@@ -1700,6 +1718,30 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     vol.Optional(
                         "sleep_days",
                         description={"suggested_value": sleep_days},
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[
+                                selector.SelectOptionDict(value=str(number), label=label)
+                                for number, label in enumerate(_WEEKDAYS)
+                            ],
+                            multiple=True,
+                            mode=selector.SelectSelectorMode.LIST,
+                            translation_key="weekday",
+                        )
+                    ),
+                    vol.Optional(
+                        "sleep_in_until",
+                        description={
+                            "suggested_value": (current.get("sleep_in") or {}).get("until")
+                        },
+                    ): _TIME,
+                    vol.Required(
+                        "sleep_in_holiday",
+                        default=(current.get("sleep_in") or {}).get("holiday", False),
+                    ): bool,
+                    vol.Optional(
+                        "sleep_in_days",
+                        description={"suggested_value": sleep_in_days},
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=[

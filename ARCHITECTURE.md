@@ -221,6 +221,22 @@ instelling — dan opent de eerste die opstaat het huis. De tijd staat met opzet
 rooster: een roostervenster zegt óók wanneer het huis weer uit moet, deze tijd zegt alleen
 tot wanneer je op iemand wacht.
 
+De slaapsensor zelf kent twee grenzen. Het **slaapvenster** is de nacht: daarbinnen
+betekent "telefoon op de lader" dat iemand in bed ligt, en het is dat venster dat het huis
+om bedtijd uitzet. **`Resident.sleep_in`** rekt daar alleen de ochtend van op, op de dagen
+die dat mogen. Die twee staan bewust los: één venster kan de twee taken niet doen. Trek je
+het door tot een uur of één, dan telt de lader ook op een woensdag als slapen en blijft het
+huis uit terwijl er iemand thuis werkt; knip je het terug tot het weekend, dan zet niets
+het huis doordeweeks 's nachts nog uit. De dagen van `sleep_in` hangen aan de **ochtend**
+en niet aan de avond ervoor - anders erft deze instelling de middernachtverankering van
+`TimeWindow`, en dat is een val die niemand verwacht.
+
+En één laag lager, in de koppelingslaag: **thuiskomen is geen slapen**. De slaapsensor kent
+opstaan, niet thuiskomen. `ClimateDirectorCoordinator._resident()` telt een slaapmelding
+daarom alleen als die van ná de thuiskomst is; wie binnenkomt met zijn telefoon nog aan de
+lader in de auto, is klaarwakker. Bij gelijke tijdstempels - na een herstart draagt alles
+hetzelfde moment - telt de melding wél, want opschorten is de onschadelijke kant.
+
 **Een vakantiedag telt voor deze tijd niet als zaterdag**, anders dan bij de roosters. Dat
 is een bewuste versmalling: de vakantie van de één is de werkdag van de ander, en telde een
 schoolvakantie als zaterdag, dan hield de uitslaper het hele huis op terwijl de ander thuis
@@ -895,6 +911,22 @@ while another is still asleep at home, that sleeper's wake deadline
 that setting — the first one up then opens the house. The time stands deliberately apart
 from the schedule: a schedule window also says when the house should go off again, this
 time only says how long you wait for somebody.
+
+The sleep sensor itself knows two bounds. The **sleep window** is the night: inside it
+"phone on the charger" means somebody is in bed, and it is that window which switches the
+house off at bedtime. **`Resident.sleep_in`** stretches only its morning, on the days that
+allow it. The two stand deliberately apart: one window cannot do both jobs. Stretch it to
+one in the afternoon and the charger counts as sleep on a Wednesday too, leaving the house
+off while somebody works from home; cut it back to the weekend and nothing switches the
+house off at night on a working day. The days of `sleep_in` hang on the **morning** rather
+than on the evening before - otherwise this setting inherits `TimeWindow`'s midnight
+anchoring, a trap nobody expects.
+
+And one layer down, in the binding layer: **coming home is not sleeping**. The sleep sensor
+knows getting up, not coming home. `ClimateDirectorCoordinator._resident()` therefore only
+counts a sleep reading that postdates the arrival; whoever walks in with their phone still
+on the car charger is wide awake. On equal timestamps - after a restart everything carries
+the same moment - the reading does count, since suspending is the harmless side.
 
 **A holiday does not count as a Saturday for this time**, unlike for the schedules. That is
 a deliberate narrowing: one person's holiday is another's working day, and were a school

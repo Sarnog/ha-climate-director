@@ -15,6 +15,7 @@ from custom_components.climate_director.engine import (
     DirectorConfig,
     PrecipitationSettings,
     Season,
+    SleepIn,
     SourceRole,
     TimeWindow,
     WakeDeadline,
@@ -75,6 +76,33 @@ class TestRoundTrip:
             ),
         )
         assert config_from_dict(config_to_dict(config)) == config
+
+    def test_sleeping_in_round_trips_with_its_days(self) -> None:
+        """Valt het weg bij het opslaan, dan slaapt niemand meer uit.
+
+        Dropped on save and nobody sleeps in any more.
+        """
+        original = house()
+        config = replace(
+            original,
+            residents=(
+                replace(
+                    original.residents[0],
+                    sleep_in=SleepIn(until=time(13, 0), weekdays=frozenset({5, 6}), holiday=True),
+                ),
+                *original.residents[1:],
+            ),
+        )
+        assert config_from_dict(config_to_dict(config)) == config
+
+    def test_a_resident_without_sleeping_in_stays_without_it(self) -> None:
+        """Geen tijd is geen uitslapen tot middernacht.
+
+        No time is not sleeping in until midnight.
+        """
+        stored = config_to_dict(house())
+        stored["residents"][0]["sleep_in"] = {"until": "", "weekdays": [5, 6]}
+        assert config_from_dict(stored).residents[0].sleep_in is None
 
     def test_a_wake_deadline_round_trips_with_its_days(self) -> None:
         """De uiterste opsta-tijd hoort bij de bewoner en moet blijven staan.

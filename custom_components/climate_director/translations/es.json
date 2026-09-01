@@ -302,7 +302,10 @@
           "sleep_days": "Días de la ventana de sueño",
           "wake_by": "Esperar a esta persona dormida hasta",
           "wake_days": "Días en los que se espera",
-          "wake_holiday": "Esperar a esta persona también en días festivos"
+          "wake_holiday": "Esperar a esta persona también en días festivos",
+          "sleep_in_until": "Dormir hasta",
+          "sleep_in_days": "Mañanas en las que duermes hasta tarde",
+          "sleep_in_holiday": "Dormir hasta tarde también en días festivos"
         },
         "data_description": {
           "sleep_entity": "Déjalo vacío si no se sigue el sueño de esta persona.",
@@ -316,7 +319,10 @@
           "sleep_days": "Déjalo vacío para todos los días. Una ventana que cruza la medianoche se ancla en el día en que empieza: una ventana del viernes 23:00-09:00 sigue contando el sábado a las 07:00.",
           "wake_by": "Si alguien está levantado mientras este residente sigue durmiendo en casa, la casa espera. Pasada esta hora ya no: entonces sigue a quien esté levantado. Déjalo vacío para que este residente no retenga a nadie.",
           "wake_days": "Déjalo vacío para todos los días. Un día festivo cuenta como sábado.",
-          "wake_holiday": "Un día festivo cuenta como sábado para los horarios, pero no para esta hora: el día libre de uno es el día laboral del otro, y quien se levanta tarde retendría la casa mientras alguien trabaja. Marca esto si quieres que también te esperen en un día festivo: entonces la hora se aplica cualquier día de la semana."
+          "wake_holiday": "Un día festivo cuenta como sábado para los horarios, pero no para esta hora: el día libre de uno es el día laboral del otro, y quien se levanta tarde retendría la casa mientras alguien trabaja. Marca esto si quieres que también te esperen en un día festivo: entonces la hora se aplica cualquier día de la semana.",
+          "sleep_in_until": "La ventana de sueño es la noche: apaga la casa a la hora de acostarse. Esto solo alarga la mañana, en los días de abajo, para que el sensor de sueño siga contando mientras sigues en la cama. Déjalo vacío y la ventana de sueño lo dice todo.",
+          "sleep_in_days": "Estas son las mañanas en las que duermes hasta tarde, no las noches anteriores. Déjalo vacío para todos los días.",
+          "sleep_in_holiday": "En cada día que marque tu calendario de vacaciones, sea cual sea el día de la semana. Así configuras dormir hasta tarde una sola vez."
         }
       },
       "windows": {

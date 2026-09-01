@@ -426,9 +426,47 @@ tegenhouden.
 | **Status die slapen betekent** | de stand die de slaapsensor meldt bij slapen |
 | **Slaapsensor telt vanaf / tot** | de uren waarin die sensor iets betekent; beide leeg = de klok rond |
 | **Dagen van het slaapvenster** | op welke dagen dat venster geldt; leeg = elke dag |
+| **Uitslapen tot** | tot hoe laat de slaapsensor 's ochtends nog telt; leeg = het slaapvenster is het hele verhaal |
+| **Ochtenden waarop je uitslaapt** | de ochtenden zelf, niet de avonden ervoor; leeg = elke dag |
+| **Ook op vakantiedagen uitslapen** | aan = geldt op elke dag die je vakantieagenda aanwijst |
 | **Wacht op deze slaper tot** | tot hoe laat deze bewoner het huis tegenhoudt terwijl hij slaapt; leeg = hij houdt niemand tegen |
 | **Dagen waarop gewacht wordt** | op welke dagen die uiterste tijd geldt; leeg = elke dag |
 | **Ook op vakantiedagen op deze slaper wachten** | uit = de dagen hierboven gelden letterlijk; aan = de tijd geldt op elke vakantiedag |
+
+### Uitslapen, en waarom dat niet gewoon een langer slaapvenster is
+
+Het slaapvenster doet twee dingen tegelijk: het zegt wanneer "telefoon op de
+lader" betekent dat iemand in bed ligt, én het zet daarmee 's avonds het huis
+uit zodra iedereen die thuis is naar bed gaat.
+
+Trek je dat venster door tot een uur of één, dan telt de lader ook op een gewone
+woensdag als slapen: wie om tien uur thuiskomt of thuis zit te werken, krijgt
+een koud huis. Knip je het venster terug tot alleen het weekend, dan zet niets
+het huis doordeweeks 's nachts nog uit en stookt het door tot iemand vertrekt.
+
+Daarom staat het uitslapen apart. Het slaapvenster blijft de nacht — bij de
+meesten iets als 21:00–08:00, elke dag. *Uitslapen tot* rekt alleen de ochtend
+op, op de ochtenden die je aanvinkt. Let op dat verschil: een slaapvenster loopt
+over middernacht en hangt daarom aan de dag waarop het begint, maar het
+uitslapen hangt aan de ochtend zelf. Uitslapen op zaterdag is dus zaterdag.
+
+Met het vinkje **Ook op vakantiedagen uitslapen** geldt het op elke dag die je
+vakantieagenda aanwijst. Je zet *vakantie* in je agenda en het uitslapen gaat
+vanzelf mee, zonder dat je ergens iets omzet.
+
+Het uitslapen en de *uiterste opsta-tijd* doen verschillend werk en vullen
+elkaar aan: uitslapen zegt hoe lang de slaapsensor geloofd wordt, de uiterste
+tijd hoe lang het huis op een slaper wacht. Slapen jullie allebei door, dan
+blijft het huis uit tot de eerste werkelijk opstaat — de uiterste tijd doet dan
+niets, want er is niemand om voor te wachten.
+
+### Thuiskomen is geen slapen
+
+De slaapsensor kent opstaan, niet thuiskomen. Kom je binnen met je telefoon nog
+aan de lader in de auto, dan is die melding ouder dan je thuiskomst en zegt hij
+niets over nu. De integratie telt een slaapmelding daarom alleen als die van ná
+de thuiskomst is: wie binnenkomt is wakker, tot hij zijn telefoon thuis opnieuw
+op de lader legt.
 
 ### Wachten op de laatste slaper
 

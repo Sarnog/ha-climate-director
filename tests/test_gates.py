@@ -29,6 +29,7 @@ from custom_components.climate_director.engine import (
     PresenceState,
     Reason,
     Resident,
+    SleepIn,
     Source,
     TimeWindow,
     WakeDeadline,
@@ -485,3 +486,116 @@ class TestWaitingForSleeper:
         relaxed = replace(config, gates=GateSettings(require_awake=False))
         world = make_world(now=at(10, 0, day=15), residents={"danny": awake(), "nancy": asleep()})
         assert gate_verdict(relaxed, world, living_room(config)).allowed
+
+
+class TestSleepingIn:
+    """Het uitslapen rekt de ochtend op, en alleen op de dagen die dat mogen.
+
+    Sleeping in stretches the morning, and only on the days that allow it.
+    """
+
+    @staticmethod
+    def _house(sleep_in: SleepIn | None, window: TimeWindow) -> DirectorConfig:
+        config = house()
+        return replace(
+            config,
+            residents=tuple(
+                replace(resident, sleep_window=window, sleep_in=sleep_in)
+                for resident in config.residents
+            ),
+        )
+
+    def _night(self) -> TimeWindow:
+        return TimeWindow(start=time(21, 0), end=time(8, 0))
+
+    def _weekend(self) -> SleepIn:
+        return SleepIn(until=time(13, 0), weekdays=frozenset({5, 6}))
+
+    def test_without_sleeping_in_the_window_is_the_whole_story(self) -> None:
+        config = self._house(None, self._night())
+        world = make_world(now=at(10, 0, day=15), residents={"danny": asleep(), "nancy": away()})
+        assert gate_verdict(config, world, living_room(config)).allowed
+
+    def test_the_morning_is_stretched_on_a_day_that_allows_it(self) -> None:
+        """15 augustus 2026 is een zaterdag. 15 August 2026 is a Saturday."""
+        config = self._house(self._weekend(), self._night())
+        world = make_world(now=at(10, 0, day=15), residents={"danny": asleep(), "nancy": away()})
+        assert gate_verdict(config, world, living_room(config)).reason is Reason.EVERYONE_ASLEEP
+
+    def test_it_stops_at_the_hour_that_was_given(self) -> None:
+        config = self._house(self._weekend(), self._night())
+        world = make_world(now=at(13, 0, day=15), residents={"danny": asleep(), "nancy": away()})
+        assert gate_verdict(config, world, living_room(config)).allowed
+
+    def test_an_ordinary_weekday_is_not_stretched(self) -> None:
+        """Anders blijft het huis uit terwijl er iemand thuis zit te werken.
+
+        Otherwise the house stays off while somebody is working from home.
+        """
+        config = self._house(self._weekend(), self._night())
+        world = make_world(now=at(10, 0, day=10), residents={"danny": asleep(), "nancy": away()})
+        assert gate_verdict(config, world, living_room(config)).allowed
+
+    def test_the_night_still_switches_the_house_off(self) -> None:
+        """Het slaapvenster blijft doen wat het deed, op elke dag.
+
+        The sleep window keeps doing what it did, on every day.
+        """
+        config = self._house(self._weekend(), self._night())
+        world = make_world(now=at(23, 0, day=10), residents={"danny": asleep(), "nancy": away()})
+        assert gate_verdict(config, world, living_room(config)).reason is Reason.EVERYONE_ASLEEP
+
+    def test_the_holiday_tick_stretches_any_holiday(self) -> None:
+        config = self._house(
+            SleepIn(until=time(13, 0), weekdays=frozenset({5, 6}), holiday=True), self._night()
+        )
+        monday = make_world(
+            now=at(10, 0, day=10), residents={"danny": asleep(), "nancy": away()}, holiday_mode=True
+        )
+        assert gate_verdict(config, monday, living_room(config)).reason is Reason.EVERYONE_ASLEEP
+
+    def test_without_the_tick_a_holiday_weekday_is_an_ordinary_weekday(self) -> None:
+        config = self._house(self._weekend(), self._night())
+        monday = make_world(
+            now=at(10, 0, day=10), residents={"danny": asleep(), "nancy": away()}, holiday_mode=True
+        )
+        assert gate_verdict(config, monday, living_room(config)).allowed
+
+    def test_sleeping_in_and_the_deadline_work_together(self) -> None:
+        """Uitslapen zegt hoe lang slaap telt, de uiterste tijd hoe lang je wacht.
+
+        Sleeping in says how long sleep counts, the deadline how long you wait.
+        """
+        config = replace(
+            self._house(self._weekend(), self._night()),
+            residents=tuple(
+                replace(
+                    resident,
+                    sleep_window=self._night(),
+                    sleep_in=self._weekend(),
+                    wake_deadline=WakeDeadline(at=time(11, 0), weekdays=frozenset({5, 6})),
+                )
+                for resident in house().residents
+            ),
+        )
+        zone = living_room(config)
+        # Eén op, één in bed: wachten tot de uiterste tijd.
+        waiting = make_world(now=at(10, 0, day=15), residents={"danny": awake(), "nancy": asleep()})
+        assert gate_verdict(config, waiting, zone).reason is Reason.WAITING_FOR_SLEEPER
+        released = make_world(
+            now=at(11, 0, day=15), residents={"danny": awake(), "nancy": asleep()}
+        )
+        assert gate_verdict(config, released, zone).allowed
+        # Allebei in bed: het huis wacht op de eerste die werkelijk opstaat.
+        both = make_world(now=at(11, 0, day=15), residents={"danny": asleep(), "nancy": asleep()})
+        assert gate_verdict(config, both, zone).reason is Reason.EVERYONE_ASLEEP
+        assert (
+            gate_verdict(
+                config,
+                make_world(
+                    now=at(12, 30, day=15), residents={"danny": asleep(), "nancy": asleep()}
+                ),
+                zone,
+            ).reason
+            is Reason.EVERYONE_ASLEEP
+        )

@@ -430,9 +430,48 @@ presencia se omiten entonces en vez de bloquearlo todo para siempre.
 | **Estado que significa dormido** | el estado que el sensor de sueño informa al dormir |
 | **El sensor de sueño cuenta de / hasta** | las horas en las que ese sensor significa algo; ambos vacíos = todo el día |
 | **Días de la ventana de sueño** | los días en los que se aplica esa ventana; vacío = todos los días |
+| **Dormir hasta** | hasta qué hora cuenta aún el sensor de sueño por la mañana; vacío = la ventana de sueño lo dice todo |
+| **Mañanas en las que duermes hasta tarde** | las mañanas mismas, no las noches anteriores; vacío = todos los días |
+| **Dormir hasta tarde también en días festivos** | marcado = se aplica en cada día que marque tu calendario de vacaciones |
 | **Esperar a esta persona dormida hasta** | hasta qué hora este residente retiene la casa mientras duerme; vacío = no retiene a nadie |
 | **Días en los que se espera** | los días en los que se aplica esa hora; vacío = todos los días |
 | **Esperar a esta persona también en días festivos** | desmarcado = los días de arriba se leen literalmente; marcado = la hora se aplica en todos los días festivos |
+
+### Dormir hasta tarde, y por qué no es simplemente una ventana de sueño más larga
+
+La ventana de sueño hace dos cosas a la vez: dice cuándo «teléfono en el
+cargador» significa que alguien está en la cama, y con ello apaga la casa por la
+noche en cuanto todos los presentes se acuestan.
+
+Si estiras esa ventana hasta la una, el cargador también cuenta como sueño un
+miércoles cualquiera: quien llega a las diez, o trabaja desde casa, se encuentra
+una casa fría. Si la recortas al fin de semana, entre semana ya nada apaga la
+casa de noche y sigue calentando hasta que alguien se marcha.
+
+Por eso dormir hasta tarde va aparte. La ventana de sueño sigue siendo la noche
+- en la mayoría de los casos algo como 21:00-08:00, todos los días. *Dormir
+hasta* solo alarga la mañana, en las mañanas que marques. Fíjate en la
+diferencia: una ventana de sueño cruza la medianoche y por eso depende del día en
+que empieza, mientras que dormir hasta tarde depende de la mañana misma. Dormir
+hasta tarde el sábado es sábado.
+
+Con la casilla **Dormir hasta tarde también en días festivos** se aplica en cada
+día que marque tu calendario de vacaciones. Pones *vacaciones* en la agenda y lo
+demás va solo.
+
+Dormir hasta tarde y la *hora límite de levantarse* hacen trabajos distintos y se
+complementan: lo primero dice cuánto tiempo se cree al sensor, lo segundo cuánto
+espera la casa a quien duerme. Si los dos seguís durmiendo, la casa sigue apagada
+hasta que el primero se levanta de verdad; la hora límite no hace nada entonces,
+porque no hay a quién esperar.
+
+### Llegar a casa no es dormir
+
+El sensor de sueño conoce el levantarse, no el llegar a casa. Si entras con el
+teléfono todavía en el cargador del coche, esa lectura es anterior a tu llegada y
+no dice nada del momento actual. Por eso la integración solo cuenta una lectura
+de sueño posterior a la llegada: quien entra está despierto, hasta que vuelve a
+dejar el teléfono en el cargador en casa.
 
 ### Esperar al último que duerme
 

@@ -53,6 +53,7 @@ from custom_components.climate_director.engine import (
     Season,
     Source,
     SourceRole,
+    WorldState,
     Zone,
     decide,
 )
@@ -511,6 +512,64 @@ def _healthy_states() -> dict[str, FakeState]:
         if entity in states:
             states[entity] = FakeState("19.0")
     return states
+
+
+class TestComingHomeIsNotSleeping:
+    """De slaapsensor kent opstaan, niet thuiskomen.
+
+    "Telefoon op de draadloze lader" zegt iets over iemand die de hele tijd
+    thuis was. Wie binnenkomt met zijn telefoon nog aan de lader in de auto, is
+    klaarwakker - en die melding is ouder dan de thuiskomst.
+
+    The sleep sensor knows getting up, not coming home. "Phone on the wireless
+    charger" says something about somebody who was home all along. Whoever walks
+    in with their phone still on the car charger is wide awake - and that
+    reading is older than the arrival.
+    """
+
+    def _world(self, home_at: datetime, charging_since: datetime) -> WorldState:
+        return coordinator(
+            {
+                "sensor.buiten": FakeState("7.5"),
+                "sensor.woonkamer": FakeState("19.0"),
+                "sensor.zolder": FakeState("18.0"),
+                LIVING: FakeState("off"),
+                BACKUP: FakeState("off"),
+                ATTIC: FakeState("off"),
+                "person.danny": FakeState("home", last_changed=home_at),
+                "sensor.danny_lader": FakeState("wireless", last_changed=charging_since),
+                "binary_sensor.achterdeur": FakeState("off"),
+                "binary_sensor.zolder": FakeState("on"),
+            }
+        ).build_world()
+
+    def test_a_reading_from_before_the_arrival_does_not_count(self) -> None:
+        world = self._world(
+            home_at=NOW - timedelta(minutes=5), charging_since=NOW - timedelta(hours=2)
+        )
+        assert world.resident("danny").home is True
+        assert world.resident("danny").asleep is False
+
+    def test_a_reading_from_after_the_arrival_counts_as_before(self) -> None:
+        """Wie zijn telefoon thuis opnieuw op de lader legt, gaat naar bed.
+
+        Whoever puts their phone back on the charger at home is turning in.
+        """
+        world = self._world(
+            home_at=NOW - timedelta(hours=2), charging_since=NOW - timedelta(minutes=5)
+        )
+        assert world.resident("danny").asleep is True
+
+    def test_equal_timestamps_count_as_asleep(self) -> None:
+        """Na een herstart dragen alle entiteiten hetzelfde moment.
+
+        Opschorten is dan de onschadelijke kant om fout te zitten.
+
+        After a restart every entity carries the same moment. Suspending is then
+        the harmless direction to be wrong in.
+        """
+        world = self._world(home_at=NOW, charging_since=NOW)
+        assert world.resident("danny").asleep is True
 
 
 class TestTheUnusableList:

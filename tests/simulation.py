@@ -33,7 +33,7 @@ import random
 from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from conftest import assert_plan_holds
 
@@ -687,6 +687,15 @@ class _HandStandIn:
         self._sent_setpoints: dict[str, tuple[str, float]] = {}
         self.saved = 0
         self.hass = _Hass(sim)
+        # De simulatie kent geen vakantieagenda. `_everyone_asleep` vraagt er
+        # sinds het uitslapen naar, dus de stand-in draagt het antwoord.
+        #
+        # The simulation has no holiday calendar. `_everyone_asleep` asks for one
+        # since sleeping in arrived, so the stand-in carries the answer.
+        self.holiday_mode = False
+
+    def _calendar_says_holiday(self) -> bool:
+        return False
 
     _notice_hand = ClimateDirectorCoordinator._notice_hand
     _zones_of = ClimateDirectorCoordinator._zones_of
@@ -717,7 +726,24 @@ class _HandStandIn:
 
 @dataclass(frozen=True)
 class _State:
+    """Wat `hass.states.get()` in de simulatie teruggeeft.
+
+    `last_changed` staat op het begin van de tijd. De simulatie houdt niet bij
+    wanneer een entiteit veranderde, en dat hoeft ook niet: de enige lezer die
+    ernaar kijkt is de regel "een slaapmelding van vóór de thuiskomst telt
+    niet", en met gelijke tijdstempels valt die naar de kant waarop de melding
+    gewoon telt. De simulatie meet dus wat ze altijd al mat.
+
+    What `hass.states.get()` hands back inside the simulation. `last_changed`
+    sits at the beginning of time. The simulation does not track when an entity
+    changed, and need not: its only reader is the rule that a sleep reading from
+    before the arrival does not count, and with equal timestamps that falls to
+    the side where the reading simply counts. So the simulation measures what it
+    always measured.
+    """
+
     state: str
+    last_changed: datetime = datetime.min.replace(tzinfo=UTC)
 
 
 class _Registry:

@@ -44,6 +44,7 @@ from .models import (
     Season,
     SeasonSettings,
     SeasonSource,
+    SleepIn,
     Source,
     SourceRole,
     TimeWindow,
@@ -226,9 +227,31 @@ def _resident(raw: Mapping[str, Any]) -> Resident:
         sleep_window=_sleep_window(
             raw.get("sleep_window") if isinstance(raw.get("sleep_window"), dict) else {}
         ),
+        sleep_in=_sleep_in(raw.get("sleep_in") if isinstance(raw.get("sleep_in"), dict) else {}),
         wake_deadline=_wake_deadline(
             raw.get("wake_deadline") if isinstance(raw.get("wake_deadline"), dict) else {}
         ),
+    )
+
+
+def _sleep_in(raw: dict[str, Any]) -> SleepIn | None:
+    """Return the sleep-in time, or `None` when no hour was filled in.
+
+    Geen tijd betekent geen uitslapen: het slaapvenster is dan het hele
+    verhaal. Een half ingevuld veld - wel dagen, geen tijd - is dus geen
+    uitslapen tot middernacht.
+
+    No time means no sleeping in: the sleep window is then the whole story. A
+    half-filled field - days but no time - is therefore not sleeping in until
+    midnight.
+    """
+    until = raw.get("until")
+    if not until:
+        return None
+    return SleepIn(
+        until=_time(until, time(0, 0)),
+        weekdays=_weekdays(raw.get("weekdays")),
+        holiday=_bool(raw.get("holiday"), False),
     )
 
 
@@ -486,6 +509,19 @@ def _resident_to_dict(resident: Resident) -> dict[str, Any]:
                     if resident.sleep_window.weekdays is None
                     else sorted(resident.sleep_window.weekdays)
                 ),
+            }
+        ),
+        "sleep_in": (
+            None
+            if resident.sleep_in is None
+            else {
+                "until": resident.sleep_in.until.isoformat(),
+                "weekdays": (
+                    None
+                    if resident.sleep_in.weekdays is None
+                    else sorted(resident.sleep_in.weekdays)
+                ),
+                "holiday": resident.sleep_in.holiday,
             }
         ),
         "wake_deadline": (

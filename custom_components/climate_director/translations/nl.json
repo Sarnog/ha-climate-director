@@ -302,7 +302,10 @@
           "sleep_days": "Dagen van het slaapvenster",
           "wake_by": "Wacht op deze slaper tot",
           "wake_days": "Dagen waarop gewacht wordt",
-          "wake_holiday": "Ook op vakantiedagen op deze slaper wachten"
+          "wake_holiday": "Ook op vakantiedagen op deze slaper wachten",
+          "sleep_in_until": "Uitslapen tot",
+          "sleep_in_days": "Ochtenden waarop je uitslaapt",
+          "sleep_in_holiday": "Ook op vakantiedagen uitslapen"
         },
         "data_description": {
           "sleep_entity": "Laat leeg als de slaap van deze persoon niet gevolgd wordt.",
@@ -316,7 +319,10 @@
           "sleep_days": "Laat leeg voor elke dag. Een venster over middernacht hangt aan de dag waarop het begint, dus een venster van vrijdag 23:00-09:00 telt zaterdag om 07:00 nog mee.",
           "wake_by": "Staat er iemand op terwijl deze bewoner thuis nog slaapt, dan wacht het huis. Na dit tijdstip niet meer: dan gaat het huis mee met wie wél op is. Leeg laten betekent dat deze bewoner niemand tegenhoudt.",
           "wake_days": "Leeg laten geldt elke dag. Een vakantiedag telt als zaterdag.",
-          "wake_holiday": "Een vakantiedag telt bij de roosters als zaterdag, maar bij deze tijd niet: de vakantie van de één is de werkdag van de ander, en dan houdt de uitslaper het huis op terwijl er iemand zit te werken. Vink dit aan als je ook op een vakantiedag gewacht wilt worden - dan geldt de tijd op elke weekdag."
+          "wake_holiday": "Een vakantiedag telt bij de roosters als zaterdag, maar bij deze tijd niet: de vakantie van de één is de werkdag van de ander, en dan houdt de uitslaper het huis op terwijl er iemand zit te werken. Vink dit aan als je ook op een vakantiedag gewacht wilt worden - dan geldt de tijd op elke weekdag.",
+          "sleep_in_until": "Het slaapvenster is de nacht: dat zet het huis om bedtijd uit. Dit rekt alleen de ochtend op, op de dagen hieronder, zodat de slaapsensor blijft tellen terwijl je nog in bed ligt. Leeg laten betekent dat het slaapvenster het hele verhaal is.",
+          "sleep_in_days": "Dit zijn de ochtenden waarop je uitslaapt, niet de avonden ervoor. Leeg laten geldt elke dag.",
+          "sleep_in_holiday": "Op elke dag die je vakantieagenda aanwijst, ongeacht de weekdag. Zo stel je het uitslapen één keer in in plaats van per vakantie."
         }
       },
       "windows": {

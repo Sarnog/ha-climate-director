@@ -882,7 +882,12 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             return False
         return all(
             bool(resident.sleep_entity)
-            and asleep_at(resident, residents[resident.resident_id].asleep, now)
+            and asleep_at(
+                resident,
+                residents[resident.resident_id].asleep,
+                now,
+                holiday=self.holiday_mode or self._calendar_says_holiday(),
+            )
             for resident in at_home
         )
 
@@ -1878,15 +1883,46 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         )
 
     def _resident(self, presence: str, sleep: str, asleep_state: str) -> ResidentState:
+        """Return one resident's state, with a stale sleep reading ignored.
+
+        Opstaan en thuiskomen zijn twee verschillende dingen, en de slaapsensor
+        kent alleen het eerste. "Telefoon op de draadloze lader" zegt iets over
+        iemand die de hele tijd thuis was; wie binnenkomt met zijn telefoon nog
+        aan de lader in de auto, is klaarwakker. Die melding is ouder dan de
+        thuiskomst en zegt dus niets over nu.
+
+        Daarom telt een slaapmelding alleen als hij van ná de thuiskomst is.
+        Legt iemand zijn telefoon thuis opnieuw op de lader, dan is dat een
+        verse melding en telt hij gewoon weer. Bij gelijke tijdstempels - na een
+        herstart krijgt alles hetzelfde moment - telt de melding wél, want
+        opschorten is de onschadelijke kant om fout te zitten.
+
+        Getting up and coming home are two different things, and the sleep
+        sensor knows only the first. "Phone on the wireless charger" says
+        something about somebody who was home all along; whoever walks in with
+        their phone still on the car charger is wide awake. That reading is
+        older than the arrival and therefore says nothing about now.
+
+        So a sleep reading only counts when it postdates the arrival. Put the
+        phone back on the charger at home and that is a fresh reading, counting
+        as before. On equal timestamps - after a restart everything carries the
+        same moment - the reading does count, since suspending is the harmless
+        direction to be wrong in.
+        """
         home = False
+        home_since = None
         if presence:
             state = self.hass.states.get(presence)
             home = state is not None and state.state.lower() in _HOME_STATES
+            if home and state is not None:
+                home_since = state.last_changed
 
         asleep = False
         if sleep:
             state = self.hass.states.get(sleep)
             asleep = state is not None and state.state == asleep_state
+            if asleep and home_since is not None and state.last_changed < home_since:
+                asleep = False
 
         return ResidentState(home=home, asleep=asleep)
 

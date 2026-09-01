@@ -420,6 +420,62 @@ class TimeWindow:
 
 
 @dataclass(frozen=True, slots=True)
+class SleepIn:
+    """Tot hoe laat de slaapsensor 's ochtends nog iets betekent.
+
+    Het slaapvenster is de nacht: daarbinnen betekent "telefoon op de lader"
+    dat iemand in bed ligt, en daarbuiten is een lader gewoon een lader. Dat
+    venster doet twee dingen tegelijk - het zet het huis om bedtijd uit én het
+    bepaalt hoe lang je 's ochtends mag doorslapen - en die twee vragen om
+    verschillende antwoorden. Trek je het venster door tot een uur of één, dan
+    telt de lader ook op een gewone woensdag als slapen en blijft het huis uit
+    terwijl er iemand thuis zit te werken. Knip je het venster op de dagen die
+    ertoe doen, dan zet niets het huis 's nachts nog uit.
+
+    Daarom staat het uitslapen hier apart: het slaapvenster blijft de nacht, en
+    dit rekt alleen de ochtend op, op de dagen dat dat mag.
+
+    The sleep window is the night: inside it "phone on the charger" means
+    somebody is in bed, and outside it a charger is just a charger. That window
+    does two jobs at once - switching the house off at bedtime and setting how
+    long you may sleep in - and those two want different answers. Stretch the
+    window to one in the afternoon and the charger counts as sleep on an
+    ordinary Wednesday too, leaving the house off while somebody is working
+    from home. Cut the window down to the days that matter and nothing switches
+    the house off at night any more.
+
+    So sleeping in lives here on its own: the sleep window stays the night, and
+    this stretches only the morning, on the days that allow it.
+    """
+
+    until: time
+    """The hour the sleep sensor stops counting on a morning that allows it."""
+
+    weekdays: frozenset[int] | None = None
+    """The **mornings** this applies to. `None` means every day.
+
+    Bewust de ochtend en niet de avond ervoor. Een slaapvenster loopt over
+    middernacht en hangt daarom aan de dag waarop het begint - wie zaterdag wil
+    uitslapen, vinkt daar vrijdag aan. Dat is een val die niemand verwacht.
+    Deze tijd hangt aan de ochtend zelf: uitslapen op zaterdag is zaterdag.
+
+    Deliberately the morning and not the evening before. A sleep window runs
+    past midnight and therefore hangs on the day it starts - whoever wants to
+    sleep in on Saturday ticks Friday. That is a trap nobody expects. This time
+    hangs on the morning itself: sleeping in on Saturday is Saturday.
+    """
+
+    holiday: bool = False
+    """Whether this also applies on a holiday, whatever the weekday."""
+
+    def applies_on(self, weekday: int, *, holiday: bool) -> bool:
+        """Return whether sleeping in is allowed on that morning."""
+        if holiday and self.holiday:
+            return True
+        return self.weekdays is None or weekday in self.weekdays
+
+
+@dataclass(frozen=True, slots=True)
 class WakeDeadline:
     """The hour from which one resident's sleep stops holding the house back.
 
@@ -499,6 +555,13 @@ class Resident:
     windows: tuple[TimeWindow, ...] = ()
     """Times this resident wants climate control. Empty means always."""
 
+    sleep_in: SleepIn | None = None
+    """Until when the sleep sensor still counts on a morning that allows it.
+
+    `None` betekent: geen uitslapen, dus het slaapvenster is het hele verhaal.
+    `None` means: no sleeping in, so the sleep window is the whole story.
+    """
+
     wake_deadline: WakeDeadline | None = None
     """Until when this resident's sleep holds the house back. `None` means never.
 
@@ -570,6 +633,19 @@ class Resident:
         which is not a schedule but a lock.
         """
         return bool(self.windows_for(holiday=holiday, weekday=weekday))
+
+    def sleeps_in_at(self, moment: time, weekday: int, *, holiday: bool = False) -> bool:
+        """Return whether this resident may still be asleep at that moment.
+
+        Alleen de ochtend wordt opgerekt; de nacht doet het slaapvenster zelf.
+        Only the morning is stretched; the night is the sleep window's own work.
+        """
+        sleep_in = self.sleep_in
+        if sleep_in is None:
+            return False
+        if not sleep_in.applies_on(weekday, holiday=holiday):
+            return False
+        return moment < sleep_in.until
 
     def waits_until(self, weekday: int, *, holiday: bool = False) -> time | None:
         """Return the time this resident's sleep stops holding the house back.

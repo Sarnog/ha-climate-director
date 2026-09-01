@@ -17,7 +17,7 @@ next day - since last night's decision should not still hold this morning.
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 from homeassistant.util import dt as dt_util
@@ -81,8 +81,22 @@ def config(*, with_residents: bool = False) -> DirectorConfig:
 
 
 class _State:
-    def __init__(self, state: str) -> None:
+    """Een toestand zoals `hass.states.get()` hem teruggeeft.
+
+    `last_changed` staat op het begin van de tijd, tenzij een test er zelf iets
+    van vindt. De enige lezer is de regel "een slaapmelding van vóór de
+    thuiskomst telt niet", en bij gelijke tijdstempels valt die naar de kant
+    waarop de melding gewoon telt.
+
+    A state as `hass.states.get()` hands it back. `last_changed` sits at the
+    beginning of time unless a test says otherwise. Its only reader is the rule
+    that a sleep reading from before the arrival does not count, and on equal
+    timestamps that falls to the side where the reading simply counts.
+    """
+
+    def __init__(self, state: str, last_changed: datetime | None = None) -> None:
         self.state = state
+        self.last_changed = last_changed or datetime.min.replace(tzinfo=UTC)
 
 
 class _Event:
@@ -170,6 +184,15 @@ def coordinator(
             self.shadow = False
             self.hass = Hass()
             self.saved = 0
+            # Geen vakantieagenda in deze stand-in; `_everyone_asleep` vraagt
+            # ernaar sinds het uitslapen bestaat.
+            #
+            # No holiday calendar in this stand-in; `_everyone_asleep` asks for
+            # one now that sleeping in exists.
+            self.holiday_mode = False
+
+        def _calendar_says_holiday(self) -> bool:
+            return False
 
         def _async_save_state(self) -> None:
             self.saved += 1

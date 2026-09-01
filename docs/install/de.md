@@ -434,9 +434,48 @@ Anwesenheitstore werden dann übersprungen, statt alles dauerhaft zu blockieren.
 | **Status, der Schlafen bedeutet** | der Zustand, den der Schlafsensor beim Schlafen meldet |
 | **Schlafsensor zählt von / bis** | die Stunden, in denen dieser Sensor etwas bedeutet; beide leer = rund um die Uhr |
 | **Tage des Schlaffensters** | an welchen Tagen dieses Fenster gilt; leer = jeden Tag |
+| **Ausschlafen bis** | bis wann der Schlafsensor morgens noch zählt; leer = das Schlaffenster ist die ganze Geschichte |
+| **Morgen, an denen du ausschläfst** | die Morgen selbst, nicht die Abende davor; leer = jeden Tag |
+| **Auch an Feiertagen ausschlafen** | ein = gilt an jedem Tag, den dein Urlaubskalender markiert |
 | **Auf diese schlafende Person warten bis** | bis wann diese Person das Haus im Schlaf aufhält; leer = sie hält niemanden auf |
 | **Tage, an denen gewartet wird** | an welchen Tagen diese Uhrzeit gilt; leer = jeden Tag |
 | **Auch an Feiertagen auf diese Person warten** | aus = die Tage oben gelten wörtlich; ein = die Uhrzeit gilt an jedem Feiertag |
+
+### Ausschlafen, und warum das nicht einfach ein längeres Schlaffenster ist
+
+Das Schlaffenster erledigt zwei Aufgaben zugleich: Es sagt, wann "Telefon am
+Ladegerät" bedeutet, dass jemand im Bett liegt, und schaltet damit abends das
+Haus aus, sobald alle Anwesenden zu Bett gegangen sind.
+
+Dehnst du dieses Fenster bis ein Uhr mittags, zählt das Ladegerät auch an einem
+gewöhnlichen Mittwoch als Schlaf: Wer um zehn nach Hause kommt oder von zu Hause
+arbeitet, bekommt ein kaltes Haus. Kürzt du das Fenster auf das Wochenende, so
+schaltet werktags nachts nichts mehr das Haus aus, und es heizt weiter, bis
+jemand geht.
+
+Deshalb steht das Ausschlafen für sich. Das Schlaffenster bleibt die Nacht - bei
+den meisten etwa 21:00-08:00, jeden Tag. *Ausschlafen bis* dehnt nur den Morgen,
+an den Morgen, die du ankreuzt. Achte auf den Unterschied: Ein Schlaffenster
+läuft über Mitternacht und hängt daher am Tag seines Beginns, das Ausschlafen
+dagegen am Morgen selbst. Ausschlafen am Samstag ist also Samstag.
+
+Mit dem Häkchen **Auch an Feiertagen ausschlafen** gilt es an jedem Tag, den dein
+Urlaubskalender markiert. Du trägst *Urlaub* in den Kalender ein, und das
+Ausschlafen folgt von selbst.
+
+Ausschlafen und die *späteste Aufstehzeit* leisten Verschiedenes und ergänzen
+einander: Das Ausschlafen sagt, wie lange dem Schlafsensor geglaubt wird, die
+späteste Zeit, wie lange das Haus auf eine schlafende Person wartet. Schlaft ihr
+beide weiter, bleibt das Haus aus, bis die erste Person wirklich aufsteht - die
+späteste Zeit tut dann nichts, denn es gibt niemanden, auf den zu warten wäre.
+
+### Nach Hause kommen ist kein Schlafen
+
+Der Schlafsensor kennt das Aufstehen, nicht das Nachhausekommen. Kommst du
+herein, während dein Telefon noch am Ladegerät im Auto hängt, ist diese Meldung
+älter als deine Ankunft und sagt nichts über jetzt. Die Integration zählt eine
+Schlafmeldung deshalb nur, wenn sie nach der Ankunft liegt: Wer hereinkommt, ist
+wach, bis er sein Telefon zu Hause wieder auf das Ladegerät legt.
 
 ### Auf den letzten Schläfer warten
 

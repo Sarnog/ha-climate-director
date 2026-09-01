@@ -302,7 +302,10 @@
           "sleep_days": "Tage des Schlaffensters",
           "wake_by": "Auf diese schlafende Person warten bis",
           "wake_days": "Tage, an denen gewartet wird",
-          "wake_holiday": "Auch an Feiertagen auf diese Person warten"
+          "wake_holiday": "Auch an Feiertagen auf diese Person warten",
+          "sleep_in_until": "Ausschlafen bis",
+          "sleep_in_days": "Morgen, an denen du ausschläfst",
+          "sleep_in_holiday": "Auch an Feiertagen ausschlafen"
         },
         "data_description": {
           "sleep_entity": "Leer lassen, wenn der Schlaf dieser Person nicht erfasst wird.",
@@ -316,7 +319,10 @@
           "sleep_days": "Leer lassen für jeden Tag. Ein Fenster über Mitternacht hängt an seinem Starttag, ein Fenster von Freitag 23:00-09:00 zählt also am Samstag um 07:00 noch mit.",
           "wake_by": "Ist jemand auf, während diese Person zu Hause noch schläft, wartet das Haus. Nach dieser Uhrzeit nicht mehr: dann richtet es sich nach denen, die auf sind. Leer lassen, damit diese Person niemanden aufhält.",
           "wake_days": "Leer lassen gilt für jeden Tag. Ein Feiertag zählt als Samstag.",
-          "wake_holiday": "Ein Feiertag zählt bei den Zeitplänen als Samstag, bei dieser Uhrzeit aber nicht: Der freie Tag des einen ist der Arbeitstag des anderen, und dann hält der Langschläfer das Haus auf, während jemand arbeitet. Setzen Sie das Häkchen, wenn auch an einem Feiertag auf Sie gewartet werden soll - dann gilt die Uhrzeit an jedem Wochentag."
+          "wake_holiday": "Ein Feiertag zählt bei den Zeitplänen als Samstag, bei dieser Uhrzeit aber nicht: Der freie Tag des einen ist der Arbeitstag des anderen, und dann hält der Langschläfer das Haus auf, während jemand arbeitet. Setzen Sie das Häkchen, wenn auch an einem Feiertag auf Sie gewartet werden soll - dann gilt die Uhrzeit an jedem Wochentag.",
+          "sleep_in_until": "Das Schlaffenster ist die Nacht: Es schaltet das Haus zur Schlafenszeit aus. Dies dehnt nur den Morgen aus, an den Tagen unten, damit der Schlafsensor weiterzählt, während du noch im Bett liegst. Leer lassen heißt: Das Schlaffenster ist die ganze Geschichte.",
+          "sleep_in_days": "Das sind die Morgen, an denen du ausschläfst, nicht die Abende davor. Leer lassen gilt für jeden Tag.",
+          "sleep_in_holiday": "An jedem Tag, den dein Urlaubskalender markiert, unabhängig vom Wochentag. So stellst du das Ausschlafen einmal ein statt pro Urlaub."
         }
       },
       "windows": {

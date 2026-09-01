@@ -204,26 +204,38 @@ def _preconditioning(world: WorldState, zone: Zone) -> bool:
     return world.preconditioning(zone.zone_id)
 
 
-def asleep_at(resident: Resident, is_asleep: bool, now: datetime) -> bool:
+def asleep_at(resident: Resident, is_asleep: bool, now: datetime, *, holiday: bool = False) -> bool:
     """Return whether this resident counts as asleep at `now`.
 
     De sensor zegt wat hij ziet; het venster zegt wanneer dat iets betekent.
-    Buiten die uren is een oplader gewoon een oplader.
+    Buiten die uren is een oplader gewoon een oplader. Op een ochtend waarop
+    uitslapen mag, loopt dat venster door tot de tijd die de bewoner daarvoor
+    heeft opgegeven - zie `Resident.sleep_in`, en zie waarom dat niet gewoon een
+    langer slaapvenster is.
 
     The sensor says what it sees; the window says when that means anything.
-    Outside those hours a charger is just a charger.
+    Outside those hours a charger is just a charger. On a morning that allows
+    sleeping in, that window runs on until the time the resident gave for it -
+    see `Resident.sleep_in`, and why that is not simply a longer sleep window.
     """
     if not is_asleep:
         return False
     window = resident.sleep_window
     if window is None:
         return True
-    return window.contains(now.time(), now.weekday())
+    if window.contains(now.time(), now.weekday()):
+        return True
+    return resident.sleeps_in_at(now.time(), now.weekday(), holiday=holiday)
 
 
 def asleep(resident: Resident, world: WorldState) -> bool:
     """Return whether this resident counts as asleep right now."""
-    return asleep_at(resident, world.resident(resident.resident_id).asleep, world.now)
+    return asleep_at(
+        resident,
+        world.resident(resident.resident_id).asleep,
+        world.now,
+        holiday=world.holiday_mode,
+    )
 
 
 def _up_and_about(resident: Resident, world: WorldState) -> bool:

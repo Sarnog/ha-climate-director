@@ -1377,6 +1377,9 @@ class TestEveryScreenSurvivesItsNeighbour:
                 "name": "Danny",
                 "presence_entity": "person.danny",
                 "sleep_state": "on",
+                "sleep_in_until": "13:00:00",
+                "sleep_in_days": ["5", "6"],
+                "sleep_in_holiday": True,
                 "wake_by": "11:00:00",
                 "wake_days": ["5", "6"],
                 "wake_holiday": True,
@@ -1392,6 +1395,11 @@ class TestEveryScreenSurvivesItsNeighbour:
     @staticmethod
     def _check_resident(stored: dict[str, Any]) -> None:
         assert stored["residents"][0]["name"] == "Danny"
+        assert stored["residents"][0]["sleep_in"] == {
+            "until": "13:00:00",
+            "weekdays": [5, 6],
+            "holiday": True,
+        }
         assert stored["residents"][0]["wake_deadline"] == {
             "at": "11:00:00",
             "weekdays": [5, 6],
@@ -1748,6 +1756,8 @@ class TestDiscardArrivesOnEveryScreen:
             "sleep_from": "22:00:00",
             "sleep_until": "07:00:00",
             "sleep_days": ["0", "1"],
+            "sleep_in_until": "13:00:00",
+            "sleep_in_days": ["5", "6"],
             "wake_by": "11:00:00",
             "wake_days": ["5", "6"],
         },
@@ -2087,7 +2097,7 @@ class TestEveryDayFieldSpeaksTheUsersLanguage:
                 found.append(config)
         return found
 
-    @pytest.mark.parametrize(("screen", "fields"), [("resident", 2), ("window", 1), ("quiet", 1)])
+    @pytest.mark.parametrize(("screen", "fields"), [("resident", 3), ("window", 1), ("quiet", 1)])
     async def test_the_day_pickers_carry_a_translation_key(self, screen: str, fields: int) -> None:
         home = await start_house(_installation_with_a_problem(), states=cold())
         try:
