@@ -833,6 +833,15 @@
     "season_excludes_mode": {
       "message": "Zone {zone} darf {mode} nur in {allowed}, aber die Jahreszeit ist auf {season} festgelegt."
     },
+    "nonfinite_hysteresis": {
+      "message": "Zone {zone} hat eine nicht-endliche {mode}-Hysterese."
+    },
+    "nonfinite_outdoor_deadband": {
+      "message": "Die Außentotzone ist keine endliche Zahl."
+    },
+    "zero_outdoor_deadband_no_circuit": {
+      "message": "Gerät {entity} hat ein begrenztes Außenfenster und sitzt auf keinem Kreis; steht die Außentotzone auf null, bremst nichts seinen Brenner."
+    },
     "zone_outdoor_without_sensor": {
       "message": "Zone {zone} begrenzt {mode} durch die Außentemperatur, aber es ist kein Außensensor eingestellt."
     },

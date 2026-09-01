@@ -833,6 +833,15 @@
     "season_excludes_mode": {
       "message": "La zona {zone} solo puede {mode} en {allowed}, pero la estación está fijada en {season}."
     },
+    "nonfinite_hysteresis": {
+      "message": "La zona {zone} tiene una histéresis de {mode} no finita."
+    },
+    "nonfinite_outdoor_deadband": {
+      "message": "La banda muerta exterior no es un número finito."
+    },
+    "zero_outdoor_deadband_no_circuit": {
+      "message": "El aparato {entity} tiene una ventana exterior acotada y no está en ningún circuito; con la banda muerta exterior a cero, nada frena su quemador."
+    },
     "zone_outdoor_without_sensor": {
       "message": "La zona {zone} limita {mode} por la temperatura exterior, pero no hay sensor exterior configurado."
     },

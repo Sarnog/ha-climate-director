@@ -833,6 +833,15 @@
     "season_excludes_mode": {
       "message": "Zone {zone} mag alleen {mode} in {allowed}, maar het seizoen staat vast op {season}."
     },
+    "nonfinite_hysteresis": {
+      "message": "Zone {zone} heeft een niet-eindige {mode}-hysterese."
+    },
+    "nonfinite_outdoor_deadband": {
+      "message": "De buitendode band is geen eindig getal."
+    },
+    "zero_outdoor_deadband_no_circuit": {
+      "message": "Apparaat {entity} heeft een begrensd buitenvenster en zit op geen circuit; met de buitendode band op nul remt niets zijn brander."
+    },
     "zone_outdoor_without_sensor": {
       "message": "Zone {zone} begrenst {mode} door de buitentemperatuur, maar er is geen buitensensor ingesteld."
     },

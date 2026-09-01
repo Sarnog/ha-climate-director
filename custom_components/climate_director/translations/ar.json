@@ -833,6 +833,15 @@
     "season_excludes_mode": {
       "message": "المنطقة {zone} يمكنها {mode} فقط في {allowed}، لكن الفصل مثبّت على {season}."
     },
+    "nonfinite_hysteresis": {
+      "message": "المنطقة {zone} لها تباطؤ {mode} غير منتهٍ."
+    },
+    "nonfinite_outdoor_deadband": {
+      "message": "النطاق الميت الخارجي ليس عدداً منتهياً."
+    },
+    "zero_outdoor_deadband_no_circuit": {
+      "message": "الجهاز {entity} له نافذة خارجية محدودة ولا يقع على أي دائرة؛ ومع النطاق الميت الخارجي عند الصفر لا يكبحه شيء."
+    },
     "zone_outdoor_without_sensor": {
       "message": "المنطقة {zone} تقيّد {mode} بدرجة الحرارة الخارجية، لكن لا يوجد مستشعر خارجي."
     },

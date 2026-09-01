@@ -833,6 +833,15 @@
     "season_excludes_mode": {
       "message": "Zone {zone} may {mode} only in {allowed}, but the season is fixed to {season}."
     },
+    "nonfinite_hysteresis": {
+      "message": "Zone {zone} has a non-finite {mode} hysteresis."
+    },
+    "nonfinite_outdoor_deadband": {
+      "message": "The outdoor dead band is not a finite number."
+    },
+    "zero_outdoor_deadband_no_circuit": {
+      "message": "Appliance {entity} has a bounded outdoor window and sits on no circuit; with the outdoor dead band at zero nothing brakes its burner."
+    },
     "zone_outdoor_without_sensor": {
       "message": "Zone {zone} limits {mode} by outdoor temperature, but no outdoor sensor is set."
     },

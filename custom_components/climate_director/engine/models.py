@@ -26,6 +26,7 @@ circuits. The two axes cross and are never tied to one another.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from datetime import time, timedelta
 from enum import StrEnum
@@ -1260,7 +1261,16 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
             settings = zone.settings_for(family)
             if settings is None:
                 continue
-            if settings.hysteresis < 0:
+            if not math.isfinite(settings.hysteresis):
+                problems.append(
+                    Problem(
+                        "nonfinite_hysteresis",
+                        f"zone {zone.zone_id} has a non-finite {family.value} hysteresis",
+                        zone=zone.zone_id,
+                        mode=family.value,
+                    )
+                )
+            elif settings.hysteresis < 0:
                 problems.append(
                     Problem(
                         "zone_negative_hysteresis",
@@ -1478,8 +1488,54 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
             )
         )
 
-    if config.outdoor_hysteresis < 0:
+    if not math.isfinite(config.outdoor_hysteresis):
+        problems.append(
+            Problem("nonfinite_outdoor_deadband", "the outdoor dead band is not a finite number")
+        )
+    elif config.outdoor_hysteresis < 0:
         problems.append(Problem("negative_outdoor_deadband", "the outdoor dead band is negative"))
+    elif config.outdoor_hysteresis == 0:
+        # Zonder circuit is er niets dat de brander nog remt: het begrensde
+        # buitenvenster is dan een schakelaar geworden die nergens op ingrijpt.
+        # Het venster kan op de bron zelf zitten of op een taak die de bron
+        # bedient; beide begrenzen wat het apparaat mag.
+        #
+        # Without a circuit there is nothing left to brake the burner: the
+        # bounded outdoor window has then become a switch that touches nothing.
+        # The window may sit on the source itself or on a duty the source
+        # serves; both bound what the appliance may do.
+        circuit_units = {unit for circuit in config.circuits for unit in circuit.units}
+
+        def bounded(entity_id: str) -> bool:
+            for _, source in config.sources():
+                if source.entity_id == entity_id and not source.outdoor.unbounded:
+                    return True
+            for zone in config.zones:
+                for source in zone.sources:
+                    if source.entity_id != entity_id:
+                        continue
+                    for family in (ModeFamily.HEAT, ModeFamily.COOL):
+                        if not source.supports(family):
+                            continue
+                        settings = zone.settings_for(family)
+                        if settings is not None and not settings.outdoor.unbounded:
+                            return True
+            return False
+
+        unbraked = sorted(
+            eid
+            for eid in {source.entity_id for _, source in config.sources() if source.entity_id}
+            if eid not in circuit_units and bounded(eid)
+        )
+        for entity_id in unbraked:
+            problems.append(
+                Problem(
+                    "zero_outdoor_deadband_no_circuit",
+                    f"appliance {entity_id} has a bounded outdoor window and sits on no "
+                    "circuit; with the outdoor dead band at zero nothing brakes its burner",
+                    entity=entity_id,
+                )
+            )
 
     if config.gates.max_precondition.total_seconds() <= 0:
         problems.append(

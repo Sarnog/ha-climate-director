@@ -35,7 +35,11 @@ from custom_components.climate_director.engine import (
     manual_only_problems,
     validate,
 )
-from custom_components.climate_director.engine.models import SeasonSettings, SeasonSource
+from custom_components.climate_director.engine.models import (
+    SeasonSettings,
+    SeasonSource,
+    SourceRole,
+)
 
 
 def problem(config: DirectorConfig, fragment: str) -> bool:
@@ -149,6 +153,77 @@ def test_a_fixed_season_that_admits_every_duty_is_not_reported() -> None:
     for source in (SeasonSource.SUMMER, SeasonSource.AUTO):
         config = replace(house(), seasons=SeasonSettings(source=source))
         assert "season_excludes_mode" not in _season_problem_codes(config)
+
+
+def test_a_zero_outdoor_deadband_without_a_circuit_is_reported() -> None:
+    """Dode band nul en een begrensd apparaat op geen circuit: niets remt.
+
+    Dead band zero with a bounded appliance on no circuit: nothing brakes it.
+    """
+    from dataclasses import replace
+
+    config = replace(house(), outdoor_hysteresis=0.0)
+    assert problem(config, "nothing brakes its burner")
+
+
+def test_a_positive_outdoor_deadband_without_a_circuit_is_fine() -> None:
+    from dataclasses import replace
+
+    config = replace(house(), outdoor_hysteresis=0.5)
+    assert not problem(config, "nothing brakes its burner")
+
+
+def _boiler_under_a_duty_window(deadband: float) -> DirectorConfig:
+    """De gemeten opstelling: het venster zit op de taak, niet op de bron.
+
+    The measured setup: the window sits on the duty, not on the source.
+    """
+    return DirectorConfig(
+        zones=(
+            Zone(
+                zone_id="woonkamer",
+                name="Woonkamer",
+                indoor_sensor="sensor.woonkamer",
+                sources=(
+                    Source(
+                        source_id="ketel",
+                        entity_id="climate.gasketel",
+                        role=SourceRole.HEAT_ONLY,
+                    ),
+                ),
+                heat=ModeSettings(21.0, 20.0, outdoor=OutdoorWindow(maximum=19.0)),
+            ),
+        ),
+        outdoor_sensor="sensor.buiten",
+        outdoor_hysteresis=deadband,
+    )
+
+
+def test_a_boiler_under_a_bounded_duty_window_is_reported_at_zero_deadband() -> None:
+    assert problem(_boiler_under_a_duty_window(0.0), "nothing brakes its burner")
+
+
+def test_a_boiler_under_a_bounded_duty_window_is_fine_above_zero_deadband() -> None:
+    assert not problem(_boiler_under_a_duty_window(0.5), "nothing brakes its burner")
+
+
+def test_a_nonfinite_outdoor_deadband_is_reported() -> None:
+    """Een NaN- of oneindige dode band glipt langs de `< 0`-check.
+
+    A NaN or infinite dead band slips past the `< 0` check.
+    """
+    from dataclasses import replace
+
+    for value in (float("nan"), float("inf")):
+        config = replace(house(), outdoor_hysteresis=value)
+        assert problem(config, "not a finite number")
+
+
+def test_a_nonfinite_mode_hysteresis_is_reported() -> None:
+    config = DirectorConfig(
+        zones=(zone("a", heat=ModeSettings(21.0, 20.0, hysteresis=float("nan"))),)
+    )
+    assert problem(config, "non-finite")
 
 
 class TestSharedPriority:

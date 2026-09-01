@@ -833,6 +833,15 @@
     "season_excludes_mode": {
       "message": "La zone {zone} ne peut {mode} qu'en {allowed}, mais la saison est fixée sur {season}."
     },
+    "nonfinite_hysteresis": {
+      "message": "La zone {zone} a une hystérésis de {mode} non finie."
+    },
+    "nonfinite_outdoor_deadband": {
+      "message": "La zone morte extérieure n'est pas un nombre fini."
+    },
+    "zero_outdoor_deadband_no_circuit": {
+      "message": "L'appareil {entity} a une fenêtre extérieure bornée et n'est sur aucun circuit ; avec la zone morte extérieure à zéro, rien ne freine son brûleur."
+    },
     "zone_outdoor_without_sensor": {
       "message": "La zone {zone} limite {mode} par la température extérieure, mais aucun capteur extérieur n'est défini."
     },
