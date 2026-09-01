@@ -897,7 +897,7 @@
         },
         "zone_ids": {
           "name": "Ruimtes",
-          "description": "Welke ruimtes vast op temperatuur moeten, met hun zone-id. Leeg laten geldt voor het hele huis."
+          "description": "Welke ruimtes vooruit geregeld moeten worden, met hun zone-id. Het veld weglaten geldt voor het hele huis; een lege lijst betekent geen enkele ruimte."
         },
         "minutes": {
           "name": "Minuten",
@@ -919,7 +919,7 @@
         },
         "zone_ids": {
           "name": "Ruimtes",
-          "description": "Voor welke ruimtes het verzoek wordt afgeblazen, met hun zone-id. Leeg laten geldt voor het hele huis."
+          "description": "Voor welke ruimtes het verzoek wordt afgeblazen, met hun zone-id. Het veld weglaten geldt voor het hele huis; een lege lijst breekt niets af."
         }
       }
     }

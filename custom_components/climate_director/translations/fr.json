@@ -897,7 +897,7 @@
         },
         "zone_ids": {
           "name": "Pièces",
-          "description": "Les pièces à préparer, par leur identifiant de zone. Laisser vide vaut pour toute la maison."
+          "description": "Les pièces à préparer, par leur identifiant de zone. Omettre le champ vaut pour toute la maison ; une liste vide ne désigne aucune pièce."
         },
         "minutes": {
           "name": "Minutes",
@@ -919,7 +919,7 @@
         },
         "zone_ids": {
           "name": "Pièces",
-          "description": "Les pièces pour lesquelles la demande est annulée, par leur identifiant de zone. Laisser vide vaut pour toute la maison."
+          "description": "Les pièces pour lesquelles la demande est annulée, par leur identifiant de zone. Omettre le champ vaut pour toute la maison ; une liste vide n'annule rien."
         }
       }
     }

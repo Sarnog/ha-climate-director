@@ -851,6 +851,44 @@ class TestTheActions:
         with pytest.raises(ServiceValidationError):
             await home.call("climate_director", "cancel_precondition", {"zone_ids": ["woonkamr"]})
 
+    async def test_an_empty_zone_list_means_no_zones(self, home: LiveHome) -> None:
+        """Een lege lijst is geen enkele zone; weglaten is nog steeds het hele huis.
+
+        An empty list means no zones; leaving the field away still means the
+        whole house.
+        """
+        home.set("person.danny", "not_home")
+        await home.evaluate()
+        assert home.state(LIVING) == "off"
+
+        await home.call("climate_director", "precondition", {"zone_ids": [], "minutes": 30})
+        await home.settle()
+        assert home.coordinator._live_preconditions() == {}
+
+        await home.call("climate_director", "precondition", {"minutes": 30})
+        await home.settle()
+        assert set(home.coordinator._live_preconditions()) == {"woonkamer", "zolder"}
+
+        await home.call("climate_director", "cancel_precondition", {"zone_ids": []})
+        await home.settle()
+        assert set(home.coordinator._live_preconditions()) == {"woonkamer", "zolder"}
+
+    async def test_an_unknown_entry_id_is_reported_as_such(self, home: LiveHome) -> None:
+        """Een onbekende installatie hoort zo te heten, niet "onbekende zone".
+
+        An unknown installation should be called that, not "unknown zone".
+        """
+        from homeassistant.exceptions import ServiceValidationError
+
+        with pytest.raises(ServiceValidationError, match="installation"):
+            await home.call(
+                "climate_director",
+                "precondition",
+                {"entry_id": "bestaat_niet", "zone_ids": ["woonkamer"], "minutes": 30},
+            )
+        with pytest.raises(ServiceValidationError, match="installation"):
+            await home.call("climate_director", "cancel_precondition", {"entry_id": "bestaat_niet"})
+
     async def test_zero_minutes_still_grants_nothing_straight_at_the_coordinator(
         self, home: LiveHome
     ) -> None:

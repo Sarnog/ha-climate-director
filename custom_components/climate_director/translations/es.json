@@ -897,7 +897,7 @@
         },
         "zone_ids": {
           "name": "Habitaciones",
-          "description": "Qué habitaciones preparar, por su identificador de zona. Dejarlo vacío vale para toda la casa."
+          "description": "Qué habitaciones preparar, por su identificador de zona. Omitir el campo vale para toda la casa; una lista vacía no designa ninguna habitación."
         },
         "minutes": {
           "name": "Minutos",
@@ -919,7 +919,7 @@
         },
         "zone_ids": {
           "name": "Habitaciones",
-          "description": "Para qué habitaciones se cancela la petición, por su identificador de zona. Dejarlo vacío vale para toda la casa."
+          "description": "Para qué habitaciones se cancela la petición, por su identificador de zona. Omitir el campo vale para toda la casa; una lista vacía no cancela nada."
         }
       }
     }

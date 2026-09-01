@@ -897,7 +897,7 @@
         },
         "zone_ids": {
           "name": "Rooms",
-          "description": "Which rooms to warm up, by their zone id. Leave empty for the whole house."
+          "description": "Which rooms to pre-condition, by their zone id. Leave the field away for the whole house; an empty list means no rooms."
         },
         "minutes": {
           "name": "Minutes",
@@ -919,7 +919,7 @@
         },
         "zone_ids": {
           "name": "Rooms",
-          "description": "Which rooms to call the request off for, by their zone id. Leave empty for the whole house."
+          "description": "Which rooms to call the request off for, by their zone id. Leave the field away for the whole house; an empty list cancels nothing."
         }
       }
     }

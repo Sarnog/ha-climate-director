@@ -897,7 +897,7 @@
         },
         "zone_ids": {
           "name": "Räume",
-          "description": "Welche Räume vorbereitet werden, mit ihrer Zonen-ID. Leer lassen gilt für das ganze Haus."
+          "description": "Welche Räume vorbereitet werden, mit ihrer Zonen-ID. Das Feld weglassen gilt für das ganze Haus; eine leere Liste bedeutet keine Räume."
         },
         "minutes": {
           "name": "Minuten",
@@ -919,7 +919,7 @@
         },
         "zone_ids": {
           "name": "Räume",
-          "description": "Für welche Räume die Anforderung abgebrochen wird, mit ihrer Zonen-ID. Leer lassen gilt für das ganze Haus."
+          "description": "Für welche Räume die Anforderung abgebrochen wird, mit ihrer Zonen-ID. Das Feld weglassen gilt für das ganze Haus; eine leere Liste bricht nichts ab."
         }
       }
     }

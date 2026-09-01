@@ -1093,6 +1093,10 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
     ) -> dict[str, datetime]:
         """Start warming the named zones up for somebody on their way home.
 
+        `zone_ids` is `None` when the call omitted the field - then every known
+        zone runs. An explicit empty list means no zones at all: a template that
+        renders to nothing must not heat the whole house by accident.
+
         The request is capped at the configured maximum, so asking for longer
         than the installation allows shortens the request rather than refusing
         it: the intent was clear, only the number was wrong.
@@ -1143,13 +1147,14 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
         until = dt_util.now() + length
 
         known = {zone.zone_id for zone in self.config.zones}
-        unknown = sorted(set(zone_ids or ()) - known)
+        requested = list(zone_ids) if zone_ids is not None else sorted(known)
+        unknown = sorted(set(requested) - known)
         if unknown:
             _LOGGER.warning(
                 "Pre-conditioning asked for unknown zones, ignored: %s",
                 ", ".join(unknown),
             )
-        chosen = [zone_id for zone_id in (zone_ids or known) if zone_id in known]
+        chosen = [zone_id for zone_id in requested if zone_id in known]
         for zone_id in chosen:
             self._precondition[zone_id] = until
             if ignore_openings:
@@ -1328,7 +1333,11 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
 
     @callback
     def async_cancel_precondition(self, zone_ids: list[str] | None) -> None:
-        """Call the whole thing off, for the named zones or for all of them."""
+        """Call the whole thing off, for the named zones or for all of them.
+
+        `zone_ids` is `None` when the call omitted the field - then every
+        request is cancelled. An explicit empty list cancels nothing.
+        """
         known = {zone.zone_id for zone in self.config.zones}
         if zone_ids is None:
             self._precondition.clear()
