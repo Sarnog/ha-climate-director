@@ -698,14 +698,14 @@ class TestTheEnglishTemplatesLiveInTheCache:
         De Engelse terugval dekt élke code; mist er één, dan valt die ene melding
         terug op de rauwe engine-tekst zonder eenheidomrekening. De codes worden
         met een AST-loop uit de engine verzameld, niet uit een met de hand
-        bijgehouden lijst; `41` is de telling die de loop vandaag moet vinden en
+        bijgehouden lijst; `42` is de telling die de loop vandaag moet vinden en
         bewaakt dat de loop zelf nog werkt.
 
         Every `Problem` code is in `strings.json["exceptions"]`.
         The English fallback covers every code; if one is missing, that one
         notice falls back to the raw engine text without unit conversion. The
         codes are gathered from the engine with an AST walk, not from a
-        hand-kept list; `41` is the count the walk must find today and guards
+        hand-kept list; `42` is the count the walk must find today and guards
         that the walk itself still works.
         """
         import ast
@@ -724,7 +724,7 @@ class TestTheEnglishTemplatesLiveInTheCache:
             and node.args
             and isinstance(node.args[0], ast.Constant)
         ]
-        assert len(codes) == 41
+        assert len(codes) == 42
         templates = texts.english_templates()
         assert templates is not None
         missing = [code for code in codes if code not in templates]

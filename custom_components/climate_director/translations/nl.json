@@ -704,6 +704,10 @@
       "title": "Climate Director: {name} vraagt een stand die {count} apparaat/apparaten niet kan draaien",
       "description": "Deze apparaten hebben een rol ingesteld die een stand kan vragen die ze niet melden - bijvoorbeeld koelen op een unit die alleen `heat` en `off` kent. De director slaat ze voor die stand over, dus de zone doet in stilte niets.\n\n{entities}\n\nControleer de rol bij Configureren, of de `hvac_modes` van het apparaat bij Ontwikkelhulpmiddelen. Deze melding verdwijnt vanzelf zodra elk apparaat de standen meldt die zijn rol mag vragen."
     },
+    "season_excludes_mode": {
+      "title": "Climate Director: {name} zet een seizoen dat {count} taak/taken buitensluit",
+      "description": "De seizoensselect staat op een seizoen waarin deze taken nooit mogen draaien, dus ze kunnen nooit draaien:\n\n{entities}\n\nZet de select terug op Automatisch, of wijzig het seizoen onder Configureren."
+    },
     "command_not_taking": {
       "title": "Climate Director: {count} apparaat/apparaten van {name} voert zijn commando niet uit",
       "description": "De director vraagt deze apparaten al een tijd hetzelfde, en ze blijven iets anders melden - de aanroep wordt aangenomen en er gebeurt niets, of het apparaat zet zichzelf meteen terug:\n\n{entities}\n\nZolang dat duurt gaat dezelfde aanroep elke ronde opnieuw de deur uit, zo'n veertienhonderd per dag, en nergens is daar iets van te zien. Controleer het apparaat bij Ontwikkelhulpmiddelen: is het bereikbaar, neemt het de stand aan, en zet iets anders het terug - een thermostaatrooster, een andere automatisering? Deze melding verdwijnt vanzelf zodra het apparaat zijn commando volgt."
@@ -825,6 +829,9 @@
     },
     "zone_window_admits_nothing": {
       "message": "Zone {zone} heeft een {mode}-buitenvenster dat niets toelaat."
+    },
+    "season_excludes_mode": {
+      "message": "Zone {zone} mag alleen {mode} in {allowed}, maar het seizoen staat vast op {season}."
     },
     "zone_outdoor_without_sensor": {
       "message": "Zone {zone} begrenst {mode} door de buitentemperatuur, maar er is geen buitensensor ingesteld."

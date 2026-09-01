@@ -704,6 +704,10 @@
       "title": "Climate Director: {name} verlangt einen Modus, den {count} Gerät(e) nicht fahren kann",
       "description": "Diese Geräte haben eine Rolle, die einen Modus verlangen kann, den sie nicht melden - etwa Kühlen an einem Gerät, das nur `heat` und `off` kennt. Der Director überspringt sie für diesen Modus, also tut die Zone still nichts.\n\n{entities}\n\nPrüfen Sie die Rolle unter Konfigurieren oder die `hvac_modes` des Geräts unter Entwicklerwerkzeuge. Dieser Hinweis verschwindet von selbst, sobald jedes Gerät die Modi meldet, die seine Rolle verlangen darf."
     },
+    "season_excludes_mode": {
+      "title": "Climate Director: {name} stellt eine Jahreszeit ein, die {count} Aufgabe(n) aussperrt",
+      "description": "Die Jahreszeiten-Auswahl steht auf einer Jahreszeit, in der diese Aufgaben nie laufen dürfen, also können sie nie laufen:\n\n{entities}\n\nSetz die Auswahl zurück auf Automatisch, oder ändere die Jahreszeit unter Konfigurieren."
+    },
     "command_not_taking": {
       "title": "Climate Director: {count} Gerät(e) von {name} führt seinen Befehl nicht aus",
       "description": "Der Director verlangt von diesen Geräten seit einer Weile dasselbe, und sie melden weiterhin etwas anderes - der Aufruf wird angenommen und es passiert nichts, oder das Gerät stellt sich sofort zurück:\n\n{entities}\n\nSolange das anhält, geht derselbe Aufruf in jeder Runde erneut hinaus, rund vierzehnhundert am Tag, und nirgends ist davon etwas zu sehen. Prüfen Sie das Gerät unter Entwicklerwerkzeuge: Ist es erreichbar, nimmt es den Modus an, und stellt es etwas anderes zurück - ein Thermostatzeitplan, eine andere Automatisierung? Dieser Hinweis verschwindet von selbst, sobald das Gerät seinem Befehl folgt."
@@ -825,6 +829,9 @@
     },
     "zone_window_admits_nothing": {
       "message": "Zone {zone} hat ein {mode}-Außenfenster, das nichts zulässt."
+    },
+    "season_excludes_mode": {
+      "message": "Zone {zone} darf {mode} nur in {allowed}, aber die Jahreszeit ist auf {season} festgelegt."
     },
     "zone_outdoor_without_sensor": {
       "message": "Zone {zone} begrenzt {mode} durch die Außentemperatur, aber es ist kein Außensensor eingestellt."

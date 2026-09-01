@@ -704,6 +704,10 @@
       "title": "Climate Director: {name} asks a mode that {count} appliance(s) cannot run",
       "description": "These appliances have a role that can ask for a mode they do not report - for example cooling on a unit that only knows `heat` and `off`. The director skips them for that mode, so the zone silently does nothing.\n\n{entities}\n\nCheck the role under Configure, or the appliance's `hvac_modes` under Developer tools. This notice disappears by itself once every appliance reports the modes its role may ask for."
     },
+    "season_excludes_mode": {
+      "title": "Climate Director: {name} sets a season that locks {count} duty/duties out",
+      "description": "The season select stands on a season these duties are never allowed in, so they can never run:\n\n{entities}\n\nSet the select back to Automatic, or change the season under Configure."
+    },
     "command_not_taking": {
       "title": "Climate Director: {count} appliance(s) of {name} do not carry out their command",
       "description": "The director has been asking these appliances for the same thing for a while, and they keep reporting something else - the call is accepted and nothing happens, or the appliance puts itself straight back:\n\n{entities}\n\nFor as long as that lasts the same call goes out again every round, some fourteen hundred a day, and nowhere is anything of it to be seen. Check the appliance under Developer tools: is it reachable, does it accept the mode, and is something else putting it back - a thermostat schedule, another automation? This notice disappears by itself once the appliance follows its command."
@@ -825,6 +829,9 @@
     },
     "zone_window_admits_nothing": {
       "message": "Zone {zone} has a {mode} outdoor window that admits nothing."
+    },
+    "season_excludes_mode": {
+      "message": "Zone {zone} may {mode} only in {allowed}, but the season is fixed to {season}."
     },
     "zone_outdoor_without_sensor": {
       "message": "Zone {zone} limits {mode} by outdoor temperature, but no outdoor sensor is set."

@@ -1055,6 +1055,7 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
                 self._report_unreadable()
                 self._report_unsupported_modes()
                 self._report_command_not_taking()
+                self._report_season_override()
                 self._schedule_deferral(plan)
             finally:
                 self.async_set_updated_data(plan)
@@ -1689,6 +1690,45 @@ class ClimateDirectorCoordinator(DataUpdateCoordinator[Plan]):
             self.config_entry.entry_id,
             self.config_entry.title,
             self._note_unapplied(),
+        )
+
+    # -- seizoensselect / season select ---------------------------------------
+
+    def _season_override_problems(self) -> dict[str, str]:
+        """Return the duties the season select locks out, keyed by zone and duty.
+
+        De engine meldt de vaste seizoensbron in `validate()`; de select is
+        bedieningstoestand en leeft hier. Zet iemand de select op een seizoen
+        waarin een ingestelde taak nooit mag draaien, dan kan die taak nooit
+        draaien - hetzelfde stille niets, dus dezelfde melding als bij de vaste
+        instelling.
+
+        The engine reports the fixed season source in `validate()`; the select
+        is control state and lives here. Put the select on a season an
+        installed duty is never allowed in, and that duty can never run - the
+        same silent nothing, so the same notice as for the fixed setting.
+        """
+        override = getattr(self, "season_override", None)
+        if override is None:
+            return {}
+        found: dict[str, str] = {}
+        for zone in self.config.zones:
+            for family in (ModeFamily.HEAT, ModeFamily.COOL):
+                settings = zone.settings_for(family)
+                if settings is not None and not settings.allowed_in(override):
+                    found[f"{zone.zone_id}:{family.value}"] = (
+                        f"{zone.name or zone.zone_id} ({family.value})"
+                    )
+        return found
+
+    @callback
+    def _report_season_override(self) -> None:
+        """Put a season select that locks a duty out under Repairs, or take it away."""
+        problems.async_report_season_override(
+            self.hass,
+            self.config_entry.entry_id,
+            self.config_entry.title,
+            self._season_override_problems(),
         )
 
     # -- vastgelopen zones / stuck zones -------------------------------------

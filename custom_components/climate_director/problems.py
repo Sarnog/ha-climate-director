@@ -401,6 +401,53 @@ def async_clear_unsupported_modes(hass: HomeAssistant, entry_id: str) -> None:
     ir.async_delete_issue(hass, DOMAIN, _unsupported_modes_issue_id(entry_id))
 
 
+def _season_excludes_mode_issue_id(entry_id: str) -> str:
+    """Return the season-excludes-mode notice id for one installation."""
+    return f"season_excludes_mode_{entry_id}"
+
+
+def async_report_season_override(
+    hass: HomeAssistant, entry_id: str, title: str, found: Mapping[str, str]
+) -> None:
+    """Raise or clear the notice about a season select that locks a duty out.
+
+    De select is bedieningstoestand: staat hij op een seizoen waarin een
+    ingestelde taak nooit mag draaien, dan kan die taak nooit draaien - en dat
+    is van buiten niet te onderscheiden van een zone die niets hoeft. De vaste
+    seizoensbron wordt door `validate()` gemeld; dit is dezelfde melding voor
+    de select, die de engine niet kent.
+
+    The select is control state: put it on a season an installed duty is never
+    allowed in, and that duty can never run - from the outside that is
+    indistinguishable from a zone with nothing to do. The fixed season source
+    is reported by `validate()`; this is the same notice for the select, which
+    the engine does not know.
+    """
+    if not found:
+        ir.async_delete_issue(hass, DOMAIN, _season_excludes_mode_issue_id(entry_id))
+        return
+
+    listed = "\n".join(f"- `{item}`" for item in sorted(found.values()))
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        _season_excludes_mode_issue_id(entry_id),
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="season_excludes_mode",
+        translation_placeholders={
+            "name": title,
+            "count": str(len(found)),
+            "entities": listed,
+        },
+    )
+
+
+def async_clear_season_override(hass: HomeAssistant, entry_id: str) -> None:
+    """Drop the season-excludes-mode notice for one installation."""
+    ir.async_delete_issue(hass, DOMAIN, _season_excludes_mode_issue_id(entry_id))
+
+
 def _command_not_taking_issue_id(entry_id: str) -> str:
     """Return the command-not-taking notice id for one installation."""
     return f"command_not_taking_{entry_id}"

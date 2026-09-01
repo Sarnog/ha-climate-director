@@ -704,6 +704,10 @@
       "title": "Climate Director: {name} pide un modo que {count} aparato(s) no puede ejecutar",
       "description": "Estos aparatos tienen un rol que puede pedir un modo que no notifican - por ejemplo, enfriar en una unidad que solo conoce `heat` y `off`. El director los omite para ese modo, así que la zona no hace nada en silencio.\n\n{entities}\n\nComprueba el rol en Configurar, o los `hvac_modes` del aparato en Herramientas de desarrollo. Este aviso desaparece por sí solo en cuanto cada aparato notifique los modos que su rol puede pedir."
     },
+    "season_excludes_mode": {
+      "title": "Climate Director: {name} fija una estación que excluye {count} tarea(s)",
+      "description": "El selector de estación está en una estación en la que estas tareas nunca pueden funcionar, así que nunca podrán hacerlo:\n\n{entities}\n\nVuelve a poner el selector en Automático, o cambia la estación en Configurar."
+    },
     "command_not_taking": {
       "title": "Climate Director: {count} aparato(s) de {name} no ejecuta su orden",
       "description": "El director lleva un tiempo pidiendo lo mismo a estos aparatos, y siguen notificando otra cosa - la llamada se acepta y no pasa nada, o el aparato se vuelve a poner como estaba:\n\n{entities}\n\nMientras eso dure, la misma llamada sale de nuevo en cada ronda, unas mil cuatrocientas al día, y en ninguna parte se ve nada. Comprueba el aparato en Herramientas de desarrollo: ¿está accesible, acepta el modo, y hay algo más que lo devuelve a su sitio, un programa del termostato u otra automatización? Este aviso desaparece por sí solo en cuanto el aparato siga su orden."
@@ -825,6 +829,9 @@
     },
     "zone_window_admits_nothing": {
       "message": "La zona {zone} tiene una ventana exterior de {mode} que no admite nada."
+    },
+    "season_excludes_mode": {
+      "message": "La zona {zone} solo puede {mode} en {allowed}, pero la estación está fijada en {season}."
     },
     "zone_outdoor_without_sensor": {
       "message": "La zona {zone} limita {mode} por la temperatura exterior, pero no hay sensor exterior configurado."

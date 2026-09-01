@@ -446,6 +446,34 @@ def _installation(rng: random.Random) -> dict:
         for source in zone["sources"]
     )
 
+    season_source = rng.choice(
+        [
+            {"source": "month"},
+            {"source": "summer"},
+            {"source": "winter"},
+            {"source": "entity", "entity_id": "sensor.seizoen"},
+        ]
+    )
+    # Staat het seizoen vast, dan hoort een taak die dat seizoen uitsluit niet
+    # uit een generator van geldige huizen te komen: `validate()` meldt die
+    # combinatie sinds ronde 21 terecht. De dichtstbijzijnde geldige vorm is
+    # "alleen in het vaste seizoen".
+    #
+    # With the season pinned, a duty that excludes that season should not come
+    # out of a generator of valid houses: `validate()` rightly reports that
+    # combination since round 21. The nearest valid shape is "only in the
+    # pinned season".
+    pinned = season_source.get("source")
+    if pinned in ("summer", "winter"):
+        for zone_dict in zones:
+            for mode in ("heat", "cool"):
+                settings = zone_dict.get(mode)
+                if not settings:
+                    continue
+                allowed = settings.get("seasons")
+                if allowed is not None and pinned not in allowed:
+                    settings["seasons"] = [pinned]
+
     return {
         # "Centraal" mag alleen als er werkelijk één warmtebron door meerdere
         # zones gedeeld wordt; anders is het een gezoneerd systeem en zegt
@@ -476,14 +504,7 @@ def _installation(rng: random.Random) -> dict:
             "guest_window": rng.choice([None, _window(rng)]),
             "quiet_windows": [_quiet_window(rng) for _ in range(rng.randrange(0, 3))],
         },
-        "seasons": rng.choice(
-            [
-                {"source": "month"},
-                {"source": "summer"},
-                {"source": "winter"},
-                {"source": "entity", "entity_id": "sensor.seizoen"},
-            ]
-        ),
+        "seasons": season_source,
         "outdoor_sensor": "sensor.buiten" if outdoor_needed or rng.random() < 0.5 else "",
         # Agenda's zonder trefwoord kunnen nooit iets aanzetten, en daar
         # klaagt `validate()` terecht over; die combinatie hoort dus niet uit

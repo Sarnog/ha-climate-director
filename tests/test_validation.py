@@ -35,6 +35,7 @@ from custom_components.climate_director.engine import (
     manual_only_problems,
     validate,
 )
+from custom_components.climate_director.engine.models import SeasonSettings, SeasonSource
 
 
 def problem(config: DirectorConfig, fragment: str) -> bool:
@@ -121,6 +122,33 @@ def test_a_switched_off_stuck_sensor_is_not_reported() -> None:
 
     config = replace(house(), stuck_after=timedelta(0))
     assert not problem(config, "below the built-in opening rest")
+
+
+def _season_problem_codes(config: DirectorConfig) -> set[str]:
+    return {item.code for item in validate(config) if getattr(item, "code", "")}
+
+
+def test_a_fixed_season_that_locks_a_duty_out_is_reported() -> None:
+    """Vast op winter, koelen alleen in de zomer: koelen kan nooit draaien.
+
+    Pinned to winter, cooling in summer only: cooling can never run.
+    """
+    from dataclasses import replace
+
+    config = replace(house(), seasons=SeasonSettings(source=SeasonSource.WINTER))
+    assert "season_excludes_mode" in _season_problem_codes(config)
+
+
+def test_a_fixed_season_that_admits_every_duty_is_not_reported() -> None:
+    """Vast op zomer laat koelen toe; automatisch is geen vaste keuze.
+
+    Pinned to summer admits cooling; automatic is not a fixed choice.
+    """
+    from dataclasses import replace
+
+    for source in (SeasonSource.SUMMER, SeasonSource.AUTO):
+        config = replace(house(), seasons=SeasonSettings(source=source))
+        assert "season_excludes_mode" not in _season_problem_codes(config)
 
 
 class TestSharedPriority:

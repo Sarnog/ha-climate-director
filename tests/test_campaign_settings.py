@@ -30,6 +30,7 @@ import pytest
 from harness_live import settings, source, start_house, stop_house, zone
 
 from custom_components.climate_director import coordinator as coordinator_module
+from custom_components.climate_director.const import DOMAIN
 from custom_components.climate_director.engine import Season
 
 LIVING = "climate.woonkamer"
@@ -214,6 +215,38 @@ class TestTheSeasonSetting:
             await home.evaluate()
             assert home.coordinator.season_override is None
             assert home.coordinator.world.season is Season.WINTER
+        finally:
+            await stop_house(home)
+
+    async def test_the_select_reports_a_season_that_locks_a_duty_out(self) -> None:
+        """Staat de select op een seizoen dat een taak uitsluit, dan valt dat op.
+
+        The select standing on a season that locks a duty out gets reported.
+        """
+        from homeassistant.helpers import issue_registry as ir
+
+        home = await start_house(summer_house({"source": "summer"}), states=hot_world())
+        try:
+            await home.evaluate()
+            registry = ir.async_get(home.hass)
+            issue_id = f"season_excludes_mode_{home.entry.entry_id}"
+            assert registry.async_get_issue(DOMAIN, issue_id) is None
+
+            await home.call(
+                "select",
+                "select_option",
+                {"entity_id": home.by_key("season"), "option": "winter"},
+            )
+            await home.evaluate()
+            assert registry.async_get_issue(DOMAIN, issue_id) is not None
+
+            await home.call(
+                "select",
+                "select_option",
+                {"entity_id": home.by_key("season"), "option": "auto"},
+            )
+            await home.evaluate()
+            assert registry.async_get_issue(DOMAIN, issue_id) is None
         finally:
             await stop_house(home)
 

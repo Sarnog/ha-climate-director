@@ -1054,6 +1054,20 @@ def manual_only_problems(config: DirectorConfig) -> tuple[Problem, ...]:
     return tuple(found)
 
 
+def _pinned_season(seasons: SeasonSettings) -> Season | None:
+    """Return the season `seasons` pins the installation to, if any."""
+    if seasons.source is SeasonSource.SUMMER:
+        return Season.SUMMER
+    if seasons.source is SeasonSource.WINTER:
+        return Season.WINTER
+    return None
+
+
+def _season_names(seasons: frozenset[Season] | None) -> str:
+    """Return the human-readable names of the seasons a duty is allowed in."""
+    return ", ".join(sorted(season.value for season in seasons or ()))
+
+
 def validate(config: DirectorConfig) -> tuple[str, ...]:
     """Return every structural problem found in `config`, newest checks last.
 
@@ -1275,6 +1289,33 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
                         mode=family.value,
                     )
                 )
+
+            # Staat het seizoen vast op een seizoen waarin deze taak nooit mag
+            # draaien, dan kan deze taak nooit draaien - het stille niets waar
+            # `unreadable_entities` en `unsupported_modes` voor gebouwd zijn.
+            # Alleen de vaste bron telt hier; de select is bedieningstoestand en
+            # leeft in de koppelingslaag, die dezelfde melding zelf opent.
+            #
+            # With the season pinned to one this duty is never allowed in, the
+            # duty can never run - the silent nothing `unreadable_entities` and
+            # `unsupported_modes` exist for. Only the fixed source counts here;
+            # the select is control state and lives in the binding layer, which
+            # opens the same notice itself.
+            pinned = _pinned_season(config.seasons)
+            if pinned is not None and not settings.allowed_in(pinned):
+                problems.append(
+                    Problem(
+                        "season_excludes_mode",
+                        f"zone {zone.zone_id} may {family.value} only in "
+                        f"{_season_names(settings.seasons)}, but the season is fixed "
+                        f"to {pinned.value}",
+                        zone=zone.zone_id,
+                        mode=family.value,
+                        allowed=_season_names(settings.seasons),
+                        season=pinned.value,
+                    )
+                )
+
             if not any(source.supports(family) for source in zone.sources):
                 problems.append(
                     Problem(

@@ -704,6 +704,10 @@
       "title": "Climate Director : {name} demande un mode que {count} appareil(s) ne peut exécuter",
       "description": "Ces appareils ont un rôle qui peut demander un mode qu'ils ne signalent pas - par exemple refroidir sur une unité qui ne connaît que `heat` et `off`. Le directeur les saute pour ce mode, la zone ne fait donc rien en silence.\n\n{entities}\n\nVérifiez le rôle sous Configurer, ou les `hvac_modes` de l'appareil sous Outils de développement. Cet avis disparaît de lui-même dès que chaque appareil signale les modes que son rôle peut demander."
     },
+    "season_excludes_mode": {
+      "title": "Climate Director : {name} règle une saison qui exclut {count} tâche(s)",
+      "description": "La sélection de saison est sur une saison où ces tâches ne sont jamais autorisées, elles ne peuvent donc jamais s'exécuter :\n\n{entities}\n\nRemettez la sélection sur Automatique, ou modifiez la saison sous Configurer."
+    },
     "command_not_taking": {
       "title": "Climate Director : {count} appareil(s) de {name} n'exécute pas sa commande",
       "description": "Le directeur demande la même chose à ces appareils depuis un moment, et ils continuent de signaler autre chose - l'appel est accepté et rien ne se passe, ou l'appareil se remet aussitôt comme avant :\n\n{entities}\n\nTant que cela dure, le même appel repart à chaque tour, soit environ quatorze cents par jour, et rien ne le montre nulle part. Vérifiez l'appareil sous Outils de développement : est-il joignable, accepte-t-il le mode, et y a-t-il autre chose qui le remet en place - un programme de thermostat, une autre automatisation ? Cet avis disparaît de lui-même dès que l'appareil suit sa commande."
@@ -825,6 +829,9 @@
     },
     "zone_window_admits_nothing": {
       "message": "La zone {zone} a une fenêtre extérieure de {mode} qui n'admet rien."
+    },
+    "season_excludes_mode": {
+      "message": "La zone {zone} ne peut {mode} qu'en {allowed}, mais la saison est fixée sur {season}."
     },
     "zone_outdoor_without_sensor": {
       "message": "La zone {zone} limite {mode} par la température extérieure, mais aucun capteur extérieur n'est défini."
