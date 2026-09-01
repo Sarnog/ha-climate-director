@@ -133,14 +133,12 @@ class TestTheSeasonSetting:
     async def test_pinned_to_winter_refuses_to_cool(self) -> None:
         """Zesentwintig graden in de winter: de airco blijft uit.
 
-        De gemelde reden is die van de verwarmkant (`satisfied`), niet die van
-        de koelkant: een zone rapporteert één reden, en de verwarmkant gaat
-        voor. Wat telt voor de veiligheid is dat er niet gekoeld wordt.
+        De gemelde reden is die van de koelkant (`season_blocks_mode`): een
+        tevreden verwarmingskant mag een geblokkeerde koeltaak niet maskeren.
 
         Twenty-six degrees in winter: the air conditioner stays off. The
-        reported reason is the heating side's (`satisfied`) rather than the
-        cooling side's: a zone reports one reason, and heating comes first.
-        What counts for safety is that no cooling happens.
+        reported reason is the cooling side's (`season_blocks_mode`): a
+        satisfied heating duty must not mask a blocked cooling duty.
         """
         home = await start_house(summer_house({"source": "winter"}), states=hot_world())
         try:

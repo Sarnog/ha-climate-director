@@ -168,6 +168,62 @@ class TestRefusals:
         demand = evaluate(zone, 15.0, ModeFamily.NEUTRAL, outdoor=None)
         assert demand.reason is Reason.NO_OUTDOOR_TEMPERATURE
 
+    @pytest.mark.parametrize("cool_block", ("season", "window"))
+    @pytest.mark.parametrize("heat_quiet", ("satisfied", "deadband"))
+    def test_a_blocked_duty_outranks_a_quiet_one(self, cool_block: str, heat_quiet: str) -> None:
+        """Tevreden verwarmen mag een geblokkeerde koeltaak niet maskeren.
+
+        `satisfied`/`within_deadband` betekent "er is niets te doen", geen
+        oorzaak. Wordt de andere taak wél ergens door tegengehouden, dan hoort
+        die reden het te winnen.
+
+        A satisfied heating duty must not mask a blocked cooling duty.
+        `satisfied`/`within_deadband` means "there is nothing to do", not a
+        cause. When the other duty is held back by something real, that reason
+        should win.
+        """
+        indoor = 22.0 if heat_quiet == "satisfied" else 20.5
+        if cool_block == "season":
+            zone = zone_with(
+                heat=ModeSettings(target=21.0, start_at=20.0, hysteresis=1.0),
+                cool=ModeSettings(
+                    target=22.0,
+                    start_at=23.0,
+                    hysteresis=1.0,
+                    seasons=frozenset({Season.SUMMER}),
+                ),
+            )
+            demand = evaluate(zone, indoor, ModeFamily.NEUTRAL, outdoor=30.0, season=Season.WINTER)
+            expected = Reason.SEASON_BLOCKS_MODE
+        else:
+            zone = zone_with(
+                heat=ModeSettings(target=21.0, start_at=20.0, hysteresis=1.0),
+                cool=ModeSettings(
+                    target=22.0,
+                    start_at=23.0,
+                    hysteresis=1.0,
+                    outdoor=OutdoorWindow(minimum=35.0),
+                ),
+            )
+            demand = evaluate(zone, indoor, ModeFamily.NEUTRAL, outdoor=30.0, season=Season.SUMMER)
+            expected = Reason.OUTDOOR_OUTSIDE_WINDOW
+        assert demand.family is ModeFamily.NEUTRAL
+        assert demand.reason is expected
+
+    def test_a_blocked_heating_still_outranks_a_satisfied_cooling(self) -> None:
+        """De omgekeerde richting blijft zoals hij was: koud huis gaat voor.
+
+        The reverse direction stays as it was: a cold house comes first.
+        """
+        zone = zone_with(
+            heat=ModeSettings(
+                target=21.0, start_at=20.0, hysteresis=1.0, outdoor=OutdoorWindow(maximum=5.0)
+            ),
+            cool=ModeSettings(target=22.0, start_at=23.0, hysteresis=1.0),
+        )
+        demand = evaluate(zone, 22.0, ModeFamily.NEUTRAL, outdoor=30.0, season=Season.SUMMER)
+        assert demand.reason is Reason.OUTDOOR_OUTSIDE_WINDOW
+
 
 class TestAnOutdoorBoundOnlyHoldsBackItsOwnDuty:
     """Een grens op koelen mag verwarmen niet stilleggen, en omgekeerd.

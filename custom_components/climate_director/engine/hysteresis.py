@@ -297,14 +297,30 @@ def _threshold(settings: ModeSettings, family: ModeFamily, running: bool) -> flo
 
 
 def _best_refusal(heat: Demand, cool: Demand) -> Demand:
-    """Return the more specific of two refusals.
+    """Return the more informative of two refusals.
 
-    `MODE_NOT_CONFIGURED` says nothing a user can act on, so any other cause
-    outranks it; between two real causes the heating one is reported, since a
-    cold house is the complaint people chase first.
+    The ranking, from most to least useful to a user:
+
+    1. a cause the user can do something about (season, outdoor window, a dead
+       sensor) — between two of those the heating one wins, since a cold house
+       is the complaint people chase first;
+    2. `SATISFIED` and `WITHIN_DEADBAND` — "there is nothing to do" is not a
+       cause, so it never masks a real one;
+    3. `MODE_NOT_CONFIGURED` — "you never set this up" is the least useful
+       answer of all.
+
+    Een tevreden verwarmingskant mag een geblokkeerde koeltaak niet
+    verbergen: `satisfied`/`within_deadband` is geen oorzaak maar "er is niets
+    te doen", en een oorzaak waar een gebruiker iets aan kan doen gaat daaraan
+    voor. Tussen twee echte oorzaken wint de verwarmingskant.
     """
+    quiet = (Reason.SATISFIED, Reason.WITHIN_DEADBAND)
     if heat.reason is Reason.MODE_NOT_CONFIGURED:
         return cool
     if cool.reason is Reason.MODE_NOT_CONFIGURED:
+        return heat
+    if heat.reason in quiet and cool.reason not in quiet:
+        return cool
+    if cool.reason in quiet and heat.reason not in quiet:
         return heat
     return heat
