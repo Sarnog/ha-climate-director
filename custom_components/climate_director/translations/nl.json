@@ -52,7 +52,7 @@
           "holiday_keyword": "Woord dat vakantie aangeeft",
           "guest_start": "Gastenmodus vanaf",
           "guest_end": "Gastenmodus tot",
-          "max_precondition": "Maximale vooruitverwarmtijd (minuten)",
+          "max_precondition": "Maximale vooruitlooptijd (minuten)",
           "when_done": "Als je hier klaar bent",
           "stuck_after": "Zone geldt als vastgelopen na (minuten)",
           "precipitation_source": "Neerslagbron",
@@ -698,7 +698,7 @@
     },
     "unreadable_entities": {
       "title": "Climate Director: {name} kan {count} entiteit(en) niet lezen",
-      "description": "Deze ingestelde entiteiten zijn al een tijd niet te lezen - verkeerd getikt, verwijderd, of `unavailable`:\n\n{entities}\n\nEr valt niets om, en dat is juist het vervelende: de poort die op zo'n entiteit leunt gaat dicht, de zone doet niets, en van buiten lijkt dat precies op een zone die niets hoeft te doen. Een onleesbare binnentemperatuur doet meer: de director laat een draaiend apparaat dan met rust, en dat apparaat houdt zijn buitenunit op zijn taak.\n\nControleer de entiteit bij Ontwikkelhulpmiddelen, of open de integratie en kies Configureren om hem ergens anders naartoe te wijzen. Deze melding verdwijnt vanzelf zodra alles weer leesbaar is."
+      "description": "Deze ingestelde entiteiten zijn al een tijd niet te lezen - verkeerd getikt, verwijderd, of `unavailable`:\n\n{entities}\n\nEr valt niets om, en dat is juist het vervelende: de poort die op zo'n entiteit leunt gaat dicht, de zone doet niets, en van buiten lijkt dat precies op een zone die niets hoeft te doen. Een onleesbare binnen- of buitentemperatuur doet meer: de director laat een draaiend apparaat dan met rust — ook de gedeelde warmtebron — en dat apparaat houdt zijn buitenunit op zijn taak.\n\nControleer de entiteit bij Ontwikkelhulpmiddelen, of open de integratie en kies Configureren om hem ergens anders naartoe te wijzen. Deze melding verdwijnt vanzelf zodra alles weer leesbaar is."
     },
     "unsupported_modes": {
       "title": "Climate Director: {name} vraagt een stand die {count} apparaat/apparaten niet kan draaien",
@@ -762,13 +762,13 @@
       "message": "- ... en nog {remaining} meer"
     },
     "precondition_refused_title": {
-      "message": "Vooruit verwarmen geweigerd"
+      "message": "Vooruit-verzoek geweigerd"
     },
     "precondition_refused": {
       "message": "{zone} kon niet vooruit beginnen. Nog open: {openings}. Doe dicht wat openstaat, of laat het verzoek toch nog {minutes} minuten draaien."
     },
     "precondition_confirmed_title": {
-      "message": "Vooruit verwarmen loopt"
+      "message": "Vooruit-verzoek loopt"
     },
     "precondition_confirmed": {
       "message": "{zone} gaat toch door, met {openings} genegeerd. Nu {indoor}, op weg naar {target}."
@@ -879,7 +879,7 @@
       "message": "De dode band op de buitentemperatuur is negatief."
     },
     "nonpositive_max_precondition": {
-      "message": "De maximale vooruit-verwarmingstijd is nul of negatief, dus een verzoek kan nooit lopen."
+      "message": "De maximale vooruitlooptijd is nul of negatief, dus een verzoek kan nooit lopen."
     },
     "exclusive_group_unknown_source": {
       "message": "Een uitsluitende groep noemt onbekende bron {source}."
@@ -897,7 +897,7 @@
       }
     },
     "precondition": {
-      "name": "Vooruit verwarmen",
+      "name": "Vooruit regelen",
       "description": "Verwarmt of koelt de opgegeven ruimtes alvast voor wie onderweg is, ook als er niemand thuis is. Het verzoek verloopt vanzelf en telt alleen binnen de ingestelde tijden.",
       "fields": {
         "entry_id": {
@@ -919,8 +919,8 @@
       }
     },
     "cancel_precondition": {
-      "name": "Vooruit verwarmen afbreken",
-      "description": "Blaast een lopend vooruitverwarm-verzoek meteen af.",
+      "name": "Vooruit afbreken",
+      "description": "Blaast een lopend vooruit-verzoek meteen af.",
       "fields": {
         "entry_id": {
           "name": "Installatie",

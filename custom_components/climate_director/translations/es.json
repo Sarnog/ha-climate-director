@@ -698,7 +698,7 @@
     },
     "unreadable_entities": {
       "title": "Climate Director: {name} no puede leer {count} entidad(es)",
-      "description": "Estas entidades configuradas llevan un rato sin poder leerse - mal escritas, eliminadas o `unavailable`:\n\n{entities}\n\nNo se rompe nada, y eso es justo lo incómodo: la puerta que se apoya en esa entidad se cierra, la zona no hace nada, y desde fuera parece exactamente una zona que no tiene nada que hacer. Una temperatura interior ilegible pesa más: el director deja entonces en paz un aparato en marcha, y ese aparato mantiene su unidad exterior en su tarea.\n\nComprueba la entidad en las Herramientas para desarrolladores, o abre la integración y elige Configurar para apuntarla a otro sitio. Este aviso desaparece solo en cuanto todo vuelve a leerse."
+      "description": "Estas entidades configuradas llevan un rato sin poder leerse - mal escritas, eliminadas o `unavailable`:\n\n{entities}\n\nNo se rompe nada, y eso es justo lo incómodo: la puerta que se apoya en esa entidad se cierra, la zona no hace nada, y desde fuera parece exactamente una zona que no tiene nada que hacer. Una temperatura interior o exterior ilegible pesa más: el director deja entonces en paz un aparato en marcha — incluida la fuente de calor compartida —, y ese aparato mantiene su unidad exterior en su tarea.\n\nComprueba la entidad en las Herramientas para desarrolladores, o abre la integración y elige Configurar para apuntarla a otro sitio. Este aviso desaparece solo en cuanto todo vuelve a leerse."
     },
     "unsupported_modes": {
       "title": "Climate Director: {name} pide un modo que {count} aparato(s) no puede ejecutar",

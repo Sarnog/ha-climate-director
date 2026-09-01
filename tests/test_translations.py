@@ -89,3 +89,37 @@ class TestEveryLanguage:
     def test_no_text_is_empty(self, path: Path) -> None:
         for key, text in leaves(load(path)).items():
             assert text.strip(), key
+
+
+def test_german_no_longer_mixes_sie_and_du() -> None:
+    """Ronde 21: het Duits trekt alle `Sie`-vormen naar `du`."""
+    texts = leaves(load(TRANSLATIONS / "de.json"))
+    for key, text in texts.items():
+        assert not re.search(r"\bSie\b", text), key
+    assert sum(len(re.findall(r"\bdu\b", text)) for text in texts.values()) > 0
+
+
+def test_french_names_the_product_one_way() -> None:
+    """Ronde 21: `directeur` overal, rechte apostroffen, geen `préchauffage`."""
+    texts = leaves(load(TRANSLATIONS / "fr.json"))
+    for key, text in texts.items():
+        assert not re.search(r"\bdirector\b", text), key
+        assert "\u2019" not in text, key
+        assert "préchauff" not in text, key
+
+
+def test_every_language_names_the_shared_heat_source_in_unreadable_entities() -> None:
+    """Ronde 21: na B1 noemt de reparatiemelding ook de gedeelde warmtebron."""
+    needles = {
+        "strings": "shared heat source",
+        "nl": "gedeelde warmtebron",
+        "en": "shared heat source",
+        "de": "gemeinsame Wärmequelle",
+        "fr": "source de chaleur partagée",
+        "es": "fuente de calor compartida",
+        "ar": "مصدر الحرارة المشترك",
+    }
+    for language, needle in needles.items():
+        path = STRINGS if language == "strings" else TRANSLATIONS / f"{language}.json"
+        text = leaves(load(path))["issues.unreadable_entities.description"]
+        assert needle in text, language

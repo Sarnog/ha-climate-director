@@ -9,7 +9,7 @@
           "shadow_mode": "Mode ombre"
         },
         "data_description": {
-          "shadow_mode": "Calcule chaque décision mais n'exécute rien, afin que le director tourne à côté de vos automatisations existantes jusqu'à ce que vous lui fassiez confiance.",
+          "shadow_mode": "Calcule chaque décision mais n'exécute rien, afin que le directeur tourne à côté de vos automatisations existantes jusqu'à ce que vous lui fassiez confiance.",
           "name": "Devient le titre de l'installation et précède le nom de chaque entité créée par cette intégration."
         }
       }
@@ -52,7 +52,7 @@
           "holiday_keyword": "Mot qui signale des vacances",
           "guest_start": "Mode invités à partir de",
           "guest_end": "Mode invités jusqu'à",
-          "max_precondition": "Durée maximale du préchauffage (minutes)",
+          "max_precondition": "Durée maximale de la préparation (minutes)",
           "when_done": "Quand vous avez terminé ici",
           "stuck_after": "Zone considérée bloquée après (minutes)",
           "precipitation_source": "Source de précipitations",
@@ -62,7 +62,7 @@
         "data_description": {
           "season_source": "Déduisez la saison du mois, lisez-la depuis une entité, ou fixez-la à la main.",
           "season_entity": "Utilisée uniquement si l'origine est réglée sur entité. L'été et l'hiver sont reconnus en anglais, néerlandais, allemand, français, espagnol et arabe.",
-          "hemisphere": "Quelle moitié de l’année compte comme été lorsque la saison vient du mois. Nord : avril-septembre. Sud : octobre-mars.",
+          "hemisphere": "Quelle moitié de l'année compte comme été lorsque la saison vient du mois. Nord : avril-septembre. Sud : octobre-mars.",
           "shadow_mode": "Calcule chaque décision mais n'exécute rien.",
           "require_schedule": "La maison attend alors l'ouverture de la première plage réglée, et continue d'attendre tant qu'une personne présente dort encore avant la sienne.",
           "outdoor_sensor": "Alimente chaque limite extérieure, ici comme sur chaque source. Sans ce capteur, aucun seuil de température extérieure ne peut être atteint, et toute l'installation reste à l'arrêt.",
@@ -193,7 +193,7 @@
       },
       "circuit": {
         "title": "Circuit de climatisation",
-        "description": "Des unités intérieures partageant une unité extérieure ne peuvent normalement pas chauffer et refroidir en même temps. Listez-les ici pour que le director puisse arbitrer entre elles.",
+        "description": "Des unités intérieures partageant une unité extérieure ne peuvent normalement pas chauffer et refroidir en même temps. Listez-les ici pour que le directeur puisse arbitrer entre elles.",
         "data": {
           "name": "Nom",
           "units": "Unités intérieures",
@@ -208,7 +208,7 @@
           "when_done": "Quand vous avez terminé ici"
         },
         "data_description": {
-          "units": "Incluez aussi les unités que le director ne pilote pas : elles sollicitent le compresseur malgré tout.",
+          "units": "Incluez aussi les unités que le directeur ne pilote pas : elles sollicitent le compresseur malgré tout.",
           "simultaneous_heat_cool": "Désactivé pour un multi-split ordinaire. Activé pour un split simple, ou pour un VRF trois tubes à récupération de chaleur.",
           "min_cycle_time": "Ne retarde que le démarrage, jamais l'arrêt.",
           "name": "Un nom, pour distinguer les circuits.",
@@ -451,7 +451,7 @@
           "start": "Entre ces heures le directeur ne démarre rien de lui-même. Une plage peut franchir minuit : 21:00 à 09:00 est la nuit.",
           "end": "Entre ces heures le directeur ne démarre rien de lui-même. Une plage peut franchir minuit : 21:00 à 09:00 est la nuit.",
           "weekdays": "Laisser vide vaut tous les jours.",
-          "delete": "Supprime cette fenêtre, de sorte que le director puisse de nouveau démarrer quelque chose pendant ces heures.",
+          "delete": "Supprime cette fenêtre, de sorte que le directeur puisse de nouveau démarrer quelque chose pendant ces heures.",
           "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
           "holiday": "Une plage de vacances ne s'applique que lorsque le planning de vacances est actif, et remplace alors les plages ordinaires. Ses jours de la semaine sont ignorés. Sans elle, un jour de vacances compte comme un samedi."
         }
@@ -644,7 +644,7 @@
     },
     "button": {
       "zone_precondition": {
-        "name": "Préchauffer {zone}"
+        "name": "Préparer {zone}"
       }
     },
     "switch": {
@@ -666,7 +666,7 @@
         "name": "Priorité {zone}"
       },
       "precondition_minutes": {
-        "name": "Durée du préchauffage"
+        "name": "Durée de la préparation"
       }
     },
     "select": {
@@ -691,14 +691,14 @@
         "step": {
           "init": {
             "title": "Tâches manuelles dans {name}",
-            "description": "{count} tâche(s) ne peut être assurée que par une source avec démarrage automatique désactivé, elle ne démarre donc jamais seule :\n\n{problems}\n\nC’est peut-être exactement ce que vous voulez - un appareil que vous allumez vous-même est un très bon choix. Confirmez cet avis une fois et il ne reviendra pas, même après un redémarrage. Si vous préférez que le director s’en charge aussi, ouvrez l’intégration, choisissez Configurer et activez le démarrage automatique sur une source."
+            "description": "{count} tâche(s) ne peut être assurée que par une source avec démarrage automatique désactivé, elle ne démarre donc jamais seule :\n\n{problems}\n\nC'est peut-être exactement ce que vous voulez - un appareil que vous allumez vous-même est un très bon choix. Confirmez cet avis une fois et il ne reviendra pas, même après un redémarrage. Si vous préférez que le directeur s'en charge aussi, ouvrez l'intégration, choisissez Configurer et activez le démarrage automatique sur une source."
           }
         }
       }
     },
     "unreadable_entities": {
       "title": "Climate Director : {name} ne peut pas lire {count} entité(s)",
-      "description": "Ces entités configurées sont illisibles depuis un moment - mal saisies, supprimées ou `unavailable` :\n\n{entities}\n\nRien ne casse, et c'est précisément le problème : la porte qui s'appuie sur une telle entité se ferme, la zone ne fait rien, et de l'extérieur cela ressemble exactement à une zone qui n'a rien à faire. Une température intérieure illisible va plus loin : le director laisse alors un appareil en marche tranquille, et cet appareil retient son unité extérieure sur sa tâche.\n\nVérifiez l'entité dans les outils de développement, ou ouvrez l'intégration et choisissez Configurer pour la pointer ailleurs. Cet avis disparaît de lui-même dès que tout redevient lisible."
+      "description": "Ces entités configurées sont illisibles depuis un moment - mal saisies, supprimées ou `unavailable` :\n\n{entities}\n\nRien ne casse, et c'est précisément le problème : la porte qui s'appuie sur une telle entité se ferme, la zone ne fait rien, et de l'extérieur cela ressemble exactement à une zone qui n'a rien à faire. Une température intérieure ou extérieure illisible va plus loin : le directeur laisse alors un appareil en marche tranquille — y compris la source de chaleur partagée —, et cet appareil retient son unité extérieure sur sa tâche.\n\nVérifiez l'entité dans les outils de développement, ou ouvrez l'intégration et choisissez Configurer pour la pointer ailleurs. Cet avis disparaît de lui-même dès que tout redevient lisible."
     },
     "unsupported_modes": {
       "title": "Climate Director : {name} demande un mode que {count} appareil(s) ne peut exécuter",
@@ -714,11 +714,11 @@
     },
     "corrupt_storage": {
       "title": "Climate Director : {name} a dû mettre son état sauvegardé de côté",
-      "description": "Le fichier dans lequel cette installation conserve ses demandes de préchauffage en cours et ses extinctions manuelles était illisible et a été renommé en `{path}`. Le director repart d'un état vide : les demandes et extinctions d'avant le redémarrage sont perdues.\n\nPour les récupérer, restaurez le fichier depuis une sauvegarde et rechargez l'intégration. Le fichier renommé reste dans le dossier `.storage` de Home Assistant."
+      "description": "Le fichier dans lequel cette installation conserve ses demandes de préparation en cours et ses extinctions manuelles était illisible et a été renommé en `{path}`. Le directeur repart d'un état vide : les demandes et extinctions d'avant le redémarrage sont perdues.\n\nPour les récupérer, restaurez le fichier depuis une sauvegarde et rechargez l'intégration. Le fichier renommé reste dans le dossier `.storage` de Home Assistant."
     },
     "precondition_unwatched": {
-      "title": "Personne n'entend une demande de préchauffage refusée",
-      "description": "Une demande de préchauffage qui échoue sur une fenêtre ou une porte ouverte se signale par l'événement `climate_director_precondition_refused`, et nulle part ailleurs. Rien ne l'écoute actuellement, donc une telle demande échoue en silence : vous appuyez sur le bouton et rien ne se passe, sans savoir pourquoi.\n\nÀ corriger de deux façons :\n\n1. Importez le blueprint **Climate Director - préchauffage refusé** *et configurez-le*. L'importer ne suffit pas - un blueprint sans automatisation construite dessus n'écoute rien.\n2. Ou écrivez votre propre automatisation sur cet événement. Il transporte la zone, les capteurs ouverts et un message tout prêt.\n\nCet avis disparaît de lui-même dès que quelque chose écoute."
+      "title": "Personne n'entend une demande de préparation refusée",
+      "description": "Une demande de préparation qui échoue sur une fenêtre ou une porte ouverte se signale par l'événement `climate_director_precondition_refused`, et nulle part ailleurs. Rien ne l'écoute actuellement, donc une telle demande échoue en silence : vous appuyez sur le bouton et rien ne se passe, sans savoir pourquoi.\n\nÀ corriger de deux façons :\n\n1. Importez le blueprint **Climate Director - préparation refusée** *et configurez-le*. L'importer ne suffit pas - un blueprint sans automatisation construite dessus n'écoute rien.\n2. Ou écrivez votre propre automatisation sur cet événement. Il transporte la zone, les capteurs ouverts et un message tout prêt.\n\nCet avis disparaît de lui-même dès que quelque chose écoute."
     }
   },
   "exceptions": {
@@ -744,7 +744,7 @@
       "message": "Des agendas de vacances sont réglés mais pas de mot-clé ; aucun évènement ne peut donc activer le planning de vacances. Saisissez le mot qu'un évènement doit porter, ou retirez les agendas."
     },
     "zone_only_manual_sources": {
-      "message": "La zone {zone} veut {mode}, mais chaque source capable de le fournir a le démarrage automatique désactivé, elle ne démarre donc jamais d’elle-même."
+      "message": "La zone {zone} veut {mode}, mais chaque source capable de le fournir a le démarrage automatique désactivé, elle ne démarre donc jamais d'elle-même."
     },
     "layout_zoned_with_shared_source": {
       "message": "Le chauffage est réglé par zone, mais {entity} est la seule source de chaleur de {count} zones ({zones}). Ces pièces ne peuvent pas être chauffées séparément."
@@ -762,13 +762,13 @@
       "message": "- ... et {remaining} de plus"
     },
     "precondition_refused_title": {
-      "message": "Préchauffage refusé"
+      "message": "Préparation refusée"
     },
     "precondition_refused": {
-      "message": "{zone} n'a pas pu démarrer le préchauffage. Ce qui reste ouvert : {openings}. Fermez ce qui est ouvert, ou laissez la demande s'exécuter quand même pendant {minutes} minutes."
+      "message": "{zone} n'a pas pu démarrer la préparation. Ce qui reste ouvert : {openings}. Fermez ce qui est ouvert, ou laissez la demande s'exécuter quand même pendant {minutes} minutes."
     },
     "precondition_confirmed_title": {
-      "message": "Le préchauffage est en cours"
+      "message": "La préparation est en cours"
     },
     "precondition_confirmed": {
       "message": "{zone} démarre quand même, {openings} est ignoré. Actuellement {indoor}, objectif {target}."
@@ -795,7 +795,7 @@
       "message": "{entity} doit s'arrêter dès qu'une ouverture est ouverte, mais l'installation n'a aucune ouverture, donc rien ne peut jamais l'arrêter."
     },
     "house_wide_unmanaged": {
-      "message": "{entity} doit s'arrêter dès qu'une ouverture est ouverte, mais aucune zone ni source de chaleur partagée ne l'utilise, donc le director ne le pilote jamais."
+      "message": "{entity} doit s'arrêter dès qu'une ouverture est ouverte, mais aucune zone ni source de chaleur partagée ne l'utilise, donc le directeur ne le pilote jamais."
     },
     "duplicate_zone_id": {
       "message": "Deux pièces partagent l'identifiant {zone}. Les identifiants de pièce doivent être uniques, car toutes les entités et l'historique d'une pièce en dépendent."
@@ -879,7 +879,7 @@
       "message": "La bande morte de température extérieure est négative."
     },
     "nonpositive_max_precondition": {
-      "message": "Le temps maximal de préchauffage est nul ou négatif, donc une demande ne peut jamais s'exécuter."
+      "message": "Le temps maximal de préparation est nul ou négatif, donc une demande ne peut jamais s'exécuter."
     },
     "exclusive_group_unknown_source": {
       "message": "Un groupe exclusif nomme une source inconnue {source}."
@@ -897,7 +897,7 @@
       }
     },
     "precondition": {
-      "name": "Préchauffer",
+      "name": "Préparer",
       "description": "Chauffe ou refroidit les pièces indiquées avant le retour de quelqu'un, même si personne n'est là. La demande expire d'elle-même et ne compte que dans les heures réglées.",
       "fields": {
         "entry_id": {
@@ -919,8 +919,8 @@
       }
     },
     "cancel_precondition": {
-      "name": "Annuler le préchauffage",
-      "description": "Interrompt aussitôt une demande de préchauffage en cours.",
+      "name": "Annuler la préparation",
+      "description": "Interrompt aussitôt une demande de préparation en cours.",
       "fields": {
         "entry_id": {
           "name": "Installation",

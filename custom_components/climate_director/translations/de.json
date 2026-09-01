@@ -52,7 +52,7 @@
           "holiday_keyword": "Wort, das Urlaub kennzeichnet",
           "guest_start": "Gästemodus ab",
           "guest_end": "Gästemodus bis",
-          "max_precondition": "Maximale Vorheizzeit (Minuten)",
+          "max_precondition": "Maximale Vorbereitungszeit (Minuten)",
           "when_done": "Wenn du hier fertig bist",
           "stuck_after": "Zone gilt als festgefahren nach (Minuten)",
           "precipitation_source": "Niederschlagsquelle",
@@ -128,7 +128,7 @@
           "presence_state": "Ein Anwesenheitssensor meldet on.",
           "presence_timeout": "Leer lassen oder auf null setzen, um sofort zu reagieren, sobald die Anwesenheit wegfällt. Anwesenheitssensoren flackern, also erspart ein paar Sekunden hier dem Verdichter einen sinnlosen Stopp.",
           "ignore_precipitation": "An für einen Raum ohne Fenster: Er hat nichts von der 'Fenster-öffnen'-Regel, also soll Niederschlag sie dort nicht aufheben.",
-          "name": "Der Name der Zone überall. Ihre interne Kennung wird einmal abgeleitet und bleibt dann stehen, späteres Umbenennen ist also unbedenklich.",
+          "name": "Der Name der Zone überall. Deine interne Kennung wird einmal abgeleitet und bleibt dann stehen, späteres Umbenennen ist also unbedenklich.",
           "enable_heat": "Aus bedeutet, dass dieser Raum nie geheizt wird, was das Thermometer auch sagt.",
           "heat_target": "Der Sollwert, den das Gerät bekommt, sobald geheizt wird. Nicht der Punkt, an dem es anfängt.",
           "heat_start_at": "Heizen beginnt bei dieser Innentemperatur oder darunter.",
@@ -319,7 +319,7 @@
           "sleep_days": "Leer lassen für jeden Tag. Ein Fenster über Mitternacht hängt an seinem Starttag, ein Fenster von Freitag 23:00-09:00 zählt also am Samstag um 07:00 noch mit.",
           "wake_by": "Ist jemand auf, während diese Person zu Hause noch schläft, wartet das Haus. Nach dieser Uhrzeit nicht mehr: dann richtet es sich nach denen, die auf sind. Leer lassen, damit diese Person niemanden aufhält.",
           "wake_days": "Leer lassen gilt für jeden Tag. Ein Feiertag zählt als Samstag.",
-          "wake_holiday": "Ein Feiertag zählt bei den Zeitplänen als Samstag, bei dieser Uhrzeit aber nicht: Der freie Tag des einen ist der Arbeitstag des anderen, und dann hält der Langschläfer das Haus auf, während jemand arbeitet. Setzen Sie das Häkchen, wenn auch an einem Feiertag auf Sie gewartet werden soll - dann gilt die Uhrzeit an jedem Wochentag.",
+          "wake_holiday": "Ein Feiertag zählt bei den Zeitplänen als Samstag, bei dieser Uhrzeit aber nicht: Der freie Tag des einen ist der Arbeitstag des anderen, und dann hält der Langschläfer das Haus auf, während jemand arbeitet. Setz das Häkchen, wenn auch an einem Feiertag auf dich gewartet werden soll - dann gilt die Uhrzeit an jedem Wochentag.",
           "sleep_in_until": "Das Schlaffenster ist die Nacht: Es schaltet das Haus zur Schlafenszeit aus. Dies dehnt nur den Morgen aus, an den Tagen unten, damit der Schlafsensor weiterzählt, während du noch im Bett liegst. Leer lassen heißt: Das Schlaffenster ist die ganze Geschichte.",
           "sleep_in_days": "Das sind die Morgen, an denen du ausschläfst, nicht die Abende davor. Leer lassen gilt für jeden Tag.",
           "sleep_in_holiday": "An jedem Tag, den dein Urlaubskalender markiert, unabhängig vom Wochentag. So stellst du das Ausschlafen einmal ein statt pro Urlaub."
@@ -458,13 +458,13 @@
       }
     },
     "error": {
-      "bands_overlap": "Kühlen beginnt auf oder unter dem Punkt, an dem Heizen beginnt, also würden beide diesen Raum gleichzeitig anfordern. Legen Sie den Einschaltpunkt fürs Kühlen über den fürs Heizen, mit Abstand dazwischen.",
+      "bands_overlap": "Kühlen beginnt auf oder unter dem Punkt, an dem Heizen beginnt, also würden beide diesen Raum gleichzeitig anfordern. Leg den Einschaltpunkt fürs Kühlen über den fürs Heizen, mit Abstand dazwischen.",
       "duplicate_priority": "Ein anderer Raum an derselben Außeneinheit hat diese Priorität bereits. Zwei Räume mit derselben Zahl lassen das Ergebnis von ihrem Namen abhängen, wähle also eine freie.",
-      "presence_gate_without_sensor": "Diese Zone läuft nach Anwesenheit im Raum, aber es ist kein Anwesenheitssensor gewählt. Der Raum gilt dann dauerhaft als leer und die Zone läuft nie wieder. Wählen Sie einen Sensor, oder lassen Sie den Haushalt entscheiden.",
+      "presence_gate_without_sensor": "Diese Zone läuft nach Anwesenheit im Raum, aber es ist kein Anwesenheitssensor gewählt. Der Raum gilt dann dauerhaft als leer und die Zone läuft nie wieder. Wähl einen Sensor, oder lass den Haushalt entscheiden.",
       "required": "Dieses Feld wird zum Speichern gebraucht. Fülle es aus, oder wähle unten „Verwerfen und zurück“, um ohne Speichern zu gehen.",
       "target_outside_band": "Die Zieltemperatur liegt auf der falschen Seite des Einschaltpunkts. Heizen zielt über den Punkt, an dem es beginnt, Kühlen darunter; umgekehrt bekommt das Gerät eine Temperatur, für die es nichts tun muss, was aussieht, als würde es sich weigern.",
       "too_few": "Wähle mindestens zwei Geräte; eine Gruppe aus einem schließt nichts aus.",
-      "zone_without_modes": "Diese Zone darf weder heizen noch kühlen, kann also nie etwas tun. Schalten Sie mindestens eines von beiden ein, oder löschen Sie die Zone."
+      "zone_without_modes": "Diese Zone darf weder heizen noch kühlen, kann also nie etwas tun. Schalte mindestens eines von beiden ein, oder lösch die Zone."
     }
   },
   "selector": {
@@ -644,7 +644,7 @@
     },
     "button": {
       "zone_precondition": {
-        "name": "{zone} vorheizen"
+        "name": "{zone} vorbereiten"
       }
     },
     "switch": {
@@ -666,7 +666,7 @@
         "name": "Priorität {zone}"
       },
       "precondition_minutes": {
-        "name": "Vorheizdauer"
+        "name": "Vorbereitungsdauer"
       }
     },
     "select": {
@@ -698,11 +698,11 @@
     },
     "unreadable_entities": {
       "title": "Climate Director: {name} kann {count} Entität(en) nicht lesen",
-      "description": "Diese eingerichteten Entitäten sind seit einiger Zeit nicht lesbar - vertippt, gelöscht oder `unavailable`:\n\n{entities}\n\nEs geht nichts kaputt, und genau das ist das Unangenehme: das Tor, das sich auf eine solche Entität stützt, schließt sich, die Zone tut nichts, und von außen sieht das genauso aus wie eine Zone, die nichts zu tun hat. Eine unlesbare Raumtemperatur wiegt schwerer: der Director lässt ein laufendes Gerät dann in Ruhe, und dieses Gerät hält seine Außeneinheit auf seiner Betriebsart fest.\n\nPrüfen Sie die Entität unter den Entwicklerwerkzeugen, oder öffnen Sie die Integration und wählen Sie Konfigurieren, um sie anderswohin zu richten. Dieser Hinweis verschwindet von selbst, sobald alles wieder lesbar ist."
+      "description": "Diese eingerichteten Entitäten sind seit einiger Zeit nicht lesbar - vertippt, gelöscht oder `unavailable`:\n\n{entities}\n\nEs geht nichts kaputt, und genau das ist das Unangenehme: das Tor, das sich auf eine solche Entität stützt, schließt sich, die Zone tut nichts, und von außen sieht das genauso aus wie eine Zone, die nichts zu tun hat. Eine unlesbare Raum- oder Außentemperatur wiegt schwerer: der Director lässt ein laufendes Gerät dann in Ruhe — auch die gemeinsame Wärmequelle —, und dieses Gerät hält seine Außeneinheit auf seiner Betriebsart fest.\n\nPrüf die Entität unter den Entwicklerwerkzeugen, oder öffne die Integration und wähle Konfigurieren, um sie anderswohin zu richten. Dieser Hinweis verschwindet von selbst, sobald alles wieder lesbar ist."
     },
     "unsupported_modes": {
       "title": "Climate Director: {name} verlangt einen Modus, den {count} Gerät(e) nicht fahren kann",
-      "description": "Diese Geräte haben eine Rolle, die einen Modus verlangen kann, den sie nicht melden - etwa Kühlen an einem Gerät, das nur `heat` und `off` kennt. Der Director überspringt sie für diesen Modus, also tut die Zone still nichts.\n\n{entities}\n\nPrüfen Sie die Rolle unter Konfigurieren oder die `hvac_modes` des Geräts unter Entwicklerwerkzeuge. Dieser Hinweis verschwindet von selbst, sobald jedes Gerät die Modi meldet, die seine Rolle verlangen darf."
+      "description": "Diese Geräte haben eine Rolle, die einen Modus verlangen kann, den sie nicht melden - etwa Kühlen an einem Gerät, das nur `heat` und `off` kennt. Der Director überspringt sie für diesen Modus, also tut die Zone still nichts.\n\n{entities}\n\nPrüf die Rolle unter Konfigurieren oder die `hvac_modes` des Geräts unter Entwicklerwerkzeuge. Dieser Hinweis verschwindet von selbst, sobald jedes Gerät die Modi meldet, die seine Rolle verlangen darf."
     },
     "season_excludes_mode": {
       "title": "Climate Director: {name} stellt eine Jahreszeit ein, die {count} Aufgabe(n) aussperrt",
@@ -710,15 +710,15 @@
     },
     "command_not_taking": {
       "title": "Climate Director: {count} Gerät(e) von {name} führt seinen Befehl nicht aus",
-      "description": "Der Director verlangt von diesen Geräten seit einer Weile dasselbe, und sie melden weiterhin etwas anderes - der Aufruf wird angenommen und es passiert nichts, oder das Gerät stellt sich sofort zurück:\n\n{entities}\n\nSolange das anhält, geht derselbe Aufruf in jeder Runde erneut hinaus, rund vierzehnhundert am Tag, und nirgends ist davon etwas zu sehen. Prüfen Sie das Gerät unter Entwicklerwerkzeuge: Ist es erreichbar, nimmt es den Modus an, und stellt es etwas anderes zurück - ein Thermostatzeitplan, eine andere Automatisierung? Dieser Hinweis verschwindet von selbst, sobald das Gerät seinem Befehl folgt."
+      "description": "Der Director verlangt von diesen Geräten seit einer Weile dasselbe, und sie melden weiterhin etwas anderes - der Aufruf wird angenommen und es passiert nichts, oder das Gerät stellt sich sofort zurück:\n\n{entities}\n\nSolange das anhält, geht derselbe Aufruf in jeder Runde erneut hinaus, rund vierzehnhundert am Tag, und nirgends ist davon etwas zu sehen. Prüf das Gerät unter Entwicklerwerkzeuge: Ist es erreichbar, nimmt es den Modus an, und stellt es etwas anderes zurück - ein Thermostatzeitplan, eine andere Automatisierung? Dieser Hinweis verschwindet von selbst, sobald das Gerät seinem Befehl folgt."
     },
     "corrupt_storage": {
       "title": "Climate Director: {name} musste seinen gespeicherten Zustand beiseitelegen",
-      "description": "Die Datei, in der diese Anlage ihre laufenden Vorheiz-Anforderungen und manuellen Abschaltungen aufbewahrt, war unlesbar und wurde in `{path}` umbenannt. Der Director beginnt mit leerem Zustand: Anforderungen und Abschaltungen von vor dem Neustart sind weg.\n\nWenn Sie sie zurückholen möchten, stellen Sie die Datei aus einem Backup wieder her und laden Sie die Integration neu. Die umbenannte Datei selbst bleibt im `.storage`-Ordner von Home Assistant stehen."
+      "description": "Die Datei, in der diese Anlage ihre laufenden Vorbereitungs-Anforderungen und manuellen Abschaltungen aufbewahrt, war unlesbar und wurde in `{path}` umbenannt. Der Director beginnt mit leerem Zustand: Anforderungen und Abschaltungen von vor dem Neustart sind weg.\n\nWenn du sie zurückholen möchtest, stell die Datei aus einem Backup wieder her und lade die Integration neu. Die umbenannte Datei selbst bleibt im `.storage`-Ordner von Home Assistant stehen."
     },
     "precondition_unwatched": {
-      "title": "Niemand hört eine abgelehnte Vorheiz-Anforderung",
-      "description": "Eine Vorheiz-Anforderung, die an einem offenen Fenster oder einer offenen Tür scheitert, meldet sich als Ereignis `climate_director_precondition_refused` und sonst nirgends. Darauf hört derzeit nichts, also scheitert eine solche Anforderung stillschweigend: Sie drücken den Knopf und nichts geschieht, ohne erkennbaren Grund.\n\nAuf eine von zwei Arten zu beheben:\n\n1. Importieren Sie den Blueprint **Climate Director - abgelehntes Vorheizen** *und richten Sie ihn ein*. Importieren allein genügt nicht - ein Blueprint ohne darauf gebaute Automatisierung hört auf nichts.\n2. Oder schreiben Sie eine eigene Automatisierung auf dieses Ereignis. Es trägt die Zone, die offenen Sensoren und eine fertige Nachricht mit sich.\n\nDieser Hinweis verschwindet von selbst, sobald etwas zuhört."
+      "title": "Niemand hört eine abgelehnte Vorbereitungs-Anforderung",
+      "description": "Eine Vorbereitungs-Anforderung, die an einem offenen Fenster oder einer offenen Tür scheitert, meldet sich als Ereignis `climate_director_precondition_refused` und sonst nirgends. Darauf hört derzeit nichts, also scheitert eine solche Anforderung stillschweigend: du drückst den Knopf und nichts geschieht, ohne erkennbaren Grund.\n\nAuf eine von zwei Arten zu beheben:\n\n1. Importiere den Blueprint **Climate Director - abgelehntes Vorbereiten** *und richte ihn ein*. Importieren allein genügt nicht - ein Blueprint ohne darauf gebaute Automatisierung hört auf nichts.\n2. Oder schreib eine eigene Automatisierung auf dieses Ereignis. Es trägt die Zone, die offenen Sensoren und eine fertige Nachricht mit sich.\n\nDieser Hinweis verschwindet von selbst, sobald etwas zuhört."
     }
   },
   "exceptions": {
@@ -753,7 +753,7 @@
       "message": "Die Heizung steht auf zentral, aber keine Wärmequelle wird zwischen den {count} Zonen geteilt. Jeder Raum hat seine eigene, das ist zoniert."
     },
     "entity_twice_in_one_zone": {
-      "message": "Zone {zone} verwendet {entity} für mehr als eine Quelle. Zwei Quellen auf demselben Gerät lassen keine Wahl; entfernen Sie eine davon."
+      "message": "Zone {zone} verwendet {entity} für mehr als eine Quelle. Zwei Quellen auf demselben Gerät lassen keine Wahl; entferne eine davon."
     },
     "target_outside_band": {
       "message": "Zone {zone} beginnt mit {mode} bei {start}, strebt aber {target} an. Das Gerät erhält dann eine Temperatur, für die es nichts tun muss - das sieht aus, als würde es sich weigern."
@@ -762,13 +762,13 @@
       "message": "- ... und {remaining} weitere"
     },
     "precondition_refused_title": {
-      "message": "Vorheizen abgelehnt"
+      "message": "Vorbereiten abgelehnt"
     },
     "precondition_refused": {
-      "message": "{zone} konnte nicht vorheizen. Noch offen: {openings}. Schließen Sie, was offen ist, oder lassen Sie die Anforderung trotzdem {minutes} Minuten laufen."
+      "message": "{zone} konnte nicht vorbereiten. Noch offen: {openings}. Schließ, was offen ist, oder lass die Anforderung trotzdem {minutes} Minuten laufen."
     },
     "precondition_confirmed_title": {
-      "message": "Vorheizen läuft"
+      "message": "Vorbereiten läuft"
     },
     "precondition_confirmed": {
       "message": "{zone} läuft trotzdem, {openings} wird ignoriert. Jetzt {indoor}, Ziel {target}."
@@ -879,7 +879,7 @@
       "message": "Das Totband der Außentemperatur ist negativ."
     },
     "nonpositive_max_precondition": {
-      "message": "Die maximale Vorheizzeit ist null oder negativ, also kann ein Wunsch nie laufen."
+      "message": "Die maximale Vorbereitungszeit ist null oder negativ, also kann ein Wunsch nie laufen."
     },
     "exclusive_group_unknown_source": {
       "message": "Eine exklusive Gruppe nennt unbekannte Quelle {source}."
@@ -897,7 +897,7 @@
       }
     },
     "precondition": {
-      "name": "Vorheizen",
+      "name": "Vorbereiten",
       "description": "Heizt oder kühlt die genannten Räume schon vor der Rückkehr, auch wenn niemand zu Hause ist. Die Anforderung läuft von selbst ab und gilt nur in den eingestellten Zeiten.",
       "fields": {
         "entry_id": {
@@ -919,8 +919,8 @@
       }
     },
     "cancel_precondition": {
-      "name": "Vorheizen abbrechen",
-      "description": "Bricht eine laufende Vorheiz-Anforderung sofort ab.",
+      "name": "Vorbereiten abbrechen",
+      "description": "Bricht eine laufende Vorbereitungs-Anforderung sofort ab.",
       "fields": {
         "entry_id": {
           "name": "Anlage",
