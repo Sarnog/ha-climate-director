@@ -53,7 +53,7 @@ geen gebruikersweergave.
 Een uitspraak in deze engine hangt altijd aan één ding, en welk ding dat is, is
 een ontwerpbesluit. Waar dat besluit niet opgeschreven stond, is het in vier
 achtereenvolgende reparatierondes telkens één stap opgeschoven — smal, dan te
-breed, dan weer terug. Deze zes ankers staan daarom hier, vóór alle modules.
+breed, dan weer terug. Deze zeven ankers staan daarom hier, vóór alle modules.
 Wijk er niet van af zonder ze hier eerst te wijzigen.
 
 1. **Een lopend vooruit-verzoek** is één begrip in de hele engine:
@@ -88,6 +88,14 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
 6. **De hoofdschakelaar uit** betekent: de director laat alles los en stuurt
    niets, ook geen `off` — net als een override. Wie alles uit wil, zet het zelf
    uit; de director laat het dan staan.
+7. **Een circuitweigering weigert het apparaat op dat circuit, niet de zone.**
+   Valt de eerste keus af met `SHORT_CYCLE_PROTECTION`, `CIRCUIT_AT_CAPACITY` of
+   `CIRCUIT_CONFLICT_LOST`, dan dient de zone haar verzoek opnieuw in bij de
+   volgende bron — precies zoals bij een onbereikbaar apparaat. De reservebron
+   neemt het zichtbaar over (`op_reserve`). Dit anker is breder dan het oude
+   gedrag (de zone viel stil) en smaller dan "elke weigering schuift door": een
+   eerste keus die huisbreed is stilgezet weigert de zone wél, met
+   `OPENING_OPEN_ELSEWHERE`; dat scenario dekt de andere kant.
 
 ### De belangrijkste scheidslijn
 
@@ -748,7 +756,7 @@ other no user-facing display.
 A statement in this engine always hangs on one thing, and which thing that is, is
 a design decision. Wherever that decision was not written down, it shifted by one
 step in four successive repair rounds — narrow, then too broad, then back again.
-These six anchors therefore sit here, ahead of every module. Do not depart from
+These seven anchors therefore sit here, ahead of every module. Do not depart from
 them without changing them here first.
 
 1. **A running pre-conditioning request** is one concept throughout the engine:
@@ -781,6 +789,14 @@ them without changing them here first.
 6. **The master switch off** means: the director lets go of everything and issues
    nothing, an `off` included — just like an override. Whoever wants everything
    off switches it off themselves; the director then leaves it be.
+7. **A circuit refusal refuses the appliance on that circuit, not the zone.**
+   When the first choice falls away with `SHORT_CYCLE_PROTECTION`,
+   `CIRCUIT_AT_CAPACITY` or `CIRCUIT_CONFLICT_LOST`, the zone files its request
+   again with the next source — exactly as with an unreachable appliance. The
+   reserve takes over visibly (`op_reserve`). This anchor is broader than the old
+   behaviour (the zone fell silent) and narrower than "every refusal moves on": a
+   first choice stopped house-wide refuses the zone instead, with
+   `OPENING_OPEN_ELSEWHERE`; that scenario covers the other side.
 
 ### The most important dividing line
 

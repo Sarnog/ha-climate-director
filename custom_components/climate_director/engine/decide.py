@@ -41,6 +41,15 @@ from .world import ClimateState, WorldState
 #: Solo circuit standing in for a source with an outdoor unit to itself.
 _SOLO = Circuit(circuit_id="", name="", units=(), simultaneous_heat_cool=True)
 
+#: Circuitweigeringen waarop de zone haar volgende bron mag proberen (anker 7).
+#:
+#: Circuit refusals after which the zone may try its next source (anchor 7).
+_CIRCUIT_REFUSALS = (
+    Reason.SHORT_CYCLE_PROTECTION,
+    Reason.CIRCUIT_AT_CAPACITY,
+    Reason.CIRCUIT_CONFLICT_LOST,
+)
+
 
 def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = None) -> Plan:
     """Return the complete, consistent end state the installation should be in.
@@ -59,10 +68,11 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
     wishes, refusals, shut, woulds, rest_deferrals = _collect_wishes(
         config, world, previous, blocked
     )
-    wishes, dropped = _apply_exclusive_groups(config, world, wishes)
 
     standing = _standing_firm(config, world, refusals)
-    grants, circuit_decisions, deferrals = _resolve_circuits(config, world, wishes, standing)
+    grants, circuit_decisions, deferrals, refused_by_circuit, dropped, wishes = (
+        _resolve_with_fallbacks(config, world, wishes, standing, blocked, previous)
+    )
     reasons = _zone_reasons(config, grants, dropped, refusals)
 
     families = {decision.circuit_id: decision.family for decision in circuit_decisions}
@@ -73,7 +83,17 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
     return Plan(
         commands=commands,
         zones=_build_zone_decisions(
-            config, world, wishes, dropped, grants, refusals, shut, woulds, previous, blocked
+            config,
+            world,
+            wishes,
+            dropped,
+            grants,
+            refusals,
+            shut,
+            woulds,
+            previous,
+            blocked,
+            refused_by_circuit,
         ),
         circuits=circuit_decisions,
         deferrals=(*deferrals, *rest_deferrals, *generator_deferrals),
@@ -390,6 +410,91 @@ def _standing_firm(
         for entity_id, verdicts in owners.items()
         if world.climate(entity_id).running and all(verdicts)
     )
+
+
+def _resolve_with_fallbacks(
+    config: DirectorConfig,
+    world: WorldState,
+    wishes: dict[str, constraints.Request],
+    standing: frozenset[str],
+    blocked: frozenset[str],
+    previous: Plan | None,
+) -> tuple[
+    dict[str, constraints.Grant],
+    tuple[CircuitDecision, ...],
+    tuple[Deferral, ...],
+    dict[str, frozenset[str]],
+    dict[str, constraints.Request],
+    dict[str, constraints.Request],
+]:
+    """Resolve every circuit, letting a refused zone fall back to its next source.
+
+    Anker 7: een circuitweigering weigert het apparaat op dat circuit, niet de
+    zone. Valt een verzoek uit met `SHORT_CYCLE_PROTECTION`,
+    `CIRCUIT_AT_CAPACITY` of `CIRCUIT_CONFLICT_LOST`, dan dient de zone haar
+    verzoek opnieuw in bij de volgende bron die dezelfde taak kan leveren, net
+    zolang tot een bron hem krijgt of er geen kandidaat meer is. De huisbrede
+    stop blijft op de zone liggen: die is al in `_collect_wishes` afgehandeld en
+    geldt hier alleen nog als kandidaat-filter voor de reserve.
+
+    Anchor 7: a circuit refusal refuses the appliance on that circuit, not the
+    zone. When a request falls through with `SHORT_CYCLE_PROTECTION`,
+    `CIRCUIT_AT_CAPACITY` or `CIRCUIT_CONFLICT_LOST`, the zone files its request
+    again with the next source able to deliver the same duty, until a source
+    gets it or no candidate remains. The house-wide stop stays on the zone: it
+    was already handled in `_collect_wishes`, and here it only still filters
+    candidates for the reserve.
+    """
+    grants: dict[str, constraints.Grant] = {}
+    circuit_decisions: tuple[CircuitDecision, ...] = ()
+    deferrals: tuple[Deferral, ...] = ()
+    refused_by_circuit: dict[str, frozenset[str]] = {}
+    all_deferrals: list[Deferral] = []
+    dropped: dict[str, constraints.Request] = {}
+
+    margin = config.outdoor_hysteresis
+    attempts = max((len(zone.sources) for zone in config.zones), default=1)
+    for _ in range(attempts):
+        wishes, dropped_now = _apply_exclusive_groups(config, world, wishes)
+        dropped.update(dropped_now)
+        grants, circuit_decisions, deferrals = _resolve_circuits(config, world, wishes, standing)
+        for deferral in deferrals:
+            if deferral not in all_deferrals:
+                all_deferrals.append(deferral)
+        changed = False
+        for zone in config.zones:
+            request = wishes.get(zone.zone_id)
+            grant = grants.get(zone.zone_id)
+            if request is None or grant is None or grant.granted:
+                continue
+            if grant.reason not in _CIRCUIT_REFUSALS:
+                continue
+            refused = refused_by_circuit.get(zone.zone_id, frozenset()) | {request.source.entity_id}
+            stopped = frozenset() if world.precondition_ignores_openings(zone.zone_id) else blocked
+            alternative = sources.select(
+                zone,
+                request.family,
+                world,
+                _serving(previous, zone.zone_id),
+                margin,
+                stopped,
+                excluding=refused,
+            )
+            if alternative is None or alternative.entity_id in refused:
+                continue
+            wishes[zone.zone_id] = constraints.Request(
+                zone=zone,
+                source=alternative,
+                family=request.family,
+                deviation=request.deviation,
+                priority=request.priority,
+            )
+            refused_by_circuit[zone.zone_id] = refused
+            changed = True
+        if not changed:
+            break
+
+    return grants, circuit_decisions, tuple(all_deferrals), refused_by_circuit, dropped, wishes
 
 
 def _resolve_circuits(
@@ -1330,8 +1435,10 @@ def _build_zone_decisions(
     woulds: dict[str, ModeFamily],
     previous: Plan | None = None,
     blocked: frozenset[str] = frozenset(),
+    refused_by_circuit: dict[str, frozenset[str]] | None = None,
 ) -> tuple[ZoneDecision, ...]:
     """Return one decision per zone, saying what it asked for and what it got."""
+    refused_by_circuit = refused_by_circuit or {}
     decisions: list[ZoneDecision] = []
 
     for zone in config.zones:
@@ -1388,6 +1495,7 @@ def _build_zone_decisions(
                     _serving(previous, zone.zone_id),
                     config.outdoor_hysteresis,
                     zone_blocked,
+                    refused_by_circuit.get(zone.zone_id, frozenset()),
                 ),
                 would_want=would,
             )

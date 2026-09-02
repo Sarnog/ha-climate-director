@@ -17,22 +17,28 @@ electricity. Hence the decision carries what was skipped.
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
+
 import pytest
 from conftest import climate, make_world
 
 from custom_components.climate_director.engine import (
     MODE_HEAT,
     MODE_OFF,
+    Circuit,
     DirectorConfig,
     ModeFamily,
     ModeSettings,
+    Opening,
     OutdoorWindow,
+    Reason,
     Source,
     SourceRole,
     Zone,
     decide,
     sources,
 )
+from custom_components.climate_director.engine.world import OpeningState
 
 HEAT = ModeSettings(target=21.0, start_at=20.0, hysteresis=1.0)
 COOL = ModeSettings(target=22.0, start_at=24.0, hysteresis=1.0)
@@ -234,3 +240,163 @@ class TestTheHelperOnItsOwn:
             ),
         )
         assert found == ()
+
+
+PUMP = "climate.warmtepomp"
+STOVE = "climate.elektrische_kachel"
+NOW = datetime(2026, 1, 12, 10, 0)
+
+
+def _zolder_with_reserve() -> Zone:
+    """Return the switchback room: heat pump first, electric stove second."""
+    return Zone(
+        zone_id="zolder",
+        name="Zolder",
+        indoor_sensor="sensor.zolder",
+        priority=1,
+        sources=(
+            Source(
+                source_id="warmtepomp",
+                entity_id=PUMP,
+                priority=0,
+                role=SourceRole.HEAT_COOL,
+                outdoor=OutdoorWindow(minimum=3.1),
+            ),
+            Source(source_id="kachel", entity_id=STOVE, priority=2, role=SourceRole.HEAT_ONLY),
+        ),
+        heat=HEAT,
+    )
+
+
+def _living_room(priority: int, *, cool: bool = False) -> Zone:
+    settings = {"heat": HEAT, "cool": COOL if cool else None}
+    return Zone(
+        zone_id="woonkamer",
+        name="Woonkamer",
+        indoor_sensor="sensor.woonkamer",
+        priority=priority,
+        sources=(Source(source_id="woonkamer_unit", entity_id="climate.woonkamer"),),
+        **settings,
+    )
+
+
+def _refused_world(refusal: str, reserve_running: bool):
+    """Return the config and world for one circuit refusal on the attic's first choice."""
+    stove_mode = "heat" if reserve_running else "off"
+    climates = {PUMP: climate("off"), STOVE: climate(stove_mode)}
+    indoor = {"zolder": 18.0}
+    zones = [_zolder_with_reserve()]
+
+    if refusal == "short_cycle":
+        circuits = (
+            Circuit(
+                "buitenunit",
+                "Buitenunit",
+                units=(PUMP,),
+                min_cycle_time=timedelta(minutes=15),
+            ),
+        )
+        climates[PUMP] = climate("off", changed_at=NOW - timedelta(minutes=2))
+        outdoor = 4.0
+    elif refusal == "capacity":
+        zones.insert(0, _living_room(priority=0))
+        circuits = (
+            Circuit(
+                "buitenunit",
+                "Buitenunit",
+                units=("climate.woonkamer", PUMP),
+                max_concurrent_units=1,
+            ),
+        )
+        indoor["woonkamer"] = 18.0
+        climates["climate.woonkamer"] = climate("off")
+        outdoor = 4.0
+    else:
+        assert refusal == "conflict"
+        zones.insert(0, _living_room(priority=0, cool=True))
+        circuits = (
+            Circuit(
+                "buitenunit",
+                "Buitenunit",
+                units=("climate.woonkamer", PUMP),
+            ),
+        )
+        indoor["woonkamer"] = 26.0
+        climates["climate.woonkamer"] = climate("off")
+        outdoor = 4.0
+
+    config = DirectorConfig(
+        zones=tuple(zones),
+        circuits=circuits,
+        outdoor_sensor="sensor.buiten",
+        outdoor_hysteresis=0.5,
+    )
+    world = make_world(now=NOW, outdoor=outdoor, indoor=indoor, climates=climates)
+    return config, world
+
+
+class TestTheCircuitRefusedZoneTriesItsNextSource:
+    """Ronde 21, anker 7: a circuit refusal refuses the appliance, not the zone."""
+
+    @pytest.mark.parametrize("refusal", ["short_cycle", "capacity", "conflict"])
+    @pytest.mark.parametrize("reserve_running", [True, False])
+    def test_the_zone_runs_its_reserve_after_a_circuit_refusal(
+        self, refusal: str, reserve_running: bool
+    ) -> None:
+        plan = decide(*_refused_world(refusal, reserve_running))
+        decision = plan.decision_for("zolder")
+        assert decision is not None
+        assert decision.source_id == "kachel"
+        assert decision.granted is ModeFamily.HEAT
+        assert decision.reason is Reason.REGULATING
+        assert decision.passed_over == ("warmtepomp",)
+        commands = {command.entity_id: command for command in plan.commands}
+        assert commands[STOVE].hvac_mode == MODE_HEAT
+        assert commands[PUMP].hvac_mode == MODE_OFF
+        assert commands[PUMP].reason is Reason.OTHER_SOURCE_CHOSEN
+
+    def test_the_short_cycle_clock_still_returns_to_the_first_choice(self) -> None:
+        """De uitwijkklok van de geweigerde eerste keus blijft in het plan staan.
+
+        The refused first choice keeps its fallback clock, so the binding layer
+        comes back once the rest has passed and the zone can switch back.
+        """
+        config, world = _refused_world("short_cycle", reserve_running=True)
+        plan = decide(config, world)
+        assert any(
+            deferral.subject == PUMP and deferral.reason is Reason.SHORT_CYCLE_PROTECTION
+            for deferral in plan.deferrals
+        )
+
+    def test_a_house_wide_stop_still_refuses_the_zone_instead(self) -> None:
+        """Een huisbreed stilgezette eerste keus schuift niet door.
+
+        A first choice stopped house-wide refuses the zone instead of moving on.
+        """
+        config = DirectorConfig(
+            zones=(_zolder_with_reserve(),),
+            circuits=(Circuit("buitenunit", "Buitenunit", units=(PUMP,)),),
+            openings=(Opening("binary_sensor.dakraam", zone_ids=("hal",), delay=timedelta(0)),),
+            house_wide_openings=(PUMP,),
+            outdoor_sensor="sensor.buiten",
+            outdoor_hysteresis=0.5,
+        )
+        world = make_world(
+            now=NOW,
+            outdoor=4.0,
+            indoor={"zolder": 18.0},
+            climates={PUMP: climate("off"), STOVE: climate("off")},
+            openings={
+                "binary_sensor.dakraam": OpeningState(
+                    open=True, changed_at=NOW - timedelta(hours=1)
+                )
+            },
+        )
+        plan = decide(config, world)
+        decision = plan.decision_for("zolder")
+        assert decision is not None
+        assert decision.reason is Reason.OPENING_OPEN_ELSEWHERE
+        assert decision.source_id is None
+        commands = {command.entity_id: command for command in plan.commands}
+        assert commands[STOVE].hvac_mode == MODE_OFF
+        assert commands[STOVE].reason is Reason.OPENING_OPEN_ELSEWHERE

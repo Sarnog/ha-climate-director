@@ -27,6 +27,7 @@ def select(
     serving: str | None = None,
     margin: float = 0.0,
     blocked: frozenset[str] = frozenset(),
+    excluding: frozenset[str] = frozenset(),
 ) -> Source | None:
     """Return the source that should deliver `family` in `zone`.
 
@@ -60,9 +61,21 @@ def select(
     at command level: were the plan to grant such a source anyway,
     `sensor.…_source_<zone>` would name an appliance that then goes off, a lie
     that does the `command_not_taking` report no favours either.
+
+    `excluding` noemt apparaten die deze ronde al geweigerd zijn — door het
+    circuit bijvoorbeeld. Ze zijn geen kandidaat, precies zoals een onbereikbaar
+    apparaat dat niet is; de zone mag doorschuiven naar zijn volgende bron.
+
+    `excluding` names appliances already refused this round — by the circuit,
+    for example. They are no candidate, exactly as an unreachable appliance is
+    not; the zone may move on to its next source.
     """
-    eligible = [source for source in zone.sources if _eligible(source, family, world, blocked)]
-    held = _held(zone, family, world, serving, margin, eligible, blocked)
+    eligible = [
+        source
+        for source in zone.sources
+        if source.entity_id not in excluding and _eligible(source, family, world, blocked)
+    ]
+    held = _held(zone, family, world, serving, margin, eligible, blocked, excluding)
     if held is not None:
         return held
     if not eligible:
@@ -78,6 +91,7 @@ def _held(
     margin: float,
     eligible: list[Source],
     blocked: frozenset[str] = frozenset(),
+    excluding: frozenset[str] = frozenset(),
 ) -> Source | None:
     """Return the running source the dead band keeps in place, if there is one.
 
@@ -94,7 +108,7 @@ def _held(
     if serving is None or not margin:
         return None
     source = next((item for item in zone.sources if item.source_id == serving), None)
-    if source is None or source in eligible:
+    if source is None or source in eligible or source.entity_id in excluding:
         return None
     # De dode band houdt vast wat draait; een huisbreed stilgezet apparaat is
     # precies wat niet meer mag draaien, dus die vasthoudgreep geldt daar niet.
@@ -115,8 +129,9 @@ def passed_over(
     serving: str | None = None,
     margin: float = 0.0,
     blocked: frozenset[str] = frozenset(),
+    refused: frozenset[str] = frozenset(),
 ) -> tuple[str, ...]:
-    """Return the preferred sources this duty had to skip because they are unreachable.
+    """Return the preferred sources this duty had to skip.
 
     Valt de gasketel weg, dan neemt de airco het over - dat regelt `select()` al,
     want een onbereikbaar apparaat is geen kandidaat. Alleen: van buiten zie je
@@ -124,9 +139,10 @@ def passed_over(
     energierekening merk je dat er wekenlang elektrisch verwarmd is.
 
     Deze functie noemt wat er overgeslagen is: bronnen die op geschiktheid en
-    buitentemperatuur wél aan de beurt waren, maar niet te bereiken zijn, en die
-    voorrang hebben op wat er nu draait. Wat niet gekozen werd omdat een ander
-    apparaat gewoon beter past, staat er dus niet bij - dat is geen storing.
+    buitentemperatuur wél aan de beurt waren, maar niet kunnen leveren - omdat
+    ze onbereikbaar zijn, of omdat het circuit ze deze ronde weigerde (`refused`)
+    - en die voorrang hebben op wat er nu draait. Wat niet gekozen werd omdat een
+    ander apparaat gewoon beter past, staat er dus niet bij - dat is geen storing.
 
     If the gas boiler drops out the air conditioner takes over - `select()`
     already arranges that, since an unreachable appliance is no candidate. Only:
@@ -135,11 +151,12 @@ def passed_over(
     electrically for weeks.
 
     This function names what was skipped: sources that on suitability and
-    outdoor temperature were up next, but cannot be reached, and that outrank
-    what is running now. What was not chosen because another appliance simply
-    fits better is therefore absent - that is no fault.
+    outdoor temperature were up next, but cannot deliver - because they are
+    unreachable, or because the circuit refused them this round (`refused`) -
+    and that outrank what is running now. What was not chosen because another
+    appliance simply fits better is therefore absent - that is no fault.
     """
-    chosen = select(zone, family, world, serving, margin, blocked)
+    chosen = select(zone, family, world, serving, margin, blocked, excluding=refused)
     if chosen is None:
         return ()
     rank = (chosen.priority, chosen.source_id)
@@ -148,7 +165,7 @@ def passed_over(
         for source in sorted(zone.sources, key=lambda item: (item.priority, item.source_id))
         if (source.priority, source.source_id) < rank
         and _suitable(source, family, world)
-        and not world.climate(source.entity_id).available
+        and (not world.climate(source.entity_id).available or source.entity_id in refused)
     )
 
 

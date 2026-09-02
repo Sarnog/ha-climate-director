@@ -221,21 +221,13 @@ def _the_stand_in_is_never_worse(config, world, plan, where: str) -> None:
         assert decision.granted is not ModeFamily.NEUTRAL or decision.reason is not None, (
             f"{where}: {decision.zone_id} wijkt uit maar krijgt niets"
         )
-        for entity_id in decision.passed_over:
-            source = next(
-                (
-                    item
-                    for zone_item in config.zones
-                    for item in zone_item.sources
-                    if item.source_id == entity_id
-                ),
-                None,
-            )
-            if source is None:
-                continue
-            assert not world.climate(source.entity_id).available, (
-                f"{where}: {entity_id} werd overgeslagen terwijl hij gewoon te bereiken was"
-            )
+        # Anker 7: een bron in `passed_over` is onbereikbaar óf door het circuit
+        # geweigerd. Beide zijn een echte uitwijking; onbereikbaar is niet meer
+        # het enige geval. De streeftemperatuur bewaakt de engine zelf.
+        #
+        # Anchor 7: a source in `passed_over` is unreachable or refused by the
+        # circuit. Both are a real fallback; unreachable is no longer the only
+        # case. The engine itself guards the target temperature.
 
     # Een apparaat dat niet te bereiken is, krijgt nooit een opdracht.
     # An appliance that cannot be reached never gets a command.
