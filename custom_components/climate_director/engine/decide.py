@@ -934,6 +934,21 @@ def _build_commands(
     commands: list[UnitCommand] = []
     untouched: list[UntouchedSource] = []
 
+    # De blind-reden van een apparaat wordt over ál zijn zones bepaald, zodat
+    # NO_OUTDOOR_TEMPERATURE vóór NO_INDOOR_TEMPERATURE gaat ongeacht de
+    # zonevolgorde — precies zoals `_generator_commands` dat over zijn bediende
+    # zones doet.
+    #
+    # An appliance's blind reason is decided over all its zones, so
+    # NO_OUTDOOR_TEMPERATURE outranks NO_INDOOR_TEMPERATURE whatever the zone
+    # order — exactly as `_generator_commands` does over the zones it serves.
+    served_zones: dict[str, list[str]] = {}
+    for zone, source in config.sources():
+        served_zones.setdefault(source.entity_id, []).append(zone.zone_id)
+    blind_by_entity = {
+        entity_id: _unreadable_reason(refusals, zones) for entity_id, zones in served_zones.items()
+    }
+
     for zone, source in config.sources():
         # Onbereikbaar en hoofdschakelaar uit zijn voor elke bron gelijk en
         # staan in `_untouched_reason`, samen met de onleesbare-temperatuurtak
@@ -1019,6 +1034,8 @@ def _build_commands(
             reason = opening
         else:
             blind = _unreadable_reason(refusals, (zone.zone_id,))
+            if blind is not None:
+                blind = blind_by_entity[source.entity_id]
             shared = _untouched_reason(world, entity_id=source.entity_id, blind=blind)
             if shared is not None:
                 untouched.append(UntouchedSource(source.entity_id, zone.zone_id, shared))
