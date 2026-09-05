@@ -991,3 +991,137 @@ def test_the_house_wide_stop_outranks_a_blind_shared_boiler() -> None:
     assert command.hvac_mode == "off", f"de ketel kreeg {command.hvac_mode}"
     assert command.reason is Reason.OPENING_OPEN_ELSEWHERE, f"ketelreden is {command.reason}"
     assert plan.untouched_for(BOILER) is None, "de ketel werd met rust gelaten"
+
+
+# ---------------------------------------------------------------------------
+# Anker 2 over beide paden: een zone-bron én een gedeelde warmtebron.
+# Anchor 2 across both paths: a zone source and a shared heat source.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("kind", ("zone_bron", "gedeelde_warmtebron"))
+@pytest.mark.parametrize("which", BLIND_BOILER)
+@pytest.mark.parametrize("running", (True, False), ids=("draait", "stond_uit"))
+def test_anker_2_geldt_voor_een_zone_bron_en_een_gedeelde_warmtebron(
+    kind: str, which: str, running: bool
+) -> None:
+    """Anker 2 is één eigenschap, geen twee paden.
+
+    Een draaiend apparaat hoort bij een dode binnen- of buitensensor met rust
+    gelaten te worden, of het nu de zone-bron is of de gedeelde warmtebron; wie
+    al uit stond krijgt gewoon zijn uit-commando. Deze test legt dat over beide
+    paden heen, zodat het gat niet op een derde pad kan terugkomen.
+
+    Anchor 2 is one property, not two paths. A running appliance belongs in
+    `untouched` with the blind reason when the indoor or outdoor sensor dies,
+    whether it is the zone source or the shared heat source; one that was
+    already off simply gets its off command. This test lays that across both
+    paths, so the gap cannot come back on a third path.
+    """
+    config = _blind_boiler_house()
+    if kind == "zone_bron":
+        config = replace(config, generators=())
+        appliance = VALVE
+    else:
+        appliance = BOILER
+    indoor = None if which == "binnen" else 17.0
+    outdoor = None if which == "buiten" else -5.0
+    valve = ("heat" if running else "off") if kind == "zone_bron" else "heat"
+    boiler = "heat" if running else "off"
+    world = make_world(
+        now=datetime(2026, 1, 12, 10, 0),
+        outdoor=outdoor,
+        indoor={"badkamer": indoor},
+        climates={
+            VALVE: climate(valve, changed_at=datetime(2026, 1, 12, 9, 0)),
+            BOILER: climate(boiler, changed_at=datetime(2026, 1, 12, 9, 0)),
+        },
+        residents={"danny": awake()},
+    )
+    plan = decide(config, world)
+
+    expected = Reason.NO_OUTDOOR_TEMPERATURE if which == "buiten" else Reason.NO_INDOOR_TEMPERATURE
+    if running:
+        left = plan.untouched_for(appliance)
+        assert left is not None, f"{kind}/{which}: het apparaat verdween uit beeld"
+        assert left.reason is expected, f"{kind}/{which}: reden is {left.reason}"
+        assert plan.command_for(appliance) is None, (
+            f"{kind}/{which}: het draaiende apparaat kreeg toch een commando"
+        )
+    else:
+        command = plan.command_for(appliance)
+        assert command is not None, f"{kind}/{which}: een stilstaand apparaat kreeg geen commando"
+        assert command.hvac_mode == "off", (
+            f"{kind}/{which}: het stilstaande apparaat kreeg {command.hvac_mode}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# De blind-reden van een gedeeld apparaat hangt niet aan de zonevolgorde.
+# A shared appliance's blind reason does not depend on zone order.
+# ---------------------------------------------------------------------------
+
+SHARED = "climate.gedeelde_ketel"
+KRAAN_A = "climate.kraan_a"
+KRAAN_B = "climate.kraan_b"
+
+
+def _two_zone_blind_house(kind: str, order: str) -> DirectorConfig:
+    """Twee zones met verschillende blind-redenen die één apparaat delen."""
+    ids = ("a", "b") if order == "ab" else ("b", "a")
+    zones = []
+    for zone_id in ids:
+        heat = ModeSettings(target=21.0, start_at=20.0, hysteresis=1.0)
+        if zone_id == "b":
+            heat = replace(heat, outdoor=OutdoorWindow(maximum=19.0))
+        if kind == "zone_bron":
+            sources = (Source("gedeeld", SHARED, role=SourceRole.HEAT_ONLY),)
+        else:
+            entity = KRAAN_A if zone_id == "a" else KRAAN_B
+            sources = (Source(f"kraan_{zone_id}", entity, role=SourceRole.HEAT_ONLY),)
+        zones.append(
+            Zone(
+                zone_id=zone_id,
+                name=zone_id,
+                indoor_sensor=f"sensor.{zone_id}",
+                sources=sources,
+                heat=heat,
+            )
+        )
+    config = DirectorConfig(zones=tuple(zones), outdoor_sensor="sensor.buiten")
+    if kind == "gedeelde_warmtebron":
+        config = replace(
+            config,
+            generators=(Generator("cv", "CV", BOILER, zone_ids=("a", "b")),),
+        )
+    return config
+
+
+def _two_zone_blind_world():
+    """Zone a heeft geen binnenlezing, zone b geen buitenlezing; alles draait."""
+    return make_world(
+        now=datetime(2026, 1, 12, 10, 0),
+        outdoor=None,
+        indoor={"a": None, "b": 17.0},
+        climates={
+            SHARED: climate("heat", changed_at=datetime(2026, 1, 12, 9, 0)),
+            KRAAN_A: climate("heat", changed_at=datetime(2026, 1, 12, 9, 0)),
+            KRAAN_B: climate("heat", changed_at=datetime(2026, 1, 12, 9, 0)),
+            BOILER: climate("heat", changed_at=datetime(2026, 1, 12, 9, 0)),
+        },
+    )
+
+
+@pytest.mark.parametrize("kind", ("zone_bron", "gedeelde_warmtebron"))
+@pytest.mark.parametrize("order", ("ab", "ba"))
+def test_de_blind_reden_hangt_niet_aan_de_zonevolgorde(kind: str, order: str) -> None:
+    """NO_OUTDOOR gaat vóór NO_INDOOR, op beide paden en in elke zonevolgorde.
+
+    NO_OUTDOOR outranks NO_INDOOR, on both paths and in either zone order.
+    """
+    config = _two_zone_blind_house(kind, order)
+    plan = decide(config, _two_zone_blind_world())
+    appliance = SHARED if kind == "zone_bron" else BOILER
+    left = plan.untouched_for(appliance)
+    assert left is not None, f"{kind}/{order}: het apparaat verdween uit beeld"
+    assert left.reason is Reason.NO_OUTDOOR_TEMPERATURE, f"{kind}/{order}: reden is {left.reason}"
