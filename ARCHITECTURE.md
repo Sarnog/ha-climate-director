@@ -117,6 +117,10 @@ Die grens is geen stijlkeuze. De reden dat losse automatiseringen voor dit probl
 onhoudbaar worden, is dat besliskunde en uitvoering door elkaar lopen; deze scheiding is
 precies de correctie daarop.
 
+De regels die deze vorm in stand houden — en de plekken waar de code ze vandaag
+niet haalt — staan verderop onder "Uitbreidbaarheid — de vorm die dat mogelijk
+maakt".
+
 ### Overzicht
 
 ```
@@ -685,11 +689,86 @@ dode band of het voorverwarmen bij; opslag via `Store`.
 
 **HACS-standaardlijst.** Geen ontwerp; procesbeslissing na bewezen praktijk.
 
-### Uitbreidbaarheid
+### Uitbreidbaarheid — de vorm die dat mogelijk maakt
 
 Nieuwe poorten, bronrollen, conflictbeleiden en circuitbeperkingen haken elk op één
 bestaande module aan zonder de pijplijn te wijzigen. Nieuwe kunde die niets met Home
 Assistant te maken heeft hoort per definitie in `engine/`, met tests ernaast.
+
+Dat blijft alleen waar zolang de code een vorm houdt waarin een toevoeging een
+*toevoeging* is en geen verbouwing. Die vorm is geen smaak. De reden dat 34 losse
+automatiseringen onhoudbaar werden, is dat elke nieuwe wens een bestaande moest
+openbreken; dit zijn de zeven regels die dat hier tegenhouden, met per regel wat hij
+voorkomt.
+
+1. **Één module doet één ding**, in één zin te omschrijven — `gates.py` mag het,
+   `hysteresis.py` moet het, `sources.py` waarmee. *Voorkomt* dat een wijziging in het
+   ene onderwerp het andere sloopt.
+2. **De afhankelijkheden lopen één kant op.** Gebruikt A B, dan gebruikt B nooit A.
+   *Voorkomt* een kring waarin niets meer los te vervangen of te testen is.
+3. **Denken staat los van doen.** Dat is de scheidslijn hierboven, en het is de
+   belangrijkste van de zeven. *Voorkomt* dat je een draaiende Home Assistant nodig hebt
+   om te weten of de besliskunde klopt.
+4. **Gegevens zijn dataclasses, geen losse dicts.** Een `Zone` heeft vaste velden; in een
+   dict past alles wat je intikt. *Voorkomt* een typefout die pas maanden later in een
+   huis opvalt.
+5. **Een functie past op één scherm.** *Voorkomt* een bijwerking veertig regels verderop
+   die niemand — mens noch agent — nog overziet.
+6. **Elke belofte heeft een bewaking die rood wordt als je hem sloopt.** Niet "er is een
+   test", maar "draai de reparatie terug en er valt iets om". *Voorkomt* het patroon waar
+   dit project de meeste rondes aan kwijt is: de reparatie staat er, de eigenschap is
+   niet vastgepind.
+7. **Uitbreiden gebeurt via een lijst, niet via een `if`.** Een nieuwe controle is een
+   functie erbij in een lijst, geen tak erbij in een bestaand blok. *Voorkomt* dat elke
+   toevoeging bestaande code moet openbreken en dus kan breken.
+
+**Een grens die alleen opgeschreven staat, is geen grens** — regel 6 geldt ook voor deze
+regels zelf. Bewaakt zijn: dat `engine/` Home Assistant nergens importeert
+(`tests/test_the_border.py`, met `ast.walk`, dus ook een import binnen een functie; de
+bewaking merkt het ook als zij niets te scannen vindt, zodat een verplaatsing van
+`engine/` haar niet stil uitzet), dat elk formulier uit de bron werkelijk opengaat
+(`TestEveryFormInTheSourceIsWalkedTo`), en dat de bewakingen zelf kloppen
+(`tests/test_the_guards_themselves.py`).
+
+De grensbewaking heeft één bewust smalle kant, en die hoort hier te staan zodat niemand
+hem voor breder aanziet: hij leest **letterlijke** imports van `homeassistant`. Een
+relatieve import naar de andere helft van het pakket (`from ..coordinator import ...`) en
+een import die pas op het draaimoment ontstaat (`importlib.import_module`) glippen er
+langs. Beide zijn vandaag onbereikbaar — er staat er geen enkele — maar de scheidslijn
+hangt in die twee vormen nog steeds aan het lezen van de code.
+
+**De maat.** Een module blijft onder ~700 regels, een functie onder ~80. Geen wet, wel de
+grens waarboven de vraag hoort te vallen: *doet dit ding er inmiddels twee?*
+
+**Waar de code die maat vandaag niet haalt.** Gemeten op 7.4.1 — 29 bestanden, 14.782
+regels: vijf modules staan boven de 700 regels, negentien functies boven de 80, en vier
+bestanden dragen samen 8302 regels, 56% van het geheel. Dat is geen schoonheidsfout; elk
+van de vier heeft aantoonbaar fouten voortgebracht.
+
+- **`coordinator.py` (2487).** Één klasse met 67 methodes die zeven banen tegelijk heeft:
+  opslag, luisteraars, de momentopname bouwen, problemen melden, vooruit-verzoeken,
+  events, en drie soorten timers; `__init__` alleen al 179 regels. De zes nagebouwde
+  coordinators in de testset breken hierdoor op afstand — dat is dit, naar buiten
+  gekomen. *Waarheen:* `state_store.py` (opslag, herstel, quarantaine),
+  `world_builder.py` (de momentopname) en `preconditions.py` (verzoeken en hun timers);
+  wat overblijft luistert, beslist, voert uit en publiceert.
+- **`config_flow.py` (2479).** Per scherm lopen formulier bouwen, valideren en opslaan
+  door elkaar; `async_step_settings` is 213 regels, `async_step_resident` 196.
+  *Waarheen:* een `schemas.py` die per scherm het formulier bouwt, zodat de flow alleen
+  de navigatie houdt.
+- **`engine/models.py` (1832).** `validate()` is één functie van 549 regels: elke nieuwe
+  controle maakt hem langer, wat regel 7 precies andersom is. *Waarheen:* een lijst
+  regelfuncties waar `validate()` overheen loopt — een controle erbij is dan een functie
+  erbij.
+- **`engine/decide.py` (1504).** `_build_commands` (190) en `_generator_commands` (216)
+  zijn twee bijna-parallelle paden voor dezelfde vraag, en een eigenschap die op het ene
+  pad gerepareerd wordt blijft op het andere staan: H1 (ronde 1), H3 (ronde 2) en B1
+  (ronde 21) zijn alle drie díé fout. *Waarheen:* één pad met de gedeelde warmtebron als
+  parameter, of minstens de gedeelde beslissingen als losse functies die beide aanroepen.
+
+Verplaatsen verandert geen gedrag: de acceptatie van elke stap hierboven is dat de
+volledige suite even groen blijft als ervoor, met `python tests/measure_short_cycles.py`
+onveranderd op **OK**. De volgorde staat in [`ROADMAP.md`](ROADMAP.md).
 
 ### De bewakingen bewaken — en daar houdt het op
 
@@ -817,6 +896,9 @@ rather than an afternoon of manual trials.
 That border is not a matter of style. The reason hand-built automations become
 unsustainable for this problem is that decision logic and execution are interleaved;
 this separation is precisely the correction for that.
+
+The rules that keep this shape — and the places where the code does not meet them
+today — are further down under "Extensibility — the shape that makes it possible".
 
 ### Overview
 
@@ -1376,11 +1458,84 @@ takes turns based on running hours.
 **Inclusion in the HACS default list.** No design; a process decision after proven
 practice.
 
-### Extensibility
+### Extensibility — the shape that makes it possible
 
 New gates, source roles, conflict policies and circuit constraints each plug into one
 existing module without changing the pipeline. New logic with nothing to do with Home
 Assistant belongs in `engine/` by definition, with tests alongside it.
+
+That only stays true as long as the code keeps a shape in which an addition is an
+*addition* and not a rebuild. That shape is not a matter of taste. The reason 34
+hand-built automations became unsustainable is that every new wish had to break open an
+existing one; these are the seven rules that stop that here, with what each one prevents.
+
+1. **One module does one thing**, describable in a single sentence — `gates.py` is it
+   allowed, `hysteresis.py` is it needed, `sources.py` with what. *Prevents* a change in
+   one subject from wrecking another.
+2. **Dependencies run one way.** If A uses B, then B never uses A. *Prevents* a cycle in
+   which nothing can be replaced or tested on its own any more.
+3. **Thinking is separate from doing.** That is the dividing line above, and it is the
+   most important of the seven. *Prevents* needing a running Home Assistant to know
+   whether the decision logic is right.
+4. **Data are dataclasses, not loose dicts.** A `Zone` has fixed fields; a dict holds
+   whatever you type into it. *Prevents* a typo that only surfaces in a house months
+   later.
+5. **A function fits on one screen.** *Prevents* a side effect forty lines further down
+   that nobody — human or agent — can still oversee.
+6. **Every promise has a guard that turns red when you break it.** Not "there is a test",
+   but "revert the fix and something falls over". *Prevents* the pattern this project has
+   lost the most rounds to: the fix is there, the property is not pinned down.
+7. **Extending happens through a list, not through an `if`.** A new check is one more
+   function in a list, not one more branch in an existing block. *Prevents* every
+   addition from having to break open existing code, and therefore being able to break
+   it.
+
+**A border that is only written down is not a border** — rule 6 applies to these rules
+themselves too. Guarded are: that `engine/` imports Home Assistant nowhere
+(`tests/test_the_border.py`, using `ast.walk`, so an import inside a function counts as
+well; the guard also notices when it finds nothing to scan, so a move of `engine/` does
+not silently switch it off), that every form in the source really opens
+(`TestEveryFormInTheSourceIsWalkedTo`), and that the guards themselves are right
+(`tests/test_the_guards_themselves.py`).
+
+The border guard has one deliberately narrow side, and it belongs here so that nobody
+mistakes it for a wider one: it reads **literal** imports of `homeassistant`. A relative
+import into the other half of the package (`from ..coordinator import ...`) and an import
+created at run time (`importlib.import_module`) slip past it. Both are unreachable today
+— there is not a single one — but in those two shapes the dividing line still rests on
+reading the code.
+
+**The measure.** A module stays under ~700 lines, a function under ~80. Not a law, but
+the point past which the question should arise: *is this thing doing two jobs by now?*
+
+**Where the code does not meet that measure today.** Measured on 7.4.1 — 29 files,
+14,782 lines: five modules sit above 700 lines, nineteen functions above 80, and four
+files carry 8,302 lines between them, 56% of the whole. That is not a cosmetic flaw; each
+of the four has demonstrably produced bugs.
+
+- **`coordinator.py` (2487).** One class with 67 methods holding seven jobs at once:
+  storage, listeners, building the snapshot, reporting problems, pre-conditioning
+  requests, events, and three kinds of timer; `__init__` alone is 179 lines. The six
+  rebuilt coordinators in the test suite break at a distance because of this — that is
+  this, surfacing. *Where to:* `state_store.py` (storage, restore, quarantine),
+  `world_builder.py` (the snapshot) and `preconditions.py` (requests and their timers);
+  what remains listens, decides, executes and publishes.
+- **`config_flow.py` (2479).** Per screen, building the form, validating and storing run
+  through one another; `async_step_settings` is 213 lines, `async_step_resident` 196.
+  *Where to:* a `schemas.py` that builds the form per screen, so the flow only keeps the
+  navigation.
+- **`engine/models.py` (1832).** `validate()` is one function of 549 lines: every new
+  check makes it longer, which is rule 7 exactly the wrong way round. *Where to:* a list
+  of rule functions that `validate()` walks — one more check is then one more function.
+- **`engine/decide.py` (1504).** `_build_commands` (190) and `_generator_commands` (216)
+  are two near-parallel paths for the same question, and a property repaired on one path
+  stays broken on the other: H1 (round 1), H3 (round 2) and B1 (round 21) are all three
+  *that* mistake. *Where to:* one path with the shared heat source as a parameter, or at
+  the very least the shared decisions as separate functions both of them call.
+
+Moving code changes no behaviour: the acceptance for every step above is that the full
+suite stays exactly as green as before, with `python tests/measure_short_cycles.py`
+unchanged at **OK**. The order is in [`ROADMAP.md`](ROADMAP.md).
 
 ### The guards are guarded — and there it stops
 

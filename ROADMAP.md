@@ -18,6 +18,16 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 
 ## Should have
 
+- **De code opdelen zodat uitbreiden een toevoeging blijft** — vier bestanden dragen samen
+  56% van de code (`coordinator.py`, `config_flow.py`, `engine/models.py` en
+  `engine/decide.py`), en alle vier hebben ze fouten voortgebracht met dezelfde vorm: een
+  eigenschap die op het ene pad gerepareerd is en op het pad ernaast blijft staan. Het gaat
+  om verplaatsen, niet om nieuw gedrag — de volledige suite hoort bij elke stap even groen
+  te blijven. De norm, de meting en de doelindeling staan in
+  [`ARCHITECTURE.md`](ARCHITECTURE.md) onder "Uitbreidbaarheid". Volgorde: eerst een
+  bewaking op de engine-grens, dan de twee bijna-parallelle paden in `decide.py`
+  samenvoegen, dan `validate()` opdelen in losse regelfuncties, dan de coordinator in
+  vieren, dan de formulieropbouw uit `config_flow.py`.
 - **Virtuele `climate` per zone** — één bedieningsentiteit per ruimte, waarmee de gewenste
   temperatuur en stand rechtstreeks op een gewone thermostaatkaart te bedienen zijn. De
   director kiest daar dan de bron bij.
@@ -141,6 +151,15 @@ The worked-out design proposals for everything below live in
 
 ## Should have
 
+- **Split the code so that extending stays an addition** — four files carry 56% of the code
+  between them (`coordinator.py`, `config_flow.py`, `engine/models.py` and
+  `engine/decide.py`), and all four have produced bugs of the same shape: a property
+  repaired on one path and left standing on the path next to it. This is moving code, not
+  new behaviour — the full suite should stay just as green at every step. The norm, the
+  measurement and the target layout are in [`ARCHITECTURE.md`](ARCHITECTURE.md) under
+  "Extensibility". Order: first a guard on the engine border, then merging the two
+  near-parallel paths in `decide.py`, then splitting `validate()` into separate rule
+  functions, then the coordinator into four, then form building out of `config_flow.py`.
 - **A virtual `climate` per zone** — one control entity per room, so the target temperature
   and mode can be set straight from an ordinary thermostat card. The director then picks the
   source to match.
