@@ -29,6 +29,7 @@ from conftest import (
     notice_key_pair_error,
     notice_title_error,
 )
+from test_the_border import border_offenders
 
 
 def _write_package(
@@ -496,3 +497,112 @@ class TestTheWalkGuard:
 
         with pytest.raises(AssertionError, match="open_screen liep naar"):
             await walk.TestEveryFormInTheSourceIsWalkedTo().test_every_step_id_in_the_source_opens()
+
+
+class TestTheBorderGuard:
+    """`border_offenders()` bewaakt de engine-grens, op verzonnen invoer.
+
+    `border_offenders()` guards the engine border, on invented input.
+    """
+
+    def test_it_sees_a_plain_homeassistant_import(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        root = _write_package(
+            monkeypatch,
+            tmp_path,
+            "guardpkg_border_plain",
+            {"gates.py": "import homeassistant\n"},
+        )
+        assert border_offenders(root=root) == ["gates.py:1: import homeassistant"]
+
+    def test_it_sees_a_homeassistant_submodule_import(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        root = _write_package(
+            monkeypatch,
+            tmp_path,
+            "guardpkg_border_submodule",
+            {"gates.py": "import homeassistant.util.dt\n"},
+        )
+        assert border_offenders(root=root) == ["gates.py:1: import homeassistant.util.dt"]
+
+    def test_it_sees_a_from_homeassistant_import(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        root = _write_package(
+            monkeypatch,
+            tmp_path,
+            "guardpkg_border_from",
+            {"gates.py": "from homeassistant.const import X\n"},
+        )
+        assert border_offenders(root=root) == ["gates.py:1: from homeassistant.const import ..."]
+
+    def test_it_sees_imports_inside_a_function_and_under_type_checking(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """De ast.walk-kant: een import die niet op modulehoogte staat telt ook.
+
+        The ast.walk side: an import that is not at module level counts too.
+        """
+        root = _write_package(
+            monkeypatch,
+            tmp_path,
+            "guardpkg_border_nested",
+            {
+                "func.py": "def laad():\n    from homeassistant import const\n",
+                "typing.py": (
+                    "from typing import TYPE_CHECKING\n"
+                    "if TYPE_CHECKING:\n"
+                    "    from homeassistant import const\n"
+                ),
+            },
+        )
+        assert border_offenders(root=root) == [
+            "func.py:2: from homeassistant import ...",
+            "typing.py:3: from homeassistant import ...",
+        ]
+
+    def test_it_sees_a_file_that_did_not_exist_yesterday_and_one_in_a_submap(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """De scan leest de schijf per aanroep, en vindt ook submappen.
+
+        The scan reads the disk per call, and finds subdirectories too.
+        """
+        root = _write_package(monkeypatch, tmp_path, "guardpkg_border_grow", {})
+        assert border_offenders(root=root) == []
+        (root / "later.py").write_text("from homeassistant import const\n", encoding="utf-8")
+        sub = root / "sub"
+        sub.mkdir()
+        (sub / "gates.py").write_text("from homeassistant import const\n", encoding="utf-8")
+        assert border_offenders(root=root) == [
+            "later.py:1: from homeassistant import ...",
+            "sub/gates.py:1: from homeassistant import ...",
+        ]
+
+    def test_it_reports_no_false_positive_on_lookalike_imports(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        root = _write_package(
+            monkeypatch,
+            tmp_path,
+            "guardpkg_border_lookalike",
+            {
+                "look.py": "import homeassistantx\n",
+                "helper.py": "from homeassistant_helper import y\n",
+            },
+        )
+        assert border_offenders(root=root) == []
+
+    def test_an_empty_or_unfindable_tree_is_an_error(self, tmp_path: Path) -> None:
+        """Een lege scan is een fout, geen groene test — dat is R1.
+
+        An empty scan is an error, not a green test — that is R1.
+        """
+        empty = tmp_path / "lege_map"
+        empty.mkdir()
+        with pytest.raises(AssertionError, match="geen bestanden gevonden"):
+            border_offenders(root=empty)
+        with pytest.raises(AssertionError, match="geen bestanden gevonden"):
+            border_offenders(root=tmp_path / "bestaat_niet")
