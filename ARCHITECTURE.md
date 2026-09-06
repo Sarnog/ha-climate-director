@@ -760,11 +760,16 @@ van de vier heeft aantoonbaar fouten voortgebracht.
   controle maakt hem langer, wat regel 7 precies andersom is. *Waarheen:* een lijst
   regelfuncties waar `validate()` overheen loopt — een controle erbij is dan een functie
   erbij.
-- **`engine/decide.py` (1504).** `_build_commands` (190) en `_generator_commands` (216)
-  zijn twee bijna-parallelle paden voor dezelfde vraag, en een eigenschap die op het ene
-  pad gerepareerd wordt blijft op het andere staan: H1 (ronde 1), H3 (ronde 2) en B1
-  (ronde 21) zijn alle drie díé fout. *Waarheen:* één pad met de gedeelde warmtebron als
-  parameter, of minstens de gedeelde beslissingen als losse functies die beide aanroepen.
+- **`engine/decide.py` (1618).** `_build_commands` (zone-bronnen) en
+  `_generator_commands` (gedeelde warmtebronnen) bestaan nog, maar de gedeelde
+  beslissingen zijn eruit getrokken naar functies die beide paden aanroepen:
+  `_untouched_reason` (onbereikbaar, hoofdschakelaar uit, anker 2),
+  `_opening_stop_reason` (anker 5), `_opening_rest_hold` (de herstart-rem),
+  `_unreadable_reason` (de blind-reden) en `_idle_mode`. Een eigenschap die op het
+  ene pad gerepareerd wordt kan daardoor niet meer op het andere blijven staan — H1
+  (ronde 1), H3 (ronde 2) en B1 (ronde 21) waren alle drie díé fout. Wat per pad
+  blijft zijn de pad-eigen keuzes: override, handbediende bron en gekozen-bron-commando
+  bij de zone-bron; vraagvolging en stop-reden bij de gedeelde warmtebron.
 
 Verplaatsen verandert geen gedrag: de acceptatie van elke stap hierboven is dat de
 volledige suite even groen blijft als ervoor, met `python tests/measure_short_cycles.py`
@@ -1527,11 +1532,16 @@ of the four has demonstrably produced bugs.
 - **`engine/models.py` (1832).** `validate()` is one function of 549 lines: every new
   check makes it longer, which is rule 7 exactly the wrong way round. *Where to:* a list
   of rule functions that `validate()` walks — one more check is then one more function.
-- **`engine/decide.py` (1504).** `_build_commands` (190) and `_generator_commands` (216)
-  are two near-parallel paths for the same question, and a property repaired on one path
-  stays broken on the other: H1 (round 1), H3 (round 2) and B1 (round 21) are all three
-  *that* mistake. *Where to:* one path with the shared heat source as a parameter, or at
-  the very least the shared decisions as separate functions both of them call.
+- **`engine/decide.py` (1618).** `_build_commands` (zone sources) and
+  `_generator_commands` (shared heat sources) still exist, but the shared decisions
+  have been pulled out into functions both paths call: `_untouched_reason`
+  (unreachable, master off, anchor 2), `_opening_stop_reason` (anchor 5),
+  `_opening_rest_hold` (the restart brake), `_unreadable_reason` (the blind reason)
+  and `_idle_mode`. A property repaired on one path can therefore no longer stay
+  broken on the other — H1 (round 1), H3 (round 2) and B1 (round 21) were all three
+  *that* mistake. What remains per path are the path-specific choices: override,
+  manual source and chosen-source command for the zone source; demand-following and
+  stop reason for the shared heat source.
 
 Moving code changes no behaviour: the acceptance for every step above is that the full
 suite stays exactly as green as before, with `python tests/measure_short_cycles.py`
