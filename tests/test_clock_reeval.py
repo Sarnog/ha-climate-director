@@ -23,6 +23,7 @@ import pytest
 from homeassistant.util import dt as dt_util
 
 from custom_components.climate_director import coordinator as module
+from custom_components.climate_director import preconditions as preconditions_module
 from custom_components.climate_director.coordinator import ClimateDirectorCoordinator
 from custom_components.climate_director.engine import Reason
 from custom_components.climate_director.engine.plan import Deferral, Plan
@@ -93,6 +94,7 @@ def scheduled(monkeypatch: pytest.MonkeyPatch):
         return cancel
 
     monkeypatch.setattr(module, "async_call_later", _fake)
+    monkeypatch.setattr(preconditions_module, "async_call_later", _fake)
     return calls, cancels
 
 
