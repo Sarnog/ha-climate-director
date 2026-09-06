@@ -25,6 +25,7 @@ from custom_components.climate_director.engine import (
     DirectorConfig,
     GateSettings,
     Generator,
+    HeatingLayout,
     ModeSettings,
     Opening,
     OutdoorWindow,
@@ -787,3 +788,88 @@ def test_the_order_of_the_complaints_is_literal() -> None:
         "quiet_covers_the_day",
         "switch_timings_without_a_switch",
     ]
+
+
+def _broken_house_for_the_other_branches(deadband: float) -> DirectorConfig:
+    """Return an installation that trips the branches the order test above misses.
+
+    De volgorde-test hierboven kiest per uitsluiting de kant die de meeste
+    andere controles laat staan. Daardoor komen vijf codes in geen enkele
+    letterlijke lijst voor: `stuck_after_below_opening_rest`,
+    `nonfinite_outdoor_deadband`, `negative_outdoor_deadband`,
+    `house_wide_without_openings` en `layout_central_without_shared_source`.
+    Deze installatie kiest die andere kant. Een niet-eindige en een negatieve
+    dode band sluiten elkaar per waarde uit (één getal kan niet allebei zijn),
+    dus de test hieronder is over die twee geparametriseerd.
+
+    The order test above picks, per exclusion, the side that leaves most other
+    checks standing. Five codes therefore appear in no literal list at all:
+    `stuck_after_below_opening_rest`, `nonfinite_outdoor_deadband`,
+    `negative_outdoor_deadband`, `house_wide_without_openings` and
+    `layout_central_without_shared_source`. This installation picks that other
+    side. A non-finite and a negative dead band exclude each other by value
+    (one number cannot be both), so the test below is parametrised over those
+    two.
+    """
+    return DirectorConfig(
+        zones=(
+            Zone(
+                "woonkamer",
+                "Woonkamer",
+                "sensor.woonkamer",
+                sources=(Source("w", "climate.woonkamer"),),
+                heat=ModeSettings(21.0, 20.0),
+            ),
+            Zone(
+                "zolder",
+                "Zolder",
+                "sensor.zolder",
+                sources=(Source("z", "climate.zolder"),),
+                heat=ModeSettings(21.0, 20.0),
+            ),
+        ),
+        heating_layout=HeatingLayout.CENTRAL,
+        house_wide_openings=("climate.woonkamer",),
+        outdoor_hysteresis=deadband,
+        stuck_after=timedelta(minutes=2),
+    )
+
+
+@pytest.mark.parametrize(
+    ("deadband", "codes"),
+    [
+        (
+            float("nan"),
+            [
+                "stuck_after_below_opening_rest",
+                "nonfinite_outdoor_deadband",
+                "house_wide_without_openings",
+                "layout_central_without_shared_source",
+            ],
+        ),
+        (
+            -1.0,
+            [
+                "stuck_after_below_opening_rest",
+                "negative_outdoor_deadband",
+                "house_wide_without_openings",
+                "layout_central_without_shared_source",
+            ],
+        ),
+    ],
+)
+def test_the_other_branch_of_every_exclusion_is_literal(deadband: float, codes: list[str]) -> None:
+    """De andere tak van elke uitsluiting staat óók letterlijk vast.
+
+    Wie `validate()` verbouwt tot een lijst regels mag geen enkele tak van een
+    uitsluiting laten vallen of omgooien. De volgorde-test hierboven bewaakt
+    één kant; deze test bewaakt de andere kant van dezelfde uitsluitingen, zodat
+    alle vijf de codes die daar ontbraken nu in een letterlijke lijst staan.
+
+    Whoever rebuilds `validate()` into a list of rules must not drop or reorder
+    any branch of an exclusion. The order test above guards one side; this test
+    guards the other side of the same exclusions, so all five codes missing
+    there now sit in a literal list.
+    """
+    found = [item.code for item in validate(_broken_house_for_the_other_branches(deadband))]
+    assert found == codes
