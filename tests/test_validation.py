@@ -24,14 +24,17 @@ from custom_components.climate_director.engine import (
     Circuit,
     DirectorConfig,
     GateSettings,
+    Generator,
     ModeSettings,
     Opening,
     OutdoorWindow,
     Problem,
     Resident,
+    Season,
     Source,
     TimeWindow,
     Zone,
+    ZoneGate,
     manual_only_problems,
     validate,
 )
@@ -603,3 +606,184 @@ class TestOnlyManualSources:
         )
         assert self._manual(config, "automatic start off")
         assert validate(config) == ()
+
+
+def _broken_house_for_the_order_test() -> DirectorConfig:
+    """Return an installation that trips as many checks at once as it can.
+
+    Elke controle hier is met opzet zo gekozen dat hij naast de buren kan
+    bestaan; waar twee controles elkaar uitsluiten (een negatieve of een nul
+    dode band, een negatieve of een te korte vastlooptijd, openingen of "geen
+    openingen") is gekozen voor de kant die de meeste andere controles laat
+    staan. De test hieronder is dan ook geen volledigheidsbewijs - dat doet
+    `test_every_complaint_carries_a_translation_code` niet en deze ook niet -
+    maar een volgordebewijs: deze installatie levert vandaag precies deze rij
+    op, en die rij is zichtbaar.
+
+    Every check here is chosen on purpose to coexist with its neighbours;
+    where two checks exclude each other (a negative or a zero dead band, a
+    negative or a too-short stuck time, openings or "no openings") the side is
+    picked that leaves most other checks standing. So the test below is not a
+    completeness proof - neither is
+    `test_every_complaint_carries_a_translation_code` - but an order proof:
+    this installation yields exactly this row today, and that row is visible.
+    """
+    return DirectorConfig(
+        zones=(
+            Zone(
+                "a",
+                "A",
+                "sensor.a",
+                sources=(
+                    Source("s1", "climate.x", outdoor=OutdoorWindow(minimum=5.0, maximum=3.0)),
+                    Source("s2", "climate.x"),
+                ),
+                priority=0,
+                heat=ModeSettings(
+                    20.0,
+                    21.0,
+                    hysteresis=float("nan"),
+                    outdoor=OutdoorWindow(minimum=5.0, maximum=3.0),
+                    seasons=frozenset({Season.SUMMER}),
+                ),
+                cool=ModeSettings(
+                    24.0,
+                    23.0,
+                    hysteresis=-1.0,
+                    outdoor=OutdoorWindow(maximum=30.0),
+                ),
+            ),
+            Zone(
+                "a",
+                "A2",
+                "",
+                sources=(
+                    Source("s1", "climate.x"),
+                    Source(
+                        "boiler",
+                        "climate.boiler",
+                        role=SourceRole.HEAT_ONLY,
+                        outdoor=OutdoorWindow(maximum=19.0),
+                    ),
+                ),
+                priority=0,
+                heat=ModeSettings(21.0, 20.0),
+                cool=None,
+            ),
+            Zone(
+                "b",
+                "B",
+                "sensor.b",
+                sources=(Source("s1", "climate.x"),),
+                priority=0,
+                heat=ModeSettings(22.0, 21.0),
+                cool=ModeSettings(20.0, 20.0),
+                gate=ZoneGate.PRESENCE,
+                presence_entity="",
+                presence_timeout=timedelta(seconds=-1),
+            ),
+            Zone("c", "C", "", sources=(), heat=None, cool=None),
+            Zone(
+                "d",
+                "D",
+                "sensor.d",
+                sources=(Source("cooler", "climate.cooler", role=SourceRole.COOL_ONLY),),
+                priority=1,
+                heat=ModeSettings(21.0, 20.0),
+                cool=None,
+            ),
+        ),
+        circuits=(
+            Circuit(
+                "circ",
+                "C",
+                units=("climate.x", "climate.unmanaged"),
+                simultaneous_heat_cool=True,
+                family_switch_delay=timedelta(minutes=5),
+                min_cycle_time=timedelta(seconds=-1),
+                max_concurrent_units=0,
+            ),
+            Circuit("circ", "C2", units=("climate.x",)),
+        ),
+        residents=(Resident("danny", "Danny"),),
+        openings=(
+            Opening("binary_sensor.deur", zone_ids=("nergens",), delay=timedelta(seconds=-1)),
+        ),
+        house_wide_openings=("climate.ghost",),
+        generators=(Generator("gen", "G", "climate.x", zone_ids=("a", "nergens")),),
+        exclusive_groups=(frozenset({"s1", "missing"}),),
+        gates=GateSettings(
+            require_schedule=True,
+            quiet_windows=(TimeWindow(time(0, 0), time(23, 59)),),
+            max_precondition=timedelta(0),
+        ),
+        seasons=SeasonSettings(source=SeasonSource.WINTER),
+        outdoor_sensor="",
+        outdoor_hysteresis=0.0,
+        stuck_after=timedelta(seconds=-1),
+        holiday_calendars=("calendar.holidays",),
+        holiday_keyword="",
+    )
+
+
+def test_the_order_of_the_complaints_is_literal() -> None:
+    """De volgorde van de meldingen is zichtbaar en staat daarom vast.
+
+    Het bewaarscherm en de reparatiemelding `invalid_config` tonen de meldingen
+    in de volgorde waarin `validate()` ze teruggeeft. Wie die functie verbouwt
+    tot een lijst regels mag dus niets omgooien; deze test houdt de volledige
+    rij van een bekende, opzettelijk foute installatie tegen een letterlijke
+    lijst, zodat elke verschuiving rood wordt in plaats van een stille
+    gedragswijziging.
+
+    The save screen and the `invalid_config` repair notice show the complaints
+    in the order `validate()` returns them. So whoever rebuilds that function
+    into a list of rules must not reorder anything; this test holds the full
+    row of a known, deliberately broken installation against a literal list,
+    so any shift turns red instead of becoming a silent behaviour change.
+    """
+    codes = [item.code for item in validate(_broken_house_for_the_order_test())]
+    assert codes == [
+        "duplicate_zone_id",
+        "duplicate_circuit_id",
+        "duplicate_source_id",
+        "entity_twice_in_one_zone",
+        "unit_in_no_zone",
+        "unit_on_two_circuits",
+        "source_window_admits_nothing",
+        "nonfinite_hysteresis",
+        "zone_window_admits_nothing",
+        "season_excludes_mode",
+        "target_outside_band",
+        "zone_negative_hysteresis",
+        "zone_outdoor_without_sensor",
+        "target_outside_band",
+        "zone_without_sensor",
+        "source_outdoor_without_sensor",
+        "zone_presence_without_sensor",
+        "zone_negative_presence_timeout",
+        "zone_cools_at_or_below_heats",
+        "zone_without_sources",
+        "zone_without_sensor",
+        "zone_neither_heats_nor_cools",
+        "zone_no_source_for_mode",
+        "generator_also_a_source",
+        "generator_unknown_zone",
+        "shared_priority",
+        "circuit_allows_no_unit",
+        "circuit_negative_timing",
+        "shared_priority",
+        "opening_unknown_zone",
+        "opening_negative_delay",
+        "schedule_gate_without_schedules",
+        "negative_stuck_time",
+        "zero_outdoor_deadband_no_circuit",
+        "nonpositive_max_precondition",
+        "house_wide_unmanaged",
+        "calendars_without_keyword",
+        "resident_without_presence",
+        "exclusive_group_unknown_source",
+        "layout_zoned_with_shared_source",
+        "quiet_covers_the_day",
+        "switch_timings_without_a_switch",
+    ]
