@@ -27,6 +27,7 @@ circuits. The two axes cross and are never tied to one another.
 from __future__ import annotations
 
 import math
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import time, timedelta
 from enum import StrEnum
@@ -1076,97 +1077,263 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
     and for tests; `decide()` itself never raises on a flawed configuration,
     since refusing to regulate a whole house over one bad zone is worse than
     regulating the sound zones and reporting the rest.
+
+    De controles staan als losse regelfuncties in `_RULES`, op volgorde; deze
+    functie is alleen nog de lus erover. Die volgorde is zichtbaar op het
+    bewaarscherm en in de reparatiemelding `invalid_config`, en wordt door
+    `tests/test_validation.py` tegen letterlijke lijsten gehouden.
+
+    The checks live as separate rule functions in `_RULES`, in order; this
+    function is only the loop over them. That order is visible on the save
+    screen and in the `invalid_config` repair notice, and is held by
+    `tests/test_validation.py` against literal lists.
     """
     problems: list[str] = []
+    for rule in _RULES:
+        problems.extend(rule(config))
+    return tuple(problems)
 
-    zone_ids = [zone.zone_id for zone in config.zones]
-    problems += [
-        Problem("duplicate_zone_id", f"duplicate zone id: {zone_id}", zone=zone_id)
-        for zone_id in _duplicates(zone_ids)
-    ]
 
-    circuit_ids = [circuit.circuit_id for circuit in config.circuits]
-    problems += [
-        Problem("duplicate_circuit_id", f"duplicate circuit id: {circuit_id}", circuit=circuit_id)
-        for circuit_id in _duplicates(circuit_ids)
-    ]
+def _rule_duplicate_zone_ids(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint for every zone id that occurs more than once.
 
-    source_ids = [source.source_id for _, source in config.sources()]
-    problems += [
-        Problem("duplicate_source_id", f"duplicate source id: {source_id}", source=source_id)
-        for source_id in _duplicates(source_ids)
-    ]
+    Een zone-id is de sleutel van alle per-zone-toestand in de engine; twee
+    zones met dezelfde id delen die sleutel en zijn van buiten niet meer uit
+    elkaar te houden.
 
-    # Hetzelfde apparaat twee keer in EEN kamer is onzin: welke van de twee
-    # bronnen wint, is dan willekeurig, en er valt niets te kiezen. Over
-    # meerdere kamers heen is het juist normaal - dat is precies hoe een
-    # centrale verwarming eruitziet, en hoe een gedeelde ketel als reserve
-    # onder elke zone komt te staan. Dat mocht hier ooit niet, omdat zo'n
-    # apparaat dan twee tegengestelde opdrachten kon krijgen; sinds die
-    # opdrachten samenvallen tot een per apparaat is dat bezwaar weg.
-    #
-    # The same appliance twice in ONE room is nonsense: which of the two
-    # sources wins is then arbitrary, and there is nothing to choose between.
-    # Across rooms it is ordinary - that is exactly what central heating looks
-    # like, and how a shared boiler ends up under every zone as a stand-in.
-    # This used to be forbidden here because such an appliance could then get
-    # two opposing commands; since those collapse into one per appliance, that
-    # objection is gone.
+    A zone id is the key of all per-zone state in the engine; two zones sharing
+    one share that key and can no longer be told apart from the outside.
+    """
+    for zone_id in _duplicates([zone.zone_id for zone in config.zones]):
+        yield Problem("duplicate_zone_id", f"duplicate zone id: {zone_id}", zone=zone_id)
+
+
+def _rule_duplicate_circuit_ids(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint for every circuit id that occurs more than once.
+
+    Een circuit-id is de sleutel van de circuittoestand; twee circuits met
+    dezelfde id zijn van buiten niet meer uit elkaar te houden.
+
+    A circuit id is the key of circuit state; two circuits sharing one can no
+    longer be told apart from the outside.
+    """
+    for circuit_id in _duplicates([circuit.circuit_id for circuit in config.circuits]):
+        yield Problem(
+            "duplicate_circuit_id", f"duplicate circuit id: {circuit_id}", circuit=circuit_id
+        )
+
+
+def _rule_duplicate_source_ids(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint for every source id that occurs more than once.
+
+    Een bron-id is de sleutel waarmee uitsluitende groepen naar bronnen
+    verwijzen; een dubbel id maakt die verwijzing dubbelzinnig.
+
+    A source id is the key exclusive groups use to point at sources; a doubled
+    id makes that reference ambiguous.
+    """
+    for source_id in _duplicates([source.source_id for _, source in config.sources()]):
+        yield Problem("duplicate_source_id", f"duplicate source id: {source_id}", source=source_id)
+
+
+def _rule_entity_twice_in_one_zone(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint when one room uses the same appliance twice.
+
+    Hetzelfde apparaat twee keer in EEN kamer is onzin: welke van de twee
+    bronnen wint, is dan willekeurig, en er valt niets te kiezen. Over
+    meerdere kamers heen is het juist normaal - dat is precies hoe een
+    centrale verwarming eruitziet, en hoe een gedeelde ketel als reserve
+    onder elke zone komt te staan. Dat mocht hier ooit niet, omdat zo'n
+    apparaat dan twee tegengestelde opdrachten kon krijgen; sinds die
+    opdrachten samenvallen tot een per apparaat is dat bezwaar weg.
+
+    The same appliance twice in ONE room is nonsense: which of the two
+    sources wins is then arbitrary, and there is nothing to choose between.
+    Across rooms it is ordinary - that is exactly what central heating looks
+    like, and how a shared boiler ends up under every zone as a stand-in.
+    This used to be forbidden here because such an appliance could then get
+    two opposing commands; since those collapse into one per appliance, that
+    objection is gone.
+    """
     for zone in config.zones:
         for entity_id in _duplicates([source.entity_id for source in zone.sources]):
-            problems.append(
-                Problem(
-                    "entity_twice_in_one_zone",
-                    f"zone {zone.zone_id} uses {entity_id} for more than one source",
-                    zone=zone.name or zone.zone_id,
-                    entity=entity_id,
-                )
+            yield Problem(
+                "entity_twice_in_one_zone",
+                f"zone {zone.zone_id} uses {entity_id} for more than one source",
+                zone=zone.name or zone.zone_id,
+                entity=entity_id,
             )
 
-    # Een unit die wel aan een buitenunit hangt maar in geen enkele zone staat,
-    # is voor de director onbeheerd. Draait hij, dan zet hij het hele circuit op
-    # zijn taak en kan geen kamer er meer iets anders vragen - en omdat hij van
-    # niemand is, zet de director hem ook nooit uit. Van buiten is dat niet te
-    # onderscheiden van "de director doet niets", dus het hoort gemeld te worden
-    # vóór iemand zich erop verkijkt.
-    #
-    # A unit that hangs on an outdoor unit but appears in no zone is unmanaged
-    # as far as the director is concerned. If it runs it holds the whole circuit
-    # to its duty and no room can ask for anything else - and since it belongs
-    # to nobody, the director never switches it off either. From the outside
-    # that is indistinguishable from "the director does nothing", so it should
-    # be reported before somebody is caught out by it.
-    in_a_zone = {source.entity_id for _zone, source in config.sources()}
-    problems += [
-        Problem(
-            "unit_in_no_zone",
-            f"unit {unit} is on circuit {circuit.circuit_id} but in no zone, so it can "
-            f"lock that circuit without the director being able to stand it down",
-            unit=unit,
-            circuit=circuit.circuit_id,
-        )
-        for circuit in config.circuits
-        for unit in circuit.units
-        if unit not in in_a_zone
-    ]
 
+def _rule_unit_in_no_zone(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint for every circuit unit that no zone steers.
+
+    Een unit die wel aan een buitenunit hangt maar in geen enkele zone staat,
+    is voor de director onbeheerd. Draait hij, dan zet hij het hele circuit op
+    zijn taak en kan geen kamer er meer iets anders vragen - en omdat hij van
+    niemand is, zet de director hem ook nooit uit. Van buiten is dat niet te
+    onderscheiden van "de director doet niets", dus het hoort gemeld te worden
+    vóór iemand zich erop verkijkt.
+
+    A unit that hangs on an outdoor unit but appears in no zone is unmanaged
+    as far as the director is concerned. If it runs it holds the whole circuit
+    to its duty and no room can ask for anything else - and since it belongs
+    to nobody, the director never switches it off either. From the outside
+    that is indistinguishable from "the director does nothing", so it should
+    be reported before somebody is caught out by it.
+    """
+    in_a_zone = {source.entity_id for _zone, source in config.sources()}
+    for circuit in config.circuits:
+        for unit in circuit.units:
+            if unit not in in_a_zone:
+                yield Problem(
+                    "unit_in_no_zone",
+                    f"unit {unit} is on circuit {circuit.circuit_id} but in no zone, so it can "
+                    f"lock that circuit without the director being able to stand it down",
+                    unit=unit,
+                    circuit=circuit.circuit_id,
+                )
+
+
+def _rule_unit_on_two_circuits(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint for every unit sitting on more than one circuit.
+
+    Een unit kan maar op één buitenunit hangen; staat hij op twee circuits,
+    dan is de configuratie met de hand bewerkt of verkeerd overgenomen en
+    weet de engine niet welk circuit hij moet geloven.
+
+    A unit can hang on only one outdoor unit; sitting on two circuits means
+    the configuration was hand-edited or copied wrongly, and the engine does
+    not know which circuit to believe.
+    """
     seen_units: dict[str, str] = {}
     for circuit in config.circuits:
         for unit in circuit.units:
             if unit in seen_units:
-                problems.append(
-                    Problem(
-                        "unit_on_two_circuits",
-                        f"unit {unit} sits on both circuit {seen_units[unit]} "
-                        f"and circuit {circuit.circuit_id}",
-                        unit=unit,
-                        first=seen_units[unit],
-                        second=circuit.circuit_id,
-                    )
+                yield Problem(
+                    "unit_on_two_circuits",
+                    f"unit {unit} sits on both circuit {seen_units[unit]} "
+                    f"and circuit {circuit.circuit_id}",
+                    unit=unit,
+                    first=seen_units[unit],
+                    second=circuit.circuit_id,
                 )
             else:
                 seen_units[unit] = circuit.circuit_id
 
+
+def _outdoor_known(config: DirectorConfig) -> bool:
+    """Return whether the installation has an outdoor temperature to read.
+
+    Gedeeld door de bron- en taakvenstercontrole in `_rule_zones`: één
+    definitie, één berekening per `validate()`-aanroep.
+
+    Shared by the source- and duty-window checks in `_rule_zones`: one
+    definition, one computation per `validate()` call.
+    """
+    return bool(config.outdoor_sensor)
+
+
+def _rule_source_outdoor_window(source: Source, outdoor_known: bool) -> Iterator[Problem]:
+    """Yield a complaint when a source's outdoor window can never be met.
+
+    Een leeg venster laat de bron nooit draaien; een begrensd venster zonder
+    buitensensor kan nooit voldaan worden. Beide zijn van buiten niet te
+    onderscheiden van "de director doet niets".
+
+    An empty window never lets the source run; a bounded window without an
+    outdoor sensor can never be satisfied. Both look like "the director does
+    nothing" from the outside.
+    """
+    if source.outdoor.empty:
+        yield Problem(
+            "source_window_admits_nothing",
+            f"source {source.source_id} has an outdoor window that admits nothing",
+            source=source.source_id,
+        )
+    elif not outdoor_known and not source.outdoor.unbounded:
+        yield Problem(
+            "source_outdoor_without_sensor",
+            f"source {source.source_id} is limited by outdoor temperature, "
+            "but no outdoor sensor is set",
+            source=source.source_id,
+        )
+
+
+def _rule_family_hysteresis(
+    zone: Zone, family: ModeFamily, settings: ModeSettings
+) -> Iterator[Problem]:
+    """Yield a complaint when a duty's hysteresis is not a usable number.
+
+    Een niet-eindige hysterese glipt langs de `< 0`-controle, en een negatieve
+    is een dode band de verkeerde kant op; beide maken het gedrag van de zone
+    onvoorspelbaar.
+
+    A non-finite hysteresis slips past the `< 0` check, and a negative one is
+    a dead band the wrong way round; both make the zone's behaviour
+    unpredictable.
+    """
+    if not math.isfinite(settings.hysteresis):
+        yield Problem(
+            "nonfinite_hysteresis",
+            f"zone {zone.zone_id} has a non-finite {family.value} hysteresis",
+            zone=zone.zone_id,
+            mode=family.value,
+        )
+    elif settings.hysteresis < 0:
+        yield Problem(
+            "zone_negative_hysteresis",
+            f"zone {zone.zone_id} has a negative {family.value} hysteresis",
+            zone=zone.zone_id,
+            mode=family.value,
+        )
+
+
+def _rule_family_outdoor_window(
+    zone: Zone, family: ModeFamily, settings: ModeSettings, outdoor_known: bool
+) -> Iterator[Problem]:
+    """Yield a complaint when a duty's outdoor window can never be met.
+
+    Een leeg venster laat de taak nooit draaien; een begrensd venster zonder
+    buitensensor kan nooit voldaan worden. Beide zijn het stille niets waar
+    deze hele controlelijst voor bestaat.
+
+    An empty window never lets the duty run; a bounded window without an
+    outdoor sensor can never be satisfied. Both are the silent nothing this
+    whole problem list exists for.
+    """
+    if settings.outdoor.empty:
+        yield Problem(
+            "zone_window_admits_nothing",
+            f"zone {zone.zone_id} has a {family.value} outdoor window that admits nothing",
+            zone=zone.zone_id,
+            mode=family.value,
+        )
+    elif not outdoor_known and not settings.outdoor.unbounded:
+        yield Problem(
+            "zone_outdoor_without_sensor",
+            f"zone {zone.zone_id} limits {family.value} by outdoor temperature, "
+            "but no outdoor sensor is set",
+            zone=zone.zone_id,
+            mode=family.value,
+        )
+
+
+def _rule_zones(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield every per-zone complaint, zone by zone.
+
+    De volgorde binnen een zone is zichtbaar en staat vast; daarom is dit één
+    regelfunctie met de zone-lus erin in plaats van één functie per controle
+    (die zou de meldingen per controle groeperen in plaats van per zone). De
+    uitsluitingen per bron en per taak staan elk in hun eigen hulpfunctie,
+    zodat geen enkele `elif` uit elkaar valt.
+
+    The order within one zone is visible and fixed; that is why this is one
+    rule function containing the zone loop rather than one function per check
+    (which would group complaints per check instead of per zone). The
+    per-source and per-duty exclusions each live in their own helper, so no
+    `elif` falls apart.
+    """
     # Een begrensd buitenvenster kan zonder buitentemperatuur nooit voldaan
     # worden, dus alles wat er een heeft valt stil. Dat is de stilste manier
     # waarop een installatie kan blijven staan: elke zone besluit netjes "niets
@@ -1176,49 +1343,39 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
     # temperature, so anything carrying one falls still. That is the quietest
     # way an installation can seize up: every zone decides "nothing to do", and
     # nowhere does it say why. Hence a problem of its own.
-    outdoor_known = bool(config.outdoor_sensor)
+    outdoor_known = _outdoor_known(config)
 
     for zone in config.zones:
         if not zone.sources:
-            problems.append(
-                Problem(
-                    "zone_without_sources",
-                    f"zone {zone.zone_id} has no sources",
-                    zone=zone.zone_id,
-                )
+            yield Problem(
+                "zone_without_sources",
+                f"zone {zone.zone_id} has no sources",
+                zone=zone.zone_id,
             )
         if not zone.indoor_sensor:
-            problems.append(
-                Problem(
-                    "zone_without_sensor",
-                    f"zone {zone.zone_id} has no indoor temperature sensor",
-                    zone=zone.zone_id,
-                )
+            yield Problem(
+                "zone_without_sensor",
+                f"zone {zone.zone_id} has no indoor temperature sensor",
+                zone=zone.zone_id,
             )
         if zone.heat is None and zone.cool is None:
-            problems.append(
-                Problem(
-                    "zone_neither_heats_nor_cools",
-                    f"zone {zone.zone_id} may neither heat nor cool",
-                    zone=zone.zone_id,
-                )
+            yield Problem(
+                "zone_neither_heats_nor_cools",
+                f"zone {zone.zone_id} may neither heat nor cool",
+                zone=zone.zone_id,
             )
         if zone.gate is ZoneGate.PRESENCE and not zone.presence_entity:
-            problems.append(
-                Problem(
-                    "zone_presence_without_sensor",
-                    f"zone {zone.zone_id} runs on room presence but has no presence entity, "
-                    f"so it can never run",
-                    zone=zone.zone_id,
-                )
+            yield Problem(
+                "zone_presence_without_sensor",
+                f"zone {zone.zone_id} runs on room presence but has no presence entity, "
+                f"so it can never run",
+                zone=zone.zone_id,
             )
         if zone.presence_timeout.total_seconds() < 0:
-            problems.append(
-                Problem(
-                    "zone_negative_presence_timeout",
-                    f"zone {zone.zone_id} has a negative presence timeout",
-                    zone=zone.zone_id,
-                )
+            yield Problem(
+                "zone_negative_presence_timeout",
+                f"zone {zone.zone_id} has a negative presence timeout",
+                zone=zone.zone_id,
             )
         if (
             zone.heat is not None
@@ -1232,73 +1389,19 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
             # Otherwise heating and cooling ask for the same room at once. The
             # engine still picks deterministically, but getting there is a
             # mistake nobody can have meant.
-            problems.append(
-                Problem(
-                    "zone_cools_at_or_below_heats",
-                    f"zone {zone.zone_id} starts cooling at or below where it starts heating",
-                    zone=zone.zone_id,
-                )
+            yield Problem(
+                "zone_cools_at_or_below_heats",
+                f"zone {zone.zone_id} starts cooling at or below where it starts heating",
+                zone=zone.zone_id,
             )
         for source in zone.sources:
-            if source.outdoor.empty:
-                problems.append(
-                    Problem(
-                        "source_window_admits_nothing",
-                        f"source {source.source_id} has an outdoor window that admits nothing",
-                        source=source.source_id,
-                    )
-                )
-            elif not outdoor_known and not source.outdoor.unbounded:
-                problems.append(
-                    Problem(
-                        "source_outdoor_without_sensor",
-                        f"source {source.source_id} is limited by outdoor temperature, "
-                        "but no outdoor sensor is set",
-                        source=source.source_id,
-                    )
-                )
+            yield from _rule_source_outdoor_window(source, outdoor_known)
         for family in (ModeFamily.HEAT, ModeFamily.COOL):
             settings = zone.settings_for(family)
             if settings is None:
                 continue
-            if not math.isfinite(settings.hysteresis):
-                problems.append(
-                    Problem(
-                        "nonfinite_hysteresis",
-                        f"zone {zone.zone_id} has a non-finite {family.value} hysteresis",
-                        zone=zone.zone_id,
-                        mode=family.value,
-                    )
-                )
-            elif settings.hysteresis < 0:
-                problems.append(
-                    Problem(
-                        "zone_negative_hysteresis",
-                        f"zone {zone.zone_id} has a negative {family.value} hysteresis",
-                        zone=zone.zone_id,
-                        mode=family.value,
-                    )
-                )
-            if settings.outdoor.empty:
-                problems.append(
-                    Problem(
-                        "zone_window_admits_nothing",
-                        f"zone {zone.zone_id} has a {family.value} outdoor window "
-                        "that admits nothing",
-                        zone=zone.zone_id,
-                        mode=family.value,
-                    )
-                )
-            elif not outdoor_known and not settings.outdoor.unbounded:
-                problems.append(
-                    Problem(
-                        "zone_outdoor_without_sensor",
-                        f"zone {zone.zone_id} limits {family.value} by outdoor temperature, "
-                        "but no outdoor sensor is set",
-                        zone=zone.zone_id,
-                        mode=family.value,
-                    )
-                )
+            yield from _rule_family_hysteresis(zone, family, settings)
+            yield from _rule_family_outdoor_window(zone, family, settings, outdoor_known)
 
             # Staat het seizoen vast op een seizoen waarin deze taak nooit mag
             # draaien, dan kan deze taak nooit draaien - het stille niets waar
@@ -1313,27 +1416,23 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
             # opens the same notice itself.
             pinned = _pinned_season(config.seasons)
             if pinned is not None and not settings.allowed_in(pinned):
-                problems.append(
-                    Problem(
-                        "season_excludes_mode",
-                        f"zone {zone.zone_id} may {family.value} only in "
-                        f"{_season_names(settings.seasons)}, but the season is fixed "
-                        f"to {pinned.value}",
-                        zone=zone.zone_id,
-                        mode=family.value,
-                        allowed=_season_names(settings.seasons),
-                        season=pinned.value,
-                    )
+                yield Problem(
+                    "season_excludes_mode",
+                    f"zone {zone.zone_id} may {family.value} only in "
+                    f"{_season_names(settings.seasons)}, but the season is fixed "
+                    f"to {pinned.value}",
+                    zone=zone.zone_id,
+                    mode=family.value,
+                    allowed=_season_names(settings.seasons),
+                    season=pinned.value,
                 )
 
             if not any(source.supports(family) for source in zone.sources):
-                problems.append(
-                    Problem(
-                        "zone_no_source_for_mode",
-                        f"zone {zone.zone_id} wants {family.value} but has no source for it",
-                        zone=zone.zone_id,
-                        mode=family.value,
-                    )
+                yield Problem(
+                    "zone_no_source_for_mode",
+                    f"zone {zone.zone_id} wants {family.value} but has no source for it",
+                    zone=zone.zone_id,
+                    mode=family.value,
                 )
 
             # De streeftemperatuur is wat het apparaat te horen krijgt; het
@@ -1353,75 +1452,82 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
                 else settings.target > settings.start_at
             )
             if askew:
-                problems.append(
-                    Problem(
-                        "target_outside_band",
-                        f"zone {zone.zone_id} starts {family.value} at {settings.start_at} "
-                        f"but aims for {settings.target}",
-                        zone=zone.name or zone.zone_id,
-                        mode=family.value,
-                        start=f"{settings.start_at:g}",
-                        target=f"{settings.target:g}",
-                    )
+                yield Problem(
+                    "target_outside_band",
+                    f"zone {zone.zone_id} starts {family.value} at {settings.start_at} "
+                    f"but aims for {settings.target}",
+                    zone=zone.name or zone.zone_id,
+                    mode=family.value,
+                    start=f"{settings.start_at:g}",
+                    target=f"{settings.target:g}",
                 )
 
+
+def _rule_generators(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint for every generator that doubles or names wrongly.
+
+    Een gedeelde warmtebron die ook als zone-bron bestaat krijgt twee
+    opdrachtgevers; een generator die een onbekende zone noemt kan die zone
+    nooit bedienen.
+
+    A shared heat source that also exists as a zone source gets two masters; a
+    generator naming an unknown zone can never serve that zone.
+    """
+    zone_ids = [zone.zone_id for zone in config.zones]
     source_entities = {source.entity_id for _, source in config.sources()}
     for generator in config.generators:
         if generator.entity_id in source_entities:
-            problems.append(
-                Problem(
-                    "generator_also_a_source",
-                    f"generator {generator.generator_id} uses climate entity "
-                    f"{generator.entity_id}, which is already a zone's source",
-                    generator=generator.generator_id,
-                    entity=generator.entity_id,
-                )
-            )
-        unknown = [zone_id for zone_id in generator.zone_ids if zone_id not in set(zone_ids)]
-        problems += [
-            Problem(
-                "generator_unknown_zone",
-                f"generator {generator.generator_id} names unknown zone {zone_id}",
+            yield Problem(
+                "generator_also_a_source",
+                f"generator {generator.generator_id} uses climate entity "
+                f"{generator.entity_id}, which is already a zone's source",
                 generator=generator.generator_id,
-                zone=zone_id,
+                entity=generator.entity_id,
             )
-            for zone_id in unknown
-        ]
+        for zone_id in generator.zone_ids:
+            if zone_id not in set(zone_ids):
+                yield Problem(
+                    "generator_unknown_zone",
+                    f"generator {generator.generator_id} names unknown zone {zone_id}",
+                    generator=generator.generator_id,
+                    zone=zone_id,
+                )
 
-    # Twee zones op één buitenunit met hetzelfde nummer laten de uitkomst
-    # afhangen van hun zone-id, dus alfabetisch. Dat crasht niets en beschadigt
-    # niets - de tie-break is deterministisch en het circuit houdt zich aan zijn
-    # ene taak - maar welke kamer wint is dan onzichtbaar en willekeurig.
-    #
-    # Two zones on one outdoor unit sharing a number leave the outcome hanging
-    # on their zone id, so alphabetical. That crashes nothing and damages
-    # nothing - the tie-break is deterministic and the circuit still keeps to
-    # its one duty - but which room wins becomes invisible and arbitrary.
+
+def _rule_circuits(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield every circuit complaint: shared priority, capacity, timing.
+
+    Twee zones op één buitenunit met hetzelfde nummer laten de uitkomst
+    afhangen van hun zone-id, dus alfabetisch. Dat crasht niets en beschadigt
+    niets - de tie-break is deterministisch en het circuit houdt zich aan zijn
+    ene taak - maar welke kamer wint is dan onzichtbaar en willekeurig.
+
+    Two zones on one outdoor unit sharing a number leave the outcome hanging
+    on their zone id, so alphabetical. That crashes nothing and damages
+    nothing - the tie-break is deterministic and the circuit still keeps to
+    its one duty - but which room wins becomes invisible and arbitrary.
+    """
     for circuit in config.circuits:
         seen: dict[int, str] = {}
         for zone, _ in config.sources_on(circuit):
             if zone.priority in seen and seen[zone.priority] != zone.zone_id:
-                problems.append(
-                    Problem(
-                        "shared_priority",
-                        f"zones {seen[zone.priority]} and {zone.zone_id} share priority "
-                        f"{zone.priority} on circuit {circuit.circuit_id}",
-                        first=seen[zone.priority],
-                        second=zone.zone_id,
-                        priority=zone.priority,
-                        circuit=circuit.circuit_id,
-                    )
+                yield Problem(
+                    "shared_priority",
+                    f"zones {seen[zone.priority]} and {zone.zone_id} share priority "
+                    f"{zone.priority} on circuit {circuit.circuit_id}",
+                    first=seen[zone.priority],
+                    second=zone.zone_id,
+                    priority=zone.priority,
+                    circuit=circuit.circuit_id,
                 )
             else:
                 seen[zone.priority] = zone.zone_id
 
         if circuit.max_concurrent_units is not None and circuit.max_concurrent_units < 1:
-            problems.append(
-                Problem(
-                    "circuit_allows_no_unit",
-                    f"circuit {circuit.circuit_id} allows no unit to run at all",
-                    circuit=circuit.circuit_id,
-                )
+            yield Problem(
+                "circuit_allows_no_unit",
+                f"circuit {circuit.circuit_id} allows no unit to run at all",
+                circuit=circuit.circuit_id,
             )
         for label, span in (
             ("family switch delay", circuit.family_switch_delay),
@@ -1429,71 +1535,97 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
             ("minimum cycle time", circuit.min_cycle_time),
         ):
             if span.total_seconds() < 0:
-                problems.append(
-                    Problem(
-                        "circuit_negative_timing",
-                        f"circuit {circuit.circuit_id} has a negative {label}",
-                        circuit=circuit.circuit_id,
-                        label=label,
-                    )
+                yield Problem(
+                    "circuit_negative_timing",
+                    f"circuit {circuit.circuit_id} has a negative {label}",
+                    circuit=circuit.circuit_id,
+                    label=label,
                 )
 
-    known_zones = set(zone_ids)
+
+def _rule_openings(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint for every opening that names or times wrongly.
+
+    Een opening die een onbekende zone noemt kan nooit iets stilzetten; een
+    negatieve vertraging is een timer die al verstreken is vóór hij begint.
+
+    An opening naming an unknown zone can never stop anything; a negative
+    delay is a timer already expired before it starts.
+    """
+    known_zones = {zone.zone_id for zone in config.zones}
     for opening in config.openings:
-        problems += [
-            Problem(
-                "opening_unknown_zone",
-                f"opening {opening.entity_id} names unknown zone {zone_id}",
-                opening=opening.entity_id,
-                zone=zone_id,
-            )
-            for zone_id in opening.zone_ids
-            if zone_id not in known_zones
-        ]
-        if opening.delay.total_seconds() < 0:
-            problems.append(
-                Problem(
-                    "opening_negative_delay",
-                    f"opening {opening.entity_id} has a negative delay",
+        for zone_id in opening.zone_ids:
+            if zone_id not in known_zones:
+                yield Problem(
+                    "opening_unknown_zone",
+                    f"opening {opening.entity_id} names unknown zone {zone_id}",
                     opening=opening.entity_id,
+                    zone=zone_id,
                 )
+        if opening.delay.total_seconds() < 0:
+            yield Problem(
+                "opening_negative_delay",
+                f"opening {opening.entity_id} has a negative delay",
+                opening=opening.entity_id,
             )
 
+
+def _rule_schedule_gate(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint when the schedule gate stands on nobody's schedule.
+
+    De roosterpoort aan zonder één rooster laat niets ooit starten, en dat is
+    van buiten niet te onderscheiden van een integratie die stuk is.
+
+    The schedule gate on without a single schedule lets nothing ever start,
+    which is indistinguishable from a broken integration from the outside.
+    """
     if config.gates.require_schedule and not any(resident.windows for resident in config.residents):
-        problems.append(
-            Problem(
-                "schedule_gate_without_schedules",
-                "the schedule gate is on but nobody has a schedule, so nothing can ever run",
-            )
+        yield Problem(
+            "schedule_gate_without_schedules",
+            "the schedule gate is on but nobody has a schedule, so nothing can ever run",
         )
 
-    if config.stuck_after.total_seconds() < 0:
-        problems.append(Problem("negative_stuck_time", "the stuck-detection time is negative"))
 
-    # De openingsrust is een ingebouwde timer van drie minuten, en
-    # `SHORT_CYCLE_PROTECTION` staat in `WAITING_REASONS`. Staat de
-    # vastlooptijd korter, dan kan de melder op die rust vals afgaan. Nul is
-    # uitgezonderd: dat is de schakelaar die de melder uitzet.
-    #
-    # The opening rest is a built-in three-minute timer, and
-    # `SHORT_CYCLE_PROTECTION` sits in `WAITING_REASONS`. With the stuck time
-    # shorter, the sensor can cry wolf on that rest. Zero is exempt: that is
-    # the switch turning the sensor off.
+def _rule_stuck_time(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint when the stuck-detection time cannot work.
+
+    Een negatieve tijd kan nooit aflopen. De openingsrust is een ingebouwde
+    timer van drie minuten, en `SHORT_CYCLE_PROTECTION` staat in
+    `WAITING_REASONS`; staat de vastlooptijd korter, dan kan de melder op die
+    rust vals afgaan. Nul is uitgezonderd: dat is de schakelaar die de melder
+    uitzet.
+
+    A negative time can never elapse. The opening rest is a built-in
+    three-minute timer, and `SHORT_CYCLE_PROTECTION` sits in `WAITING_REASONS`;
+    with the stuck time shorter, the sensor can cry wolf on that rest. Zero is
+    exempt: that is the switch turning the sensor off.
+    """
+    if config.stuck_after.total_seconds() < 0:
+        yield Problem("negative_stuck_time", "the stuck-detection time is negative")
+
     stuck_seconds = config.stuck_after.total_seconds()
     if 0 < stuck_seconds < OPENING_MIN_REST.total_seconds():
-        problems.append(
-            Problem(
-                "stuck_after_below_opening_rest",
-                "the stuck-detection time is below the built-in opening rest",
-            )
+        yield Problem(
+            "stuck_after_below_opening_rest",
+            "the stuck-detection time is below the built-in opening rest",
         )
 
+
+def _rule_outdoor_deadband(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint when the outdoor dead band cannot do its job.
+
+    Een niet-eindige of negatieve dode band maakt elke buitenvergelijking
+    onbetrouwbaar; nul zonder circuit haalt de laatste rem onder een begrensde
+    brander weg.
+
+    A non-finite or negative dead band makes every outdoor comparison
+    unreliable; zero without a circuit removes the last brake under a bounded
+    burner.
+    """
     if not math.isfinite(config.outdoor_hysteresis):
-        problems.append(
-            Problem("nonfinite_outdoor_deadband", "the outdoor dead band is not a finite number")
-        )
+        yield Problem("nonfinite_outdoor_deadband", "the outdoor dead band is not a finite number")
     elif config.outdoor_hysteresis < 0:
-        problems.append(Problem("negative_outdoor_deadband", "the outdoor dead band is negative"))
+        yield Problem("negative_outdoor_deadband", "the outdoor dead band is negative")
     elif config.outdoor_hysteresis == 0:
         # Zonder circuit is er niets dat de brander nog remt: het begrensde
         # buitenvenster is dan een schakelaar geworden die nergens op ingrijpt.
@@ -1528,96 +1660,120 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
             if eid not in circuit_units and bounded(eid)
         )
         for entity_id in unbraked:
-            problems.append(
-                Problem(
-                    "zero_outdoor_deadband_no_circuit",
-                    f"appliance {entity_id} has a bounded outdoor window and sits on no "
-                    "circuit; with the outdoor dead band at zero nothing brakes its burner",
-                    entity=entity_id,
-                )
+            yield Problem(
+                "zero_outdoor_deadband_no_circuit",
+                f"appliance {entity_id} has a bounded outdoor window and sits on no "
+                "circuit; with the outdoor dead band at zero nothing brakes its burner",
+                entity=entity_id,
             )
 
+
+def _rule_nonpositive_max_precondition(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint when no pre-conditioning request can ever run.
+
+    Een maximum van nul of negatief maakt elk vooruit-verzoek onmogelijk; de
+    instelling staat er dan wel, maar doet nooit iets.
+
+    A maximum of zero or negative makes every pre-conditioning request
+    impossible; the setting is there, but never does anything.
+    """
     if config.gates.max_precondition.total_seconds() <= 0:
-        problems.append(
-            Problem(
-                "nonpositive_max_precondition",
-                "the maximum pre-conditioning time is zero or negative, so no request can ever run",
-            )
+        yield Problem(
+            "nonpositive_max_precondition",
+            "the maximum pre-conditioning time is zero or negative, so no request can ever run",
         )
 
-    # Een apparaat dat huisbreed stil hoort te vallen terwijl er niets is dat
-    # het ooit stilzet, is een instelling die er staat en niets doet. Beide
-    # helften zijn los te vergeten: de openingen kunnen ontbreken, en het
-    # apparaat kan bij geen enkele zone of gedeelde warmtebron horen - dan
-    # stuurt de director er nooit iets heen en valt er dus ook niets stil te
-    # zetten.
-    #
-    # An appliance meant to stop house-wide while nothing can ever stop it is a
-    # setting that sits there doing nothing. Both halves can be forgotten
-    # separately: the openings may be missing, and the appliance may belong to
-    # no zone and no shared heat source - the director then never sends it
-    # anything, so there is nothing to stop either.
+
+def _rule_house_wide_stops(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint for every house-wide stop that can never stop.
+
+    Een apparaat dat huisbreed stil hoort te vallen terwijl er niets is dat
+    het ooit stilzet, is een instelling die er staat en niets doet. Beide
+    helften zijn los te vergeten: de openingen kunnen ontbreken, en het
+    apparaat kan bij geen enkele zone of gedeelde warmtebron horen - dan
+    stuurt de director er nooit iets heen en valt er dus ook niets stil te
+    zetten.
+
+    An appliance meant to stop house-wide while nothing can ever stop it is a
+    setting that sits there doing nothing. Both halves can be forgotten
+    separately: the openings may be missing, and the appliance may belong to
+    no zone and no shared heat source - the director then never sends it
+    anything, so there is nothing to stop either.
+    """
     if config.house_wide_openings and not config.openings:
-        problems += [
-            Problem(
+        for entity_id in config.house_wide_openings:
+            yield Problem(
                 "house_wide_without_openings",
                 f"appliance {entity_id} is set to stop while an opening stands open, "
                 "but the installation has no openings at all",
                 entity=entity_id,
             )
-            for entity_id in config.house_wide_openings
-        ]
 
     steered = {source.entity_id for _, source in config.sources()} | {
         generator.entity_id for generator in config.generators
     }
-    problems += [
-        Problem(
-            "house_wide_unmanaged",
-            f"appliance {entity_id} is set to stop while an opening stands open, but no "
-            "zone and no shared heat source uses it, so the director never steers it",
-            entity=entity_id,
-        )
-        for entity_id in config.house_wide_openings
-        if entity_id not in steered
-    ]
-
-    if config.holiday_calendars and not config.holiday_keyword.strip():
-        problems.append(
-            Problem(
-                "calendars_without_keyword",
-                "holiday calendars are set but no keyword is, so no event can ever "
-                "switch holiday mode on",
+    for entity_id in config.house_wide_openings:
+        if entity_id not in steered:
+            yield Problem(
+                "house_wide_unmanaged",
+                f"appliance {entity_id} is set to stop while an opening stands open, but no "
+                "zone and no shared heat source uses it, so the director never steers it",
+                entity=entity_id,
             )
+
+
+def _rule_holiday_calendars(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint when holiday calendars have nothing to match on.
+
+    Agenda's zonder trefwoord kunnen nooit een vakantiedag aanzetten; de
+    instelling staat er dan wel, maar doet niets.
+
+    Calendars without a keyword can never switch a holiday on; the setting is
+    there, but does nothing.
+    """
+    if config.holiday_calendars and not config.holiday_keyword.strip():
+        yield Problem(
+            "calendars_without_keyword",
+            "holiday calendars are set but no keyword is, so no event can ever "
+            "switch holiday mode on",
         )
 
-    problems += [
-        Problem(
-            "resident_without_presence",
-            f"resident {resident.resident_id} has no presence entity, so can never be home",
-            resident=resident.resident_id,
-        )
-        for resident in config.residents
-        if not resident.presence_entity
-    ]
 
-    known_sources = set(source_ids)
+def _rule_resident_without_presence(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint for every resident who can never be home.
 
+    Een bewoner zonder aanwezigheidsentiteit telt nooit als thuis; elke poort
+    die op die bewoner wacht, wacht voor niets.
+
+    A resident without a presence entity never counts as home; every gate
+    waiting on that resident waits for nothing.
+    """
+    for resident in config.residents:
+        if not resident.presence_entity:
+            yield Problem(
+                "resident_without_presence",
+                f"resident {resident.resident_id} has no presence entity, so can never be home",
+                resident=resident.resident_id,
+            )
+
+
+def _rule_exclusive_groups(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint for every exclusive group naming an unknown source.
+
+    Een groep die naar een onbekende bron wijst kan zijn uitsluiting nooit
+    toepassen; de instelling staat er dan wel, maar doet niets.
+
+    A group pointing at an unknown source can never apply its exclusion; the
+    setting is there, but does nothing.
+    """
+    known_sources = {source.source_id for _, source in config.sources()}
     for group in config.exclusive_groups:
-        problems += [
-            Problem(
+        for source_id in sorted(group - known_sources):
+            yield Problem(
                 "exclusive_group_unknown_source",
                 f"exclusive group names unknown source {source_id}",
                 source=source_id,
             )
-            for source_id in sorted(group - known_sources)
-        ]
-
-    problems += _layout_problems(config)
-    problems += _quiet_problems(config)
-    problems += _timing_problems(config)
-
-    return tuple(problems)
 
 
 def _quiet_problems(config: DirectorConfig) -> list[Problem]:
@@ -1830,3 +1986,36 @@ def _duplicates(values: list[str]) -> list[str]:
             duplicated.append(value)
         seen.add(value)
     return duplicated
+
+
+#: De regels die `validate()` afloopt, op volgorde. Die volgorde is zichtbaar
+#: en staat vast: het bewaarscherm en de reparatiemelding `invalid_config`
+#: tonen de meldingen in deze rij, en `tests/test_validation.py` houdt hem
+#: letterlijk tegen een lijst.
+#:
+#: The rules `validate()` walks, in order. That order is visible and fixed: the
+#: save screen and the `invalid_config` repair notice show the complaints in
+#: this row, and `tests/test_validation.py` holds it literally against a list.
+_RULES = (
+    _rule_duplicate_zone_ids,
+    _rule_duplicate_circuit_ids,
+    _rule_duplicate_source_ids,
+    _rule_entity_twice_in_one_zone,
+    _rule_unit_in_no_zone,
+    _rule_unit_on_two_circuits,
+    _rule_zones,
+    _rule_generators,
+    _rule_circuits,
+    _rule_openings,
+    _rule_schedule_gate,
+    _rule_stuck_time,
+    _rule_outdoor_deadband,
+    _rule_nonpositive_max_precondition,
+    _rule_house_wide_stops,
+    _rule_holiday_calendars,
+    _rule_resident_without_presence,
+    _rule_exclusive_groups,
+    _layout_problems,
+    _quiet_problems,
+    _timing_problems,
+)

@@ -756,10 +756,10 @@ van de vier heeft aantoonbaar fouten voortgebracht.
   door elkaar; `async_step_settings` is 213 regels, `async_step_resident` 196.
   *Waarheen:* een `schemas.py` die per scherm het formulier bouwt, zodat de flow alleen
   de navigatie houdt.
-- **`engine/models.py` (1832).** `validate()` is één functie van 549 regels: elke nieuwe
-  controle maakt hem langer, wat regel 7 precies andersom is. *Waarheen:* een lijst
-  regelfuncties waar `validate()` overheen loopt — een controle erbij is dan een functie
-  erbij.
+- **`engine/models.py` (2021).** `validate()` was één functie van 549 regels; dat is
+  verholpen: hij is nu een lus over `_RULES`, een lijst regelfuncties die elk één
+  controle doen, dus een controle erbij is een functie erbij. Het bestand zelf blijft
+  boven de maat doordat het model en de regels samen in één module staan.
 - **`engine/decide.py` (1618).** `_build_commands` (zone-bronnen) en
   `_generator_commands` (gedeelde warmtebronnen) bestaan nog, maar de gedeelde
   beslissingen zijn eruit getrokken naar functies die beide paden aanroepen:
@@ -1529,9 +1529,10 @@ of the four has demonstrably produced bugs.
   through one another; `async_step_settings` is 213 lines, `async_step_resident` 196.
   *Where to:* a `schemas.py` that builds the form per screen, so the flow only keeps the
   navigation.
-- **`engine/models.py` (1832).** `validate()` is one function of 549 lines: every new
-  check makes it longer, which is rule 7 exactly the wrong way round. *Where to:* a list
-  of rule functions that `validate()` walks — one more check is then one more function.
+- **`engine/models.py` (2021).** `validate()` used to be one function of 549 lines; that
+  is fixed: it is now a loop over `_RULES`, a list of rule functions each doing one
+  check, so one more check is now one more function. The file itself stays above the
+  measure because the model and the rules live together in one module.
 - **`engine/decide.py` (1618).** `_build_commands` (zone sources) and
   `_generator_commands` (shared heat sources) still exist, but the shared decisions
   have been pulled out into functions both paths call: `_untouched_reason`
