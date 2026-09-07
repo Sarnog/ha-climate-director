@@ -18,16 +18,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 
 ## Should have
 
-- **De code opdelen zodat uitbreiden een toevoeging blijft** — vier bestanden dragen samen
-  56% van de code (`coordinator.py`, `config_flow.py`, `engine/models.py` en
-  `engine/decide.py`), en alle vier hebben ze fouten voortgebracht met dezelfde vorm: een
-  eigenschap die op het ene pad gerepareerd is en op het pad ernaast blijft staan. Het gaat
-  om verplaatsen, niet om nieuw gedrag — de volledige suite hoort bij elke stap even groen
-  te blijven. De norm, de meting en de doelindeling staan in
-  [`ARCHITECTURE.md`](ARCHITECTURE.md) onder "Uitbreidbaarheid". Volgorde: eerst een
-  bewaking op de engine-grens, dan de twee bijna-parallelle paden in `decide.py`
-  samenvoegen, dan `validate()` opdelen in losse regelfuncties, dan de coordinator in
-  vieren, dan de formulieropbouw uit `config_flow.py`.
 - **Virtuele `climate` per zone** — één bedieningsentiteit per ruimte, waarmee de gewenste
   temperatuur en stand rechtstreeks op een gewone thermostaatkaart te bedienen zijn. De
   director kiest daar dan de bron bij.
@@ -47,6 +37,11 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   élk step_id in díe methode** — geen kruisbesmetting zolang elke stapmethode precies
   één formulier toont, wat vandaag zo is maar nergens staat. Een stapmethode met twee
   formulieren zou één bron aan beide step_id's hangen zonder dat iemand het merkt.
+- **De maatbewaking klapt twee gelijknamige functies in één bestand samen tot de
+  langste** — `function_sizes()` bewaakt van zo'n paar dus alleen de langste. Vandaag
+  onbereikbaar — er zijn 18 gelijknamige paren en de grootste is 38 regels — en het wordt
+  pas bereikbaar zodra in één bestand twee gelijknamige functies allebei boven de 80
+  komen; dan kan de kleinste ongemerkt doorgroeien.
 - **Een controle op exclusieve groepen die wél klopt** — er stond er een die waarschuwde
   zodra de buitengrenzen van twee groepsleden elkaar overlapten, met het advies ze
   aansluitend te maken. Dat advies maakt de groep juist zinloos: hij bestaat om te kiezen
@@ -160,15 +155,6 @@ The worked-out design proposals for everything below live in
 
 ## Should have
 
-- **Split the code so that extending stays an addition** — four files carry 56% of the code
-  between them (`coordinator.py`, `config_flow.py`, `engine/models.py` and
-  `engine/decide.py`), and all four have produced bugs of the same shape: a property
-  repaired on one path and left standing on the path next to it. This is moving code, not
-  new behaviour — the full suite should stay just as green at every step. The norm, the
-  measurement and the target layout are in [`ARCHITECTURE.md`](ARCHITECTURE.md) under
-  "Extensibility". Order: first a guard on the engine border, then merging the two
-  near-parallel paths in `decide.py`, then splitting `validate()` into separate rule
-  functions, then the coordinator into four, then form building out of `config_flow.py`.
 - **A virtual `climate` per zone** — one control entity per room, so the target temperature
   and mode can be set straight from an ordinary thermostat card. The director then picks the
   source to match.
@@ -188,6 +174,11 @@ The worked-out design proposals for everything below live in
   to every step_id in that method** — no cross-contamination as long as each step
   method shows exactly one form, which is true today but stated nowhere. A step method
   with two forms would attach one source to both step_ids without anyone noticing.
+- **The measure guard collapses two same-named functions in one file into the longest** —
+  `function_sizes()` therefore guards only the longer of such a pair. Unreachable today —
+  there are 18 same-named pairs and the largest is 38 lines — and it only becomes
+  reachable once two same-named functions in one file both rise above 80; then the smaller
+  one can grow unnoticed.
 - **A check on exclusive groups that actually holds** — there used to be one warning as soon
   as two members' outdoor bounds overlapped, advising you to make them adjacent. That advice
   is what makes the group pointless: it exists to choose between appliances that can meet.
