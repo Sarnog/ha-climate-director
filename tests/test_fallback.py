@@ -400,3 +400,57 @@ class TestTheCircuitRefusedZoneTriesItsNextSource:
         commands = {command.entity_id: command for command in plan.commands}
         assert commands[STOVE].hvac_mode == MODE_OFF
         assert commands[STOVE].reason is Reason.OPENING_OPEN_ELSEWHERE
+
+
+NO_SOURCE_HEAT = ModeSettings(target=21.0, start_at=20.0, hysteresis=1.0)
+
+
+def _zone_without_sources(zone_id: str) -> Zone:
+    """Een kamer zonder één bron; `validate()` meldt het, `decide()` moet gewoon lopen.
+
+    A room without a single source; `validate()` reports it, `decide()` must simply run.
+    """
+    return Zone(
+        zone_id=zone_id,
+        name=zone_id.title(),
+        indoor_sensor=f"sensor.{zone_id}",
+        sources=(),
+        heat=NO_SOURCE_HEAT,
+    )
+
+
+class TestTheCircuitsAreResolvedAtLeastOnce:
+    """C1: de uitwijklusgrens hangt aan de eigenschap, niet aan een toevallig aantal.
+
+    C1: the fallback loop bound hangs on the property, not on a coincidental count.
+    """
+
+    @pytest.mark.parametrize(
+        "zones",
+        [
+            (),
+            (_zone_without_sources("z"),),
+            (_zone_without_sources("z"), _zone_without_sources("y")),
+        ],
+        ids=["geen-zones", "een-zone-zonder-bronnen", "twee-zones-zonder-bronnen"],
+    )
+    def test_every_circuit_gets_a_decision(self, zones: tuple[Zone, ...]) -> None:
+        """De circuits worden minstens één keer opgelost, ook zonder een enkele bron.
+
+        The circuits are resolved at least once, even without a single source.
+        """
+        config = DirectorConfig(
+            zones=zones,
+            circuits=(Circuit("buitenunit", "Buitenunit", units=(PUMP,)),),
+            outdoor_sensor="sensor.buiten",
+            outdoor_hysteresis=0.5,
+        )
+        world = make_world(
+            now=NOW,
+            outdoor=4.0,
+            indoor={"z": 18.0, "y": 18.0},
+            climates={PUMP: climate("off")},
+        )
+        plan = decide(config, world)
+        assert len(plan.circuits) == 1
+        assert plan.circuits[0].circuit_id == "buitenunit"

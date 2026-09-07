@@ -436,16 +436,18 @@ def _resolve_with_fallbacks(
     `CIRCUIT_AT_CAPACITY` of `CIRCUIT_CONFLICT_LOST`, dan dient de zone haar
     verzoek opnieuw in bij de volgende bron die dezelfde taak kan leveren, net
     zolang tot een bron hem krijgt of er geen kandidaat meer is. De huisbrede
-    stop blijft op de zone liggen: die is al in `_collect_wishes` afgehandeld en
-    geldt hier alleen nog als kandidaat-filter voor de reserve.
+    stop blijft op de zone liggen: die is al in `_collect_wishes` afgehandeld;
+    hier geldt hij alleen nog als kandidaat-filter. De ondergrens van 1 op
+    `attempts` zorgt dat een half ingerichte installatie haar circuits houdt (C1).
 
     Anchor 7: a circuit refusal refuses the appliance on that circuit, not the
     zone. When a request falls through with `SHORT_CYCLE_PROTECTION`,
     `CIRCUIT_AT_CAPACITY` or `CIRCUIT_CONFLICT_LOST`, the zone files its request
     again with the next source able to deliver the same duty, until a source
     gets it or no candidate remains. The house-wide stop stays on the zone: it
-    was already handled in `_collect_wishes`, and here it only still filters
-    candidates for the reserve.
+    was already handled in `_collect_wishes`; here it only filters candidates.
+    The lower bound of 1 on `attempts` keeps the circuits of a half-configured
+    installation intact (C1).
     """
     grants: dict[str, constraints.Grant] = {}
     circuit_decisions: tuple[CircuitDecision, ...] = ()
@@ -455,14 +457,12 @@ def _resolve_with_fallbacks(
     dropped: dict[str, constraints.Request] = {}
 
     margin = config.outdoor_hysteresis
-    attempts = max((len(zone.sources) for zone in config.zones), default=1)
+    attempts = max(1, max((len(zone.sources) for zone in config.zones), default=0))
     for _ in range(attempts):
         wishes, dropped_now = _apply_exclusive_groups(config, world, wishes)
         dropped.update(dropped_now)
         grants, circuit_decisions, deferrals = _resolve_circuits(config, world, wishes, standing)
-        for deferral in deferrals:
-            if deferral not in all_deferrals:
-                all_deferrals.append(deferral)
+        all_deferrals += [deferral for deferral in deferrals if deferral not in all_deferrals]
         changed = False
         for zone in config.zones:
             request = wishes.get(zone.zone_id)
