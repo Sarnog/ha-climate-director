@@ -38,6 +38,15 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 
 ## Could have
 
+- **De veldenkaart van de formulierbewaking valt stil terug op de `Call`-knoop** —
+  `conftest.form_field_nodes()` geeft 0 velden terug wanneer de genoemde
+  `schemas.<naam>` niet bestaat, in plaats van een harde fout
+  ("`schemas.<naam>` bestaat niet"). Vandaag gedekt doordat de veldenkaart een exacte
+  gelijkheid is; een harde fout zou dat anker weghalen.
+- **`TestEveryScreenCanBeLeft._steps()` plakt elke schemabron van een stapmethode aan
+  élk step_id in díe methode** — geen kruisbesmetting zolang elke stapmethode precies
+  één formulier toont, wat vandaag zo is maar nergens staat. Een stapmethode met twee
+  formulieren zou één bron aan beide step_id's hangen zonder dat iemand het merkt.
 - **Een controle op exclusieve groepen die wél klopt** — er stond er een die waarschuwde
   zodra de buitengrenzen van twee groepsleden elkaar overlapten, met het advies ze
   aansluitend te maken. Dat advies maakt de groep juist zinloos: hij bestaat om te kiezen
@@ -170,6 +179,15 @@ The worked-out design proposals for everything below live in
 
 ## Could have
 
+- **The form guard's field map silently falls back to the `Call` node** —
+  `conftest.form_field_nodes()` returns 0 fields when the named `schemas.<name>`
+  does not exist, instead of a hard error ("`schemas.<name>` does not exist").
+  Covered today because the field map is an exact equality; a hard error would
+  remove that anchor.
+- **`TestEveryScreenCanBeLeft._steps()` attaches every schema source of a step method
+  to every step_id in that method** — no cross-contamination as long as each step
+  method shows exactly one form, which is true today but stated nowhere. A step method
+  with two forms would attach one source to both step_ids without anyone noticing.
 - **A check on exclusive groups that actually holds** — there used to be one warning as soon
   as two members' outdoor bounds overlapped, advising you to make them adjacent. That advice
   is what makes the group pointless: it exists to choose between appliances that can meet.

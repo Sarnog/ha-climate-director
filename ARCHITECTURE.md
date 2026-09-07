@@ -125,6 +125,7 @@ maakt".
 
 ```
 config_flow.py         wizard; schrijft één dict in entry.options
+  schemas.py            bouwt per scherm het vol.Schema uit de huidige waarden
       │
       ▼
 engine/serialise.py    dict → dataclasses (puur, vergevingsgezind)
@@ -501,6 +502,12 @@ Een verlopen cursor (bijvoorbeeld naar een zone die net verwijderd is) stuurt te
 het menu in plaats van een uitzondering te gooien: een config flow die crasht laat een half
 opgebouwde installatie achter zonder weg terug.
 
+Sinds S5 staan de schema's in `schemas.py`: die module bouwt per scherm het
+`vol.Schema` uit de huidige waarden, en de `async_step_*`-methodes houden de
+navigatie, de validatie en het opslaan. De `async_show_form`-aanroepen zijn
+bewust in `config_flow.py` gebleven, want daar hangen de bewakingen op de
+formulieren aan.
+
 **Eigenschap:** een scherm dat je binnen kunt, kun je ook weer uit — ongeacht wat er in
 de **optionele** velden staat of juist niet staat. "Verwerpen en teruggaan" komt aan zodra
 de verplichte velden geldig zijn. Elk optioneel veld staat daarom als kale selector in het
@@ -762,10 +769,12 @@ van de vier heeft aantoonbaar fouten voortgebracht.
   gekomen. *Waarheen:* `state_store.py` (opslag, herstel, quarantaine),
   `world_builder.py` (de momentopname) en `preconditions.py` (verzoeken en hun timers);
   wat overblijft luistert, beslist, voert uit en publiceert.
-- **`config_flow.py` (2479).** Per scherm lopen formulier bouwen, valideren en opslaan
-  door elkaar; `async_step_settings` is 213 regels, `async_step_resident` 196.
-  *Waarheen:* een `schemas.py` die per scherm het formulier bouwt, zodat de flow alleen
-  de navigatie houdt.
+- **`config_flow.py` (1476).** Per scherm liepen formulier bouwen, valideren en opslaan
+  door elkaar; dat is verholpen: sinds S5 bouwt `schemas.py` per scherm het `vol.Schema`
+  uit de huidige waarden, en houden de stapmethodes de navigatie, de validatie en het
+  opslaan. Het bestand zelf blijft boven de maat doordat alle stapmethodes samen in één
+  module staan, en het punt is daarmee verplaatst, niet opgelost: `schemas.py` telt 1101
+  regels en staat er dus óók boven.
 - **`engine/models.py` (2021).** `validate()` was één functie van 549 regels; dat is
   verholpen: hij is nu een lus over `_RULES`, een lijst regelfuncties die elk één
   controle doen, dus een controle erbij is een functie erbij. Het bestand zelf blijft
@@ -919,6 +928,7 @@ today — are further down under "Extensibility — the shape that makes it poss
 
 ```
 config_flow.py         wizard; writes one dict into entry.options
+  schemas.py            builds each screen's vol.Schema from the current values
       │
       ▼
 engine/serialise.py    dict → dataclasses (pure, forgiving)
@@ -1286,6 +1296,12 @@ A stale cursor (to a zone just deleted, say) sends the user back to the menu rat
 raising: a config flow that crashes leaves a half-built installation behind with no way back
 into it.
 
+Since S5 the schemas live in `schemas.py`: that module builds each screen's
+`vol.Schema` from the current values, and the `async_step_*` methods keep the
+navigation, validation and storage. The `async_show_form` calls have
+deliberately stayed in `config_flow.py`, because that is what the form guards
+hang on.
+
 **Property:** a screen you can enter, you can leave again — whatever the **optional**
 fields hold or do not hold. "Discard and go back" arrives whenever the required fields are
 valid. Every optional field therefore stands as a plain selector in the schema. The
@@ -1544,10 +1560,12 @@ of the four has demonstrably produced bugs.
   this, surfacing. *Where to:* `state_store.py` (storage, restore, quarantine),
   `world_builder.py` (the snapshot) and `preconditions.py` (requests and their timers);
   what remains listens, decides, executes and publishes.
-- **`config_flow.py` (2479).** Per screen, building the form, validating and storing run
-  through one another; `async_step_settings` is 213 lines, `async_step_resident` 196.
-  *Where to:* a `schemas.py` that builds the form per screen, so the flow only keeps the
-  navigation.
+- **`config_flow.py` (1476).** Per screen, building the form, validating and storing used
+  to run through one another; that is fixed: since S5 `schemas.py` builds each screen's
+  `vol.Schema` from the current values, and the step methods keep the navigation,
+  validation and storage. The file itself stays above the measure because all step
+  methods sit together in one module, and the point has moved, not been solved:
+  `schemas.py` counts 1,101 lines and so sits above it too.
 - **`engine/models.py` (2021).** `validate()` used to be one function of 549 lines; that
   is fixed: it is now a loop over `_RULES`, a list of rule functions each doing one
   check, so one more check is now one more function. The file itself stays above the
