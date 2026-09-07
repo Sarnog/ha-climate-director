@@ -754,27 +754,50 @@ een import die pas op het draaimoment ontstaat (`importlib.import_module`) glipp
 langs. Beide zijn vandaag onbereikbaar — er staat er geen enkele — maar de scheidslijn
 hangt in die twee vormen nog steeds aan het lezen van de code.
 
+**De maat wordt bewaakt als een ratel** — regel 6 geldt ook voor de maat zelf:
+`tests/test_the_measure.py` houdt de norm vast zoals hij hier staat — groter dan wat er
+genoteerd is mag niet, kleiner betekent "haal hem van de lijst" — met de definitie van
+"regels" erbij: een module telt als het aantal fysieke regels van het bestand
+(`len(text.splitlines())`), een functie als `end_lineno - lineno + 1`, van de eerste
+regel die `ast` aan de `def` toekent tot en met de laatste regel van het blok, en er
+wordt met `ast.walk` over élk bestand onder `custom_components/climate_director/`
+gelopen, dus een geneste functie telt mee.
+
+De maatbewaking heeft één bewust smalle kant, en die hoort hier te staan zodat niemand
+haar voor breder aanziet: `function_sizes()` klapt twee gelijknamige functies in één
+bestand samen tot de langste. Zijn er ooit twee gelijknamige functies boven de 80, dan
+wordt alleen de langste bewaakt. Vandaag onbereikbaar — er zijn 18 gelijknamige paren en
+de grootste is 38 regels — en dat staat hier zodat een volgende ronde het niet als bug
+aanmeldt.
+
 **De maat.** Een module blijft onder ~700 regels, een functie onder ~80. Geen wet, wel de
 grens waarboven de vraag hoort te vallen: *doet dit ding er inmiddels twee?*
 
-**Waar de code die maat vandaag niet haalt.** Gemeten op 7.4.1 — 29 bestanden, 14.782
-regels: vijf modules staan boven de 700 regels, negentien functies boven de 80, en vier
-bestanden dragen samen 8302 regels, 56% van het geheel. Dat is geen schoonheidsfout; elk
-van de vier heeft aantoonbaar fouten voortgebracht.
+**Waar de code die maat vandaag niet haalt.** Gemeten na S1 t/m S6, op `28846e7` — 33
+bestanden, 15.309 regels: zes modules staan boven de 700 regels, zeventien functies boven
+de 80, en die zes grootste bestanden dragen samen 8.638 regels, 56,4% van het geheel. Dat
+is geen schoonheidsfout: vier van de zes — `coordinator.py`, `config_flow.py`,
+`engine/models.py` en `engine/decide.py` — hebben aantoonbaar fouten voortgebracht,
+telkens dezelfde vorm.
 
-- **`coordinator.py` (2487).** Één klasse met 67 methodes die zeven banen tegelijk heeft:
-  opslag, luisteraars, de momentopname bouwen, problemen melden, vooruit-verzoeken,
-  events, en drie soorten timers; `__init__` alleen al 179 regels. De zes nagebouwde
-  coordinators in de testset breken hierdoor op afstand — dat is dit, naar buiten
-  gekomen. *Waarheen:* `state_store.py` (opslag, herstel, quarantaine),
-  `world_builder.py` (de momentopname) en `preconditions.py` (verzoeken en hun timers);
-  wat overblijft luistert, beslist, voert uit en publiceert.
+- **`coordinator.py` (1698).** De coordinator was één klasse met 67 methodes die zeven
+  banen tegelijk had — opslag, luisteraars, de momentopname bouwen, problemen melden,
+  vooruit-verzoeken, events en drie soorten timers — en de zes nagebouwde coordinators
+  in de testset braken erop af; dat is verholpen: sinds S4 staat de opslag (herstel en
+  quarantaine inbegrepen) in `state_store.py`, de momentopname in `world_builder.py`, en
+  de vooruit-verzoeken met hun timers in `preconditions.py`. Het bestand zelf blijft
+  boven de maat doordat wat overblijft — luisteren, beslissen, uitvoeren en publiceren —
+  samen in één module staat.
 - **`config_flow.py` (1476).** Per scherm liepen formulier bouwen, valideren en opslaan
   door elkaar; dat is verholpen: sinds S5 bouwt `schemas.py` per scherm het `vol.Schema`
   uit de huidige waarden, en houden de stapmethodes de navigatie, de validatie en het
   opslaan. Het bestand zelf blijft boven de maat doordat alle stapmethodes samen in één
   module staan, en het punt is daarmee verplaatst, niet opgelost: `schemas.py` telt 1101
   regels en staat er dus óók boven.
+- **`schemas.py` (1101).** Gebouwd in S5: per scherm het `vol.Schema` uit de huidige
+  waarden, zodat de stapmethodes in `config_flow.py` de navigatie, de validatie en het
+  opslaan houden. Het bestand staat boven de maat doordat alle schermschema's samen in
+  één module staan.
 - **`engine/models.py` (2021).** `validate()` was één functie van 549 regels; dat is
   verholpen: hij is nu een lus over `_RULES`, een lijst regelfuncties die elk één
   controle doen, dus een controle erbij is een functie erbij. Het bestand zelf blijft
@@ -790,9 +813,15 @@ van de vier heeft aantoonbaar fouten voortgebracht.
   blijft zijn de pad-eigen keuzes: override, handbediende bron en gekozen-bron-commando
   bij de zone-bron; vraagvolging en stop-reden bij de gedeelde warmtebron.
 
-Verplaatsen verandert geen gedrag: de acceptatie van elke stap hierboven is dat de
-volledige suite even groen blijft als ervoor, met `python tests/measure_short_cycles.py`
-onveranderd op **OK**. De volgorde staat in [`ROADMAP.md`](ROADMAP.md).
+- **`engine/serialise.py` (724).** De enige plek waar de platte dict van de config entry
+  naar de dataclasses van `engine/models.py` vertaald wordt, en terug; het lezen is
+  bewust vergevingsgezind. Het bestand staat boven de maat doordat alle modellen samen in
+  één module geserialiseerd worden.
+
+Het plan is uitgevoerd: S1 t/m S6 staan op `main`, en verplaatsen veranderde geen
+gedrag — de volledige suite bleef bij elke stap even groen als ervoor, met
+`python tests/measure_short_cycles.py` onveranderd op **OK**. Wat de maat voortaan
+vasthoudt is de bewaking hierboven (`tests/test_the_measure.py`), niet dit document.
 
 ### De bewakingen bewaken — en daar houdt het op
 
@@ -1545,27 +1574,49 @@ created at run time (`importlib.import_module`) slip past it. Both are unreachab
 — there is not a single one — but in those two shapes the dividing line still rests on
 reading the code.
 
+**The measure is guarded as a ratchet** — rule 6 applies to the measure itself too:
+`tests/test_the_measure.py` holds the norm as written here — larger than what is noted
+is not allowed, smaller means "remove it from the list" — with the definition of "lines"
+included: a module counts as the number of physical lines of the file
+(`len(text.splitlines())`), a function as `end_lineno - lineno + 1`, from the first line
+`ast` assigns to the `def` through the last line of the block, and every file under
+`custom_components/climate_director/` is walked with `ast.walk`, so a nested function
+counts too.
+
+The measure guard has one deliberately narrow side, and it belongs here so that nobody
+mistakes it for a wider one: `function_sizes()` collapses two same-named functions in one
+file into the longest. Should there ever be two same-named functions above 80, only the
+longest is guarded. Unreachable today — there are 18 same-named pairs and the largest is
+38 lines — and that is written here so a next round does not report it as a bug.
+
 **The measure.** A module stays under ~700 lines, a function under ~80. Not a law, but
 the point past which the question should arise: *is this thing doing two jobs by now?*
 
-**Where the code does not meet that measure today.** Measured on 7.4.1 — 29 files,
-14,782 lines: five modules sit above 700 lines, nineteen functions above 80, and four
-files carry 8,302 lines between them, 56% of the whole. That is not a cosmetic flaw; each
-of the four has demonstrably produced bugs.
+**Where the code does not meet that measure today.** Measured after S1 through S6, at
+`28846e7` — 33 files, 15,309 lines: six modules sit above 700 lines, seventeen functions
+above 80, and those six largest files carry 8,638 lines between them, 56.4% of the whole.
+That is not a cosmetic flaw: four of the six — `coordinator.py`, `config_flow.py`,
+`engine/models.py` and `engine/decide.py` — have demonstrably produced bugs, each time
+the same shape.
 
-- **`coordinator.py` (2487).** One class with 67 methods holding seven jobs at once:
-  storage, listeners, building the snapshot, reporting problems, pre-conditioning
-  requests, events, and three kinds of timer; `__init__` alone is 179 lines. The six
-  rebuilt coordinators in the test suite break at a distance because of this — that is
-  this, surfacing. *Where to:* `state_store.py` (storage, restore, quarantine),
-  `world_builder.py` (the snapshot) and `preconditions.py` (requests and their timers);
-  what remains listens, decides, executes and publishes.
+- **`coordinator.py` (1,698).** The coordinator used to be one class with 67 methods
+  holding seven jobs at once — storage, listeners, building the snapshot, reporting
+  problems, pre-conditioning requests, events and three kinds of timer — and the six
+  rebuilt coordinators in the test suite broke on it; that is fixed: since S4 the storage
+  (restore and quarantine included) lives in `state_store.py`, the snapshot in
+  `world_builder.py`, and the pre-conditioning requests with their timers in
+  `preconditions.py`. The file itself stays above the measure because what remains —
+  listening, deciding, executing and publishing — sits together in one module.
 - **`config_flow.py` (1476).** Per screen, building the form, validating and storing used
   to run through one another; that is fixed: since S5 `schemas.py` builds each screen's
   `vol.Schema` from the current values, and the step methods keep the navigation,
   validation and storage. The file itself stays above the measure because all step
   methods sit together in one module, and the point has moved, not been solved:
   `schemas.py` counts 1,101 lines and so sits above it too.
+- **`schemas.py` (1,101).** Built in S5: each screen's `vol.Schema` from the current
+  values, so the step methods in `config_flow.py` keep the navigation, the validation and
+  the storage. The file sits above the measure because all screen schemas live together
+  in one module.
 - **`engine/models.py` (2021).** `validate()` used to be one function of 549 lines; that
   is fixed: it is now a loop over `_RULES`, a list of rule functions each doing one
   check, so one more check is now one more function. The file itself stays above the
@@ -1581,9 +1632,15 @@ of the four has demonstrably produced bugs.
   manual source and chosen-source command for the zone source; demand-following and
   stop reason for the shared heat source.
 
-Moving code changes no behaviour: the acceptance for every step above is that the full
-suite stays exactly as green as before, with `python tests/measure_short_cycles.py`
-unchanged at **OK**. The order is in [`ROADMAP.md`](ROADMAP.md).
+- **`engine/serialise.py` (724).** The only place where the config entry's plain dict is
+  translated into the dataclasses of `engine/models.py`, and back; reading is
+  deliberately forgiving. The file sits above the measure because all models are
+  serialised together in one module.
+
+The plan has been carried out: S1 through S6 are on `main`, and moving code changed no
+behaviour — the full suite stayed exactly as green at every step, with
+`python tests/measure_short_cycles.py` unchanged at **OK**. What holds the measure from
+now on is the guard above (`tests/test_the_measure.py`), not this document.
 
 ### The guards are guarded — and there it stops
 
