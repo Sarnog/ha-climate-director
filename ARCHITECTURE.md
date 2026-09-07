@@ -136,6 +136,7 @@ Home Assistant (entiteitstoestanden, klokgebeurtenissen)
   coordinator          verzamelt toestanden, ontdubbelt, serialiseert
     state_store.py     opslag, herstel en quarantaine van wat een mens zei
     preconditions.py   vooruit-verzoeken en hun timers
+    world_builder.py   de momentopname (build_world)
       │
       ▼
   world.WorldState     momentopname: één dataobject, verder niets
@@ -457,10 +458,12 @@ Doet precies drie dingen: entiteiten uitlezen tot één `WorldState`, `decide()`
 zelf geen besliskunde; staat er ooit een `if` over temperaturen in dat bestand, dan hoort
 die in `engine/`.
 
-De klasse wordt in vieren geknipt; twee delen staan op zichzelf. `state_store.py`
+De klasse is in vieren geknipt; drie delen staan op zichzelf. `state_store.py`
 bewaart, herstelt en quarantaineert wat een mens met de hand heeft gezegd — een
-vooruit-verzoek en een apparaat dat iemand zelf uitzette — en `preconditions.py`
-beheert de vooruit-verzoeken en hun timers; de coordinator zelf houdt de rest.
+vooruit-verzoek en een apparaat dat iemand zelf uitzette —, `preconditions.py`
+beheert de vooruit-verzoeken en hun timers, en `world_builder.py` bouwt de
+momentopname met zijn lezers; de coordinator zelf luistert, beslist, voert uit
+en publiceert.
 
 Drie dingen zijn er subtiel aan:
 
@@ -927,6 +930,7 @@ Home Assistant (entity states, clock events)
   coordinator          gathers states, debounces, serialises
     state_store.py     stores, restores and quarantines what a person said
     preconditions.py   pre-conditioning requests and their timers
+    world_builder.py   the snapshot (build_world)
       │
       ▼
   world.WorldState     snapshot: one data object, nothing more
@@ -1242,10 +1246,11 @@ into a `Plan`, and make sure a fresh decision happens whenever that is worthwhil
 decision logic itself; if an `if` about temperatures ever appears in that file, it belongs
 in `engine/`.
 
-The class is being cut into four; two parts stand on their own. `state_store.py` stores,
+The class is cut into four; three parts stand on their own. `state_store.py` stores,
 restores and quarantines what a person said by hand — a pre-conditioning request and an
-appliance somebody switched off — and `preconditions.py` manages the pre-conditioning
-requests and their timers; the coordinator itself keeps the rest.
+appliance somebody switched off —, `preconditions.py` manages the pre-conditioning
+requests and their timers, and `world_builder.py` builds the snapshot with its readers;
+the coordinator itself listens, decides, executes and publishes.
 
 Three things about it are subtle:
 
