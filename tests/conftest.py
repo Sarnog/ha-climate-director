@@ -11,6 +11,7 @@ every scenario is a plain data object.
 
 from __future__ import annotations
 
+import ast
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 from pathlib import Path
@@ -432,6 +433,61 @@ def async_show_form_calls(
                 if keyword.arg == "data_schema":
                     schema = keyword.value
             found.append((module, step_id, schema))
+    return found
+
+
+def form_field_nodes(
+    root: Path | None = None,
+) -> list[tuple[str, str | None, ast.AST]]:
+    """Return `(module, step_id, schema_node)` for every form, schema resolved.
+
+    De `data_schema=`-uitdrukking van elke `async_show_form` wordt opgelost naar
+    de plek waar de `vol.Required`/`vol.Optional`-sleutels werkelijk staan: een
+    letterlijke `vol.Schema({...})` telt zelf, en een aanroep
+    `schemas.<naam>(...)` telt als de `def <naam>` in `schemas.py`. Zo blijven
+    de veldenkaarten kloppen nu de formulieren apart zijn opgebouwd.
+
+    Wat er niet doorheen komt: een schema dat onder een andere naam wordt
+    opgebouwd dan de functie die `data_schema=` noemt (bijvoorbeeld een
+    doorgeefluik dat een andere functie aanroept), en een schema dat achter een
+    niet-letterlijke `step_id` zit. Beide zijn vandaag onbereikbaar; wie zo'n
+    vorm toevoegt, hoort deze helper mee te nemen.
+
+    The `data_schema=` expression of every `async_show_form` call is resolved to
+    the place where its `vol.Required`/`vol.Optional` keys actually live: a
+    literal `vol.Schema({...})` counts as itself, and a `schemas.<name>(...)`
+    call counts as the `def <name>` in `schemas.py`. That keeps the field maps
+    correct now that the forms are built apart.
+
+    What does not pass through: a schema built under a name other than the
+    function named in `data_schema=` (for example a pass-through that calls
+    another function), and a schema behind a non-literal `step_id`. Both are
+    unreachable today; whoever adds such a shape should update this helper.
+    """
+    import ast
+
+    if root is None:
+        root = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
+    trees: dict[str, ast.Module] = {}
+    for path in sorted(root.rglob("*.py")):
+        trees[_module_of(root, path)] = ast.parse(path.read_text(encoding="utf-8"))
+    functions = {
+        (module, node.name): node
+        for module, tree in trees.items()
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef)
+    }
+    found: list[tuple[str, str | None, ast.AST]] = []
+    for module, step_id, schema in async_show_form_calls(root):
+        if step_id is None or schema is None:
+            continue
+        target = schema
+        if isinstance(schema, ast.Call) and isinstance(schema.func, ast.Attribute):
+            value = schema.func.value
+            if isinstance(value, ast.Name) and value.id == "schemas":
+                schemas_module = _module_of(root, root / "schemas.py")
+                target = functions.get((schemas_module, schema.func.attr), schema)
+        found.append((module, step_id, target))
     return found
 
 

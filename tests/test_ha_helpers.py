@@ -28,7 +28,6 @@ from custom_components.climate_director.config_flow import (
     _deep_copy,
     _next_priority,
     _unique_id,
-    _window_label,
     _zone_errors,
     _zone_from_form,
 )
@@ -56,6 +55,7 @@ from custom_components.climate_director.engine.models import Problem
 from custom_components.climate_director.engine.serialise import config_from_dict, config_to_dict
 from custom_components.climate_director.number import resolve_initial
 from custom_components.climate_director.problems import MAX_LISTED, readable, summarise
+from custom_components.climate_director.schemas import _window_label
 
 
 @pytest.fixture(autouse=True)

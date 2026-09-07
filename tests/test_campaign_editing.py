@@ -246,22 +246,26 @@ def _optional_fields_by_step() -> dict[str, list[str]]:
     kaart of uit `config_flow.py` alleen. Een nieuw optioneel veld — in welk
     bestand dan ook — doet zo automatisch mee in plaats van stilletjes te
     ontbreken; precies wat er met `house_wide_openings` op het
-    openingenlijstscherm misging.
+    openingenlijstscherm misging. Sinds S5 staan de schema's in `schemas.py`;
+    `conftest.form_field_nodes()` lost `data_schema=schemas.<naam>(...)` op
+    naar de functie in dat bestand, zodat de velden hier evengoed gelezen
+    worden.
 
     The map comes from the source of the whole integration (AST over every
     `*.py` under `custom_components/climate_director/`), not from a hand-kept
     map or from `config_flow.py` alone. A new optional field — in whatever file —
     joins in automatically instead of quietly missing; exactly what went wrong
-    with `house_wide_openings` on the openings screen.
+    with `house_wide_openings` on the openings screen. Since S5 the schemas live
+    in `schemas.py`; `conftest.form_field_nodes()` resolves
+    `data_schema=schemas.<name>(...)` to the function in that file, so the
+    fields are read here just the same.
     """
     import ast
 
-    from conftest import async_show_form_calls
+    from conftest import form_field_nodes
 
     found: dict[str, list[str]] = {}
-    for _module, step_id, schema in async_show_form_calls():
-        if step_id is None or schema is None:
-            continue
+    for _module, step_id, schema in form_field_nodes():
         found[step_id] = [
             sub.args[0].value
             for sub in ast.walk(schema)
@@ -2110,7 +2114,7 @@ class TestEveryDayFieldSpeaksTheUsersLanguage:
             await stop_house(home)
 
     def test_the_list_line_uses_the_translated_days(self) -> None:
-        from custom_components.climate_director.config_flow import _window_label
+        from custom_components.climate_director.schemas import _window_label
 
         dutch = {
             "component.climate_director.selector.weekday_short.options.5": "za",
@@ -2122,7 +2126,7 @@ class TestEveryDayFieldSpeaksTheUsersLanguage:
         assert _window_label({**window, "weekdays": None}, dutch) == "08:00 - 15:00, elke dag"
 
     def test_it_falls_back_on_english_without_a_translation(self) -> None:
-        from custom_components.climate_director.config_flow import _window_label
+        from custom_components.climate_director.schemas import _window_label
 
         window = {"start": "08:00:00", "end": "15:00:00", "weekdays": [5, 6]}
         assert _window_label(window, {}) == "08:00 - 15:00, Sat, Sun"

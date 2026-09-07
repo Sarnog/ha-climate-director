@@ -56,19 +56,21 @@ def fields_per_step() -> dict[str, set[str]]:
     """Return every field the flow asks for, per step, read from the source.
 
     Uit de broncode en niet uit een lijstje: een lijstje raakt achter zodra
-    iemand een veld toevoegt, en dan bewijst deze test niets meer.
+    iemand een veld toevoegt, en dan bewijst deze test niets meer. De schema's
+    staan sinds S5 in `schemas.py`; een `data_schema=schemas.<naam>(...)` wordt
+    hier opgelost naar de functie in dat bestand (`conftest.form_field_nodes`).
 
     From the source rather than from a list: a list falls behind the moment
-    somebody adds a field, and then this test proves nothing.
+    somebody adds a field, and then this test proves nothing. The schemas live
+    in `schemas.py` since S5; a `data_schema=schemas.<name>(...)` is resolved
+    here to the function in that file (`conftest.form_field_nodes`).
     """
-    tree = ast.parse((COMPONENT / "config_flow.py").read_text(encoding="utf-8"))
+    from conftest import form_field_nodes
+
     found: dict[str, set[str]] = {}
 
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call) or getattr(node.func, "attr", "") != "async_show_form":
-            continue
-        step = next((kw.value.value for kw in node.keywords if kw.arg == "step_id"), None)
-        if not isinstance(step, str):
+    for module, step, node in form_field_nodes():
+        if module != "custom_components.climate_director.config_flow":
             continue
 
         keys: set[str] = set()
@@ -189,7 +191,11 @@ class TestEveryFormField:
 class TestEveryDropdown:
     """A select without translated options shows its stored values instead."""
 
-    _flow = (COMPONENT / "config_flow.py").read_text(encoding="utf-8")
+    _flow = (
+        (COMPONENT / "config_flow.py").read_text(encoding="utf-8")
+        + "\n"
+        + (COMPONENT / "schemas.py").read_text(encoding="utf-8")
+    )
     #: Twee vormen: rechtstreeks op de selector, en via `_choices`.
     #: Two shapes: straight on the selector, and by way of `_choices`.
     keys = set(re.findall(r'translation_key="(\w+)"', _flow)) | set(
@@ -315,16 +321,47 @@ class TestEveryScreenCanBeLeft:
     exempt = {"user", "init"}
 
     def _steps(self) -> dict[str, str]:
-        """Return the source of each step's own method, keyed by step id."""
+        """Return the source of each step's own method plus its schema function.
+
+        De terugweg (`_back_option()` / `_EXIT`) staat sinds S5 in de
+        schemafuncties in `schemas.py`, niet meer in de stapmethode zelf. Deze
+        lezer lost `data_schema=schemas.<naam>(...)` daarom op naar de functie
+        in dat bestand en plakt de bron erbij, zodat de bewaking meeverhuist in
+        plaats van te verzwakken.
+
+        Since S5 the way back (`_back_option()` / `_EXIT`) lives in the schema
+        functions in `schemas.py`, no longer in the step method itself. This
+        reader therefore resolves `data_schema=schemas.<name>(...)` to the
+        function in that file and appends its source, so the guard moves along
+        instead of weakening.
+        """
         source = (COMPONENT / "config_flow.py").read_text(encoding="utf-8")
+        schema_source = (COMPONENT / "schemas.py").read_text(encoding="utf-8")
         tree = ast.parse(source)
+        schema_tree = ast.parse(schema_source)
+        schema_functions = {
+            node.name: node for node in ast.walk(schema_tree) if isinstance(node, ast.FunctionDef)
+        }
         lines = source.splitlines(keepends=True)
+        schema_lines = schema_source.splitlines(keepends=True)
         found: dict[str, str] = {}
 
         for node in ast.walk(tree):
             if not isinstance(node, ast.AsyncFunctionDef):
                 continue
             body = "".join(lines[node.lineno - 1 : node.end_lineno])
+            for call in ast.walk(node):
+                if not isinstance(call, ast.Call):
+                    continue
+                if getattr(call.func, "attr", "") != "async_show_form":
+                    continue
+                schema = next((kw.value for kw in call.keywords if kw.arg == "data_schema"), None)
+                if isinstance(schema, ast.Call) and isinstance(schema.func, ast.Attribute):
+                    value = schema.func.value
+                    if isinstance(value, ast.Name) and value.id == "schemas":
+                        function = schema_functions.get(schema.func.attr)
+                        if function is not None:
+                            body += "".join(schema_lines[function.lineno - 1 : function.end_lineno])
             for step in re.findall(r'step_id="(\w+)"', body):
                 found[step] = body
         return found
@@ -368,21 +405,24 @@ class TestNoScreenCanRefuseToBeLeft:
     and checked in the handler.
     """
 
-    def _forms(self) -> dict[str, ast.AsyncFunctionDef]:
-        tree = ast.parse((COMPONENT / "config_flow.py").read_text(encoding="utf-8"))
-        found = {}
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.AsyncFunctionDef):
-                continue
-            for call in ast.walk(node):
-                if (
-                    isinstance(call, ast.Call)
-                    and getattr(call.func, "attr", "") == "async_show_form"
-                ):
-                    step = next((k.value.value for k in call.keywords if k.arg == "step_id"), None)
-                    if isinstance(step, str):
-                        found[step] = node
-        return found
+    def _forms(self) -> dict[str, ast.AST]:
+        """Return the resolved schema node per step, from `form_field_nodes`.
+
+        De `vol.Required`-sleutels staan sinds S5 in `schemas.py`; deze lezer
+        loopt daarom over de opgeloste schemaknopen in plaats van over de
+        stapmethode zelf.
+
+        Since S5 the `vol.Required` keys live in `schemas.py`; this reader
+        therefore walks the resolved schema nodes instead of the step method
+        itself.
+        """
+        from conftest import form_field_nodes
+
+        return {
+            step: node
+            for module, step, node in form_field_nodes()
+            if module == "custom_components.climate_director.config_flow"
+        }
 
     def test_the_reader_finds_the_forms(self) -> None:
         assert len(self._forms()) >= 15
@@ -456,6 +496,12 @@ class TestTheSaveScreenWarns:
         source = (COMPONENT / "config_flow.py").read_text(encoding="utf-8")
         start = source.index("async def async_step_save(")
         body = source[start : source.index("\n    async def ", start + 1)]
+        schema_source = (COMPONENT / "schemas.py").read_text(encoding="utf-8")
+        match = re.search(r"^def save\(", schema_source, re.M)
+        assert match, "schemas.save() bestaat niet"
+        rest = schema_source[match.end() :]
+        end = re.search(r"^def ", rest, re.M)
+        body += schema_source[match.start() : match.end() + (end.start() if end else len(rest))]
         assert "_EXIT_DROP" in body, "geen weg terug vanaf het opslaanscherm"
         assert "_exit_row()" in body, "geen keuze tussen opslaan en teruggaan"
 
@@ -483,7 +529,11 @@ class TestEveryPickerCanBeBuilt:
     is all the user gets to see.
     """
 
-    _flow = (COMPONENT / "config_flow.py").read_text(encoding="utf-8")
+    _flow = (
+        (COMPONENT / "config_flow.py").read_text(encoding="utf-8")
+        + "\n"
+        + (COMPONENT / "schemas.py").read_text(encoding="utf-8")
+    )
 
     def test_every_add_row_has_a_fallback(self) -> None:
         used = set(re.findall(r'_add_option\("(\w+)"\)', self._flow))
