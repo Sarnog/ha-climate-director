@@ -166,7 +166,8 @@
           "outdoor_max": "Use up to this outdoor temperature",
           "delete": "Delete this source",
           "autostart": "Start this appliance automatically",
-          "when_done": "When you are done here"
+          "when_done": "When you are done here",
+          "min_cycle_time": "Rest before this appliance may restart (seconds)"
         },
         "data_description": {
           "priority": "Lower wins when several sources could serve the same duty.",
@@ -176,7 +177,8 @@
           "role": "Whether this appliance can heat, cool, or both. A boiler is heating only.",
           "delete": "Removes the source from this zone. The appliance itself is left alone.",
           "autostart": "Off leaves it alone: the director never switches it on, and switches it off only when it runs a duty the shared outdoor unit cannot allow. For an appliance you switch on yourself and want left as you left it.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
+          "min_cycle_time": "Only ever delays starting, never stopping. Applies only when the appliance sits on no circuit; on a circuit the circuit's rest counts. Leave empty for no own rest."
         }
       },
       "circuits": {

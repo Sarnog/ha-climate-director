@@ -627,6 +627,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                             temperature_unit_of(self.hass),
                         ),
                     },
+                    "min_cycle_time": _blank_to_none(user_input.get("min_cycle_time")),
                 }
                 if self._source_index is None:
                     sources.append(source)

@@ -1746,6 +1746,7 @@ class TestDiscardArrivesOnEveryScreen:
             "entity_id": "climate.gas",
             "outdoor_min": -5.0,
             "outdoor_max": 20.0,
+            "min_cycle_time": 180,
         },
         "circuit": {"units": [LIVING, ATTIC], "max_concurrent_units": 2},
         "circuit_priority": {},

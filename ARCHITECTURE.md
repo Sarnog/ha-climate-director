@@ -85,6 +85,14 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
    plan dat zegt welke zone werkelijk warmte kreeg (`_received_heat`).
    Bewust geen instelling: één knop minder om verkeerd te zetten, en drie minuten
    is veilig voor elke brander.
+   Sinds 7.4.2 staat daar een tweede rem naast: een bron kan een eigen
+   `min_cycle_time` dragen (`Source.min_cycle_time`), ook als hij op geen circuit
+   zit; leeg of nul betekent geen eigen rem. Een bron op een circuit houdt de
+   rusttijd van dat circuit — de eigen rem is een ondergrens per apparaat en
+   geldt alleen voor een bron zonder circuit. Dit anker is daarmee **breder**
+   geworden: een rusttijd kan nu aan elk apparaat hangen, niet alleen aan een
+   apparaat op een circuit; de vaste openingsrust hierboven blijft ernaast
+   bestaan.
 6. **De hoofdschakelaar uit** betekent: de director laat alles los en stuurt
    niets, ook geen `off` — net als een override. Wie alles uit wil, zet het zelf
    uit; de director laat het dan staan.
@@ -918,6 +926,13 @@ them without changing them here first.
    source does not, since its stop only counts with a previous plan saying which
    zone really received heat (`_received_heat`). Deliberately not a setting: one
    knob fewer to get wrong, and three minutes is safe for any burner.
+   Since 7.4.2 a second brake stands beside it: a source may carry its own
+   `min_cycle_time` (`Source.min_cycle_time`), even when it sits on no circuit;
+   empty or zero means no own brake. A source on a circuit keeps that circuit's
+   rest — the own brake is a per-appliance lower bound and applies only to a
+   source without a circuit. This anchor has thereby become **broader**: a rest
+   can now hang on any appliance, not only on an appliance on a circuit; the
+   fixed opening rest above stays alongside.
 6. **The master switch off** means: the director lets go of everything and issues
    nothing, an `off` included — just like an override. Whoever wants everything
    off switches it off themselves; the director then leaves it be.

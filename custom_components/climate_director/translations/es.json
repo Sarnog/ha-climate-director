@@ -166,7 +166,8 @@
           "outdoor_max": "Usar hasta esta temperatura exterior",
           "delete": "Eliminar esta fuente",
           "autostart": "Encender este aparato automáticamente",
-          "when_done": "Cuando termines aquí"
+          "when_done": "Cuando termines aquí",
+          "min_cycle_time": "Descanso antes de que este aparato pueda reiniciarse (segundos)"
         },
         "data_description": {
           "priority": "El más bajo gana cuando varias fuentes podrían cumplir la misma tarea.",
@@ -176,7 +177,8 @@
           "role": "Si este aparato puede calentar, enfriar, o ambas cosas. Una caldera solo calienta.",
           "delete": "Saca la fuente de esta zona. El aparato en sí queda intacto.",
           "autostart": "Desactivado lo deja en paz: el director nunca lo enciende, y solo lo apaga si realiza una tarea que la unidad exterior compartida no permite. Para un aparato que enciendes tú y quieres dejar como está.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
+          "min_cycle_time": "Solo retrasa el arranque, nunca la parada. Solo se aplica cuando el aparato no está en ningún circuito; en un circuito cuenta el descanso de ese circuito. Dejarlo vacío significa ningún descanso propio."
         }
       },
       "circuits": {

@@ -166,7 +166,8 @@
           "outdoor_max": "Utiliser jusqu'à cette température extérieure",
           "delete": "Supprimer cette source",
           "autostart": "Démarrer cet appareil automatiquement",
-          "when_done": "Quand vous avez terminé ici"
+          "when_done": "Quand vous avez terminé ici",
+          "min_cycle_time": "Repos avant que cet appareil puisse redémarrer (secondes)"
         },
         "data_description": {
           "priority": "Le plus bas l'emporte quand plusieurs sources peuvent assurer la même tâche.",
@@ -176,7 +177,8 @@
           "role": "Si cet appareil peut chauffer, refroidir, ou les deux. Une chaudière ne fait que chauffer.",
           "delete": "Retire la source de cette zone. L'appareil lui-même reste intact.",
           "autostart": "Désactivé le laisse tranquille : le directeur ne l'allume jamais et ne l'éteint que s'il exécute une tâche que l'unité extérieure partagée n'autorise pas. Pour un appareil que vous allumez vous-même et voulez laisser tel quel.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
+          "min_cycle_time": "Retarde uniquement le démarrage, jamais l'arrêt. Ne s'applique que lorsque l'appareil n'est sur aucun circuit; sur un circuit, c'est le repos du circuit qui compte. Laisser vide signifie aucun repos propre."
         }
       },
       "circuits": {

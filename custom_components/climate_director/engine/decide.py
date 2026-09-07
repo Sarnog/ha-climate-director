@@ -529,14 +529,14 @@ def _resolve_circuits(
         )
         decisions.append(outcome.decision)
         deferrals.extend(outcome.deferrals)
-        for grant in outcome.grants:
-            grants[grant.zone_id] = grant
+        grants.update((grant.zone_id, grant) for grant in outcome.grants)
 
     for request in solo:
-        outcome = constraints.resolve(config, world, _SOLO, (request,), standing)
+        rest = request.source.min_cycle_time
+        circuit = _SOLO if not rest else Circuit("", "", (), True, min_cycle_time=rest)
+        outcome = constraints.resolve(config, world, circuit, (request,), standing)
         deferrals.extend(outcome.deferrals)
-        for grant in outcome.grants:
-            grants[grant.zone_id] = grant
+        grants.update((grant.zone_id, grant) for grant in outcome.grants)
 
     return grants, tuple(decisions), tuple(deferrals)
 

@@ -171,6 +171,9 @@ def _source(raw: Mapping[str, Any]) -> Source:
         autostart=_bool(raw.get("autostart"), True),
         priority=_int(raw.get("priority"), 0),
         outdoor=_window(raw.get("outdoor")),
+        min_cycle_time=(
+            None if raw.get("min_cycle_time") in (None, "") else _seconds(raw.get("min_cycle_time"))
+        ),
     )
 
 
@@ -453,6 +456,9 @@ def _source_to_dict(source: Source) -> dict[str, Any]:
         "autostart": source.autostart,
         "priority": source.priority,
         "outdoor": _window_to_dict(source.outdoor),
+        "min_cycle_time": (
+            None if source.min_cycle_time is None else source.min_cycle_time.total_seconds()
+        ),
     }
 
 

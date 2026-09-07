@@ -671,6 +671,10 @@ def source(flow: Any, current: dict[str, Any]) -> vol.Schema:
                 "outdoor_max",
                 description={"suggested_value": rounded_from_celsius(outdoor.get("maximum"), unit)},
             ): _temperature(unit),
+            vol.Optional(
+                "min_cycle_time",
+                description={"suggested_value": current.get("min_cycle_time")},
+            ): _SECONDS,
             vol.Required("delete", default=False): bool,
             vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
         }

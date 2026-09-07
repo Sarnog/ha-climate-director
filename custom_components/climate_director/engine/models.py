@@ -225,6 +225,18 @@ class Source:
     switched off, since otherwise it would block a room with more claim.
     """
 
+    min_cycle_time: timedelta | None = None
+    """Own rest before this appliance may restart, when it sits on no circuit.
+
+    Een bron op een circuit houdt de rusttijd van dat circuit; deze rem is een
+    ondergrens per apparaat en geldt alleen voor een bron zonder circuit. Leeg
+    of nul betekent: geen eigen rem.
+
+    A source on a circuit keeps that circuit's rest; this brake is a
+    per-appliance lower bound and only applies to a source without a circuit.
+    Empty or zero means: no own brake.
+    """
+
     def supports(self, family: ModeFamily) -> bool:
         """Return whether this source can deliver `family`."""
         if family is ModeFamily.HEAT:

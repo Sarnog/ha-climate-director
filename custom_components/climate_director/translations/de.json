@@ -166,7 +166,8 @@
           "outdoor_max": "Verwenden bis zu dieser Außentemperatur",
           "delete": "Diese Quelle löschen",
           "autostart": "Dieses Gerät automatisch einschalten",
-          "when_done": "Wenn du hier fertig bist"
+          "when_done": "Wenn du hier fertig bist",
+          "min_cycle_time": "Ruhezeit, bevor dieses Gerät erneut starten darf (Sekunden)"
         },
         "data_description": {
           "priority": "Niedriger gewinnt, wenn mehrere Quellen dieselbe Aufgabe erfüllen könnten.",
@@ -176,7 +177,8 @@
           "role": "Ob dieses Gerät heizen, kühlen oder beides kann. Ein Heizkessel kann nur heizen.",
           "delete": "Nimmt die Quelle aus dieser Zone. Das Gerät selbst bleibt unangetastet.",
           "autostart": "Aus lässt es in Ruhe: der Director schaltet es nie ein und nur dann aus, wenn es eine Aufgabe fährt, die das gemeinsame Außengerät nicht zulässt. Für ein Gerät, das du selbst einschaltest und so lassen willst.",
-          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst.",
+          "min_cycle_time": "Verzögert nur das Starten, nie das Stoppen. Gilt nur, wenn das Gerät an keinem Kreis hängt; an einem Kreis zählt dessen Ruhezeit. Leer lassen heißt keine eigene Ruhezeit."
         }
       },
       "circuits": {

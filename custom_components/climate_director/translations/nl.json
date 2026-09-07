@@ -166,7 +166,8 @@
           "outdoor_max": "Gebruiken tot deze buitentemperatuur",
           "delete": "Deze bron verwijderen",
           "autostart": "Dit apparaat automatisch aanzetten",
-          "when_done": "Als je hier klaar bent"
+          "when_done": "Als je hier klaar bent",
+          "min_cycle_time": "Rusttijd voordat dit apparaat opnieuw mag starten (seconden)"
         },
         "data_description": {
           "priority": "Lager wint als meerdere bronnen dezelfde taak kunnen leveren.",
@@ -176,7 +177,8 @@
           "role": "Of dit apparaat kan verwarmen, koelen, of allebei. Een cv-ketel kan alleen verwarmen.",
           "delete": "Haalt de bron uit deze zone. Het apparaat zelf blijft ongemoeid.",
           "autostart": "Uit laat hem met rust: de director zet hem nooit aan, en zet hem alleen uit als hij een taak draait die de gedeelde buitenunit niet toestaat. Voor een apparaat dat je zelf aanzet en zo wilt laten staan.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
+          "min_cycle_time": "Vertraagt alleen starten, nooit stoppen. Geldt alleen als het apparaat op geen circuit zit; op een circuit telt de rusttijd van dat circuit. Leeg laten betekent geen eigen rusttijd."
         }
       },
       "circuits": {

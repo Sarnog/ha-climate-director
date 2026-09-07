@@ -303,6 +303,79 @@ class TestReachableSourcesAreNeverReported:
         assert found == ()
 
 
+class TestAnApplianceCanRestWithoutACircuit:
+    """C4: een bron kan een eigen rusttijd dragen, los van een circuit.
+
+    C4: a source can carry its own rest, apart from any circuit.
+    """
+
+    @pytest.mark.parametrize(
+        ("source_rest", "circuit_rest", "expected"),
+        [
+            (180, None, "held"),
+            (None, None, "running"),
+            (180, 0, "running"),
+            (180, 300, "held"),
+        ],
+        ids=["eigen-rem", "geen-rem", "circuit-nul-wint", "circuit-rem-wint"],
+    )
+    def test_the_rest_that_holds_the_start(
+        self, source_rest: int | None, circuit_rest: int | None, expected: str
+    ) -> None:
+        zone = Zone(
+            zone_id="zolder",
+            name="Zolder",
+            indoor_sensor="sensor.zolder",
+            sources=(
+                Source(
+                    source_id="kachel",
+                    entity_id="climate.kachel",
+                    role=SourceRole.HEAT_ONLY,
+                    min_cycle_time=(
+                        None if source_rest is None else timedelta(seconds=source_rest)
+                    ),
+                ),
+            ),
+            heat=HEAT,
+        )
+        circuits = ()
+        if circuit_rest is not None:
+            circuits = (
+                Circuit(
+                    "buiten",
+                    "Buitenunit",
+                    units=("climate.kachel",),
+                    min_cycle_time=timedelta(seconds=circuit_rest),
+                ),
+            )
+        config = DirectorConfig(
+            zones=(zone,),
+            circuits=circuits,
+            outdoor_sensor="sensor.buiten",
+        )
+        world = make_world(
+            now=NOW,
+            indoor={"zolder": 18.0},
+            outdoor=5.0,
+            climates={"climate.kachel": climate("off", changed_at=NOW - timedelta(seconds=60))},
+        )
+        plan = decide(config, world)
+        decision = plan.decision_for("zolder")
+        assert decision is not None
+        if expected == "held":
+            assert decision.granted is ModeFamily.NEUTRAL
+            assert decision.reason is Reason.SHORT_CYCLE_PROTECTION
+            until = (circuit_rest if circuit_rest else source_rest) or 0
+            assert any(
+                deferral.subject == "climate.kachel"
+                and deferral.until == NOW + timedelta(seconds=until - 60)
+                for deferral in plan.deferrals
+            ), plan.deferrals
+        else:
+            assert decision.granted is ModeFamily.HEAT
+            assert not any(deferral.subject == "climate.kachel" for deferral in plan.deferrals)
+
+
 PUMP = "climate.warmtepomp"
 STOVE = "climate.elektrische_kachel"
 NOW = datetime(2026, 1, 12, 10, 0)
