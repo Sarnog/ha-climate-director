@@ -242,6 +242,67 @@ class TestTheHelperOnItsOwn:
         assert found == ()
 
 
+class TestReachableSourcesAreNeverReported:
+    """C2: een bereikbare, niet geweigerde eerste keus hoort niet in `passed_over`.
+
+    C2: a reachable, not refused first choice does not belong in `passed_over`.
+    """
+
+    @pytest.mark.parametrize(
+        ("blocked", "serving", "margin", "outdoor"),
+        [
+            (frozenset({"climate.first"}), None, 0.0, 5.0),
+            (frozenset(), "second", 0.5, 10.3),
+        ],
+        ids=["huisbreed-stilgezet", "dode-band-houdt-de-reserve"],
+    )
+    def test_a_reachable_first_choice_is_never_reported(
+        self,
+        blocked: frozenset[str],
+        serving: str | None,
+        margin: float,
+        outdoor: float,
+    ) -> None:
+        zone = Zone(
+            zone_id="living_room",
+            name="Living room",
+            indoor_sensor="sensor.living_room",
+            sources=(
+                Source(
+                    source_id="first",
+                    entity_id="climate.first",
+                    priority=0,
+                    role=SourceRole.HEAT_ONLY,
+                ),
+                Source(
+                    source_id="second",
+                    entity_id="climate.second",
+                    priority=1,
+                    role=SourceRole.HEAT_ONLY,
+                    outdoor=OutdoorWindow(maximum=10.0),
+                ),
+            ),
+            heat=HEAT,
+        )
+        world_state = make_world(
+            indoor={"living_room": 18.0},
+            outdoor=outdoor,
+            climates={
+                "climate.first": climate("off"),
+                "climate.second": climate("heat"),
+            },
+        )
+        found = sources.passed_over(
+            zone,
+            ModeFamily.HEAT,
+            world_state,
+            serving=serving,
+            margin=margin,
+            blocked=blocked,
+        )
+        assert found == ()
+
+
 PUMP = "climate.warmtepomp"
 STOVE = "climate.elektrische_kachel"
 NOW = datetime(2026, 1, 12, 10, 0)

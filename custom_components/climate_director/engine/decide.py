@@ -100,6 +100,7 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
         deferrals=(*deferrals, *rest_deferrals, *generator_deferrals),
         untouched=untouched,
         opening_rest_until=opening_rest_until,
+        refused_by_circuit=refused_by_circuit,
     )
 
 
@@ -521,8 +522,7 @@ def _resolve_circuits(
     deferrals: list[Deferral] = []
 
     # Every configured circuit is resolved, including the ones nobody asked
-    # anything of: a circuit whose requests all dropped away still has to be
-    # reported as idle rather than silently omitted.
+    # anything of: those whose requests dropped away are still reported as idle.
     for circuit in config.circuits:
         outcome = constraints.resolve(
             config, world, circuit, tuple(by_circuit.get(circuit.circuit_id, ())), standing

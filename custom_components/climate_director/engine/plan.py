@@ -315,6 +315,18 @@ class Plan:
     another off reason does not forget the rest.
     """
 
+    refused_by_circuit: dict[str, frozenset[str]] = field(default_factory=dict)
+    """Per zone the appliance entity ids the circuit refused this round (anker 7).
+
+    Deze kaart is dezelfde die `_resolve_with_fallbacks` bijhoudt; hij staat
+    hier zodat een bewaking kan nagaan dat `passed_over` alleen onbereikbare of
+    geweigerde bronnen noemt.
+
+    This map is the same one `_resolve_with_fallbacks` keeps; it lives here so a
+    guard can verify that `passed_over` only names unreachable or refused
+    sources.
+    """
+
     def command_for(self, entity_id: str) -> UnitCommand | None:
         """Return the command aimed at this entity, if any."""
         return next((command for command in self.commands if command.entity_id == entity_id), None)
