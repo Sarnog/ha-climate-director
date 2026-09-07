@@ -101,12 +101,49 @@ IDS = [path.name for path in FILES]
 
 
 class TestEveryFormField:
-    """Nineteen screens, eighty-six fields, seven files."""
+    """Twenty-three screens, one hundred and seventeen fields, seven files."""
 
     def test_the_source_yields_steps_at_all(self) -> None:
-        """Guards the reader itself: an empty sweep would pass everything below."""
-        assert len(STEPS) >= 15
-        assert sum(len(keys) for keys in STEPS.values()) >= 80
+        """Guards the reader itself: an empty sweep would pass everything below.
+
+        De aantallen zijn vandaag gemeten (23 schermen, 117 velden) en staan als
+        letterlijke gelijkheid, niet als ondergrens. Met een ondergrens
+        (`>= 15` / `>= 80`) zou deze bewaking stilletjes verblinden zodra er
+        velden verdwijnen; met deze gelijkheid zegt een verschil wélk scherm
+        velden kwijt is.
+
+        The counts were measured today (23 screens, 117 fields) and stand as
+        literal equality, not as a lower bound. With a lower bound
+        (`>= 15` / `>= 80`) this guard would quietly go blind the moment fields
+        disappear; with this equality a difference says which screen lost them.
+        """
+        counts = {step: len(keys) for step, keys in STEPS.items()}
+        assert counts == {
+            "circuit": 11,
+            "circuit_priorities": 1,
+            "circuit_priority": 2,
+            "circuits": 1,
+            "exclusive": 3,
+            "exclusives": 1,
+            "generator": 6,
+            "generators": 1,
+            "opening": 6,
+            "openings": 2,
+            "quiet": 6,
+            "quiets": 1,
+            "resident": 15,
+            "residents": 1,
+            "save": 1,
+            "settings": 19,
+            "source": 8,
+            "sources": 1,
+            "user": 2,
+            "window": 6,
+            "windows": 1,
+            "zone": 21,
+            "zones": 1,
+        }
+        assert sum(counts.values()) == 117
 
     @pytest.mark.parametrize("path", FILES, ids=IDS)
     def test_every_step_exists(self, path: pathlib.Path) -> None:
