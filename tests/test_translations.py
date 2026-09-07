@@ -91,11 +91,24 @@ class TestEveryLanguage:
             assert text.strip(), key
 
 
-def test_german_no_longer_mixes_sie_and_du() -> None:
-    """Ronde 21: het Duits trekt alle `Sie`-vormen naar `du`."""
+@pytest.mark.parametrize("formal", ["Sie", "Ihr", "Ihre", "Ihnen"])
+def test_german_no_longer_mixes_formal_and_du(formal: str) -> None:
+    """Ronde 21: het Duits trekt alle formele vormen naar `du`; C3 verbreedt dat.
+
+    De bewaking keek eerst alleen naar het losse woord `Sie`. Het Duits kent
+    zijn formele aanspreekvorm net zo goed in `Ihr`, `Ihre` en `Ihnen`, dus wie
+    alleen op `Sie` let, laat die drie erlangs glippen. Daarom hier het hele
+    rijtje, als parametrisatie.
+
+    Round 21: the German pulls every formal form towards `du`; C3 broadens that.
+    The guard first looked only at the word `Sie`. German knows its formal
+    address just as well in `Ihr`, `Ihre` and `Ihnen`, so a guard that only
+    watches `Sie` lets those three slip through. Hence the whole row here, as a
+    parametrisation.
+    """
     texts = leaves(load(TRANSLATIONS / "de.json"))
     for key, text in texts.items():
-        assert not re.search(r"\bSie\b", text), key
+        assert not re.search(rf"\b{formal}\b", text), key
     assert sum(len(re.findall(r"\bdu\b", text)) for text in texts.values()) > 0
 
 
