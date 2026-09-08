@@ -1,3 +1,8 @@
+[project]
+name = "ha-climate-director"
+version = "7.4.2"
+requires-python = ">=3.13"
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 asyncio_mode = "auto"
@@ -26,3 +31,7 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+strict = true
+
