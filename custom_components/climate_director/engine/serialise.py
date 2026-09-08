@@ -28,6 +28,7 @@ from collections.abc import Mapping
 from datetime import time
 from typing import Any
 
+from .fields import GATES_FLAT_FIELDS, GUEST_WINDOW_FIELDS, target_key
 from .models import (
     Circuit,
     ConflictPolicy,
@@ -108,7 +109,7 @@ def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
         "generators": [_generator_to_dict(item) for item in config.generators],
         "exclusive_groups": [sorted(group) for group in config.exclusive_groups],
         "gates": {
-            "require_awake": config.gates.require_awake,
+            **_gates_flat_to_dict(config.gates),
             "quiet_windows": [
                 {
                     "start": window.start.isoformat(),
@@ -125,16 +126,7 @@ def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
                 }
                 for window in config.gates.quiet_windows
             ],
-            "require_schedule": config.gates.require_schedule,
-            "max_precondition": int(config.gates.max_precondition.total_seconds()),
-            "guest_window": (
-                None
-                if config.gates.guest_window is None
-                else {
-                    "start": config.gates.guest_window.start.isoformat(),
-                    "end": config.gates.guest_window.end.isoformat(),
-                }
-            ),
+            "guest_window": _guest_window_to_dict(config.gates.guest_window),
         },
         "seasons": {
             "source": config.seasons.source.value,
@@ -325,18 +317,60 @@ def _generator(raw: Mapping[str, Any]) -> Generator:
 def _gates(raw: Any) -> GateSettings:
     if not isinstance(raw, Mapping):
         return GateSettings()
+    flat = {
+        target_key(field): _parse_leaf(field, raw.get(target_key(field)))
+        for field in GATES_FLAT_FIELDS
+    }
     guest = raw.get("guest_window")
     return GateSettings(
-        require_awake=_bool(raw.get("require_awake"), True),
+        require_awake=flat["require_awake"],
         quiet_windows=tuple(
             _time_window(item)
             for item in _sequence(raw.get("quiet_windows"))
             if isinstance(item, dict)
         ),
-        require_schedule=_bool(raw.get("require_schedule"), False),
+        require_schedule=flat["require_schedule"],
         guest_window=_guest_window(guest if isinstance(guest, dict) else {}),
-        max_precondition=_seconds(raw.get("max_precondition"), 7200.0),
+        max_precondition=flat["max_precondition"],
     )
+
+
+def _parse_leaf(field, stored: Any) -> Any:
+    """Return one table field as the value its dataclass expects.
+
+    De vergevingsgezindheid zit in de bestaande helpers, niet hier.
+    The forgivingness sits in the existing helpers, not here.
+    """
+    if field.kind == "bool":
+        return _bool(stored, field.default)
+    if field.kind == "seconds":
+        return _seconds(stored, field.default)
+    if field.kind == "number":
+        if field.unit in ("minutes", "minutes_or_off"):
+            return _seconds(stored, field.default)
+        return _float(stored, field.default)
+    if field.kind == "time":
+        return _time(stored, time(0, 0))
+    if field.kind == "weekdays":
+        return _weekdays(stored)
+    raise AssertionError(f"onbekend veldtype {field.kind!r} voor {field.key}")
+
+
+def _write_leaf(field, value: Any) -> Any:
+    """Return one dataclass value as the plain data the entry stores."""
+    if field.kind == "bool":
+        return value
+    if field.kind == "seconds" or (
+        field.kind == "number" and field.unit in ("minutes", "minutes_or_off")
+    ):
+        return int(value.total_seconds())
+    if field.kind == "time":
+        return value.isoformat()
+    if field.kind == "weekdays":
+        return None if value is None else sorted(value)
+    if field.kind == "number":
+        return value
+    raise AssertionError(f"onbekend veldtype {field.kind!r} voor {field.key}")
 
 
 def _guest_window(raw: dict[str, Any]) -> TimeWindow | None:
@@ -344,11 +378,48 @@ def _guest_window(raw: dict[str, Any]) -> TimeWindow | None:
 
     Half een venster is geen venster: dan geldt de gastenmodus de hele dag.
     Half a window is no window: guest mode then applies all day.
+
+    De bladeren (start, eind en dagen) komen uit de veldtabel, zodat een nieuw
+    gastenvensterveld één rij is in `engine/fields.py` in plaats van een
+    wijziging hier én in het formulier.
+
+    The leaves (start, end and days) come from the field table, so a new guest
+    window field is one row in `engine/fields.py` instead of a change here and
+    one in the form.
     """
-    start, end = raw.get("start"), raw.get("end")
+    if not isinstance(raw, Mapping):
+        return None
+    leaves = {target_key(field): raw.get(target_key(field)) for field in GUEST_WINDOW_FIELDS}
+    start, end = leaves.get("start"), leaves.get("end")
     if not start or not end:
         return None
-    return TimeWindow(start=_time(start, time(0, 0)), end=_time(end, time(0, 0)))
+    values = {
+        target_key(field): _parse_leaf(field, leaves[target_key(field)])
+        for field in GUEST_WINDOW_FIELDS
+    }
+    return TimeWindow(
+        start=values["start"],
+        end=values["end"],
+        weekdays=values.get("weekdays"),
+    )
+
+
+def _guest_window_to_dict(window: TimeWindow | None) -> dict[str, Any] | None:
+    """Return the guest window as stored data, days included."""
+    if window is None:
+        return None
+    return {
+        target_key(field): _write_leaf(field, getattr(window, target_key(field)))
+        for field in GUEST_WINDOW_FIELDS
+    }
+
+
+def _gates_flat_to_dict(gates: GateSettings) -> dict[str, Any]:
+    """Return the flat gates fields as stored data, from the field table."""
+    return {
+        target_key(field): _write_leaf(field, getattr(gates, target_key(field)))
+        for field in GATES_FLAT_FIELDS
+    }
 
 
 def _sleep_window(raw: dict[str, Any]) -> TimeWindow | None:
