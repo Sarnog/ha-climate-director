@@ -128,24 +128,24 @@ def function_sizes(root: Path | None = None) -> dict[tuple[str, str], int]:
 
     `ast.walk` ziet geneste functies en `AsyncFunctionDef` net zo goed als
     `FunctionDef`. Bestaan er twee functies met dezelfde naam in één bestand,
-    dan telt de langste.
+    dan tellen ze apart, met het regelnummer in de sleutel.
 
     Measure every function as `end_lineno - lineno + 1`, through `ast.walk`.
     `ast.walk` sees nested functions and `AsyncFunctionDef` just as well as
-    `FunctionDef`. When two functions share a name in one file, the longest
-    counts.
+    `FunctionDef`. When two functions share a name in one file, they count
+    separately, with the line number in the key.
     """
     if root is None:
         root = PACKAGE_ROOT
-    sizes: dict[tuple[str, str], int] = {}
+    sizes: dict[tuple[str, str, int], int] = {}
     for path in _python_files(root):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         rel = path.relative_to(root).as_posix()
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                key = (rel, node.name)
+                key = (rel, node.name, node.lineno)
                 lines = node.end_lineno - node.lineno + 1
-                sizes[key] = max(sizes.get(key, 0), lines)
+                sizes[key] = lines
     return sizes
 
 
@@ -197,7 +197,10 @@ def test_the_measure_is_a_ratchet() -> None:
             )
 
     for key, noted in sorted(FUNCTION_EXCEPTIONS.items()):
-        actual = functions.get(key)
+        actual = max(
+            (lines for (rel, name, _lineno), lines in functions.items() if (rel, name) == key),
+            default=None,
+        )
         label = f"{key[0]}::{key[1]}"
         if actual is None:
             problems.append(
@@ -207,8 +210,8 @@ def test_the_measure_is_a_ratchet() -> None:
             problems.append(_drift_note("functie", label, noted, actual, FUNCTION_LIMIT))
 
     for key, actual in functions.items():
-        if actual > FUNCTION_LIMIT and key not in FUNCTION_EXCEPTIONS:
-            label = f"{key[0]}::{key[1]}"
+        if actual > FUNCTION_LIMIT and (key[0], key[1]) not in FUNCTION_EXCEPTIONS:
+            label = f"{key[0]}::{key[1]}@{key[2]}"
             problems.append(
                 f"functie {label}: {actual} regels, boven de {FUNCTION_LIMIT} en niet genoteerd — "
                 "de maat mag niet groeien"
