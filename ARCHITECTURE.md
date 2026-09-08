@@ -179,6 +179,7 @@ config_flow.py         wizard; schrijft één dict in entry.options
       │
       ▼
 engine/serialise.py    dict → dataclasses (puur, vergevingsgezind)
+engine/fields.py       declaratieve veldtabel (naam, type, standaard, vertaling, doel)
       │
       ▼
 Home Assistant (entiteitstoestanden, klokgebeurtenissen)
@@ -882,6 +883,24 @@ gedrag — de volledige suite bleef bij elke stap even groen als ervoor, met
 `python tests/measure_short_cycles.py` onveranderd op **OK**. Wat de maat voortaan
 vasthoudt is de bewaking hierboven (`tests/test_the_measure.py`), niet dit document.
 
+**De veldtabel (ronde 23).** Eén instelling toevoegen raakte nog steeds te veel
+plaatsen: de dataclass in `engine/models.py`, lezen en schrijven in
+`engine/serialise.py`, het formulier in `schemas.py`, de opslag in `config_flow.py`,
+en bij een veld met bedieningstoestand ook de verbruiker in de engine — plus de zeven
+tekstbestanden. Dat is de fabriek van "op het ene pad gerepareerd, op het pad ernaast
+vergeten". Sinds ronde 23 is de ketting voor het instellingenscherm korter:
+`engine/fields.py` draagt één declaratieve veldtabel per scherm — naam, type,
+standaard, vertaalsleutel en doel in het model — en zowel `schemas.py` (het
+formulier) als `engine/serialise.py` (de opslag van dat scherm) lezen daaruit. De
+tabel woont bewust in `engine/`, zodat `serialise.py` haar met een gewone import
+binnen het pakket leest en de engine-grens heel blijft; daarom staat er geen enkele
+selector en geen `vol.Schema` in — die vertaling kent alleen `schemas.py`. Het
+instellingenscherm is de eerste tabel; nieuwe schermen volgen hetzelfde patroon. De
+bewakingen die de formulierbron met een AST lezen (`form_field_nodes` en de
+veldenkaarten) zijn meeverhuisd: een veld in de tabel telt als een veld in het
+schema, en een `schemas.<naam>` die niet bestaat is een fout in plaats van een
+stille lege kaart.
+
 ### De bewakingen bewaken — en daar houdt het op
 
 De testset bewaakt de integratie; `tests/test_the_guards_themselves.py` bewaakt
@@ -1068,6 +1087,7 @@ config_flow.py         wizard; writes one dict into entry.options
       │
       ▼
 engine/serialise.py    dict → dataclasses (pure, forgiving)
+engine/fields.py       declarative field table (name, type, default, translation, target)
       │
       ▼
 Home Assistant (entity states, clock events)
@@ -1757,6 +1777,22 @@ The plan has been carried out: S1 through S6 are on `main`, and moving code chan
 behaviour — the full suite stayed exactly as green at every step, with
 `python tests/measure_short_cycles.py` unchanged at **OK**. What holds the measure from
 now on is the guard above (`tests/test_the_measure.py`), not this document.
+
+**The field table (round 23).** Adding one setting still touched too many places: the
+dataclass in `engine/models.py`, reading and writing in `engine/serialise.py`, the form
+in `schemas.py`, the storage in `config_flow.py`, and — for a field carrying control
+state — also the consumer in the engine, plus the seven translation files. That is the
+factory of "fixed on one path, forgotten on the one beside it". Since round 23 the
+chain is shorter for the settings screen: `engine/fields.py` carries one declarative
+field table per screen — name, type, default, translation key and target in the model —
+and both `schemas.py` (the form) and `engine/serialise.py` (that screen's storage) read
+from it. The table deliberately lives in `engine/`, so `serialise.py` reads it with an
+ordinary import within the package and the engine border stays intact; therefore it
+contains no selector and no `vol.Schema` — that translation belongs to `schemas.py`
+alone. The settings screen is the first table; new screens follow the same pattern. The
+guards that read the form source with an AST (`form_field_nodes` and the field maps)
+moved along with it: a field in the table counts as a field in the schema, and a
+`schemas.<name>` that does not exist is an error rather than a silently empty map.
 
 ### The guards are guarded — and there it stops
 
