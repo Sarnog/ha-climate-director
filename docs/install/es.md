@@ -794,6 +794,30 @@ una automatización se apoya en ese evento.
   la última instantánea leída y el último plan. Con esos tres, cualquier
   decisión es exactamente reproducible.
 
+## Limitaciones conocidas
+
+- Esta integración **aún no ha funcionado en producción en ningún sitio**. El
+  modo sombra existe precisamente para eso: deja que el director observe unas
+  semanas antes de que pueda conmutar nada, y juzga cada ronda con la prueba en
+  modo sombra.
+- Un aparato **sin circuito** puede tener su propio tiempo de reposo desde la
+  7.4.2 (`min_cycle_time` por fuente). No se rellena solo: ajústalo a mano en
+  cada fuente sin circuito.
+- Un sensor interior por zona: toda la zona sigue esa única lectura.
+- El secado no es una tarea propia del director.
+- La lluvia cuenta como sí/no: no hay umbral.
+
+## Casos de uso
+
+La integración conoce tres formas:
+
+1. **Gas por zona.** Cada zona tiene su propia caldera o estufa de gas como
+   fuente.
+2. **Un multi-split.** Varias zonas cuelgan del mismo circuito de aire
+   acondicionado, con una prioridad por zona.
+3. **La combinación.** Circuitos de aire acondicionado para las habitaciones,
+   una fuente de calor compartida (una caldera, por ejemplo) para el resto.
+
 ## Idiomas
 
 La explicación bajo cada campo sigue el idioma de tu Home Assistant.

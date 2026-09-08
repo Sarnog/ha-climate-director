@@ -800,6 +800,29 @@ Automatisierung auf diesem Ereignis steht.
   Konfiguration, den zuletzt gelesenen Schnappschuss und den letzten Plan. Mit
   diesen dreien ist jede Entscheidung exakt nachvollziehbar.
 
+## Bekannte Einschränkungen
+
+- Diese Integration ist **noch nirgendwo in Produktion gelaufen**. Genau dafür
+  gibt es den Schattenmodus: Lass den Director einige Wochen zusehen, bevor er
+  etwas schalten darf, und beurteile jede Runde anhand des Schattenlaufs.
+- Ein Gerät **ohne Kreis** kann seit 7.4.2 eine eigene Ruhezeit haben
+  (`min_cycle_time` pro Quelle). Sie füllt sich nicht von selbst: Trage sie bei
+  jeder Quelle ohne Kreis von Hand ein.
+- Ein Innensensor pro Zone: Die ganze Zone folgt dieser einen Messung.
+- Trocknen ist keine eigene Aufgabe des Directors.
+- Niederschlag zählt als Ja/Nein: Es gibt keinen Schwellenwert.
+
+## Anwendungsfälle
+
+Die Integration kennt drei Formen:
+
+1. **Gas pro Zone.** Jede Zone hat ihren eigenen Kessel oder Gasheizer als
+   Quelle.
+2. **Ein Multi-Split.** Mehrere Zonen hängen am selben Klimakreis, mit einer
+   Priorität pro Zone.
+3. **Die Kombination.** Klimakreise für die Zimmer, eine gemeinsame Wärmequelle
+   (etwa ein Kessel) für den Rest.
+
 ## Sprachen
 
 Die Erklärung unter jedem Eingabefeld folgt der Sprache deines Home Assistant.

@@ -811,6 +811,30 @@ automatisation repose sur cet événement.
   configuration, le dernier instantané lu et le dernier plan. Avec ces trois
   éléments, toute décision est exactement reproductible.
 
+## Limites connues
+
+- Cette intégration **n'a encore tourné nulle part en production**. Le mode
+  fantôme existe précisément pour cela : laisse le directeur observer pendant
+  quelques semaines avant qu'il n'ait le droit de commuter quoi que ce soit, et
+  juge chaque tour d'après la période fantôme.
+- Un appareil **sans circuit** peut avoir son propre temps de repos depuis la
+  7.4.2 (`min_cycle_time` par source). Il ne se remplit pas tout seul :
+  règle-le à la main sur chaque source sans circuit.
+- Un capteur intérieur par zone : toute la zone suit cette seule mesure.
+- Le séchage n'est pas une tâche propre du directeur.
+- La pluie compte en oui/non : il n'y a pas de seuil.
+
+## Cas d'utilisation
+
+L'intégration connaît trois formes :
+
+1. **Gaz par zone.** Chaque zone a sa propre chaudière ou son poêle à gaz comme
+   source.
+2. **Un multi-split.** Plusieurs zones pendent au même circuit de
+   climatisation, avec une priorité par zone.
+3. **La combinaison.** Des circuits de climatisation pour les pièces, une
+   source de chaleur partagée (une chaudière, par exemple) pour le reste.
+
 ## Langues
 
 L'explication sous chaque champ suit la langue de votre Home Assistant.

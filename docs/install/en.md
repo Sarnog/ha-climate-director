@@ -780,6 +780,28 @@ automation stands on that event.
   the last snapshot read and the last plan. With those three, any decision is
   exactly reproducible.
 
+## Known limitations
+
+- This integration has **not run in production anywhere yet**. Shadow mode
+  exists precisely for that: let the director watch along for a few weeks
+  before it may switch anything, and judge every round by the shadow run.
+- An appliance **without a circuit** can have its own rest time since 7.4.2
+  (`min_cycle_time` per source). It is not filled in automatically: set it by
+  hand on every source without a circuit.
+- One indoor sensor per zone: the whole zone follows that single reading.
+- Drying laundry is not a task of its own for the director.
+- Precipitation counts as yes/no: there is no threshold.
+
+## Use cases
+
+The integration knows three shapes:
+
+1. **Gas per zone.** Every zone has its own boiler or gas heater as source.
+2. **One multi-split.** Several zones hang on the same air-conditioning
+   circuit, with a priority per zone.
+3. **The combination.** Air-conditioning circuits for the rooms, one shared
+   heat source (a boiler, say) for the rest.
+
 ## Languages
 
 The explanation under every input follows your Home Assistant's language.

@@ -788,6 +788,29 @@ automatisering op die gebeurtenis staat.
   laatst gelezen momentopname en het laatste plan. Met die drie is elke
   beslissing exact na te spelen.
 
+## Bekende beperkingen
+
+- Deze integratie heeft **nog nergens in productie gedraaid**. De schaduwmodus
+  bestaat precies daarvoor: laat de director een paar weken meekijken voordat
+  hij iets mag schakelen, en beoordeel elke ronde aan de hand van de
+  schaduwrun.
+- Een apparaat **zonder circuit** kan sinds versie 7.4.2 een eigen rusttijd
+  hebben (`min_cycle_time` per bron). Die wordt niet vanzelf ingevuld: stel hem
+  met de hand in bij elke bron zonder circuit.
+- Eén binnensensor per zone: de hele zone volgt die ene meting.
+- Droogstand is geen eigen taak van de director.
+- Neerslag telt als ja/nee: er is geen drempelwaarde.
+
+## Gebruiksscenario's
+
+De integratie kent drie vormen:
+
+1. **Gas per zone.** Elke zone heeft een eigen cv-ketel of gaskachel als bron.
+2. **Eén multi-split.** Meerdere zones hangen aan hetzelfde airco-circuit, met
+   een prioriteit per zone.
+3. **De combinatie.** Airco-circuits voor de kamers, een gedeelde warmtebron
+   (zoals een ketel) voor de rest.
+
 ## Talen
 
 De uitleg onder elk invoerveld volgt de taal van je Home Assistant.
