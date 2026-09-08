@@ -243,25 +243,26 @@ class TestTheHelperOnItsOwn:
 
 
 class TestReachableSourcesAreNeverReported:
-    """C2: een bereikbare, niet geweigerde eerste keus hoort niet in `passed_over`.
+    """C2: een bereikbare eerste keus hoort alleen in `passed_over` als hij overgeslagen is.
 
-    C2: a reachable, not refused first choice does not belong in `passed_over`.
+    C2: a reachable first choice belongs in `passed_over` only when it was skipped.
     """
 
     @pytest.mark.parametrize(
-        ("blocked", "serving", "margin", "outdoor"),
+        ("blocked", "serving", "margin", "outdoor", "expected"),
         [
-            (frozenset({"climate.first"}), None, 0.0, 5.0),
-            (frozenset(), "second", 0.5, 10.3),
+            (frozenset({"climate.first"}), None, 0.0, 5.0, ("first",)),
+            (frozenset(), "second", 0.5, 10.3, ()),
         ],
         ids=["huisbreed-stilgezet", "dode-band-houdt-de-reserve"],
     )
-    def test_a_reachable_first_choice_is_never_reported(
+    def test_a_reachable_first_choice_is_reported_only_when_skipped(
         self,
         blocked: frozenset[str],
         serving: str | None,
         margin: float,
         outdoor: float,
+        expected: tuple[str, ...],
     ) -> None:
         zone = Zone(
             zone_id="living_room",
@@ -300,7 +301,7 @@ class TestReachableSourcesAreNeverReported:
             margin=margin,
             blocked=blocked,
         )
-        assert found == ()
+        assert found == expected
 
 
 class TestAnApplianceCanRestWithoutACircuit:
@@ -534,6 +535,100 @@ class TestTheCircuitRefusedZoneTriesItsNextSource:
         commands = {command.entity_id: command for command in plan.commands}
         assert commands[STOVE].hvac_mode == MODE_OFF
         assert commands[STOVE].reason is Reason.OPENING_OPEN_ELSEWHERE
+
+
+def _zolder_with_a_blocked_middle() -> Zone:
+    """De zolder van `_refused_world`, met een huisbreed stilgezette ketel ertussen.
+
+    The attic from `_refused_world`, with a house-wide stopped boiler in between.
+    """
+    return Zone(
+        zone_id="zolder",
+        name="Zolder",
+        indoor_sensor="sensor.zolder",
+        priority=1,
+        sources=(
+            Source(
+                source_id="warmtepomp",
+                entity_id=PUMP,
+                priority=0,
+                role=SourceRole.HEAT_COOL,
+                outdoor=OutdoorWindow(minimum=3.1),
+            ),
+            Source(source_id="ketel", entity_id=GAS, priority=1, role=SourceRole.HEAT_ONLY),
+            Source(source_id="kachel", entity_id=STOVE, priority=2, role=SourceRole.HEAT_ONLY),
+        ),
+        heat=HEAT,
+    )
+
+
+def _blocked_middle_world(*, opening_elsewhere: bool) -> tuple[DirectorConfig, object]:
+    """Een circuitconflict weigert de warmtepomp; de ketel is huisbreed stilgezet.
+
+    De ketel staat stil doordat een raam elders openstaat, dus de kachel neemt
+    het over. Met `opening_elsewhere=False` is het raam van de zolder zelf open:
+    dat is een gewone raampoort, en daar hoort de uitwijking niet bij te
+    knipperen.
+
+    A circuit conflict refuses the heat pump; the boiler is stopped house-wide.
+    The boiler stands still because a window elsewhere is open, so the stove
+    takes over. With `opening_elsewhere=False` the attic's own window is open:
+    that is an ordinary window gate, and the fallback should not blink for it.
+    """
+    opening = (
+        Opening("binary_sensor.dakraam", zone_ids=("hal",), delay=timedelta(0))
+        if opening_elsewhere
+        else Opening("binary_sensor.dakraam", zone_ids=("zolder",), delay=timedelta(0))
+    )
+    config = DirectorConfig(
+        zones=(_living_room(priority=0), _zolder_with_a_blocked_middle()),
+        circuits=(
+            Circuit(
+                "buitenunit",
+                "Buitenunit",
+                units=(PUMP, "climate.woonkamer"),
+                max_concurrent_units=1,
+            ),
+        ),
+        openings=(opening,),
+        house_wide_openings=(GAS,),
+        outdoor_sensor="sensor.buiten",
+        outdoor_hysteresis=0.5,
+    )
+    world = make_world(
+        now=NOW,
+        outdoor=4.0,
+        indoor={"woonkamer": 18.0, "zolder": 18.0},
+        climates={
+            PUMP: climate("off"),
+            GAS: climate("off"),
+            STOVE: climate("off"),
+            "climate.woonkamer": climate("heat"),
+        },
+        openings={
+            "binary_sensor.dakraam": OpeningState(open=True, changed_at=NOW - timedelta(hours=1))
+        },
+    )
+    return config, world
+
+
+class TestABlockedSourceCountsAsPassedOver:
+    """C14: een huisbreed stilgezette bron telt als uitwijking.
+
+    C14: a house-wide stopped source counts as a fallback.
+    """
+
+    @pytest.mark.parametrize("opening_elsewhere", [True, False])
+    def test_the_fallback_reporter_names_the_blocked_source(self, opening_elsewhere: bool) -> None:
+        config, world = _blocked_middle_world(opening_elsewhere=opening_elsewhere)
+        plan = decide(config, world)
+        decision = plan.decision_for("zolder")
+        assert decision is not None
+        if opening_elsewhere:
+            assert decision.source_id == "kachel"
+            assert decision.passed_over == ("warmtepomp", "ketel")
+        else:
+            assert decision.passed_over == ()
 
 
 NO_SOURCE_HEAT = ModeSettings(target=21.0, start_at=20.0, hysteresis=1.0)

@@ -59,6 +59,7 @@ from custom_components.climate_director.engine import (
     SourceRole,
     TimeWindow,
     Zone,
+    gates,
     validate,
 )
 from custom_components.climate_director.engine.models import SeasonSettings
@@ -234,9 +235,14 @@ def _the_stand_in_is_never_worse(config, world, plan, where: str) -> None:
             if source is None:
                 continue
             refused = plan.refused_by_circuit.get(decision.zone_id, frozenset())
-            assert not world.climate(source.entity_id).available or source.entity_id in refused, (
-                f"{where}: {entity_id} werd overgeslagen terwijl hij bereikbaar was "
-                "en niet door het circuit geweigerd"
+            blocked = gates.house_wide_blocked(config, world)
+            assert (
+                not world.climate(source.entity_id).available
+                or source.entity_id in refused
+                or source.entity_id in blocked
+            ), (
+                f"{where}: {entity_id} werd overgeslagen terwijl hij bereikbaar was, "
+                "niet door het circuit geweigerd en niet huisbreed stilgezet"
             )
 
     # Een apparaat dat niet te bereiken is, krijgt nooit een opdracht.

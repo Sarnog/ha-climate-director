@@ -140,9 +140,10 @@ def passed_over(
 
     Deze functie noemt wat er overgeslagen is: bronnen die op geschiktheid en
     buitentemperatuur wél aan de beurt waren, maar niet kunnen leveren - omdat
-    ze onbereikbaar zijn, of omdat het circuit ze deze ronde weigerde (`refused`)
-    - en die voorrang hebben op wat er nu draait. Wat niet gekozen werd omdat een
-    ander apparaat gewoon beter past, staat er dus niet bij - dat is geen storing.
+    ze onbereikbaar zijn, omdat het circuit ze deze ronde weigerde (`refused`),
+    of omdat een opening elders in huis ze stilzet (`blocked`) - en die voorrang
+    hebben op wat er nu draait. Wat niet gekozen werd omdat een ander apparaat
+    gewoon beter past, staat er dus niet bij - dat is geen storing.
 
     If the gas boiler drops out the air conditioner takes over - `select()`
     already arranges that, since an unreachable appliance is no candidate. Only:
@@ -152,9 +153,10 @@ def passed_over(
 
     This function names what was skipped: sources that on suitability and
     outdoor temperature were up next, but cannot deliver - because they are
-    unreachable, or because the circuit refused them this round (`refused`) -
-    and that outrank what is running now. What was not chosen because another
-    appliance simply fits better is therefore absent - that is no fault.
+    unreachable, because the circuit refused them this round (`refused`), or
+    because an opening elsewhere in the house stops them (`blocked`) - and that
+    outrank what is running now. What was not chosen because another appliance
+    simply fits better is therefore absent - that is no fault.
     """
     chosen = select(zone, family, world, serving, margin, blocked, excluding=refused)
     if chosen is None:
@@ -165,7 +167,11 @@ def passed_over(
         for source in sorted(zone.sources, key=lambda item: (item.priority, item.source_id))
         if (source.priority, source.source_id) < rank
         and _suitable(source, family, world)
-        and (not world.climate(source.entity_id).available or source.entity_id in refused)
+        and (
+            not world.climate(source.entity_id).available
+            or source.entity_id in refused
+            or source.entity_id in blocked
+        )
     )
 
 
