@@ -16,20 +16,28 @@ from __future__ import annotations
 from typing import Any
 
 import voluptuous as vol
-from homeassistant.const import UnitOfTemperature
 from homeassistant.helpers import selector
 
 from . import texts
 from .const import CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE
+from .engine.fields import SETTINGS_FIELDS
 from .engine.models import (
     ConflictPolicy,
-    HeatingLayout,
-    PrecipitationSettings,
     Season,
-    SeasonSettings,
-    SeasonSource,
     SourceRole,
     ZoneGate,
+)
+from .schema_fields import (
+    _CLIMATE,
+    _CLIMATE_MULTI,
+    _RANK,
+    _SECONDS,
+    _TEXT,
+    _TIME,
+    _band,
+    _choices,
+    _table_schema,
+    _temperature,
 )
 from .units import (
     rounded_delta_from_celsius,
@@ -67,142 +75,6 @@ _ADD_FALLBACK = {
 #: `translation_key="weekday"`, so the interface puts the user's language there.
 #: They live in `texts.py`, since the list lines read them too.
 _WEEKDAYS = texts.WEEKDAYS
-
-#: Zomermaanden per halfrond, als maandnummers 1-12. De engine telt
-#: april-september als zomer; wie op het zuidelijk halfrond woont, krijgt
-#: oktober-maart. De noordelijke standaard komt uit de engine, zodat hij hier
-#: niet stilletjes uit de pas kan lopen.
-#:
-#: Summer months per hemisphere, as month numbers 1-12. The engine counts
-#: April-September as summer; the southern hemisphere gets October-March. The
-#: northern default comes from the engine, so it cannot drift apart here.
-_SUMMER_NORTH = SeasonSettings().summer_months
-_SUMMER_SOUTH = frozenset({1, 2, 3, 10, 11, 12})
-
-
-def _hemisphere(months: Any) -> str:
-    """Return which hemisphere a stored summer-months set describes.
-
-    Alles wat niet precies het zuidelijke rijtje is, telt als noordelijk. Dat is
-    de veilige kant: een handmatig bewerkte of half geschreven waarde valt
-    terug op de standaard in plaats van de wizard te laten struikelen.
-
-    Anything that is not exactly the southern row counts as northern. That is
-    the safe side: a hand-edited or half-written value falls back on the
-    default rather than tripping the wizard up.
-    """
-    try:
-        return "south" if frozenset(int(month) for month in months) == _SUMMER_SOUTH else "north"
-    except (TypeError, ValueError):
-        return "north"
-
-
-def _temperature(unit: str) -> selector.NumberSelector:
-    """Return a temperature selector in the user's unit.
-
-    De engine bewaart alles in graden Celsius; het formulier toont de eenheid
-    van Home Assistant. In Fahrenheit is hetzelfde zinnige bereik -20..40 °C
-    precies -4..104 °F.
-
-    The engine stores everything in degrees Celsius; the form shows Home
-    Assistant's unit. In Fahrenheit the same sensible -20..40 °C range is
-    exactly -4..104 °F.
-    """
-    if unit == UnitOfTemperature.FAHRENHEIT:
-        return selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=-4,
-                max=104,
-                step=1,
-                unit_of_measurement="°F",
-                mode=selector.NumberSelectorMode.BOX,
-            )
-        )
-    return selector.NumberSelector(
-        selector.NumberSelectorConfig(
-            min=-20,
-            max=40,
-            step=0.5,
-            unit_of_measurement="°C",
-            mode=selector.NumberSelectorMode.BOX,
-        )
-    )
-
-
-def _band(unit: str) -> selector.NumberSelector:
-    """Return a temperature-band selector in the user's unit.
-
-    Een band is een verschil, dus in Fahrenheit telt alleen de schaalfactor:
-    0..10 °C is 0..18 °F.
-
-    A band is a difference, so in Fahrenheit only the scale factor counts:
-    0..10 °C is 0..18 °F.
-    """
-    if unit == UnitOfTemperature.FAHRENHEIT:
-        return selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0,
-                max=18,
-                step=0.2,
-                unit_of_measurement="°F",
-                mode=selector.NumberSelectorMode.BOX,
-            )
-        )
-    return selector.NumberSelector(
-        selector.NumberSelectorConfig(
-            min=0,
-            max=10,
-            step=0.1,
-            unit_of_measurement="°C",
-            mode=selector.NumberSelectorMode.BOX,
-        )
-    )
-
-
-_MINUTES_OR_OFF = selector.NumberSelector(
-    selector.NumberSelectorConfig(
-        min=0, max=240, step=1, unit_of_measurement="min", mode=selector.NumberSelectorMode.BOX
-    )
-)
-
-_MINUTES = selector.NumberSelector(
-    selector.NumberSelectorConfig(
-        min=1, max=480, step=1, unit_of_measurement="min", mode=selector.NumberSelectorMode.BOX
-    )
-)
-
-_SECONDS = selector.NumberSelector(
-    selector.NumberSelectorConfig(min=0, max=3600, step=1, mode=selector.NumberSelectorMode.BOX)
-)
-_RANK = selector.NumberSelector(
-    selector.NumberSelectorConfig(min=0, max=99, step=1, mode=selector.NumberSelectorMode.BOX)
-)
-_CLIMATE = selector.EntitySelector(selector.EntitySelectorConfig(domain="climate"))
-_CLIMATE_MULTI = selector.EntitySelector(
-    selector.EntitySelectorConfig(domain="climate", multiple=True)
-)
-_TEXT = selector.TextSelector()
-_TIME = selector.TimeSelector()
-
-
-def _choices(values: list[str], key: str = "") -> selector.SelectSelector:
-    """Return a dropdown over plain string values.
-
-    Met een vertaalsleutel toont Home Assistant de vertaalde namen in plaats van
-    de opgeslagen waarden. Zonder sleutel blijft het bij de waarde zelf, wat voor
-    een lijst die al leesbaar is genoeg is.
-
-    With a translation key Home Assistant shows translated names instead of the
-    stored values. Without one the value itself shows, which is enough for a list
-    that reads well already.
-    """
-    return selector.SelectSelector(
-        selector.SelectSelectorConfig(
-            options=values,
-            mode=selector.SelectSelectorMode.DROPDOWN,
-            translation_key=key or None,
-        )
-    )
 
 
 def _back_option() -> selector.SelectOptionDict:
@@ -333,95 +205,20 @@ def save() -> vol.Schema:
 
 
 def settings(flow: Any) -> vol.Schema:
-    """Return the general settings schema from the current installation."""
-    installation = flow._installation
-    seasons = installation.get("seasons") or {}
-    gates = installation.get("gates") or {}
-    guest = gates.get("guest_window") or {}
-    precipitation = installation.get("precipitation") or {}
-    unit = temperature_unit_of(flow.hass)
-    return vol.Schema(
-        {
-            vol.Optional(
-                "outdoor_sensor",
-                description={"suggested_value": installation.get("outdoor_sensor") or None},
-            ): selector.EntitySelector(selector.EntitySelectorConfig(domain=["sensor", "weather"])),
-            vol.Required(
-                "outdoor_hysteresis",
-                default=rounded_delta_from_celsius(
-                    float(installation.get("outdoor_hysteresis", 0.5)), unit
-                ),
-            ): _band(unit),
-            vol.Required(
-                "heating_layout",
-                default=installation.get("heating_layout", HeatingLayout.PER_ZONE.value),
-            ): _choices([item.value for item in HeatingLayout], "heating_layout"),
-            vol.Required(
-                "season_source", default=seasons.get("source", SeasonSource.AUTO.value)
-            ): _choices([item.value for item in SeasonSource], "season_source"),
-            vol.Optional(
-                "season_entity",
-                description={"suggested_value": seasons.get("entity_id") or None},
-            ): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain=["sensor", "input_select", "select", "season"])
-            ),
-            vol.Required(
-                "hemisphere",
-                default=_hemisphere(seasons.get("summer_months")),
-            ): _choices(["north", "south"], "hemisphere"),
-            vol.Required("require_awake", default=gates.get("require_awake", True)): bool,
-            vol.Required("require_schedule", default=gates.get("require_schedule", False)): bool,
-            vol.Optional(
-                "holiday_calendars",
-                description={"suggested_value": installation.get("holiday_calendars") or None},
-            ): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain="calendar", multiple=True)
-            ),
-            vol.Optional(
-                "holiday_keyword",
-                description={"suggested_value": installation.get("holiday_keyword") or None},
-            ): str,
-            vol.Required(
-                "max_precondition",
-                default=int(gates.get("max_precondition", 7200)) // 60,
-            ): _MINUTES,
-            vol.Optional(
-                "guest_start",
-                description={"suggested_value": guest.get("start") or None},
-            ): _TIME,
-            vol.Optional(
-                "guest_end",
-                description={"suggested_value": guest.get("end") or None},
-            ): _TIME,
-            vol.Required(
-                "stuck_after",
-                default=int(installation.get("stuck_after", 900)) // 60,
-            ): _MINUTES_OR_OFF,
-            vol.Optional(
-                "precipitation_source",
-                description={"suggested_value": precipitation.get("source") or None},
-            ): selector.EntitySelector(selector.EntitySelectorConfig(domain=["weather", "sensor"])),
-            vol.Required(
-                "precipitation_states",
-                default=", ".join(
-                    precipitation.get("states") or sorted(PrecipitationSettings().states)
-                ),
-            ): _TEXT,
-            vol.Required(
-                "precipitation_grace",
-                default=int(
-                    precipitation.get("grace", PrecipitationSettings().grace.total_seconds())
-                )
-                // 60,
-            ): _MINUTES,
-            vol.Required(
-                CONF_SHADOW_MODE,
-                default=(
-                    flow._shadow_mode if flow._shadow_mode is not None else DEFAULT_SHADOW_MODE
-                ),
-            ): bool,
-            vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
-        }
+    """Return the general settings schema from the current installation.
+
+    De veldenlijst staat in `engine.fields.SETTINGS_FIELDS`; deze functie is
+    alleen nog de vertaling naar `vol.Schema`, plus de afsluitregel die elk
+    scherm draagt.
+
+    The field list lives in `engine.fields.SETTINGS_FIELDS`; this function is
+    now only the translation into `vol.Schema`, plus the exit row every screen
+    carries.
+    """
+    return _table_schema(
+        SETTINGS_FIELDS,
+        flow,
+        footer={vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row()},
     )
 
 

@@ -28,13 +28,12 @@ from .coordinator import ClimateDirectorEntry
 from .engine import validate
 from .engine.models import Season, ZoneGate
 from .engine.serialise import config_from_dict
+from .schema_fields import _SUMMER_NORTH, _SUMMER_SOUTH
 from .schemas import (
     _ADD,
     _BACK,
     _EXIT,
     _EXIT_DROP,
-    _SUMMER_NORTH,
-    _SUMMER_SOUTH,
     CONF_NAME,
     _managed_entities,
 )
