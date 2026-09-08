@@ -1,0 +1,72 @@
+{
+  "services": {
+    "evaluate": {
+      "service": "mdi:refresh"
+    },
+    "precondition": {
+      "service": "mdi:timer-play"
+    },
+    "cancel_precondition": {
+      "service": "mdi:timer-cancel"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "zone_blocked": {
+        "default": "mdi:door-closed-lock"
+      },
+      "zone_fallback": {
+        "default": "mdi:swap-horizontal"
+      },
+      "stuck": {
+        "default": "mdi:timer-sand"
+      }
+    },
+    "button": {
+      "zone_precondition": {
+        "default": "mdi:timer-play-outline"
+      }
+    },
+    "number": {
+      "zone_priority": {
+        "default": "mdi:format-list-numbered"
+      },
+      "precondition_minutes": {
+        "default": "mdi:timer-outline"
+      }
+    },
+    "select": {
+      "season": {
+        "default": "mdi:leaf"
+      }
+    },
+    "sensor": {
+      "last_decision": {
+        "default": "mdi:history"
+      },
+      "would_command": {
+        "default": "mdi:traffic-light"
+      },
+      "mismatch": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "zone_source": {
+        "default": "mdi:radiator"
+      }
+    },
+    "switch": {
+      "master": {
+        "default": "mdi:power"
+      },
+      "holiday": {
+        "default": "mdi:beach"
+      },
+      "guest": {
+        "default": "mdi:account-clock-outline"
+      },
+      "zone_override": {
+        "default": "mdi:tune-vertical"
+      }
+    }
+  }
+}
