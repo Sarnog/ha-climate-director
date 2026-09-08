@@ -114,10 +114,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   hysterese zijn nu alleen via de config flow te wijzigen; eigen `number`-entiteiten maken
   ze bedienbaar zonder de hele installatie te herladen. Staat ook in `ARCHITECTURE.md`
   onder "Nog te bouwen".
-- **Gasten- en vooruit-venster per weekdag** — het slaapvenster van een bewoner kent zijn
-  dagen, maar het gastenvenster en het venster waarin vooruit verwarmen mag gelden nog
-  voor elke dag hetzelfde. Wie in het weekend andere uren aanhoudt, kan dat daar niet
-  zetten. Het model kan het al; het formulier en de opslag vragen er niet naar.
 
 ## Would have
 
@@ -236,10 +232,6 @@ The worked-out design proposals for everything below live in
   and hysteresis can currently only be changed through the config flow; `number` entities
   of their own would make them controllable without reloading the whole installation. Also
   listed in `ARCHITECTURE.md` under "Still to build".
-- **Guest and pre-conditioning window per weekday** — a resident's sleep window knows its
-  days, but the guest window and the window in which pre-conditioning is allowed still
-  apply to every day alike. Anyone keeping different hours at the weekend cannot set that
-  there. The model already supports it; the form and storage do not ask for it.
 
 ## Would have
 
