@@ -28,7 +28,7 @@ from .coordinator import ClimateDirectorEntry
 from .engine import validate
 from .engine.models import Season, ZoneGate
 from .engine.serialise import config_from_dict
-from .schema_fields import _SUMMER_NORTH, _SUMMER_SOUTH
+from .schema_fields import _SUMMER_NORTH, _SUMMER_SOUTH, guest_window_from_form
 from .schemas import (
     _ADD,
     _BACK,
@@ -299,10 +299,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 {
                     "require_awake": user_input["require_awake"],
                     "require_schedule": user_input["require_schedule"],
-                    "guest_window": {
-                        "start": user_input.get("guest_start") or "",
-                        "end": user_input.get("guest_end") or "",
-                    },
+                    "guest_window": guest_window_from_form(user_input),
                     "max_precondition": int(user_input.get("max_precondition") or 0) * 60,
                 }
             )

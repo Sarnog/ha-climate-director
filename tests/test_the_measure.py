@@ -74,7 +74,7 @@ MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2033,
     "coordinator.py": 1698,
     "engine/decide.py": 1618,
-    "config_flow.py": 1476,
+    "config_flow.py": 1473,
     "schemas.py": 902,
 }
 
@@ -87,7 +87,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("coordinator.py", "_refusal_data"): 119,
     ("coordinator.py", "_notice_hand"): 117,
     ("engine/decide.py", "_collect_wishes"): 114,
-    ("config_flow.py", "async_step_settings"): 106,
+    ("config_flow.py", "async_step_settings"): 103,
     ("engine/decide.py", "_manual_conflict"): 103,
     ("schemas.py", "resident"): 98,
     ("engine/hysteresis.py", "_candidate"): 97,

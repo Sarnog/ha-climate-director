@@ -15,6 +15,7 @@ translation lives here, in the Home Assistant half of the package.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -23,7 +24,7 @@ from homeassistant.helpers import selector
 
 from . import texts
 from .const import CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE
-from .engine.fields import FieldSpec
+from .engine.fields import GUEST_WINDOW_FIELDS, FieldSpec, target_key
 from .engine.models import PrecipitationSettings, SeasonSettings
 from .units import rounded_delta_from_celsius, temperature_unit_of
 
@@ -287,3 +288,24 @@ def _table_schema(
     if footer:
         schema.update(footer)
     return vol.Schema(schema)
+
+
+def guest_window_from_form(user_input: Mapping[str, Any]) -> dict[str, Any]:
+    """Return the stored guest-window dict described by a submitted form.
+
+    De velden komen uit de veldtabel, zodat een nieuw gastenvensterveld één rij
+    in `engine/fields.py` is; deze functie hoeft dan niet mee te veranderen.
+
+    The fields come from the field table, so a new guest-window field is one row
+    in `engine/fields.py`; this function then need not change along.
+    """
+    window: dict[str, Any] = {}
+    for field in GUEST_WINDOW_FIELDS:
+        form_value = user_input.get(field.key)
+        if field.kind == "time":
+            window[target_key(field)] = form_value or ""
+        elif field.kind == "weekdays":
+            window[target_key(field)] = [int(day) for day in form_value or ()] or None
+        else:
+            raise AssertionError(f"onbekend veldtype {field.kind!r} voor {field.key}")
+    return window
