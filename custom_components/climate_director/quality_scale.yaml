@@ -1,0 +1,80 @@
+rules:
+  # Bronze
+  action-setup: todo
+  appropriate-polling:
+    status: exempt
+    comment: "Deze integratie praat met geen enkel apparaat of dienst; er valt niets te pollen. / This integration talks to no appliance or service; there is nothing to poll."
+  brands: done
+  config-flow: done
+  dependency-transparency:
+    status: exempt
+    comment: "Geen bibliotheek, geen netwerkstapel en geen afhankelijkheid buiten Home Assistant zelf. / No library, no network stack and no dependency beyond Home Assistant itself."
+  discovery:
+    status: exempt
+    comment: "Er is niets te ontdekken, de gebruiker kiest zelf zijn apparaten en sensoren. / There is nothing to discover; the user picks their own appliances and sensors."
+  docs-actions: done
+  docs-configuration-parameters: done
+  docs-examples: done
+  docs-installation-instructions: done
+  docs-known-limitations: todo
+  docs-removal-instructions: done
+  docs-troubleshooting: done
+  docs-use-cases: todo
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure:
+    status: exempt
+    comment: "De integratie praat met geen enkel apparaat of dienst, dus er valt niets te testen vóór het opslaan. / The integration talks to no appliance or service, so there is nothing to test before saving."
+  test-before-setup:
+    status: exempt
+    comment: "Zonder apparaat of dienst valt er niets te controleren vóór de setup. / Without an appliance or service there is nothing to check before setup."
+  test-coverage: done
+  unique-config-entry: done
+  # Silver
+  config-entry-unloading: done
+  discovery-update-info:
+    status: exempt
+    comment: "Geen ontdekking, dus ook geen ontdekkingsinformatie om bij te werken. / No discovery, so no discovery information to update."
+  entity-unavailable:
+    status: exempt
+    comment: "Geen eigen entiteiten die apparaten of diensten spiegelen; onleesbare invoer krijgt een reparatiemelding. / No own entities mirroring appliances or services; unreadable input gets a repair notice."
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: "Er is geen verbinding die weg kan vallen; sensoruitval loopt via de reparatiemelding `unreadable_entities`. / There is no connection that can drop; sensor outages run through the `unreadable_entities` repair notice."
+  parallel-updates: todo
+  reauthentication-flow:
+    status: exempt
+    comment: "Geen host, poort, sleutel of account; er valt niets te herauthenticeren. / No host, port, key or account; there is nothing to re-authenticate."
+  # Gold
+  devices: done
+  diagnostics: done
+  docs-supported-devices:
+    status: exempt
+    comment: "Geen apparaat of dienst waar de integratie mee praat; de ondersteunde invoer staat in de handleiding. / No appliance or service the integration talks to; the supported input is in the manual."
+  dynamic-devices:
+    status: exempt
+    comment: "Geen apparaten van een externe bron; alles komt uit de eigen configuratie. / No devices from an external source; everything comes from the integration's own configuration."
+  entity-category: todo
+  entity-disabled-by-default:
+    status: exempt
+    comment: "Er is geen entiteit die een nieuwe gebruiker in de weg zit, en standaard uitschakelen zou bestaande dashboards en kaarten breken. / No entity gets in a new user's way, and disabling by default would break existing dashboards and cards."
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: "Geen host, poort of sleutel; alles wat een gebruiker wil wijzigen gaat al via de options flow. / No host, port or key; everything a user wants to change already goes through the options flow."
+  repair-issues: done
+  stale-devices:
+    status: exempt
+    comment: "Er zijn geen apparaten van buiten die kunnen verouderen; de installatie is één device. / There are no external devices that can go stale; the installation is one device."
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: "Geen bibliotheek of netwerkstapel om asynchroon te laden. / No library or network stack to load asynchronously."
+  inject-websession:
+    status: exempt
+    comment: "Geen websessie nodig, de integratie doet geen HTTP. / No web session needed; the integration does no HTTP."
+  strict-typing: todo
