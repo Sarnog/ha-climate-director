@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Precies wat de CI aan tests draait, lokaal.
+# Exactly what CI runs for tests, locally.
+set -e
+cd "$(dirname "$0")/.."
+
+if [ -x ".venv/Scripts/python.exe" ]; then
+  PYTHON=".venv/Scripts/python.exe"
+else
+  PYTHON=".venv/bin/python"
+fi
+
+"$PYTHON" -m coverage run -m pytest -q
+"$PYTHON" -m coverage report

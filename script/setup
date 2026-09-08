@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Bouw de lokale omgeving die `script/lint` en `script/test` gebruiken.
+# Build the local environment used by `script/lint` and `script/test`.
+set -e
+cd "$(dirname "$0")/.."
+
+python -m venv .venv
+if [ -x ".venv/Scripts/python.exe" ]; then
+  PYTHON=".venv/Scripts/python.exe"
+else
+  PYTHON=".venv/bin/python"
+fi
+
+"$PYTHON" -m pip install --upgrade pip
+"$PYTHON" -m pip install -r requirements_test.txt
