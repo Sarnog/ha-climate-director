@@ -321,9 +321,23 @@ class TestTheLifecycle:
         assert live.hass.services.has_service("climate_director", "evaluate")
 
     async def test_tearing_down_and_setting_up_again_works(self, live: LiveHome) -> None:
+        """Afbreken laat de acties bestaan; een aanroep botst netjes met de installatie-fout.
+
+        Tearing down leaves the actions standing; a call hits the installation
+        error instead of "service not found".
+        """
+        from homeassistant.exceptions import ServiceValidationError
+
         await live.hass.config_entries.async_unload(live.entry.entry_id)
         await live.hass.async_block_till_done()
-        assert not live.hass.services.has_service("climate_director", "evaluate")
+        assert live.hass.services.has_service("climate_director", "precondition")
+        with pytest.raises(ServiceValidationError, match="installation"):
+            await live.hass.services.async_call(
+                "climate_director",
+                "precondition",
+                {"zone_ids": ["woonkamer"], "minutes": 30},
+                blocking=True,
+            )
 
         await live.hass.config_entries.async_setup(live.entry.entry_id)
         await live.hass.async_block_till_done()

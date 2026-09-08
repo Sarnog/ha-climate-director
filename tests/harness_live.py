@@ -488,6 +488,7 @@ async def start_bare_house(
     hass.auth = await auth_module.auth_manager_from_config(hass, [], [])
     await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(hass, "climate", {})
+    await async_setup_component(hass, DOMAIN, {})
     hass.set_state(CoreState.running)
     for entity_id, (state, attributes) in (states or {}).items():
         hass.states.async_set(entity_id, state, attributes)

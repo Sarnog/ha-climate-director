@@ -64,7 +64,7 @@ from .engine import DirectorConfig
 
 _LOGGER = logging.getLogger(__name__)
 
-__all__ = ["DOMAIN", "async_remove_entry", "async_setup_entry", "async_unload_entry"]
+__all__ = ["DOMAIN", "async_remove_entry", "async_setup", "async_setup_entry", "async_unload_entry"]
 
 _EVALUATE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTRY_ID): vol.All(cv.ensure_list, [cv.string])})
 
@@ -88,6 +88,21 @@ _PRECONDITION_SCHEMA = vol.Schema(
 )
 
 _CANCEL_SCHEMA = vol.Schema({**_ENTRIES, **_ZONES})
+
+
+async def async_setup(hass: HomeAssistant, config: dict[str, object]) -> bool:
+    """Register the domain's actions, also without a loaded installation.
+
+    De acties horen bij het domein, niet bij een entry: ze bestaan zodra Home
+    Assistant het domein opzet, zodat een aanroep zonder geladen installatie
+    netjes botst met de installatie-fout in plaats van met "service not found".
+
+    The actions belong to the domain rather than to an entry: they exist as soon
+    as Home Assistant sets the domain up, so a call without a loaded installation
+    hits the installation error instead of "service not found".
+    """
+    _async_register_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -> bool:
@@ -233,7 +248,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -
         # when the last installation does.
         if not hass.config_entries.async_loaded_entries(DOMAIN):
             problems.async_clear_watchers(hass)
-            _async_remove_services(hass)
     return unloaded
 
 
@@ -256,26 +270,6 @@ async def async_remove_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -
 async def _async_reload(hass: HomeAssistant, entry: ClimateDirectorEntry) -> None:
     """Reload after the options changed, since the whole layout may have."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-@callback
-def _async_remove_services(hass: HomeAssistant) -> None:
-    """Take the domain's actions away with the last installation.
-
-    Ze horen bij de integratie, niet bij een entry, dus ze worden ook maar één
-    keer aangemeld. Bleven ze na het afbreken staan, dan deed een aanroep in
-    stilte niets: de handler loopt over de geladen installaties, en dat zijn er
-    dan nul. Een actie die er is en niets doet is erger dan een actie die er
-    niet is - dan zegt Home Assistant tenminste dat hij niet bestaat.
-
-    They belong to the integration rather than to an entry, so they are
-    registered only once. Left standing after tearing down, a call quietly did
-    nothing: the handler walks the loaded installations, and there are none. An
-    action that exists and does nothing is worse than an action that does not
-    exist - at least then Home Assistant says so.
-    """
-    for service in (SERVICE_EVALUATE, SERVICE_PRECONDITION, SERVICE_CANCEL_PRECONDITION):
-        hass.services.async_remove(DOMAIN, service)
 
 
 @callback

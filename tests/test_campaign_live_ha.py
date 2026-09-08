@@ -392,13 +392,27 @@ class TestTheActionsAndTheirLifetime:
         for name in ("evaluate", "precondition", "cancel_precondition"):
             assert home.hass.services.has_service("climate_director", name), name
 
-    async def test_the_last_installation_takes_the_actions_with_it(self) -> None:
+    async def test_the_last_installation_leaves_the_actions_standing(self) -> None:
+        """Ook zonder installatie bestaan de acties; een aanroep botst netjes.
+
+        Even without an installation the actions exist; a call hits the proper
+        error instead of "service not found".
+        """
+        from homeassistant.exceptions import ServiceValidationError
+
         live = await start_house(installation(), states=cold_world(), entry_id="acties")
         try:
             await live.hass.config_entries.async_unload(live.entry.entry_id)
             await live.hass.async_block_till_done()
             for name in ("evaluate", "precondition", "cancel_precondition"):
-                assert not live.hass.services.has_service("climate_director", name), name
+                assert live.hass.services.has_service("climate_director", name), name
+            with pytest.raises(ServiceValidationError, match="installation"):
+                await live.hass.services.async_call(
+                    "climate_director",
+                    "precondition",
+                    {"zone_ids": ["woonkamer"], "minutes": 30},
+                    blocking=True,
+                )
         finally:
             await stop_house(live)
 
@@ -758,6 +772,36 @@ class TestTheActions:
     async def test_evaluate_ignores_an_unknown_entry_id(self, home: LiveHome) -> None:
         await home.call("climate_director", "evaluate", {"entry_id": "geen-installatie"})
         await home.settle()
+
+    async def test_actions_exist_without_a_loaded_entry(self) -> None:
+        """Zonder geladen installatie bestaan de acties, en botsen ze netjes.
+
+        Without a loaded entry the actions exist, and they hit the proper error.
+        """
+        from harness_live import start_bare_house
+        from homeassistant.exceptions import ServiceValidationError
+
+        hass = await start_bare_house()
+        try:
+            assert hass.services.has_service("climate_director", "precondition")
+            assert hass.services.has_service("climate_director", "cancel_precondition")
+            assert hass.services.has_service("climate_director", "evaluate")
+            with pytest.raises(ServiceValidationError, match="installation"):
+                await hass.services.async_call(
+                    "climate_director",
+                    "precondition",
+                    {"zone_ids": ["woonkamer"], "minutes": 30},
+                    blocking=True,
+                )
+            with pytest.raises(ServiceValidationError, match="installation"):
+                await hass.services.async_call(
+                    "climate_director",
+                    "cancel_precondition",
+                    {"zone_ids": ["woonkamer"]},
+                    blocking=True,
+                )
+        finally:
+            await hass.async_stop(force=True)
 
     async def test_preconditioning_runs_an_empty_house(self, home: LiveHome) -> None:
         home.set("person.danny", "not_home")
