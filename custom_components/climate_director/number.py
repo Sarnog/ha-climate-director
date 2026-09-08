@@ -108,6 +108,7 @@ class ZonePriorityNumber(ClimateDirectorEntity, NumberEntity, RestoreEntity):
     """How strongly one zone claims a shared outdoor unit. Lower wins."""
 
     _attr_translation_key = "zone_priority"
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:sort-numeric-ascending"
     _attr_native_min_value = 0
     _attr_native_max_value = 99

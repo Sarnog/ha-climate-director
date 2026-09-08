@@ -553,6 +553,15 @@ overschrijven.
 De platforms worden vóór de eerste beslissing opgezet, zodat een uitgeschakelde
 hoofdschakelaar niet één ronde lang aan lijkt te staan.
 
+**Categorieën (7.4.2).** Elke entiteit kent haar `entity_category`, en die keuze
+verandert wat een gebruiker in zijn lijst ziet: de waarneemsensoren
+(`sensor.*`) en de blokkade/valt-terug/vast-binaire sensoren staan op
+`DIAGNOSTIC`; de twee `number`-entiteiten en de seizoenskeuze op `CONFIG`; de
+knoppen en schakelaars blijven gewoon zichtbaar (geen categorie). Nergens
+wordt `entity_registry_enabled_default` gezet: er verdwijnt niets uit
+bestaande dashboards en kaarten, en dat is een bewaakte eigenschap
+(`test_entity_categories.py`), geen afspraak.
+
 ### texts.py — vertaalde zinnen naar buiten
 
 De integratie stuurt zelf geen berichten; waar een melding heen gaat hoort een gebruiker te
@@ -1380,6 +1389,15 @@ otherwise the outcome of one decision would overwrite the input to the next.
 
 The platforms are set up before the first decision, so a master switch left off does not
 appear on for one round.
+
+**Categories (7.4.2).** Every entity carries its `entity_category`, and that
+choice changes what a user sees in their list: the observation sensors
+(`sensor.*`) and the blocked/fallback/stuck binary sensors sit on
+`DIAGNOSTIC`; the two `number` entities and the season picker on `CONFIG`; the
+buttons and switches stay plainly visible (no category). Nowhere is
+`entity_registry_enabled_default` set: nothing disappears from existing
+dashboards and cards, and that is a guarded property
+(`test_entity_categories.py`), not a promise.
 
 ### texts.py — translated sentences going outward
 

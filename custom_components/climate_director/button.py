@@ -57,6 +57,7 @@ class ZonePreconditionButton(ClimateDirectorEntity, ButtonEntity):
     """Warms one zone up for somebody on their way home."""
 
     _attr_translation_key = "zone_precondition"
+    _attr_entity_category = None
     _attr_icon = "mdi:home-clock"
 
     def __init__(self, coordinator: ClimateDirectorCoordinator, zone_id: str) -> None:

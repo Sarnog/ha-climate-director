@@ -106,6 +106,7 @@ class MasterSwitch(_DirectorSwitch):
     """Turns the whole director on and off."""
 
     _attr_translation_key = "master"
+    _attr_entity_category = None
     _attr_icon = "mdi:home-thermometer"
     _default_on = True
 
@@ -121,6 +122,7 @@ class HolidaySwitch(_DirectorSwitch):
     """Holiday mode: every day counts as a Saturday, or as its own schedule."""
 
     _attr_translation_key = "holiday"
+    _attr_entity_category = None
     _attr_icon = "mdi:palm-tree"
 
     def __init__(self, coordinator: ClimateDirectorCoordinator) -> None:
@@ -135,6 +137,7 @@ class GuestSwitch(_DirectorSwitch):
     """Guest mode: keeps the house running while the residents are away."""
 
     _attr_translation_key = "guest"
+    _attr_entity_category = None
     _attr_icon = "mdi:account-multiple-plus"
 
     def __init__(self, coordinator: ClimateDirectorCoordinator) -> None:
@@ -149,6 +152,7 @@ class ZoneOverrideSwitch(_DirectorSwitch):
     """Hands one zone back to the user until it is turned off again."""
 
     _attr_translation_key = "zone_override"
+    _attr_entity_category = None
     _attr_icon = "mdi:hand-back-right"
 
     def __init__(self, coordinator: ClimateDirectorCoordinator, zone_id: str) -> None:

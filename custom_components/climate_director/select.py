@@ -19,6 +19,7 @@ itself after a restart and writes its state back to the coordinator.
 from __future__ import annotations
 
 from homeassistant.components.select import SelectEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -52,6 +53,7 @@ class SeasonSelect(ClimateDirectorEntity, SelectEntity, RestoreEntity):
     """A select that overrides the season the director works with."""
 
     _attr_translation_key = "season"
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:calendar-month"
     _attr_options = list(OPTIONS)
 

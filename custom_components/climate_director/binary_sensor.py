@@ -65,6 +65,7 @@ class ZoneBlockedSensor(ClimateDirectorEntity, BinarySensorEntity):
     """
 
     _attr_translation_key = "zone_blocked"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:hand-back-left"
 
     def __init__(self, coordinator: ClimateDirectorCoordinator, zone_id: str) -> None:
@@ -139,6 +140,7 @@ class ZoneFallbackSensor(ClimateDirectorEntity, BinarySensorEntity):
     """
 
     _attr_translation_key = "zone_fallback"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:swap-horizontal"
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
 

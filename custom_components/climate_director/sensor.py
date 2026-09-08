@@ -16,6 +16,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -120,6 +121,7 @@ class DecisionSensor(ClimateDirectorEntity, SensorEntity):
     """Summary of the last decision across the whole installation."""
 
     _attr_translation_key = "last_decision"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:clipboard-text-clock"
     # Het volledige plan is alleen voor wie nu kijkt; de recorder hoeft er niet
     # per minuut een kopie van te bewaren.
@@ -192,6 +194,7 @@ class CommandSensor(ClimateDirectorEntity, SensorEntity):
     """
 
     _attr_translation_key = "would_command"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:script-text-outline"
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = COMMAND_STATES
@@ -274,6 +277,7 @@ class MismatchSensor(ClimateDirectorEntity, SensorEntity):
     """
 
     _attr_translation_key = "mismatch"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:not-equal-variant"
     # Geen eenheid: dit is een aantal, geen meting. Er stond `appliances`, en
     # Home Assistant zet zo'n eenheid letterlijk achter het getal - onvertaald,
@@ -335,6 +339,7 @@ class ZoneSourceSensor(ClimateDirectorEntity, SensorEntity):
     """Which source is serving one zone, and why."""
 
     _attr_translation_key = "zone_source"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:thermostat-box"
 
     def __init__(self, coordinator: ClimateDirectorCoordinator, zone_id: str) -> None:
