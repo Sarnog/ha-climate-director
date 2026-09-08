@@ -885,6 +885,15 @@
     },
     "exclusive_group_unknown_source": {
       "message": "Een uitsluitende groep noemt onbekende bron {source}."
+    },
+    "unknown_installation": {
+      "message": "Onbekende installatie: {installation}"
+    },
+    "no_installation_configured": {
+      "message": "Er is geen climate_director-installatie geconfigureerd"
+    },
+    "unknown_zones": {
+      "message": "Onbekende zones: {zones}"
     }
   },
   "services": {

@@ -885,6 +885,15 @@
     },
     "exclusive_group_unknown_source": {
       "message": "Un groupe exclusif nomme une source inconnue {source}."
+    },
+    "unknown_installation": {
+      "message": "Installation inconnue : {installation}"
+    },
+    "no_installation_configured": {
+      "message": "Aucune installation climate_director n'est configurée"
+    },
+    "unknown_zones": {
+      "message": "Zones inconnues : {zones}"
     }
   },
   "services": {

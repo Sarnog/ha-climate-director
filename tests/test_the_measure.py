@@ -94,7 +94,6 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/hysteresis.py", "_candidate"): 97,
     ("schemas.py", "settings"): 91,
     ("config_flow.py", "async_step_resident"): 91,
-    ("__init__.py", "_async_register_services"): 84,
     ("engine/decide.py", "_resolve_with_fallbacks"): 83,
     ("preconditions.py", "async_precondition"): 83,
 }

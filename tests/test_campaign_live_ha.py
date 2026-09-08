@@ -1442,6 +1442,86 @@ class TestTheTranslationsLive:
         finally:
             await stop_house(home)
 
+    @pytest.mark.parametrize("language", ["en", "nl"])
+    async def test_the_installation_error_carries_a_translated_sentence(
+        self, language: str
+    ) -> None:
+        """Zonder installatie draagt de fout een sleutel, en elke taal kent de zin.
+
+        Without an installation the error carries a key, and every language
+        knows the sentence.
+        """
+        from harness_live import start_bare_house
+        from homeassistant.exceptions import ServiceValidationError
+        from homeassistant.helpers import translation
+
+        hass = await start_bare_house()
+        try:
+            hass.config.language = language
+            await translation.async_load_integrations(hass, {"climate_director"})
+            with pytest.raises(ServiceValidationError) as caught:
+                await hass.services.async_call(
+                    "climate_director",
+                    "precondition",
+                    {"zone_ids": ["woonkamer"], "minutes": 30},
+                    blocking=True,
+                )
+            error = caught.value
+            assert error.translation_domain == "climate_director"
+            assert error.translation_key == "no_installation_configured"
+            assert "installation" in str(error)
+
+            cached = translation.async_get_cached_translations(
+                hass, language, "exceptions", "climate_director"
+            )
+            key = "component.climate_director.exceptions.no_installation_configured.message"
+            message = cached[key]
+            if language == "nl":
+                assert "installatie" in message, message
+            else:
+                assert "installation" in message, message
+        finally:
+            await hass.async_stop(force=True)
+
+    @pytest.mark.parametrize("language", ["en", "nl"])
+    async def test_the_unknown_zone_error_carries_a_translated_sentence(
+        self, language: str
+    ) -> None:
+        """Onbekende zones dragen een sleutel en een ingevulde zin per taal.
+
+        Unknown zones carry a key and a filled-in sentence per language.
+        """
+        from homeassistant.exceptions import ServiceValidationError
+        from homeassistant.helpers import translation
+
+        home = await start_house(installation(), states=cold_world())
+        try:
+            home.hass.config.language = language
+            await translation.async_load_integrations(home.hass, {"climate_director"})
+            with pytest.raises(ServiceValidationError) as caught:
+                await home.hass.services.async_call(
+                    "climate_director",
+                    "precondition",
+                    {"zone_ids": ["kelder"], "minutes": 30},
+                    blocking=True,
+                )
+            error = caught.value
+            assert error.translation_domain == "climate_director"
+            assert error.translation_key == "unknown_zones"
+            assert "zones" in str(error)
+            assert error.translation_placeholders == {"zones": "kelder"}
+
+            cached = translation.async_get_cached_translations(
+                home.hass, language, "exceptions", "climate_director"
+            )
+            message = cached["component.climate_director.exceptions.unknown_zones.message"]
+            if language == "nl":
+                assert "Onbekende zones" in message, message
+            else:
+                assert "zones" in message, message
+        finally:
+            await stop_house(home)
+
 
 class TestHandingBackLifecycle:
     """De levensloop van een hand aan het apparaat, met de klok ertussen.

@@ -885,6 +885,15 @@
     },
     "exclusive_group_unknown_source": {
       "message": "مجموعة حصرية تسمّي مصدرًا مجهولًا {source}."
+    },
+    "unknown_installation": {
+      "message": "تثبيت غير معروف: {installation}"
+    },
+    "no_installation_configured": {
+      "message": "لم يتم إعداد أي تثبيت لـ climate_director"
+    },
+    "unknown_zones": {
+      "message": "مناطق غير معروفة: {zones}"
     }
   },
   "services": {

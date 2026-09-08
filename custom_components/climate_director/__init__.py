@@ -272,6 +272,62 @@ async def _async_reload(hass: HomeAssistant, entry: ClimateDirectorEntry) -> Non
     await hass.config_entries.async_reload(entry.entry_id)
 
 
+def _chosen_entries(hass: HomeAssistant, call: ServiceCall) -> list[ClimateDirectorEntry]:
+    """Return the installations a call wants, or all loaded ones."""
+    wanted = set(call.data.get(ATTR_ENTRY_ID) or ())
+    return [
+        entry
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN)
+        if not wanted or entry.entry_id in wanted
+    ]
+
+
+def _refuse_unknown_zones(zone_ids, entries, wanted_entry_id) -> None:
+    """Raise when a requested zone does not exist, instead of only logging.
+
+    Een typefout in `zone_ids` verdween tot nu toe met alleen een logregel:
+    je drukt op de knop, er gebeurt niets, en nergens staat waarom. Een
+    service die de zone niet kent hoort te botsen, precies zoals een
+    onbekende entiteit dat doet. Een onbekende `entry_id` is hetzelfde
+    verhaal één niveau hoger: dan bestaat de installatie niet en hoort de
+    fout dat te zeggen, in plaats van elke zone als onbekend af te
+    schilderen.
+
+    A typo in `zone_ids` used to vanish with only a log line: you press the
+    button, nothing happens, and nowhere does it say why. A service that does
+    not know the zone should collide, exactly like an unknown entity does. An
+    unknown `entry_id` is the same story one level up: the installation does
+    not exist then, and the error should say so instead of painting every zone
+    as unknown.
+    """
+    if not entries:
+        if wanted_entry_id:
+            wanted = (
+                ", ".join(wanted_entry_id)
+                if isinstance(wanted_entry_id, list)
+                else str(wanted_entry_id)
+            )
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_installation",
+                translation_placeholders={"installation": wanted},
+            )
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_installation_configured",
+        )
+    if not zone_ids:
+        return
+    known = {zone.zone_id for entry in entries for zone in entry.runtime_data.config.zones}
+    unknown = sorted(set(zone_ids) - known)
+    if unknown:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_zones",
+            translation_placeholders={"zones": ", ".join(unknown)},
+        )
+
+
 @callback
 def _async_register_services(hass: HomeAssistant) -> None:
     """Register the domain's actions once, however many installations there are.
@@ -292,7 +348,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
 
     async def _async_precondition(call: ServiceCall) -> None:
         """Warm zones up for somebody on their way home."""
-        entries = _chosen(call)
+        entries = _chosen_entries(hass, call)
         _refuse_unknown_zones(call.data.get(ATTR_ZONE_IDS), entries, call.data.get(ATTR_ENTRY_ID))
         for entry in entries:
             entry.runtime_data.async_precondition(
@@ -303,52 +359,10 @@ def _async_register_services(hass: HomeAssistant) -> None:
 
     async def _async_cancel_precondition(call: ServiceCall) -> None:
         """Call a running pre-conditioning request off."""
-        entries = _chosen(call)
+        entries = _chosen_entries(hass, call)
         _refuse_unknown_zones(call.data.get(ATTR_ZONE_IDS), entries, call.data.get(ATTR_ENTRY_ID))
         for entry in entries:
             entry.runtime_data.async_cancel_precondition(call.data.get(ATTR_ZONE_IDS))
-
-    def _refuse_unknown_zones(zone_ids, entries, wanted_entry_id) -> None:
-        """Raise when a requested zone does not exist, instead of only logging.
-
-        Een typefout in `zone_ids` verdween tot nu toe met alleen een
-        logregel: je drukt op de knop, er gebeurt niets, en nergens staat
-        waarom. Een service die de zone niet kent hoort te botsen, precies
-        zoals een onbekende entiteit dat doet. Een onbekende `entry_id` is
-        hetzelfde verhaal één niveau hoger: dan bestaat de installatie niet en
-        hoort de fout dat te zeggen, in plaats van elke zone als onbekend af
-        te schilderen.
-
-        A typo in `zone_ids` used to vanish with only a log line: you press the
-        button, nothing happens, and nowhere does it say why. A service that
-        does not know the zone should collide, exactly like an unknown entity
-        does. An unknown `entry_id` is the same story one level up: the
-        installation does not exist then, and the error should say so instead
-        of painting every zone as unknown.
-        """
-        if not entries:
-            if wanted_entry_id:
-                wanted = (
-                    ", ".join(wanted_entry_id)
-                    if isinstance(wanted_entry_id, list)
-                    else str(wanted_entry_id)
-                )
-                raise ServiceValidationError(f"unknown installation: {wanted}")
-            raise ServiceValidationError("no climate_director installation is configured")
-        if not zone_ids:
-            return
-        known = {zone.zone_id for entry in entries for zone in entry.runtime_data.config.zones}
-        unknown = sorted(set(zone_ids) - known)
-        if unknown:
-            raise ServiceValidationError(f"unknown zones: {', '.join(unknown)}")
-
-    def _chosen(call: ServiceCall):
-        wanted = set(call.data.get(ATTR_ENTRY_ID) or ())
-        return [
-            entry
-            for entry in hass.config_entries.async_loaded_entries(DOMAIN)
-            if not wanted or entry.entry_id in wanted
-        ]
 
     hass.services.async_register(DOMAIN, SERVICE_EVALUATE, _async_evaluate, _EVALUATE_SCHEMA)
     hass.services.async_register(
