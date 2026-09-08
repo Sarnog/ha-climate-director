@@ -53,7 +53,7 @@ geen gebruikersweergave.
 Een uitspraak in deze engine hangt altijd aan één ding, en welk ding dat is, is
 een ontwerpbesluit. Waar dat besluit niet opgeschreven stond, is het in vier
 achtereenvolgende reparatierondes telkens één stap opgeschoven — smal, dan te
-breed, dan weer terug. Deze zeven ankers staan daarom hier, vóór alle modules.
+breed, dan weer terug. Deze elf ankers staan daarom hier, vóór alle modules.
 Wijk er niet van af zonder ze hier eerst te wijzigen.
 
 1. **Een lopend vooruit-verzoek** is één begrip in de hele engine:
@@ -63,7 +63,9 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
    altijd boven de automatisering, ongeacht het uur, voor de volledige
    `max_precondition`. De begrenzing is de looptijd van het verzoek zelf plus de
    bevestiging bij een openstaande deur — hetzelfde principe als: wie laat
-   opblijft, houdt zijn verwarming.
+   opblijft, houdt zijn verwarming. Er zijn twee manieren om dat *toch doen*
+   te zeggen: de vlag `ignore_openings` op één verzoek, en de overbrugging per
+   opening uit anker 8. Ze betekenen hetzelfde en stapelen niet.
 2. **Een onleesbare buitentemperatuur** weigert een taak alleen als díe taak zelf
    een begrensd venster moet passeren — op de zone, of op een bron die deze taak
    kan leveren. Vensters van bronnen die de taak niet leveren tellen niet mee:
@@ -92,7 +94,8 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
    geldt alleen voor een bron zonder circuit. Dit anker is daarmee **breder**
    geworden: een rusttijd kan nu aan elk apparaat hangen, niet alleen aan een
    apparaat op een circuit; de vaste openingsrust hierboven blijft ernaast
-   bestaan.
+   bestaan. Een overbrugde opening (anker 8) heft deze rust niet op:
+   overbruggen is comfort, de rust is branderbescherming.
 6. **De hoofdschakelaar uit** betekent: de director laat alles los en stuurt
    niets, ook geen `off` — net als een override. Wie alles uit wil, zet het zelf
    uit; de director laat het dan staan.
@@ -104,6 +107,45 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
    gedrag (de zone viel stil) en smaller dan "elke weigering schuift door": een
    eerste keus die huisbreed is stilgezet weigert de zone wél, met
    `OPENING_OPEN_ELSEWHERE`; dat scenario dekt de andere kant.
+8. **Een overbrugde opening bestaat niet voor de director.** Staat de
+   overbrugging van een opening aan, dan telt hij nergens meer mee: niet voor het
+   opschorten van zijn eigen zones, en niet voor de huisbrede stop. Half
+   overbruggen bestaat niet. De overbrugging blijft staan tot iemand hem zelf
+   terugzet — er is geen looptijd — en zolang hij aanstaat terwijl de opening
+   werkelijk openstaat, meldt de integratie dat: anders stook je een winter lang
+   met een raam open zonder dat iets het zegt. De rust uit anker 5 loopt er wél
+   gewoon door. Een opening draagt hiervoor een eigen `opening_id` én een naam,
+   net als elk ander objecttype — zonder eigen identiteit hangt de schakelaar aan
+   de `entity_id` van de sensor en verdwijnt hij zodra die sensor vervangen wordt.
+9. **Een vakantiedag telt als zaterdag, behalve waar dat één bewoner het huis
+   laat ophouden.** De stiltevensters en de roosters vertalen een vakantiedag naar
+   zaterdag, tenzij er vakantievensters zijn opgegeven — die nemen het dan over.
+   De uiterste opsta-tijd doet dat uitdrukkelijk **niet**: anders houdt de
+   schoolvakantie van de één het huis op terwijl de ander thuis zit te werken. Het
+   slaapvenster leest de echte weekdag en weet van vakantie niets. Drie
+   verschillende antwoorden, alle drie bewust; wie er één verandert, verandert ze
+   niet allemaal.
+10. **Een buitengrens is half-open: `[minimum, maximum)`.** Twee vensters die
+    aan dezelfde waarde grenzen verdelen de schaal sluitend — geen gat en geen
+    overlap, dus geen enkele buitentemperatuur kan tussen twee bronnen vallen.
+    Het gevolg is dat een waarde precies óp de grens bij het bovenste venster
+    hoort: een grens van 24 koelt ook bij precies 24,0. Een met de hand
+    geschreven automatisering die "boven 24" zei is daarmee niet exact na te
+    bouwen; de dichtstbijzijnde keuze is de grens zelf, niet 24,1.
+11. **Een override met een looptijd draagt zijn eigen einde; een override die je
+    met de hand uitzet doet dat niet.** De actie `climate_director.set_override`
+    neemt een looptijd én een keuze *bij afloop*: het apparaat uitzetten, of
+    laten staan. Verstrijkt de tijd, dan voert de director die keuze uit als één
+    commando op dat moment, en daarna beslist hij gewoon weer — dat is het énige
+    moment waarop het einde van een override zelf iets stuurt. Zet iemand de
+    overrideschakelaar met de hand uit, dan gebeurt er niets bijzonders: de
+    engine neemt de zone weer over en het apparaat gaat alleen uit als de
+    beslissing dat nodig maakt. Een bron met `autostart: false` blijft dan dus
+    draaien tot hij in de weg staat. Diezelfde actie zet de stand en de
+    temperatuur zelf, in dezelfde beslisronde als de overdracht: gebeurt dat in
+    twee losse aanroepen, dan bestaat er een venster waarin de director het net
+    gezette apparaat alsnog wegschakelt, en dan zou de volgorde van die twee
+    aanroepen een eigenschap moeten dragen die nergens is vastgelegd.
 
 ### De belangrijkste scheidslijn
 
@@ -905,7 +947,7 @@ other no user-facing display.
 A statement in this engine always hangs on one thing, and which thing that is, is
 a design decision. Wherever that decision was not written down, it shifted by one
 step in four successive repair rounds — narrow, then too broad, then back again.
-These seven anchors therefore sit here, ahead of every module. Do not depart from
+These eleven anchors therefore sit here, ahead of every module. Do not depart from
 them without changing them here first.
 
 1. **A running pre-conditioning request** is one concept throughout the engine:
@@ -914,7 +956,9 @@ them without changing them here first.
    anyway" to. There is no time window: a hand-given request always outranks the
    automation, whatever the hour, for the full `max_precondition`. The bounds are
    the request's own expiry plus the confirmation on an open door — the same
-   principle as: whoever stays up late keeps their heating.
+   principle as: whoever stays up late keeps their heating. There are two ways
+   to say that *do it anyway*: the `ignore_openings` flag on a single request,
+   and the per-opening bypass of anchor 8. They mean the same and do not stack.
 2. **An unreadable outdoor temperature** refuses a duty only when that duty
    itself has to pass a bounded window — on the zone, or on a source able to
    deliver this duty. Windows of sources that do not deliver the duty do not
@@ -941,7 +985,9 @@ them without changing them here first.
    rest — the own brake is a per-appliance lower bound and applies only to a
    source without a circuit. This anchor has thereby become **broader**: a rest
    can now hang on any appliance, not only on an appliance on a circuit; the
-   fixed opening rest above stays alongside.
+   fixed opening rest above stays alongside. A bypassed opening (anchor 8)
+   does not lift this rest: bypassing is comfort, the rest is burner
+   protection.
 6. **The master switch off** means: the director lets go of everything and issues
    nothing, an `off` included — just like an override. Whoever wants everything
    off switches it off themselves; the director then leaves it be.
@@ -953,6 +999,43 @@ them without changing them here first.
    behaviour (the zone fell silent) and narrower than "every refusal moves on": a
    first choice stopped house-wide refuses the zone instead, with
    `OPENING_OPEN_ELSEWHERE`; that scenario covers the other side.
+8. **A bypassed opening does not exist for the director.** With an opening's
+   bypass on it counts nowhere any more: neither for suspending its own zones, nor
+   for the house-wide stop. There is no half bypass. The bypass stands until
+   somebody turns it back themselves — there is no duration — and while it is on
+   with the opening really standing open, the integration says so: otherwise you
+   heat a whole winter with a window open without anything mentioning it. The rest
+   from anchor 5 does keep running. An opening carries its own `opening_id` and a
+   name for this, like every other object type — without its own identity the
+   switch hangs on the sensor's `entity_id` and disappears the moment that sensor
+   is replaced.
+9. **A holiday counts as a Saturday, except where that would let one resident
+   hold the house up.** The quiet windows and the schedules translate a holiday
+   into a Saturday, unless holiday windows have been given — those take over then.
+   The wake deadline deliberately does **not**: otherwise one person's school
+   holiday holds the house up while the other is working from home. The sleep
+   window reads the real weekday and knows nothing of holidays. Three different
+   answers, all three deliberate; changing one does not change them all.
+10. **An outdoor bound is half-open: `[minimum, maximum)`.** Two windows meeting
+    at the same value divide the scale exactly — no gap and no overlap, so no
+    outdoor temperature can fall between two sources. The consequence is that a
+    value exactly on the bound belongs to the upper window: a bound of 24 cools
+    at precisely 24.0 too. A hand-written automation saying "above 24" cannot be
+    reproduced exactly; the closest choice is the bound itself, not 24.1.
+11. **An override with a duration carries its own ending; an override you switch
+    off by hand does not.** The `climate_director.set_override` action takes a
+    duration and a choice *on expiry*: switch the appliance off, or leave it be.
+    When the time runs out the director carries that choice out as one command
+    at that moment, and decides normally again afterwards — that is the only
+    moment at which the end of an override issues anything itself. When somebody
+    switches the override off by hand nothing special happens: the engine takes
+    the zone back and the appliance only goes off if the decision makes that
+    necessary. A source with `autostart: false` therefore keeps running until it
+    is in the way. That same action sets the mode and the temperature itself, in
+    the same decision round as the handover: done as two separate calls there is
+    a window in which the director stands the just-set appliance down after all,
+    and then the order of those two calls would have to carry a property that is
+    written down nowhere.
 
 ### The most important dividing line
 
