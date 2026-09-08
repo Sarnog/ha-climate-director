@@ -123,7 +123,7 @@ def module_sizes(root: Path | None = None) -> dict[str, int]:
     return sizes
 
 
-def function_sizes(root: Path | None = None) -> dict[tuple[str, str], int]:
+def function_sizes(root: Path | None = None) -> dict[tuple[str, str, int], int]:
     """Meet elke functie als `end_lineno - lineno + 1`, via `ast.walk`.
 
     `ast.walk` ziet geneste functies en `AsyncFunctionDef` net zo goed als
@@ -144,7 +144,11 @@ def function_sizes(root: Path | None = None) -> dict[tuple[str, str], int]:
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 key = (rel, node.name, node.lineno)
-                lines = node.end_lineno - node.lineno + 1
+                end = node.end_lineno
+                assert end is not None, (
+                    "een uit de bron geparsete functie hoort een end_lineno te hebben"
+                )
+                lines = end - node.lineno + 1
                 sizes[key] = lines
     return sizes
 
@@ -209,9 +213,12 @@ def test_the_measure_is_a_ratchet() -> None:
         elif actual != noted:
             problems.append(_drift_note("functie", label, noted, actual, FUNCTION_LIMIT))
 
-    for key, actual in functions.items():
-        if actual > FUNCTION_LIMIT and (key[0], key[1]) not in FUNCTION_EXCEPTIONS:
-            label = f"{key[0]}::{key[1]}@{key[2]}"
+    for function_key, actual in functions.items():
+        if (
+            actual > FUNCTION_LIMIT
+            and (function_key[0], function_key[1]) not in FUNCTION_EXCEPTIONS
+        ):
+            label = f"{function_key[0]}::{function_key[1]}@{function_key[2]}"
             problems.append(
                 f"functie {label}: {actual} regels, boven de {FUNCTION_LIMIT} en niet genoteerd — "
                 "de maat mag niet groeien"
