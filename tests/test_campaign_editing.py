@@ -1782,6 +1782,7 @@ class TestDiscardArrivesOnEveryScreen:
             "holiday_keyword": "vakantie",
             "guest_start": "08:00:00",
             "guest_end": "23:00:00",
+            "guest_days": ["5", "6"],
             "precipitation_source": "sensor.regen",
         },
         "openings": {"house_wide_openings": [LIVING]},

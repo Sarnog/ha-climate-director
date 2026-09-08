@@ -147,6 +147,12 @@ SETTINGS_FIELDS: tuple[FieldSpec, ...] = (
     FieldSpec("guest_start", "time", required=False, target="gates.guest_window.start"),
     FieldSpec("guest_end", "time", required=False, target="gates.guest_window.end"),
     FieldSpec(
+        "guest_days",
+        "weekdays",
+        required=False,
+        target="gates.guest_window.weekdays",
+    ),
+    FieldSpec(
         "stuck_after",
         "number",
         default=900,

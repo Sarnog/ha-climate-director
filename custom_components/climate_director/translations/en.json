@@ -57,7 +57,8 @@
           "stuck_after": "Report a zone stuck after (minutes)",
           "precipitation_source": "Precipitation source",
           "precipitation_states": "States that count as precipitation",
-          "precipitation_grace": "How long precipitation keeps counting (minutes)"
+          "precipitation_grace": "How long precipitation keeps counting (minutes)",
+          "guest_days": "Guest mode days"
         },
         "data_description": {
           "season_source": "Derive the season from the month, read it from an entity, or pin it by hand.",
@@ -78,7 +79,8 @@
           "stuck_after": "A pause when switching duty should last seconds. A zone still sitting on one after this long is no longer waiting but stuck, which from the outside looks exactly like doing nothing. Keep it comfortably above your longest pause; a false alarm teaches you to ignore the alarm. Zero switches the sensor off.",
           "precipitation_source": "A weather entity or precipitation sensor. While it reports one of the states below, the per-zone open-a-window bound is skipped. Leave empty to keep the ordinary rule always.",
           "precipitation_states": "Comma-separated. For a weather entity these are its conditions; for a sensor its states. The default covers rain, snow and hail.",
-          "precipitation_grace": "A five-minute shower should not make the regulation bounce, so a reading keeps counting for this long after the precipitation stops."
+          "precipitation_grace": "A five-minute shower should not make the regulation bounce, so a reading keeps counting for this long after the precipitation stops.",
+          "guest_days": "Leave empty for every day; otherwise guest mode only carries the house on the selected days."
         }
       },
       "zones": {

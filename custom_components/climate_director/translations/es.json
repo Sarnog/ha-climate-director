@@ -57,7 +57,8 @@
           "stuck_after": "Zona se considera atascada tras (minutos)",
           "precipitation_source": "Fuente de precipitaciones",
           "precipitation_states": "Estados que cuentan como precipitación",
-          "precipitation_grace": "Cuánto tiempo siguen contando las precipitaciones (minutos)"
+          "precipitation_grace": "Cuánto tiempo siguen contando las precipitaciones (minutos)",
+          "guest_days": "Días del modo invitados"
         },
         "data_description": {
           "season_source": "Deduce la estación del mes, léela de una entidad, o fíjala a mano.",
@@ -78,7 +79,8 @@
           "stuck_after": "Una pausa al cambiar de tarea debe durar segundos. Una zona que sigue en ella pasado este tiempo ya no espera, está atascada, y desde fuera eso se parece exactamente a no hacer nada. Mantenlo bien por encima de tu pausa más larga; una falsa alarma enseña a ignorar la alarma. Cero apaga el sensor.",
           "precipitation_source": "Una entidad meteorológica o un sensor de precipitaciones. Mientras informe de uno de los estados de abajo, el límite de «abrir una ventana» por zona se omite. Déjalo vacío para que la regla ordinaria se aplique siempre.",
           "precipitation_states": "Separados por comas. Para una entidad meteorológica son sus condiciones; para un sensor, sus estados. El valor por defecto cubre lluvia, nieve y granizo.",
-          "precipitation_grace": "Un chaparrón de cinco minutos no debe hacer oscilar la regulación, así que una lectura sigue contando este tiempo después de que cesen las precipitaciones."
+          "precipitation_grace": "Un chaparrón de cinco minutos no debe hacer oscilar la regulación, así que una lectura sigue contando este tiempo después de que cesen las precipitaciones.",
+          "guest_days": "Déjalo vacío para todos los días; si no, el modo invitados solo mantiene la casa los días elegidos."
         }
       },
       "zones": {

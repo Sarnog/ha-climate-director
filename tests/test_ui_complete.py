@@ -103,18 +103,18 @@ IDS = [path.name for path in FILES]
 
 
 class TestEveryFormField:
-    """Twenty-three screens, one hundred and eighteen fields, seven files."""
+    """Twenty-three screens, one hundred and nineteen fields, seven files."""
 
     def test_the_source_yields_steps_at_all(self) -> None:
         """Guards the reader itself: an empty sweep would pass everything below.
 
-        De aantallen zijn vandaag gemeten (23 schermen, 118 velden) en staan als
+        De aantallen zijn vandaag gemeten (23 schermen, 119 velden) en staan als
         letterlijke gelijkheid, niet als ondergrens. Met een ondergrens
         (`>= 15` / `>= 80`) zou deze bewaking stilletjes verblinden zodra er
         velden verdwijnen; met deze gelijkheid zegt een verschil wélk scherm
         velden kwijt is.
 
-        The counts were measured today (23 screens, 118 fields) and stand as
+        The counts were measured today (23 screens, 119 fields) and stand as
         literal equality, not as a lower bound. With a lower bound
         (`>= 15` / `>= 80`) this guard would quietly go blind the moment fields
         disappear; with this equality a difference says which screen lost them.
@@ -136,7 +136,7 @@ class TestEveryFormField:
             "resident": 15,
             "residents": 1,
             "save": 1,
-            "settings": 19,
+            "settings": 20,
             "source": 9,
             "sources": 1,
             "user": 2,
@@ -145,7 +145,7 @@ class TestEveryFormField:
             "zone": 21,
             "zones": 1,
         }
-        assert sum(counts.values()) == 118
+        assert sum(counts.values()) == 119
 
     @pytest.mark.parametrize("path", FILES, ids=IDS)
     def test_every_step_exists(self, path: pathlib.Path) -> None:

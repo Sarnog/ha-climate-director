@@ -57,7 +57,8 @@
           "stuck_after": "Zone considérée bloquée après (minutes)",
           "precipitation_source": "Source de précipitations",
           "precipitation_states": "États comptant comme précipitations",
-          "precipitation_grace": "Combien de temps les précipitations continuent de compter (minutes)"
+          "precipitation_grace": "Combien de temps les précipitations continuent de compter (minutes)",
+          "guest_days": "Jours du mode invités"
         },
         "data_description": {
           "season_source": "Déduisez la saison du mois, lisez-la depuis une entité, ou fixez-la à la main.",
@@ -78,7 +79,8 @@
           "stuck_after": "Une pause lors d'un changement de tâche doit durer des secondes. Une pièce qui y reste au-delà n'attend plus, elle est bloquée - ce qui, vu de l'extérieur, ressemble exactement à ne rien faire. Gardez la valeur bien au-dessus de votre plus longue pause ; une fausse alerte apprend à ignorer l'alerte. Zéro désactive le capteur.",
           "precipitation_source": "Une entité météo ou un capteur de précipitations. Tant qu'elle signale l'un des états ci-dessous, la limite « ouvrir une fenêtre » par zone est ignorée. Laissez vide pour que la règle ordinaire s'applique toujours.",
           "precipitation_states": "Séparés par des virgules. Pour une entité météo, ce sont ses conditions ; pour un capteur, ses états. La valeur par défaut couvre la pluie, la neige et la grêle.",
-          "precipitation_grace": "Une averse de cinq minutes ne doit pas faire osciller la régulation, donc une lecture continue de compter encore ce temps après que les précipitations se sont arrêtées."
+          "precipitation_grace": "Une averse de cinq minutes ne doit pas faire osciller la régulation, donc une lecture continue de compter encore ce temps après que les précipitations se sont arrêtées.",
+          "guest_days": "Laissez vide pour tous les jours ; sinon le mode invités ne porte la maison que les jours choisis."
         }
       },
       "zones": {

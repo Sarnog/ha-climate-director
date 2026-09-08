@@ -57,7 +57,8 @@
           "stuck_after": "Zone gilt als festgefahren nach (Minuten)",
           "precipitation_source": "Niederschlagsquelle",
           "precipitation_states": "Zustände, die als Niederschlag zählen",
-          "precipitation_grace": "Wie lange Niederschlag weiter zählt (Minuten)"
+          "precipitation_grace": "Wie lange Niederschlag weiter zählt (Minuten)",
+          "guest_days": "Tage des Gastmodus"
         },
         "data_description": {
           "season_source": "Leite die Jahreszeit aus dem Monat ab, lies sie aus einer Entität, oder lege sie von Hand fest.",
@@ -78,7 +79,8 @@
           "stuck_after": "Eine Pause beim Aufgabenwechsel sollte Sekunden dauern. Eine Zone, die nach dieser Zeit noch darauf steht, wartet nicht mehr, sondern hängt fest - von außen sieht das genau wie Nichtstun aus. Halte den Wert deutlich über deiner längsten Pause; ein Fehlalarm lehrt dich, den Melder zu ignorieren. Null schaltet ihn aus.",
           "precipitation_source": "Eine Wetter-Entität oder ein Niederschlagssensor. Solange sie einen der Zustände unten meldet, wird die 'Fenster-öffnen'-Grenze pro Zone übersprungen. Leer lassen, damit die gewöhnliche Regel immer gilt.",
           "precipitation_states": "Kommagetrennt. Bei einer Wetter-Entität sind das ihre Bedingungen, bei einem Sensor seine Zustände. Die Vorgabe deckt Regen, Schnee und Hagel ab.",
-          "precipitation_grace": "Ein Fünf-Minuten-Schauer soll die Regelung nicht ins Schwingen bringen, also zählt eine Messung noch so lange weiter, nachdem der Niederschlag aufgehört hat."
+          "precipitation_grace": "Ein Fünf-Minuten-Schauer soll die Regelung nicht ins Schwingen bringen, also zählt eine Messung noch so lange weiter, nachdem der Niederschlag aufgehört hat.",
+          "guest_days": "Leer lassen für jeden Tag; sonst trägt der Gastmodus das Haus nur an den gewählten Tagen."
         }
       },
       "zones": {

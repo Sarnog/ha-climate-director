@@ -77,6 +77,24 @@ class TestRoundTrip:
         )
         assert config_from_dict(config_to_dict(config)) == config
 
+    def test_a_guest_window_keeps_its_days(self) -> None:
+        """Een weekend-gastenvenster hoort niet stilletjes elke dag te worden.
+
+        The guest window can be limited to weekdays; without this the days
+        would drop on save and guest mode would carry the house all week.
+        """
+        original = house()
+        config = replace(
+            original,
+            gates=replace(
+                original.gates,
+                guest_window=TimeWindow(
+                    start=time(8, 0), end=time(23, 0), weekdays=frozenset({5, 6})
+                ),
+            ),
+        )
+        assert config_from_dict(config_to_dict(config)) == config
+
     def test_sleeping_in_round_trips_with_its_days(self) -> None:
         """Valt het weg bij het opslaan, dan slaapt niemand meer uit.
 

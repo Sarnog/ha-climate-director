@@ -57,7 +57,8 @@
           "stuck_after": "Zone geldt als vastgelopen na (minuten)",
           "precipitation_source": "Neerslagbron",
           "precipitation_states": "Toestanden die als neerslag tellen",
-          "precipitation_grace": "Hoe lang neerslag blijft tellen (minuten)"
+          "precipitation_grace": "Hoe lang neerslag blijft tellen (minuten)",
+          "guest_days": "Dagen van de gastenmodus"
         },
         "data_description": {
           "season_source": "Leid het seizoen af uit de maand, lees het uit een entiteit, of zet het met de hand vast.",
@@ -78,7 +79,8 @@
           "stuck_after": "Een pauze bij het wisselen van taak hoort seconden te duren. Een zone die er na deze tijd nog op staat wacht niet meer maar zit vast, en dat lijkt van buiten precies op niets doen. Houd hem ruim boven je langste pauze; een valse melding leert je de melder te negeren. Nul zet de melder uit.",
           "precipitation_source": "Een weather-entiteit of neerslagsensor. Zolang die een van de staten hieronder meldt, wordt de 'zet een raam open'-grens per zone overgeslagen. Laat leeg om de gewone regel altijd te laten gelden.",
           "precipitation_states": "Komma-gescheiden. Voor een weather-entiteit zijn dit zijn condities; voor een sensor zijn het zijn toestanden. De standaard dekt regen, sneeuw en hagel.",
-          "precipitation_grace": "Een bui van vijf minuten hoort de regeling niet te laten stuiteren, dus een meting blijft nog zo lang meetellen nadat de neerslag ophoudt."
+          "precipitation_grace": "Een bui van vijf minuten hoort de regeling niet te laten stuiteren, dus een meting blijft nog zo lang meetellen nadat de neerslag ophoudt.",
+          "guest_days": "Laat leeg voor elke dag; anders draagt de gastenmodus het huis alleen op de gekozen dagen."
         }
       },
       "zones": {
