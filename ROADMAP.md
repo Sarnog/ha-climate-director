@@ -37,11 +37,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   élk step_id in díe methode** — geen kruisbesmetting zolang elke stapmethode precies
   één formulier toont, wat vandaag zo is maar nergens staat. Een stapmethode met twee
   formulieren zou één bron aan beide step_id's hangen zonder dat iemand het merkt.
-- **De maatbewaking klapt twee gelijknamige functies in één bestand samen tot de
-  langste** — `function_sizes()` bewaakt van zo'n paar dus alleen de langste. Vandaag
-  onbereikbaar — er zijn 18 gelijknamige paren en de grootste is 38 regels — en het wordt
-  pas bereikbaar zodra in één bestand twee gelijknamige functies allebei boven de 80
-  komen; dan kan de kleinste ongemerkt doorgroeien.
 - **Een controle op exclusieve groepen die wél klopt** — er stond er een die waarschuwde
   zodra de buitengrenzen van twee groepsleden elkaar overlapten, met het advies ze
   aansluitend te maken. Dat advies maakt de groep juist zinloos: hij bestaat om te kiezen
@@ -116,17 +111,10 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   hysterese zijn nu alleen via de config flow te wijzigen; eigen `number`-entiteiten maken
   ze bedienbaar zonder de hele installatie te herladen. Staat ook in `ARCHITECTURE.md`
   onder "Nog te bouwen".
-- **Documenteren dat meerdere installaties naast elkaar mogen** — de code en de tests
-  ondersteunen al twee config entries in één Home Assistant; de handleidingen zeggen er
-  nog niets over.
 - **Gasten- en vooruit-venster per weekdag** — het slaapvenster van een bewoner kent zijn
   dagen, maar het gastenvenster en het venster waarin vooruit verwarmen mag gelden nog
   voor elke dag hetzelfde. Wie in het weekend andere uren aanhoudt, kan dat daar niet
   zetten. Het model kan het al; het formulier en de opslag vragen er niet naar.
-- **Mutatiemeting in de CI** — de dekking wordt gemeten en bewaakt, maar dekking zegt
-  alleen dat een regel gedraaid is, niet dat er iets omvalt als hij verkeerd wordt. Een
-  mutatieronde, al is het maar wekelijks, laat zien welke wijziging in de code geen enkele
-  test raakt — precies het soort gat waar de bugs van de laatste review in zaten.
 
 ## Would have
 
@@ -174,11 +162,6 @@ The worked-out design proposals for everything below live in
   to every step_id in that method** — no cross-contamination as long as each step
   method shows exactly one form, which is true today but stated nowhere. A step method
   with two forms would attach one source to both step_ids without anyone noticing.
-- **The measure guard collapses two same-named functions in one file into the longest** —
-  `function_sizes()` therefore guards only the longer of such a pair. Unreachable today —
-  there are 18 same-named pairs and the largest is 38 lines — and it only becomes
-  reachable once two same-named functions in one file both rise above 80; then the smaller
-  one can grow unnoticed.
 - **A check on exclusive groups that actually holds** — there used to be one warning as soon
   as two members' outdoor bounds overlapped, advising you to make them adjacent. That advice
   is what makes the group pointless: it exists to choose between appliances that can meet.
@@ -247,16 +230,10 @@ The worked-out design proposals for everything below live in
   and hysteresis can currently only be changed through the config flow; `number` entities
   of their own would make them controllable without reloading the whole installation. Also
   listed in `ARCHITECTURE.md` under "Still to build".
-- **Document that several installations may sit side by side** — the code and tests already
-  support two config entries in one Home Assistant; the manuals say nothing about it yet.
 - **Guest and pre-conditioning window per weekday** — a resident's sleep window knows its
   days, but the guest window and the window in which pre-conditioning is allowed still
   apply to every day alike. Anyone keeping different hours at the weekend cannot set that
   there. The model already supports it; the form and storage do not ask for it.
-- **Mutation measurement in CI** — coverage is measured and guarded, but coverage only says
-  a line ran, not that anything breaks when it goes wrong. A mutation round, even a weekly
-  one, shows which change to the code touches no test at all - exactly the kind of gap the
-  bugs of the last review sat in.
 
 ## Would have
 
