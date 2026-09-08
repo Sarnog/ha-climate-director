@@ -25,6 +25,10 @@ from .engine.families import MODE_FAN_ONLY, MODE_OFF, preferred_mode
 from .entity import ClimateDirectorEntity
 from .units import rounded_from_celsius, unit_of_coordinator
 
+#: Alles komt uit één coordinator; er valt niets te serialiseren.
+#: Everything comes from one coordinator; there is nothing to serialise.
+PARALLEL_UPDATES = 0
+
 #: De toestand van een apparaat dat de director met opzet met rust laat: een
 #: overgedragen zone, of een handbediend apparaat dat niemand in de weg staat.
 #:

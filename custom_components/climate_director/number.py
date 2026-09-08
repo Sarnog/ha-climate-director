@@ -34,6 +34,10 @@ from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry
 from .engine import DirectorConfig
 from .entity import ClimateDirectorEntity
 
+#: Alles komt uit één coordinator; er valt niets te serialiseren.
+#: Everything comes from one coordinator; there is nothing to serialise.
+PARALLEL_UPDATES = 0
+
 #: Bewaard naast de stand, zodat een latere wijziging in de configuratie te
 #: onderscheiden is van een waarde die een automatisering heeft gezet.
 #:

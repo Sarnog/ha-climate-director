@@ -19,6 +19,10 @@ from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry
 from .engine import DirectorConfig
 from .entity import ClimateDirectorEntity
 
+#: Alles komt uit één coordinator; er valt niets te serialiseren.
+#: Everything comes from one coordinator; there is nothing to serialise.
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
