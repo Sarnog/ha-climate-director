@@ -62,8 +62,10 @@ def test_every_rule_has_a_known_status() -> None:
             if value not in ("done", "todo"):
                 problems.append(f"{identifier}: {value}")
         elif isinstance(value, dict):
-            if value.get("status") != "exempt":
+            if value.get("status") not in ("done", "todo", "exempt"):
                 problems.append(f"{identifier}: {value}")
+            elif not value.get("comment"):
+                problems.append(f"{identifier}: een uitgebreide regel hoort een comment te hebben")
         else:
             problems.append(f"{identifier}: {value!r}")
     assert not problems, "onbekende status: " + "; ".join(problems)

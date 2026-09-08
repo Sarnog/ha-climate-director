@@ -40,6 +40,33 @@ jobs:
       - name: Coverage
         run: python -m coverage report
 
+  # `strict-typing` meet 106 fouten (zie quality_scale.yaml). De baan is
+  # niet-blokkerend zolang dat aantal boven nul is; het aantal mag alleen
+  # omlaag, en bij nul wordt `continue-on-error` weggehaald.
+  #
+  # `strict-typing` measures 106 errors (see quality_scale.yaml). The job is
+  # non-blocking while that count is above zero; the count may only go down,
+  # and once it reaches zero `continue-on-error` is removed.
+  mypy:
+    name: Mypy (strict, non-blocking)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements_test.txt
+
+      - name: Mypy
+        run: python -m mypy custom_components/climate_director
+
   # De README, de handleidingen en `hacs.json` beloven Home Assistant 2025.3 als
   # ondergrens. Deze baan draait de suite tegen precies die versie, zodat de
   # belofte gecontroleerd wordt in plaats van aangenomen. Alleen pytest: ruff

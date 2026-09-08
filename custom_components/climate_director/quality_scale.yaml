@@ -77,4 +77,6 @@ rules:
   inject-websession:
     status: exempt
     comment: "Geen websessie nodig, de integratie doet geen HTTP. / No web session needed; the integration does no HTTP."
-  strict-typing: todo
+  strict-typing:
+    status: todo
+    comment: "106 mypy-fouten gemeten op 2026-09-08 (mypy 2.3.1, strict). De CI-baan is niet-blokkerend tot dit aantal nul is. / 106 mypy errors measured on 2026-09-08 (mypy 2.3.1, strict). The CI job stays non-blocking until this count reaches zero."

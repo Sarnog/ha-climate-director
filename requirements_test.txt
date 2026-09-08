@@ -10,6 +10,12 @@ pytest-asyncio
 coverage
 ruff
 
+# De mypy-baan in tests.yaml meet `strict-typing`; het aantal fouten staat in
+# quality_scale.yaml en mag alleen omlaag.
+# The mypy job in tests.yaml measures `strict-typing`; the error count sits in
+# quality_scale.yaml and may only go down.
+mypy
+
 # tests/test_ui_complete.py leest services.yaml uit om elk actieveld na te lopen.
 # tests/test_ui_complete.py reads services.yaml to check every action field.
 pyyaml
