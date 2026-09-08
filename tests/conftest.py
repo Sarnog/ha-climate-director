@@ -38,6 +38,9 @@ from custom_components.climate_director.engine import (
     Zone,
     gates,
 )
+from custom_components.climate_director.engine import (
+    fields as engine_fields,
+)
 from custom_components.climate_director.engine.plan import Reason
 
 # Entiteiten uit de bestaande opstelling, zodat scenario's herkenbaar blijven.
@@ -447,6 +450,15 @@ def form_field_nodes(
     `schemas.<naam>(...)` telt als de `def <naam>` in `schemas.py`. Zo blijven
     de veldenkaarten kloppen nu de formulieren apart zijn opgebouwd.
 
+    Bestaat `schemas.<naam>` niet, dan is dat een duidelijke fout en geen stille
+    lege kaart: anders valt de dekking van precies dat scherm weg zonder dat
+    iemand het merkt. En sinds ronde 23 kan een schema uit een veldtabel komen:
+    roept de schemafunctie `_table_schema(<tabel>, ...)` aan, dan telt elke rij
+    van die tabel als een veld van het scherm. De tabel komt uit
+    `engine/fields.py` — dezelfde module die de productiecode leest — zodat de
+    bewaking de nieuwe plek werkelijk meeneemt in plaats van op de oude vorm te
+    blijven hangen.
+
     Wat er niet doorheen komt: een schema dat onder een andere naam wordt
     opgebouwd dan de functie die `data_schema=` noemt (bijvoorbeeld een
     doorgeefluik dat een andere functie aanroept), en een schema dat achter een
@@ -458,6 +470,15 @@ def form_field_nodes(
     literal `vol.Schema({...})` counts as itself, and a `schemas.<name>(...)`
     call counts as the `def <name>` in `schemas.py`. That keeps the field maps
     correct now that the forms are built apart.
+
+    When `schemas.<name>` does not exist that is a clear error, not a silently
+    empty map: otherwise the coverage of exactly that screen drops away without
+    anybody noticing. And since round 23 a schema can come from a field table:
+    when the schema function calls `_table_schema(<table>, ...)`, every row of
+    that table counts as a field of the screen. The table comes from
+    `engine/fields.py` — the same module the production code reads — so the
+    guard genuinely moves to the new place instead of hanging on to the old
+    shape.
 
     What does not pass through: a schema built under a name other than the
     function named in `data_schema=` (for example a pass-through that calls
@@ -486,9 +507,83 @@ def form_field_nodes(
             value = schema.func.value
             if isinstance(value, ast.Name) and value.id == "schemas":
                 schemas_module = _module_of(root, root / "schemas.py")
-                target = functions.get((schemas_module, schema.func.attr), schema)
+                function = functions.get((schemas_module, schema.func.attr))
+                if function is None:
+                    raise AssertionError(
+                        f"{module}: data_schema verwijst naar schemas.{schema.func.attr}, "
+                        "maar die functie bestaat niet in schemas.py"
+                    )
+                target = function
+                table_name = _table_schema_argument(function)
+                if table_name is not None:
+                    target = _table_schema_node(table_name, function)
         found.append((module, step_id, target))
     return found
+
+
+def _table_schema_argument(node: ast.AST) -> str | None:
+    """Return the table name a schema function reads, or `None`.
+
+    Geeft `SETTINGS_FIELDS` terug voor een functie die
+    `_table_schema(SETTINGS_FIELDS, ...)` aanroept, en `None` voor elke andere
+    vorm. De naam wordt niet geëvalueerd — de tabel zelf wordt door
+    `_table_schema_node` uit `engine.fields` gehaald, zodat de bewaking dezelfde
+    module leest als de productiecode.
+
+    Returns `SETTINGS_FIELDS` for a function calling
+    `_table_schema(SETTINGS_FIELDS, ...)`, and `None` for every other shape. The
+    name is not evaluated — the table itself is fetched from `engine.fields` by
+    `_table_schema_node`, so the guard reads the same module the production code
+    reads.
+    """
+    import ast
+
+    for call in ast.walk(node):
+        if not (isinstance(call, ast.Call) and isinstance(call.func, ast.Name)):
+            continue
+        if call.func.id != "_table_schema":
+            continue
+        if call.args and isinstance(call.args[0], ast.Name):
+            return call.args[0].id
+    return None
+
+
+def _table_schema_node(table_name: str, function_node: ast.AST) -> ast.Module:
+    """Return the function node plus one synthetic field call per table row.
+
+    De veldenkaarten (`fields_per_step`, `_optional_fields_by_step`, de
+    terugwegcontrole) lopen met `ast.walk` over de opgeloste schemaknoop op zoek
+    naar `vol.Required`/`vol.Optional`. Voor een tabelgedreven schema staan die
+    aanroepen nergens letterlijk in de bron; daarom bouwt deze helper per
+    tabelrij een gelijkwaardige knoop. De tabel is de bron, de knoop is alleen
+    de adapter, en de letterlijke velden van de functie zelf (zoals de
+    afsluitregel) blijven gewoon meedoen.
+
+    The field maps (`fields_per_step`, `_optional_fields_by_step`, the way-back
+    check) walk the resolved schema node with `ast.walk` looking for
+    `vol.Required`/`vol.Optional`. For a table-driven schema those calls appear
+    nowhere literally in the source; this helper therefore builds an equivalent
+    node per table row. The table is the source, the node only the adapter, and
+    the function's own literal fields (such as the exit row) keep participating.
+    """
+    import ast
+
+    specs = getattr(engine_fields, table_name)
+    synthetic: list[ast.stmt] = []
+    for spec in specs:
+        key_node: ast.expr = ast.Constant(value=spec.key)
+        func = ast.Attribute(
+            value=ast.Name(id="vol", ctx=ast.Load()),
+            attr="Required" if spec.required else "Optional",
+            ctx=ast.Load(),
+        )
+        keywords = (
+            [ast.keyword(arg="default", value=ast.Constant(value=spec.default))]
+            if spec.required
+            else []
+        )
+        synthetic.append(ast.Expr(value=ast.Call(func=func, args=[key_node], keywords=keywords)))
+    return ast.Module(body=[function_node, *synthetic], type_ignores=[])
 
 
 def fixable_issue_keys(root: Path | None = None) -> set[str]:

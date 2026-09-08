@@ -329,11 +329,21 @@ class TestEveryScreenCanBeLeft:
         in dat bestand en plakt de bron erbij, zodat de bewaking meeverhuist in
         plaats van te verzwakken.
 
+        De toewijzing gaat per `async_show_form`-aanroep, niet per methode: één
+        methode met twee schermen kreeg anders voor béíde `step_id`'s dezelfde
+        samengevoegde bron, en dan kon een terugweg in het ene schema het
+        ontbreken ervan in het andere maskeren.
+
         Since S5 the way back (`_back_option()` / `_EXIT`) lives in the schema
         functions in `schemas.py`, no longer in the step method itself. This
         reader therefore resolves `data_schema=schemas.<name>(...)` to the
         function in that file and appends its source, so the guard moves along
         instead of weakening.
+
+        The mapping is per `async_show_form` call, not per method: one method
+        with two screens would otherwise get the same merged source for both
+        `step_id`s, and then a way back in one schema could mask its absence in
+        the other.
         """
         source = (COMPONENT / "config_flow.py").read_text(encoding="utf-8")
         schema_source = (COMPONENT / "schemas.py").read_text(encoding="utf-8")
@@ -349,21 +359,31 @@ class TestEveryScreenCanBeLeft:
         for node in ast.walk(tree):
             if not isinstance(node, ast.AsyncFunctionDef):
                 continue
-            body = "".join(lines[node.lineno - 1 : node.end_lineno])
+            method_body = "".join(lines[node.lineno - 1 : node.end_lineno])
             for call in ast.walk(node):
                 if not isinstance(call, ast.Call):
                     continue
                 if getattr(call.func, "attr", "") != "async_show_form":
                     continue
+                step_id = next(
+                    (
+                        keyword.value.value
+                        for keyword in call.keywords
+                        if keyword.arg == "step_id" and isinstance(keyword.value, ast.Constant)
+                    ),
+                    None,
+                )
+                if step_id is None:
+                    continue
                 schema = next((kw.value for kw in call.keywords if kw.arg == "data_schema"), None)
+                body = method_body
                 if isinstance(schema, ast.Call) and isinstance(schema.func, ast.Attribute):
                     value = schema.func.value
                     if isinstance(value, ast.Name) and value.id == "schemas":
                         function = schema_functions.get(schema.func.attr)
                         if function is not None:
                             body += "".join(schema_lines[function.lineno - 1 : function.end_lineno])
-            for step in re.findall(r'step_id="(\w+)"', body):
-                found[step] = body
+                found[step_id] = body
         return found
 
     def test_the_reader_finds_the_screens(self) -> None:
