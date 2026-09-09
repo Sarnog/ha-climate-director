@@ -315,6 +315,14 @@ def _generator(raw: Mapping[str, Any]) -> Generator:
 
 
 def _gates(raw: Any) -> GateSettings:
+    """Return the gate settings, built from the field table.
+
+    De sleutels van `GATES_FLAT_FIELDS` zijn de namen van de dataclass: een
+    nieuwe poort is één tabelrij plus één attribuut op `GateSettings`.
+
+    The keys of `GATES_FLAT_FIELDS` are the dataclass's names: a new gate is one
+    table row plus one attribute on `GateSettings`.
+    """
     if not isinstance(raw, Mapping):
         return GateSettings()
     flat = {
@@ -323,15 +331,13 @@ def _gates(raw: Any) -> GateSettings:
     }
     guest = raw.get("guest_window")
     return GateSettings(
-        require_awake=flat["require_awake"],
         quiet_windows=tuple(
             _time_window(item)
             for item in _sequence(raw.get("quiet_windows"))
             if isinstance(item, dict)
         ),
-        require_schedule=flat["require_schedule"],
         guest_window=_guest_window(guest if isinstance(guest, dict) else {}),
-        max_precondition=flat["max_precondition"],
+        **flat,
     )
 
 
