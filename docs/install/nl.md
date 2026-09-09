@@ -168,6 +168,7 @@ je in het hoofdmenu **Opslaan en sluiten** kiest.
 | **Woord dat vakantie aangeeft** | het trefwoord dat een agenda-item moet dragen; leeg = agenda's worden genegeerd |
 | **Vooruitverwarmingsduur** | het plafond op één verzoek; standaard 120 minuten |
 | **Gastenmodus vanaf / tot** | het venster waarin de gastenmodus geldt; beide leeg = de hele dag |
+| **Dagen van de gastenmodus** | op welke weekdagen dat venster geldt; leeg = elke dag |
 | **Meld een zone vastgelopen na** | na hoeveel minuten wachten een zone als vastgelopen geldt; 0 zet de melder uit |
 | **Neerslagbron** | een `weather.*`- of `sensor.*`-entiteit die zegt of er neerslag valt; leeg = de neerslagregel doet niet mee |
 | **Staten die als neerslag tellen** | welke standen van die entiteit neerslag betekenen; standaard regen, sneeuw en hagel |
@@ -273,6 +274,7 @@ opgeslagen, kies je meteen de bronnen ervan.
 
 | Instelling | Wat het doet |
 |---|---|
+| **Naam** | een eigen naam voor deze bron; leeg = de kiezer noemt het apparaat zelf |
 | **Climate-entiteit** | het apparaat zelf |
 | **Wat dit apparaat kan** | alleen verwarmen, alleen koelen, of allebei. Een ketel is *alleen verwarmen* |
 | **Dit apparaat automatisch starten** | uit laat hem met rust, zie hieronder |

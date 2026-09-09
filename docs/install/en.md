@@ -168,6 +168,7 @@ what you typed is then thrown away. And **nothing** is stored until you pick
 | **Word that marks a holiday** | the keyword an event must carry; empty = calendars are ignored |
 | **Pre-conditioning duration** | the ceiling on a single request; default 120 minutes |
 | **Guest mode from / until** | the window in which guest mode applies; both empty = all day |
+| **Days of guest mode** | on which weekdays that window applies; empty = every day |
 | **Report a zone stuck after** | after how many minutes of waiting a zone counts as stuck; 0 switches the sensor off |
 | **Precipitation source** | a `weather.*` or `sensor.*` entity that says whether precipitation falls; empty = the precipitation rule does not take part |
 | **States that count as precipitation** | which states of that entity mean precipitation; rain, snow and hail by default |
@@ -273,6 +274,7 @@ you pick its sources straight away.
 
 | Setting | What it does |
 |---|---|
+| **Name** | a name of your own for this source; empty = the picker names the appliance itself |
 | **Climate entity** | the appliance itself |
 | **What this appliance can do** | heating only, cooling only, or both. A boiler is *heating only* |
 | **Start this appliance automatically** | off leaves it alone, see below |

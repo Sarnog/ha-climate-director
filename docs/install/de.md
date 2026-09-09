@@ -171,6 +171,7 @@ wählst.
 | **Wort, das Ferien kennzeichnet** | das Stichwort, das ein Ereignis tragen muss; leer = Kalender werden ignoriert |
 | **Vorheizdauer** | die Obergrenze einer einzelnen Anfrage; Standard 120 Minuten |
 | **Gastmodus von / bis** | das Fenster, in dem der Gastmodus gilt; beide leer = den ganzen Tag |
+| **Tage des Gastmodus** | an welchen Wochentagen dieses Fenster gilt; leer = jeder Tag |
 | **Zone nach … Minuten als festgefahren melden** | nach wie vielen Minuten Wartezeit eine Zone als festgefahren gilt; 0 schaltet den Sensor aus |
 | **Niederschlagsquelle** | eine `weather.*`- oder `sensor.*`-Entität, die sagt, ob Niederschlag fällt; leer = die Niederschlagsregel macht nicht mit |
 | **Zustände, die als Niederschlag zählen** | welche Zustände dieser Entität Niederschlag bedeuten; standardmäßig Regen, Schnee und Hagel |
@@ -277,6 +278,7 @@ gespeichert hast, wählst du sofort ihre Quellen.
 
 | Einstellung | Was sie tut |
 |---|---|
+| **Name** | ein eigener Name für diese Quelle; leer = die Auswahl nennt das Gerät selbst |
 | **Klima-Entität** | das Gerät selbst |
 | **Was dieses Gerät kann** | nur heizen, nur kühlen oder beides. Ein Kessel ist *nur heizen* |
 | **Dieses Gerät automatisch starten** | aus lässt es in Ruhe, siehe unten |

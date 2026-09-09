@@ -169,6 +169,7 @@ hasta que eliges **Guardar y cerrar** en el menú principal.
 | **Palabra que marca vacaciones** | la palabra clave que debe llevar un evento; vacío = se ignoran los calendarios |
 | **Duración del preacondicionamiento** | el tope de una sola petición; por defecto 120 minutos |
 | **Modo invitados de / hasta** | la ventana en la que se aplica el modo invitados; ambos vacíos = todo el día |
+| **Días del modo invitados** | en qué días de la semana se aplica esa ventana; vacío = todos los días |
 | **Avisar de zona atascada tras** | tras cuántos minutos de espera una zona cuenta como atascada; 0 apaga el sensor |
 | **Fuente de precipitaciones** | una entidad `weather.*` o `sensor.*` que dice si hay precipitaciones; vacío = la regla de precipitaciones no participa |
 | **Estados que cuentan como precipitación** | qué estados de esa entidad significan precipitaciones; lluvia, nieve y granizo por defecto |
@@ -277,6 +278,7 @@ eliges enseguida sus fuentes.
 
 | Ajuste | Qué hace |
 |---|---|
+| **Nombre** | un nombre propio para esta fuente; vacío = el selector nombra el aparato en sí |
 | **Entidad climática** | el aparato en sí |
 | **Qué puede hacer este aparato** | solo calentar, solo enfriar, o ambas cosas. Una caldera es *solo calentar* |
 | **Arrancar este aparato automáticamente** | desactivado lo deja en paz, ver abajo |

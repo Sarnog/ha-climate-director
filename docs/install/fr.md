@@ -171,6 +171,7 @@ le menu principal.
 | **Mot qui marque des vacances** | le mot-clé que doit porter un événement ; vide = calendriers ignorés |
 | **Durée de préchauffage** | le plafond d'une seule demande ; par défaut 120 minutes |
 | **Mode invités de / jusqu'à** | la fenêtre où le mode invités s'applique ; les deux vides = toute la journée |
+| **Jours du mode invités** | les jours de la semaine où cette fenêtre s'applique ; vide = tous les jours |
 | **Signaler une zone bloquée après** | après combien de minutes d'attente une zone compte comme bloquée ; 0 éteint le capteur |
 | **Source de précipitations** | une entité `weather.*` ou `sensor.*` qui dit s'il y a des précipitations ; vide = la règle de précipitations ne participe pas |
 | **États comptant comme précipitations** | quels états de cette entité signifient des précipitations ; pluie, neige et grêle par défaut |
@@ -280,6 +281,7 @@ une zone, vous choisissez immédiatement ses sources.
 
 | Réglage | Ce qu'il fait |
 |---|---|
+| **Nom** | un nom à vous pour cette source ; vide = le sélecteur nomme l'appareil lui-même |
 | **Entité climatique** | l'appareil lui-même |
 | **Ce que cet appareil peut faire** | chauffer seulement, refroidir seulement, ou les deux. Une chaudière est *chauffage seulement* |
 | **Démarrer cet appareil automatiquement** | désactivé le laisse tranquille, voir ci-dessous |
