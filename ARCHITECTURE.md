@@ -65,7 +65,9 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
    bevestiging bij een openstaande deur — hetzelfde principe als: wie laat
    opblijft, houdt zijn verwarming. Er zijn twee manieren om dat *toch doen*
    te zeggen: de vlag `ignore_openings` op één verzoek, en de overbrugging per
-   opening uit anker 8. Ze betekenen hetzelfde en stapelen niet.
+   opening uit anker 8. Ze betekenen hetzelfde en stapelen niet. Sinds ronde 4
+   is er bewust géén vooruit-venster meer; een vooruit-venster per weekdag is
+   daarom geen idee maar een terugdraaiing van dat besluit.
 2. **Een onleesbare buitentemperatuur** weigert een taak alleen als díe taak zelf
    een begrensd venster moet passeren — op de zone, of op een bron die deze taak
    kan leveren. Vensters van bronnen die de taak niet leveren tellen niet mee:
@@ -1019,6 +1021,9 @@ them without changing them here first.
    principle as: whoever stays up late keeps their heating. There are two ways
    to say that *do it anyway*: the `ignore_openings` flag on a single request,
    and the per-opening bypass of anchor 8. They mean the same and do not stack.
+   Since round 4 there is deliberately no pre-conditioning window any more; a
+   pre-conditioning window per weekday is therefore not an idea but a reversal
+   of that decision.
 2. **An unreadable outdoor temperature** refuses a duty only when that duty
    itself has to pass a bounded window — on the zone, or on a source able to
    deliver this duty. Windows of sources that do not deliver the duty do not
