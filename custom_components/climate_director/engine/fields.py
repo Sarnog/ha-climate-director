@@ -63,6 +63,25 @@ class FieldSpec:
     """De maat van een getalveld: `temperature`, `delta_celsius`, `minutes`,
     `minutes_or_off`, `seconds` of `rank`."""
 
+    hook: str | None = None
+    """De naam van de eigenzinnige behandeling die dit veld bij het opslaan krijgt.
+
+    De opslagkant is generiek: elke rij gaat naar haar `target`-pad. Een enkel
+    veld wijkt daar bewust van af — de zomermaanden volgen een halfrondkeuze, de
+    neerslagstanden komen als komma-lijst binnen, het vakantietrefwoord wordt
+    getrimd, en de schaduwmodus hoort in de bedieningstoestand en niet in de
+    installatie. Die uitzonderingen staan hier als naam, zodat ze zichtbaar in
+    de tabel staan in plaats van als tak in een stapmethode te verdwijnen.
+
+    The name of the idiosyncratic treatment this field gets when saved. The
+    storage side is generic: every row goes to its `target` path. A few fields
+    deliberately differ — the summer months follow a hemisphere choice, the
+    precipitation states arrive as a comma list, the holiday keyword is trimmed,
+    and shadow mode belongs in the control state rather than in the installation.
+    Those exceptions sit here as a name, so they show up in the table instead of
+    disappearing into a branch of a step method.
+    """
+
 
 def target_key(field: FieldSpec) -> str:
     """Geef het laatste paddeel van `field.target`, de sleutel in de opslag.
@@ -125,6 +144,7 @@ SETTINGS_FIELDS: tuple[FieldSpec, ...] = (
         translation_key="hemisphere",
         target="seasons.summer_months",
         options=("north", "south"),
+        hook="summer_months",
     ),
     FieldSpec("require_awake", "bool", default=True, target="gates.require_awake"),
     FieldSpec("require_schedule", "bool", default=False, target="gates.require_schedule"),
@@ -136,7 +156,7 @@ SETTINGS_FIELDS: tuple[FieldSpec, ...] = (
         domain="calendar",
         multiple=True,
     ),
-    FieldSpec("holiday_keyword", "text", required=False, target="holiday_keyword"),
+    FieldSpec("holiday_keyword", "text", required=False, target="holiday_keyword", hook="trim"),
     FieldSpec(
         "max_precondition",
         "number",
@@ -166,7 +186,12 @@ SETTINGS_FIELDS: tuple[FieldSpec, ...] = (
         target="precipitation.source",
         domain=("weather", "sensor"),
     ),
-    FieldSpec("precipitation_states", "states_text", target="precipitation.states"),
+    FieldSpec(
+        "precipitation_states",
+        "states_text",
+        target="precipitation.states",
+        hook="states",
+    ),
     FieldSpec(
         "precipitation_grace",
         "number",
@@ -174,7 +199,7 @@ SETTINGS_FIELDS: tuple[FieldSpec, ...] = (
         target="precipitation.grace",
         unit="minutes",
     ),
-    FieldSpec("shadow_mode", "bool", default=None, target=None),
+    FieldSpec("shadow_mode", "bool", default=None, target=None, hook="control_state"),
 )
 
 #: Per veldtabel het model waaraan haar `target`-paden hangen, en de functie in

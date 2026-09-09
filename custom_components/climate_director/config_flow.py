@@ -26,9 +26,10 @@ from . import problems, schemas, texts
 from .const import CONF_INSTALLATION, CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE, DOMAIN
 from .coordinator import ClimateDirectorEntry
 from .engine import validate
+from .engine.fields import SETTINGS_FIELDS
 from .engine.models import Season, ZoneGate
 from .engine.serialise import config_from_dict
-from .schema_fields import _SUMMER_NORTH, _SUMMER_SOUTH, guest_window_from_form
+from .schema_fields import write_table
 from .schemas import (
     _ADD,
     _BACK,
@@ -246,63 +247,33 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         if user_input is not None:
             if user_input.get(_EXIT) == _EXIT_DROP:
                 return await self.async_step_init()
-            # Optionele velden worden hier bewust met `or ""` / `or ()` gelezen.
-            # De echte HA-interface vult een selector met een `suggested_value`
-            # voor en stuurt die waarde mee bij het opslaan; alleen een
-            # leeggemaakt veld komt als leeg binnen. Wie hier "afwezig = bewaren"
-            # van maakt, blokkeert het leegmaken van de buitensensor en de
-            # neerslagbron - een gedragswijziging, geen reparatie.
+            # Elke rij van de tabel schrijft zichzelf terug naar haar puntpad;
+            # de eigenzinnige velden (zomermaanden, neerslagstanden, het
+            # vakantietrefwoord en de schaduwmodus) dragen daarvoor een `hook`
+            # in `engine/fields.py`. Optionele velden worden daar bewust leeg
+            # gelezen: de echte HA-interface stuurt een voorgevulde selector mee
+            # bij het opslaan, dus alleen een leeggemaakt veld komt leeg binnen.
+            # Wie daar "afwezig = bewaren" van maakt, blokkeert het leegmaken
+            # van de buitensensor en de neerslagbron.
             #
-            # Optional fields are deliberately read with `or ""` / `or ()`.
-            # The real HA frontend pre-fills a selector with a `suggested_value`
-            # and submits that value on save; only a field the user cleared
-            # arrives empty. Turning this into "absent = keep" would stop users
-            # from clearing the outdoor sensor and the precipitation source - a
-            # behaviour change, not a repair.
-            self._installation["outdoor_sensor"] = user_input.get("outdoor_sensor") or ""
-            self._installation["heating_layout"] = user_input["heating_layout"]
-            # Een handmatige zomermaandenlijst is een bewuste keuze; het
-            # halfrond-veld is alleen de snelle manier om een van de twee
-            # standaardlijsten te kiezen. Wijst de opgeslagen lijst af van
-            # beide standaarden, dan blijft hij staan; anders volgt hij het
-            # halfrond zoals altijd.
+            # Every row of the table writes itself back to its dotted path; the
+            # idiosyncratic fields (summer months, precipitation states, the
+            # holiday keyword and shadow mode) carry a `hook` in
+            # `engine/fields.py` for that. Optional fields are deliberately read
+            # as empty there: the real HA frontend submits a pre-filled selector
+            # on save, so only a field the user cleared arrives empty. Turning
+            # that into "absent = keep" would stop users from clearing the
+            # outdoor sensor and the precipitation source.
             #
-            # A hand-picked summer-months list is a deliberate choice; the
-            # hemisphere field is only the quick way to pick one of the two
-            # default lists. If the stored list differs from both defaults it
-            # stays; otherwise it follows the hemisphere as ever.
-            stored_seasons = self._installation.get("seasons") or {}
-            stored_months = stored_seasons.get("summer_months")
-            if stored_months and frozenset(int(month) for month in stored_months) not in (
-                _SUMMER_NORTH,
-                _SUMMER_SOUTH,
-            ):
-                summer_months = sorted(int(month) for month in stored_months)
-            else:
-                summer_months = sorted(
-                    _SUMMER_SOUTH if user_input["hemisphere"] == "south" else _SUMMER_NORTH
-                )
-            self._installation["seasons"] = {
-                "source": user_input["season_source"],
-                "entity_id": user_input.get("season_entity") or "",
-                "summer_months": summer_months,
-            }
-            # `gates` wordt bewust bijgewerkt in plaats van vervangen: het
-            # stiltevensterscherm schrijft in dezelfde sleutel (`quiet_windows`),
-            # en een compleet nieuw dict zou dat werk stilletjes wissen.
+            # `gates` wordt daarbij bijgewerkt en niet vervangen: het
+            # stiltevensterscherm schrijft in dezelfde sleutel
+            # (`quiet_windows`), en een compleet nieuw dict zou dat werk
+            # stilletjes wissen.
             #
-            # `gates` is deliberately updated rather than replaced: the quiet
+            # `gates` is updated rather than replaced along the way: the quiet
             # window screen writes into the same key (`quiet_windows`), and a
             # brand-new dict would silently erase that work.
-            gates = self._installation.setdefault("gates", {})
-            gates.update(
-                {
-                    "require_awake": user_input["require_awake"],
-                    "require_schedule": user_input["require_schedule"],
-                    "guest_window": guest_window_from_form(user_input),
-                    "max_precondition": int(user_input.get("max_precondition") or 0) * 60,
-                }
-            )
+            write_table(SETTINGS_FIELDS, user_input, self._installation, flow=self)
             # Het vooruit-venster bestaat niet meer. Een installatie die het
             # ooit opsloeg houdt de dode sleutel niet langer vast zodra er hier
             # iets gewijzigd wordt.
@@ -310,32 +281,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             # The pre-conditioning window no longer exists. An installation
             # that once stored it no longer keeps the dead key once anything is
             # changed here.
-            gates.pop("precondition_window", None)
-            self._installation["holiday_calendars"] = list(
-                user_input.get("holiday_calendars") or ()
-            )
-            self._installation["stuck_after"] = int(user_input.get("stuck_after") or 0) * 60
-            self._installation["outdoor_hysteresis"] = float(
-                delta_to_celsius(
-                    user_input.get("outdoor_hysteresis"), temperature_unit_of(self.hass)
-                )
-                or 0
-            )
-            self._installation["holiday_keyword"] = (
-                user_input.get("holiday_keyword") or ""
-            ).strip()
-            self._installation["precipitation"] = {
-                "source": user_input.get("precipitation_source") or "",
-                "states": sorted(
-                    {
-                        item.strip()
-                        for item in (user_input.get("precipitation_states") or "").split(",")
-                        if item.strip()
-                    }
-                ),
-                "grace": int(user_input.get("precipitation_grace") or 0) * 60,
-            }
-            self._shadow_mode = user_input[CONF_SHADOW_MODE]
+            self._installation.setdefault("gates", {}).pop("precondition_window", None)
             return await self.async_step_init()
 
         return self.async_show_form(
