@@ -218,6 +218,7 @@ def settings(flow: Any) -> vol.Schema:
     return _table_schema(
         SETTINGS_FIELDS,
         flow,
+        values=flow._installation,
         footer={vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row()},
     )
 

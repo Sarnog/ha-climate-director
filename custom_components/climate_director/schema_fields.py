@@ -165,13 +165,20 @@ def _choices(values: list[str], key: str = "") -> selector.SelectSelector:
     )
 
 
-def _target_value(installation: dict[str, Any], target: str | None) -> Any:
-    """Read a dotted path from the installation, `None` at the first gap."""
+def _target_value(values: Mapping[str, Any], target: str | None) -> Any:
+    """Read a dotted path from a value source, `None` at the first gap.
+
+    De waardebron is de installatie voor het instellingenscherm en het item zelf
+    voor een lijst-itemscherm; de tabel kent alleen het pad.
+
+    The value source is the installation for the settings screen and the item
+    itself for a list-item screen; the table only knows the path.
+    """
     if not target:
         return None
-    current: Any = installation
+    current: Any = values
     for part in target.split("."):
-        if not isinstance(current, dict):
+        if not isinstance(current, Mapping):
             return None
         current = current.get(part)
     return current
@@ -228,11 +235,22 @@ def _selector_for(field: FieldSpec, flow: Any) -> Any:
     raise AssertionError(f"onbekend veldtype {field.kind!r} voor {field.key}")
 
 
-def _settings_value(flow: Any, field: FieldSpec) -> Any:
-    """Return the form-level default or suggestion for one settings field."""
+def _settings_value(flow: Any, field: FieldSpec, values: Mapping[str, Any]) -> Any:
+    """Return the form-level default or suggestion for one table field.
+
+    De waardebron komt van buiten mee in plaats van hard uit `flow._installation`
+    te komen: het instellingenscherm leest de installatie, een lijst-itemscherm
+    leest het item dat bewerkt wordt. Dat is het enige verschil tussen de twee,
+    en daarom is het een parameter en geen tweede functie.
+
+    The value source is handed in rather than coming hard-wired from
+    `flow._installation`: the settings screen reads the installation, a list-item
+    screen reads the item being edited. That is the only difference between the
+    two, and hence a parameter rather than a second function.
+    """
     unit = temperature_unit_of(flow.hass)
     if field.kind == "number":
-        stored = _target_value(flow._installation, field.target)
+        stored = _target_value(values, field.target)
         if field.unit in ("minutes", "minutes_or_off"):
             return int(stored if stored is not None else field.default) // 60
         if field.unit == "delta_celsius":
@@ -241,14 +259,14 @@ def _settings_value(flow: Any, field: FieldSpec) -> Any:
             )
         return stored if stored is not None else field.default
     if field.kind == "hemisphere":
-        return _hemisphere(_target_value(flow._installation, field.target))
+        return _hemisphere(_target_value(values, field.target))
     if field.kind == "weekdays":
-        stored = _target_value(flow._installation, field.target)
+        stored = _target_value(values, field.target)
         return None if stored is None else [str(day) for day in sorted(stored)]
     if field.kind == "states_text":
-        stored = _target_value(flow._installation, field.target)
+        stored = _target_value(values, field.target)
         return ", ".join(stored if stored else sorted(PrecipitationSettings().states))
-    stored = _target_value(flow._installation, field.target)
+    stored = _target_value(values, field.target)
     if not field.required:
         return stored or None
     if stored is not None:
@@ -262,6 +280,7 @@ def _table_schema(
     fields: tuple[FieldSpec, ...],
     flow: Any,
     *,
+    values: Mapping[str, Any],
     footer: dict[Any, Any] | None = None,
 ) -> vol.Schema:
     """Build a screen schema from a field table.
@@ -275,10 +294,16 @@ def _table_schema(
     function turns each row into the `vol.Required`/`vol.Optional` shape Home
     Assistant draws. The exit row (`when_done`) does not belong in the table —
     it is the same for every screen — and comes along as `footer`.
+
+    De waardebron (`values`) staat er expliciet bij: de installatie voor het
+    instellingenscherm, het item zelf voor een lijst-itemscherm.
+
+    The value source (`values`) is explicit: the installation for the settings
+    screen, the item itself for a list-item screen.
     """
     schema: dict[Any, Any] = {}
     for field in fields:
-        value = _settings_value(flow, field)
+        value = _settings_value(flow, field, values)
         if field.required:
             schema[vol.Required(field.key, default=value)] = _selector_for(field, flow)
         else:
