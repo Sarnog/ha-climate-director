@@ -161,6 +161,7 @@
         "title": "Source",
         "description": "La fenêtre extérieure est ce qui sépare une chaudière d'une pompe à chaleur. Deux fenêtres adjacentes se rejoignent exactement, aucune température extérieure ne tombe donc entre les deux.",
         "data": {
+          "name": "Nom",
           "entity_id": "Entité climate",
           "role": "Ce que cet appareil sait faire",
           "priority": "Ordre au sein de cette zone",
@@ -172,6 +173,7 @@
           "min_cycle_time": "Repos avant que cet appareil puisse redémarrer (secondes)"
         },
         "data_description": {
+          "name": "Un nom à vous pour cette source ; si vous le laissez vide, le sélecteur nomme l'appareil lui-même.",
           "priority": "Le plus bas l'emporte quand plusieurs sources peuvent assurer la même tâche.",
           "outdoor_min": "À partir de cette température la source compte ; cette valeur elle-même en fait partie.",
           "outdoor_max": "Jusqu'à cette température la source compte ; cette valeur elle-même n'en fait plus partie, de sorte qu'elle rejoint exactement une source qui commence là.",

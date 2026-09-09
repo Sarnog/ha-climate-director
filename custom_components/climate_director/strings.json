@@ -161,6 +161,7 @@
         "title": "Source",
         "description": "The outdoor window is what separates a boiler from a heat pump. Two adjacent windows meet exactly, so no outdoor temperature falls between them.",
         "data": {
+          "name": "Name",
           "entity_id": "Climate entity",
           "role": "What this appliance can do",
           "priority": "Order within this zone",
@@ -172,6 +173,7 @@
           "min_cycle_time": "Rest before this appliance may restart (seconds)"
         },
         "data_description": {
+          "name": "A name of your own for this source; leave it empty and the picker names the appliance itself.",
           "priority": "Lower wins when several sources could serve the same duty.",
           "outdoor_min": "The source counts from this temperature upwards; this value itself is included.",
           "outdoor_max": "The source counts up to this temperature; this value itself is not, so it meets a source starting there exactly.",

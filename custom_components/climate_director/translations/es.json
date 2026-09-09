@@ -161,6 +161,7 @@
         "title": "Fuente",
         "description": "La ventana exterior es lo que separa una caldera de una bomba de calor. Dos ventanas contiguas se encuentran exactamente, así que ninguna temperatura exterior cae entre ellas.",
         "data": {
+          "name": "Nombre",
           "entity_id": "Entidad climate",
           "role": "Lo que puede hacer este aparato",
           "priority": "Orden dentro de esta zona",
@@ -172,6 +173,7 @@
           "min_cycle_time": "Descanso antes de que este aparato pueda reiniciarse (segundos)"
         },
         "data_description": {
+          "name": "Un nombre propio para esta fuente; si lo dejas vacío, el selector nombra el aparato en sí.",
           "priority": "El más bajo gana cuando varias fuentes podrían cumplir la misma tarea.",
           "outdoor_min": "A partir de esta temperatura la fuente cuenta; este valor mismo entra.",
           "outdoor_max": "Hasta esta temperatura la fuente cuenta; este valor mismo ya no, de modo que enlaza exactamente con una fuente que empieza ahí.",

@@ -216,6 +216,7 @@ SETTINGS_FIELDS: tuple[FieldSpec, ...] = (
 #: fields. Assigning a `source_id` likewise stays by hand — that is identity,
 #: not a field.
 SOURCE_FIELDS: tuple[FieldSpec, ...] = (
+    FieldSpec("name", "text", required=False, target="name"),
     FieldSpec("entity_id", "entity", required=False, target="entity_id", domain="climate"),
     FieldSpec(
         "role",

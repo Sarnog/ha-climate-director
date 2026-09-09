@@ -123,7 +123,10 @@ def _source_options(flow: Any) -> list[selector.SelectOptionDict]:
             options.append(
                 selector.SelectOptionDict(
                     value=source["source_id"],
-                    label=f"{zone.get('name') or zone['zone_id']} - {source['entity_id']}",
+                    label=(
+                        f"{zone.get('name') or zone['zone_id']}"
+                        f" - {source.get('name') or source['entity_id']}"
+                    ),
                 )
             )
     return options

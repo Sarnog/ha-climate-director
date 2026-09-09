@@ -1743,6 +1743,7 @@ class TestDiscardArrivesOnEveryScreen:
             "cool_outdoor_min": 15.0,
         },
         "source": {
+            "name": "Gasketel",
             "entity_id": "climate.gas",
             "outdoor_min": -5.0,
             "outdoor_max": 20.0,
@@ -1911,6 +1912,14 @@ class TestAnEditRoundStoresNoEmptyStrings:
     """
 
     _STRING_EMPTY_KEYS = {
+        # Een lege eigen naam betekent "noem het apparaat zelf", net zoals een
+        # leeg vakantietrefwoord "geen trefwoord" betekent. Dat is een geldige
+        # tekstwaarde, geen lege string op de plek van een getal of entiteit.
+        #
+        # An empty name of one's own means "name the appliance itself", just as
+        # an empty holiday keyword means "no keyword". That is a valid text
+        # value, not an empty string where a number or an entity belongs.
+        "name",
         "presence_entity",
         "outdoor_sensor",
         "season_entity",

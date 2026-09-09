@@ -161,6 +161,7 @@
         "title": "Quelle",
         "description": "Das Außenfenster ist es, was einen Heizkessel von einer Wärmepumpe trennt. Zwei benachbarte Fenster treffen sich genau, sodass keine Außentemperatur dazwischen fällt.",
         "data": {
+          "name": "Name",
           "entity_id": "Climate-Entität",
           "role": "Was dieses Gerät kann",
           "priority": "Reihenfolge innerhalb dieser Zone",
@@ -172,6 +173,7 @@
           "min_cycle_time": "Ruhezeit, bevor dieses Gerät erneut starten darf (Sekunden)"
         },
         "data_description": {
+          "name": "Ein eigener Name für diese Quelle; lässt du ihn leer, nennt die Auswahl das Gerät selbst.",
           "priority": "Niedriger gewinnt, wenn mehrere Quellen dieselbe Aufgabe erfüllen könnten.",
           "outdoor_min": "Ab dieser Temperatur zählt die Quelle mit; dieser Wert selbst gehört dazu.",
           "outdoor_max": "Bis zu dieser Temperatur zählt die Quelle mit; dieser Wert selbst nicht mehr, so schließt sie genau an eine Quelle an, die dort beginnt.",

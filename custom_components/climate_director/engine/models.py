@@ -203,6 +203,12 @@ class Source:
 
     source_id: str
     entity_id: str
+    name: str = ""
+    """Eigen naam; leeg laat de bronkiezer het apparaat zelf noemen.
+
+    This source's own name; empty lets the source picker name the appliance.
+    """
+
     role: SourceRole = SourceRole.HEAT_COOL
     priority: int = 0
     """Preference within a zone; the lowest number available wins."""

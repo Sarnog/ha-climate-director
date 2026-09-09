@@ -161,6 +161,7 @@
         "title": "Bron",
         "description": "Het buitenvenster is wat een cv-ketel van een warmtepomp scheidt. Twee aangrenzende vensters sluiten precies op elkaar aan, dus er valt geen buitentemperatuur tussenuit.",
         "data": {
+          "name": "Naam",
           "entity_id": "Climate-entiteit",
           "role": "Wat dit apparaat kan",
           "priority": "Volgorde binnen deze zone",
@@ -172,6 +173,7 @@
           "min_cycle_time": "Rusttijd voordat dit apparaat opnieuw mag starten (seconden)"
         },
         "data_description": {
+          "name": "Een eigen naam voor deze bron; laat je hem leeg, dan noemt de kiezer het apparaat zelf.",
           "priority": "Lager wint als meerdere bronnen dezelfde taak kunnen leveren.",
           "outdoor_min": "Vanaf deze temperatuur telt de bron mee; deze waarde zelf hoort erbij.",
           "outdoor_max": "Tot deze temperatuur telt de bron mee; deze waarde zelf niet meer, zodat hij precies aansluit op een bron die daar begint.",
