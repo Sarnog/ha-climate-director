@@ -177,6 +177,27 @@ SETTINGS_FIELDS: tuple[FieldSpec, ...] = (
     FieldSpec("shadow_mode", "bool", default=None, target=None),
 )
 
+#: Per veldtabel het model waaraan haar `target`-paden hangen, en de functie in
+#: `engine/serialise.py` die dat model naar opgeslagen data schrijft. Een
+#: typefout in een `target` is anders stil: het scherm toont de standaard en
+#: schrijft die bij het volgende opslaan terug. `tests/test_field_tables.py`
+#: loopt over élke tabel in dit bestand en eist een regel hier, zodat een derde
+#: tabel niet ongemerkt buiten de bewaking kan vallen.
+#:
+#: Per field table the model its `target` paths hang on, and the function in
+#: `engine/serialise.py` that writes that model to stored data. A typo in a
+#: `target` is silent otherwise: the screen shows the default and writes it back
+#: on the next save. `tests/test_field_tables.py` walks every table in this file
+#: and demands a row here, so a third table cannot quietly fall outside the
+#: guard.
+TABLE_ROOTS: dict[str, tuple[str, str]] = {
+    "SETTINGS_FIELDS": ("DirectorConfig", "config_to_dict"),
+    "GATES_FIELDS": ("DirectorConfig", "config_to_dict"),
+    "GATES_FLAT_FIELDS": ("DirectorConfig", "config_to_dict"),
+    "GUEST_WINDOW_FIELDS": ("DirectorConfig", "config_to_dict"),
+}
+
+
 #: De instellingsvelden die in de `gates`-sectie van de installatie wonen.
 #:
 #: The settings fields that live in the installation's `gates` section.
