@@ -26,7 +26,7 @@ from . import problems, schemas, texts
 from .const import CONF_INSTALLATION, CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE, DOMAIN
 from .coordinator import ClimateDirectorEntry
 from .engine import validate
-from .engine.fields import SETTINGS_FIELDS
+from .engine.fields import SETTINGS_FIELDS, SOURCE_FIELDS
 from .engine.models import Season, ZoneGate
 from .engine.serialise import config_from_dict
 from .schema_fields import write_table
@@ -549,28 +549,21 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                         and old_entity_id in (self._installation.get("house_wide_openings") or ())
                     ):
                         self._renamed_house_wide.add(old_entity_id)
-                source = {
+                # Het `source_id` blijft met de hand: dat is identiteit en geen
+                # veld van het scherm, en het mag bij het bewerken niet
+                # veranderen. De velden zelf komen uit de tabel.
+                #
+                # The `source_id` stays by hand: that is identity, not a field of
+                # the screen, and it must not change when editing. The fields
+                # themselves come from the table.
+                source: dict[str, Any] = {
                     "source_id": current.get("source_id")
                     or _unique_id(
                         f"{zone['zone_id']}_{user_input['entity_id'].split('.')[-1]}",
                         _all_source_ids(self._installation),
-                    ),
-                    "entity_id": user_input["entity_id"],
-                    "role": user_input["role"],
-                    "autostart": user_input["autostart"],
-                    "priority": int(user_input["priority"]),
-                    "outdoor": {
-                        "minimum": to_celsius(
-                            _blank_to_none(user_input.get("outdoor_min")),
-                            temperature_unit_of(self.hass),
-                        ),
-                        "maximum": to_celsius(
-                            _blank_to_none(user_input.get("outdoor_max")),
-                            temperature_unit_of(self.hass),
-                        ),
-                    },
-                    "min_cycle_time": _blank_to_none(user_input.get("min_cycle_time")),
+                    )
                 }
+                write_table(SOURCE_FIELDS, user_input, source, flow=self)
                 if self._source_index is None:
                     sources.append(source)
                 else:

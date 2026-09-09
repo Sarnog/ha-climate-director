@@ -28,7 +28,7 @@ from collections.abc import Mapping
 from datetime import time
 from typing import Any
 
-from .fields import GATES_FLAT_FIELDS, GUEST_WINDOW_FIELDS, target_key
+from .fields import GATES_FLAT_FIELDS, GUEST_WINDOW_FIELDS, SOURCE_FIELDS, target_key
 from .models import (
     Circuit,
     ConflictPolicy,
@@ -67,6 +67,7 @@ from .storage_helpers import (
     _time,
     _weekdays,
 )
+from .table_storage import dict_from, parse_leaf, values_from, write_leaf
 
 
 def config_from_dict(raw: Mapping[str, Any]) -> DirectorConfig:
@@ -170,17 +171,13 @@ def _zone(raw: Mapping[str, Any]) -> Zone:
 
 
 def _source(raw: Mapping[str, Any]) -> Source:
-    return Source(
-        source_id=_text(raw.get("source_id")),
-        entity_id=_text(raw.get("entity_id")),
-        role=_enum(SourceRole, raw.get("role"), SourceRole.HEAT_COOL),
-        autostart=_bool(raw.get("autostart"), True),
-        priority=_int(raw.get("priority"), 0),
-        outdoor=_window(raw.get("outdoor")),
-        min_cycle_time=(
-            None if raw.get("min_cycle_time") in (None, "") else _seconds(raw.get("min_cycle_time"))
-        ),
-    )
+    """Return one source, its fields read from `SOURCE_FIELDS`.
+
+    Alleen `source_id` staat er niet in: dat is identiteit en geen veld van het
+    scherm. / Only `source_id` is not in it: that is identity, not a field of
+    the screen.
+    """
+    return Source(source_id=_text(raw.get("source_id")), **values_from(SOURCE_FIELDS, raw, Source))
 
 
 def _mode(raw: Any) -> ModeSettings | None:
@@ -326,7 +323,7 @@ def _gates(raw: Any) -> GateSettings:
     if not isinstance(raw, Mapping):
         return GateSettings()
     flat = {
-        target_key(field): _parse_leaf(field, raw.get(target_key(field)))
+        target_key(field): parse_leaf(field, raw.get(target_key(field)))
         for field in GATES_FLAT_FIELDS
     }
     guest = raw.get("guest_window")
@@ -339,44 +336,6 @@ def _gates(raw: Any) -> GateSettings:
         guest_window=_guest_window(guest if isinstance(guest, dict) else {}),
         **flat,
     )
-
-
-def _parse_leaf(field, stored: Any) -> Any:
-    """Return one table field as the value its dataclass expects.
-
-    De vergevingsgezindheid zit in de bestaande helpers, niet hier.
-    The forgivingness sits in the existing helpers, not here.
-    """
-    if field.kind == "bool":
-        return _bool(stored, field.default)
-    if field.kind == "seconds":
-        return _seconds(stored, field.default)
-    if field.kind == "number":
-        if field.unit in ("minutes", "minutes_or_off"):
-            return _seconds(stored, field.default)
-        return _float(stored, field.default)
-    if field.kind == "time":
-        return _time(stored, time(0, 0))
-    if field.kind == "weekdays":
-        return _weekdays(stored)
-    raise AssertionError(f"onbekend veldtype {field.kind!r} voor {field.key}")
-
-
-def _write_leaf(field, value: Any) -> Any:
-    """Return one dataclass value as the plain data the entry stores."""
-    if field.kind == "bool":
-        return value
-    if field.kind == "seconds" or (
-        field.kind == "number" and field.unit in ("minutes", "minutes_or_off")
-    ):
-        return int(value.total_seconds())
-    if field.kind == "time":
-        return value.isoformat()
-    if field.kind == "weekdays":
-        return None if value is None else sorted(value)
-    if field.kind == "number":
-        return value
-    raise AssertionError(f"onbekend veldtype {field.kind!r} voor {field.key}")
 
 
 def _guest_window(raw: dict[str, Any]) -> TimeWindow | None:
@@ -400,7 +359,7 @@ def _guest_window(raw: dict[str, Any]) -> TimeWindow | None:
     if not start or not end:
         return None
     values = {
-        target_key(field): _parse_leaf(field, leaves[target_key(field)])
+        target_key(field): parse_leaf(field, leaves[target_key(field)])
         for field in GUEST_WINDOW_FIELDS
     }
     return TimeWindow(
@@ -415,7 +374,7 @@ def _guest_window_to_dict(window: TimeWindow | None) -> dict[str, Any] | None:
     if window is None:
         return None
     return {
-        target_key(field): _write_leaf(field, getattr(window, target_key(field)))
+        target_key(field): write_leaf(field, getattr(window, target_key(field)))
         for field in GUEST_WINDOW_FIELDS
     }
 
@@ -423,7 +382,7 @@ def _guest_window_to_dict(window: TimeWindow | None) -> dict[str, Any] | None:
 def _gates_flat_to_dict(gates: GateSettings) -> dict[str, Any]:
     """Return the flat gates fields as stored data, from the field table."""
     return {
-        target_key(field): _write_leaf(field, getattr(gates, target_key(field)))
+        target_key(field): write_leaf(field, getattr(gates, target_key(field)))
         for field in GATES_FLAT_FIELDS
     }
 
@@ -519,17 +478,8 @@ def _zone_to_dict(zone: Zone) -> dict[str, Any]:
 
 
 def _source_to_dict(source: Source) -> dict[str, Any]:
-    return {
-        "source_id": source.source_id,
-        "entity_id": source.entity_id,
-        "role": source.role.value,
-        "autostart": source.autostart,
-        "priority": source.priority,
-        "outdoor": _window_to_dict(source.outdoor),
-        "min_cycle_time": (
-            None if source.min_cycle_time is None else source.min_cycle_time.total_seconds()
-        ),
-    }
+    """Return one source as stored data, its fields from `SOURCE_FIELDS`."""
+    return {"source_id": source.source_id, **dict_from(SOURCE_FIELDS, source)}
 
 
 def _mode_to_dict(settings: ModeSettings | None) -> dict[str, Any] | None:

@@ -20,11 +20,10 @@ from homeassistant.helpers import selector
 
 from . import texts
 from .const import CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE
-from .engine.fields import SETTINGS_FIELDS
+from .engine.fields import SETTINGS_FIELDS, SOURCE_FIELDS
 from .engine.models import (
     ConflictPolicy,
     Season,
-    SourceRole,
     ZoneGate,
 )
 from .schema_fields import (
@@ -447,35 +446,26 @@ def sources(flow: Any) -> vol.Schema:
 
 
 def source(flow: Any, current: dict[str, Any]) -> vol.Schema:
-    """Return the single source schema."""
-    outdoor = current.get("outdoor") or {}
-    unit = temperature_unit_of(flow.hass)
-    return vol.Schema(
-        {
-            vol.Optional(
-                "entity_id",
-                description={"suggested_value": current.get("entity_id") or None},
-            ): _CLIMATE,
-            vol.Required("role", default=current.get("role", SourceRole.HEAT_COOL.value)): _choices(
-                [item.value for item in SourceRole], "source_role"
-            ),
-            vol.Required("autostart", default=current.get("autostart", True)): bool,
-            vol.Required("priority", default=current.get("priority", 0)): _RANK,
-            vol.Optional(
-                "outdoor_min",
-                description={"suggested_value": rounded_from_celsius(outdoor.get("minimum"), unit)},
-            ): _temperature(unit),
-            vol.Optional(
-                "outdoor_max",
-                description={"suggested_value": rounded_from_celsius(outdoor.get("maximum"), unit)},
-            ): _temperature(unit),
-            vol.Optional(
-                "min_cycle_time",
-                description={"suggested_value": current.get("min_cycle_time")},
-            ): _SECONDS,
+    """Return the single source schema, read from the field table.
+
+    De veldenlijst staat in `engine.fields.SOURCE_FIELDS`; de waardebron is de
+    bron die bewerkt wordt. De verwijderregel en de afsluitregel horen bij de
+    vorm van een lijst-itemscherm en niet bij de velden, dus die komen als
+    voettekst mee.
+
+    The field list lives in `engine.fields.SOURCE_FIELDS`; the value source is
+    the source being edited. The delete row and the exit row belong to the shape
+    of a list-item screen rather than to the fields, so they come along as a
+    footer.
+    """
+    return _table_schema(
+        SOURCE_FIELDS,
+        flow,
+        values=current,
+        footer={
             vol.Required("delete", default=False): bool,
             vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
-        }
+        },
     )
 
 

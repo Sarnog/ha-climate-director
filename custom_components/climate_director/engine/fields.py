@@ -20,6 +20,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from .models import SourceRole
+
 
 @dataclass(frozen=True, slots=True)
 class FieldSpec:
@@ -202,6 +204,52 @@ SETTINGS_FIELDS: tuple[FieldSpec, ...] = (
     FieldSpec("shadow_mode", "bool", default=None, target=None, hook="control_state"),
 )
 
+#: Het bronscherm: één apparaat dat een zone kan bedienen. De afsluitregel
+#: (`when_done`) en de verwijderregel (`delete`) staan niet hier maar in
+#: `schemas.source`: die horen bij de vorm en bij de navigatie, niet bij de
+#: velden. Het toekennen van een `source_id` blijft ook met de hand — dat is
+#: identiteit, geen veld.
+#:
+#: The source screen: one appliance able to serve a zone. The exit row
+#: (`when_done`) and the delete row (`delete`) are not here but in
+#: `schemas.source`: they belong to the shape and to the navigation, not to the
+#: fields. Assigning a `source_id` likewise stays by hand — that is identity,
+#: not a field.
+SOURCE_FIELDS: tuple[FieldSpec, ...] = (
+    FieldSpec("entity_id", "entity", required=False, target="entity_id", domain="climate"),
+    FieldSpec(
+        "role",
+        "choice",
+        default=SourceRole.HEAT_COOL.value,
+        translation_key="source_role",
+        target="role",
+        options=tuple(item.value for item in SourceRole),
+    ),
+    FieldSpec("autostart", "bool", default=True, target="autostart"),
+    FieldSpec("priority", "number", default=0, target="priority", unit="rank"),
+    FieldSpec(
+        "outdoor_min",
+        "number",
+        required=False,
+        target="outdoor.minimum",
+        unit="temperature",
+    ),
+    FieldSpec(
+        "outdoor_max",
+        "number",
+        required=False,
+        target="outdoor.maximum",
+        unit="temperature",
+    ),
+    FieldSpec(
+        "min_cycle_time",
+        "number",
+        required=False,
+        target="min_cycle_time",
+        unit="seconds",
+    ),
+)
+
 #: Per veldtabel het model waaraan haar `target`-paden hangen, en de functie in
 #: `engine/serialise.py` die dat model naar opgeslagen data schrijft. Een
 #: typefout in een `target` is anders stil: het scherm toont de standaard en
@@ -220,6 +268,7 @@ TABLE_ROOTS: dict[str, tuple[str, str]] = {
     "GATES_FIELDS": ("DirectorConfig", "config_to_dict"),
     "GATES_FLAT_FIELDS": ("DirectorConfig", "config_to_dict"),
     "GUEST_WINDOW_FIELDS": ("DirectorConfig", "config_to_dict"),
+    "SOURCE_FIELDS": ("Source", "_source_to_dict"),
 }
 
 

@@ -147,6 +147,31 @@ class TestEveryFormField:
         }
         assert sum(counts.values()) == 119
 
+    def test_the_source_screen_is_its_table_plus_its_own_rows(self) -> None:
+        """De veldtabel telt op bij wat het scherm zelf nog letterlijk noemt.
+
+        Het bronscherm leest zijn velden sinds ronde 24 uit `SOURCE_FIELDS`.
+        Deze bewaking pint vast dat de kaart hierboven dáár werkelijk uit komt:
+        de tabelrijen plus de twee regels die het scherm zelf draagt — de
+        verwijderregel en de afsluitregel — zijn samen wat de veldenkaart voor
+        `source` ziet. Zonder deze optelling zou een tabel die stilzwijgend niet
+        meer gelezen wordt hierboven onopgemerkt blijven.
+
+        The field table adds up with what the screen itself still names
+        literally. Since round 24 the source screen reads its fields from
+        `SOURCE_FIELDS`. This guard pins down that the map above genuinely comes
+        from there: the table rows plus the two rows the screen carries itself —
+        the delete row and the exit row — together are what the field map sees
+        for `source`. Without this sum a table that quietly stopped being read
+        would go unnoticed above.
+        """
+        from custom_components.climate_director.engine.fields import SOURCE_FIELDS
+
+        table_keys = {field.key for field in SOURCE_FIELDS}
+        own_rows = STEPS["source"] - table_keys
+        assert own_rows == {"delete", "when_done"}
+        assert len(SOURCE_FIELDS) + len(own_rows) == len(STEPS["source"])
+
     @pytest.mark.parametrize("path", FILES, ids=IDS)
     def test_every_step_exists(self, path: pathlib.Path) -> None:
         data = load(path)

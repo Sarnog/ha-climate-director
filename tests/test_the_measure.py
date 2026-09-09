@@ -74,8 +74,8 @@ MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2033,
     "coordinator.py": 1698,
     "engine/decide.py": 1618,
-    "config_flow.py": 1419,
-    "schemas.py": 903,
+    "config_flow.py": 1412,
+    "schemas.py": 893,
 }
 
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {

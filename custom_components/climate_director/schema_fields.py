@@ -29,6 +29,7 @@ from .engine.models import PrecipitationSettings, SeasonSettings
 from .units import (
     delta_to_celsius,
     rounded_delta_from_celsius,
+    rounded_from_celsius,
     temperature_unit_of,
     to_celsius,
 )
@@ -262,6 +263,13 @@ def _settings_value(flow: Any, field: FieldSpec, values: Mapping[str, Any]) -> A
             return rounded_delta_from_celsius(
                 float(stored if stored is not None else field.default), unit
             )
+        if field.unit == "temperature":
+            return rounded_from_celsius(stored, unit)
+        if field.unit == "seconds" and not field.required:
+            # Leeg blijft leeg: dat betekent "geen eigen rem", en nul betekent
+            # iets anders. / Empty stays empty: that means "no brake of its
+            # own", and zero means something else.
+            return stored
         return stored if stored is not None else field.default
     if field.kind == "hemisphere":
         return _hemisphere(_target_value(values, field.target))
