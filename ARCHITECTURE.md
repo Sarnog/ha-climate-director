@@ -901,6 +901,47 @@ veldenkaarten) zijn meeverhuisd: een veld in de tabel telt als een veld in het
 schema, en een `schemas.<naam>` die niet bestaat is een fout in plaats van een
 stille lege kaart.
 
+**De veldtabel wordt het patroon voor lijst-itemschermen (ronde 24).** Het
+instellingenscherm was de eerste tabel, en het is het minst representatieve
+scherm dat er is: het is het enige scherm dat geen lijst-item bewerkt. Sinds
+ronde 24 leest het **bronscherm** zijn velden uit `SOURCE_FIELDS`, en daarmee
+staat het patroon vast voor elk scherm dat één item uit een lijst bewerkt: de
+tabel zegt wélke velden er zijn, `schema_fields._table_schema` krijgt de
+waardebron expliciet mee — de installatie voor het instellingenscherm, het item
+zelf (`values=current`) voor een lijst-item — en de opslagkant schrijft elke rij
+terug naar haar puntpad.
+
+**De opslagkant is generiek.** `config_flow.py` schrijft een scherm niet meer
+veld voor veld terug; `schema_fields.write_table` loopt de tabel af en zet elke
+formulierwaarde op haar `target`-pad in de doeldict: genest (`outdoor.minimum`
+maakt de tussenliggende dict aan), met eenheidsomrekening waar de tabel een maat
+noemt (`temperature` en `delta_celsius` gaan door `to_celsius`, `minutes` maal
+zestig), en leeg wordt `None` voor een optioneel veld. Wat een scherm eigenzinnig
+doet staat als expliciete haak in de tabel (`hook=`) in plaats van als een tak
+in de stapmethode: de zomermaandenlijst die met de hand gekozen is blijft staan,
+`precipitation_states` wordt komma-gesplitst en gesorteerd, `holiday_keyword`
+wordt getrimd, en `shadow_mode` gaat naar de bedieningstoestand in plaats van
+naar de installatie.
+
+**Wat bewust met de hand blijft**, en dat hoort hier te staan zodat een volgende
+ronde het niet als achterstallig werk aanziet: het toekennen van een `source_id`
+(`_unique_id`), de verwijdertak van een bron, `_drop_source_references` en
+`_renamed_house_wide`, de veldvalidatie (`_missing`), en de afsluitregel
+`when_done`. Dat zijn geen velden maar navigatie, identiteit en opruiming; ze
+generiek maken is risico zonder winst.
+
+**De telling, gemeten en niet geschat.** Er zijn **23** schermen. Het
+instellingenscherm is omgezet, en het bronscherm erbij; van de **21** die
+overblijven dragen er **zeven** echte gegevensvelden (zone 21, resident 15,
+circuit 11, en window / quiet / opening / generator elk 6) en zijn de overige
+**veertien** keuzelijsten en menu's — één rij die zegt wélk item je wilt
+bewerken — waar een veldtabel niets aan toevoegt.
+
+**De engine-grens blijft heilig.** De tabellen wonen in `engine/fields.py`,
+zonder één selector en zonder één `vol.Schema`; `tests/test_the_border.py`
+bewaakt dat `engine/` Home Assistant nergens importeert, en dat blijft gelden nu
+`serialise.py` de tabel leest.
+
 ### De bewakingen bewaken — en daar houdt het op
 
 De testset bewaakt de integratie; `tests/test_the_guards_themselves.py` bewaakt
@@ -1793,6 +1834,46 @@ alone. The settings screen is the first table; new screens follow the same patte
 guards that read the form source with an AST (`form_field_nodes` and the field maps)
 moved along with it: a field in the table counts as a field in the schema, and a
 `schemas.<name>` that does not exist is an error rather than a silently empty map.
+
+**The field table becomes the pattern for list-item screens (round 24).** The
+settings screen was the first table, and it is the least representative screen
+there is: it is the only screen that does not edit a list item. Since round 24
+the **source screen** reads its fields from `SOURCE_FIELDS`, and that fixes the
+pattern for every screen that edits one item out of a list: the table says which
+fields exist, `schema_fields._table_schema` is handed its value source
+explicitly — the installation for the settings screen, the item itself
+(`values=current`) for a list item — and the storage side writes every row back
+to its dotted path.
+
+**The storage side is generic.** `config_flow.py` no longer writes a screen back
+field by field; `schema_fields.write_table` walks the table and puts each form
+value at its `target` path in the destination dict: nested (`outdoor.minimum`
+creates the intermediate dict), with unit conversion wherever the table names a
+measure (`temperature` and `delta_celsius` go through `to_celsius`, `minutes`
+times sixty), and empty becomes `None` for an optional field. What a screen does
+idiosyncratically sits as an explicit hook in the table (`hook=`) rather than as
+a branch in the step method: a hand-picked summer-months list stays,
+`precipitation_states` is comma-split and sorted, `holiday_keyword` is trimmed,
+and `shadow_mode` goes to the control state instead of to the installation.
+
+**What deliberately stays by hand**, and it belongs here so a later round does
+not mistake it for unfinished work: assigning a `source_id` (`_unique_id`), the
+delete branch of a source, `_drop_source_references` and `_renamed_house_wide`,
+field validation (`_missing`), and the exit row `when_done`. Those are not
+fields but navigation, identity and tidying up; making them generic is risk
+without gain.
+
+**The count, measured rather than estimated.** There are **23** screens. The
+settings screen has been converted, and the source screen with it; of the **21**
+that remain, **seven** carry real data fields (zone 21, resident 15, circuit 11,
+and window / quiet / opening / generator 6 each) and the other **fourteen** are
+pickers and menus — one row saying which item you want to edit — that a field
+table adds nothing to.
+
+**The engine border stays sacred.** The tables live in `engine/fields.py`,
+without a single selector and without a single `vol.Schema`;
+`tests/test_the_border.py` guards that `engine/` imports Home Assistant nowhere,
+and that keeps holding now that `serialise.py` reads the table.
 
 ### The guards are guarded — and there it stops
 
