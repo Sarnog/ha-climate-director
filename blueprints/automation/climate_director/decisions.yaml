@@ -23,7 +23,8 @@ blueprint:
     `no_indoor_temperature`, `no_outdoor_temperature`, `season_blocks_mode`,
     `outdoor_outside_window`,
     `mode_not_configured`, `no_source_available`, `other_source_chosen`,
-    `manual_source`, `source_unreachable`, `circuit_conflict_lost`,
+    `manual_source`, `source_unreachable`, `shared_source_took_over`,
+    `circuit_conflict_lost`,
     `circuit_switch_too_soon`, `circuit_switch_pending`, `circuit_at_capacity`,
     `short_cycle_protection`, `exclusive_group_lost`.
 

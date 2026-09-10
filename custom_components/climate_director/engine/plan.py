@@ -63,6 +63,7 @@ class Reason(StrEnum):
 
     MANUAL_SOURCE = "manual_source"
     SOURCE_UNREACHABLE = "source_unreachable"
+    SHARED_SOURCE_TOOK_OVER = "shared_source_took_over"
 
     CIRCUIT_CONFLICT_LOST = "circuit_conflict_lost"
     CIRCUIT_SWITCH_TOO_SOON = "circuit_switch_too_soon"

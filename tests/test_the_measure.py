@@ -73,7 +73,9 @@ FUNCTION_LIMIT = 80
 # Eén regel is sinds cf3e4bf omhooggegaan en dat was een bewuste keuze:
 # `engine/models.py` groeide van 2039 naar 2100 doordat anker 12 twee velden aan
 # `Source` toevoegt (`covers_zones`, `takeover_delay`) plus de regel die een
-# onbekende zone in dat gebied meldt. Een veld toevoegen kan niet zonder regels;
+# onbekende zone in dat gebied meldt, en `engine/decide.py` van 1618 naar 1647
+# doordat de overname vóór de bronkeuze moet staan en dus door vier functies
+# heen wordt meegegeven. Een veld toevoegen kan niet zonder regels;
 # de ratel maakt die groei zichtbaar in plaats van hem te verbieden. Verhoog een
 # genoteerd getal daarom alleen met een reden erbij, precies zoals hier.
 #
@@ -86,25 +88,26 @@ FUNCTION_LIMIT = 80
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2100,
     "coordinator.py": 1698,
-    "engine/decide.py": 1618,
+    "engine/decide.py": 1647,
     "config_flow.py": 1412,
     "schemas.py": 896,
 }
 
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
-    ("engine/decide.py", "_build_commands"): 200,
+    ("engine/decide.py", "_build_commands"): 202,
     ("engine/decide.py", "_generator_commands"): 192,
     ("coordinator.py", "__init__"): 179,
     ("engine/models.py", "_rule_zones"): 142,
     ("engine/constraints.py", "resolve"): 128,
     ("coordinator.py", "_refusal_data"): 119,
     ("coordinator.py", "_notice_hand"): 117,
-    ("engine/decide.py", "_collect_wishes"): 114,
+    ("engine/decide.py", "_collect_wishes"): 126,
     ("engine/decide.py", "_manual_conflict"): 103,
+    ("engine/decide.py", "_build_zone_decisions"): 82,
     ("schemas.py", "resident"): 98,
     ("engine/hysteresis.py", "_candidate"): 97,
     ("config_flow.py", "async_step_resident"): 91,
-    ("engine/decide.py", "_resolve_with_fallbacks"): 83,
+    ("engine/decide.py", "_resolve_with_fallbacks"): 87,
     ("preconditions.py", "async_precondition"): 83,
 }
 

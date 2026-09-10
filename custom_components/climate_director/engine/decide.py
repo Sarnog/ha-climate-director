@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import datetime
 
-from . import constraints, gates, hysteresis, sources
+from . import constraints, gates, hysteresis, sources, takeover
 from .families import (
     MODE_FAN_ONLY,
     MODE_HEAT,
@@ -66,19 +66,25 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
     the command.
     """
     blocked = gates.house_wide_blocked(config, world)
+    # Anker 12: welke bron een gebied overneemt staat vóór de bronkeuze vast,
+    # want het bepaalt wélke bron een kamer nog mag kiezen.
+    #
+    # Anchor 12: which source takes an area over is settled before source
+    # selection, since it decides which source a room may still choose.
+    takeovers = takeover.in_force(config, world)
     wishes, refusals, shut, woulds, rest_deferrals = _collect_wishes(
-        config, world, previous, blocked
+        config, world, previous, blocked, takeovers
     )
 
     standing = _standing_firm(config, world, refusals)
     grants, circuit_decisions, deferrals, refused_by_circuit, dropped, wishes = (
-        _resolve_with_fallbacks(config, world, wishes, standing, blocked, previous)
+        _resolve_with_fallbacks(config, world, wishes, standing, blocked, previous, takeovers)
     )
     reasons = _zone_reasons(config, grants, dropped, refusals)
 
     families = {decision.circuit_id: decision.family for decision in circuit_decisions}
     commands, untouched, generator_deferrals, stopped_now = _build_commands(
-        config, world, grants, reasons, wishes, refusals, families, blocked, previous
+        config, world, grants, reasons, wishes, refusals, families, blocked, previous, takeovers
     )
     opening_rest_until = _opening_rest_bookkeeping(world, previous, commands, stopped_now)
     return Plan(
@@ -95,6 +101,7 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
             previous,
             blocked,
             refused_by_circuit,
+            takeovers,
         ),
         circuits=circuit_decisions,
         deferrals=(*deferrals, *rest_deferrals, *generator_deferrals),
@@ -109,6 +116,7 @@ def _collect_wishes(
     world: WorldState,
     previous: Plan | None,
     blocked: frozenset[str] = frozenset(),
+    takeovers: tuple[takeover.Takeover, ...] = (),
 ) -> tuple[
     dict[str, constraints.Request],
     dict[str, Reason],
@@ -163,7 +171,10 @@ def _collect_wishes(
         # window gate above. One exception, in one place.
         serving = _serving(previous, zone.zone_id)
         stopped = frozenset() if world.precondition_ignores_openings(zone.zone_id) else blocked
-        first_choice = sources.select(zone, demand.family, world, serving, margin)
+        only, unbounded = takeover.narrowing(takeovers, zone.zone_id, demand.family)
+        first_choice = sources.select(
+            zone, demand.family, world, serving, margin, only=only, unbounded=unbounded
+        )
         if first_choice is not None and first_choice.entity_id in stopped:
             # De huisbrede stop stopt de zone, niet alleen het apparaat. Zou de
             # bronkeuze de stilgezette eerste keus gewoon overslaan, dan gleed
@@ -185,7 +196,15 @@ def _collect_wishes(
 
         source = first_choice
         if source is None:
-            refusals[zone.zone_id] = Reason.NO_SOURCE_AVAILABLE
+            # Onder een overname is er maar één kandidaat, en die kan er niet
+            # zijn. Dan is de kamer niet bronloos maar overgenomen, en dat is
+            # wat de melder hoort te zeggen. / Under a takeover there is one
+            # candidate, and it may not be there. The room is then not
+            # source-less but taken over, and that is what the sensor should
+            # say.
+            refusals[zone.zone_id] = (
+                Reason.SHARED_SOURCE_TOOK_OVER if only else Reason.NO_SOURCE_AVAILABLE
+            )
             continue
 
         if _opening_rest_hold(
@@ -422,6 +441,7 @@ def _resolve_with_fallbacks(
     standing: frozenset[str],
     blocked: frozenset[str],
     previous: Plan | None,
+    takeovers: tuple[takeover.Takeover, ...] = (),
 ) -> tuple[
     dict[str, constraints.Grant],
     tuple[CircuitDecision, ...],
@@ -474,6 +494,7 @@ def _resolve_with_fallbacks(
                 continue
             refused = refused_by_circuit.get(zone.zone_id, frozenset()) | {request.source.entity_id}
             stopped = frozenset() if world.precondition_ignores_openings(zone.zone_id) else blocked
+            only, unbounded = takeover.narrowing(takeovers, zone.zone_id, request.family)
             alternative = sources.select(
                 zone,
                 request.family,
@@ -482,6 +503,8 @@ def _resolve_with_fallbacks(
                 margin,
                 stopped,
                 excluding=refused,
+                only=only,
+                unbounded=unbounded,
             )
             if alternative is None or alternative.entity_id in refused:
                 continue
@@ -909,6 +932,7 @@ def _build_commands(
     families: dict[str, ModeFamily],
     blocked: frozenset[str] = frozenset(),
     previous: Plan | None = None,
+    takeovers: tuple[takeover.Takeover, ...] = (),
 ) -> tuple[
     tuple[UnitCommand, ...],
     tuple[UntouchedSource, ...],
@@ -1065,6 +1089,7 @@ def _build_commands(
     pre_collapse = list(commands)
     commands = _collapse_shared(config, world, commands)
     commands = _stop_blocked(config, world, grants, blocked, commands)
+    commands = takeover.stop_others(config, world, takeovers, commands, untouched)
     # De openingsstop hangt aan het apparaat, niet aan de reden die de collapse
     # overleefde. Bij een gedeelde ketel wint de reden van de zone met de meeste
     # voorrang, en dat is niet altijd de opening; de pre-collapse-opdrachten
@@ -1550,6 +1575,7 @@ def _build_zone_decisions(
     previous: Plan | None = None,
     blocked: frozenset[str] = frozenset(),
     refused_by_circuit: dict[str, frozenset[str]] | None = None,
+    takeovers: tuple[takeover.Takeover, ...] = (),
 ) -> tuple[ZoneDecision, ...]:
     """Return one decision per zone, saying what it asked for and what it got."""
     refused_by_circuit = refused_by_circuit or {}
@@ -1594,6 +1620,7 @@ def _build_zone_decisions(
         # reporter assume another source was chosen and name an unreachable
         # second choice that never got its turn.
         zone_blocked = frozenset() if world.precondition_ignores_openings(zone.zone_id) else blocked
+        only, unbounded = takeover.narrowing(takeovers, zone.zone_id, request.family)
         decisions.append(
             ZoneDecision(
                 zone_id=zone.zone_id,
@@ -1610,6 +1637,8 @@ def _build_zone_decisions(
                     config.outdoor_hysteresis,
                     zone_blocked,
                     refused_by_circuit.get(zone.zone_id, frozenset()),
+                    only,
+                    unbounded,
                 ),
                 would_want=would,
             )

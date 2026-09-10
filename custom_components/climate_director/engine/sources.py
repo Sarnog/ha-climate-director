@@ -28,6 +28,8 @@ def select(
     margin: float = 0.0,
     blocked: frozenset[str] = frozenset(),
     excluding: frozenset[str] = frozenset(),
+    only: frozenset[str] | None = None,
+    unbounded: frozenset[str] = frozenset(),
 ) -> Source | None:
     """Return the source that should deliver `family` in `zone`.
 
@@ -69,13 +71,27 @@ def select(
     `excluding` names appliances already refused this round — by the circuit,
     for example. They are no candidate, exactly as an unreachable appliance is
     not; the zone may move on to its next source.
+
+    `only` en `unbounded` dragen anker 12. Neemt een bron het gebied over omdat
+    er een bron in weggevallen is, dan is hij in dat gebied de énige kandidaat
+    (`only`) — de kamer schuift niet door naar haar volgende bron — en telt zijn
+    buitenvenster deze ronde niet (`unbounded`), want de scheiding op
+    buitentemperatuur is geen reden om een huis koud te laten staan.
+
+    `only` and `unbounded` carry anchor 12. When a source takes an area over
+    because a source in it dropped out, it is the only candidate in that area
+    (`only`) — the room does not slide on to its next source — and its outdoor
+    window does not count this round (`unbounded`), because the split on outdoor
+    temperature is no reason to leave a house standing cold.
     """
     eligible = [
         source
         for source in zone.sources
-        if source.entity_id not in excluding and _eligible(source, family, world, blocked)
+        if source.entity_id not in excluding
+        and (only is None or source.entity_id in only)
+        and _eligible(source, family, world, blocked, unbounded)
     ]
-    held = _held(zone, family, world, serving, margin, eligible, blocked, excluding)
+    held = _held(zone, family, world, serving, margin, eligible, blocked, excluding, only)
     if held is not None:
         return held
     if not eligible:
@@ -92,6 +108,7 @@ def _held(
     eligible: list[Source],
     blocked: frozenset[str] = frozenset(),
     excluding: frozenset[str] = frozenset(),
+    only: frozenset[str] | None = None,
 ) -> Source | None:
     """Return the running source the dead band keeps in place, if there is one.
 
@@ -109,6 +126,11 @@ def _held(
         return None
     source = next((item for item in zone.sources if item.source_id == serving), None)
     if source is None or source in eligible or source.entity_id in excluding:
+        return None
+    # Een overname laat maar één bron over; de dode band houdt niets vast wat
+    # daar niet bij hoort. / A takeover leaves one source; the dead band holds
+    # on to nothing outside it.
+    if only is not None and source.entity_id not in only:
         return None
     # De dode band houdt vast wat draait; een huisbreed stilgezet apparaat is
     # precies wat niet meer mag draaien, dus die vasthoudgreep geldt daar niet.
@@ -130,6 +152,8 @@ def passed_over(
     margin: float = 0.0,
     blocked: frozenset[str] = frozenset(),
     refused: frozenset[str] = frozenset(),
+    only: frozenset[str] | None = None,
+    unbounded: frozenset[str] = frozenset(),
 ) -> tuple[str, ...]:
     """Return the preferred sources this duty had to skip.
 
@@ -158,7 +182,9 @@ def passed_over(
     outrank what is running now. What was not chosen because another appliance
     simply fits better is therefore absent - that is no fault.
     """
-    chosen = select(zone, family, world, serving, margin, blocked, excluding=refused)
+    chosen = select(
+        zone, family, world, serving, margin, blocked, refused, only=only, unbounded=unbounded
+    )
     if chosen is None:
         return ()
     rank = (chosen.priority, chosen.source_id)
@@ -213,11 +239,17 @@ def _reachable(source: Source, family: ModeFamily, world: WorldState) -> bool:
 
 
 def _eligible(
-    source: Source, family: ModeFamily, world: WorldState, blocked: frozenset[str] = frozenset()
+    source: Source,
+    family: ModeFamily,
+    world: WorldState,
+    blocked: frozenset[str] = frozenset(),
+    unbounded: frozenset[str] = frozenset(),
 ) -> bool:
     """Return whether a source can serve this duty under current conditions."""
     if source.entity_id in blocked:
         return False
     if not _reachable(source, family, world):
         return False
+    if source.entity_id in unbounded:
+        return True
     return source.outdoor.contains(world.outdoor_temperature)
