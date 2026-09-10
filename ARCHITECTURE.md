@@ -148,8 +148,8 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     twee losse aanroepen, dan bestaat er een venster waarin de director het net
     gezette apparaat alsnog wegschakelt, en dan zou de volgorde van die twee
     aanroepen een eigenschap moeten dragen die nergens is vastgelegd.
-12. **Het verwarmingsgebied hangt aan de bron en noemt zones.** Een bron draagt
-    `heats_zones`: de zones die hij meeverwarmt of meekoelt zodra hij draait.
+12. **Het bereik van een bron hangt aan de bron en noemt zones.** Een bron draagt
+    `covers_zones`: de zones die hij meeverwarmt of meekoelt zodra hij draait.
     Leeg betekent *alleen de eigen zone* — het gedrag van vóór deze instelling,
     dus een gezoneerde installatie merkt er niets van. Hetzelfde apparaat staat
     vaak als aparte bron onder meerdere kamers; de engine voegt die gebieden
@@ -176,7 +176,7 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     reden om een huis koud te laten staan. Dit is een **verbreding**: tot nu toe
     was een buitenvenster onvoorwaardelijk. De andere kant wordt gedekt doordat
     het venster in élke andere situatie gewoon geldt, en doordat een leeg
-    `heats_zones` deze uitzondering nergens laat ontstaan.
+    `covers_zones` deze uitzondering nergens laat ontstaan.
 
     **Onbereikbaar is wat de wereld onbereikbaar noemt:** `unavailable`,
     `unknown`, of een entiteit die er niet is — dezelfde definitie die
@@ -1164,8 +1164,8 @@ them without changing them here first.
     a window in which the director stands the just-set appliance down after all,
     and then the order of those two calls would have to carry a property that is
     written down nowhere.
-12. **The heating area hangs on the source and names zones.** A source carries
-    `heats_zones`: the zones it heats or cools along with it the moment it runs.
+12. **A source's reach hangs on the source and names zones.** A source carries
+    `covers_zones`: the zones it heats or cools along with it the moment it runs.
     Empty means *its own zone only* — the behaviour from before this setting, so
     a zoned installation notices nothing. The same appliance often sits as a
     separate source under several rooms; the engine therefore merges those areas
@@ -1191,7 +1191,7 @@ them without changing them here first.
     stays — it simply stops being a reason to leave a house cold. This is a
     **broadening**: until now an outdoor window was unconditional. The other
     side is covered by the window applying normally in every other situation,
-    and by an empty `heats_zones` never letting this exception arise at all.
+    and by an empty `covers_zones` never letting this exception arise at all.
 
     **Unreachable is what the world calls unreachable:** `unavailable`,
     `unknown`, or an entity that is not there — the same definition
