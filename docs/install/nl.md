@@ -281,6 +281,8 @@ opgeslagen, kies je meteen de bronnen ervan.
 | **Volgorde binnen deze zone** | welke bron de voorkeur heeft; **lager wint** |
 | **Gebruiken vanaf deze buitentemperatuur** | de ondergrens; hoort bij het venster |
 | **Gebruiken tot deze buitentemperatuur** | de bovengrens; hoort niet bij het venster |
+| **Zones die dit apparaat mee bedient** | de kamers die dit apparaat meeverwarmt of meekoelt zodra het draait; leeg = alleen deze zone |
+| **Wachttijd voordat dit apparaat overneemt** | hoe lang een bron in dat gebied al onbereikbaar moet zijn; standaard vijf minuten, nul is meteen |
 
 ### Buitengrenzen: half open
 
@@ -296,6 +298,38 @@ Wil je gas onder de 3 °C en de airco erboven, zet de grens dan **niet** op 3,0:
 
 Zet de grens bij **elke** bron gelijk, en nooit verschillend — anders ontstaat
 er een overlap waarin allebei mogen.
+
+### Als een bron wegvalt: het gebied wordt overgenomen
+
+Vul **Zones die dit apparaat mee bedient** in voor een apparaat dat meer dan één
+kamer warm of koel maakt — een cv-ketel met radiatoren door het hele huis is het
+gewone geval. Leeg laten betekent *alleen deze zone*, en dat is precies wat er
+vóór deze instelling gebeurde; een installatie die het veld leeg laat merkt hier
+dus niets van.
+
+Staat het gebied er wél, dan gebeurt dit zodra een bron in dat gebied
+onbereikbaar wordt:
+
+- **dit apparaat neemt de taak over**, en het buitenvenster houdt hem daar niet
+  van af. De scheiding gas/airco blijft gewoon staan, maar hij is geen reden meer
+  om een huis koud te laten staan;
+- **niets anders in dat gebied verwarmt of koelt nog** zolang dit apparaat
+  draait. De apparaten die daardoor stilvallen melden `shared_source_took_over`.
+  Ook een apparaat dat je zelf hebt aangezet gaat uit — het staat hier de
+  natuurkunde in de weg en niet een buitenunit;
+- **geen enkele kamer in het gebied schuift door naar haar volgende bron.**
+  Anders staat er een elektrische kachel te stoken in een kamer die de ketel al
+  warm maakt.
+
+De kamer waarvan de bron wegviel blijft melden wat er werkelijk aan de hand is:
+de melder *op reserve* gaat aan en de reden noemt het onbereikbare apparaat. Zo
+blijft een kapotte thermostaat zichtbaar in plaats van weggepoetst.
+
+**Wachttijd voordat dit apparaat overneemt** telt vanaf het moment dat het
+apparaat onbereikbaar werd, zodat een integratie die aan en uit knippert de
+brander niet elke paar minuten ontsteekt. Vijf minuten is de standaard, nul neemt
+meteen over — en een moment dat niet te lezen is, bijvoorbeeld vlak na een
+herstart, ook.
 
 ### Een apparaat dat je zelf aanzet
 

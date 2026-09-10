@@ -267,6 +267,9 @@ Home Assistant (entiteitstoestanden, klokgebeurtenissen)
 │  hysteresis.py  moet er geregeld worden (temperaturen)           │
 │      │                                                           │
 │      ▼                                                           │
+│  takeover.py    wie het gebied van een weggevallen bron overneemt│
+│      │                                                           │
+│      ▼                                                           │
 │  sources.py     welk apparaat levert die taak                    │
 │      │                                                           │
 │      ▼                                                           │
@@ -409,6 +412,24 @@ Vraagt de zone niets, dan zegt de reden wélk soort niets: `satisfied` als de ka
 voorbij de verre rand van de band ligt, `within_deadband` als hij erbinnen ligt en wacht
 tot het aanpunt weer gehaald wordt. Dat onderscheid beantwoordt de vraag die gebruikers
 stellen: het is 20,5 en het aanpunt staat op 20, waarom slaat hij niet aan?
+
+### takeover.py — wie het overneemt
+
+Anker 12 als eigen module. `in_force()` zegt vóór de bronkeuze wélke overnames er
+op dit moment gelden: een bron met een gebied (`covers_zones`) neemt over zodra
+een beheerde bron in dat gebied onbereikbaar is en dat lang genoeg
+(`takeover_delay`, geteld vanaf het moment van uitvallen; een onbekend moment is
+meteen). De gebieden worden samengevoegd op `entity_id`, precies zoals een
+uitsluitende groep dat doet — hetzelfde apparaat staat vaak als aparte bron onder
+meerdere kamers, en één keer invullen hoort genoeg te zijn.
+
+De twee gevolgen hangen aan verschillende momenten, en daarom staan ze als twee
+functies naast elkaar. `narrowing()` is invoer voor `sources.select()`: in het
+gebied is de overnemer de énige kandidaat en telt zijn buitenvenster deze ronde
+niet. `stop_others()` draait ná het plan, want het hangt eraan of de overnemer
+werkelijk een taak kreeg: pas dan kan dezelfde ruimte tegelijk verwarmd en
+gekoeld worden, en pas dan stookt een airco mee in een kamer die de ketel al warm
+maakt. Wat daardoor stilvalt draagt `SHARED_SOURCE_TOOK_OVER`.
 
 ### sources.py — waarmee
 
@@ -1280,6 +1301,9 @@ Home Assistant (entity states, clock events)
 │  hysteresis.py  is regulating needed (temperatures)              │
 │      │                                                           │
 │      ▼                                                           │
+│  takeover.py    who takes over a dropped-out source's area       │
+│      │                                                           │
+│      ▼                                                           │
 │  sources.py     which appliance delivers that duty               │
 │      │                                                           │
 │      ▼                                                           │
@@ -1421,6 +1445,24 @@ the room lies past the far edge of the band, `within_deadband` when it lies insi
 waiting for the switch-on point to be reached again. That distinction answers the
 question users actually ask: it is 20.5 and the switch-on point is 20, so why does it
 not kick in?
+
+### takeover.py — who takes over
+
+Anchor 12 as a module of its own. `in_force()` says, before source selection,
+which takeovers hold at this moment: a source with an area (`covers_zones`) takes
+over as soon as a managed source in that area is unreachable and has been for
+long enough (`takeover_delay`, counted from the moment of dropping out; an
+unknown moment is at once). The areas are merged on `entity_id`, exactly as an
+exclusive group does — the same appliance often sits as a separate source under
+several rooms, and filling it in once should be enough.
+
+The two consequences hang off different moments, which is why they stand side by
+side as two functions. `narrowing()` is input to `sources.select()`: inside the
+area the taker-over is the only candidate and its outdoor window does not count
+this round. `stop_others()` runs after the plan, since it depends on whether the
+taker-over really got a duty: only then can the same room be heated and cooled at
+once, and only then does an air conditioner add to a room the boiler is already
+warming. Whatever stands down carries `SHARED_SOURCE_TOOK_OVER`.
 
 ### sources.py — with what
 

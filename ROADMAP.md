@@ -25,27 +25,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   gelden nu in `GateSettings` voor de hele installatie. De keuze huishouden-vs-aanwezigheid,
   de aanwezigheidssensor en de nalooptijd zijn al per zone; een slaapkamer wil daarnaast
   andere slaap- en stiltevensters dan een woonkamer.
-- **Gasterugval per warmtezone, met de airco's eruit** — valt binnen een warmtezone één airco
-  weg, dan neemt de gedeelde warmtebron het over en gaan **alle** airco's in díé warmtezone
-  direct uit. Vandaag gebeurt dat niet. Gemeten met een nagebouwd huis (zes ruimtes, één
-  ketel): de ketel gaat aan voor de kamer met de onbereikbare airco, terwijl de airco's van
-  de buurkamers gewoon doorstoken — dubbele kosten. De terugval is nu strikt **per ruimte**.
-  Binnen één zone klopt het wel: kiest die het gas, dan krijgt zijn eigen airco netjes
-  `other_source_chosen`. Tussen zones onderling bestaat geen enkele koppeling; elke zone
-  kiest onafhankelijk op voorrang. Uitsluitende groepen lossen dit **niet** op: die worden
-  op zonevoorrang beslecht, en in dezelfde meting won de airco, viel het gas uit met
-  `other_source_chosen` en kreeg de kamer met de kapotte airco `exclusive_group_lost` — dus
-  helemaal niets meer. Een koud huis in plaats van een duur huis, en dat is de verkeerde
-  kant op. De warmtezone bestaat al als begrip: `Generator.zone_ids`, "a heat source several
-  zones draw on through their own valves". Dat veld bepaalt vandaag alleen wánneer de ketel
-  moet branden, niet wat de overige apparaten in die zone moeten doen.
-  **Ankerbesluit van de gebruiker:** zodra het gas het overneemt, gaan de airco's in die
-  warmtezone **direct** uit. **Aanvulling:** de scheiding op buitentemperatuur blijft
-  bestaan — het gas houdt zijn eigen buitenvenster — maar onbereikbaarheid mag die scheiding
-  doorbreken. Valt de buitentemperatuur buiten het venster van de gasbron terwijl een airco
-  in de warmtezone onbereikbaar is, dan gaat het gas alsnog aan en gaan de airco's in die
-  zone uit. Daarmee wordt het buitenvenster van een bron **voorwaardelijk**, en dat is een
-  echte ankerwijziging: schrijf hem tweetalig in `ARCHITECTURE.md` vóór er een regel code komt.
 
 ## Could have
 
@@ -170,27 +149,6 @@ The worked-out design proposals for everything below live in
   live in `GateSettings` for the whole installation. The household-vs-presence choice, the
   presence sensor and the grace period are already per zone; a bedroom also wants different
   sleep and quiet windows from a living room.
-- **Gas fallback per heat zone, with the air conditioners switched off** — when one air
-  conditioner inside a heat zone drops out, the shared heat source takes over and **every**
-  air conditioner in that same heat zone goes off at once. That does not happen today.
-  Measured on a rebuilt house (six rooms, one boiler): the boiler fires for the room with
-  the unreachable unit while the neighbouring rooms keep heating on their own units — paying
-  twice. The fallback is strictly **per room**. Within one zone it is right: pick the gas and
-  that zone's own unit duly gets `other_source_chosen`. Between zones there is no coupling at
-  all; each zone chooses independently by priority. Exclusive groups do **not** solve this:
-  they are settled on zone priority, and in the same measurement the air conditioner won, the
-  gas dropped out with `other_source_chosen`, and the room with the broken unit was left with
-  `exclusive_group_lost` — nothing at all. A cold house instead of an expensive one, which is
-  the wrong way round. The heat zone already exists as a concept: `Generator.zone_ids`, "a
-  heat source several zones draw on through their own valves". Today that field only settles
-  *when* the boiler should fire, not what the other appliances in that zone should do.
-  **The user's anchor decision:** the moment the gas takes over, the air conditioners in that
-  heat zone go off **immediately**. **Addition:** the split on outdoor temperature stays — the
-  gas keeps its own outdoor window — but unreachability may break through it. With the outdoor
-  temperature outside the gas source's window while an air conditioner in the heat zone is
-  unreachable, the gas fires anyway and that zone's air conditioners go off. That makes a
-  source's outdoor window **conditional**, which is a genuine anchor change: write it in
-  `ARCHITECTURE.md` in both languages before a line of code is written.
 
 ## Could have
 

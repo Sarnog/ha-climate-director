@@ -285,6 +285,8 @@ gespeichert hast, wählst du sofort ihre Quellen.
 | **Reihenfolge innerhalb dieser Zone** | welche Quelle bevorzugt wird; **niedriger gewinnt** |
 | **Verwenden ab dieser Außentemperatur** | die Untergrenze; gehört zum Fenster |
 | **Verwenden bis zu dieser Außentemperatur** | die Obergrenze; gehört nicht zum Fenster |
+| **Zonen, die dieses Gerät mitversorgt** | die Räume, die es mitheizt oder mitkühlt, sobald es läuft; leer = nur diese Zone |
+| **So lange warten, bevor übernommen wird** | wie lange eine Quelle in diesem Gebiet schon nicht erreichbar sein muss; standardmäßig fünf Minuten, null ist sofort |
 
 ### Außengrenzen: halboffen
 
@@ -301,6 +303,36 @@ Willst du Gas unter 3 °C und die Klimaanlage darüber, setze die Grenze dann
 
 Setze die Grenze bei **jeder** Quelle gleich und nie unterschiedlich — sonst
 entsteht eine Überlappung, in der beide erlaubt sind.
+
+### Wenn eine Quelle ausfällt: das Gebiet wird übernommen
+
+Fülle **Zonen, die dieses Gerät mitversorgt** für ein Gerät aus, das mehr als
+einen Raum wärmt oder kühlt — ein Kessel mit Heizkörpern im ganzen Haus ist der
+gewöhnliche Fall. Leer lassen bedeutet *nur diese Zone*, und genau das geschah
+vor dieser Einstellung; eine Installation, die das Feld leer lässt, merkt hier
+also nichts.
+
+Steht das Gebiet dort, passiert Folgendes, sobald eine Quelle darin nicht mehr
+erreichbar ist:
+
+- **dieses Gerät übernimmt die Aufgabe**, und das Außenfenster hält es nicht
+  davon ab. Die Trennung Gas/Klimagerät bleibt bestehen, ist aber kein Grund
+  mehr, ein Haus kalt stehen zu lassen;
+- **nichts anderes in diesem Gebiet heizt oder kühlt noch**, solange dieses
+  Gerät läuft. Die Geräte, die dadurch stillstehen, melden
+  `shared_source_took_over`. Auch ein Gerät, das du selbst eingeschaltet hast,
+  geht aus — hier steht es der Physik im Weg und nicht einer Außeneinheit;
+- **kein Raum im Gebiet rückt auf seine nächste Quelle vor.** Sonst heizt ein
+  Elektroofen in einem Raum, den der Kessel bereits wärmt.
+
+Der Raum, dessen Quelle ausfiel, meldet weiter, was wirklich los ist: der Melder
+*auf Reserve* geht an, und der Grund nennt das nicht erreichbare Gerät. So
+bleibt ein kaputter Thermostat sichtbar, statt übertüncht zu werden.
+
+**So lange warten, bevor übernommen wird** zählt ab dem Moment, in dem das Gerät
+ausfiel, damit eine flackernde Integration den Brenner nicht alle paar Minuten
+zündet. Fünf Minuten sind die Vorgabe, null übernimmt sofort — und ein nicht
+lesbarer Moment, etwa direkt nach einem Neustart, ebenfalls.
 
 ### Ein Gerät, das du selbst einschaltest
 

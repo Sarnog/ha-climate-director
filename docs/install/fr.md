@@ -288,6 +288,8 @@ une zone, vous choisissez immédiatement ses sources.
 | **Ordre dans cette zone** | quelle source est préférée ; **le plus petit gagne** |
 | **Utiliser à partir de cette température extérieure** | la borne inférieure ; incluse dans la plage |
 | **Utiliser jusqu'à cette température extérieure** | la borne supérieure ; exclue de la plage |
+| **Zones que cet appareil dessert aussi** | les pièces qu'il chauffe ou refroidit en même temps dès qu'il fonctionne ; vide = cette zone seulement |
+| **Attendre ce délai avant de prendre le relais** | depuis combien de temps une source de ce périmètre doit être injoignable ; cinq minutes par défaut, zéro tout de suite |
 
 ### Bornes extérieures : à moitié ouvertes
 
@@ -304,6 +306,38 @@ Vous voulez le gaz sous 3 °C et le climatiseur au-dessus ? Ne mettez alors
 
 Réglez la frontière de la même façon sur **chaque** source, et jamais
 différemment — sinon un chevauchement apparaît où les deux sont autorisés.
+
+### Quand une source disparaît : le périmètre est repris
+
+Renseignez **Zones que cet appareil dessert aussi** pour un appareil qui chauffe
+ou refroidit plus d'une pièce — une chaudière avec des radiateurs dans toute la
+maison est le cas ordinaire. Laisser vide signifie *cette zone seulement*, ce qui
+est exactement ce qui se passait avant ce réglage ; une installation qui laisse
+le champ vide ne remarque rien.
+
+Avec un périmètre renseigné, voici ce qui se produit dès qu'une source de ce
+périmètre devient injoignable :
+
+- **cet appareil reprend la tâche**, et sa fenêtre extérieure ne l'en empêche
+  pas. La séparation gaz/climatisation reste, mais elle n'est plus une raison de
+  laisser une maison froide ;
+- **plus rien d'autre dans ce périmètre ne chauffe ni ne refroidit** tant que cet
+  appareil fonctionne. Les appareils ainsi arrêtés signalent
+  `shared_source_took_over`. Un appareil que vous avez allumé vous-même s'arrête
+  aussi — ici il gêne la physique et non une unité extérieure ;
+- **aucune pièce du périmètre ne passe à sa source suivante.** Sinon un
+  radiateur électrique chaufferait dans une pièce que la chaudière réchauffe
+  déjà.
+
+La pièce dont la source a disparu continue de signaler ce qui se passe vraiment :
+le capteur *sur relais* s'allume et la raison nomme l'appareil injoignable. Un
+thermostat cassé reste donc visible au lieu d'être masqué.
+
+**Attendre ce délai avant de prendre le relais** se compte à partir du moment où
+l'appareil est devenu injoignable, pour qu'une intégration instable n'allume pas
+le brûleur toutes les quelques minutes. Cinq minutes par défaut, zéro prend le
+relais tout de suite — et un moment illisible, juste après un redémarrage par
+exemple, également.
 
 ### Un appareil que vous allumez vous-même
 

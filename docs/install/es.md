@@ -285,6 +285,8 @@ eliges enseguida sus fuentes.
 | **Orden dentro de esta zona** | qué fuente se prefiere; **el más bajo gana** |
 | **Usar desde esta temperatura exterior** | el límite inferior; incluido en el rango |
 | **Usar hasta esta temperatura exterior** | el límite superior; excluido del rango |
+| **Zonas que este aparato también atiende** | las habitaciones que calienta o enfría de paso en cuanto funciona; vacío = solo esta zona |
+| **Esperar este tiempo antes de asumir el relevo** | cuánto tiempo debe llevar inalcanzable una fuente de ese ámbito; cinco minutos por defecto, cero de inmediato |
 
 ### Límites exteriores: medio abiertos
 
@@ -301,6 +303,38 @@ adyacentes cubren así toda la escala, sin hueco ni solape.
 
 Pon la frontera igual en **cada** fuente, y nunca distinta — si no, aparece un
 solape en el que ambas están permitidas.
+
+### Cuando una fuente se cae: el ámbito se asume
+
+Rellena **Zonas que este aparato también atiende** para un aparato que calienta o
+enfría más de una habitación — una caldera con radiadores por toda la casa es el
+caso corriente. Dejarlo vacío significa *solo esta zona*, que es exactamente lo
+que ocurría antes de este ajuste; una instalación que deja el campo vacío no
+nota nada.
+
+Con un ámbito relleno, esto ocurre en cuanto una fuente de ese ámbito queda
+inalcanzable:
+
+- **este aparato asume la tarea**, y su ventana exterior no se lo impide. La
+  separación gas/aire acondicionado se mantiene, pero deja de ser motivo para
+  dejar una casa fría;
+- **nada más en ese ámbito calienta ni enfría** mientras este aparato funciona.
+  Los aparatos que se detienen así informan `shared_source_took_over`. También se
+  apaga un aparato que encendiste tú — aquí estorba a la física y no a una unidad
+  exterior;
+- **ninguna habitación del ámbito pasa a su siguiente fuente.** De lo contrario
+  una estufa eléctrica calentaría en una habitación que la caldera ya está
+  templando.
+
+La habitación cuya fuente se cayó sigue informando de lo que realmente pasa: el
+sensor *en reserva* se enciende y el motivo nombra el aparato inalcanzable. Así
+un termostato roto queda visible en lugar de disimulado.
+
+**Esperar este tiempo antes de asumir el relevo** se cuenta desde el momento en
+que el aparato quedó inalcanzable, para que una integración inestable no encienda
+el quemador cada pocos minutos. Cinco minutos por defecto, cero asume el relevo
+de inmediato — y un momento ilegible, justo tras un reinicio por ejemplo,
+también.
 
 ### Un aparato que enciendes tú mismo
 

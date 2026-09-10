@@ -281,6 +281,8 @@ you pick its sources straight away.
 | **Order within this zone** | which source is preferred; **lower wins** |
 | **Use from this outdoor temperature** | the lower bound; included in the range |
 | **Use up to this outdoor temperature** | the upper bound; excluded from the range |
+| **Zones this appliance also serves** | the rooms it heats or cools along with it the moment it runs; empty = this zone only |
+| **Wait this long before taking over** | how long a source in that area must already have been unreachable; five minutes by default, zero is at once |
 
 ### Outdoor bounds: half open
 
@@ -297,6 +299,36 @@ boundary at 3.0:
 
 Set the boundary the same on **every** source, and never differently —
 otherwise an overlap appears in which both are allowed.
+
+### When a source drops out: the area is taken over
+
+Fill in **Zones this appliance also serves** for an appliance warming or cooling
+more than one room — a boiler with radiators throughout the house is the ordinary
+case. Leaving it empty means *this zone only*, which is exactly what happened
+before this setting existed; an installation that leaves the field empty notices
+nothing.
+
+With an area filled in, this happens the moment a source in that area becomes
+unreachable:
+
+- **this appliance takes the duty over**, and its outdoor window does not stop
+  it. The boiler/heat-pump split simply stays, but it is no longer a reason to
+  leave a house standing cold;
+- **nothing else in that area heats or cools** while this appliance runs. The
+  appliances that stand down report `shared_source_took_over`. An appliance you
+  switched on yourself goes off too — here it is in the way of physics rather
+  than of an outdoor unit;
+- **no room in the area slides on to its next source.** Otherwise an electric
+  heater sits burning in a room the boiler is already warming.
+
+The room whose source dropped out keeps reporting what is really the matter: the
+*on stand-in* sensor comes on and the reason names the unreachable appliance. A
+broken thermostat therefore stays visible instead of being papered over.
+
+**Wait this long before taking over** counts from the moment the appliance became
+unreachable, so an integration blinking on and off does not fire the burner every
+few minutes. Five minutes is the default, zero takes over at once — and so does a
+moment that cannot be read, right after a restart for instance.
 
 ### An appliance you switch on yourself
 
