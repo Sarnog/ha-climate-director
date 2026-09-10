@@ -53,7 +53,7 @@ geen gebruikersweergave.
 Een uitspraak in deze engine hangt altijd aan één ding, en welk ding dat is, is
 een ontwerpbesluit. Waar dat besluit niet opgeschreven stond, is het in vier
 achtereenvolgende reparatierondes telkens één stap opgeschoven — smal, dan te
-breed, dan weer terug. Deze elf ankers staan daarom hier, vóór alle modules.
+breed, dan weer terug. Deze twaalf ankers staan daarom hier, vóór alle modules.
 Wijk er niet van af zonder ze hier eerst te wijzigen.
 
 1. **Een lopend vooruit-verzoek** is één begrip in de hele engine:
@@ -148,6 +148,69 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     twee losse aanroepen, dan bestaat er een venster waarin de director het net
     gezette apparaat alsnog wegschakelt, en dan zou de volgorde van die twee
     aanroepen een eigenschap moeten dragen die nergens is vastgelegd.
+12. **Het verwarmingsgebied hangt aan de bron en noemt zones.** Een bron draagt
+    `heats_zones`: de zones die hij meeverwarmt of meekoelt zodra hij draait.
+    Leeg betekent *alleen de eigen zone* — het gedrag van vóór deze instelling,
+    dus een gezoneerde installatie merkt er niets van. Hetzelfde apparaat staat
+    vaak als aparte bron onder meerdere kamers; de engine voegt die gebieden
+    daarom samen op `entity_id`, precies zoals een uitsluitende groep dat doet
+    (`_group_entities`). Eén keer invullen is genoeg. Dit is dezelfde vorm als
+    `Generator.zone_ids`, met één bewust verschil: leeg is hier *niets* en daar
+    *alles*, want een terugval die standaard aanstaat is geen terugval maar een
+    verrassing.
+
+    **De uitspraak die eraan hangt:** valt een beheerde bron in dat gebied weg,
+    dan neemt de bron met het gebied de taak over, en levert er in dat hele
+    gebied géén ander klimaatapparaat meer warmte of koeling — ook een apparaat
+    dat zelf prima bereikbaar is, ook een apparaat dat iemand met de hand heeft
+    aangezet. Anders verwarmt de ketel het hele huis terwijl de airco's
+    doorstoken, of wordt dezelfde ruimte tegelijk verwarmd en gekoeld. De
+    apparaten die zo stilvallen krijgen `SHARED_SOURCE_TOOK_OVER`; de zone met
+    de weggevallen bron blijft melden wat er werkelijk aan de hand is
+    (`op_reserve`, `SOURCE_UNREACHABLE`).
+
+    **Onbereikbaarheid maakt het buitenvenster van de vervangende bron
+    voorwaardelijk.** Ligt de buitentemperatuur buiten zijn venster terwijl een
+    bron in zijn gebied onbereikbaar is, dan gaat hij alsnog aan. De scheiding
+    op buitentemperatuur blijft dus bestaan — die is alleen niet langer een
+    reden om een huis koud te laten staan. Dit is een **verbreding**: tot nu toe
+    was een buitenvenster onvoorwaardelijk. De andere kant wordt gedekt doordat
+    het venster in élke andere situatie gewoon geldt, en doordat een leeg
+    `heats_zones` deze uitzondering nergens laat ontstaan.
+
+    **Onbereikbaar is wat de wereld onbereikbaar noemt:** `unavailable`,
+    `unknown`, of een entiteit die er niet is — dezelfde definitie die
+    `ClimateState.available` al draagt. Een apparaat dat zijn commando niet
+    aanneemt telt hier niet mee: dat is bedieningstoestand en die woont buiten
+    de engine. De overname wacht `takeover_delay` (standaard vijf minuten, op de
+    vervangende bron, nul is meteen) vanaf het moment dat het apparaat
+    onbereikbaar werd, zodat een klapperende integratie de brander niet elke
+    paar minuten ontsteekt. Is dat moment onbekend, dan is er niets om op te
+    wachten en gaat de overname meteen in. Het terugschakelen ná herstel krijgt
+    géén eigen rem: dat is `Source.min_cycle_time` en de openingsrust uit
+    anker 5, en een tweede rem naast die twee is precies hoe deze engine eerder
+    twee bijna-gelijke paden kreeg.
+
+    **Dit anker verbreedt anker 7 aan één kant.** Daar staat dat een
+    circuitweigering het apparaat weigert en niet de zone, met als uitzondering
+    dat een huisbreed stilgezette eerste keus de zone wél weigert
+    (`OPENING_OPEN_ELSEWHERE`). De huisbrede overname is de tweede zo'n
+    uitzondering: een apparaat dat hierdoor stilstaat laat zijn zone niet
+    doorschuiven naar een volgende bron, want dan verwarmde die kamer alsnog
+    elektrisch binnen een gebied dat de ketel al warm maakt.
+
+    **Wat het niet is.** Het vervangt de uitsluitende groepen niet en bouwt er
+    niet op voort: die blijven een handmatige uitsluiting, beslecht op
+    zonevoorrang. De overname werkt ervóór — hij haalt de apparaten uit de
+    wensen, zodat de groep daarna niets meer te kiezen heeft. Laat je de groep
+    beslissen, dan wint de airco op voorrang, valt het gas uit met
+    `other_source_chosen` en houdt de kamer met de kapotte airco
+    `exclusive_group_lost` over: een koud huis in plaats van een duur huis. De
+    director herstelt verder geen handmatige stand — een apparaat dat hierdoor
+    uitging blijft uit of gaat verwarmen als de regeling dat vraagt, maar keert
+    nooit uit zichzelf terug naar koelen. En is de vervangende bron zélf
+    onbereikbaar, dan valt er niets over te nemen: er wordt niets stilgezet en
+    de gewone bronkeuze doet zijn werk.
 
 ### De belangrijkste scheidslijn
 
@@ -1009,7 +1072,7 @@ other no user-facing display.
 A statement in this engine always hangs on one thing, and which thing that is, is
 a design decision. Wherever that decision was not written down, it shifted by one
 step in four successive repair rounds — narrow, then too broad, then back again.
-These eleven anchors therefore sit here, ahead of every module. Do not depart from
+These twelve anchors therefore sit here, ahead of every module. Do not depart from
 them without changing them here first.
 
 1. **A running pre-conditioning request** is one concept throughout the engine:
@@ -1101,6 +1164,67 @@ them without changing them here first.
     a window in which the director stands the just-set appliance down after all,
     and then the order of those two calls would have to carry a property that is
     written down nowhere.
+12. **The heating area hangs on the source and names zones.** A source carries
+    `heats_zones`: the zones it heats or cools along with it the moment it runs.
+    Empty means *its own zone only* — the behaviour from before this setting, so
+    a zoned installation notices nothing. The same appliance often sits as a
+    separate source under several rooms; the engine therefore merges those areas
+    on `entity_id`, exactly as an exclusive group does (`_group_entities`).
+    Filling it in once is enough. This is the same shape as `Generator.zone_ids`,
+    with one deliberate difference: empty means *nothing* here and *everything*
+    there, because a fallback that is on by default is not a fallback but a
+    surprise.
+
+    **The statement hanging off it:** when a managed source inside that area
+    drops out, the source owning the area takes the duty over, and no other
+    climate appliance anywhere in that area delivers heat or cooling any more —
+    not one that is perfectly reachable itself, and not one somebody switched on
+    by hand. Otherwise the boiler heats the whole house while the air
+    conditioners keep going, or the same room is heated and cooled at once. The
+    appliances stood down this way carry `SHARED_SOURCE_TOOK_OVER`; the zone
+    whose source dropped out keeps reporting what is really the matter
+    (`op_reserve`, `SOURCE_UNREACHABLE`).
+
+    **Unreachability makes the replacing source's outdoor window conditional.**
+    With the outdoor temperature outside its window while a source in its area
+    is unreachable, it fires anyway. The split on outdoor temperature therefore
+    stays — it simply stops being a reason to leave a house cold. This is a
+    **broadening**: until now an outdoor window was unconditional. The other
+    side is covered by the window applying normally in every other situation,
+    and by an empty `heats_zones` never letting this exception arise at all.
+
+    **Unreachable is what the world calls unreachable:** `unavailable`,
+    `unknown`, or an entity that is not there — the same definition
+    `ClimateState.available` already carries. An appliance not taking its command
+    does not count here: that is control state and it lives outside the engine.
+    The takeover waits `takeover_delay` (five minutes by default, on the
+    replacing source, zero is immediately) from the moment the appliance became
+    unreachable, so a flapping integration does not light the burner every few
+    minutes. When that moment is unknown there is nothing to wait for and the
+    takeover applies at once. Switching back after recovery gets no brake of its
+    own: that is `Source.min_cycle_time` and the opening rest from anchor 5, and
+    a second brake beside those two is exactly how this engine ended up with two
+    nearly identical paths before.
+
+    **This anchor broadens anchor 7 on one side.** There it says a circuit
+    refusal refuses the appliance and not the zone, with the exception that a
+    first choice stopped house-wide does refuse the zone
+    (`OPENING_OPEN_ELSEWHERE`). The house-wide takeover is the second such
+    exception: an appliance standing still because of it does not let its zone
+    move on to a next source, since that room would then heat electrically
+    inside an area the boiler is already warming.
+
+    **What it is not.** It neither replaces the exclusive groups nor builds on
+    them: those stay a manual exclusion, settled on zone priority. The takeover
+    acts before them — it removes the appliances from the wishes, so the group
+    has nothing left to choose. Let the group decide and the air conditioner
+    wins on priority, the gas drops out with `other_source_chosen`, and the room
+    with the broken unit is left holding `exclusive_group_lost`: a cold house
+    instead of an expensive one. Beyond that the director restores no manual
+    setting — an appliance switched off by this stays off, or heats if the
+    control asks for it, but never returns to cooling by itself. And when the
+    replacing source is itself unreachable there is nothing to take over:
+    nothing is stood down and ordinary source selection does its work.
 
 ### The most important dividing line
 
