@@ -205,6 +205,32 @@ def _weekday_selector() -> selector.SelectSelector:
     )
 
 
+def _zone_selector(flow: Any) -> selector.SelectSelector:
+    """Return a picker over this installation's zones, the same shape twice.
+
+    De gedeelde warmtebron kiest zijn zones al zo; een bron met een gebied
+    (anker 12) kiest ze net zo. Wélke zones erin staan hangt aan de installatie
+    die bewerkt wordt, dus dit is de vorm van het scherm en niet de betekenis
+    van het veld — en daarom staat hij hier en niet in `engine/fields.py`.
+
+    The shared heat source already picks its zones this way; a source with an
+    area (anchor 12) picks them the same way. Which zones sit in the list hangs
+    off the installation being edited, so this is the shape of the screen rather
+    than the meaning of the field — hence here and not in `engine/fields.py`.
+    """
+    return selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=[
+                selector.SelectOptionDict(
+                    value=zone["zone_id"], label=zone.get("name") or zone["zone_id"]
+                )
+                for zone in flow._list("zones")
+            ],
+            multiple=True,
+        )
+    )
+
+
 def _selector_for(field: FieldSpec, flow: Any) -> Any:
     """Return the selector a table field describes, without `vol` around it."""
     unit = temperature_unit_of(flow.hass)
@@ -225,6 +251,8 @@ def _selector_for(field: FieldSpec, flow: Any) -> Any:
         return _choices(list(field.options), field.translation_key or "")
     if field.kind == "weekdays":
         return _weekday_selector()
+    if field.kind == "zones":
+        return _zone_selector(flow)
     if field.kind == "number":
         if field.unit == "temperature":
             return _temperature(unit)
@@ -276,6 +304,8 @@ def _settings_value(flow: Any, field: FieldSpec, values: Mapping[str, Any]) -> A
     if field.kind == "weekdays":
         stored = _target_value(values, field.target)
         return None if stored is None else [str(day) for day in sorted(stored)]
+    if field.kind == "zones":
+        return list(_target_value(values, field.target) or ())
     if field.kind == "states_text":
         stored = _target_value(values, field.target)
         return ", ".join(stored if stored else sorted(PrecipitationSettings().states))
@@ -394,6 +424,8 @@ def _stored_value(
         return list(form_value or ()) if field.multiple else (form_value or "")
     if field.kind == "weekdays":
         return [int(day) for day in form_value or ()] or None
+    if field.kind == "zones":
+        return list(form_value or ())
     if field.kind == "number":
         return _stored_number(field, form_value, unit)
     raise AssertionError(f"onbekend veldtype {field.kind!r} voor {field.key}")

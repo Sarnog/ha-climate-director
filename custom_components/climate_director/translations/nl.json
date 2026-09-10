@@ -170,7 +170,9 @@
           "delete": "Deze bron verwijderen",
           "autostart": "Dit apparaat automatisch aanzetten",
           "when_done": "Als je hier klaar bent",
-          "min_cycle_time": "Rusttijd voordat dit apparaat opnieuw mag starten (seconden)"
+          "min_cycle_time": "Rusttijd voordat dit apparaat opnieuw mag starten (seconden)",
+          "covers_zones": "Zones die dit apparaat mee bedient",
+          "takeover_delay": "Wachttijd voordat dit apparaat overneemt (minuten)"
         },
         "data_description": {
           "name": "Een eigen naam voor deze bron; laat je hem leeg, dan noemt de kiezer het apparaat zelf.",
@@ -182,7 +184,9 @@
           "delete": "Haalt de bron uit deze zone. Het apparaat zelf blijft ongemoeid.",
           "autostart": "Uit laat hem met rust: de director zet hem nooit aan, en zet hem alleen uit als hij een taak draait die de gedeelde buitenunit niet toestaat. Voor een apparaat dat je zelf aanzet en zo wilt laten staan.",
           "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
-          "min_cycle_time": "Vertraagt alleen starten, nooit stoppen. Geldt alleen als het apparaat op geen circuit zit; op een circuit telt de rusttijd van dat circuit. Leeg laten betekent geen eigen rusttijd."
+          "min_cycle_time": "Vertraagt alleen starten, nooit stoppen. Geldt alleen als het apparaat op geen circuit zit; op een circuit telt de rusttijd van dat circuit. Leeg laten betekent geen eigen rusttijd.",
+          "covers_zones": "De kamers die dit apparaat meeverwarmt of meekoelt zodra het draait. Leeg betekent alleen deze zone. Valt een bron in dat gebied weg, dan neemt dit apparaat de taak over en verwarmt of koelt er in dat hele gebied niets anders meer. Hetzelfde apparaat onder meerdere kamers deelt één gebied, dus één keer invullen is genoeg.",
+          "takeover_delay": "Hoe lang een bron in het gebied al onbereikbaar moet zijn voordat dit apparaat overneemt. Geteld vanaf het moment dat hij onbereikbaar werd, zodat een klapperende integratie de brander niet elke paar minuten ontsteekt. Nul neemt meteen over, en een moment dat niet te lezen is ook."
         }
       },
       "circuits": {
@@ -898,6 +902,9 @@
     },
     "unknown_zones": {
       "message": "Onbekende zones: {zones}"
+    },
+    "source_unknown_covered_zone": {
+      "message": "Bron {source} noemt onbekende zone {zone} in het gebied dat hij mee bedient."
     }
   },
   "services": {

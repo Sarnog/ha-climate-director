@@ -75,6 +75,11 @@ def parse_leaf(field: FieldSpec, stored: Any, annotation: Any = None) -> Any:
         return _bool(stored, field.default)
     if field.kind in ("text", "entity"):
         return tuple(_strings(stored)) if field.multiple else _text(stored)
+    if field.kind == "zones":
+        # Een lijst zone-id's. Leeg is hier een echte waarde: "alleen de eigen
+        # zone". / A list of zone ids. Empty is a real value here: "this zone
+        # only".
+        return tuple(_strings(stored))
     if field.kind == "choice":
         enum_type = _unwrap(annotation)
         return _enum(enum_type, stored, enum_type(field.default))
@@ -103,6 +108,8 @@ def write_leaf(field: FieldSpec, value: Any) -> Any:
         return value
     if field.kind in ("text", "entity"):
         return list(value) if field.multiple else value
+    if field.kind == "zones":
+        return list(value)
     if field.kind == "choice":
         return value.value
     if field.kind == "time":

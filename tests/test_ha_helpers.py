@@ -724,7 +724,7 @@ class TestTheEnglishTemplatesLiveInTheCache:
             and node.args
             and isinstance(node.args[0], ast.Constant)
         ]
-        assert len(codes) == 45
+        assert len(codes) == 46
         templates = texts.english_templates()
         assert templates is not None
         missing = [code for code in codes if code not in templates]

@@ -170,7 +170,9 @@
           "delete": "Supprimer cette source",
           "autostart": "Démarrer cet appareil automatiquement",
           "when_done": "Quand vous avez terminé ici",
-          "min_cycle_time": "Repos avant que cet appareil puisse redémarrer (secondes)"
+          "min_cycle_time": "Repos avant que cet appareil puisse redémarrer (secondes)",
+          "covers_zones": "Zones que cet appareil dessert aussi",
+          "takeover_delay": "Attendre ce délai avant de prendre le relais (minutes)"
         },
         "data_description": {
           "name": "Un nom à vous pour cette source ; si vous le laissez vide, le sélecteur nomme l'appareil lui-même.",
@@ -182,7 +184,9 @@
           "delete": "Retire la source de cette zone. L'appareil lui-même reste intact.",
           "autostart": "Désactivé le laisse tranquille : le directeur ne l'allume jamais et ne l'éteint que s'il exécute une tâche que l'unité extérieure partagée n'autorise pas. Pour un appareil que vous allumez vous-même et voulez laisser tel quel.",
           "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
-          "min_cycle_time": "Retarde uniquement le démarrage, jamais l'arrêt. Ne s'applique que lorsque l'appareil n'est sur aucun circuit; sur un circuit, c'est le repos du circuit qui compte. Laisser vide signifie aucun repos propre."
+          "min_cycle_time": "Retarde uniquement le démarrage, jamais l'arrêt. Ne s'applique que lorsque l'appareil n'est sur aucun circuit; sur un circuit, c'est le repos du circuit qui compte. Laisser vide signifie aucun repos propre.",
+          "covers_zones": "Les pièces que cet appareil chauffe ou refroidit en même temps dès qu'il fonctionne. Vide signifie cette zone seulement. Si une source de ce périmètre devient injoignable, cet appareil reprend la tâche et plus rien d'autre ne chauffe ni ne refroidit dans tout ce périmètre. Le même appareil sous plusieurs pièces partage un seul périmètre : le remplir une fois suffit.",
+          "takeover_delay": "Depuis combien de temps une source du périmètre doit être injoignable avant que cet appareil prenne le relais. Compté à partir du moment où elle est devenue injoignable, pour qu'une intégration instable n'allume pas le brûleur toutes les quelques minutes. Zéro prend le relais tout de suite, et un moment illisible aussi."
         }
       },
       "circuits": {
@@ -898,6 +902,9 @@
     },
     "unknown_zones": {
       "message": "Zones inconnues : {zones}"
+    },
+    "source_unknown_covered_zone": {
+      "message": "La source {source} nomme une zone inconnue {zone} dans le périmètre qu'elle dessert aussi."
     }
   },
   "services": {

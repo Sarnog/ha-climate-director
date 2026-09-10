@@ -243,6 +243,40 @@ class Source:
     Empty or zero means: no own brake.
     """
 
+    covers_zones: tuple[str, ...] = ()
+    """The zones this appliance heats or cools along with it the moment it runs.
+
+    Anker 12. Leeg betekent *alleen de eigen zone*: het gedrag van vóór deze
+    instelling, dus een gezoneerde installatie merkt er niets van. Hetzelfde
+    apparaat staat vaak als aparte bron onder meerdere kamers; de gebieden
+    worden daarom samengevoegd op `entity_id`, dus één keer invullen is genoeg.
+    Dit is dezelfde vorm als `Generator.zone_ids`, met één bewust verschil: leeg
+    is hier *niets* en daar *alles*, want een terugval die standaard aanstaat is
+    geen terugval maar een verrassing.
+
+    Anchor 12. Empty means *this zone only*: the behaviour from before this
+    setting, so a zoned installation notices nothing. The same appliance often
+    sits as a separate source under several rooms; the areas are therefore
+    merged on `entity_id`, so filling it in once is enough. This is the same
+    shape as `Generator.zone_ids`, with one deliberate difference: empty means
+    *nothing* here and *everything* there, because a fallback that is on by
+    default is no fallback but a surprise.
+    """
+
+    takeover_delay: timedelta = timedelta(minutes=5)
+    """How long a source in this appliance's area must be unreachable first.
+
+    Anker 12. De overname wacht vanaf het moment dat het apparaat onbereikbaar
+    werd, zodat een klapperende integratie de brander niet elke paar minuten
+    ontsteekt. Is dat moment onbekend, dan is er niets om op te wachten en gaat
+    de overname meteen in. Nul is meteen.
+
+    Anchor 12. The takeover waits from the moment the appliance became
+    unreachable, so a flapping integration does not fire the burner every few
+    minutes. If that moment is unknown there is nothing to wait for and the
+    takeover starts at once. Zero is at once.
+    """
+
     def supports(self, family: ModeFamily) -> bool:
         """Return whether this source can deliver `family`."""
         if family is ModeFamily.HEAT:
@@ -1278,6 +1312,32 @@ def _rule_source_outdoor_window(source: Source, outdoor_known: bool) -> Iterator
         )
 
 
+def _rule_source_covered_zones(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint when a source's area names a zone that does not exist.
+
+    Anker 12: `covers_zones` noemt zones, en een zone die niet bestaat kan dit
+    apparaat nooit meebedienen. Stil overslaan zou de overname kleiner maken dan
+    de gebruiker denkt en dat is precies het soort verschil dat je nergens ziet -
+    dezelfde klacht die een gedeelde warmtebron met een onbekende zone al krijgt.
+
+    Anchor 12: `covers_zones` names zones, and a zone that does not exist can
+    never be served along by this appliance. Skipping it quietly would make the
+    takeover smaller than the user thinks, and that is exactly the kind of
+    difference you never see - the same complaint a shared heat source naming an
+    unknown zone already gets.
+    """
+    known = {zone.zone_id for zone in config.zones}
+    for _, source in config.sources():
+        for zone_id in source.covers_zones:
+            if zone_id not in known:
+                yield Problem(
+                    "source_unknown_covered_zone",
+                    f"source {source.source_id} names unknown zone {zone_id} in its area",
+                    source=source.source_id,
+                    zone=zone_id,
+                )
+
+
 def _rule_family_hysteresis(
     zone: Zone, family: ModeFamily, settings: ModeSettings
 ) -> Iterator[Problem]:
@@ -2021,6 +2081,7 @@ _RULES = (
     _rule_entity_twice_in_one_zone,
     _rule_unit_in_no_zone,
     _rule_unit_on_two_circuits,
+    _rule_source_covered_zones,
     _rule_zones,
     _rule_generators,
     _rule_circuits,

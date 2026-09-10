@@ -170,7 +170,9 @@
           "delete": "Delete this source",
           "autostart": "Start this appliance automatically",
           "when_done": "When you are done here",
-          "min_cycle_time": "Rest before this appliance may restart (seconds)"
+          "min_cycle_time": "Rest before this appliance may restart (seconds)",
+          "covers_zones": "Zones this appliance also serves",
+          "takeover_delay": "Wait this long before taking over (minutes)"
         },
         "data_description": {
           "name": "A name of your own for this source; leave it empty and the picker names the appliance itself.",
@@ -182,7 +184,9 @@
           "delete": "Removes the source from this zone. The appliance itself is left alone.",
           "autostart": "Off leaves it alone: the director never switches it on, and switches it off only when it runs a duty the shared outdoor unit cannot allow. For an appliance you switch on yourself and want left as you left it.",
           "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
-          "min_cycle_time": "Only ever delays starting, never stopping. Applies only when the appliance sits on no circuit; on a circuit the circuit's rest counts. Leave empty for no own rest."
+          "min_cycle_time": "Only ever delays starting, never stopping. Applies only when the appliance sits on no circuit; on a circuit the circuit's rest counts. Leave empty for no own rest.",
+          "covers_zones": "The rooms this appliance heats or cools along with it the moment it runs. Empty means this zone only. Does a source in that area become unreachable, then this appliance takes the duty over and nothing else in that whole area heats or cools. The same appliance under several rooms shares one area, so filling it in once is enough.",
+          "takeover_delay": "How long a source in the area must already have been unreachable before this appliance takes over. Counted from the moment it became unreachable, so a flapping integration does not fire the burner every few minutes. Zero takes over at once, and so does a moment nobody can read."
         }
       },
       "circuits": {
@@ -898,6 +902,9 @@
     },
     "unknown_zones": {
       "message": "Unknown zones: {zones}"
+    },
+    "source_unknown_covered_zone": {
+      "message": "Source {source} names unknown zone {zone} in the area it serves along."
     }
   },
   "services": {

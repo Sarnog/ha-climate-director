@@ -170,7 +170,9 @@
           "delete": "Eliminar esta fuente",
           "autostart": "Encender este aparato automáticamente",
           "when_done": "Cuando termines aquí",
-          "min_cycle_time": "Descanso antes de que este aparato pueda reiniciarse (segundos)"
+          "min_cycle_time": "Descanso antes de que este aparato pueda reiniciarse (segundos)",
+          "covers_zones": "Zonas que este aparato también atiende",
+          "takeover_delay": "Esperar este tiempo antes de asumir el relevo (minutos)"
         },
         "data_description": {
           "name": "Un nombre propio para esta fuente; si lo dejas vacío, el selector nombra el aparato en sí.",
@@ -182,7 +184,9 @@
           "delete": "Saca la fuente de esta zona. El aparato en sí queda intacto.",
           "autostart": "Desactivado lo deja en paz: el director nunca lo enciende, y solo lo apaga si realiza una tarea que la unidad exterior compartida no permite. Para un aparato que enciendes tú y quieres dejar como está.",
           "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
-          "min_cycle_time": "Solo retrasa el arranque, nunca la parada. Solo se aplica cuando el aparato no está en ningún circuito; en un circuito cuenta el descanso de ese circuito. Dejarlo vacío significa ningún descanso propio."
+          "min_cycle_time": "Solo retrasa el arranque, nunca la parada. Solo se aplica cuando el aparato no está en ningún circuito; en un circuito cuenta el descanso de ese circuito. Dejarlo vacío significa ningún descanso propio.",
+          "covers_zones": "Las habitaciones que este aparato calienta o enfría de paso en cuanto funciona. Vacío significa solo esta zona. Si una fuente de ese ámbito queda inalcanzable, este aparato asume la tarea y en todo ese ámbito nada más calienta ni enfría. El mismo aparato bajo varias habitaciones comparte un solo ámbito, así que rellenarlo una vez basta.",
+          "takeover_delay": "Cuánto tiempo debe llevar inalcanzable una fuente del ámbito antes de que este aparato asuma el relevo. Se cuenta desde el momento en que quedó inalcanzable, para que una integración inestable no encienda el quemador cada pocos minutos. Cero asume el relevo de inmediato, y un momento ilegible también."
         }
       },
       "circuits": {
@@ -898,6 +902,9 @@
     },
     "unknown_zones": {
       "message": "Zonas desconocidas: {zones}"
+    },
+    "source_unknown_covered_zone": {
+      "message": "La fuente {source} nombra una zona desconocida {zone} en el ámbito que también atiende."
     }
   },
   "services": {

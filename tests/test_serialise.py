@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import time, timedelta
 
+import pytest
 from conftest import house
 
 from custom_components.climate_director.engine import (
@@ -295,6 +296,97 @@ class TestDurations:
     def test_a_presence_timeout_defaults_to_none(self) -> None:
         config = config_from_dict({"zones": [{"zone_id": "z", "presence_entity": "b.p"}]})
         assert config.zones[0].presence_timeout == timedelta(0)
+
+
+class TestTheAreaOfASource:
+    """Anker 12: het gebied en de wachttijd overleven de opslag heen en terug.
+
+    Anchor 12: the area and the delay survive storage both ways.
+
+    Geparametriseerd over de vorm waarin het gebied opgeslagen kan staan, want
+    dat is de eigenschap: een lijst zone-id's, een lege lijst en een ontbrekende
+    sleutel betekenen alle drie iets anders in de tekst maar hetzelfde in de
+    engine - alleen de eigen zone.
+
+    Parameterised over the shapes the area can be stored in, because that is the
+    property: a list of zone ids, an empty list and a missing key all read
+    differently in the text but the same in the engine - this zone only.
+    """
+
+    @pytest.mark.parametrize(
+        ("stored", "expected"),
+        [
+            pytest.param(
+                {"covers_zones": ["zolder", "slaapkamer"]},
+                ("zolder", "slaapkamer"),
+                id="twee_zones",
+            ),
+            pytest.param({"covers_zones": []}, (), id="leeg"),
+            pytest.param({}, (), id="ontbreekt"),
+            # Een losse tekst is geen lijst zones; hem letter voor letter lezen
+            # zou erger zijn dan hem laten vallen - dezelfde keuze die
+            # `holiday_calendars` al maakt. / A bare string is no list of zones;
+            # reading it letter by letter would be worse than dropping it - the
+            # same choice `holiday_calendars` already makes.
+            pytest.param({"covers_zones": "zolder"}, (), id="losse_tekst"),
+            pytest.param({"covers_zones": None}, (), id="none"),
+        ],
+    )
+    def test_the_area_reads_back(self, stored: dict, expected: tuple[str, ...]) -> None:
+        config = config_from_dict(
+            {
+                "zones": [
+                    {
+                        "zone_id": "z",
+                        "sources": [{"source_id": "s", "entity_id": "climate.a", **stored}],
+                    }
+                ]
+            }
+        )
+        assert config.zones[0].sources[0].covers_zones == expected
+
+    @pytest.mark.parametrize(
+        ("stored", "expected"),
+        [
+            pytest.param({"takeover_delay": 0}, timedelta(0), id="nul"),
+            pytest.param({"takeover_delay": 600}, timedelta(minutes=10), id="tien_minuten"),
+            pytest.param({}, timedelta(minutes=5), id="standaard"),
+        ],
+    )
+    def test_the_delay_reads_back(self, stored: dict, expected: timedelta) -> None:
+        config = config_from_dict(
+            {
+                "zones": [
+                    {
+                        "zone_id": "z",
+                        "sources": [{"source_id": "s", "entity_id": "climate.a", **stored}],
+                    }
+                ]
+            }
+        )
+        assert config.zones[0].sources[0].takeover_delay == expected
+
+    def test_both_fields_survive_a_round_trip(self) -> None:
+        config = config_from_dict(
+            {
+                "zones": [
+                    {
+                        "zone_id": "z",
+                        "sources": [
+                            {
+                                "source_id": "s",
+                                "entity_id": "climate.a",
+                                "covers_zones": ["zolder"],
+                                "takeover_delay": 900,
+                            }
+                        ],
+                    }
+                ]
+            }
+        )
+        again = config_from_dict(config_to_dict(config))
+        assert again.zones[0].sources[0].covers_zones == ("zolder",)
+        assert again.zones[0].sources[0].takeover_delay == timedelta(minutes=15)
 
 
 class TestOpenings:

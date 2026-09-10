@@ -215,6 +215,16 @@ SETTINGS_FIELDS: tuple[FieldSpec, ...] = (
 #: `schemas.source`: they belong to the shape and to the navigation, not to the
 #: fields. Assigning a `source_id` likewise stays by hand — that is identity,
 #: not a field.
+#:
+#: `covers_zones` is de eerste rij met veldtype `zones`: een keuzelijst over de
+#: zones van deze installatie. De tabel noemt alleen het type; wélke zones er in
+#: die lijst staan weet `schema_fields.py`, want dat is de vorm van het scherm en
+#: niet de betekenis van het veld.
+#:
+#: `covers_zones` is the first row of field kind `zones`: a picker over this
+#: installation's zones. The table only names the kind; which zones sit in that
+#: list is up to `schema_fields.py`, because that is the shape of the screen and
+#: not the meaning of the field.
 SOURCE_FIELDS: tuple[FieldSpec, ...] = (
     FieldSpec("name", "text", required=False, target="name"),
     FieldSpec("entity_id", "entity", required=False, target="entity_id", domain="climate"),
@@ -248,6 +258,14 @@ SOURCE_FIELDS: tuple[FieldSpec, ...] = (
         required=False,
         target="min_cycle_time",
         unit="seconds",
+    ),
+    FieldSpec("covers_zones", "zones", required=False, target="covers_zones"),
+    FieldSpec(
+        "takeover_delay",
+        "number",
+        default=300,
+        target="takeover_delay",
+        unit="minutes",
     ),
 )
 
