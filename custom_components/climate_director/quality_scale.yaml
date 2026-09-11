@@ -98,4 +98,4 @@ rules:
     comment: "Geen websessie nodig, de integratie doet geen HTTP. / No web session needed; the integration does no HTTP."
   strict-typing:
     status: todo
-    comment: "108 mypy-fouten in 14 bestanden gemeten op 2026-09-09 (mypy 2.3.1, strict). De CI-baan is niet-blokkerend tot dit aantal nul is. / 108 mypy errors in 14 files measured on 2026-09-09 (mypy 2.3.1, strict). The CI job stays non-blocking until this count reaches zero."
+    comment: "158 mypy-fouten in 15 bestanden gemeten op 2026-09-11 (mypy 2.3.1, strict); de override-mixin van 7.5.3 bracht er 37 bij. De CI-baan is niet-blokkerend tot dit aantal nul is. / 158 mypy errors in 15 files measured on 2026-09-11 (mypy 2.3.1, strict); the 7.5.3 override mixin added 37. The CI job stays non-blocking until this count reaches zero."
