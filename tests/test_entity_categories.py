@@ -51,6 +51,7 @@ EXPECTED: dict[str, dict[str, EntityCategory | None]] = {
         "holiday": None,
         "guest": None,
         "zone_override": None,
+        "opening_bypass": None,
     },
 }
 

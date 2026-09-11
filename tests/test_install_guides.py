@@ -63,7 +63,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.generators.data.generator": ("Heat source"),
         "options.step.opening.data.delay": ("Delay before suspending (seconds)"),
         "options.step.opening.data.delete": ("Delete this opening"),
-        "options.step.openings.data.opening": ("Opening"),
         "options.step.quiet.data.delete": ("Delete this window"),
         "options.step.quiet.data.end": ("Quiet until"),
         "options.step.quiet.data.start": ("Quiet from"),

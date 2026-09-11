@@ -120,6 +120,7 @@ def make_world(
     precondition_bypass: frozenset[str] = frozenset(),
     zone_overrides: dict[str, bool] | None = None,
     zone_priorities: dict[str, int] | None = None,
+    opening_bypasses: frozenset[str] = frozenset(),
     precipitation: bool = False,
 ) -> WorldState:
     """Return a `WorldState`, accepting bare mode strings for climate entities."""
@@ -144,6 +145,7 @@ def make_world(
         precondition_bypass=precondition_bypass,
         zone_overrides=dict(zone_overrides or {}),
         zone_priorities=dict(zone_priorities or {}),
+        opening_bypasses=opening_bypasses,
         precipitation=precipitation,
     )
 
@@ -309,7 +311,14 @@ def house() -> DirectorConfig:
                 sleep_state="wireless",
             ),
         ),
-        openings=(Opening(entity_id=BACK_DOOR, delay=timedelta(seconds=30)),),
+        openings=(
+            Opening(
+                entity_id=BACK_DOOR,
+                opening_id="achterdeur",
+                name="Achterdeur",
+                delay=timedelta(seconds=30),
+            ),
+        ),
         gates=GateSettings(require_awake=True),
         # De engine leest deze entiteit nooit zelf - de koppelingslaag doet dat
         # en zet het resultaat in `WorldState`. Hij hoort hier omdat elk

@@ -398,7 +398,7 @@ def _room_occupied(world: WorldState, zone: Zone) -> bool:
 def _any_opening_open(config: DirectorConfig, world: WorldState, zone: Zone) -> bool:
     """Return whether an opening has suspended this zone long enough."""
     return any(
-        _standing_open(opening, world)
+        opening_standing(opening, world)
         for opening in config.openings
         if opening.affects(zone.zone_id)
     )
@@ -420,15 +420,39 @@ def _standing_open(opening: Opening, world: WorldState) -> bool:
 def opening_standing(opening: Opening, world: WorldState) -> bool:
     """Return whether this opening counts as standing open, delay included.
 
-    De publieke lezer voor de koppelingslaag: die noemt in de
-    weigeringsmelding alleen de openingen die de zone écht tegenhouden, en een
-    raam binnen zijn vertraging hoort daar niet bij.
+    Anker 8: een overbrugde opening bestaat niet voor de director. Hij telt
+    nergens meer mee - niet voor het opschorten van zijn eigen zones, en niet
+    voor de huisbrede stop. `opening_standing` is de publieke lezer voor de
+    koppelingslaag: die noemt in de weigeringsmelding en in de events alleen de
+    openingen die de zone écht tegenhouden, en daar hoort een overbrugde opening
+    niet bij, net zo min als een raam binnen zijn vertraging.
 
-    The public reader for the binding layer: the refusal notice names only the
-    openings really holding the zone back, and a window inside its delay does
-    not belong there.
+    Anchor 8: a bypassed opening does not exist for the director. It counts
+    nowhere any more - neither for suspending its own zones, nor for the
+    house-wide stop. `opening_standing` is the public reader for the binding
+    layer: the refusal notice and the events name only the openings really
+    holding the zone back, and a bypassed opening does not belong there, just
+    as a window inside its delay does not.
     """
+    if opening.opening_id in world.opening_bypasses:
+        return False
     return _standing_open(opening, world)
+
+
+def opening_bypassed_and_open(opening: Opening, world: WorldState) -> bool:
+    """Return whether this opening is bypassed while it really stands open.
+
+    De kant van anker 8 die wél moet opvallen: staat de overbrugging aan
+    terwijl de opening werkelijk openstaat, dan stookt de installatie met een
+    raam open zonder dat de poort er iets aan doet. De koppelingslaag meldt
+    dat, zodat het niet een hele winter stil blijft.
+
+    The side of anchor 8 that must stand out: with the bypass on while the
+    opening really stands open, the installation heats with a window open
+    without the gate doing anything about it. The binding layer reports that,
+    so it does not stay silent for a whole winter.
+    """
+    return opening.opening_id in world.opening_bypasses and _standing_open(opening, world)
 
 
 def house_wide_blocked(config: DirectorConfig, world: WorldState) -> frozenset[str]:
@@ -452,7 +476,7 @@ def house_wide_blocked(config: DirectorConfig, world: WorldState) -> frozenset[s
     """
     if not config.house_wide_openings:
         return frozenset()
-    if not any(_standing_open(opening, world) for opening in config.openings):
+    if not any(opening_standing(opening, world) for opening in config.openings):
         return frozenset()
     return frozenset(config.house_wide_openings)
 

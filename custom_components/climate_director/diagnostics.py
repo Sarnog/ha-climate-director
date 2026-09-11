@@ -134,6 +134,7 @@ def _world(world: WorldState | None) -> dict[str, Any] | None:
             zone_id: until.isoformat() for zone_id, until in world.precondition_until.items()
         },
         "precondition_bypass": sorted(world.precondition_bypass),
+        "opening_bypasses": sorted(world.opening_bypasses),
         "guest_mode": world.guest_mode,
         "precipitation": world.precipitation,
         "zone_priorities": dict(world.zone_priorities),

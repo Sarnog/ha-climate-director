@@ -572,6 +572,7 @@ Eine Öffnung, die lange genug offen steht, legt die betroffenen Zonen still.
 
 | Einstellung | Was sie tut |
 |---|---|
+| **Name** | ein Label, um Öffnungen auseinanderzuhalten |
 | **Sensor** | der Tür-, Fenster- oder Dachfensterkontakt; ein `binary_sensor.*`, `cover.*` oder `sensor.*` |
 | **Zustand, der „offen“ bedeutet** | bei einem Fensterkontakt meist `on`, bei einem Dachfenster oder Rollladen `open`; Standard `on` |
 | **Betroffene Zonen** | leer = die ganze Installation |
@@ -603,6 +604,8 @@ Der Raum nennt dann `opening_open_elsewhere` als Grund, sodass du siehst, warum
 nichts geschieht. Zwei Dinge bleiben wie immer: Eine Zone mit Übersteuerung und
 eine handbediente Quelle werden nicht gesteuert, auch von dieser Liste nicht.
 
+Gib jeder Öffnung einen eigenen **Name**: daran hängt der Überbrückungsschalter, sodass er bestehen bleibt, wenn du den Sensor ersetzt. Jede Öffnung bekommt einen Überbrückungsschalter (`switch.*_uberbruckung_<opening>`). An = der Director tut so, als gäbe es diese Öffnung nicht — ihre eigenen Zonen und der hausweite Stopp ignorieren sie beide. Es gibt keine Laufzeit: der Schalter bleibt an, bis du ihn selbst ausschaltest. Steht er an, während die Öffnung wirklich offensteht, meldet der Director das unter *Reparaturen*.
+
 ## Schritt 12 — Speichern und schließen
 
 Wähle im Hauptmenü **✅ Speichern und schließen**. Erst dann wird die
@@ -632,6 +635,7 @@ Ein Gerät pro Installation, darunter:
 | `switch.*_urlaubsplan` | lässt jeden Tag als Samstag zählen, oder als eigenen Urlaubsplan |
 | `switch.*_gastemodus` | regelt weiter, während die Bewohner weg sind |
 | `switch.*_ubersteuerung_<zone>` | übergibt eine Zone vollständig an dich |
+| `switch.*_uberbruckung_<opening>` | an = diese Öffnung zählt nirgends mehr; nicht für ihre eigenen Zonen und nicht für den hausweiten Stopp |
 | `number.*_prioritat_<zone>` | der Vorrang dieser Zone; auch aus einer Automatisierung setzbar |
 | `number.*_vorbereitungsdauer` | wie lange eine Vorbereitung nach einem Tastendruck dauert |
 | `button.*_<zone>_vorbereiten` | heizt oder kühlt diese Zone vor |
@@ -665,6 +669,7 @@ dem zuletzt gelesenen Schnappschuss und dem letzten Plan.
   Abend. Damit lässt sich eine Zone tagelang eigenen Automationen überlassen.
   Ein Gerät, das du am Gerät *selbst* ausschaltest, erlischt sehr wohl zur
   Schlafenszeit oder bei leerem Haus; das steht weiter unten.
+- **Überbrückung** (`switch.*_uberbruckung_<opening>`): an = diese Öffnung existiert für den Director nicht. Der Schalter bleibt an, bis du ihn selbst ausschaltest; steht er an, während die Öffnung wirklich offensteht, meldet der Director das unter *Reparaturen*.
 - **Taste „Vorbereiten“** (`button.*_<zone>_vorbereiten`) und **Dauer**
   (`number.*_vorbereitungsdauer`): siehe unten.
 

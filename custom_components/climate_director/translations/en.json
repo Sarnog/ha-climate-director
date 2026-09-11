@@ -384,6 +384,7 @@
       "opening": {
         "title": "Opening",
         "data": {
+          "name": "Name",
           "entity_id": "Sensor",
           "open_state": "State that means open",
           "zone_ids": "Zones affected",
@@ -397,7 +398,8 @@
           "entity_id": "The door, window or skylight contact. Which state means open is set below.",
           "open_state": "The state that counts as open. For a window contact that is usually 'on', for a skylight or shutter 'open'.",
           "delete": "Removes the opening; it stops suspending anything.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
+          "name": "A label, to tell openings apart."
         }
       },
       "save": {
@@ -669,6 +671,9 @@
       },
       "guest": {
         "name": "Guest mode"
+      },
+      "opening_bypass": {
+        "name": "{opening} bypass"
       }
     },
     "number": {
@@ -729,6 +734,10 @@
     "precondition_unwatched": {
       "title": "Nobody hears a refused pre-conditioning request",
       "description": "A pre-conditioning request that strands on an open window or door reports itself as the event `climate_director_precondition_refused`, and nowhere else. Nothing is listening for it right now, so such a request fails silently: you press the button and nothing happens, with no way of telling why.\n\nFix it in one of two ways:\n\n1. Import the blueprint **Climate Director - refused pre-conditioning** *and set it up*. Importing alone is not enough - a blueprint without an automation built from it listens to nothing.\n2. Or write an automation of your own on that event. It carries the zone, the open sensors and a ready-made message.\n\nThis notice disappears by itself once something is listening."
+    },
+    "bypassed_openings": {
+      "title": "Climate Director: {count} opening(s) of {name} are bypassed while open",
+      "description": "These openings are bypassed while they really stand open, so the director lets the installation heat with a window open. Turn the bypass off or close the opening.\n\n{openings}"
     }
   },
   "exceptions": {

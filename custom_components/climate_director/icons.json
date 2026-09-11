@@ -66,6 +66,9 @@
       },
       "zone_override": {
         "default": "mdi:tune-vertical"
+      },
+      "opening_bypass": {
+        "default": "mdi:window-open-variant"
       }
     }
   }

@@ -771,6 +771,26 @@ class Opening:
     that was never given a value hides that choice.
     """
 
+    opening_id: str = ""
+    """A stable identity of its own, so the bypass switch outlives its sensor.
+
+    Anker 8: een opening draagt een eigen `opening_id` en een naam, net als elk
+    ander objecttype. Zonder eigen identiteit hangt de overbruggingsschakelaar
+    aan de `entity_id` van de sensor en verdwijnt hij zodra die sensor vervangen
+    wordt. Leeg betekent: nog geen identiteit (oude opslag); `serialise.py`
+    vult dat aan met de `entity_id` zodat opslaan van de configuratie hem
+    vastlegt.
+
+    Anchor 8: an opening carries its own `opening_id` and a name, like every
+    other object type. Without an identity of its own the bypass switch hangs
+    on the sensor's `entity_id` and vanishes the moment that sensor is
+    replaced. Empty means: no identity yet (old storage); `serialise.py` fills
+    that in with the `entity_id` so saving the configuration pins it down.
+    """
+
+    name: str = ""
+    """What the user calls this opening; empty falls back on the `entity_id`."""
+
     def affects(self, zone_id: str) -> bool:
         """Return whether this opening suspends `zone_id`."""
         return not self.zone_ids or zone_id in self.zone_ids

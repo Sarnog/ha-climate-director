@@ -97,18 +97,28 @@ FUNCTION_LIMIT = 80
 # by 32 tests. Adding a field cannot happen without lines; the ratchet makes
 # that growth visible rather than forbidding it. Only ever raise a noted
 # number with a reason alongside, exactly as here.
+#
+# Ronde 25, fase 1 (anker 8): de opening kreeg een eigen identiteit en een
+# overbruggingsschakelaar; dat raakt de models, de coordinator, de config flow
+# en de schema's, dus deze vijf getallen groeiden mee. De lijst zelf is even
+# lang gebleven.
+#
+# Round 25, phase 1 (anchor 8): the opening gained an identity of its own and a
+# bypass switch; that touches the models, the coordinator, the config flow and
+# the schemas, so these five numbers grew along. The list itself stayed the
+# same length.
 MODULE_EXCEPTIONS: dict[str, int] = {
-    "engine/models.py": 2100,
-    "coordinator.py": 1698,
+    "engine/models.py": 2120,
+    "coordinator.py": 1732,
     "engine/decide.py": 1647,
-    "config_flow.py": 1412,
-    "schemas.py": 896,
+    "config_flow.py": 1418,
+    "schemas.py": 900,
 }
 
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_build_commands"): 202,
     ("engine/decide.py", "_generator_commands"): 192,
-    ("coordinator.py", "__init__"): 179,
+    ("coordinator.py", "__init__"): 192,
     ("engine/models.py", "_rule_zones"): 142,
     ("engine/constraints.py", "resolve"): 128,
     ("coordinator.py", "_refusal_data"): 119,

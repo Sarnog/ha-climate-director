@@ -808,7 +808,10 @@ def openings(flow: Any) -> vol.Schema:
     """Return the opening picker schema, house-wide stops included."""
     openings = flow._list("openings")
     options = [
-        selector.SelectOptionDict(value=str(index), label=opening["entity_id"])
+        selector.SelectOptionDict(
+            value=str(index),
+            label=opening.get("name") or opening.get("opening_id") or opening["entity_id"],
+        )
         for index, opening in enumerate(openings)
     ]
     options.append(_add_option("opening"))
@@ -871,6 +874,7 @@ def opening(flow: Any, current: dict[str, Any]) -> vol.Schema:
     ]
     return vol.Schema(
         {
+            vol.Required(CONF_NAME, default=current.get("name", "")): _TEXT,
             vol.Optional(
                 "entity_id",
                 description={"suggested_value": current.get("entity_id") or None},

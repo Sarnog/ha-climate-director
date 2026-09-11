@@ -85,7 +85,15 @@ def shared_boiler(**overrides: object) -> DirectorConfig:
     )
     return DirectorConfig(
         zones=(living, attic),
-        openings=(Opening(entity_id=SKYLIGHT, zone_ids=("zolder",), delay=timedelta(minutes=5)),),
+        openings=(
+            Opening(
+                entity_id=SKYLIGHT,
+                zone_ids=("zolder",),
+                delay=timedelta(minutes=5),
+                opening_id="dakraam",
+                name="Dakraam",
+            ),
+        ),
         **overrides,  # type: ignore[arg-type]
     )
 

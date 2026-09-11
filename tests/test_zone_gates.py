@@ -76,7 +76,9 @@ def house(**zone_kwargs: object) -> DirectorConfig:
             ),
         ),
         residents=(DANNY,),
-        openings=(Opening("binary_sensor.raam", zone_ids=("zolder",)),),
+        openings=(
+            Opening("binary_sensor.raam", zone_ids=("zolder",), opening_id="raam", name="Raam"),
+        ),
         gates=GateSettings(require_schedule=True),
     )
 

@@ -384,6 +384,7 @@
       "opening": {
         "title": "Öffnung",
         "data": {
+          "name": "Name",
           "entity_id": "Sensor",
           "open_state": "Zustand, der „offen“ bedeutet",
           "zone_ids": "Betroffene Zonen",
@@ -397,7 +398,8 @@
           "entity_id": "Der Tür-, Fenster- oder Dachfensterkontakt. Welcher Zustand offen bedeutet, steht darunter.",
           "open_state": "Der Zustand, der als offen zählt. Bei einem Fensterkontakt ist das meist 'on', bei einem Dachfenster oder Rollladen 'open'.",
           "delete": "Entfernt die Öffnung; sie setzt dann nichts mehr aus.",
-          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst.",
+          "name": "Ein Name, um Öffnungen auseinanderzuhalten."
         }
       },
       "save": {
@@ -669,6 +671,9 @@
       },
       "guest": {
         "name": "Gästemodus"
+      },
+      "opening_bypass": {
+        "name": "Überbrückung {opening}"
       }
     },
     "number": {
@@ -729,6 +734,10 @@
     "precondition_unwatched": {
       "title": "Niemand hört eine abgelehnte Vorbereitungs-Anforderung",
       "description": "Eine Vorbereitungs-Anforderung, die an einem offenen Fenster oder einer offenen Tür scheitert, meldet sich als Ereignis `climate_director_precondition_refused` und sonst nirgends. Darauf hört derzeit nichts, also scheitert eine solche Anforderung stillschweigend: du drückst den Knopf und nichts geschieht, ohne erkennbaren Grund.\n\nAuf eine von zwei Arten zu beheben:\n\n1. Importiere den Blueprint **Climate Director - abgelehntes Vorbereiten** *und richte ihn ein*. Importieren allein genügt nicht - ein Blueprint ohne darauf gebaute Automatisierung hört auf nichts.\n2. Oder schreib eine eigene Automatisierung auf dieses Ereignis. Es trägt die Zone, die offenen Sensoren und eine fertige Nachricht mit sich.\n\nDieser Hinweis verschwindet von selbst, sobald etwas zuhört."
+    },
+    "bypassed_openings": {
+      "title": "Climate Director: {count} Öffnung(en) von {name} ist überbrückt, während sie offensteht",
+      "description": "Diese Öffnungen sind überbrückt, während sie wirklich offenstehen; der Director lässt die Installation mit offenem Fenster heizen. Schalte die Überbrückung aus oder schließe die Öffnung.\n\n{openings}"
     }
   },
   "exceptions": {

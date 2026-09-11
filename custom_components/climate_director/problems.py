@@ -495,6 +495,53 @@ def async_clear_command_not_taking(hass: HomeAssistant, entry_id: str) -> None:
     ir.async_delete_issue(hass, DOMAIN, _command_not_taking_issue_id(entry_id))
 
 
+def _bypassed_opening_issue_id(entry_id: str) -> str:
+    """Return the notice id for openings bypassed while really open."""
+    return f"bypassed_openings_{entry_id}"
+
+
+def async_report_bypassed_openings(
+    hass: HomeAssistant, entry_id: str, title: str, found: Mapping[str, str]
+) -> None:
+    """Raise or clear the notice that a bypassed opening really stands open.
+
+    Anker 8: een overbrugde opening bestaat niet voor de director, en dat is
+    precies de bedoeling - maar staat de overbrugging aan terwijl de opening
+    werkelijk openstaat, dan stookt de installatie met een raam open zonder
+    dat de poort er iets aan doet. Dat hoort zichtbaar te zijn, anders gaat
+    een hele winter voorbij zonder dat iets het zegt.
+
+    Anchor 8: a bypassed opening does not exist for the director, and that is
+    exactly the point - but with the bypass on while the opening really stands
+    open, the installation heats with a window open without the gate doing
+    anything about it. That should be visible, otherwise a whole winter goes
+    by without anything saying so.
+    """
+    if not found:
+        ir.async_delete_issue(hass, DOMAIN, _bypassed_opening_issue_id(entry_id))
+        return
+
+    listed = "\n".join(f"- `{entity_id}` ({name})" for entity_id, name in sorted(found.items()))
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        _bypassed_opening_issue_id(entry_id),
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="bypassed_openings",
+        translation_placeholders={
+            "name": title,
+            "count": str(len(found)),
+            "openings": listed,
+        },
+    )
+
+
+def async_clear_bypassed_openings(hass: HomeAssistant, entry_id: str) -> None:
+    """Drop the bypassed-openings notice for one installation."""
+    ir.async_delete_issue(hass, DOMAIN, _bypassed_opening_issue_id(entry_id))
+
+
 def _corrupt_storage_issue_id(entry_id: str) -> str:
     """Return the corrupt-storage notice id for one installation."""
     return f"corrupt_storage_{entry_id}"

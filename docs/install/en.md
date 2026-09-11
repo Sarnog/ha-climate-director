@@ -559,6 +559,7 @@ An opening standing open long enough suspends the zones it affects.
 
 | Setting | What it does |
 |---|---|
+| **Name** | a label to tell openings apart |
 | **Sensor** | the door, window or skylight contact; a `binary_sensor.*`, `cover.*` or `sensor.*` |
 | **State that means open** | usually `on` for a window contact, `open` for a skylight or shutter; `on` by default |
 | **Zones affected** | empty = the whole installation |
@@ -590,6 +591,8 @@ The room then names `opening_open_elsewhere` as its reason, so you can see why
 nothing is happening. Two things stay as they always were: a zone under override
 and a hand-operated source are not steered, by this list either.
 
+Give every opening its own **Name**: the bypass switch hangs on it, so it keeps existing when you replace the sensor. Each opening gets a bypass switch (`switch.*_<opening>_bypass`). On = the director pretends this opening is not there — its own zones and the house-wide stop both ignore it. There is no timer: it stays on until you turn it off yourself. While it stands on with the opening really open, the director reports it under *Repairs*.
+
 ## Step 12 — Save and close
 
 Pick **✅ Save and close** in the main menu. Only then is the installation
@@ -619,6 +622,7 @@ One device per installation, holding:
 | `switch.*_holiday_schedule` | makes every day count as a Saturday, or as its own holiday schedule |
 | `switch.*_guest_mode` | keeps regulating while the residents are away |
 | `switch.*_<zone>_override` | hands one zone over to you completely |
+| `switch.*_<opening>_bypass` | on = this opening counts nowhere; not for its own zones, nor for the house-wide stop |
 | `number.*_<zone>_priority` | this zone's precedence; settable from an automation too |
 | `number.*_pre_conditioning_duration` | how long one press of a pre-conditioning button lasts |
 | `button.*_<zone>_pre_condition` | pre-conditions this zone |
@@ -652,6 +656,7 @@ last snapshot read and the last plan.
   leave a zone to automations of your own for days. Switching an appliance off
   at the appliance *itself* does lapse at bedtime or on an empty house; that is
   below.
+- **Opening bypass** (`switch.*_<opening>_bypass`): on = this opening does not exist for the director. It holds until you turn it off yourself; while it stands on with the opening really open, the director reports that under *Repairs*.
 - **Pre-conditioning button** (`button.*_<zone>_pre_condition`) and **duration**
   (`number.*_pre_conditioning_duration`): see below.
 

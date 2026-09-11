@@ -548,6 +548,7 @@ class TestAddingThroughEveryScreen:
             result = await flow.async_configure(
                 result["flow_id"],
                 {
+                    "name": "Dakraam",
                     "entity_id": "cover.dakraam",
                     "open_state": "open",
                     "zone_ids": ["zolder"],
@@ -560,6 +561,8 @@ class TestAddingThroughEveryScreen:
 
             assert stored["openings"] == [
                 {
+                    "opening_id": "dakraam",
+                    "name": "Dakraam",
                     "entity_id": "cover.dakraam",
                     "zone_ids": ["zolder"],
                     "open_state": "open",
@@ -602,6 +605,7 @@ class TestAddingThroughEveryScreen:
             result = await flow.async_configure(
                 result["flow_id"],
                 {
+                    "name": "Achterdeur",
                     "entity_id": "binary_sensor.achterdeur",
                     "zone_ids": ["woonkamer"],
                     "delete": False,
@@ -839,7 +843,7 @@ class TestTheScreenSaysNo:
             )
 
             assert result["step_id"] == "opening"
-            assert result["errors"] == {"entity_id": "required"}
+            assert result["errors"] == {"name": "required", "entity_id": "required"}
         finally:
             await stop_house(home)
 
@@ -1416,6 +1420,7 @@ class TestEveryScreenSurvivesItsNeighbour:
         result = await flow.async_configure(
             result["flow_id"],
             {
+                "name": "Dakraam",
                 "entity_id": "cover.dakraam",
                 "open_state": "open",
                 "zone_ids": ["zolder"],
@@ -1431,6 +1436,8 @@ class TestEveryScreenSurvivesItsNeighbour:
     def _check_opening(stored: dict[str, Any]) -> None:
         assert stored["openings"] == [
             {
+                "opening_id": "dakraam",
+                "name": "Dakraam",
                 "entity_id": "cover.dakraam",
                 "zone_ids": ["zolder"],
                 "open_state": "open",

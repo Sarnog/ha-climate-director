@@ -188,6 +188,15 @@ class WorldState:
     rewriting a config entry for that would reload the whole installation.
     """
 
+    opening_bypasses: frozenset[str] = frozenset()
+    """Openingen die overbrugd zijn en dus nergens meer meetellen (anker 8).
+
+    Keyed by `opening_id`. A bypassed opening counts nowhere: not for
+    suspending its own zones, and not for the house-wide stop. There is no
+    half bypass and no duration - the switch stands until someone turns it
+    off themselves.
+    """
+
     def climate(self, entity_id: str) -> ClimateState:
         """Return a climate entity's state, or an unavailable placeholder."""
         return self.climates.get(entity_id, ClimateState(available=False))

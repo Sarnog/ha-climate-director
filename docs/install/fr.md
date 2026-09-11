@@ -581,6 +581,7 @@ Une ouverture restée ouverte assez longtemps suspend les zones concernées.
 
 | Réglage | Ce qu'il fait |
 |---|---|
+| **Nom** | un libellé pour distinguer les ouvertures |
 | **Capteur** | le contact de porte, de fenêtre ou de velux ; un `binary_sensor.*`, `cover.*` ou `sensor.*` |
 | **État qui signifie ouvert** | en général `on` pour un contact de fenêtre, `open` pour un velux ou un volet ; `on` par défaut |
 | **Zones concernées** | vide = toute l'installation |
@@ -614,6 +615,8 @@ voyiez pourquoi rien ne se passe. Deux choses restent comme toujours : une zone
 sous dérogation et une source manuelle ne sont pas pilotées, pas davantage par
 cette liste.
 
+Donnez à chaque ouverture son propre **Nom** : c'est à lui que s'accroche l'interrupteur de contournement, qui survit ainsi au remplacement du capteur. Chaque ouverture reçoit un interrupteur de contournement (`switch.*_contournement_<opening>`). Activé = le directeur fait comme si cette ouverture n'existait pas — ses propres zones et l'arrêt global l'ignorent tous deux. Il n'y a pas de durée : il reste actif jusqu'à ce que vous l'éteigniez vous-même. Tant qu'il est actif alors que l'ouverture est réellement ouverte, le directeur le signale sous *Réparations*.
+
 ## Étape 12 — Enregistrer et fermer
 
 Choisissez **✅ Enregistrer et fermer** dans le menu principal. C'est seulement
@@ -644,6 +647,7 @@ Un appareil par installation, avec en dessous :
 | `switch.*_planning_de_vacances` | fait compter chaque jour comme un samedi, ou comme son propre programme vacances |
 | `switch.*_mode_invites` | continue de réguler pendant que les résidents sont absents |
 | `switch.*_derogation_<zone>` | rend une zone entièrement à vous |
+| `switch.*_contournement_<opening>` | activé = cette ouverture ne compte plus nulle part ; ni pour ses propres zones, ni pour l'arrêt global |
 | `number.*_priorite_<zone>` | la préséance de cette zone ; réglable aussi depuis une automatisation |
 | `number.*_duree_de_la_preparation` | combien de temps dure un appui sur un bouton de préchauffage |
 | `button.*_preparer_<zone>` | préchauffe ou pré-refroidit cette zone |
@@ -678,6 +682,7 @@ le dernier instantané lu et le dernier plan.
   permet de laisser une zone à vos propres automatisations pendant des jours.
   Éteindre un appareil sur l'appareil *lui-même* expire bel et bien au coucher
   ou sur une maison vide ; c'est plus bas.
+- **Contournement** (`switch.*_contournement_<opening>`) : activé = cette ouverture n'existe pas pour le directeur. Il reste actif jusqu'à ce que vous l'éteigniez vous-même ; tant qu'il est actif alors que l'ouverture est réellement ouverte, le directeur le signale sous *Réparations*.
 - **Bouton de préchauffage** (`button.*_preparer_<zone>`) et **durée**
   (`number.*_duree_de_la_preparation`) : voir ci-dessous.
 

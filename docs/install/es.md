@@ -570,6 +570,7 @@ Una abertura abierta el tiempo suficiente suspende las zonas afectadas.
 
 | Ajuste | Qué hace |
 |---|---|
+| **Nombre** | un nombre para distinguir aberturas |
 | **Sensor** | el contacto de puerta, ventana o claraboya; un `binary_sensor.*`, `cover.*` o `sensor.*` |
 | **Estado que significa abierto** | para un contacto de ventana suele ser `on`; para una claraboya o persiana, `open`; `on` por defecto |
 | **Zonas afectadas** | vacío = toda la instalación |
@@ -601,6 +602,8 @@ La habitación indica entonces `opening_open_elsewhere` como motivo, para que
 veas por qué no ocurre nada. Dos cosas siguen como siempre: una zona con
 anulación y una fuente manual no se gobiernan, tampoco por esta lista.
 
+Dale a cada abertura su propio **Nombre**: de él cuelga el interruptor de anulación, que así sobrevive al cambio de sensor. Cada abertura recibe un interruptor de anulación (`switch.*_anulacion_<opening>`). Activada = el director hace como si esta abertura no existiera — sus propias zonas y la parada global la ignoran. No hay duración: se mantiene hasta que la apagues tú mismo. Mientras siga activa con la abertura realmente abierta, el director lo informa en *Reparaciones*.
+
 ## Paso 12 — Guardar y cerrar
 
 Elige **✅ Guardar y cerrar** en el menú principal. Solo entonces se escribe la
@@ -630,6 +633,7 @@ Un dispositivo por instalación, con debajo:
 | `switch.*_horario_de_vacaciones` | hace que cada día cuente como sábado, o como su propio horario de vacaciones |
 | `switch.*_modo_invitados` | sigue regulando mientras los residentes están fuera |
 | `switch.*_anulacion_<zone>` | devuelve una zona por completo a ti |
+| `switch.*_anulacion_<opening>` | activado = esta abertura ya no cuenta en ninguna parte; ni para sus propias zonas, ni para la parada global |
 | `number.*_prioridad_<zone>` | la precedencia de esta zona; también configurable desde una automatización |
 | `number.*_duracion_del_preacondicionamiento` | cuánto dura una pulsación de un botón de preacondicionamiento |
 | `button.*_preacondicionar_<zone>` | preacondiciona esta zona |
@@ -663,6 +667,7 @@ También hay una exportación de diagnóstico descargable con la configuración,
   dejar una zona a tus propias automatizaciones durante días. Apagar un aparato
   en el aparato *mismo* sí caduca al acostarse o con la casa vacía; eso está más
   abajo.
+- **Anulación** (`switch.*_anulacion_<opening>`): activada = esta abertura no existe para el director. Se mantiene hasta que la apagues tú mismo; mientras siga activa con la abertura realmente abierta, el director lo informa en *Reparaciones*.
 - **Botón de preacondicionamiento** (`button.*_preacondicionar_<zone>`) y
   **duración** (`number.*_duracion_del_preacondicionamiento`): ver abajo.
 

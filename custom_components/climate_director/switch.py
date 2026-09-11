@@ -44,6 +44,11 @@ async def async_setup_entry(
     entities.extend(
         ZoneOverrideSwitch(coordinator, zone.zone_id) for zone in coordinator.config.zones
     )
+    entities.extend(
+        OpeningBypassSwitch(coordinator, opening.opening_id)
+        for opening in coordinator.config.openings
+        if opening.opening_id
+    )
     async_add_entities(entities)
 
 
@@ -54,6 +59,11 @@ def wanted_entity_keys(config: DirectorConfig) -> set[str]:
         "holiday",
         "guest",
         *(f"zone_{zone.zone_id}_override" for zone in config.zones),
+        *(
+            f"opening_{opening.opening_id}_bypass"
+            for opening in config.openings
+            if opening.opening_id
+        ),
     }
 
 
@@ -191,3 +201,49 @@ class ZoneOverrideSwitch(_DirectorSwitch):
     def is_on(self) -> bool:
         """Return the switch state, following the coordinator when it lets go."""
         return self.coordinator.zone_overrides.get(self._zone_id, False)
+
+
+class OpeningBypassSwitch(_DirectorSwitch):
+    """Bridges one opening: while on, that opening counts nowhere (anchor 8)."""
+
+    _attr_translation_key = "opening_bypass"
+    _attr_entity_category = None
+    _attr_icon = "mdi:window-open-variant"
+
+    def __init__(self, coordinator: ClimateDirectorCoordinator, opening_id: str) -> None:
+        """Set up the bypass switch for one opening."""
+        self._opening_id = opening_id
+        super().__init__(coordinator, f"opening_{opening_id}_bypass")
+        opening = next(
+            (item for item in coordinator.config.openings if item.opening_id == opening_id),
+            None,
+        )
+        self._attr_translation_placeholders = {"opening": opening.name if opening else opening_id}
+
+    def _push(self) -> None:
+        self.coordinator.opening_bypasses[self._opening_id] = self._is_on
+
+    def _handle_coordinator_update(self) -> None:
+        """Follow the coordinator, and drop the state when the opening goes away.
+
+        De overbrugging blijft staan tot iemand hem zelf terugzet; de
+        coordinator gooit `opening_bypasses` niet leeg. Deze koppeling staat er
+        toch, om dezelfde reden als bij de overrideschakelaar: zou de
+        schakelaar zijn eigen stand houden terwijl de coordinator er anders over
+        denkt, dan stond hij aan terwijl de opening allang weer meetelt - en
+        erger: een herstart herstelt die `on` terug de coordinator in.
+
+        The bypass holds until someone turns it off themselves; the coordinator
+        does not empty `opening_bypasses`. This binding stays all the same, for
+        the same reason as the override switch: were the switch to keep its own
+        state while the coordinator thought otherwise, it would read on while
+        the opening has long since counted again - and worse: a restart restores
+        that `on` back into the coordinator.
+        """
+        self._is_on = self.coordinator.opening_bypasses.get(self._opening_id, False)
+        self.async_write_ha_state()
+
+    @property
+    def is_on(self) -> bool:
+        """Return the switch state, following the coordinator when it lets go."""
+        return self.coordinator.opening_bypasses.get(self._opening_id, False)

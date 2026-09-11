@@ -64,7 +64,12 @@ from .engine import (
 from .engine.constraints import active_family
 from .engine.diff import Change, changes
 from .engine.families import family_of, preferred_mode
-from .engine.gates import asleep_at, house_wide_blocked, opening_standing
+from .engine.gates import (
+    asleep_at,
+    house_wide_blocked,
+    opening_bypassed_and_open,
+    opening_standing,
+)
 from .engine.models import SeasonSource
 from .engine.serialise import config_from_dict
 from .preconditions import _PreconditionsMixin, _still_running
@@ -235,6 +240,19 @@ class ClimateDirectorCoordinator(
         self.zone_overrides: dict[str, bool] = {}
         self._handed_back: dict[str, date] = {}
         self.zone_priorities: dict[str, int] = {}
+        self.opening_bypasses: dict[str, bool] = {}
+        """Per `opening_id`, of de overbrugging aanstaat (anker 8).
+
+        De schakelaars schrijven hierheen, net als de overrideschakelaars; de
+        momentopname geeft de aanstaande ids door als
+        `WorldState.opening_bypasses`. Er is geen looptijd: een overbrugging
+        blijft staan tot iemand de schakelaar zelf terugzet.
+
+        The switches write here, just like the override switches; the snapshot
+        passes the ids that are on through as `WorldState.opening_bypasses`.
+        There is no duration: a bypass holds until someone turns the switch off
+        themselves.
+        """
         self.season_override: Season | None = None
         """Een met de hand gekozen seizoen via de select-entiteit, of `None`.
 
@@ -956,6 +974,7 @@ class ClimateDirectorCoordinator(
                 self._report_unsupported_modes()
                 self._report_command_not_taking()
                 self._report_season_override()
+                self._report_bypassed_openings()
                 self._schedule_deferral(plan)
             finally:
                 self.async_set_updated_data(plan)
@@ -1244,6 +1263,21 @@ class ClimateDirectorCoordinator(
             self.config_entry.entry_id,
             self.config_entry.title,
             self._note_unapplied(),
+        )
+
+    @callback
+    def _report_bypassed_openings(self) -> None:
+        """Put openings bypassed while really open under Repairs, or take them away."""
+        found: dict[str, str] = {}
+        if self.world is not None:
+            for opening in self.config.openings:
+                if opening_bypassed_and_open(opening, self.world):
+                    found[opening.entity_id] = opening.name or opening.entity_id
+        problems.async_report_bypassed_openings(
+            self.hass,
+            self.config_entry.entry_id,
+            self.config_entry.title,
+            found,
         )
 
     # -- seizoensselect / season select ---------------------------------------

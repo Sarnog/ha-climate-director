@@ -193,6 +193,7 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
             self.guest_mode = False
             self.zone_overrides: dict[str, bool] = {}
             self.zone_priorities: dict[str, int] = {}
+            self.opening_bypasses: dict[str, bool] = {}
             self._precondition: dict[str, datetime] = {}
             self._precondition_bypass: set[str] = set()
             self._precipitation_seen_at: datetime | None = None

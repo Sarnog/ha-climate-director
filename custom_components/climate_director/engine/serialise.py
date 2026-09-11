@@ -293,11 +293,15 @@ def _time_window(raw: Mapping[str, Any]) -> TimeWindow:
 
 
 def _opening(raw: Mapping[str, Any]) -> Opening:
+    entity_id = _text(raw.get("entity_id"))
+    opening_id = _text(raw.get("opening_id")) or entity_id
     return Opening(
-        entity_id=_text(raw.get("entity_id")),
+        entity_id=entity_id,
         zone_ids=tuple(_strings(raw.get("zone_ids"))),
         open_state=_text(raw.get("open_state")) or "on",
         delay=_seconds(raw.get("delay")),
+        opening_id=opening_id,
+        name=_text(raw.get("name")) or entity_id,
     )
 
 
@@ -587,6 +591,8 @@ def _generator_to_dict(generator: Generator) -> dict[str, Any]:
 
 def _opening_to_dict(opening: Opening) -> dict[str, Any]:
     return {
+        "opening_id": opening.opening_id,
+        "name": opening.name,
         "entity_id": opening.entity_id,
         "zone_ids": list(opening.zone_ids),
         "open_state": opening.open_state,

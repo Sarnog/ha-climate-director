@@ -61,6 +61,7 @@ def _full_world() -> WorldState:
         holiday_mode=False,
         precondition_until={"woonkamer": NOW + timedelta(minutes=30)},
         precondition_bypass=frozenset({"woonkamer"}),
+        opening_bypasses=frozenset({"achterdeur"}),
         guest_mode=True,
         precipitation=True,
         zone_overrides={"zolder": True},
@@ -100,6 +101,7 @@ class TestTheWorldIsComplete:
             "presence",
             "precondition_until",
             "precondition_bypass",
+            "opening_bypasses",
             "guest_mode",
             "precipitation",
             "zone_priorities",
@@ -111,6 +113,7 @@ class TestTheWorldIsComplete:
         assert data["presence"]["woonkamer"]["occupied"] is True
         assert data["precondition_until"]["woonkamer"] == (NOW + timedelta(minutes=30)).isoformat()
         assert data["precondition_bypass"] == ["woonkamer"]
+        assert data["opening_bypasses"] == ["achterdeur"]
         assert data["guest_mode"] is True
         assert data["precipitation"] is True
         assert data["zone_priorities"] == {"woonkamer": 1}
@@ -215,6 +218,7 @@ class TestThePrivacyRedaction:
             "presence",
             "precondition_until",
             "precondition_bypass",
+            "opening_bypasses",
             "guest_mode",
             "precipitation",
             "zone_priorities",

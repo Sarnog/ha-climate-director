@@ -385,7 +385,13 @@ class TestSerialisationSurvivesEverything:
                     ),
                 ),
                 openings=(
-                    Opening("binary_sensor.o", zone_ids=("z",), delay=timedelta(seconds=30)),
+                    Opening(
+                        "binary_sensor.o",
+                        zone_ids=("z",),
+                        delay=timedelta(seconds=30),
+                        opening_id="o",
+                        name="O",
+                    ),
                 ),
                 gates=GateSettings(
                     require_awake=False,

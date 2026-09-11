@@ -241,6 +241,9 @@ class _WorldBuilderMixin:
             precondition_bypass=frozenset(self._precondition_bypass),
             zone_overrides=self._overridden_zones(now, residents),
             zone_priorities=dict(self.zone_priorities),
+            opening_bypasses=frozenset(
+                opening_id for opening_id, on in self.opening_bypasses.items() if on
+            ),
             precipitation=self._precipitation(),
         )
 

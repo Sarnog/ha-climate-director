@@ -756,6 +756,7 @@ class TestSavingTheSameInputTwice:
         result = await flow.async_configure(
             result["flow_id"],
             {
+                "name": "Raam",
                 "entity_id": "binary_sensor.raam",
                 "open_state": "on",
                 "delay": 0,

@@ -562,6 +562,7 @@ Een opening die lang genoeg openstaat, zet de gekoppelde zones stil.
 
 | Instelling | Wat het doet |
 |---|---|
+| **Naam** | een label om openingen uit elkaar te houden |
 | **Sensor** | het deur-, raam- of dakraamcontact; een `binary_sensor.*`, `cover.*` of `sensor.*` |
 | **Toestand die 'open' betekent** | voor een raamcontact meestal `on`, voor een dakraam of rolluik `open`; standaard `on` |
 | **Zones die het raakt** | leeg = de hele installatie |
@@ -594,6 +595,8 @@ niets gebeurt. Twee dingen blijven zoals ze altijd waren: een zone met een
 override en een handbediende bron worden niet aangestuurd, ook niet door deze
 lijst.
 
+Geef elke opening een eigen **Naam**: daar hangt de overbruggingsschakelaar aan, zodat die blijft bestaan als je de sensor vervangt. Elke opening krijgt een overbruggingsschakelaar (`switch.*_overbrugging_<opening>`). Aan = de director doet alsof deze opening er niet is — zijn eigen zones en de huisbrede stop negeren hem allebei. Er is geen looptijd: hij blijft aan tot je hem zelf uitzet. Staat hij aan terwijl de opening werkelijk openstaat, dan meldt de director dat onder *Reparaties*.
+
 ## Stap 12 — Opslaan en sluiten
 
 Kies in het hoofdmenu **✅ Opslaan en sluiten**. Pas op dat moment wordt de
@@ -623,6 +626,7 @@ Eén device per installatie, met daaronder:
 | `switch.*_vakantieschema` | laat elke dag als zaterdag tellen, of als het eigen vakantierooster |
 | `switch.*_gastenmodus` | blijft regelen terwijl de bewoners weg zijn |
 | `switch.*_override_<zone>` | geeft één zone volledig aan jou terug |
+| `switch.*_overbrugging_<opening>` | aan = deze opening telt nergens meer mee; niet voor zijn eigen zones, en niet voor de huisbrede stop |
 | `number.*_prioriteit_<zone>` | de voorrang van deze zone; ook vanuit een automatisering te wijzigen |
 | `number.*_vooruitduur` | hoe lang één druk op een vooruit-knop duurt |
 | `button.*_<zone>_vooruit` | laat deze zone vooruit verwarmen of koelen |
@@ -656,6 +660,7 @@ gelezen momentopname en het laatste plan.
   zone dagenlang aan je eigen automatiseringen te laten. Een apparaat dat je
   bij het apparaat zélf uitzet vervalt wél bij bedtijd of een leeg huis; dat
   staat hieronder.
+- **Overbrugging** (`switch.*_overbrugging_<opening>`): aan = deze opening bestaat niet voor de director. Hij blijft aan tot je hem zelf uitzet; staat hij aan terwijl de opening werkelijk openstaat, dan meldt de director dat onder *Reparaties*.
 - **Vooruit-knop** (`button.*_<zone>_vooruit`) en **vooruitduur**
   (`number.*_vooruitduur`): zie hieronder.
 

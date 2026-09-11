@@ -985,7 +985,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             if user_input.get(_EXIT) == _EXIT_DROP:
                 return await self.async_step_openings()
             if not user_input.get("delete"):
-                errors = _missing(user_input, "entity_id")
+                errors = _missing(user_input, "entity_id", CONF_NAME)
             if errors:
                 current = {**current, **user_input}
 
@@ -994,6 +994,12 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 openings.pop(self._index)
             else:
                 opening = {
+                    "opening_id": current.get("opening_id")
+                    or _unique_id(
+                        user_input[CONF_NAME],
+                        [entry.get("opening_id") for entry in openings],
+                    ),
+                    "name": user_input[CONF_NAME],
                     "entity_id": user_input["entity_id"],
                     "zone_ids": user_input.get("zone_ids") or [],
                     "open_state": user_input.get("open_state") or "on",

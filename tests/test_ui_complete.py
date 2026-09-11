@@ -129,7 +129,7 @@ class TestEveryFormField:
             "exclusives": 1,
             "generator": 6,
             "generators": 1,
-            "opening": 6,
+            "opening": 7,
             "openings": 2,
             "quiet": 6,
             "quiets": 1,
@@ -145,7 +145,7 @@ class TestEveryFormField:
             "zone": 21,
             "zones": 1,
         }
-        assert sum(counts.values()) == 122
+        assert sum(counts.values()) == 123
 
     def test_the_source_screen_is_its_table_plus_its_own_rows(self) -> None:
         """De veldtabel telt op bij wat het scherm zelf nog letterlijk noemt.
