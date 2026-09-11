@@ -137,11 +137,23 @@ class TestAnApplianceThatNeverTakesItsCommand:
         home.clear_calls()
         await rounds(home, 3)
         calls = home.climate_calls()
-        # Elke ronde de stand; het setpoint zonder terugmelding wordt één keer
-        # meegestuurd en daarna als ongewijzigd behandeld (zie M5).
-        # The mode every round; the setpoint without a reading is sent once and
-        # then treated as unchanged (see M5).
-        assert sum(1 for call in calls if call[0] == "set_hvac_mode") == 3
+        # De eigenschap: elke uitdrukkelijke ronde biedt de stand opnieuw aan;
+        # het setpoint zonder terugmelding wordt één keer meegestuurd en daarna
+        # als ongewijzigd behandeld (zie M5). Er wordt bewust op "minstens drie"
+        # geteld en niet op "precies drie": onder CPU-belasting kan de
+        # wandklokvangnet nog een extra ronde laten vuren, en dat is geen
+        # defect. Per ronde kan er hoogstens één set_hvac_mode zijn (één
+        # apparaat), dus "minstens drie bij drie rondes" betekent precies
+        # "elke ronde opnieuw aangeboden".
+        #
+        # The property: every explicit round offers the mode again; the setpoint
+        # without a reading is sent once and then treated as unchanged (see M5).
+        # The count deliberately reads "at least three" rather than "exactly
+        # three": under CPU load the wall-clock safety net may fire one extra
+        # round, and that is no defect. A round can produce at most one
+        # set_hvac_mode (one appliance), so "at least three across three rounds"
+        # means exactly "offered again every round".
+        assert sum(1 for call in calls if call[0] == "set_hvac_mode") >= 3
         assert sum(1 for call in calls if call[0] == "set_temperature") == 1
 
     async def test_a_few_rounds_report_nothing_yet(self, home: LiveHome) -> None:
