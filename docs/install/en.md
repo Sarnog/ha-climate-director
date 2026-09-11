@@ -823,7 +823,7 @@ automation stands on that event.
   (`min_cycle_time` per source). It is not filled in automatically: set it by
   hand on every source without a circuit.
 - One indoor sensor per zone: the whole zone follows that single reading.
-- Drying laundry is not a task of its own for the director.
+- Dry (dehumidifying) is not a task of its own for the director.
 - Precipitation counts as yes/no: there is no threshold.
 
 ## Use cases

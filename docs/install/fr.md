@@ -857,7 +857,7 @@ automatisation repose sur cet événement.
   7.4.2 (`min_cycle_time` par source). Il ne se remplit pas tout seul :
   règle-le à la main sur chaque source sans circuit.
 - Un capteur intérieur par zone : toute la zone suit cette seule mesure.
-- Le séchage n'est pas une tâche propre du directeur.
+- La déshumidification n'est pas une tâche propre du directeur.
 - La pluie compte en oui/non : il n'y a pas de seuil.
 
 ## Cas d'utilisation

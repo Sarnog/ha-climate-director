@@ -840,7 +840,7 @@ una automatización se apoya en ese evento.
   7.4.2 (`min_cycle_time` por fuente). No se rellena solo: ajústalo a mano en
   cada fuente sin circuito.
 - Un sensor interior por zona: toda la zona sigue esa única lectura.
-- El secado no es una tarea propia del director.
+- El modo Dry no es una tarea propia del director.
 - La lluvia cuenta como sí/no: no hay umbral.
 
 ## Casos de uso
