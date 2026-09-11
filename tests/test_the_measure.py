@@ -70,20 +70,32 @@ FUNCTION_LIMIT = 80
 # The state of this moment, measured on cf3e4bf (2026-09-07). This list is the
 # exception to the norm in ARCHITECTURE.md, not the norm itself: it can only
 # get shorter.
-# Eén regel is sinds cf3e4bf omhooggegaan en dat was een bewuste keuze:
-# `engine/models.py` groeide van 2039 naar 2100 doordat anker 12 twee velden aan
-# `Source` toevoegt (`covers_zones`, `takeover_delay`) plus de regel die een
-# onbekende zone in dat gebied meldt, en `engine/decide.py` van 1618 naar 1647
-# doordat de overname vóór de bronkeuze moet staan en dus door vier functies
-# heen wordt meegegeven. Een veld toevoegen kan niet zonder regels;
-# de ratel maakt die groei zichtbaar in plaats van hem te verbieden. Verhoog een
+# Sinds cf3e4bf zijn er zes genoteerde getallen bewogen, en dat was een bewuste
+# keuze: `engine/models.py` 2039 → 2100 (anker 12 voegt `covers_zones` en
+# `takeover_delay` aan `Source` toe, plus de regel die een onbekende zone in
+# dat gebied meldt), `engine/decide.py` 1618 → 1647 (de overname moet vóór de
+# bronkeuze staan en wordt door de functies heen meegegeven), `_build_commands`
+# 200 → 202, `_collect_wishes` 114 → 126, `_resolve_with_fallbacks` 83 → 87,
+# en `_build_zone_decisions` is met 82 nieuw op de lijst. Let op dat de regel
+# `only, unbounded = takeover.narrowing(...)` op drie paden staat
+# (`_collect_wishes`, `_resolve_with_fallbacks`, `_build_zone_decisions`) —
+# de vorm "op het ene pad gerepareerd, op het pad ernaast vergeten", vandaag
+# gedekt door 32 tests. Een veld toevoegen kan niet zonder regels; de ratel
+# maakt die groei zichtbaar in plaats van hem te verbieden. Verhoog een
 # genoteerd getal daarom alleen met een reden erbij, precies zoals hier.
 #
-# One line has gone up since cf3e4bf and that was deliberate:
-# `engine/models.py` grew from 2039 to 2100 because anchor 12 adds two fields to
-# `Source` (`covers_zones`, `takeover_delay`) plus the rule reporting an unknown
-# zone in that area. Adding a field cannot happen without lines; the ratchet
-# makes that growth visible rather than forbidding it. Only ever raise a noted
+# Since cf3e4bf six noted numbers have moved, and that was a deliberate choice:
+# `engine/models.py` 2039 → 2100 (anchor 12 adds `covers_zones` and
+# `takeover_delay` to `Source`, plus the rule reporting an unknown zone in that
+# area), `engine/decide.py` 1618 → 1647 (the takeover must sit before source
+# selection and is passed through the functions), `_build_commands` 200 → 202,
+# `_collect_wishes` 114 → 126, `_resolve_with_fallbacks` 83 → 87, and
+# `_build_zone_decisions` is new on the list at 82. Note that the line
+# `only, unbounded = takeover.narrowing(...)` stands on three paths
+# (`_collect_wishes`, `_resolve_with_fallbacks`, `_build_zone_decisions`) —
+# the shape "fixed on one path, forgotten on the one beside it", today covered
+# by 32 tests. Adding a field cannot happen without lines; the ratchet makes
+# that growth visible rather than forbidding it. Only ever raise a noted
 # number with a reason alongside, exactly as here.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2100,
