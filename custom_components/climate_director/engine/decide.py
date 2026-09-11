@@ -102,6 +102,7 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
             blocked,
             refused_by_circuit,
             takeovers,
+            commands,
         ),
         circuits=circuit_decisions,
         deferrals=(*deferrals, *rest_deferrals, *generator_deferrals),
@@ -1576,6 +1577,7 @@ def _build_zone_decisions(
     blocked: frozenset[str] = frozenset(),
     refused_by_circuit: dict[str, frozenset[str]] | None = None,
     takeovers: tuple[takeover.Takeover, ...] = (),
+    commands: tuple[UnitCommand, ...] = (),
 ) -> tuple[ZoneDecision, ...]:
     """Return one decision per zone, saying what it asked for and what it got."""
     refused_by_circuit = refused_by_circuit or {}
@@ -1621,6 +1623,34 @@ def _build_zone_decisions(
         # second choice that never got its turn.
         zone_blocked = frozenset() if world.precondition_ignores_openings(zone.zone_id) else blocked
         only, unbounded = takeover.narrowing(takeovers, zone.zone_id, request.family)
+        stood_down = next(
+            (
+                command
+                for command in commands
+                if command.zone_id == zone.zone_id
+                and command.source_id == request.source.source_id
+                and command.reason is Reason.SHARED_SOURCE_TOOK_OVER
+            ),
+            None,
+        )
+        if stood_down is not None:
+            # Anker 1 vierde uitzondering / anker 12: een overgenomen gebied
+            # verwarmt of koelt nooit tegelijk met de overnemer, ook niet op
+            # een lopend vooruit-verzoek. Het commando staat al uit; de
+            # zonebeslissing hoort datzelfde te zeggen in plaats van een
+            # koelende airco te blijven tonen (A2).
+            decisions.append(
+                ZoneDecision(
+                    zone_id=zone.zone_id,
+                    wanted=request.family,
+                    granted=ModeFamily.NEUTRAL,
+                    source_id=request.source.source_id,
+                    reason=Reason.SHARED_SOURCE_TOOK_OVER,
+                    closed_gates=shut.get(zone.zone_id, ()),
+                    would_want=would,
+                )
+            )
+            continue
         decisions.append(
             ZoneDecision(
                 zone_id=zone.zone_id,

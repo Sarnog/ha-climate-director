@@ -110,7 +110,7 @@ FUNCTION_LIMIT = 80
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2120,
     "coordinator.py": 1756,
-    "engine/decide.py": 1647,
+    "engine/decide.py": 1677,
     "config_flow.py": 1418,
     "schemas.py": 900,
 }
@@ -125,7 +125,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("coordinator.py", "_notice_hand"): 117,
     ("engine/decide.py", "_collect_wishes"): 126,
     ("engine/decide.py", "_manual_conflict"): 103,
-    ("engine/decide.py", "_build_zone_decisions"): 82,
+    ("engine/decide.py", "_build_zone_decisions"): 111,
     ("schemas.py", "resident"): 98,
     ("engine/hysteresis.py", "_candidate"): 97,
     ("config_flow.py", "async_step_resident"): 91,

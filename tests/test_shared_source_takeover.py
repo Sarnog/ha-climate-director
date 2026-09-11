@@ -260,6 +260,48 @@ class TestWhatStandsDownSaysWhy:
         assert modes(plan)[LIVING_AIRCO] == MODE_OFF
         assert reasons(plan)[LIVING_AIRCO] is Reason.SHARED_SOURCE_TOOK_OVER
 
+    def test_a_precondition_cool_request_in_a_taken_over_area_reports_it(self) -> None:
+        """A2: de zonebeslissing beweegt mee met het stilgezette commando.
+
+        A2: the zone decision moves along with the stood-down command.
+        """
+        from custom_components.climate_director.engine import ModeFamily
+
+        taken_over = make_world(
+            now=NOW,
+            indoor={"living": 26.0, "attic": 18.0},
+            outdoor=8.0,
+            climates={
+                GAS: climate("off"),
+                LIVING_AIRCO: climate("off"),
+                ATTIC_AIRCO: climate("off", available=False),
+            },
+            precondition_until={"living": NOW + timedelta(minutes=30)},
+        )
+        plan = decide(house(), taken_over)
+
+        assert modes(plan)[GAS] == MODE_HEAT
+        assert modes(plan)[LIVING_AIRCO] == MODE_OFF
+        assert reasons(plan)[LIVING_AIRCO] is Reason.SHARED_SOURCE_TOOK_OVER
+
+        decision = plan.decision_for("living")
+        assert decision is not None
+        assert decision.wanted is ModeFamily.COOL
+        assert decision.granted is ModeFamily.NEUTRAL
+        assert decision.reason is Reason.SHARED_SOURCE_TOOK_OVER
+        assert decision.source_id == "living_airco"
+
+    def test_the_same_family_is_not_stood_down(self) -> None:
+        """Bij dezelfde familie zet de `only`-tak de reden al goed (A2).
+
+        With the same family the `only` branch already sets the reason (A2).
+        """
+        plan = decide(house(), world(living_indoor=18.0))
+        decision = plan.decision_for("living")
+        assert decision is not None
+        assert decision.reason is not Reason.SHARED_SOURCE_TOOK_OVER
+        assert reasons(plan).get(LIVING_AIRCO) is not Reason.SHARED_SOURCE_TOOK_OVER
+
     def test_a_hand_operated_appliance_is_stood_down_too(self) -> None:
         """Anker 12 noemt hem uitdrukkelijk: hij staat de natuurkunde in de weg."""
         config = house(attic_autostart=False)

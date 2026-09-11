@@ -58,8 +58,11 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
 
 1. **Een lopend vooruit-verzoek** is één begrip in de hele engine:
    `world.preconditioning(zone_id)`. Het passeert álles behalve de
-   hoofdschakelaar, een override, en een openstaande opening waarvoor niemand
-   "toch doen" heeft gezegd. Er is geen tijdvenster: een handmatig verzoek gaat
+   hoofdschakelaar, een override, een openstaande opening waarvoor niemand
+   "toch doen" heeft gezegd, en een huisbrede overname die de tegengestelde
+   taakfamilie draait: dezelfde ruimte wordt nooit tegelijk verwarmd en
+   gekoeld, ook niet op verzoek (anker 12). Er is geen tijdvenster: een
+   handmatig verzoek gaat
    altijd boven de automatisering, ongeacht het uur, voor de volledige
    `max_precondition`. De begrenzing is de looptijd van het verzoek zelf plus de
    bevestiging bij een openstaande deur — hetzelfde principe als: wie laat
@@ -1098,8 +1101,10 @@ them without changing them here first.
 
 1. **A running pre-conditioning request** is one concept throughout the engine:
    `world.preconditioning(zone_id)`. It passes everything except the master
-   switch, an override, and an opening standing open that nobody said "do it
-   anyway" to. There is no time window: a hand-given request always outranks the
+   switch, an override, an opening standing open that nobody said "do it
+   anyway" to, and a house-wide takeover running the opposing duty family: the
+   same room is never heated and cooled at once, not even on request (anchor
+   12). There is no time window: a hand-given request always outranks the
    automation, whatever the hour, for the full `max_precondition`. The bounds are
    the request's own expiry plus the confirmation on an open door — the same
    principle as: whoever stays up late keeps their heating. There are two ways
