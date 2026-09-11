@@ -154,8 +154,13 @@ def test_french_guide_speaks_vous_not_tu() -> None:
     not belong under it.
     """
     text = (Path(__file__).parent.parent / "docs" / "install" / "fr.md").read_text(encoding="utf-8")
+    # Hoofdletterongevoelig: een zin die met "Tu …" begint is net zo goed een
+    # terugval in tutoiement als een "tu" midden in de zin.
+    #
+    # Case-insensitive: a sentence starting with "Tu …" is just as much a
+    # relapse into tutoiement as a "tu" in the middle of a sentence.
     for tu_form in (r"\btu\b", r"\bton\b", r"\bta\b", r"\btes\b", r"\btoi\b"):
-        assert not re.search(tu_form, text), f"fr.md bevat {tu_form}"
+        assert not re.search(tu_form, text, flags=re.IGNORECASE), f"fr.md bevat {tu_form}"
     for phrase in ("laisse le directeur", "juge chaque tour", "règle-le"):
         assert phrase not in text, f"fr.md bevat {phrase!r}"
     assert re.search(r"\bvous\b", text), "fr.md spreekt de lezer niet meer met vous aan"
