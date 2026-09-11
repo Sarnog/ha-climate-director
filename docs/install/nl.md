@@ -900,6 +900,8 @@ De integratie kent drie vormen:
 3. **De combinatie.** Airco-circuits voor de kamers, een gedeelde warmtebron
    (zoals een ketel) voor de rest.
 
+De schermen en knoppen gebruiken precies deze woorden: **Een zone die verliest mag lucht blijven circuleren**, **Dit circuit verwijderen**, **Pauze bij het wisselen van taak (seconden)**, **Maximaal aantal units tegelijk aan**, **Rusttijd voordat een unit opnieuw mag starten (seconden)**, **Minimale looptijd voor een taakwissel (seconden)**, **Voorrang op dit circuit**, **Circuit**, **Deze groep verwijderen**, **Apparaten in deze groep**, **Groep**, **Deze warmtebron verwijderen**, **Vaste doeltemperatuur**, **Warmtebron**, **Vertraging voordat er opgeschort wordt (seconden)**, **Deze opening verwijderen**, **Zones die dit raakt**, **Opening**, **Dit venster verwijderen**, **Stilte tot**, **Stilte vanaf**, **Dagen waarop dit geldt**, **Deze bewoner verwijderen**, **Toestand die slapen betekent**, **Slaapsensor telt tot**, **Wat nu**, **Gastenmodus tot**, **Iemand die thuis is moet wakker zijn**, **Zone geldt als vastgelopen na (minuten)**, **Dit apparaat automatisch aanzetten**, **Deze bron verwijderen**, **Rusttijd voordat dit apparaat opnieuw mag starten (seconden)**, **Wachttijd voordat dit apparaat overneemt (minuten)**, **Dit rooster verwijderen**, **Begin met koelen bij**, **Doeltemperatuur koelen**, **Deze zone verwijderen**, **Begin met verwarmen bij**, **Aanwezigheidssensor van deze zone**, **Toestand die bezet betekent**, **Nog zo lang als bezet tellen (seconden)**, **← Terug naar het hoofdmenu om iets aan te passen**, **← Verwerpen en teruggaan**.
+
 ## Talen
 
 De uitleg onder elk invoerveld volgt de taal van je Home Assistant.
