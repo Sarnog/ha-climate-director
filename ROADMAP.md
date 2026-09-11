@@ -75,13 +75,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 - **Suggestie voor circuitgroepering** — voorstellen welke binnenunits een buitenunit delen
   op basis van gedeeld `device` / `via_device` / fabrikant, uitdrukkelijk als voorstel en
   niet als feit, omdat de meeste klimaatintegraties die relatie niet blootgeven.
-- **Overrides via acties** — `climate_director.set_override` en
-  `climate_director.clear_override`, plus knoppen die ze aanroepen. De
-  override-schakelaar per zone bestaat al; wat ontbreekt is deze actie-interface.
-  De vorm is inmiddels vastgelegd in **anker 11**: de actie neemt een looptijd, een
-  keuze *bij afloop* (uitzetten of laten staan) en de stand plus de temperatuur, die
-  hij in dezelfde beslisronde zet als de overdracht. Vervangt de acht timerscripts
-  voor de slaapkamerairco en de gasverwarming. `climate_director.evaluate` bestaat al.
 - **De droogstand als eigen taak, met een eigen drempel** — de engine leest `dry` wel (het
   telt als koelen), maar kiest hem nooit: er wordt alleen `heat`, `cool`, `fan_only` en
   `off` aangestuurd. Wie bij vochtig weer bewust ontvochtigt, moet dat nu naast de
@@ -195,13 +188,6 @@ The worked-out design proposals for everything below live in
 - **Suggested circuit grouping** — propose which indoor units share an outdoor unit based on
   shared `device` / `via_device` / manufacturer, explicitly as a proposal rather than a
   fact, since most climate integrations do not expose that relationship.
-- **Overrides through actions** — `climate_director.set_override` and
-  `climate_director.clear_override`, plus buttons calling them. The per-zone override
-  switch already exists; what is missing is this action interface. Its shape is now
-  settled in **anchor 11**: the action takes a duration, a choice *on expiry* (switch
-  off or leave be) and the mode plus the temperature, which it sets in the same
-  decision round as the handover. It replaces the eight timer scripts for the bedroom
-  air conditioner and the gas heating. `climate_director.evaluate` already exists.
 - **Drying as a duty of its own, with its own threshold** — the engine does read `dry` (it
   counts as cooling) but never picks it: only `heat`, `cool`, `fan_only` and `off` are
   commanded. Anyone deliberately dehumidifying in muggy weather has to do that beside the

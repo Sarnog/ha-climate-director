@@ -693,6 +693,8 @@ le dernier instantané lu et le dernier plan.
 | `climate_director.evaluate` | décider à nouveau tout de suite, sans attendre un changement d'état |
 | `climate_director.precondition` | démarrer le préchauffage ou le pré-refroidissement |
 | `climate_director.cancel_precondition` | annuler une demande de préchauffage en cours |
+| `climate_director.set_override` | rendre une zone pour une durée, régler son appareil et exécuter le choix à l'échéance (`turn_off` / `leave`) |
+| `climate_director.clear_override` | terminer l'override d'une zone comme le fait l'interrupteur : en silence |
 
 `climate_director.evaluate` est pratique pendant la mise en place. En mode
 ombre, il n'exécute toujours rien — il recalcule seulement.

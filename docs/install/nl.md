@@ -671,6 +671,8 @@ gelezen momentopname en het laatste plan.
 | `climate_director.evaluate` | nu opnieuw laten beslissen, zonder op een toestandswijziging te wachten |
 | `climate_director.precondition` | vooruit verwarmen of koelen starten |
 | `climate_director.cancel_precondition` | een lopend vooruit-verzoek afblazen |
+| `climate_director.set_override` | een zone voor een looptijd overdragen, het apparaat zetten, en bij afloop de keuze uitvoeren (`turn_off` / `leave`) |
+| `climate_director.clear_override` | een override van een zone beëindigen zoals de schakelaar dat doet: stil |
 
 `climate_director.evaluate` is handig tijdens het inrichten. In schaduwmodus
 voert hij nog steeds niets uit — hij herberekent alleen.

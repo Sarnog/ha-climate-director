@@ -667,6 +667,8 @@ last snapshot read and the last plan.
 | `climate_director.evaluate` | decide again right now, without waiting for a state change |
 | `climate_director.precondition` | start pre-conditioning |
 | `climate_director.cancel_precondition` | call a running pre-conditioning request off |
+| `climate_director.set_override` | hand one zone over for a duration, set its appliance, and carry out the choice on expiry (`turn_off` / `leave`) |
+| `climate_director.clear_override` | end a zone's override the way the switch does: silently |
 
 `climate_director.evaluate` is handy while setting up. In shadow mode it still
 executes nothing — it only recomputes.

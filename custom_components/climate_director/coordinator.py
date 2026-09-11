@@ -72,6 +72,7 @@ from .engine.gates import (
 )
 from .engine.models import SeasonSource
 from .engine.serialise import config_from_dict
+from .overrides import _OverridesMixin
 from .preconditions import _PreconditionsMixin, _still_running
 from .state_store import _StateStoreMixin
 from .units import (
@@ -142,6 +143,7 @@ def storage_key(entry_id: str) -> str:
 class ClimateDirectorCoordinator(
     _StateStoreMixin,
     _PreconditionsMixin,
+    _OverridesMixin,
     _WorldBuilderMixin,
     DataUpdateCoordinator[Plan],
 ):
@@ -240,6 +242,11 @@ class ClimateDirectorCoordinator(
         self.zone_overrides: dict[str, bool] = {}
         self._handed_back: dict[str, date] = {}
         self.zone_priorities: dict[str, int] = {}
+        self.zone_override_until: dict[str, datetime] = {}
+        self.zone_override_when_done: dict[str, str] = {}
+        self.zone_override_entity: dict[str, str] = {}
+        self._pending_override: dict[str, Change] = {}
+        self._cancel_override_wake = None
         self.opening_bypasses: dict[str, bool] = {}
         """Per `opening_id`, of de overbrugging aanstaat (anker 8).
 
@@ -901,6 +908,7 @@ class ClimateDirectorCoordinator(
         self._cancel_pending_deferral()
         self._cancel_clock_reeval()
         self._cancel_pending_precondition_wake()
+        self._cancel_pending_override_wake()
         self._debouncer.async_shutdown()
         # Een uitgestelde opslag kan nog uitstaan: de store schrijft één seconde
         # na de laatste wijziging. Bij een herlaadbeurt is dat geen bezwaar, maar
@@ -922,6 +930,7 @@ class ClimateDirectorCoordinator(
         if self._closing:
             return
         async with self._lock:
+            self._drop_lapsed_override_timers()
             world = self.build_world()
             self._remember_families(world)
             world = self._with_family_history(world)
@@ -939,7 +948,22 @@ class ClimateDirectorCoordinator(
             # execute. In shadow mode this is exactly "what the director would
             # have done while something else steers the house" - the number the
             # whole shadow phase is about.
-            self.last_changes = changes(plan, world, self._sent_setpoints)
+            #
+            # De afloopkeuze (anker 11) komt vóór de gewone verschillen: het
+            # plan is nog met de override berekend, dus het geeft die zone geen
+            # commando, en de afloopkeuze is zo precies het enige commando op
+            # dat moment. Daarna beslist de director gewoon weer.
+            #
+            # The expiry choice (anchor 11) comes before the ordinary
+            # differences: the plan was still computed with the override, so it
+            # commands that zone nothing, and the expiry choice is thus exactly
+            # the one command at that moment. After that the director simply
+            # decides again.
+            expiry_changes = self._consume_expired_overrides(world.now)
+            pending_changes = self._consume_pending_override_changes()
+            self.last_changes = (
+                changes(plan, world, self._sent_setpoints) + expiry_changes + pending_changes
+            )
             self.last_applied = ()
 
             try:

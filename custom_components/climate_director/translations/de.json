@@ -962,6 +962,50 @@
           "description": "Für welche Räume die Anforderung abgebrochen wird, mit ihrer Zonen-ID. Das Feld weglassen gilt für das ganze Haus; eine leere Liste bricht nichts ab."
         }
       }
+    },
+    "set_override": {
+      "name": "Override setzen",
+      "description": "Übergibt eine Zone für eine Laufzeit, setzt das Gerät jetzt und schaltet es bei Ablauf aus oder lässt es stehen.",
+      "fields": {
+        "entry_id": {
+          "name": "Anlage",
+          "description": "Welche Anlage gemeint ist. Leer lassen gilt für alle."
+        },
+        "zone_id": {
+          "name": "Zone",
+          "description": "Die Zone, die übergeben wird."
+        },
+        "hvac_mode": {
+          "name": "Modus",
+          "description": "Der Modus, den das Gerät jetzt bekommt."
+        },
+        "temperature": {
+          "name": "Temperatur",
+          "description": "Der Sollwert, den das Gerät jetzt bekommt, in der Einheit dieses Home Assistant."
+        },
+        "minutes": {
+          "name": "Laufzeit",
+          "description": "Wie lange die Override dauert. Leer = läuft nie von selbst ab."
+        },
+        "when_done": {
+          "name": "Bei Ablauf",
+          "description": "Was beim Ablauf passiert: das Gerät ausschalten oder stehen lassen."
+        }
+      }
+    },
+    "clear_override": {
+      "name": "Override beenden",
+      "description": "Beendet die Zonen-Override wie der Schalter: der Director übernimmt die Zone wieder und sendet nichts extra.",
+      "fields": {
+        "entry_id": {
+          "name": "Anlage",
+          "description": "Welche Anlage gemeint ist. Leer lassen gilt für alle."
+        },
+        "zone_id": {
+          "name": "Zone",
+          "description": "Die Zone, deren Override endet."
+        }
+      }
     }
   }
 }

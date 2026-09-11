@@ -625,6 +625,8 @@ Home Assistant لديك بلغة أخرى فستحمل هناك أسماء أخ�
 | `climate_director.evaluate` | إعادة اتخاذ القرار الآن، دون انتظار تغير حالة |
 | `climate_director.precondition` | بدء التدفئة أو التبريد المسبق |
 | `climate_director.cancel_precondition` | إلغاء طلب مسبق جارٍ |
+| `climate_director.set_override` | تسليم منطقة لمدة، وضبط جهازها، وتنفيذ الاختيار عند الانتهاء (`turn_off` / `leave`) |
+| `climate_director.clear_override` | إنهاء تجاوز منطقة كما يفعل المفتاح: بصمت |
 
 `climate_director.evaluate` عملي أثناء الإعداد. وفي وضع الظل لا ينفذ أي شيء
 حتى الآن — إنه يعيد الحساب فقط.

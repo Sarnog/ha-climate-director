@@ -678,6 +678,8 @@ También hay una exportación de diagnóstico descargable con la configuración,
 | `climate_director.evaluate` | decidir de nuevo ahora mismo, sin esperar un cambio de estado |
 | `climate_director.precondition` | iniciar el preacondicionamiento |
 | `climate_director.cancel_precondition` | cancelar una petición de preacondicionamiento en curso |
+| `climate_director.set_override` | entregar una zona durante un tiempo, ajustar su aparato y ejecutar la elección al vencer (`turn_off` / `leave`) |
+| `climate_director.clear_override` | terminar la anulación de una zona como lo hace el interruptor: en silencio |
 
 `climate_director.evaluate` es práctico durante la puesta en marcha. En modo
 sombra sigue sin ejecutar nada — solo recalcula.

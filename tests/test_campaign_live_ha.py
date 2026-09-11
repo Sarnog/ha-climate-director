@@ -346,7 +346,13 @@ class TestSettingUp:
 
     async def test_the_actions_are_registered(self, home: LiveHome) -> None:
         available = home.hass.services.async_services().get("climate_director", {})
-        assert set(available) == {"evaluate", "precondition", "cancel_precondition"}
+        assert set(available) == {
+            "evaluate",
+            "precondition",
+            "cancel_precondition",
+            "set_override",
+            "clear_override",
+        }
 
     async def test_the_device_carries_the_installed_version(self, home: LiveHome) -> None:
         from homeassistant.helpers import device_registry
@@ -389,7 +395,13 @@ class TestTheActionsAndTheirLifetime:
     """
 
     async def test_the_actions_stand_while_an_installation_is_loaded(self, home: LiveHome) -> None:
-        for name in ("evaluate", "precondition", "cancel_precondition"):
+        for name in (
+            "evaluate",
+            "precondition",
+            "cancel_precondition",
+            "set_override",
+            "clear_override",
+        ):
             assert home.hass.services.has_service("climate_director", name), name
 
     async def test_the_last_installation_leaves_the_actions_standing(self) -> None:
@@ -404,7 +416,13 @@ class TestTheActionsAndTheirLifetime:
         try:
             await live.hass.config_entries.async_unload(live.entry.entry_id)
             await live.hass.async_block_till_done()
-            for name in ("evaluate", "precondition", "cancel_precondition"):
+            for name in (
+                "evaluate",
+                "precondition",
+                "cancel_precondition",
+                "set_override",
+                "clear_override",
+            ):
                 assert live.hass.services.has_service("climate_director", name), name
             with pytest.raises(ServiceValidationError, match="installation"):
                 await live.hass.services.async_call(

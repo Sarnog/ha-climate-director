@@ -962,6 +962,50 @@
           "description": "Which rooms to call the request off for, by their zone id. Leave the field away for the whole house; an empty list cancels nothing."
         }
       }
+    },
+    "set_override": {
+      "name": "Set override",
+      "description": "Hands one zone over for a duration, sets its appliance now, and on expiry turns it off or leaves it.",
+      "fields": {
+        "entry_id": {
+          "name": "Installation",
+          "description": "Which installation to act on. Leave empty for all of them."
+        },
+        "zone_id": {
+          "name": "Zone",
+          "description": "The zone to hand over."
+        },
+        "hvac_mode": {
+          "name": "Mode",
+          "description": "The mode the appliance gets now."
+        },
+        "temperature": {
+          "name": "Temperature",
+          "description": "The setpoint the appliance gets now, in the unit of this Home Assistant."
+        },
+        "minutes": {
+          "name": "Duration",
+          "description": "How long the override lasts. Leave empty to never expire."
+        },
+        "when_done": {
+          "name": "On expiry",
+          "description": "What happens when the duration runs out: turn the appliance off, or leave it."
+        }
+      }
+    },
+    "clear_override": {
+      "name": "Clear override",
+      "description": "Ends the zone's override the way the switch does: the director takes the zone back and commands nothing extra.",
+      "fields": {
+        "entry_id": {
+          "name": "Installation",
+          "description": "Which installation to act on. Leave empty for all of them."
+        },
+        "zone_id": {
+          "name": "Zone",
+          "description": "The zone whose override ends."
+        }
+      }
     }
   }
 }

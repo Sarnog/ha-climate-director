@@ -962,6 +962,50 @@
           "description": "Voor welke ruimtes het verzoek wordt afgeblazen, met hun zone-id. Het veld weglaten geldt voor het hele huis; een lege lijst breekt niets af."
         }
       }
+    },
+    "set_override": {
+      "name": "Override zetten",
+      "description": "Draagt een zone voor een looptijd over, zet het apparaat nu, en zet het bij afloop uit of laat het staan.",
+      "fields": {
+        "entry_id": {
+          "name": "Installatie",
+          "description": "Welke installatie het betreft. Leeg laten geldt voor allemaal."
+        },
+        "zone_id": {
+          "name": "Zone",
+          "description": "De zone die overgedragen wordt."
+        },
+        "hvac_mode": {
+          "name": "Stand",
+          "description": "De stand die het apparaat nu krijgt."
+        },
+        "temperature": {
+          "name": "Temperatuur",
+          "description": "Het setpoint dat het apparaat nu krijgt, in de eenheid van deze Home Assistant."
+        },
+        "minutes": {
+          "name": "Looptijd",
+          "description": "Hoe lang de override duurt. Leeg = vervalt nooit vanzelf."
+        },
+        "when_done": {
+          "name": "Bij afloop",
+          "description": "Wat er bij het verstrijken gebeurt: het apparaat uitzetten of laten staan."
+        }
+      }
+    },
+    "clear_override": {
+      "name": "Override beëindigen",
+      "description": "Beëindigt de override van de zone zoals de schakelaar dat doet: de director neemt de zone terug en stuurt niets extra.",
+      "fields": {
+        "entry_id": {
+          "name": "Installatie",
+          "description": "Welke installatie het betreft. Leeg laten geldt voor allemaal."
+        },
+        "zone_id": {
+          "name": "Zone",
+          "description": "De zone waarvan de override eindigt."
+        }
+      }
     }
   }
 }

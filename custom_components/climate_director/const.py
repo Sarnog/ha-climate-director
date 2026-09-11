@@ -85,6 +85,24 @@ ATTR_ZONE_IDS = "zone_ids"
 ATTR_MINUTES = "minutes"
 ATTR_IGNORE_OPENINGS = "ignore_openings"
 
+# Een override met een looptijd (anker 11). De actie draagt de zone over, zet
+# stand en temperatuur in dezelfde beslisronde, en voert bij afloop de keuze
+# `when_done` uit: het apparaat uitzetten of laten staan. Zonder looptijd
+# vervalt een override nooit vanzelf.
+#
+# An override with a duration (anchor 11). The action hands the zone over, sets
+# the mode and temperature in the same decision round, and on expiry carries out
+# the `when_done` choice: turn the appliance off or leave it be. Without a
+# duration an override never lapses by itself.
+SERVICE_SET_OVERRIDE = "set_override"
+SERVICE_CLEAR_OVERRIDE = "clear_override"
+ATTR_ZONE_ID = "zone_id"
+ATTR_HVAC_MODE = "hvac_mode"
+ATTR_TEMPERATURE = "temperature"
+ATTR_WHEN_DONE = "when_done"
+WHEN_DONE_TURN_OFF = "turn_off"
+WHEN_DONE_LEAVE = "leave"
+
 # De duur die de knop per zone gebruikt. Een uur is lang genoeg om een koud huis
 # op temperatuur te krijgen en kort genoeg om niet mis te zijn als je het per
 # ongeluk aanraakt. De ondergrens houdt een verzoek zinvol - onder een kwartier

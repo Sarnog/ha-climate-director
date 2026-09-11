@@ -962,6 +962,50 @@
           "description": "Les pièces pour lesquelles la demande est annulée, par leur identifiant de zone. Omettre le champ vaut pour toute la maison ; une liste vide n'annule rien."
         }
       }
+    },
+    "set_override": {
+      "name": "Définir une dérogation",
+      "description": "Rend une zone pour une durée, règle l'appareil maintenant et, à l'échéance, l'éteint ou le laisse.",
+      "fields": {
+        "entry_id": {
+          "name": "Installation",
+          "description": "L'installation concernée. Laisser vide vaut pour toutes."
+        },
+        "zone_id": {
+          "name": "Zone",
+          "description": "La zone à rendre."
+        },
+        "hvac_mode": {
+          "name": "Mode",
+          "description": "Le mode que l'appareil reçoit maintenant."
+        },
+        "temperature": {
+          "name": "Température",
+          "description": "La consigne que l'appareil reçoit maintenant, dans l'unité de ce Home Assistant."
+        },
+        "minutes": {
+          "name": "Durée",
+          "description": "Combien de temps dure la dérogation. Vide = n'expire jamais d'elle-même."
+        },
+        "when_done": {
+          "name": "À l'échéance",
+          "description": "Ce qui se passe à l'échéance : éteindre l'appareil ou le laisser."
+        }
+      }
+    },
+    "clear_override": {
+      "name": "Terminer la dérogation",
+      "description": "Termine la dérogation de la zone comme le fait l'interrupteur : le directeur reprend la zone et n'envoie rien de plus.",
+      "fields": {
+        "entry_id": {
+          "name": "Installation",
+          "description": "L'installation concernée. Laisser vide vaut pour toutes."
+        },
+        "zone_id": {
+          "name": "Zone",
+          "description": "La zone dont la dérogation se termine."
+        }
+      }
     }
   }
 }

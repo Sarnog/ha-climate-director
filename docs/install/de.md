@@ -680,6 +680,8 @@ dem zuletzt gelesenen Schnappschuss und dem letzten Plan.
 | `climate_director.evaluate` | sofort neu entscheiden, ohne auf eine Zustandsänderung zu warten |
 | `climate_director.precondition` | Vorbereiten oder Vorkühlen starten |
 | `climate_director.cancel_precondition` | eine laufende Vorbereitungs-Anfrage abbrechen |
+| `climate_director.set_override` | eine Zone für eine Laufzeit übergeben, ihr Gerät setzen und bei Ablauf die Wahl ausführen (`turn_off` / `leave`) |
+| `climate_director.clear_override` | eine Zonen-Override so beenden, wie der Schalter es tut: still |
 
 `climate_director.evaluate` ist praktisch beim Einrichten. Im Schattenmodus
 führt er weiterhin nichts aus — er rechnet nur neu.

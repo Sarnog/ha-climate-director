@@ -48,19 +48,28 @@ from . import (
 )
 from .const import (
     ATTR_ENTRY_ID,
+    ATTR_HVAC_MODE,
     ATTR_IGNORE_OPENINGS,
     ATTR_MINUTES,
+    ATTR_TEMPERATURE,
+    ATTR_WHEN_DONE,
+    ATTR_ZONE_ID,
     ATTR_ZONE_IDS,
     DOMAIN,
     EVENT_AUTOMATION_RELOADED,
     PLATFORMS,
     SERVICE_CANCEL_PRECONDITION,
+    SERVICE_CLEAR_OVERRIDE,
     SERVICE_EVALUATE,
     SERVICE_PRECONDITION,
+    SERVICE_SET_OVERRIDE,
     STORAGE_VERSION,
+    WHEN_DONE_LEAVE,
+    WHEN_DONE_TURN_OFF,
 )
 from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry, storage_key
 from .engine import DirectorConfig
+from .units import temperature_unit_of, to_celsius
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,6 +97,26 @@ _PRECONDITION_SCHEMA = vol.Schema(
 )
 
 _CANCEL_SCHEMA = vol.Schema({**_ENTRIES, **_ZONES})
+
+_OVERRIDE_WHEN_DONE = vol.In([WHEN_DONE_TURN_OFF, WHEN_DONE_LEAVE])
+
+_SET_OVERRIDE_SCHEMA = vol.Schema(
+    {
+        **_ENTRIES,
+        vol.Required(ATTR_ZONE_ID): cv.string,
+        vol.Required(ATTR_HVAC_MODE): cv.string,
+        vol.Optional(ATTR_TEMPERATURE): vol.All(vol.Coerce(float)),
+        vol.Optional(ATTR_MINUTES): vol.All(vol.Coerce(float), vol.Range(min=1)),
+        vol.Optional(ATTR_WHEN_DONE, default=WHEN_DONE_TURN_OFF): _OVERRIDE_WHEN_DONE,
+    }
+)
+
+_CLEAR_OVERRIDE_SCHEMA = vol.Schema(
+    {
+        **_ENTRIES,
+        vol.Required(ATTR_ZONE_ID): cv.string,
+    }
+)
 
 
 async def async_setup(hass: HomeAssistant, config: dict[str, object]) -> bool:
@@ -364,10 +393,39 @@ def _async_register_services(hass: HomeAssistant) -> None:
         for entry in entries:
             entry.runtime_data.async_cancel_precondition(call.data.get(ATTR_ZONE_IDS))
 
+    async def _async_set_override(call: ServiceCall) -> None:
+        """Hand a zone over for a duration, with the appliance already set."""
+        entries = _chosen_entries(hass, call)
+        _refuse_unknown_zones([call.data[ATTR_ZONE_ID]], entries, call.data.get(ATTR_ENTRY_ID))
+        temperature = call.data.get(ATTR_TEMPERATURE)
+        for entry in entries:
+            entry.runtime_data.async_set_override(
+                call.data[ATTR_ZONE_ID],
+                call.data[ATTR_HVAC_MODE],
+                to_celsius(temperature, temperature_unit_of(hass))
+                if temperature is not None
+                else None,
+                call.data.get(ATTR_MINUTES),
+                call.data.get(ATTR_WHEN_DONE, WHEN_DONE_TURN_OFF),
+            )
+
+    async def _async_clear_override(call: ServiceCall) -> None:
+        """End the override the way a hand-off of the switch does: silently."""
+        entries = _chosen_entries(hass, call)
+        _refuse_unknown_zones([call.data[ATTR_ZONE_ID]], entries, call.data.get(ATTR_ENTRY_ID))
+        for entry in entries:
+            entry.runtime_data.async_clear_override(call.data[ATTR_ZONE_ID])
+
     hass.services.async_register(DOMAIN, SERVICE_EVALUATE, _async_evaluate, _EVALUATE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_PRECONDITION, _async_precondition, _PRECONDITION_SCHEMA
     )
     hass.services.async_register(
         DOMAIN, SERVICE_CANCEL_PRECONDITION, _async_cancel_precondition, _CANCEL_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_OVERRIDE, _async_set_override, _SET_OVERRIDE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_CLEAR_OVERRIDE, _async_clear_override, _CLEAR_OVERRIDE_SCHEMA
     )

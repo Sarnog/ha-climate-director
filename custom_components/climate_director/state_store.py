@@ -18,6 +18,7 @@ from __future__ import annotations
 import logging
 import os
 from collections.abc import Mapping
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -47,6 +48,12 @@ class _StateStoreMixin:
             "until": {zone_id: until.isoformat() for zone_id, until in self._precondition.items()},
             "bypass": sorted(self._precondition_bypass),
             "handed_back": {zone_id: day.isoformat() for zone_id, day in self._handed_back.items()},
+            "override_until": {
+                zone_id: until.isoformat()
+                for zone_id, until in getattr(self, "zone_override_until", {}).items()
+            },
+            "override_when_done": dict(getattr(self, "zone_override_when_done", {})),
+            "override_entity": dict(getattr(self, "zone_override_entity", {})),
         }
 
     @callback
@@ -167,7 +174,53 @@ class _StateStoreMixin:
                 if day == today:
                     self._handed_back[zone_id] = day
 
+        if hasattr(self, "_restore_overrides"):
+            self._restore_overrides(stored, now)
+
         self._wake_at_the_first_expiry()
+
+    def _restore_overrides(self, stored: Mapping[str, Any], now: datetime) -> None:
+        """Restore timed overrides; expired ones lapse without a command.
+
+        Een verlopen looptijd komt niet terug: de tijd liep door terwijl Home
+        Assistant weg was, en gisteren aflopende keuze alsnog uitvoeren is erger
+        dan haar te vergeten. De overdracht zelf vervalt dan ook: de engine
+        neemt de zone weer over, precies zoals na een afloop terwijl de
+        integratie draaide.
+
+        An expired duration does not come back: time ran on while Home Assistant
+        was away, and carrying out yesterday's expiry choice after the fact is
+        worse than forgetting it. The handover itself then lapses too: the
+        engine takes the zone back, exactly as after an expiry while the
+        integration ran.
+        """
+        if not hasattr(self, "zone_override_until"):
+            # Een stand-in zonder override-staat (tests) laadt gewoon wat hij kent.
+            # A stand-in without override state (tests) simply loads what it knows.
+            return
+        until_raw = stored.get("override_until")
+        when_raw = stored.get("override_when_done")
+        entity_raw = stored.get("override_entity")
+        known_zones = {zone.zone_id for zone in self.config.zones}
+        if isinstance(until_raw, Mapping):
+            for zone_id, raw in until_raw.items():
+                if zone_id not in known_zones:
+                    continue
+                until = dt_util.parse_datetime(str(raw))
+                if until is None or not now < until:
+                    self.zone_overrides.pop(zone_id, None)
+                    continue
+                self.zone_override_until[zone_id] = until
+                self.zone_overrides[zone_id] = True
+        if isinstance(when_raw, Mapping):
+            for zone_id, raw in when_raw.items():
+                if zone_id in self.zone_override_until and isinstance(raw, str):
+                    self.zone_override_when_done[zone_id] = raw
+        if isinstance(entity_raw, Mapping):
+            for zone_id, raw in entity_raw.items():
+                if zone_id in self.zone_override_until and isinstance(raw, str):
+                    self.zone_override_entity[zone_id] = raw
+        self._override_wake_at_first_expiry()
 
     async def _quarantine_storage(self) -> None:
         """Move an unreadable state file aside and tell the user.

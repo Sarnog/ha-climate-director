@@ -962,6 +962,50 @@
           "description": "Para qué habitaciones se cancela la petición, por su identificador de zona. Omitir el campo vale para toda la casa; una lista vacía no cancela nada."
         }
       }
+    },
+    "set_override": {
+      "name": "Definir anulación",
+      "description": "Entrega una zona durante un tiempo, ajusta el aparato ahora y, al vencer, lo apaga o lo deja.",
+      "fields": {
+        "entry_id": {
+          "name": "Instalación",
+          "description": "A qué instalación se refiere. Dejarlo vacío vale para todas."
+        },
+        "zone_id": {
+          "name": "Zona",
+          "description": "La zona que se entrega."
+        },
+        "hvac_mode": {
+          "name": "Modo",
+          "description": "El modo que recibe ahora el aparato."
+        },
+        "temperature": {
+          "name": "Temperatura",
+          "description": "La consigna que recibe ahora el aparato, en la unidad de este Home Assistant."
+        },
+        "minutes": {
+          "name": "Duración",
+          "description": "Cuánto dura la anulación. Vacío = no caduca sola."
+        },
+        "when_done": {
+          "name": "Al vencer",
+          "description": "Qué ocurre al vencer: apagar el aparato o dejarlo."
+        }
+      }
+    },
+    "clear_override": {
+      "name": "Terminar anulación",
+      "description": "Termina la anulación de la zona como lo hace el interruptor: el director retoma la zona y no envía nada más.",
+      "fields": {
+        "entry_id": {
+          "name": "Instalación",
+          "description": "A qué instalación se refiere. Dejarlo vacío vale para todas."
+        },
+        "zone_id": {
+          "name": "Zona",
+          "description": "La zona cuya anulación termina."
+        }
+      }
     }
   }
 }
