@@ -28,6 +28,7 @@ de vorige.
 - [De schakelaars en knoppen](#de-schakelaars-en-knoppen)
 - [Acties](#acties)
 - [Vooruit verwarmen en koelen](#vooruit-verwarmen-en-koelen)
+- [Een override met een looptijd](#een-override-met-een-looptijd)
 - [Zelf de baas](#zelf-de-baas)
 - [Een schaduwrun beoordelen](#een-schaduwrun-beoordelen)
 - [Blueprints en meldingen](#blueprints-en-meldingen)
@@ -726,6 +727,50 @@ deur vraagt om bevestiging: zonder *Toch doen* weigert de deur het verzoek.
 
 Afblazen kan met `climate_director.cancel_precondition`.
 
+## Een override met een looptijd
+
+De overrideschakelaar hierboven geeft een zone aan jou terug tot je hem zelf
+weer uitzet. Wil je een zone een uur lang zelf zetten — "airco slaapkamer, één
+uur op 18 °C" — dan is dat één actie, geen script met een timer ernaast:
+
+```yaml
+action: climate_director.set_override
+data:
+  zone_id: slaapkamer
+  hvac_mode: cool
+  temperature: 18
+  minutes: 60
+  when_done: turn_off
+```
+
+De actie doet drie dingen in dezelfde beslisronde: hij draagt de zone aan jou
+over (de overrideschakelaar gaat aan), zet het apparaat op de gevraagde
+**Stand** en **Temperatuur**, en onthoudt de **Looptijd**. Omdat overdracht en
+stand samen gaan, kan de director je verzoek niet in de tussentijd weer
+uitzetten. De looptijd overleeft een herstart.
+
+| Veld | Betekenis |
+|---|---|
+| **Zone** (`zone_id`) | het id van de zone, zoals in de instellingen |
+| **Stand** (`hvac_mode`) | `heat`, `cool`, `fan_only` of `off`; de zone kiest de bron met de meeste voorrang die die stand kan leveren |
+| **Temperatuur** (`temperature`) | het setpoint, in de eenheid van je Home Assistant; weglaten = alleen de stand |
+| **Looptijd** (`minutes`) | hoe lang; weglaten = de override vervalt nooit vanzelf, net als de schakelaar |
+| **Bij afloop** (`when_done`) | `turn_off` (standaard): het apparaat gaat uit; `leave`: het blijft staan zoals het staat |
+
+Bij afloop stuurt de director precies één commando volgens *Bij afloop* en
+beslist daarna gewoon weer over de zone. Zet je de overrideschakelaar
+tussendoor met de hand uit, of roep je `climate_director.clear_override` aan,
+dan vervalt de looptijd stil: er gaat géén commando naar het apparaat, de
+director neemt de zone weer over en zet het apparaat alleen uit als zijn eigen
+beslissing dat nodig maakt. Een bron met *Dit apparaat automatisch starten* uit
+blijft dus draaien tot hij in de weg staat.
+
+Dit is de vervanging van een dashboardknop met een timerscript: één knop, één
+aanroep van `set_override`. Twee dingen om te weten: heeft de zone geen bron
+die de gevraagde stand kan leveren, dan gebeurt er niets en staat de reden
+alleen in het logboek; en in schaduwmodus gaat de schakelaar wel om, maar het
+apparaat niet — daar wordt niets uitgevoerd, ook dit niet.
+
 ## Zelf de baas
 
 - **Een apparaat zelf uitzetten** (bij het apparaat of op de afstandsbediening)
@@ -733,11 +778,14 @@ Afblazen kan met `climate_director.cancel_precondition`.
   zone doet weer mee zodra je hem zelf aanzet, zodra er iemand thuiskomt in een
   leeg huis, zodra iedereen die thuis is naar bed gaat, of zodra het de volgende
   dag is (na middernacht).
-- **Een apparaat een paar uur met de hand aanzetten** kan gewoon met een script
-  ernaast, mits je die zone zolang met de override aan jezelf teruggeeft. Zonder
-  override rekent de director bij de eerstvolgende evaluatie zijn eigen plan
-  door en zet hij je apparaat weer uit. Een apparaat met *Dit apparaat
-  automatisch starten* uit heeft die override niet nodig.
+- **Een apparaat een paar uur met de hand aanzetten** doe je met
+  `climate_director.set_override` (zie hierboven): één aanroep zet de zone over
+  én het apparaat, en na de looptijd ruimt de director zelf op. Een script
+  ernaast dat het apparaat rechtstreeks zet werkt alleen als je die zone zolang
+  met de override aan jezelf teruggeeft; zonder override rekent de director bij
+  de eerstvolgende evaluatie zijn eigen plan door en zet hij je apparaat weer
+  uit. Een apparaat met *Dit apparaat automatisch starten* uit heeft die
+  override niet nodig.
 - **Een kamer die je altijd zelf bedient**: maak er tóch een zone van (anders
   weet de integratie niet van dat apparaat af), kies als binnentemperatuursensor
   de `climate.*`-entiteit van het apparaat zelf, en zet bij de bron *Dit
@@ -832,12 +880,11 @@ automatisering op die gebeurtenis staat.
 
 ## Bekende beperkingen
 
-- Deze integratie heeft **nog nergens in productie gedraaid**. De schaduwmodus
-  bestaat precies daarvoor: laat de director een paar weken meekijken voordat
-  hij iets mag schakelen, en beoordeel elke ronde aan de hand van de
-  schaduwrun.
-- Een apparaat **zonder circuit** kan sinds versie 7.4.2 een eigen rusttijd
-  hebben (`min_cycle_time` per bron). Die wordt niet vanzelf ingevuld: stel hem
+- De schaduwmodus is er om de director op jouw installatie eerst een paar
+  weken te laten meekijken voordat hij iets mag schakelen. Beoordeel elke ronde
+  aan de hand van de schaduwrun: wat in het ene huis bewezen is, is dat in het
+  jouwe nog niet.
+- Een apparaat **zonder circuit** kan een eigen rusttijd hebben (`min_cycle_time` per bron). Die wordt niet vanzelf ingevuld: stel hem
   met de hand in bij elke bron zonder circuit.
 - Eén binnensensor per zone: de hele zone volgt die ene meting.
 - Droogstand is geen eigen taak van de director.

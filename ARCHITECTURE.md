@@ -807,10 +807,6 @@ climate-entiteiten op gedeeld `device` / `via_device` / fabrikant en bied het al
 voorstelknop aan. Geen engine-wijziging; nadrukkelijk een voorstel, omdat de relatie vaak
 niet blootligt.
 
-**Overrides via acties.** `climate_director.set_override` (duur of tot de volgende
-gebeurtenis) en `clear_override`; de coordinator bewaart `zone_override_until` en plant een
-evaluatie bij het verlopen. De bestaande schakelaar blijft bestaan.
-
 **Droogstand als eigen taak.** `Zone.dry: ModeSettings` met een luchtvochtigheidssensor;
 `dry` wordt een derde taak naast `heat`/`cool` met een eigen aan-/uitpunt. Op een
 niet-simultaan circuit blijft `dry` bij de koelfamilie horen.
@@ -1830,10 +1826,6 @@ editor for such a schedule is the bulk of the work.
 **Suggested circuit grouping.** Config flow only: group chosen climate entities on shared
 `device` / `via_device` / manufacturer and offer it as a suggestion button. No engine
 change; explicitly a proposal, since the relation often does not show.
-
-**Overrides through actions.** `climate_director.set_override` (a duration or until the next
-event) and `clear_override`; the coordinator keeps `zone_override_until` and schedules an
-evaluation when it lapses. The existing switch stays.
 
 **Drying as a duty of its own.** `Zone.dry: ModeSettings` with a humidity sensor; `dry`
 becomes a third duty beside `heat`/`cool` with its own switch-on point. On a non-simultaneous

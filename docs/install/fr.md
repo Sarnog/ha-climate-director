@@ -28,6 +28,7 @@ précédente.
 - [Les interrupteurs et boutons](#les-interrupteurs-et-boutons)
 - [Actions](#actions)
 - [Préchauffage et pré-refroidissement](#préchauffage-et-pré-refroidissement)
+- [Un override avec une durée](#un-override-avec-une-durée)
 - [Prendre la main](#prendre-la-main)
 - [Évaluer une période en mode ombre](#évaluer-une-période-en-mode-ombre)
 - [Blueprints et notifications](#blueprints-et-notifications)
@@ -750,6 +751,51 @@ demande.
 
 Annulez avec `climate_director.cancel_precondition`.
 
+## Un override avec une durée
+
+L'interrupteur d'override ci-dessus vous rend une zone jusqu'à ce que vous
+l'éteigniez vous-même. Si vous voulez régler une zone vous-même pendant une
+heure — « climatiseur de la chambre, une heure à 18 °C » — c'est une seule
+action, pas un script avec une minuterie à côté :
+
+```yaml
+action: climate_director.set_override
+data:
+  zone_id: chambre
+  hvac_mode: cool
+  temperature: 18
+  minutes: 60
+  when_done: turn_off
+```
+
+L'action fait trois choses dans le même tour de décision : elle vous rend la
+zone (l'interrupteur d'override s'allume), règle l'appareil sur le **Mode** et
+la **Température** demandés, et retient la **Durée**. Comme la remise et le
+mode vont ensemble, le directeur ne peut pas éteindre votre demande entre-temps.
+La durée survit à un redémarrage.
+
+| Champ | Signification |
+|---|---|
+| **Zone** (`zone_id`) | l'identifiant de la zone, comme dans les réglages |
+| **Mode** (`hvac_mode`) | `heat`, `cool`, `fan_only` ou `off` ; la zone prend sa source la plus prioritaire capable de fournir ce mode |
+| **Température** (`temperature`) | la consigne, dans l'unité de votre Home Assistant ; omise = le mode seul |
+| **Durée** (`minutes`) | combien de temps ; omise = l'override n'expire jamais de lui-même, comme l'interrupteur |
+| **À l'échéance** (`when_done`) | `turn_off` (par défaut) : l'appareil s'éteint ; `leave` : il reste tel quel |
+
+À l'échéance, le directeur envoie exactement une commande selon *À l'échéance*
+puis décide de nouveau normalement pour la zone. Si vous éteignez
+l'interrupteur d'override à la main entre-temps, ou si vous appelez
+`climate_director.clear_override`, la durée expire en silence : aucune commande
+ne part vers l'appareil, le directeur reprend la zone et n'éteint l'appareil que
+si sa propre décision l'exige. Une source avec *Démarrer cet appareil
+automatiquement* désactivé continue donc de tourner jusqu'à ce qu'elle gêne.
+
+Cela remplace un bouton de tableau de bord avec un script minuteur : un bouton,
+un appel à `set_override`. Deux choses à savoir : si la zone n'a aucune source
+capable de fournir le mode demandé, il ne se passe rien et la raison n'est que
+dans le journal ; et en mode ombre l'interrupteur bascule mais pas l'appareil —
+rien n'y est exécuté, ceci compris.
+
 ## Prendre la main
 
 - **Éteindre un appareil vous-même** (sur l'appareil ou la télécommande) met la
@@ -757,11 +803,14 @@ Annulez avec `climate_director.cancel_precondition`.
   zone reprend dès que vous la rallumez, dès que quelqu'un rentre dans une
   maison vide, dès que tous les présents vont se coucher, ou dès le lendemain
   (après minuit).
-- **Allumer un appareil à la main pour quelques heures** fonctionne avec un
-  script à côté, à condition de vous rendre la zone avec l'override pendant la
-  durée. Sans override, le directeur recalcule son propre plan à la prochaine
-  évaluation et éteint votre appareil. Un appareil avec *Démarrer cet appareil
-  automatiquement* désactivé n'a pas besoin d'override.
+- **Allumer un appareil à la main pour quelques heures** se fait avec
+  `climate_director.set_override` (voir plus haut) : un seul appel rend la zone
+  et règle l'appareil, et après la durée le directeur range lui-même. Un script
+  à côté qui règle l'appareil directement ne fonctionne qu'à condition de vous
+  rendre la zone avec l'override pendant la durée ; sans override, le directeur
+  recalcule son propre plan à la prochaine évaluation et éteint votre appareil.
+  Un appareil avec *Démarrer cet appareil automatiquement* désactivé n'a pas
+  besoin d'override.
 - **Une pièce que vous manœuvrez toujours vous-même** : faites-en tout de même
   une zone (sinon l'intégration ignore cet appareil), choisissez l'entité
   `climate.*` de l'appareil comme capteur intérieur, et désactivez *Démarrer
@@ -856,12 +905,12 @@ automatisation repose sur cet événement.
 
 ## Limites connues
 
-- Cette intégration **n'a encore tourné nulle part en production**. Le mode
-  ombre existe précisément pour cela : laissez le directeur observer pendant
-  quelques semaines avant qu'il n'ait le droit de commuter quoi que ce soit, et
-  jugez chaque tour d'après la période ombre.
-- Un appareil **sans circuit** peut avoir son propre temps de repos depuis la
-  7.4.2 (`min_cycle_time` par source). Il ne se remplit pas tout seul :
+- Le mode ombre existe pour que le directeur observe d'abord votre
+  installation pendant quelques semaines avant d'avoir le droit de commuter
+  quoi que ce soit. Jugez chaque tour d'après la période ombre : ce qui est
+  prouvé dans une maison ne l'est pas encore dans la vôtre.
+- Un appareil **sans circuit** peut avoir son propre temps de repos
+  (`min_cycle_time` par source). Il ne se remplit pas tout seul :
   réglez-le à la main sur chaque source sans circuit.
 - Un capteur intérieur par zone : toute la zone suit cette seule mesure.
 - La déshumidification n'est pas une tâche propre du directeur.

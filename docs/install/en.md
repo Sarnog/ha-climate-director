@@ -28,6 +28,7 @@ one before it.
 - [The switches and buttons](#the-switches-and-buttons)
 - [Actions](#actions)
 - [Pre-conditioning](#pre-conditioning)
+- [An override with a duration](#an-override-with-a-duration)
 - [Taking charge yourself](#taking-charge-yourself)
 - [Judging a shadow run](#judging-a-shadow-run)
 - [Blueprints and notifications](#blueprints-and-notifications)
@@ -722,6 +723,51 @@ asks for confirmation: without *Do it anyway* the door refuses the request.
 
 Call it off with `climate_director.cancel_precondition`.
 
+## An override with a duration
+
+The override switch above hands a zone back to you until you switch it off
+yourself. If you want to set a zone yourself for an hour — "bedroom air
+conditioner, one hour at 18 °C" — that is one action, not a script with a timer
+beside it:
+
+```yaml
+action: climate_director.set_override
+data:
+  zone_id: bedroom
+  hvac_mode: cool
+  temperature: 18
+  minutes: 60
+  when_done: turn_off
+```
+
+The action does three things in the same decision round: it hands the zone over
+to you (the override switch turns on), sets the appliance to the requested
+**Mode** and **Temperature**, and remembers the **Duration**. Because handover
+and mode go together, the director cannot switch your request off again in
+between. The duration survives a restart.
+
+| Field | Meaning |
+|---|---|
+| **Zone** (`zone_id`) | the zone's id, as in the settings |
+| **Mode** (`hvac_mode`) | `heat`, `cool`, `fan_only` or `off`; the zone picks its highest-precedence source that can deliver that mode |
+| **Temperature** (`temperature`) | the setpoint, in the unit of your Home Assistant; leave it out for the mode alone |
+| **Duration** (`minutes`) | how long; leave it out and the override never lapses by itself, just like the switch |
+| **On expiry** (`when_done`) | `turn_off` (default): the appliance goes off; `leave`: it stays as it stands |
+
+On expiry the director sends exactly one command according to *On expiry* and
+then simply decides about the zone again. If you switch the override switch off
+by hand in the meantime, or call `climate_director.clear_override`, the
+duration lapses silently: no command goes to the appliance, the director takes
+the zone back and only switches the appliance off when its own decision needs
+that. A source with *Start this appliance automatically* off therefore keeps
+running until it stands in the way.
+
+This replaces a dashboard button with a timer script: one button, one call to
+`set_override`. Two things to know: if the zone has no source that can deliver
+the requested mode, nothing happens and the reason is only in the log; and in
+shadow mode the switch turns over but the appliance does not — nothing is
+executed there, this included.
+
 ## Taking charge yourself
 
 - **Switching an appliance off yourself** (at the appliance or on the remote)
@@ -729,11 +775,14 @@ Call it off with `climate_director.cancel_precondition`.
   The zone takes part again once you switch it back on, once somebody comes
   home to an empty house, once everybody who is home turns in, or once it is
   the next day (past midnight).
-- **Switching an appliance on by hand for a few hours** works with a script
-  beside it, as long as you hand that zone back to yourself with the override
-  for the duration. Without the override the director works out its own plan at
-  the next evaluation and switches your appliance off again. An appliance with
-  *Start this appliance automatically* off needs no override.
+- **Switching an appliance on by hand for a few hours** is done with
+  `climate_director.set_override` (see above): one call hands the zone over and
+  sets the appliance, and after the duration the director tidies up itself. A
+  script beside it that sets the appliance directly only works as long as you
+  hand that zone back to yourself with the override for the duration; without
+  the override the director works out its own plan at the next evaluation and
+  switches your appliance off again. An appliance with *Start this appliance
+  automatically* off needs no override.
 - **A room you always operate yourself**: still make it a zone (otherwise the
   integration does not know that appliance exists), pick the appliance's own
   `climate.*` entity as the indoor sensor, and turn *Start this appliance
@@ -823,10 +872,10 @@ automation stands on that event.
 
 ## Known limitations
 
-- This integration has **not run in production anywhere yet**. Shadow mode
-  exists precisely for that: let the director watch along for a few weeks
-  before it may switch anything, and judge every round by the shadow run.
-- An appliance **without a circuit** can have its own rest time since 7.4.2
+- Shadow mode exists to let the director watch along on your installation
+  for a few weeks first, before it may switch anything. Judge every round by
+  the shadow run: what is proven in one house is not yet proven in yours.
+- An appliance **without a circuit** can have its own rest time
   (`min_cycle_time` per source). It is not filled in automatically: set it by
   hand on every source without a circuit.
 - One indoor sensor per zone: the whole zone follows that single reading.

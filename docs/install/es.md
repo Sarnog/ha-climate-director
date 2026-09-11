@@ -27,6 +27,7 @@ Sigue los pasos de arriba abajo; cada paso se apoya en el anterior.
 - [Los interruptores y botones](#los-interruptores-y-botones)
 - [Acciones](#acciones)
 - [Preacondicionamiento](#preacondicionamiento)
+- [Una anulación con duración](#una-anulación-con-duración)
 - [Tomar el mando](#tomar-el-mando)
 - [Evaluar una prueba en modo sombra](#evaluar-una-prueba-en-modo-sombra)
 - [Blueprints y notificaciones](#blueprints-y-notificaciones)
@@ -734,6 +735,51 @@ petición.
 
 Cancélalo con `climate_director.cancel_precondition`.
 
+## Una anulación con duración
+
+El interruptor de override de arriba te devuelve una zona hasta que tú mismo lo
+apagues. Si quieres ajustar una zona tú mismo durante una hora — «aire
+acondicionado del dormitorio, una hora a 18 °C» — eso es una sola acción, no un
+script con un temporizador al lado:
+
+```yaml
+action: climate_director.set_override
+data:
+  zone_id: dormitorio
+  hvac_mode: cool
+  temperature: 18
+  minutes: 60
+  when_done: turn_off
+```
+
+La acción hace tres cosas en la misma ronda de decisión: te entrega la zona (el
+interruptor de override se enciende), pone el aparato en el **Modo** y la
+**Temperatura** pedidos, y recuerda la **Duración**. Como la entrega y el modo
+van juntos, el director no puede volver a apagar tu petición entre medias. La
+duración sobrevive a un reinicio.
+
+| Campo | Significado |
+|---|---|
+| **Zona** (`zone_id`) | el id de la zona, como en los ajustes |
+| **Modo** (`hvac_mode`) | `heat`, `cool`, `fan_only` u `off`; la zona elige su fuente de mayor prioridad capaz de dar ese modo |
+| **Temperatura** (`temperature`) | la consigna, en la unidad de tu Home Assistant; si la omites, solo el modo |
+| **Duración** (`minutes`) | cuánto tiempo; si la omites, la anulación nunca vence por sí sola, igual que el interruptor |
+| **Al vencer** (`when_done`) | `turn_off` (por defecto): el aparato se apaga; `leave`: se queda como está |
+
+Al vencer, el director envía exactamente una orden según *Al vencer* y después
+vuelve a decidir sobre la zona con normalidad. Si entre medias apagas el
+interruptor de override a mano, o llamas a `climate_director.clear_override`,
+la duración vence en silencio: no va ninguna orden al aparato, el director
+retoma la zona y solo apaga el aparato si su propia decisión lo exige. Una
+fuente con *Arrancar este aparato automáticamente* desactivado sigue por tanto
+funcionando hasta que estorbe.
+
+Esto sustituye a un botón del panel con un script temporizador: un botón, una
+llamada a `set_override`. Dos cosas que conviene saber: si la zona no tiene
+ninguna fuente capaz de dar el modo pedido, no pasa nada y el motivo solo queda
+en el registro; y en modo sombra el interruptor cambia pero el aparato no — ahí
+no se ejecuta nada, tampoco esto.
+
 ## Tomar el mando
 
 - **Apagar un aparato tú mismo** (en el aparato o con el mando) silencia esa
@@ -741,11 +787,14 @@ Cancélalo con `climate_director.cancel_precondition`.
   vuelve a participar en cuanto la enciendes tú, en cuanto alguien llega a una
   casa vacía, en cuanto todos los presentes se acuestan, o en cuanto es el día
   siguiente (pasada la medianoche).
-- **Encender un aparato a mano unas horas** funciona con un script al lado,
-  siempre que te devuelvas esa zona con el override durante ese tiempo. Sin
-  override, el director recalcula su propio plan en la siguiente evaluación y
-  apaga tu aparato. Un aparato con *Arrancar este aparato automáticamente*
-  desactivado no necesita override.
+- **Encender un aparato a mano unas horas** se hace con
+  `climate_director.set_override` (ver arriba): una sola llamada entrega la
+  zona y pone el aparato, y tras la duración el director recoge él mismo. Un
+  script al lado que ponga el aparato directamente solo funciona si te
+  devuelves esa zona con el override durante ese tiempo; sin override, el
+  director recalcula su propio plan en la siguiente evaluación y apaga tu
+  aparato. Un aparato con *Arrancar este aparato automáticamente* desactivado
+  no necesita override.
 - **Una habitación que manejas siempre tú mismo**: haz de ella una zona igual
   (si no, la integración no sabe de ese aparato), elige la entidad `climate.*`
   del propio aparato como sensor interior y desactiva *Arrancar este aparato
@@ -839,12 +888,11 @@ una automatización se apoya en ese evento.
 
 ## Limitaciones conocidas
 
-- Esta integración **aún no ha funcionado en producción en ningún sitio**. El
-  modo sombra existe precisamente para eso: deja que el director observe unas
-  semanas antes de que pueda conmutar nada, y juzga cada ronda con la prueba en
-  modo sombra.
-- Un aparato **sin circuito** puede tener su propio tiempo de reposo desde la
-  7.4.2 (`min_cycle_time` por fuente). No se rellena solo: ajústalo a mano en
+- El modo sombra existe para que el director observe primero tu instalación
+  unas semanas antes de poder conmutar nada. Juzga cada ronda con la prueba en
+  modo sombra: lo que está probado en una casa aún no lo está en la tuya.
+- Un aparato **sin circuito** puede tener su propio tiempo de reposo
+  (`min_cycle_time` por fuente). No se rellena solo: ajústalo a mano en
   cada fuente sin circuito.
 - Un sensor interior por zona: toda la zona sigue esa única lectura.
 - El modo Dry no es una tarea propia del director.

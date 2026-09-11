@@ -28,6 +28,7 @@ durch; jeder Schritt baut auf dem vorherigen auf.
 - [Die Schalter und Tasten](#die-schalter-und-tasten)
 - [Aktionen](#aktionen)
 - [Vorbereiten und Vorkühlen](#vorbereiten-und-vorkühlen)
+- [Ein Override mit Laufzeit](#ein-override-mit-laufzeit)
 - [Selbst das Kommando übernehmen](#selbst-das-kommando-übernehmen)
 - [Einen Schattenlauf beurteilen](#einen-schattenlauf-beurteilen)
 - [Blueprints und Meldungen](#blueprints-und-meldungen)
@@ -735,6 +736,51 @@ verlangt eine Bestätigung: ohne *Trotzdem tun* weist die Tür die Anfrage ab.
 
 Abbrechen geht mit `climate_director.cancel_precondition`.
 
+## Ein Override mit Laufzeit
+
+Der Override-Schalter oben gibt dir eine Zone zurück, bis du ihn selbst wieder
+ausschaltest. Willst du eine Zone eine Stunde lang selbst setzen —
+„Klimaanlage Schlafzimmer, eine Stunde auf 18 °C“ — dann ist das eine Aktion,
+kein Script mit einem Timer daneben:
+
+```yaml
+action: climate_director.set_override
+data:
+  zone_id: schlafzimmer
+  hvac_mode: cool
+  temperature: 18
+  minutes: 60
+  when_done: turn_off
+```
+
+Die Aktion tut in derselben Entscheidungsrunde drei Dinge: Die Zone geht an dich
+über (der Override-Schalter geht an), das Gerät bekommt den gewünschten
+**Modus** und die **Temperatur**, und die **Laufzeit** wird gemerkt. Weil
+Übergabe und Modus zusammen gehen, kann der Director deinen Wunsch
+zwischendurch nicht wieder ausschalten. Die Laufzeit übersteht einen Neustart.
+
+| Feld | Bedeutung |
+|---|---|
+| **Zone** (`zone_id`) | die ID der Zone, wie in den Einstellungen |
+| **Modus** (`hvac_mode`) | `heat`, `cool`, `fan_only` oder `off`; die Zone nimmt die Quelle mit dem meisten Vorrang, die diesen Modus liefern kann |
+| **Temperatur** (`temperature`) | der Sollwert, in der Einheit deines Home Assistant; weglassen = nur der Modus |
+| **Laufzeit** (`minutes`) | wie lange; weglassen = der Override läuft nie von selbst ab, genau wie der Schalter |
+| **Bei Ablauf** (`when_done`) | `turn_off` (Standard): das Gerät geht aus; `leave`: es bleibt, wie es steht |
+
+Bei Ablauf schickt der Director genau einen Befehl gemäß *Bei Ablauf* und
+entscheidet danach einfach wieder über die Zone. Schaltest du den
+Override-Schalter zwischendurch von Hand aus oder rufst du
+`climate_director.clear_override` auf, dann verfällt die Laufzeit still: Es geht
+kein Befehl an das Gerät, der Director übernimmt die Zone wieder und schaltet
+das Gerät nur aus, wenn seine eigene Entscheidung das verlangt. Eine Quelle mit
+*Dieses Gerät automatisch starten* aus läuft also weiter, bis sie im Weg steht.
+
+Das ersetzt eine Dashboard-Taste mit einem Timer-Script: eine Taste, ein Aufruf
+von `set_override`. Zwei Dinge solltest du wissen: Hat die Zone keine Quelle,
+die den gewünschten Modus liefern kann, passiert nichts, und der Grund steht nur
+im Protokoll; und im Schattenmodus geht zwar der Schalter um, das Gerät aber
+nicht — dort wird nichts ausgeführt, auch das nicht.
+
 ## Selbst das Kommando übernehmen
 
 - **Ein Gerät selbst ausschalten** (am Gerät oder auf der Fernbedienung) legt
@@ -742,11 +788,14 @@ Abbrechen geht mit `climate_director.cancel_precondition`.
   ein. Die Zone macht wieder mit, sobald du sie selbst einschaltest, sobald
   jemand in ein leeres Haus zurückkommt, sobald alle Anwesenden ins Bett gehen
   oder sobald der nächste Tag ist (nach Mitternacht).
-- **Ein Gerät für ein paar Stunden von Hand einschalten** geht mit einem
-  Script daneben, solange du diese Zone für die Dauer mit dem Override an dich
-  zurückgibst. Ohne Override rechnet der Director bei der nächsten Auswertung
-  seinen eigenen Plan durch und schaltet dein Gerät wieder aus. Ein Gerät mit
-  *Dieses Gerät automatisch starten* aus braucht keinen Override.
+- **Ein Gerät für ein paar Stunden von Hand einschalten** machst du mit
+  `climate_director.set_override` (siehe oben): Ein Aufruf übergibt die Zone
+  und setzt das Gerät, und nach der Laufzeit räumt der Director selbst auf. Ein
+  Script daneben, das das Gerät direkt setzt, geht nur, solange du diese Zone
+  für die Dauer mit dem Override an dich zurückgibst; ohne Override rechnet der
+  Director bei der nächsten Auswertung seinen eigenen Plan durch und schaltet
+  dein Gerät wieder aus. Ein Gerät mit *Dieses Gerät automatisch starten* aus
+  braucht keinen Override.
 - **Ein Raum, den du immer selbst bedienst**: Mach trotzdem eine Zone daraus
   (sonst kennt die Integration dieses Gerät nicht), wähle als
   Innentemperatursensor die `climate.*`-Entität des Geräts selbst und schalte
@@ -843,10 +892,11 @@ Automatisierung auf diesem Ereignis steht.
 
 ## Bekannte Einschränkungen
 
-- Diese Integration ist **noch nirgendwo in Produktion gelaufen**. Genau dafür
-  gibt es den Schattenmodus: Lass den Director einige Wochen zusehen, bevor er
-  etwas schalten darf, und beurteile jede Runde anhand des Schattenlaufs.
-- Ein Gerät **ohne Kreis** kann seit 7.4.2 eine eigene Ruhezeit haben
+- Den Schattenmodus gibt es, damit der Director auf deiner Anlage erst ein
+  paar Wochen zusieht, bevor er etwas schalten darf. Beurteile jede Runde
+  anhand des Schattenlaufs: Was in einem Haus bewiesen ist, ist es in deinem
+  noch nicht.
+- Ein Gerät **ohne Kreis** kann eine eigene Ruhezeit haben
   (`min_cycle_time` pro Quelle). Die Ruhezeit füllt sich nicht von selbst: Trage sie bei
   jeder Quelle ohne Kreis von Hand ein.
 - Ein Innensensor pro Zone: Die ganze Zone folgt dieser einen Messung.
