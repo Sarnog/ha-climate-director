@@ -21,8 +21,14 @@ from __future__ import annotations
 
 import asyncio
 
-from custom_components.climate_director.engine import DirectorConfig, ModeSettings, Source, Zone
-from custom_components.climate_director.switch import ZoneOverrideSwitch
+from custom_components.climate_director.engine import (
+    DirectorConfig,
+    ModeSettings,
+    Opening,
+    Source,
+    Zone,
+)
+from custom_components.climate_director.switch import OpeningBypassSwitch, ZoneOverrideSwitch
 
 
 def config() -> DirectorConfig:
@@ -53,6 +59,7 @@ class _Coordinator:
         self.config_entry = _Entry()
         self.version = ""
         self.zone_overrides: dict[str, bool] = {}
+        self.opening_bypasses: dict[str, bool] = {}
         self.evaluations = 0
 
     def async_add_listener(self, listener, context=None):
@@ -121,3 +128,43 @@ class TestZoneOverrideSwitch:
 
         assert revived.is_on is False
         assert revived.coordinator.zone_overrides.get("woonkamer", False) is False
+
+
+class TestOpeningBypassSwitch:
+    def _coordinator(self) -> _Coordinator:
+        coordinator = _Coordinator()
+        coordinator.config = DirectorConfig(
+            zones=coordinator.config.zones,
+            openings=(
+                Opening(
+                    entity_id="binary_sensor.achterdeur",
+                    opening_id="achterdeur",
+                    name="Achterdeur",
+                ),
+            ),
+        )
+        return coordinator
+
+    def test_the_switch_writes_its_state_into_the_coordinator(self) -> None:
+        coordinator = self._coordinator()
+        switch = OpeningBypassSwitch(coordinator, "achterdeur")
+        switch.async_write_ha_state = lambda: None
+
+        asyncio.run(switch._set(True))
+        assert coordinator.opening_bypasses == {"achterdeur": True}
+
+        asyncio.run(switch._set(False))
+        assert coordinator.opening_bypasses == {"achterdeur": False}
+
+    def test_when_the_coordinator_lets_go_the_switch_writes_off(self) -> None:
+        coordinator = self._coordinator()
+        switch = OpeningBypassSwitch(coordinator, "achterdeur")
+        written: list[bool] = []
+        switch.async_write_ha_state = lambda: written.append(switch.is_on)
+
+        asyncio.run(switch._set(True))
+        coordinator.opening_bypasses.clear()
+        switch._handle_coordinator_update()
+
+        assert switch.is_on is False
+        assert written == [True, False]
