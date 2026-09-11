@@ -20,7 +20,7 @@ précédente.
 - [Étape 6 — Circuits de climatisation](#étape-6--circuits-de-climatisation)
 - [Étape 7 — Sources de chaleur partagées](#étape-7--sources-de-chaleur-partagées)
 - [Étape 8 — Groupes exclusifs](#étape-8--groupes-exclusifs)
-- [Étape 9 — Fenêtres silencieuses](#étape-9--fenêtres-silencieuses)
+- [Étape 9 — Plages de silence](#étape-9--plages-de-silence)
 - [Étape 10 — Résidents](#étape-10--résidents)
 - [Étape 11 — Portes et fenêtres](#étape-11--portes-et-fenêtres)
 - [Étape 12 — Enregistrer et fermer](#étape-12--enregistrer-et-fermer)
@@ -29,7 +29,7 @@ précédente.
 - [Actions](#actions)
 - [Préchauffage et pré-refroidissement](#préchauffage-et-pré-refroidissement)
 - [Prendre la main](#prendre-la-main)
-- [Évaluer une période en mode fantôme](#évaluer-une-période-en-mode-fantôme)
+- [Évaluer une période en mode ombre](#évaluer-une-période-en-mode-ombre)
 - [Blueprints et notifications](#blueprints-et-notifications)
 - [Résoudre les problèmes](#résoudre-les-problèmes)
 - [Langues](#langues)
@@ -42,7 +42,7 @@ entités `climate` que vous avez déjà — une chaudière à gaz, une pompe à
 chaleur, des climatiseurs. À chaque instant, elle calcule un état final
 cohérent pour toute la maison et le traduit en appels de service.
 
-**Le mode fantôme est activé par défaut.** L'intégration calcule alors chaque
+**Le mode ombre est activé par défaut.** L'intégration calcule alors chaque
 décision et montre ce qu'elle aurait fait, mais ne pilote rien. Vous pouvez
 ainsi la laisser tourner pendant des semaines à côté de vos automatisations
 existantes et ne basculer qu'une fois votre confiance établie.
@@ -121,7 +121,7 @@ depuis 2025.3.
 2. Cherchez **Climate Director** et choisissez-le.
 3. Donnez un **nom** à l'installation. Ce nom devient le titre et précède le
    nom de chaque entité créée par l'intégration.
-4. Laissez le **Mode fantôme** activé. Vous observez ainsi d'abord avant que
+4. Laissez le **Mode ombre** activé. Vous observez ainsi d'abord avant que
    quoi que ce soit soit réellement piloté.
 5. Enregistrez. L'installation apparaît dans l'onglet **Intégrations**.
 
@@ -133,12 +133,12 @@ Sous **Configurer** se trouve le menu principal, dans cet ordre :
 
 | Menu | Pour quoi |
 |---|---|
-| **Réglages généraux** | température extérieure, saison, portes, fenêtres, calendriers, mode fantôme |
+| **Réglages généraux** | température extérieure, saison, portes, fenêtres, calendriers, mode ombre |
 | **Zones et sources** | par pièce : température, points de démarrage et d'arrêt, et les appareils associés |
 | **Circuits de climatisation** | quelles unités intérieures partagent une unité extérieure |
 | **Sources de chaleur partagées** | une chaudière ou pompe à chaleur desservant plusieurs pièces |
 | **Groupes exclusifs** | des appareils qui ne doivent jamais tourner ensemble |
-| **Fenêtres silencieuses** | heures où le directeur ne démarre rien de lui-même |
+| **Plages de silence** | heures où le directeur ne démarre rien de lui-même |
 | **Résidents** | qui est présent, qui dort, et l'emploi du temps de chacun |
 | **Portes et fenêtres** | quelles ouvertures mettent quelles zones en pause |
 | **✅ Enregistrer et fermer** | rien n'est réellement enregistré avant cet endroit |
@@ -146,7 +146,7 @@ Sous **Configurer** se trouve le menu principal, dans cet ordre :
 Deux choses rendent le menu agréable :
 
 - Chaque écran se termine par **Quand vous avez terminé ici**, avec le choix
-  *Conserver ces modifications et revenir* ou *Annuler et revenir*.
+  *Conserver ces modifications et revenir* ou *Abandonner et revenir*.
 - Chaque liste comporte une ligne **← Retour au menu principal**.
 
 Rien ne vous piège donc. Revenir en arrière fonctionne toujours, même avec un
@@ -176,7 +176,7 @@ le menu principal.
 | **Source de précipitations** | une entité `weather.*` ou `sensor.*` qui dit s'il y a des précipitations ; vide = la règle de précipitations ne participe pas |
 | **États comptant comme précipitations** | quels états de cette entité signifient des précipitations ; pluie, neige et grêle par défaut |
 | **Combien de temps les précipitations continuent de compter (minutes)** | délai de grâce après l'arrêt des précipitations ; 15 minutes par défaut |
-| **Mode fantôme** | activé = tout calculer, ne rien piloter |
+| **Mode ombre** | activé = tout calculer, ne rien piloter |
 
 ### Les précipitations mettent la limite extérieure de côté
 
@@ -432,7 +432,7 @@ membre du groupe vient à son tour, l'appareil manuel s'éteint. Et dans
 l'autre sens : quand un tel appareil tourne déjà, il occupe le groupe et un
 autre membre attend.
 
-## Étape 9 — Fenêtres silencieuses
+## Étape 9 — Plages de silence
 
 Des heures où le directeur **ne démarre rien de lui-même**. Rentrer à onze
 heures du soir alors que vous allez vous coucher ne doit pas lancer la
@@ -690,7 +690,7 @@ le dernier instantané lu et le dernier plan.
 | `climate_director.cancel_precondition` | annuler une demande de préchauffage en cours |
 
 `climate_director.evaluate` est pratique pendant la mise en place. En mode
-fantôme, il n'exécute toujours rien — il recalcule seulement.
+ombre, il n'exécute toujours rien — il recalcule seulement.
 
 ## Préchauffage et pré-refroidissement
 
@@ -760,9 +760,9 @@ Annulez avec `climate_director.cancel_precondition`.
   `climate.*` de l'appareil comme capteur intérieur, et désactivez *Démarrer
   cet appareil automatiquement* sur la source.
 
-## Évaluer une période en mode fantôme
+## Évaluer une période en mode ombre
 
-Trois capteurs rendent une période en mode fantôme évaluable après coup :
+Trois capteurs rendent une période en mode ombre évaluable après coup :
 
 - **`sensor.*_mismatch`** est le chiffre clé. Zéro signifie que le directeur est
   d'accord avec ce qui tourne à ce moment. Un pic bref est normal ; une valeur
@@ -787,7 +787,7 @@ sauter :
 |---|---|---|
 | **Surveillance** | signale une panne silencieuse : une zone bloquée, ou une zone tournant sur un appareil de secours plus coûteux | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/monitoring.yaml` |
 | **Préchauffage refusé** | vous avez appuyé sur un bouton et rien ne s'est passé ; celui-ci le signale, avec un bouton *Faites-le quand même* | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/precondition_refused.yaml` |
-| **Ce qui a été décidé** | l'outil le plus pratique pendant la configuration et en mode fantôme | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/decisions.yaml` |
+| **Ce qui a été décidé** | l'outil le plus pratique pendant la configuration et en mode ombre | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/decisions.yaml` |
 
 L'import passe par **Réglages → Automatismes et scènes → Blueprints → Importer
 un blueprint**, avec le lien ci-dessus.
@@ -822,11 +822,11 @@ automatisation repose sur cet événement.
   liste. Ce n'est pas une erreur de configuration mais de la réalité : un
   capteur à pile vide, un appareil hors réseau, ou une entité renommée. Le délai
   écarte un bref hoquet lors d'un redémarrage. Cela compte surtout pour une
-  température intérieure illisible, car le director laisse alors un appareil en
+  température intérieure illisible, car le directeur laisse alors un appareil en
   marche tranquille et cet appareil retient son unité extérieure sur sa tâche.
 - **Un rôle demandant un mode que l'appareil ne peut exécuter** y apparaît
   aussi, après cinq minutes. Par exemple une source au rôle *chauffage et
-  refroidissement* sur une unité ne signalant que `heat` et `off` : le director
+  refroidissement* sur une unité ne signalant que `heat` et `off` : le directeur
   la saute pour le refroidissement, et de l'extérieur cela ressemble à une pièce
   sans besoin. Vérifiez le rôle sous *Configurer*, ou les `hvac_modes` de
   l'appareil sous *Outils de développement*.
@@ -835,7 +835,7 @@ automatisation repose sur cet événement.
   l'appareil continue de signaler autre chose : l'appel est accepté et rien ne
   se passe, ou l'appareil se remet aussitôt comme avant. Vérifiez s'il est
   joignable, s'il accepte le mode, et si autre chose le remet en place — un
-  programme de thermostat ou une autre automatisation. En mode fantôme cet avis
+  programme de thermostat ou une autre automatisation. En mode ombre cet avis
   n'apparaît jamais : rien n'y est exécuté, volontairement.
 - **Un état sauvegardé mis de côté** se signale lui aussi sous *Réparations*.
   Ce fichier contient les demandes de préchauffage en cours et les appareils que
@@ -850,12 +850,12 @@ automatisation repose sur cet événement.
 ## Limites connues
 
 - Cette intégration **n'a encore tourné nulle part en production**. Le mode
-  fantôme existe précisément pour cela : laisse le directeur observer pendant
+  ombre existe précisément pour cela : laissez le directeur observer pendant
   quelques semaines avant qu'il n'ait le droit de commuter quoi que ce soit, et
-  juge chaque tour d'après la période fantôme.
+  jugez chaque tour d'après la période ombre.
 - Un appareil **sans circuit** peut avoir son propre temps de repos depuis la
   7.4.2 (`min_cycle_time` par source). Il ne se remplit pas tout seul :
-  règle-le à la main sur chaque source sans circuit.
+  réglez-le à la main sur chaque source sans circuit.
 - Un capteur intérieur par zone : toute la zone suit cette seule mesure.
 - La déshumidification n'est pas une tâche propre du directeur.
 - La pluie compte en oui/non : il n'y a pas de seuil.

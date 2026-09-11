@@ -143,8 +143,7 @@ Onder **Configureren** vind je het hoofdmenu, in deze volgorde:
 
 Twee dingen maken het menu prettig:
 
-- Elk scherm eindigt met **Als je hier klaar bent**, met de keuze *Deze
-  wijzigingen bewaren en teruggaan* of *Weggooien en teruggaan*.
+- Elk scherm eindigt met **Als je hier klaar bent**, met de keuze *Deze wijzigingen bewaren en teruggaan* of *Verwerpen en teruggaan*.
 - Elke keuzelijst heeft een regel **← Terug naar het hoofdmenu**.
 
 Je zit dus nergens vast. Teruggaan kan altijd, ook met een half ingevuld
@@ -158,7 +157,7 @@ je in het hoofdmenu **Opslaan en sluiten** kiest.
 | **Buitentemperatuursensor** | voedt elke buitengrens. Zonder sensor telt elke ingestelde grens als niet gehaald en staat de installatie stil |
 | **Dode band buitentemperatuur** | hoeveel graden een lopende taak voorbij zijn buitengrens mag doorlopen voordat hij omslaat; standaard 0,5, nul zet hem uit |
 | **Verwarmingssysteem** | *Centraal* of *Per zone*, zie hieronder |
-| **Seizoensbron** | waar het seizoen vandaan komt: de maand, een entiteit, of vast zomer/winter |
+| **Herkomst seizoen** | waar het seizoen vandaan komt: de maand, een entiteit, of vast zomer/winter |
 | **Seizoensentiteit** | alleen nodig als de bron op *entiteit* staat; ook de ingebouwde `season.*`-entiteit is kiesbaar |
 | **Halfrond** | welke maanden als zomer tellen wanneer het seizoen uit de maand komt: noordelijk april–september, zuidelijk oktober–maart |
 | **Seizoenskeuze** | de `select.*`-entiteit *Seizoen* zet het seizoen met de hand op Automatisch, Zomer of Winter; de keuze overleeft een herstart |
@@ -166,12 +165,12 @@ je in het hoofdmenu **Opslaan en sluiten** kiest.
 | **Het rooster van een bewoner moet openstaan** | aan = het huis wacht op het eerste roostervenster; uit = alleen aanwezigheid telt |
 | **Vakantieagenda's** | welke agenda's een vakantie mogen aankondigen; meerdere toegestaan |
 | **Woord dat vakantie aangeeft** | het trefwoord dat een agenda-item moet dragen; leeg = agenda's worden genegeerd |
-| **Vooruitverwarmingsduur** | het plafond op één verzoek; standaard 120 minuten |
+| **Maximale vooruitlooptijd (minuten)** | het plafond op één verzoek; standaard 120 minuten |
 | **Gastenmodus vanaf / tot** | het venster waarin de gastenmodus geldt; beide leeg = de hele dag |
 | **Dagen van de gastenmodus** | op welke weekdagen dat venster geldt; leeg = elke dag |
 | **Meld een zone vastgelopen na** | na hoeveel minuten wachten een zone als vastgelopen geldt; 0 zet de melder uit |
 | **Neerslagbron** | een `weather.*`- of `sensor.*`-entiteit die zegt of er neerslag valt; leeg = de neerslagregel doet niet mee |
-| **Staten die als neerslag tellen** | welke standen van die entiteit neerslag betekenen; standaard regen, sneeuw en hagel |
+| **Toestanden die als neerslag tellen** | welke standen van die entiteit neerslag betekenen; standaard regen, sneeuw en hagel |
 | **Hoe lang neerslag blijft tellen (minuten)** | nalooptijd na het stoppen van de neerslag; standaard 15 minuten |
 | **Schaduwmodus** | aan = alles doorrekenen, niets aansturen |
 
@@ -221,7 +220,7 @@ Een zone is een ruimte. Per zone stel je in:
 | **Aanwezigheidssensor + status + nalooptijd** | wanneer de kamer als bezet telt; de nalooptijd vangt knipperende melders op |
 | **Neerslag heft de 'zet een raam open'-regel niet op** | aan voor een ruimte zonder ramen; daar blijft de buitengrens ook bij neerslag gelden |
 | **Deze zone mag verwarmen** | uit = deze kamer wordt nooit verwarmd |
-| **Streeftemperatuur verwarmen** | het setpoint dat het apparaat krijgt als verwarmen draait — niet het startpunt |
+| **Doeltemperatuur verwarmen** | het setpoint dat het apparaat krijgt als verwarmen draait — niet het startpunt |
 | **Verwarmen starten bij** | verwarmen start bij deze binnentemperatuur of lager |
 | **Dode band verwarmen** | hoe ver boven het startpunt verwarmen stopt |
 | **Alleen verwarmen onder deze buitentemperatuur** | daarboven blijft verwarmen uit; leeg = geen grens |
@@ -342,7 +341,7 @@ aanwezigheidssensor). De director:
 - **zet hem alleen uit** als hij een taak draait die de gedeelde buitenunit
   niet toestaat.
 
-Zit er een taak die alleen zo’n apparaat kan, dan meldt de integratie dat één
+Zit er een taak die alleen zo'n apparaat kan, dan meldt de integratie dat één
 keer onder *Reparaties*. Bevestig je die melding, dan blijft hij weg — ook na
 een herstart. Krijgt de zone er later een nieuwe handbediende taak bij, dan
 volgt er opnieuw één melding.
@@ -419,7 +418,7 @@ vragen zitten elkaar niet in de weg: dat is één apparaat dat draait.
 
 Een groep geldt ook voor apparaten die je zelf aanzet: komt een ander lid van de
 groep aan de beurt, dan gaat het handbediende apparaat uit. En andersom: draait
-zo’n apparaat al, dan bezet het de groep en wacht een ander lid.
+zo'n apparaat al, dan bezet het de groep en wacht een ander lid.
 
 ## Stap 9 — Stiltevensters
 

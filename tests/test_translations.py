@@ -112,6 +112,55 @@ def test_german_no_longer_mixes_formal_and_du(formal: str) -> None:
     assert sum(len(re.findall(r"\bdu\b", text)) for text in texts.values()) > 0
 
 
+@pytest.mark.parametrize("formal", ["Sie", "Ihr", "Ihre", "Ihnen"])
+def test_german_guide_no_longer_mixes_formal_and_du(formal: str) -> None:
+    """Ronde 25 (D3): de Duitse handleiding spreekt `du`, net als de interface.
+
+    De aanspreekvorm-bewaking hierboven keek alleen naar `de.json`; de
+    handleiding viel op twee regels terug in de Sie-vorm en een paar
+    hoofdletter-`Sie`-vormen die als "zij" bedoeld waren. Nu geldt dezelfde
+    eis voor `docs/install/de.md`, zodat de handleiding niet stilletjes kan
+    terugvallen. Bewuste prijs: de tekst vermijdt ook de hoofdletter `Sie` als
+    verwijzing naar een zelfstandig naamwoord, en noemt dat naamwoord gewoon.
+
+    Round 25 (D3): the German guide speaks `du`, exactly like the interface.
+    The address guard above only looked at `de.json`; the guide fell back into
+    the Sie-form on two lines, with a few capital-`Sie` forms meant as "she".
+    The same demand now applies to `docs/install/de.md`, so the guide cannot
+    silently relapse. Deliberate price: the text also avoids capital `Sie`
+    referring to a noun, and simply names that noun.
+    """
+    text = (Path(__file__).parent.parent / "docs" / "install" / "de.md").read_text(encoding="utf-8")
+    assert not re.search(rf"\b{formal}\b", text), f"de.md bevat {formal}"
+    assert re.search(r"\bdu\b", text), "de.md spreekt de lezer niet meer met du aan"
+
+
+def test_french_guide_speaks_vous_not_tu() -> None:
+    """Ronde 25 (D3): de Franse handleiding spreekt `vous`, net als de interface.
+
+    De sectie *Limites connues* viel terug in tutoiement (`laisse`, `juge`,
+    `règle-le`) midden in een vous-tekst. Hier dezelfde eis als bij het Duits:
+    geen tu-voornaamwoorden en geen tu-gebiedende wijs, zodat de handleiding
+    niet stilletjes terugvalt. De bewaking is bewust een letterlijke lijst van
+    de tu-vormen die kunnen terugkomen; een derde-persoons-`laisse`
+    ("une installation qui laisse") hoort er niet onder.
+
+    Round 25 (D3): the French guide speaks `vous`, exactly like the interface.
+    The *Known limitations* section fell back into tutoiement (`laisse`,
+    `juge`, `règle-le`) in the middle of a vous-text. The same demand as for
+    German: no tu-pronouns and no tu-imperative, so the guide cannot silently
+    relapse. The guard is deliberately a literal list of the tu-forms that can
+    come back; a third-person `laisse` ("une installation qui laisse") does
+    not belong under it.
+    """
+    text = (Path(__file__).parent.parent / "docs" / "install" / "fr.md").read_text(encoding="utf-8")
+    for tu_form in (r"\btu\b", r"\bton\b", r"\bta\b", r"\btes\b", r"\btoi\b"):
+        assert not re.search(tu_form, text), f"fr.md bevat {tu_form}"
+    for phrase in ("laisse le directeur", "juge chaque tour", "règle-le"):
+        assert phrase not in text, f"fr.md bevat {phrase!r}"
+    assert re.search(r"\bvous\b", text), "fr.md spreekt de lezer niet meer met vous aan"
+
+
 def test_french_names_the_product_one_way() -> None:
     """Ronde 21: `directeur` overal, rechte apostroffen, geen `préchauffage`."""
     texts = leaves(load(TRANSLATIONS / "fr.json"))

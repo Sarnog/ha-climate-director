@@ -27,7 +27,7 @@ durch; jeder Schritt baut auf dem vorherigen auf.
 - [Was du in Home Assistant bekommst](#was-du-in-home-assistant-bekommst)
 - [Die Schalter und Tasten](#die-schalter-und-tasten)
 - [Aktionen](#aktionen)
-- [Vorheizen und Vorkühlen](#vorheizen-und-vorkühlen)
+- [Vorbereiten und Vorkühlen](#vorbereiten-und-vorkühlen)
 - [Selbst das Kommando übernehmen](#selbst-das-kommando-übernehmen)
 - [Einen Schattenlauf beurteilen](#einen-schattenlauf-beurteilen)
 - [Blueprints und Meldungen](#blueprints-und-meldungen)
@@ -37,9 +37,9 @@ durch; jeder Schritt baut auf dem vorherigen auf.
 ## Was ist Climate Director
 
 Climate Director ist eine Home-Assistant-Integration, die vorhandene
-Klimageräte steuert. Sie besitzt selbst keine Hardware: Sie dirigiert die
-`climate`-Entitäten, die du bereits hast — einen Gas-Brennwertkessel, eine
-Wärmepumpe, Klimaanlagen. In jedem Moment berechnet sie einen einzigen
+Klimageräte steuert. Die Integration besitzt selbst keine Hardware und
+dirigiert die `climate`-Entitäten, die du bereits hast — einen
+Gas-Brennwertkessel, eine Wärmepumpe, Klimaanlagen. In jedem Moment berechnet sie einen einzigen
 stimmigen Endzustand für das ganze Haus und setzt ihn in Service Calls um.
 
 **Der Schattenmodus ist standardmäßig an.** Die Integration berechnet dann
@@ -73,7 +73,7 @@ und löst diesen Konflikt für dich.
 | Ein Schlafsensor pro Bewohner | nein | ohne ihn zählt niemand jemals als schlafend |
 | `binary_sensor.*` Anwesenheit pro Zone | nur wenn eine Zone auf *den Raum selbst* läuft | dann ist es das einzige Tor der Zone |
 | `binary_sensor.*`, `cover.*` oder `sensor.*` Tür, Fenster oder Dachfenster | nein | setzt die verbundenen Zonen aus, solange es offen ist |
-| `calendar.*` | nein | schaltet den Ferienplan von selbst ein; funktioniert nur mit einem Stichwort |
+| `calendar.*` | nein | schaltet den Urlaubsplan von selbst ein; funktioniert nur mit einem Stichwort |
 | Eine Jahreszeiten-Entität | nein | nur wenn du die Jahreszeit nicht aus dem Monat ableiten willst |
 
 Helfer musst du dafür nirgends anlegen. Alle Schalter und Regler erstellt die
@@ -167,10 +167,10 @@ wählst.
 | **Jahreszeitenwahl** | die `select.*`-Entität *Jahreszeit* stellt die Jahreszeit von Hand auf Automatisch, Sommer oder Winter; die Wahl überlebt einen Neustart |
 | **Jemand zu Hause muss wach sein** | an = das Haus wartet auf jemanden zu Hause *und* wach; aus = Schlaf zählt nicht |
 | **Der Zeitplan eines Bewohners muss offen sein** | an = das Haus wartet auf das erste Zeitfenster; aus = Anwesenheit allein entscheidet |
-| **Ferienkalender** | welche Kalender Ferien ankündigen dürfen; mehrere erlaubt |
-| **Wort, das Ferien kennzeichnet** | das Stichwort, das ein Ereignis tragen muss; leer = Kalender werden ignoriert |
-| **Vorheizdauer** | die Obergrenze einer einzelnen Anfrage; Standard 120 Minuten |
-| **Gastmodus von / bis** | das Fenster, in dem der Gastmodus gilt; beide leer = den ganzen Tag |
+| **Urlaubskalender** | welche Kalender Urlaub ankündigen dürfen; mehrere erlaubt |
+| **Wort, das Urlaub kennzeichnet** | das Stichwort, das ein Ereignis tragen muss; leer = Kalender werden ignoriert |
+| **Vorbereitungsdauer** | die Obergrenze einer einzelnen Anfrage; Standard 120 Minuten |
+| **Gästemodus ab / bis** | das Fenster, in dem der Gästemodus gilt; beide leer = den ganzen Tag |
 | **Tage des Gastmodus** | an welchen Wochentagen dieses Fenster gilt; leer = jeder Tag |
 | **Zone nach … Minuten als festgefahren melden** | nach wie vielen Minuten Wartezeit eine Zone als festgefahren gilt; 0 schaltet den Sensor aus |
 | **Niederschlagsquelle** | eine `weather.*`- oder `sensor.*`-Entität, die sagt, ob Niederschlag fällt; leer = die Niederschlagsregel macht nicht mit |
@@ -187,7 +187,7 @@ passiert nichts, während es drinnen zu warm oder zu kalt bleibt.
 
 Richte deshalb eine **Niederschlagsquelle** ein. Solange sie Niederschlag
 meldet, überspringt Climate Director die **Außengrenze pro Zone** — genau wie
-eine Vorheiz-Anfrage. Die Totzone, die Jahreszeit und die Außengrenze **pro
+eine Vorbereitungs-Anfrage. Die Totzone, die Jahreszeit und die Außengrenze **pro
 Quelle** gelten weiter; die wählen immer noch das Gerät. Die Nachlaufzeit
 sorgt dafür, dass ein Fünf-Minuten-Schauer die Regelung nicht ins Schwingen
 bringt. Ohne Quelle macht die Niederschlagsregel nicht mit.
@@ -208,7 +208,7 @@ noch einen Kreislauf und eine Wärmequelle, die für alle gleichzeitig an- oder
 ausgeht. Wähle dann **Zentral**. Ein Kessel mit drei Zonenventilen ist
 hingegen **Pro Zone**.
 
-Diese Einstellung ändert nichts daran, wer laufen darf. Sie hält fest, was
+Diese Einstellung ändert nichts daran, wer laufen darf. Diese hält fest, was
 deine Installation ist, damit die Konfigurationsprüfung warnen kann, wenn dein
 Aufbau nicht dazu passt.
 
@@ -358,7 +358,7 @@ eigenes Außengerät, lass das leer.
 | Einstellung | Was sie tut |
 |---|---|
 | **Name** | ein Label, um Kreisläufe auseinanderzuhalten |
-| **Innengeräte** | welche `climate.*`-Entitäten an diesem Außengerät hängen. Nimm auch Geräte auf, die der Director nicht verwaltet: Sie beanspruchen den Kompressor ebenfalls |
+| **Innengeräte** | welche `climate.*`-Entitäten an diesem Außengerät hängen. Nimm auch Geräte auf, die der Director nicht verwaltet: sie beanspruchen den Verdichter ebenfalls |
 | **Kann gleichzeitig heizen und kühlen** | aus für ein gewöhnliches Multi-Split; an für ein Single-Split oder Drei-Leiter-VRF mit Wärmerückgewinnung |
 | **Konfliktregel** | wer gewinnt, wenn zwei Räume gegensätzliche Aufgaben wollen |
 | **Eine verlierende Zone darf lüften** | an = der Verlierer geht auf `fan_only` statt auf aus, aber nur wenn das Gerät diesen Modus kennt; sonst geht es aus |
@@ -538,8 +538,8 @@ Wer auch an einem freien Wochentag erwartet werden möchte, setzt das Häkchen
 Feiertag, unabhängig vom Wochentag. Ein Feiertag, der auf einen Samstag fällt,
 bleibt in jedem Fall ein Samstag.
 
-Achten Sie auf das Schlaffenster: Liegt die Uhrzeit außerhalb, gilt diese Person
-ohnehin nicht mehr als schlafend und hält niemanden auf. Lassen Sie das
+Achte auf das Schlaffenster: Liegt die Uhrzeit außerhalb, gilt diese Person
+ohnehin nicht mehr als schlafend und hält niemanden auf. Lass das
 Schlaffenster also über die Uhrzeit hinaus laufen.
 
 ### Zeitpläne
@@ -548,7 +548,7 @@ Nachdem du einen Bewohner gespeichert hast, legst du seine Zeitpläne an:
 
 | Einstellung | Was sie tut |
 |---|---|
-| **Dies ist ein Ferienfenster** | gilt nur während des Ferienplans und ersetzt dann die normalen Fenster |
+| **Dies ist ein Urlaubsfenster** | gilt nur während des Urlaubsplans und ersetzt dann die normalen Fenster |
 | **Von / Bis** | das Fenster; darf über Mitternacht laufen |
 | **Tage** | leer = jeden Tag |
 
@@ -629,11 +629,11 @@ Ein Gerät pro Installation, darunter:
 | `binary_sensor.*_<zone>_on_stand_in` | an, wenn eine Zone auf einem Ersatzgerät läuft, weil die erste Wahl unerreichbar ist |
 | `binary_sensor.*_stuck` | an, wenn eine Zone zu lange auf demselben Wartegrund sitzt |
 | `switch.*_director` | der Hauptschalter; aus = es wird nichts geregelt |
-| `switch.*_holiday_schedule` | lässt jeden Tag als Samstag zählen, oder als eigenen Ferienplan |
+| `switch.*_holiday_schedule` | lässt jeden Tag als Samstag zählen, oder als eigenen Urlaubsplan |
 | `switch.*_guest_mode` | regelt weiter, während die Bewohner weg sind |
 | `switch.*_<zone>_override` | übergibt eine Zone vollständig an dich |
 | `number.*_<zone>_priority` | der Vorrang dieser Zone; auch aus einer Automatisierung setzbar |
-| `number.*_pre_conditioning_duration` | wie lange ein Druck auf eine Vorheiz-Taste dauert |
+| `number.*_pre_conditioning_duration` | wie lange eine Vorbereitung nach einem Tastendruck dauert |
 | `button.*_<zone>_pre_condition` | heizt oder kühlt diese Zone vor |
 | `select.*_season` | stellt die Jahreszeit von Hand auf Automatisch, Sommer oder Winter |
 
@@ -650,22 +650,22 @@ dem zuletzt gelesenen Schnappschuss und dem letzten Plan.
 - **Hauptschalter** (`switch.*_director`): aus = der Director tut gar nichts.
   Er lässt alles los und sendet nichts mehr — auch kein Aus. Was in dem Moment
   läuft, läuft also einfach weiter; willst du alles aus, schalte es selbst aus.
-- **Gastmodus** (`switch.*_guest_mode`): Jemand Unverfolgtes wohnt da, also
+- **Gästemodus** (`switch.*_guest_mode`): Jemand Unverfolgtes wohnt da, also
   sagt „Haus leer“ nichts. Schlaf der Anwesenden gilt weiter, und außerhalb des
   Gastfensters übernehmen die normalen Tore.
-- **Ferienplan** (`switch.*_holiday_schedule`): Jeder Tag zählt als Samstag
-  oder als eigenes Ferienfenster. Schaltet sich auch von selbst ein, sobald ein
+- **Urlaubsplan** (`switch.*_holiday_schedule`): Jeder Tag zählt als Samstag
+  oder als eigenes Urlaubsfenster. Schaltet sich auch von selbst ein, sobald ein
   eingerichteter Kalender ein laufendes Ereignis mit dem Stichwort hat. Ohne
   Stichwort werden die Kalender ignoriert.
 - **Override** (`switch.*_<zone>_override`): übergibt eine Zone vollständig an
   dich. Der Director sendet dieser Zone nichts mehr — auch kein Aus. Die
-  Kreislaufregeln gelten für die anderen Räume weiter. Er bleibt stehen, bis du
+  Kreisregeln gelten für die anderen Räume weiter. Er bleibt stehen, bis du
   ihn selbst wieder ausschaltest, auch über die Nacht und über ein leeres Haus
   hinweg: Es ist eine Entscheidung, die du zurücknimmst, nicht die von heute
   Abend. Damit lässt sich eine Zone tagelang eigenen Automationen überlassen.
   Ein Gerät, das du am Gerät *selbst* ausschaltest, erlischt sehr wohl zur
   Schlafenszeit oder bei leerem Haus; das steht weiter unten.
-- **Vorheiz-Taste** (`button.*_<zone>_pre_condition`) und **Dauer**
+- **Taste „Vorbereiten“** (`button.*_<zone>_pre_condition`) und **Dauer**
   (`number.*_pre_conditioning_duration`): siehe unten.
 
 ## Aktionen
@@ -673,13 +673,13 @@ dem zuletzt gelesenen Schnappschuss und dem letzten Plan.
 | Aktion | Wofür |
 |---|---|
 | `climate_director.evaluate` | sofort neu entscheiden, ohne auf eine Zustandsänderung zu warten |
-| `climate_director.precondition` | Vorheizen oder Vorkühlen starten |
-| `climate_director.cancel_precondition` | eine laufende Vorheiz-Anfrage abbrechen |
+| `climate_director.precondition` | Vorbereiten oder Vorkühlen starten |
+| `climate_director.cancel_precondition` | eine laufende Vorbereitungs-Anfrage abbrechen |
 
 `climate_director.evaluate` ist praktisch beim Einrichten. Im Schattenmodus
 führt er weiterhin nichts aus — er rechnet nur neu.
 
-## Vorheizen und Vorkühlen
+## Vorbereiten und Vorkühlen
 
 Die einzige Möglichkeit, ein leeres Haus laufen zu lassen, und mit Absicht die
 einzige, die du von Hand einschalten musst.
@@ -701,14 +701,14 @@ Tür; danach entscheidet die Integration genau wie sonst — die Totzone prüft,
 ob es zu kalt oder zu warm ist, die Jahreszeit und das Außenfenster pro Quelle
 wählen das Gerät. Liegt der Raum bereits richtig, bleibt das Gerät aus.
 
-Während einer Vorheiz-Anfrage gelten Hauptschalter, ein Override, die Totzone,
+Während einer Vorbereitungs-Anfrage gelten Hauptschalter, ein Override, die Totzone,
 die Jahreszeit, das Außenfenster pro Quelle, Fenster und Türen, der Kreislauf
 und die exklusiven Gruppen weiter. Übersprungen werden: *jemand zu Hause*,
 *wach*, *Zeitplan*, *Anwesenheit im Raum*, das Außenfenster pro Zone und das
 Ruhefenster.
 
 Ein offenes Fenster oder eine offene Tür **verweigert** eine Anfrage. Wer das
-Fenster selbst geöffnet hat, darf sagen: trotzdem tun.
+Fenster selbst geöffnet hat, darf sagen: Trotzdem starten.
 
 ```yaml
 action: climate_director.precondition
@@ -771,7 +771,7 @@ auslassen:
 | Blueprint | Warum du ihn nicht missen kannst | Import-Link |
 |---|---|---|
 | **Überwachung** | meldet stilles Versagen: eine Zone, die festhängt, oder eine Zone, die auf einem teureren Ersatzgerät läuft | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/monitoring.yaml` |
-| **Abgelehntes Vorheizen** | du hast eine Taste gedrückt und nichts passierte; dieser meldet es, mit einer *Trotzdem tun*-Taste | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/precondition_refused.yaml` |
+| **Abgelehntes Vorbereiten** | du hast eine Taste gedrückt und nichts passierte; dieser meldet es, mit einer *Trotzdem starten*-Taste | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/precondition_refused.yaml` |
 | **Was entschieden wurde** | das praktischste Werkzeug beim Einrichten und beim Schattenlauf | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/decisions.yaml` |
 
 Importieren geht über **Einstellungen → Automatisierungen und Szenen →
@@ -781,7 +781,7 @@ Blueprints → Blueprint importieren**, mit dem Link oben.
 > erst etwas zu, wenn du eine Automatisierung daraus baust. Tu das sofort nach
 > dem Importieren.
 
-Solange niemand auf eine abgelehnte Vorheiz-Anfrage hört, steht dazu ein
+Solange niemand auf eine abgelehnte Vorbereitungs-Anfrage hört, steht dazu ein
 Reparaturhinweis in Home Assistant. Der verschwindet von selbst, sobald eine
 Automatisierung auf diesem Ereignis steht.
 
@@ -825,7 +825,7 @@ Automatisierung auf diesem Ereignis steht.
   diese Meldung nie: Dort wird absichtlich nichts ausgeführt.
 - **Ein gespeicherter Zustand, der beiseitegelegt werden musste**, meldet sich
   ebenfalls unter *Reparaturen*. In dieser Datei stehen die laufenden
-  Vorheiz-Anfragen und die Geräte, die du von Hand ausgeschaltet hast. Ist sie
+  Vorbereitungs-Anfragen und die Geräte, die du von Hand ausgeschaltet hast. Ist sie
   unlesbar, wird sie umbenannt und der Director beginnt mit leerem Zustand:
   diese Anfragen und Abschaltungen sind weg, der Rest deiner Anlage nicht.
   Willst du sie zurück, stelle die Datei aus einem Backup wieder her und lade
@@ -840,7 +840,7 @@ Automatisierung auf diesem Ereignis steht.
   gibt es den Schattenmodus: Lass den Director einige Wochen zusehen, bevor er
   etwas schalten darf, und beurteile jede Runde anhand des Schattenlaufs.
 - Ein Gerät **ohne Kreis** kann seit 7.4.2 eine eigene Ruhezeit haben
-  (`min_cycle_time` pro Quelle). Sie füllt sich nicht von selbst: Trage sie bei
+  (`min_cycle_time` pro Quelle). Die Ruhezeit füllt sich nicht von selbst: Trage sie bei
   jeder Quelle ohne Kreis von Hand ein.
 - Ein Innensensor pro Zone: Die ganze Zone folgt dieser einen Messung.
 - Trocknen ist keine eigene Aufgabe des Directors.

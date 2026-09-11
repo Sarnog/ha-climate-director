@@ -16,10 +16,10 @@ Sigue los pasos de arriba abajo; cada paso se apoya en el anterior.
 - [Paso 3 — Ajustes generales](#paso-3--ajustes-generales)
 - [Paso 4 — Zonas](#paso-4--zonas)
 - [Paso 5 — Fuentes](#paso-5--fuentes)
-- [Paso 6 — Circuitos de aire acondicionado](#paso-6--circuitos-de-aire-acondicionado)
+- [Paso 6 — Circuitos de climatización](#paso-6--circuitos-de-climatización)
 - [Paso 7 — Fuentes de calor compartidas](#paso-7--fuentes-de-calor-compartidas)
 - [Paso 8 — Grupos exclusivos](#paso-8--grupos-exclusivos)
-- [Paso 9 — Ventanas silenciosas](#paso-9--ventanas-silenciosas)
+- [Paso 9 — Franjas de silencio](#paso-9--franjas-de-silencio)
 - [Paso 10 — Residentes](#paso-10--residentes)
 - [Paso 11 — Puertas y ventanas](#paso-11--puertas-y-ventanas)
 - [Paso 12 — Guardar y cerrar](#paso-12--guardar-y-cerrar)
@@ -134,12 +134,12 @@ En **Configurar** encuentras el menú principal, en este orden:
 |---|---|
 | **Ajustes generales** | temperatura exterior, estación, puertas, ventanas, calendarios, modo sombra |
 | **Zonas y fuentes** | por habitación: temperatura, puntos de arranque y parada, y los aparatos correspondientes |
-| **Circuitos de aire acondicionado** | qué unidades interiores comparten una unidad exterior |
+| **Circuitos de climatización** | qué unidades interiores comparten una unidad exterior |
 | **Fuentes de calor compartidas** | una caldera o bomba de calor de la que tiran varias habitaciones |
 | **Grupos exclusivos** | aparatos que nunca deben funcionar a la vez |
-| **Ventanas silenciosas** | horas en las que el director no inicia nada por su cuenta |
+| **Franjas de silencio** | horas en las que el director no inicia nada por su cuenta |
 | **Residentes** | quién está en casa, quién duerme y el horario de cada uno |
-| **Puertas y ventanas** | qué aperturas silencian qué zonas |
+| **Puertas y ventanas** | qué aberturas silencian qué zonas |
 | **✅ Guardar y cerrar** | solo aquí se guarda todo de verdad |
 
 Dos cosas hacen el menú agradable:
@@ -352,7 +352,7 @@ vez bajo *Reparaciones*. Confirma el aviso y no volverá — tampoco tras un
 reinicio. Si la zona gana luego una nueva función manual, llegará un aviso
 nuevo.
 
-## Paso 6 — Circuitos de aire acondicionado
+## Paso 6 — Circuitos de climatización
 
 Solo necesario cuando unidades interiores comparten una unidad exterior. Si
 cada unidad tiene la suya, déjalo vacío.
@@ -426,7 +426,7 @@ Un grupo también ata a los aparatos que enciendes tú mismo: cuando le toca a
 otro miembro del grupo, el aparato manual se apaga. Y al revés: cuando un
 aparato así ya está en marcha, ocupa el grupo y otro miembro espera.
 
-## Paso 9 — Ventanas silenciosas
+## Paso 9 — Franjas de silencio
 
 Horas en las que el director **no inicia nada por su cuenta**. Llegar a casa a
 las once de la noche cuando estás a punto de acostarte no debe encender la
@@ -566,7 +566,7 @@ Deja el sensor de sueño vacío y ese residente nunca cuenta como dormido.
 
 ## Paso 11 — Puertas y ventanas
 
-Una apertura abierta el tiempo suficiente suspende las zonas afectadas.
+Una abertura abierta el tiempo suficiente suspende las zonas afectadas.
 
 | Ajuste | Qué hace |
 |---|---|
@@ -851,7 +851,7 @@ La integración conoce tres formas:
    fuente.
 2. **Un multi-split.** Varias zonas cuelgan del mismo circuito de aire
    acondicionado, con una prioridad por zona.
-3. **La combinación.** Circuitos de aire acondicionado para las habitaciones,
+3. **La combinación.** Circuitos de climatización para las habitaciones,
    una fuente de calor compartida (una caldera, por ejemplo) para el resto.
 
 ## Idiomas
