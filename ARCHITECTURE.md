@@ -122,6 +122,10 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
    gewoon door. Een opening draagt hiervoor een eigen `opening_id` én een naam,
    net als elk ander objecttype — zonder eigen identiteit hangt de schakelaar aan
    de `entity_id` van de sensor en verdwijnt hij zodra die sensor vervangen wordt.
+   Ontbreekt het id in opslag van vóór 7.5.3, dan leidt de serialisatie het stil
+   af uit de `entity_id`, uniek per sensor — twee openingen op dezelfde sensor
+   krijgen zo elk een eigen schakelaar. Een opgeslagen dubbel `opening_id`
+   weigert `validate()` met `duplicate_opening_id`.
 9. **Een vakantiedag telt als zaterdag, behalve waar dat één bewoner het huis
    laat ophouden.** De stiltevensters en de roosters vertalen een vakantiedag naar
    zaterdag, tenzij er vakantievensters zijn opgegeven — die nemen het dan over.
@@ -150,7 +154,11 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     temperatuur zelf, in dezelfde beslisronde als de overdracht: gebeurt dat in
     twee losse aanroepen, dan bestaat er een venster waarin de director het net
     gezette apparaat alsnog wegschakelt, en dan zou de volgorde van die twee
-    aanroepen een eigenschap moeten dragen die nergens is vastgelegd.
+    aanroepen een eigenschap moeten dragen die nergens is vastgelegd. Heeft de
+    zone geen bron die de gevraagde stand kan leveren, dan weigert de actie met
+    dezelfde vertaalde fout als een onbekende zone (`zone_no_source_for_mode`).
+    Het temperatuurveld heeft geen vast bereik: de waarde geldt in de eenheid van
+    Home Assistant en wordt naar Celsius omgerekend.
 12. **Het bereik van een bron hangt aan de bron en noemt zones.** Een bron draagt
     `covers_zones`: de zones die hij meeverwarmt of meekoelt zodra hij draait.
     Leeg betekent *alleen de eigen zone* — het gedrag van vóór deze instelling,
@@ -1158,7 +1166,10 @@ them without changing them here first.
    from anchor 5 does keep running. An opening carries its own `opening_id` and a
    name for this, like every other object type — without its own identity the
    switch hangs on the sensor's `entity_id` and disappears the moment that sensor
-   is replaced.
+   is replaced. When the id is missing in storage from before 7.5.3,
+   serialisation derives it silently from the `entity_id`, unique per sensor —
+   two openings on the same sensor each get their own switch. A stored duplicate
+   `opening_id` is refused by `validate()` with `duplicate_opening_id`.
 9. **A holiday counts as a Saturday, except where that would let one resident
    hold the house up.** The quiet windows and the schedules translate a holiday
    into a Saturday, unless holiday windows have been given — those take over then.
@@ -1185,7 +1196,10 @@ them without changing them here first.
     the same decision round as the handover: done as two separate calls there is
     a window in which the director stands the just-set appliance down after all,
     and then the order of those two calls would have to carry a property that is
-    written down nowhere.
+    written down nowhere. If the zone has no source that can deliver the
+    requested mode, the action refuses with the same translated error as an
+    unknown zone (`zone_no_source_for_mode`). The temperature field has no fixed
+    range: the value counts in Home Assistant's unit and is converted to Celsius.
 12. **A source's reach hangs on the source and names zones.** A source carries
     `covers_zones`: the zones it heats or cools along with it the moment it runs.
     Empty means *its own zone only* — the behaviour from before this setting, so
