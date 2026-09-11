@@ -37,6 +37,7 @@ import re
 from pathlib import Path
 
 import pytest
+from homeassistant.util import slugify
 
 COMPONENT = Path(__file__).parent.parent / "custom_components" / "climate_director"
 TRANSLATIONS = COMPONENT / "translations"
@@ -549,6 +550,56 @@ def test_every_guide_uses_the_words_of_its_interface() -> None:
                     f"handleiding; haal deze van de lijst"
                 )
     assert not problems, "de handleidingen drijven weg van de interface:\n" + "\n".join(problems)
+
+
+def entity_names(language: str) -> dict[tuple[str, str], str]:
+    """Elke vertaalde entiteitsnaam, per domein en translation_key.
+
+    Every translated entity name, per domain and translation key.
+    """
+    data = load(TRANSLATIONS / f"{language}.json")
+    names: dict[tuple[str, str], str] = {}
+    for domain, keys in data.get("entity", {}).items():
+        if not isinstance(keys, dict):
+            continue
+        for key, info in keys.items():
+            if isinstance(info, dict) and isinstance(info.get("name"), str):
+                names[(domain, key)] = info["name"]
+    return names
+
+
+def test_every_guide_names_its_own_entity_ids() -> None:
+    """Elke handleiding noemt de entiteit-ID's die HA van die taal afleidt.
+
+    Home Assistant leidt de entiteit-ID af van de vertaalde naam: op een Duitse
+    HA heet de mismatchesensor `sensor.*_abweichungen`, niet
+    `sensor.*_mismatch`. Deze bewaking rekent per taal de verwachte ID-patronen
+    uit met dezelfde `slugify` die HA gebruikt en eist dat elk patroon letterlijk
+    in de handleiding staat. Placeholders als `{zone}` verschijnen in de
+    handleiding als `<zone>`, dus die vorm wordt in het patroon teruggezet.
+
+    Every guide names the entity ids HA derives from that language. Home
+    Assistant derives the entity id from the translated name: on a German HA
+    the mismatch sensor is called `sensor.*_abweichungen`, not
+    `sensor.*_mismatch`. This guard computes each language's expected id
+    patterns with the same `slugify` HA uses and requires every pattern to
+    stand literally in the guide. Placeholders such as `{zone}` appear in the
+    guide as `<zone>`, so that form is put back into the pattern.
+    """
+    problems: list[str] = []
+    for language in LANGUAGES:
+        text = guide_text(language)
+        for (domain, key), name in sorted(entity_names(language).items()):
+            pattern = slugify(name)
+            for placeholder in re.findall(r"\{[a-z_]+\}", name):
+                pattern = pattern.replace(slugify(placeholder), f"<{placeholder[1:-1]}>")
+            needle = f"{domain}.*_{pattern}"
+            if needle not in text:
+                problems.append(
+                    f"{language}: entiteit {domain}.{key} = {name!r} hoort als "
+                    f"`{needle}` in docs/install/{language}.md te staan"
+                )
+    assert not problems, "de entiteit-ID's drijven weg van de interface:\n" + "\n".join(problems)
 
 
 @pytest.mark.parametrize("language", LANGUAGES)

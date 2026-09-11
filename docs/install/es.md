@@ -619,21 +619,21 @@ Un dispositivo por instalación, con debajo:
 
 | Entidad | Para qué |
 |---|---|
-| `sensor.*_last_decision` | cuántas zonas están siendo servidas, con el plan completo como atributos |
-| `sensor.*_would_command_<entity>` | el modo en que el director pondría este aparato — un sensor por aparato |
-| `sensor.*_mismatch` | cuántos aparatos están ahora en un sitio distinto del que el plan quiere; 0 = director y casa de acuerdo |
-| `sensor.*_<zone>_source` | qué fuente sirve esta zona, con lo que la zona quería, obtuvo y por qué |
-| `binary_sensor.*_<zone>_blocked` | activado cuando una zona recibió menos de lo pedido, o quería funcionar pero una circunstancia la retuvo; las puertas cerradas están en los atributos |
-| `binary_sensor.*_<zone>_on_stand_in` | activado cuando una zona funciona con un aparato suplente porque la primera opción es inalcanzable |
-| `binary_sensor.*_stuck` | activado cuando una zona lleva demasiado tiempo con el mismo motivo de espera |
+| `sensor.*_ultima_decision` | cuántas zonas están siendo servidas, con el plan completo como atributos |
+| `sensor.*_gobernaria_<entity>` | el modo en que el director pondría este aparato — un sensor por aparato |
+| `sensor.*_discrepancias` | cuántos aparatos están ahora en un sitio distinto del que el plan quiere; 0 = director y casa de acuerdo |
+| `sensor.*_fuente_<zone>` | qué fuente sirve esta zona, con lo que la zona quería, obtuvo y por qué |
+| `binary_sensor.*_<zone>_bloqueada` | activado cuando una zona recibió menos de lo pedido, o quería funcionar pero una circunstancia la retuvo; las puertas cerradas están en los atributos |
+| `binary_sensor.*_<zone>_en_equipo_suplente` | activado cuando una zona funciona con un aparato suplente porque la primera opción es inalcanzable |
+| `binary_sensor.*_atascado` | activado cuando una zona lleva demasiado tiempo con el mismo motivo de espera |
 | `switch.*_director` | el interruptor principal; apagado = no se regula nada |
-| `switch.*_holiday_schedule` | hace que cada día cuente como sábado, o como su propio horario de vacaciones |
-| `switch.*_guest_mode` | sigue regulando mientras los residentes están fuera |
-| `switch.*_<zone>_override` | devuelve una zona por completo a ti |
-| `number.*_<zone>_priority` | la precedencia de esta zona; también configurable desde una automatización |
-| `number.*_pre_conditioning_duration` | cuánto dura una pulsación de un botón de preacondicionamiento |
-| `button.*_<zone>_pre_condition` | preacondiciona esta zona |
-| `select.*_season` | pone la estación a mano en Automático, Verano o Invierno |
+| `switch.*_horario_de_vacaciones` | hace que cada día cuente como sábado, o como su propio horario de vacaciones |
+| `switch.*_modo_invitados` | sigue regulando mientras los residentes están fuera |
+| `switch.*_anulacion_<zone>` | devuelve una zona por completo a ti |
+| `number.*_prioridad_<zone>` | la precedencia de esta zona; también configurable desde una automatización |
+| `number.*_duracion_del_preacondicionamiento` | cuánto dura una pulsación de un botón de preacondicionamiento |
+| `button.*_preacondicionar_<zone>` | preacondiciona esta zona |
+| `select.*_estacion` | pone la estación a mano en Automático, Verano o Invierno |
 
 Los nombres de estas entidades están traducidos, y Home Assistant deduce el id
 de entidad del nombre. Si tu Home Assistant está en otro idioma, allí se llaman
@@ -648,14 +648,14 @@ También hay una exportación de diagnóstico descargable con la configuración,
   nada en absoluto. Lo suelta todo y ya no envía nada — tampoco un apagado. Lo
   que esté funcionando en ese momento sigue funcionando; si quieres apagarlo
   todo, apágalo tú mismo.
-- **Modo invitados** (`switch.*_guest_mode`): hay alguien no seguido alojado,
+- **Modo invitados** (`switch.*_modo_invitados`): hay alguien no seguido alojado,
   así que «casa vacía» no dice nada. El sueño de los presentes sigue contando, y
   fuera de la ventana de invitados toman el relevo las puertas normales.
-- **Horario de vacaciones** (`switch.*_holiday_schedule`): cada día cuenta como
+- **Horario de vacaciones** (`switch.*_horario_de_vacaciones`): cada día cuenta como
   sábado, o como su propia ventana de vacaciones. También se activa solo en
   cuanto un calendario configurado tiene un evento en curso con la palabra
   clave. Sin palabra clave, los calendarios se ignoran.
-- **Override** (`switch.*_<zone>_override`): devuelve una zona por completo a
+- **Override** (`switch.*_anulacion_<zone>`): devuelve una zona por completo a
   ti. El director no envía nada a esa zona — ni siquiera un apagado. Las reglas
   del circuito siguen aplicándose a las demás habitaciones. Se mantiene hasta
   que lo apagues tú mismo, también a través de la noche y de una casa vacía: es
@@ -663,8 +663,8 @@ También hay una exportación de diagnóstico descargable con la configuración,
   dejar una zona a tus propias automatizaciones durante días. Apagar un aparato
   en el aparato *mismo* sí caduca al acostarse o con la casa vacía; eso está más
   abajo.
-- **Botón de preacondicionamiento** (`button.*_<zone>_pre_condition`) y
-  **duración** (`number.*_pre_conditioning_duration`): ver abajo.
+- **Botón de preacondicionamiento** (`button.*_preacondicionar_<zone>`) y
+  **duración** (`number.*_duracion_del_preacondicionamiento`): ver abajo.
 
 ## Acciones
 
@@ -682,8 +682,8 @@ sombra sigue sin ejecutar nada — solo recalcula.
 La única forma de hacer funcionar una casa vacía, y deliberadamente la única
 que debes activar a mano.
 
-- **Con un botón**: cada zona tiene `button.*_<zone>_pre_condition`. Cuánto
-  dura una pulsación así está en `number.*_pre_conditioning_duration` (60
+- **Con un botón**: cada zona tiene `button.*_preacondicionar_<zone>`. Cuánto
+  dura una pulsación así está en `number.*_duracion_del_preacondicionamiento` (60
   minutos por defecto, de un cuarto de hora a dos horas).
 - **Con la acción**:
 
@@ -748,14 +748,14 @@ Cancélalo con `climate_director.cancel_precondition`.
 
 Tres sensores hacen que una prueba en modo sombra sea evaluable después:
 
-- **`sensor.*_mismatch`** es la cifra clave. Cero significa que el director está
+- **`sensor.*_discrepancias`** es la cifra clave. Cero significa que el director está
   de acuerdo con lo que funciona en ese momento. Un pico breve es normal; un
   valor que se mantiene es un desacuerdo real. Pon este sensor en un gráfico de
   historial.
-- **`sensor.*_would_command_<entity>`** se coloca junto al historial de la
+- **`sensor.*_gobernaria_<entity>`** se coloca junto al historial de la
   entidad `climate` del mismo nombre. Dos líneas que se siguen = el director
   decidió lo mismo que tus automatizaciones.
-- **`sensor.*_<zone>_source`** y **`binary_sensor.*_<zone>_blocked`** dicen
+- **`sensor.*_fuente_<zone>`** y **`binary_sensor.*_<zone>_bloqueada`** dicen
   después *por qué*: qué fuente se eligió y qué puerta retuvo una zona.
 
 ## Blueprints y notificaciones
@@ -784,7 +784,7 @@ una automatización se apoya en ese evento.
 
 ## Resolver problemas
 
-- **`binary_sensor.*_stuck`** se enciende cuando una zona lleva demasiado tiempo
+- **`binary_sensor.*_atascado`** se enciende cuando una zona lleva demasiado tiempo
   con el mismo motivo de espera (15 minutos por defecto) — y solo por eso. Una
   unidad exterior llena no cuenta: solo se libera cuando otra habitación deja de
   pedir, y eso puede durar horas. Esa habitación sí queda registrada como
@@ -793,7 +793,7 @@ una automatización se apoya en ese evento.
   `unavailable`, y también un sensor legible que no da ningún número
   (`no number`). Eso no enciende el sensor; para ello llega un aviso de
   reparación al cabo de cinco minutos.
-- **`binary_sensor.*_<zone>_on_stand_in`** se enciende cuando una zona funciona
+- **`binary_sensor.*_<zone>_en_equipo_suplente`** se enciende cuando una zona funciona
   con una fuente que no era la primera opción, porque la primera opción es
   inalcanzable. La habitación simplemente se calienta — y por eso mismo, sin
   sensor, no notas nada hasta la factura de la luz.

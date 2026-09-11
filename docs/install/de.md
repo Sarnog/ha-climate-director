@@ -621,21 +621,21 @@ Ein Gerät pro Installation, darunter:
 
 | Entität | Wofür |
 |---|---|
-| `sensor.*_last_decision` | wie viele Zonen bedient werden, mit dem vollständigen Plan als Attributen |
-| `sensor.*_would_command_<entity>` | der Modus, in den der Director dieses Gerät setzen würde — ein Sensor pro Gerät |
-| `sensor.*_mismatch` | wie viele Geräte gerade anders stehen als der Plan will; 0 = Director und Haus sind einig |
-| `sensor.*_<zone>_source` | welche Quelle diese Zone bedient, mit dem, was die Zone wollte, bekam und warum |
-| `binary_sensor.*_<zone>_blocked` | an, wenn eine Zone weniger bekam als verlangt oder laufen wollte, aber ein Umstand sie zurückhielt; die geschlossenen Tore stehen in den Attributen |
-| `binary_sensor.*_<zone>_on_stand_in` | an, wenn eine Zone auf einem Ersatzgerät läuft, weil die erste Wahl unerreichbar ist |
-| `binary_sensor.*_stuck` | an, wenn eine Zone zu lange auf demselben Wartegrund sitzt |
+| `sensor.*_letzte_entscheidung` | wie viele Zonen bedient werden, mit dem vollständigen Plan als Attributen |
+| `sensor.*_wurde_<entity>_ansteuern` | der Modus, in den der Director dieses Gerät setzen würde — ein Sensor pro Gerät |
+| `sensor.*_abweichungen` | wie viele Geräte gerade anders stehen als der Plan will; 0 = Director und Haus sind einig |
+| `sensor.*_quelle_<zone>` | welche Quelle diese Zone bedient, mit dem, was die Zone wollte, bekam und warum |
+| `binary_sensor.*_<zone>_blockiert` | an, wenn eine Zone weniger bekam als verlangt oder laufen wollte, aber ein Umstand sie zurückhielt; die geschlossenen Tore stehen in den Attributen |
+| `binary_sensor.*_<zone>_auf_ersatzgerat` | an, wenn eine Zone auf einem Ersatzgerät läuft, weil die erste Wahl unerreichbar ist |
+| `binary_sensor.*_festgefahren` | an, wenn eine Zone zu lange auf demselben Wartegrund sitzt |
 | `switch.*_director` | der Hauptschalter; aus = es wird nichts geregelt |
-| `switch.*_holiday_schedule` | lässt jeden Tag als Samstag zählen, oder als eigenen Urlaubsplan |
-| `switch.*_guest_mode` | regelt weiter, während die Bewohner weg sind |
-| `switch.*_<zone>_override` | übergibt eine Zone vollständig an dich |
-| `number.*_<zone>_priority` | der Vorrang dieser Zone; auch aus einer Automatisierung setzbar |
-| `number.*_pre_conditioning_duration` | wie lange eine Vorbereitung nach einem Tastendruck dauert |
-| `button.*_<zone>_pre_condition` | heizt oder kühlt diese Zone vor |
-| `select.*_season` | stellt die Jahreszeit von Hand auf Automatisch, Sommer oder Winter |
+| `switch.*_urlaubsplan` | lässt jeden Tag als Samstag zählen, oder als eigenen Urlaubsplan |
+| `switch.*_gastemodus` | regelt weiter, während die Bewohner weg sind |
+| `switch.*_ubersteuerung_<zone>` | übergibt eine Zone vollständig an dich |
+| `number.*_prioritat_<zone>` | der Vorrang dieser Zone; auch aus einer Automatisierung setzbar |
+| `number.*_vorbereitungsdauer` | wie lange eine Vorbereitung nach einem Tastendruck dauert |
+| `button.*_<zone>_vorbereiten` | heizt oder kühlt diese Zone vor |
+| `select.*_jahreszeit` | stellt die Jahreszeit von Hand auf Automatisch, Sommer oder Winter |
 
 Die Namen dieser Entitäten werden übersetzt, und Home Assistant leitet die
 Entitäts-ID vom Namen ab. Steht dein Home Assistant in einer anderen Sprache,
@@ -650,14 +650,14 @@ dem zuletzt gelesenen Schnappschuss und dem letzten Plan.
 - **Hauptschalter** (`switch.*_director`): aus = der Director tut gar nichts.
   Er lässt alles los und sendet nichts mehr — auch kein Aus. Was in dem Moment
   läuft, läuft also einfach weiter; willst du alles aus, schalte es selbst aus.
-- **Gästemodus** (`switch.*_guest_mode`): Jemand Unverfolgtes wohnt da, also
+- **Gästemodus** (`switch.*_gastemodus`): Jemand Unverfolgtes wohnt da, also
   sagt „Haus leer“ nichts. Schlaf der Anwesenden gilt weiter, und außerhalb des
   Gastfensters übernehmen die normalen Tore.
-- **Urlaubsplan** (`switch.*_holiday_schedule`): Jeder Tag zählt als Samstag
+- **Urlaubsplan** (`switch.*_urlaubsplan`): Jeder Tag zählt als Samstag
   oder als eigenes Urlaubsfenster. Schaltet sich auch von selbst ein, sobald ein
   eingerichteter Kalender ein laufendes Ereignis mit dem Stichwort hat. Ohne
   Stichwort werden die Kalender ignoriert.
-- **Override** (`switch.*_<zone>_override`): übergibt eine Zone vollständig an
+- **Override** (`switch.*_ubersteuerung_<zone>`): übergibt eine Zone vollständig an
   dich. Der Director sendet dieser Zone nichts mehr — auch kein Aus. Die
   Kreisregeln gelten für die anderen Räume weiter. Er bleibt stehen, bis du
   ihn selbst wieder ausschaltest, auch über die Nacht und über ein leeres Haus
@@ -665,8 +665,8 @@ dem zuletzt gelesenen Schnappschuss und dem letzten Plan.
   Abend. Damit lässt sich eine Zone tagelang eigenen Automationen überlassen.
   Ein Gerät, das du am Gerät *selbst* ausschaltest, erlischt sehr wohl zur
   Schlafenszeit oder bei leerem Haus; das steht weiter unten.
-- **Taste „Vorbereiten“** (`button.*_<zone>_pre_condition`) und **Dauer**
-  (`number.*_pre_conditioning_duration`): siehe unten.
+- **Taste „Vorbereiten“** (`button.*_<zone>_vorbereiten`) und **Dauer**
+  (`number.*_vorbereitungsdauer`): siehe unten.
 
 ## Aktionen
 
@@ -684,8 +684,8 @@ führt er weiterhin nichts aus — er rechnet nur neu.
 Die einzige Möglichkeit, ein leeres Haus laufen zu lassen, und mit Absicht die
 einzige, die du von Hand einschalten musst.
 
-- **Mit einer Taste**: Jede Zone hat `button.*_<zone>_pre_condition`. Wie lange
-  so ein Druck dauert, steht in `number.*_pre_conditioning_duration` (Standard
+- **Mit einer Taste**: Jede Zone hat `button.*_<zone>_vorbereiten`. Wie lange
+  so ein Druck dauert, steht in `number.*_vorbereitungsdauer` (Standard
   60 Minuten, eine Viertelstunde bis zwei Stunden).
 - **Mit der Aktion**:
 
@@ -749,14 +749,14 @@ Abbrechen geht mit `climate_director.cancel_precondition`.
 
 Drei Sensoren machen einen Schattenlauf hinterher beurteilbar:
 
-- **`sensor.*_mismatch`** ist die Kennzahl. Null bedeutet, der Director ist
+- **`sensor.*_abweichungen`** ist die Kennzahl. Null bedeutet, der Director ist
   einig mit dem, was gerade läuft. Eine kurze Spitze ist normal; ein Wert, der
   stehen bleibt, ist eine echte Meinungsverschiedenheit. Setze diesen Sensor in
   ein Verlaufsdiagramm.
-- **`sensor.*_would_command_<entity>`** legst du neben den Verlauf der
+- **`sensor.*_wurde_<entity>_ansteuern`** legst du neben den Verlauf der
   gleichnamigen `climate`-Entität. Zwei Linien, die einander folgen = der
   Director entschied dasselbe wie deine Automatisierungen.
-- **`sensor.*_<zone>_source`** und **`binary_sensor.*_<zone>_blocked`** sagen
+- **`sensor.*_quelle_<zone>`** und **`binary_sensor.*_<zone>_blockiert`** sagen
   danach *warum*: welche Quelle gewählt wurde und welches Tor eine Zone
   zurückhielt.
 
@@ -787,7 +787,7 @@ Automatisierung auf diesem Ereignis steht.
 
 ## Probleme lösen
 
-- **`binary_sensor.*_stuck`** geht an, wenn eine Zone zu lange auf demselben
+- **`binary_sensor.*_festgefahren`** geht an, wenn eine Zone zu lange auf demselben
   Wartegrund sitzt (Standard 15 Minuten) — und nur dafür. Eine volle
   Außeneinheit zählt nicht mit: Die wird erst frei, wenn ein anderer Raum
   aufhört zu fragen, und das darf Stunden dauern. Dieser Raum gilt sehr wohl als
@@ -796,7 +796,7 @@ Automatisierung auf diesem Ereignis steht.
   vorübergehend `unavailable`, und ebenso ein Sensor, der lesbar ist, aber keine
   Zahl liefert (`no number`). Das schaltet den Melder nicht ein; dafür kommt
   nach fünf Minuten ein Reparaturhinweis.
-- **`binary_sensor.*_<zone>_on_stand_in`** geht an, wenn eine Zone auf einer
+- **`binary_sensor.*_<zone>_auf_ersatzgerat`** geht an, wenn eine Zone auf einer
   Quelle läuft, die nicht die erste Wahl war, weil die erste Wahl unerreichbar
   ist. Der Raum wird einfach warm — und genau deshalb merkst du ohne Melder
   nichts, bis die Energierechnung kommt.

@@ -613,7 +613,7 @@ Eén device per installatie, met daaronder:
 | Entiteit | Waarvoor |
 |---|---|
 | `sensor.*_laatste_beslissing` | hoeveel zones bediend worden, met het volledige plan als attributen |
-| `sensor.*_zou_<entiteit>_aansturen` | de stand waarin de director dit apparaat zou zetten — één sensor per apparaat |
+| `sensor.*_zou_<entity>_aansturen` | de stand waarin de director dit apparaat zou zetten — één sensor per apparaat |
 | `sensor.*_afwijkingen` | hoeveel apparaten er nú anders staan dan het plan wil; 0 = director en huis zijn het eens |
 | `sensor.*_bron_<zone>` | welke bron deze zone bedient, met wat de zone wilde, kreeg en waarom |
 | `binary_sensor.*_<zone>_geblokkeerd` | aan als een zone minder kreeg dan hij vroeg, of wilde draaien maar een omstandigheid haar tegenhield; de dichte poorten staan in de attributen |
@@ -744,7 +744,7 @@ Drie sensoren maken een schaduwrun achteraf beoordeelbaar:
   eens is met wat er op dat moment draait. Een korte piek is normaal; een
   waarde die blijft staan is een echt meningsverschil. Zet deze sensor in een
   geschiedenisgrafiek.
-- **`sensor.*_zou_<entiteit>_aansturen`** leg je naast de geschiedenis van de
+- **`sensor.*_zou_<entity>_aansturen`** leg je naast de geschiedenis van de
   `climate`-entiteit met dezelfde naam. Twee lijnen die elkaar volgen = de
   director besloot hetzelfde als je automatiseringen.
 - **`sensor.*_bron_<zone>`** en **`binary_sensor.*_<zone>_geblokkeerd`**

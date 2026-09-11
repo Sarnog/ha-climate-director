@@ -633,21 +633,21 @@ Un appareil par installation, avec en dessous :
 
 | Entité | Pour quoi |
 |---|---|
-| `sensor.*_last_decision` | combien de zones sont desservies, avec le plan complet en attributs |
-| `sensor.*_would_command_<entity>` | le mode dans lequel le directeur mettrait cet appareil — un capteur par appareil |
-| `sensor.*_mismatch` | combien d'appareils se trouvent ailleurs que là où le plan les veut ; 0 = directeur et maison d'accord |
-| `sensor.*_<zone>_source` | quelle source dessert cette zone, avec ce que la zone voulait, a obtenu et pourquoi |
-| `binary_sensor.*_<zone>_blocked` | activé quand une zone a reçu moins que demandé, ou voulait tourner mais qu'une circonstance l'a retenue ; les portes fermées sont dans les attributs |
-| `binary_sensor.*_<zone>_on_stand_in` | activé quand une zone tourne sur un appareil de secours parce que le premier choix est injoignable |
-| `binary_sensor.*_stuck` | activé quand une zone reste trop longtemps sur le même motif d'attente |
+| `sensor.*_derniere_decision` | combien de zones sont desservies, avec le plan complet en attributs |
+| `sensor.*_commanderait_<entity>` | le mode dans lequel le directeur mettrait cet appareil — un capteur par appareil |
+| `sensor.*_ecarts` | combien d'appareils se trouvent ailleurs que là où le plan les veut ; 0 = directeur et maison d'accord |
+| `sensor.*_source_<zone>` | quelle source dessert cette zone, avec ce que la zone voulait, a obtenu et pourquoi |
+| `binary_sensor.*_<zone>_bloquee` | activé quand une zone a reçu moins que demandé, ou voulait tourner mais qu'une circonstance l'a retenue ; les portes fermées sont dans les attributs |
+| `binary_sensor.*_<zone>_sur_appareil_de_secours` | activé quand une zone tourne sur un appareil de secours parce que le premier choix est injoignable |
+| `binary_sensor.*_bloque` | activé quand une zone reste trop longtemps sur le même motif d'attente |
 | `switch.*_director` | l'interrupteur principal ; éteint = rien n'est régulé |
-| `switch.*_holiday_schedule` | fait compter chaque jour comme un samedi, ou comme son propre programme vacances |
-| `switch.*_guest_mode` | continue de réguler pendant que les résidents sont absents |
-| `switch.*_<zone>_override` | rend une zone entièrement à vous |
-| `number.*_<zone>_priority` | la préséance de cette zone ; réglable aussi depuis une automatisation |
-| `number.*_pre_conditioning_duration` | combien de temps dure un appui sur un bouton de préchauffage |
-| `button.*_<zone>_pre_condition` | préchauffe ou pré-refroidit cette zone |
-| `select.*_season` | règle la saison à la main sur Automatique, Été ou Hiver |
+| `switch.*_planning_de_vacances` | fait compter chaque jour comme un samedi, ou comme son propre programme vacances |
+| `switch.*_mode_invites` | continue de réguler pendant que les résidents sont absents |
+| `switch.*_derogation_<zone>` | rend une zone entièrement à vous |
+| `number.*_priorite_<zone>` | la préséance de cette zone ; réglable aussi depuis une automatisation |
+| `number.*_duree_de_la_preparation` | combien de temps dure un appui sur un bouton de préchauffage |
+| `button.*_preparer_<zone>` | préchauffe ou pré-refroidit cette zone |
+| `select.*_saison` | règle la saison à la main sur Automatique, Été ou Hiver |
 
 Les noms de ces entités sont traduits, et Home Assistant déduit l'identifiant
 d'entité du nom. Si votre Home Assistant est dans une autre langue, elles s'y
@@ -663,14 +663,14 @@ le dernier instantané lu et le dernier plan.
   fait rien du tout. Il lâche tout et n'envoie plus rien — pas même un arrêt. Ce
   qui tourne à ce moment-là continue donc simplement ; si vous voulez tout
   éteindre, éteignez-le vous-même.
-- **Mode invités** (`switch.*_guest_mode`) : quelqu'un de non suivi loge là,
+- **Mode invités** (`switch.*_mode_invites`) : quelqu'un de non suivi loge là,
   donc « maison vide » ne dit rien. Le sommeil des présents s'applique toujours,
   et hors de la fenêtre invités, les portes ordinaires reprennent le relais.
-- **Programme vacances** (`switch.*_holiday_schedule`) : chaque jour compte
+- **Programme vacances** (`switch.*_planning_de_vacances`) : chaque jour compte
   comme un samedi, ou comme sa propre fenêtre de vacances. S'active aussi tout
   seul dès qu'un calendrier configuré a un événement en cours portant le
   mot-clé. Sans mot-clé, les calendriers sont ignorés.
-- **Override** (`switch.*_<zone>_override`) : rend une zone entièrement à vous.
+- **Override** (`switch.*_derogation_<zone>`) : rend une zone entièrement à vous.
   Le directeur n'envoie plus rien à cette zone — pas même un arrêt. Les règles
   de circuit s'appliquent toujours aux autres pièces. Il tient jusqu'à ce que
   vous l'éteigniez vous-même, y compris à travers la nuit et une maison vide :
@@ -678,8 +678,8 @@ le dernier instantané lu et le dernier plan.
   permet de laisser une zone à vos propres automatisations pendant des jours.
   Éteindre un appareil sur l'appareil *lui-même* expire bel et bien au coucher
   ou sur une maison vide ; c'est plus bas.
-- **Bouton de préchauffage** (`button.*_<zone>_pre_condition`) et **durée**
-  (`number.*_pre_conditioning_duration`) : voir ci-dessous.
+- **Bouton de préchauffage** (`button.*_preparer_<zone>`) et **durée**
+  (`number.*_duree_de_la_preparation`) : voir ci-dessous.
 
 ## Actions
 
@@ -697,8 +697,8 @@ ombre, il n'exécute toujours rien — il recalcule seulement.
 La seule façon de faire tourner une maison vide, et délibérément la seule que
 vous devez activer à la main.
 
-- **Avec un bouton** : chaque zone a `button.*_<zone>_pre_condition`. La durée
-  d'un tel appui se règle dans `number.*_pre_conditioning_duration` (60 minutes
+- **Avec un bouton** : chaque zone a `button.*_preparer_<zone>`. La durée
+  d'un tel appui se règle dans `number.*_duree_de_la_preparation` (60 minutes
   par défaut, d'un quart d'heure à deux heures).
 - **Avec l'action** :
 
@@ -764,14 +764,14 @@ Annulez avec `climate_director.cancel_precondition`.
 
 Trois capteurs rendent une période en mode ombre évaluable après coup :
 
-- **`sensor.*_mismatch`** est le chiffre clé. Zéro signifie que le directeur est
+- **`sensor.*_ecarts`** est le chiffre clé. Zéro signifie que le directeur est
   d'accord avec ce qui tourne à ce moment. Un pic bref est normal ; une valeur
   qui persiste est un vrai désaccord. Mettez ce capteur dans un graphique
   d'historique.
-- **`sensor.*_would_command_<entity>`** se place à côté de l'historique de
+- **`sensor.*_commanderait_<entity>`** se place à côté de l'historique de
   l'entité `climate` du même nom. Deux lignes qui se suivent = le directeur a
   décidé la même chose que vos automatisations.
-- **`sensor.*_<zone>_source`** et **`binary_sensor.*_<zone>_blocked`** disent
+- **`sensor.*_source_<zone>`** et **`binary_sensor.*_<zone>_bloquee`** disent
   ensuite *pourquoi* : quelle source a été choisie, et quelle porte a retenu une
   zone.
 
@@ -802,7 +802,7 @@ automatisation repose sur cet événement.
 
 ## Résoudre les problèmes
 
-- **`binary_sensor.*_stuck`** s'allume quand une zone reste trop longtemps sur
+- **`binary_sensor.*_bloque`** s'allume quand une zone reste trop longtemps sur
   le même motif d'attente (15 minutes par défaut) — et rien que pour cela. Une
   unité extérieure pleine ne compte pas : elle ne se libère que lorsqu'une autre
   pièce cesse de demander, et cela peut durer des heures. Cette pièce est bel et
@@ -811,7 +811,7 @@ automatisation repose sur cet événement.
   temporairement `unavailable`, ainsi qu'un capteur lisible qui ne donne aucun
   nombre (`no number`). Cela n'allume pas le capteur ; un avis de réparation
   arrive pour cela après cinq minutes.
-- **`binary_sensor.*_<zone>_on_stand_in`** s'allume quand une zone tourne sur
+- **`binary_sensor.*_<zone>_sur_appareil_de_secours`** s'allume quand une zone tourne sur
   une source qui n'était pas le premier choix, parce que le premier choix est
   injoignable. La pièce devient simplement chaude — et c'est exactement
   pourquoi, sans capteur, vous ne remarquez rien avant la facture d'énergie.
