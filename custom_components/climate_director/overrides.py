@@ -27,6 +27,7 @@ from homeassistant.util import dt as dt_util
 from .const import WHEN_DONE_LEAVE, WHEN_DONE_TURN_OFF
 from .engine.diff import Change
 from .engine.families import MODE_OFF, ModeFamily, family_of
+from .engine.models import Source, Zone
 from .engine.plan import Reason, UnitCommand
 
 # De logger heet coordinator, zodat het verplaatsen van deze methodes geen
@@ -123,7 +124,7 @@ class _OverridesMixin:
         self._override_wake_at_first_expiry()
         self.async_request_evaluation()
 
-    def override_source(self, zone_id: str, hvac_mode: str):
+    def override_source(self, zone_id: str, hvac_mode: str) -> Source | None:
         """Return the zone's source for `hvac_mode`, or None when there is none.
 
         De publieke lezer voor de actielaag: die moet een zone zonder bron
@@ -139,7 +140,7 @@ class _OverridesMixin:
             return None
         return self._override_source(zone, hvac_mode)
 
-    def _override_source(self, zone, hvac_mode: str):
+    def _override_source(self, zone: Zone, hvac_mode: str) -> Source | None:
         """Return the zone's source for `hvac_mode`, by priority.
 
         `off` en `fan_only` draaien niets en passen op elke bron; de hoogste
