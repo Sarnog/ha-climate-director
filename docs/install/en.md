@@ -764,9 +764,9 @@ running until it stands in the way.
 
 This replaces a dashboard button with a timer script: one button, one call to
 `set_override`. Two things to know: if the zone has no source that can deliver
-the requested mode, nothing happens and the reason is only in the log; and in
-shadow mode the switch turns over but the appliance does not — nothing is
-executed there, this included.
+the requested mode, the call fails with an error that names the zone and the
+mode; and in shadow mode the switch turns over but the appliance does not —
+nothing is executed there, this included.
 
 ## Taking charge yourself
 

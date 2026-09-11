@@ -915,6 +915,9 @@
     "unknown_zones": {
       "message": "Onbekende zones: {zones}"
     },
+    "zone_no_source_for_mode": {
+      "message": "Zone {zone} heeft geen bron voor {mode}."
+    },
     "source_unknown_covered_zone": {
       "message": "Bron {source} noemt onbekende zone {zone} in het gebied dat hij mee bedient."
     }

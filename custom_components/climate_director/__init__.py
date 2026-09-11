@@ -396,12 +396,20 @@ def _async_register_services(hass: HomeAssistant) -> None:
     async def _async_set_override(call: ServiceCall) -> None:
         """Hand a zone over for a duration, with the appliance already set."""
         entries = _chosen_entries(hass, call)
-        _refuse_unknown_zones([call.data[ATTR_ZONE_ID]], entries, call.data.get(ATTR_ENTRY_ID))
+        zone_id = call.data[ATTR_ZONE_ID]
+        hvac_mode = call.data[ATTR_HVAC_MODE]
+        _refuse_unknown_zones([zone_id], entries, call.data.get(ATTR_ENTRY_ID))
         temperature = call.data.get(ATTR_TEMPERATURE)
         for entry in entries:
+            if entry.runtime_data.override_source(zone_id, hvac_mode) is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="zone_no_source_for_mode",
+                    translation_placeholders={"zone": zone_id, "mode": hvac_mode},
+                )
             entry.runtime_data.async_set_override(
-                call.data[ATTR_ZONE_ID],
-                call.data[ATTR_HVAC_MODE],
+                zone_id,
+                hvac_mode,
                 to_celsius(temperature, temperature_unit_of(hass))
                 if temperature is not None
                 else None,

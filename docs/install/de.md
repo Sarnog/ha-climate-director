@@ -777,9 +777,9 @@ das Gerät nur aus, wenn seine eigene Entscheidung das verlangt. Eine Quelle mit
 
 Das ersetzt eine Dashboard-Taste mit einem Timer-Script: eine Taste, ein Aufruf
 von `set_override`. Zwei Dinge solltest du wissen: Hat die Zone keine Quelle,
-die den gewünschten Modus liefern kann, passiert nichts, und der Grund steht nur
-im Protokoll; und im Schattenmodus geht zwar der Schalter um, das Gerät aber
-nicht — dort wird nichts ausgeführt, auch das nicht.
+die den gewünschten Modus liefern kann, schlägt der Aufruf mit einer Fehlermeldung
+fehl, die Zone und Modus nennt; und im Schattenmodus geht zwar der Schalter um,
+das Gerät aber nicht — dort wird nichts ausgeführt, auch das nicht.
 
 ## Selbst das Kommando übernehmen
 

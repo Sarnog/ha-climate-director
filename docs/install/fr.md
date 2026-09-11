@@ -792,8 +792,8 @@ automatiquement* désactivé continue donc de tourner jusqu'à ce qu'elle gêne.
 
 Cela remplace un bouton de tableau de bord avec un script minuteur : un bouton,
 un appel à `set_override`. Deux choses à savoir : si la zone n'a aucune source
-capable de fournir le mode demandé, il ne se passe rien et la raison n'est que
-dans le journal ; et en mode ombre l'interrupteur bascule mais pas l'appareil —
+capable de fournir le mode demandé, l'appel échoue avec une erreur qui nomme la
+zone et le mode ; et en mode ombre l'interrupteur bascule mais pas l'appareil —
 rien n'y est exécuté, ceci compris.
 
 ## Prendre la main

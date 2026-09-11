@@ -276,6 +276,15 @@ class TestEveryAction:
         ]
         assert not missing, missing
 
+    def test_the_override_temperature_has_no_fixed_celsius_bounds(self) -> None:
+        """De temperatuur van `set_override` mag geen vast 5–30 °C-bereik hebben.
+
+        The `set_override` temperature must not have a fixed 5–30 °C range.
+        """
+        selector = self.actions["set_override"]["fields"]["temperature"]["selector"]["number"]
+        assert "min" not in selector, selector
+        assert "max" not in selector, selector
+
 
 class TestEveryEntity:
     """Every entity the integration creates needs a name in each language."""

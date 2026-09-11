@@ -915,6 +915,9 @@
     "unknown_zones": {
       "message": "Zonas desconocidas: {zones}"
     },
+    "zone_no_source_for_mode": {
+      "message": "La zona {zone} no tiene ninguna fuente para {mode}."
+    },
     "source_unknown_covered_zone": {
       "message": "La fuente {source} nombra una zona desconocida {zone} en el ámbito que también atiende."
     }

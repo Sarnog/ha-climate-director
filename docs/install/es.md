@@ -776,9 +776,9 @@ funcionando hasta que estorbe.
 
 Esto sustituye a un botón del panel con un script temporizador: un botón, una
 llamada a `set_override`. Dos cosas que conviene saber: si la zona no tiene
-ninguna fuente capaz de dar el modo pedido, no pasa nada y el motivo solo queda
-en el registro; y en modo sombra el interruptor cambia pero el aparato no — ahí
-no se ejecuta nada, tampoco esto.
+ninguna fuente capaz de dar el modo pedido, la llamada falla con un error que
+nombra la zona y el modo; y en modo sombra el interruptor cambia pero el aparato
+no — ahí no se ejecuta nada, tampoco esto.
 
 ## Tomar el mando
 

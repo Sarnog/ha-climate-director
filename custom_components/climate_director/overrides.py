@@ -72,11 +72,7 @@ class _OverridesMixin:
         `minutes` is `None` when the call omitted the duration - then the
         override never lapses by itself. `when_done` is `turn_off` or `leave`.
         """
-        zone = self.config.zone(zone_id)
-        if zone is None:
-            _LOGGER.warning("set_override asked for unknown zone, ignored: %s", zone_id)
-            return False
-        source = self._override_source(zone, hvac_mode)
+        source = self.override_source(zone_id, hvac_mode)
         if source is None:
             _LOGGER.warning("set_override: zone %s has no source for %s", zone_id, hvac_mode)
             return False
@@ -126,6 +122,22 @@ class _OverridesMixin:
         self._async_save_state()
         self._override_wake_at_first_expiry()
         self.async_request_evaluation()
+
+    def override_source(self, zone_id: str, hvac_mode: str):
+        """Return the zone's source for `hvac_mode`, or None when there is none.
+
+        De publieke lezer voor de actielaag: die moet een zone zonder bron
+        vóór het uitvoeren kunnen weigeren met dezelfde vertaalde fout als een
+        onbekende zone, in plaats van stil niets te doen.
+
+        The public reader for the action layer: it must be able to refuse a
+        zone without a source before execution, with the same translated error
+        as an unknown zone, instead of silently doing nothing.
+        """
+        zone = self.config.zone(zone_id)
+        if zone is None:
+            return None
+        return self._override_source(zone, hvac_mode)
 
     def _override_source(self, zone, hvac_mode: str):
         """Return the zone's source for `hvac_mode`, by priority.

@@ -915,6 +915,9 @@
     "unknown_zones": {
       "message": "مناطق غير معروفة: {zones}"
     },
+    "zone_no_source_for_mode": {
+      "message": "المنطقة {zone} ليس لديها مصدر للوضع {mode}."
+    },
     "source_unknown_covered_zone": {
       "message": "المصدر {source} يسمّي منطقة مجهولة {zone} في النطاق الذي يخدمه أيضًا."
     }

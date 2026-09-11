@@ -767,9 +767,9 @@ blijft dus draaien tot hij in de weg staat.
 
 Dit is de vervanging van een dashboardknop met een timerscript: één knop, één
 aanroep van `set_override`. Twee dingen om te weten: heeft de zone geen bron
-die de gevraagde stand kan leveren, dan gebeurt er niets en staat de reden
-alleen in het logboek; en in schaduwmodus gaat de schakelaar wel om, maar het
-apparaat niet — daar wordt niets uitgevoerd, ook dit niet.
+die de gevraagde stand kan leveren, dan mislukt de aanroep met een foutmelding
+die de zone en de stand noemt; en in schaduwmodus gaat de schakelaar wel om,
+maar het apparaat niet — daar wordt niets uitgevoerd, ook dit niet.
 
 ## Zelf de baas
 
