@@ -825,6 +825,9 @@
     "duplicate_source_id": {
       "message": "Twee bronnen delen het id {source}. Bron-id's moeten uniek zijn binnen een kamer."
     },
+    "duplicate_opening_id": {
+      "message": "Twee openingen delen het id {opening}. Opening-id's moeten uniek zijn, want de overbruggingsschakelaar en de geschiedenis van een opening hangen eraan."
+    },
     "unit_on_two_circuits": {
       "message": "{unit} zit op zowel circuit {first} als circuit {second}. Eén buitenunit kan maar bij één circuit horen."
     },

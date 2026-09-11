@@ -825,6 +825,9 @@
     "duplicate_source_id": {
       "message": "Deux sources partagent l'identifiant {source}. Les identifiants de source doivent être uniques dans une pièce."
     },
+    "duplicate_opening_id": {
+      "message": "Deux ouvertures partagent l'identifiant {opening}. Les identifiants d'ouverture doivent être uniques, car l'interrupteur de contournement et l'historique d'une ouverture en dépendent."
+    },
     "unit_on_two_circuits": {
       "message": "{unit} est sur le circuit {first} et sur le circuit {second}. Une unité extérieure ne peut appartenir qu'à un seul circuit."
     },

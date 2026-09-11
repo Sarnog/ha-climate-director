@@ -825,6 +825,9 @@
     "duplicate_source_id": {
       "message": "Two sources share the id {source}. Source ids must be unique within a room."
     },
+    "duplicate_opening_id": {
+      "message": "Two openings share the id {opening}. Opening ids must be unique, because every opening's bypass switch and history hang on it."
+    },
     "unit_on_two_circuits": {
       "message": "{unit} sits on both circuit {first} and circuit {second}. One outdoor unit can only belong to one circuit."
     },

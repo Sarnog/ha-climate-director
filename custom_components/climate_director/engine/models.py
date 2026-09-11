@@ -1208,6 +1208,28 @@ def _rule_duplicate_source_ids(config: DirectorConfig) -> Iterator[Problem]:
         yield Problem("duplicate_source_id", f"duplicate source id: {source_id}", source=source_id)
 
 
+def _rule_duplicate_opening_ids(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint for every opening id that occurs more than once.
+
+    Anker 8: een opening draagt een eigen `opening_id`; twee openingen met
+    dezelfde id delen de overbruggingsschakelaar, en dan verdwijnt er één stil
+    uit het entiteitenregister. Opslag van vóór 7.5.3 kent die ids niet; ze
+    worden bij het lezen uniek afgeleid (`serialise._unique_opening_id`), dus
+    deze controle ziet alleen een opgeslagen dubbel id.
+
+    Anchor 8: an opening carries its own `opening_id`; two openings sharing one
+    share the bypass switch, and then one disappears quietly from the entity
+    registry. Storage from before 7.5.3 has no such ids; they are derived
+    uniquely on read (`serialise._unique_opening_id`), so this check only sees
+    a stored duplicate id.
+    """
+    ids = [opening.opening_id for opening in config.openings if opening.opening_id]
+    for opening_id in _duplicates(ids):
+        yield Problem(
+            "duplicate_opening_id", f"duplicate opening id: {opening_id}", opening=opening_id
+        )
+
+
 def _rule_entity_twice_in_one_zone(config: DirectorConfig) -> Iterator[Problem]:
     """Yield a complaint when one room uses the same appliance twice.
 
@@ -2098,6 +2120,7 @@ _RULES = (
     _rule_duplicate_zone_ids,
     _rule_duplicate_circuit_ids,
     _rule_duplicate_source_ids,
+    _rule_duplicate_opening_ids,
     _rule_entity_twice_in_one_zone,
     _rule_unit_in_no_zone,
     _rule_unit_on_two_circuits,

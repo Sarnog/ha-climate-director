@@ -91,6 +91,21 @@ def test_every_complaint_carries_a_translation_code() -> None:
         assert isinstance(complaint, Problem) and complaint.code, complaint
 
 
+def test_two_openings_sharing_an_id_are_refused() -> None:
+    """Twee openingen met hetzelfde id zijn van buiten niet uit elkaar te houden.
+
+    Two openings sharing one id cannot be told apart from the outside.
+    """
+    config = DirectorConfig(
+        openings=(
+            Opening("binary_sensor.deur", opening_id="achterdeur"),
+            Opening("binary_sensor.deur", opening_id="achterdeur"),
+        ),
+    )
+    codes = [item.code for item in validate(config)]
+    assert "duplicate_opening_id" in codes
+
+
 def zone(zone_id: str, **kwargs: object) -> Zone:
     """Return a workable zone, overridden by whatever the test cares about."""
     settings: dict[str, object] = {
@@ -708,7 +723,13 @@ def _broken_house_for_the_order_test() -> DirectorConfig:
         ),
         residents=(Resident("danny", "Danny"),),
         openings=(
-            Opening("binary_sensor.deur", zone_ids=("nergens",), delay=timedelta(seconds=-1)),
+            Opening(
+                "binary_sensor.deur",
+                opening_id="deur",
+                zone_ids=("nergens",),
+                delay=timedelta(seconds=-1),
+            ),
+            Opening("binary_sensor.deur", opening_id="deur"),
         ),
         house_wide_openings=("climate.ghost",),
         generators=(Generator("gen", "G", "climate.x", zone_ids=("a", "nergens")),),
@@ -748,6 +769,7 @@ def test_the_order_of_the_complaints_is_literal() -> None:
         "duplicate_zone_id",
         "duplicate_circuit_id",
         "duplicate_source_id",
+        "duplicate_opening_id",
         "entity_twice_in_one_zone",
         "unit_in_no_zone",
         "unit_on_two_circuits",

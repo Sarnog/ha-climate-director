@@ -825,6 +825,9 @@
     "duplicate_source_id": {
       "message": "Zwei Quellen teilen die ID {source}. Quell-IDs müssen innerhalb eines Raums eindeutig sein."
     },
+    "duplicate_opening_id": {
+      "message": "Zwei Öffnungen teilen die ID {opening}. Öffnungs-IDs müssen eindeutig sein, denn der Überbrückungsschalter und der Verlauf einer Öffnung hängen daran."
+    },
     "unit_on_two_circuits": {
       "message": "{unit} hängt sowohl an Kreislauf {first} als auch an Kreislauf {second}. Ein Außengerät kann nur zu einem Kreislauf gehören."
     },

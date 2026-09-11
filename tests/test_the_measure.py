@@ -107,8 +107,18 @@ FUNCTION_LIMIT = 80
 # bypass switch; that touches the models, the coordinator, the config flow and
 # the schemas, so these five numbers grew along. The list itself stayed the
 # same length.
+#
+# Ronde 26 (R2): `engine/models.py` 2120 → 2143 door de nieuwe
+# `_rule_duplicate_opening_ids` — een dubbel opening_id moet een `Problem`-code
+# krijgen in plaats van stil twee schakelaars te laten delen. Een nieuwe
+# validatieregel kan niet zonder regels; de ratel maakt die groei zichtbaar.
+#
+# Round 26 (R2): `engine/models.py` 2120 → 2143 through the new
+# `_rule_duplicate_opening_ids` — a doubled opening id must get a `Problem`
+# code instead of silently sharing two switches. A new validation rule cannot
+# exist without lines; the ratchet makes that growth visible.
 MODULE_EXCEPTIONS: dict[str, int] = {
-    "engine/models.py": 2120,
+    "engine/models.py": 2143,
     "coordinator.py": 1756,
     "engine/decide.py": 1677,
     "config_flow.py": 1418,

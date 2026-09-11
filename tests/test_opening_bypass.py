@@ -118,3 +118,41 @@ def test_legacy_openings_get_their_identity_from_the_entity() -> None:
     # En de tweede passage is stabiel: de identiteit wordt opgeslagen.
     # And the second pass is stable: the identity is stored.
     assert config_from_dict(config_to_dict(config)) == config
+
+
+def test_two_openings_on_the_same_sensor_get_distinct_ids() -> None:
+    """Twee openingen op één sensor (opslag van vóór 7.5.3) delen niet één id.
+
+    Two openings on one sensor (storage from before 7.5.3) do not share one id.
+    """
+    raw = {
+        "openings": [
+            {"entity_id": "binary_sensor.achterdeur"},
+            {"entity_id": "binary_sensor.achterdeur"},
+        ],
+    }
+    config = config_from_dict(raw)
+    ids = [opening.opening_id for opening in config.openings]
+    assert ids == ["binary_sensor.achterdeur", "binary_sensor.achterdeur_2"]
+    # Daarmee krijgen de overbruggingsschakelaars elk een eigen unique_id.
+    # Hence the bypass switches each get their own unique id.
+    switch_keys = {f"opening_{opening_id}_bypass" for opening_id in ids}
+    assert len(switch_keys) == 2
+
+
+def test_each_legacy_opening_on_its_own_sensor_keeps_its_entity_id() -> None:
+    """Bestaande installaties met unieke sensoren houden exact hetzelfde id.
+
+    Existing installations with unique sensors keep exactly the same id.
+    """
+    raw = {
+        "openings": [
+            {"entity_id": "binary_sensor.achterdeur"},
+            {"entity_id": "binary_sensor.dakraam"},
+        ],
+    }
+    config = config_from_dict(raw)
+    assert [opening.opening_id for opening in config.openings] == [
+        "binary_sensor.achterdeur",
+        "binary_sensor.dakraam",
+    ]

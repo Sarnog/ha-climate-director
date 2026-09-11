@@ -825,6 +825,9 @@
     "duplicate_source_id": {
       "message": "Dos fuentes comparten el id {source}. Los id de fuente deben ser únicos dentro de una habitación."
     },
+    "duplicate_opening_id": {
+      "message": "Dos aberturas comparten el id {opening}. Los id de abertura deben ser únicos, porque el interruptor de anulación y el historial de una abertura dependen de él."
+    },
     "unit_on_two_circuits": {
       "message": "{unit} está en el circuito {first} y en el circuito {second}. Una unidad exterior solo puede pertenecer a un circuito."
     },

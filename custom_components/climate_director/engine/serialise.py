@@ -72,11 +72,17 @@ from .table_storage import dict_from, parse_leaf, values_from, write_leaf
 
 def config_from_dict(raw: Mapping[str, Any]) -> DirectorConfig:
     """Return the installation described by `raw`."""
+    openings: list[Opening] = []
+    taken_opening_ids: set[str] = set()
+    for item in _items(raw, "openings"):
+        opening = _opening(item, taken_opening_ids)
+        openings.append(opening)
+        taken_opening_ids.add(opening.opening_id)
     return DirectorConfig(
         zones=tuple(_zone(item) for item in _items(raw, "zones")),
         circuits=tuple(_circuit(item) for item in _items(raw, "circuits")),
         residents=tuple(_resident(item) for item in _items(raw, "residents")),
-        openings=tuple(_opening(item) for item in _items(raw, "openings")),
+        openings=tuple(openings),
         house_wide_openings=tuple(_strings(raw.get("house_wide_openings"))),
         generators=tuple(_generator(item) for item in _items(raw, "generators")),
         exclusive_groups=tuple(
@@ -292,9 +298,33 @@ def _time_window(raw: Mapping[str, Any]) -> TimeWindow:
     )
 
 
-def _opening(raw: Mapping[str, Any]) -> Opening:
+def _unique_opening_id(entity_id: str, taken: set[str]) -> str:
+    """Return `entity_id` or the first `entity_id_<n>` not in `taken`.
+
+    Dezelfde vorm als `config_flow._unique_id`, maar zonder `slugify`: de
+    entity_id is al een geldige, unieke identifier en moet dat blijven, anders
+    verdwijnt de overbruggingsschakelaar van bestaande installaties bij de
+    upgrade. Alleen opslag van vóór 7.5.3 heeft geen opening_id; wie twee
+    openingen op dezelfde sensor had, kreeg toen één id voor twee schakelaars.
+
+    The same shape as `config_flow._unique_id`, but without `slugify`: the
+    entity id is already a valid, unique identifier and must stay that way,
+    otherwise the bypass switch of existing installations disappears on
+    upgrade. Only storage from before 7.5.3 has no opening id; two openings on
+    one sensor then got one id for two switches.
+    """
+    base = entity_id or "opening"
+    if base not in taken:
+        return base
+    index = 2
+    while f"{base}_{index}" in taken:
+        index += 1
+    return f"{base}_{index}"
+
+
+def _opening(raw: Mapping[str, Any], taken: set[str]) -> Opening:
     entity_id = _text(raw.get("entity_id"))
-    opening_id = _text(raw.get("opening_id")) or entity_id
+    opening_id = _text(raw.get("opening_id")) or _unique_opening_id(entity_id, taken)
     return Opening(
         entity_id=entity_id,
         zone_ids=tuple(_strings(raw.get("zone_ids"))),
