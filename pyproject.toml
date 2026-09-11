@@ -1,6 +1,6 @@
 [project]
 name = "ha-climate-director"
-version = "7.5.2"
+version = "7.5.3"
 requires-python = ">=3.13"
 
 [tool.pytest.ini_options]
