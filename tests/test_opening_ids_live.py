@@ -25,6 +25,18 @@ UI, and an existing switch survives being given a name. On top of that, the
 switch of a legacy opening is named after the sensor's friendly name, so the
 five production switches read properly without anybody having to edit them
 first.
+
+Sinds R27-4 staat hier ook de andere kant: een **opgeslagen** dubbel
+`opening_id` is geen stille afwijking maar komt als reparatiemelding
+(`invalid_config`) in het echte `issue_registry`, waar de gebruiker hem ziet.
+Zonder deze bewaking verdwijnt zo'n dubbele id in de diagnose en lijkt de
+installatie gezond.
+
+Since R27-4 the other side stands here too: a **stored** duplicate
+`opening_id` is not a silent deviation but arrives as a repair notice
+(`invalid_config`) in the real `issue_registry`, where the user sees it. Without
+this guard such a duplicate id disappears into the diagnostics and the
+installation looks healthy.
 """
 
 from __future__ import annotations
@@ -33,8 +45,9 @@ from typing import Any
 
 import pytest
 from harness_live import LiveHome, settings, source, start_house, stop_house, zone
+from homeassistant.helpers import issue_registry as ir
 
-from custom_components.climate_director.const import CONF_INSTALLATION
+from custom_components.climate_director.const import CONF_INSTALLATION, DOMAIN
 
 BACK_DOOR = "binary_sensor.achterdeur"
 SKYLIGHT = "cover.dakraam"
@@ -248,3 +261,57 @@ class TestTheSwitchNamesTheSensor:
             await stop_house(home)
         assert "Achterdeur beneden" in name, name
         assert "Achterdeur contact" not in name, name
+
+
+def duplicate_installation() -> dict[str, Any]:
+    """Return storage where two openings carry the same `opening_id`.
+
+    De lezer laat een opgeslagen id staan - hij leidt alleen een ontbrekend id af
+    - dus deze dubbele id overleeft het lezen en hoort bij `validate()` te
+    stranden, niet stil verdwijnen.
+
+    The reader leaves a stored id alone - it only derives a missing one - so this
+    duplicate id survives being read and belongs to `validate()` failing, not to
+    it disappearing quietly.
+    """
+    data = installation()
+    data["openings"] = [
+        {
+            "entity_id": BACK_DOOR,
+            "zone_ids": ["woonkamer"],
+            "open_state": "on",
+            "delay": 0,
+            "opening_id": "deur",
+        },
+        {
+            "entity_id": SKYLIGHT,
+            "zone_ids": [],
+            "open_state": "open",
+            "delay": 0,
+            "opening_id": "deur",
+        },
+    ]
+    return data
+
+
+def issue_for(home: LiveHome) -> Any:
+    """Return this installation's repair notice for a broken configuration."""
+    registry = ir.async_get(home.hass)
+    return registry.async_get_issue(DOMAIN, f"invalid_config_{home.entry.entry_id}")
+
+
+class TestADuplicateOpeningIdReachesTheRepairNotice:
+    """Een opgeslagen dubbel `opening_id` komt aan waar de gebruiker kijkt."""
+
+    async def test_a_stored_duplicate_id_lands_in_the_issue_registry(self) -> None:
+        home = await start_house(duplicate_installation(), states=world())
+        try:
+            issue = issue_for(home)
+            assert issue is not None, "geen reparatiemelding voor een dubbel opening-id"
+            assert issue.translation_key == "invalid_config"
+            assert issue.severity == ir.IssueSeverity.WARNING
+            placeholders = issue.translation_placeholders or {}
+            assert placeholders.get("count") == "1", placeholders
+            assert "deur" in placeholders["problems"], placeholders["problems"]
+        finally:
+            await stop_house(home)
