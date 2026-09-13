@@ -24,7 +24,7 @@ wrong comes out of `validate()`, not out of an exception here.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from datetime import time
 from typing import Any
 
@@ -72,12 +72,11 @@ from .table_storage import dict_from, parse_leaf, values_from, write_leaf
 
 def config_from_dict(raw: Mapping[str, Any]) -> DirectorConfig:
     """Return the installation described by `raw`."""
-    openings: list[Opening] = []
-    taken_opening_ids: set[str] = set()
-    for item in _items(raw, "openings"):
-        opening = _opening(item, taken_opening_ids)
-        openings.append(opening)
-        taken_opening_ids.add(opening.opening_id)
+    stored_openings = _items(raw, "openings")
+    openings = [
+        _opening(item, opening_id)
+        for item, opening_id in zip(stored_openings, opening_ids(stored_openings), strict=True)
+    ]
     return DirectorConfig(
         zones=tuple(_zone(item) for item in _items(raw, "zones")),
         circuits=tuple(_circuit(item) for item in _items(raw, "circuits")),
@@ -298,33 +297,47 @@ def _time_window(raw: Mapping[str, Any]) -> TimeWindow:
     )
 
 
-def _unique_opening_id(entity_id: str, taken: set[str]) -> str:
-    """Return `entity_id` or the first `entity_id_<n>` not in `taken`.
+def opening_ids(items: Iterable[Mapping[str, Any]]) -> list[str]:
+    """Return the id of every opening, deriving a missing one from its sensor.
 
-    Dezelfde vorm als `config_flow._unique_id`, maar zonder `slugify`: de
-    entity_id is al een geldige, unieke identifier en moet dat blijven, anders
-    verdwijnt de overbruggingsschakelaar van bestaande installaties bij de
-    upgrade. Alleen opslag van vóór 7.5.3 heeft geen opening_id; wie twee
-    openingen op dezelfde sensor had, kreeg toen één id voor twee schakelaars.
+    Eén afleiding, op één plek, voor twee lezers: de opslaglezer hieronder en de
+    options flow, die de ruwe opslag leest. Een ontbrekend `opening_id` komt uit
+    de `entity_id` en niet uit de naam, want de entity_id is de identiteit en
+    blijft dezelfde als iemand er later een naam aan hangt - anders wisselt de
+    `unique_id` van de overbruggingsschakelaar en verdwijnt de entiteit met
+    geschiedenis en dashboardverwijzingen erbij. Alleen opslag van vóór 7.5.3
+    heeft geen id; een tweede opening op dezelfde sensor krijgt `_<n>` erachter.
+    Een opgeslagen id wordt nooit veranderd, ook een dubbele niet: dat is iets
+    voor `validate()` om te melden, niet voor deze lezer om stil op te lossen.
 
-    The same shape as `config_flow._unique_id`, but without `slugify`: the
-    entity id is already a valid, unique identifier and must stay that way,
-    otherwise the bypass switch of existing installations disappears on
-    upgrade. Only storage from before 7.5.3 has no opening id; two openings on
-    one sensor then got one id for two switches.
+    One derivation, in one place, for two readers: the storage reader below and
+    the options flow, which reads the raw storage. A missing `opening_id` comes
+    from the `entity_id` and not from the name, because the entity id is the
+    identity and stays the same once somebody hangs a name on it - otherwise the
+    bypass switch's `unique_id` changes and the entity disappears, history and
+    dashboard references included. Only storage from before 7.5.3 has no id; a
+    second opening on the same sensor gets `_<n>` appended. A stored id is never
+    changed, not even a duplicate one: that is for `validate()` to report, not
+    for this reader to solve quietly.
     """
-    base = entity_id or "opening"
-    if base not in taken:
-        return base
-    index = 2
-    while f"{base}_{index}" in taken:
-        index += 1
-    return f"{base}_{index}"
+    ids: list[str] = []
+    taken: set[str] = set()
+    for item in items:
+        opening_id = _text(item.get("opening_id"))
+        if not opening_id:
+            base = _text(item.get("entity_id")) or "opening"
+            opening_id, index = base, 1
+            while opening_id in taken:
+                index += 1
+                opening_id = f"{base}_{index}"
+        ids.append(opening_id)
+        taken.add(opening_id)
+    return ids
 
 
-def _opening(raw: Mapping[str, Any], taken: set[str]) -> Opening:
+def _opening(raw: Mapping[str, Any], opening_id: str) -> Opening:
+    """Return one opening, with the id handed in by `opening_ids`."""
     entity_id = _text(raw.get("entity_id"))
-    opening_id = _text(raw.get("opening_id")) or _unique_opening_id(entity_id, taken)
     return Opening(
         entity_id=entity_id,
         zone_ids=tuple(_strings(raw.get("zone_ids"))),

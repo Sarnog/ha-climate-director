@@ -117,11 +117,26 @@ FUNCTION_LIMIT = 80
 # `_rule_duplicate_opening_ids` — a doubled opening id must get a `Problem`
 # code instead of silently sharing two switches. A new validation rule cannot
 # exist without lines; the ratchet makes that growth visible.
+#
+# Ronde 27 (R27-2): `config_flow.py` 1418 → 1444 door `_normalise_opening_ids`
+# — de options flow leest de ruwe opslag, dus een opening zonder `opening_id`
+# kreeg bij de eerste bewerking een id uit de naam en daarmee een nieuwe
+# `unique_id`. De afleiding zelf woont in `engine/serialise.opening_ids`, dat
+# daardoor onder de 700 blijft: `_unique_opening_id` ging erin op in plaats van
+# ernaast te staan. Wat hier groeit is de aanroep plus de uitleg waarom.
+#
+# Round 27 (R27-2): `config_flow.py` 1418 → 1444 through `_normalise_opening_ids`
+# — the options flow reads the raw storage, so an opening without an
+# `opening_id` got an id from its name on the first edit, and with it a new
+# `unique_id`. The derivation itself lives in `engine/serialise.opening_ids`,
+# which stays under 700 because of it: `_unique_opening_id` merged into that
+# function instead of standing beside it. What grows here is the call plus the
+# explanation of why.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2143,
     "coordinator.py": 1756,
     "engine/decide.py": 1677,
-    "config_flow.py": 1418,
+    "config_flow.py": 1444,
     "schemas.py": 900,
 }
 

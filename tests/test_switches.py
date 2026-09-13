@@ -51,10 +51,26 @@ class _Entry:
     title = "Climate Director"
 
 
+class _States:
+    """Stand-in for `hass.states`: no sensor of this house is known here."""
+
+    def get(self, entity_id: str):
+        """Return nothing: these switches are tested without a running house."""
+        return None
+
+
+class _Hass:
+    """Stand-in for `hass`: only what the switch reads off it."""
+
+    def __init__(self) -> None:
+        self.states = _States()
+
+
 class _Coordinator:
     """Stand-in carrying what the switch and its entity base touch."""
 
     def __init__(self) -> None:
+        self.hass = _Hass()
         self.config = config()
         self.config_entry = _Entry()
         self.version = ""

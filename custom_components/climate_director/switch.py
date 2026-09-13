@@ -203,6 +203,35 @@ class ZoneOverrideSwitch(_DirectorSwitch):
         return self.coordinator.zone_overrides.get(self._zone_id, False)
 
 
+def _opening_label(coordinator: ClimateDirectorCoordinator, opening_id: str) -> str:
+    """Return the readable label for one opening's bypass switch.
+
+    Een legacy-opening heeft geen naam en heet in de opslag naar zijn
+    `opening_id`, dat de `entity_id` van de sensor is. Dan leest de schakelaar
+    als "Overbrugging binary_sensor.achterdeur". Valt er geen naam te kiezen,
+    dan is de friendly name van de sensor zelf de eerstvolgende leesbare
+    aanduiding - die verandert mee als iemand de sensor hernoemt, en dat is
+    precies wat je wilt voor een opening zonder eigen naam.
+
+    A legacy opening has no name and is called after its `opening_id` in
+    storage, which is the sensor's `entity_id`. The switch then reads as
+    "Bypass binary_sensor.achterdeur". When there is no name to pick, the
+    sensor's own friendly name is the next readable label - it follows along
+    when somebody renames the sensor, which is exactly what you want for an
+    opening without a name of its own.
+    """
+    opening = next(
+        (item for item in coordinator.config.openings if item.opening_id == opening_id),
+        None,
+    )
+    if opening is None:
+        return opening_id
+    if opening.name != opening.opening_id:
+        return opening.name
+    state = coordinator.hass.states.get(opening.entity_id)
+    return state.name if state is not None else opening.name
+
+
 class OpeningBypassSwitch(_DirectorSwitch):
     """Bridges one opening: while on, that opening counts nowhere (anchor 8)."""
 
@@ -214,11 +243,7 @@ class OpeningBypassSwitch(_DirectorSwitch):
         """Set up the bypass switch for one opening."""
         self._opening_id = opening_id
         super().__init__(coordinator, f"opening_{opening_id}_bypass")
-        opening = next(
-            (item for item in coordinator.config.openings if item.opening_id == opening_id),
-            None,
-        )
-        self._attr_translation_placeholders = {"opening": opening.name if opening else opening_id}
+        self._attr_translation_placeholders = {"opening": _opening_label(coordinator, opening_id)}
 
     def _push(self) -> None:
         self.coordinator.opening_bypasses[self._opening_id] = self._is_on

@@ -28,7 +28,7 @@ from .coordinator import ClimateDirectorEntry
 from .engine import validate
 from .engine.fields import SETTINGS_FIELDS, SOURCE_FIELDS
 from .engine.models import Season, ZoneGate
-from .engine.serialise import config_from_dict
+from .engine.serialise import config_from_dict, opening_ids
 from .schema_fields import write_table
 from .schemas import (
     _ADD,
@@ -174,6 +174,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         if not self._installation:
             stored = self.config_entry.options.get(CONF_INSTALLATION) or {}
             self._installation = _deep_copy(stored)
+            self._normalise_opening_ids()
         if self._shadow_mode is None:
             self._shadow_mode = self.config_entry.options.get(CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE)
 
@@ -1019,6 +1020,31 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         )
 
     # -- hulpjes / helpers ---------------------------------------------------
+
+    def _normalise_opening_ids(self) -> None:
+        """Fill a derived `opening_id` for every opening that lacks one.
+
+        De opslag van vóór 7.5.3 draagt geen `opening_id`, en deze flow leest de
+        ruwe opslag. Zonder deze stap leidt het bewerkscherm het id af uit de
+        naam die je net intypt, en dan wisselt de `unique_id` van de
+        overbruggingsschakelaar: entiteit weg, geschiedenis weg, elke
+        dashboardverwijzing stuk. Daarom dezelfde afleiding als de opslaglezer,
+        uit één functie, en wat die toevoegt schrijft het opslagscherm meteen
+        mee - de migratie die `async_migrate_entry` niet doet.
+
+        Storage from before 7.5.3 carries no `opening_id`, and this flow reads
+        the raw storage. Without this step the edit screen derives the id from
+        the name you just typed, and then the bypass switch's `unique_id`
+        changes: entity gone, history gone, every dashboard reference broken.
+        Hence the same derivation as the storage reader, from one function, and
+        whatever it adds is written along by the save screen - the migration
+        `async_migrate_entry` does not do.
+        """
+        stored = [
+            item for item in self._installation.get("openings") or [] if isinstance(item, dict)
+        ]
+        for opening, opening_id in zip(stored, opening_ids(stored), strict=True):
+            opening["opening_id"] = opening_id
 
     def _list(self, key: str) -> list[dict[str, Any]]:
         """Return the editable list stored under `key`, creating it if needed."""

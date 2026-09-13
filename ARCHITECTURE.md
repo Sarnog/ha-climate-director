@@ -122,10 +122,19 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
    gewoon door. Een opening draagt hiervoor een eigen `opening_id` én een naam,
    net als elk ander objecttype — zonder eigen identiteit hangt de schakelaar aan
    de `entity_id` van de sensor en verdwijnt hij zodra die sensor vervangen wordt.
-   Ontbreekt het id in opslag van vóór 7.5.3, dan leidt de serialisatie het stil
-   af uit de `entity_id`, uniek per sensor — twee openingen op dezelfde sensor
-   krijgen zo elk een eigen schakelaar. Een opgeslagen dubbel `opening_id`
-   weigert `validate()` met `duplicate_opening_id`.
+   Ontbreekt het id in opslag van vóór 7.5.3, dan leidt de serialisatie het af
+   uit de `entity_id`, uniek per sensor — twee openingen op dezelfde sensor
+   krijgen zo elk een eigen schakelaar. Die afleiding staat op één plek
+   (`serialise.opening_ids`) met twee lezers: de opslaglezer en de options
+   flow, die de ruwe opslag leest en een ontbrekend id bij het laden invult,
+   zodat het opslagscherm het meeschrijft. Zonder die stap leidt het
+   bewerkscherm het id af uit de naam die je net intypt, en dan wisselt de
+   `unique_id` van de overbruggingsschakelaar: entiteit weg, geschiedenis weg,
+   elke dashboardverwijzing stuk. `config_flow._unique_id(naam, ...)` geldt
+   daarom alleen nog voor een **nieuwe** opening. Een opening zonder naam heet
+   naar zijn id, en omdat dat de `entity_id` is valt de schakelaar dan terug op
+   de friendly name van de sensor. Een opgeslagen dubbel `opening_id` weigert
+   `validate()` met `duplicate_opening_id`.
 9. **Een vakantiedag telt als zaterdag, behalve waar dat één bewoner het huis
    laat ophouden.** De stiltevensters en de roosters vertalen een vakantiedag naar
    zaterdag, tenzij er vakantievensters zijn opgegeven — die nemen het dan over.
@@ -1167,9 +1176,18 @@ them without changing them here first.
    name for this, like every other object type — without its own identity the
    switch hangs on the sensor's `entity_id` and disappears the moment that sensor
    is replaced. When the id is missing in storage from before 7.5.3,
-   serialisation derives it silently from the `entity_id`, unique per sensor —
-   two openings on the same sensor each get their own switch. A stored duplicate
-   `opening_id` is refused by `validate()` with `duplicate_opening_id`.
+   serialisation derives it from the `entity_id`, unique per sensor — two
+   openings on the same sensor each get their own switch. That derivation lives
+   in one place (`serialise.opening_ids`) with two readers: the storage reader
+   and the options flow, which reads the raw storage and fills a missing id on
+   load so the save screen writes it along. Without that step the edit screen
+   derives the id from the name you just typed, and then the bypass switch's
+   `unique_id` switches: entity gone, history gone, every dashboard reference
+   broken. `config_flow._unique_id(name, ...)` therefore only applies to a
+   **new** opening. An opening without a name is called after its id, and since
+   that is the `entity_id` the switch falls back to the sensor's friendly name.
+   A stored duplicate `opening_id` is refused by `validate()` with
+   `duplicate_opening_id`.
 9. **A holiday counts as a Saturday, except where that would let one resident
    hold the house up.** The quiet windows and the schedules translate a holiday
    into a Saturday, unless holiday windows have been given — those take over then.
