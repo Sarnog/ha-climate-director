@@ -179,7 +179,13 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     `min_temp`/`max_temp` van de gekozen bron, met dezelfde regel als het
     engine-pad (`clamped_target`). **Klemmen, niet weigeren** — weigeren zou een
     tweede regel naast de eerste zijn, en dan lopen de twee paden uit elkaar.
-    Een aanroep die niets kan zetten weigert nog steeds, met
+    Die klem hangt aan het moment van **versturen**, niet aan het moment van de
+    aanroep (R28-2): tussen die twee kan het apparaat zijn bereik gaan melden of
+    juist kwijtraken — een cloud-drop-out laat `min_temp` even verdwijnen — en
+    de beslisronde heeft de wereld van dat moment al in de hand. De servicelaag
+    rekent daarom alleen nog de eenheid om; de klem staat in de ronde waarin het
+    commando de deur uit gaat, waar dezelfde `clamped_target` als op het
+    engine-pad geldt. Een aanroep die niets kan zetten weigert nog steeds, met
     `zone_no_source_for_mode`.
 12. **Het bereik van een bron hangt aan de bron en noemt zones.** Een bron draagt
     `covers_zones`: de zones die hij meeverwarmt of meekoelt zodra hij draait.
@@ -1240,8 +1246,15 @@ them without changing them here first.
     to Celsius. What the appliance itself accepts *is* a bound: the setpoint is
     clamped to the chosen source's `min_temp`/`max_temp`, by the same rule as the
     engine path (`clamped_target`). **Clamping, not refusing** — refusing would be
-    a second rule beside the first, and then the two paths drift apart. A call
-    that cannot set anything still refuses, with `zone_no_source_for_mode`.
+    a second rule beside the first, and then the two paths drift apart. That
+    clamp hangs on the moment of **sending**, not on the moment of the call
+    (R28-2): between those two the appliance can start reporting its range or
+    lose it — a cloud drop-out makes `min_temp` disappear for a while — and the
+    decision round already holds the world of that moment. The service layer
+    therefore only converts the unit; the clamp sits in the round that puts the
+    command on the wire, where the same `clamped_target` applies as on the
+    engine path. A call that cannot set anything still refuses, with
+    `zone_no_source_for_mode`.
 12. **A source's reach hangs on the source and names zones.** A source carries
     `covers_zones`: the zones it heats or cools along with it the moment it runs.
     Empty means *its own zone only* — the behaviour from before this setting, so

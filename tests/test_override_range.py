@@ -163,6 +163,73 @@ class TestAnOverrideSetpointStaysInsideTheAppliance:
             await stop_house(home)
 
 
+class TestTheClampHangsOnSending:
+    """R28-2: de klem hangt aan het versturen, niet aan de aanroep.
+
+    Tussen de service-aanroep en de beslisronde waarin het commando de deur uit
+    gaat, kan het apparaat zijn bereik gaan melden - of juist kwijtraken. De
+    klem hoort daarom bij de ronde, waar de wereld al in de hand is, en niet bij
+    de aanroep. Anders gaat er een setpoint uit dat het apparaat weigert, en
+    loopt de override door met een waarde die nooit aankwam: de zone staat op
+    "van mij" terwijl het apparaat op zijn oude waarde blijft staan.
+
+    R28-2: the clamp hangs on sending, not on the call.
+
+    Between the service call and the decision round that puts the command on the
+    wire, the appliance can start reporting its range - or lose it. The clamp
+    therefore belongs with the round, where the world is already in hand, and
+    not with the call. Otherwise a setpoint goes out that the appliance refuses,
+    and the override carries on with a value that never arrived: the zone stands
+    on "mine" while the appliance stays on its old value.
+    """
+
+    async def test_a_range_that_arrives_after_the_call_is_still_honoured(self) -> None:
+        """Het bereik komt binnen ná de aanroep en vóór de ronde: klem naar 30.
+
+        Het apparaat is op het moment van de aanroep onbereikbaar - de
+        cloud-drop-out waarin `min_temp`/`max_temp` ontbreken - en meldt zijn
+        bereik van 10-30 pas vóór de beslisronde.
+
+        The range arrives after the call and before the round: clamp to 30. The
+        appliance is unreachable at the moment of the call - the cloud drop-out
+        in which `min_temp`/`max_temp` are missing - and only reports its 10-30
+        range before the decision round.
+        """
+        states = {
+            "sensor.woonkamer": ("20.0", {"unit_of_measurement": "°C"}),
+            "sensor.buiten": ("4.0", {"unit_of_measurement": "°C"}),
+            LIVING: ("unavailable", {"hvac_modes": ["heat", "cool", "off"]}),
+        }
+        home = await start_house(
+            installation(), states=states, appliance="stubborn", unit_system=METRIC_SYSTEM
+        )
+        try:
+            home.clear_calls()
+
+            await home.call(
+                DOMAIN,
+                "set_override",
+                {"zone_id": "woonkamer", "hvac_mode": "cool", "minutes": 60, "temperature": 40.0},
+            )
+
+            # Het apparaat is er weer, mét zijn bereik, vóór de beslisronde.
+            # The appliance is back, with its range, before the decision round.
+            home.set(
+                LIVING,
+                "off",
+                hvac_modes=["heat", "cool", "off"],
+                min_temp=10.0,
+                max_temp=30.0,
+            )
+
+            await home.evaluate()
+
+            assert setpoints(home) == [30.0], home.climate_calls()
+            assert home.coordinator.zone_overrides["woonkamer"] is True
+        finally:
+            await stop_house(home)
+
+
 class TestTheEnginePathKeepsClamping:
     async def test_a_target_outside_the_range_lands_on_the_bound(self) -> None:
         """Het engine-pad klemde al; dat blijft zo, in dezelfde vorm.

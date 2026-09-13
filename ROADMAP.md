@@ -116,10 +116,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   `script/_gen_guides_test.py` (`LINE_LENGTH`). Verandert de eerste, dan schrijft de
   generator een uitzonderingenlijst die `ruff format --check` opnieuw wil opmaken; hij
   hoort die breedte uit `pyproject.toml` te lezen.
-- **De override-klem bouwt de hele wereld voor één getal** — `_override_setpoint` roept
-  `coordinator.build_world()` aan om `min_temp`/`max_temp` van één bron te lezen. Een
-  lichtere lezer (de laatst bewaarde wereld bijvoorbeeld) doet hetzelfde werk zonder bij
-  elke override-aanroep alle entiteiten opnieuw te lezen.
 
 ## Would have
 
@@ -240,10 +236,6 @@ The worked-out design proposals for everything below live in
   `script/_gen_guides_test.py` (`LINE_LENGTH`). Change the first and the generator writes
   an exception list that `ruff format --check` wants to redo; it should read that width
   from `pyproject.toml`.
-- **The override clamp builds the whole world for one number** — `_override_setpoint`
-  calls `coordinator.build_world()` to read one source's `min_temp`/`max_temp`. A lighter
-  reader (the last saved world, for instance) does the same work without reading every
-  entity again on each override call.
 
 ## Would have
 

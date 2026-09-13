@@ -960,7 +960,7 @@ class ClimateDirectorCoordinator(
             # the one command at that moment. After that the director simply
             # decides again.
             expiry_changes = self._consume_expired_overrides(world.now)
-            pending_changes = self._consume_pending_override_changes()
+            pending_changes = self._consume_pending_override_changes(world)
             self.last_changes = (
                 changes(plan, world, self._sent_setpoints) + expiry_changes + pending_changes
             )

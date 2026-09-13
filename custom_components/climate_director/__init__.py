@@ -68,7 +68,7 @@ from .const import (
     WHEN_DONE_TURN_OFF,
 )
 from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry, storage_key
-from .engine import DirectorConfig, Source, clamped_target
+from .engine import DirectorConfig
 from .units import temperature_unit_of, to_celsius
 
 _LOGGER = logging.getLogger(__name__)
@@ -311,27 +311,26 @@ def _chosen_entries(hass: HomeAssistant, call: ServiceCall) -> list[ClimateDirec
     ]
 
 
-def _override_setpoint(
-    runtime: ClimateDirectorCoordinator, source: Source, temperature: float | None, unit: str
-) -> float | None:
-    """Return the override's setpoint in Celsius, inside the appliance's range.
+def _override_setpoint(temperature: float | None, unit: str) -> float | None:
+    """Return the override's setpoint in Celsius.
 
-    Dezelfde klem als het engine-pad (`engine.clamped_target`), want een koppig
-    apparaat weigert een waarde buiten zijn `min_temp`/`max_temp` stil:
-    `applier.apply()` vangt die weigering op en de override liep dan door met een
-    setpoint dat nooit aankwam. Klemmen en niet weigeren houdt het bij één regel
-    in plaats van twee die uit elkaar lopen.
+    Alleen de eenheidsomrekening. Het klemmen naar `min_temp`/`max_temp` van het
+    apparaat gebeurt in de beslisronde waarin het commando werkelijk de deur uit
+    gaat (R28-2): daar is de wereld al in de hand, en tussen de aanroep en die
+    ronde kan het bereik van het apparaat veranderen - een cloud-drop-out laat
+    `min_temp` even verdwijnen, of een apparaat meldt zijn bereik pas later.
+    Beide paden gebruiken daar dezelfde `engine.clamped_target`.
 
-    The same clamp as the engine path (`engine.clamped_target`), because a
-    stubborn appliance quietly refuses a value outside its `min_temp`/`max_temp`:
-    `applier.apply()` catches that refusal and the override then carried on with
-    a setpoint that never arrived. Clamping rather than refusing keeps it at one
-    rule instead of two that drift apart.
+    Only the unit conversion. Pressing the setpoint into the appliance's
+    `min_temp`/`max_temp` happens in the decision round that really puts the
+    command on the wire (R28-2): the world is already in hand there, and between
+    the call and that round the appliance's range can change - a cloud drop-out
+    makes `min_temp` disappear for a while, or an appliance only reports its
+    range later. Both paths use the same `engine.clamped_target` there.
     """
     if temperature is None:
         return None
-    celsius = to_celsius(temperature, unit)
-    return clamped_target(celsius, runtime.build_world().climate(source.entity_id))
+    return to_celsius(temperature, unit)
 
 
 def _refuse_unknown_zones(zone_ids, entries, wanted_entry_id) -> None:
@@ -436,7 +435,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             runtime.async_set_override(
                 zone_id,
                 hvac_mode,
-                _override_setpoint(runtime, source, temperature, unit),
+                _override_setpoint(temperature, unit),
                 call.data.get(ATTR_MINUTES),
                 call.data.get(ATTR_WHEN_DONE, WHEN_DONE_TURN_OFF),
             )

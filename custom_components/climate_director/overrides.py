@@ -18,6 +18,7 @@ about `zone_overrides`.
 from __future__ import annotations
 
 import logging
+from dataclasses import replace
 from datetime import datetime, timedelta
 
 from homeassistant.core import callback
@@ -25,10 +26,12 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
 from .const import WHEN_DONE_LEAVE, WHEN_DONE_TURN_OFF
+from .engine import clamped_target
 from .engine.diff import Change
 from .engine.families import MODE_OFF, ModeFamily, family_of
 from .engine.models import Source, Zone
 from .engine.plan import Reason, UnitCommand
+from .engine.world import WorldState
 
 # De logger heet coordinator, zodat het verplaatsen van deze methodes geen
 # enkele logregel verandert.
@@ -159,11 +162,50 @@ class _OverridesMixin:
         return min(candidates, key=lambda source: (source.priority, source.source_id))
 
     @callback
-    def _consume_pending_override_changes(self) -> tuple[Change, ...]:
-        """Return the same-round override commands and forget them."""
-        pending = tuple(self._pending_override.values())
+    def _consume_pending_override_changes(self, world: WorldState) -> tuple[Change, ...]:
+        """Return the same-round override commands, clamped to this round.
+
+        De klem hoort hier en niet bij de service-aanroep (R28-2): tussen die
+        twee kan het apparaat zijn bereik gaan melden - of juist kwijtraken.
+        Deze ronde heeft de wereld al in de hand; `_override_setpoint` doet
+        daarom alleen nog de eenheidsomrekening. Beide paden gebruiken dezelfde
+        `engine.clamped_target`, zodat er geen tweede regel naast de eerste
+        ontstaat. Daarna is de wachtrij leeg: een commando gaat precies één keer
+        de deur uit.
+
+        The clamp belongs here and not with the service call (R28-2): between
+        those two the appliance can start reporting its range - or lose it. This
+        round already holds the world; `_override_setpoint` therefore only does
+        the unit conversion. Both paths use the same `engine.clamped_target`, so
+        no second rule arises beside the first. The queue is empty afterwards: a
+        command goes out exactly once.
+        """
+        pending = tuple(
+            self._clamp_override_change(change, world) for change in self._pending_override.values()
+        )
         self._pending_override.clear()
         return pending
+
+    def _clamp_override_change(self, change: Change, world: WorldState) -> Change:
+        """Return `change` with its setpoint pressed inside the appliance's range.
+
+        Een opgave zonder bereik laat `clamped_target` door, net als op het
+        engine-pad: onbekend is onbekend. Alleen een setpoint dat werkelijk
+        verschuift wordt opnieuw opgebouwd, zodat de rest van het commando
+        (reden, bron, zone) ongemoeid blijft.
+
+        A listing without a range passes through `clamped_target`, just as on the
+        engine path: unknown is unknown. Only a setpoint that really shifts is
+        rebuilt, so the rest of the command (reason, source, zone) stays
+        untouched.
+        """
+        temperature = change.command.temperature
+        if not change.set_temperature or temperature is None:
+            return change
+        clamped = clamped_target(temperature, world.climate(change.entity_id))
+        if clamped == temperature:
+            return change
+        return replace(change, command=replace(change.command, temperature=clamped))
 
     @callback
     def _drop_override_timers(self, zone_id: str) -> None:
