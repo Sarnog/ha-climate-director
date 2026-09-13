@@ -272,19 +272,21 @@ class TestTheSwitchFollowsTheSensorName:
     bleef de schakelaar heten naar wat er op dat eerste moment stond.
 
     HA's `name` is een `cached_property` en `_attr_translation_placeholders`
-    staat niet in HA's lijst van cache-ongeldigmakers, dus een nieuwe placeholder
-    alleen is niet genoeg: de schakelaar moet de gecachte naam zelf weggooien en
-    de staat opnieuw schrijven.
+    staat net als `name` wél in HA's `CACHED_PROPERTIES_WITH_ATTR_`: de
+    `_attr_`-setter maakt de placeholdercache ongeldig, maar niet de naamcache.
+    Een nieuwe placeholder alleen is dus niet genoeg: de schakelaar moet de
+    gecachte naam zelf weggooien en de staat opnieuw schrijven.
 
     The name was read once, at setup. In production the five openings are Zigbee
     contacts that can just as well appear *after* the integration on a restart,
     and renaming a sensor happens too; in both cases the switch kept the name it
     had at that first moment.
 
-    HA's `name` is a `cached_property` and `_attr_translation_placeholders` is
-    not in HA's list of cache invalidators, so a new placeholder alone is not
-    enough: the switch must drop the cached name itself and write its state
-    again.
+    HA's `name` is a `cached_property` and `_attr_translation_placeholders` sits
+    in HA's `CACHED_PROPERTIES_WITH_ATTR_` just like `name`: the `_attr_` setter
+    invalidates the placeholder cache, but not the name cache. So a new
+    placeholder alone is not enough: the switch must drop the cached name itself
+    and write its state again.
     """
 
     async def test_a_sensor_that_appears_later_names_the_switch(self) -> None:

@@ -289,19 +289,25 @@ class OpeningBypassSwitch(_DirectorSwitch):
     def _refresh_label(self) -> None:
         """Follow the sensor's friendly name without a reload (R28-1).
 
-        Gemeten op deze Home Assistant-versie: `name` is een `cached_property`
-        en `_attr_translation_placeholders` staat niet in HA's lijst van
-        cache-ongeldigmakers, dus een nieuwe placeholder alleen laat de oude
-        naam staan. Daarom gooit de schakelaar de gecachte naam er zelf uit
-        zodra het label werkelijk verandert - niet elke ronde, want dat zou de
-        state onnodig opnieuw publiceren.
+        Gemeten op deze Home Assistant-versie: `translation_placeholders` staat
+        net als `name` wél in HA's `CACHED_PROPERTIES_WITH_ATTR_`, en de
+        `_attr_`-setter maakt de cache van `translation_placeholders` ook
+        ongeldig. Alleen: `name` is een eigen `cached_property` die de vertaling
+        met de placeholders opmaakt en zijn uitkomst apart bewaart, dus die
+        cache raakt de placeholder-setter niet. Een nieuwe placeholder alleen
+        laat de oude naam dus staan, en daarom gooit de schakelaar de gecachte
+        naam er zelf uit zodra het label werkelijk verandert - niet elke ronde,
+        want dat zou de state onnodig opnieuw publiceren.
 
-        Measured on this Home Assistant version: `name` is a `cached_property`
-        and `_attr_translation_placeholders` is not in HA's list of cache
-        invalidators, so a new placeholder alone leaves the old name in place.
-        The switch therefore drops the cached name itself as soon as the label
-        really changes - not every round, since that would publish the state
-        again for nothing.
+        Measured on this Home Assistant version: `translation_placeholders`
+        sits in HA's `CACHED_PROPERTIES_WITH_ATTR_` just like `name`, and the
+        `_attr_` setter does invalidate the cache of `translation_placeholders`.
+        Only: `name` is a `cached_property` of its own that renders the
+        translation with the placeholders and stores its result separately, so
+        the placeholder setter does not touch that cache. A new placeholder
+        alone therefore leaves the old name in place, and that is why the switch
+        drops the cached name itself as soon as the label really changes - not
+        every round, since that would publish the state again for nothing.
         """
         label = _opening_label(self.coordinator, self._opening_id)
         if self._attr_translation_placeholders.get("opening") == label:
