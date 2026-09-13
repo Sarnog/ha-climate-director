@@ -249,7 +249,7 @@ class OpeningBypassSwitch(_DirectorSwitch):
         self.coordinator.opening_bypasses[self._opening_id] = self._is_on
 
     def _handle_coordinator_update(self) -> None:
-        """Follow the coordinator, and drop the state when the opening goes away.
+        """Follow the coordinator, the sensor's name, and the opening's state.
 
         De overbrugging blijft staan tot iemand hem zelf terugzet; de
         coordinator gooit `opening_bypasses` niet leeg. Deze koppeling staat er
@@ -258,15 +258,57 @@ class OpeningBypassSwitch(_DirectorSwitch):
         denkt, dan stond hij aan terwijl de opening allang weer meetelt - en
         erger: een herstart herstelt die `on` terug de coordinator in.
 
+        Sinds R28-1 ververst deze ronde ook de naam, want die werd eerder alleen
+        bij het opzetten gelezen en bleef dan staan. In productie zijn de vijf
+        openingen Zigbee-contacten die bij een herstart net zo goed ná de
+        integratie kunnen verschijnen, en een sensor hernoemen komt ook voor;
+        zonder deze verversing heette de schakelaar in beide gevallen naar de
+        kale `entity_id`. Geen herlaad nodig: de coordinator geeft elke
+        beslisronde een update, en een toestandswijziging van de sensor vraagt
+        er zelf een aan.
+
         The bypass holds until someone turns it off themselves; the coordinator
         does not empty `opening_bypasses`. This binding stays all the same, for
         the same reason as the override switch: were the switch to keep its own
         state while the coordinator thought otherwise, it would read on while
         the opening has long since counted again - and worse: a restart restores
         that `on` back into the coordinator.
+
+        Since R28-1 this round refreshes the name too, which used to be read at
+        setup only and then stayed put. In production the five openings are
+        Zigbee contacts that can just as well appear *after* the integration on
+        a restart, and renaming a sensor happens too; without this refresh the
+        switch read as the bare `entity_id` in both cases. No reload needed: the
+        coordinator hands out an update every decision round, and a state change
+        of the sensor asks for one itself.
         """
         self._is_on = self.coordinator.opening_bypasses.get(self._opening_id, False)
+        self._refresh_label()
         self.async_write_ha_state()
+
+    def _refresh_label(self) -> None:
+        """Follow the sensor's friendly name without a reload (R28-1).
+
+        Gemeten op deze Home Assistant-versie: `name` is een `cached_property`
+        en `_attr_translation_placeholders` staat niet in HA's lijst van
+        cache-ongeldigmakers, dus een nieuwe placeholder alleen laat de oude
+        naam staan. Daarom gooit de schakelaar de gecachte naam er zelf uit
+        zodra het label werkelijk verandert - niet elke ronde, want dat zou de
+        state onnodig opnieuw publiceren.
+
+        Measured on this Home Assistant version: `name` is a `cached_property`
+        and `_attr_translation_placeholders` is not in HA's list of cache
+        invalidators, so a new placeholder alone leaves the old name in place.
+        The switch therefore drops the cached name itself as soon as the label
+        really changes - not every round, since that would publish the state
+        again for nothing.
+        """
+        label = _opening_label(self.coordinator, self._opening_id)
+        if self._attr_translation_placeholders.get("opening") == label:
+            return
+        self._attr_translation_placeholders = {"opening": label}
+        self.__dict__.pop("name", None)
+        self._cached_friendly_name = None
 
     @property
     def is_on(self) -> bool:

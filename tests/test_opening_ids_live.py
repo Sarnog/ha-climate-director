@@ -263,6 +263,69 @@ class TestTheSwitchNamesTheSensor:
         assert "Achterdeur contact" not in name, name
 
 
+class TestTheSwitchFollowsTheSensorName:
+    """De naam van de schakelaar volgt de sensor, ook zonder herladen.
+
+    De naam werd één keer bij het opzetten gelezen. In productie zijn de vijf
+    openingen Zigbee-contacten die bij een herstart net zo goed ná de integratie
+    kunnen verschijnen, en een sensor hernoemen komt ook voor; in beide gevallen
+    bleef de schakelaar heten naar wat er op dat eerste moment stond.
+
+    HA's `name` is een `cached_property` en `_attr_translation_placeholders`
+    staat niet in HA's lijst van cache-ongeldigmakers, dus een nieuwe placeholder
+    alleen is niet genoeg: de schakelaar moet de gecachte naam zelf weggooien en
+    de staat opnieuw schrijven.
+
+    The name was read once, at setup. In production the five openings are Zigbee
+    contacts that can just as well appear *after* the integration on a restart,
+    and renaming a sensor happens too; in both cases the switch kept the name it
+    had at that first moment.
+
+    HA's `name` is a `cached_property` and `_attr_translation_placeholders` is
+    not in HA's list of cache invalidators, so a new placeholder alone is not
+    enough: the switch must drop the cached name itself and write its state
+    again.
+    """
+
+    async def test_a_sensor_that_appears_later_names_the_switch(self) -> None:
+        """Een sensor die pas ná het opzetten komt, geeft de schakelaar zijn naam.
+
+        A sensor that only appears after setup names the switch.
+        """
+        states = {key: value for key, value in world().items() if key != BACK_DOOR}
+        home = await start_house(installation(), states=states)
+        try:
+            before = switch_name(home, BACK_DOOR)
+            assert "Achterdeur contact" not in before, before
+
+            home.set(BACK_DOOR, "off", friendly_name="Achterdeur contact")
+            await home.evaluate()
+
+            after = switch_name(home, BACK_DOOR)
+        finally:
+            await stop_house(home)
+        assert "Achterdeur contact" in after, after
+        assert BACK_DOOR not in after, after
+
+    async def test_renaming_the_sensor_renames_the_switch(self) -> None:
+        """Hernoemt iemand de sensor, dan volgt de schakelaarnaam.
+
+        When somebody renames the sensor, the switch name follows.
+        """
+        home = await start_house(installation(), states=world())
+        try:
+            assert "Achterdeur contact" in switch_name(home, BACK_DOOR)
+
+            home.set(BACK_DOOR, "off", friendly_name="Achterdeur vernieuwd")
+            await home.evaluate()
+
+            renamed = switch_name(home, BACK_DOOR)
+        finally:
+            await stop_house(home)
+        assert "Achterdeur vernieuwd" in renamed, renamed
+        assert "Achterdeur contact" not in renamed, renamed
+
+
 def duplicate_installation() -> dict[str, Any]:
     """Return storage where two openings carry the same `opening_id`.
 

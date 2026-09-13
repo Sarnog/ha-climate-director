@@ -133,7 +133,14 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
    elke dashboardverwijzing stuk. `config_flow._unique_id(naam, ...)` geldt
    daarom alleen nog voor een **nieuwe** opening. Een opening zonder naam heet
    naar zijn id, en omdat dat de `entity_id` is valt de schakelaar dan terug op
-   de friendly name van de sensor. Een opgeslagen dubbel `opening_id` weigert
+   de friendly name van de sensor. Die terugval wordt elke beslisronde opnieuw
+   gelezen, niet één keer bij het opzetten: een sensor die pas ná de integratie
+   verschijnt, of die later hernoemd wordt, geeft de schakelaar zonder herladen
+   zijn nieuwe naam. Home Assistant cachet de naam van een entiteit en maakt die
+   cache niet ongeldig als alleen de placeholder verandert, dus de schakelaar
+   gooit hem zelf weg zodra het label werkelijk wijzigt (`switch._refresh_label`)
+   — dat is dezelfde klasse als R27-2: één momentopname bij het opzetten waar de
+   wereld daarna nog kan veranderen. Een opgeslagen dubbel `opening_id` weigert
    `validate()` met `duplicate_opening_id`.
 9. **Een vakantiedag telt als zaterdag, behalve waar dat één bewoner het huis
    laat ophouden.** De stiltevensters en de roosters vertalen een vakantiedag naar
@@ -1192,8 +1199,14 @@ them without changing them here first.
    broken. `config_flow._unique_id(name, ...)` therefore only applies to a
    **new** opening. An opening without a name is called after its id, and since
    that is the `entity_id` the switch falls back to the sensor's friendly name.
-   A stored duplicate `opening_id` is refused by `validate()` with
-   `duplicate_opening_id`.
+   That fallback is read again every decision round, not once at setup: a sensor
+   that only appears *after* the integration, or that is renamed later, gives
+   the switch its new name without a reload. Home Assistant caches an entity's
+   name and does not invalidate that cache when only the placeholder changes, so
+   the switch drops it itself as soon as the label really differs
+   (`switch._refresh_label`) — the same class as R27-2: a snapshot taken at
+   setup where the world can still change afterwards. A stored duplicate
+   `opening_id` is refused by `validate()` with `duplicate_opening_id`.
 9. **A holiday counts as a Saturday, except where that would let one resident
    hold the house up.** The quiet windows and the schedules translate a holiday
    into a Saturday, unless holiday windows have been given — those take over then.
