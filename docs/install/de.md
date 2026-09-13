@@ -918,7 +918,60 @@ Die Integration kennt drei Formen:
 3. **Die Kombination.** Klimakreise für die Zimmer, eine gemeinsame Wärmequelle
    (etwa ein Kessel) für den Rest.
 
-Die Bildschirme und Schaltflächen verwenden genau diese Wörter: **Eine unterlegene Zone darf Luft umwälzen**, **Diesen Kreis löschen**, **Pause beim Aufgabenwechsel (Sekunden)**, **Höchstzahl gleichzeitig laufender Geräte**, **Ruhezeit, bevor ein Gerät neu starten darf (Sekunden)**, **Mindestlaufzeit vor einem Aufgabenwechsel (Sekunden)**, **Vorrang in diesem Kreis**, **Diese Gruppe löschen**, **Geräte in dieser Gruppe**, **Diese Wärmequelle löschen**, **Climate-Entität**, **Zonen, die er versorgt**, **Verzögerung vor dem Aussetzen (Sekunden)**, **Diese Öffnung löschen**, **Dieses Fenster löschen**, **Ruhe bis**, **Ruhe ab**, **Tage, an denen das gilt**, **Diesen Bewohner löschen**, **Schlafsensor zählt ab**, **Zustand, der schlafend bedeutet**, **Schlafsensor zählt bis**, **Was nun**, **Gästemodus bis**, **Heizungsanlage**, **Maximale Vorbereitungszeit (Minuten)**, **Wer zu Hause ist, muss wach sein**, **Jahreszeit-Entität**, **Herkunft der Jahreszeit**, **Zone gilt als festgefahren nach (Minuten)**, **Dieses Gerät automatisch einschalten**, **Diese Quelle löschen**, **Ruhezeit, bevor dieses Gerät erneut starten darf (Sekunden)**, **So lange warten, bevor übernommen wird (Minuten)**, **Diesen Zeitplan löschen**, **Nur kühlen über dieser Außentemperatur**, **Kühlen beginnen bei**, **Diese Zone löschen**, **Nur heizen unter dieser Außentemperatur**, **Heizen beginnen bei**, **Anwesenheitssensor dieser Zone**, **Zustand, der belegt bedeutet**, **Noch so lange als belegt zählen (Sekunden)**, **← Zurück zum Hauptmenü, um etwas zu ändern**, **← Verwerfen und zurück**, **Diese Änderungen behalten und zurück**.
+## Wörterliste der Oberfläche
+
+Die Bildschirme und Schaltflächen verwenden die Wörter unten. Diese stehen
+hier zusammen, weil der Text oben sie nicht überall wörtlich nennt.
+
+| Wort | Bildschirm |
+|---|---|
+| Diesen Kreis löschen | Klimakreis |
+| Eine unterlegene Zone darf Luft umwälzen | Klimakreis |
+| Höchstzahl gleichzeitig laufender Geräte | Klimakreis |
+| Mindestlaufzeit vor einem Aufgabenwechsel (Sekunden) | Klimakreis |
+| Pause beim Aufgabenwechsel (Sekunden) | Klimakreis |
+| Ruhezeit, bevor ein Gerät neu starten darf (Sekunden) | Klimakreis |
+| Vorrang in diesem Kreis | Priorität für {zone} |
+| Diese Gruppe löschen | Exklusive Gruppe |
+| Geräte in dieser Gruppe | Exklusive Gruppe |
+| Climate-Entität | Gemeinsame Wärmequelle |
+| Diese Wärmequelle löschen | Gemeinsame Wärmequelle |
+| Zonen, die er versorgt | Gemeinsame Wärmequelle |
+| Diese Öffnung löschen | Öffnung |
+| Verzögerung vor dem Aussetzen (Sekunden) | Öffnung |
+| Diese Änderungen behalten und zurück | Jeder Bildschirm |
+| ← Verwerfen und zurück | Jeder Bildschirm |
+| ← Zurück zum Hauptmenü, um etwas zu ändern | Etwas fällt auf |
+| Dieses Fenster löschen | Ruhefenster |
+| Ruhe ab | Ruhefenster |
+| Ruhe bis | Ruhefenster |
+| Tage, an denen das gilt | Ruhefenster |
+| Diesen Bewohner löschen | Bewohner |
+| Schlafsensor zählt ab | Bewohner |
+| Schlafsensor zählt bis | Bewohner |
+| Zustand, der schlafend bedeutet | Bewohner |
+| Was nun | Etwas fällt auf |
+| Gästemodus bis | Allgemeine Einstellungen |
+| Heizungsanlage | Allgemeine Einstellungen |
+| Herkunft der Jahreszeit | Allgemeine Einstellungen |
+| Jahreszeit-Entität | Allgemeine Einstellungen |
+| Maximale Vorbereitungszeit (Minuten) | Allgemeine Einstellungen |
+| Wer zu Hause ist, muss wach sein | Allgemeine Einstellungen |
+| Zone gilt als festgefahren nach (Minuten) | Allgemeine Einstellungen |
+| Climate-Entität | Quelle |
+| Diese Quelle löschen | Quelle |
+| Dieses Gerät automatisch einschalten | Quelle |
+| Ruhezeit, bevor dieses Gerät erneut starten darf (Sekunden) | Quelle |
+| So lange warten, bevor übernommen wird (Minuten) | Quelle |
+| Diesen Zeitplan löschen | Zeitplan |
+| Anwesenheitssensor dieser Zone | Zone |
+| Diese Zone löschen | Zone |
+| Heizen beginnen bei | Zone |
+| Kühlen beginnen bei | Zone |
+| Noch so lange als belegt zählen (Sekunden) | Zone |
+| Nur heizen unter dieser Außentemperatur | Zone |
+| Nur kühlen über dieser Außentemperatur | Zone |
+| Zustand, der belegt bedeutet | Zone |
 
 ## Sprachen
 

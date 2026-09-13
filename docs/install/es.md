@@ -912,7 +912,86 @@ La integración conoce tres formas:
 3. **La combinación.** Circuitos de climatización para las habitaciones,
    una fuente de calor compartida (una caldera, por ejemplo) para el resto.
 
-Las pantallas y los botones usan exactamente estas palabras: **Una zona que pierde puede mover aire**, **Regla de conflicto**, **Eliminar este circuito**, **Pausa al cambiar de tarea (segundos)**, **Número máximo de unidades funcionando a la vez**, **Descanso antes de que una unidad pueda rearrancar (segundos)**, **Tiempo mínimo antes de cambiar de tarea (segundos)**, **Cuando termines aquí**, **Prioridad en este circuito**, **Eliminar este grupo**, **Aparatos de este grupo**, **Eliminar esta fuente de calor**, **Entidad climate**, **Zonas a las que sirve**, **Fuente de calor**, **Retardo antes de suspender (segundos)**, **Eliminar esta abertura**, **Abertura**, **Eliminar esta franja**, **Silencio hasta**, **Silencio desde**, **Días en que se aplica**, **Eliminar este residente**, **El sensor de sueño cuenta desde**, **El sensor de sueño cuenta hasta**, **Y ahora**, **Modo invitados hasta**, **Modo invitados desde**, **Palabra que indica vacaciones**, **Tiempo máximo de preacondicionamiento (minutos)**, **Origen de la estación**, **Zona se considera atascada tras (minutos)**, **Encender este aparato automáticamente**, **Eliminar esta fuente**, **Descanso antes de que este aparato pueda reiniciarse (segundos)**, **Usar a partir de esta temperatura exterior**, **Lo que puede hacer este aparato**, **Esperar este tiempo antes de asumir el relevo (minutos)**, **Eliminar este horario**, **Desde**, **Banda muerta de refrigeración**, **Empezar a enfriar en**, **Temperatura objetivo al enfriar**, **Eliminar esta zona**, **Banda muerta de calefacción**, **Empezar a calentar en**, **Temperatura objetivo al calentar**, **Sensor de presencia de esta zona**, **Estado que significa ocupada**, **Seguir contando como ocupada durante (segundos)**, **← Volver al menú principal para cambiar algo**, **Guardar igualmente**, **← Descartar y volver**.
+## Glosario de la interfaz
+
+Las pantallas y los botones usan las palabras de abajo. Están juntas aquí
+porque el texto de arriba no las nombra todas literalmente.
+
+| Palabra | Pantalla |
+|---|---|
+| Cuando termines aquí | Circuito de climatización |
+| Descanso antes de que una unidad pueda rearrancar (segundos) | Circuito de climatización |
+| Eliminar este circuito | Circuito de climatización |
+| Número máximo de unidades funcionando a la vez | Circuito de climatización |
+| Pausa al cambiar de tarea (segundos) | Circuito de climatización |
+| Regla de conflicto | Circuito de climatización |
+| Tiempo mínimo antes de cambiar de tarea (segundos) | Circuito de climatización |
+| Una zona que pierde puede mover aire | Circuito de climatización |
+| Cuando termines aquí | Prioridades en {circuit} |
+| Cuando termines aquí | Prioridad de {zone} |
+| Prioridad en este circuito | Prioridad de {zone} |
+| Cuando termines aquí | Circuitos de climatización |
+| Aparatos de este grupo | Grupo exclusivo |
+| Cuando termines aquí | Grupo exclusivo |
+| Eliminar este grupo | Grupo exclusivo |
+| Cuando termines aquí | Grupos exclusivos |
+| Cuando termines aquí | Fuente de calor compartida |
+| Eliminar esta fuente de calor | Fuente de calor compartida |
+| Entidad climate | Fuente de calor compartida |
+| Zonas a las que sirve | Fuente de calor compartida |
+| Cuando termines aquí | Fuentes de calor compartidas |
+| Fuente de calor | Fuentes de calor compartidas |
+| Cuando termines aquí | Abertura |
+| Eliminar esta abertura | Abertura |
+| Retardo antes de suspender (segundos) | Abertura |
+| Abertura | Puertas y ventanas |
+| Cuando termines aquí | Puertas y ventanas |
+| Guardar igualmente | Algo llama la atención |
+| ← Descartar y volver | Toda pantalla |
+| ← Volver al menú principal para cambiar algo | Algo llama la atención |
+| Cuando termines aquí | Franja de silencio |
+| Días en que se aplica | Franja de silencio |
+| Eliminar esta franja | Franja de silencio |
+| Silencio desde | Franja de silencio |
+| Silencio hasta | Franja de silencio |
+| Cuando termines aquí | Residente |
+| El sensor de sueño cuenta desde | Residente |
+| El sensor de sueño cuenta hasta | Residente |
+| Eliminar este residente | Residente |
+| Cuando termines aquí | Residentes |
+| Y ahora | Algo llama la atención |
+| Cuando termines aquí | Ajustes generales |
+| Modo invitados desde | Ajustes generales |
+| Modo invitados hasta | Ajustes generales |
+| Origen de la estación | Ajustes generales |
+| Palabra que indica vacaciones | Ajustes generales |
+| Tiempo máximo de preacondicionamiento (minutos) | Ajustes generales |
+| Zona se considera atascada tras (minutos) | Ajustes generales |
+| Cuando termines aquí | Fuente |
+| Descanso antes de que este aparato pueda reiniciarse (segundos) | Fuente |
+| Eliminar esta fuente | Fuente |
+| Encender este aparato automáticamente | Fuente |
+| Entidad climate | Fuente |
+| Esperar este tiempo antes de asumir el relevo (minutos) | Fuente |
+| Lo que puede hacer este aparato | Fuente |
+| Usar a partir de esta temperatura exterior | Fuente |
+| Cuando termines aquí | Fuentes de {zone} |
+| Cuando termines aquí | Horario |
+| Desde | Horario |
+| Eliminar este horario | Horario |
+| Cuando termines aquí | Horarios de {resident} |
+| Banda muerta de calefacción | Zona |
+| Banda muerta de refrigeración | Zona |
+| Cuando termines aquí | Zona |
+| Eliminar esta zona | Zona |
+| Empezar a calentar en | Zona |
+| Empezar a enfriar en | Zona |
+| Estado que significa ocupada | Zona |
+| Seguir contando como ocupada durante (segundos) | Zona |
+| Sensor de presencia de esta zona | Zona |
+| Temperatura objetivo al calentar | Zona |
+| Temperatura objetivo al enfriar | Zona |
+| Cuando termines aquí | Zonas |
 
 ## Idiomas
 

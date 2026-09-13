@@ -904,7 +904,56 @@ De integratie kent drie vormen:
 3. **De combinatie.** Airco-circuits voor de kamers, een gedeelde warmtebron
    (zoals een ketel) voor de rest.
 
-De schermen en knoppen gebruiken precies deze woorden: **Een zone die verliest mag lucht blijven circuleren**, **Dit circuit verwijderen**, **Pauze bij het wisselen van taak (seconden)**, **Maximaal aantal units tegelijk aan**, **Rusttijd voordat een unit opnieuw mag starten (seconden)**, **Minimale looptijd voor een taakwissel (seconden)**, **Voorrang op dit circuit**, **Circuit**, **Deze groep verwijderen**, **Apparaten in deze groep**, **Groep**, **Deze warmtebron verwijderen**, **Vaste doeltemperatuur**, **Warmtebron**, **Vertraging voordat er opgeschort wordt (seconden)**, **Deze opening verwijderen**, **Zones die dit raakt**, **Opening**, **Dit venster verwijderen**, **Stilte tot**, **Stilte vanaf**, **Dagen waarop dit geldt**, **Deze bewoner verwijderen**, **Toestand die slapen betekent**, **Slaapsensor telt tot**, **Wat nu**, **Gastenmodus tot**, **Iemand die thuis is moet wakker zijn**, **Zone geldt als vastgelopen na (minuten)**, **Dit apparaat automatisch aanzetten**, **Deze bron verwijderen**, **Rusttijd voordat dit apparaat opnieuw mag starten (seconden)**, **Wachttijd voordat dit apparaat overneemt (minuten)**, **Dit rooster verwijderen**, **Begin met koelen bij**, **Doeltemperatuur koelen**, **Deze zone verwijderen**, **Begin met verwarmen bij**, **Aanwezigheidssensor van deze zone**, **Toestand die bezet betekent**, **Nog zo lang als bezet tellen (seconden)**, **← Terug naar het hoofdmenu om iets aan te passen**, **← Verwerpen en teruggaan**.
+## Woordenlijst van de interface
+
+De schermen en knoppen gebruiken de woorden hieronder. Ze staan hier bij
+elkaar omdat de tekst hierboven ze niet allemaal letterlijk noemt.
+
+| Woord | Scherm |
+|---|---|
+| Dit circuit verwijderen | Airco-circuit |
+| Een zone die verliest mag lucht blijven circuleren | Airco-circuit |
+| Maximaal aantal units tegelijk aan | Airco-circuit |
+| Minimale looptijd voor een taakwissel (seconden) | Airco-circuit |
+| Pauze bij het wisselen van taak (seconden) | Airco-circuit |
+| Rusttijd voordat een unit opnieuw mag starten (seconden) | Airco-circuit |
+| Voorrang op dit circuit | Prioriteit voor {zone} |
+| Circuit | Airco-circuits |
+| Apparaten in deze groep | Exclusieve groep |
+| Deze groep verwijderen | Exclusieve groep |
+| Groep | Exclusieve groepen |
+| Deze warmtebron verwijderen | Gedeelde warmtebron |
+| Vaste doeltemperatuur | Gedeelde warmtebron |
+| Warmtebron | Gedeelde warmtebronnen |
+| Deze opening verwijderen | Opening |
+| Vertraging voordat er opgeschort wordt (seconden) | Opening |
+| Zones die dit raakt | Opening |
+| Opening | Deuren en ramen |
+| ← Terug naar het hoofdmenu om iets aan te passen | Er valt iets op |
+| ← Verwerpen en teruggaan | Elk scherm |
+| Dagen waarop dit geldt | Stiltevenster |
+| Dit venster verwijderen | Stiltevenster |
+| Stilte tot | Stiltevenster |
+| Stilte vanaf | Stiltevenster |
+| Deze bewoner verwijderen | Bewoner |
+| Slaapsensor telt tot | Bewoner |
+| Toestand die slapen betekent | Bewoner |
+| Wat nu | Er valt iets op |
+| Gastenmodus tot | Algemene instellingen |
+| Iemand die thuis is moet wakker zijn | Algemene instellingen |
+| Zone geldt als vastgelopen na (minuten) | Algemene instellingen |
+| Deze bron verwijderen | Bron |
+| Dit apparaat automatisch aanzetten | Bron |
+| Rusttijd voordat dit apparaat opnieuw mag starten (seconden) | Bron |
+| Wachttijd voordat dit apparaat overneemt (minuten) | Bron |
+| Dit rooster verwijderen | Rooster |
+| Aanwezigheidssensor van deze zone | Zone |
+| Begin met koelen bij | Zone |
+| Begin met verwarmen bij | Zone |
+| Deze zone verwijderen | Zone |
+| Doeltemperatuur koelen | Zone |
+| Nog zo lang als bezet tellen (seconden) | Zone |
+| Toestand die bezet betekent | Zone |
 
 ## Talen
 

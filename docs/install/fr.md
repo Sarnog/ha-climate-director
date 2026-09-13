@@ -931,7 +931,72 @@ L'intégration connaît trois formes :
 3. **La combinaison.** Des circuits de climatisation pour les pièces, une
    source de chaleur partagée (une chaudière, par exemple) pour le reste.
 
-Les écrans et les boutons utilisent exactement ces mots : **Une zone perdante peut brasser l'air**, **Supprimer ce circuit**, **Pause lors du changement de tâche (secondes)**, **Nombre maximal d'unités en marche simultanément**, **Repos avant qu'une unité puisse redémarrer (secondes)**, **Durée minimale avant un changement de tâche (secondes)**, **Priorité sur ce circuit**, **Supprimer ce groupe**, **Appareils de ce groupe**, **Supprimer cette source de chaleur**, **Entité climate**, **Zones qu'il dessert**, **Source de chaleur**, **Délai avant suspension (secondes)**, **Supprimer cette ouverture**, **Ouverture**, **Supprimer cette plage**, **Silence jusqu'à**, **Silence à partir de**, **Jours concernés**, **Supprimer cet occupant**, **Le capteur de sommeil compte à partir de**, **Le capteur de sommeil compte jusqu'à**, **Occupant**, **Et maintenant**, **Mode invités jusqu'à**, **Mode invités à partir de**, **Agendas de vacances**, **Mot qui signale des vacances**, **Durée maximale de la préparation (minutes)**, **Une personne présente doit être éveillée**, **Le planning d'un occupant doit être ouvert**, **Origine de la saison**, **Zone considérée bloquée après (minutes)**, **Supprimer cette source**, **Repos avant que cet appareil puisse redémarrer (secondes)**, **Ordre au sein de cette zone**, **Ce que cet appareil sait faire**, **Attendre ce délai avant de prendre le relais (minutes)**, **Supprimer ce planning**, **Planning**, **Bande morte de refroidissement**, **Refroidir uniquement au-dessus de cette température extérieure**, **Commencer à refroidir à**, **Refroidir uniquement en été**, **Température cible en refroidissement**, **Supprimer cette zone**, **Ce qui décide si cette zone fonctionne**, **Bande morte de chauffage**, **Chauffer uniquement sous cette température extérieure**, **Commencer à chauffer à**, **Température cible en chauffage**, **Capteur de présence de cette zone**, **État signifiant occupée**, **Continuer à compter comme occupée pendant (secondes)**, **← Retour au menu principal pour modifier quelque chose**, **← Abandonner et revenir**.
+## Glossaire de l'interface
+
+Les écrans et les boutons utilisent les mots ci-dessous. Ils sont
+rassemblés ici parce que le texte ci-dessus ne les nomme pas tous
+littéralement.
+
+| Mot | Écran |
+|---|---|
+| Durée minimale avant un changement de tâche (secondes) | Circuit de climatisation |
+| Nombre maximal d'unités en marche simultanément | Circuit de climatisation |
+| Pause lors du changement de tâche (secondes) | Circuit de climatisation |
+| Repos avant qu'une unité puisse redémarrer (secondes) | Circuit de climatisation |
+| Supprimer ce circuit | Circuit de climatisation |
+| Une zone perdante peut brasser l'air | Circuit de climatisation |
+| Priorité sur ce circuit | Priorité de {zone} |
+| Appareils de ce groupe | Groupe exclusif |
+| Supprimer ce groupe | Groupe exclusif |
+| Entité climate | Source de chaleur partagée |
+| Supprimer cette source de chaleur | Source de chaleur partagée |
+| Zones qu'il dessert | Source de chaleur partagée |
+| Source de chaleur | Sources de chaleur partagées |
+| Délai avant suspension (secondes) | Ouverture |
+| Supprimer cette ouverture | Ouverture |
+| Ouverture | Portes et fenêtres |
+| ← Abandonner et revenir | Chaque écran |
+| ← Retour au menu principal pour modifier quelque chose | Quelque chose ressort |
+| Jours concernés | Plage de silence |
+| Silence jusqu'à | Plage de silence |
+| Silence à partir de | Plage de silence |
+| Supprimer cette plage | Plage de silence |
+| Le capteur de sommeil compte jusqu'à | Occupant |
+| Le capteur de sommeil compte à partir de | Occupant |
+| Supprimer cet occupant | Occupant |
+| Occupant | Occupants |
+| Et maintenant | Quelque chose ressort |
+| Agendas de vacances | Réglages généraux |
+| Durée maximale de la préparation (minutes) | Réglages généraux |
+| Le planning d'un occupant doit être ouvert | Réglages généraux |
+| Mode invités jusqu'à | Réglages généraux |
+| Mode invités à partir de | Réglages généraux |
+| Mot qui signale des vacances | Réglages généraux |
+| Origine de la saison | Réglages généraux |
+| Une personne présente doit être éveillée | Réglages généraux |
+| Zone considérée bloquée après (minutes) | Réglages généraux |
+| Attendre ce délai avant de prendre le relais (minutes) | Source |
+| Ce que cet appareil sait faire | Source |
+| Entité climate | Source |
+| Ordre au sein de cette zone | Source |
+| Repos avant que cet appareil puisse redémarrer (secondes) | Source |
+| Supprimer cette source | Source |
+| Supprimer ce planning | Planning |
+| Planning | Plannings de {resident} |
+| Bande morte de chauffage | Zone |
+| Bande morte de refroidissement | Zone |
+| Capteur de présence de cette zone | Zone |
+| Ce qui décide si cette zone fonctionne | Zone |
+| Chauffer uniquement sous cette température extérieure | Zone |
+| Commencer à chauffer à | Zone |
+| Commencer à refroidir à | Zone |
+| Continuer à compter comme occupée pendant (secondes) | Zone |
+| Refroidir uniquement au-dessus de cette température extérieure | Zone |
+| Refroidir uniquement en été | Zone |
+| Supprimer cette zone | Zone |
+| Température cible en chauffage | Zone |
+| Température cible en refroidissement | Zone |
+| État signifiant occupée | Zone |
 
 ## Langues
 

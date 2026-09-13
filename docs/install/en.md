@@ -896,7 +896,48 @@ The integration knows three shapes:
 3. **The combination.** Air-conditioning circuits for the rooms, one shared
    heat source (a boiler, say) for the rest.
 
-The screens and buttons use exactly these words: **Delete this circuit**, **Pause when swapping duty (seconds)**, **Rest before a unit may restart (seconds)**, **Minimum run before swapping duty (seconds)**, **Precedence on this circuit**, **Circuit**, **Delete this group**, **Appliances in this group**, **Group**, **Delete this heat source**, **Heat source**, **Delay before suspending (seconds)**, **Delete this opening**, **Delete this window**, **Quiet until**, **Quiet from**, **Days this applies**, **Delete this resident**, **Sleep sensor counts until**, **What now**, **Guest mode days**, **Guest mode until**, **Maximum pre-conditioning time (minutes)**, **Report a zone stuck after (minutes)**, **Delete this source**, **Rest before this appliance may restart (seconds)**, **Wait this long before taking over (minutes)**, **Delete this schedule**, **Delete this zone**, **Presence sensor for this zone**, **State meaning occupied**, **Keep counting as occupied for (seconds)**, **← Back to the main menu to change something**, **← Discard and go back**, **Keep these changes and go back**.
+## Interface glossary
+
+The screens and buttons use the words below. They stand together here
+because the text above does not name all of them literally.
+
+| Word | Screen |
+|---|---|
+| Delete this circuit | Air conditioning circuit |
+| Minimum run before swapping duty (seconds) | Air conditioning circuit |
+| Pause when swapping duty (seconds) | Air conditioning circuit |
+| Rest before a unit may restart (seconds) | Air conditioning circuit |
+| Precedence on this circuit | Priority for {zone} |
+| Circuit | Air conditioning circuits |
+| Appliances in this group | Exclusive group |
+| Delete this group | Exclusive group |
+| Group | Exclusive groups |
+| Delete this heat source | Shared heat source |
+| Heat source | Shared heat sources |
+| Delay before suspending (seconds) | Opening |
+| Delete this opening | Opening |
+| Keep these changes and go back | Every screen |
+| ← Back to the main menu to change something | Something looks off |
+| ← Discard and go back | Every screen |
+| Days this applies | Quiet window |
+| Delete this window | Quiet window |
+| Quiet from | Quiet window |
+| Quiet until | Quiet window |
+| Delete this resident | Resident |
+| Sleep sensor counts until | Resident |
+| What now | Something looks off |
+| Guest mode days | General settings |
+| Guest mode until | General settings |
+| Maximum pre-conditioning time (minutes) | General settings |
+| Report a zone stuck after (minutes) | General settings |
+| Delete this source | Source |
+| Rest before this appliance may restart (seconds) | Source |
+| Wait this long before taking over (minutes) | Source |
+| Delete this schedule | Schedule |
+| Delete this zone | Zone |
+| Keep counting as occupied for (seconds) | Zone |
+| Presence sensor for this zone | Zone |
+| State meaning occupied | Zone |
 
 ## Languages
 

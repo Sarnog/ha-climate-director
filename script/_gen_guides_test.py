@@ -11,6 +11,84 @@ TRANS = ROOT / "custom_components" / "climate_director" / "translations"
 BUTTON_SELECTORS = ("when_done", "save_exit")
 LANGUAGES = ("en", "nl", "de", "es", "fr", "ar")
 
+#: De regelbreedte van `pyproject.toml`. De uitzonderingenlijst hieronder moet
+#: `ruff format --check` doorstaan, en dat kapt een lange regel op deze breedte
+#: af; daarom rekent de generator dezelfde grens uit.
+#:
+#: The line width from `pyproject.toml`. The exception list below has to pass
+#: `ruff format --check`, and that splits a long line at this width; so the
+#: generator works out the same bound.
+LINE_LENGTH = 100
+
+#: De kop van de woordenlijst per taal. Deze generator knipt die sectie uit de
+#: handleiding voordat hij de uitzonderingen meet, en de gegenereerde test doet
+#: hetzelfde met dezelfde koppen - daarom staat de lijst hier en niet daar.
+#:
+#: The glossary heading per language. This generator cuts that section out of
+#: the guide before measuring the exceptions, and the generated test does the
+#: same with the same headings - which is why the list lives here and not there.
+GLOSSARY = {
+    "en": "Interface glossary",
+    "nl": "Woordenlijst van de interface",
+    "de": "Wörterliste der Oberfläche",
+    "es": "Glosario de la interfaz",
+    "fr": "Glossaire de l'interface",
+    "ar": "قائمة كلمات الواجهة",
+}
+
+
+def without_glossary(text: str, language: str) -> str:
+    """Return `text` without the interface glossary section.
+
+    De woordenlijst staat in de handleiding voor de lezer, niet voor de ratel:
+    die meet of het **proza** de woorden van de interface gebruikt. Zonder deze
+    knip telt elk label mee dat ergens in een tabel staat, en dan is de bewaking
+    groen zonder dat er iets bewezen is - dan keurt de lijst ontbrekende tekst
+    goed in plaats van hem aan te wijzen.
+
+    The glossary is in the guide for the reader, not for the ratchet: it
+    measures whether the **prose** uses the interface's words. Without this cut
+    every label in any table counts, and then the guard is green without
+    anything being proven - the list then approves missing text instead of
+    pointing at it.
+    """
+    lines = text.splitlines(keepends=True)
+    keep: list[str] = []
+    skipping = False
+    for line in lines:
+        if line.strip() == f"## {GLOSSARY[language]}":
+            skipping = True
+            continue
+        if skipping and line.startswith("## "):
+            skipping = False
+        if not skipping:
+            keep.append(line)
+    return "".join(keep)
+
+
+def glossary_code() -> str:
+    """Return the glossary headings as Python source for the generated test."""
+    lines = [
+        "#: De kop van de woordenlijst per taal. Deze test knipt die sectie uit de",
+        "#: handleiding voordat hij meet, en die koppen moeten dus letterlijk met de",
+        "#: zes bestanden overeenkomen - anders knipt hij niets weg en telt de tabel",
+        "#: mee. Deze lijst wordt gegenereerd uit `script/_gen_guides_test.py`, waar",
+        "#: dezelfde koppen de uitzonderingen meten.",
+        "#:",
+        "#: The glossary heading per language. This test cuts that section out of the",
+        "#: guide before measuring, so the headings have to match the six files",
+        "#: literally - otherwise it cuts nothing away and the table counts along.",
+        "#: This list is generated from `script/_gen_guides_test.py`, where the same",
+        "#: headings measure the exceptions.",
+        "GLOSSARY: dict[str, str] = {",
+    ]
+    lines += [
+        f"    {json.dumps(lang, ensure_ascii=False)}: {json.dumps(heading, ensure_ascii=False)},"
+        for lang, heading in GLOSSARY.items()
+    ]
+    lines.append("}")
+    return "\n".join(lines)
+
 
 def interface_labels(lang: str) -> dict[str, str]:
     with open(TRANS / f"{lang}.json", encoding="utf-8") as f:
@@ -47,15 +125,24 @@ def build(docs: Path, *, entity_guard: bool, slugify_import: bool = False) -> st
     exceptions: dict[str, dict[str, str]] = {}
     for lang in LANGUAGES:
         doc = (docs / f"{lang}.md").read_text(encoding="utf-8")
-        exceptions[lang] = {k: v for k, v in interface_labels(lang).items() if v not in doc}
+        prose = without_glossary(doc, lang)
+        exceptions[lang] = {k: v for k, v in interface_labels(lang).items() if v not in prose}
+
+    glossary_literal = glossary_code()
 
     lines = []
     for lang in LANGUAGES:
         lines.append(f'    "{lang}": {{')
         for k, v in sorted(exceptions[lang].items()):
-            lines.append(f"        {k!r}: (")
-            lines.append(f"            {v!r}")
-            lines.append("        ),")
+            key = json.dumps(k, ensure_ascii=False)
+            value = json.dumps(v, ensure_ascii=False)
+            one_line = f"        {key}: ({value}),"
+            if len(one_line) <= LINE_LENGTH:
+                lines.append(one_line)
+            else:
+                lines.append(f"        {key}: (")
+                lines.append(f"            {value}")
+                lines.append("        ),")
         lines.append("    },")
     exceptions_literal = "\n".join(lines)
 
@@ -104,18 +191,14 @@ def test_every_guide_names_its_own_entity_ids() -> None:
         for (domain, key), name in sorted(entity_names(language).items()):
             pattern = slugify(name)
             for placeholder in re.findall(r"\\{[a-z_]+\\}", name):
-                pattern = pattern.replace(
-                    slugify(placeholder), f"<{placeholder[1:-1]}>"
-                )
+                pattern = pattern.replace(slugify(placeholder), f"<{placeholder[1:-1]}>")
             needle = f"{domain}.*_{pattern}"
             if needle not in text:
                 problems.append(
                     f"{language}: entiteit {domain}.{key} = {name!r} hoort als "
                     f"`{needle}` in docs/install/{language}.md te staan"
                 )
-    assert not problems, "de entiteit-ID's drijven weg van de interface:\\n" + "\\n".join(
-        problems
-    )
+    assert not problems, "de entiteit-ID's drijven weg van de interface:\\n" + "\\n".join(problems)
 '''
 
     source = f'''"""De zes handleidingen gebruiken de woorden van de interface.
@@ -134,6 +217,12 @@ de lijst". Zo kan de lijst alleen korter worden en is hij nooit stiekem
 verouderd. De zes bestanden moeten bovendien een gelijk aantal `## `-koppen
 houden, zodat geen taal een sectie kwijtraakt zonder dat iemand het merkt.
 
+Gemeten wordt het **proza**: de sectie "Woordenlijst van de interface" wordt er
+eerst uit geknipt. Anders telt een label mee zodra het ergens in een tabel
+staat, en dan is deze test groen zonder dat er iets bewezen is - dan keurt de
+lijst ontbrekende tekst goed in plaats van hem aan te wijzen. De koppentelling
+leest het hele bestand, juist zodat de woordenlijst niet stil kan verdwijnen.
+
 The six installation guides use the words of the interface.
 
 No test or CI job reads `docs/install/*.md` today; the guides have therefore
@@ -148,6 +237,12 @@ renamed in the translation this test is red; when the guide is repaired it is
 red too, with the message "remove it from the list". That way the list can only
 get shorter and is never silently outdated. The six files must also keep an
 equal number of `## ` headers, so no language loses a section unnoticed.
+
+What is measured is the **prose**: the "Interface glossary" section is cut out
+first. Otherwise a label counts as soon as it stands in any table, and then this
+test is green without anything being proven - the list then approves missing
+text instead of pointing at it. The header count reads the whole file, exactly
+so the glossary cannot disappear quietly.
 """
 
 from __future__ import annotations
@@ -164,6 +259,8 @@ INSTALL = Path(__file__).parent.parent / "docs" / "install"
 
 LANGUAGES = ("en", "nl", "de", "es", "fr", "ar")
 BUTTON_SELECTORS = ("when_done", "save_exit")
+
+{glossary_literal}
 
 EXCEPTIONS: dict[str, dict[str, str]] = {{
 {exceptions_literal}
@@ -200,9 +297,38 @@ def interface_labels(language: str) -> dict[str, str]:
     return labels
 
 
-def guide_text(language: str) -> str:
-    """The full installation guide of one language."""
+def guide_raw(language: str) -> str:
+    """The whole installation guide of one language, glossary included."""
     return (INSTALL / f"{{language}}.md").read_text(encoding="utf-8")
+
+
+def guide_text(language: str) -> str:
+    """The guide's prose, without the interface glossary section.
+
+    De woordenlijst staat in de handleiding voor de lezer, niet voor deze ratel:
+    die meet of het **proza** de woorden van de interface gebruikt. Zonder deze
+    knip telt elk label mee dat ergens in een tabel staat, en dan is de bewaking
+    groen zonder dat er iets bewezen is. Dan keurt de lijst ontbrekende tekst
+    goed in plaats van hem aan te wijzen.
+
+    The glossary is in the guide for the reader, not for this ratchet: it
+    measures whether the **prose** uses the interface's words. Without this cut
+    every label in any table counts, and then the guard is green without
+    anything being proven - the list then approves missing text instead of
+    pointing at it.
+    """
+    lines = guide_raw(language).splitlines(keepends=True)
+    keep: list[str] = []
+    skipping = False
+    for line in lines:
+        if line.strip() == f"## {{GLOSSARY[language]}}":
+            skipping = True
+            continue
+        if skipping and line.startswith("## "):
+            skipping = False
+        if not skipping:
+            keep.append(line)
+    return "".join(keep)
 
 
 def test_every_guide_uses_the_words_of_its_interface() -> None:
@@ -255,10 +381,14 @@ def test_every_guide_uses_the_words_of_its_interface() -> None:
 def test_every_guide_has_the_same_number_of_headers(language: str) -> None:
     """Zes bestanden, een gelijk aantal `## `-koppen.
 
-    Six files, an equal number of `## ` headers.
+    Deze telt het hele bestand (`guide_raw`), dus de woordenlijst-sectie telt
+    mee: die is van de lezer en mag in geen enkele taal ontbreken.
+
+    This one counts the whole file (`guide_raw`), so the glossary section counts
+    along: it is the reader's and may be missing from no language.
     """
     counts = {{
-        lang: len(re.findall(r"^## ", guide_text(lang), flags=re.MULTILINE)) for lang in LANGUAGES
+        lang: len(re.findall(r"^## ", guide_raw(lang), flags=re.MULTILINE)) for lang in LANGUAGES
     }}
     assert len(set(counts.values())) == 1, f"ongelijke koppentelling: {{counts}}"
     assert counts[language] > 0, f"{{language}}: geen enkele `## `-kop"
