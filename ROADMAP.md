@@ -107,6 +107,19 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   hysterese zijn nu alleen via de config flow te wijzigen; eigen `number`-entiteiten maken
   ze bedienbaar zonder de hele installatie te herladen. Staat ook in `ARCHITECTURE.md`
   onder "Nog te bouwen".
+- **De woordenlijst kan van de uitzonderingenlijst weglopen** —
+  `tests/test_install_guides.py` meet of elk interfacelabel in het proza staat, en de
+  woordenlijst-sectie is daarvan uitgezonderd. De tabel zelf wordt nergens gecontroleerd,
+  dus een regel die iemand eruit haalt valt niet op. Een tweede bewaking zou de
+  tabelregels per taal gelijk kunnen stellen aan de uitzonderingenlijst.
+- **De regelbreedte 100 staat op twee plekken** — `pyproject.toml` en
+  `script/_gen_guides_test.py` (`LINE_LENGTH`). Verandert de eerste, dan schrijft de
+  generator een uitzonderingenlijst die `ruff format --check` opnieuw wil opmaken; hij
+  hoort die breedte uit `pyproject.toml` te lezen.
+- **De override-klem bouwt de hele wereld voor één getal** — `_override_setpoint` roept
+  `coordinator.build_world()` aan om `min_temp`/`max_temp` van één bron te lezen. Een
+  lichtere lezer (de laatst bewaarde wereld bijvoorbeeld) doet hetzelfde werk zonder bij
+  elke override-aanroep alle entiteiten opnieuw te lezen.
 
 ## Would have
 
@@ -218,6 +231,19 @@ The worked-out design proposals for everything below live in
   and hysteresis can currently only be changed through the config flow; `number` entities
   of their own would make them controllable without reloading the whole installation. Also
   listed in `ARCHITECTURE.md` under "Still to build".
+- **The glossary can drift away from the exception list** —
+  `tests/test_install_guides.py` measures whether every interface label stands in the
+  prose, and the glossary section is exempt from that. The table itself is checked
+  nowhere, so a row somebody removes goes unnoticed. A second guard could hold the table
+  rows per language equal to the exception list.
+- **The line width 100 stands in two places** — `pyproject.toml` and
+  `script/_gen_guides_test.py` (`LINE_LENGTH`). Change the first and the generator writes
+  an exception list that `ruff format --check` wants to redo; it should read that width
+  from `pyproject.toml`.
+- **The override clamp builds the whole world for one number** — `_override_setpoint`
+  calls `coordinator.build_world()` to read one source's `min_temp`/`max_temp`. A lighter
+  reader (the last saved world, for instance) does the same work without reading every
+  entity again on each override call.
 
 ## Would have
 
