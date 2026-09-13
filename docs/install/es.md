@@ -780,6 +780,9 @@ ninguna fuente capaz de dar el modo pedido, la llamada falla con un error que
 nombra la zona y el modo; y en modo sombra el interruptor cambia pero el aparato
 no — ahí no se ejecuta nada, tampoco esto.
 
+Y una **Temperatura** que el aparato no admite se lleva al límite más cercano:
+el director no rechaza nada, pide lo que el aparato sí admite.
+
 ## Tomar el mando
 
 - **Apagar un aparato tú mismo** (en el aparato o con el mando) silencia esa

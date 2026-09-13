@@ -1033,7 +1033,7 @@ def _build_commands(
                 UnitCommand(
                     entity_id=source.entity_id,
                     hvac_mode=preferred_mode(grant.family),
-                    temperature=_clamped_target(
+                    temperature=clamped_target(
                         settings.target if settings else None,
                         world.climate(source.entity_id),
                     ),
@@ -1493,7 +1493,7 @@ def _generator_commands(
             UnitCommand(
                 entity_id=generator.entity_id,
                 hvac_mode=MODE_HEAT,
-                temperature=_clamped_target(setpoint, world.climate(generator.entity_id)),
+                temperature=clamped_target(setpoint, world.climate(generator.entity_id)),
                 source_id=generator.generator_id,
                 reason=Reason.REGULATING,
             )
@@ -1523,7 +1523,7 @@ def _idle_mode(config: DirectorConfig, world: WorldState, entity_id: str, reason
     return MODE_OFF
 
 
-def _clamped_target(target: float | None, state: ClimateState) -> float | None:
+def clamped_target(target: float | None, state: ClimateState) -> float | None:
     """Clamp a setpoint to what the appliance says it accepts.
 
     Home Assistant weigert een setpoint buiten `min_temp`/`max_temp` met een

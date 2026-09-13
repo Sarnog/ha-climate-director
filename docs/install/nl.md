@@ -771,6 +771,10 @@ die de gevraagde stand kan leveren, dan mislukt de aanroep met een foutmelding
 die de zone en de stand noemt; en in schaduwmodus gaat de schakelaar wel om,
 maar het apparaat niet — daar wordt niets uitgevoerd, ook dit niet.
 
+En een **Temperatuur** die het apparaat niet aankan wordt naar de
+dichtstbijzijnde grens gebracht: de director weigert niets, hij vraagt wat het
+apparaat wél aanneemt.
+
 ## Zelf de baas
 
 - **Een apparaat zelf uitzetten** (bij het apparaat of op de afstandsbediening)

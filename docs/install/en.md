@@ -768,6 +768,10 @@ the requested mode, the call fails with an error that names the zone and the
 mode; and in shadow mode the switch turns over but the appliance does not —
 nothing is executed there, this included.
 
+And a **Temperature** the appliance cannot handle is moved to the nearest
+bound: the director refuses nothing, it asks for what the appliance does
+accept.
+
 ## Taking charge yourself
 
 - **Switching an appliance off yourself** (at the appliance or on the remote)

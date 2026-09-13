@@ -796,6 +796,10 @@ capable de fournir le mode demandé, l'appel échoue avec une erreur qui nomme l
 zone et le mode ; et en mode ombre l'interrupteur bascule mais pas l'appareil —
 rien n'y est exécuté, ceci compris.
 
+Et une **Température** que l'appareil n'accepte pas est ramenée à la borne la
+plus proche : le directeur ne refuse rien, il demande ce que l'appareil
+accepte.
+
 ## Prendre la main
 
 - **Éteindre un appareil vous-même** (sur l'appareil ou la télécommande) met la

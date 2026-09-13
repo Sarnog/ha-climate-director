@@ -68,7 +68,7 @@ from .const import (
     WHEN_DONE_TURN_OFF,
 )
 from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry, storage_key
-from .engine import DirectorConfig
+from .engine import DirectorConfig, Source, clamped_target
 from .units import temperature_unit_of, to_celsius
 
 _LOGGER = logging.getLogger(__name__)
@@ -311,6 +311,29 @@ def _chosen_entries(hass: HomeAssistant, call: ServiceCall) -> list[ClimateDirec
     ]
 
 
+def _override_setpoint(
+    runtime: ClimateDirectorCoordinator, source: Source, temperature: float | None, unit: str
+) -> float | None:
+    """Return the override's setpoint in Celsius, inside the appliance's range.
+
+    Dezelfde klem als het engine-pad (`engine.clamped_target`), want een koppig
+    apparaat weigert een waarde buiten zijn `min_temp`/`max_temp` stil:
+    `applier.apply()` vangt die weigering op en de override liep dan door met een
+    setpoint dat nooit aankwam. Klemmen en niet weigeren houdt het bij één regel
+    in plaats van twee die uit elkaar lopen.
+
+    The same clamp as the engine path (`engine.clamped_target`), because a
+    stubborn appliance quietly refuses a value outside its `min_temp`/`max_temp`:
+    `applier.apply()` catches that refusal and the override then carried on with
+    a setpoint that never arrived. Clamping rather than refusing keeps it at one
+    rule instead of two that drift apart.
+    """
+    if temperature is None:
+        return None
+    celsius = to_celsius(temperature, unit)
+    return clamped_target(celsius, runtime.build_world().climate(source.entity_id))
+
+
 def _refuse_unknown_zones(zone_ids, entries, wanted_entry_id) -> None:
     """Raise when a requested zone does not exist, instead of only logging.
 
@@ -400,19 +423,20 @@ def _async_register_services(hass: HomeAssistant) -> None:
         hvac_mode = call.data[ATTR_HVAC_MODE]
         _refuse_unknown_zones([zone_id], entries, call.data.get(ATTR_ENTRY_ID))
         temperature = call.data.get(ATTR_TEMPERATURE)
+        unit = temperature_unit_of(hass)
         for entry in entries:
-            if entry.runtime_data.override_source(zone_id, hvac_mode) is None:
+            runtime = entry.runtime_data
+            source = runtime.override_source(zone_id, hvac_mode)
+            if source is None:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="zone_no_source_for_mode",
                     translation_placeholders={"zone": zone_id, "mode": hvac_mode},
                 )
-            entry.runtime_data.async_set_override(
+            runtime.async_set_override(
                 zone_id,
                 hvac_mode,
-                to_celsius(temperature, temperature_unit_of(hass))
-                if temperature is not None
-                else None,
+                _override_setpoint(runtime, source, temperature, unit),
                 call.data.get(ATTR_MINUTES),
                 call.data.get(ATTR_WHEN_DONE, WHEN_DONE_TURN_OFF),
             )

@@ -15,7 +15,7 @@ in milliseconds, without a running Home Assistant.
 
 from __future__ import annotations
 
-from .decide import decide
+from .decide import clamped_target, decide
 from .families import (
     ACTIVE_FAMILIES,
     MODE_COOL,
@@ -109,6 +109,7 @@ __all__ = [
     "WorldState",
     "Zone",
     "ZoneDecision",
+    "clamped_target",
     "decide",
     "family_of",
     "is_compatible",

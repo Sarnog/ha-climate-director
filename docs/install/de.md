@@ -781,6 +781,10 @@ die den gewünschten Modus liefern kann, schlägt der Aufruf mit einer Fehlermel
 fehl, die Zone und Modus nennt; und im Schattenmodus geht zwar der Schalter um,
 das Gerät aber nicht — dort wird nichts ausgeführt, auch das nicht.
 
+Und eine **Temperatur**, die das Gerät nicht annimmt, wird auf die
+nächstgelegene Grenze gebracht: Der Director lehnt nichts ab, er fragt nach
+dem, was das Gerät annimmt.
+
 ## Selbst das Kommando übernehmen
 
 - **Ein Gerät selbst ausschalten** (am Gerät oder auf der Fernbedienung) legt

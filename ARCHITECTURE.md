@@ -166,8 +166,14 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     aanroepen een eigenschap moeten dragen die nergens is vastgelegd. Heeft de
     zone geen bron die de gevraagde stand kan leveren, dan weigert de actie met
     dezelfde vertaalde fout als een onbekende zone (`zone_no_source_for_mode`).
-    Het temperatuurveld heeft geen vast bereik: de waarde geldt in de eenheid van
-    Home Assistant en wordt naar Celsius omgerekend.
+    Het temperatuurveld heeft geen vast bereik in het formulier: de waarde geldt
+    in de eenheid van Home Assistant en wordt naar Celsius omgerekend. Wat het
+    apparaat zelf aankan is wél een grens: het setpoint wordt geklemd naar
+    `min_temp`/`max_temp` van de gekozen bron, met dezelfde regel als het
+    engine-pad (`clamped_target`). **Klemmen, niet weigeren** — weigeren zou een
+    tweede regel naast de eerste zijn, en dan lopen de twee paden uit elkaar.
+    Een aanroep die niets kan zetten weigert nog steeds, met
+    `zone_no_source_for_mode`.
 12. **Het bereik van een bron hangt aan de bron en noemt zones.** Een bron draagt
     `covers_zones`: de zones die hij meeverwarmt of meekoelt zodra hij draait.
     Leeg betekent *alleen de eigen zone* — het gedrag van vóór deze instelling,
@@ -1217,7 +1223,12 @@ them without changing them here first.
     written down nowhere. If the zone has no source that can deliver the
     requested mode, the action refuses with the same translated error as an
     unknown zone (`zone_no_source_for_mode`). The temperature field has no fixed
-    range: the value counts in Home Assistant's unit and is converted to Celsius.
+    range in the form: the value counts in Home Assistant's unit and is converted
+    to Celsius. What the appliance itself accepts *is* a bound: the setpoint is
+    clamped to the chosen source's `min_temp`/`max_temp`, by the same rule as the
+    engine path (`clamped_target`). **Clamping, not refusing** — refusing would be
+    a second rule beside the first, and then the two paths drift apart. A call
+    that cannot set anything still refuses, with `zone_no_source_for_mode`.
 12. **A source's reach hangs on the source and names zones.** A source carries
     `covers_zones`: the zones it heats or cools along with it the moment it runs.
     Empty means *its own zone only* — the behaviour from before this setting, so
