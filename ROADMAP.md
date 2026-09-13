@@ -116,10 +116,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   `script/_gen_guides_test.py` (`LINE_LENGTH`). Verandert de eerste, dan schrijft de
   generator een uitzonderingenlijst die `ruff format --check` opnieuw wil opmaken; hij
   hoort die breedte uit `pyproject.toml` te lezen.
-- **De release gaat pas de deur uit als de Tests-baan groen is** — het uitbrengritueel
-  schrijft voor dat de tag ná groene CI gezet wordt, maar dat hangt aan de discipline van
-  de agent. Een release-workflow die de tag (of de release) pas aanmaakt zodra de
-  Tests-baan op die commit groen is, maakt daar een eigenschap van de repo van.
 
 ## Would have
 
@@ -240,10 +236,6 @@ The worked-out design proposals for everything below live in
   `script/_gen_guides_test.py` (`LINE_LENGTH`). Change the first and the generator writes
   an exception list that `ruff format --check` wants to redo; it should read that width
   from `pyproject.toml`.
-- **A release only goes out once the Tests job is green** — the release ritual prescribes
-  tagging after green CI, but that rests on the agent's discipline. A release workflow
-  that only creates the tag (or the release) once the Tests job on that commit is green
-  turns that into a property of the repository.
 
 ## Would have
 
