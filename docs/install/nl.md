@@ -596,7 +596,7 @@ niets gebeurt. Twee dingen blijven zoals ze altijd waren: een zone met een
 override en een handbediende bron worden niet aangestuurd, ook niet door deze
 lijst.
 
-Geef elke opening een eigen **Naam**: daar hangt de overbruggingsschakelaar aan, zodat die blijft bestaan als je de sensor vervangt. Elke opening krijgt een overbruggingsschakelaar (`switch.*_overbrugging_<opening>`). Aan = de director doet alsof deze opening er niet is — zijn eigen zones en de huisbrede stop negeren hem allebei. Er is geen looptijd: hij blijft aan tot je hem zelf uitzet. Staat hij aan terwijl de opening werkelijk openstaat, dan meldt de director dat onder *Reparaties*.
+Elke opening heeft een eigen id dat onzichtbaar in de opslag staat, en daar hangt de overbruggingsschakelaar aan (`switch.*_overbrugging_<opening>`), zodat die blijft bestaan als je de sensor vervangt; de **Naam** is alleen het label dat je zelf ziet. Had een opening nog geen eigen id, dan is dat id de sensor en heet de schakelaar naar de naam die de sensor zelf toont — verschijnt die pas later of hernoem je hem, dan volgt de schakelaarnaam zonder herladen. Aan = de director doet alsof deze opening er niet is — zijn eigen zones en de huisbrede stop negeren hem allebei. Er is geen looptijd: hij blijft aan tot je hem zelf uitzet. Staat hij aan terwijl de opening werkelijk openstaat, dan meldt de director dat onder *Reparaties*.
 
 ## Stap 12 — Opslaan en sluiten
 

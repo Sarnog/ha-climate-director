@@ -603,7 +603,7 @@ La habitación indica entonces `opening_open_elsewhere` como motivo, para que
 veas por qué no ocurre nada. Dos cosas siguen como siempre: una zona con
 anulación y una fuente manual no se gobiernan, tampoco por esta lista.
 
-Dale a cada abertura su propio **Nombre**: de él cuelga el interruptor de anulación, que así sobrevive al cambio de sensor. Cada abertura recibe un interruptor de anulación (`switch.*_anulacion_<opening>`). Activada = el director hace como si esta abertura no existiera — sus propias zonas y la parada global la ignoran. No hay duración: se mantiene hasta que la apagues tú mismo. Mientras siga activa con la abertura realmente abierta, el director lo informa en *Reparaciones*.
+Cada abertura tiene su propio identificador, guardado de forma invisible, y de él cuelga el interruptor de anulación (`switch.*_anulacion_<opening>`), de modo que sigue existiendo al cambiar el sensor; el **Nombre** es solo la etiqueta que ves tú. Si una abertura aún no tenía identificador, ese identificador es el sensor y el interruptor se llama como el nombre que muestra el propio sensor: si aparece más tarde o lo renombras, el nombre del interruptor lo sigue sin recargar. Activada = el director hace como si esta abertura no existiera — sus propias zonas y la parada global la ignoran. No hay duración: se mantiene hasta que la apagues tú mismo. Mientras siga activa con la abertura realmente abierta, el director lo informa en *Reparaciones*.
 
 ## Paso 12 — Guardar y cerrar
 

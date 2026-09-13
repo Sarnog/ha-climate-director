@@ -605,7 +605,7 @@ Der Raum nennt dann `opening_open_elsewhere` als Grund, sodass du siehst, warum
 nichts geschieht. Zwei Dinge bleiben wie immer: Eine Zone mit Übersteuerung und
 eine handbediente Quelle werden nicht gesteuert, auch von dieser Liste nicht.
 
-Gib jeder Öffnung einen eigenen **Name**: daran hängt der Überbrückungsschalter, sodass er bestehen bleibt, wenn du den Sensor ersetzt. Jede Öffnung bekommt einen Überbrückungsschalter (`switch.*_uberbruckung_<opening>`). An = der Director tut so, als gäbe es diese Öffnung nicht — ihre eigenen Zonen und der hausweite Stopp ignorieren sie beide. Es gibt keine Laufzeit: der Schalter bleibt an, bis du ihn selbst ausschaltest. Steht er an, während die Öffnung wirklich offensteht, meldet der Director das unter *Reparaturen*.
+Jede Öffnung hat eine eigene, unsichtbar gespeicherte ID, und daran hängt der Überbrückungsschalter (`switch.*_uberbruckung_<opening>`), sodass er bestehen bleibt, wenn du den Sensor ersetzt; der **Name** ist nur das Etikett, das du selbst siehst. Hatte eine Öffnung noch keine ID, dann ist diese ID der Sensor und heißt der Schalter nach dem Namen, den der Sensor selbst anzeigt — erscheint er erst später oder benennst du ihn um, folgt der Schaltername ohne Neuladen. An = der Director tut so, als gäbe es diese Öffnung nicht — ihre eigenen Zonen und der hausweite Stopp ignorieren sie beide. Es gibt keine Laufzeit: der Schalter bleibt an, bis du ihn selbst ausschaltest. Steht er an, während die Öffnung wirklich offensteht, meldet der Director das unter *Reparaturen*.
 
 ## Schritt 12 — Speichern und schließen
 

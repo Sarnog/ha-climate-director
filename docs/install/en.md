@@ -592,7 +592,7 @@ The room then names `opening_open_elsewhere` as its reason, so you can see why
 nothing is happening. Two things stay as they always were: a zone under override
 and a hand-operated source are not steered, by this list either.
 
-Give every opening its own **Name**: the bypass switch hangs on it, so it keeps existing when you replace the sensor. Each opening gets a bypass switch (`switch.*_<opening>_bypass`). On = the director pretends this opening is not there — its own zones and the house-wide stop both ignore it. There is no timer: it stays on until you turn it off yourself. While it stands on with the opening really open, the director reports it under *Repairs*.
+Every opening has its own id, stored invisibly, and that is what the bypass switch hangs on (`switch.*_<opening>_bypass`), so it keeps existing when you replace the sensor; the **Name** is just the label you see yourself. When an opening had no id yet, that id is the sensor and the switch is named after the name that sensor itself shows — should it appear later or be renamed, the switch name follows it without a reload. On = the director pretends this opening is not there — its own zones and the house-wide stop both ignore it. There is no timer: it stays on until you turn it off yourself. While it stands on with the opening really open, the director reports it under *Repairs*.
 
 ## Step 12 — Save and close
 

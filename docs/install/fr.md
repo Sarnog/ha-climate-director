@@ -616,7 +616,7 @@ voyiez pourquoi rien ne se passe. Deux choses restent comme toujours : une zone
 sous dérogation et une source manuelle ne sont pas pilotées, pas davantage par
 cette liste.
 
-Donnez à chaque ouverture son propre **Nom** : c'est à lui que s'accroche l'interrupteur de contournement, qui survit ainsi au remplacement du capteur. Chaque ouverture reçoit un interrupteur de contournement (`switch.*_contournement_<opening>`). Activé = le directeur fait comme si cette ouverture n'existait pas — ses propres zones et l'arrêt global l'ignorent tous deux. Il n'y a pas de durée : il reste actif jusqu'à ce que vous l'éteigniez vous-même. Tant qu'il est actif alors que l'ouverture est réellement ouverte, le directeur le signale sous *Réparations*.
+Chaque ouverture a son propre identifiant, stocké de façon invisible, et c'est à lui que s'accroche l'interrupteur de contournement (`switch.*_contournement_<opening>`), si bien qu'il survit au remplacement du capteur ; le **Nom** n'est que l'étiquette que vous voyez. Si une ouverture n'avait pas encore d'identifiant, cet identifiant est le capteur et l'interrupteur porte le nom que le capteur affiche lui-même — s'il apparaît plus tard ou si vous le renommez, le nom de l'interrupteur suit sans rechargement. Activé = le directeur fait comme si cette ouverture n'existait pas — ses propres zones et l'arrêt global l'ignorent tous deux. Il n'y a pas de durée : il reste actif jusqu'à ce que vous l'éteigniez vous-même. Tant qu'il est actif alors que l'ouverture est réellement ouverte, le directeur le signale sous *Réparations*.
 
 ## Étape 12 — Enregistrer et fermer
 
