@@ -987,7 +987,7 @@ class ClimateDirectorCoordinator(
             async with asyncio.timeout(5):
                 async with self._lock:
                     pass
-        except TimeoutError:  # pragma: no cover - niet af te dwingen in een test
+        except TimeoutError:
             _LOGGER.warning("Een beslisronde liep nog bij het afsluiten van %s", self.name)
         self._cancel_pending_deferral()
         self._cancel_clock_reeval()
@@ -1052,7 +1052,7 @@ class ClimateDirectorCoordinator(
 
             try:
                 self.last_applied = await apply(self.hass, self.last_changes, shadow=self.shadow)
-            except Exception:  # noqa: BLE001  # pragma: no cover - applier vangt dit zelf op
+            except Exception:  # noqa: BLE001  # pragma: no cover - onbereikbaar in een test
                 _LOGGER.exception("Applying the climate plan failed")
             self._note_commanded_off(self.last_applied)
             for change in self.last_applied:
@@ -1164,7 +1164,7 @@ class ClimateDirectorCoordinator(
                 continue
             state = self.hass.states.get(entity_id)
             if state is None or _unreadable(state.state):
-                continue  # pragma: no cover - een onleesbare sensor is hierboven al gemeld
+                continue  # pragma: no cover - onbereikbaar in een test: hierboven al gemeld
             attributes = getattr(state, "attributes", {})
             if (
                 temperature_from_state(

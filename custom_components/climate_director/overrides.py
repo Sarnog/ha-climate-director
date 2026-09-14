@@ -93,7 +93,9 @@ class _OverridesMixin(_CoordinatorBase):
         override never lapses by itself. `when_done` is `turn_off` or `leave`.
         """
         source = self.override_source(zone_id, hvac_mode)
-        if source is None:  # pragma: no cover - de servicelaag weigert dit al eerder
+        if (
+            source is None
+        ):  # pragma: no cover - onbereikbaar in een test: de servicelaag weigert dit al eerder
             _LOGGER.warning("set_override: zone %s has no source for %s", zone_id, hvac_mode)
             return False
 
@@ -294,7 +296,9 @@ class _OverridesMixin(_CoordinatorBase):
             return
         until = min(pending.values())
         seconds = (until - dt_util.now()).total_seconds()
-        if seconds <= 0:  # pragma: no cover - een race tussen twee kloklezingen
+        if (
+            seconds <= 0
+        ):  # pragma: no cover - onbereikbaar in een test: race tussen twee kloklezingen
             return
         self._cancel_override_wake: CALLBACK_TYPE | None = async_call_later(
             self.hass, seconds + 1, self._on_override_expiry

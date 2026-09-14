@@ -153,7 +153,7 @@ class _StateStoreMixin(_CoordinatorBase):
         """
         try:
             stored = await self._store.async_load()
-        except Exception:  # pragma: no cover - een onleesbare opslag hoort opzij
+        except Exception:
             _LOGGER.exception("Reading the stored state of %s failed", self.name)
             await self._quarantine_storage()
             return
@@ -261,7 +261,7 @@ class _StateStoreMixin(_CoordinatorBase):
         corrupt = path.with_name(f"{path.name}.corrupt.{stamp}")
         try:
             await self.hass.async_add_executor_job(os.rename, path, corrupt)
-        except OSError:  # pragma: no cover - mislukt verplaatsen blijft melden
+        except OSError:
             _LOGGER.exception("Moving the unreadable state file %s aside failed", path)
         problems.async_report_corrupt_storage(
             self.hass,

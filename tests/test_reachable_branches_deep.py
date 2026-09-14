@@ -480,3 +480,17 @@ def test_a_hand_operated_appliance_in_a_taken_area_is_stood_down() -> None:
     # `climate.c` is bereikbaar maar staat uit, `climate.d` valt buiten het
     # gebied: geen van beide levert een commando op.
     assert takeover.stop_others(config, world, takeovers, commands, untouched) == commands
+
+
+def test_an_unreadable_strings_file_yields_no_english_templates(monkeypatch) -> None:
+    """texts.py: een onleesbaar `strings.json` geeft een lege terugval, geen fout.
+
+    texts.py: an unreadable `strings.json` yields an empty fallback, not an error.
+    """
+    from pathlib import Path
+
+    def refuse(_self, *_args, **_kwargs) -> str:
+        raise OSError("onleesbaar")
+
+    monkeypatch.setattr(Path, "read_text", refuse)
+    assert texts._read_english_templates() == {}
