@@ -268,6 +268,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -
         problems.async_clear_unreadable(hass, entry.entry_id)
         problems.async_clear_unsupported_modes(hass, entry.entry_id)
         problems.async_clear_command_not_taking(hass, entry.entry_id)
+        problems.async_clear_bypassed_openings(hass, entry.entry_id)
         problems.async_clear_season_override(hass, entry.entry_id)
         problems.async_clear_corrupt_storage(hass, entry.entry_id)
         # De luistermelding is er één voor de hele integratie, dus hij gaat pas

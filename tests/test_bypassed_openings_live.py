@@ -124,6 +124,23 @@ class TestTheBypassedOpeningsNotice:
 
         assert issue_for(home) is None
 
+    async def test_the_notice_goes_when_the_entry_unloads(self, home: LiveHome) -> None:
+        """R30-2: ook deze melding verdwijnt als de installatie uitlaadt.
+
+        R30-2: this notice too disappears when the installation unloads.
+
+        Zonder de clear-aanroep in `async_unload_entry` bleef de
+        overbruggingsmelding in de échte `issue_registry` staan terwijl de entry
+        weg was - precies het gat dat de dode functie ernaast markeerde.
+        """
+        await bypass_on(home)
+        assert issue_for(home) is not None
+
+        assert await home.hass.config_entries.async_unload(home.entry.entry_id) is True
+        await home.hass.async_block_till_done()
+
+        assert issue_for(home) is None
+
 
 class TestAcrossARestart:
     async def test_the_notice_comes_back_while_both_sides_still_hold(self) -> None:
