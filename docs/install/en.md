@@ -636,6 +636,13 @@ called something else there; look for the name as it appears in the interface.
 There is also a downloadable diagnostics export with the configuration, the
 last snapshot read and the last plan.
 
+The director decides again on **every state change** that matters to it — a
+temperature, a window, presence, an override — and additionally on the **clock**:
+a fixed re-evaluation as a safety net, plus exactly at the moments it expects in
+the future itself (the end of a delay, a rest time or a request). That way a zone
+where nothing changes is left alone, and it still steps in the moment a time
+limit expires.
+
 ## The switches and buttons
 
 - **Master switch** (`switch.*_director`): off = the director does nothing at

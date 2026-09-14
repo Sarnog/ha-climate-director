@@ -640,6 +640,13 @@ heten ze daar anders; zoek dan op de naam zoals hij in de interface staat.
 Daarnaast is er een downloadbare diagnose met de configuratie, de laatst
 gelezen momentopname en het laatste plan.
 
+De director beslist opnieuw bij **elke toestandswijziging** die er voor hem toe
+doet — een temperatuur, een raam, een aanwezigheid, een override — en daarnaast
+op de **klok**: een vaste herbeoordeling als vangnet, plus precies op de
+momenten die hij zelf in de toekomst verwacht (het einde van een vertraging, een
+rusttijd of een verzoek). Zo blijft een zone waar niets verandert met rust, en
+grijpt hij toch in zodra een tijdsgrens verstrijkt.
+
 ## De schakelaars en knoppen
 
 - **Hoofdschakelaar** (`switch.*_director`): uit = de director doet helemaal

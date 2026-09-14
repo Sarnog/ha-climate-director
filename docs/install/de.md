@@ -650,6 +650,13 @@ steht.
 Außerdem gibt es einen herunterladbaren Diagnose-Export mit der Konfiguration,
 dem zuletzt gelesenen Schnappschuss und dem letzten Plan.
 
+Der Director entscheidet bei **jeder Zustandsänderung** neu, die für ihn zählt —
+eine Temperatur, ein Fenster, Anwesenheit, eine Übersteuerung — und zusätzlich
+auf der **Uhr**: eine feste Neubewertung als Sicherheitsnetz, und genau zu den
+Zeitpunkten, die er selbst in der Zukunft erwartet (das Ende einer Verzögerung,
+einer Ruhezeit oder einer Anforderung). So bleibt eine Zone, in der sich nichts
+ändert, in Ruhe, und greift trotzdem ein, sobald eine Zeitgrenze abläuft.
+
 ## Die Schalter und Tasten
 
 - **Hauptschalter** (`switch.*_director`): aus = der Director tut gar nichts.

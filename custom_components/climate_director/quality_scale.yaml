@@ -6,9 +6,22 @@ rules:
     comment: "Deze integratie praat met geen enkel apparaat of dienst; er valt niets te pollen. / This integration talks to no appliance or service; there is nothing to poll."
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: "De regel vraagt 100% dekking van de config flow en options flow; vandaag wordt alleen het totaal (≥95%) bewaakt, niet 100% per flow. / The rule asks 100% coverage of the config flow and options flow; today only the total (≥95%) is guarded, not 100% per flow."
+  config-flow-test-coverage: done
+  # De config flow en de options flow zijn regel voor regel gedekt: 509 van 509
+  # statements, 0 gemist (100 %). `branch = true` meldt daarnaast twee open
+  # takken in `config_flow.py`, en die zijn met een reden verantwoord in plaats
+  # van gedicht: `238->240` is een opslaan dat nooit het menu opende (het menu
+  # zet `_shadow_mode` altijd), en `1074->1084` is een verwijderde zone zonder
+  # `zone_id` (elke zone heeft er een). Beide zijn verdedigende haken die geen
+  # enkel UI-pad raakt. De oude "≥95 %"-ondergrens is daarmee vervallen.
+  #
+  # The config flow and the options flow are covered line by line: 509 of 509
+  # statements, 0 missed (100 %). `branch = true` additionally reports two open
+  # branches in `config_flow.py`, accounted for rather than closed: `238->240`
+  # is a save that never opened the menu (the menu always sets `_shadow_mode`),
+  # and `1074->1084` is a removed zone without a `zone_id` (every zone has one).
+  # Both are defensive guards no UI path reaches. The old "≥95 %" floor has
+  # therefore lapsed.
   config-flow: done
   dependency-transparency:
     status: exempt
@@ -60,9 +73,14 @@ rules:
   discovery:
     status: exempt
     comment: "Er is niets te ontdekken, de gebruiker kiest zelf zijn apparaten en sensoren. / There is nothing to discover; the user picks their own appliances and sensors."
-  docs-data-update:
-    status: todo
-    comment: "De handleiding beschrijft nog niet dat de integratie bij elke toestandswijziging herbeslist en daarnaast een klokgestuurde herbeoordeling draait. / The manual does not yet describe that the integration re-decides on every state change and also runs a clock-driven re-evaluation."
+  docs-data-update: done
+  # De zes gidsen beschrijven wanneer de director opnieuw beslist: bij elke
+  # toestandswijziging die er voor hem toe doet, en daarnaast op de klok (het
+  # vangnet en de momenten die hij zelf in de toekomst verwacht).
+  #
+  # The six guides describe when the director decides again: on every state
+  # change that matters to it, and additionally on the clock (the safety net and
+  # the moments it expects in the future itself).
   docs-examples: done
   docs-known-limitations: done
   docs-supported-devices:

@@ -647,6 +647,13 @@ de otra forma; busca entonces por el nombre tal como aparece en la interfaz.
 También hay una exportación de diagnóstico descargable con la configuración, la
 última instantánea leída y el último plan.
 
+El director vuelve a decidir en **cada cambio de estado** que le importa —una
+temperatura, una ventana, la presencia, una anulación— y además según el
+**reloj**: una reevaluación fija como red de seguridad, y justo en los momentos
+que él mismo espera en el futuro (el final de un retardo, de un tiempo de reposo
+o de una petición). Así, una zona donde nada cambia se queda en paz, y aun así
+interviene en cuanto vence un límite de tiempo.
+
 ## Los interruptores y botones
 
 - **Interruptor principal** (`switch.*_director`): apagado = el director no hace

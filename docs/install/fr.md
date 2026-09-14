@@ -662,6 +662,13 @@ l'interface.
 Il existe aussi un export de diagnostic téléchargeable avec la configuration,
 le dernier instantané lu et le dernier plan.
 
+Le directeur redécide à **chaque changement d'état** qui compte pour lui — une
+température, une fenêtre, une présence, un contournement — et en plus selon
+l'**horloge** : une réévaluation fixe comme filet de sécurité, et exactement aux
+moments qu'il attend lui-même dans le futur (la fin d'un délai, d'un temps de
+repos ou d'une demande). Ainsi, une zone où rien ne change reste tranquille, et
+il intervient malgré tout dès qu'une limite de temps expire.
+
 ## Les interrupteurs et boutons
 
 - **Interrupteur principal** (`switch.*_director`) : éteint = le directeur ne
