@@ -914,17 +914,17 @@ automatisation repose sur cet événement.
   configuration, le dernier instantané lu et le dernier plan. Avec ces trois
   éléments, toute décision est exactement reproductible.
 
-Sous **Réparations**, vous pouvez rencontrer ces messages :
+Sous **Réparations**, vous pouvez rencontrer ces messages, avec ce qu'ils signifient et ce qu'il faut faire :
 
-- Climate Director : <count> ouverture(s) de <name> est contournée alors qu'elle est ouverte
-- Climate Director : <count> appareil(s) de <name> n'exécute pas sa commande
-- Climate Director : <name> a dû mettre son état sauvegardé de côté
-- Climate Director : <name> a un problème de configuration
-- Climate Director : <name> a des tâches manuelles
-- Personne n'entend une demande de préparation refusée
-- Climate Director : <name> règle une saison qui exclut <count> tâche(s)
-- Climate Director : <name> ne peut pas lire <count> entité(s)
-- Climate Director : <name> demande un mode que <count> appareil(s) ne peut exécuter
+- **Climate Director : <count> ouverture(s) de <name> est contournée alors qu'elle est ouverte** — vous avez contourné une ouverture alors qu'elle est réellement ouverte ; fermez l'ouverture ou désactivez le contournement.
+- **Climate Director : <count> appareil(s) de <name> n'exécute pas sa commande** — un appareil accepte l'appel mais ne change pas ; vérifiez qu'il est joignable et que rien ne le remet en place.
+- **Climate Director : <name> a dû mettre son état sauvegardé de côté** — le fichier d'état était illisible et a été renommé ; les demandes et les reprises manuelles d'avant le redémarrage sont perdues, restaurez le fichier depuis une sauvegarde si vous en avez besoin.
+- **Climate Director : <name> a un problème de configuration** — l'installation est incorrecte ; les zones correctes continuent d'être régulées, donc vérifiez la configuration.
+- **Climate Director : <name> a des tâches manuelles** — une zone n'a que des sources qui ne démarrent jamais seules ; activez *Démarrage automatique* ou confirmez le message.
+- **Personne n'entend une demande de préparation refusée** — aucune automatisation n'écoute l'événement de refus ; importez le blueprint *decisions* et créez une automatisation.
+- **Climate Director : <name> règle une saison qui exclut <count> tâche(s)** — la saison est réglée sur une saison où une tâche installée ne peut jamais tourner ; changez la saison ou la tâche.
+- **Climate Director : <name> ne peut pas lire <count> entité(s)** — une entité configurée n'existe pas, a disparu ou ne donne pas de nombre ; corrigez l'entité ou remettez le capteur en place.
+- **Climate Director : <name> demande un mode que <count> appareil(s) ne peut exécuter** — un rôle demande un mode que l'appareil ne déclare pas ; changez le rôle ou choisissez un autre appareil.
 
 ## Limites connues
 

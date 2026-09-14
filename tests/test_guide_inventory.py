@@ -131,6 +131,44 @@ def _notice_title(language: str, key: str) -> str:
     return MARKER.sub(lambda match: f"<{match.group(0)[1:-1]}>", BRAND.sub("", title))
 
 
+#: Hoeveel tekens er ná de titel op dezelfde regel moeten staan voordat het een
+#: uitleg is en geen kale titelopsomming. De titel zelf is per taal 30-80 tekens;
+#: de uitleg erachter is in elke taal ruim langer dan dit.
+#:
+#: How many characters must stand after the title on the same line before it
+#: counts as an explanation rather than a bare title list. The title itself is
+#: 30-80 characters per language; the explanation behind it is comfortably
+#: longer than this in every language.
+MIN_EXPLANATION = 25
+
+#: Tekens die geen uitleg zijn: de markdown-opmaak en het scheidingsteken.
+#:
+#: Characters that are not explanation: the markdown emphasis and the separator.
+DECORATION = " \t*_—–-.:;،"
+
+
+def _explained(text: str, needle: str) -> bool:
+    """Staat de titel ergens op een regel mét uitleg erachter?
+
+    Een kale opsomming van titels is geen handleiding: de lezer weet dan nog
+    niet wat een melding betekent of wat hij eraan doet. Deze functie eist dat
+    de titel op minstens één regel staat met genoeg tekst erachter.
+
+    Is the title somewhere on a line with an explanation behind it?
+
+    A bare list of titles is no manual: the reader still does not know what a
+    notice means or what to do about it. This function demands that the title
+    stands on at least one line with enough text behind it.
+    """
+    for line in text.splitlines():
+        if needle not in line:
+            continue
+        rest = line.partition(needle)[2].strip(DECORATION)
+        if len(rest) >= MIN_EXPLANATION:
+            return True
+    return False
+
+
 def _missing(language: str) -> list[str]:
     """Return every inventory item this guide does not name."""
     text = (INSTALL / f"{language}.md").read_text(encoding="utf-8")
@@ -150,6 +188,8 @@ def _missing(language: str) -> list[str]:
         needle = _notice_title(language, key)
         if needle not in text:
             missing.append(f"melding {key}: {needle!r} ontbreekt")
+        elif not _explained(text, needle):
+            missing.append(f"melding {key}: {needle!r} staat er zonder uitleg")
 
     return missing
 

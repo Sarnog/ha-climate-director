@@ -881,17 +881,17 @@ automation stands on that event.
   the last snapshot read and the last plan. With those three, any decision is
   exactly reproducible.
 
-Under **Repairs** you may run into these notices:
+Under **Repairs** you may run into these notices, with what they mean and what to do:
 
-- Climate Director: <count> opening(s) of <name> are bypassed while open
-- Climate Director: <count> appliance(s) of <name> do not carry out their command
-- Climate Director: <name> had to set its saved state aside
-- Climate Director: <name> has a configuration problem
-- Climate Director: <name> has hand-operated duties
-- Nobody hears a refused pre-conditioning request
-- Climate Director: <name> sets a season that locks <count> duty/duties out
-- Climate Director: <name> cannot read <count> entity(ies)
-- Climate Director: <name> asks a mode that <count> appliance(s) cannot run
+- **Climate Director: <count> opening(s) of <name> are bypassed while open** — you bypassed an opening while it really stands open; close the opening or switch the bypass off.
+- **Climate Director: <count> appliance(s) of <name> do not carry out their command** — an appliance accepts the call but does not change; check that it is reachable and that nothing else puts it back.
+- **Climate Director: <name> had to set its saved state aside** — the state file was unreadable and has been renamed; requests and hand-backs from before the restart are gone, so restore the file from a backup if you need them.
+- **Climate Director: <name> has a configuration problem** — the installation is structurally wrong; the zones that are fine are still regulated, so check the configuration.
+- **Climate Director: <name> has hand-operated duties** — a zone only has sources that never start by themselves; switch *Automatic start* on or confirm the notice.
+- **Nobody hears a refused pre-conditioning request** — no automation listens for the refusal event; import the *decisions* blueprint and build an automation from it.
+- **Climate Director: <name> sets a season that locks <count> duty/duties out** — the season is set to one in which an installed duty can never run; change the season or the duty.
+- **Climate Director: <name> cannot read <count> entity(ies)** — a configured entity does not exist, is gone or produces no number; correct the entity or bring the sensor back.
+- **Climate Director: <name> asks a mode that <count> appliance(s) cannot run** — a role asks for a mode the appliance does not report; change the role or pick another appliance.
 
 ## Known limitations
 
