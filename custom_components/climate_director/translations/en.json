@@ -568,12 +568,6 @@
         "discard": "← Discard and go back"
       }
     },
-    "save_exit": {
-      "options": {
-        "keep": "Save anyway",
-        "discard": "← Back to the main menu to change something"
-      }
-    },
     "exclusive_list": {
       "options": {
         "add_new": "+ Add group",

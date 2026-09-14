@@ -568,12 +568,6 @@
         "discard": "← Descartar y volver"
       }
     },
-    "save_exit": {
-      "options": {
-        "keep": "Guardar igualmente",
-        "discard": "← Volver al menú principal para cambiar algo"
-      }
-    },
     "exclusive_list": {
       "options": {
         "add_new": "+ Añadir grupo",

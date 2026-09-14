@@ -568,12 +568,6 @@
         "discard": "← Verwerpen en teruggaan"
       }
     },
-    "save_exit": {
-      "options": {
-        "keep": "Toch opslaan",
-        "discard": "← Terug naar het hoofdmenu om iets aan te passen"
-      }
-    },
     "exclusive_list": {
       "options": {
         "add_new": "+ Groep toevoegen",

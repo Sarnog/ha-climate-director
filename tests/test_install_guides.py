@@ -4,7 +4,7 @@ Er leest vandaag geen enkele test of CI-baan `docs/install/*.md`; daardoor zijn
 de handleidingen van de interface weggedreven. Deze test maakt ze weer vast:
 voor elke taal wordt elke interfacelabel uit `translations/<taal>.json` —
 de veldnamen van `options.step.*.data.*` plus de knopteksten `discard`/`keep`
-van de twee actiekeuzes — letterlijk in `docs/install/<taal>.md` gezocht.
+van de actiekeuze — letterlijk in `docs/install/<taal>.md` gezocht.
 
 De uitzonderingenlijst hieronder is letterlijk de stand van dit moment: het
 label hoort in de handleiding thuis maar staat er nog niet letterlijk in.
@@ -25,8 +25,8 @@ The six installation guides use the words of the interface.
 No test or CI job reads `docs/install/*.md` today; the guides have therefore
 drifted away from the interface. This test ties them back: for each language
 every interface label from `translations/<language>.json` — the field names of
-`options.step.*.data.*` plus the `discard`/`keep` button texts of the two
-action pickers — is looked up literally in `docs/install/<language>.md`.
+`options.step.*.data.*` plus the `discard`/`keep` button texts of the action
+picker — is looked up literally in `docs/install/<language>.md`.
 
 The exception list below is literally the state of this moment: the label
 belongs in the guide but does not yet stand in it literally. When a label is
@@ -56,7 +56,7 @@ TRANSLATIONS = COMPONENT / "translations"
 INSTALL = Path(__file__).parent.parent / "docs" / "install"
 
 LANGUAGES = ("en", "nl", "de", "es", "fr", "ar")
-BUTTON_SELECTORS = ("when_done", "save_exit")
+BUTTON_SELECTORS = ("when_done",)
 
 #: De kop van de woordenlijst per taal. Deze test knipt die sectie uit de
 #: handleiding voordat hij meet, en die koppen moeten dus letterlijk met de
@@ -116,7 +116,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.zone.data.presence_entity": ("Presence sensor for this zone"),
         "options.step.zone.data.presence_state": ("State meaning occupied"),
         "options.step.zone.data.presence_timeout": ("Keep counting as occupied for (seconds)"),
-        "selector.save_exit.options.discard": ("← Back to the main menu to change something"),
         "selector.when_done.options.discard": ("← Discard and go back"),
         "selector.when_done.options.keep": ("Keep these changes and go back"),
     },
@@ -174,7 +173,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.zone.data.presence_entity": ("Aanwezigheidssensor van deze zone"),
         "options.step.zone.data.presence_state": ("Toestand die bezet betekent"),
         "options.step.zone.data.presence_timeout": ("Nog zo lang als bezet tellen (seconden)"),
-        "selector.save_exit.options.discard": ("← Terug naar het hoofdmenu om iets aan te passen"),
         "selector.when_done.options.discard": ("← Verwerpen en teruggaan"),
     },
     "de": {
@@ -234,7 +232,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.zone.data.presence_entity": ("Anwesenheitssensor dieser Zone"),
         "options.step.zone.data.presence_state": ("Zustand, der belegt bedeutet"),
         "options.step.zone.data.presence_timeout": ("Noch so lange als belegt zählen (Sekunden)"),
-        "selector.save_exit.options.discard": ("← Zurück zum Hauptmenü, um etwas zu ändern"),
         "selector.when_done.options.discard": ("← Verwerfen und zurück"),
         "selector.when_done.options.keep": ("Diese Änderungen behalten und zurück"),
     },
@@ -325,8 +322,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         ),
         "options.step.zone.data.when_done": ("Cuando termines aquí"),
         "options.step.zones.data.when_done": ("Cuando termines aquí"),
-        "selector.save_exit.options.discard": ("← Volver al menú principal para cambiar algo"),
-        "selector.save_exit.options.keep": ("Guardar igualmente"),
         "selector.when_done.options.discard": ("← Descartar y volver"),
     },
     "fr": {
@@ -410,9 +405,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.zone.data.presence_timeout": (
             "Continuer à compter comme occupée pendant (secondes)"
         ),
-        "selector.save_exit.options.discard": (
-            "← Retour au menu principal pour modifier quelque chose"
-        ),
         "selector.when_done.options.discard": ("← Abandonner et revenir"),
     },
     "ar": {
@@ -494,8 +486,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.zone.data.presence_timeout": ("استمر في اعتبارها مشغولة لمدة (ثوانٍ)"),
         "options.step.zone.data.when_done": ("عند الانتهاء هنا"),
         "options.step.zones.data.when_done": ("عند الانتهاء هنا"),
-        "selector.save_exit.options.discard": ("← العودة إلى القائمة الرئيسية لتعديل شيء"),
-        "selector.save_exit.options.keep": ("احفظ على أي حال"),
         "selector.when_done.options.discard": ("← التجاهل والعودة"),
         "selector.when_done.options.keep": ("الاحتفاظ بهذه التغييرات والعودة"),
     },
@@ -511,8 +501,8 @@ def interface_labels(language: str) -> dict[str, str]:
     """Every label of the options flow, keyed by its dotted path.
 
     De veldnamen van `options.step.*.data.*` zijn wat de gebruiker naast elk
-    formulierveld leest; de twee actiekeuzes (`when_done`, `save_exit`) dragen
-    de knopteksten waaronder `discard` en `keep`.
+    formulierveld leest; de actiekeuze (`when_done`) draagt de knopteksten
+    waaronder `discard` en `keep`.
     """
     data = load(TRANSLATIONS / f"{language}.json")
     labels: dict[str, str] = {}

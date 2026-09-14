@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(".")
 TRANS = ROOT / "custom_components" / "climate_director" / "translations"
-BUTTON_SELECTORS = ("when_done", "save_exit")
+BUTTON_SELECTORS = ("when_done",)
 LANGUAGES = ("en", "nl", "de", "es", "fr", "ar")
 
 #: De regelbreedte van `pyproject.toml`. De uitzonderingenlijst hieronder moet
@@ -207,7 +207,7 @@ Er leest vandaag geen enkele test of CI-baan `docs/install/*.md`; daardoor zijn
 de handleidingen van de interface weggedreven. Deze test maakt ze weer vast:
 voor elke taal wordt elke interfacelabel uit `translations/<taal>.json` —
 de veldnamen van `options.step.*.data.*` plus de knopteksten `discard`/`keep`
-van de twee actiekeuzes — letterlijk in `docs/install/<taal>.md` gezocht.
+van de actiekeuze — letterlijk in `docs/install/<taal>.md` gezocht.
 
 De uitzonderingenlijst hieronder is letterlijk de stand van dit moment: het
 label hoort in de handleiding thuis maar staat er nog niet letterlijk in.
@@ -228,8 +228,8 @@ The six installation guides use the words of the interface.
 No test or CI job reads `docs/install/*.md` today; the guides have therefore
 drifted away from the interface. This test ties them back: for each language
 every interface label from `translations/<language>.json` — the field names of
-`options.step.*.data.*` plus the `discard`/`keep` button texts of the two
-action pickers — is looked up literally in `docs/install/<language>.md`.
+`options.step.*.data.*` plus the `discard`/`keep` button texts of the action
+picker — is looked up literally in `docs/install/<language>.md`.
 
 The exception list below is literally the state of this moment: the label
 belongs in the guide but does not yet stand in it literally. When a label is
@@ -258,7 +258,7 @@ TRANSLATIONS = COMPONENT / "translations"
 INSTALL = Path(__file__).parent.parent / "docs" / "install"
 
 LANGUAGES = ("en", "nl", "de", "es", "fr", "ar")
-BUTTON_SELECTORS = ("when_done", "save_exit")
+BUTTON_SELECTORS = ("when_done",)
 
 {glossary_literal}
 
@@ -276,8 +276,8 @@ def interface_labels(language: str) -> dict[str, str]:
     """Every label of the options flow, keyed by its dotted path.
 
     De veldnamen van `options.step.*.data.*` zijn wat de gebruiker naast elk
-    formulierveld leest; de twee actiekeuzes (`when_done`, `save_exit`) dragen
-    de knopteksten waaronder `discard` en `keep`.
+    formulierveld leest; de actiekeuze (`when_done`) draagt de knopteksten
+    waaronder `discard` en `keep`.
     """
     data = load(TRANSLATIONS / f"{{language}}.json")
     labels: dict[str, str] = {{}}

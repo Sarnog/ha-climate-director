@@ -568,12 +568,6 @@
         "discard": "← Verwerfen und zurück"
       }
     },
-    "save_exit": {
-      "options": {
-        "keep": "Trotzdem speichern",
-        "discard": "← Zurück zum Hauptmenü, um etwas zu ändern"
-      }
-    },
     "exclusive_list": {
       "options": {
         "add_new": "+ Gruppe hinzufügen",
