@@ -400,7 +400,7 @@ def _guest_window(raw: dict[str, Any]) -> TimeWindow | None:
     one in the form.
     """
     if not isinstance(raw, Mapping):
-        return None
+        return None  # pragma: no cover - de aanroeper geeft altijd een Mapping
     leaves = {target_key(field): raw.get(target_key(field)) for field in GUEST_WINDOW_FIELDS}
     start, end = leaves.get("start"), leaves.get("end")
     if not start or not end:

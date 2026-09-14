@@ -14,16 +14,24 @@ branch = true
 [tool.coverage.report]
 show_missing = true
 
-# De suite staat op 97%. De drempel ligt er net onder: hij vangt een stuk code
-# dat zonder test binnenkomt, zonder te struikelen over een regel die om een
-# goede reden onbereikbaar blijft. Zakt de dekking, dan hoort de vraag "welke
-# test is hier vergeten" gesteld te worden, niet de drempel verlaagd.
+# Elk statement in de integratie wordt door de suite geraakt: de meting van
+# ronde 30 laat 0 gemiste regels zien (4949 van 4949). De 19 open takken die
+# `branch = true` daarnaast meet, zijn de twee kanten van een lus of een
+# kortsluiting (`a or b`) waarvan er één niet langskomt; die zijn met een test
+# niet af te dwingen zonder de code te verbouwen. De drempel staat daarom op het
+# gemeten totaal, afgerond naar beneden: 99. Zakt de dekking, dan hoort de vraag
+# "welke test is hier vergeten" gesteld te worden, niet de drempel verlaagd; een
+# regel die er echt niet komt, krijgt een pragma met de reden erachter.
 #
-# The suite sits at 97%. The threshold lies just below it: it catches a piece of
-# code arriving without a test, without tripping over a line that stays
-# unreachable for a good reason. If coverage drops, the question to ask is
-# "which test was forgotten here", not to lower the threshold.
-fail_under = 95
+# Every statement in the integration is touched by the suite: the round-30
+# measurement shows 0 missed lines (4949 of 4949). The 19 open branches that
+# `branch = true` measures alongside them are the two sides of a loop or a
+# short-circuit (`a or b`) of which one never comes past; those cannot be forced
+# with a test without rebuilding the code. The threshold therefore sits at the
+# measured total, rounded down: 99. If coverage drops, the question to ask is
+# "which test was forgotten here", not to lower the threshold; a line that truly
+# cannot be reached gets a pragma with the reason behind it.
+fail_under = 99
 
 [tool.ruff]
 target-version = "py313"

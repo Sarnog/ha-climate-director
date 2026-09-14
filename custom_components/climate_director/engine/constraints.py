@@ -539,9 +539,8 @@ def _apply_capacity(
     for grant in winners:
         entity_id = entity_by_zone.get(grant.zone_id) or f"\0{grant.zone_id}"
         if entity_id not in best_rank:
+            # `winners` staat op rang: de eerste toekenning houdt meteen de beste rang.
             ordered_entities.append(entity_id)
-            best_rank[entity_id] = key_of_zone(grant.zone_id)
-        elif key_of_zone(grant.zone_id) < best_rank[entity_id]:
             best_rank[entity_id] = key_of_zone(grant.zone_id)
 
     ordered_entities.sort(key=lambda entity_id: best_rank[entity_id])

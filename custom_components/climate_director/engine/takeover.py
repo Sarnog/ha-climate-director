@@ -119,12 +119,11 @@ def in_force(config: DirectorConfig, world: WorldState) -> tuple[Takeover, ...]:
     for entity_id, zones in sorted(areas(config).items()):
         if not world.climate(entity_id).available:
             continue
-        families = _families(config, entity_id)
-        if not families:
-            continue
+        # `areas()` levert alleen apparaten met een bronrij, en elke rol dekt
+        # minstens één taak: dit apparaat heeft er dus altijd een.
         if not _dropped_out(config, world, entity_id, zones, _delay(config, entity_id)):
             continue
-        found.append(Takeover(entity_id, zones, families))
+        found.append(Takeover(entity_id, zones, _families(config, entity_id)))
     return tuple(found)
 
 

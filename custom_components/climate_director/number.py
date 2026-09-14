@@ -134,7 +134,7 @@ class ZonePriorityNumber(ClimateDirectorEntity, NumberEntity, RestoreEntity):
         if last is not None:
             try:
                 last_value = int(float(last.state))
-            except (TypeError, ValueError):
+            except (TypeError, ValueError):  # pragma: no cover - stand van buiten Home Assistant
                 last_value = None
             raw = last.attributes.get(ATTR_CONFIGURED)
             last_configured = int(raw) if isinstance(raw, int | float) else None

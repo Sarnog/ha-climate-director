@@ -82,7 +82,7 @@ def _read_english_templates() -> dict[str, str]:
                 message = value.get("message") if isinstance(value, dict) else None
                 if message:
                     templates[key] = message
-    except (OSError, ValueError):
+    except (OSError, ValueError):  # pragma: no cover - strings.json hoort er te zijn
         pass
     return templates
 

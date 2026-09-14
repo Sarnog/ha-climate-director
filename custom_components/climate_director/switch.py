@@ -106,7 +106,7 @@ class _DirectorSwitch(ClimateDirectorEntity, SwitchEntity, RestoreEntity):
 
     def _push(self) -> None:
         """Write this switch's state into the coordinator."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover - abstracte haak: elke schakelaar vult hem in
 
     def _handle_coordinator_update(self) -> None:
         """Ignore coordinator updates: this switch is an input, not an output."""
