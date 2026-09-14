@@ -114,7 +114,7 @@ def _without_translations(monkeypatch: pytest.MonkeyPatch):
     Opzoeken raakt een cache die alleen in een draaiende Home Assistant bestaat.
     Looking up touches a cache that only exists inside a running Home Assistant.
     """
-    monkeypatch.setattr(texts, "lookup", lambda hass, code: None)
+    monkeypatch.setattr(texts, "lookup", lambda _hass, _code: None)
 
 
 class TestTheFacts:
@@ -179,7 +179,7 @@ class TestTheRefusalSentence:
         assert "120 minutes" in data["message"]
 
     def test_a_translation_wins_over_the_english(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        def dutch(hass, code: str) -> str | None:
+        def dutch(_hass, code: str) -> str | None:
             return "{zone}: {openings} staat open" if code == "precondition_refused" else None
 
         monkeypatch.setattr(texts, "lookup", dutch)
@@ -190,7 +190,7 @@ class TestTheRefusalSentence:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A translation that drifted from the code may not take the event down."""
-        monkeypatch.setattr(texts, "lookup", lambda hass, code: "{does_not_exist}")
+        monkeypatch.setattr(texts, "lookup", lambda _hass, _code: "{does_not_exist}")
         data = coordinator().refusal_data("zolder")
         assert "Zolder" in data["message"]
 

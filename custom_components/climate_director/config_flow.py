@@ -133,7 +133,7 @@ class ClimateDirectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(entry: ClimateDirectorEntry) -> OptionsFlow:
+    def async_get_options_flow(_entry: ClimateDirectorEntry) -> OptionsFlow:
         """Return the options flow, where the installation is actually built."""
         return ClimateDirectorOptionsFlow()
 
@@ -169,7 +169,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
 
     # -- ingang / entry point ------------------------------------------------
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    async def async_step_init(self, _user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Show the main menu."""
         if not self._installation:
             stored = self.config_entry.options.get(CONF_INSTALLATION) or {}

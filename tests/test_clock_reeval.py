@@ -87,7 +87,7 @@ def scheduled(monkeypatch: pytest.MonkeyPatch):
     calls: list[tuple[float, object]] = []
     cancels: list[_Cancel] = []
 
-    def _fake(hass, delay: float, action):
+    def _fake(_hass, delay: float, action):
         cancel = _Cancel()
         cancels.append(cancel)
         calls.append((delay, action))

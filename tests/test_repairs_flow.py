@@ -48,7 +48,7 @@ class FakeConfigEntries:
             return self._entry
         return None
 
-    def async_update_entry(self, entry: FakeEntry, *, options: dict[str, Any]) -> None:
+    def async_update_entry(self, _entry: FakeEntry, *, options: dict[str, Any]) -> None:
         self.updated = options
 
 
@@ -73,10 +73,10 @@ def _fake_issue_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     import custom_components.climate_director.repairs as repairs_module
 
     class FakeIssueRegistry:
-        def async_get_issue(self, handler: str, issue_id: str) -> None:
+        def async_get_issue(self, _handler: str, _issue_id: str) -> None:
             return None
 
-    monkeypatch.setattr(repairs_module.ir, "async_get", lambda hass: FakeIssueRegistry())
+    monkeypatch.setattr(repairs_module.ir, "async_get", lambda _hass: FakeIssueRegistry())
 
 
 async def test_submitting_stores_the_signature_in_the_entry_options(

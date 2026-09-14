@@ -490,7 +490,7 @@ class TestTheWalkGuard:
         """
         import test_campaign_editing as walk
 
-        async def lying_open_screen(home: object, screen: str):
+        async def lying_open_screen(_home: object, _screen: str):
             return "flow", {"type": "form", "step_id": "een_ander_scherm"}, None
 
         monkeypatch.setattr(walk, "open_screen", lying_open_screen)

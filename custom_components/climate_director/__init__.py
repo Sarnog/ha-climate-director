@@ -119,7 +119,7 @@ _CLEAR_OVERRIDE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict[str, object]) -> bool:
+async def async_setup(hass: HomeAssistant, _config: dict[str, object]) -> bool:
     """Register the domain's actions, also without a loaded installation.
 
     De acties horen bij het domein, niet bij een entry: ze bestaan zodra Home

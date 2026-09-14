@@ -65,7 +65,7 @@ def fine_house() -> DirectorConfig:
     )
 
 
-def fine_weather(now: datetime, rng: random.Random) -> tuple[float, Season]:
+def fine_weather(_now: datetime, _rng: random.Random) -> tuple[float, Season]:
     """Return a steady frost: the boiler is the only candidate all along."""
     return 2.0, Season.WINTER
 

@@ -877,7 +877,7 @@ class TestItSurvivesARestart:
             def __init__(self) -> None:
                 self.written: dict | None = None
 
-            def async_delay_save(self, writer, delay: int) -> None:
+            def async_delay_save(self, writer, _delay: int) -> None:
                 self.written = writer()
 
             async def async_load(self):

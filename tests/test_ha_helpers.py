@@ -540,7 +540,7 @@ class TestProblemSummary:
         """
         from custom_components.climate_director import texts
 
-        monkeypatch.setattr(texts, "lookup", lambda hass, code: "{zone:d}")
+        monkeypatch.setattr(texts, "lookup", lambda _hass, _code: "{zone:d}")
         problem = Problem("zone_without_sources", "zone z has no sources", zone="z")
         assert readable(_no_hass(), problem) == (
             "Zone z has no appliance at all, so there is nothing to steer. Add a source."
@@ -590,7 +590,7 @@ class TestTheEnglishTemplateIsTheSecondFallback:
         """
         from custom_components.climate_director import texts
 
-        monkeypatch.setattr(texts, "lookup", lambda hass, code: None)
+        monkeypatch.setattr(texts, "lookup", lambda _hass, _code: None)
         problem = Problem(
             "target_outside_band",
             "zone woonkamer starts heat at 20 but aims for 19.8",
@@ -626,11 +626,11 @@ class TestTheEnglishTemplatesLiveInTheCache:
 
         from custom_components.climate_director import texts
 
-        def _boom(*args: object, **kwargs: object) -> str:
+        def _boom(*_args: object, **_kwargs: object) -> str:
             raise AssertionError("readable() ging naar de schijf / readable() went to disk")
 
         monkeypatch.setattr(Path, "read_text", _boom)
-        monkeypatch.setattr(texts, "lookup", lambda hass, code: None)
+        monkeypatch.setattr(texts, "lookup", lambda _hass, _code: None)
         problem = Problem("zone_without_sources", "zone z has no sources", zone="z")
         assert readable(_no_hass(), problem) == (
             "Zone z has no appliance at all, so there is nothing to steer. Add a source."
@@ -681,7 +681,7 @@ class TestTheEnglishTemplatesLiveInTheCache:
         monkeypatch.setattr(problems, "_ENGLISH_TEMPLATES", None, raising=False)
         monkeypatch.setattr(texts, "_ENGLISH_TEMPLATES", None)
 
-        monkeypatch.setattr(texts, "lookup", lambda hass, code: None)
+        monkeypatch.setattr(texts, "lookup", lambda _hass, _code: None)
         problem = Problem("zone_without_sources", "zone z has no sources", zone="z")
         try:
             watching = True

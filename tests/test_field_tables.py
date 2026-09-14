@@ -151,8 +151,19 @@ def stored_path_exists(stored: Any, path: str) -> bool:
 class TestEveryTargetPointsSomewhere:
     """Elke tabelrij wijst naar de opslag én naar de dataclass eronder."""
 
-    def test_the_table_names_its_model(self, name: str, table: tuple[FieldSpec, ...]) -> None:
-        """A table without a row in `TABLE_ROOTS` would fall outside this guard."""
+    def test_the_table_names_its_model(
+        self,
+        name: str,
+        table: tuple[FieldSpec, ...],  # noqa: ARG002 - pytest injecteert deze naam
+    ) -> None:
+        """A table without a row in `TABLE_ROOTS` would fall outside this guard.
+
+        `table` staat er omdat pytest de klasseparametrisatie aan élke
+        testmethode meegeeft; deze methode leest hem niet.
+
+        `table` is here because pytest hands the class parametrisation to every
+        test method; this method does not read it.
+        """
         assert name in engine_fields.TABLE_ROOTS, (
             f"veldtabel {name} staat niet in fields.TABLE_ROOTS, "
             "dus zijn targets worden nergens getoetst"

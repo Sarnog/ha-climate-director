@@ -229,7 +229,7 @@ class TestThePhoneSentence:
     @pytest.fixture(autouse=True)
     def _without_translations(self, monkeypatch: pytest.MonkeyPatch):
         """Keep the English fallback in place, since a stand-in has no cache."""
-        monkeypatch.setattr(texts, "lookup", lambda hass, code: None)
+        monkeypatch.setattr(texts, "lookup", lambda _hass, _code: None)
 
     @pytest.mark.parametrize(
         ("unit", "expected"),

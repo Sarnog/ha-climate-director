@@ -54,7 +54,7 @@ class _Entry:
 class _States:
     """Stand-in for `hass.states`: no sensor of this house is known here."""
 
-    def get(self, entity_id: str):
+    def get(self, _entity_id: str):
         """Return nothing: these switches are tested without a running house."""
         return None
 
@@ -78,7 +78,7 @@ class _Coordinator:
         self.opening_bypasses: dict[str, bool] = {}
         self.evaluations = 0
 
-    def async_add_listener(self, listener, context=None):
+    def async_add_listener(self, listener, _context=None):
         self._listener = listener
         return lambda: None
 

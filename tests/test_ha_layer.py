@@ -110,7 +110,17 @@ class FakeServices:
         self.calls: list[tuple[str, str, dict]] = []
         self.failing = failing or set()
 
-    async def async_call(self, domain: str, service: str, data: dict, blocking: bool = False):
+    # `blocking` staat er omdat de applier de aanroep met `blocking=True` doet;
+    # deze stand-in leest hem niet, maar de naam mag daarom niet weg.
+    # `blocking` is here because the applier makes the call with `blocking=True`;
+    # this stand-in does not read it, but the name must stay for that reason.
+    async def async_call(
+        self,
+        domain: str,
+        service: str,
+        data: dict,
+        blocking: bool = False,  # noqa: ARG002
+    ):
         self.calls.append((domain, service, data))
         if data.get("entity_id") in self.failing:
             raise RuntimeError("de service call mislukte")
@@ -256,7 +266,7 @@ def _local_clock(monkeypatch: pytest.MonkeyPatch):
 
     monkeypatch.setattr(module.dt_util, "now", lambda: NOW)
     monkeypatch.setattr(module.dt_util, "as_local", lambda value: value)
-    monkeypatch.setattr(texts, "lookup", lambda hass, code: None)
+    monkeypatch.setattr(texts, "lookup", lambda _hass, _code: None)
 
 
 # ---------------------------------------------------------------------------

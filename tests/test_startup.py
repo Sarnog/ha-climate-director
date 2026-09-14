@@ -73,7 +73,7 @@ async def test_the_first_decision_waits_for_hass_to_start(monkeypatch) -> None:
     monkeypatch.setattr(
         module,
         "async_at_started",
-        lambda hass, callback: scheduled.__setitem__("callback", callback) or (lambda: None),
+        lambda _hass, callback: scheduled.__setitem__("callback", callback) or (lambda: None),
     )
 
     item = StandIn()

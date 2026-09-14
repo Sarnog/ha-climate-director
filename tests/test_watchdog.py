@@ -54,10 +54,10 @@ class Registry:
         self.created: list[tuple[str, dict]] = []
         self.deleted: list[str] = []
 
-    def async_create_issue(self, hass, domain, issue_id, **kwargs):
+    def async_create_issue(self, _hass, _domain, issue_id, **kwargs):
         self.created.append((issue_id, kwargs))
 
-    def async_delete_issue(self, hass, domain, issue_id):
+    def async_delete_issue(self, _hass, _domain, issue_id):
         self.deleted.append(issue_id)
 
 
@@ -108,7 +108,11 @@ class TestSomebodyListening:
         assert registry.deleted == [problems.UNWATCHED_ISSUE]
         assert not registry.created
 
-    def test_several_listeners_are_just_as_good(self, registry: Registry) -> None:
+    # `registry` is een pytest-fixture; de test leest hem niet, maar de naam
+    # moet blijven omdat pytest hem op die naam inspuit.
+    # `registry` is a pytest fixture; the test does not read it, but the name
+    # must stay because pytest injects it by that name.
+    def test_several_listeners_are_just_as_good(self, registry: Registry) -> None:  # noqa: ARG002
         assert problems.async_check_watchers(hass_with(4)) is True
 
     def test_the_last_installation_leaving_clears_it(self, registry: Registry) -> None:
@@ -156,7 +160,7 @@ class TestTheHandOperatedNotice:
     @pytest.fixture(autouse=True)
     def _no_translations(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Fall back to the English problem text; the notice text is not tested here."""
-        monkeypatch.setattr(problems.texts, "lookup", lambda hass, code: None)
+        monkeypatch.setattr(problems.texts, "lookup", lambda _hass, _code: None)
 
     def test_it_raises_the_notice(self, registry: Registry) -> None:
         config = manual_house()
@@ -205,7 +209,7 @@ class TestTheHandOperatedFixFlow:
                 self.entry = None
                 self.updated = None
 
-            def async_get_entry(self, entry_id: str):
+            def async_get_entry(self, _entry_id: str):
                 return self.entry
 
             def async_update_entry(self, entry, options=None):
@@ -225,10 +229,10 @@ class TestTheHandOperatedFixFlow:
         import custom_components.climate_director.repairs as repairs_module
 
         class FakeIssueRegistry:
-            def async_get_issue(self, handler: str, issue_id: str) -> None:
+            def async_get_issue(self, _handler: str, _issue_id: str) -> None:
                 return None
 
-        monkeypatch.setattr(repairs_module.ir, "async_get", lambda hass: FakeIssueRegistry())
+        monkeypatch.setattr(repairs_module.ir, "async_get", lambda _hass: FakeIssueRegistry())
 
     async def test_confirming_stores_the_fingerprint(self, monkeypatch: pytest.MonkeyPatch) -> None:
         self._fake_issue_registry(monkeypatch)

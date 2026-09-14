@@ -335,7 +335,7 @@ def whole_year(now: datetime, rng: random.Random) -> tuple[float, Season]:
 # -- extra beloftes voor dit huis / extra promises for this house -----------
 
 
-def _the_big_house_holds(config: DirectorConfig, world, plan, where: str) -> None:
+def _the_big_house_holds(_config: DirectorConfig, world, plan, where: str) -> None:
     """Assert what this particular installation must never do."""
     running = {
         command.entity_id: family_of(command.hvac_mode)

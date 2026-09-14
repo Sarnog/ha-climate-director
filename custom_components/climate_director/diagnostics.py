@@ -25,7 +25,7 @@ from .engine.serialise import config_to_dict
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ClimateDirectorEntry
+    _hass: HomeAssistant, entry: ClimateDirectorEntry
 ) -> dict[str, Any]:
     """Return everything needed to reproduce the current decision.
 

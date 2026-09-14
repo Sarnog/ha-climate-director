@@ -36,7 +36,7 @@ OPTIONS = ("auto", "summer", "winter")
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _hass: HomeAssistant,
     entry: ClimateDirectorEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -44,7 +44,7 @@ async def async_setup_entry(
     async_add_entities([SeasonSelect(entry.runtime_data)])
 
 
-def wanted_entity_keys(config: DirectorConfig) -> set[str]:
+def wanted_entity_keys(_config: DirectorConfig) -> set[str]:
     """Return every unique-id key this platform will create for `config`."""
     return {"season"}
 
