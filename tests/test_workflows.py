@@ -143,11 +143,18 @@ def test_no_push_trigger_can_fire_on_a_tag(name: str) -> None:
     """
     on = triggers(name)
 
-    push = on.get("push")
-    if push is None:
-        # Geen push-trigger: een tag-push kan deze baan niet starten.
-        # No push trigger: a tag push cannot start this job.
+    if "push" not in on:
+        # Geen push-trigger: een tag-push kan deze baan niet starten. Let op:
+        # een kale `push:` staat er wél in en levert `None` op, en dat is juist
+        # de gevaarlijkste vorm - hij draait op elke branch én elke tag. Daarom
+        # toetst dit op de aanwezigheid van de sleutel, niet op `None`.
+        #
+        # No push trigger: a tag push cannot start this job. Note: a bare
+        # `push:` is present and yields `None`, and that is exactly the most
+        # dangerous form - it runs on every branch and every tag. Hence this
+        # tests for the presence of the key, not for `None`.
         return
+    push = on["push"]
 
     assert isinstance(push, dict), (
         f"{name}: `push` hoort een `branches`-filter te hebben; zonder filter draait "
