@@ -127,7 +127,7 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   mislukte tests. Ze zouden hun attributen kunnen afleiden uit `CoordinatorSurface`, of
   een test zou kunnen eisen dat een stand-in elk lid draagt dat de gekopieerde methodes
   aanraken.
-- **De 19 open takken van de dekkingsmeting** — `branch = true` meldt negentien keer één
+- **De 21 open takken van de dekkingsmeting** — `branch = true` meldt eenentwintig keer één
   kant van een lus of een kortsluiting die nooit langskomt. Ze zijn nu met een pragma noch
   een test gedicht; per stuk is de vraag of de tweede kant te bereiken is (dan een test)
   of niet (dan een herschrijving die de tak laat verdwijnen).
@@ -261,7 +261,7 @@ The worked-out design proposals for everything below live in
   member (`entry`, `season_override`) cost a round of failing tests in round 30. They could
   derive their attributes from `CoordinatorSurface`, or a test could demand that a stand-in
   carries every member the copied methods touch.
-- **The 19 open branches of the coverage measurement** — `branch = true` reports nineteen
+- **The 21 open branches of the coverage measurement** — `branch = true` reports twenty-one
   times one side of a loop or a short-circuit that never comes past. Neither a pragma nor a
   test covers them now; per one the question is whether the second side is reachable (then a
   test) or not (then a rewrite that removes the branch).
