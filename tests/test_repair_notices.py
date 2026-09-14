@@ -7,21 +7,44 @@ aangeroepen. Zes van de zeven per-installatie meldingen werden bij het uitladen
 opgeruimd, deze niet - een overbruggingsmelding bleef dus staan nadat de entry
 weg was. De functie ernaast was dode code die precies dat gat markeerde.
 
-Deze test leest de **lijst van meldingsfabrieken uit `problems.py`** met een AST
-in plaats van hem hier nog een keer over te typen, en eist voor élke
-`async_report_*` dat `async_unload_entry` de bijbehorende `async_clear_*`
-werkelijk aanroept. Zo kan een achtste melding niet opnieuw vergeten worden: de
-test groeit mee met de bron.
+De vorige bewaking hing aan de **naam** van de fabriek (`async_report_*` in
+`problems.py`). Gemeten in ronde 31: een melding die je onder een andere naam
+opzet (`async_note_probe`, of dezelfde aanroep in `state_store.py`) glipte er
+langs - de unload-bewaking bleef groen. Daarom loopt deze test nu met een AST
+over **álle** `ir.async_create_issue`-aanroepen in het hele pakket, haalt het
+issue-id-hulpje eruit (`_issue_id(entry_id)`, of een moduleconstante zoals
+`UNWATCHED_ISSUE`), en eist dat `async_unload_entry` - direct of via een functie
+die het aanroept - een `ir.async_delete_issue` op **datzelfde** hulpje bereikt.
+Zo hangt de bewaking aan de eigenschap en niet aan hoe een melding heet of in
+welk bestand hij woont.
+
+`UNWATCHED_ISSUE` is de bewuste uitzondering: dat is één melding voor de hele
+integratie in plaats van één per installatie, dus hij gaat pas weg als de laatste
+installatie verdwijnt (`async_clear_watchers`, en die is wel vanuit
+`async_unload_entry` bereikbaar). De bewaking eist daarom ook van die melding dat
+er een bereikbare delete is, maar niet dat hij bij élke unload verdwijnt.
 
 R30-2: `problems.async_clear_bypassed_openings` existed but was never called.
 Six of the seven per-installation notices were cleaned up on unload, this one
 was not - so a bypass notice stayed behind after the entry was gone. The
 function next to it was dead code marking exactly that gap.
 
-This test reads the **list of notice factories from `problems.py`** with an AST
-instead of re-typing it here, and demands that for every `async_report_*`,
-`async_unload_entry` actually calls the matching `async_clear_*`. That way an
-eighth notice cannot be forgotten again: the test grows along with the source.
+The previous guard hung on the **name** of the factory (`async_report_*` in
+`problems.py`). Measured in round 31: a notice set up under another name
+(`async_note_probe`, or the same call in `state_store.py`) slipped past it - the
+unload guard stayed green. This test therefore walks **every**
+`ir.async_create_issue` call in the whole package with an AST, pulls the issue-id
+helper out of it (`_issue_id(entry_id)`, or a module constant such as
+`UNWATCHED_ISSUE`), and demands that `async_unload_entry` - directly or through a
+function it calls - reaches an `ir.async_delete_issue` on **that same** helper.
+That way the guard hangs on the property, not on what a notice is called or which
+file it lives in.
+
+`UNWATCHED_ISSUE` is the deliberate exception: it is one notice for the whole
+integration rather than one per installation, so it only goes when the last
+installation does (`async_clear_watchers`, which is reachable from
+`async_unload_entry`). The guard therefore demands a reachable delete for it too,
+but not that it disappears on every unload.
 """
 
 from __future__ import annotations
@@ -30,91 +53,194 @@ import ast
 from pathlib import Path
 
 PACKAGE = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
-PROBLEMS = PACKAGE / "problems.py"
-INIT = PACKAGE / "__init__.py"
+
+#: De twee naamvarianten waarmee een issue-id kan worden doorgegeven: als derde
+#: positie (zoals overal in dit project) of als trefwoordargument.
+#:
+#: The two spellings an issue id can arrive in: as the third position (as
+#: everywhere in this project) or as a keyword argument.
+ISSUE_ID_ARGUMENT = 2
+ISSUE_ID_KEYWORD = "issue_id"
 
 
-def module_functions(path: Path) -> set[str]:
-    """Return the names of every function defined at module level in a file.
+def _modules() -> list[Path]:
+    """Elk Python-bestand van het pakket.
 
-    Return the names of every function defined at module level in a file.
+    Every Python file of the package.
     """
-    tree = ast.parse(path.read_text(encoding="utf-8"))
-    return {
-        node.name for node in tree.body if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
-    }
+    return sorted(PACKAGE.rglob("*.py"))
 
 
-def report_functions() -> list[str]:
-    """Return every `async_report*` factory defined in `problems.py`."""
-    return sorted(name for name in module_functions(PROBLEMS) if name.startswith("async_report"))
+def _issue_id_argument(call: ast.Call) -> ast.expr | None:
+    """Het issue-id-argument van een `async_create_issue`/`async_delete_issue`."""
+
+    if len(call.args) > ISSUE_ID_ARGUMENT:
+        return call.args[ISSUE_ID_ARGUMENT]
+    for keyword in call.keywords:
+        if keyword.arg == ISSUE_ID_KEYWORD:
+            return keyword.value
+    return None
+
+
+def _issue_id_key(argument: ast.expr | None) -> str | None:
+    """De sleutel waaronder een issue-id telt: het hulpje of de constante.
+
+    The key an issue id counts under: the helper or the constant. A call such as
+    `_issue_id(entry_id)` and a name such as `UNWATCHED_ISSUE` both become a
+    string; a literal string stays itself; anything else is not an issue id we
+    can follow.
+    """
+    if isinstance(argument, ast.Call):
+        func = argument.func
+        if isinstance(func, ast.Attribute):
+            return func.attr
+        if isinstance(func, ast.Name):
+            return func.id
+        return None
+    if isinstance(argument, ast.Name):
+        return argument.id
+    if isinstance(argument, ast.Constant) and isinstance(argument.value, str):
+        return argument.value
+    return None
+
+
+def _calls(tree: ast.Module, attribute: str) -> list[ast.Call]:
+    """Elke aanroep van `attribute` (waar hij ook aan hangt) in de boom.
+
+    Every call of `attribute` (whatever it hangs off) in the tree.
+    """
+    return [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == attribute
+    ]
+
+
+def _walk_functions(tree: ast.Module) -> list[ast.FunctionDef | ast.AsyncFunctionDef]:
+    """Elke functie- en methodedefinitie in de boom, op elk niveau.
+
+    Every function and method definition in the tree, at every level.
+    """
+    return [
+        node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
+    ]
+
+
+def _called_names(node: ast.AST) -> set[str]:
+    """Elke naam die binnen `node` wordt aangeroepen.
+
+    Every name called inside `node`.
+    """
+    names: set[str] = set()
+    for call in ast.walk(node):
+        if not isinstance(call, ast.Call):
+            continue
+        func = call.func
+        if isinstance(func, ast.Attribute):
+            names.add(func.attr)
+        elif isinstance(func, ast.Name):
+            names.add(func.id)
+    return names
+
+
+def _trees() -> list[ast.Module]:
+    """De AST van elk pakketbestand, één keer ingelezen.
+
+    The AST of every package file, read once.
+    """
+    return [ast.parse(path.read_text(encoding="utf-8")) for path in _modules()]
+
+
+def created_issue_ids() -> set[str]:
+    """Elke issue-id waarop het pakket een melding aanmaakt.
+
+    Every issue id on which the package raises a notice.
+    """
+    found: set[str] = set()
+    for tree in _trees():
+        for call in _calls(tree, "async_create_issue"):
+            key = _issue_id_key(_issue_id_argument(call))
+            if key is not None:
+                found.add(key)
+    return found
+
+
+def deleted_ids_by_function() -> dict[str, set[str]]:
+    """Per functie de issue-id's die hij met `async_delete_issue` opruimt.
+
+    Per function the issue ids it clears with `async_delete_issue`.
+    """
+    deleted: dict[str, set[str]] = {}
+    for tree in _trees():
+        for function in _walk_functions(tree):
+            for call in _calls(function, "async_delete_issue"):
+                key = _issue_id_key(_issue_id_argument(call))
+                if key is not None:
+                    deleted.setdefault(function.name, set()).add(key)
+    return deleted
+
+
+def functions_called_by() -> dict[str, set[str]]:
+    """Per functie de namen die hij aanroept.
+
+    Per function the names it calls.
+    """
+    called: dict[str, set[str]] = {}
+    for tree in _trees():
+        for function in _walk_functions(tree):
+            called.setdefault(function.name, set()).update(_called_names(function))
+    return called
+
+
+def unload_reachable_functions() -> set[str]:
+    """Elke functie die `async_unload_entry` bereikt, direct of via een andere.
+
+    Every function `async_unload_entry` reaches, directly or through another.
+    """
+    called = functions_called_by()
+    reachable: set[str] = set()
+    queue = list(called.get("async_unload_entry", set()))
+    while queue:
+        name = queue.pop()
+        if name in reachable or name not in called:
+            continue
+        reachable.add(name)
+        queue.extend(called[name] - reachable)
+    return reachable
 
 
 def cleared_at_unload() -> set[str]:
-    """Return every `problems.async_clear_*` call inside `async_unload_entry`.
+    """Elke issue-id die een vanuit `async_unload_entry` bereikbare functie wist.
 
-    Return every `problems.async_clear_*` call inside `async_unload_entry`.
+    Every issue id a function reachable from `async_unload_entry` clears.
     """
-    tree = ast.parse(INIT.read_text(encoding="utf-8"))
+    deleted = deleted_ids_by_function()
     cleared: set[str] = set()
-    for node in ast.walk(tree):
-        if not (isinstance(node, ast.AsyncFunctionDef) and node.name == "async_unload_entry"):
-            continue
-        for call in ast.walk(node):
-            if not isinstance(call, ast.Call):
-                continue
-            func = call.func
-            if not isinstance(func, ast.Attribute) or not func.attr.startswith("async_clear"):
-                continue
-            if isinstance(func.value, ast.Name) and func.value.id == "problems":
-                cleared.add(func.attr)
+    for name in unload_reachable_functions():
+        cleared |= deleted.get(name, set())
     return cleared
 
 
-def clear_name_for(report: str) -> str:
-    """Return the clear counterpart that belongs to a report factory.
+def test_every_created_notice_is_cleared_when_the_entry_unloads() -> None:
+    """Bij het uitladen verdwijnt élke melding van deze installatie.
 
-    Return the clear counterpart that belongs to a report factory.
+    On unload every notice of this installation disappears.
     """
-    return report.replace("async_report", "async_clear", 1)
-
-
-def test_every_report_factory_has_a_clear_counterpart() -> None:
-    """Elke melding die je maakt, kun je ook opruimen.
-
-    Every notice you raise, you can also clear.
-    """
-    functions = module_functions(PROBLEMS)
-    reports = report_functions()
-
-    assert reports, "geen enkele `async_report_*` gevonden; de AST leest het verkeerde bestand"
-
-    for report in reports:
-        clear = clear_name_for(report)
-        assert clear in functions, (
-            f"{report} heeft geen tegenhanger `{clear}` in problems.py; "
-            f"een melding die je niet kunt opruimen blijft eeuwig staan"
-        )
-
-
-def test_every_report_is_cleared_when_the_entry_unloads() -> None:
-    """Bij het uitladen verdwijnt élke melding van deze installatie, niet zes van de zeven.
-
-    On unload every notice of this installation disappears, not six of the seven.
-    """
+    created = created_issue_ids()
     cleared = cleared_at_unload()
-    reports = report_functions()
 
-    assert reports, "geen enkele `async_report_*` gevonden; de AST leest het verkeerde bestand"
+    assert created, "geen enkele `async_create_issue` gevonden; de AST leest het verkeerde pakket"
+    assert "async_unload_entry" in functions_called_by(), (
+        "`async_unload_entry` niet gevonden; de AST leest `__init__.py` niet"
+    )
 
-    missing: set[str] = set()
-    for report in reports:
-        clear = clear_name_for(report)
-        if clear not in cleared:
-            missing.add(clear)
+    missing = sorted(created - cleared)
     assert not missing, (
-        "deze opruimers worden niet aangeroepen in `async_unload_entry`, dus hun "
-        f"melding overleeft het uitladen: {', '.join(sorted(missing))}"
+        "deze meldingen worden aangemaakt maar op het uitlaadpad van "
+        "`async_unload_entry` niet meer gewist, dus ze overleven het uitladen: "
+        + ", ".join(missing)
     )
 
 
@@ -123,8 +249,18 @@ def test_the_guard_reads_the_real_source() -> None:
 
     The guard hangs on the source, not on a list here.
     """
-    reports = report_functions()
-    assert "async_report_bypassed_openings" in reports
-    assert clear_name_for("async_report_bypassed_openings") == "async_clear_bypassed_openings"
-    assert clear_name_for("async_report") == "async_clear"
-    assert cleared_at_unload() >= {clear_name_for(report) for report in reports}
+    created = created_issue_ids()
+    cleared = cleared_at_unload()
+
+    # De meldingen van vandaag, in beide vormen: een hulpje per installatie en
+    # de ene constante voor de hele integratie.
+    #
+    # Today's notices, in both forms: a per-installation helper and the single
+    # whole-integration constant.
+    assert "_bypassed_opening_issue_id" in created
+    assert "UNWATCHED_ISSUE" in created
+
+    # Elk gevonden hulpje wordt op het uitlaadpad ook werkelijk gewist.
+    #
+    # Every helper found is really cleared on the unload path.
+    assert created <= cleared
