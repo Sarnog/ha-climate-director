@@ -889,6 +889,18 @@ una automatización se apoya en ese evento.
   la última instantánea leída y el último plan. Con esos tres, cualquier
   decisión es exactamente reproducible.
 
+En **Reparaciones** puedes encontrarte con estos avisos:
+
+- Climate Director: <count> abertura(s) de <name> está anulada mientras está abierta
+- Climate Director: <count> aparato(s) de <name> no ejecuta su orden
+- Climate Director: <name> tuvo que apartar su estado guardado
+- Climate Director: <name> tiene un problema de configuración
+- Climate Director: <name> tiene tareas manuales
+- Nadie escucha una petición de preacondicionamiento rechazada
+- Climate Director: <name> fija una estación que excluye <count> tarea(s)
+- Climate Director: <name> no puede leer <count> entidad(es)
+- Climate Director: <name> pide un modo que <count> aparato(s) no puede ejecutar
+
 ## Limitaciones conocidas
 
 - El modo sombra existe para que el director observe primero tu instalación

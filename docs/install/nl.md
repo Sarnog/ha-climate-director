@@ -882,6 +882,18 @@ automatisering op die gebeurtenis staat.
   laatst gelezen momentopname en het laatste plan. Met die drie is elke
   beslissing exact na te spelen.
 
+Onder **Reparaties** kun je deze meldingen tegenkomen:
+
+- Climate Director: <count> opening(en) van <name> is overbrugd terwijl hij openstaat
+- Climate Director: <count> apparaat/apparaten van <name> voert zijn commando niet uit
+- Climate Director: <name> moest zijn bewaarde toestand opzij zetten
+- Climate Director: <name> heeft een configuratieprobleem
+- Climate Director: <name> heeft handbediende taken
+- Niemand hoort een geweigerd vooruit-verzoek
+- Climate Director: <name> zet een seizoen dat <count> taak/taken buitensluit
+- Climate Director: <name> kan <count> entiteit(en) niet lezen
+- Climate Director: <name> vraagt een stand die <count> apparaat/apparaten niet kan draaien
+
 ## Bekende beperkingen
 
 - De schaduwmodus is er om de director op jouw installatie eerst een paar

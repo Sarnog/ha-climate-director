@@ -894,6 +894,18 @@ Automatisierung auf diesem Ereignis steht.
   Konfiguration, den zuletzt gelesenen Schnappschuss und den letzten Plan. Mit
   diesen dreien ist jede Entscheidung exakt nachvollziehbar.
 
+Unter **Reparaturen** kannst du diesen Meldungen begegnen:
+
+- Climate Director: <count> Öffnung(en) von <name> ist überbrückt, während sie offensteht
+- Climate Director: <count> Gerät(e) von <name> führt seinen Befehl nicht aus
+- Climate Director: <name> musste seinen gespeicherten Zustand beiseitelegen
+- Climate Director: <name> hat ein Konfigurationsproblem
+- Climate Director: <name> hat handbediente Aufgaben
+- Niemand hört eine abgelehnte Vorbereitungs-Anforderung
+- Climate Director: <name> stellt eine Jahreszeit ein, die <count> Aufgabe(n) aussperrt
+- Climate Director: <name> kann <count> Entität(en) nicht lesen
+- Climate Director: <name> verlangt einen Modus, den <count> Gerät(e) nicht fahren kann
+
 ## Bekannte Einschränkungen
 
 - Den Schattenmodus gibt es, damit der Director auf deiner Anlage erst ein

@@ -907,6 +907,18 @@ automatisation repose sur cet événement.
   configuration, le dernier instantané lu et le dernier plan. Avec ces trois
   éléments, toute décision est exactement reproductible.
 
+Sous **Réparations**, vous pouvez rencontrer ces messages :
+
+- Climate Director : <count> ouverture(s) de <name> est contournée alors qu'elle est ouverte
+- Climate Director : <count> appareil(s) de <name> n'exécute pas sa commande
+- Climate Director : <name> a dû mettre son état sauvegardé de côté
+- Climate Director : <name> a un problème de configuration
+- Climate Director : <name> a des tâches manuelles
+- Personne n'entend une demande de préparation refusée
+- Climate Director : <name> règle une saison qui exclut <count> tâche(s)
+- Climate Director : <name> ne peut pas lire <count> entité(s)
+- Climate Director : <name> demande un mode que <count> appareil(s) ne peut exécuter
+
 ## Limites connues
 
 - Le mode ombre existe pour que le directeur observe d'abord votre

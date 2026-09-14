@@ -874,6 +874,18 @@ automation stands on that event.
   the last snapshot read and the last plan. With those three, any decision is
   exactly reproducible.
 
+Under **Repairs** you may run into these notices:
+
+- Climate Director: <count> opening(s) of <name> are bypassed while open
+- Climate Director: <count> appliance(s) of <name> do not carry out their command
+- Climate Director: <name> had to set its saved state aside
+- Climate Director: <name> has a configuration problem
+- Climate Director: <name> has hand-operated duties
+- Nobody hears a refused pre-conditioning request
+- Climate Director: <name> sets a season that locks <count> duty/duties out
+- Climate Director: <name> cannot read <count> entity(ies)
+- Climate Director: <name> asks a mode that <count> appliance(s) cannot run
+
 ## Known limitations
 
 - Shadow mode exists to let the director watch along on your installation
