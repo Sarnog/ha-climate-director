@@ -41,17 +41,16 @@ jobs:
       - name: Coverage
         run: python -m coverage report
 
-  # `strict-typing` meet 106 fouten (zie quality_scale.yaml). De baan is
-  # niet-blokkerend zolang dat aantal boven nul is; het aantal mag alleen
-  # omlaag, en bij nul wordt `continue-on-error` weggehaald.
+  # `strict-typing` staat sinds ronde 30 op nul fouten (zie quality_scale.yaml).
+  # De baan blokkeert dus gewoon: een nieuwe fout laat de pull request rood
+  # worden in plaats van er stilletjes bij te staan.
   #
-  # `strict-typing` measures 106 errors (see quality_scale.yaml). The job is
-  # non-blocking while that count is above zero; the count may only go down,
-  # and once it reaches zero `continue-on-error` is removed.
+  # `strict-typing` has stood at zero errors since round 30 (see
+  # quality_scale.yaml). The job therefore blocks like any other: a new error
+  # turns the pull request red instead of quietly standing beside it.
   mypy:
-    name: Mypy (strict, non-blocking)
+    name: Mypy (strict)
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 

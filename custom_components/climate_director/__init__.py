@@ -14,6 +14,7 @@ engine to Home Assistant.
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
@@ -100,23 +101,21 @@ _CANCEL_SCHEMA = vol.Schema({**_ENTRIES, **_ZONES})
 
 _OVERRIDE_WHEN_DONE = vol.In([WHEN_DONE_TURN_OFF, WHEN_DONE_LEAVE])
 
-_SET_OVERRIDE_SCHEMA = vol.Schema(
-    {
-        **_ENTRIES,
-        vol.Required(ATTR_ZONE_ID): cv.string,
-        vol.Required(ATTR_HVAC_MODE): cv.string,
-        vol.Optional(ATTR_TEMPERATURE): vol.All(vol.Coerce(float)),
-        vol.Optional(ATTR_MINUTES): vol.All(vol.Coerce(float), vol.Range(min=1)),
-        vol.Optional(ATTR_WHEN_DONE, default=WHEN_DONE_TURN_OFF): _OVERRIDE_WHEN_DONE,
-    }
-)
+_SET_OVERRIDE_FIELDS: dict[Any, Any] = {
+    **_ENTRIES,
+    vol.Required(ATTR_ZONE_ID): cv.string,
+    vol.Required(ATTR_HVAC_MODE): cv.string,
+    vol.Optional(ATTR_TEMPERATURE): vol.All(vol.Coerce(float)),
+    vol.Optional(ATTR_MINUTES): vol.All(vol.Coerce(float), vol.Range(min=1)),
+    vol.Optional(ATTR_WHEN_DONE, default=WHEN_DONE_TURN_OFF): _OVERRIDE_WHEN_DONE,
+}
+_SET_OVERRIDE_SCHEMA = vol.Schema(_SET_OVERRIDE_FIELDS)
 
-_CLEAR_OVERRIDE_SCHEMA = vol.Schema(
-    {
-        **_ENTRIES,
-        vol.Required(ATTR_ZONE_ID): cv.string,
-    }
-)
+_CLEAR_OVERRIDE_FIELDS: dict[Any, Any] = {
+    **_ENTRIES,
+    vol.Required(ATTR_ZONE_ID): cv.string,
+}
+_CLEAR_OVERRIDE_SCHEMA = vol.Schema(_CLEAR_OVERRIDE_FIELDS)
 
 
 async def async_setup(hass: HomeAssistant, _config: dict[str, object]) -> bool:
@@ -186,7 +185,7 @@ def _async_watch_for_listeners(hass: HomeAssistant, entry: ClimateDirectorEntry)
     """
 
     @callback
-    def _recheck(_event: Event | None = None) -> None:
+    def _recheck(_event: Event | HomeAssistant | None = None) -> None:
         problems.async_check_watchers(hass)
 
     entry.async_on_unload(async_at_started(hass, _recheck))
@@ -334,7 +333,11 @@ def _override_setpoint(temperature: float | None, unit: str) -> float | None:
     return to_celsius(temperature, unit)
 
 
-def _refuse_unknown_zones(zone_ids, entries, wanted_entry_id) -> None:
+def _refuse_unknown_zones(
+    zone_ids: list[str] | None,
+    entries: list[ClimateDirectorEntry],
+    wanted_entry_id: list[str] | str | None,
+) -> None:
     """Raise when a requested zone does not exist, instead of only logging.
 
     Een typefout in `zone_ids` verdween tot nu toe met alleen een logregel:

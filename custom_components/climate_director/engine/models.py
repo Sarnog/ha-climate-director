@@ -2063,10 +2063,10 @@ def _layout_problems(config: DirectorConfig) -> list[str]:
             stranded = sorted(
                 zone_id
                 for zone_id in zone_ids
-                if (zone := config.zone(zone_id)) is not None
+                if (candidate := config.zone(zone_id)) is not None
                 and not [
                     source
-                    for source in zone.sources
+                    for source in candidate.sources
                     if heats(source) and source.entity_id != entity_id
                 ]
             )

@@ -18,7 +18,7 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.util import dt as dt_util
@@ -33,6 +33,21 @@ from .engine import (
 )
 from .engine.models import SeasonSource
 from .units import to_celsius, unit_of_coordinator
+
+if TYPE_CHECKING:
+    from .coordinator import CoordinatorSurface
+
+    # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
+    # van hém. Voor mypy is dit de gastheer, zodat `self.config` en de rest
+    # kloppen; buiten de typecontrole is de basis gewoon `object`.
+    #
+    # The mixin sits on the coordinator but does not inherit from it: the
+    # coordinator inherits from the mixin. For mypy this is the host, so
+    # `self.config` and the rest resolve; outside the type check the base is
+    # simply `object`.
+    _CoordinatorBase = CoordinatorSurface
+else:
+    _CoordinatorBase = object
 
 #: Toestanden die "thuis" betekenen voor een aanwezigheidsentiteit.
 #: States meaning "home" for a presence entity.
@@ -185,7 +200,7 @@ def _as_modes(raw: Any) -> frozenset[str] | None:
     return frozenset(modes) if modes else None
 
 
-class _WorldBuilderMixin:
+class _WorldBuilderMixin(_CoordinatorBase):
     """De momentopname en de lezers die hem vullen.
 
     The snapshot and the readers that fill it.
@@ -356,11 +371,9 @@ class _WorldBuilderMixin:
                 home_since = state.last_changed
 
         asleep = False
-        if sleep:
-            state = self.hass.states.get(sleep)
-            asleep = state is not None and state.state == asleep_state
-            if asleep and home_since is not None and state.last_changed < home_since:
-                asleep = False
+        sleeper = self.hass.states.get(sleep) if sleep else None
+        if sleeper is not None and sleeper.state == asleep_state:
+            asleep = home_since is None or sleeper.last_changed >= home_since
 
         return ResidentState(home=home, asleep=asleep)
 
@@ -400,7 +413,7 @@ class _WorldBuilderMixin:
             is_open = reported in ("open", "opening", "closing")
         else:
             is_open = reported == open_state
-        changed_at = dt_util.as_local(state.last_changed)
+        changed_at: datetime | None = dt_util.as_local(state.last_changed)
         # Na een herstart leest `last_changed` het herstartmoment, en een raam
         # dat al uren openstond zou dan als "net geopend" tellen - de zone
         # stookte nog `delay` lang door. Wie voor het opstartmoment openstaat
@@ -433,8 +446,16 @@ class _WorldBuilderMixin:
         )
 
     def _season(self) -> Season:
-        if getattr(self, "season_override", None) is not None:
-            return self.season_override
+        # `getattr` en niet `self.season_override`: de proefopstellingen in de
+        # tests dragen alleen de lezers en niet dit veld, precies zoals bij
+        # `_started_at` hierboven.
+        #
+        # `getattr` rather than `self.season_override`: the test stand-ins carry
+        # only the readers and not this field, exactly as with `_started_at`
+        # above.
+        override: Season | None = getattr(self, "season_override", None)
+        if override is not None:
+            return override
         settings = self.config.seasons
         if settings.source is SeasonSource.SUMMER:
             return Season.SUMMER

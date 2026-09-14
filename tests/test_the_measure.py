@@ -132,11 +132,31 @@ FUNCTION_LIMIT = 80
 # which stays under 700 because of it: `_unique_opening_id` merged into that
 # function instead of standing beside it. What grows here is the call plus the
 # explanation of why.
+#
+# Ronde 30, fase 4 (mypy strict schoon): `coordinator.py` 1756 → 1840 door het
+# `CoordinatorSurface`-protocol plus de `entry`-property. De vier mixins liggen
+# op de coördinator maar erven er niet van — de coördinator erft van hén — dus
+# zonder dat protocol ziet mypy hun `self` als de mixin en klaagt hij op elk
+# coordinator-attribuut: 106 van de 156 fouten. Het protocol is er alleen onder
+# `TYPE_CHECKING`; buiten de typecontrole bestaat het niet. `config_flow.py`
+# 1444 → 1451 door `_groups()`: de exclusieve groepen zijn een lijst van
+# lijsten, en één getypeerde lezer is eerlijker dan twee `list[dict]`-casts op
+# de plek waar de bron-ID's wonen.
+#
+# Round 30, phase 4 (mypy strict clean): `coordinator.py` 1756 → 1840 through the
+# `CoordinatorSurface` protocol plus the `entry` property. The four mixins sit on
+# the coordinator but do not inherit from it — the coordinator inherits from
+# them — so without that protocol mypy sees their `self` as the mixin and
+# complains about every coordinator attribute: 106 of the 156 errors. The
+# protocol exists only under `TYPE_CHECKING`; outside the type check it does not.
+# `config_flow.py` 1444 → 1451 through `_groups()`: the exclusive groups are a
+# list of lists, and one typed reader is more honest than two `list[dict]` casts
+# where the source ids live.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2143,
-    "coordinator.py": 1756,
+    "coordinator.py": 1840,
     "engine/decide.py": 1677,
-    "config_flow.py": 1444,
+    "config_flow.py": 1451,
     "schemas.py": 900,
 }
 

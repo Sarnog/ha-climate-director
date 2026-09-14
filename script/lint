@@ -12,3 +12,4 @@ fi
 
 "$PYTHON" -m ruff check .
 "$PYTHON" -m ruff format --check .
+"$PYTHON" -m mypy custom_components/climate_director

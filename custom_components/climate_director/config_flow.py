@@ -312,8 +312,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Edit one exclusive group: the sources that may never run together."""
-        groups = self._list("exclusive_groups")
-        current = groups[self._index] if self._index is not None else []
+        groups = self._groups()
+        current: list[str] = groups[self._index] if self._index is not None else []
 
         errors: dict[str, str] = {}
 
@@ -347,7 +347,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
     def _quiet_windows(self) -> list[dict[str, Any]]:
         """Return the stored quiet windows, creating the list on first use."""
         gates = self._installation.setdefault("gates", {})
-        return gates.setdefault("quiet_windows", [])
+        windows: list[dict[str, Any]] = gates.setdefault("quiet_windows", [])
+        return windows
 
     async def async_step_quiets(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Pick a quiet window to edit, add one, or go back."""
@@ -444,8 +445,8 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 self._drop_zone_references(removed)
                 return await self.async_step_init()
 
-            taken = [
-                item.get("zone_id")
+            taken: list[str] = [
+                str(item["zone_id"])
                 for index, item in enumerate(zones)
                 if index != self._zone_index and item.get("zone_id")
             ]
@@ -998,7 +999,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     "opening_id": current.get("opening_id")
                     or _unique_id(
                         user_input[CONF_NAME],
-                        [entry.get("opening_id") for entry in openings],
+                        [str(entry.get("opening_id") or "") for entry in openings],
                     ),
                     "name": user_input[CONF_NAME],
                     "entity_id": user_input["entity_id"],
@@ -1048,7 +1049,13 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
 
     def _list(self, key: str) -> list[dict[str, Any]]:
         """Return the editable list stored under `key`, creating it if needed."""
-        return self._installation.setdefault(key, [])
+        found: list[dict[str, Any]] = self._installation.setdefault(key, [])
+        return found
+
+    def _groups(self) -> list[list[str]]:
+        """Return the exclusive groups, creating the list on first use."""
+        found: list[list[str]] = self._installation.setdefault("exclusive_groups", [])
+        return found
 
     def _drop_zone_references(self, removed: dict[str, Any]) -> None:
         """Remove a deleted zone from every list that can point at it.
@@ -1096,7 +1103,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         """
         if not source_ids:
             return
-        groups = self._list("exclusive_groups")
+        groups = self._groups()
         cleaned = [[item for item in group if item not in source_ids] for group in groups]
         groups[:] = [group for group in cleaned if group]
 

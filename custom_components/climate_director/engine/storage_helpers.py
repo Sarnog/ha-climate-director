@@ -20,6 +20,19 @@ from datetime import time, timedelta
 from typing import Any
 
 
+def _as_dict(value: object) -> dict[str, Any]:
+    """Geef `value` als woordenboek terug, of een leeg als het er geen is.
+
+    De opslag is vergevingsgezind: een blok dat geen woordenboek is telt als
+    afwezig, niet als een reden om de hele installatie te laten vallen.
+
+    Return `value` as a mapping, or an empty one when it is not a mapping. The
+    storage is forgiving: a block that is no mapping counts as absent, not as a
+    reason to drop the whole installation.
+    """
+    return value if isinstance(value, dict) else {}
+
+
 def _weekdays(raw: Any) -> frozenset[int] | None:
     """Return the days a window is limited to, or `None` for every day.
 

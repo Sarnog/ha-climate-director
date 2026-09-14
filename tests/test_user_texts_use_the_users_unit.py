@@ -206,6 +206,7 @@ class TestThePhoneSentence:
                 )
                 self.hass = Hass()
                 self.config_entry = Entry()
+                self.entry = self.config_entry
                 self.data = None
                 self.temperature_unit = unit
                 self._precondition = {"zolder": noon + timedelta(hours=1)}

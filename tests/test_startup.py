@@ -34,6 +34,7 @@ class StandIn:
         self.hass = object()
         self.name = "stand-in"
         self.config_entry = _Entry()
+        self.entry = self.config_entry
         self.restored = 0
         self.evaluated = 0
         self.clock_armed = 0

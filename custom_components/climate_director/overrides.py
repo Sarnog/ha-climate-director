@@ -20,10 +20,26 @@ from __future__ import annotations
 import logging
 from dataclasses import replace
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from .coordinator import CoordinatorSurface
+
+    # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
+    # van hém. Voor mypy is dit de gastheer, zodat `self.config` en de rest
+    # kloppen; buiten de typecontrole is de basis gewoon `object`.
+    #
+    # The mixin sits on the coordinator but does not inherit from it: the
+    # coordinator inherits from the mixin. For mypy this is the host, so
+    # `self.config` and the rest resolve; outside the type check the base is
+    # simply `object`.
+    _CoordinatorBase = CoordinatorSurface
+else:
+    _CoordinatorBase = object
 
 from .const import WHEN_DONE_LEAVE, WHEN_DONE_TURN_OFF
 from .engine import clamped_target
@@ -39,7 +55,7 @@ from .engine.world import WorldState
 _LOGGER = logging.getLogger(f"{__package__}.coordinator")
 
 
-class _OverridesMixin:
+class _OverridesMixin(_CoordinatorBase):
     """De looptijd-override: zetten, aflopen en stil vervallen.
 
     The timed override: setting it, letting it run out and letting it lapse
@@ -280,7 +296,7 @@ class _OverridesMixin:
         seconds = (until - dt_util.now()).total_seconds()
         if seconds <= 0:  # pragma: no cover - een race tussen twee kloklezingen
             return
-        self._cancel_override_wake = async_call_later(
+        self._cancel_override_wake: CALLBACK_TYPE | None = async_call_later(
             self.hass, seconds + 1, self._on_override_expiry
         )
 

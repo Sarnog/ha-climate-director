@@ -198,6 +198,7 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
             self.config = config or house()
             self.hass = FakeHass(states)
             self.config_entry = Entry()
+            self.entry = self.config_entry
             self.master_enabled = True
             self.holiday_mode = False
             self.guest_mode = False

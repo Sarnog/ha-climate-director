@@ -97,5 +97,5 @@ rules:
     status: exempt
     comment: "Geen websessie nodig, de integratie doet geen HTTP. / No web session needed; the integration does no HTTP."
   strict-typing:
-    status: todo
-    comment: "156 mypy-fouten in 15 bestanden gemeten op 2026-09-11 (mypy 2.3.1, strict); ronde 26 typte de override-bronzoeker en haalde er daarmee twee af. De CI-baan is niet-blokkerend tot dit aantal nul is. / 156 mypy errors in 15 files measured on 2026-09-11 (mypy 2.3.1, strict); round 26 typed the override source lookup and removed two. The CI job stays non-blocking until this count reaches zero."
+    status: done
+    comment: "Nul mypy-fouten in 39 bestanden, gemeten op 2026-09-14 (mypy 2.3.1, strict); ronde 30 haalde de laatste 156 weg. De vier mixins erven sinds die ronde onder `TYPE_CHECKING` van het `CoordinatorSurface`-protocol in de coördinator, want zij liggen op de coördinator zonder erft van de coördinator; de rest was echte narrowing. De CI-baan blokkeert weer. / Zero mypy errors in 39 files, measured on 2026-09-14 (mypy 2.3.1, strict); round 30 removed the last 156. Since that round the four mixins inherit from the `CoordinatorSurface` protocol in the coordinator under `TYPE_CHECKING`, because they sit on the coordinator without the coordinator sitting on them; the rest was honest narrowing. The CI job blocks again."

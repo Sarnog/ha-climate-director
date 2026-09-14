@@ -20,12 +20,27 @@ import os
 from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
 from . import problems
+
+if TYPE_CHECKING:
+    from .coordinator import CoordinatorSurface
+
+    # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
+    # van hém. Voor mypy is dit de gastheer, zodat `self.config` en de rest
+    # kloppen; buiten de typecontrole is de basis gewoon `object`.
+    #
+    # The mixin sits on the coordinator but does not inherit from it: the
+    # coordinator inherits from the mixin. For mypy this is the host, so
+    # `self.config` and the rest resolve; outside the type check the base is
+    # simply `object`.
+    _CoordinatorBase = CoordinatorSurface
+else:
+    _CoordinatorBase = object
 
 # De logger heet coordinator, zodat het verplaatsen van deze methodes geen
 # enkele logregel verandert.
@@ -34,7 +49,7 @@ from . import problems
 _LOGGER = logging.getLogger(f"{__package__}.coordinator")
 
 
-class _StateStoreMixin:
+class _StateStoreMixin(_CoordinatorBase):
     """Opslag, herstel en quarantaine van wat een mens met de hand heeft gezegd.
 
     Storage, restore and quarantine of what a person said by hand.
@@ -250,7 +265,7 @@ class _StateStoreMixin:
             _LOGGER.exception("Moving the unreadable state file %s aside failed", path)
         problems.async_report_corrupt_storage(
             self.hass,
-            self.config_entry.entry_id,
-            self.config_entry.title,
+            self.entry.entry_id,
+            self.entry.title,
             str(corrupt),
         )

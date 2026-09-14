@@ -18,10 +18,26 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from .coordinator import CoordinatorSurface
+
+    # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
+    # van hém. Voor mypy is dit de gastheer, zodat `self.config` en de rest
+    # kloppen; buiten de typecontrole is de basis gewoon `object`.
+    #
+    # The mixin sits on the coordinator but does not inherit from it: the
+    # coordinator inherits from the mixin. For mypy this is the host, so
+    # `self.config` and the rest resolve; outside the type check the base is
+    # simply `object`.
+    _CoordinatorBase = CoordinatorSurface
+else:
+    _CoordinatorBase = object
 
 # De logger heet coordinator, zodat het verplaatsen van deze methodes geen
 # enkele logregel verandert.
@@ -43,7 +59,7 @@ def _still_running(requests: Mapping[str, datetime], now: datetime) -> dict[str,
     return {zone_id: until for zone_id, until in requests.items() if now < until}
 
 
-class _PreconditionsMixin:
+class _PreconditionsMixin(_CoordinatorBase):
     """De vooruit-verzoeken en hun timers.
 
     The pre-conditioning requests and their timers.
@@ -223,7 +239,7 @@ class _PreconditionsMixin:
         seconds = (until - dt_util.now()).total_seconds()
         if seconds <= 0:
             return
-        self._cancel_precondition_wake = async_call_later(
+        self._cancel_precondition_wake: CALLBACK_TYPE | None = async_call_later(
             self.hass, seconds + 1, self._on_precondition_expiry
         )
 

@@ -13,14 +13,12 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.climate import (
+from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
 )
-from homeassistant.components.climate import (
-    DOMAIN as CLIMATE_DOMAIN,
-)
+from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 

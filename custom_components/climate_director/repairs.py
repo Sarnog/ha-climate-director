@@ -21,6 +21,7 @@ from typing import Any
 import voluptuous as vol
 from homeassistant.components.repairs.models import RepairsFlow
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowContext, FlowResult
 from homeassistant.helpers import issue_registry as ir
 
 from .const import CONF_MANUAL_SOURCES_SEEN
@@ -34,7 +35,9 @@ class ManualSourcesFlow(RepairsFlow):
         super().__init__()
         self._shown = False
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult[FlowContext, str]:
         """Show the confirmation, then store it on submit.
 
         De flow-manager van Home Assistant opent de fix-flow door
@@ -55,7 +58,7 @@ class ManualSourcesFlow(RepairsFlow):
         """
         if self._shown and user_input is not None:
             data = self.data or {}
-            entry_id = data.get("entry_id")
+            entry_id = str(data.get("entry_id") or "")
             signature = data.get("signature") or ""
             entry = self.hass.config_entries.async_get_entry(entry_id) if entry_id else None
             if entry is not None:

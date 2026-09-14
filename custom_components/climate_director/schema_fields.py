@@ -162,13 +162,13 @@ def _choices(values: list[str], key: str = "") -> selector.SelectSelector:
     stored values. Without one the value itself shows, which is enough for a list
     that reads well already.
     """
-    return selector.SelectSelector(
-        selector.SelectSelectorConfig(
-            options=values,
-            mode=selector.SelectSelectorMode.DROPDOWN,
-            translation_key=key or None,
-        )
-    )
+    config: selector.SelectSelectorConfig = {
+        "options": values,
+        "mode": selector.SelectSelectorMode.DROPDOWN,
+    }
+    if key:
+        config["translation_key"] = key
+    return selector.SelectSelector(config)
 
 
 def _target_value(values: Mapping[str, Any], target: str | None) -> Any:

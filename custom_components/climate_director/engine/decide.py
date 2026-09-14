@@ -1304,7 +1304,7 @@ def _claim(config: DirectorConfig, world: WorldState, command: UnitCommand) -> t
     """Return how strong a command's claim on its appliance is; lower wins."""
     running = command.hvac_mode not in (MODE_OFF, MODE_FAN_ONLY)
     zone = config.zone(command.zone_id) if command.zone_id else None
-    priority = world.priority_for(command.zone_id, zone.priority) if zone else 0
+    priority = world.priority_for(command.zone_id or "", zone.priority) if zone else 0
     return (0 if running else 1, priority, command.zone_id or "")
 
 

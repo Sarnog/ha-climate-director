@@ -53,6 +53,7 @@ from .models import (
     ZoneGate,
 )
 from .storage_helpers import (
+    _as_dict,
     _bool,
     _enum,
     _float,
@@ -235,13 +236,9 @@ def _resident(raw: Mapping[str, Any]) -> Resident:
         presence_entity=_text(raw.get("presence_entity")),
         sleep_entity=_text(raw.get("sleep_entity")),
         sleep_state=_text(raw.get("sleep_state")) or "on",
-        sleep_window=_sleep_window(
-            raw.get("sleep_window") if isinstance(raw.get("sleep_window"), dict) else {}
-        ),
-        sleep_in=_sleep_in(raw.get("sleep_in") if isinstance(raw.get("sleep_in"), dict) else {}),
-        wake_deadline=_wake_deadline(
-            raw.get("wake_deadline") if isinstance(raw.get("wake_deadline"), dict) else {}
-        ),
+        sleep_window=_sleep_window(_as_dict(raw.get("sleep_window"))),
+        sleep_in=_sleep_in(_as_dict(raw.get("sleep_in"))),
+        wake_deadline=_wake_deadline(_as_dict(raw.get("wake_deadline"))),
     )
 
 
@@ -653,7 +650,7 @@ def _items(raw: Mapping[str, Any], key: str) -> list[Mapping[str, Any]]:
     return [item for item in _sequence(raw.get(key)) if isinstance(item, Mapping)]
 
 
-def _layout(raw: dict[str, Any]) -> HeatingLayout:
+def _layout(raw: Mapping[str, Any]) -> HeatingLayout:
     """Return the heating layout, inferred when it was never chosen.
 
     De instelling kwam er later bij. Een bestaande installatie zonder deze

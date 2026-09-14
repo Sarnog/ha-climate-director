@@ -73,6 +73,7 @@ class _Coordinator:
         self.hass = _Hass()
         self.config = config()
         self.config_entry = _Entry()
+        self.entry = self.config_entry
         self.version = ""
         self.zone_overrides: dict[str, bool] = {}
         self.opening_bypasses: dict[str, bool] = {}

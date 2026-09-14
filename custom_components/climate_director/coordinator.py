@@ -21,7 +21,7 @@ import asyncio
 import logging
 from dataclasses import replace
 from datetime import date, datetime, timedelta
-from typing import Any
+from typing import Any, Protocol, cast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, Event, EventStateChangedData, HomeAssistant, callback
@@ -140,6 +140,65 @@ def storage_key(entry_id: str) -> str:
     return f"{DOMAIN}.{entry_id}.precondition"
 
 
+class CoordinatorSurface(Protocol):
+    """Het oppervlak van de coördinator dat de vier mixins gebruiken.
+
+    The coordinator surface the four mixins use.
+
+    De mixins (`_StateStoreMixin`, `_PreconditionsMixin`, `_OverridesMixin`,
+    `_WorldBuilderMixin`) liggen op de coördinator maar erven er niet van: de
+    coördinator erft van hén. Zonder deze declaratie ziet mypy hun `self` als de
+    mixin zelf en klaagt hij op elk coordinator-attribuut. Elke mixin erft onder
+    `TYPE_CHECKING` van dit protocol, zodat `self.config` en de rest kloppen;
+    buiten de typecontrole bestaat het niet, en de coördinator erft het zo
+    binnen - de waarden zelf staan in zijn `__init__`.
+
+    The mixins (`_StateStoreMixin`, `_PreconditionsMixin`, `_OverridesMixin`,
+    `_WorldBuilderMixin`) sit on the coordinator but do not inherit from it: the
+    coordinator inherits from them. Without this declaration mypy sees their
+    `self` as the mixin itself and complains about every coordinator attribute.
+    Under `TYPE_CHECKING` each mixin inherits from this protocol, so `self.config`
+    and the rest resolve; outside the type check it does not exist, and the
+    coordinator inherits it like any other base - the values themselves stand in
+    its `__init__`.
+    """
+
+    config: DirectorConfig
+    hass: HomeAssistant
+    name: str
+    master_enabled: bool
+    holiday_mode: bool
+    guest_mode: bool
+    season_override: Season | None
+    zone_overrides: dict[str, bool]
+    zone_priorities: dict[str, int]
+    zone_override_until: dict[str, datetime]
+    zone_override_when_done: dict[str, str]
+    zone_override_entity: dict[str, str]
+    opening_bypasses: dict[str, bool]
+    _precondition: dict[str, datetime]
+    _precondition_bypass: set[str]
+    _pending_override: dict[str, Change]
+    _store: Store[dict[str, Any]]
+    _handed_back: dict[str, date]
+    _precipitation_seen_at: datetime | None
+    _cancel_precondition_wake: CALLBACK_TYPE | None
+    _cancel_override_wake: CALLBACK_TYPE | None
+
+    @property
+    def entry(self) -> ClimateDirectorEntry: ...
+
+    def async_request_evaluation(self) -> None: ...
+    def _async_save_state(self) -> None: ...
+    def _live_preconditions(self) -> dict[str, datetime]: ...
+    def _wake_at_the_first_expiry(self) -> None: ...
+    def _override_wake_at_first_expiry(self) -> None: ...
+    def _calendar_says_holiday(self) -> bool: ...
+    def _zones_handed_back(
+        self, now: datetime, residents: dict[str, ResidentState]
+    ) -> set[str]: ...
+
+
 class ClimateDirectorCoordinator(
     _StateStoreMixin,
     _PreconditionsMixin,
@@ -148,6 +207,14 @@ class ClimateDirectorCoordinator(
     DataUpdateCoordinator[Plan],
 ):
     """Reads the world, runs the engine, applies the outcome."""
+
+    # De gastheer zet deze twee zelf, buiten `__init__` om; hier expliciet
+    # benoemd zodat het protocol ze niet als oningevuld blijft zien.
+    #
+    # The host sets these two itself, outside `__init__`; named explicitly here
+    # so the protocol does not keep seeing them as unfilled.
+    hass: HomeAssistant
+    name: str
 
     def __init__(self, hass: HomeAssistant, entry: ClimateDirectorEntry) -> None:
         """Set up the coordinator for one installation."""
@@ -246,7 +313,7 @@ class ClimateDirectorCoordinator(
         self.zone_override_when_done: dict[str, str] = {}
         self.zone_override_entity: dict[str, str] = {}
         self._pending_override: dict[str, Change] = {}
-        self._cancel_override_wake = None
+        self._cancel_override_wake: CALLBACK_TYPE | None = None
         self.opening_bypasses: dict[str, bool] = {}
         """Per `opening_id`, of de overbrugging aanstaat (anker 8).
 
@@ -348,6 +415,23 @@ class ClimateDirectorCoordinator(
         )
 
     @property
+    def entry(self) -> ClimateDirectorEntry:
+        """Geef de config entry terug, die Home Assistant vóór de opzet zet.
+
+        `config_entry` van `DataUpdateCoordinator` is optioneel getypeerd, maar
+        is het hier nooit: Home Assistant zet hem voordat `async_setup` draait.
+        Deze property maakt dat voor de typecontrole expliciet, zodat de rest van
+        dit bestand en de opslagmixin er zonder `None`-controle bij kunnen.
+
+        Return the config entry, which Home Assistant sets before setup. The
+        `config_entry` of `DataUpdateCoordinator` is typed optional, but never is
+        here: Home Assistant sets it before `async_setup` runs. This property
+        makes that explicit for the type check, so the rest of this file and the
+        storage mixin can use it without a `None` check.
+        """
+        return cast("ClimateDirectorEntry", self.config_entry)
+
+    @property
     def temperature_unit(self) -> str:
         """De eenheid waarin Home Assistant nu temperaturen aanlevert en verwacht.
 
@@ -379,12 +463,12 @@ class ClimateDirectorCoordinator(
         """
         entities = self.tracked_entities()
         if entities:
-            self.config_entry.async_on_unload(
+            self.entry.async_on_unload(
                 async_track_state_change_event(self.hass, sorted(entities), self._handle_change)
             )
-        self.config_entry.async_on_unload(self._cancel_pending_deferral)
-        self.config_entry.async_on_unload(self._cancel_clock_reeval)
-        self.config_entry.async_on_unload(async_at_started(self.hass, self._async_on_hass_started))
+        self.entry.async_on_unload(self._cancel_pending_deferral)
+        self.entry.async_on_unload(self._cancel_clock_reeval)
+        self.entry.async_on_unload(async_at_started(self.hass, self._async_on_hass_started))
 
     async def _async_on_hass_started(self, _hass: HomeAssistant) -> None:
         """Restore what a restart left behind, decide once, and arm the clock.
@@ -1097,8 +1181,8 @@ class ClimateDirectorCoordinator(
         """Put the entities that stay unreadable under Repairs, or take them away."""
         problems.async_report_unreadable(
             self.hass,
-            self.config_entry.entry_id,
-            self.config_entry.title,
+            self.entry.entry_id,
+            self.entry.title,
             self._note_unusable(),
         )
 
@@ -1227,8 +1311,8 @@ class ClimateDirectorCoordinator(
         """Put the roles asking impossible modes under Repairs, or take them away."""
         problems.async_report_unsupported_modes(
             self.hass,
-            self.config_entry.entry_id,
-            self.config_entry.title,
+            self.entry.entry_id,
+            self.entry.title,
             self._note_unsupported(),
         )
 
@@ -1284,8 +1368,8 @@ class ClimateDirectorCoordinator(
         """Put appliances that never take their command under Repairs, or take them away."""
         problems.async_report_command_not_taking(
             self.hass,
-            self.config_entry.entry_id,
-            self.config_entry.title,
+            self.entry.entry_id,
+            self.entry.title,
             self._note_unapplied(),
         )
 
@@ -1299,8 +1383,8 @@ class ClimateDirectorCoordinator(
                     found[opening.entity_id] = opening.name or opening.entity_id
         problems.async_report_bypassed_openings(
             self.hass,
-            self.config_entry.entry_id,
-            self.config_entry.title,
+            self.entry.entry_id,
+            self.entry.title,
             found,
         )
 
@@ -1338,8 +1422,8 @@ class ClimateDirectorCoordinator(
         """Put a season select that locks a duty out under Repairs, or take it away."""
         problems.async_report_season_override(
             self.hass,
-            self.config_entry.entry_id,
-            self.config_entry.title,
+            self.entry.entry_id,
+            self.entry.title,
             self._season_override_problems(),
         )
 
@@ -1610,7 +1694,7 @@ class ClimateDirectorCoordinator(
             "minutes": minutes,
         }
         return {
-            "entry_id": self.config_entry.entry_id,
+            "entry_id": self.entry.entry_id,
             "zone_id": zone_id,
             "zone": name,
             "openings": openings,

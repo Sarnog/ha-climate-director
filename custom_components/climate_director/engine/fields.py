@@ -302,12 +302,16 @@ GATES_FIELDS = tuple(
 #:
 #: The guest-window fields, as leaves under `gates.guest_window.*`.
 GUEST_WINDOW_FIELDS = tuple(
-    field for field in GATES_FIELDS if field.target.startswith("gates.guest_window.")
+    field
+    for field in GATES_FIELDS
+    if field.target and field.target.startswith("gates.guest_window.")
 )
 
 #: De platte `gates`-velden (alles behalve het gastenvenster).
 #:
 #: The flat `gates` fields (everything but the guest window).
 GATES_FLAT_FIELDS = tuple(
-    field for field in GATES_FIELDS if not field.target.startswith("gates.guest_window.")
+    field
+    for field in GATES_FIELDS
+    if not (field.target and field.target.startswith("gates.guest_window."))
 )

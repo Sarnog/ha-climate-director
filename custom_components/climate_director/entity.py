@@ -20,11 +20,11 @@ class ClimateDirectorEntity(CoordinatorEntity[ClimateDirectorCoordinator]):
     def __init__(self, coordinator: ClimateDirectorCoordinator, key: str) -> None:
         """Bind the entity to its installation."""
         super().__init__(coordinator)
-        entry_id = coordinator.config_entry.entry_id
+        entry_id = coordinator.entry.entry_id
         self._attr_unique_id = f"{entry_id}_{key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry_id)},
-            name=coordinator.config_entry.title,
+            name=coordinator.entry.title,
             manufacturer="Sarnog",
             model="Climate Director",
             entry_type=DeviceEntryType.SERVICE,
