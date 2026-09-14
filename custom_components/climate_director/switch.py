@@ -314,7 +314,6 @@ class OpeningBypassSwitch(_DirectorSwitch):
             return
         self._attr_translation_placeholders = {"opening": label}
         self.__dict__.pop("name", None)
-        self._cached_friendly_name = None
 
     @property
     def is_on(self) -> bool:
