@@ -48,4 +48,13 @@ select = ["E", "F", "I", "UP", "B", "SIM", "ARG"]
 
 [tool.mypy]
 strict = true
+# Iedere onderdrukking noemt haar foutcode. `PROBE: int = "tapijt"  # type: ignore`
+# is met `strict` alleen stil groen (de ignore slikt de echte fout in); deze code
+# laat hem vallen. De enige `# type: ignore` in het pakket draagt al `[arg-type]`.
+#
+# Every suppression names its error code. `PROBE: int = "tapijt"  # type: ignore`
+# is silently green under `strict` alone (the ignore swallows the real error);
+# this code turns it red. The package's only `# type: ignore` already carries
+# `[arg-type]`.
+enable_error_code = ["ignore-without-code"]
 
