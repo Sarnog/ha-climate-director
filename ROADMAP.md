@@ -116,6 +116,21 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   `script/_gen_guides_test.py` (`LINE_LENGTH`). Verandert de eerste, dan schrijft de
   generator een uitzonderingenlijst die `ruff format --check` opnieuw wil opmaken; hij
   hoort die breedte uit `pyproject.toml` te lezen.
+- **Het `CoordinatorSurface`-protocol wordt nergens gecontroleerd** — de vier mixins
+  erven er onder `TYPE_CHECKING` van, dus mypy gelooft dat hun `self` elk lid heeft,
+  maar niets controleert of de coördinator ze ook werkelijk zet. Eén test die na de opzet
+  elk protocollid op de coördinator opvraagt zou dat dichten; de `entry`-property van
+  ronde 30 laat zien dat zo'n lid er zomaar bij kan komen.
+- **De proefopstellingen in de tests dragen de interface met de hand** — de stand-ins
+  kopiëren de leesmethodes van de coördinator en zetten de bijbehorende attributen stuk
+  voor stuk neer. Elk nieuw lid (`entry`, `season_override`) kostte in ronde 30 een ronde
+  mislukte tests. Ze zouden hun attributen kunnen afleiden uit `CoordinatorSurface`, of
+  een test zou kunnen eisen dat een stand-in elk lid draagt dat de gekopieerde methodes
+  aanraken.
+- **De 19 open takken van de dekkingsmeting** — `branch = true` meldt negentien keer één
+  kant van een lus of een kortsluiting die nooit langskomt. Ze zijn nu met een pragma noch
+  een test gedicht; per stuk is de vraag of de tweede kant te bereiken is (dan een test)
+  of niet (dan een herschrijving die de tak laat verdwijnen).
 
 ## Would have
 
@@ -236,6 +251,20 @@ The worked-out design proposals for everything below live in
   `script/_gen_guides_test.py` (`LINE_LENGTH`). Change the first and the generator writes
   an exception list that `ruff format --check` wants to redo; it should read that width
   from `pyproject.toml`.
+- **The `CoordinatorSurface` protocol is checked nowhere** — the four mixins inherit from
+  it under `TYPE_CHECKING`, so mypy believes their `self` has every member, but nothing
+  checks that the coordinator actually sets them. One test asking the coordinator for every
+  protocol member after setup would close that; round 30's `entry` property shows such a
+  member can simply appear.
+- **The test stand-ins carry the interface by hand** — the stand-ins copy the
+  coordinator's reading methods and set the matching attributes one by one. Every new
+  member (`entry`, `season_override`) cost a round of failing tests in round 30. They could
+  derive their attributes from `CoordinatorSurface`, or a test could demand that a stand-in
+  carries every member the copied methods touch.
+- **The 19 open branches of the coverage measurement** — `branch = true` reports nineteen
+  times one side of a loop or a short-circuit that never comes past. Neither a pragma nor a
+  test covers them now; per one the question is whether the second side is reachable (then a
+  test) or not (then a rewrite that removes the branch).
 
 ## Would have
 
