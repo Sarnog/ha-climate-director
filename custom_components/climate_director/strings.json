@@ -861,9 +861,6 @@
     "zone_outdoor_without_sensor": {
       "message": "Zone {zone} limits {mode} by outdoor temperature, but no outdoor sensor is set."
     },
-    "zone_no_source_for_mode": {
-      "message": "Zone {zone} wants {mode} but has no source for it."
-    },
     "generator_also_a_source": {
       "message": "Shared heat source {generator} uses {entity}, which is already a zone's source."
     },

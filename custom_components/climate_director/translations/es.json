@@ -861,9 +861,6 @@
     "zone_outdoor_without_sensor": {
       "message": "La zona {zone} limita {mode} por la temperatura exterior, pero no hay sensor exterior configurado."
     },
-    "zone_no_source_for_mode": {
-      "message": "La zona {zone} quiere {mode} pero no tiene fuente para ello."
-    },
     "generator_also_a_source": {
       "message": "La fuente de calor compartida {generator} usa {entity}, que ya es una fuente de una zona."
     },

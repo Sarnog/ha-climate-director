@@ -861,9 +861,6 @@
     "zone_outdoor_without_sensor": {
       "message": "Zone {zone} begrenst {mode} door de buitentemperatuur, maar er is geen buitensensor ingesteld."
     },
-    "zone_no_source_for_mode": {
-      "message": "Zone {zone} wil {mode} maar heeft er geen bron voor."
-    },
     "generator_also_a_source": {
       "message": "Gedeelde warmtebron {generator} gebruikt {entity}, en dat is al een bron van een zone."
     },

@@ -861,9 +861,6 @@
     "zone_outdoor_without_sensor": {
       "message": "Zone {zone} begrenzt {mode} durch die Außentemperatur, aber es ist kein Außensensor eingestellt."
     },
-    "zone_no_source_for_mode": {
-      "message": "Zone {zone} möchte {mode}, hat aber keine Quelle dafür."
-    },
     "generator_also_a_source": {
       "message": "Gemeinsame Wärmequelle {generator} nutzt {entity}, das bereits eine Quelle einer Zone ist."
     },

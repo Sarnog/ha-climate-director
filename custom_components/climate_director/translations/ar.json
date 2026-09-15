@@ -861,9 +861,6 @@
     "zone_outdoor_without_sensor": {
       "message": "المنطقة {zone} تقيّد {mode} بدرجة الحرارة الخارجية، لكن لا يوجد مستشعر خارجي."
     },
-    "zone_no_source_for_mode": {
-      "message": "المنطقة {zone} تريد {mode} لكن لا مصدر لها لذلك."
-    },
     "generator_also_a_source": {
       "message": "مصدر الحرارة المشترك {generator} يستخدم {entity}، وهو مصدر منطقة بالفعل."
     },
