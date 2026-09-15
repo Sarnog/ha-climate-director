@@ -186,7 +186,19 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     rekent daarom alleen nog de eenheid om; de klem staat in de ronde waarin het
     commando de deur uit gaat, waar dezelfde `clamped_target` als op het
     engine-pad geldt. Een aanroep die niets kan zetten weigert nog steeds, met
-    `zone_no_source_for_mode`.
+    `zone_no_source_for_mode`. Naast het einde bewaart de override zijn
+    **starttijd** (`zone_override_started`), gezet uit dezelfde kloklezing als
+    het einde zelf: twee lezingen naast elkaar zouden een voortgangsring
+    opleveren die niet bij zijn eigen eindtijd past. Die starttijd overleeft een
+    herstart, en een statusbestand van vóór dit veld laadt gewoon, met een
+    onbekende starttijd in plaats van een gegokte. Beide acties nemen naast
+    `zone_id` ook een **entiteit** als doel; zonder dat veld in het schema zou
+    de annuleerknop van `simple-timer-card` stuklopen op de validatie, want die
+    kaart stuurt de sensor zelf als `target.entity_id` mee en Home Assistant
+    plakt dat doel vóór de schemavalidatie aan de data. Een entiteit bepaalt dan
+    de installatie én de zone; alleen de overrideschakelaar en de eindtijdsensor
+    van deze integratie tellen, elke andere entiteit is een typefout en wordt
+    geweigerd.
 12. **Het bereik van een bron hangt aan de bron en noemt zones.** Een bron draagt
     `covers_zones`: de zones die hij meeverwarmt of meekoelt zodra hij draait.
     Leeg betekent *alleen de eigen zone* — het gedrag van vóór deze instelling,
@@ -725,7 +737,10 @@ hoofdschakelaar niet één ronde lang aan lijkt te staan.
 verandert wat een gebruiker in zijn lijst ziet: de waarneemsensoren
 (`sensor.*`) en de blokkade/valt-terug/vast-binaire sensoren staan op
 `DIAGNOSTIC`; de twee `number`-entiteiten en de seizoenskeuze op `CONFIG`; de
-knoppen en schakelaars blijven gewoon zichtbaar (geen categorie). Nergens
+knoppen en schakelaars blijven gewoon zichtbaar (geen categorie). Eén sensor is
+de uitzondering: de eindtijdsensor van een override (`..._override_ends`) volgt
+de coordinator, maar hoort op een dashboard naast de overrideschakelaar te
+staan en blijft daarom bewust zichtbaar. Nergens
 wordt `entity_registry_enabled_default` gezet: er verdwijnt niets uit
 bestaande dashboards en kaarten, en dat is een bewaakte eigenschap
 (`test_entity_categories.py`), geen afspraak.
@@ -1254,7 +1269,18 @@ them without changing them here first.
     therefore only converts the unit; the clamp sits in the round that puts the
     command on the wire, where the same `clamped_target` applies as on the
     engine path. A call that cannot set anything still refuses, with
-    `zone_no_source_for_mode`.
+    `zone_no_source_for_mode`. Next to its ending the override keeps its **start
+    time** (`zone_override_started`), taken from the same clock reading as the
+    ending itself: two readings side by side would yield a progress ring that
+    does not fit its own end time. That start time survives a restart, and a
+    state file from before this field simply loads, with an unknown start time
+    rather than a guessed one. Both actions take an **entity** as their target
+    next to `zone_id`; without that field in the schema the cancel button of
+    `simple-timer-card` would trip over validation, since that card sends the
+    sensor itself as `target.entity_id` and Home Assistant merges that target
+    into the data before schema validation. An entity then settles both the
+    installation and the zone; only this integration's override switch and
+    end-time sensor count, any other entity is a typo and is refused.
 12. **A source's reach hangs on the source and names zones.** A source carries
     `covers_zones`: the zones it heats or cools along with it the moment it runs.
     Empty means *its own zone only* — the behaviour from before this setting, so
@@ -1779,7 +1805,10 @@ appear on for one round.
 choice changes what a user sees in their list: the observation sensors
 (`sensor.*`) and the blocked/fallback/stuck binary sensors sit on
 `DIAGNOSTIC`; the two `number` entities and the season picker on `CONFIG`; the
-buttons and switches stay plainly visible (no category). Nowhere is
+buttons and switches stay plainly visible (no category). One sensor is the
+exception: a zone's override end-time sensor (`..._override_ends`) follows the
+coordinator but belongs on a dashboard next to the override switch and therefore
+deliberately stays visible. Nowhere is
 `entity_registry_enabled_default` set: nothing disappears from existing
 dashboards and cards, and that is a guarded property
 (`test_entity_categories.py`), not a promise.
