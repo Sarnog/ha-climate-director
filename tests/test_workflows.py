@@ -26,6 +26,20 @@ de hand van de documentatie en de mutatiemetingen van ronde 30:
   * `push:` zonder enig filter                -> alle branches én alle tags;
   * `push:` met een `tags-ignore` naast `branches` -> onschadelijk.
 
+Daarnaast zijn er events die niet `push` heten maar wél op een tag afgaan, en
+die kende deze bewaking tot ronde 32 (R32-5) niet — gemeten: `create:` naast
+`push: branches: [main]` in `tests.yaml` liet de suite **groen** terwijl GitHub
+de baan dan bij elke `git push --tags` opnieuw start:
+
+  * `on: create`  -> GitHub start de baan zodra er een branch **of een tag**
+    wordt aangemaakt, dus ook bij `git push --tags` (dezelfde dubbele run als
+    R29-2, onder een andere naam);
+  * `on: delete`  -> idem bij het verwijderen van een branch of een tag;
+  * `on: release` -> elke releaseactiviteit, dus ook de release die deze repo via
+    de REST API aanmaakt;
+  * `on: [push]` of `on: push` (een lijst of een string in plaats van een
+    mapping) -> valt rood op de `isinstance(on, dict)`-assertie hieronder.
+
 Daarom eist deze test, voor elk bestand mét een `push`-trigger: `push` is een
 mapping, draagt géén `tags`-sleutel, en heeft een `branches`-filter met precies
 `main`. Dat is strenger dan de tag-eigenschap alleen: `branches-ignore` zou
@@ -48,6 +62,20 @@ documentation and round 30's mutation runs:
     the jobs again (exactly the double run R29-2 removed);
   * `push:` without any filter             -> all branches and all tags;
   * `push:` with `tags-ignore` next to `branches` -> harmless.
+
+Extra to that, there are events that are not called `push` yet still fire on a
+tag, and this guard did not know them until round 32 (R32-5) — measured:
+`create:` next to `push: branches: [main]` in `tests.yaml` left the suite
+**green**, while GitHub then starts the job again on every `git push --tags`:
+
+  * `on: create`  -> GitHub starts the job the moment a branch **or a tag** is
+    created, so also on `git push --tags` (the same double run as R29-2, under
+    another name);
+  * `on: delete`  -> likewise when a branch or a tag is deleted;
+  * `on: release` -> every release activity, so also the release this repo
+    creates through the REST API;
+  * `on: [push]` or `on: push` (a list or a string instead of a mapping) -> goes
+    red on the `isinstance(on, dict)` assertion below.
 
 For every file **with** a `push` trigger this test therefore demands: `push` is
 a mapping, carries no `tags` key, and has a `branches` filter with exactly
@@ -108,6 +136,19 @@ REMAINING = {
     "hassfest.yaml": ("pull_request", "schedule"),
 }
 
+# Events die op een **tag-ref** of een release afgaan in plaats van op een
+# branch. `create` draait zodra een branch of een tag wordt aangemaakt - dus ook
+# bij `git push --tags` - `delete` bij het verwijderen, en `release` bij elke
+# releaseactiviteit. Ze mogen hier geen van drieën voorkomen: dezelfde dubbele
+# run als R29-2, alleen onder een andere naam.
+#
+# Events that fire on a **tag ref** or a release rather than on a branch.
+# `create` runs the moment a branch or a tag is created - so also on
+# `git push --tags` - `delete` when one is removed, and `release` on every
+# release activity. None of the three may appear here: the same double run as
+# R29-2, only under another name.
+TAG_EVENTS = ("create", "delete", "release")
+
 
 def triggers(name: str) -> dict:
     """Geef de `on:`-mapping van een workflowbestand terug.
@@ -133,6 +174,29 @@ def test_the_glob_reads_the_real_workflow_directory() -> None:
         + ", ".join(missing)
         + " - dan valt de tag-bewaking stil"
     )
+
+
+@pytest.mark.parametrize("name", WORKFLOW_NAMES)
+def test_no_other_trigger_can_fire_on_a_tag(name: str) -> None:
+    """Geen enkel ander event in `on:` gaat op een tag of een release af.
+
+    No other event in `on:` fires on a tag or a release.
+
+    `create`, `delete` en `release` heten niet `push`, maar GitHub start de baan
+    er net zo goed mee op een tag-ref: `git push --tags` maakt een tag aan
+    (`create`), de release via de REST API is een releaseactiviteit, en het
+    opruimen van een tag is een `delete`. Dat is de dubbele run van R29-2 onder
+    een andere naam, en daarom staat de GitHub-regel per event in de docstring
+    hierboven.
+    """
+    on = triggers(name)
+
+    for event in TAG_EVENTS:
+        assert event not in on, (
+            f"{name}: het event `{event}` gaat af op een tag of een release, dus "
+            f"`git push --tags` of de release start deze baan opnieuw - de dubbele "
+            f"run die R29-2 weghaalde"
+        )
 
 
 @pytest.mark.parametrize("name", WORKFLOW_NAMES)
