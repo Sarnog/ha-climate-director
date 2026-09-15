@@ -29,7 +29,10 @@ from conftest import (
     notice_key_pair_error,
     notice_title_error,
 )
+from coverage.data import CoverageData
 from test_the_border import border_offenders
+
+import script.coverage_gate as coverage_gate
 
 
 def _write_package(
@@ -606,3 +609,91 @@ class TestTheBorderGuard:
             border_offenders(root=empty)
         with pytest.raises(AssertionError, match="geen bestanden gevonden"):
             border_offenders(root=tmp_path / "bestaat_niet")
+
+
+class TestTheCoverageGate:
+    """De dekkingspoort keurt geen lege of halve meting goed (ronde 32, R32-4).
+
+    The coverage gate approves no empty or half measurement (round 32, R32-4).
+
+    Alle invoer hier is verzonnen: een pakketje in `tmp_path` met één of twee
+    bestanden, en een gegevensbestand dat die bestanden wel of niet noemt. Zo
+    meet de test de eigenschap en niet de toestand van vandaag. Het vierde geval
+    is de scherpste: een module die nooit geïmporteerd wordt staat in geen enkele
+    meting, en zonder die eis zou zijn dekking stilzwijgend 100% zijn.
+
+    All input here is invented: a small package in `tmp_path` with one or two
+    files, and a data file that does or does not name those files. That way the
+    test measures the property and not today's state. The fourth case is the
+    sharpest: a module that is never imported appears in no measurement, and
+    without that demand its coverage would silently be 100%.
+    """
+
+    def _package(self, tmp_path: Path, files: dict[str, str]) -> Path:
+        """Een verzonnen pakket met alleen de gegeven bestanden.
+
+        An invented package with only the given files.
+        """
+        root = tmp_path / "pkg"
+        root.mkdir()
+        for name, text in files.items():
+            (root / name).write_text(text, encoding="utf-8")
+        return root
+
+    def _measurement(self, path: Path, measured: dict[str, set[int]]) -> Path:
+        """Een coverage-gegevensbestand met precies de gegeven metingen.
+
+        A coverage data file with exactly the given measurements.
+        """
+        data = CoverageData(basename=str(path))
+        data.add_lines(measured)
+        data.write()
+        return path
+
+    def _run(self, data: Path, package: Path) -> int:
+        return coverage_gate.main(["--data-file", str(data), "--package", str(package)])
+
+    def test_a_missing_data_file_is_refused(self, tmp_path: Path, capsys) -> None:
+        """Zonder gegevensbestand valt er niets goed te keuren."""
+        data = tmp_path / "bestaat_niet"
+        assert self._run(data, tmp_path) == 1
+        assert str(data) in capsys.readouterr().out
+
+    def test_an_empty_measurement_is_refused(self, tmp_path: Path, capsys) -> None:
+        """Een meting zonder één bestand is geen goedkeuring waard."""
+        package = self._package(tmp_path, {"a.py": "x = 1\n"})
+        data = self._measurement(tmp_path / "meting.data", {})
+        assert self._run(data, package) == 1
+        assert "is leeg" in capsys.readouterr().out
+
+    def test_a_measurement_without_the_package_is_refused(self, tmp_path: Path, capsys) -> None:
+        """Een meting over een andere map gaat niet over dit pakket."""
+        package = self._package(tmp_path, {"a.py": "x = 1\n"})
+        elsewhere = tmp_path / "elders.py"
+        elsewhere.write_text("y = 1\n", encoding="utf-8")
+        data = self._measurement(tmp_path / "elders.data", {str(elsewhere): {1}})
+        assert self._run(data, package) == 1
+        assert "geen enkel gemeten bestand" in capsys.readouterr().out
+
+    def test_a_measurement_missing_a_module_is_refused(self, tmp_path: Path, capsys) -> None:
+        """Een module die nooit geïmporteerd wordt moet opvallen."""
+        package = self._package(tmp_path, {"a.py": "x = 1\n", "b.py": "y = 1\n"})
+        data = self._measurement(tmp_path / "half.data", {str(package / "a.py"): {1}})
+        assert self._run(data, package) == 1
+        out = capsys.readouterr().out
+        assert "b.py" in out and "a.py" not in out
+
+    def test_a_complete_measurement_is_accepted(self, tmp_path: Path, capsys) -> None:
+        """Een volledige meting zonder gemiste regel komt er doorheen."""
+        package = self._package(tmp_path, {"a.py": "x = 1\n"})
+        data = self._measurement(tmp_path / "heel.data", {str(package / "a.py"): {1}})
+        assert self._run(data, package) == 0
+        assert "OK" in capsys.readouterr().out
+
+    def test_a_missed_line_is_reported_with_its_file_and_line(self, tmp_path: Path, capsys) -> None:
+        """Een gemiste regel valt om, met het bestand en de regel erbij."""
+        package = self._package(tmp_path, {"a.py": "x = 1\nif x:\n    y = 2\n"})
+        data = self._measurement(tmp_path / "gemist.data", {str(package / "a.py"): {1}})
+        assert self._run(data, package) == 1
+        out = capsys.readouterr().out
+        assert "a.py" in out and "2" in out and "3" in out
