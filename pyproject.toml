@@ -41,8 +41,12 @@ precision = 2
 # De open takken zelf zijn één kant van een lus of een kortsluiting (`a or b`)
 # die nooit langskomt; die zijn met een test noch een pragma gedicht en staan als
 # idee in ROADMAP.md. Zakt de dekking, dan hoort de vraag "welke test is hier
-# vergeten" gesteld te worden, niet de drempel verlaagd; een regel die er echt
-# niet komt, krijgt een pragma met de reden erachter.
+# vergeten" gesteld te worden, niet de drempel verlaagd. Een regel die er echt
+# niet komt krijgt een test met verzonnen invoer: het pakket draagt sinds ronde 32
+# (R32-1) **geen enkele** `pragma: no cover` meer. Zo'n pragma haalt een regel uit
+# deze meting, en dan zegt "nul gemiste regels" niets meer over die regel;
+# `tests/test_reachable_branches_deep.py::test_nothing_is_hidden_from_the_measurement`
+# houdt dat vast.
 #
 # Two guards on the same measurement, with a different task.
 #
@@ -60,8 +64,12 @@ precision = 2
 # The open branches themselves are one side of a loop or a short-circuit
 # (`a or b`) that never comes past; neither a test nor a pragma closes them, and
 # they stand as an idea in ROADMAP.md. If coverage drops, the question to ask is
-# "which test was forgotten here", not to lower the threshold; a line that truly
-# cannot be reached gets a pragma with the reason behind it.
+# "which test was forgotten here", not to lower the threshold. A line that truly
+# cannot be reached gets a test with invented input: the package has carried
+# **no** `pragma: no cover` at all since round 32 (R32-1). Such a pragma takes a
+# line out of this measurement, and then "zero missed lines" says nothing about
+# that line; `tests/test_reachable_branches_deep.py::test_nothing_is_hidden_from_the_measurement`
+# holds that down.
 fail_under = 99.68
 
 [tool.ruff]

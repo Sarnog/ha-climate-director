@@ -1052,7 +1052,7 @@ class ClimateDirectorCoordinator(
 
             try:
                 self.last_applied = await apply(self.hass, self.last_changes, shadow=self.shadow)
-            except Exception:  # noqa: BLE001  # pragma: no cover - onbereikbaar in een test
+            except Exception:  # noqa: BLE001
                 _LOGGER.exception("Applying the climate plan failed")
             self._note_commanded_off(self.last_applied)
             for change in self.last_applied:
@@ -1164,7 +1164,7 @@ class ClimateDirectorCoordinator(
                 continue
             state = self.hass.states.get(entity_id)
             if state is None or _unreadable(state.state):
-                continue  # pragma: no cover - onbereikbaar in een test: hierboven al gemeld
+                continue
             attributes = getattr(state, "attributes", {})
             if (
                 temperature_from_state(

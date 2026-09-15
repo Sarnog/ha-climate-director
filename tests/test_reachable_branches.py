@@ -5,16 +5,18 @@ The reachable branches the suite had not touched yet (round 30, phase 3b).
 De dekkingsmeting van 2026-09-14 wees 107 gemiste statements aan. Deze module
 dekt de takken die **bereikbaar** zijn: de terugkeer naar het hoofdmenu, het
 verwijderen en bewerken van een item, de foutherhalingen van de formulieren, en
-de kleine engine- en opslagtakken. Wat tegen Home Assistant of een onleesbaar
-bestand verdedigt en alleen buiten een test bereikbaar is, staat in de bron met
-`# pragma: no cover` en de reden erachter.
+de kleine engine- en opslagtakken. Die meting telde ook regels die met
+`# pragma: no cover` waren afgevangen; ronde 32 (R32-1) heeft de laatste zes
+daarvan alsnog gemeten, en sindsdien draagt het pakket **geen enkele** pragma
+meer (`tests/test_reachable_branches_deep.py` houdt dat vast).
 
 The coverage run of 2026-09-14 pointed at 107 missed statements. This module
 covers the branches that are **reachable**: returning to the main menu, deleting
 and editing an item, the forms' error repeats, and the small engine and storage
-branches. What defends against Home Assistant or an unreadable file, and is only
-reachable outside a test, sits in the source with `# pragma: no cover` and the
-reason behind it.
+branches. That measurement also counted lines caught with `# pragma: no cover`;
+round 32 (R32-1) measured the last six of those after all, and the package has
+carried **no** pragma since (`tests/test_reachable_branches_deep.py` holds that
+down).
 """
 
 from __future__ import annotations

@@ -6,21 +6,27 @@ De tweede helft van de dekkingsronde: de takken die geen eigen scherm hebben
 maar wel degelijk te bereiken zijn — een commando zonder setpoint, een bron die
 naar een onbekende zone wijst, een override die afloopt, een opgeslagen
 override die terugkomt. Elk daarvan is een gewone toestand van de integratie,
-geen verdediging tegen Home Assistant; die laatste staan in de bron met
-`# pragma: no cover` en de reden erachter.
+geen verdediging tegen Home Assistant. Ronde 32 (R32-1) heeft de laatste zes
+regels die nog met `# pragma: no cover` waren afgevangen ook gemeten; zie
+`TestTheLastSixExcludedLines` onderaan. Het pakket draagt sindsdien **geen
+enkele** pragma meer, en dat houdt `test_nothing_is_hidden_from_the_measurement`
+vast.
 
 The second half of the coverage round: the branches that have no screen of their
 own but are perfectly reachable — a command without a setpoint, a source naming
 an unknown zone, an override running out, a stored override coming back. Each of
 these is an ordinary state of the integration, not a defence against Home
-Assistant; the latter sit in the source with `# pragma: no cover` and the reason
-behind it.
+Assistant. Round 32 (R32-1) measured the last six lines that were still caught
+with `# pragma: no cover` as well; see `TestTheLastSixExcludedLines` at the
+bottom. The package has carried **no** pragma since, and
+`test_nothing_is_hidden_from_the_measurement` holds that down.
 """
 
 from __future__ import annotations
 
 import dataclasses
 from datetime import timedelta
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
@@ -41,8 +47,10 @@ from custom_components.climate_director.preconditions import _PreconditionsMixin
 from custom_components.climate_director.schema_fields import _summer_months
 from custom_components.climate_director.sensor import ZoneSourceSensor
 from custom_components.climate_director.state_store import _StateStoreMixin
-from custom_components.climate_director.switch import _opening_label
+from custom_components.climate_director.switch import _DirectorSwitch, _opening_label
 from custom_components.climate_director.world_builder import _WorldBuilderMixin
+
+PACKAGE = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
 
 # -- de engine ----------------------------------------------------------------
 # -- the engine ---------------------------------------------------------------
@@ -494,3 +502,128 @@ def test_an_unreadable_strings_file_yields_no_english_templates(monkeypatch) -> 
 
     monkeypatch.setattr(Path, "read_text", refuse)
     assert texts._read_english_templates() == {}
+
+
+# -- de laatste zes uitgesloten regels ----------------------------------------
+# -- the last six excluded lines ---------------------------------------------
+
+
+class TestTheLastSixExcludedLines:
+    """De zes regels die ronde 31 nog met een pragma afving (ronde 32, R32-1).
+
+    The six lines round 31 still caught with a pragma (round 32, R32-1).
+
+    Alle zes stonden met de reden "onbereikbaar in een test" in de bron, en alle
+    zes zijn met een monkeypatch, een stand-in of een rechtstreekse aanroep te
+    bereiken — precies de techniek die `4a5b9e8` voor de vijf eerdere pragma's
+    gebruikte. Ze verliezen daarom hun `# pragma: no cover`: de bewaking is dat
+    ze gedekt zijn, niet dat ze uitgesloten zijn.
+
+    All six stood in the source with the reason "unreachable in a test", and all
+    six can be reached with a monkeypatch, a stand-in or a direct call — exactly
+    the technique `4a5b9e8` used for the five earlier pragmas. They therefore
+    lose their `# pragma: no cover`: the guard is that they are covered, not
+    that they are excluded.
+    """
+
+    async def test_a_failing_apply_is_logged_and_the_round_goes_on(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """coordinator.py: een ronde waarin `apply` gooit wordt gemeld en gaat door."""
+        from harness_live import start_house, stop_house
+        from test_campaign_editing import cold, two_rooms
+
+        from custom_components.climate_director import coordinator as coordinator_module
+
+        logged: list[str] = []
+        monkeypatch.setattr(
+            coordinator_module._LOGGER,
+            "exception",
+            lambda message, *args: logged.append(message % args),
+        )
+
+        async def refuse(*_args: Any, **_kwargs: Any) -> None:
+            raise RuntimeError("kapot")
+
+        monkeypatch.setattr(coordinator_module, "apply", refuse)
+
+        live = await start_house(two_rooms(), states=cold())
+        try:
+            await live.evaluate()
+            assert live.coordinator.last_changes, "deze ronde hoort iets te willen sturen"
+            assert logged, "een mislukte `apply` hoort gemeld te worden"
+            assert "Applying the climate plan failed" in logged[0]
+            assert live.coordinator.last_applied == ()
+            assert live.coordinator.data is not None, "de ronde hoort gewoon door te gaan"
+        finally:
+            await stop_house(live)
+
+    def test_a_configured_sensor_that_is_not_tracked_is_skipped(self) -> None:
+        """coordinator.py: een geconfigureerde sensor die niet gevolgd wordt."""
+        config = dataclasses.replace(house(), outdoor_sensor="sensor.buiten")
+        coordinator = SimpleNamespace(
+            config=config,
+            hass=SimpleNamespace(states=SimpleNamespace(get=lambda _entity_id: None)),
+            tracked_entities=lambda: set(),
+        )
+        assert ClimateDirectorCoordinator.unusable_entities(coordinator) == {}
+
+    def test_a_guest_window_that_is_no_mapping_is_dropped(self) -> None:
+        """serialise.py: een gastenvenster dat geen mapping is bestaat niet."""
+        assert serialise._guest_window("x") is None
+
+    def test_an_override_without_a_source_is_refused(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """overrides.py: zonder bron weigert de override en meldt dat."""
+        host = OverrideHost(house())
+        monkeypatch.setattr(host, "override_source", lambda *_args, **_kwargs: None)
+        assert host.async_set_override("woonkamer", "heat", 21.0, 60, "turn_off") is False
+
+    def test_an_override_that_expired_between_two_readings_waits_for_nothing(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """overrides.py: de tweede kloklezing valt ná `until`, dus niets in te plannen."""
+        now = dt_util.utcnow()
+        readings = iter([now, now + timedelta(hours=2)])
+        monkeypatch.setattr(dt_util, "now", lambda: next(readings))
+
+        host = OverrideHost(house())
+        zone_id = house().zones[0].zone_id
+        host.zone_overrides[zone_id] = True
+        host.zone_override_until[zone_id] = now + timedelta(hours=1)
+        host._override_wake_at_first_expiry()
+        assert host._cancel_override_wake is None
+
+    def test_the_base_switch_refuses_to_push(self) -> None:
+        """switch.py: de basis van de schakelaars is abstract en zegt dat."""
+        switch = _DirectorSwitch.__new__(_DirectorSwitch)
+        with pytest.raises(NotImplementedError):
+            switch._push()
+
+
+def test_nothing_is_hidden_from_the_measurement() -> None:
+    """Het pakket draagt geen enkele `pragma: no cover` meer (ronde 32, R32-1).
+
+    De dekkingspoort (`script/coverage_gate.py`) kan alleen zien wat coverage
+    meekrijgt: een `pragma: no cover` haalt een regel uit de meting, en dan zegt
+    "nul gemiste regels" niets meer over die regel. Daarom is de eigenschap die
+    hier vastligt: het pakket sluit geen enkele regel uit. Wie er ooit een nodig
+    heeft, past deze test aan met de reden erbij — en dat is dan een bewuste
+    beslissing in plaats van een stilzwijgende uitsluiting.
+
+    The coverage gate (`script/coverage_gate.py`) can only see what coverage is
+    given: a `pragma: no cover` takes a line out of the measurement, and then
+    "zero missed lines" no longer says anything about that line. Hence the
+    property pinned here: the package excludes no line at all. Whoever needs one
+    someday edits this test and adds the reason — making it a deliberate
+    decision instead of a silent exclusion.
+    """
+    offenders = [
+        f"{path.relative_to(PACKAGE)}:{number}: {line.strip()}"
+        for path in sorted(PACKAGE.rglob("*.py"))
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1)
+        if "pragma: no cover" in line
+    ]
+    assert not offenders, (
+        "deze regels zijn uit de dekkingsmeting gehouden in plaats van gemeten: "
+        + ", ".join(offenders)
+    )
