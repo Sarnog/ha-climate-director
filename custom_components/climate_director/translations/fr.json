@@ -914,6 +914,15 @@
     },
     "source_unknown_covered_zone": {
       "message": "La source {source} nomme une zone inconnue {zone} dans le périmètre qu'elle dessert aussi."
+    },
+    "not_an_override_entity": {
+      "message": "L'entité {entity} n'est pas une dérogation de cette intégration."
+    },
+    "override_needs_a_target": {
+      "message": "Cette action a besoin d'une zone ou d'une entité de dérogation comme cible."
+    },
+    "override_target_conflict": {
+      "message": "La zone {zone} n'appartient pas à l'entité que vous avez ciblée."
     }
   },
   "services": {
@@ -965,7 +974,7 @@
     },
     "set_override": {
       "name": "Définir une dérogation",
-      "description": "Rend une zone pour une durée, règle l'appareil maintenant et, à l'échéance, l'éteint ou le laisse.",
+      "description": "Rend une zone pour une durée, règle l'appareil maintenant et, à l'échéance, l'éteint ou le laisse. Ciblez l'interrupteur de dérogation ou le capteur de fin de la zone, ou nommez la zone.",
       "fields": {
         "entry_id": {
           "name": "Installation",
@@ -973,7 +982,7 @@
         },
         "zone_id": {
           "name": "Zone",
-          "description": "La zone à rendre."
+          "description": "La zone à rendre. Laissez le champ vide si vous ciblez plutôt une entité de dérogation."
         },
         "hvac_mode": {
           "name": "Mode",
@@ -995,7 +1004,7 @@
     },
     "clear_override": {
       "name": "Terminer la dérogation",
-      "description": "Termine la dérogation de la zone comme le fait l'interrupteur : le directeur reprend la zone et n'envoie rien de plus.",
+      "description": "Termine la dérogation de la zone comme le fait l'interrupteur : le directeur reprend la zone et n'envoie rien de plus. Ciblez l'interrupteur de dérogation ou le capteur de fin de la zone, ou nommez la zone.",
       "fields": {
         "entry_id": {
           "name": "Installation",
@@ -1003,7 +1012,7 @@
         },
         "zone_id": {
           "name": "Zone",
-          "description": "La zone dont la dérogation se termine."
+          "description": "La zone dont la dérogation se termine. Laissez le champ vide si vous ciblez plutôt une entité de dérogation."
         }
       }
     }

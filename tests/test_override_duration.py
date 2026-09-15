@@ -235,6 +235,19 @@ def sensor_state(until: datetime) -> str:
     return dt_util.as_utc(until).isoformat(timespec="seconds")
 
 
+async def call_with_target(home: LiveHome, service: str, data: dict, entity_id: str) -> None:
+    """Call an action the way the card does: no data, the entity as the target.
+
+    `simple-timer-card` stuurt bij een timestamp-sensor geen `data` mee maar zet
+    de sensor zelf als `target.entity_id`; Home Assistant plakt dat doel vóór de
+    schemavalidatie aan de data.
+    """
+    await home.hass.services.async_call(
+        DOMAIN, service, data, target={"entity_id": entity_id}, blocking=True
+    )
+    await home.hass.async_block_till_done()
+
+
 async def test_the_end_time_sensor_shows_the_running_override(home: LiveHome) -> None:
     """De toestand is de eindtijd, met de starttijd als attribuut."""
     await call_set_override(home, minutes=60)
@@ -339,6 +352,137 @@ async def test_the_diagnostics_show_the_start_time(home: LiveHome) -> None:
     started = home.coordinator.zone_override_started["woonkamer"]
     found = await async_get_config_entry_diagnostics(home.hass, home.entry)
     assert found["control_state"]["zone_override_started"] == {"woonkamer": started.isoformat()}
+
+
+# ---------------------------------------------------------------------------
+# De entiteit als doel: precies wat de annuleerknop van de kaart stuurt.
+# The entity as the target: exactly what the card's cancel button sends.
+# ---------------------------------------------------------------------------
+
+
+async def test_the_card_cancels_with_only_the_sensor_as_its_target(home: LiveHome) -> None:
+    await call_set_override(home, minutes=60)
+    sensor = home.by_key(ENDS)
+
+    home.clear_calls()
+    await call_with_target(home, "clear_override", {}, sensor)
+    await home.evaluate()
+
+    assert home.coordinator.zone_overrides.get("woonkamer", False) is False
+    assert home.coordinator.zone_override_until == {}
+    assert home.state(sensor) == "unknown"
+    modes = [data.get("hvac_mode") for _service, data in home.climate_calls()]
+    assert "off" not in modes, home.climate_calls()
+
+
+async def test_the_override_switch_works_as_the_target_too(home: LiveHome) -> None:
+    await call_set_override(home, minutes=60)
+    switch = home.by_key(OVERRIDE)
+    await call_with_target(home, "clear_override", {}, switch)
+    await home.evaluate()
+    assert home.coordinator.zone_overrides.get("woonkamer", False) is False
+
+
+async def test_set_override_accepts_only_an_entity_as_its_target(home: LiveHome) -> None:
+    sensor = home.by_key(ENDS)
+    home.clear_calls()
+    await call_with_target(
+        home,
+        "set_override",
+        {"hvac_mode": "cool", "temperature": 18.5, "minutes": 60, "when_done": "leave"},
+        sensor,
+    )
+    await home.evaluate()
+
+    assert home.coordinator.zone_overrides["woonkamer"] is True
+    assert home.coordinator.zone_override_until
+    modes = [
+        data.get("hvac_mode") for _service, data in home.climate_calls() if "hvac_mode" in data
+    ]
+    assert modes == ["cool"], home.climate_calls()
+
+
+async def test_a_matching_zone_next_to_the_entity_is_allowed(home: LiveHome) -> None:
+    """Entiteit én zone mogen samen, zolang ze hetzelfde zeggen."""
+    sensor = home.by_key(ENDS)
+    await call_with_target(home, "clear_override", {"zone_id": "woonkamer"}, sensor)
+    sensor = home.by_key(ENDS)
+    await call_with_target(
+        home, "set_override", {"zone_id": "woonkamer", "hvac_mode": "cool", "minutes": 30}, sensor
+    )
+    assert home.coordinator.zone_overrides["woonkamer"] is True
+
+
+async def test_a_zone_that_does_not_match_the_entity_is_refused(home: LiveHome) -> None:
+    from homeassistant.exceptions import ServiceValidationError
+
+    sensor = home.by_key(ENDS)
+    with pytest.raises(ServiceValidationError, match="does not belong|hoort niet bij"):
+        await call_with_target(home, "clear_override", {"zone_id": "zolder"}, sensor)
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    ["sensor.buiten", "climate.woonkamer", "binary_sensor.achterdeur"],
+)
+async def test_an_entity_that_is_no_override_is_refused(home: LiveHome, entity_id: str) -> None:
+    """Alleen de schakelaar en de eindtijdsensor van een zone tellen als doel."""
+    from homeassistant.exceptions import ServiceValidationError
+
+    with pytest.raises(ServiceValidationError, match="not an override|geen override"):
+        await call_with_target(home, "clear_override", {}, entity_id)
+
+
+async def test_one_of_our_own_other_entities_is_refused_too(home: LiveHome) -> None:
+    """Een sensor van deze integratie die geen override is, is evengoed een typefout."""
+    from homeassistant.exceptions import ServiceValidationError
+
+    with pytest.raises(ServiceValidationError, match="not an override|geen override"):
+        await call_with_target(home, "clear_override", {}, home.by_key("zone_woonkamer_source"))
+
+
+async def test_an_entity_with_a_wrong_entry_id_is_refused(home: LiveHome) -> None:
+    from homeassistant.exceptions import ServiceValidationError
+
+    with pytest.raises(ServiceValidationError, match="Unknown installation|Onbekende installatie"):
+        await call_with_target(
+            home, "clear_override", {"entry_id": "bestaat_niet"}, home.by_key(ENDS)
+        )
+
+
+async def test_an_entity_of_an_unloaded_installation_is_refused(home: LiveHome) -> None:
+    """Een register kan een entiteit van een niet-geladen installatie dragen."""
+    from homeassistant.exceptions import ServiceValidationError
+
+    sensor = home.by_key(ENDS)
+    await home.hass.config_entries.async_unload(home.entry.entry_id)
+    await home.hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError, match="Unknown installation|Onbekende installatie"):
+        await call_with_target(home, "clear_override", {}, sensor)
+
+
+async def test_without_a_zone_and_without_an_entity_is_refused(home: LiveHome) -> None:
+    from homeassistant.exceptions import ServiceValidationError
+
+    with pytest.raises(ServiceValidationError, match="needs a zone|heeft een zone"):
+        await home.call(DOMAIN, "clear_override", {})
+
+
+async def test_two_override_entities_may_be_targeted_at_once(home: LiveHome) -> None:
+    """Meerdere entiteiten zijn net zo goed een doel; de zone bepaalt de rest."""
+    sensor = home.by_key(ENDS)
+    switch = home.by_key(OVERRIDE)
+    await home.hass.services.async_call(
+        DOMAIN,
+        "clear_override",
+        {},
+        target={"entity_id": [sensor, switch]},
+        blocking=True,
+    )
+    await home.hass.async_block_till_done()
+    await call_set_override(home, minutes=60)
+    assert home.coordinator.zone_overrides["woonkamer"] is True
 
 
 # ---------------------------------------------------------------------------

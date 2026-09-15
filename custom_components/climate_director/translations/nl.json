@@ -914,6 +914,15 @@
     },
     "source_unknown_covered_zone": {
       "message": "Bron {source} noemt onbekende zone {zone} in het gebied dat hij mee bedient."
+    },
+    "not_an_override_entity": {
+      "message": "Entiteit {entity} is geen override van deze integratie."
+    },
+    "override_needs_a_target": {
+      "message": "Deze actie heeft een zone of een override-entiteit als doel nodig."
+    },
+    "override_target_conflict": {
+      "message": "Zone {zone} hoort niet bij de entiteit die je als doel gaf."
     }
   },
   "services": {
@@ -965,7 +974,7 @@
     },
     "set_override": {
       "name": "Override zetten",
-      "description": "Draagt een zone voor een looptijd over, zet het apparaat nu, en zet het bij afloop uit of laat het staan.",
+      "description": "Draagt een zone voor een looptijd over, zet het apparaat nu, en zet het bij afloop uit of laat het staan. Richt je op de overrideschakelaar of de eindtijdsensor van de zone, of noem de zone.",
       "fields": {
         "entry_id": {
           "name": "Installatie",
@@ -973,7 +982,7 @@
         },
         "zone_id": {
           "name": "Zone",
-          "description": "De zone die overgedragen wordt."
+          "description": "De zone die overgedragen wordt. Laat leeg als je in plaats daarvan een override-entiteit als doel geeft."
         },
         "hvac_mode": {
           "name": "Stand",
@@ -995,7 +1004,7 @@
     },
     "clear_override": {
       "name": "Override beëindigen",
-      "description": "Beëindigt de override van de zone zoals de schakelaar dat doet: de director neemt de zone terug en stuurt niets extra.",
+      "description": "Beëindigt de override van de zone zoals de schakelaar dat doet: de director neemt de zone terug en stuurt niets extra. Richt je op de overrideschakelaar of de eindtijdsensor van de zone, of noem de zone.",
       "fields": {
         "entry_id": {
           "name": "Installatie",
@@ -1003,7 +1012,7 @@
         },
         "zone_id": {
           "name": "Zone",
-          "description": "De zone waarvan de override eindigt."
+          "description": "De zone waarvan de override eindigt. Laat leeg als je in plaats daarvan een override-entiteit als doel geeft."
         }
       }
     }

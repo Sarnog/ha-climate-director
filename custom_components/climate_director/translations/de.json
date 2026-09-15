@@ -914,6 +914,15 @@
     },
     "source_unknown_covered_zone": {
       "message": "Quelle {source} nennt unbekannte Zone {zone} in dem Gebiet, das sie mitversorgt."
+    },
+    "not_an_override_entity": {
+      "message": "Entität {entity} ist keine Übersteuerung dieser Integration."
+    },
+    "override_needs_a_target": {
+      "message": "Diese Aktion braucht eine Zone oder eine Übersteuerungs-Entität als Ziel."
+    },
+    "override_target_conflict": {
+      "message": "Zone {zone} gehört nicht zu der Entität, die du als Ziel gewählt hast."
     }
   },
   "services": {
@@ -965,7 +974,7 @@
     },
     "set_override": {
       "name": "Override setzen",
-      "description": "Übergibt eine Zone für eine Laufzeit, setzt das Gerät jetzt und schaltet es bei Ablauf aus oder lässt es stehen.",
+      "description": "Übergibt eine Zone für eine Laufzeit, setzt das Gerät jetzt und schaltet es bei Ablauf aus oder lässt es stehen. Richte dich auf den Übersteuerungsschalter oder den Endzeitsensor der Zone, oder nenne die Zone.",
       "fields": {
         "entry_id": {
           "name": "Anlage",
@@ -973,7 +982,7 @@
         },
         "zone_id": {
           "name": "Zone",
-          "description": "Die Zone, die übergeben wird."
+          "description": "Die Zone, die übergeben wird. Lass das Feld leer, wenn du stattdessen eine Übersteuerungs-Entität als Ziel angibst."
         },
         "hvac_mode": {
           "name": "Modus",
@@ -995,7 +1004,7 @@
     },
     "clear_override": {
       "name": "Override beenden",
-      "description": "Beendet die Zonen-Override wie der Schalter: der Director übernimmt die Zone wieder und sendet nichts extra.",
+      "description": "Beendet die Übersteuerung der Zone wie der Schalter: der Director übernimmt die Zone wieder und sendet nichts extra. Richte dich auf den Übersteuerungsschalter oder den Endzeitsensor der Zone, oder nenne die Zone.",
       "fields": {
         "entry_id": {
           "name": "Anlage",
@@ -1003,7 +1012,7 @@
         },
         "zone_id": {
           "name": "Zone",
-          "description": "Die Zone, deren Override endet."
+          "description": "Die Zone, deren Übersteuerung endet. Lass das Feld leer, wenn du stattdessen eine Übersteuerungs-Entität als Ziel angibst."
         }
       }
     }

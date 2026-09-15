@@ -55,6 +55,25 @@ cancel_precondition:
           multiple: true
 
 set_override:
+  # Een entiteit als doel is de vorm die de kaart `simple-timer-card` stuurt: bij
+  # een timestamp-sensor heeft zijn annuleerknop geen `data` nodig, want de kaart
+  # zet de sensor zelf als `target.entity_id` in de aanroep. Home Assistant plakt
+  # dat doel aan de data, dus `entity_id` komt bij de actie binnen. `zone_id`
+  # blijft bestaan voor wie de zone bij naam kent; minstens één van de twee is
+  # verplicht en de actie weigert een entiteit die geen override is.
+  #
+  # An entity as the target is the shape the `simple-timer-card` card sends: with
+  # a timestamp sensor its cancel button needs no `data`, since the card puts the
+  # sensor itself in the call as `target.entity_id`. Home Assistant merges that
+  # target into the data, so `entity_id` arrives at the action. `zone_id` stays
+  # for whoever knows the zone by name; at least one of the two is required and
+  # the action refuses an entity that is no override.
+  target:
+    entity:
+      integration: climate_director
+      domain:
+        - sensor
+        - switch
   fields:
     entry_id:
       required: false
@@ -62,7 +81,7 @@ set_override:
         config_entry:
           integration: climate_director
     zone_id:
-      required: true
+      required: false
       example: "woonkamer"
       selector:
         text:
@@ -101,6 +120,12 @@ set_override:
           mode: dropdown
 
 clear_override:
+  target:
+    entity:
+      integration: climate_director
+      domain:
+        - sensor
+        - switch
   fields:
     entry_id:
       required: false
@@ -108,7 +133,7 @@ clear_override:
         config_entry:
           integration: climate_director
     zone_id:
-      required: true
+      required: false
       example: "woonkamer"
       selector:
         text:

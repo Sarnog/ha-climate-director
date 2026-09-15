@@ -14,9 +14,11 @@ engine to Home Assistant.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 import voluptuous as vol
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -101,9 +103,17 @@ _CANCEL_SCHEMA = vol.Schema({**_ENTRIES, **_ZONES})
 
 _OVERRIDE_WHEN_DONE = vol.In([WHEN_DONE_TURN_OFF, WHEN_DONE_LEAVE])
 
+#: De twee unique-id-vormen die als override-doel tellen: de schakelaar van een
+#: zone en de eindtijdsensor van diezelfde zone. Al het andere is geen doel.
+#:
+#: The two unique-id shapes that count as an override target: a zone's switch
+#: and that same zone's end-time sensor. Anything else is not a target.
+_OVERRIDE_TARGET = re.compile(r"^zone_(?P<zone>.+)_override(?P<sensor>_ends)?$")
+
 _SET_OVERRIDE_FIELDS: dict[Any, Any] = {
     **_ENTRIES,
-    vol.Required(ATTR_ZONE_ID): cv.string,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ZONE_ID): cv.string,
     vol.Required(ATTR_HVAC_MODE): cv.string,
     vol.Optional(ATTR_TEMPERATURE): vol.All(vol.Coerce(float)),
     vol.Optional(ATTR_MINUTES): vol.All(vol.Coerce(float), vol.Range(min=1)),
@@ -113,7 +123,8 @@ _SET_OVERRIDE_SCHEMA = vol.Schema(_SET_OVERRIDE_FIELDS)
 
 _CLEAR_OVERRIDE_FIELDS: dict[Any, Any] = {
     **_ENTRIES,
-    vol.Required(ATTR_ZONE_ID): cv.string,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ZONE_ID): cv.string,
 }
 _CLEAR_OVERRIDE_SCHEMA = vol.Schema(_CLEAR_OVERRIDE_FIELDS)
 
@@ -384,6 +395,116 @@ def _refuse_unknown_zones(
 
 
 @callback
+def _override_entity_target(
+    hass: HomeAssistant,
+    entity_id: str,
+    wanted_entry_id: list[str] | None,
+) -> tuple[ClimateDirectorEntry, str]:
+    """Return the installation and zone one override entity points at.
+
+    De kaart `simple-timer-card` stuurt bij een timestamp-sensor geen `data` mee:
+    hij zet de sensor zelf als `target.entity_id` in de aanroep. Home Assistant
+    plakt dat doel vóór de schemavalidatie aan de data, dus de actie krijgt
+    `entity_id` binnen en moet daar de zone en de installatie uit halen. Dat gaat
+    via het entiteitenregister, en alleen de twee entiteiten die deze integratie
+    voor een override maakt tellen mee: de overrideschakelaar van een zone en de
+    eindtijdsensor van diezelfde zone. Al het andere is een typefout en hoort te
+    botsen in plaats van stil niets te doen.
+
+    The `simple-timer-card` card sends no `data` for a timestamp sensor: it puts
+    the sensor itself in the call as `target.entity_id`. Home Assistant merges
+    that target into the data before schema validation, so the action receives
+    `entity_id` and has to derive the zone and the installation from it. That
+    goes through the entity registry, and only the two entities this integration
+    creates for an override count: a zone's override switch and that same zone's
+    end-time sensor. Anything else is a typo and should collide instead of
+    quietly doing nothing.
+    """
+    registry = er.async_get(hass)
+    registered = registry.async_get(entity_id)
+    entry_id = registered.config_entry_id if registered is not None else None
+    match: re.Match[str] | None = None
+    if registered is not None and entry_id is not None:
+        match = _OVERRIDE_TARGET.fullmatch(registered.unique_id.removeprefix(f"{entry_id}_"))
+    if match is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="not_an_override_entity",
+            translation_placeholders={"entity": entity_id},
+        )
+    entry = next(
+        (
+            item
+            for item in hass.config_entries.async_loaded_entries(DOMAIN)
+            if item.entry_id == entry_id
+        ),
+        None,
+    )
+    if entry is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_installation",
+            translation_placeholders={"installation": str(entry_id)},
+        )
+    if wanted_entry_id and entry_id not in wanted_entry_id:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_installation",
+            translation_placeholders={"installation": ", ".join(wanted_entry_id)},
+        )
+    return entry, match.group("zone")
+
+
+def _override_targets(
+    hass: HomeAssistant, call: ServiceCall
+) -> list[tuple[ClimateDirectorEntry, str]]:
+    """Resolve an override call into installation-and-zone pairs.
+
+    Twee vormen. Met `entity_id` bepaalt de entiteit de installatie én de zone —
+    dat is de vorm die de kaart stuurt. Met `zone_id` blijft het gedrag van vóór
+    deze versie staan: elke gekozen installatie, of precies die uit `entry_id`.
+    Minstens één van de twee is verplicht, en een `zone_id` die niet bij de
+    opgegeven entiteit hoort is een tegenspraak in plaats van een keuze. Een zone
+    hoeft op dit pad niet apart getoetst te worden: de entiteit is er een die
+    deze integratie zelf voor díe zone maakte, en een zone die uit de
+    configuratie verdwijnt laat zijn entiteiten bij de volgende opzet opruimen
+    (`_async_remove_stale_entities`).
+
+    Two shapes. With `entity_id` the entity settles the installation *and* the
+    zone — that is the shape the card sends. With `zone_id` the behaviour from
+    before this version stands: every chosen installation, or exactly the one
+    from `entry_id`. At least one of the two is required, and a `zone_id` that
+    does not belong to the given entity is a contradiction rather than a choice.
+    A zone needs no separate check on this path: the entity is one this
+    integration created for *that* zone itself, and a zone that leaves the
+    configuration has its entities cleaned up at the next setup
+    (`_async_remove_stale_entities`).
+    """
+    entity_ids = call.data.get(ATTR_ENTITY_ID)
+    zone_id = call.data.get(ATTR_ZONE_ID)
+    if entity_ids:
+        targets = [
+            _override_entity_target(hass, entity_id, call.data.get(ATTR_ENTRY_ID))
+            for entity_id in entity_ids
+        ]
+        if zone_id is not None and any(resolved != zone_id for _, resolved in targets):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="override_target_conflict",
+                translation_placeholders={"zone": zone_id},
+            )
+        return targets
+    if zone_id is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="override_needs_a_target",
+        )
+    entries = _chosen_entries(hass, call)
+    _refuse_unknown_zones([zone_id], entries, call.data.get(ATTR_ENTRY_ID))
+    return [(entry, zone_id) for entry in entries]
+
+
+@callback
 def _async_register_services(hass: HomeAssistant) -> None:
     """Register the domain's actions once, however many installations there are.
 
@@ -421,13 +542,13 @@ def _async_register_services(hass: HomeAssistant) -> None:
 
     async def _async_set_override(call: ServiceCall) -> None:
         """Hand a zone over for a duration, with the appliance already set."""
-        entries = _chosen_entries(hass, call)
-        zone_id = call.data[ATTR_ZONE_ID]
+        targets = _override_targets(hass, call)
         hvac_mode = call.data[ATTR_HVAC_MODE]
-        _refuse_unknown_zones([zone_id], entries, call.data.get(ATTR_ENTRY_ID))
         temperature = call.data.get(ATTR_TEMPERATURE)
         unit = temperature_unit_of(hass)
-        for entry in entries:
+        minutes = call.data.get(ATTR_MINUTES)
+        when_done = call.data.get(ATTR_WHEN_DONE, WHEN_DONE_TURN_OFF)
+        for entry, zone_id in targets:
             runtime = entry.runtime_data
             source = runtime.override_source(zone_id, hvac_mode)
             if source is None:
@@ -440,16 +561,14 @@ def _async_register_services(hass: HomeAssistant) -> None:
                 zone_id,
                 hvac_mode,
                 _override_setpoint(temperature, unit),
-                call.data.get(ATTR_MINUTES),
-                call.data.get(ATTR_WHEN_DONE, WHEN_DONE_TURN_OFF),
+                minutes,
+                when_done,
             )
 
     async def _async_clear_override(call: ServiceCall) -> None:
         """End the override the way a hand-off of the switch does: silently."""
-        entries = _chosen_entries(hass, call)
-        _refuse_unknown_zones([call.data[ATTR_ZONE_ID]], entries, call.data.get(ATTR_ENTRY_ID))
-        for entry in entries:
-            entry.runtime_data.async_clear_override(call.data[ATTR_ZONE_ID])
+        for entry, zone_id in _override_targets(hass, call):
+            entry.runtime_data.async_clear_override(zone_id)
 
     hass.services.async_register(DOMAIN, SERVICE_EVALUATE, _async_evaluate, _EVALUATE_SCHEMA)
     hass.services.async_register(

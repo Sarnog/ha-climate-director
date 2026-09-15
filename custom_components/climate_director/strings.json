@@ -914,6 +914,15 @@
     },
     "source_unknown_covered_zone": {
       "message": "Source {source} names unknown zone {zone} in the area it serves along."
+    },
+    "not_an_override_entity": {
+      "message": "Entity {entity} is not an override of this integration."
+    },
+    "override_needs_a_target": {
+      "message": "This action needs a zone or an override entity as its target."
+    },
+    "override_target_conflict": {
+      "message": "Zone {zone} does not belong to the entity you targeted."
     }
   },
   "services": {
@@ -965,7 +974,7 @@
     },
     "set_override": {
       "name": "Set override",
-      "description": "Hands one zone over for a duration, sets its appliance now, and on expiry turns it off or leaves it.",
+      "description": "Hands one zone over for a duration, sets its appliance now, and on expiry turns it off or leaves it. Target the zone's override switch or its end-time sensor, or name the zone.",
       "fields": {
         "entry_id": {
           "name": "Installation",
@@ -973,7 +982,7 @@
         },
         "zone_id": {
           "name": "Zone",
-          "description": "The zone to hand over."
+          "description": "The zone to hand over. Leave it empty when you target an override entity instead."
         },
         "hvac_mode": {
           "name": "Mode",
@@ -995,7 +1004,7 @@
     },
     "clear_override": {
       "name": "Clear override",
-      "description": "Ends the zone's override the way the switch does: the director takes the zone back and commands nothing extra.",
+      "description": "Ends the zone's override the way the switch does: the director takes the zone back and commands nothing extra. Target the zone's override switch or its end-time sensor, or name the zone.",
       "fields": {
         "entry_id": {
           "name": "Installation",
@@ -1003,7 +1012,7 @@
         },
         "zone_id": {
           "name": "Zone",
-          "description": "The zone whose override ends."
+          "description": "The zone whose override ends. Leave it empty when you target an override entity instead."
         }
       }
     }

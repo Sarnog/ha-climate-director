@@ -914,6 +914,15 @@
     },
     "source_unknown_covered_zone": {
       "message": "La fuente {source} nombra una zona desconocida {zone} en el ámbito que también atiende."
+    },
+    "not_an_override_entity": {
+      "message": "La entidad {entity} no es una anulación de esta integración."
+    },
+    "override_needs_a_target": {
+      "message": "Esta acción necesita una zona o una entidad de anulación como destino."
+    },
+    "override_target_conflict": {
+      "message": "La zona {zone} no pertenece a la entidad a la que apuntaste."
     }
   },
   "services": {
@@ -965,7 +974,7 @@
     },
     "set_override": {
       "name": "Definir anulación",
-      "description": "Entrega una zona durante un tiempo, ajusta el aparato ahora y, al vencer, lo apaga o lo deja.",
+      "description": "Entrega una zona durante un tiempo, ajusta el aparato ahora y, al vencer, lo apaga o lo deja. Apunta al interruptor de anulación o al sensor de fin de la zona, o nombra la zona.",
       "fields": {
         "entry_id": {
           "name": "Instalación",
@@ -973,7 +982,7 @@
         },
         "zone_id": {
           "name": "Zona",
-          "description": "La zona que se entrega."
+          "description": "La zona que se entrega. Déjalo vacío si apuntas a una entidad de anulación."
         },
         "hvac_mode": {
           "name": "Modo",
@@ -995,7 +1004,7 @@
     },
     "clear_override": {
       "name": "Terminar anulación",
-      "description": "Termina la anulación de la zona como lo hace el interruptor: el director retoma la zona y no envía nada más.",
+      "description": "Termina la anulación de la zona como lo hace el interruptor: el director retoma la zona y no envía nada más. Apunta al interruptor de anulación o al sensor de fin de la zona, o nombra la zona.",
       "fields": {
         "entry_id": {
           "name": "Instalación",
@@ -1003,7 +1012,7 @@
         },
         "zone_id": {
           "name": "Zona",
-          "description": "La zona cuya anulación termina."
+          "description": "La zona cuya anulación termina. Déjalo vacío si apuntas a una entidad de anulación."
         }
       }
     }
