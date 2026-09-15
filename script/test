@@ -12,3 +12,4 @@ fi
 
 "$PYTHON" -m coverage run -m pytest -q
 "$PYTHON" -m coverage report
+"$PYTHON" script/coverage_gate.py
