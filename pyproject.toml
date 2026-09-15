@@ -14,28 +14,55 @@ branch = true
 [tool.coverage.report]
 show_missing = true
 
-# Elk statement in de integratie wordt door de suite geraakt: de meting van
-# ronde 31 laat 0 gemiste regels zien (5007 van 5007). De 20 open takken die
-# `branch = true` daarnaast meet, zijn één kant van een lus of een kortsluiting
-# (`a or b`) die nooit langskomt; die zijn met een test noch een pragma gedicht
-# en staan als idee in ROADMAP.md. De drempel staat op het gemeten totaal met
-# twee decimalen, naar beneden: 99,7023 % -> 99.70. Dat is een ratel: één nieuwe
-# ongedekte regel laat `coverage report` meteen omvallen, terwijl een gedekte
-# regel de drempel juist ruimte geeft. Zakt de dekking, dan hoort de vraag "welke
-# test is hier vergeten" gesteld te worden, niet de drempel verlaagd; een regel
-# die er echt niet komt, krijgt een pragma met de reden erachter.
+# `precision` is geen luxe: zonder deze regel vergelijkt coverage het percentage
+# afgerond op nul decimalen met `fail_under`, en dan is 99,69 gelijk aan 100 en
+# vuurt de drempel nooit. Ronde 31 heeft dat gemeten: met `fail_under = 99.70`
+# en de standaardprecisie kwam een dode tak gewoon door (exit 0), met
+# `precision = 2` viel hij om. / `precision` is not a luxury: without this line
+# coverage compares the percentage rounded to zero decimals with `fail_under`,
+# and then 99.69 equals 100 and the threshold never fires. Round 31 measured
+# that: with `fail_under = 99.70` and the default precision a dead branch simply
+# passed (exit 0), while with `precision = 2` it dropped.
+precision = 2
+
+# Twee bewakingen op dezelfde meting, met een verschillende taak.
 #
-# Every statement in the integration is touched by the suite: the round-31
-# measurement shows 0 missed lines (5007 of 5007). The 20 open branches that
-# `branch = true` measures alongside them are one side of a loop or a
-# short-circuit (`a or b`) that never comes past; neither a test nor a pragma
-# closes them, and they stand as an idea in ROADMAP.md. The threshold sits at the
-# measured total to two decimals, rounded down: 99.7023 % -> 99.70. That is a
-# ratchet: one new uncovered line drops `coverage report` at once, while a covered
-# line only gives the threshold more room. If coverage drops, the question to ask
-# is "which test was forgotten here", not to lower the threshold; a line that
-# truly cannot be reached gets a pragma with the reason behind it.
-fail_under = 99.70
+# 1. `script/coverage_gate.py` (CI-stap "Coverage gate") eist dat geen enkele
+#    regel gemist is. Dat is de scherpe, deterministische eis: of een regel is
+#    uitgevoerd hangt niet van de run af. De meting van ronde 31: 5007 van 5007
+#    regels geraakt, 0 gemist.
+# 2. `fail_under` hieronder is de ratel op het totaal. Die moet de wiebel in de
+#    partiële takken verdragen: ronde 31 mat op identieke code 20 én 21 partiële
+#    takken (dezelfde suite, twee runs). Eén gemiste regel geeft 99,69 of 99,67
+#    procent, dus een drempel die één gemiste regel betrapt zou de ene run goed-
+#    en de andere afkeuren. Daarom staat hij op 99.68: hij valt bij twee gemiste
+#    regels, en de poort hierboven vangt de enkele.
+#
+# De open takken zelf zijn één kant van een lus of een kortsluiting (`a or b`)
+# die nooit langskomt; die zijn met een test noch een pragma gedicht en staan als
+# idee in ROADMAP.md. Zakt de dekking, dan hoort de vraag "welke test is hier
+# vergeten" gesteld te worden, niet de drempel verlaagd; een regel die er echt
+# niet komt, krijgt een pragma met de reden erachter.
+#
+# Two guards on the same measurement, with a different task.
+#
+# 1. `script/coverage_gate.py` (CI step "Coverage gate") demands that not a
+#    single line is missed. That is the sharp, deterministic demand: whether a
+#    line ran does not depend on the run. Round 31's measurement: 5007 of 5007
+#    lines touched, 0 missed.
+# 2. `fail_under` below is the ratchet on the total. It has to absorb the wobble
+#    in the partial branches: round 31 measured 20 and 21 partial branches on
+#    identical code (same suite, two runs). One missed line yields 99.69 or
+#    99.67 percent, so a threshold that catches one missed line would pass the
+#    one run and fail the other. Hence it sits at 99.68: it drops at two missed
+#    lines, and the gate above catches the single one.
+#
+# The open branches themselves are one side of a loop or a short-circuit
+# (`a or b`) that never comes past; neither a test nor a pragma closes them, and
+# they stand as an idea in ROADMAP.md. If coverage drops, the question to ask is
+# "which test was forgotten here", not to lower the threshold; a line that truly
+# cannot be reached gets a pragma with the reason behind it.
+fail_under = 99.68
 
 [tool.ruff]
 target-version = "py313"

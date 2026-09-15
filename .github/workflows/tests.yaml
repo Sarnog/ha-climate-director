@@ -34,12 +34,24 @@ jobs:
         run: python -m coverage run -m pytest -q
 
       # De drempel staat in pyproject.toml; deze stap laat de baan vallen zodra
-      # de dekking eronder zakt.
+      # de dekking eronder zakt. Let op: die drempel vergelijkt met twee
+      # decimalen (`precision` in pyproject) en verdraagt de wiebel in de
+      # partiële takken, dus hij valt pas bij twee gemiste regels.
       #
       # The threshold sits in pyproject.toml; this step drops the job the moment
-      # coverage falls below it.
+      # coverage falls below it. Note: that threshold compares with two decimals
+      # (`precision` in pyproject) and absorbs the wobble in the partial
+      # branches, so it only drops at two missed lines.
       - name: Coverage
         run: python -m coverage report
+
+      # En deze stap is de scherpe kant: geen enkele gemiste regel. Zie
+      # script/coverage_gate.py en de uitleg in pyproject.toml.
+      #
+      # And this step is the sharp side: not a single missed line. See
+      # script/coverage_gate.py and the explanation in pyproject.toml.
+      - name: Coverage gate
+        run: python script/coverage_gate.py
 
   # `strict-typing` staat sinds ronde 30 op nul fouten (zie quality_scale.yaml).
   # De baan blokkeert dus gewoon: een nieuwe fout laat de pull request rood
