@@ -30,6 +30,11 @@ from conftest import (
     notice_title_error,
 )
 from coverage.data import CoverageData
+from test_repair_notices import (
+    created_issue_ids,
+    deleted_ids_by_function,
+    unfollowable_issue_ids,
+)
 from test_the_border import border_offenders
 
 import script.coverage_gate as coverage_gate
@@ -697,3 +702,109 @@ class TestTheCoverageGate:
         assert self._run(data, package) == 1
         out = capsys.readouterr().out
         assert "a.py" in out and "2" in out and "3" in out
+
+
+class TestTheRepairNoticeGuard:
+    """Een onvolgbaar issue-id meldt zich in plaats van stil over te slaan.
+
+    An unfollowable issue id reports itself instead of being skipped silently.
+
+    Ronde 32 (R32-6): `_issue_id_key` gaf `None` voor een f-string, een
+    samenvoeging of een variabele, en de verzamelfunctie sloeg die melding
+    vervolgens over. Daarmee viel ze uit de unload-controle zonder één woord.
+    Volgbaar is een hulpje, een moduleconstante met een letterlijke string, of de
+    letterlijke string zelf — de rest is een fout met bestand en regelnummer.
+
+    Round 32 (R32-6): `_issue_id_key` returned `None` for an f-string, a
+    concatenation or a variable, and the collector then skipped that notice. That
+    took it out of the unload check without a word. Followable is a helper, a
+    module constant holding a literal string, or the literal string itself — the
+    rest is an error with file and line number.
+    """
+
+    def _package(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        name: str,
+        body: str,
+    ) -> Path:
+        return _write_package(monkeypatch, tmp_path, name, {"problems.py": body})
+
+    def test_a_literal_id_is_followed(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        root = self._package(
+            monkeypatch,
+            tmp_path,
+            "noticepkg_literal",
+            'async def report(hass, domain):\n    ir.async_create_issue(hass, domain, "probe")\n',
+        )
+        assert created_issue_ids(root=root) == {"probe"}
+
+    def test_a_helper_id_is_followed(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        root = self._package(
+            monkeypatch,
+            tmp_path,
+            "noticepkg_helper",
+            "def _probe_issue_id(entry_id):\n"
+            '    return f"probe_{entry_id}"\n'
+            "\n"
+            "\n"
+            "async def report(hass, domain, entry_id):\n"
+            "    ir.async_create_issue(hass, domain, _probe_issue_id(entry_id))\n",
+        )
+        assert created_issue_ids(root=root) == {"_probe_issue_id"}
+
+    def test_a_module_constant_is_followed(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        root = self._package(
+            monkeypatch,
+            tmp_path,
+            "noticepkg_constant",
+            'PROBE_ISSUE = "probe"\n'
+            "\n"
+            "\n"
+            "async def report(hass, domain):\n"
+            "    ir.async_create_issue(hass, domain, PROBE_ISSUE)\n",
+        )
+        assert created_issue_ids(root=root) == {"PROBE_ISSUE"}
+
+    @pytest.mark.parametrize(
+        "argument",
+        ['f"probe_{entry_id}"', '"probe_" + entry_id', "issue_id"],
+    )
+    def test_an_id_it_cannot_follow_is_refused(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        argument: str,
+    ) -> None:
+        """De f-string, de samenvoeging en de variabele melden zich alle drie."""
+        root = self._package(
+            monkeypatch,
+            tmp_path,
+            "noticepkg_unfollowable",
+            "async def report(hass, domain, entry_id):\n"
+            "    issue_id = entry_id\n"
+            f"    ir.async_create_issue(hass, domain, {argument})\n",
+        )
+        offenders = unfollowable_issue_ids(root=root)
+        assert len(offenders) == 1 and offenders[0].startswith("problems.py:3:")
+        with pytest.raises(AssertionError, match=r"problems\.py:3:"):
+            created_issue_ids(root=root)
+
+    def test_an_unfollowable_delete_is_refused_too(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Dezelfde eis geldt voor de `async_delete_issue`-kant."""
+        root = self._package(
+            monkeypatch,
+            tmp_path,
+            "noticepkg_delete",
+            "async def clear(hass, domain, entry_id):\n"
+            '    ir.async_delete_issue(hass, domain, f"probe_{entry_id}")\n',
+        )
+        with pytest.raises(AssertionError, match=r"problems\.py:2: async_delete_issue"):
+            deleted_ids_by_function(root=root)
