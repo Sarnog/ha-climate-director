@@ -185,6 +185,7 @@ class TestThePrivacyRedaction:
             guest_mode = False
             season_override = None
             zone_overrides: dict[str, bool] = {}
+            zone_override_started: dict[str, object] = {}
             zone_priorities: dict[str, int] = {}
             world = _full_world()
             data = _full_plan()

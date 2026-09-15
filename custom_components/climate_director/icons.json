@@ -52,6 +52,9 @@
       },
       "zone_source": {
         "default": "mdi:radiator"
+      },
+      "zone_override_ends": {
+        "default": "mdi:timer-outline"
       }
     },
     "switch": {

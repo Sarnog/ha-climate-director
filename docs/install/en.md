@@ -623,6 +623,7 @@ One device per installation, holding:
 | `switch.*_holiday_schedule` | makes every day count as a Saturday, or as its own holiday schedule |
 | `switch.*_guest_mode` | keeps regulating while the residents are away |
 | `switch.*_<zone>_override` | hands one zone over to you completely |
+| `sensor.*_<zone>_override_ends` | when this zone's override ends; a timer card counts down to it |
 | `switch.*_<opening>_bypass` | on = this opening counts nowhere; not for its own zones, nor for the house-wide stop |
 | `number.*_<zone>_priority` | this zone's precedence; settable from an automation too |
 | `number.*_pre_conditioning_duration` | how long one press of a pre-conditioning button lasts |
@@ -778,6 +779,55 @@ nothing is executed there, this included.
 And a **Temperature** the appliance cannot handle is moved to the nearest
 bound: the director refuses nothing, it asks for what the appliance does
 accept.
+
+## Watching a timed override on the dashboard
+
+`sensor.*_<zone>_override_ends` carries the moment at which a zone's override
+ends. That is all a timer card needs: with `mode: timestamp` the card reads the
+state as the end time, and `unknown` means there is nothing to count down — no
+override, an override without a duration, or one that has just lapsed. The
+`start_time` attribute carries the moment the override was set, which the card
+uses for its progress ring.
+
+This is that card, with a cancel button that really cancels:
+
+```yaml
+type: custom:simple-timer-card
+entities:
+  - entity: sensor.<device>_slaapkamer_override_ends
+    mode: timestamp
+    name: Bedroom
+    icon: mdi:timer
+    buttons:
+      - action:
+          action: perform-action
+          perform_action: climate_director.clear_override
+        icon: mdi:close
+        name: Cancel
+        show_when: [running, finished]
+show_timer_presets: false
+show_active_header: false
+expire_action: remove
+visibility:
+  - condition: state
+    entity: sensor.<device>_slaapkamer_override_ends
+    state_not: unknown
+  - condition: state
+    entity: sensor.<device>_slaapkamer_override_ends
+    state_not: unavailable
+```
+
+The button carries no `data`: `simple-timer-card` sends the sensor itself as the
+target, and `climate_director.clear_override` accepts that. That is the second
+way to name a zone: next to **Zone** (`zone_id`) both actions also accept
+**Entity** (`entity_id`) — the override switch (`switch.*_<zone>_override`) or
+the end-time sensor of a zone. An automation can therefore point straight at
+what it already has, without naming the zone. Only an override entity of this
+integration counts; any other entity is refused with a message.
+
+An override that was already running before you installed this version has no
+start time in the state file: the sensor still shows its end time, and only the
+progress ring stays at the beginning until the override lapses.
 
 ## Taking charge yourself
 

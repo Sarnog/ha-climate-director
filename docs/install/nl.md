@@ -627,6 +627,7 @@ Eén device per installatie, met daaronder:
 | `switch.*_vakantieschema` | laat elke dag als zaterdag tellen, of als het eigen vakantierooster |
 | `switch.*_gastenmodus` | blijft regelen terwijl de bewoners weg zijn |
 | `switch.*_override_<zone>` | geeft één zone volledig aan jou terug |
+| `sensor.*_override_<zone>_verloopt` | wanneer de override van deze zone afloopt; een timerkaart telt er naartoe af |
 | `switch.*_overbrugging_<opening>` | aan = deze opening telt nergens meer mee; niet voor zijn eigen zones, en niet voor de huisbrede stop |
 | `number.*_prioriteit_<zone>` | de voorrang van deze zone; ook vanuit een automatisering te wijzigen |
 | `number.*_vooruitduur` | hoe lang één druk op een vooruit-knop duurt |
@@ -781,6 +782,56 @@ maar het apparaat niet — daar wordt niets uitgevoerd, ook dit niet.
 En een **Temperatuur** die het apparaat niet aankan wordt naar de
 dichtstbijzijnde grens gebracht: de director weigert niets, hij vraagt wat het
 apparaat wél aanneemt.
+
+## Een override met looptijd op het dashboard
+
+`sensor.*_override_<zone>_verloopt` draagt het moment waarop de override van een
+zone afloopt. Meer heeft een timerkaart niet nodig: met `mode: timestamp` leest
+de kaart de toestand als eindtijd, en `unknown` betekent dat er niets af te
+tellen valt — geen override, een override zonder looptijd, of een die net
+vervallen is. Het attribuut `start_time` draagt het moment waarop de override
+gezet is; dat gebruikt de kaart voor zijn voortgangsring.
+
+Dit is die kaart, met een annuleerknop die echt annuleert:
+
+```yaml
+type: custom:simple-timer-card
+entities:
+  - entity: sensor.<apparaat>_override_slaapkamer_verloopt
+    mode: timestamp
+    name: Slaapkamer
+    icon: mdi:timer
+    buttons:
+      - action:
+          action: perform-action
+          perform_action: climate_director.clear_override
+        icon: mdi:close
+        name: Annuleren
+        show_when: [running, finished]
+show_timer_presets: false
+show_active_header: false
+expire_action: remove
+visibility:
+  - condition: state
+    entity: sensor.<apparaat>_override_slaapkamer_verloopt
+    state_not: unknown
+  - condition: state
+    entity: sensor.<apparaat>_override_slaapkamer_verloopt
+    state_not: unavailable
+```
+
+De knop draagt geen `data`: `simple-timer-card` stuurt de sensor zelf als doel
+mee, en `climate_director.clear_override` neemt dat aan. Dat is de tweede manier
+om een zone te benoemen: naast **Zone** (`zone_id`) nemen beide acties ook
+**Entiteit** (`entity_id`) aan — de overrideschakelaar
+(`switch.*_override_<zone>`) of de eindtijdsensor van een zone. Een automatisering
+kan dus wijzen naar wat ze al heeft, zonder de zone te noemen. Alleen een
+override-entiteit van deze integratie telt; elke andere entiteit wordt met een
+melding geweigerd.
+
+Een override die al liep vóór je deze versie installeerde, heeft geen starttijd
+in het statusbestand: de sensor laat zijn eindtijd wel zien, en alleen de
+voortgangsring blijft tot het aflopen aan het begin staan.
 
 ## Zelf de baas
 

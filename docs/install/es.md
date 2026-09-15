@@ -634,6 +634,7 @@ Un dispositivo por instalación, con debajo:
 | `switch.*_horario_de_vacaciones` | hace que cada día cuente como sábado, o como su propio horario de vacaciones |
 | `switch.*_modo_invitados` | sigue regulando mientras los residentes están fuera |
 | `switch.*_anulacion_<zone>` | devuelve una zona por completo a ti |
+| `sensor.*_fin_de_la_anulacion_<zone>` | cuándo termina la anulación de esta zona; una tarjeta de temporizador cuenta hasta ahí |
 | `switch.*_anulacion_<opening>` | activado = esta abertura ya no cuenta en ninguna parte; ni para sus propias zonas, ni para la parada global |
 | `number.*_prioridad_<zone>` | la precedencia de esta zona; también configurable desde una automatización |
 | `number.*_duracion_del_preacondicionamiento` | cuánto dura una pulsación de un botón de preacondicionamiento |
@@ -789,6 +790,56 @@ no — ahí no se ejecuta nada, tampoco esto.
 
 Y una **Temperatura** que el aparato no admite se lleva al límite más cercano:
 el director no rechaza nada, pide lo que el aparato sí admite.
+
+## Ver una anulación con duración en el panel
+
+El sensor `sensor.*_fin_de_la_anulacion_<zone>` lleva el momento en que termina
+la anulación de una zona. Es todo lo que necesita una tarjeta de temporizador:
+con `mode: timestamp` la tarjeta lee el estado como hora de fin, y `unknown`
+significa que no hay nada que descontar — ni anulación, ni una anulación sin
+duración, ni una que acaba de expirar. El atributo `start_time` lleva el momento
+en que se puso la anulación; la tarjeta lo usa para su anillo de progreso.
+
+Esta es esa tarjeta, con un botón de cancelar que cancela de verdad:
+
+```yaml
+type: custom:simple-timer-card
+entities:
+  - entity: sensor.<device>_fin_de_la_anulacion_slaapkamer
+    mode: timestamp
+    name: Dormitorio
+    icon: mdi:timer
+    buttons:
+      - action:
+          action: perform-action
+          perform_action: climate_director.clear_override
+        icon: mdi:close
+        name: Cancelar
+        show_when: [running, finished]
+show_timer_presets: false
+show_active_header: false
+expire_action: remove
+visibility:
+  - condition: state
+    entity: sensor.<device>_fin_de_la_anulacion_slaapkamer
+    state_not: unknown
+  - condition: state
+    entity: sensor.<device>_fin_de_la_anulacion_slaapkamer
+    state_not: unavailable
+```
+
+El botón no lleva `data`: `simple-timer-card` envía el propio sensor como
+objetivo, y `climate_director.clear_override` lo acepta. Esa es la segunda forma
+de nombrar una zona: junto a **Zona** (`zone_id`), las dos acciones aceptan
+también **Entidad** (`entity_id`) — el interruptor de anulación
+(`switch.*_anulacion_<zone>`) o el sensor de fin de una zona. Una
+automatización puede apuntar así a lo que ya tiene, sin nombrar la zona. Solo
+cuenta una entidad de anulación de esta integración; cualquier otra entidad se
+rechaza con un mensaje.
+
+Una anulación que ya estaba en marcha antes de instalar esta versión no tiene
+hora de inicio en el archivo de estado: el sensor sigue mostrando su hora de fin,
+y solo el anillo de progreso se queda al principio hasta que expire.
 
 ## Tomar el mando
 

@@ -622,6 +622,9 @@
       "zone_source": {
         "name": "Quelle {zone}"
       },
+      "zone_override_ends": {
+        "name": "Übersteuerung {zone} endet"
+      },
       "would_command": {
         "name": "Würde {entity} ansteuern",
         "state": {

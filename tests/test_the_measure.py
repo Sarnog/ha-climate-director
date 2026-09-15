@@ -152,9 +152,30 @@ FUNCTION_LIMIT = 80
 # `config_flow.py` 1444 → 1451 through `_groups()`: the exclusive groups are a
 # list of lists, and one typed reader is more honest than two `list[dict]` casts
 # where the source ids live.
+#
+# Ronde 33 (override op het dashboard): `coordinator.py` 1840 → 1842 en
+# `coordinator.py::__init__` 197 → 198 door de **starttijd** van een override
+# (`zone_override_started`). Eén regel in het `CoordinatorSurface`-protocol en
+# één in `__init__`, want de mixin `overrides.py` zet die tijd en mypy moet hem
+# daar kennen; zonder die twee regels klapt de typecontrole op een lid dat de
+# coördinator werkelijk draagt. De rest van deze ronde woont in `sensor.py` (de
+# eindtijdsensor met zijn apparaatklasse), `state_store.py` (opslag en herstel,
+# met een oude opslag die zonder dat veld gewoon laadt) en `__init__.py` (de
+# servicelaag die een entiteit als doel aanneemt) — alle drie onder hun maat.
+#
+# Round 33 (override on the dashboard): `coordinator.py` 1840 → 1842 and
+# `coordinator.py::__init__` 197 → 198 through an override's **start time**
+# (`zone_override_started`). One line in the `CoordinatorSurface` protocol and
+# one in `__init__`, because the `overrides.py` mixin sets that time and mypy has
+# to know it there; without those two lines the type check trips over a member
+# the coordinator really carries. The rest of this round lives in `sensor.py`
+# (the end-time sensor with its device class), `state_store.py` (storage and
+# restore, where an old file without that field simply loads) and `__init__.py`
+# (the service layer accepting an entity as its target) — all three below their
+# measure.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2143,
-    "coordinator.py": 1840,
+    "coordinator.py": 1842,
     "engine/decide.py": 1677,
     "config_flow.py": 1451,
     "schemas.py": 900,
@@ -163,7 +184,7 @@ MODULE_EXCEPTIONS: dict[str, int] = {
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_build_commands"): 202,
     ("engine/decide.py", "_generator_commands"): 192,
-    ("coordinator.py", "__init__"): 197,
+    ("coordinator.py", "__init__"): 198,
     ("engine/models.py", "_rule_zones"): 142,
     ("engine/constraints.py", "resolve"): 128,
     ("coordinator.py", "_refusal_data"): 119,

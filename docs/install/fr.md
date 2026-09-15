@@ -648,6 +648,7 @@ Un appareil par installation, avec en dessous :
 | `switch.*_planning_de_vacances` | fait compter chaque jour comme un samedi, ou comme son propre programme vacances |
 | `switch.*_mode_invites` | continue de réguler pendant que les résidents sont absents |
 | `switch.*_derogation_<zone>` | rend une zone entièrement à vous |
+| `sensor.*_fin_de_derogation_<zone>` | quand l'override de cette zone se termine ; une carte minuteur compte à rebours |
 | `switch.*_contournement_<opening>` | activé = cette ouverture ne compte plus nulle part ; ni pour ses propres zones, ni pour l'arrêt global |
 | `number.*_priorite_<zone>` | la préséance de cette zone ; réglable aussi depuis une automatisation |
 | `number.*_duree_de_la_preparation` | combien de temps dure un appui sur un bouton de préchauffage |
@@ -806,6 +807,56 @@ rien n'y est exécuté, ceci compris.
 Et une **Température** que l'appareil n'accepte pas est ramenée à la borne la
 plus proche : le directeur ne refuse rien, il demande ce que l'appareil
 accepte.
+
+## Suivre un override à durée sur le tableau de bord
+
+Le capteur `sensor.*_fin_de_derogation_<zone>` porte le moment où l'override
+d'une zone se termine. C'est tout ce qu'il faut à une carte minuteur : avec
+`mode: timestamp`, la carte lit l'état comme heure de fin, et `unknown` signifie
+qu'il n'y a rien à décompter — pas d'override, un override sans durée, ou un qui
+vient d'expirer. L'attribut `start_time` porte le moment où l'override a été
+posé ; c'est ce que la carte utilise pour son anneau de progression.
+
+Voici cette carte, avec un bouton d'annulation qui annule vraiment :
+
+```yaml
+type: custom:simple-timer-card
+entities:
+  - entity: sensor.<device>_fin_de_derogation_slaapkamer
+    mode: timestamp
+    name: Chambre
+    icon: mdi:timer
+    buttons:
+      - action:
+          action: perform-action
+          perform_action: climate_director.clear_override
+        icon: mdi:close
+        name: Annuler
+        show_when: [running, finished]
+show_timer_presets: false
+show_active_header: false
+expire_action: remove
+visibility:
+  - condition: state
+    entity: sensor.<device>_fin_de_derogation_slaapkamer
+    state_not: unknown
+  - condition: state
+    entity: sensor.<device>_fin_de_derogation_slaapkamer
+    state_not: unavailable
+```
+
+Le bouton ne porte pas de `data` : `simple-timer-card` envoie le capteur
+lui-même comme cible, et `climate_director.clear_override` l'accepte. C'est la
+seconde façon de nommer une zone : à côté de **Zone** (`zone_id`), les deux
+actions acceptent aussi **Entité** (`entity_id`) — l'interrupteur d'override
+(`switch.*_derogation_<zone>`) ou le capteur de fin d'une zone. Une
+automatisation peut donc viser ce qu'elle a déjà, sans nommer la zone. Seule une
+entité d'override de cette intégration compte ; toute autre entité est refusée
+avec un message.
+
+Un override qui tournait déjà avant l'installation de cette version n'a pas
+d'heure de début dans le fichier d'état : le capteur montre toujours son heure de
+fin, et seul l'anneau de progression reste au début jusqu'à l'expiration.
 
 ## Prendre la main
 

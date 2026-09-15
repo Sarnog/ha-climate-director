@@ -622,6 +622,9 @@
       "zone_source": {
         "name": "مصدر {zone}"
       },
+      "zone_override_ends": {
+        "name": "نهاية تجاوز {zone}"
+      },
       "would_command": {
         "name": "سيوجّه {entity}",
         "state": {

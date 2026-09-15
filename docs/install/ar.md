@@ -586,6 +586,7 @@
 | `switch.*_jdwl_l_tl` | يجعل كل يوم يُحسب سبتًا، أو كجدول عطلاته الخاص |
 | `switch.*_wd_ldywf` | يواصل التنظيم أثناء غياب المقيمين |
 | `switch.*_tjwz_<zone>` | يعيد منطقة كاملة إليك |
+| `sensor.*_nhy_tjwz_<zone>` | متى ينتهي تجاوز هذه المنطقة؛ وبطاقة المؤقت تعدّ تنازليًا إليه |
 | `switch.*_tjwz_<opening>` | مفعّل = لا تُحسب هذه الفتحة في أي مكان؛ لا لمناطقها ولا للتوقف العام |
 | `number.*_wlwy_<zone>` | أولوية هذه المنطقة؛ وقابل للضبط من أتمتة أيضًا |
 | `number.*_md_ltdfy_lmsbq` | كم تدوم ضغطة واحدة على زر التكييف المسبق |
@@ -720,6 +721,52 @@ data:
 المفتاح لكن الجهاز لا — فهناك لا يُنفَّذ شيء، ولا هذا أيضًا.
 
 ودرجة **حرارة** لا يقبلها الجهاز تُنقل إلى أقرب حدّ: فلا يُرفض شيء، بل يُطلب ما يقبله الجهاز.
+
+## متابعة تجاوز بمدة على لوحة التحكم
+
+يحمل المستشعر `sensor.*_nhy_tjwz_<zone>` اللحظة التي ينتهي فيها تجاوز منطقة.
+وهذا كل ما تحتاجه بطاقة مؤقت: مع `mode: timestamp` تقرأ البطاقة الحالة كوقت
+انتهاء، وتعني `unknown` أنه لا شيء للعدّ التنازلي — لا تجاوز، أو تجاوز بلا
+مدة، أو تجاوز انتهى للتو. وتحمل الخاصية `start_time` لحظة ضبط التجاوز، وهي ما
+تستعمله البطاقة لحلقة التقدّم.
+
+هذه هي تلك البطاقة، بزر إلغاء يُلغي فعلًا:
+
+```yaml
+type: custom:simple-timer-card
+entities:
+  - entity: sensor.<device>_nhy_tjwz_slaapkamer
+    mode: timestamp
+    name: غرفة النوم
+    icon: mdi:timer
+    buttons:
+      - action:
+          action: perform-action
+          perform_action: climate_director.clear_override
+        icon: mdi:close
+        name: إلغاء
+        show_when: [running, finished]
+show_timer_presets: false
+show_active_header: false
+expire_action: remove
+visibility:
+  - condition: state
+    entity: sensor.<device>_nhy_tjwz_slaapkamer
+    state_not: unknown
+  - condition: state
+    entity: sensor.<device>_nhy_tjwz_slaapkamer
+    state_not: unavailable
+```
+
+لا يحمل الزر أي `data`: فبطاقة `simple-timer-card` ترسل المستشعر نفسه كهدف،
+ويقبل `climate_director.clear_override` ذلك. وهذه هي الطريقة الثانية لتسمية
+منطقة: فإلى جانب **المنطقة** (`zone_id`) يقبل الإجراءان أيضًا **الكيان**
+(`entity_id`) — مفتاح التجاوز (`switch.*_nhy_tjwz_<zone>`) أو مستشعر نهاية
+المنطقة. ويمكن للأتمتة أن تشير إلى ما لديها بالفعل دون تسمية المنطقة. ولا
+يُحتسب إلا كيان تجاوز لهذا التكامل؛ وأي كيان آخر يُرفض برسالة.
+
+التجاوز الذي كان يعمل قبل تثبيت هذا الإصدار ليس له لحظة بداية في ملف الحالة:
+يعرض المستشعر وقت انتهائه، وتبقى حلقة التقدّم في البداية فقط حتى ينتهي التجاوز.
 
 ## تولي زمام الأمور بنفسك
 

@@ -67,6 +67,10 @@ class _StateStoreMixin(_CoordinatorBase):
                 zone_id: until.isoformat()
                 for zone_id, until in getattr(self, "zone_override_until", {}).items()
             },
+            "override_started": {
+                zone_id: started.isoformat()
+                for zone_id, started in getattr(self, "zone_override_started", {}).items()
+            },
             "override_when_done": dict(getattr(self, "zone_override_when_done", {})),
             "override_entity": dict(getattr(self, "zone_override_entity", {})),
         }
@@ -203,17 +207,28 @@ class _StateStoreMixin(_CoordinatorBase):
         neemt de zone weer over, precies zoals na een afloop terwijl de
         integratie draaide.
 
+        Een ouder bestand draagt nog geen `override_started`: de starttijd is dan
+        onbekend, en het dashboard laat de voortgang van die override op nul
+        staan. Dat is geen reden om de opslagversie te verhogen - er valt niets
+        te migreren aan een sleutel die er niet was.
+
         An expired duration does not come back: time ran on while Home Assistant
         was away, and carrying out yesterday's expiry choice after the fact is
         worse than forgetting it. The handover itself then lapses too: the
         engine takes the zone back, exactly as after an expiry while the
         integration ran.
+
+        An older file carries no `override_started` yet: the start time is then
+        unknown, and the dashboard leaves that override's progress at zero. That
+        is no reason to raise the storage version - there is nothing to migrate
+        about a key that was never there.
         """
         if not hasattr(self, "zone_override_until"):
             # Een stand-in zonder override-staat (tests) laadt gewoon wat hij kent.
             # A stand-in without override state (tests) simply loads what it knows.
             return
         until_raw = stored.get("override_until")
+        started_raw = stored.get("override_started")
         when_raw = stored.get("override_when_done")
         entity_raw = stored.get("override_entity")
         known_zones = {zone.zone_id for zone in self.config.zones}
@@ -227,6 +242,13 @@ class _StateStoreMixin(_CoordinatorBase):
                     continue
                 self.zone_override_until[zone_id] = until
                 self.zone_overrides[zone_id] = True
+        if isinstance(started_raw, Mapping):
+            for zone_id, raw in started_raw.items():
+                if zone_id not in self.zone_override_until:
+                    continue
+                started = dt_util.parse_datetime(str(raw))
+                if started is not None:
+                    self.zone_override_started[zone_id] = started
         if isinstance(when_raw, Mapping):
             for zone_id, raw in when_raw.items():
                 if zone_id in self.zone_override_until and isinstance(raw, str):

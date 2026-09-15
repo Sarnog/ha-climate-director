@@ -622,6 +622,9 @@
       "zone_source": {
         "name": "Source {zone}"
       },
+      "zone_override_ends": {
+        "name": "Fin de dérogation {zone}"
+      },
       "would_command": {
         "name": "Commanderait {entity}",
         "state": {

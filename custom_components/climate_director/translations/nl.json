@@ -622,6 +622,9 @@
       "zone_source": {
         "name": "Bron {zone}"
       },
+      "zone_override_ends": {
+        "name": "Override {zone} verloopt"
+      },
       "would_command": {
         "name": "Zou {entity} aansturen",
         "state": {

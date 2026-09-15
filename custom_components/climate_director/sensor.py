@@ -13,6 +13,7 @@ see what would have happened, without anything happening.
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
@@ -82,6 +83,9 @@ async def async_setup_entry(
     entities.extend(
         ZoneSourceSensor(coordinator, zone.zone_id) for zone in coordinator.config.zones
     )
+    entities.extend(
+        ZoneOverrideEndsSensor(coordinator, zone.zone_id) for zone in coordinator.config.zones
+    )
     # Een sensor per APPARAAT, niet per bron. Sinds een apparaat onder meerdere
     # zones mag staan - zo ziet een centrale verwarming eruit - leverde een
     # bron-voor-bron-lijst dubbele unieke ID's op, en gooide Home Assistant de
@@ -113,6 +117,7 @@ def wanted_entity_keys(config: DirectorConfig) -> set[str]:
         "last_decision",
         "mismatch",
         *(f"zone_{zone.zone_id}_source" for zone in config.zones),
+        *(f"zone_{zone.zone_id}_override_ends" for zone in config.zones),
         *(f"command_{entity_id}" for entity_id in dict.fromkeys(steered)),
     }
 
@@ -375,3 +380,93 @@ class ZoneSourceSensor(ClimateDirectorEntity, SensorEntity):
             "reason": decision.reason.value,
             "blocked": decision.blocked,
         }
+
+
+class ZoneOverrideEndsSensor(ClimateDirectorEntity, SensorEntity):
+    """Wanneer de override van één zone afloopt (anker 11).
+
+    When one zone's override runs out (anchor 11).
+
+    Een override met een looptijd wordt met de hand gegeven en hoort zichtbaar te
+    zijn. Deze sensor draagt de eindtijd als zijn toestand en de starttijd als
+    attribuut, zodat een dashboardkaart de voortgang kan tekenen en zijn
+    annuleerknop `climate_director.clear_override` kan aanroepen. `unknown` wil
+    zeggen: er loopt geen override met een looptijd — een override zonder
+    `minutes`, een schakelaar die iemand met de hand aanzette, of een override
+    die al afgelopen of geannuleerd is.
+
+    De toestand volgt de coordinator en niet de schakelaar. Elke set, clear,
+    afloop en handmatige uitzetting vraagt een beslisronde aan, en die publiceert
+    het plan waarna deze sensor opnieuw schrijft; een eigen listener is dus niet
+    nodig.
+
+    A timed override is given by hand and should be visible. This sensor carries
+    the end time as its state and the start time as an attribute, so a dashboard
+    card can draw the progress and its cancel button can call
+    `climate_director.clear_override`. `unknown` means: no override with a
+    duration is running — an override without `minutes`, a switch somebody turned
+    on by hand, or one that has already expired or been cleared.
+
+    The state follows the coordinator rather than the switch. Every set, clear,
+    expiry and hand-off asks for a decision round, and that round publishes the
+    plan after which this sensor writes again; so it needs no listener of its
+    own.
+    """
+
+    # Een bedieningsentiteit voor het dashboard, net als de overrideschakelaar:
+    # bewust géén DIAGNOSTIC, want dan verdwijnt hij achter een filter in de
+    # entiteitenlijst van precies de kaart die hem nodig heeft.
+    #
+    # A control entity for the dashboard, exactly like the override switch:
+    # deliberately not DIAGNOSTIC, since that would hide it behind a filter in
+    # the entity list of the very card that needs it.
+    _attr_translation_key = "zone_override_ends"
+    _attr_entity_category = None
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_icon = "mdi:timer-outline"
+
+    def __init__(self, coordinator: ClimateDirectorCoordinator, zone_id: str) -> None:
+        """Set up the end-time sensor for one zone."""
+        super().__init__(coordinator, f"zone_{zone_id}_override_ends")
+        self._zone_id = zone_id
+        zone = coordinator.config.zone(zone_id)
+        self._attr_translation_placeholders = {"zone": zone.name if zone else zone_id}
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return the moment this zone's override runs out, or `unknown`.
+
+        Alleen een override die aanstaat én een looptijd heeft telt: staat de
+        schakelaar met de hand aan, dan is er geen eindtijd en hoort er geen
+        aftelling te staan.
+
+        Only an override that is on *and* carries a duration counts: with the
+        switch turned on by hand there is no end time, and no countdown belongs
+        on screen.
+        """
+        if not self.coordinator.zone_overrides.get(self._zone_id, False):
+            return None
+        return self.coordinator.zone_override_until.get(self._zone_id)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the start time, and what this override belongs to.
+
+        `start_time` wordt weggelaten zodra de starttijd onbekend is — een
+        override die van vóór deze versie in de opslag stond. De kaart laat de
+        voortgang dan op nul staan in plaats van een verzonnen ring te tekenen.
+
+        `start_time` is left out as soon as the start time is unknown — an
+        override that sat in storage from before this version. The card then
+        leaves the progress at zero instead of drawing an invented ring.
+        """
+        coordinator = self.coordinator
+        attributes: dict[str, Any] = {
+            "zone_id": self._zone_id,
+            "when_done": coordinator.zone_override_when_done.get(self._zone_id),
+            "target_entity": coordinator.zone_override_entity.get(self._zone_id),
+        }
+        started = coordinator.zone_override_started.get(self._zone_id)
+        if started is not None:
+            attributes["start_time"] = started.isoformat()
+        return attributes

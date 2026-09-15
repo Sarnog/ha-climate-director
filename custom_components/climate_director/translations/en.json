@@ -622,6 +622,9 @@
       "zone_source": {
         "name": "{zone} source"
       },
+      "zone_override_ends": {
+        "name": "{zone} override ends"
+      },
       "would_command": {
         "name": "Would command {entity}",
         "state": {

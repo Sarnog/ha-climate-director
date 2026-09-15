@@ -45,6 +45,14 @@ EXPECTED: dict[str, dict[str, EntityCategory | None]] = {
         "would_command": EntityCategory.DIAGNOSTIC,
         "mismatch": EntityCategory.DIAGNOSTIC,
         "zone_source": EntityCategory.DIAGNOSTIC,
+        # Een bedieningsentiteit voor het dashboard, net als de
+        # overrideschakelaar: bewust zichtbaar en niet achter het
+        # diagnosisfilter van de entiteitenlijst.
+        #
+        # A control entity for the dashboard, just like the override switch:
+        # deliberately visible and not behind the entity list's diagnostics
+        # filter.
+        "zone_override_ends": None,
     },
     "switch": {
         "master": None,

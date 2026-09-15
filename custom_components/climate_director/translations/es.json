@@ -622,6 +622,9 @@
       "zone_source": {
         "name": "Fuente {zone}"
       },
+      "zone_override_ends": {
+        "name": "Fin de la anulación {zone}"
+      },
       "would_command": {
         "name": "Gobernaría {entity}",
         "state": {

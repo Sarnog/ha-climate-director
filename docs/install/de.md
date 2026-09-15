@@ -636,6 +636,7 @@ Ein Gerät pro Installation, darunter:
 | `switch.*_urlaubsplan` | lässt jeden Tag als Samstag zählen, oder als eigenen Urlaubsplan |
 | `switch.*_gastemodus` | regelt weiter, während die Bewohner weg sind |
 | `switch.*_ubersteuerung_<zone>` | übergibt eine Zone vollständig an dich |
+| `sensor.*_ubersteuerung_<zone>_endet` | wann der Override dieser Zone endet; eine Timer-Karte zählt darauf zu |
 | `switch.*_uberbruckung_<opening>` | an = diese Öffnung zählt nirgends mehr; nicht für ihre eigenen Zonen und nicht für den hausweiten Stopp |
 | `number.*_prioritat_<zone>` | der Vorrang dieser Zone; auch aus einer Automatisierung setzbar |
 | `number.*_vorbereitungsdauer` | wie lange eine Vorbereitung nach einem Tastendruck dauert |
@@ -791,6 +792,56 @@ das Gerät aber nicht — dort wird nichts ausgeführt, auch das nicht.
 Und eine **Temperatur**, die das Gerät nicht annimmt, wird auf die
 nächstgelegene Grenze gebracht: Der Director lehnt nichts ab, er fragt nach
 dem, was das Gerät annimmt.
+
+## Einen Override mit Laufzeit auf dem Dashboard
+
+`sensor.*_ubersteuerung_<zone>_endet` trägt den Moment, an dem der Override
+einer Zone endet. Mehr braucht eine Timer-Karte nicht: mit `mode: timestamp`
+liest die Karte den Zustand als Endzeit, und `unknown` heißt, dass es nichts
+herunterzuzählen gibt — kein Override, ein Override ohne Laufzeit oder einer,
+der gerade abgelaufen ist. Das Attribut `start_time` trägt den Moment, an dem
+der Override gesetzt wurde; das nutzt die Karte für ihren Fortschrittsring.
+
+Das ist diese Karte, mit einer Abbrechen-Taste, die wirklich abbricht:
+
+```yaml
+type: custom:simple-timer-card
+entities:
+  - entity: sensor.<device>_ubersteuerung_slaapkamer_endet
+    mode: timestamp
+    name: Schlafzimmer
+    icon: mdi:timer
+    buttons:
+      - action:
+          action: perform-action
+          perform_action: climate_director.clear_override
+        icon: mdi:close
+        name: Abbrechen
+        show_when: [running, finished]
+show_timer_presets: false
+show_active_header: false
+expire_action: remove
+visibility:
+  - condition: state
+    entity: sensor.<device>_ubersteuerung_slaapkamer_endet
+    state_not: unknown
+  - condition: state
+    entity: sensor.<device>_ubersteuerung_slaapkamer_endet
+    state_not: unavailable
+```
+
+Die Taste trägt keine `data`: `simple-timer-card` sendet den Sensor selbst als
+Ziel mit, und `climate_director.clear_override` nimmt das an. Das ist der zweite
+Weg, eine Zone zu benennen: neben **Zone** (`zone_id`) nehmen beide Aktionen
+auch **Entität** (`entity_id`) an — den Override-Schalter
+(`switch.*_ubersteuerung_<zone>`) oder den Endzeitsensor einer Zone. Eine
+Automatisierung kann also auf das zeigen, was sie schon hat, ohne die Zone zu
+nennen. Nur eine Override-Entität dieser Integration zählt; jede andere Entität
+wird mit einer Meldung abgelehnt.
+
+Ein Override, der schon lief, bevor du diese Version installiert hast, hat keine
+Startzeit in der Zustandsdatei: Der Sensor zeigt seine Endzeit weiterhin, und
+nur der Fortschrittsring bleibt bis zum Ablauf am Anfang stehen.
 
 ## Selbst das Kommando übernehmen
 

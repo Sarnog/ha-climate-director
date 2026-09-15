@@ -52,6 +52,10 @@ async def async_get_config_entry_diagnostics(
                 else None
             ),
             "zone_overrides": dict(coordinator.zone_overrides),
+            "zone_override_started": {
+                zone_id: started.isoformat()
+                for zone_id, started in coordinator.zone_override_started.items()
+            },
             "zone_priorities": dict(coordinator.zone_priorities),
             "precondition_requests": {
                 zone_id: until.isoformat()

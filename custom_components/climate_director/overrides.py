@@ -113,10 +113,22 @@ class _OverridesMixin(_CoordinatorBase):
 
         if minutes is None:
             self.zone_override_until.pop(zone_id, None)
+            self.zone_override_started.pop(zone_id, None)
             self.zone_override_when_done.pop(zone_id, None)
             self.zone_override_entity.pop(zone_id, None)
         else:
-            self.zone_override_until[zone_id] = dt_util.now() + timedelta(minutes=minutes)
+            now = dt_util.now()
+            self.zone_override_until[zone_id] = now + timedelta(minutes=minutes)
+            # Dezelfde `now` als waaruit `until` volgt: het dashboard laat de
+            # voortgang van de override zien en leest daarvoor de starttijd.
+            # Twee kloklezingen naast elkaar zouden een ring opleveren die niet
+            # bij zijn eigen eindtijd past.
+            #
+            # The same `now` the `until` follows from: the dashboard shows the
+            # override's progress and reads the start time for it. Two clock
+            # readings side by side would yield a ring that does not fit its own
+            # end time.
+            self.zone_override_started[zone_id] = now
             self.zone_override_when_done[zone_id] = when_done
             self.zone_override_entity[zone_id] = source.entity_id
 
@@ -227,6 +239,7 @@ class _OverridesMixin(_CoordinatorBase):
     def _drop_override_timers(self, zone_id: str) -> None:
         """Let one zone's duration lapse without a command."""
         self.zone_override_until.pop(zone_id, None)
+        self.zone_override_started.pop(zone_id, None)
         self.zone_override_when_done.pop(zone_id, None)
         self.zone_override_entity.pop(zone_id, None)
 

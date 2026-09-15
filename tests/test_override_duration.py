@@ -5,12 +5,14 @@ Anchor 11: an override with a duration carries its own ending.
 
 from __future__ import annotations
 
-from datetime import timedelta
+import json
+from datetime import datetime, timedelta
+from pathlib import Path
 
 import pytest
-from harness_live import LiveHome, start_house, stop_house
+from harness_live import LiveHome, new_config_dir, start_house, stop_house
 from homeassistant.util import dt as dt_util
-from test_campaign_live_ha import cold_world, installation
+from test_campaign_live_ha import LIVING, cold_world, installation
 
 from custom_components.climate_director.const import DOMAIN
 
@@ -212,3 +214,226 @@ async def test_the_handover_stands_before_the_apply() -> None:
         assert "off" not in modes, live.climate_calls()
     finally:
         await stop_house(live)
+
+
+# ---------------------------------------------------------------------------
+# De eindtijdsensor: wat het dashboard laat zien (ronde 33).
+# The end-time sensor: what the dashboard shows (round 33).
+# ---------------------------------------------------------------------------
+
+ENDS = "zone_woonkamer_override_ends"
+OVERRIDE = "zone_woonkamer_override"
+OTHER_ENDS = "zone_zolder_override_ends"
+
+
+def sensor_state(until: datetime) -> str:
+    """Return the state a timestamp sensor takes for `until`.
+
+    Home Assistant zet een `datetime` met tijdzone om naar UTC en naar hele
+    seconden; dat is wat de kaart als eindtijd leest.
+    """
+    return dt_util.as_utc(until).isoformat(timespec="seconds")
+
+
+async def test_the_end_time_sensor_shows_the_running_override(home: LiveHome) -> None:
+    """De toestand is de eindtijd, met de starttijd als attribuut."""
+    await call_set_override(home, minutes=60)
+    sensor = home.by_key(ENDS)
+    until = home.coordinator.zone_override_until["woonkamer"]
+
+    assert home.state(sensor) == sensor_state(until)
+    attributes = home.attributes(sensor)
+    assert attributes["zone_id"] == "woonkamer"
+    assert attributes["when_done"] == "turn_off"
+    assert attributes["target_entity"] == LIVING
+    assert (
+        dt_util.parse_datetime(attributes["start_time"])
+        == (home.coordinator.zone_override_started["woonkamer"])
+    )
+
+
+async def test_the_start_time_is_the_moment_the_end_time_counts_from(home: LiveHome) -> None:
+    """Eén kloklezing: de starttijd en de looptijd horen bij elkaar te passen.
+
+    Twee lezingen naast elkaar zouden een voortgangsring opleveren die niet bij
+    zijn eigen eindtijd past.
+    """
+    await call_set_override(home, minutes=45)
+    started = home.coordinator.zone_override_started["woonkamer"]
+    until = home.coordinator.zone_override_until["woonkamer"]
+    assert until - started == timedelta(minutes=45)
+
+
+async def test_only_the_overridden_zone_has_an_end_time(home: LiveHome) -> None:
+    await call_set_override(home, minutes=60)
+    assert home.state(home.by_key(ENDS)) != "unknown"
+    assert home.state(home.by_key(OTHER_ENDS)) == "unknown"
+
+
+async def test_without_an_override_the_end_time_is_unknown(home: LiveHome) -> None:
+    sensor = home.by_key(ENDS)
+    assert home.state(sensor) == "unknown"
+    assert home.attributes(sensor)["start_time"] if False else True  # zie hieronder
+    assert "start_time" not in home.attributes(sensor)
+    assert home.attributes(sensor)["when_done"] is None
+    assert home.attributes(sensor)["target_entity"] is None
+
+
+async def test_an_override_without_minutes_has_no_end_time(home: LiveHome) -> None:
+    """Een override zonder looptijd vervalt nooit, dus er valt niets af te tellen."""
+    await call_set_override(home, minutes=None)
+    assert home.coordinator.zone_overrides["woonkamer"] is True
+    assert home.state(home.by_key(ENDS)) == "unknown"
+    assert "start_time" not in home.attributes(home.by_key(ENDS))
+
+
+async def test_the_switch_turned_on_by_hand_has_no_end_time(home: LiveHome) -> None:
+    await home.call("switch", "turn_on", {"entity_id": home.by_key(OVERRIDE)})
+    await home.evaluate()
+    assert home.state(home.by_key(ENDS)) == "unknown"
+
+
+@pytest.mark.parametrize("when_done", ["turn_off", "leave"])
+async def test_the_end_time_disappears_when_the_override_lapses(
+    home: LiveHome, when_done: str
+) -> None:
+    await call_set_override(home, when_done=when_done)
+    assert home.state(home.by_key(ENDS)) != "unknown"
+
+    home.coordinator.zone_override_until["woonkamer"] = dt_util.now() - timedelta(seconds=1)
+    await home.evaluate()
+
+    assert home.state(home.by_key(ENDS)) == "unknown"
+    assert home.coordinator.zone_override_started == {}
+
+
+async def test_the_end_time_disappears_when_the_switch_goes_off_by_hand(home: LiveHome) -> None:
+    """Met de hand uitzetten laat de looptijd stil vervallen - en de sensor mee.
+
+    De schakelaar schrijft alleen `zone_overrides`; de ronde daarna ruimt de
+    looptijd op en publiceert het plan, waarna de sensor opnieuw schrijft.
+    """
+    await call_set_override(home, minutes=60)
+    await home.call("switch", "turn_off", {"entity_id": home.by_key(OVERRIDE)})
+    await home.evaluate()
+
+    assert home.state(home.by_key(ENDS)) == "unknown"
+    assert home.coordinator.zone_override_started == {}
+    assert home.coordinator.zone_override_until == {}
+
+
+async def test_clear_override_makes_the_end_time_unknown(home: LiveHome) -> None:
+    await call_set_override(home, minutes=60)
+    await home.call(DOMAIN, "clear_override", {"zone_id": "woonkamer"})
+    await home.evaluate()
+    assert home.state(home.by_key(ENDS)) == "unknown"
+
+
+async def test_the_diagnostics_show_the_start_time(home: LiveHome) -> None:
+    """De diagnose draagt de starttijd mee, zodat een override na te spelen is."""
+    from custom_components.climate_director.diagnostics import (
+        async_get_config_entry_diagnostics,
+    )
+
+    await call_set_override(home, minutes=60)
+    started = home.coordinator.zone_override_started["woonkamer"]
+    found = await async_get_config_entry_diagnostics(home.hass, home.entry)
+    assert found["control_state"]["zone_override_started"] == {"woonkamer": started.isoformat()}
+
+
+# ---------------------------------------------------------------------------
+# Een herstart: de starttijd hoort mee te komen, en een oude opslag laadt ook.
+# A restart: the start time travels along, and an old store loads too.
+# ---------------------------------------------------------------------------
+
+
+async def test_the_start_time_survives_a_restart() -> None:
+    config_dir = new_config_dir()
+    home = await start_house(
+        installation(), states=cold_world(), entry_id="einde", config_dir=config_dir
+    )
+    try:
+        await call_set_override(home, minutes=60)
+        until = home.coordinator.zone_override_until["woonkamer"]
+        started = home.coordinator.zone_override_started["woonkamer"]
+    finally:
+        await stop_house(home)
+
+    again = await start_house(
+        installation(), states=cold_world(), entry_id="einde", config_dir=config_dir
+    )
+    try:
+        sensor = again.by_key(ENDS)
+        assert again.state(sensor) == sensor_state(until)
+        assert again.attributes(sensor)["start_time"] == started.isoformat()
+        assert again.coordinator.zone_override_started["woonkamer"] == started
+    finally:
+        await stop_house(again)
+
+
+async def test_an_old_store_without_a_start_time_still_loads() -> None:
+    """Een opslag van vóór deze versie draagt geen `override_started`.
+
+    De eindtijd komt gewoon terug en de sensor telt af; alleen de starttijd is
+    onbekend, dus die laten we weg in plaats van er iets voor te verzinnen.
+    """
+    config_dir = new_config_dir()
+    home = await start_house(
+        installation(), states=cold_world(), entry_id="oud", config_dir=config_dir
+    )
+    try:
+        await call_set_override(home, minutes=60)
+        until = home.coordinator.zone_override_until["woonkamer"]
+        store = Path(home.coordinator._store.path)
+    finally:
+        await stop_house(home)
+
+    stored = json.loads(store.read_text(encoding="utf-8"))
+    assert "override_started" in stored["data"]
+    del stored["data"]["override_started"]
+    store.write_text(json.dumps(stored), encoding="utf-8")
+
+    again = await start_house(
+        installation(), states=cold_world(), entry_id="oud", config_dir=config_dir
+    )
+    try:
+        sensor = again.by_key(ENDS)
+        assert again.state(sensor) == sensor_state(until)
+        assert again.coordinator.zone_override_started == {}
+        assert "start_time" not in again.attributes(sensor)
+    finally:
+        await stop_house(again)
+
+
+async def test_a_leftover_start_time_without_an_ending_is_dropped() -> None:
+    """Een starttijd zonder levende eindtijd blijft nergens staan.
+
+    Dat is wat een huis oplevert dat uit stond toen de looptijd afliep: de opslag
+    draagt de starttijd nog, maar de eindtijd is verstreken. Er valt dan niets af
+    te tellen, dus ook geen starttijd om een ring op te hangen.
+    """
+    config_dir = new_config_dir()
+    home = await start_house(
+        installation(), states=cold_world(), entry_id="rest", config_dir=config_dir
+    )
+    try:
+        await call_set_override(home, minutes=60)
+        store = Path(home.coordinator._store.path)
+    finally:
+        await stop_house(home)
+
+    stored = json.loads(store.read_text(encoding="utf-8"))
+    assert stored["data"]["override_started"]["woonkamer"]
+    lapsed = dt_util.now() - timedelta(minutes=5)
+    stored["data"]["override_until"]["woonkamer"] = lapsed.isoformat()
+    store.write_text(json.dumps(stored), encoding="utf-8")
+
+    again = await start_house(
+        installation(), states=cold_world(), entry_id="rest", config_dir=config_dir
+    )
+    try:
+        assert again.coordinator.zone_override_started == {}
+        assert "woonkamer" not in again.coordinator.zone_override_until
+        assert again.state(again.by_key(ENDS)) == "unknown"
+    finally:
+        await stop_house(again)

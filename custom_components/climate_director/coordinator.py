@@ -173,6 +173,7 @@ class CoordinatorSurface(Protocol):
     zone_overrides: dict[str, bool]
     zone_priorities: dict[str, int]
     zone_override_until: dict[str, datetime]
+    zone_override_started: dict[str, datetime]
     zone_override_when_done: dict[str, str]
     zone_override_entity: dict[str, str]
     opening_bypasses: dict[str, bool]
@@ -310,6 +311,7 @@ class ClimateDirectorCoordinator(
         self._handed_back: dict[str, date] = {}
         self.zone_priorities: dict[str, int] = {}
         self.zone_override_until: dict[str, datetime] = {}
+        self.zone_override_started: dict[str, datetime] = {}
         self.zone_override_when_done: dict[str, str] = {}
         self.zone_override_entity: dict[str, str] = {}
         self._pending_override: dict[str, Change] = {}
