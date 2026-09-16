@@ -8,9 +8,11 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 import pytest
 from harness_live import LiveHome, new_config_dir, start_house, stop_house
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 from test_campaign_live_ha import LIVING, cold_world, installation
 
@@ -616,3 +618,139 @@ async def test_a_leftover_start_time_without_an_ending_is_dropped() -> None:
         assert again.state(again.by_key(ENDS)) == "unknown"
     finally:
         await stop_house(again)
+
+
+# ---------------------------------------------------------------------------
+# Alleen onze eigen entiteiten zijn een override-doel (R34-9).
+# Only our own entities are an override target (R34-9).
+# ---------------------------------------------------------------------------
+
+
+#: De verzonnen buurman: een andere integratie met een eigen installatie, waarin
+#: iemand een entiteit heeft gemaakt die op een override-entiteit lijkt.
+#:
+#: The invented neighbour: another integration with its own installation, in
+#: which someone made an entity that looks like an override entity.
+FOREIGN_DOMAIN = "probe_integratie"
+FOREIGN_ENTRY_ID = "vreemde_installatie"
+
+
+class _ForeignEntry:
+    """Een config entry van een andere integratie, verzonnen.
+
+    Hij hoeft bijna niets te kunnen: de resolver leest alleen `.domain`, en het
+    entiteitenregister alleen `.entry_id`, `.disabled_by` en
+    `.pref_disable_new_entities`. Zo blijft de invoer hier verzonnen in plaats
+    van dat er een tweede installatie in het harnas bij komt.
+
+    An invented config entry of another integration. It has to be able to do
+    nearly nothing: the resolver only reads `.domain`, and the entity registry
+    only `.entry_id`, `.disabled_by` and `.pref_disable_new_entities`. That keeps
+    the input here invented instead of bringing a second installation into the
+    harness.
+    """
+
+    entry_id = FOREIGN_ENTRY_ID
+    domain = FOREIGN_DOMAIN
+    disabled_by = None
+    pref_disable_new_entities = False
+
+
+def _hang_a_foreign_entry(home: LiveHome, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Laat `async_get_entry` precies één vreemde installatie kennen.
+
+    Home Assistant koppelt een entiteit alleen aan een entry die het kent
+    (`Can't link entity to unknown config entry`), dus zonder deze stap is er
+    geen entiteit van een andere integratie te verzinnen. Elke andere id gaat
+    naar het origineel.
+
+    Have `async_get_entry` know exactly one foreign installation. Home Assistant
+    only links an entity to an entry it knows (`Can't link entity to unknown
+    config entry`), so without this step there is no entity of another
+    integration to invent. Every other id goes to the original.
+    """
+    original = home.hass.config_entries.async_get_entry
+    foreign = _ForeignEntry()
+
+    def _entry(entry_id: str):
+        return foreign if entry_id == foreign.entry_id else original(entry_id)
+
+    monkeypatch.setattr(home.hass.config_entries, "async_get_entry", _entry)
+
+
+def _put_in_the_registry(
+    home: LiveHome,
+    *,
+    domain: str,
+    platform: str,
+    unique_id: str,
+    entry: Any,
+) -> str:
+    """Zet een verzonnen entiteit in het echte register en geef zijn entity_id.
+
+    Het register is waar de resolver kijkt; een entiteit hoeft geen toestand te
+    hebben om erin te staan.
+
+    Put an invented entity in the real registry and return its entity_id. The
+    registry is what the resolver looks at; an entity needs no state to be in it.
+    """
+    registry = er.async_get(home.hass)
+    return registry.async_get_or_create(
+        domain,
+        platform,
+        unique_id,
+        suggested_object_id="probe",
+        config_entry=entry,
+    ).entity_id
+
+
+@pytest.mark.parametrize(
+    ("domain", "platform", "unique_id", "foreign"),
+    [
+        ("number", DOMAIN, "{entry}_zone_woonkamer_override", False),
+        ("sensor", FOREIGN_DOMAIN, "{foreign}_zone_woonkamer_override", True),
+        ("sensor", DOMAIN, "zone_woonkamer_override", False),
+        ("sensor", FOREIGN_DOMAIN, "{entry}_zone_woonkamer_override", False),
+    ],
+    ids=["ander-domein", "andere-entry", "prefix-ontbreekt", "verkeerd-platform"],
+)
+async def test_an_entity_that_only_looks_like_an_override_is_refused(
+    home: LiveHome,
+    monkeypatch: pytest.MonkeyPatch,
+    domain: str,
+    platform: str,
+    unique_id: str,
+    foreign: bool,
+) -> None:
+    """Een look-alike id van elders is een typefout, geen override-doel (R34-9).
+
+    De vier gevallen zijn precies de vier toetsen van de resolver: het
+    entiteitsdomein, de entry, de prefix en het platform. Zonder die toetsen
+    gebeurde er iets anders dan botsen: bij `ander-domein`, `prefix-ontbreekt` en
+    `verkeerd-platform` ging de aanroep gewoon door (de look-alike id matchte,
+    en de entry was de onze), en bij `andere-entry` kwam `unknown_installation`
+    met de vreemde `entry_id` erbij - een melding over de verkeerde zaak, terwijl
+    de opgegeven entiteit deze integratie niet eens toebehoort.
+
+    The four cases are exactly the resolver's four checks: the entity domain, the
+    entry, the prefix and the platform. Without those checks something other than
+    a collision happened: with `ander-domein`, `prefix-ontbreekt` and
+    `verkeerd-platform` the call simply went through (the look-alike id matched,
+    and the entry was ours), and with `andere-entry` came `unknown_installation`
+    with the foreign `entry_id` alongside it - a notice about the wrong thing,
+    while the entity given does not even belong to this integration.
+    """
+    from homeassistant.exceptions import ServiceValidationError
+
+    if foreign:
+        _hang_a_foreign_entry(home, monkeypatch)
+    target = _put_in_the_registry(
+        home,
+        domain=domain,
+        platform=platform,
+        unique_id=unique_id.format(entry=home.entry.entry_id, foreign=FOREIGN_ENTRY_ID),
+        entry=_ForeignEntry() if foreign else home.entry,
+    )
+
+    with pytest.raises(ServiceValidationError, match="not an override|geen override"):
+        await call_with_target(home, "clear_override", {}, target)

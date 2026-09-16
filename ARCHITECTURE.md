@@ -198,10 +198,17 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     plakt dat doel vóór de schemavalidatie aan de data. Een entiteit bepaalt dan
     de installatie én de zone; alleen de overrideschakelaar en de eindtijdsensor
     van deze integratie tellen, elke andere entiteit is een typefout en wordt
-    geweigerd. Wie de override uitzet — de schakelaar, of een van beide acties —
-    laat de eindtijdsensor **direct** meeschrijven: de sensor leest zijn toestand
-    van de coordinator, dus zonder die stap zou de debouncer er een seconde
-    tussen zitten en pas de volgende beslisronde de eindtijd of `unknown` tonen.
+    geweigerd. Die toets is sinds ronde 34 volledig: de entry moet bestaan en de
+    onze zijn, het platform moet dit zijn, het domein moet `sensor` of `switch`
+    zijn, en de `unique_id` moet met onze prefix beginnen én pas daarna op het
+    patroon passen. Zonder die vier krijgt een entiteit van een andere integratie
+    met een look-alike id (`zone_<x>_override`) `unknown_installation` met een
+    vreemde `entry_id` erbij, terwijl de opgegeven entiteit deze integratie niet
+    eens toebehoort. Wie de override uitzet — de schakelaar, of een van beide
+    acties — laat de eindtijdsensor **direct** meeschrijven: de sensor leest zijn
+    toestand van de coordinator, dus zonder die stap zou de debouncer er een
+    seconde tussen zitten en pas de volgende beslisronde de eindtijd of `unknown`
+    tonen.
 12. **Het bereik van een bron hangt aan de bron en noemt zones.** Een bron draagt
     `covers_zones`: de zones die hij meeverwarmt of meekoelt zodra hij draait.
     Leeg betekent *alleen de eigen zone* — het gedrag van vóór deze instelling,
@@ -1283,11 +1290,18 @@ them without changing them here first.
     sensor itself as `target.entity_id` and Home Assistant merges that target
     into the data before schema validation. An entity then settles both the
     installation and the zone; only this integration's override switch and
-    end-time sensor count, any other entity is a typo and is refused. Whoever ends
-    the override — the switch, or either action — has the end-time sensor
-    **write along at once**: the sensor reads its state from the coordinator, so
-    without that step the debouncer would sit a second in between and only the
-    next decision round would show the end time or `unknown`.
+    end-time sensor count, any other entity is a typo and is refused. That check
+    has been complete since round 34: the entry has to exist and be ours, the
+    platform has to be this one, the domain has to be `sensor` or `switch`, and
+    the `unique_id` has to start with our prefix and only then fit the pattern.
+    Without those four, an entity of another integration with a look-alike id
+    (`zone_<x>_override`) gets `unknown_installation` with a foreign `entry_id`
+    alongside it, while the entity given does not even belong to this
+    integration. Whoever ends the override — the switch, or either action — has
+    the end-time sensor **write along at once**: the sensor reads its state from
+    the coordinator, so without that step the debouncer would sit a second in
+    between and only the next decision round would show the end time or
+    `unknown`.
 12. **A source's reach hangs on the source and names zones.** A source carries
     `covers_zones`: the zones it heats or cools along with it the moment it runs.
     Empty means *its own zone only* — the behaviour from before this setting, so

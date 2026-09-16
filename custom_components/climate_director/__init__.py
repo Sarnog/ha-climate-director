@@ -110,6 +110,15 @@ _OVERRIDE_WHEN_DONE = vol.In([WHEN_DONE_TURN_OFF, WHEN_DONE_LEAVE])
 #: and that same zone's end-time sensor. Anything else is not a target.
 _OVERRIDE_TARGET = re.compile(r"^zone_(?P<zone>.+)_override(?P<sensor>_ends)?$")
 
+#: De twee entiteitsdomeinen waarin deze integratie een override-entiteit maakt.
+#: Een entiteit van een ander domein met een look-alike `unique_id` is geen doel
+#: (R34-9), hoe toevallig de id ook op het patroon past.
+#:
+#: The two entity domains in which this integration creates an override entity.
+#: An entity from another domain with a look-alike `unique_id` is not a target
+#: (R34-9), however coincidentally the id fits the pattern.
+_OVERRIDE_DOMAINS = ("sensor", "switch")
+
 _SET_OVERRIDE_FIELDS: dict[Any, Any] = {
     **_ENTRIES,
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -411,6 +420,10 @@ def _override_entity_target(
     eindtijdsensor van diezelfde zone. Al het andere is een typefout en hoort te
     botsen in plaats van stil niets te doen.
 
+    Die toets is sinds ronde 34 (R34-9) volledig: entry, platform, domein én
+    prefix moeten alle vier kloppen voordat de `unique_id` op het patroon mag
+    passen. Zie anker 11 in ARCHITECTURE.md voor waarom.
+
     The `simple-timer-card` card sends no `data` for a timestamp sensor: it puts
     the sensor itself in the call as `target.entity_id`. Home Assistant merges
     that target into the data before schema validation, so the action receives
@@ -419,20 +432,33 @@ def _override_entity_target(
     creates for an override count: a zone's override switch and that same zone's
     end-time sensor. Anything else is a typo and should collide instead of
     quietly doing nothing.
+
+    That check has been complete since round 34 (R34-9): entry, platform, domain
+    and prefix all have to hold before the `unique_id` may fit the pattern. See
+    anchor 11 in ARCHITECTURE.md for why.
     """
     registry = er.async_get(hass)
     registered = registry.async_get(entity_id)
     entry_id = registered.config_entry_id if registered is not None else None
+    entry = hass.config_entries.async_get_entry(entry_id) if entry_id else None
+    prefix = f"{entry_id}_"
     match: re.Match[str] | None = None
-    if registered is not None and entry_id is not None:
-        match = _OVERRIDE_TARGET.fullmatch(registered.unique_id.removeprefix(f"{entry_id}_"))
+    if (
+        registered is not None
+        and entry is not None
+        and entry.domain == DOMAIN
+        and registered.platform == DOMAIN
+        and registered.domain in _OVERRIDE_DOMAINS
+        and registered.unique_id.startswith(prefix)
+    ):
+        match = _OVERRIDE_TARGET.fullmatch(registered.unique_id[len(prefix) :])
     if match is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="not_an_override_entity",
             translation_placeholders={"entity": entity_id},
         )
-    entry = next(
+    loaded = next(
         (
             item
             for item in hass.config_entries.async_loaded_entries(DOMAIN)
@@ -440,7 +466,7 @@ def _override_entity_target(
         ),
         None,
     )
-    if entry is None:
+    if loaded is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="unknown_installation",
@@ -452,7 +478,7 @@ def _override_entity_target(
             translation_key="unknown_installation",
             translation_placeholders={"installation": ", ".join(wanted_entry_id)},
         )
-    return entry, match.group("zone")
+    return loaded, match.group("zone")
 
 
 def _override_targets(
