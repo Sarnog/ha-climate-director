@@ -78,10 +78,28 @@ class _Coordinator:
         self.zone_overrides: dict[str, bool] = {}
         self.opening_bypasses: dict[str, bool] = {}
         self.evaluations = 0
+        self._listener = None
 
     def async_add_listener(self, listener, _context=None):
         self._listener = listener
         return lambda: None
+
+    def async_publish_override_state(self) -> None:
+        """Stand-in: laat de luisteraars opnieuw schrijven, net als het origineel.
+
+        De echte coordinator laat hier ook de looptijd van een met de hand
+        uitgezette zone stil vervallen en werkt daarna zijn luisteraars bij
+        (R34-7); die boekhouding hangt aan `zone_override_until` en raakt de twee
+        tests hier niet. Wat de schakelaar van dit lid merkt is de tweede helft.
+
+        Stand-in: have the listeners write again, just like the real coordinator.
+        The real one also lets the duration of a hand-switched-off zone lapse
+        silently here and then updates its listeners (R34-7); that bookkeeping
+        hangs on `zone_override_until` and does not touch the two tests here.
+        What the switch notices of this member is the second half.
+        """
+        if self._listener is not None:
+            self._listener()
 
     def async_request_evaluation(self) -> None:
         self.evaluations += 1

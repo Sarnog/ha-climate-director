@@ -173,9 +173,29 @@ FUNCTION_LIMIT = 80
 # restore, where an old file without that field simply loads) and `__init__.py`
 # (the service layer accepting an entity as its target) — all three below their
 # measure.
+#
+# Ronde 34 (R34-7): `coordinator.py` 1842 → 1852 door de declaratie van
+# `async_update_listeners` in het `CoordinatorSurface`-protocol, met de reden
+# erbij waarom die geen kale `...`-stub is: de mixin `overrides.py` laat de
+# eindtijdsensor na het uitzetten van de schakelaar, `set_override` en
+# `clear_override` direct meeschrijven in plaats van pas bij de volgende
+# beslisronde, en mypy moet die methode daar kennen. De methode zelf komt van
+# `DataUpdateCoordinator`; een lege stub zou de concrete klasse abstract maken.
+# De reparatie woont in `overrides.py` (één publishmethode voor de drie paden) en
+# `switch.py` (de schakelaar roept hem aan) — allebei onder hun maat.
+#
+# Round 34 (R34-7): `coordinator.py` 1842 → 1852 through the declaration of
+# `async_update_listeners` in the `CoordinatorSurface` protocol, with the reason
+# alongside why it is no bare `...` stub: the `overrides.py` mixin has the
+# end-time sensor write along at once after switching the override off,
+# `set_override` and `clear_override`, instead of only at the next decision
+# round, and mypy has to know that method there. The method itself comes from
+# `DataUpdateCoordinator`; an empty stub would make the concrete class abstract.
+# The repair lives in `overrides.py` (one publish method for the three paths) and
+# `switch.py` (the switch calls it) — both below their measure.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2143,
-    "coordinator.py": 1842,
+    "coordinator.py": 1852,
     "engine/decide.py": 1677,
     "config_flow.py": 1451,
     "schemas.py": 900,

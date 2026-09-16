@@ -134,6 +134,7 @@ class _OverridesMixin(_CoordinatorBase):
 
         self._async_save_state()
         self._override_wake_at_first_expiry()
+        self.async_publish_override_state()
         self.async_request_evaluation()
         return True
 
@@ -153,7 +154,44 @@ class _OverridesMixin(_CoordinatorBase):
         self._pending_override.pop(zone_id, None)
         self._async_save_state()
         self._override_wake_at_first_expiry()
+        self.async_publish_override_state()
         self.async_request_evaluation()
+
+    @callback
+    def async_publish_override_state(self) -> None:
+        """Laat alles wat aan de override hangt direct volgen (R34-7).
+
+        De eindtijdsensor leest `zone_overrides`, `zone_override_until` en
+        `zone_override_started` rechtstreeks van deze coordinator, maar een
+        entiteit publiceert pas als de coordinator zijn luisteraars bijwerkt - en
+        dat gebeurde tot nu toe alleen aan het eind van een beslisronde. De
+        debouncer wacht een seconde, dus na het uitzetten van de schakelaar,
+        `set_override` of `clear_override` bleef de sensor staan tot die ronde
+        langskwam (ronde 34, R34-7).
+
+        Eén mechanisme voor die drie paden, en géén eigen listener op de sensor:
+        dat zou een vierde plek zijn die iemand kan vergeten. De looptijd van een
+        zone die met de hand is uitgezet hoort hier ook stil te vervallen - de
+        schakelaar schrijft alleen `zone_overrides`, en zonder deze stap blijft de
+        starttijd tot de volgende ronde in de opslag en op het scherm staan
+        (anker 11).
+
+        The end-time sensor reads `zone_overrides`, `zone_override_until` and
+        `zone_override_started` straight from this coordinator, but an entity only
+        publishes once the coordinator updates its listeners - and until now that
+        happened only at the end of a decision round. The debouncer waits a
+        second, so after turning the switch off, `set_override` or
+        `clear_override` the sensor stayed put until that round came by (round 34,
+        R34-7).
+
+        One mechanism for those three paths, and no listener of its own on the
+        sensor: that would be a fourth place somebody can forget. The duration of
+        a zone switched off by hand lapses here too - the switch only writes
+        `zone_overrides`, and without this step the start time stays in storage
+        and on screen until the next round (anchor 11).
+        """
+        self._drop_lapsed_override_timers()
+        self.async_update_listeners()
 
     def override_source(self, zone_id: str, hvac_mode: str) -> Source | None:
         """Return the zone's source for `hvac_mode`, or None when there is none.

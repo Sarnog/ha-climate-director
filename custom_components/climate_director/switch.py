@@ -173,7 +173,20 @@ class ZoneOverrideSwitch(_DirectorSwitch):
         self._attr_translation_placeholders = {"zone": zone.name if zone else zone_id}
 
     def _push(self) -> None:
+        """Zet de stand en laat de rest direct volgen (R34-7).
+
+        De schakelaar schrijft alleen `zone_overrides`; de coordinator laat de
+        looptijd van een handmatig uitgezette zone stil vervallen en werkt zijn
+        luisteraars bij, zodat de eindtijdsensor meteen `unknown` toont in plaats
+        van pas bij de volgende beslisronde (de debouncer wacht een seconde).
+
+        The switch only writes `zone_overrides`; the coordinator lets the duration
+        of a hand-switched-off zone lapse silently and updates its listeners, so
+        the end-time sensor shows `unknown` at once instead of only at the next
+        decision round (the debouncer waits a second).
+        """
         self.coordinator.zone_overrides[self._zone_id] = self._is_on
+        self.coordinator.async_publish_override_state()
 
     def _handle_coordinator_update(self) -> None:
         """Follow the coordinator, and write any lapse away when it lets go.
@@ -193,9 +206,24 @@ class ZoneOverrideSwitch(_DirectorSwitch):
         otherwise, it would read on while the zone has long since rejoined - and
         worse: a restart restores that `on` back into the coordinator, reviving a
         handover that was gone.
+
+        Geschreven wordt er alleen bij een **echte** verandering (R34-7). Sinds de
+        override zijn stand direct publiceert komt deze tak ook langs op het
+        moment dat de schakelaar zelf net schreef, en dan is er niets veranderd:
+        `async_write_ha_state` zou daar een `state_reported` van maken en geen
+        `state_changed`, dus dat is ruis. Zo blijft er precies één schrijfactie
+        per echte overgang over.
+
+        This writes only on a **real** change (R34-7). Since the override
+        publishes its state at once, this branch also comes past the moment the
+        switch itself just wrote, and then nothing has changed: `async_write_ha_state`
+        would make a `state_reported` of that and no `state_changed`, so it is
+        noise. That leaves exactly one write per real transition.
         """
-        self._is_on = self.coordinator.zone_overrides.get(self._zone_id, False)
-        self.async_write_ha_state()
+        enabled = self.coordinator.zone_overrides.get(self._zone_id, False)
+        if enabled != self._is_on:
+            self._is_on = enabled
+            self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool:

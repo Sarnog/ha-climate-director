@@ -395,10 +395,11 @@ class ZoneOverrideEndsSensor(ClimateDirectorEntity, SensorEntity):
     `minutes`, een schakelaar die iemand met de hand aanzette, of een override
     die al afgelopen of geannuleerd is.
 
-    De toestand volgt de coordinator en niet de schakelaar. Elke set, clear,
-    afloop en handmatige uitzetting vraagt een beslisronde aan, en die publiceert
-    het plan waarna deze sensor opnieuw schrijft; een eigen listener is dus niet
-    nodig.
+    De toestand volgt de coordinator en niet de schakelaar. Het zetten, het
+    annuleren en het met de hand uitzetten laten deze sensor **direct**
+    meeschrijven (`coordinator.async_publish_override_state`, R34-7); bij het
+    aflopen gebeurt dat via de beslisronde die het plan publiceert. Een eigen
+    listener heeft hij dus niet nodig.
 
     A timed override is given by hand and should be visible. This sensor carries
     the end time as its state and the start time as an attribute, so a dashboard
@@ -407,10 +408,11 @@ class ZoneOverrideEndsSensor(ClimateDirectorEntity, SensorEntity):
     duration is running — an override without `minutes`, a switch somebody turned
     on by hand, or one that has already expired or been cleared.
 
-    The state follows the coordinator rather than the switch. Every set, clear,
-    expiry and hand-off asks for a decision round, and that round publishes the
-    plan after which this sensor writes again; so it needs no listener of its
-    own.
+    The state follows the coordinator rather than the switch. Setting,
+    cancelling and switching the override off by hand have this sensor **write
+    along at once** (`coordinator.async_publish_override_state`, R34-7); on
+    expiry that happens through the decision round that publishes the plan. So it
+    needs no listener of its own.
     """
 
     # Een bedieningsentiteit voor het dashboard, net als de overrideschakelaar:

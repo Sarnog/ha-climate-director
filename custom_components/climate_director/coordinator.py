@@ -190,6 +190,16 @@ class CoordinatorSurface(Protocol):
     def entry(self) -> ClimateDirectorEntry: ...
 
     def async_request_evaluation(self) -> None: ...
+    # Komt van `DataUpdateCoordinator` en wordt hier nergens overschreven. Een
+    # kale `...`-stub zou de concrete klasse abstract maken zodra een mixin van
+    # dit protocol erft, want hij schaduwt de echte implementatie in de MRO.
+    #
+    # Comes from `DataUpdateCoordinator` and is overridden nowhere here. A bare
+    # `...` stub would make the concrete class abstract as soon as a mixin
+    # inherits this protocol, since it shadows the real implementation in the MRO.
+    def async_update_listeners(self) -> None:
+        return None
+
     def _async_save_state(self) -> None: ...
     def _live_preconditions(self) -> dict[str, datetime]: ...
     def _wake_at_the_first_expiry(self) -> None: ...

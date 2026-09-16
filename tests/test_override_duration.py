@@ -249,8 +249,23 @@ async def call_with_target(home: LiveHome, service: str, data: dict, entity_id: 
 
 
 async def test_the_end_time_sensor_shows_the_running_override(home: LiveHome) -> None:
-    """De toestand is de eindtijd, met de starttijd als attribuut."""
-    await call_set_override(home, minutes=60)
+    """De toestand is de eindtijd, met de starttijd als attribuut.
+
+    Géén `evaluate()` erna: de actie laat de sensor zelf meeschrijven (R34-7).
+    Met een beslisronde ertussen zou deze test de debouncer meten in plaats van
+    de eigenschap - de ronde komt pas een seconde later langs.
+    """
+    await home.call(
+        DOMAIN,
+        "set_override",
+        {
+            "zone_id": "woonkamer",
+            "hvac_mode": "cool",
+            "temperature": 18.5,
+            "minutes": 60,
+            "when_done": "turn_off",
+        },
+    )
     sensor = home.by_key(ENDS)
     until = home.coordinator.zone_override_until["woonkamer"]
 
@@ -323,12 +338,12 @@ async def test_the_end_time_disappears_when_the_override_lapses(
 async def test_the_end_time_disappears_when_the_switch_goes_off_by_hand(home: LiveHome) -> None:
     """Met de hand uitzetten laat de looptijd stil vervallen - en de sensor mee.
 
-    De schakelaar schrijft alleen `zone_overrides`; de ronde daarna ruimt de
-    looptijd op en publiceert het plan, waarna de sensor opnieuw schrijft.
+    Zonder beslisronde erna: de schakelaar laat alles wat aan de override hangt
+    direct volgen (R34-7). De looptijd van een handmatig uitgezette zone vervalt
+    dus meteen, en niet pas wanneer de debouncer een seconde later langskomt.
     """
     await call_set_override(home, minutes=60)
     await home.call("switch", "turn_off", {"entity_id": home.by_key(OVERRIDE)})
-    await home.evaluate()
 
     assert home.state(home.by_key(ENDS)) == "unknown"
     assert home.coordinator.zone_override_started == {}
@@ -336,10 +351,14 @@ async def test_the_end_time_disappears_when_the_switch_goes_off_by_hand(home: Li
 
 
 async def test_clear_override_makes_the_end_time_unknown(home: LiveHome) -> None:
+    """De annuleerknop van de kaart: de sensor als doel, en meteen `unknown` (R34-7)."""
     await call_set_override(home, minutes=60)
-    await home.call(DOMAIN, "clear_override", {"zone_id": "woonkamer"})
-    await home.evaluate()
-    assert home.state(home.by_key(ENDS)) == "unknown"
+    sensor = home.by_key(ENDS)
+    await call_with_target(home, "clear_override", {}, sensor)
+
+    assert home.state(sensor) == "unknown"
+    assert home.coordinator.zone_override_started == {}
+    assert home.coordinator.zone_override_until == {}
 
 
 async def test_the_diagnostics_show_the_start_time(home: LiveHome) -> None:
