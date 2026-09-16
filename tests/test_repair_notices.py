@@ -71,6 +71,24 @@ Round 35 (R35-1): the match itself now lives in `tests/_ast_helpers.py`. Four
 readers in the suite use the same definition there — attribute and bare name,
 with resolved import aliases — instead of four of their own `ast.Attribute`
 variants.
+
+Ronde 36 (R36-1): de match kent nog steeds geen aanroep onder een eigen naam
+(`_create = ir.async_create_issue`), en een derde spelling in de helper zou
+alleen de vólgende spelling openlaten. Daarom staat er sinds deze ronde een
+**structurele afspraak** naast: `test_the_issue_registry_is_only_used_as_ir` eist
+dat `issue_registry` alleen als `ir` geïmporteerd en alleen rechtstreeks
+aangeroepen wordt — geen alias, geen `functools.partial`, geen callback, geen
+`getattr`. De runtime-kant staat in `tests/test_repair_notices_live.py`, dat de
+échte meldingsfuncties omhult en geen enkele regel bron leest.
+
+Round 36 (R36-1): the match still does not know a call under its own name
+(`_create = ir.async_create_issue`), and a third spelling in the helper would
+only leave the *next* spelling open. Hence a **structural agreement** stands
+beside it since this round: `test_the_issue_registry_is_only_used_as_ir` demands
+that `issue_registry` is imported only as `ir` and called only directly — no
+alias, no `functools.partial`, no callback, no `getattr`. The runtime side lives
+in `tests/test_repair_notices_live.py`, which wraps the real notice functions and
+reads no source line.
 """
 
 from __future__ import annotations
@@ -78,7 +96,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-from _ast_helpers import ISSUE_CALLS, issue_call_names, issue_calls
+from _ast_helpers import ISSUE_CALLS, ISSUE_MODULE, issue_call_names, issue_calls
 
 PACKAGE = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
 
@@ -374,4 +392,165 @@ def test_every_issue_id_can_be_followed() -> None:
     assert not offenders, (
         "deze meldingen gebruiken een issue-id dat de bewaking niet kan volgen en "
         "vallen dus stil buiten de unload-controle: " + "; ".join(offenders)
+    )
+
+
+# ---------------------------------------------------------------------------
+# De vorm van de issue-registry / the shape of the issue registry (R36-1)
+# ---------------------------------------------------------------------------
+
+
+#: De enige naam waaronder `issue_registry` in dit pakket geïmporteerd mag worden.
+#: De bewaking hierboven leest de **bron**, en deze afspraak maakt dat de enige
+#: toegestane vorm ook de enige bestaande is: `ir.async_create_issue(...)`,
+#: rechtstreeks aangeroepen. Een alias op moduleniveau (`_create =
+#: ir.async_create_issue`), een `getattr`, een `functools.partial` of een
+#: doorgegeven functie haalt de aanroep uit die vorm, en dan is de bewaking stil
+#: groen over een melding die hij nooit ziet. Dat is precies wat ronde 35
+#: (R35-1) mat: `_create = ir.async_create_issue` plus een aanroep eronder liet
+#: de hele suite groen.
+#:
+#: The only name under which `issue_registry` may be imported in this package.
+#: The guard above reads the **source**, and this agreement makes the only
+#: allowed shape the only existing one: `ir.async_create_issue(...)`, called
+#: directly. A module-level alias (`_create = ir.async_create_issue`), a
+#: `getattr`, a `functools.partial` or a passed function takes the call out of
+#: that shape, and then the guard is quietly green about a notice it never sees.
+#: That is exactly what round 35 (R35-1) measured.
+ISSUE_ALIAS = "ir"
+
+#: De bovenliggende module waaruit de registry geïmporteerd hoort te worden.
+#:
+#: The parent module the registry should be imported from.
+ISSUE_PARENT = "homeassistant.helpers"
+
+
+def _issue_aliases(tree: ast.Module) -> set[str]:
+    """Elke naam die in dit bestand naar de issue-registry wijst.
+
+    Every name in this file that points at the issue registry.
+    """
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module == ISSUE_PARENT:
+            for alias in node.names:
+                if alias.name == "issue_registry":
+                    names.add(alias.asname or alias.name)
+    return names
+
+
+def issue_registry_form_problems(root: Path = PACKAGE) -> list[str]:
+    """Elke schrijfwijze waarin de bewaking van hierboven een aanroep kan missen.
+
+    Drie dingen zijn verboden, alle drie omdat ze de aanroep uit de vorm halen
+    waarop `issue_calls` matcht:
+
+    1. een andere import dan `from homeassistant.helpers import issue_registry as
+       ir` — de functie rechtstreeks importeren (`from …issue_registry import
+       async_create_issue`), de module onder een andere naam, of de module
+       helemaal uitschrijven;
+    2. `ir.async_create_issue` of `ir.async_delete_issue` ergens anders dan als
+       het doel van een directe aanroep: aan een naam gegeven, in een
+       `functools.partial` gestopt, als callback doorgegeven;
+    3. dezelfde functie via `getattr(ir, "async_create_issue")` opgehaald.
+
+    Elke andere vorm is te bewaken: `ir.async_create_issue(...)` en
+    `ir.async_delete_issue(...)` staan letterlijk in de bron, en daar leest
+    `issue_calls` ze. Een test die deze afspraak handhaaft laat de rand niet
+    bestaan in plaats van hem te repareren.
+
+    Every spelling in which the guard above can miss a call. Three things are
+    forbidden, all three because they take the call out of the shape
+    `issue_calls` matches: another import than `from homeassistant.helpers import
+    issue_registry as ir`; `ir.async_create_issue` or `ir.async_delete_issue`
+    anywhere other than as the target of a direct call; and the same function
+    fetched through `getattr(ir, "async_create_issue")`. Every other shape can be
+    guarded: the direct calls stand literally in the source, and that is where
+    `issue_calls` reads them. A test enforcing this agreement makes the edge not
+    exist instead of repairing it.
+    """
+    problems: list[str] = []
+    for path, tree in _parse(root):
+        parents = {
+            child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)
+        }
+        aliases = _issue_aliases(tree)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                if node.module == ISSUE_MODULE:
+                    problems.append(
+                        f"{path.name}:{node.lineno}: `{ISSUE_MODULE}` wordt rechtstreeks "
+                        f"geïmporteerd; alleen `from {ISSUE_PARENT} import issue_registry "
+                        f"as {ISSUE_ALIAS}` is te bewaken"
+                    )
+                elif node.module == ISSUE_PARENT:
+                    for alias in node.names:
+                        if alias.name == "issue_registry" and alias.asname != ISSUE_ALIAS:
+                            problems.append(
+                                f"{path.name}:{node.lineno}: `issue_registry` wordt als "
+                                f"`{alias.asname or alias.name}` geïmporteerd; alleen "
+                                f"`as {ISSUE_ALIAS}` is te bewaken"
+                            )
+            elif isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name.split(".")[-1] == "issue_registry":
+                        problems.append(
+                            f"{path.name}:{node.lineno}: `{alias.name}` wordt rechtstreeks "
+                            f"geïmporteerd; alleen `from {ISSUE_PARENT} import issue_registry "
+                            f"as {ISSUE_ALIAS}` is te bewaken"
+                        )
+            elif isinstance(node, ast.Attribute) and node.attr in ISSUE_CALLS:
+                parent = parents.get(node)
+                if isinstance(parent, ast.Call) and parent.func is node:
+                    continue
+                problems.append(
+                    f"{path.name}:{node.lineno}: {ast.unparse(node)} wordt aan een naam "
+                    f"gegeven of als argument doorgegeven; alleen een directe aanroep "
+                    f"`{ISSUE_ALIAS}.{node.attr}(...)` is te bewaken"
+                )
+            elif (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == "getattr"
+                and len(node.args) >= 2
+                and isinstance(node.args[0], ast.Name)
+                and node.args[0].id in aliases
+                and isinstance(node.args[1], ast.Constant)
+                and node.args[1].value in ISSUE_CALLS
+            ):
+                problems.append(
+                    f"{path.name}:{node.lineno}: {ast.unparse(node)} haalt de aanroep via "
+                    f"`getattr` op; alleen `{ISSUE_ALIAS}.{node.args[1].value}(...)` is te "
+                    f"bewaken"
+                )
+    return problems
+
+
+def test_the_issue_registry_is_only_used_as_ir() -> None:
+    """De enige bestaande schrijfwijze is ook de enige die de bewaking dekt (R36-1).
+
+    De meldingsbewaking hierboven leest de bron, dus elke vorm die ze niet kent
+    is een gat. In plaats van een derde spelling aan `_ast_helpers` toe te
+    voegen — waardoor de volgende spelling de volgende ronde wordt — legt deze
+    afspraak vast dat `issue_registry` alleen als `ir` geïmporteerd wordt en
+    alleen rechtstreeks aangeroepen. Dan bestaat de rand niet meer, en de
+    runtime-kant staat in `tests/test_repair_notices_live.py`: daar worden de
+    échte meldingsfuncties omhuld en moet elke melding die een huis aanmaakt bij
+    het uitladen ook weer gewist zijn — zonder één regel bron te lezen.
+
+    The only existing spelling is also the only one the guard covers (R36-1).
+    The notice guard above reads the source, so every shape it does not know is a
+    gap. Instead of adding a third spelling to `_ast_helpers` — which would make
+    the next spelling the next round — this agreement pins down that
+    `issue_registry` is imported only as `ir` and called only directly. Then the
+    edge no longer exists, and the runtime side stands in
+    `tests/test_repair_notices_live.py`: there the real notice functions are
+    wrapped and every notice a house raises must be cleared again on unload —
+    without reading a single source line.
+    """
+    problems = issue_registry_form_problems()
+    assert problems == [], (
+        "deze schrijfwijzen halen een meldingsaanroep uit de vorm die de bewaking "
+        "hierboven leest, en dan is die bewaking stil groen over een melding die ze "
+        "niet ziet:\n" + "\n".join(problems)
     )

@@ -36,6 +36,7 @@ from coverage.data import CoverageData
 from test_repair_notices import (
     created_issue_ids,
     deleted_ids_by_function,
+    issue_registry_form_problems,
     unfollowable_issue_ids,
 )
 from test_the_border import border_offenders
@@ -1156,3 +1157,110 @@ class TestTheNoticeCallMatch:
             },
         )
         assert created_issue_ids(root=root) == {"_probe_issue_id"}
+
+
+class TestTheIssueRegistryForm:
+    """De enige bestaande vorm van de registry is de enige die de bewaking dekt.
+
+    The only existing shape of the registry is the only one the guard covers.
+
+    De meldingsbewaking leest de bron; een aanroep onder een eigen naam
+    (`_create = ir.async_create_issue`), via `getattr` of in een
+    `functools.partial` glipt er langs (ronde 35, R35-1). In plaats van een derde
+    spelling aan `_ast_helpers` toe te voegen legt `issue_registry_form_problems`
+    vast dat zulke vormen niet bestaan. Deze tests pinnen die afspraak op
+    **verzonnen** invoer vast: elke verboden vorm meldt zich, de toegestane vorm
+    niet.
+
+    The notice guard reads the source; a call under its own name
+    (`_create = ir.async_create_issue`), through `getattr` or inside a
+    `functools.partial` slips past it (round 35, R35-1). Instead of adding a third
+    spelling to `_ast_helpers`, `issue_registry_form_problems` pins down that such
+    shapes do not exist. These tests pin that agreement on **invented** input:
+    every forbidden shape reports itself, the allowed one does not.
+    """
+
+    @staticmethod
+    def _problems(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, body: str, name: str = "regpkg"
+    ) -> list[str]:
+        root = _write_package(monkeypatch, tmp_path, name, {"problems.py": body})
+        return issue_registry_form_problems(root=root)
+
+    def test_the_canonical_form_is_allowed(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """`from … import issue_registry as ir` plus een directe aanroep is goed."""
+        assert (
+            self._problems(
+                monkeypatch,
+                tmp_path,
+                "from homeassistant.helpers import issue_registry as ir\n"
+                "\n"
+                "\n"
+                "async def report(hass, domain):\n"
+                '    ir.async_create_issue(hass, domain, "probe")\n'
+                '    ir.async_delete_issue(hass, domain, "probe")\n',
+            )
+            == []
+        )
+
+    def test_a_direct_function_import_is_refused(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """De functie rechtstreeks importeren haalt de aanroep uit de vorm."""
+        problems = self._problems(
+            monkeypatch,
+            tmp_path,
+            "from homeassistant.helpers.issue_registry import async_create_issue\n",
+        )
+        assert problems and "rechtstreeks" in problems[0]
+
+    def test_another_alias_for_the_module_is_refused(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """De module onder een andere naam importeren mag niet."""
+        problems = self._problems(
+            monkeypatch,
+            tmp_path,
+            "from homeassistant.helpers import issue_registry as x\n",
+        )
+        assert problems and "als `x`" in problems[0]
+
+    def test_a_module_level_alias_is_refused(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """`_create = ir.async_create_issue` is precies het gat van ronde 35."""
+        problems = self._problems(
+            monkeypatch,
+            tmp_path,
+            "from homeassistant.helpers import issue_registry as ir\n"
+            "\n"
+            "_create = ir.async_create_issue\n",
+        )
+        assert problems and "aan een naam gegeven" in problems[0]
+
+    def test_a_partial_is_refused(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        """Een `functools.partial` rond de meldingsfunctie mag niet."""
+        problems = self._problems(
+            monkeypatch,
+            tmp_path,
+            "import functools\n"
+            "from homeassistant.helpers import issue_registry as ir\n"
+            "\n"
+            "_create = functools.partial(ir.async_create_issue, None, None)\n",
+        )
+        assert any("als argument doorgegeven" in problem for problem in problems)
+
+    def test_a_getattr_is_refused(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        """`getattr(ir, "async_create_issue")` mag niet."""
+        problems = self._problems(
+            monkeypatch,
+            tmp_path,
+            "from homeassistant.helpers import issue_registry as ir\n"
+            "\n"
+            "\n"
+            "async def report(hass, domain):\n"
+            '    getattr(ir, "async_create_issue")(hass, domain, "probe")\n',
+        )
+        assert any("via `getattr`" in problem for problem in problems)

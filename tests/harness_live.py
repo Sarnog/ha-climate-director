@@ -341,6 +341,7 @@ async def start_house(
     config_dir: str | None = None,
     appliance: str | None = None,
     unit_system: Any | None = None,
+    watch_events: bool = True,
 ) -> LiveHome:
     """Return a running Home Assistant with this installation loaded.
 
@@ -351,11 +352,21 @@ async def start_house(
     `unit_system` is optioneel en wordt gezet vóór de entry opgezet wordt, zodat
     de coordinator de eenheid van meet af aan leest.
 
+    `watch_events` zet de eigen gebeurtenissenrecorder van dit harnas aan; die
+    luistert ook naar een geweigerd vooruit-verzoek. Een test die de
+    luistermelding (`precondition_unwatched`) wil zien zet hem uit, want die
+    melding gaat juist over het ontbreken van een luisteraar.
+
     States are set before the entry is set up, so the first decision sees a full
     world - just as on a restart of a house already running.
 
     `unit_system` is optional and is applied before the entry is set up, so the
     coordinator reads the unit from the start.
+
+    `watch_events` turns on this harness's own event recorder; it listens for a
+    refused pre-conditioning request too. A test that wants to see the listener
+    notice (`precondition_unwatched`) turns it off, since that notice is exactly
+    about a missing listener.
     """
     hass = HomeAssistant(config_dir or new_config_dir())
     if unit_system is not None:
@@ -450,7 +461,8 @@ async def start_house(
     home = LiveHome(hass, entry)
     home.appliance = dict(APPLIANCE_TYPES[appliance or DEFAULT_APPLIANCE])
     _register_climate(home)
-    _watch_events(home)
+    if watch_events:
+        _watch_events(home)
 
     for entity_id, (state, attributes) in (states or {}).items():
         hass.states.async_set(entity_id, state, attributes)
