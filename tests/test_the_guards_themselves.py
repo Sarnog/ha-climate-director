@@ -31,6 +31,7 @@ from conftest import (
     notice_key_pair_error,
     notice_title_error,
 )
+from coverage import Coverage
 from coverage.data import CoverageData
 from test_repair_notices import (
     created_issue_ids,
@@ -858,6 +859,94 @@ class TestTheCoverageGate:
         assert "\n" in hint
         assert len([line for line in hint.splitlines() if line.strip()]) >= 5
         assert "NAMED_EXCLUSIONS" in hint
+
+
+class TestTheMeasurementNextToATestStaysUntouched:
+    """Een test raakt de dekkingsmeting naast zich niet aan (ronde 36, R36-4).
+
+    `test_reachable_branches_deep.py::test_every_line_outside_the_measurement_has_a_name`
+    bouwde een `Coverage()` zonder `data_file`, en dat wijst naar het
+    standaardbestand `.coverage`. `hidden_lines()` roept `analysis2()` aan, en
+    gemeten liet dat het bestaande `.coverage` leeg achter: 39 → 0 gemeten
+    bestanden, waarna `coverage report` "No data to report" zei en de poort "de
+    meting is leeg". `Coverage` beschrijft `data_file=None` zelf als "geen
+    gegevensbestand"; dan wordt er niets gelezen en niets geschreven.
+
+    Deze test verzet de map naar `tmp_path`, maakt daar een echt meetbestand
+    onder de standaardnaam `.coverage`, en eist dat zowel de functie onder
+    bewaking als de bewaringstest zelf dat bestand ongemoeid laten — grootte én
+    `measured_files()` vóór en ná gelijk. Wie de test terugzet op `Coverage()`
+    maakt deze test rood, en dat is precies de bedoeling: de meting waar een test
+    naast staat hoort hij niet aan te raken.
+
+    A test does not touch the coverage measurement next to it (round 36, R36-4).
+    `test_reachable_branches_deep.py::test_every_line_outside_the_measurement_has_a_name`
+    built a `Coverage()` without `data_file`, which points at the default
+    `.coverage`. `hidden_lines()` calls `analysis2()`, and measured, that left the
+    existing `.coverage` empty: 39 → 0 measured files, after which
+    `coverage report` said "No data to report" and the gate "the measurement is
+    empty". `Coverage` itself describes `data_file=None` as "no data file at
+    all"; then nothing is read and nothing is written.
+
+    This test moves the working directory to `tmp_path`, creates a real
+    measurement there under the default name `.coverage`, and demands that both
+    the function under guard and the guard test itself leave that file alone —
+    size and `measured_files()` equal before and after. Reverting the test to
+    `Coverage()` turns this test red, which is exactly the point: a test should
+    not touch the measurement it stands next to.
+    """
+
+    @staticmethod
+    def _measurement(path: Path, measured: dict[str, set[int]]) -> Path:
+        """Schrijf een echt meetbestand op `path`.
+
+        Write a real measurement file at `path`.
+        """
+        data = CoverageData(basename=str(path))
+        data.add_lines(measured)
+        data.write()
+        return path
+
+    @staticmethod
+    def _fingerprint(path: Path) -> tuple[int, set[str]]:
+        """Grootte en gemeten bestanden van een meetbestand, alleen-lezen.
+
+        Size and measured files of a measurement file, read-only.
+        """
+        data = CoverageData(basename=str(path))
+        data.read()
+        return path.stat().st_size, set(data.measured_files())
+
+    def test_a_fabricated_measurement_survives_the_whitelist_guard(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        measured = tmp_path / "measured.py"
+        measured.write_text("x = 1\n", encoding="utf-8")
+        # Het standaarddatabestand heet in de map waarin je staat `.coverage`, dus
+        # verzetten we de map: dan is dit verzonnen bestand precies degene die
+        # `Coverage()` zou aanraken.
+        #
+        # The default data file is called `.coverage` in the directory you stand
+        # in, so we move there: this invented file is then exactly the one
+        # `Coverage()` would touch.
+        monkeypatch.chdir(tmp_path)
+        data_path = self._measurement(tmp_path / ".coverage", {str(measured): {1}})
+        before = self._fingerprint(data_path)
+        assert before[1] == {str(measured)}, "het verzonnen meetbestand is niet gevuld"
+
+        coverage_gate.hidden_lines(Coverage(data_file=None), coverage_gate.PACKAGE)
+        assert self._fingerprint(data_path) == before, (
+            "de functie onder bewaking raakt de meting naast zich aan"
+        )
+
+        from test_reachable_branches_deep import (
+            test_every_line_outside_the_measurement_has_a_name,
+        )
+
+        test_every_line_outside_the_measurement_has_a_name()
+        assert self._fingerprint(data_path) == before, (
+            "de bewaringstest zelf raakt de meting naast zich aan"
+        )
 
 
 class TestTheRepairNoticeGuard:

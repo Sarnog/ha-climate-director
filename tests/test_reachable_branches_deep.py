@@ -644,6 +644,16 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
     hangt aan het bestand en het patroon, niet aan wat er gedraaid is. Zonder
     enige uitsluiting zou deze test niets meten, en dat is dan ook een fout.
 
+    Ronde 36 (R36-4): die meting krijgt `data_file=None` mee, en dat is geen
+    detail. `Coverage()` zonder dat argument wijst naar het standaardbestand
+    `.coverage`, en `hidden_lines()` roept `analysis2()` aan; gemeten liet dat het
+    bestaande `.coverage` leeg achter (39 → 0 gemeten bestanden), waarna
+    `coverage report` en de poort "de meting is leeg" meldden. `Coverage` zelf
+    beschrijft `data_file=None` als "geen gegevensbestand": dan wordt er niets
+    gelezen en niets geschreven. Een test hoort de meting waar hij naast staat
+    niet aan te raken; `test_the_guards_themselves.py` pint dat met een verzonnen
+    meetbestand vast.
+
     Every line that falls outside the measurement has a name (round 34, R34-2).
     The gate (`script/coverage_gate.py`) can only see what coverage is given, and
     coverage keeps three kinds of lines out of the count on a pattern. A pattern
@@ -654,8 +664,18 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
     That measurement needs no data file — what coverage excludes hangs on the file
     and the pattern, not on what ran. Without any exclusion this test would
     measure nothing, and that too is an error.
+
+    Round 36 (R36-4): that measurement takes `data_file=None`, and that is no
+    detail. `Coverage()` without that argument points at the default
+    `.coverage`, and `hidden_lines()` calls `analysis2()`; measured, that left
+    the existing `.coverage` empty (39 → 0 measured files), after which
+    `coverage report` and the gate said "the measurement is empty". `Coverage`
+    itself describes `data_file=None` as "no data file at all": then nothing is
+    read and nothing is written. A test should not touch the measurement next to
+    it; `test_the_guards_themselves.py` pins that down with an invented
+    measurement.
     """
-    hidden = coverage_gate.hidden_lines(Coverage(), PACKAGE)
+    hidden = coverage_gate.hidden_lines(Coverage(data_file=None), PACKAGE)
     assert hidden, "de meting sluit geen enkele regel uit, dus deze test meet niets"
     assert coverage_gate.exclusion_problems(hidden, PACKAGE) == []
 
