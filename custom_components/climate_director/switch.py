@@ -78,7 +78,20 @@ class _DirectorSwitch(ClimateDirectorEntity, SwitchEntity, RestoreEntity):
         self._is_on = self._default_on
 
     async def async_added_to_hass(self) -> None:
-        """Restore the saved state before the first decision is made."""
+        """Restore the saved state before the first decision is made.
+
+        De stand gaat hier de coordinator in, maar er wordt niet gepubliceerd: bij
+        het opstarten publiceert alleen de eerste beslissing. Tot ronde 35
+        publiceerde elke zoneschakelaar hier, dus publiceerde een huis met twee
+        zones drie keer voordat er iets besloten was - twee keer om niets en één
+        keer echt (ronde 35, R35-8).
+
+        The state goes into the coordinator here, but nothing is published: at
+        startup only the first decision publishes. Until round 35 every zone
+        switch published here, so a two-zone house published three times before
+        anything had been decided - twice for nothing and once for real (round 35,
+        R35-8).
+        """
         await super().async_added_to_hass()
         last = await self.async_get_last_state()
         if last is not None and last.state in ("on", "off"):
@@ -101,12 +114,35 @@ class _DirectorSwitch(ClimateDirectorEntity, SwitchEntity, RestoreEntity):
     async def _set(self, value: bool) -> None:
         self._is_on = value
         self._push()
+        self._publish()
         self.async_write_ha_state()
         self.coordinator.async_request_evaluation()
 
     def _push(self) -> None:
-        """Write this switch's state into the coordinator."""
+        """Write this switch's state into the coordinator, without publishing.
+
+        Publiceert bewust niet: bij een wijziging door de gebruiker doet
+        `_publish` dat, en bij het opstarten de eerste beslissing (ronde 35,
+        R35-8). Een schakelaar is invoer voor de beslissing, geen uitvoer, dus het
+        herstellen van zijn stand hoeft de rest van het huis niet wakker te maken.
+
+        Deliberately does not publish: on a change by the user `_publish` does
+        that, and at startup the first decision does (round 35, R35-8). A switch is
+        input to the decision, not output, so restoring its state need not wake up
+        the rest of the house.
+        """
         raise NotImplementedError
+
+    def _publish(self) -> None:
+        """Let everything that hangs on this state follow at once.
+
+        Alleen een wijziging door de gebruiker publiceert; bij het opstarten doet
+        de eerste beslissing dat (ronde 35, R35-8). Een schakelaar die niets extra
+        te vertellen heeft laat dit leeg.
+
+        Only a change by the user publishes; at startup the first decision does
+        (round 35, R35-8). A switch with nothing extra to say leaves this empty.
+        """
 
     def _handle_coordinator_update(self) -> None:
         """Ignore coordinator updates: this switch is an input, not an output."""
@@ -173,19 +209,33 @@ class ZoneOverrideSwitch(_DirectorSwitch):
         self._attr_translation_placeholders = {"zone": zone.name if zone else zone_id}
 
     def _push(self) -> None:
-        """Zet de stand en laat de rest direct volgen (R34-7).
+        """Zet de stand van deze zone in de coordinator (R34-7, R35-8).
 
-        De schakelaar schrijft alleen `zone_overrides`; de coordinator laat de
-        looptijd van een handmatig uitgezette zone stil vervallen en werkt zijn
-        luisteraars bij, zodat de eindtijdsensor meteen `unknown` toont in plaats
-        van pas bij de volgende beslisronde (de debouncer wacht een seconde).
+        De schakelaar schrijft alleen `zone_overrides`; wie daarna publiceert
+        staat in `_publish` - bij een wijziging door de gebruiker dus, en niet bij
+        het herstellen van de stand bij het opstarten.
 
-        The switch only writes `zone_overrides`; the coordinator lets the duration
-        of a hand-switched-off zone lapse silently and updates its listeners, so
-        the end-time sensor shows `unknown` at once instead of only at the next
-        decision round (the debouncer waits a second).
+        The switch only writes `zone_overrides`; who publishes afterwards stands
+        in `_publish` - on a change by the user, then, and not while restoring the
+        state at startup.
         """
         self.coordinator.zone_overrides[self._zone_id] = self._is_on
+
+    def _publish(self) -> None:
+        """Laat de looptijd vervallen en werk de luisteraars bij (R34-7, R35-8).
+
+        De coordinator laat de looptijd van een handmatig uitgezette zone stil
+        vervallen en werkt zijn luisteraars bij, zodat de eindtijdsensor meteen
+        `unknown` toont in plaats van pas bij de volgende beslisronde (de
+        debouncer wacht een seconde). Dat hoort bij een wijziging door de
+        gebruiker; bij het opstarten publiceert de eerste beslissing zelf.
+
+        The coordinator lets the duration of a hand-switched-off zone lapse
+        silently and updates its listeners, so the end-time sensor shows `unknown`
+        at once instead of only at the next decision round (the debouncer waits a
+        second). That belongs to a change by the user; at startup the first
+        decision publishes by itself.
+        """
         self.coordinator.async_publish_override_state()
 
     def _handle_coordinator_update(self) -> None:
