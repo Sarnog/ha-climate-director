@@ -658,3 +658,58 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
     hidden = coverage_gate.hidden_lines(Coverage(), PACKAGE)
     assert hidden, "de meting sluit geen enkele regel uit, dus deze test meet niets"
     assert coverage_gate.exclusion_problems(hidden, PACKAGE) == []
+
+
+#: Het aantal benoemde uitsluitingen van de poort. De whitelist mag alleen korter
+#: worden: elke regel die erbij komt is een regel die de meting niet meer dekt, en
+#: zonder deze ratel groeit dat stil door. Het getal is gemeten op `c3e7957` +
+#: ronde 35 (R35-5): negen statements in `coordinator.py` en drie in elk van de
+#: vier mixins die het protocol onder `TYPE_CHECKING` importeren.
+#:
+#: The number of named exclusions of the gate. The whitelist may only get shorter:
+#: every line added to it is a line the measurement no longer covers, and without
+#: this ratchet that grows silently. The number was measured on `c3e7957` + round
+#: 35 (R35-5): nine statements in `coordinator.py` and three in each of the four
+#: mixins that import the protocol under `TYPE_CHECKING`.
+NAMED_EXCLUSIONS_BUDGET = 21
+
+
+def test_the_named_exclusions_are_a_ratchet() -> None:
+    """Het aantal benoemde uitsluitingen mag alleen dalen (ronde 35, R35-4).
+
+    De whitelist is er voor regels die de meting niet kán meenemen; elke regel die
+    erbij komt is er één die de meting niet meer dekt. Zonder deze ratel groeit dat
+    stil door — gemeten in ronde 34: een nieuwe dode stub plus zijn naam in
+    `NAMED_EXCLUSIONS` liet de hele suite én de poort groen, terwijl de maat in
+    `test_the_measure.py` alleen de modulegrootte zag. Wordt het getal groter, dan
+    is deze test rood en somt hij de huidige inhoud op (met de nieuwe naam erbij);
+    wordt het kleiner, dan is hij óók rood met de vraag het getal te verlagen. Zo
+    kan de whitelist alleen korter worden.
+
+    The number of named exclusions may only go down (round 35, R35-4). The
+    whitelist exists for lines the measurement cannot include; every line added to
+    it is one the measurement no longer covers. Without this ratchet that grows
+    silently — measured in round 34: a new dead stub plus its name in
+    `NAMED_EXCLUSIONS` left the whole suite and the gate green, while the measure
+    in `test_the_measure.py` only saw the module size. When the number grows, this
+    test is red and lists the current content (with the new name in it); when it
+    shrinks, it is red too, asking for the number to be lowered. That way the
+    whitelist can only get shorter.
+    """
+    counted = sum(len(entries) for entries in coverage_gate.NAMED_EXCLUSIONS.values())
+    if counted == NAMED_EXCLUSIONS_BUDGET:
+        return
+    listed = "; ".join(
+        f"{name}: {', '.join(entries)}"
+        for name, entries in sorted(coverage_gate.NAMED_EXCLUSIONS.items())
+    )
+    if counted > NAMED_EXCLUSIONS_BUDGET:
+        raise AssertionError(
+            f"de whitelist van de poort is gegroeid: {counted} benoemde uitsluitingen, "
+            f"genoteerd {NAMED_EXCLUSIONS_BUDGET}. Elke regel erbij is een regel die de "
+            f"meting niet meer dekt; haal hem eruit of verantwoord hem. Nu: {listed}"
+        )
+    raise AssertionError(
+        f"de whitelist van de poort is korter geworden: {counted}, genoteerd "
+        f"{NAMED_EXCLUSIONS_BUDGET}. Zet het nieuwe getal erin (lager mag altijd). Nu: {listed}"
+    )
