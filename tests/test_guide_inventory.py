@@ -111,13 +111,24 @@ def notice_keys() -> list[str]:
     return sorted(keys)
 
 
-def _entity_pattern(language: str, domain: str, key: str) -> str:
-    """Return the entity id pattern the guide should name."""
+def _slug_pattern(language: str, domain: str, key: str) -> str:
+    """Return the slug pattern of one entity, with `{zone}` turned into `<zone>`.
+
+    Home Assistant derives an entity id from the translated name with `slugify`,
+    so this is exactly what a guide has to name. The placeholder between angle
+    brackets stands where the marker stood, so the comparison hits the translated
+    slug and not the incidental name of a room.
+    """
     name = _translation(language)["entity"][domain][key]["name"]
     pattern = slugify(name)
     for marker in MARKER.findall(name):
         pattern = pattern.replace(slugify(marker), f"<{marker[1:-1]}>")
-    return f"{domain}.*_{pattern}"
+    return pattern
+
+
+def _entity_pattern(language: str, domain: str, key: str) -> str:
+    """Return the entity id pattern the guide should name."""
+    return f"{domain}.*_{_slug_pattern(language, domain, key)}"
 
 
 def _notice_title(language: str, key: str) -> str:
@@ -193,3 +204,67 @@ def _missing(language: str) -> list[str]:
 def test_every_visible_feature_stands_in_every_guide(language: str) -> None:
     """Elke entiteit, actie en melding staat met de interfacewoorden in de gids."""
     assert not _missing(language)
+
+
+#: Elke vermelding van een schakelaar- of sensorpatroon in een gids. Wat tussen de
+#: haken staat hoort bij de plaatshouder (`<zone>`, `<opening>`, …) en blijft
+#: staan, zodat de vergelijking de vertaalde slug raakt.
+#:
+#: Every mention of a switch or sensor pattern in a guide. What stands between the
+#: brackets belongs to the placeholder (`<zone>`, `<opening>`, …) and stays, so the
+#: comparison hits the translated slug.
+SLUG_MENTION = re.compile(r"\b(switch|sensor)\.\*_([^\s`|,)]+)")
+
+#: De twee domeinen waarvan deze bewaking de slugs leest. Andere domeinen
+#: (`binary_sensor`, `button`, `number`, `select`) hebben hun eigen patronen en
+#: vallen buiten deze test.
+#:
+#: The two domains this guard reads the slugs of. Other domains (`binary_sensor`,
+#: `button`, `number`, `select`) have their own patterns and stay outside it.
+SLUG_DOMAINS = ("switch", "sensor")
+
+
+def _translated_slugs(language: str) -> set[tuple[str, str]]:
+    """Elke (domein, slug) die deze taal werkelijk uit zijn vertaling afleidt.
+
+    Every (domain, slug) this language really derives from its translation.
+    """
+    entity = _translation(language)["entity"]
+    return {
+        (domain, _slug_pattern(language, domain, key))
+        for domain in SLUG_DOMAINS
+        for key in entity.get(domain, {})
+    }
+
+
+@pytest.mark.parametrize("language", LANGUAGES)
+def test_every_switch_or_sensor_slug_a_guide_names_is_translated(language: str) -> None:
+    """Elke override-slug in de gids is `slugify` van de vertaalde naam (R35-3).
+
+    Home Assistant leidt de entiteit-id af uit de vertaalde naam, dus een gids die
+    de slug van een ánder domein noemt — de sensorslug achter `switch.` — stuurt de
+    lezer naar een entiteit die niet bestaat. Gemeten in ronde 34: `ar.md:764`
+    noemde `switch.*_nhy_tjwz_<zone>` terwijl de schakelaar `switch.*_tjwz_<zone>`
+    heet; de andere vijf gidsen klopten. De test loopt regel voor regel, zodat de
+    melding het bestand én de regel noemt.
+
+    Every override slug in the guide is `slugify` of the translated name (R35-3).
+    Home Assistant derives the entity id from the translated name, so a guide
+    naming another domain's slug — the sensor slug after `switch.` — sends the
+    reader to an entity that does not exist. Measured in round 34: `ar.md:764`
+    named `switch.*_nhy_tjwz_<zone>` while the switch is called
+    `switch.*_tjwz_<zone>`; the other five guides were right. The test walks line
+    by line, so the message names both the file and the line.
+    """
+    valid = _translated_slugs(language)
+    text = (INSTALL / f"{language}.md").read_text(encoding="utf-8")
+    offenders = [
+        f"{language}.md:{number}: {domain}.*_{slug}"
+        for number, line in enumerate(text.splitlines(), 1)
+        for domain, slug in SLUG_MENTION.findall(line)
+        if (domain, slug) not in valid
+    ]
+    assert not offenders, (
+        "deze slugs komen niet uit de vertaling van deze taal, dus de gids noemt "
+        "een entiteit die niet bestaat: " + "; ".join(offenders)
+    )
