@@ -190,13 +190,13 @@ class CoordinatorSurface(Protocol):
     def entry(self) -> ClimateDirectorEntry: ...
 
     def async_request_evaluation(self) -> None: ...
-    # Komt van `DataUpdateCoordinator` en wordt hier nergens overschreven. Een
-    # kale `...`-stub zou de concrete klasse abstract maken zodra een mixin van
-    # dit protocol erft, want hij schaduwt de echte implementatie in de MRO.
+    # Komt van `DataUpdateCoordinator` en wordt hier nergens overschreven. Voor
+    # mypy maakt een kale `...` de klasse abstract ("implicitly abstract because
+    # it has an empty function body"); bij het draaien komt hij van die klasse.
     #
-    # Comes from `DataUpdateCoordinator` and is overridden nowhere here. A bare
-    # `...` stub would make the concrete class abstract as soon as a mixin
-    # inherits this protocol, since it shadows the real implementation in the MRO.
+    # Comes from `DataUpdateCoordinator` and is overridden nowhere here. To mypy
+    # a bare `...` makes the class abstract ("implicitly abstract because it has
+    # an empty function body"); at run time the method comes from that class.
     def async_update_listeners(self) -> None:
         return None
 

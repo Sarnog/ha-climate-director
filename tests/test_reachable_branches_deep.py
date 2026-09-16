@@ -632,7 +632,7 @@ def test_nothing_is_hidden_from_the_measurement() -> None:
 
 
 def test_every_line_outside_the_measurement_has_a_name() -> None:
-    """Elke regel die buiten de meting valt heeft een naam (ronde 34, R34-3).
+    """Elke regel die buiten de meting valt heeft een naam (ronde 34, R34-2).
 
     De poort (`script/coverage_gate.py`) kan alleen zien wat coverage meekrijgt,
     en coverage houdt drie soorten regels buiten de telling op een patroon. Een
@@ -644,7 +644,7 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
     hangt aan het bestand en het patroon, niet aan wat er gedraaid is. Zonder
     enige uitsluiting zou deze test niets meten, en dat is dan ook een fout.
 
-    Every line that falls outside the measurement has a name (round 34, R34-3).
+    Every line that falls outside the measurement has a name (round 34, R34-2).
     The gate (`script/coverage_gate.py`) can only see what coverage is given, and
     coverage keeps three kinds of lines out of the count on a pattern. A pattern
     hides silently, so the gate names every line in `NAMED_EXCLUSIONS`. This test

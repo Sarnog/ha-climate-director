@@ -19,7 +19,7 @@ show_missing = true
 # laat zien wat er buiten blijft, en niet een versie van coverage die ze stil
 # meebrengt; de patronen zijn die van coverage 7.16, één op één overgenomen, dus
 # de meting verandert er niet van. Wat het patroon raakt wordt sinds ronde 34
-# (R34-3) met naam en toenaam gemeld door `script/coverage_gate.py`
+# (R34-2) met naam en toenaam gemeld door `script/coverage_gate.py`
 # (`NAMED_EXCLUSIONS`): een regel zonder naam laat de poort vallen, en een naam
 # zonder regel ook.
 #
@@ -28,7 +28,7 @@ show_missing = true
 # configuration itself shows what stays outside, rather than a version of
 # coverage quietly bringing them along; the patterns are coverage 7.16's, copied
 # one to one, so the measurement does not change. What the pattern hits is
-# reported by name since round 34 (R34-3) by `script/coverage_gate.py`
+# reported by name since round 34 (R34-2) by `script/coverage_gate.py`
 # (`NAMED_EXCLUSIONS`): a line without a name drops the gate, and so does a name
 # without a line.
 exclude_lines = [

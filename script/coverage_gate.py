@@ -17,7 +17,7 @@ zonder één bestand onder het pakket, en een meting waarin niet élk `.py`-best
 van het pakket voorkomt — een module die nooit geïmporteerd wordt is anders
 onzichtbaar.
 
-Daar komt sinds ronde 34 (R34-3) een vijfde weigering bij: een meting waarin een
+Daar komt sinds ronde 34 (R34-2) een vijfde weigering bij: een meting waarin een
 regel buiten de telling valt die geen naam heeft in `NAMED_EXCLUSIONS`. Coverage
 laat regels weg op een patroon (`# pragma: no cover`, een `...` als blokinhoud,
 een `if TYPE_CHECKING:`-blok), en een patroon verbergt stil: zo'n regel verdwijnt
@@ -50,7 +50,7 @@ Gebruik / usage:
     and a measurement missing one of the package's `.py` files — a module that
     is never imported is invisible otherwise.
 
-    Round 34 (R34-3) adds a fifth refusal: a measurement in which a line falls
+    Round 34 (R34-2) adds a fifth refusal: a measurement in which a line falls
     outside the count without a name in `NAMED_EXCLUSIONS`. Coverage drops lines
     on a pattern (`# pragma: no cover`, a `...` as a block's content, an
     `if TYPE_CHECKING:` block), and a pattern hides silently: such a line
@@ -125,7 +125,7 @@ EXCLUSION_HINT = (
 #:
 #: Coverage laat drie soorten regels weg op een patroon: `# pragma: no cover`,
 #: een `...` als enige inhoud van een blok, en een `if TYPE_CHECKING:`-blok. Die
-#: patronen staan sinds ronde 34 (R34-3) uitgeschreven in `pyproject.toml`, zodat
+#: patronen staan sinds ronde 34 (R34-2) uitgeschreven in `pyproject.toml`, zodat
 #: de meting niet op verborgen standaardpatronen leunt, maar een patroon verbergt
 #: nog steeds stil: elke regel die eronder valt verdwijnt uit "nul gemiste regels"
 #: zonder dat iemand hem noemt. Daarom staat hieronder elke statementregel met
@@ -144,7 +144,7 @@ EXCLUSION_HINT = (
 #:
 #: Coverage drops three kinds of lines on a pattern: `# pragma: no cover`, a `...`
 #: as a block's only content, and an `if TYPE_CHECKING:` block. Since round 34
-#: (R34-3) those patterns are written out in `pyproject.toml`, so the measurement
+#: (R34-2) those patterns are written out in `pyproject.toml`, so the measurement
 #: does not lean on hidden defaults, but a pattern still hides silently: every
 #: line it hits disappears from "zero missed lines" without anyone naming it.
 #: Hence every statement line stands below with its own content — nine in
