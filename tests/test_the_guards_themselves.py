@@ -61,6 +61,26 @@ def _write_package(
     return root
 
 
+def _assert_multiline_hint(out: str) -> None:
+    """De hint van de vijfde weigering gaat over echte regels (R35-6).
+
+    Een hint met een letterlijke `\\n` erin is één lange regel met zichtbare
+    `\\n`; deze helper eist dat er geen letterlijke `\\n` meer in staat en dat de
+    uitvoer over meerdere regels valt. Draait in de twee weigertests van
+    `TestTheCoverageGate`; de constante zelf wordt apart gemeten.
+
+    The fifth refusal's hint spans real lines (R35-6). A hint with a literal `\\n`
+    in it is one long line with visible `\\n`; this helper demands that no literal
+    `\\n` stands in it and that the output falls over several lines. It runs in
+    the two refusal tests of `TestTheCoverageGate`; the constant itself is
+    measured separately.
+    """
+    assert "\\n" not in out, f"de hint drukt een letterlijke \\n af: {out!r}"
+    assert len([line for line in out.splitlines() if line.strip()]) >= 5, (
+        f"de hint hoort over meerdere regels te gaan: {out!r}"
+    )
+
+
 class TestFixFlowSteps:
     """`fix_flow_steps()` hangt aan de klasse, niet aan hoe je hem opschrijft."""
 
@@ -727,6 +747,7 @@ class TestTheCoverageGate:
         out = capsys.readouterr().out
         assert "zonder naam" in out
         assert "a.py:5" in out and "def een(self) -> None: ..." in out
+        _assert_multiline_hint(out)
 
     def test_a_named_line_the_patterns_hide_is_accepted(
         self, tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
@@ -772,6 +793,7 @@ class TestTheCoverageGate:
         out = capsys.readouterr().out
         assert "noemt een regel die de meting niet meer overslaat" in out
         assert "iets_anders" in out
+        _assert_multiline_hint(out)
 
     def test_a_comment_behind_a_stub_is_not_a_line_without_a_name(
         self, tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
@@ -818,6 +840,24 @@ class TestTheCoverageGate:
         data = self._measurement(tmp_path / "comment.data", {str(package / "a.py"): {1, 4}})
         assert self._run(data, package) == 0
         assert "regels buiten de meting: 2" in capsys.readouterr().out
+
+    def test_the_exclusion_hint_breaks_its_lines(self) -> None:
+        """De hint van de vijfde weigering breekt zijn regels echt af (R35-6).
+
+        Ronde 34 schreef de hint met `"\\\\n"` in plaats van `"\\n"`, dus drukte hij
+        één lange regel met zichtbare `\\n` af. Deze test meet de constante zelf, en
+        de twee weigertests hierboven (`_assert_multiline_hint`) meten de uitvoer.
+
+        The fifth refusal's hint really breaks its lines (R35-6). Round 34 wrote
+        the hint with `"\\\\n"` instead of `"\\n"`, so it printed one long line with
+        visible `\\n`. This test measures the constant itself, and the two refusal
+        tests above (`_assert_multiline_hint`) measure the output.
+        """
+        hint = coverage_gate.EXCLUSION_HINT
+        assert "\\n" not in hint
+        assert "\n" in hint
+        assert len([line for line in hint.splitlines() if line.strip()]) >= 5
+        assert "NAMED_EXCLUSIONS" in hint
 
 
 class TestTheRepairNoticeGuard:

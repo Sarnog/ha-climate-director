@@ -100,20 +100,20 @@ MISSED_HINT = (
 )
 
 EXCLUSION_HINT = (
-    "Een regel die buiten de meting valt hoort een naam te hebben in\\n"
-    '`NAMED_EXCLUSIONS`, met de reden erbij: pas dan is "nul gemiste regels" een\\n'
-    "uitspraak over elke regel. Kan de regel er echt niet komen (hij bestaat\\n"
-    "alleen voor de typecontrole), zet hem er dan bij; is hij wel te meten, zoek\\n"
-    "dan de test die er hoort. Andersom geldt het ook: een naam die niets meer\\n"
-    "verbergt hoort uit de lijst, want een verouderde whitelist wekt de indruk\\n"
-    "dat er iets afgesproken is.\\n"
-    "\\n"
-    "A line that falls outside the measurement should have a name in\\n"
-    '`NAMED_EXCLUSIONS`, with the reason alongside: only then is "zero missed\\n'
-    'lines" a statement about every line. If the line really cannot be reached\\n'
-    "(it exists for the type check only), add it there; if it can be measured,\\n"
-    "find the test that belongs to it. The reverse holds too: a name that hides\\n"
-    "nothing anymore belongs out of the list, since a stale whitelist suggests\\n"
+    "Een regel die buiten de meting valt hoort een naam te hebben in\n"
+    '`NAMED_EXCLUSIONS`, met de reden erbij: pas dan is "nul gemiste regels" een\n'
+    "uitspraak over elke regel. Kan de regel er echt niet komen (hij bestaat\n"
+    "alleen voor de typecontrole), zet hem er dan bij; is hij wel te meten, zoek\n"
+    "dan de test die er hoort. Andersom geldt het ook: een naam die niets meer\n"
+    "verbergt hoort uit de lijst, want een verouderde whitelist wekt de indruk\n"
+    "dat er iets afgesproken is.\n"
+    "\n"
+    "A line that falls outside the measurement should have a name in\n"
+    '`NAMED_EXCLUSIONS`, with the reason alongside: only then is "zero missed\n'
+    'lines" a statement about every line. If the line really cannot be reached\n'
+    "(it exists for the type check only), add it there; if it can be measured,\n"
+    "find the test that belongs to it. The reverse holds too: a name that hides\n"
+    "nothing anymore belongs out of the list, since a stale whitelist suggests\n"
     "something was agreed."
 )
 
