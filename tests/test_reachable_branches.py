@@ -21,6 +21,7 @@ down).
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -31,6 +32,7 @@ from custom_components.climate_director.config_flow import (
     ClimateDirectorOptionsFlow,
     _name_errors,
 )
+from custom_components.climate_director.coordinator import CoordinatorSurface
 
 CIRCUIT_FIELDS: dict[str, Any] = {
     "name": "Buitenunit",
@@ -429,3 +431,29 @@ async def test_a_resident_form_comes_back_with_what_you_typed(home: LiveHome) ->
     result = await flow.async_configure(flow_id, {"name": "Danny"})
     assert result["type"] == "form"
     assert result["step_id"] == "resident"
+
+
+def test_the_protocol_stub_of_the_listener_update_returns_nothing() -> None:
+    """coordinator.py: de stub in het protocol doet niets (ronde 34, R34-7).
+
+    `CoordinatorSurface` draagt `async_update_listeners` zodat mypy hem in de
+    mixins kent; bij het draaien wint de echte methode van
+    `DataUpdateCoordinator` in de MRO. Een kale `...` zou daar de echte
+    implementatie schaduwen — de mixin roept hem aan en er zou niets gebeuren —
+    dus de stub heeft een expliciete `return`. Die regel komt nooit langs tenzij
+    iemand hem aanroept, en dat is precies wat hier gebeurt: met een verzonnen
+    `self`, want van een protocol bestaan geen instanties. Zonder deze test is het
+    een gemiste regel in de dekkingsmeting, en dat was hij ook: de poort viel erop
+    toen de methode in ronde 34 werd toegevoegd.
+
+    coordinator.py: the protocol's stub does nothing (round 34, R34-7).
+    `CoordinatorSurface` carries `async_update_listeners` so that mypy knows it in
+    the mixins; at run time the real method from `DataUpdateCoordinator` wins in
+    the MRO. A bare `...` would shadow the real implementation there — the mixin
+    calls it and nothing would happen — hence the explicit `return`. That line
+    never comes past unless someone calls it, and that is exactly what happens
+    here: with an invented `self`, since a protocol has no instances. Without this
+    test it is a missed line in the measurement, and it was: the gate caught it
+    when the method was added in round 34.
+    """
+    assert CoordinatorSurface.async_update_listeners(SimpleNamespace()) is None
