@@ -299,9 +299,25 @@ async def test_only_the_overridden_zone_has_an_end_time(home: LiveHome) -> None:
 
 
 async def test_without_an_override_the_end_time_is_unknown(home: LiveHome) -> None:
+    """Zonder override is er geen eindtijd, geen starttijd en geen doel.
+
+    De regel die hier stond was een dode assertie: `assert X if False else True`
+    is `assert True` en kon dus nooit rood worden (R34-8). Er zat geen eigenschap
+    achter die de regel eronder niet al vastpint — `start_time` hoort te
+    ontbreken, en dat is precies wat de assertie hierna eist. De regel is daarom
+    weg en niet herschreven; wie de eigenschap wil zien bijten, haalt in
+    `sensor.py` de `if started is not None`-wacht weg.
+
+    Without an override there is no end time, no start time and no target. The
+    line that stood here was a dead assertion: `assert X if False else True` is
+    `assert True` and could never go red (R34-8). There was no property behind it
+    that the line below does not already pin down — `start_time` is supposed to
+    be absent, which is exactly what the next assertion demands. So the line is
+    gone rather than rewritten; whoever wants to see the property bite removes
+    the `if started is not None` guard in `sensor.py`.
+    """
     sensor = home.by_key(ENDS)
     assert home.state(sensor) == "unknown"
-    assert home.attributes(sensor)["start_time"] if False else True  # zie hieronder
     assert "start_time" not in home.attributes(sensor)
     assert home.attributes(sensor)["when_done"] is None
     assert home.attributes(sensor)["target_entity"] is None
