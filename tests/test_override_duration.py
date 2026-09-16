@@ -17,6 +17,7 @@ from homeassistant.util import dt as dt_util
 from test_campaign_live_ha import LIVING, cold_world, installation
 
 from custom_components.climate_director.const import DOMAIN
+from custom_components.climate_director.coordinator import ClimateDirectorCoordinator
 
 
 @pytest.fixture
@@ -107,6 +108,86 @@ async def test_switching_the_override_off_by_hand_lapses_the_duration_silently(
     assert "off" not in modes, home.climate_calls()
     assert home.coordinator.zone_override_until == {}
     assert home.coordinator.zone_override_when_done == {}
+
+
+def _count_publishes(monkeypatch: pytest.MonkeyPatch) -> list[int]:
+    """Tel elke keer dat de coordinator zijn luisteraars bijwerkt.
+
+    Count every time the coordinator updates its listeners.
+    """
+    published: list[int] = []
+    original = ClimateDirectorCoordinator.async_update_listeners
+
+    def counting(self) -> None:
+        published.append(1)
+        original(self)
+
+    monkeypatch.setattr(ClimateDirectorCoordinator, "async_update_listeners", counting)
+    return published
+
+
+async def test_the_zone_switches_publish_nothing_before_the_first_decision(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Bij het opstarten publiceert alleen de eerste beslissing (ronde 35, R35-8).
+
+    Elke zoneschakelaar zet bij het herstellen van zijn stand de override in de
+    coordinator, maar hoort daarbij niet te publiceren: er is nog niets besloten.
+    Tot ronde 35 deed hij dat wel, want `_push` publiceerde mee - dus publiceerde
+    een huis met twee zones drie keer voordat de eerste beslissing klaar was: twee
+    keer om niets en één keer echt. Deze test telt elke bijwerking van de
+    luisteraars vanaf het opzetten en eist er precies één.
+
+    At startup only the first decision publishes (round 35, R35-8). Every zone
+    switch writes its override into the coordinator while restoring its state, but
+    must not publish along with it: nothing has been decided yet. Until round 35
+    it did, since `_push` published too - so a two-zone house published three
+    times before the first decision was done: twice for nothing and once for real.
+    This test counts every listener update from setup on and demands exactly one.
+    """
+    published = _count_publishes(monkeypatch)
+    live = await start_house(installation(), states=cold_world())
+    try:
+        assert len(published) == 1, (
+            "de eerste beslissing publiceert één keer; de zoneschakelaars horen daar "
+            f"niets aan toe te voegen, maar het waren {len(published)} publicaties"
+        )
+    finally:
+        await stop_house(live)
+
+
+async def test_a_hand_off_publishes_at_once(
+    home: LiveHome, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Een wijziging door de gebruiker publiceert nog steeds direct (ronde 35, R35-8).
+
+    De drie paden die de eindtijdsensor meteen bij moeten werken: de schakelaar
+    met de hand omzetten, `set_override` en `clear_override`. De debouncer wacht
+    een seconde, dus zonder deze stap blijft de sensor staan tot de volgende ronde
+    (R34-7). Wat niet mag is publiceren bij het opstarten; wat moet blijven is
+    publiceren bij een wijziging.
+
+    A change by the user still publishes at once (round 35, R35-8). The three
+    paths that have to bring the end-time sensor up to date immediately: flipping
+    the switch by hand, `set_override` and `clear_override`. The debouncer waits a
+    second, so without this step the sensor stays put until the next round
+    (R34-7). What must not happen is publishing at startup; what must stay is
+    publishing on a change.
+    """
+    published = _count_publishes(monkeypatch)
+    switch = home.by_key("zone_woonkamer_override")
+
+    before = len(published)
+    await home.call("switch", "turn_on", {"entity_id": switch})
+    assert len(published) > before, "de schakelaar hoort direct te publiceren"
+
+    before = len(published)
+    await call_set_override(home, minutes=60)
+    assert len(published) > before, "`set_override` hoort direct te publiceren"
+
+    before = len(published)
+    await home.call(DOMAIN, "clear_override", {"zone_id": "woonkamer"})
+    assert len(published) > before, "`clear_override` hoort direct te publiceren"
 
 
 async def test_clear_override_behaves_like_the_hand_off_of_the_switch(
