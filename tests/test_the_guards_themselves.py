@@ -703,6 +703,74 @@ class TestTheCoverageGate:
         out = capsys.readouterr().out
         assert "a.py" in out and "2" in out and "3" in out
 
+    def test_a_line_the_patterns_hide_must_be_named(self, tmp_path: Path, capsys) -> None:
+        """Een regel die coverage overslaat hoort een naam te hebben (R34-3).
+
+        Coverage houdt een `...`-stub buiten de telling op een patroon, en zonder
+        whitelist zou die regel stil uit "nul gemiste regels" verdwijnen: de poort
+        zou groen staan over een regel die hij nooit gezien heeft. Hier is de
+        stub niet genoemd, dus valt de poort om en noemt hij de regel zelf.
+
+        A line coverage skips has to have a name (R34-3). Coverage keeps a `...`
+        stub out of the count on a pattern, and without the whitelist that line
+        would quietly disappear from "zero missed lines": the gate would stand
+        green about a line it never saw. Here the stub is unnamed, so the gate
+        drops and names the line itself.
+        """
+        package = self._package(
+            tmp_path, {"a.py": "x = 1\n\n\nclass P:\n    def een(self) -> None: ...\n"}
+        )
+        data = self._measurement(tmp_path / "stub.data", {str(package / "a.py"): {1, 4}})
+        assert self._run(data, package) == 1
+        out = capsys.readouterr().out
+        assert "zonder naam" in out
+        assert "a.py:5" in out and "def een(self) -> None: ..." in out
+
+    def test_a_named_line_the_patterns_hide_is_accepted(
+        self, tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Met een naam erbij is precies diezelfde meting wel goed (R34-3).
+
+        De whitelist wordt hier verzonnen in plaats van gelezen, want hij hoort
+        bij dit pakket en niet bij een pakketje in `tmp_path`.
+
+        With a name alongside, that very measurement is fine (R34-3). The
+        whitelist is invented here rather than read, since it belongs to this
+        package and not to a small package in `tmp_path`.
+        """
+        monkeypatch.setattr(
+            coverage_gate,
+            "NAMED_EXCLUSIONS",
+            {"a.py": ("def een(self) -> None: ...",)},
+        )
+        package = self._package(
+            tmp_path, {"a.py": "x = 1\n\n\nclass P:\n    def een(self) -> None: ...\n"}
+        )
+        data = self._measurement(tmp_path / "stub.data", {str(package / "a.py"): {1, 4}})
+        assert self._run(data, package) == 0
+        assert "regels buiten de meting: 1" in capsys.readouterr().out
+
+    def test_a_name_that_hides_nothing_is_refused(
+        self, tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Een whitelist die niets meer verbergt is verouderd, geen goedkeuring (R34-3).
+
+        Een naam zonder regel wekt de indruk dat er iets afgesproken is terwijl de
+        meting die regel gewoon meet; dan hoort de naam eruit in plaats van te
+        blijven staan.
+
+        A whitelist that hides nothing anymore is stale, not an approval (R34-3).
+        A name without a line suggests something was agreed while the measurement
+        simply measures that line; then the name belongs out instead of staying.
+        """
+        monkeypatch.setattr(coverage_gate, "NAMED_EXCLUSIONS", {"a.py": ("iets_anders",)})
+        package = self._package(tmp_path, {"a.py": "if 1:\n    x = 1\n"})
+        data = self._measurement(tmp_path / "gewoon.data", {str(package / "a.py"): {1, 2}})
+        assert self._run(data, package) == 1
+        out = capsys.readouterr().out
+        assert "noemt een regel die de meting niet meer overslaat" in out
+        assert "iets_anders" in out
+
 
 class TestTheRepairNoticeGuard:
     """Een onvolgbaar issue-id meldt zich in plaats van stil over te slaan.

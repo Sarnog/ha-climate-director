@@ -17,6 +17,14 @@ zonder één bestand onder het pakket, en een meting waarin niet élk `.py`-best
 van het pakket voorkomt — een module die nooit geïmporteerd wordt is anders
 onzichtbaar.
 
+Daar komt sinds ronde 34 (R34-3) een vijfde weigering bij: een meting waarin een
+regel buiten de telling valt die geen naam heeft in `NAMED_EXCLUSIONS`. Coverage
+laat regels weg op een patroon (`# pragma: no cover`, een `...` als blokinhoud,
+een `if TYPE_CHECKING:`-blok), en een patroon verbergt stil: zo'n regel verdwijnt
+uit "nul gemiste regels" zonder dat iemand hem noemt. De poort noemt ze daarom
+allemaal, met hun inhoud erbij, en laat zowel een regel zonder naam als een naam
+zonder regel vallen.
+
 Gebruik / usage:
 
     python -m coverage run -m pytest -q
@@ -38,12 +46,21 @@ Gebruik / usage:
     empty measurement, a measurement without a single file under the package,
     and a measurement missing one of the package's `.py` files — a module that
     is never imported is invisible otherwise.
+
+    Round 34 (R34-3) adds a fifth refusal: a measurement in which a line falls
+    outside the count without a name in `NAMED_EXCLUSIONS`. Coverage drops lines
+    on a pattern (`# pragma: no cover`, a `...` as a block's content, an
+    `if TYPE_CHECKING:` block), and a pattern hides silently: such a line
+    disappears from "zero missed lines" without anyone naming it. Hence the gate
+    names them all, with their content alongside, and drops both a line without
+    a name and a name without a line.
 """
 
 from __future__ import annotations
 
 import argparse
 import sys
+from collections import Counter
 from pathlib import Path
 
 from coverage import Coverage
@@ -74,6 +91,90 @@ MISSED_HINT = (
     "deliberately carries no `pragma: no cover` at all: it takes a line out of\n"
     'this measurement, and then "zero missed lines" says nothing about it.'
 )
+
+EXCLUSION_HINT = (
+    "Een regel die buiten de meting valt hoort een naam te hebben in\\n"
+    '`NAMED_EXCLUSIONS`, met de reden erbij: pas dan is "nul gemiste regels" een\\n'
+    "uitspraak over elke regel. Kan de regel er echt niet komen (hij bestaat\\n"
+    "alleen voor de typecontrole), zet hem er dan bij; is hij wel te meten, zoek\\n"
+    "dan de test die er hoort. Andersom geldt het ook: een naam die niets meer\\n"
+    "verbergt hoort uit de lijst, want een verouderde whitelist wekt de indruk\\n"
+    "dat er iets afgesproken is.\\n"
+    "\\n"
+    "A line that falls outside the measurement should have a name in\\n"
+    '`NAMED_EXCLUSIONS`, with the reason alongside: only then is "zero missed\\n'
+    'lines" a statement about every line. If the line really cannot be reached\\n'
+    "(it exists for the type check only), add it there; if it can be measured,\\n"
+    "find the test that belongs to it. The reverse holds too: a name that hides\\n"
+    "nothing anymore belongs out of the list, since a stale whitelist suggests\\n"
+    "something was agreed."
+)
+
+#: De regels die de meting niet meerekent, met naam en toenaam.
+#:
+#: Coverage laat drie soorten regels weg op een patroon: `# pragma: no cover`,
+#: een `...` als enige inhoud van een blok, en een `if TYPE_CHECKING:`-blok. Die
+#: patronen staan sinds ronde 34 (R34-3) uitgeschreven in `pyproject.toml`, zodat
+#: de meting niet op verborgen standaardpatronen leunt, maar een patroon verbergt
+#: nog steeds stil: elke regel die eronder valt verdwijnt uit "nul gemiste
+#: regels" zonder dat iemand hem noemt. Daarom staat hieronder elke regel met
+#: zijn eigen inhoud — twaalf in `coordinator.py` (het `CoordinatorSurface`-
+#: protocol, dat alleen voor de typecontrole bestaat: een `...`-stub wordt nooit
+#: aangeroepen) en drie in elk van de vier mixins die dat protocol onder
+#: `TYPE_CHECKING` importeren (die tak is bij het draaien nooit waar). Een lege
+#: regel kan nooit een gemiste regel zijn en telt hier niet mee. De poort eist
+#: dat de lijst precies klopt: een regel die buiten de meting valt zonder hier te
+#: staan laat hem vallen, en een naam die niets meer verbergt ook.
+#:
+#: The lines the measurement does not count, by name. Coverage drops three kinds
+#: of lines on a pattern: `# pragma: no cover`, a `...` as a block's only
+#: content, and an `if TYPE_CHECKING:` block. Since round 34 (R34-3) those
+#: patterns are written out in `pyproject.toml`, so the measurement does not lean
+#: on hidden defaults, but a pattern still hides silently: every line it hits
+#: disappears from "zero missed lines" without anyone naming it. Hence every line
+#: stands below with its own content — twelve in `coordinator.py` (the
+#: `CoordinatorSurface` protocol, which exists for the type check only: a `...`
+#: stub is never called) and three in each of the four mixins that import that
+#: protocol under `TYPE_CHECKING` (that branch is never true at run time). An
+#: empty line can never be a missed line and does not count here. The gate
+#: demands the list to be exact: a line that falls outside the measurement
+#: without standing here drops it, and so does a name that hides nothing anymore.
+NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {
+    "coordinator.py": (
+        "@property",
+        "def entry(self) -> ClimateDirectorEntry: ...",
+        "def async_request_evaluation(self) -> None: ...",
+        "# Komt van `DataUpdateCoordinator` en wordt hier nergens overschreven. Een",
+        "def _async_save_state(self) -> None: ...",
+        "def _live_preconditions(self) -> dict[str, datetime]: ...",
+        "def _wake_at_the_first_expiry(self) -> None: ...",
+        "def _override_wake_at_first_expiry(self) -> None: ...",
+        "def _calendar_says_holiday(self) -> bool: ...",
+        "def _zones_handed_back(",
+        "self, now: datetime, residents: dict[str, ResidentState]",
+        ") -> set[str]: ...",
+    ),
+    "overrides.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import CoordinatorSurface",
+        "_CoordinatorBase = CoordinatorSurface",
+    ),
+    "preconditions.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import CoordinatorSurface",
+        "_CoordinatorBase = CoordinatorSurface",
+    ),
+    "state_store.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import CoordinatorSurface",
+        "_CoordinatorBase = CoordinatorSurface",
+    ),
+    "world_builder.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import CoordinatorSurface",
+        "_CoordinatorBase = CoordinatorSurface",
+    ),
+}
 
 
 def measured_path(path: str) -> Path:
@@ -146,6 +247,87 @@ def missed_lines(data_file: str, package: Path = PACKAGE) -> dict[str, list[int]
     return missed
 
 
+def hidden_lines(coverage: Coverage, package: Path = PACKAGE) -> dict[str, list[tuple[int, str]]]:
+    """De niet-lege regels die buiten de meting vallen, per bestand.
+
+    Coverage geeft per bestand de regels terug die het overslaat. Een lege regel
+    kan nooit een gemiste regel zijn en telt hier niet mee, en een regelnummer
+    voorbij het einde van het bestand (coverage noemt de regel ná een
+    afgesloten blok er soms bij) ook niet. De rest moet een naam hebben in
+    `NAMED_EXCLUSIONS`.
+
+    The non-empty lines that fall outside the measurement, per file. Coverage
+    returns per file the lines it skips. An empty line can never be a missed line
+    and does not count here, and neither does a line number past the end of the
+    file (coverage sometimes names the line after a closed block). The rest has
+    to have a name in `NAMED_EXCLUSIONS`.
+    """
+    root = Path(package).resolve()
+    hidden: dict[str, list[tuple[int, str]]] = {}
+    for path in sorted(root.rglob("*.py")):
+        _, _, excluded, _, _ = coverage.analysis2(str(path))
+        text = path.read_text(encoding="utf-8").splitlines()
+        kept = [
+            (line, text[line - 1].strip())
+            for line in sorted(excluded)
+            if line <= len(text) and text[line - 1].strip()
+        ]
+        if kept:
+            hidden[str(path.relative_to(root))] = kept
+    return hidden
+
+
+def exclusion_problems(
+    hidden: dict[str, list[tuple[int, str]]], package: Path = PACKAGE
+) -> list[str]:
+    """Elke regel buiten de meting heeft een naam, en elke naam een regel.
+
+    Twee kanten, allebei even hard. Een regel die de meting overslaat zonder in
+    `NAMED_EXCLUSIONS` te staan is een stil weggemoffelde regel: "nul gemiste
+    regels" zegt dan niets over hem. En een naam die niets meer verbergt is een
+    verouderde whitelist, die de indruk wekt dat er iets afgesproken is. Die
+    tweede kant geldt voor de bestanden die in dit pakket bestaan: wie de poort
+    op een ander pakket richt (de testopstelling doet dat met een verzonnen
+    pakketje) heeft niets aan een oordeel over bestanden die daar niet liggen.
+
+    Every line outside the measurement has a name, and every name a line. Two
+    sides, equally hard. A line the measurement skips without standing in
+    `NAMED_EXCLUSIONS` is a quietly hidden line: "zero missed lines" then says
+    nothing about it. And a name that hides nothing anymore is a stale whitelist,
+    which suggests something was agreed. That second side applies to the files
+    that exist in this package: whoever points the gate at another package (the
+    test setup does that with an invented one) has no use for a verdict about
+    files that are not there.
+    """
+    root = Path(package).resolve()
+    present = {str(path.relative_to(root)) for path in root.rglob("*.py")}
+    problems: list[str] = []
+    for name, found in sorted(hidden.items()):
+        unnamed = Counter(content for _, content in found) - Counter(NAMED_EXCLUSIONS.get(name, ()))
+        for line, content in found:
+            if unnamed[content] <= 0:
+                continue
+            unnamed[content] -= 1
+            problems.append(
+                f"{name}:{line} valt buiten de meting zonder naam: {content} / "
+                f"stands outside the measurement without a name"
+            )
+    for name, named in sorted(NAMED_EXCLUSIONS.items()):
+        if name not in present:
+            continue
+        found = Counter(content for _, content in hidden.get(name, []))
+        for content in named:
+            if found[content] > 0:
+                found[content] -= 1
+                continue
+            problems.append(
+                f"{name}: de whitelist noemt een regel die de meting niet meer "
+                f"overslaat: {content} / the whitelist names a line the measurement "
+                f"no longer skips"
+            )
+    return problems
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -160,7 +342,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    problems = measurement_problems(args.data_file, Path(args.package))
+    package = Path(args.package)
+    problems = measurement_problems(args.data_file, package)
     if problems:
         print("De meting is niet bruikbaar / the measurement cannot be used:")
         for problem in problems:
@@ -169,7 +352,18 @@ def main(argv: list[str] | None = None) -> int:
         print(MEASUREMENT_HINT)
         return 1
 
-    missed = missed_lines(args.data_file, Path(args.package))
+    coverage = Coverage(data_file=args.data_file)
+    coverage.load()
+    unnamed = exclusion_problems(hidden_lines(coverage, package), package)
+    if unnamed:
+        print("Regels buiten de meting / lines outside the measurement:")
+        for problem in unnamed:
+            print(f"  {problem}")
+        print()
+        print(EXCLUSION_HINT)
+        return 1
+
+    missed = missed_lines(args.data_file, package)
     if missed:
         print("Gemiste regels / missed lines:")
         for path, lines in missed.items():
@@ -177,7 +371,11 @@ def main(argv: list[str] | None = None) -> int:
         print()
         print(MISSED_HINT)
         return 1
-    print("OK: geen enkele gemiste regel / no missed line.")
+    named = sum(len(entries) for entries in NAMED_EXCLUSIONS.values())
+    print(
+        f"OK: geen enkele gemiste regel; regels buiten de meting: {named}, allemaal "
+        f"met naam / no missed line; lines outside the measurement: {named}, all named."
+    )
     return 0
 
 

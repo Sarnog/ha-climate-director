@@ -137,13 +137,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   kant van een lus of een kortsluiting die nooit langskomt. Ze zijn nu met een pragma noch
   een test gedicht; per stuk is de vraag of de tweede kant te bereiken is (dan een test)
   of niet (dan een herschrijving die de tak laat verdwijnen).
-- **De eigen `exclude_lines` van de dekkingsmeting** — de poort meldt alleen gemiste regels,
-  maar de drie eigen patronen in `pyproject.toml` (het pragma-patroon, `...`-lijven,
-  `if TYPE_CHECKING:`) houden nog **21** regels buiten de telling (gemeten in ronde 32: 9
-  protocol-stubs in `coordinator.py`, en 3 per bestand in vier `TYPE_CHECKING`-blokken,
-  waaronder `_CoordinatorBase = CoordinatorSurface`). De poort zou die regels kunnen
-  benoemen, zodat "nul gemiste regels" precies afgebakend is, en per patroon is de vraag of
-  het terecht is.
 - **De opruimbeurt van verweesde entiteiten mist dezelfde volledigheidstoets** —
   `_async_remove_stale_entities` verwijdert een entiteit als zijn `config_entry_id` de onze is
   én zijn `unique_id` met onze prefix begint, maar kijkt niet naar het platform of het domein;
@@ -290,12 +283,6 @@ The worked-out design proposals for everything below live in
   times one side of a loop or a short-circuit that never comes past. Neither a pragma nor a
   test covers them now; per one the question is whether the second side is reachable (then a
   test) or not (then a rewrite that removes the branch).
-- **The gate's own `exclude_lines`** — the gate only reports missed lines, but this project's
-  three patterns in `pyproject.toml` (the pragma pattern, `...` bodies, `if TYPE_CHECKING:`)
-  keep another **21** lines out of the count (measured in round 32: 9 protocol stubs in
-  `coordinator.py`, and 3 per file in four `TYPE_CHECKING` blocks, including
-  `_CoordinatorBase = CoordinatorSurface`). The gate could name those lines, so that "zero
-  missed lines" is scoped precisely, and per pattern the question is whether it is justified.
 - **The sweep of orphaned entities misses the same completeness check** —
   `_async_remove_stale_entities` removes an entity when its `config_entry_id` is ours and its
   `unique_id` starts with our prefix, but it does not look at the platform or the domain; the

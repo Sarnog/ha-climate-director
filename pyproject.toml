@@ -14,6 +14,29 @@ branch = true
 [tool.coverage.report]
 show_missing = true
 
+# De drie patronen waarmee coverage regels buiten de meting houdt, uitgeschreven
+# in plaats van als verborgen standaard. Ze staan hier zodat de configuratie zelf
+# laat zien wat er buiten blijft, en niet een versie van coverage die ze stil
+# meebrengt; de patronen zijn die van coverage 7.16, één op één overgenomen, dus
+# de meting verandert er niet van. Wat het patroon raakt wordt sinds ronde 34
+# (R34-3) met naam en toenaam gemeld door `script/coverage_gate.py`
+# (`NAMED_EXCLUSIONS`): een regel zonder naam laat de poort vallen, en een naam
+# zonder regel ook.
+#
+# The three patterns with which coverage keeps lines out of the measurement,
+# written out instead of as a hidden default. They stand here so that the
+# configuration itself shows what stays outside, rather than a version of
+# coverage quietly bringing them along; the patterns are coverage 7.16's, copied
+# one to one, so the measurement does not change. What the pattern hits is
+# reported by name since round 34 (R34-3) by `script/coverage_gate.py`
+# (`NAMED_EXCLUSIONS`): a line without a name drops the gate, and so does a name
+# without a line.
+exclude_lines = [
+    '#\s*(pragma|PRAGMA)[:\s]?\s*(no|NO)\s*(cover|COVER)',
+    '^\s*(((async )?def .*?)?[\])]+(\s*->.*?)?:\s*)?\.\.\.\s*(#|$)',
+    'if (typing\.)?TYPE_CHECKING:',
+]
+
 # `precision` is geen luxe: zonder deze regel vergelijkt coverage het percentage
 # afgerond op nul decimalen met `fail_under`, en dan is 99,69 gelijk aan 100 en
 # vuurt de drempel nooit. Ronde 31 heeft dat gemeten: met `fail_under = 99.70`

@@ -32,9 +32,11 @@ from typing import Any
 
 import pytest
 from conftest import climate, house, make_world
+from coverage import Coverage
 from homeassistant.util import dt as dt_util
 
 import custom_components.climate_director.engine.sources as source_picker
+import script.coverage_gate as coverage_gate
 from custom_components.climate_director import problems, texts
 from custom_components.climate_director.binary_sensor import ZoneBlockedSensor, ZoneFallbackSensor
 from custom_components.climate_director.coordinator import ClimateDirectorCoordinator
@@ -627,3 +629,32 @@ def test_nothing_is_hidden_from_the_measurement() -> None:
         "deze regels zijn uit de dekkingsmeting gehouden in plaats van gemeten: "
         + ", ".join(offenders)
     )
+
+
+def test_every_line_outside_the_measurement_has_a_name() -> None:
+    """Elke regel die buiten de meting valt heeft een naam (ronde 34, R34-3).
+
+    De poort (`script/coverage_gate.py`) kan alleen zien wat coverage meekrijgt,
+    en coverage houdt drie soorten regels buiten de telling op een patroon. Een
+    patroon verbergt stil, en daarom noemt de poort elke regel met naam en
+    toenaam in `NAMED_EXCLUSIONS`. Deze test eist dat die lijst **precies** klopt
+    met wat de meting overslaat: geen regel zonder naam, geen naam zonder regel.
+
+    De meting heeft daar geen gegevensbestand voor nodig — wat coverage uitsluit
+    hangt aan het bestand en het patroon, niet aan wat er gedraaid is. Zonder
+    enige uitsluiting zou deze test niets meten, en dat is dan ook een fout.
+
+    Every line that falls outside the measurement has a name (round 34, R34-3).
+    The gate (`script/coverage_gate.py`) can only see what coverage is given, and
+    coverage keeps three kinds of lines out of the count on a pattern. A pattern
+    hides silently, so the gate names every line in `NAMED_EXCLUSIONS`. This test
+    demands that the list matches **exactly** what the measurement skips: no line
+    without a name, no name without a line.
+
+    That measurement needs no data file — what coverage excludes hangs on the file
+    and the pattern, not on what ran. Without any exclusion this test would
+    measure nothing, and that too is an error.
+    """
+    hidden = coverage_gate.hidden_lines(Coverage(), PACKAGE)
+    assert hidden, "de meting sluit geen enkele regel uit, dus deze test meet niets"
+    assert coverage_gate.exclusion_problems(hidden, PACKAGE) == []
