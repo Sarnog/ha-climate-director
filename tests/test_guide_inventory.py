@@ -206,64 +206,140 @@ def test_every_visible_feature_stands_in_every_guide(language: str) -> None:
     assert not _missing(language)
 
 
-#: Elke vermelding van een schakelaar- of sensorpatroon in een gids. Wat tussen de
-#: haken staat hoort bij de plaatshouder (`<zone>`, `<opening>`, …) en blijft
-#: staan, zodat de vergelijking de vertaalde slug raakt.
+#: Elke vermelding van een entiteitspatroon in een gids. Wat tussen de haken staat
+#: hoort bij de plaatshouder (`<zone>`, `<opening>`, …) en blijft staan, zodat de
+#: vergelijking de vertaalde slug raakt.
 #:
-#: Every mention of a switch or sensor pattern in a guide. What stands between the
-#: brackets belongs to the placeholder (`<zone>`, `<opening>`, …) and stays, so the
+#: Every mention of an entity pattern in a guide. What stands between the brackets
+#: belongs to the placeholder (`<zone>`, `<opening>`, …) and stays, so the
 #: comparison hits the translated slug.
-SLUG_MENTION = re.compile(r"\b(switch|sensor)\.\*_([^\s`|,)]+)")
+SLUG_MENTION = re.compile(r"\b(switch|sensor|binary_sensor|button|number|select)\.([a-z0-9_*<>]+)")
 
-#: De twee domeinen waarvan deze bewaking de slugs leest. Andere domeinen
-#: (`binary_sensor`, `button`, `number`, `select`) hebben hun eigen patronen en
-#: vallen buiten deze test.
+#: De zes domeinen waarvan deze bewaking de slugs leest. Ze doen alle zes mee: een
+#: slug van het ene domein achter het andere is precies de fout van ronde 34, en
+#: die fout bestaat net zo goed voor `binary_sensor`, `button`, `number` en
+#: `select`. Alle zes staan er, zodat de bewaking niet opnieuw aan een lijstje
+#: hangt waar het volgende domein naast valt.
 #:
-#: The two domains this guard reads the slugs of. Other domains (`binary_sensor`,
-#: `button`, `number`, `select`) have their own patterns and stay outside it.
-SLUG_DOMAINS = ("switch", "sensor")
+#: The six domains this guard reads the slugs of. All six take part: a slug of one
+#: domain behind another is exactly round 34's mistake, and that mistake exists
+#: just as well for `binary_sensor`, `button`, `number` and `select`. All six stand
+#: here, so the guard does not hang on a list the next domain can fall beside.
+SLUG_DOMAINS = ("switch", "sensor", "binary_sensor", "button", "number", "select")
+
+#: Een plaatshouder in een slug (`<zone>`, `<opening>`, `<entity>`).
+#:
+#: A placeholder in a slug (`<zone>`, `<opening>`, `<entity>`).
+PLACEHOLDER = re.compile(r"<[a-z_]+>")
 
 
-def _translated_slugs(language: str) -> set[tuple[str, str]]:
-    """Elke (domein, slug) die deze taal werkelijk uit zijn vertaling afleidt.
+def _slug_regex(language: str, domain: str, key: str) -> re.Pattern[str]:
+    """Een vertaalde slug als patroon, waarin een plaatshouder ook een naam mag zijn.
 
-    Every (domain, slug) this language really derives from its translation.
+    De gidsen schrijven naast `<zone>` ook een voorbeeld als `slaapkamer`; beide
+    horen te kloppen. Alles buiten de plaatshouder staat letterlijk vast.
+
+    A translated slug as a pattern, in which a placeholder may also be a real
+    name. The guides write an example such as `slaapkamer` next to `<zone>`; both
+    should match. Everything outside the placeholder stands literally.
+    """
+    parts = re.split(r"(<[a-z_]+>)", _slug_pattern(language, domain, key))
+    return re.compile(
+        "".join(
+            rf"(?:{part}|[a-z0-9]+(?:_[a-z0-9]+)*)"
+            if PLACEHOLDER.fullmatch(part)
+            else re.escape(part)
+            for part in parts
+        )
+        + r"\Z"
+    )
+
+
+def _translated_slugs(language: str) -> dict[str, list[re.Pattern[str]]]:
+    """Elke slug die deze taal per domein werkelijk uit zijn vertaling afleidt.
+
+    Every slug this language really derives per domain from its translation.
     """
     entity = _translation(language)["entity"]
     return {
-        (domain, _slug_pattern(language, domain, key))
+        domain: [_slug_regex(language, domain, key) for key in entity.get(domain, {})]
         for domain in SLUG_DOMAINS
-        for key in entity.get(domain, {})
     }
 
 
+def _mention_problem(domain: str, rest: str, slugs: dict[str, list[re.Pattern[str]]]) -> str | None:
+    """Of deze vermelding een bestaande entiteit kan aanduiden (R36-3).
+
+    `rest` is wat in de gids achter `switch.` of `sensor.` staat. De gids schrijft
+    een voorvoegsel (`*`, een plaatshouder of de naam van de installatie) en
+    daarna de slug; welk voorvoegsel dat is hangt van de installatie af. Daarom
+    probeert deze functie elke knip op een `_`: is de rest achter de eerste knip
+    een vertaalde slug van **dit** domein, dan klopt de vermelding. Is die rest
+    een slug van een ánder domein, dan noemt de gids een entiteit die niet bestaat
+    — precies de fout van ronde 34 (`switch.*_nhy_tjwz_<zone>`). Vindt geen enkele
+    knip een slug, dan is de slug zelf verkeerd. De oude regel zocht alleen
+    `domein.*_`, en daarmee glipte elke andere schrijfwijze van het voorvoegsel
+    erlangs (gemeten: `switch.climate_director_nhy_tjwz_<zone>` bleef groen).
+
+    Whether this mention can point at an existing entity (R36-3). `rest` is what
+    stands behind `switch.` or `sensor.` in the guide. The guide writes a prefix
+    (`*`, a placeholder or the installation's name) and then the slug; which prefix
+    that is depends on the installation. This function therefore tries every split
+    on a `_`: if the remainder behind the first split is a translated slug of
+    **this** domain, the mention is right. If that remainder is a slug of another
+    domain, the guide names an entity that does not exist — exactly round 34's
+    mistake (`switch.*_nhy_tjwz_<zone>`). When no split yields a slug, the slug
+    itself is wrong. The old rule only looked for `domain.*_`, and every other
+    spelling of the prefix slipped past it (measured:
+    `switch.climate_director_nhy_tjwz_<zone>` stayed green).
+    """
+    for index, character in enumerate(rest):
+        if character != "_":
+            continue
+        remainder = rest[index + 1 :]
+        if not remainder:
+            continue
+        if any(pattern.fullmatch(remainder) for pattern in slugs.get(domain, ())):
+            return None
+        for other, patterns in slugs.items():
+            if other != domain and any(pattern.fullmatch(remainder) for pattern in patterns):
+                return f"slug van {other}"
+    return "geen vertaalde slug"
+
+
 @pytest.mark.parametrize("language", LANGUAGES)
-def test_every_switch_or_sensor_slug_a_guide_names_is_translated(language: str) -> None:
-    """Elke override-slug in de gids is `slugify` van de vertaalde naam (R35-3).
+def test_every_entity_id_a_guide_names_comes_from_its_translation(language: str) -> None:
+    """Elke entiteit-id in de gids komt uit de vertaling van die taal (R35-3, R36-3).
 
     Home Assistant leidt de entiteit-id af uit de vertaalde naam, dus een gids die
     de slug van een ánder domein noemt — de sensorslug achter `switch.` — stuurt de
     lezer naar een entiteit die niet bestaat. Gemeten in ronde 34: `ar.md:764`
     noemde `switch.*_nhy_tjwz_<zone>` terwijl de schakelaar `switch.*_tjwz_<zone>`
-    heet; de andere vijf gidsen klopten. De test loopt regel voor regel, zodat de
-    melding het bestand én de regel noemt.
+    heet; de andere vijf gidsen klopten. Ronde 36 (R36-3) haalt de schrijfwijze van
+    het voorvoegsel eruit: de test knipt op elke `_`, accepteert `*`, een
+    plaatshouder en een echte naam, en toetst zes domeinen. De test loopt regel
+    voor regel, zodat de melding het bestand én de regel noemt.
 
-    Every override slug in the guide is `slugify` of the translated name (R35-3).
-    Home Assistant derives the entity id from the translated name, so a guide
-    naming another domain's slug — the sensor slug after `switch.` — sends the
-    reader to an entity that does not exist. Measured in round 34: `ar.md:764`
+    Every entity id in the guide comes from that language's translation (R35-3,
+    R36-3). Home Assistant derives the entity id from the translated name, so a
+    guide naming another domain's slug — the sensor slug after `switch.` — sends
+    the reader to an entity that does not exist. Measured in round 34: `ar.md:764`
     named `switch.*_nhy_tjwz_<zone>` while the switch is called
-    `switch.*_tjwz_<zone>`; the other five guides were right. The test walks line
-    by line, so the message names both the file and the line.
+    `switch.*_tjwz_<zone>`; the other five guides were right. Round 36 (R36-3)
+    takes the spelling of the prefix out of it: the test splits on every `_`,
+    accepts `*`, a placeholder and a real name, and covers six domains. The test
+    walks line by line, so the message names both the file and the line.
     """
-    valid = _translated_slugs(language)
+    slugs = _translated_slugs(language)
     text = (INSTALL / f"{language}.md").read_text(encoding="utf-8")
-    offenders = [
-        f"{language}.md:{number}: {domain}.*_{slug}"
-        for number, line in enumerate(text.splitlines(), 1)
-        for domain, slug in SLUG_MENTION.findall(line)
-        if (domain, slug) not in valid
-    ]
+    offenders: list[str] = []
+    for number, line in enumerate(text.splitlines(), 1):
+        for domain, rest in SLUG_MENTION.findall(line):
+            if rest == "*":
+                continue
+            problem = _mention_problem(domain, rest, slugs)
+            if problem is not None:
+                offenders.append(f"{language}.md:{number}: {domain}.{rest} ({problem})")
     assert not offenders, (
         "deze slugs komen niet uit de vertaling van deze taal, dus de gids noemt "
         "een entiteit die niet bestaat: " + "; ".join(offenders)
