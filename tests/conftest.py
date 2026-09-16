@@ -612,16 +612,14 @@ def fixable_issue_keys(root: Path | None = None) -> set[str]:
     """
     import ast
 
+    from _ast_helpers import issue_calls
+
     if root is None:
         root = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
     source = (root / "problems.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
     found: set[str] = set()
-    for node in ast.walk(tree):
-        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)):
-            continue
-        if node.func.attr != "async_create_issue":
-            continue
+    for node in issue_calls(tree, "async_create_issue"):
         keywords = {keyword.arg: keyword.value for keyword in node.keywords}
         fixable = keywords.get("is_fixable")
         if not (isinstance(fixable, ast.Constant) and fixable.value is True):

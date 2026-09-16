@@ -61,12 +61,24 @@ integration rather than one per installation, so it only goes when the last
 installation does (`async_clear_watchers`, which is reachable from
 `async_unload_entry`). The guard therefore demands a reachable delete for it too,
 but not that it disappears on every unload.
+
+Ronde 35 (R35-1): de match zelf woont nu in `tests/_ast_helpers.py`. Vier lezers
+in de testset gebruiken daar dezelfde definitie — attribuut én kale naam, met
+opgeloste import-aliassen — in plaats van vier keer hun eigen
+`ast.Attribute`-variant.
+
+Round 35 (R35-1): the match itself now lives in `tests/_ast_helpers.py`. Four
+readers in the suite use the same definition there — attribute and bare name,
+with resolved import aliases — instead of four of their own `ast.Attribute`
+variants.
 """
 
 from __future__ import annotations
 
 import ast
 from pathlib import Path
+
+from _ast_helpers import ISSUE_CALLS, issue_call_names, issue_calls
 
 PACKAGE = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
 
@@ -77,11 +89,6 @@ PACKAGE = Path(__file__).resolve().parents[1] / "custom_components" / "climate_d
 #: everywhere in this project) or as a keyword argument.
 ISSUE_ID_ARGUMENT = 2
 ISSUE_ID_KEYWORD = "issue_id"
-
-#: De twee kanten van een melding: aanmaken en wissen.
-#:
-#: The two sides of a notice: creating and clearing.
-ISSUE_CALLS = ("async_create_issue", "async_delete_issue")
 
 
 def _modules(root: Path = PACKAGE) -> list[Path]:
@@ -167,8 +174,9 @@ def unfollowable_issue_ids(root: Path = PACKAGE) -> list[str]:
     offenders: list[str] = []
     for path, tree in _parse(root):
         constants = _string_constants(tree)
+        names = issue_call_names(tree)
         for attribute in ISSUE_CALLS:
-            for call in _calls(tree, attribute):
+            for call in issue_calls(tree, attribute, names):
                 argument = _issue_id_argument(call)
                 if _issue_id_key(argument, constants) is not None:
                     continue
@@ -188,20 +196,6 @@ def _refuse_unfollowable(root: Path = PACKAGE) -> None:
         "bewaking kan ze niet volgen en die meldingen vallen stil uit de "
         "unload-controle: " + "; ".join(offenders)
     )
-
-
-def _calls(tree: ast.Module, attribute: str) -> list[ast.Call]:
-    """Elke aanroep van `attribute` (waar hij ook aan hangt) in de boom.
-
-    Every call of `attribute` (whatever it hangs off) in the tree.
-    """
-    return [
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Attribute)
-        and node.func.attr == attribute
-    ]
 
 
 def _walk_functions(tree: ast.Module) -> list[ast.FunctionDef | ast.AsyncFunctionDef]:
@@ -231,20 +225,34 @@ def _called_names(node: ast.AST) -> set[str]:
     return names
 
 
+def created_issue_origins(root: Path = PACKAGE) -> dict[str, str]:
+    """Elke aangemaakte issue-id met de plek waar hij vandaan komt.
+
+    Voor de melding van de uitlaadbewaking: zonder bestand en regelnummer moet
+    wie een melding ziet die niet gewist wordt zelf gaan zoeken.
+
+    Every created issue id with the place it comes from. For the unload guard's
+    message: without file and line number, whoever sees a notice that is not
+    cleared has to go looking themselves.
+    """
+    _refuse_unfollowable(root)
+    found: dict[str, str] = {}
+    for path, tree in _parse(root):
+        constants = _string_constants(tree)
+        names = issue_call_names(tree)
+        for call in issue_calls(tree, "async_create_issue", names):
+            key = _issue_id_key(_issue_id_argument(call), constants)
+            if key is not None:
+                found.setdefault(key, f"{path.name}:{call.lineno}")
+    return found
+
+
 def created_issue_ids(root: Path = PACKAGE) -> set[str]:
     """Elke issue-id waarop het pakket een melding aanmaakt.
 
     Every issue id on which the package raises a notice.
     """
-    _refuse_unfollowable(root)
-    found: set[str] = set()
-    for _path, tree in _parse(root):
-        constants = _string_constants(tree)
-        for call in _calls(tree, "async_create_issue"):
-            key = _issue_id_key(_issue_id_argument(call), constants)
-            if key is not None:
-                found.add(key)
-    return found
+    return set(created_issue_origins(root))
 
 
 def deleted_ids_by_function(root: Path = PACKAGE) -> dict[str, set[str]]:
@@ -256,8 +264,9 @@ def deleted_ids_by_function(root: Path = PACKAGE) -> dict[str, set[str]]:
     deleted: dict[str, set[str]] = {}
     for _path, tree in _parse(root):
         constants = _string_constants(tree)
+        names = issue_call_names(tree)
         for function in _walk_functions(tree):
-            for call in _calls(function, "async_delete_issue"):
+            for call in issue_calls(function, "async_delete_issue", names):
                 key = _issue_id_key(_issue_id_argument(call), constants)
                 if key is not None:
                     deleted.setdefault(function.name, set()).add(key)
@@ -319,10 +328,11 @@ def test_every_created_notice_is_cleared_when_the_entry_unloads() -> None:
     )
 
     missing = sorted(created - cleared)
+    origins = created_issue_origins()
+    detail = ", ".join(f"{name} ({origins.get(name, '?')})" for name in missing)
     assert not missing, (
         "deze meldingen worden aangemaakt maar op het uitlaadpad van "
-        "`async_unload_entry` niet meer gewist, dus ze overleven het uitladen: "
-        + ", ".join(missing)
+        "`async_unload_entry` niet meer gewist, dus ze overleven het uitladen: " + detail
     )
 
 

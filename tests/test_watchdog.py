@@ -23,6 +23,7 @@ import pathlib
 import re
 
 import pytest
+from _ast_helpers import issue_calls
 from conftest import fix_flow_steps, fixable_issue_keys
 
 from custom_components.climate_director import problems
@@ -371,11 +372,7 @@ class TestTheFixFlowHasTextInEveryLanguage:
         """Return the placeholder names the code really passes for `key`."""
         source = (COMPONENT / "problems.py").read_text(encoding="utf-8")
         tree = ast.parse(source)
-        for node in ast.walk(tree):
-            if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)):
-                continue
-            if node.func.attr != "async_create_issue":
-                continue
+        for node in issue_calls(tree, "async_create_issue"):
             keywords = {keyword.arg: keyword.value for keyword in node.keywords}
             key_node = keywords.get("translation_key")
             if not (isinstance(key_node, ast.Constant) and key_node.value == key):

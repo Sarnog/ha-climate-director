@@ -18,9 +18,11 @@ because that would again test today's state instead of the property.
 
 from __future__ import annotations
 
+import ast
 from pathlib import Path
 
 import pytest
+from _ast_helpers import issue_calls
 from conftest import (
     async_show_form_calls,
     fix_flow_steps,
@@ -876,3 +878,106 @@ class TestTheRepairNoticeGuard:
         )
         with pytest.raises(AssertionError, match=r"problems\.py:2: async_delete_issue"):
             deleted_ids_by_function(root=root)
+
+
+class TestTheNoticeCallMatch:
+    """Elke meldingsaanroep telt mee, hoe hij ook geïmporteerd is (ronde 35, R35-1).
+
+    Vier lezers in de testset liepen elk hun eigen AST af en matchten alleen
+    `ast.Attribute` — `ir.async_create_issue(...)`. Een kale naam of een
+    `from … import … as x`-alias glipte er langs, en daarmee hing de hele
+    meldingsbewaking (wissen bij het uitladen, de fixable-inventarisatie, de
+    gidsen en de placeholders) aan één schrijfwijze. De match woont sinds ronde
+    35 in `tests/_ast_helpers.py`; deze tests pinnen hem op verzonnen invoer
+    vast: beide spellingen tellen, een naam zonder de juiste import niet.
+
+    Every notice call counts, however it was imported (round 35, R35-1). Four
+    readers in the suite each walked their own AST and matched only
+    `ast.Attribute` — `ir.async_create_issue(...)`. A bare name or a
+    `from … import … as x` alias slipped past it, and with that the whole notice
+    guard (clearing on unload, the fixable inventory, the guides and the
+    placeholders) hung on one spelling. The match lives in
+    `tests/_ast_helpers.py` since round 35; these tests pin it on invented input:
+    both spellings count, a name without the right import does not.
+    """
+
+    @staticmethod
+    def _count(body: str, attribute: str = "async_create_issue") -> int:
+        """Aantal aanroepen van `attribute` in een verzonnen bestand.
+
+        The number of calls of `attribute` in an invented file.
+        """
+        return len(issue_calls(ast.parse(body), attribute))
+
+    def test_an_attribute_call_counts(self) -> None:
+        """`ir.async_create_issue(...)` blijft tellen, ook zonder import ernaast."""
+        assert self._count('ir.async_create_issue(hass, domain, "probe")\n') == 1
+
+    def test_a_bare_imported_name_counts(self) -> None:
+        """Een kale naam na de import telt mee — dat was het gat."""
+        assert (
+            self._count(
+                "from homeassistant.helpers.issue_registry import async_create_issue\n"
+                'async_create_issue(hass, domain, "probe")\n'
+            )
+            == 1
+        )
+
+    def test_an_aliased_imported_name_counts(self) -> None:
+        """`from … import … as x` wordt opgelost, hoe de alias ook heet."""
+        assert (
+            self._count(
+                "from homeassistant.helpers.issue_registry import async_create_issue as note\n"
+                'note(hass, domain, "probe")\n'
+            )
+            == 1
+        )
+
+    def test_a_lookalike_without_the_import_does_not_count(self) -> None:
+        """Een kale naam zonder de juiste import is geen melding."""
+        assert self._count('async_create_issue(hass, domain, "probe")\n') == 0
+
+    def test_a_like_named_function_from_elsewhere_does_not_count(self) -> None:
+        """Een gelijknamige functie uit een ander pakket telt niet mee."""
+        assert (
+            self._count(
+                "from other.package import async_create_issue\n"
+                'async_create_issue(hass, domain, "probe")\n'
+            )
+            == 0
+        )
+
+    def test_the_delete_side_is_matched_too(self) -> None:
+        """Dezelfde regel geldt voor `async_delete_issue`."""
+        assert (
+            self._count(
+                "from homeassistant.helpers import issue_registry as x\n"
+                'x.async_delete_issue(hass, domain, "probe")\n',
+                "async_delete_issue",
+            )
+            == 1
+        )
+
+    def test_a_bare_name_with_a_helper_id_reaches_the_unload_guard(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """De hele keten: een kale naam met een helper-id wordt gezien."""
+        root = _write_package(
+            monkeypatch,
+            tmp_path,
+            "noticepkg_barename",
+            {
+                "problems.py": (
+                    "from homeassistant.helpers.issue_registry import async_create_issue\n"
+                    "\n"
+                    "\n"
+                    "def _probe_issue_id(entry_id):\n"
+                    '    return f"probe_{entry_id}"\n'
+                    "\n"
+                    "\n"
+                    "async def report(hass, domain, entry_id):\n"
+                    "    async_create_issue(hass, domain, _probe_issue_id(entry_id))\n"
+                )
+            },
+        )
+        assert created_issue_ids(root=root) == {"_probe_issue_id"}

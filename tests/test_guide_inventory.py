@@ -38,6 +38,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from _ast_helpers import issue_calls
 from homeassistant.util import slugify
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -98,13 +99,7 @@ def notice_keys() -> list[str]:
         and isinstance(node.value.value, str)
     }
     keys: set[str] = set()
-    for node in ast.walk(tree):
-        if not (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute)
-            and node.func.attr == "async_create_issue"
-        ):
-            continue
+    for node in issue_calls(tree, "async_create_issue"):
         for keyword in node.keywords:
             if keyword.arg != "translation_key":
                 continue
