@@ -773,6 +773,52 @@ class TestTheCoverageGate:
         assert "noemt een regel die de meting niet meer overslaat" in out
         assert "iets_anders" in out
 
+    def test_a_comment_behind_a_stub_is_not_a_line_without_a_name(
+        self, tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Een commentaarregel achter een stub vraagt geen naam (R35-5).
+
+        Coverage sluit de hele regio van een `...`-stub mee uit — de decorator
+        erboven, een commentaarregel ertussen, de vervolgregels van een
+        meerregelige `def` — maar zo'n regel kan zonder de uitsluiting nooit
+        gemeten worden. De whitelist hoort hem dus niet te noemen; anders hing de
+        poort aan de letterlijke tekst van een commentaar.
+
+        A comment line behind a stub asks for no name (R35-5). Coverage excludes
+        the whole region of a `...` stub — the decorator above it, a comment line
+        in between, the continuation lines of a multi-line `def` — but such a line
+        could never be measured without the exclusion. The whitelist should
+        therefore not name it; otherwise the gate hung on the literal text of a
+        comment.
+        """
+        monkeypatch.setattr(
+            coverage_gate,
+            "NAMED_EXCLUSIONS",
+            {
+                "a.py": (
+                    "def een(self) -> None: ...",
+                    "def twee(self) -> None: ...",
+                )
+            },
+        )
+        package = self._package(
+            tmp_path,
+            {
+                "a.py": (
+                    "x = 1\n"
+                    "\n"
+                    "\n"
+                    "class P:\n"
+                    "    def een(self) -> None: ...\n"
+                    "    # een commentaar\n"
+                    "    def twee(self) -> None: ...\n"
+                )
+            },
+        )
+        data = self._measurement(tmp_path / "comment.data", {str(package / "a.py"): {1, 4}})
+        assert self._run(data, package) == 0
+        assert "regels buiten de meting: 2" in capsys.readouterr().out
+
 
 class TestTheRepairNoticeGuard:
     """Een onvolgbaar issue-id meldt zich in plaats van stil over te slaan.

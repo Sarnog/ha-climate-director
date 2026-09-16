@@ -23,7 +23,10 @@ laat regels weg op een patroon (`# pragma: no cover`, een `...` als blokinhoud,
 een `if TYPE_CHECKING:`-blok), en een patroon verbergt stil: zo'n regel verdwijnt
 uit "nul gemiste regels" zonder dat iemand hem noemt. De poort noemt ze daarom
 allemaal, met hun inhoud erbij, en laat zowel een regel zonder naam als een naam
-zonder regel vallen.
+zonder regel vallen. Sinds ronde 35 (R35-5) telt alleen het begin van een
+statement: een commentaarregel, een decorator of een vervolgregel kan zonder de
+uitsluiting nooit een gemeten regel zijn, dus die vraagt geen naam — anders hing
+de poort aan de letterlijke tekst van een commentaar.
 
 Gebruik / usage:
 
@@ -53,12 +56,16 @@ Gebruik / usage:
     `if TYPE_CHECKING:` block), and a pattern hides silently: such a line
     disappears from "zero missed lines" without anyone naming it. Hence the gate
     names them all, with their content alongside, and drops both a line without
-    a name and a name without a line.
+    a name and a name without a line. Since round 35 (R35-5) only the start of a
+    statement counts: a comment line, a decorator or a continuation line could
+    never be a measured line without the exclusion, so it asks for no name —
+    otherwise the gate hung on the literal text of a comment.
 """
 
 from __future__ import annotations
 
 import argparse
+import ast
 import sys
 from collections import Counter
 from pathlib import Path
@@ -110,48 +117,53 @@ EXCLUSION_HINT = (
     "something was agreed."
 )
 
-#: De regels die de meting niet meerekent, met naam en toenaam.
+#: De regels die de meting niet meerekent, met naam en toenaam. Alleen het begin
+#: van een statement telt hier: een commentaarregel, een decorator of een
+#: vervolgregel kan zonder uitsluiting nooit een gemeten regel zijn, dus die hoort
+#: niet in deze lijst — anders hing de poort aan de letterlijke tekst van een
+#: commentaar (ronde 35, R35-5).
 #:
 #: Coverage laat drie soorten regels weg op een patroon: `# pragma: no cover`,
 #: een `...` als enige inhoud van een blok, en een `if TYPE_CHECKING:`-blok. Die
 #: patronen staan sinds ronde 34 (R34-3) uitgeschreven in `pyproject.toml`, zodat
 #: de meting niet op verborgen standaardpatronen leunt, maar een patroon verbergt
-#: nog steeds stil: elke regel die eronder valt verdwijnt uit "nul gemiste
-#: regels" zonder dat iemand hem noemt. Daarom staat hieronder elke regel met
-#: zijn eigen inhoud — twaalf in `coordinator.py` (het `CoordinatorSurface`-
+#: nog steeds stil: elke regel die eronder valt verdwijnt uit "nul gemiste regels"
+#: zonder dat iemand hem noemt. Daarom staat hieronder elke statementregel met
+#: zijn eigen inhoud — negen in `coordinator.py` (het `CoordinatorSurface`-
 #: protocol, dat alleen voor de typecontrole bestaat: een `...`-stub wordt nooit
 #: aangeroepen) en drie in elk van de vier mixins die dat protocol onder
-#: `TYPE_CHECKING` importeren (die tak is bij het draaien nooit waar). Een lege
-#: regel kan nooit een gemiste regel zijn en telt hier niet mee. De poort eist
-#: dat de lijst precies klopt: een regel die buiten de meting valt zonder hier te
-#: staan laat hem vallen, en een naam die niets meer verbergt ook.
+#: `TYPE_CHECKING` importeren (die tak is bij het draaien nooit waar). De poort
+#: eist dat de lijst precies klopt: een regel die buiten de meting valt zonder
+#: hier te staan laat hem vallen, en een naam die niets meer verbergt ook.
 #:
-#: The lines the measurement does not count, by name. Coverage drops three kinds
-#: of lines on a pattern: `# pragma: no cover`, a `...` as a block's only
-#: content, and an `if TYPE_CHECKING:` block. Since round 34 (R34-3) those
-#: patterns are written out in `pyproject.toml`, so the measurement does not lean
-#: on hidden defaults, but a pattern still hides silently: every line it hits
-#: disappears from "zero missed lines" without anyone naming it. Hence every line
-#: stands below with its own content — twelve in `coordinator.py` (the
-#: `CoordinatorSurface` protocol, which exists for the type check only: a `...`
-#: stub is never called) and three in each of the four mixins that import that
-#: protocol under `TYPE_CHECKING` (that branch is never true at run time). An
-#: empty line can never be a missed line and does not count here. The gate
-#: demands the list to be exact: a line that falls outside the measurement
-#: without standing here drops it, and so does a name that hides nothing anymore.
+#: The lines the measurement does not count, by name. Only the start of a
+#: statement counts here: a comment line, a decorator or a continuation line
+#: could never be a measured line without the exclusion, so it does not belong in
+#: this list — otherwise the gate hung on the literal text of a comment (round
+#: 35, R35-5).
+#:
+#: Coverage drops three kinds of lines on a pattern: `# pragma: no cover`, a `...`
+#: as a block's only content, and an `if TYPE_CHECKING:` block. Since round 34
+#: (R34-3) those patterns are written out in `pyproject.toml`, so the measurement
+#: does not lean on hidden defaults, but a pattern still hides silently: every
+#: line it hits disappears from "zero missed lines" without anyone naming it.
+#: Hence every statement line stands below with its own content — nine in
+#: `coordinator.py` (the `CoordinatorSurface` protocol, which exists for the type
+#: check only: a `...` stub is never called) and three in each of the four mixins
+#: that import that protocol under `TYPE_CHECKING` (that branch is never true at
+#: run time). The gate demands the list to be exact: a line that falls outside the
+#: measurement without standing here drops it, and so does a name that hides
+#: nothing anymore.
 NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {
     "coordinator.py": (
-        "@property",
         "def entry(self) -> ClimateDirectorEntry: ...",
         "def async_request_evaluation(self) -> None: ...",
-        "# Komt van `DataUpdateCoordinator` en wordt hier nergens overschreven. Een",
         "def _async_save_state(self) -> None: ...",
         "def _live_preconditions(self) -> dict[str, datetime]: ...",
         "def _wake_at_the_first_expiry(self) -> None: ...",
         "def _override_wake_at_first_expiry(self) -> None: ...",
         "def _calendar_says_holiday(self) -> bool: ...",
         "def _zones_handed_back(",
-        "self, now: datetime, residents: dict[str, ResidentState]",
         ") -> set[str]: ...",
     ),
     "overrides.py": (
@@ -247,18 +259,56 @@ def missed_lines(data_file: str, package: Path = PACKAGE) -> dict[str, list[int]
     return missed
 
 
+def statement_lines(path: Path) -> set[int]:
+    """De regelnummers waar een statement begint, uit de bron zelf.
+
+    Niet elke regel die coverage overslaat zou zonder uitsluiting een gemeten
+    regel zijn geweest. Staat er een `...`-stub in een klasse, dan slaat
+    coverage de hele uitgesloten regio over — de decorator erboven, een
+    commentaarregel ertussen en de vervolgregels van een meerregelige `def`
+    horen daar bij. Die kunnen zonder de uitsluiting nooit gemeten worden, dus
+    ze horen niet in de whitelist; anders hing de poort aan de letterlijke tekst
+    van een commentaar (ronde 35, R35-5).
+
+    De regelnummers komen uit `ast`: elke `ast.stmt` begint ergens, en een
+    `Expr` met `...` als lichaam begint op de regel van die `...`. Daarmee valt
+    de decorator af (`FunctionDef.lineno` wijst naar de `def`, niet naar de
+    decorator) en de vervolgregel ook.
+
+    The line numbers where a statement starts, from the source itself. Not every
+    line coverage skips would have been a measured line without the exclusion.
+    When a class holds a `...` stub, coverage skips the whole excluded region —
+    the decorator above it, a comment line in between and the continuation lines
+    of a multi-line `def` come along. Those could never be measured without the
+    exclusion, so they do not belong in the whitelist; otherwise the gate hung on
+    the literal text of a comment (round 35, R35-5).
+
+    The line numbers come from `ast`: every `ast.stmt` starts somewhere, and an
+    `Expr` with `...` as its body starts on the line of that `...`. That drops
+    the decorator (`FunctionDef.lineno` points at the `def`, not at the
+    decorator) and the continuation line too.
+    """
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    return {node.lineno for node in ast.walk(tree) if isinstance(node, ast.stmt)}
+
+
 def hidden_lines(coverage: Coverage, package: Path = PACKAGE) -> dict[str, list[tuple[int, str]]]:
-    """De niet-lege regels die buiten de meting vallen, per bestand.
+    """De regels buiten de meting die zonder uitsluiting een statement waren.
 
-    Coverage geeft per bestand de regels terug die het overslaat. Een lege regel
-    kan nooit een gemiste regel zijn en telt hier niet mee, en een regelnummer
-    voorbij het einde van het bestand (coverage noemt de regel ná een
-    afgesloten blok er soms bij) ook niet. De rest moet een naam hebben in
-    `NAMED_EXCLUSIONS`.
+    Coverage geeft per bestand de regels terug die het overslaat. Alleen het
+    begin van een statement telt hier mee (zie `statement_lines`): een
+    commentaarregel, een decorator of een vervolgregel kan zonder de uitsluiting
+    nooit een gemeten regel zijn, dus die vraagt geen naam. Een leeg veld kan
+    nooit een gemiste regel zijn en telt ook niet mee, en een regelnummer voorbij
+    het einde van het bestand (coverage noemt de regel ná een afgesloten blok er
+    soms bij) evenmin. De rest moet een naam hebben in `NAMED_EXCLUSIONS`.
 
-    The non-empty lines that fall outside the measurement, per file. Coverage
-    returns per file the lines it skips. An empty line can never be a missed line
-    and does not count here, and neither does a line number past the end of the
+    The lines outside the measurement that would have been a statement without
+    the exclusion. Coverage returns per file the lines it skips. Only the start
+    of a statement counts here (see `statement_lines`): a comment line, a
+    decorator or a continuation line could never be a measured line without the
+    exclusion, so it asks for no name. An empty line can never be a missed line
+    and does not count either, and neither does a line number past the end of the
     file (coverage sometimes names the line after a closed block). The rest has
     to have a name in `NAMED_EXCLUSIONS`.
     """
@@ -267,10 +317,11 @@ def hidden_lines(coverage: Coverage, package: Path = PACKAGE) -> dict[str, list[
     for path in sorted(root.rglob("*.py")):
         _, _, excluded, _, _ = coverage.analysis2(str(path))
         text = path.read_text(encoding="utf-8").splitlines()
+        starts = statement_lines(path)
         kept = [
             (line, text[line - 1].strip())
             for line in sorted(excluded)
-            if line <= len(text) and text[line - 1].strip()
+            if line in starts and line <= len(text) and text[line - 1].strip()
         ]
         if kept:
             hidden[str(path.relative_to(root))] = kept
