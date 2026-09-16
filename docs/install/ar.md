@@ -724,39 +724,67 @@ data:
 
 ## متابعة تجاوز بمدة على لوحة التحكم
 
+**ما تحتاجه.** تستعمل الأمثلة أدناه البطاقة المخصّصة **Simple Timer Card**
+(<https://github.com/eyalgal/simple-timer-card>)، وهي في متجر HACS العادي:
+HACS ← الواجهة الأمامية (Frontend) ← ابحث عن "Simple Timer Card" ← تنزيل ← ثم
+أعد تحميل الصفحة. ويدويًا أيضًا: ضع `simple-timer-card.js` من أحدث إصدار في
+`config/www` وأضف `/local/simple-timer-card.js` كمصدر للوحة التحكم من النوع
+`module`. والتكامل يعمل أيضًا بدون هذه البطاقة — فمستشعر وقت الانتهاء موجود في
+كل الأحوال؛ والبطاقة للوحة التحكم فقط.
+
 يحمل المستشعر `sensor.*_nhy_tjwz_<zone>` اللحظة التي ينتهي فيها تجاوز منطقة.
 وهذا كل ما تحتاجه بطاقة مؤقت: مع `mode: timestamp` تقرأ البطاقة الحالة كوقت
 انتهاء، وتعني `unknown` أنه لا شيء للعدّ التنازلي — لا تجاوز، أو تجاوز بلا
-مدة، أو تجاوز انتهى للتو. وتحمل الخاصية `start_time` لحظة ضبط التجاوز، وهي ما
-تستعمله البطاقة لحلقة التقدّم.
+مدة، أو تجاوز انتهى للتو. وتحمل الخاصية `start_time` لحظة ضبط التجاوز، وهي
+القيمة الافتراضية لـ `start_time_attr`، وتستعملها البطاقة لحلقة التقدّم.
 
-هذه هي تلك البطاقة، بزر إلغاء يُلغي فعلًا:
+هذه هي لوحة التحكم: أولًا زر يبدأ التجاوز، وتحته البطاقة مع زر الإلغاء. زر
+واحد واستدعاء واحد — هذا هو الزر الذي يحلّ محل سكربتات المؤقت القديمة، وتصنع
+واحدًا لكل مدة تريدها:
 
 ```yaml
-type: custom:simple-timer-card
-entities:
-  - entity: sensor.<device>_nhy_tjwz_slaapkamer
-    mode: timestamp
-    name: غرفة النوم
-    icon: mdi:timer
-    buttons:
-      - action:
-          action: perform-action
-          perform_action: climate_director.clear_override
-        icon: mdi:close
-        name: إلغاء
-        show_when: [running, finished]
-show_timer_presets: false
-show_active_header: false
-expire_action: remove
-visibility:
-  - condition: state
-    entity: sensor.<device>_nhy_tjwz_slaapkamer
-    state_not: unknown
-  - condition: state
-    entity: sensor.<device>_nhy_tjwz_slaapkamer
-    state_not: unavailable
+type: vertical-stack
+cards:
+  - type: button
+    name: غرفة النوم تبريد ساعة واحدة
+    icon: mdi:snowflake
+    tap_action:
+      action: perform-action
+      perform_action: climate_director.set_override
+      data:
+        zone_id: slaapkamer
+        hvac_mode: cool
+        temperature: 21
+        minutes: 60
+        when_done: turn_off
+  - type: custom:simple-timer-card
+    entities:
+      - entity: sensor.<device>_nhy_tjwz_slaapkamer
+        mode: timestamp
+        name: غرفة النوم
+        icon: mdi:timer
+        buttons:
+          - action:
+              action: perform-action
+              perform_action: climate_director.clear_override
+            icon: mdi:close
+            name: إلغاء
+            show_when: [running, finished]
+    show_timer_presets: false
+    show_active_header: false
+    expire_action: remove
+    visibility:
+      - condition: state
+        entity: sensor.<device>_nhy_tjwz_slaapkamer
+        state_not: unknown
+      - condition: state
+        entity: sensor.<device>_nhy_tjwz_slaapkamer
+        state_not: unavailable
 ```
+
+لا تعمل إعدادات البطاقة المسبقة (`timer_presets`) هنا: فالبطاقة لا تستطيع أن
+تبدأ مستشعر الطابع الزمني بنفسها — وهذا مذكور في وثائق إعداد البطاقة — ولذلك
+يقف زر البدء بجانبها كبطاقة منفصلة.
 
 لا يحمل الزر أي `data`: فبطاقة `simple-timer-card` ترسل المستشعر نفسه كهدف،
 ويقبل `climate_director.clear_override` ذلك. وهذه هي الطريقة الثانية لتسمية

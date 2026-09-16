@@ -782,40 +782,68 @@ accept.
 
 ## Watching a timed override on the dashboard
 
+**What you need.** The examples below use the custom card **Simple Timer Card**
+(<https://github.com/eyalgal/simple-timer-card>), which sits in the ordinary HACS
+store: HACS → Frontend → search for "Simple Timer Card" → Download → then refresh
+the page. Manually works too: put `simple-timer-card.js` from the newest release
+in `config/www` and add `/local/simple-timer-card.js` as a dashboard resource of
+type `module`. The integration works without this card as well — the end-time
+sensor is there either way; the card is only for the dashboard.
+
 `sensor.*_<zone>_override_ends` carries the moment at which a zone's override
 ends. That is all a timer card needs: with `mode: timestamp` the card reads the
 state as the end time, and `unknown` means there is nothing to count down — no
 override, an override without a duration, or one that has just lapsed. The
-`start_time` attribute carries the moment the override was set, which the card
-uses for its progress ring.
+`start_time` attribute carries the moment the override was set; that is the
+default of `start_time_attr`, and the card uses it for its progress ring.
 
-This is that card, with a cancel button that really cancels:
+This is that dashboard: first a button that starts the override, below it the card
+with the cancel button. One button, one action — this is the button that replaces
+the old timer scripts, and you make one per duration you want:
 
 ```yaml
-type: custom:simple-timer-card
-entities:
-  - entity: sensor.<device>_slaapkamer_override_ends
-    mode: timestamp
-    name: Bedroom
-    icon: mdi:timer
-    buttons:
-      - action:
-          action: perform-action
-          perform_action: climate_director.clear_override
-        icon: mdi:close
-        name: Cancel
-        show_when: [running, finished]
-show_timer_presets: false
-show_active_header: false
-expire_action: remove
-visibility:
-  - condition: state
-    entity: sensor.<device>_slaapkamer_override_ends
-    state_not: unknown
-  - condition: state
-    entity: sensor.<device>_slaapkamer_override_ends
-    state_not: unavailable
+type: vertical-stack
+cards:
+  - type: button
+    name: Bedroom cool for 1 hour
+    icon: mdi:snowflake
+    tap_action:
+      action: perform-action
+      perform_action: climate_director.set_override
+      data:
+        zone_id: slaapkamer
+        hvac_mode: cool
+        temperature: 21
+        minutes: 60
+        when_done: turn_off
+  - type: custom:simple-timer-card
+    entities:
+      - entity: sensor.<device>_slaapkamer_override_ends
+        mode: timestamp
+        name: Bedroom
+        icon: mdi:timer
+        buttons:
+          - action:
+              action: perform-action
+              perform_action: climate_director.clear_override
+            icon: mdi:close
+            name: Cancel
+            show_when: [running, finished]
+    show_timer_presets: false
+    show_active_header: false
+    expire_action: remove
+    visibility:
+      - condition: state
+        entity: sensor.<device>_slaapkamer_override_ends
+        state_not: unknown
+      - condition: state
+        entity: sensor.<device>_slaapkamer_override_ends
+        state_not: unavailable
 ```
+
+The card's presets (`timer_presets`) do not work here: the card cannot start a
+timestamp sensor itself — that stands in the card's configuration documentation —
+and that is why the start button sits beside it as a separate card.
 
 The button carries no `data`: `simple-timer-card` sends the sensor itself as the
 target, and `climate_director.clear_override` accepts that. That is the second

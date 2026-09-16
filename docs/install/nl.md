@@ -785,40 +785,70 @@ apparaat wél aanneemt.
 
 ## Een override met looptijd op het dashboard
 
+**Wat je nodig hebt.** De voorbeelden hieronder gebruiken de custom card
+**Simple Timer Card** (<https://github.com/eyalgal/simple-timer-card>), die in de
+gewone HACS-winkel staat: HACS → Frontend → zoeken op "Simple Timer Card" →
+Downloaden → daarna de pagina verversen. Handmatig kan het ook: zet
+`simple-timer-card.js` uit de nieuwste release in `config/www` en voeg als
+dashboardresource `/local/simple-timer-card.js` toe met type `module`. De
+integratie werkt ook zónder deze kaart — de eindtijdsensor is er hoe dan ook; de
+kaart is alleen voor het dashboard.
+
 `sensor.*_override_<zone>_verloopt` draagt het moment waarop de override van een
 zone afloopt. Meer heeft een timerkaart niet nodig: met `mode: timestamp` leest
 de kaart de toestand als eindtijd, en `unknown` betekent dat er niets af te
 tellen valt — geen override, een override zonder looptijd, of een die net
 vervallen is. Het attribuut `start_time` draagt het moment waarop de override
-gezet is; dat gebruikt de kaart voor zijn voortgangsring.
+gezet is; dat is de standaard van `start_time_attr`, en de kaart gebruikt het
+voor zijn voortgangsring.
 
-Dit is die kaart, met een annuleerknop die echt annuleert:
+Dit is dat dashboard: eerst een knop die de override start, daaronder de kaart met
+de annuleerknop. Eén knop, één actie — dit is de knop die de oude timerscripts
+vervangt, en je maakt er per gewenste duur één:
 
 ```yaml
-type: custom:simple-timer-card
-entities:
-  - entity: sensor.<apparaat>_override_slaapkamer_verloopt
-    mode: timestamp
-    name: Slaapkamer
-    icon: mdi:timer
-    buttons:
-      - action:
-          action: perform-action
-          perform_action: climate_director.clear_override
-        icon: mdi:close
-        name: Annuleren
-        show_when: [running, finished]
-show_timer_presets: false
-show_active_header: false
-expire_action: remove
-visibility:
-  - condition: state
-    entity: sensor.<apparaat>_override_slaapkamer_verloopt
-    state_not: unknown
-  - condition: state
-    entity: sensor.<apparaat>_override_slaapkamer_verloopt
-    state_not: unavailable
+type: vertical-stack
+cards:
+  - type: button
+    name: Slaapkamer 1 uur koelen
+    icon: mdi:snowflake
+    tap_action:
+      action: perform-action
+      perform_action: climate_director.set_override
+      data:
+        zone_id: slaapkamer
+        hvac_mode: cool
+        temperature: 21
+        minutes: 60
+        when_done: turn_off
+  - type: custom:simple-timer-card
+    entities:
+      - entity: sensor.<apparaat>_override_slaapkamer_verloopt
+        mode: timestamp
+        name: Slaapkamer
+        icon: mdi:timer
+        buttons:
+          - action:
+              action: perform-action
+              perform_action: climate_director.clear_override
+            icon: mdi:close
+            name: Annuleren
+            show_when: [running, finished]
+    show_timer_presets: false
+    show_active_header: false
+    expire_action: remove
+    visibility:
+      - condition: state
+        entity: sensor.<apparaat>_override_slaapkamer_verloopt
+        state_not: unknown
+      - condition: state
+        entity: sensor.<apparaat>_override_slaapkamer_verloopt
+        state_not: unavailable
 ```
+
+De presets van de kaart (`timer_presets`) werken hier niet: de kaart kan een
+timestamp-sensor niet zelf starten — dat staat in de configuratiedocumentatie van
+de kaart — en daarom staat de startknop er als aparte kaart naast.
 
 De knop draagt geen `data`: `simple-timer-card` stuurt de sensor zelf als doel
 mee, en `climate_director.clear_override` neemt dat aan. Dat is de tweede manier

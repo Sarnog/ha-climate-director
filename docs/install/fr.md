@@ -810,40 +810,71 @@ accepte.
 
 ## Suivre un override à durée sur le tableau de bord
 
+**Ce qu'il vous faut.** Les exemples ci-dessous utilisent la carte personnalisée
+**Simple Timer Card** (<https://github.com/eyalgal/simple-timer-card>), qui se
+trouve dans le magasin HACS habituel : HACS → Frontend → cherchez « Simple
+Timer Card » → Télécharger → puis rafraîchissez la page. À la main aussi :
+placez `simple-timer-card.js` de la dernière version dans `config/www` et ajoutez
+`/local/simple-timer-card.js` comme ressource du tableau de bord de type
+`module`. L'intégration fonctionne aussi sans cette carte — le capteur d'heure de
+fin est là dans tous les cas ; la carte ne sert qu'au tableau de bord.
+
 Le capteur `sensor.*_fin_de_derogation_<zone>` porte le moment où l'override
 d'une zone se termine. C'est tout ce qu'il faut à une carte minuteur : avec
 `mode: timestamp`, la carte lit l'état comme heure de fin, et `unknown` signifie
 qu'il n'y a rien à décompter — pas d'override, un override sans durée, ou un qui
 vient d'expirer. L'attribut `start_time` porte le moment où l'override a été
-posé ; c'est ce que la carte utilise pour son anneau de progression.
+posé ; c'est la valeur par défaut de `start_time_attr`, et la carte l'utilise pour
+son anneau de progression.
 
-Voici cette carte, avec un bouton d'annulation qui annule vraiment :
+Voici ce tableau de bord : d'abord un bouton qui lance l'override, en dessous la
+carte avec le bouton d'annulation. Un bouton, un appel — c'est le bouton qui
+remplace les anciens scripts minuteur, et vous en faites un par durée voulue :
 
 ```yaml
-type: custom:simple-timer-card
-entities:
-  - entity: sensor.<device>_fin_de_derogation_slaapkamer
-    mode: timestamp
-    name: Chambre
-    icon: mdi:timer
-    buttons:
-      - action:
-          action: perform-action
-          perform_action: climate_director.clear_override
-        icon: mdi:close
-        name: Annuler
-        show_when: [running, finished]
-show_timer_presets: false
-show_active_header: false
-expire_action: remove
-visibility:
-  - condition: state
-    entity: sensor.<device>_fin_de_derogation_slaapkamer
-    state_not: unknown
-  - condition: state
-    entity: sensor.<device>_fin_de_derogation_slaapkamer
-    state_not: unavailable
+type: vertical-stack
+cards:
+  - type: button
+    name: Chambre 1 heure de froid
+    icon: mdi:snowflake
+    tap_action:
+      action: perform-action
+      perform_action: climate_director.set_override
+      data:
+        zone_id: slaapkamer
+        hvac_mode: cool
+        temperature: 21
+        minutes: 60
+        when_done: turn_off
+  - type: custom:simple-timer-card
+    entities:
+      - entity: sensor.<device>_fin_de_derogation_slaapkamer
+        mode: timestamp
+        name: Chambre
+        icon: mdi:timer
+        buttons:
+          - action:
+              action: perform-action
+              perform_action: climate_director.clear_override
+            icon: mdi:close
+            name: Annuler
+            show_when: [running, finished]
+    show_timer_presets: false
+    show_active_header: false
+    expire_action: remove
+    visibility:
+      - condition: state
+        entity: sensor.<device>_fin_de_derogation_slaapkamer
+        state_not: unknown
+      - condition: state
+        entity: sensor.<device>_fin_de_derogation_slaapkamer
+        state_not: unavailable
 ```
+
+Les presets de la carte (`timer_presets`) ne fonctionnent pas ici : la carte ne
+peut pas démarrer elle-même un capteur timestamp — cela figure dans la
+documentation de configuration de la carte — et c'est pourquoi le bouton de
+départ se trouve à côté, comme carte séparée.
 
 Le bouton ne porte pas de `data` : `simple-timer-card` envoie le capteur
 lui-même comme cible, et `climate_director.clear_override` l'accepte. C'est la

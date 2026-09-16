@@ -793,40 +793,71 @@ el director no rechaza nada, pide lo que el aparato sí admite.
 
 ## Ver una anulación con duración en el panel
 
+**Lo que necesitas.** Los ejemplos de abajo usan la tarjeta personalizada
+**Simple Timer Card** (<https://github.com/eyalgal/simple-timer-card>), que está
+en la tienda normal de HACS: HACS → Frontend → busca «Simple Timer Card»
+→ Descargar → y después refresca la página. A mano también: pon
+`simple-timer-card.js` de la última versión en `config/www` y añade
+`/local/simple-timer-card.js` como recurso del panel de tipo `module`. La
+integración funciona también sin esta tarjeta — el sensor de hora de fin está en
+cualquier caso; la tarjeta es solo para el panel.
+
 El sensor `sensor.*_fin_de_la_anulacion_<zone>` lleva el momento en que termina
 la anulación de una zona. Es todo lo que necesita una tarjeta de temporizador:
 con `mode: timestamp` la tarjeta lee el estado como hora de fin, y `unknown`
 significa que no hay nada que descontar — ni anulación, ni una anulación sin
 duración, ni una que acaba de expirar. El atributo `start_time` lleva el momento
-en que se puso la anulación; la tarjeta lo usa para su anillo de progreso.
+en que se puso la anulación; es el valor por defecto de `start_time_attr`, y la
+tarjeta lo usa para su anillo de progreso.
 
-Esta es esa tarjeta, con un botón de cancelar que cancela de verdad:
+Este es ese panel: primero un botón que arranca la anulación, debajo la tarjeta
+con el botón de cancelar. Un botón, una llamada — este es el botón que sustituye
+a los antiguos scripts temporizador, y haces uno por duración que quieras:
 
 ```yaml
-type: custom:simple-timer-card
-entities:
-  - entity: sensor.<device>_fin_de_la_anulacion_slaapkamer
-    mode: timestamp
-    name: Dormitorio
-    icon: mdi:timer
-    buttons:
-      - action:
-          action: perform-action
-          perform_action: climate_director.clear_override
-        icon: mdi:close
-        name: Cancelar
-        show_when: [running, finished]
-show_timer_presets: false
-show_active_header: false
-expire_action: remove
-visibility:
-  - condition: state
-    entity: sensor.<device>_fin_de_la_anulacion_slaapkamer
-    state_not: unknown
-  - condition: state
-    entity: sensor.<device>_fin_de_la_anulacion_slaapkamer
-    state_not: unavailable
+type: vertical-stack
+cards:
+  - type: button
+    name: Dormitorio enfriar 1 hora
+    icon: mdi:snowflake
+    tap_action:
+      action: perform-action
+      perform_action: climate_director.set_override
+      data:
+        zone_id: slaapkamer
+        hvac_mode: cool
+        temperature: 21
+        minutes: 60
+        when_done: turn_off
+  - type: custom:simple-timer-card
+    entities:
+      - entity: sensor.<device>_fin_de_la_anulacion_slaapkamer
+        mode: timestamp
+        name: Dormitorio
+        icon: mdi:timer
+        buttons:
+          - action:
+              action: perform-action
+              perform_action: climate_director.clear_override
+            icon: mdi:close
+            name: Cancelar
+            show_when: [running, finished]
+    show_timer_presets: false
+    show_active_header: false
+    expire_action: remove
+    visibility:
+      - condition: state
+        entity: sensor.<device>_fin_de_la_anulacion_slaapkamer
+        state_not: unknown
+      - condition: state
+        entity: sensor.<device>_fin_de_la_anulacion_slaapkamer
+        state_not: unavailable
 ```
+
+Los presets de la tarjeta (`timer_presets`) no funcionan aquí: la tarjeta no
+puede arrancar por sí misma un sensor timestamp — eso está en la documentación de
+configuración de la tarjeta — y por eso el botón de arranque está al lado, como
+tarjeta aparte.
 
 El botón no lleva `data`: `simple-timer-card` envía el propio sensor como
 objetivo, y `climate_director.clear_override` lo acepta. Esa es la segunda forma
