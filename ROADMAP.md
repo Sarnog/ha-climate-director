@@ -143,12 +143,11 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   het override-doel doet dat sinds ronde 34 wél. Bereikbaar is het nauwelijks (een andere
   integratie zou een entiteit aan onze entry moeten hangen), dus dit is een harding met een
   test, geen reparatie.
-- **De maat in `test_the_measure.py` telt fysieke regels** — een commentaarregel in een
-  genoteerd bestand verschuift daardoor het getal en vraagt een nieuwe meting: in ronde 35
-  moest een uitleg in `coordinator.py` op precies zeven regels blijven om zijn 1852 te
-  houden, en het eerste concept van acht regels brak de maat. De poort telt sinds R35-5
-  alleen nog statementregels (`statement_lines`); de maat zou dat kunnen volgen, zodat
-  commentaar, decorators en vervolgregels buiten de maat vallen.
+- **De maat in `test_the_measure.py` telt fysieke regels** — een commentaarregel, een
+  decorator of een vervolgregel in een genoteerd bestand verschuift daardoor het getal en
+  vraagt een nieuwe meting. De poort telt alleen nog statementregels (`statement_lines`);
+  de maat zou dat kunnen volgen, zodat commentaar, decorators en vervolgregels buiten de
+  maat vallen.
 
 ## Would have
 
@@ -295,12 +294,10 @@ The worked-out design proposals for everything below live in
   override target has done that since round 34. It is hardly reachable (another integration
   would have to hang an entity off our entry), so this is a hardening with a test rather than
   a repair.
-- **The measure in `test_the_measure.py` counts physical lines** — a comment line in a noted
-  file therefore shifts the number and asks for a fresh measurement: in round 35 an
-  explanation in `coordinator.py` had to stay exactly seven lines to keep its 1852, and the
-  first draft of eight lines broke the measure. Since R35-5 the gate counts statement lines
-  only (`statement_lines`); the measure could follow, so that comments, decorators and
-  continuation lines fall outside the measure.
+- **The measure in `test_the_measure.py` counts physical lines** — a comment line, a
+  decorator or a continuation line in a noted file therefore shifts the number and asks for
+  a fresh measurement. The gate counts statement lines only (`statement_lines`); the measure
+  could follow, so that comments, decorators and continuation lines fall outside the measure.
 
 ## Would have
 
