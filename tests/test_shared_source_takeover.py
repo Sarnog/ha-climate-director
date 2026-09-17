@@ -31,6 +31,7 @@ once".
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime, timedelta
 
 import pytest
@@ -507,3 +508,46 @@ class TestTheWaitBeforeTakingOver:
         late = decide(config, world(changed_at=NOW - timedelta(minutes=6)))
         assert modes(early).get(GAS, MODE_OFF) == MODE_OFF
         assert modes(late)[GAS] == MODE_HEAT
+
+
+class TestAHandOperatedSourceIsNoTrigger:
+    """Een bron die de director nooit zou aanzetten kan hij ook niet kwijtraken.
+
+    A source the director would never switch on is one it cannot lose either.
+
+    Anker 12 versmald: alleen een bron mét `autostart` telt als beheerde bron in
+    het gebied. Anders zet één losse stekker van een handbediende slaapkamerairco
+    het hele huis op gas en de andere airco's uit. De uitspraak hangt aan de
+    bronrij, niet aan het apparaat: staat hetzelfde apparaat onder een andere
+    kamer wél met `autostart`, dan telt díe rij gewoon mee.
+
+    Anchor 12 narrowed: only a source with `autostart` counts as a managed source
+    in the area. Otherwise one unplugged hand-operated bedroom air conditioner
+    puts the whole house on gas and the other air conditioners off. The statement
+    hangs on the source row, not on the appliance: where the same appliance sits
+    under another room with `autostart`, that row does count.
+    """
+
+    def test_a_managed_source_dropping_out_is_a_loss(self) -> None:
+        """De tegenkant: mét `autostart` is de uitval wél een overname waard."""
+        assert takeover_module.in_force(house(), world()) != ()
+
+    def test_a_hand_operated_source_dropping_out_is_no_loss(self) -> None:
+        config = house(attic_autostart=False)
+        assert takeover_module.in_force(config, world()) == ()
+
+    def test_the_rest_of_the_house_keeps_its_own_appliances(self) -> None:
+        """Bij airco-weer blijft de woonkamer op haar eigen airco, niet op gas."""
+        config = house(attic_autostart=False)
+        plan = decide(config, world())
+        assert modes(plan)[LIVING_AIRCO] == MODE_HEAT
+        assert modes(plan).get(GAS, MODE_OFF) == MODE_OFF
+        assert reasons(plan)[LIVING_AIRCO] is not Reason.SHARED_SOURCE_TOOK_OVER
+
+    def test_the_row_with_autostart_still_counts(self) -> None:
+        """Hetzelfde apparaat onder een andere kamer mét `autostart`: wél een verlies."""
+        base = house(attic_autostart=False)
+        living = base.zones[0]
+        living_rows = (*living.sources, airco_source("living_attic_airco", ATTIC_AIRCO))
+        config = replace(base, zones=(replace(living, sources=living_rows), base.zones[1]))
+        assert takeover_module.in_force(config, world()) != ()

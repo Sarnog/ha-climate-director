@@ -308,9 +308,23 @@ def _dropped_out(
     taking its command does not count here - that is control state and lives
     outside the engine. If the moment of dropping out is unknown there is
     nothing to wait for and the takeover starts at once.
+
+    Een handbediende rij (`autostart` uit) telt niet mee: die bron zou de
+    director nooit gestart hebben, dus haar uitval is geen verlies. Anders zet
+    één losse stekker van een slaapkamerairco het hele huis op gas. Het hangt
+    aan de rij, niet aan het apparaat - een tweede rij van hetzelfde apparaat
+    mét `autostart` onder een andere kamer telt gewoon mee.
+
+    A hand-operated row (`autostart` off) does not count: the director would
+    never have started that source, so its dropping out is no loss. Otherwise
+    one unplugged bedroom air conditioner puts the whole house on gas. It hangs
+    on the row, not on the appliance - a second row of the same appliance with
+    `autostart` under another room does count.
     """
     for zone, source in config.sources():
         if zone.zone_id not in zones or source.entity_id == entity_id:
+            continue
+        if not source.autostart:
             continue
         state = world.climate(source.entity_id)
         if state.available:
