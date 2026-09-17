@@ -148,6 +148,18 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   vraagt een nieuwe meting. De poort telt alleen nog statementregels (`statement_lines`);
   de maat zou dat kunnen volgen, zodat commentaar, decorators en vervolgregels buiten de
   maat vallen.
+- **De CI-scriptbewaking slaat een hele `run:`-regel over zodra er `-m pip` in staat** —
+  de opstapregels worden op die tekst herkend, en een regel die de opstap met `&&` aan een
+  tweede commando koppelt (`python -m pip install x && python -m pytest …`) valt daarmee
+  in zijn geheel buiten beide bewakingen (gemeten: groen). Een vormtest die per regel
+  precies één commando eist, of een opstapherkenning op het eerste commando in plaats van
+  op een tekstfragment, sluit die rand.
+- **De dashboardsectie van de zes gidsen is niet als geheel bewaakt** — de koptelling,
+  de interfacewoorden, de entiteit-id's en de acties zijn dat wél, maar de kaart-URL, de
+  installatiestap en het YAML-voorbeeld niet (gemeten: één gids zonder de URL laat de
+  gidsentests groen). Een symmetrietest die per gids het YAML-blok parseert en eist dat
+  het beide acties, `custom:simple-timer-card` en de repo-URL noemt, zou de zes gidsen
+  ook daar bij elkaar houden.
 
 ## Would have
 
@@ -298,6 +310,18 @@ The worked-out design proposals for everything below live in
   decorator or a continuation line in a noted file therefore shifts the number and asks for
   a fresh measurement. The gate counts statement lines only (`statement_lines`); the measure
   could follow, so that comments, decorators and continuation lines fall outside the measure.
+- **The CI-script guard skips a whole `run:` line as soon as it contains `-m pip`** — the
+  setup lines are recognised by that text, and a line that chains the setup to a second
+  command with `&&` (`python -m pip install x && python -m pytest …`) thereby falls
+  entirely outside both guards (measured: green). A form test demanding exactly one
+  command per line, or a setup recognition on the first command instead of on a text
+  fragment, closes that edge.
+- **The dashboard section of the six guides is not guarded as a whole** — the header
+  count, the interface words, the entity ids and the actions are, but the card URL, the
+  installation step and the YAML example are not (measured: one guide without the URL
+  leaves the guide tests green). A symmetry test that parses the YAML block per guide and
+  demands that it names both actions, `custom:simple-timer-card` and the repository URL
+  would keep the six guides together there too.
 
 ## Would have
 
