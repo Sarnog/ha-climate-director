@@ -331,6 +331,12 @@ brander niet elke paar minuten ontsteekt. Vijf minuten is de standaard, nul neem
 meteen over — en een moment dat niet te lezen is, bijvoorbeeld vlak na een
 herstart, ook.
 
+Een apparaat waarvoor **Dit apparaat automatisch aanzetten** uit staat telt
+hier niet als trigger: de director zou het nooit zelf gestart hebben, dus als
+het onbereikbaar wordt is er niets verloren en neemt niemand iets over. Een
+handbediende slaapkamerairco waarvan de stekker eruit gaat zet dus niet het
+hele huis op gas.
+
 ### Een apparaat dat je zelf aanzet
 
 Zet **Dit apparaat automatisch starten** uit voor een apparaat dat je met de

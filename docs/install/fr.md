@@ -340,6 +340,12 @@ le brûleur toutes les quelques minutes. Cinq minutes par défaut, zéro prend l
 relais tout de suite — et un moment illisible, juste après un redémarrage par
 exemple, également.
 
+Un appareil dont **Démarrer cet appareil automatiquement** est désactivé ne
+compte pas ici comme déclencheur : le directeur ne l'aurait jamais démarré
+lui-même, donc s'il devient injoignable rien n'est perdu et personne ne prend
+le relais. Un climatiseur de chambre manœuvré à la main que l'on débranche ne
+met donc pas toute la maison au gaz.
+
 ### Un appareil que vous allumez vous-même
 
 Désactivez **Démarrer cet appareil automatiquement** pour un appareil que vous

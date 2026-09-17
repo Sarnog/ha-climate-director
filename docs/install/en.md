@@ -331,6 +331,12 @@ unreachable, so an integration blinking on and off does not fire the burner ever
 few minutes. Five minutes is the default, zero takes over at once — and so does a
 moment that cannot be read, right after a restart for instance.
 
+An appliance with **Start this appliance automatically** off does not count
+as a trigger here: the director would never have started it itself, so when
+it becomes unreachable nothing is lost and nobody takes anything over. A
+hand-operated bedroom air conditioner that gets unplugged therefore does not
+put the whole house on gas.
+
 ### An appliance you switch on yourself
 
 Turn **Start this appliance automatically** off for an appliance you operate by

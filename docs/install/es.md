@@ -337,6 +337,12 @@ el quemador cada pocos minutos. Cinco minutos por defecto, cero asume el relevo
 de inmediato — y un momento ilegible, justo tras un reinicio por ejemplo,
 también.
 
+Un aparato con **Encender este aparato automáticamente** desactivado no cuenta
+aquí como disparador: el director nunca lo habría arrancado por su cuenta, así
+que si queda inalcanzable no se pierde nada y nadie asume el relevo. Un aire
+acondicionado de dormitorio manejado a mano que se desenchufa no pone, por
+tanto, toda la casa a gas.
+
 ### Un aparato que enciendes tú mismo
 
 Desactiva **Arrancar este aparato automáticamente** para un aparato que manejas

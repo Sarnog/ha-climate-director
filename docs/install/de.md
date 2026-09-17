@@ -335,6 +335,12 @@ ausfiel, damit eine flackernde Integration den Brenner nicht alle paar Minuten
 zündet. Fünf Minuten sind die Vorgabe, null übernimmt sofort — und ein nicht
 lesbarer Moment, etwa direkt nach einem Neustart, ebenfalls.
 
+Ein Gerät, bei dem **Dieses Gerät automatisch einschalten** aus ist, zählt hier
+nicht als Auslöser: der Director hätte es nie selbst gestartet, also geht
+nichts verloren, wenn es nicht mehr erreichbar ist, und niemand übernimmt
+etwas. Eine von Hand bediente Schlafzimmer-Klimaanlage, deren Stecker gezogen
+wird, stellt das ganze Haus also nicht auf Gas um.
+
 ### Ein Gerät, das du selbst einschaltest
 
 Schalte **Dieses Gerät automatisch starten** aus für ein Gerät, das du von Hand

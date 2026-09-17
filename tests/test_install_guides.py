@@ -157,7 +157,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.settings.data.guest_end": ("Gastenmodus tot"),
         "options.step.settings.data.require_awake": ("Iemand die thuis is moet wakker zijn"),
         "options.step.settings.data.stuck_after": ("Zone geldt als vastgelopen na (minuten)"),
-        "options.step.source.data.autostart": ("Dit apparaat automatisch aanzetten"),
         "options.step.source.data.delete": ("Deze bron verwijderen"),
         "options.step.source.data.min_cycle_time": (
             "Rusttijd voordat dit apparaat opnieuw mag starten (seconden)"
@@ -214,7 +213,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.settings.data.season_entity": ("Jahreszeit-Entität"),
         "options.step.settings.data.season_source": ("Herkunft der Jahreszeit"),
         "options.step.settings.data.stuck_after": ("Zone gilt als festgefahren nach (Minuten)"),
-        "options.step.source.data.autostart": ("Dieses Gerät automatisch einschalten"),
         "options.step.source.data.delete": ("Diese Quelle löschen"),
         "options.step.source.data.entity_id": ("Climate-Entität"),
         "options.step.source.data.min_cycle_time": (
@@ -291,7 +289,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.settings.data.season_source": ("Origen de la estación"),
         "options.step.settings.data.stuck_after": ("Zona se considera atascada tras (minutos)"),
         "options.step.settings.data.when_done": ("Cuando termines aquí"),
-        "options.step.source.data.autostart": ("Encender este aparato automáticamente"),
         "options.step.source.data.delete": ("Eliminar esta fuente"),
         "options.step.source.data.entity_id": ("Entidad climate"),
         "options.step.source.data.min_cycle_time": (
