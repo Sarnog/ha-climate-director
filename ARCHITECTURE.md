@@ -252,6 +252,18 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     anker 5, en een tweede rem naast die twee is precies hoe deze engine eerder
     twee bijna-gelijke paden kreeg.
 
+    **Een handbediende bron is geen trigger.** Alleen een bron die de director
+    zelf zou aanzetten (*Dit apparaat automatisch aanzetten* aan) telt als
+    "beheerde bron in het gebied". Een bron met dat vinkje uit kan de director
+    niet kwijtraken — hij zou hem nooit gestart hebben — dus haar uitval is
+    geen verlies dat een overname rechtvaardigt; anders zet één losse stekker
+    van een slaapkamerairco het hele huis op gas. Dit is een **versmalling**,
+    per bronrij: staat hetzelfde apparaat onder een andere kamer wél met
+    automatisch aanzetten, dan telt díe rij gewoon mee, want daar zou de
+    director hem wel starten. De andere kant blijft zoals hij was: wordt het
+    gebied om een ándere reden overgenomen, dan wordt een draaiende
+    handbediende bron nog steeds stilgezet.
+
     **Dit anker verbreedt anker 7 aan één kant.** Daar staat dat een
     circuitweigering het apparaat weigert en niet de zone, met als uitzondering
     dat een huisbreed stilgezette eerste keus de zone wél weigert
@@ -1343,6 +1355,17 @@ them without changing them here first.
     own: that is `Source.min_cycle_time` and the opening rest from anchor 5, and
     a second brake beside those two is exactly how this engine ended up with two
     nearly identical paths before.
+
+    **A hand-operated source is no trigger.** Only a source the director would
+    switch on itself (*Start this appliance automatically* ticked) counts
+    as a "managed source in the area". A source with that box unticked is one
+    the director cannot lose — it would never have started it — so its dropping
+    out is no loss that justifies a takeover; otherwise one unplugged bedroom
+    air conditioner puts the whole house on gas. This is a **narrowing**, per
+    source row: where the same appliance sits under another room with automatic
+    start on, that row does count, since there the director would start it.
+    The other side stays as it was: when the area is taken over for another
+    reason, a running hand-operated source is still stood down.
 
     **This anchor broadens anchor 7 on one side.** There it says a circuit
     refusal refuses the appliance and not the zone, with the exception that a
