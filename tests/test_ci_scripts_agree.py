@@ -8,11 +8,14 @@ Ronde 31 zette een nieuwe stap in de CI ("Coverage gate") en vergat hem in
 draait, lokaal". Dat is de vorm die deze bewaking moet stoppen: een stap erbij in
 `tests.yaml` blijft niet stil achter.
 
-De eigenschap hangt aan de **bron** en niet aan een handlijst van stapnamen: elke
-`run:`-regel van elke baan in `tests.yaml` moet, met dezelfde tool en dezelfde
-argumenten, in `script/test` of `script/lint` staan. De opstapstappen
-(`python -m pip install …`) horen daar niet bij — die staan in `script/setup` —
-dus die worden overgeslagen op hun tool. De omgekeerde richting wordt ook
+De eigenschap hangt aan de **bron** en niet aan een handlijst van stapnamen: elk
+commando van elke baan in `tests.yaml` moet, met dezelfde tool en dezelfde
+argumenten, in `script/test` of `script/lint` staan. Een `run:`-regel wordt daarom
+eerst in losse commando's geknipt — op `shlex`, en verder op `&&`, `||` en `;` —
+want een regel die de opstap aan een tweede commando plakt hoort niet in zijn
+geheel overgeslagen te worden. De opstapstappen (`python -m pip install …`) horen
+niet in een script thuis — die staan in `script/setup` — dus die worden
+overgeslagen, en wel op het **eerste** commando van de regel. De omgekeerde richting wordt ook
 bewaakt: een commando dat alleen in een script staat, hoort ergens in
 `tests.yaml` te staan.
 
@@ -108,6 +111,24 @@ CI_PREFIXES = ("python -m ", "python script/")
 #: The CI's setup step; that belongs in `script/setup`, not in a test script.
 SETUP = "-m pip"
 
+#: De scheidingstekens waarmee één `run:`-regel meerdere commando's aan elkaar
+#: plakt. Alle drie worden herkend: een regel die de opstap met `&&` aan een tweede
+#: commando koppelt, viel anders in zijn geheel buiten de bewaking.
+#:
+#: The separators with which one `run:` line glues several commands together. All
+#: three are recognised: a line gluing the setup to a second command with `&&`
+#: otherwise fell outside the guard as a whole.
+COMMAND_SEPARATORS = ("&&", "||", ";")
+
+#: Waaraan een opstapcommando te herkennen is: `python -m pip`. Alleen het
+#: **eerste** commando van een regel telt als opstap; staat de opstap achter `&&`,
+#: dan is de rest van de regel een gewoon commando, en dat valt onder de bewaking.
+#:
+#: How a setup command is recognised: `python -m pip`. Only the **first** command
+#: of a line counts as setup; with the setup behind `&&` the rest of the line is an
+#: ordinary command, and that falls under the guard.
+SETUP_COMMAND = ("python", "-m", "pip")
+
 #: De enige baan waarvan de eigen stap níét in een script hoort te staan, met de
 #: reden erbij. Deze baan pint een Home Assistant-versie (`homeassistant==2025.3.*`)
 #: en draait daarna precies dezelfde pytest; dat is een variatie op de
@@ -147,6 +168,51 @@ def ci_jobs() -> list[str]:
     return list(jobs)
 
 
+def commands_of(line: str) -> list[str]:
+    """Knip één `run:`-regel in de losse commando's die erin staan.
+
+    `shlex` knipt de regel in woorden en haalt de aanhalingstekens eraf; daarna
+    splitst deze functie op `&&`, `||` en `;`. Zo blijft een regel die twee
+    commando's aan elkaar plakt twee commando's, in plaats van één regel die aan
+    geen enkele kant meer te vergelijken is.
+
+    De vormen die dit dekt: een enkel commando, `a && b`, `a || b`, `a ; b`, en elke
+    mengeling daarvan op één regel, met of zonder aanhalingstekens en met of zonder
+    extra spaties.
+
+    Split one `run:` line into the separate commands it holds.
+
+    `shlex` cuts the line into words and takes the quotes off; after that this
+    function splits on `&&`, `||` and `;`. That way a line gluing two commands
+    together stays two commands, instead of one line that can no longer be compared
+    at either end.
+
+    The forms this covers: a single command, `a && b`, `a || b`, `a ; b`, and any
+    mixture of those on one line, with or without quotes and with or without extra
+    spaces.
+    """
+    commands: list[list[str]] = [[]]
+    for token in words(line):
+        if token in COMMAND_SEPARATORS:
+            commands.append([])
+        else:
+            commands[-1].append(token)
+    return [" ".join(command) for command in commands if command]
+
+
+def is_setup(command: str) -> bool:
+    """Is dit een opstapcommando? Dat is het als het met `python -m pip` begint.
+
+    Alleen het eerste commando van een regel kan opstap zijn; de opstapherkenning
+    kijkt dus nooit meer naar een fragment verderop in de regel.
+
+    Is this a setup command? It is when it starts with `python -m pip`. Only the
+    first command of a line can be setup; the recognition therefore never looks at a
+    fragment further along the line again.
+    """
+    return tuple(words(command)[:3]) == SETUP_COMMAND
+
+
 def ci_commands(job: str = "tests") -> list[tuple[str, str]]:
     """Geef (stapnaam, commando) van elke `run:`-regel in een baan.
 
@@ -162,8 +228,10 @@ def ci_commands(job: str = "tests") -> list[tuple[str, str]]:
             continue
         for line in run.splitlines():
             stripped = line.strip()
-            if stripped:
-                steps.append((step.get("name", "?"), stripped))
+            if not stripped:
+                continue
+            for command in commands_of(stripped):
+                steps.append((step.get("name", "?"), command))
     return steps
 
 
@@ -218,10 +286,10 @@ def test_every_ci_step_of_every_job_is_in_a_script() -> None:
     for job in ci_jobs():
         if job in EXEMPT_JOBS:
             continue
-        for step, line in ci_commands(job):
-            if SETUP in line:
+        for step, command in ci_commands(job):
+            if is_setup(command):
                 continue
-            command = without_interpreter(line)
+            command = without_interpreter(command)
             if command not in scripts:
                 missing.append(f"{job}: {step} ({command})")
 
@@ -248,11 +316,11 @@ def test_every_ci_step_keeps_the_one_allowed_form() -> None:
     to stop.
     """
     offenders = [
-        f"{job}: {step} ({line})"
+        f"{job}: {step} ({command})"
         for job in ci_jobs()
         if job not in EXEMPT_JOBS
-        for step, line in ci_commands(job)
-        if SETUP not in line and not line.startswith(CI_PREFIXES)
+        for step, command in ci_commands(job)
+        if not is_setup(command) and not command.startswith(CI_PREFIXES)
     ]
     assert not offenders, (
         "deze CI-stappen gebruiken een andere vorm dan `python -m` of "
@@ -287,7 +355,7 @@ def test_the_only_exempt_job_pins_a_version_and_stays_needed() -> None:
         assert reason.strip(), "een uitzondering zonder reden is geen uitzondering"
 
     scripts = {command for name in SCRIPTS for command in script_commands(name)}
-    own = [line for _step, line in ci_commands("oldest-supported") if SETUP not in line]
+    own = [command for _step, command in ci_commands("oldest-supported") if not is_setup(command)]
     assert own, "de uitgezonderde baan draait geen eigen stap meer, dus de uitzondering kan weg"
     for line in own:
         assert without_interpreter(line) not in scripts, (
@@ -303,14 +371,9 @@ def test_every_script_command_is_a_ci_step() -> None:
     """
     known = set()
     for job in ci_jobs():
-        for step in workflow()["jobs"][job]["steps"]:
-            run = step.get("run")
-            if not isinstance(run, str):
-                continue
-            for line in run.splitlines():
-                stripped = line.strip()
-                if stripped and SETUP not in stripped:
-                    known.add(without_interpreter(stripped))
+        for _step, command in ci_commands(job):
+            if not is_setup(command):
+                known.add(without_interpreter(command))
 
     extra = [
         f"{name} ({command})"
@@ -345,5 +408,5 @@ def test_the_setup_step_is_recognised() -> None:
 
     The setup step is recognised, so it does not silently fall outside the guard.
     """
-    setup = [line for _step, line in ci_commands() if SETUP in line]
+    setup = [command for _step, command in ci_commands() if is_setup(command)]
     assert len(setup) == 2, f"verwachte twee opstapregels, vond {setup}"

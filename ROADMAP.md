@@ -132,12 +132,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   vraagt een nieuwe meting. De poort telt alleen nog statementregels (`statement_lines`);
   de maat zou dat kunnen volgen, zodat commentaar, decorators en vervolgregels buiten de
   maat vallen.
-- **De CI-scriptbewaking slaat een hele `run:`-regel over zodra er `-m pip` in staat** —
-  de opstapregels worden op die tekst herkend, en een regel die de opstap met `&&` aan een
-  tweede commando koppelt (`python -m pip install x && python -m pytest …`) valt daarmee
-  in zijn geheel buiten beide bewakingen (gemeten: groen). Een vormtest die per regel
-  precies één commando eist, of een opstapherkenning op het eerste commando in plaats van
-  op een tekstfragment, sluit die rand.
 
 ## Would have
 
@@ -274,12 +268,6 @@ The worked-out design proposals for everything below live in
   decorator or a continuation line in a noted file therefore shifts the number and asks for
   a fresh measurement. The gate counts statement lines only (`statement_lines`); the measure
   could follow, so that comments, decorators and continuation lines fall outside the measure.
-- **The CI-script guard skips a whole `run:` line as soon as it contains `-m pip`** — the
-  setup lines are recognised by that text, and a line that chains the setup to a second
-  command with `&&` (`python -m pip install x && python -m pytest …`) thereby falls
-  entirely outside both guards (measured: green). A form test demanding exactly one
-  command per line, or a setup recognition on the first command instead of on a text
-  fragment, closes that edge.
 
 ## Would have
 
