@@ -49,11 +49,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   zoals bij de gewone raampoort. Voor wie een handbediende airco in die lijst zet is dat
   niet wat hij verwacht; wat ontbreekt is een keuze tussen "alleen wat ik stuur" en "ook
   wat ik met de hand aanzet".
-- **Een huisbreed stilgezette bron als uitwijking melden** — staat de cv-ketel stil door
-  een openstaande deur en neemt de airco het over, dan verwarmt de kamer elektrisch
-  zonder dat `binary_sensor.…_op_reserve` daar iets over zegt: `passed_over` telt alleen
-  bronnen die onbereikbaar zijn, en een stilgezette bron is dat niet. Een aparte melding
-  zou dat zichtbaar maken zonder de melder bij elke openstaande deur te laten knipperen.
 - **Huisbreed vermogensplafond** — een maximum in watt over de hele installatie, in plaats
   van alleen een maximum aantal units per circuit. Een grens in stuks zegt niets over wat
   er werkelijk uit de meter loopt: drie kleine units zijn iets heel anders dan één ketel.
@@ -150,9 +145,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   of het voorverwarmen daarop aanpassen.
 - **Balancering over circuits** — bij twee gelijkwaardige bronnen op verschillende
   circuits de belasting verdelen in plaats van altijd dezelfde te kiezen.
-- **Opname in de HACS-standaardlijst** — zodat de integratie in HACS vindbaar wordt zonder
-  handmatige "custom repository"-toevoeging. Pas indienen als hij zich een tijd in de
-  praktijk bewezen heeft.
 
 ---
 
@@ -202,15 +194,15 @@ The worked-out design proposals for everything below live in
   alone, exactly as with the ordinary window gate. For anyone putting a hand-operated air
   conditioner on that list this is not what they expect; what is missing is a choice
   between "only what I steer" and "what I switch on by hand as well".
-- **Report a house-wide stopped source as a fallback** — with the boiler stopped by an
-  open door and the air conditioner taking over, the room heats electrically without
-  `binary_sensor.…_on_fallback` saying anything about it: `passed_over` counts only
-  sources that are unreachable, and a stopped source is not. A separate report would make
-  that visible without leaving the sensor blinking at every open door.
 - **A house-wide power ceiling** — a maximum in watts across the whole installation, rather
   than only a maximum number of units per circuit. A limit in units says nothing about what
   actually leaves the meter: three small units are a very different thing from one boiler.
   Needs a wattage per source and an order in which to shed.
+- **The unreadable-entities notice may blink daily** — `unusable_entities()` runs
+  over *all* tracked entities, cloud `climate` entities and calendars included. A
+  measurement on the real installation is still missing; judge during the control
+  round whether the reporter blinks and whether it needs damping or a notice of its
+  own.
 - **Precipitation intensity as a threshold** — precipitation currently counts as yes/no: a
   configured state lifts the outdoor bound, however light the precipitation. Anyone who
   wants to keep the windows open during a drizzle should be able to set a floor (a sensor
@@ -295,6 +287,3 @@ The worked-out design proposals for everything below live in
   dead band or the pre-heating to it.
 - **Balancing across circuits** — with two equivalent sources on different circuits, share
   the load instead of always picking the same one.
-- **Inclusion in the HACS default list** — so the integration becomes findable in HACS
-  without adding it as a custom repository by hand. Only worth submitting once it has
-  proven itself in practice for a while.

@@ -922,8 +922,6 @@ dode band of het voorverwarmen bij; opslag via `Store`.
 **Balancering over circuits.** Bij gelijkwaardige bronnen op verschillende circuits kiest
 `decide.py` beurtelings op basis van draaiuren.
 
-**HACS-standaardlijst.** Geen ontwerp; procesbeslissing na bewezen praktijk.
-
 ### Uitbreidbaarheid — de vorm die dat mogelijk maakt
 
 Nieuwe poorten, bronrollen, conflictbeleiden en circuitbeperkingen haken elk op één
@@ -2010,9 +2008,6 @@ and adjusts the dead band or the pre-heating; kept through `Store`.
 
 **Balancing across circuits.** With equivalent sources on different circuits, `decide.py`
 takes turns based on running hours.
-
-**Inclusion in the HACS default list.** No design; a process decision after proven
-practice.
 
 ### Extensibility — the shape that makes it possible
 
