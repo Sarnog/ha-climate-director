@@ -143,12 +143,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   in zijn geheel buiten beide bewakingen (gemeten: groen). Een vormtest die per regel
   precies één commando eist, of een opstapherkenning op het eerste commando in plaats van
   op een tekstfragment, sluit die rand.
-- **De dashboardsectie van de zes gidsen is niet als geheel bewaakt** — de koptelling,
-  de interfacewoorden, de entiteit-id's en de acties zijn dat wél, maar de kaart-URL, de
-  installatiestap en het YAML-voorbeeld niet (gemeten: één gids zonder de URL laat de
-  gidsentests groen). Een symmetrietest die per gids het YAML-blok parseert en eist dat
-  het beide acties, `custom:simple-timer-card` en de repo-URL noemt, zou de zes gidsen
-  ook daar bij elkaar houden.
 
 ## Would have
 
@@ -294,12 +288,6 @@ The worked-out design proposals for everything below live in
   entirely outside both guards (measured: green). A form test demanding exactly one
   command per line, or a setup recognition on the first command instead of on a text
   fragment, closes that edge.
-- **The dashboard section of the six guides is not guarded as a whole** — the header
-  count, the interface words, the entity ids and the actions are, but the card URL, the
-  installation step and the YAML example are not (measured: one guide without the URL
-  leaves the guide tests green). A symmetry test that parses the YAML block per guide and
-  demands that it names both actions, `custom:simple-timer-card` and the repository URL
-  would keep the six guides together there too.
 
 ## Would have
 
