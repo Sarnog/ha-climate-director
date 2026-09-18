@@ -60,6 +60,83 @@ def test_the_languages_we_promise_are_all_shipped() -> None:
     assert {"en", "nl", "de", "fr", "es", "ar"} <= shipped
 
 
+class _Object(list):
+    """Een JSON-object, bewaard als zijn sleutel-waardeparen.
+
+    `json` roept de `object_pairs_hook` voor elk object aan met de paren in
+    bestandsorde. Door die paren te bewaren in plaats van er een dict van te
+    maken blijft een sleutel die twee keer voorkomt zichtbaar; een gewone dict
+    laat stil de laatste winnen.
+
+    A JSON object, kept as its key-value pairs. `json` calls the
+    `object_pairs_hook` for every object with the pairs in file order. Keeping
+    those pairs instead of turning them into a dict leaves a key that stands
+    twice visible; a plain dict quietly lets the last one win.
+    """
+
+
+def duplicate_key_paths(node: object, path: str = "") -> list[str]:
+    """Geef het pad van elke sleutel die binnen hetzelfde object twee keer staat.
+
+    Return the path of every key that stands twice inside the same object.
+
+    `node` is wat `json.loads(..., object_pairs_hook=_Object)` teruggeeft: elk
+    object is een `_Object` (een lijst paren), elke array een gewone lijst. Een
+    dubbele sleutel levert hier het pad van het object waarin hij staat plus de
+    sleutel zelf, en telt per voorkomen — dus drie keer hetzelfde betekent twee
+    meldingen.
+
+    `node` is what `json.loads(..., object_pairs_hook=_Object)` returns: every
+    object is an `_Object` (a list of pairs), every array a plain list. A
+    duplicate key yields the path of the object it stands in plus the key
+    itself, once per extra occurrence — so three times the same key means two
+    findings.
+    """
+    found: list[str] = []
+    if isinstance(node, _Object):
+        seen: set[str] = set()
+        for key, value in node:
+            here = f"{path}.{key}" if path else key
+            if key in seen:
+                found.append(here)
+            seen.add(key)
+            found += duplicate_key_paths(value, here)
+    elif isinstance(node, list):
+        for index, value in enumerate(node):
+            found += duplicate_key_paths(value, f"{path}[{index}]")
+    return found
+
+
+@pytest.mark.parametrize("path", [STRINGS, *language_files()], ids=lambda path: path.stem)
+def test_no_key_stands_twice_inside_one_object(path: Path) -> None:
+    """Geen enkel vertaalbestand draagt twee keer dezelfde sleutel.
+
+    Wat hier vastligt: binnen één object komt geen sleutel twee keer voor. Dat
+    is de eigenschap die een mens niet ziet en die een vertaling stil onbruikbaar
+    maakt — JSON laat de laatste winnen, dus de eerste zin is onbereikbaar en er
+    klaagt niets. De zeven bestanden zijn `strings.json` plus de zes
+    vertalingen; de bron is de tekst van het bestand, gelezen met `json` zelf
+    (`object_pairs_hook`), niet met een eigen parser ernaast. Die haak ziet
+    élke dubbele sleutel, op elk niveau en in elke schrijfwijze — vandaag is dat
+    de enige manier om dit te meten, want een dict is het bewijs al kwijt.
+
+    What this pins down: inside one object no key occurs twice. That is the
+    property a human does not see and that quietly makes a translation unusable
+    — JSON lets the last one win, so the first sentence is unreachable and
+    nothing complains. The seven files are `strings.json` plus the six
+    translations; the source is the file's text, read with `json` itself
+    (`object_pairs_hook`), not with a parser of its own beside it. That hook sees
+    every duplicate key, at every level and in every spelling — today that is the
+    only way to measure this, because a dict has already lost the evidence.
+    """
+    data = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=_Object)
+    found = duplicate_key_paths(data)
+    assert not found, (
+        f"{path.name}: dezelfde sleutel staat twee keer in hetzelfde object, en JSON "
+        f"laat stil de laatste winnen: {found}"
+    )
+
+
 @pytest.mark.parametrize("path", language_files(), ids=lambda path: path.stem)
 class TestEveryLanguage:
     def test_it_is_valid_json(self, path: Path) -> None:

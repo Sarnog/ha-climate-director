@@ -107,12 +107,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   hysterese zijn nu alleen via de config flow te wijzigen; eigen `number`-entiteiten maken
   ze bedienbaar zonder de hele installatie te herladen. Staat ook in `ARCHITECTURE.md`
   onder "Nog te bouwen".
-- **Een dubbele sleutel in een vertaalbestand valt niemand op** — in alle zeven
-  bestanden stond `zone_no_source_for_mode` twee keer, met twee verschillende zinnen;
-  JSON laat stil de laatste winnen, dus de eerste tekst was onbereikbaar en niets
-  klaagde. Die dubbele sleutels zijn opgeruimd, maar een bewaking ontbreekt nog: een
-  test die elk vertaalbestand met een `object_pairs_hook` inleest en dubbele sleutels
-  meldt zou herhaling voorkomen.
 - **De woordenlijst kan van de uitzonderingenlijst weglopen** —
   `tests/test_install_guides.py` meet of elk interfacelabel in het proza staat, en de
   woordenlijst-sectie is daarvan uitgezonderd. De tabel zelf wordt nergens gecontroleerd,
@@ -271,12 +265,6 @@ The worked-out design proposals for everything below live in
   and hysteresis can currently only be changed through the config flow; `number` entities
   of their own would make them controllable without reloading the whole installation. Also
   listed in `ARCHITECTURE.md` under "Still to build".
-- **A duplicate key in a translation file goes unnoticed** — in all seven files
-  `zone_no_source_for_mode` stood twice, with two different sentences; JSON quietly
-  lets the last one win, so the first text was unreachable and nothing complained.
-  Those duplicates are cleaned up, but a guard is still missing: a test reading each
-  translation file with an `object_pairs_hook` and reporting duplicate keys would
-  prevent a repeat.
 - **The glossary can drift away from the exception list** —
   `tests/test_install_guides.py` measures whether every interface label stands in the
   prose, and the glossary section is exempt from that. The table itself is checked
