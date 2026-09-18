@@ -475,10 +475,10 @@ presencia se omiten entonces en vez de bloquearlo todo para siempre.
 | **Días de la ventana de sueño** | los días en los que se aplica esa ventana; vacío = todos los días |
 | **Dormir hasta** | hasta qué hora cuenta aún el sensor de sueño por la mañana; vacío = la ventana de sueño lo dice todo |
 | **Mañanas en las que duermes hasta tarde** | las mañanas mismas, no las noches anteriores; vacío = todos los días |
-| **Dormir hasta tarde también en días festivos** | marcado = se aplica en cada día que marque tu calendario de vacaciones |
+| **Dormir hasta tarde también en días de vacaciones** | marcado = se aplica en cada día que marque tu calendario de vacaciones |
 | **Esperar a esta persona dormida hasta** | hasta qué hora este residente retiene la casa mientras duerme; vacío = no retiene a nadie |
 | **Días en los que se espera** | los días en los que se aplica esa hora; vacío = todos los días |
-| **Esperar a esta persona también en días festivos** | desmarcado = los días de arriba se leen literalmente; marcado = la hora se aplica en todos los días festivos |
+| **Esperar a esta persona también en días de vacaciones** | desmarcado = los días de arriba se leen literalmente; marcado = la hora se aplica en todos los días de vacaciones |
 
 ### Dormir hasta tarde, y por qué no es simplemente una ventana de sueño más larga
 
@@ -498,7 +498,7 @@ diferencia: una ventana de sueño cruza la medianoche y por eso depende del día
 que empieza, mientras que dormir hasta tarde depende de la mañana misma. Dormir
 hasta tarde el sábado es sábado.
 
-Con la casilla **Dormir hasta tarde también en días festivos** se aplica en cada
+Con la casilla **Dormir hasta tarde también en días de vacaciones** se aplica en cada
 día que marque tu calendario de vacaciones. Pones *vacaciones* en la agenda y lo
 demás va solo.
 
@@ -534,13 +534,13 @@ alguien. Mientras todos los presentes duermen, la casa sigue apagada: eso es la
 puerta del sueño, no esta hora, así que la casa solo arranca cuando la primera
 persona se levanta de verdad.
 
-**Aquí un día festivo no cuenta como sábado**, a diferencia de los horarios. El
+**Aquí un día de vacaciones no cuenta como sábado**, a diferencia de los horarios. El
 día libre de uno es el día laboral del otro: si unas vacaciones escolares
 contaran como sábado, quien se levanta tarde retendría la casa mientras el otro
 trabaja desde casa. Los días significan literalmente lo que dicen. Quien quiera
 que también le esperen en un día libre entre semana marca *Esperar a esta
-persona también en días festivos*; entonces la hora se aplica en todos los días
-festivos, sea cual sea el día de la semana. Un día festivo que caiga en sábado
+persona también en días de vacaciones*; entonces la hora se aplica en todos los días
+de vacaciones, sea cual sea el día de la semana. Un día de vacaciones que caiga en sábado
 sigue siendo un sábado.
 
 Ojo con la ventana de sueño: si la hora límite cae fuera de ella, este residente

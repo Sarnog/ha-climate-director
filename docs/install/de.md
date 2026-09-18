@@ -477,10 +477,10 @@ Anwesenheitstore werden dann übersprungen, statt alles dauerhaft zu blockieren.
 | **Tage des Schlaffensters** | an welchen Tagen dieses Fenster gilt; leer = jeden Tag |
 | **Ausschlafen bis** | bis wann der Schlafsensor morgens noch zählt; leer = das Schlaffenster ist die ganze Geschichte |
 | **Morgen, an denen du ausschläfst** | die Morgen selbst, nicht die Abende davor; leer = jeden Tag |
-| **Auch an Feiertagen ausschlafen** | ein = gilt an jedem Tag, den dein Urlaubskalender markiert |
+| **Auch an Urlaubstagen ausschlafen** | ein = gilt an jedem Tag, den dein Urlaubskalender markiert |
 | **Auf diese schlafende Person warten bis** | bis wann diese Person das Haus im Schlaf aufhält; leer = sie hält niemanden auf |
 | **Tage, an denen gewartet wird** | an welchen Tagen diese Uhrzeit gilt; leer = jeden Tag |
-| **Auch an Feiertagen auf diese Person warten** | aus = die Tage oben gelten wörtlich; ein = die Uhrzeit gilt an jedem Feiertag |
+| **Auch an Urlaubstagen auf diese Person warten** | aus = die Tage oben gelten wörtlich; ein = die Uhrzeit gilt an jedem Urlaubstag |
 
 ### Ausschlafen, und warum das nicht einfach ein längeres Schlaffenster ist
 
@@ -500,7 +500,7 @@ an den Morgen, die du ankreuzt. Achte auf den Unterschied: Ein Schlaffenster
 läuft über Mitternacht und hängt daher am Tag seines Beginns, das Ausschlafen
 dagegen am Morgen selbst. Ausschlafen am Samstag ist also Samstag.
 
-Mit dem Häkchen **Auch an Feiertagen ausschlafen** gilt es an jedem Tag, den dein
+Mit dem Häkchen **Auch an Urlaubstagen ausschlafen** gilt es an jedem Tag, den dein
 Urlaubskalender markiert. Du trägst *Urlaub* in den Kalender ein, und das
 Ausschlafen folgt von selbst.
 
@@ -536,13 +536,13 @@ muss. Schlafen alle Anwesenden, bleibt das Haus aus - das ist das Schlaftor,
 nicht diese Uhrzeit, und das Haus beginnt somit erst, wenn der Erste wirklich
 aufsteht.
 
-**Ein Feiertag zählt hier nicht von selbst als Samstag**, anders als bei den
+**Ein Urlaubstag zählt hier nicht von selbst als Samstag**, anders als bei den
 Zeitplänen. Der freie Tag des einen ist der Arbeitstag des anderen: Zählten die
 Schulferien als Samstag, hielte der Langschläfer das Haus auf, während der
 andere zu Hause arbeitet. Die Tage bedeuten hier also wörtlich, was dort steht.
 Wer auch an einem freien Wochentag erwartet werden möchte, setzt das Häkchen
-*Auch an Feiertagen auf diese Person warten*; dann gilt die Uhrzeit an jedem
-Feiertag, unabhängig vom Wochentag. Ein Feiertag, der auf einen Samstag fällt,
+*Auch an Urlaubstagen auf diese Person warten*; dann gilt die Uhrzeit an jedem
+Urlaubstag, unabhängig vom Wochentag. Ein Urlaubstag, der auf einen Samstag fällt,
 bleibt in jedem Fall ein Samstag.
 
 Achte auf das Schlaffenster: Liegt die Uhrzeit außerhalb, gilt diese Person

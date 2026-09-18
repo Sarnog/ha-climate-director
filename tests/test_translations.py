@@ -267,3 +267,93 @@ def test_every_language_names_the_shared_heat_source_in_unreadable_entities() ->
         path = STRINGS if language == "strings" else TRANSLATIONS / f"{language}.json"
         text = leaves(load(path))["issues.unreadable_entities.description"]
         assert needle in text, language
+
+
+#: Eén begrip, één woord. Per taal het verboden woord, het canonieke woord en de
+#: reden erbij. De lijst groeit per tekstronde; er gaat niets af zonder reden.
+#:
+#: One concept, one word. Per language the forbidden word, the canonical word and
+#: the reason alongside. The list grows per text round; nothing comes off without
+#: a reason.
+TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
+    "de": (
+        (
+            "Feiertag",
+            "Urlaubstag",
+            "de interface noemt een vakantiedag een *Urlaubstag*; een *Feiertag* is een "
+            "feestdag en dat verschil is precies wat de uitleg bij de uiterste opsta-tijd maakt",
+        ),
+    ),
+    "fr": (
+        (
+            "jour férié",
+            "jour de vacances",
+            "de interface noemt een vakantiedag *un jour de vacances*; *un jour férié* is een "
+            "feestdag",
+        ),
+    ),
+    "es": (
+        (
+            "día festivo",
+            "día de vacaciones",
+            "de interface noemt een vakantiedag *un día de vacaciones*; *un día festivo* is "
+            "een feestdag",
+        ),
+    ),
+    "ar": (
+        (
+            "التدفئة المسبقة",
+            "التهيئة المسبقة",
+            "het verzoek warmt niet voor maar vraagt vooruit; dezelfde taakneutrale term als "
+            "het Nederlands, Duits en Frans gebruiken",
+        ),
+    ),
+}
+
+GUIDES = Path(__file__).parent.parent / "docs" / "install"
+
+
+def terminology_texts(language: str) -> dict[str, list[str]]:
+    """De teksten van één taal: het vertaalbestand en de gids van die taal.
+
+    The texts of one language: its translation file and its guide.
+    """
+    return {
+        f"translations/{language}.json": list(
+            leaves(load(TRANSLATIONS / f"{language}.json")).values()
+        ),
+        f"docs/install/{language}.md": [(GUIDES / f"{language}.md").read_text(encoding="utf-8")],
+    }
+
+
+@pytest.mark.parametrize("language", sorted(TERMINOLOGY))
+def test_one_concept_gets_one_word(language: str) -> None:
+    """Eén begrip, één woord, in het vertaalbestand én in de gids van die taal.
+
+    Dit is een **spellingsbewaking** en dat is hier de juiste vorm: "één woord per
+    begrip" valt nergens aan een object of een echte tool af te meten, want het is
+    een afspraak over de tekst zelf. De lijst is daarom letterlijk en noemt per
+    regel het verboden woord, het canonieke woord en de reden; de docstring bij de
+    lijst zegt welke spellingen hij dekt. Wie een woord toevoegt, schrijft de reden
+    erbij op: waarom het ene woord het begrip dekt en het andere een ander begrip
+    oproept.
+
+    One concept, one word, in the translation file and in that language's guide.
+
+    This is a **spelling guard** and that is the right shape here: "one word per
+    concept" cannot be measured on an object or with a real tool, because it is an
+    agreement about the text itself. The list is therefore literal and names the
+    forbidden word, the canonical word and the reason per line; the docstring at
+    the list says which spellings it covers. Whoever adds a word writes the reason
+    down: why the one word covers the concept and the other calls up a different
+    one.
+    """
+    problems: list[str] = []
+    for where, texts in terminology_texts(language).items():
+        for forbidden, canonical, reason in TERMINOLOGY[language]:
+            for text in texts:
+                if forbidden in text:
+                    problems.append(
+                        f"{where}: {forbidden!r} hoort {canonical!r} te zijn - {reason}"
+                    )
+    assert not problems, "één begrip, één woord:\n" + "\n".join(problems)

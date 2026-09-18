@@ -482,10 +482,10 @@ sont alors ignorées au lieu de tout bloquer pour toujours.
 | **Jours de la fenêtre de sommeil** | les jours où cette fenêtre s'applique ; vide = tous les jours |
 | **Faire la grasse matinée jusqu'à** | jusqu'à quelle heure le capteur de sommeil compte encore le matin ; vide = la fenêtre de sommeil dit tout |
 | **Matins où vous faites la grasse matinée** | les matins eux-mêmes, pas les soirs précédents ; vide = tous les jours |
-| **Faire la grasse matinée aussi les jours fériés** | coché = s'applique tous les jours marqués par votre calendrier de vacances |
+| **Faire la grasse matinée aussi les jours de vacances** | coché = s'applique tous les jours marqués par votre calendrier de vacances |
 | **Attendre ce dormeur jusqu'à** | jusqu'à quelle heure cet occupant retient la maison pendant son sommeil ; vide = il ne retient personne |
 | **Jours où l'attente s'applique** | les jours où cette heure s'applique ; vide = tous les jours |
-| **Attendre ce dormeur aussi les jours fériés** | décoché = les jours ci-dessus se lisent littéralement ; coché = l'heure s'applique tous les jours fériés |
+| **Attendre ce dormeur aussi les jours de vacances** | décoché = les jours ci-dessus se lisent littéralement ; coché = l'heure s'applique tous les jours de vacances |
 
 ### La grasse matinée, et pourquoi ce n'est pas une fenêtre de sommeil plus longue
 
@@ -506,7 +506,7 @@ la différence : une fenêtre de sommeil traverse minuit et dépend donc du jour
 elle commence, tandis que la grasse matinée dépend du matin lui-même. La grasse
 matinée du samedi, c'est samedi.
 
-Avec la case **Faire la grasse matinée aussi les jours fériés**, elle s'applique
+Avec la case **Faire la grasse matinée aussi les jours de vacances**, elle s'applique
 tous les jours marqués par votre calendrier de vacances. Vous inscrivez
 *vacances* dans l'agenda et la grasse matinée suit d'elle-même.
 
@@ -543,13 +543,13 @@ quelqu'un. Tant que tous les présents dorment, la maison reste éteinte - c'est
 la porte du sommeil, pas cette heure, et la maison ne démarre donc qu'au moment
 où la première personne se lève vraiment.
 
-**Un jour férié ne compte pas ici comme un samedi**, contrairement aux horaires.
+**Un jour de vacances ne compte pas ici comme un samedi**, contrairement aux horaires.
 Le congé de l'un est la journée de travail de l'autre : si des vacances
 scolaires comptaient comme un samedi, le lève-tard retiendrait la maison pendant
 que l'autre travaille chez lui. Les jours signifient donc littéralement ce qui
 est écrit. Si vous voulez qu'on vous attende aussi un jour de congé en semaine,
-cochez *Attendre ce dormeur aussi les jours fériés* ; l'heure s'applique alors
-tous les jours fériés, quel que soit le jour de la semaine. Un jour férié tombant
+cochez *Attendre ce dormeur aussi les jours de vacances* ; l'heure s'applique alors
+tous les jours de vacances, quel que soit le jour de la semaine. Un jour de vacances tombant
 un samedi reste de toute façon un samedi.
 
 Attention à la fenêtre de sommeil : si l'heure limite tombe en dehors, cet
