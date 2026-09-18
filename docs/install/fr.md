@@ -1009,7 +1009,7 @@ Sous **Réparations**, vous pouvez rencontrer ces messages, avec ce qu'ils signi
 - **Climate Director : <name> a dû mettre son état sauvegardé de côté** — le fichier d'état était illisible et a été renommé ; les demandes et les reprises manuelles d'avant le redémarrage sont perdues, restaurez le fichier depuis une sauvegarde si vous en avez besoin.
 - **Climate Director : <name> a un problème de configuration** — l'installation est incorrecte ; les zones correctes continuent d'être régulées, donc vérifiez la configuration.
 - **Climate Director : <name> a des tâches manuelles** — une zone n'a que des sources qui ne démarrent jamais seules ; activez *Démarrage automatique* ou confirmez le message.
-- **Personne n'entend une demande de préparation refusée** — aucune automatisation n'écoute l'événement de refus ; importez le blueprint *decisions* et créez une automatisation.
+- **Personne n'entend une demande de préparation refusée** — aucune automatisation n'écoute l'événement de refus ; importez le blueprint *Préchauffage refusé* (`precondition_refused.yaml`) et créez une automatisation.
 - **Climate Director : <name> règle une saison qui exclut <count> tâche(s)** — la saison est réglée sur une saison où une tâche installée ne peut jamais tourner ; changez la saison ou la tâche.
 - **Climate Director : <name> ne peut pas lire <count> entité(s)** — une entité configurée n'existe pas, a disparu ou ne donne pas de nombre ; corrigez l'entité ou remettez le capteur en place.
 - **Climate Director : <name> demande un mode que <count> appareil(s) ne peuvent exécuter** — un rôle demande un mode que l'appareil ne déclare pas ; changez le rôle ou choisissez un autre appareil.

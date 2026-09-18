@@ -991,7 +991,7 @@ En **Reparaciones** puedes encontrarte con estos avisos, con lo que significan y
 - **Climate Director: <name> tuvo que apartar su estado guardado** — el archivo de estado era ilegible y se ha renombrado; las peticiones y los ajustes manuales anteriores al reinicio se han perdido, restaura el archivo desde una copia si los necesitas.
 - **Climate Director: <name> tiene un problema de configuración** — la instalación no es correcta; las zonas que sí lo son siguen regulándose, así que revisa la configuración.
 - **Climate Director: <name> tiene tareas manuales** — una zona solo tiene fuentes que nunca arrancan solas; activa *Inicio automático* o confirma el aviso.
-- **Nadie escucha una petición de preacondicionamiento rechazada** — ninguna automatización escucha el evento de rechazo; importa el blueprint *decisions* y crea una automatización.
+- **Nadie escucha una petición de preacondicionamiento rechazada** — ninguna automatización escucha el evento de rechazo; importa el blueprint *Preacondicionamiento rechazado* (`precondition_refused.yaml`) y crea una automatización.
 - **Climate Director: <name> fija una estación que excluye <count> tarea(s)** — la estación está puesta en una en la que una tarea configurada nunca puede funcionar; cambia la estación o la tarea.
 - **Climate Director: <name> no puede leer <count> entidad(es)** — una entidad configurada no existe, se ha ido o no da un número; corrige la entidad o recupera el sensor.
 - **Climate Director: <name> pide un modo que <count> aparato(s) no pueden ejecutar** — un rol pide un modo que el aparato no declara; cambia el rol o elige otro aparato.

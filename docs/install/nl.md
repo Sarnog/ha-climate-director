@@ -983,7 +983,7 @@ Onder **Reparaties** kun je deze meldingen tegenkomen, met wat ze betekenen en w
 - **Climate Director: <name> moest zijn bewaarde toestand opzij zetten** — het opslagbestand was onleesbaar en is hernoemd; verzoeken en handmatige uitzettingen van vóór de herstart zijn weg, zet het bestand terug uit een back-up als je ze nodig hebt.
 - **Climate Director: <name> heeft een configuratieprobleem** — de installatie klopt structureel niet; de zones die wel kloppen worden gewoon geregeld, loop de configuratie na.
 - **Climate Director: <name> heeft handbediende taken** — een zone heeft alleen bronnen die niet vanzelf starten; zet *Automatisch starten* aan of bevestig de melding.
-- **Niemand hoort een geweigerd vooruit-verzoek** — er is geen automatisering op het weigerings-event; importeer de blueprint *decisions* en maak er een automatisering van.
+- **Niemand hoort een geweigerd vooruit-verzoek** — er is geen automatisering op het weigerings-event; importeer de blueprint *Geweigerd vooruit-verzoek* (`precondition_refused.yaml`) en maak er een automatisering van.
 - **Climate Director: <name> zet een seizoen dat <count> taak/taken buitensluit** — het seizoen staat op een seizoen waarin een ingestelde taak nooit mag draaien; zet het seizoen of de taak bij.
 - **Climate Director: <name> kan <count> entiteit(en) niet lezen** — een ingestelde entiteit bestaat niet, is weg of levert geen getal; corrigeer de entiteit of breng de sensor terug.
 - **Climate Director: <name> vraagt een stand die <count> apparaat/apparaten niet kunnen draaien** — een rol vraagt een stand die het apparaat niet meldt; pas de rol aan of kies een ander apparaat.
