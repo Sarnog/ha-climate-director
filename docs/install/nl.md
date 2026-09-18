@@ -978,15 +978,15 @@ automatisering op die gebeurtenis staat.
 
 Onder **Reparaties** kun je deze meldingen tegenkomen, met wat ze betekenen en wat je eraan doet:
 
-- **Climate Director: <count> opening(en) van <name> is overbrugd terwijl hij openstaat** — je hebt een opening overbrugd terwijl hij echt openstaat; sluit de opening of zet de overbrugging uit.
-- **Climate Director: <count> apparaat/apparaten van <name> voert zijn commando niet uit** — een apparaat neemt de aanroep aan maar verandert niet; kijk of het bereikbaar is en of iets anders het terugzet.
+- **Climate Director: <count> opening(en) van <name> zijn overbrugd terwijl ze openstaan** — je hebt een opening overbrugd terwijl hij echt openstaat; sluit de opening of zet de overbrugging uit.
+- **Climate Director: <count> apparaat/apparaten van <name> voeren hun commando niet uit** — een apparaat neemt de aanroep aan maar verandert niet; kijk of het bereikbaar is en of iets anders het terugzet.
 - **Climate Director: <name> moest zijn bewaarde toestand opzij zetten** — het opslagbestand was onleesbaar en is hernoemd; verzoeken en handmatige uitzettingen van vóór de herstart zijn weg, zet het bestand terug uit een back-up als je ze nodig hebt.
 - **Climate Director: <name> heeft een configuratieprobleem** — de installatie klopt structureel niet; de zones die wel kloppen worden gewoon geregeld, loop de configuratie na.
 - **Climate Director: <name> heeft handbediende taken** — een zone heeft alleen bronnen die niet vanzelf starten; zet *Automatisch starten* aan of bevestig de melding.
 - **Niemand hoort een geweigerd vooruit-verzoek** — er is geen automatisering op het weigerings-event; importeer de blueprint *decisions* en maak er een automatisering van.
 - **Climate Director: <name> zet een seizoen dat <count> taak/taken buitensluit** — het seizoen staat op een seizoen waarin een ingestelde taak nooit mag draaien; zet het seizoen of de taak bij.
 - **Climate Director: <name> kan <count> entiteit(en) niet lezen** — een ingestelde entiteit bestaat niet, is weg of levert geen getal; corrigeer de entiteit of breng de sensor terug.
-- **Climate Director: <name> vraagt een stand die <count> apparaat/apparaten niet kan draaien** — een rol vraagt een stand die het apparaat niet meldt; pas de rol aan of kies een ander apparaat.
+- **Climate Director: <name> vraagt een stand die <count> apparaat/apparaten niet kunnen draaien** — een rol vraagt een stand die het apparaat niet meldt; pas de rol aan of kies een ander apparaat.
 
 ## Bekende beperkingen
 

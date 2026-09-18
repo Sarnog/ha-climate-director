@@ -713,7 +713,7 @@
       "description": "Estas entidades configuradas llevan un rato sin poder leerse - mal escritas, eliminadas o `unavailable`:\n\n{entities}\n\nNo se rompe nada, y eso es justo lo incómodo: la puerta que se apoya en esa entidad se cierra, la zona no hace nada, y desde fuera parece exactamente una zona que no tiene nada que hacer. Una temperatura interior o exterior ilegible pesa más: el director deja entonces en paz un aparato en marcha — incluida la fuente de calor compartida —, y ese aparato mantiene su unidad exterior en su tarea.\n\nComprueba la entidad en las Herramientas para desarrolladores, o abre la integración y elige Configurar para apuntarla a otro sitio. Este aviso desaparece solo en cuanto todo vuelve a leerse."
     },
     "unsupported_modes": {
-      "title": "Climate Director: {name} pide un modo que {count} aparato(s) no puede ejecutar",
+      "title": "Climate Director: {name} pide un modo que {count} aparato(s) no pueden ejecutar",
       "description": "Estos aparatos tienen un rol que puede pedir un modo que no notifican - por ejemplo, enfriar en una unidad que solo conoce `heat` y `off`. El director los omite para ese modo, así que la zona no hace nada en silencio.\n\n{entities}\n\nComprueba el rol en Configurar, o los `hvac_modes` del aparato en Herramientas de desarrollo. Este aviso desaparece por sí solo en cuanto cada aparato notifique los modos que su rol puede pedir."
     },
     "season_excludes_mode": {
@@ -721,7 +721,7 @@
       "description": "El selector de estación está en una estación en la que estas tareas nunca pueden funcionar, así que nunca podrán hacerlo:\n\n{entities}\n\nVuelve a poner el selector en Automático, o cambia la estación en Configurar."
     },
     "command_not_taking": {
-      "title": "Climate Director: {count} aparato(s) de {name} no ejecuta su orden",
+      "title": "Climate Director: {count} aparato(s) de {name} no ejecutan su orden",
       "description": "El director lleva un tiempo pidiendo lo mismo a estos aparatos, y siguen notificando otra cosa - la llamada se acepta y no pasa nada, o el aparato se vuelve a poner como estaba:\n\n{entities}\n\nMientras eso dure, la misma llamada sale de nuevo en cada ronda, unas mil cuatrocientas al día, y en ninguna parte se ve nada. Comprueba el aparato en Herramientas de desarrollo: ¿está accesible, acepta el modo, y hay algo más que lo devuelve a su sitio, un programa del termostato u otra automatización? Este aviso desaparece por sí solo en cuanto el aparato siga su orden."
     },
     "corrupt_storage": {
@@ -733,7 +733,7 @@
       "description": "Una petición de preacondicionamiento que encalla en una ventana o puerta abierta se anuncia como el evento `climate_director_precondition_refused`, y en ningún otro sitio. Ahora mismo nada lo escucha, así que una petición así falla en silencio: pulsas el botón y no pasa nada, sin poder ver por qué.\n\nSe arregla de una de estas dos maneras:\n\n1. Importa el blueprint **Climate Director - preacondicionamiento rechazado** *y configúralo*. Importarlo no basta: un blueprint sin una automatización construida sobre él no escucha nada.\n2. O escribe tu propia automatización sobre ese evento. Lleva la zona, los sensores abiertos y un mensaje ya preparado.\n\nEste aviso desaparece solo en cuanto algo escuche."
     },
     "bypassed_openings": {
-      "title": "Climate Director: {count} abertura(s) de {name} está anulada mientras está abierta",
+      "title": "Climate Director: {count} abertura(s) de {name} están anuladas mientras están abiertas",
       "description": "Estas aberturas están anuladas mientras están realmente abiertas; el director deja que la instalación caliente con una ventana abierta. Apaga la anulación o cierra la abertura.\n\n{openings}"
     }
   },

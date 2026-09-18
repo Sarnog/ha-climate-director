@@ -991,15 +991,15 @@ Automatisierung auf diesem Ereignis steht.
 
 Unter **Reparaturen** kannst du diesen Meldungen begegnen, mit dem, was sie bedeuten und was du dagegen tust:
 
-- **Climate Director: <count> Öffnung(en) von <name> ist überbrückt, während sie offensteht** — du hast eine Öffnung überbrückt, während sie wirklich offensteht; schließe die Öffnung oder schalte die Überbrückung aus.
-- **Climate Director: <count> Gerät(e) von <name> führt seinen Befehl nicht aus** — ein Gerät nimmt den Aufruf an, ändert sich aber nicht; prüfe, ob es erreichbar ist und ob etwas anderes es zurücksetzt.
+- **Climate Director: <count> Öffnung(en) von <name> sind überbrückt, während sie offenstehen** — du hast eine Öffnung überbrückt, während sie wirklich offensteht; schließe die Öffnung oder schalte die Überbrückung aus.
+- **Climate Director: <count> Gerät(e) von <name> führen ihren Befehl nicht aus** — ein Gerät nimmt den Aufruf an, ändert sich aber nicht; prüfe, ob es erreichbar ist und ob etwas anderes es zurücksetzt.
 - **Climate Director: <name> musste seinen gespeicherten Zustand beiseitelegen** — die Zustandsdatei war unlesbar und wurde umbenannt; Anfragen und Handeingriffe von vor dem Neustart sind weg, stelle die Datei aus einer Sicherung wieder her, wenn du sie brauchst.
 - **Climate Director: <name> hat ein Konfigurationsproblem** — die Installation ist strukturell falsch; die Zonen, die stimmen, werden weiter geregelt, also prüfe die Konfiguration.
 - **Climate Director: <name> hat handbediente Aufgaben** — eine Zone hat nur Quellen, die nie von selbst starten; schalte *Automatisch starten* ein oder bestätige die Meldung.
 - **Niemand hört eine abgelehnte Vorbereitungs-Anforderung** — keine Automatisierung hört auf das Ablehnungsereignis; importiere die *decisions*-Blueprint und baue daraus eine Automatisierung.
 - **Climate Director: <name> stellt eine Jahreszeit ein, die <count> Aufgabe(n) aussperrt** — die Jahreszeit steht auf einer, in der eine eingestellte Aufgabe nie laufen darf; ändere die Jahreszeit oder die Aufgabe.
 - **Climate Director: <name> kann <count> Entität(en) nicht lesen** — eine eingestellte Entität gibt es nicht, sie ist weg oder liefert keine Zahl; korrigiere die Entität oder bring den Sensor zurück.
-- **Climate Director: <name> verlangt einen Modus, den <count> Gerät(e) nicht fahren kann** — eine Rolle verlangt einen Modus, den das Gerät nicht meldet; ändere die Rolle oder wähle ein anderes Gerät.
+- **Climate Director: <name> verlangt einen Modus, den <count> Gerät(e) nicht fahren können** — eine Rolle verlangt einen Modus, den das Gerät nicht meldet; ändere die Rolle oder wähle ein anderes Gerät.
 
 ## Bekannte Einschränkungen
 

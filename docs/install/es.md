@@ -986,15 +986,15 @@ una automatización se apoya en ese evento.
 
 En **Reparaciones** puedes encontrarte con estos avisos, con lo que significan y lo que puedes hacer:
 
-- **Climate Director: <count> abertura(s) de <name> está anulada mientras está abierta** — has anulado una abertura mientras está realmente abierta; cierra la abertura o desactiva la anulación.
-- **Climate Director: <count> aparato(s) de <name> no ejecuta su orden** — un aparato acepta la llamada pero no cambia; comprueba que sea accesible y que nada lo devuelva a su estado anterior.
+- **Climate Director: <count> abertura(s) de <name> están anuladas mientras están abiertas** — has anulado una abertura mientras está realmente abierta; cierra la abertura o desactiva la anulación.
+- **Climate Director: <count> aparato(s) de <name> no ejecutan su orden** — un aparato acepta la llamada pero no cambia; comprueba que sea accesible y que nada lo devuelva a su estado anterior.
 - **Climate Director: <name> tuvo que apartar su estado guardado** — el archivo de estado era ilegible y se ha renombrado; las peticiones y los ajustes manuales anteriores al reinicio se han perdido, restaura el archivo desde una copia si los necesitas.
 - **Climate Director: <name> tiene un problema de configuración** — la instalación no es correcta; las zonas que sí lo son siguen regulándose, así que revisa la configuración.
 - **Climate Director: <name> tiene tareas manuales** — una zona solo tiene fuentes que nunca arrancan solas; activa *Inicio automático* o confirma el aviso.
 - **Nadie escucha una petición de preacondicionamiento rechazada** — ninguna automatización escucha el evento de rechazo; importa el blueprint *decisions* y crea una automatización.
 - **Climate Director: <name> fija una estación que excluye <count> tarea(s)** — la estación está puesta en una en la que una tarea configurada nunca puede funcionar; cambia la estación o la tarea.
 - **Climate Director: <name> no puede leer <count> entidad(es)** — una entidad configurada no existe, se ha ido o no da un número; corrige la entidad o recupera el sensor.
-- **Climate Director: <name> pide un modo que <count> aparato(s) no puede ejecutar** — un rol pide un modo que el aparato no declara; cambia el rol o elige otro aparato.
+- **Climate Director: <name> pide un modo que <count> aparato(s) no pueden ejecutar** — un rol pide un modo que el aparato no declara; cambia el rol o elige otro aparato.
 
 ## Limitaciones conocidas
 

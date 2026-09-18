@@ -357,3 +357,99 @@ def test_one_concept_gets_one_word(language: str) -> None:
                         f"{where}: {forbidden!r} hoort {canonical!r} te zijn - {reason}"
                     )
     assert not problems, "één begrip, één woord:\n" + "\n".join(problems)
+
+
+#: De titels waarin `{count}` het onderwerp van de zin is: daar moet de
+#: werkwoordsvorm het aantal kunnen dragen. Bij `unreadable_entities` en
+#: `season_excludes_mode` is `{name}` het onderwerp en is het enkelvoud juist.
+#:
+#: The titles in which `{count}` is the subject of the sentence: there the verb
+#: has to carry the number. In `unreadable_entities` and `season_excludes_mode`
+#: `{name}` is the subject and the singular is right.
+COUNT_SUBJECT_TITLES = ("command_not_taking", "bypassed_openings", "unsupported_modes")
+
+#: Elke titel die `{count}` draagt, in elke taal. Een nieuwe titel met een aantal
+#: erin laat deze bewaking rood worden, zodat hij niet ongemeten blijft.
+#:
+#: Every title carrying `{count}`, in every language. A new title with a count in
+#: it turns this guard red, so it does not stay unmeasured.
+COUNT_TITLES = frozenset({"unreadable_entities", "season_excludes_mode", *COUNT_SUBJECT_TITLES})
+
+#: De enkelvoudige werkwoordsvormen die naast een `{count}` van 3 niet meer mogen
+#: staan, per taal. Letterlijk, want "het werkwoord hoort bij het aantal" is een
+#: afspraak over de tekst zelf en nergens aan een object te meten.
+#:
+#: The singular verb forms that may no longer stand beside a `{count}` of 3, per
+#: language. Literal, because "the verb agrees with the count" is an agreement
+#: about the text itself and cannot be measured on an object anywhere.
+SINGULAR_VERBS: dict[str, tuple[str, ...]] = {
+    "nl": ("voert", "is overbrugd", "kan"),
+    "de": ("führt", "ist überbrückt", "kann"),
+    "fr": ("n'exécute", "est contournée", "peut"),
+    "es": ("no ejecuta", "está anulada", "puede"),
+}
+
+
+def count_titles(language: str) -> dict[str, str]:
+    """Elke `issues.*.title` met een `{count}` erin, per taal.
+
+    Every `issues.*.title` with a `{count}` in it, per language.
+    """
+    path = STRINGS if language == "strings" else TRANSLATIONS / f"{language}.json"
+    return {
+        key: value.get("title", "")
+        for key, value in load(path)["issues"].items()
+        if "{count}" in value.get("title", "")
+    }
+
+
+@pytest.mark.parametrize(
+    "language",
+    ["strings", *sorted(path.stem for path in language_files())],
+    ids=["strings", "en", "nl", "de", "fr", "es", "ar"],
+)
+def test_every_count_title_is_a_known_one(language: str) -> None:
+    """Elke titel met `{count}` staat in de lijst hierboven.
+
+    Every title with `{count}` stands in the list above.
+    """
+    found = set(count_titles(language))
+    assert found == set(COUNT_TITLES), (
+        f"{language}: titels met een {{count}} erin: {sorted(found)}; verwacht "
+        f"{sorted(COUNT_TITLES)}. Een nieuwe titel met een aantal erin hoort hier "
+        f"bij te staan en op zijn werkwoordsvorm nagekeken te worden."
+    )
+
+
+@pytest.mark.parametrize("language", sorted(SINGULAR_VERBS))
+def test_the_count_titles_read_at_count_one_and_three(language: str) -> None:
+    """De drie titels met `{count}` als onderwerp lezen goed bij 1 én bij 3.
+
+    De bewaking rendert elke titel op `count=1` en `count=3` en eist dat er geen
+    enkelvoudige werkwoordsvorm uit de letterlijke lijst in staat. Bij `1
+    apparaat` hoort `voert`, bij `3 apparaten` hoort `voeren`; één titel moet het
+    met één vorm doen, en dan is de meervoudsvorm de enige die bij 3 niet liegt.
+    De andere twee titels met een `{count}` erin blijven buiten de lijst: daar is
+    `{name}` het onderwerp, en daar is het enkelvoud juist.
+
+    The three titles with `{count}` as their subject read well at both 1 and 3.
+
+    The guard renders every title at `count=1` and `count=3` and demands that no
+    singular verb form from the literal list stands in it. `1 apparaat` takes
+    `voert`, `3 apparaten` takes `voeren`; one title has to make do with one form,
+    and then the plural is the only one that does not lie at 3. The other two
+    titles containing a `{count}` stay outside the list: `{name}` is the subject
+    there, and the singular is right.
+    """
+    problems: list[str] = []
+    for key in COUNT_SUBJECT_TITLES:
+        title = count_titles(language)[key]
+        for count in (1, 3):
+            rendered = title.replace("{count}", str(count)).replace("{name}", "Woonkamer")
+            for form in SINGULAR_VERBS[language]:
+                if re.search(rf"\b{re.escape(form)}\b", rendered):
+                    problems.append(
+                        f"{key} op count={count}: {form!r} staat in {rendered!r}, en dat leest "
+                        f"niet bij drie"
+                    )
+    assert not problems, "de titel liegt over het aantal:\n" + "\n".join(problems)
