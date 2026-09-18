@@ -631,11 +631,14 @@ là que l'installation est écrite.
 
 Si quelque chose est structurellement faux — une zone sans source utilisable,
 deux sources sur la même entité, une fenêtre extérieure qui n'admet rien —
-vous voyez d'abord une liste, avec le choix *Enregistrer quand même* ou
-*Revenir pour modifier quelque chose*. C'est un **avertissement, pas un refus** :
-une installation peut délibérément être inhabituelle, et vous seul savez si
-c'est le cas. La même liste apparaît aussi sous **Réparations** tant qu'elle
-s'applique.
+vous arrivez sur l'écran **Quelque chose ressort** : le champ **Et maintenant**
+propose deux choix. *Conserver ces modifications et revenir* écrit quand même
+l'installation et revient au menu principal ; *← Abandonner et revenir* laisse
+tomber votre modification et vous ramène pour l'ajuster.
+
+C'est un **avertissement, pas un refus** : une installation peut délibérément
+être inhabituelle, et vous seul savez si c'est le cas. La même liste apparaît
+aussi sous **Réparations** tant qu'elle s'applique.
 
 ## Ce que vous obtenez dans Home Assistant
 
@@ -1062,7 +1065,6 @@ littéralement.
 | Délai avant suspension (secondes) | Ouverture |
 | Supprimer cette ouverture | Ouverture |
 | Ouverture | Portes et fenêtres |
-| ← Abandonner et revenir | Chaque écran |
 | Jours concernés | Plage de silence |
 | Silence jusqu'à | Plage de silence |
 | Silence à partir de | Plage de silence |
@@ -1071,7 +1073,6 @@ littéralement.
 | Le capteur de sommeil compte à partir de | Occupant |
 | Supprimer cet occupant | Occupant |
 | Occupant | Occupants |
-| Et maintenant | Quelque chose ressort |
 | Agendas de vacances | Réglages généraux |
 | Durée maximale de la préparation (minutes) | Réglages généraux |
 | Le planning d'un occupant doit être ouvert | Réglages généraux |

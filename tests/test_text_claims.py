@@ -138,16 +138,55 @@ RETRACTED: tuple[Claim, ...] = (
     Claim(
         name="de oude bewaarknop",
         reason=(
-            "het oude bewaarscherm had een knop *toch opslaan*; die bestaat niet meer, het "
-            "scherm heet nu *Er valt iets op* met de when_done-keuzes"
+            "het oude bewaarscherm had twee eigen knoppen *toch opslaan* en *terug om iets aan "
+            "te passen*; die bestaan niet meer, het scherm heet *Er valt iets op* met het veld "
+            "*Wat nu* en de when_done-keuzes"
+        ),
+        anchor=(
+            "`options.step.save.title`, `options.step.save.data.when_done` en "
+            "`selector.when_done.options.*` in de zeven tekstbestanden, en de sectie "
+            "*Stap 12* van de zes gidsen"
+        ),
+        needles={
+            "nl": "Toch opslaan",
+            "en": "Save anyway",
+            "de": "Trotzdem speichern",
+            "fr": "Enregistrer quand même",
+            "es": "Guardar igualmente",
+            "ar": "احفظ رغم ذلك",
+        },
+    ),
+    Claim(
+        name="de oude terugkeerknop van het bewaarscherm",
+        reason=(
+            "het oude bewaarscherm had ook een eigen terugkeerknop; het scherm heet *Er valt iets "
+            "op* en de terugkeer zit in de when_done-keuzes"
+        ),
+        anchor=(
+            "`selector.when_done.options.discard` in de zeven tekstbestanden en de sectie "
+            "*Stap 12* van de zes gidsen"
+        ),
+        needles={
+            "nl": "Terug om iets aan te passen",
+            "en": "Back to change something",
+            "de": "Zurück, um etwas zu ändern",
+            "fr": "Revenir pour modifier quelque chose",
+            "es": "Volver para cambiar algo",
+            "ar": "عُد لتغيير شيء",
+        },
+    ),
+    Claim(
+        name="de oude Spaanse bewaarknop",
+        reason=(
+            "de éérste versie van het bewaarscherm had een eigen bewaarknop die de wijziging "
+            "toch wegschreef; die knop bestaat niet meer"
         ),
         anchor=(
             "`options.step.save.data.when_done` in de zeven tekstbestanden en de sectie "
             "*Stap 12* van de zes gidsen"
         ),
         needles={
-            "es": "Guardar igualmente",
-            "ar": "احفظ على أي حال",
+            "es": "Guardar de todos modos",
         },
     ),
 )

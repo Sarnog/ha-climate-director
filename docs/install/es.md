@@ -617,11 +617,15 @@ Elige **✅ Guardar y cerrar** en el menú principal. Solo entonces se escribe l
 instalación.
 
 Si algo está estructuralmente mal — una zona sin fuente útil, dos fuentes sobre
-la misma entidad, una ventana exterior que no admite nada — primero ves una
-lista, con la opción *Guardar de todos modos* o *Volver para cambiar algo*. Es
-una **advertencia, no una negativa**: una instalación puede ser deliberadamente
-peculiar, y solo tú sabes si es así. La misma lista aparece también bajo
-**Reparaciones** mientras se aplique.
+la misma entidad, una ventana exterior que no admite nada — llegas a la pantalla
+**Algo llama la atención**. Allí el campo **Y ahora** ofrece dos opciones.
+*Conservar estos cambios y volver* escribe la instalación igualmente y vuelve al
+menú principal; *← Descartar y volver* descarta tu cambio y te devuelve para
+ajustarlo.
+
+Es una **advertencia, no una negativa**: una instalación puede ser
+deliberadamente peculiar, y solo tú sabes si es así. La misma lista aparece
+también bajo **Reparaciones** mientras se aplique.
 
 ## Qué obtienes en Home Assistant
 
@@ -1053,7 +1057,6 @@ porque el texto de arriba no las nombra todas literalmente.
 | Retardo antes de suspender (segundos) | Abertura |
 | Abertura | Puertas y ventanas |
 | Cuando termines aquí | Puertas y ventanas |
-| ← Descartar y volver | Toda pantalla |
 | Cuando termines aquí | Franja de silencio |
 | Días en que se aplica | Franja de silencio |
 | Eliminar esta franja | Franja de silencio |
@@ -1064,7 +1067,6 @@ porque el texto de arriba no las nombra todas literalmente.
 | El sensor de sueño cuenta hasta | Residente |
 | Eliminar este residente | Residente |
 | Cuando termines aquí | Residentes |
-| Y ahora | Algo llama la atención |
 | Cuando termines aquí | Ajustes generales |
 | Modo invitados desde | Ajustes generales |
 | Modo invitados hasta | Ajustes generales |

@@ -619,11 +619,15 @@ Wähle im Hauptmenü **✅ Speichern und schließen**. Erst dann wird die
 Installation weggeschrieben.
 
 Ist etwas strukturell falsch — eine Zone ohne brauchbare Quelle, zwei Quellen
-auf derselben Entität, ein Außenfenster, das nichts zulässt — bekommst du
-zuerst eine Liste, mit der Wahl *Trotzdem speichern* oder *Zurück, um etwas zu
-ändern*. Es ist eine **Warnung, keine Weigerung**: Eine Installation darf mit
-Absicht ungewöhnlich sein, und nur du weißt, ob das so ist. Dieselbe Liste
-steht, solange sie gilt, auch unter **Reparaturen**.
+auf derselben Entität, ein Außenfenster, das nichts zulässt — landest du auf dem
+Bildschirm **Etwas fällt auf**. Dort bietet das Feld **Was nun** zwei
+Möglichkeiten. *Diese Änderungen behalten und zurück* schreibt die Installation
+trotzdem weg und geht zum Hauptmenü zurück; *← Verwerfen und zurück* lässt deine
+Änderung fallen und bringt dich zurück, um sie anzupassen.
+
+Es ist eine **Warnung, keine Weigerung**: Eine Installation darf mit Absicht
+ungewöhnlich sein, und nur du weißt, ob das so ist. Dieselbe Liste steht,
+solange sie gilt, auch unter **Reparaturen**.
 
 ## Was du in Home Assistant bekommst
 
@@ -1046,8 +1050,6 @@ hier zusammen, weil der Text oben sie nicht überall wörtlich nennt.
 | Zonen, die er versorgt | Gemeinsame Wärmequelle |
 | Diese Öffnung löschen | Öffnung |
 | Verzögerung vor dem Aussetzen (Sekunden) | Öffnung |
-| Diese Änderungen behalten und zurück | Jeder Bildschirm |
-| ← Verwerfen und zurück | Jeder Bildschirm |
 | Dieses Fenster löschen | Ruhefenster |
 | Ruhe ab | Ruhefenster |
 | Ruhe bis | Ruhefenster |
@@ -1056,7 +1058,6 @@ hier zusammen, weil der Text oben sie nicht überall wörtlich nennt.
 | Schlafsensor zählt ab | Bewohner |
 | Schlafsensor zählt bis | Bewohner |
 | Zustand, der schlafend bedeutet | Bewohner |
-| Was nun | Etwas fällt auf |
 | Gästemodus bis | Allgemeine Einstellungen |
 | Heizungsanlage | Allgemeine Einstellungen |
 | Herkunft der Jahreszeit | Allgemeine Einstellungen |

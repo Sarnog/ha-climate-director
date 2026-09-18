@@ -606,10 +606,14 @@ Pick **✅ Save and close** in the main menu. Only then is the installation
 written out.
 
 If something is structurally wrong — a zone with no usable source, two sources
-on the same entity, an outdoor window that admits nothing — you first get a
-list, with the choice *Save anyway* or *Back to change something*. It is a
-**warning, not a refusal**: an installation may deliberately be unusual, and
-only you know whether it is. The same list also appears under **Repairs** for
+on the same entity, an outdoor window that admits nothing — you end up on the
+**Something looks off** screen. There the field **What now** offers two choices.
+*Keep these changes and go back* writes the installation out anyway and returns
+to the main menu; *← Discard and go back* drops your change and takes you back to
+adjust it.
+
+It is a **warning, not a refusal**: an installation may deliberately be unusual,
+and only you know whether it is. The same list also appears under **Repairs** for
 as long as it applies.
 
 ## What you get in Home Assistant
@@ -1019,15 +1023,12 @@ because the text above does not name all of them literally.
 | Heat source | Shared heat sources |
 | Delay before suspending (seconds) | Opening |
 | Delete this opening | Opening |
-| Keep these changes and go back | Every screen |
-| ← Discard and go back | Every screen |
 | Days this applies | Quiet window |
 | Delete this window | Quiet window |
 | Quiet from | Quiet window |
 | Quiet until | Quiet window |
 | Delete this resident | Resident |
 | Sleep sensor counts until | Resident |
-| What now | Something looks off |
 | Guest mode days | General settings |
 | Guest mode until | General settings |
 | Maximum pre-conditioning time (minutes) | General settings |

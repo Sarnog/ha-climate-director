@@ -113,7 +113,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.quiet.data.weekdays": ("Days this applies"),
         "options.step.resident.data.delete": ("Delete this resident"),
         "options.step.resident.data.sleep_until": ("Sleep sensor counts until"),
-        "options.step.save.data.when_done": ("What now"),
         "options.step.settings.data.guest_days": ("Guest mode days"),
         "options.step.settings.data.guest_end": ("Guest mode until"),
         "options.step.settings.data.max_precondition": ("Maximum pre-conditioning time (minutes)"),
@@ -128,8 +127,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.zone.data.presence_entity": ("Presence sensor for this zone"),
         "options.step.zone.data.presence_state": ("State meaning occupied"),
         "options.step.zone.data.presence_timeout": ("Keep counting as occupied for (seconds)"),
-        "selector.when_done.options.discard": ("← Discard and go back"),
-        "selector.when_done.options.keep": ("Keep these changes and go back"),
     },
     "nl": {
         "options.step.circuit.data.allow_fan_only_during_conflict": (
@@ -165,7 +162,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.resident.data.delete": ("Deze bewoner verwijderen"),
         "options.step.resident.data.sleep_state": ("Toestand die slapen betekent"),
         "options.step.resident.data.sleep_until": ("Slaapsensor telt tot"),
-        "options.step.save.data.when_done": ("Wat nu"),
         "options.step.settings.data.guest_end": ("Gastenmodus tot"),
         "options.step.settings.data.require_awake": ("Iemand die thuis is moet wakker zijn"),
         "options.step.settings.data.stuck_after": ("Zone geldt als vastgelopen na (minuten)"),
@@ -184,7 +180,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.zone.data.presence_entity": ("Aanwezigheidssensor van deze zone"),
         "options.step.zone.data.presence_state": ("Toestand die bezet betekent"),
         "options.step.zone.data.presence_timeout": ("Nog zo lang als bezet tellen (seconden)"),
-        "selector.when_done.options.discard": ("← Verwerpen en teruggaan"),
     },
     "de": {
         "options.step.circuit.data.allow_fan_only_during_conflict": (
@@ -217,7 +212,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.resident.data.sleep_from": ("Schlafsensor zählt ab"),
         "options.step.resident.data.sleep_state": ("Zustand, der schlafend bedeutet"),
         "options.step.resident.data.sleep_until": ("Schlafsensor zählt bis"),
-        "options.step.save.data.when_done": ("Was nun"),
         "options.step.settings.data.guest_end": ("Gästemodus bis"),
         "options.step.settings.data.heating_layout": ("Heizungsanlage"),
         "options.step.settings.data.max_precondition": ("Maximale Vorbereitungszeit (Minuten)"),
@@ -242,8 +236,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.zone.data.presence_entity": ("Anwesenheitssensor dieser Zone"),
         "options.step.zone.data.presence_state": ("Zustand, der belegt bedeutet"),
         "options.step.zone.data.presence_timeout": ("Noch so lange als belegt zählen (Sekunden)"),
-        "selector.when_done.options.discard": ("← Verwerfen und zurück"),
-        "selector.when_done.options.keep": ("Diese Änderungen behalten und zurück"),
     },
     "es": {
         "options.step.circuit.data.allow_fan_only_during_conflict": (
@@ -291,7 +283,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.resident.data.sleep_until": ("El sensor de sueño cuenta hasta"),
         "options.step.resident.data.when_done": ("Cuando termines aquí"),
         "options.step.residents.data.when_done": ("Cuando termines aquí"),
-        "options.step.save.data.when_done": ("Y ahora"),
         "options.step.settings.data.guest_end": ("Modo invitados hasta"),
         "options.step.settings.data.guest_start": ("Modo invitados desde"),
         "options.step.settings.data.holiday_keyword": ("Palabra que indica vacaciones"),
@@ -331,7 +322,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         ),
         "options.step.zone.data.when_done": ("Cuando termines aquí"),
         "options.step.zones.data.when_done": ("Cuando termines aquí"),
-        "selector.when_done.options.discard": ("← Descartar y volver"),
     },
     "fr": {
         "options.step.circuit.data.allow_fan_only_during_conflict": (
@@ -368,7 +358,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.resident.data.sleep_from": ("Le capteur de sommeil compte à partir de"),
         "options.step.resident.data.sleep_until": ("Le capteur de sommeil compte jusqu'à"),
         "options.step.residents.data.resident": ("Occupant"),
-        "options.step.save.data.when_done": ("Et maintenant"),
         "options.step.settings.data.guest_end": ("Mode invités jusqu'à"),
         "options.step.settings.data.guest_start": ("Mode invités à partir de"),
         "options.step.settings.data.holiday_calendars": ("Agendas de vacances"),
@@ -414,7 +403,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.zone.data.presence_timeout": (
             "Continuer à compter comme occupée pendant (secondes)"
         ),
-        "selector.when_done.options.discard": ("← Abandonner et revenir"),
     },
     "ar": {
         "options.step.circuit.data.allow_fan_only_during_conflict": (
@@ -457,7 +445,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.resident.data.sleep_until": ("يُحتسب مستشعر النوم حتى"),
         "options.step.resident.data.when_done": ("عند الانتهاء هنا"),
         "options.step.residents.data.when_done": ("عند الانتهاء هنا"),
-        "options.step.save.data.when_done": ("وماذا الآن"),
         "options.step.settings.data.guest_end": ("وضع الضيوف حتى"),
         "options.step.settings.data.holiday_calendars": ("تقاويم العطلات"),
         "options.step.settings.data.holiday_keyword": ("الكلمة الدالة على العطلة"),
@@ -495,8 +482,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.zone.data.presence_timeout": ("استمر في اعتبارها مشغولة لمدة (ثوانٍ)"),
         "options.step.zone.data.when_done": ("عند الانتهاء هنا"),
         "options.step.zones.data.when_done": ("عند الانتهاء هنا"),
-        "selector.when_done.options.discard": ("← التجاهل والعودة"),
-        "selector.when_done.options.keep": ("الاحتفاظ بهذه التغييرات والعودة"),
     },
 }
 

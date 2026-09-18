@@ -610,8 +610,12 @@ Kies in het hoofdmenu **✅ Opslaan en sluiten**. Pas op dat moment wordt de
 installatie weggeschreven.
 
 Klopt er iets structureel niet — een zone zonder bruikbare bron, twee bronnen op
-dezelfde entiteit, een buitenvenster dat niets toelaat — dan krijg je eerst een
-lijst te zien met de keuze *Toch opslaan* of *Terug om iets aan te passen*.
+dezelfde entiteit, een buitenvenster dat niets toelaat — dan kom je op het scherm
+**Er valt iets op**. Daar staat het veld **Wat nu** met twee keuzes:
+*Deze wijzigingen bewaren en teruggaan* schrijft de installatie toch weg en gaat
+terug naar het hoofdmenu; *← Verwerpen en teruggaan* laat je wijziging vallen en brengt
+je terug om het aan te passen.
+
 Het is een **waarschuwing, geen weigering**: een installatie mag met opzet
 afwijkend zijn, en alleen jij weet of dat zo is. Dezelfde lijst staat zolang het
 geldt ook onder **Reparaties**.
@@ -1035,7 +1039,6 @@ elkaar omdat de tekst hierboven ze niet allemaal letterlijk noemt.
 | Vertraging voordat er opgeschort wordt (seconden) | Opening |
 | Zones die dit raakt | Opening |
 | Opening | Deuren en ramen |
-| ← Verwerpen en teruggaan | Elk scherm |
 | Dagen waarop dit geldt | Stiltevenster |
 | Dit venster verwijderen | Stiltevenster |
 | Stilte tot | Stiltevenster |
@@ -1043,7 +1046,6 @@ elkaar omdat de tekst hierboven ze niet allemaal letterlijk noemt.
 | Deze bewoner verwijderen | Bewoner |
 | Slaapsensor telt tot | Bewoner |
 | Toestand die slapen betekent | Bewoner |
-| Wat nu | Er valt iets op |
 | Gastenmodus tot | Algemene instellingen |
 | Iemand die thuis is moet wakker zijn | Algemene instellingen |
 | Zone geldt als vastgelopen na (minuten) | Algemene instellingen |
