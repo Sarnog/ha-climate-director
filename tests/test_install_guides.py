@@ -20,6 +20,12 @@ staat, en dan is deze test groen zonder dat er iets bewezen is - dan keurt de
 lijst ontbrekende tekst goed in plaats van hem aan te wijzen. De koppentelling
 leest het hele bestand, juist zodat de woordenlijst niet stil kan verdwijnen.
 
+De woordenlijst zelf wordt ook bewaakt: de eerste kolom is precies de
+uitzonderingenlijst hieronder, niet meer en niet minder, en elke rij noemt een
+label dat werkelijk in de vertaling van die taal staat. Die vergelijking staat
+in `script/_gen_guides_test.py`, waar de uitzonderingenlijst ook vandaan komt -
+één plek, zodat tabel en lijst alleen samen kunnen veranderen.
+
 The six installation guides use the words of the interface.
 
 No test or CI job reads `docs/install/*.md` today; the guides have therefore
@@ -40,6 +46,12 @@ first. Otherwise a label counts as soon as it stands in any table, and then this
 test is green without anything being proven - the list then approves missing
 text instead of pointing at it. The header count reads the whole file, exactly
 so the glossary cannot disappear quietly.
+
+The glossary itself is guarded too: its first column is exactly the exception
+list below, no more and no less, and every row names a label that really stands
+in that language's translation. That comparison lives in
+`script/_gen_guides_test.py`, where the exception list comes from as well - one
+place, so table and list can only change together.
 """
 
 from __future__ import annotations
@@ -664,3 +676,83 @@ def test_every_guide_has_the_same_number_of_headers(language: str) -> None:
     }
     assert len(set(counts.values())) == 1, f"ongelijke koppentelling: {counts}"
     assert counts[language] > 0, f"{language}: geen enkele `## `-kop"
+
+
+def glossary_rows(language: str) -> list[str]:
+    """De eerste kolom van de woordenlijst-sectie, in bestandsorde.
+
+    De kopregel en de scheidingsregel (`|---|---|`) tellen niet mee; alles wat
+    daarna in de sectie met een `|` begint is een rij van de lezer.
+
+    The first column of the interface glossary section, in file order. The
+    header row and the separator row (`|---|---|`) do not count; everything after
+    that inside the section, starting with `|`, is a row for the reader.
+    """
+    rows: list[str] = []
+    inside = False
+    separator_seen = False
+    for line in guide_raw(language).splitlines():
+        stripped = line.strip()
+        if stripped == f"## {GLOSSARY[language]}":
+            inside = True
+            continue
+        if inside and line.startswith("## "):
+            break
+        if not inside or not stripped.startswith("|"):
+            continue
+        cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+        if len(cells) < 2:
+            continue
+        if set(cells[0]) <= set("-: "):
+            separator_seen = True
+            continue
+        if not separator_seen:
+            continue
+        rows.append(cells[0])
+    return rows
+
+
+def test_the_glossary_is_the_exception_list() -> None:
+    """De woordenlijst is de uitzonderingenlijst van die taal, en niets anders.
+
+    Wat hier vastligt: de eerste kolom van de woordenlijst-sectie komt exact
+    overeen met `EXCEPTIONS[taal]` - elke rij staat op de lijst en elke regel van
+    de lijst heeft een rij - en elke rij noemt een label dat werkelijk in
+    `translations/<taal>.json` staat. Die tweede eis is de scherpe kant: een
+    verdwenen interfaceknop laat een rij staan die nergens meer naar verwijst, en
+    dat is precies hoe deze tabel eerder is weggelopen. Vergeleken wordt op de
+    **tekst** van het label, niet op de sleutel: een label dat twee sleutels
+    deelt (een `when_done`-knop die op elk scherm hetzelfde heet) hoort één rij
+    te hebben, niet twee.
+
+    What this pins down: the glossary's first column matches `EXCEPTIONS[language]`
+    exactly - every row stands on the list and every line of the list has a row -
+    and every row names a label that really stands in `translations/<language>.json`.
+    That second demand is the sharp side: a disappeared interface button leaves a
+    row pointing at nothing, and that is exactly how this table drifted before.
+    The comparison is on the **text** of the label, not on the key: a label two
+    keys share (a `when_done` button that is called the same on every screen)
+    belongs in one row, not two.
+    """
+    problems: list[str] = []
+    for language in LANGUAGES:
+        rows = glossary_rows(language)
+        expected = {value for value in EXCEPTIONS.get(language, {}).values()}
+        labels = set(interface_labels(language).values())
+        for row in sorted(set(rows) - expected):
+            problems.append(
+                f"{language}: de woordenlijst noemt {row!r}, en dat staat niet op de "
+                f"uitzonderingenlijst; haal de rij weg"
+            )
+        for row in sorted(expected - set(rows)):
+            problems.append(
+                f"{language}: de uitzonderingenlijst noemt {row!r} en de woordenlijst "
+                f"niet; zet de rij erin of haal de regel van de lijst"
+            )
+        for row in sorted(set(rows)):
+            if row not in labels:
+                problems.append(
+                    f"{language}: de woordenlijst noemt {row!r}, en dat label bestaat "
+                    f"niet in translations/{language}.json"
+                )
+    assert not problems, "de woordenlijst is de uitzonderingenlijst niet:\n" + "\n".join(problems)

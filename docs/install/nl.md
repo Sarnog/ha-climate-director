@@ -1035,7 +1035,6 @@ elkaar omdat de tekst hierboven ze niet allemaal letterlijk noemt.
 | Vertraging voordat er opgeschort wordt (seconden) | Opening |
 | Zones die dit raakt | Opening |
 | Opening | Deuren en ramen |
-| ← Terug naar het hoofdmenu om iets aan te passen | Er valt iets op |
 | ← Verwerpen en teruggaan | Elk scherm |
 | Dagen waarop dit geldt | Stiltevenster |
 | Dit venster verwijderen | Stiltevenster |
@@ -1049,7 +1048,6 @@ elkaar omdat de tekst hierboven ze niet allemaal letterlijk noemt.
 | Iemand die thuis is moet wakker zijn | Algemene instellingen |
 | Zone geldt als vastgelopen na (minuten) | Algemene instellingen |
 | Deze bron verwijderen | Bron |
-| Dit apparaat automatisch aanzetten | Bron |
 | Rusttijd voordat dit apparaat opnieuw mag starten (seconden) | Bron |
 | Wachttijd voordat dit apparaat overneemt (minuten) | Bron |
 | Dit rooster verwijderen | Rooster |

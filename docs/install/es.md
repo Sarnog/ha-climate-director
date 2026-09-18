@@ -1053,9 +1053,7 @@ porque el texto de arriba no las nombra todas literalmente.
 | Retardo antes de suspender (segundos) | Abertura |
 | Abertura | Puertas y ventanas |
 | Cuando termines aquí | Puertas y ventanas |
-| Guardar igualmente | Algo llama la atención |
 | ← Descartar y volver | Toda pantalla |
-| ← Volver al menú principal para cambiar algo | Algo llama la atención |
 | Cuando termines aquí | Franja de silencio |
 | Días en que se aplica | Franja de silencio |
 | Eliminar esta franja | Franja de silencio |
@@ -1077,7 +1075,6 @@ porque el texto de arriba no las nombra todas literalmente.
 | Cuando termines aquí | Fuente |
 | Descanso antes de que este aparato pueda reiniciarse (segundos) | Fuente |
 | Eliminar esta fuente | Fuente |
-| Encender este aparato automáticamente | Fuente |
 | Entidad climate | Fuente |
 | Esperar este tiempo antes de asumir el relevo (minutos) | Fuente |
 | Lo que puede hacer este aparato | Fuente |

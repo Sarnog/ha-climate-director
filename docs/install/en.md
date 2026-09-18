@@ -1020,7 +1020,6 @@ because the text above does not name all of them literally.
 | Delay before suspending (seconds) | Opening |
 | Delete this opening | Opening |
 | Keep these changes and go back | Every screen |
-| ← Back to the main menu to change something | Something looks off |
 | ← Discard and go back | Every screen |
 | Days this applies | Quiet window |
 | Delete this window | Quiet window |

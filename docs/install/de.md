@@ -1048,7 +1048,6 @@ hier zusammen, weil der Text oben sie nicht überall wörtlich nennt.
 | Verzögerung vor dem Aussetzen (Sekunden) | Öffnung |
 | Diese Änderungen behalten und zurück | Jeder Bildschirm |
 | ← Verwerfen und zurück | Jeder Bildschirm |
-| ← Zurück zum Hauptmenü, um etwas zu ändern | Etwas fällt auf |
 | Dieses Fenster löschen | Ruhefenster |
 | Ruhe ab | Ruhefenster |
 | Ruhe bis | Ruhefenster |
@@ -1067,7 +1066,6 @@ hier zusammen, weil der Text oben sie nicht überall wörtlich nennt.
 | Zone gilt als festgefahren nach (Minuten) | Allgemeine Einstellungen |
 | Climate-Entität | Quelle |
 | Diese Quelle löschen | Quelle |
-| Dieses Gerät automatisch einschalten | Quelle |
 | Ruhezeit, bevor dieses Gerät erneut starten darf (Sekunden) | Quelle |
 | So lange warten, bevor übernommen wird (Minuten) | Quelle |
 | Diesen Zeitplan löschen | Zeitplan |

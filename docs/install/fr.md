@@ -1063,7 +1063,6 @@ littéralement.
 | Supprimer cette ouverture | Ouverture |
 | Ouverture | Portes et fenêtres |
 | ← Abandonner et revenir | Chaque écran |
-| ← Retour au menu principal pour modifier quelque chose | Quelque chose ressort |
 | Jours concernés | Plage de silence |
 | Silence jusqu'à | Plage de silence |
 | Silence à partir de | Plage de silence |
