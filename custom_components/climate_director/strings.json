@@ -328,7 +328,7 @@
           "sleep_until": "A phone on the charger at three in the afternoon does not mean somebody is turning in. Between these times the sleep sensor counts; outside them a charger is just a charger. Leave both empty to have it count around the clock.",
           "sleep_days": "Leave empty for every day. A window running past midnight is anchored on the day it starts, so a Friday 23:00-09:00 window still counts at 07:00 on Saturday.",
           "wake_by": "With somebody up while this resident is still asleep at home, the house waits. Past this time it no longer does: it then follows whoever is up. Leave empty to have this resident hold nobody back.",
-          "wake_days": "Leave empty for every day. A holiday counts as a Saturday.",
+          "wake_days": "Leave empty for every day.",
           "wake_holiday": "A holiday counts as a Saturday for the schedules, but not for this time: one person's holiday is another's working day, and the late riser would hold the house up while somebody is working. Tick this when you do want to be waited for on a holiday - then it applies whatever the weekday.",
           "sleep_in_until": "The sleep window is the night: it switches the house off at bedtime. This stretches only the morning, on the days below, so the sleep sensor keeps counting while you are still in bed. Leave it empty and the sleep window is the whole story.",
           "sleep_in_days": "These are the mornings you sleep in on, not the evenings before. Leave empty for every day.",
@@ -938,7 +938,7 @@
     },
     "precondition": {
       "name": "Pre-condition",
-      "description": "Warms or cools the named rooms ahead of somebody's return, even with nobody home. The request expires by itself and only counts inside the configured hours.",
+      "description": "Warms or cools the named rooms ahead of somebody's return, even with nobody home. The request expires by itself and always goes first: only the master switch, an override and an unconfirmed open opening hold it back.",
       "fields": {
         "entry_id": {
           "name": "Installation",

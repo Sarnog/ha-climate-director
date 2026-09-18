@@ -328,7 +328,7 @@
           "sleep_until": "Ein Telefon, das um drei Uhr nachmittags am Ladegerät liegt, heißt nicht, dass jemand ins Bett geht. Zwischen diesen Zeiten zählt der Schlafsensor; außerhalb ist ein Ladegerät nur ein Ladegerät. Beide leer lassen, damit er rund um die Uhr gilt.",
           "sleep_days": "Leer lassen für jeden Tag. Ein Fenster über Mitternacht hängt an seinem Starttag, ein Fenster von Freitag 23:00-09:00 zählt also am Samstag um 07:00 noch mit.",
           "wake_by": "Ist jemand auf, während diese Person zu Hause noch schläft, wartet das Haus. Nach dieser Uhrzeit nicht mehr: dann richtet es sich nach denen, die auf sind. Leer lassen, damit diese Person niemanden aufhält.",
-          "wake_days": "Leer lassen gilt für jeden Tag. Ein Feiertag zählt als Samstag.",
+          "wake_days": "Leer lassen gilt für jeden Tag.",
           "wake_holiday": "Ein Feiertag zählt bei den Zeitplänen als Samstag, bei dieser Uhrzeit aber nicht: Der freie Tag des einen ist der Arbeitstag des anderen, und dann hält der Langschläfer das Haus auf, während jemand arbeitet. Setz das Häkchen, wenn auch an einem Feiertag auf dich gewartet werden soll - dann gilt die Uhrzeit an jedem Wochentag.",
           "sleep_in_until": "Das Schlaffenster ist die Nacht: Es schaltet das Haus zur Schlafenszeit aus. Dies dehnt nur den Morgen aus, an den Tagen unten, damit der Schlafsensor weiterzählt, während du noch im Bett liegst. Leer lassen heißt: Das Schlaffenster ist die ganze Geschichte.",
           "sleep_in_days": "Das sind die Morgen, an denen du ausschläfst, nicht die Abende davor. Leer lassen gilt für jeden Tag.",
@@ -938,7 +938,7 @@
     },
     "precondition": {
       "name": "Vorbereiten",
-      "description": "Heizt oder kühlt die genannten Räume schon vor der Rückkehr, auch wenn niemand zu Hause ist. Die Anforderung läuft von selbst ab und gilt nur in den eingestellten Zeiten.",
+      "description": "Heizt oder kühlt die genannten Räume schon vor der Rückkehr, auch wenn niemand zu Hause ist. Die Anforderung läuft von selbst ab und geht immer vor: nur der Hauptschalter, eine Übersteuerung und eine offene Öffnung, die niemand bestätigt hat, halten sie auf.",
       "fields": {
         "entry_id": {
           "name": "Anlage",
