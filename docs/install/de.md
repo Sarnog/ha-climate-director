@@ -29,12 +29,15 @@ durch; jeder Schritt baut auf dem vorherigen auf.
 - [Aktionen](#aktionen)
 - [Vorbereiten und Vorkühlen](#vorbereiten-und-vorkühlen)
 - [Ein Override mit Laufzeit](#ein-override-mit-laufzeit)
+- [Einen Override mit Laufzeit auf dem Dashboard](#einen-override-mit-laufzeit-auf-dem-dashboard)
 - [Selbst das Kommando übernehmen](#selbst-das-kommando-übernehmen)
 - [Einen Schattenlauf beurteilen](#einen-schattenlauf-beurteilen)
 - [Blueprints und Meldungen](#blueprints-und-meldungen)
 - [Probleme lösen](#probleme-lösen)
+- [Bekannte Einschränkungen](#bekannte-einschränkungen)
+- [Anwendungsfälle](#anwendungsfälle)
+- [Wörterliste der Oberfläche](#wörterliste-der-oberfläche)
 - [Sprachen](#sprachen)
-
 ## Was ist Climate Director
 
 Climate Director ist eine Home-Assistant-Integration, die vorhandene

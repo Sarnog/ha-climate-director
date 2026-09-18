@@ -28,12 +28,15 @@ Sigue los pasos de arriba abajo; cada paso se apoya en el anterior.
 - [Acciones](#acciones)
 - [Preacondicionamiento](#preacondicionamiento)
 - [Una anulación con duración](#una-anulación-con-duración)
+- [Ver una anulación con duración en el panel](#ver-una-anulación-con-duración-en-el-panel)
 - [Tomar el mando](#tomar-el-mando)
 - [Evaluar una prueba en modo sombra](#evaluar-una-prueba-en-modo-sombra)
 - [Blueprints y notificaciones](#blueprints-y-notificaciones)
 - [Resolver problemas](#resolver-problemas)
+- [Limitaciones conocidas](#limitaciones-conocidas)
+- [Casos de uso](#casos-de-uso)
+- [Glosario de la interfaz](#glosario-de-la-interfaz)
 - [Idiomas](#idiomas)
-
 ## Qué es Climate Director
 
 Climate Director es una integración de Home Assistant que gobierna aparatos de

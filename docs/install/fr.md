@@ -29,12 +29,15 @@ précédente.
 - [Actions](#actions)
 - [Préchauffage et pré-refroidissement](#préchauffage-et-pré-refroidissement)
 - [Un override avec une durée](#un-override-avec-une-durée)
+- [Suivre un override à durée sur le tableau de bord](#suivre-un-override-à-durée-sur-le-tableau-de-bord)
 - [Prendre la main](#prendre-la-main)
 - [Évaluer une période en mode ombre](#évaluer-une-période-en-mode-ombre)
 - [Blueprints et notifications](#blueprints-et-notifications)
 - [Résoudre les problèmes](#résoudre-les-problèmes)
+- [Limites connues](#limites-connues)
+- [Cas d'utilisation](#cas-dutilisation)
+- [Glossaire de l'interface](#glossaire-de-linterface)
 - [Langues](#langues)
-
 ## Qu'est-ce que Climate Director
 
 Climate Director est une intégration Home Assistant qui pilote des appareils de

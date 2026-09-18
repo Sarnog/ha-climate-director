@@ -29,12 +29,15 @@ one before it.
 - [Actions](#actions)
 - [Pre-conditioning](#pre-conditioning)
 - [An override with a duration](#an-override-with-a-duration)
+- [Watching a timed override on the dashboard](#watching-a-timed-override-on-the-dashboard)
 - [Taking charge yourself](#taking-charge-yourself)
 - [Judging a shadow run](#judging-a-shadow-run)
 - [Blueprints and notifications](#blueprints-and-notifications)
 - [Troubleshooting](#troubleshooting)
+- [Known limitations](#known-limitations)
+- [Use cases](#use-cases)
+- [Interface glossary](#interface-glossary)
 - [Languages](#languages)
-
 ## What is Climate Director
 
 Climate Director is a Home Assistant integration that steers existing climate

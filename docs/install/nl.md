@@ -29,12 +29,15 @@ de vorige.
 - [Acties](#acties)
 - [Vooruit verwarmen en koelen](#vooruit-verwarmen-en-koelen)
 - [Een override met een looptijd](#een-override-met-een-looptijd)
+- [Een override met looptijd op het dashboard](#een-override-met-looptijd-op-het-dashboard)
 - [Zelf de baas](#zelf-de-baas)
 - [Een schaduwrun beoordelen](#een-schaduwrun-beoordelen)
 - [Blueprints en meldingen](#blueprints-en-meldingen)
 - [Problemen oplossen](#problemen-oplossen)
+- [Bekende beperkingen](#bekende-beperkingen)
+- [Gebruiksscenario's](#gebruiksscenarios)
+- [Woordenlijst van de interface](#woordenlijst-van-de-interface)
 - [Talen](#talen)
-
 ## Wat is Climate Director
 
 Climate Director is een integratie voor Home Assistant die bestaande
