@@ -402,7 +402,19 @@ COUNT_TITLES = frozenset({"unreadable_entities", "season_excludes_mode", *COUNT_
 #: The singular verb forms that may no longer stand beside a `{count}` of 3, per
 #: language. Literal, because "the verb agrees with the count" is an agreement
 #: about the text itself and cannot be measured on an object anywhere.
+#:
+#: Het Arabisch gebruikt bij een niet-menselijk meervoud de vrouwelijke
+#: enkelvoudsvorm: *لا تنفّذ أمرها* hoort bij *أجهزة*, en de mannelijke
+#: enkelvoudsvorm *ينفّذ* liegt zodra er drie staan. Voor *جهاز* alleen zou
+#: *ينفّذ* juist zijn, maar een titel moet het met een vorm doen, en dan is de
+#: vorm die bij drie niet liegt de enige keuze.
+#:
+#: Arabic uses the feminine singular for a non-human plural: *لا تنفّذ أمرها*
+#: belongs with *أجهزة*, and the masculine singular *ينفّذ* lies as soon as three
+#: stand there. For *جهاز* alone *ينفّذ* would be right, but a title has to make do
+#: with one form, and then the form that does not lie at three is the only choice.
 SINGULAR_VERBS: dict[str, tuple[str, ...]] = {
+    "ar": ("ينفّذ",),
     "nl": ("voert", "is overbrugd", "kan"),
     "de": ("führt", "ist überbrückt", "kann"),
     "fr": ("n'exécute", "est contournée", "peut"),
