@@ -663,17 +663,18 @@ def test_every_guide_has_the_same_number_of_headers(language: str) -> None:
     assert counts[language] > 0, f"{language}: geen enkele `## `-kop"
 
 
-def glossary_rows(language: str) -> list[str]:
-    """De eerste kolom van de woordenlijst-sectie, in bestandsorde.
+def glossary_cells(language: str) -> list[list[str]]:
+    """Elke rij van de woordenlijst-sectie als lijst cellen, in bestandsorde.
 
     De kopregel en de scheidingsregel (`|---|---|`) tellen niet mee; alles wat
     daarna in de sectie met een `|` begint is een rij van de lezer.
 
-    The first column of the interface glossary section, in file order. The
-    header row and the separator row (`|---|---|`) do not count; everything after
-    that inside the section, starting with `|`, is a row for the reader.
+    Every row of the interface glossary section as a list of cells, in file
+    order. The header row and the separator row (`|---|---|`) do not count;
+    everything after that inside the section, starting with `|`, is a row for the
+    reader.
     """
-    rows: list[str] = []
+    rows: list[list[str]] = []
     inside = False
     separator_seen = False
     for line in guide_raw(language).splitlines():
@@ -693,8 +694,16 @@ def glossary_rows(language: str) -> list[str]:
             continue
         if not separator_seen:
             continue
-        rows.append(cells[0])
+        rows.append(cells)
     return rows
+
+
+def glossary_rows(language: str) -> list[str]:
+    """De eerste kolom van de woordenlijst-sectie, in bestandsorde.
+
+    The first column of the interface glossary section, in file order.
+    """
+    return [cells[0] for cells in glossary_cells(language)]
 
 
 def test_the_glossary_is_the_exception_list() -> None:
@@ -708,7 +717,8 @@ def test_the_glossary_is_the_exception_list() -> None:
     dat is precies hoe deze tabel eerder is weggelopen. Vergeleken wordt op de
     **tekst** van het label, niet op de sleutel: een label dat twee sleutels
     deelt (een `when_done`-knop die op elk scherm hetzelfde heet) hoort één rij
-    te hebben, niet twee.
+    te hebben, niet twee. Staat dezelfde rij twee keer in de sectie, dan is dat
+    ook rood: een `set` zou de dubbele stil laten vallen.
 
     What this pins down: the glossary's first column matches `EXCEPTIONS[language]`
     exactly - every row stands on the list and every line of the list has a row -
@@ -717,13 +727,19 @@ def test_the_glossary_is_the_exception_list() -> None:
     row pointing at nothing, and that is exactly how this table drifted before.
     The comparison is on the **text** of the label, not on the key: a label two
     keys share (a `when_done` button that is called the same on every screen)
-    belongs in one row, not two.
+    belongs in one row, not two. A row standing twice in the section is red as
+    well: a `set` would quietly let the duplicate fall.
     """
     problems: list[str] = []
     for language in LANGUAGES:
         rows = glossary_rows(language)
         expected = {value for value in EXCEPTIONS.get(language, {}).values()}
         labels = set(interface_labels(language).values())
+        pairs = [tuple(cells[:2]) for cells in glossary_cells(language)]
+        duplicates = sorted({pair for pair in pairs if pairs.count(pair) > 1})
+        for pair in duplicates:
+            note = f"{language}: rij {pair[0]!r} bij {pair[1]!r} staat er twee keer"
+            problems.append(note)
         for row in sorted(set(rows) - expected):
             problems.append(
                 f"{language}: de woordenlijst noemt {row!r}, en dat staat niet op de "

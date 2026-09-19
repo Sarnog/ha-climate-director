@@ -203,12 +203,18 @@ def commands_of(line: str) -> list[str]:
 def is_setup(command: str) -> bool:
     """Is dit een opstapcommando? Dat is het als het met `python -m pip` begint.
 
-    Alleen het eerste commando van een regel kan opstap zijn; de opstapherkenning
-    kijkt dus nooit meer naar een fragment verderop in de regel.
+    Elk commando van een regel komt hier langs, niet alleen het eerste:
+    `ci_commands()` knipt een `run:`-regel in losse commando's en deze toets ziet
+    ze allemaal. Dat is strenger dan "alleen de opstap vooraan" - een opstap achter
+    een `&&` is ook een opstap, en de bewaking hiernaast laat hem dus niet als
+    gewone stap door. De docstring zei eerder het omgekeerde; de code doet dit.
 
-    Is this a setup command? It is when it starts with `python -m pip`. Only the
-    first command of a line can be setup; the recognition therefore never looks at a
-    fragment further along the line again.
+    Every command of a line passes through here, not just the first:
+    `ci_commands()` splits a `run:` line into separate commands and this check
+    sees them all. That is stricter than "only a leading setup" - a setup behind
+    a `&&` is a setup too, and the guard beside this one therefore does not let it
+    through as an ordinary step. The docstring used to say the opposite; the code
+    does this.
     """
     return tuple(words(command)[:3]) == SETUP_COMMAND
 
