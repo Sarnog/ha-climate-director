@@ -304,6 +304,13 @@ TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
             "de interface noemt een vakantiedag *un jour de vacances*; *un jour férié* is een "
             "feestdag",
         ),
+        (
+            "préchauff",
+            "préparation",
+            "het verzoek warmt niet voor maar bereidt voor, en het koelt evengoed: het scherm "
+            "noemt de knop en de duur *Préparer* en *Durée de la préparation*, en "
+            "*préchauffage* belooft verwarming die er niet is",
+        ),
     ),
     "es": (
         (

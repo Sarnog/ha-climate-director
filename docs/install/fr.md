@@ -27,7 +27,7 @@ précédente.
 - [Ce que vous obtenez dans Home Assistant](#ce-que-vous-obtenez-dans-home-assistant)
 - [Les interrupteurs et boutons](#les-interrupteurs-et-boutons)
 - [Actions](#actions)
-- [Préchauffage et pré-refroidissement](#préchauffage-et-pré-refroidissement)
+- [Préparation et pré-refroidissement](#préparation-et-pré-refroidissement)
 - [Un override avec une durée](#un-override-avec-une-durée)
 - [Suivre un override à durée sur le tableau de bord](#suivre-un-override-à-durée-sur-le-tableau-de-bord)
 - [Prendre la main](#prendre-la-main)
@@ -173,7 +173,7 @@ le menu principal.
 | **L'emploi du temps d'un résident doit être ouvert** | activé = la maison attend la première fenêtre d'emploi du temps ; désactivé = la présence seule décide |
 | **Calendriers de vacances** | quels calendriers peuvent annoncer des vacances ; plusieurs autorisés |
 | **Mot qui marque des vacances** | le mot-clé que doit porter un événement ; vide = calendriers ignorés |
-| **Durée de préchauffage** | le plafond d'une seule demande ; par défaut 120 minutes |
+| **Durée de préparation** | le plafond d'une seule demande ; par défaut 120 minutes |
 | **Mode invités de / jusqu'à** | la fenêtre où le mode invités s'applique ; les deux vides = toute la journée |
 | **Jours du mode invités** | les jours de la semaine où cette fenêtre s'applique ; vide = tous les jours |
 | **Signaler une zone bloquée après** | après combien de minutes d'attente une zone compte comme bloquée ; 0 éteint le capteur |
@@ -193,7 +193,7 @@ trop froide.
 Configurez donc une **source de précipitations**. Tant qu'elle signale des
 précipitations, Climate Director ignore la **limite extérieure par zone** —
 exactement
-comme le fait une demande de préchauffage. La bande morte, la saison et la
+comme le fait une demande de préparation. La bande morte, la saison et la
 limite extérieure **par source** continuent de s'appliquer ; ce sont elles qui
 choisissent l'appareil. Le délai de grâce fait qu'une averse de cinq minutes ne
 fait pas osciller la régulation. Sans source, la règle de précipitations ne
@@ -663,8 +663,8 @@ Un appareil par installation, avec en dessous :
 | `sensor.*_fin_de_derogation_<zone>` | quand l'override de cette zone se termine ; une carte minuteur compte à rebours |
 | `switch.*_contournement_<opening>` | activé = cette ouverture ne compte plus nulle part ; ni pour ses propres zones, ni pour l'arrêt global |
 | `number.*_priorite_<zone>` | la préséance de cette zone ; réglable aussi depuis une automatisation |
-| `number.*_duree_de_la_preparation` | combien de temps dure un appui sur un bouton de préchauffage |
-| `button.*_preparer_<zone>` | préchauffe ou pré-refroidit cette zone |
+| `number.*_duree_de_la_preparation` | combien de temps dure un appui sur un bouton de préparation |
+| `button.*_preparer_<zone>` | prépare ou pré-refroidit cette zone |
 | `select.*_saison` | règle la saison à la main sur Automatique, Été ou Hiver |
 
 Les noms de ces entités sont traduits, et Home Assistant déduit l'identifiant
@@ -704,7 +704,7 @@ il intervient malgré tout dès qu'une limite de temps expire.
   Éteindre un appareil sur l'appareil *lui-même* expire bel et bien au coucher
   ou sur une maison vide ; c'est plus bas.
 - **Contournement** (`switch.*_contournement_<opening>`) : activé = cette ouverture n'existe pas pour le directeur. Il reste actif jusqu'à ce que vous l'éteigniez vous-même ; tant qu'il est actif alors que l'ouverture est réellement ouverte, le directeur le signale sous *Réparations*.
-- **Bouton de préchauffage** (`button.*_preparer_<zone>`) et **durée**
+- **Bouton de préparation** (`button.*_preparer_<zone>`) et **durée**
   (`number.*_duree_de_la_preparation`) : voir ci-dessous.
 
 ## Actions
@@ -712,15 +712,15 @@ il intervient malgré tout dès qu'une limite de temps expire.
 | Action | Pour quoi |
 |---|---|
 | `climate_director.evaluate` | décider à nouveau tout de suite, sans attendre un changement d'état |
-| `climate_director.precondition` | démarrer le préchauffage ou le pré-refroidissement |
-| `climate_director.cancel_precondition` | annuler une demande de préchauffage en cours |
+| `climate_director.precondition` | démarrer la préparation ou le pré-refroidissement |
+| `climate_director.cancel_precondition` | annuler une demande de préparation en cours |
 | `climate_director.set_override` | rendre une zone pour une durée, régler son appareil et exécuter le choix à l'échéance (`turn_off` / `leave`) |
 | `climate_director.clear_override` | terminer l'override d'une zone comme le fait l'interrupteur : en silence |
 
 `climate_director.evaluate` est pratique pendant la mise en place. En mode
 ombre, il n'exécute toujours rien — il recalcule seulement.
 
-## Préchauffage et pré-refroidissement
+## Préparation et pré-refroidissement
 
 La seule façon de faire tourner une maison vide, et délibérément la seule que
 vous devez activer à la main.
@@ -743,7 +743,7 @@ la bande morte vérifie s'il fait trop froid ou trop chaud, la saison et la
 fenêtre extérieure par source choisissent l'appareil. Si la pièce est déjà
 bien, l'appareil reste éteint.
 
-Pendant une demande de préchauffage, l'interrupteur principal, un override, la
+Pendant une demande de préparation, l'interrupteur principal, un override, la
 bande morte, la saison, la fenêtre extérieure par source, les fenêtres et
 portes, le circuit et les groupes exclusifs continuent de s'appliquer. Sont
 ignorés : *quelqu'un à la maison*, *réveillé*, *emploi du temps*, *présence dans
@@ -947,7 +947,7 @@ sauter :
 | Blueprint | Pourquoi vous ne pouvez pas vous en passer | Lien d'import |
 |---|---|---|
 | **Surveillance** | signale une panne silencieuse : une zone bloquée, ou une zone tournant sur un appareil de secours plus coûteux | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/monitoring.yaml` |
-| **Préchauffage refusé** | vous avez appuyé sur un bouton et rien ne s'est passé ; celui-ci le signale, avec un bouton *Faites-le quand même* | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/precondition_refused.yaml` |
+| **Préparation refusée** | vous avez appuyé sur un bouton et rien ne s'est passé ; celui-ci le signale, avec un bouton *Faites-le quand même* | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/precondition_refused.yaml` |
 | **Ce qui a été décidé** | l'outil le plus pratique pendant la configuration et en mode ombre | `https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/decisions.yaml` |
 
 L'import passe par **Réglages → Automatismes et scènes → Blueprints → Importer
@@ -957,7 +957,7 @@ un blueprint**, avec le lien ci-dessus.
 > tant que vous n'en avez pas fait une automatisation. Faites-le tout de suite
 > après l'import.
 
-Tant que personne n'écoute une demande de préchauffage refusée, Home Assistant
+Tant que personne n'écoute une demande de préparation refusée, Home Assistant
 affiche un avis de réparation à ce sujet. Il disparaît de lui-même dès qu'une
 automatisation repose sur cet événement.
 
@@ -999,7 +999,7 @@ automatisation repose sur cet événement.
   programme de thermostat ou une autre automatisation. En mode ombre cet avis
   n'apparaît jamais : rien n'y est exécuté, volontairement.
 - **Un état sauvegardé mis de côté** se signale lui aussi sous *Réparations*.
-  Ce fichier contient les demandes de préchauffage en cours et les appareils que
+  Ce fichier contient les demandes de préparation en cours et les appareils que
   vous avez éteints à la main. S'il est illisible, il est renommé et le
   directeur repart d'un état vide : ces demandes et extinctions sont perdues, le
   reste de votre installation non. Pour les récupérer, restaurez le fichier
@@ -1015,7 +1015,7 @@ Sous **Réparations**, vous pouvez rencontrer ces messages, avec ce qu'ils signi
 - **Climate Director : <name> a dû mettre son état sauvegardé de côté** — le fichier d'état était illisible et a été renommé ; les demandes et les reprises manuelles d'avant le redémarrage sont perdues, restaurez le fichier depuis une sauvegarde si vous en avez besoin.
 - **Climate Director : <name> a un problème de configuration** — l'installation est incorrecte ; les zones correctes continuent d'être régulées, donc vérifiez la configuration.
 - **Climate Director : <name> a des tâches manuelles** — une zone n'a que des sources qui ne démarrent jamais seules ; activez *Démarrage automatique* ou confirmez le message.
-- **Personne n'entend une demande de préparation refusée** — aucune automatisation n'écoute l'événement de refus ; importez le blueprint *Préchauffage refusé* (`precondition_refused.yaml`) et créez une automatisation.
+- **Personne n'entend une demande de préparation refusée** — aucune automatisation n'écoute l'événement de refus ; importez le blueprint *Préparation refusée* (`precondition_refused.yaml`) et créez une automatisation.
 - **Climate Director : <name> règle une saison qui exclut <count> tâche(s)** — la saison est réglée sur une saison où une tâche installée ne peut jamais tourner ; changez la saison ou la tâche.
 - **Climate Director : <name> ne peut pas lire <count> entité(s)** — une entité configurée n'existe pas, a disparu ou ne donne pas de nombre ; corrigez l'entité ou remettez le capteur en place.
 - **Climate Director : <name> demande un mode que <count> appareil(s) ne peuvent exécuter** — un rôle demande un mode que l'appareil ne déclare pas ; changez le rôle ou choisissez un autre appareil.
