@@ -272,9 +272,22 @@ def test_every_language_names_the_shared_heat_source_in_unreadable_entities() ->
 #: Eén begrip, één woord. Per taal het verboden woord, het canonieke woord en de
 #: reden erbij. De lijst groeit per tekstronde; er gaat niets af zonder reden.
 #:
+#: Een naald is een **stam**, niet een heel woord: het Arabisch plakt zijn
+#: lidwoord en zijn voorzetsels aan het woord vast (*ال*, *لل*, *بال*, *وال*),
+#: dus een naald met het lidwoord eraan mist dezelfde stam achter een ander
+#: voorzetsel. Wie een naald opschrijft laat het lidwoord eraf, zodat elke vorm
+#: meetelt; de canonieke vorm eronder draagt het lidwoord wél, want dat is wat de
+#: lezer op het scherm hoort te zien.
+#:
 #: One concept, one word. Per language the forbidden word, the canonical word and
 #: the reason alongside. The list grows per text round; nothing comes off without
 #: a reason.
+#:
+#: A needle is a **stem**, not a whole word: Arabic glues its article and its
+#: prepositions onto the word (*ال*, *لل*, *بال*, *وال*), so a needle carrying the
+#: article misses the same stem behind another preposition. Whoever writes a
+#: needle leaves the article off, so every form counts; the canonical form below
+#: does carry the article, because that is what the reader should see on screen.
 TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
     "de": (
         (
@@ -302,7 +315,7 @@ TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
     ),
     "ar": (
         (
-            "التدفئة المسبقة",
+            "تدفئة المسبقة",
             "التهيئة المسبقة",
             "het verzoek warmt niet voor maar vraagt vooruit; dezelfde taakneutrale term als "
             "het Nederlands, Duits en Frans gebruiken",

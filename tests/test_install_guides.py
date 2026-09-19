@@ -448,7 +448,7 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.settings.data.guest_end": ("وضع الضيوف حتى"),
         "options.step.settings.data.holiday_calendars": ("تقاويم العطلات"),
         "options.step.settings.data.holiday_keyword": ("الكلمة الدالة على العطلة"),
-        "options.step.settings.data.max_precondition": ("أقصى مدة للتدفئة المسبقة (بالدقائق)"),
+        "options.step.settings.data.max_precondition": ("أقصى مدة للتهيئة المسبقة (بالدقائق)"),
         "options.step.settings.data.outdoor_sensor": ("مستشعر حرارة الخارج"),
         "options.step.settings.data.require_awake": ("يجب أن يكون أحد الموجودين مستيقظًا"),
         "options.step.settings.data.require_schedule": ("يجب أن يكون جدول أحد الساكنين مفتوحًا"),
