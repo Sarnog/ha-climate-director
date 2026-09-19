@@ -19,6 +19,16 @@ de *waarden* van de zeven bestanden (via `json`, niet met een eigen parser) en i
 de volledige tekst van de zes handleidingen, zodat een escape als `\\u00e9` er
 niet langs glipt.
 
+De naald is een **zinsdeel**, geen hele zin: zonder hoofdletter en zonder
+leesteken, en de vergelijking is hoofdletterongevoelig. Een hele zin als naald
+mist dezelfde bewering in een andere zinsbouw - gemeten: "a holiday counts as a
+Saturday for this time too" bleef groen naast de naald "A holiday counts as a
+Saturday.". Naast elke naald staat daarom een letterlijke lijst **toegestane
+contexten**: de zinsneden waarin dat zinsdeel wel mag staan, omdat ze het tegendeel
+zeggen of over iets anders gaan. Een treffer telt alleen buiten zo'n context, en
+elke toegestane context moet werkelijk in de teksten staan - een context die
+nergens meer voorkomt is een verouderde vergunning en is rood.
+
 Retracted claims: sentences the interface may no longer carry.
 
 This is a **ratchet of abolished mechanisms**. Every line below is a sentence
@@ -38,12 +48,22 @@ literally "this phrase no longer occurs anywhere". That can only be measured on
 the text itself; no runtime object can contradict it. The guard searches the
 *values* of the seven files (through `json`, not with a parser of its own) and
 the full text of the six guides, so an escape such as `\\u00e9` cannot slip past.
+
+The needle is a **phrase**, not a whole sentence: without a capital and without
+punctuation, and the comparison is case-insensitive. A whole sentence as a needle
+misses the same claim in another sentence shape - measured: "a holiday counts as a
+Saturday for this time too" stayed green beside the needle "A holiday counts as a
+Saturday.". Beside every needle therefore stands a literal list of **allowed
+contexts**: the phrases in which that fragment may stand, because they say the
+opposite or are about something else. A hit counts only outside such a context, and
+every allowed context has to really stand in the texts - a context that occurs
+nowhere any more is a stale permission and is red.
 """
 
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
@@ -71,13 +91,15 @@ class Claim:
     reason: str
     anchor: str
     needles: dict[str, str]
+    allowed: dict[str, tuple[str, ...]] = field(default_factory=dict)
 
 
-#: Elke ingetrokken bewering, met per taal de letterlijke zinsnede die niet meer
-#: mag voorkomen. Alleen groter worden, met een reden.
+#: Elke ingetrokken bewering, met per taal het zinsdeel dat niet meer mag
+#: voorkomen en de letterlijke contexten waarin het wel mag. Alleen groter worden,
+#: met een reden.
 #:
-#: Every retracted claim, with the literal phrase per language that may no longer
-#: occur. Only ever larger, with a reason.
+#: Every retracted claim, with the fragment per language that may no longer occur
+#: and the literal contexts in which it may. Only ever larger, with a reason.
 RETRACTED: tuple[Claim, ...] = (
     Claim(
         name="vakantiedag is geen zaterdag",
@@ -90,13 +112,34 @@ RETRACTED: tuple[Claim, ...] = (
             "vakantievenster van die tijd staat als aparte vlag in `WakeDeadline.holiday`"
         ),
         needles={
-            "nl": "Een vakantiedag telt als zaterdag.",
-            "en": "A holiday counts as a Saturday.",
-            "strings": "A holiday counts as a Saturday.",
-            "de": "Ein Feiertag zählt als Samstag.",
-            "fr": "Un jour férié compte comme un samedi.",
-            "es": "Un día festivo cuenta como sábado.",
-            "ar": "كل يوم. يُحتسب يوم العطلة سبتًا.",
+            "nl": "telt als zaterdag",
+            "en": "counts as a saturday",
+            "strings": "counts as a saturday",
+            "de": "zählt als samstag",
+            "fr": "compte comme un samedi",
+            "es": "cuenta como sábado",
+            "ar": "يُحتسب يوم العطلة سبتًا",
+        },
+        allowed={
+            "nl": ("elke dag telt als zaterdag",),
+            "en": (
+                "A holiday counts as a Saturday for the schedules",
+                "Without one, a holiday counts as a Saturday",
+            ),
+            "strings": (
+                "A holiday counts as a Saturday for the schedules",
+                "Without one, a holiday counts as a Saturday",
+            ),
+            "de": ("Jeder Tag zählt als Samstag",),
+            "fr": ("un jour de vacances compte comme un samedi",),
+            "es": (
+                "cuenta como sábado para los horarios",
+                "no cuenta como sábado",
+            ),
+            "ar": (
+                "يُحتسب يوم العطلة سبتًا في الجداول",
+                "وبدونها يُحتسب يوم العطلة سبتًا",
+            ),
         },
     ),
     Claim(
@@ -107,13 +150,13 @@ RETRACTED: tuple[Claim, ...] = (
         ),
         anchor="anker 1 in `ARCHITECTURE.md` (het vooruit-verzoek kent geen tijdvenster)",
         needles={
-            "nl": "telt alleen binnen de ingestelde tijden",
-            "en": "only counts inside the configured hours",
-            "strings": "only counts inside the configured hours",
-            "de": "gilt nur in den eingestellten Zeiten",
-            "fr": "ne compte que dans les heures réglées",
-            "es": "solo cuenta dentro de las horas configuradas",
-            "ar": "ولا يُحتسب إلا ضمن الأوقات المضبوطة",
+            "nl": "ingestelde tijden",
+            "en": "configured hours",
+            "strings": "configured hours",
+            "de": "eingestellten zeiten",
+            "fr": "heures réglées",
+            "es": "horas configuradas",
+            "ar": "الأوقات المضبوطة",
         },
     ),
     Claim(
@@ -205,6 +248,27 @@ def leaves(node: object, path: str = "") -> dict[str, str]:
     return found
 
 
+def blanked(text: str, contexts: tuple[str, ...]) -> str:
+    """Vervang elke toegestane context door evenveel nullen.
+
+    Replace every allowed context with as many zero characters.
+
+    Zo blijft de positie staan en kan een treffer niet over een grens heen
+    ontstaan: een zinsdeel dat binnen een toegestane context valt telt niet mee,
+    en een zinsdeel dat erbuiten valt wel.
+
+    That keeps the position and a hit cannot arise across a boundary: a fragment
+    inside an allowed context does not count, and one outside it does.
+    """
+    for context in contexts:
+        while True:
+            start = text.lower().find(context.lower())
+            if start < 0:
+                break
+            text = text[:start] + chr(0) * len(context) + text[start + len(context) :]
+    return text
+
+
 def corpus() -> dict[str, str]:
     """Alle tekst die een gebruiker kan lezen: zeven bestanden en zes gidsen.
 
@@ -223,26 +287,36 @@ def corpus() -> dict[str, str]:
 
 @pytest.mark.parametrize("claim", RETRACTED, ids=lambda claim: claim.name)
 def test_the_retracted_claim_is_nowhere(claim: Claim) -> None:
-    """Deze ingetrokken zin staat in geen enkel bestand en in geen enkele gids.
+    """Deze ingetrokken bewering staat in geen enkel bestand en in geen enkele gids.
 
-    This retracted sentence stands in no file and in no guide.
+    This retracted claim stands in no file and in no guide.
 
-    Zoekt per taal de letterlijke zinsnede in alle teksten. Een treffer noemt het
-    bestand, de taal en de zinsnede, plus de reden en het anker, zodat de volgende
-    lezer weet waarom deze regel bestaat zonder in de geschiedenis te duiken.
+    Zoekt per taal het zinsdeel hoofdletterongevoelig in alle teksten, buiten de
+    toegestane contexten van die taal. Een treffer noemt het bestand, de taal en
+    het zinsdeel, plus de reden en het anker, zodat de volgende lezer weet waarom
+    deze regel bestaat zonder in de geschiedenis te duiken. Een toegestane context
+    die nergens meer staat is zelf een treffer: een vergunning zonder tekst is
+    verouderd.
 
-    Searches the literal phrase per language in every text. A hit names the file,
-    the language and the phrase, plus the reason and the anchor, so the next
-    reader knows why this rule exists without digging into history.
+    Searches each language's phrase case-insensitively in every text, outside that
+    language's allowed contexts. A hit names the file, the language and the
+    phrase, plus the reason and the anchor, so the next reader knows why this rule
+    exists without digging into history. An allowed context that no longer stands
+    anywhere is itself a hit: a permission without a text is stale.
     """
+    texts = corpus()
     found: list[str] = []
-    for where, text in corpus().items():
-        for language, needle in claim.needles.items():
-            if needle in text:
+    for language, needle in claim.needles.items():
+        contexts = claim.allowed.get(language, ())
+        for context in contexts:
+            if not any(context.lower() in text.lower() for text in texts.values()):
+                found.append(f"toegestane context staat nergens meer: [{language}] {context!r}")
+        for where, text in texts.items():
+            if needle.lower() in blanked(text, contexts).lower():
                 found.append(f"{where} [{language}]: {needle!r}")
     assert not found, (
-        f"deze zin is ingetrokken ({claim.reason}); hij hoort nergens meer te staan "
-        f"({claim.anchor}):\n" + "\n".join(found)
+        f"deze bewering is ingetrokken ({claim.reason}); hij hoort nergens meer te staan "
+        f"({claim.anchor}):" + chr(10).join(["", *found])
     )
 
 
