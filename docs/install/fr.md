@@ -28,8 +28,8 @@ précédente.
 - [Les interrupteurs et boutons](#les-interrupteurs-et-boutons)
 - [Actions](#actions)
 - [Préparation et pré-refroidissement](#préparation-et-pré-refroidissement)
-- [Un override avec une durée](#un-override-avec-une-durée)
-- [Suivre un override à durée sur le tableau de bord](#suivre-un-override-à-durée-sur-le-tableau-de-bord)
+- [Une dérogation avec une durée](#une-dérogation-avec-une-durée)
+- [Suivre une dérogation à durée sur le tableau de bord](#suivre-une-dérogation-à-durée-sur-le-tableau-de-bord)
 - [Prendre la main](#prendre-la-main)
 - [Évaluer une période en mode ombre](#évaluer-une-période-en-mode-ombre)
 - [Blueprints et notifications](#blueprints-et-notifications)
@@ -143,7 +143,7 @@ Sous **Configurer** se trouve le menu principal, dans cet ordre :
 | **Sources de chaleur partagées** | une chaudière ou pompe à chaleur desservant plusieurs pièces |
 | **Groupes exclusifs** | des appareils qui ne doivent jamais tourner ensemble |
 | **Plages de silence** | heures où le directeur ne démarre rien de lui-même |
-| **Résidents** | qui est présent, qui dort, et l'emploi du temps de chacun |
+| **Résidents** | qui est présent, qui dort, et le planning de chacun |
 | **Portes et fenêtres** | quelles ouvertures mettent quelles zones en pause |
 | **✅ Enregistrer et fermer** | rien n'est réellement enregistré avant cet endroit |
 
@@ -170,7 +170,7 @@ le menu principal.
 | **Hémisphère** | quels mois comptent comme été lorsque la saison vient du mois : nord avril–septembre, sud octobre–mars |
 | **Choix de saison** | l'entité `select.*` *Saison* règle la saison à la main sur Automatique, Été ou Hiver ; le choix survit à un redémarrage |
 | **Quelqu'un à la maison doit être réveillé** | activé = la maison attend quelqu'un à la maison *et* réveillé ; désactivé = le sommeil ne compte pas |
-| **L'emploi du temps d'un résident doit être ouvert** | activé = la maison attend la première fenêtre d'emploi du temps ; désactivé = la présence seule décide |
+| **Le planning d'un occupant doit être ouvert** | activé = la maison attend la première fenêtre de planning ; désactivé = la présence seule décide |
 | **Calendriers de vacances** | quels calendriers peuvent annoncer des vacances ; plusieurs autorisés |
 | **Mot qui marque des vacances** | le mot-clé que doit porter un événement ; vide = calendriers ignorés |
 | **Durée de préparation** | le plafond d'une seule demande ; par défaut 120 minutes |
@@ -228,7 +228,7 @@ Une zone est une pièce. Par zone, vous réglez :
 | **Nom** | le libellé qui apparaît partout |
 | **Capteur de température intérieure** | ce sur quoi la bande morte calcule ; une `climate.*` qui mesure elle-même convient |
 | **Préséance sur une unité extérieure partagée** | avec quelle force cette zone revendique une unité extérieure partagée ; **le plus petit gagne**. Sur un circuit, aucun numéro ne peut apparaître deux fois |
-| **Ce qui décide si cette zone tourne** | *le foyer* (emploi du temps, sommeil, quelqu'un à la maison) ou *la pièce elle-même* (seul le capteur de présence) |
+| **Ce qui décide si cette zone tourne** | *le foyer* (planning, sommeil, quelqu'un à la maison) ou *la pièce elle-même* (seul le capteur de présence) |
 | **Capteur de présence + état + délai de grâce** | quand la pièce compte comme occupée ; le délai absorbe les détecteurs qui clignotent |
 | **Les précipitations ne lèvent pas la règle « ouvrir une fenêtre »** | activé pour une pièce sans fenêtres ; là, la limite extérieure continue de s'appliquer même lorsqu'il y a des précipitations |
 | **Cette zone peut chauffer** | désactivé = cette pièce n'est jamais chauffée |
@@ -269,14 +269,14 @@ qui existe mais ne fait jamais rien :
 
 ### Le foyer ou la pièce elle-même
 
-- **Le foyer** (par défaut) : emploi du temps, sommeil et quelqu'un-à-la-maison
+- **Le foyer** (par défaut) : planning, sommeil et quelqu'un-à-la-maison
   comptent. Ajoutez un capteur de présence et il agit comme condition
   supplémentaire : le foyer doit l'autoriser **et** la pièce doit être occupée.
-- **La pièce elle-même** : emploi du temps, sommeil et quelqu'un-à-la-maison
+- **La pièce elle-même** : planning, sommeil et quelqu'un-à-la-maison
   sont ignorés. Seul le capteur de présence décide. Cela exige donc un capteur
   de présence, sinon la zone ne peut jamais tourner.
 
-Ainsi, une pièce peut suivre l'emploi du temps et une autre la présence.
+Ainsi, une pièce peut suivre le planning et une autre la présence.
 
 ## Étape 5 — Sources
 
@@ -570,7 +570,7 @@ Après avoir enregistré un résident, vous réglez ses emplois du temps :
 | **De / Jusqu'à** | la fenêtre ; peut franchir minuit |
 | **Jours** | vide = chaque jour |
 
-Un résident sans emploi du temps ne participe pas à la porte d'emploi du temps.
+Un résident sans planning ne participe pas à la porte de planning.
 Quelqu'un sans fenêtre un jour donné ne retient pas la maison ce jour-là.
 
 ### Capteur de sommeil : pas de capteur, mais un bouton ?
@@ -660,7 +660,7 @@ Un appareil par installation, avec en dessous :
 | `switch.*_planning_de_vacances` | fait compter chaque jour comme un samedi, ou comme son propre programme vacances |
 | `switch.*_mode_invites` | continue de réguler pendant que les résidents sont absents |
 | `switch.*_derogation_<zone>` | rend une zone entièrement à vous |
-| `sensor.*_fin_de_derogation_<zone>` | quand l'override de cette zone se termine ; une carte minuteur compte à rebours |
+| `sensor.*_fin_de_derogation_<zone>` | quand la dérogation de cette zone se termine ; une carte minuteur compte à rebours |
 | `switch.*_contournement_<opening>` | activé = cette ouverture ne compte plus nulle part ; ni pour ses propres zones, ni pour l'arrêt global |
 | `number.*_priorite_<zone>` | la préséance de cette zone ; réglable aussi depuis une automatisation |
 | `number.*_duree_de_la_preparation` | combien de temps dure un appui sur un bouton de préparation |
@@ -695,7 +695,7 @@ il intervient malgré tout dès qu'une limite de temps expire.
   comme un samedi, ou comme sa propre fenêtre de vacances. S'active aussi tout
   seul dès qu'un calendrier configuré a un événement en cours portant le
   mot-clé. Sans mot-clé, les calendriers sont ignorés.
-- **Override** (`switch.*_derogation_<zone>`) : rend une zone entièrement à vous.
+- **Dérogation** (`switch.*_derogation_<zone>`) : rend une zone entièrement à vous.
   Le directeur n'envoie plus rien à cette zone — pas même un arrêt. Les règles
   de circuit s'appliquent toujours aux autres pièces. Il tient jusqu'à ce que
   vous l'éteigniez vous-même, y compris à travers la nuit et une maison vide :
@@ -715,7 +715,7 @@ il intervient malgré tout dès qu'une limite de temps expire.
 | `climate_director.precondition` | démarrer la préparation ou le pré-refroidissement |
 | `climate_director.cancel_precondition` | annuler une demande de préparation en cours |
 | `climate_director.set_override` | rendre une zone pour une durée, régler son appareil et exécuter le choix à l'échéance (`turn_off` / `leave`) |
-| `climate_director.clear_override` | terminer l'override d'une zone comme le fait l'interrupteur : en silence |
+| `climate_director.clear_override` | terminer la dérogation d'une zone comme le fait l'interrupteur : en silence |
 
 `climate_director.evaluate` est pratique pendant la mise en place. En mode
 ombre, il n'exécute toujours rien — il recalcule seulement.
@@ -743,10 +743,10 @@ la bande morte vérifie s'il fait trop froid ou trop chaud, la saison et la
 fenêtre extérieure par source choisissent l'appareil. Si la pièce est déjà
 bien, l'appareil reste éteint.
 
-Pendant une demande de préparation, l'interrupteur principal, un override, la
+Pendant une demande de préparation, l'interrupteur principal, une dérogation, la
 bande morte, la saison, la fenêtre extérieure par source, les fenêtres et
 portes, le circuit et les groupes exclusifs continuent de s'appliquer. Sont
-ignorés : *quelqu'un à la maison*, *réveillé*, *emploi du temps*, *présence dans
+ignorés : *quelqu'un à la maison*, *réveillé*, *planning*, *présence dans
 la pièce*, la fenêtre extérieure par zone et la fenêtre silencieuse.
 
 Une fenêtre ou une porte ouverte **refuse** une demande. Celui qui a ouvert la
@@ -771,9 +771,9 @@ demande.
 
 Annulez avec `climate_director.cancel_precondition`.
 
-## Un override avec une durée
+## Une dérogation avec une durée
 
-L'interrupteur d'override ci-dessus vous rend une zone jusqu'à ce que vous
+L'interrupteur de dérogation ci-dessus vous rend une zone jusqu'à ce que vous
 l'éteigniez vous-même. Si vous voulez régler une zone vous-même pendant une
 heure — « climatiseur de la chambre, une heure à 18 °C » — c'est une seule
 action, pas un script avec une minuterie à côté :
@@ -789,7 +789,7 @@ data:
 ```
 
 L'action fait trois choses dans le même tour de décision : elle vous rend la
-zone (l'interrupteur d'override s'allume), règle l'appareil sur le **Mode** et
+zone (l'interrupteur de dérogation s'allume), règle l'appareil sur le **Mode** et
 la **Température** demandés, et retient la **Durée**. Comme la remise et le
 mode vont ensemble, le directeur ne peut pas éteindre votre demande entre-temps.
 La durée survit à un redémarrage.
@@ -799,12 +799,12 @@ La durée survit à un redémarrage.
 | **Zone** (`zone_id`) | l'identifiant de la zone, comme dans les réglages |
 | **Mode** (`hvac_mode`) | `heat`, `cool`, `fan_only` ou `off` ; la zone prend sa source la plus prioritaire capable de fournir ce mode |
 | **Température** (`temperature`) | la consigne, dans l'unité de votre Home Assistant ; omise = le mode seul |
-| **Durée** (`minutes`) | combien de temps ; omise = l'override n'expire jamais de lui-même, comme l'interrupteur |
+| **Durée** (`minutes`) | combien de temps ; omise = la dérogation n'expire jamais de lui-même, comme l'interrupteur |
 | **À l'échéance** (`when_done`) | `turn_off` (par défaut) : l'appareil s'éteint ; `leave` : il reste tel quel |
 
 À l'échéance, le directeur envoie exactement une commande selon *À l'échéance*
 puis décide de nouveau normalement pour la zone. Si vous éteignez
-l'interrupteur d'override à la main entre-temps, ou si vous appelez
+l'interrupteur de dérogation à la main entre-temps, ou si vous appelez
 `climate_director.clear_override`, la durée expire en silence : aucune commande
 ne part vers l'appareil, le directeur reprend la zone et n'éteint l'appareil que
 si sa propre décision l'exige. Une source avec *Démarrer cet appareil
@@ -820,7 +820,7 @@ Et une **Température** que l'appareil n'accepte pas est ramenée à la borne la
 plus proche : le directeur ne refuse rien, il demande ce que l'appareil
 accepte.
 
-## Suivre un override à durée sur le tableau de bord
+## Suivre une dérogation à durée sur le tableau de bord
 
 **Ce qu'il vous faut.** Les exemples ci-dessous utilisent la carte personnalisée
 **Simple Timer Card** (<https://github.com/eyalgal/simple-timer-card>), qui se
@@ -831,15 +831,15 @@ placez `simple-timer-card.js` de la dernière version dans `config/www` et ajout
 `module`. L'intégration fonctionne aussi sans cette carte — le capteur d'heure de
 fin est là dans tous les cas ; la carte ne sert qu'au tableau de bord.
 
-Le capteur `sensor.*_fin_de_derogation_<zone>` porte le moment où l'override
+Le capteur `sensor.*_fin_de_derogation_<zone>` porte le moment où la dérogation
 d'une zone se termine. C'est tout ce qu'il faut à une carte minuteur : avec
 `mode: timestamp`, la carte lit l'état comme heure de fin, et `unknown` signifie
-qu'il n'y a rien à décompter — pas d'override, un override sans durée, ou un qui
-vient d'expirer. L'attribut `start_time` porte le moment où l'override a été
+qu'il n'y a rien à décompter — pas de dérogation, une dérogation sans durée, ou une qui
+vient d'expirer. L'attribut `start_time` porte le moment où la dérogation a été
 posé ; c'est la valeur par défaut de `start_time_attr`, et la carte l'utilise pour
 son anneau de progression.
 
-Voici ce tableau de bord : d'abord un bouton qui lance l'override, en dessous la
+Voici ce tableau de bord : d'abord un bouton qui lance la dérogation, en dessous la
 carte avec le bouton d'annulation. Un bouton, un appel — c'est le bouton qui
 remplace les anciens scripts minuteur, et vous en faites un par durée voulue :
 
@@ -891,13 +891,13 @@ départ se trouve à côté, comme carte séparée.
 Le bouton ne porte pas de `data` : `simple-timer-card` envoie le capteur
 lui-même comme cible, et `climate_director.clear_override` l'accepte. C'est la
 seconde façon de nommer une zone : à côté de **Zone** (`zone_id`), les deux
-actions acceptent aussi **Entité** (`entity_id`) — l'interrupteur d'override
+actions acceptent aussi **Entité** (`entity_id`) — l'interrupteur de dérogation
 (`switch.*_derogation_<zone>`) ou le capteur de fin d'une zone. Une
 automatisation peut donc viser ce qu'elle a déjà, sans nommer la zone. Seule une
-entité d'override de cette intégration compte ; toute autre entité est refusée
+entité de dérogation de cette intégration compte ; toute autre entité est refusée
 avec un message.
 
-Un override qui tournait déjà avant l'installation de cette version n'a pas
+Une dérogation qui tournait déjà avant l'installation de cette version n'a pas
 d'heure de début dans le fichier d'état : le capteur montre toujours son heure de
 fin, et seul l'anneau de progression reste au début jusqu'à l'expiration.
 
@@ -912,10 +912,10 @@ fin, et seul l'anneau de progression reste au début jusqu'à l'expiration.
   `climate_director.set_override` (voir plus haut) : un seul appel rend la zone
   et règle l'appareil, et après la durée le directeur range lui-même. Un script
   à côté qui règle l'appareil directement ne fonctionne qu'à condition de vous
-  rendre la zone avec l'override pendant la durée ; sans override, le directeur
+  rendre la zone avec la dérogation pendant la durée ; sans dérogation, le directeur
   recalcule son propre plan à la prochaine évaluation et éteint votre appareil.
   Un appareil avec *Démarrer cet appareil automatiquement* désactivé n'a pas
-  besoin d'override.
+  besoin de dérogation.
 - **Une pièce que vous manœuvrez toujours vous-même** : faites-en tout de même
   une zone (sinon l'intégration ignore cet appareil), choisissez l'entité
   `climate.*` de l'appareil comme capteur intérieur, et désactivez *Démarrer
@@ -1078,7 +1078,6 @@ littéralement.
 | Occupant | Occupants |
 | Agendas de vacances | Réglages généraux |
 | Durée maximale de la préparation (minutes) | Réglages généraux |
-| Le planning d'un occupant doit être ouvert | Réglages généraux |
 | Mode invités jusqu'à | Réglages généraux |
 | Mode invités à partir de | Réglages généraux |
 | Mot qui signale des vacances | Réglages généraux |

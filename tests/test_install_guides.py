@@ -366,9 +366,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
             "Durée maximale de la préparation (minutes)"
         ),
         "options.step.settings.data.require_awake": ("Une personne présente doit être éveillée"),
-        "options.step.settings.data.require_schedule": (
-            "Le planning d'un occupant doit être ouvert"
-        ),
         "options.step.settings.data.season_source": ("Origine de la saison"),
         "options.step.settings.data.stuck_after": ("Zone considérée bloquée après (minutes)"),
         "options.step.source.data.delete": ("Supprimer cette source"),

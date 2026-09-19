@@ -281,7 +281,8 @@ def test_every_language_names_the_shared_heat_source_in_unreadable_entities() ->
 #: patroon met het lidwoord optioneel, zodat elke vorm meetelt; de canonieke
 #: vorm eronder draagt het lidwoord wél, want dat is wat de lezer op het scherm
 #: hoort te zien. Daarom wordt een naald met `re` gelezen en niet als losse
-#: tekst.
+#: tekst, en mag hij een **woordgrens** dragen waar een dienstnaam hetzelfde
+#: woord bevat: `\boverride\b` telt het losse woord en niet `set_override`.
 #:
 #: One concept, one word. Per language the forbidden word, the canonical word and
 #: the reason alongside. The list grows per text round; nothing comes off without
@@ -295,7 +296,9 @@ def test_every_language_names_the_shared_heat_source_in_unreadable_entities() ->
 #: where that is impossible he writes a pattern with the article optional, so
 #: every form counts; the canonical form below does carry the article, because
 #: that is what the reader should see on screen. That is why a needle is read
-#: with `re` and not as plain text.
+#: with `re` and not as plain text, and why it may carry a **word boundary**
+#: where a service name holds the same word: `\boverride\b` counts the loose
+#: word and not `set_override`.
 TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
     "de": (
         (
@@ -318,6 +321,21 @@ TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
             "het verzoek warmt niet voor maar bereidt voor, en het koelt evengoed: het scherm "
             "noemt de knop en de duur *Préparer* en *Durée de la préparation*, en "
             "*préchauffage* belooft verwarming die er niet is",
+        ),
+        (
+            r"\boverride\b",
+            "dérogation",
+            "het scherm noemt de schakelaar *Dérogation {zone}* en de acties *Définir une "
+            "dérogation* en *Terminer la dérogation*; *override* is Engels en staat in geen "
+            "enkele Franse schermtekst. De dienstnamen `set_override` en `clear_override` "
+            "blijven Engels en vallen door de woordgrens buiten deze naald",
+        ),
+        (
+            "emploi du temps",
+            "planning",
+            "het scherm noemt het rooster en de poort *Planning* (*Le planning d'un occupant "
+            "doit être ouvert*, *La porte de planning*); *emploi du temps* staat in geen "
+            "enkele Franse schermtekst",
         ),
     ),
     "es": (
