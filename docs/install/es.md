@@ -494,8 +494,8 @@ miércoles cualquiera: quien llega a las diez, o trabaja desde casa, se encuentr
 una casa fría. Si la recortas al fin de semana, entre semana ya nada apaga la
 casa de noche y sigue calentando hasta que alguien se marcha.
 
-Por eso dormir hasta tarde va aparte. La ventana de sueño sigue siendo la noche
-- en la mayoría de los casos algo como 21:00-08:00, todos los días. *Dormir
+Por eso dormir hasta tarde va aparte. La ventana de sueño sigue siendo la noche -
+en la mayoría de los casos algo como 21:00-08:00, todos los días. *Dormir
 hasta* solo alarga la mañana, en las mañanas que marques. Fíjate en la
 diferencia: una ventana de sueño cruza la medianoche y por eso depende del día en
 que empieza, mientras que dormir hasta tarde depende de la mañana misma. Dormir

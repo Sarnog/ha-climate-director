@@ -502,8 +502,8 @@ lui, trouve une maison froide. Réduisez la fenêtre au seul week-end et plus ri
 n'éteint la maison la nuit en semaine : elle chauffe jusqu'à ce que quelqu'un
 parte.
 
-C'est pourquoi la grasse matinée est à part. La fenêtre de sommeil reste la nuit
-- chez la plupart, quelque chose comme 21:00-08:00, tous les jours. *Faire la
+C'est pourquoi la grasse matinée est à part. La fenêtre de sommeil reste la nuit -
+chez la plupart, quelque chose comme 21:00-08:00, tous les jours. *Faire la
 grasse matinée jusqu'à* n'étend que le matin, les matins que vous cochez. Notez
 la différence : une fenêtre de sommeil traverse minuit et dépend donc du jour où
 elle commence, tandis que la grasse matinée dépend du matin lui-même. La grasse
