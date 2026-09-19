@@ -363,7 +363,9 @@ def test_one_concept_gets_one_word(language: str) -> None:
     een afspraak over de tekst zelf. De lijst is daarom letterlijk en noemt per
     regel het verboden woord, het canonieke woord en de reden; de docstring bij de
     lijst zegt welke spellingen hij dekt, en elke naald wordt als patroon gelezen
-    (`re`) zodat een lidwoord optioneel kan zijn. Wie een woord toevoegt, schrijft de reden
+    (`re`) zodat een lidwoord optioneel kan zijn. De vergelijking is
+    hoofdletterongevoelig, zodat een kop die met het verboden woord begint niet
+    langs de bewaking glipt. Wie een woord toevoegt, schrijft de reden
     erbij op: waarom het ene woord het begrip dekt en het andere een ander begrip
     oproept.
 
@@ -373,7 +375,9 @@ def test_one_concept_gets_one_word(language: str) -> None:
     concept" cannot be measured on an object or with a real tool, because it is an
     agreement about the text itself. The list is therefore literal and names the
     forbidden word, the canonical word and the reason per line; the docstring at
-    the list says which spellings it covers. Whoever adds a word writes the reason
+    the list says which spellings it covers. The comparison is case-insensitive,
+    so a heading opening with the forbidden word does not slip past the guard.
+    Whoever adds a word writes the reason
     down: why the one word covers the concept and the other calls up a different
     one.
     """
@@ -381,7 +385,7 @@ def test_one_concept_gets_one_word(language: str) -> None:
     for where, texts in terminology_texts(language).items():
         for forbidden, canonical, reason in TERMINOLOGY[language]:
             for text in texts:
-                if re.search(forbidden, text):
+                if re.search(forbidden, text, re.IGNORECASE):
                     problems.append(
                         f"{where}: {forbidden!r} hoort {canonical!r} te zijn - {reason}"
                     )
