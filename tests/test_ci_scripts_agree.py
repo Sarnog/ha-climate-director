@@ -1,71 +1,48 @@
 """`script/test` en `script/lint` draaien precies wat de CI draait.
 
+De scripts zijn er zodat lokaal en CI niet uit elkaar lopen: een stap erbij in
+`tests.yaml` hoort niet stil achter te blijven. De eigenschap hangt aan de
+**bron** en niet aan een handlijst van stapnamen: elk commando van elke baan in
+`tests.yaml` moet, met dezelfde tool en dezelfde argumenten, in `script/test` of
+`script/lint` staan. Een `run:`-regel wordt daarom eerst in losse commando's
+geknipt - op `shlex`, en verder op `&&`, `||` en `;` - want een regel die de
+opstap aan een tweede commando plakt hoort niet in zijn geheel overgeslagen te
+worden, en een regel zonder interpreter ervoor (`pytest ...`, `ruff ...`) is net
+zo goed een stap. De opstapstappen (`python -m pip install ...`) horen niet in
+een script thuis - die staan in `script/setup` - dus die worden overgeslagen, en
+wel op het **eerste** commando van de regel. De omgekeerde richting wordt ook
+bewaakt: een commando dat alleen in een script staat, hoort ergens in
+`tests.yaml` te staan. Daarnaast eist een tweede test de **vorm**: elke
+niet-opstapregel van elke niet-uitgezonderde baan begint met `python -m` of
+`python script/`. Eén vorm, dan bestaat de rand niet: geen `python3`, geen kale
+tool, geen `"$PYTHON"` in de CI.
+
+`oldest-supported` is de uitzondering en staat letterlijk in dit bestand met zijn
+reden: die baan pint een Home Assistant-versie en draait daarna dezelfde pytest,
+dus het is een variatie op de CI-omgeving en geen commando van zijn eigen.
+
 `script/test` and `script/lint` run exactly what CI runs.
 
-C13 van ronde 22: de scripts zijn er zodat lokaal en CI niet uit elkaar lopen.
-Ronde 31 zette een nieuwe stap in de CI ("Coverage gate") en vergat hem in
-`script/test`, terwijl de kop van dat script belooft "precies wat de CI aan tests
-draait, lokaal". Dat is de vorm die deze bewaking moet stoppen: een stap erbij in
-`tests.yaml` blijft niet stil achter.
+The scripts exist so that local and CI do not drift apart: an extra step in
+`tests.yaml` must not stay behind silently. The property hangs on the **source**,
+not on a hand-written list of step names: every `run:` line of every job in
+`tests.yaml` must appear, with the same tool and the same arguments, in
+`script/test` or `script/lint`. A `run:` line is therefore split into separate
+commands first - on `shlex`, and further on `&&`, `||` and `;` - because a line
+that glues the setup to a second command must not be skipped as a whole, and a
+line without an interpreter in front (`pytest ...`, `ruff ...`) is a step just
+the same. The setup steps (`python -m pip install ...`) do not belong in a script
+- they live in `script/setup` - so they are skipped, and skipped on the **first**
+command of the line. The reverse direction is guarded too: a command that only
+lives in a script belongs somewhere in `tests.yaml`. On top of that a second test
+demands the **form**: every non-setup line of every non-exempt job starts with
+`python -m` or `python script/`. One form, so the edge does not exist: no
+`python3`, no bare tool, no `"$PYTHON"` in CI.
 
-De eigenschap hangt aan de **bron** en niet aan een handlijst van stapnamen: elk
-commando van elke baan in `tests.yaml` moet, met dezelfde tool en dezelfde
-argumenten, in `script/test` of `script/lint` staan. Een `run:`-regel wordt daarom
-eerst in losse commando's geknipt — op `shlex`, en verder op `&&`, `||` en `;` —
-want een regel die de opstap aan een tweede commando plakt hoort niet in zijn
-geheel overgeslagen te worden. De opstapstappen (`python -m pip install …`) horen
-niet in een script thuis — die staan in `script/setup` — dus die worden
-overgeslagen, en wel op het **eerste** commando van de regel. De omgekeerde richting wordt ook
-bewaakt: een commando dat alleen in een script staat, hoort ergens in
-`tests.yaml` te staan.
-
-C13 of round 22: the scripts exist so that local and CI do not drift apart.
-Round 31 added a new CI step ("Coverage gate") and forgot it in `script/test`,
-while that script's header promises "exactly what CI runs for tests, locally".
-That is the shape this guard has to stop: an extra step in `tests.yaml` must not
-stay behind silently.
-
-The property hangs on the **source**, not on a hand-written list of step names:
-every `run:` line of every job in `tests.yaml` must appear, with the same tool and
-the same arguments, in `script/test` or `script/lint`. The setup steps
-(`python -m pip install …`) do not belong there — they live in `script/setup` — so
-they are skipped on their tool. One job is the exception and it stands literally
-in this file with its reason: `oldest-supported` pins a Home Assistant version and
-then runs the very same pytest, so it is a variation on the CI environment rather
-than a command of its own. The reverse direction is guarded too: a command that
-only lives in a script belongs somewhere in `tests.yaml`.
-
-Ronde 35 (R35-2): de heenrichting las alleen de baan `tests`. Gemeten in ronde
-34: een extra stap `python -m mypy tests/test_gates.py` in de baan `mypy` bleef
-stil achter (2775 groen) terwijl `script/lint` belooft precies de CI-lint te
-draaien. De bewaking loopt daarom over élke baan.
-
-Round 35 (R35-2): the forward direction read only the `tests` job. Measured in
-round 34: an extra step `python -m mypy tests/test_gates.py` in the `mypy` job
-stayed behind silently (2775 green) while `script/lint` promises to run exactly
-the CI lint. The guard therefore covers every job.
-
-Ronde 36 (R36-2): de heenrichting sloeg elke `run:`-regel over die niet met
-`python ` begon (`if SETUP in line or not line.startswith("python "): continue`).
-Gemeten: `run: pytest tests/test_gates.py -q` in de baan `mypy` liet de hele
-suite groen, en `run: ruff check .` zou dat net zo goed doen. Elke regel wordt nu
-met `shlex` in woorden geknipt, een interpreter gaat er alleen af als hij
-`python`, `python3` of `"$PYTHON"` heet, en al het overige moet letterlijk in een
-script staan — anders is het een bevinding met de stapnaam erbij. Daarnaast eist
-een tweede test de **vorm**: elke niet-opstapregel van elke niet-uitgezonderde
-baan begint met `python -m` of `python script/`. Eén vorm, dan bestaat de rand
-niet: geen `python3`, geen kale tool, geen `"$PYTHON"` in de CI.
-
-Round 36 (R36-2): the forward direction skipped every `run:` line that did not
-start with `python ` (`if SETUP in line or not line.startswith("python "):
-continue`). Measured: `run: pytest tests/test_gates.py -q` in the `mypy` job left
-the whole suite green, and `run: ruff check .` would do the same. Every line is
-now split into words with `shlex`, an interpreter is stripped only when it is
-called `python`, `python3` or `"$PYTHON"`, and everything else has to stand
-literally in a script — otherwise it is a finding with the step name alongside.
-A second test demands the **form** on top: every non-setup line of every
-non-exempt job starts with `python -m` or `python script/`. One form, so the edge
-does not exist: no `python3`, no bare tool, no `"$PYTHON"` in CI.
+`oldest-supported` is the exception and stands literally in this file with its
+reason: that job pins a Home Assistant version and then runs the very same
+pytest, so it is a variation on the CI environment rather than a command of its
+own.
 """
 
 from __future__ import annotations
@@ -207,14 +184,13 @@ def is_setup(command: str) -> bool:
     `ci_commands()` knipt een `run:`-regel in losse commando's en deze toets ziet
     ze allemaal. Dat is strenger dan "alleen de opstap vooraan" - een opstap achter
     een `&&` is ook een opstap, en de bewaking hiernaast laat hem dus niet als
-    gewone stap door. De docstring zei eerder het omgekeerde; de code doet dit.
+    gewone stap door.
 
     Every command of a line passes through here, not just the first:
     `ci_commands()` splits a `run:` line into separate commands and this check
     sees them all. That is stricter than "only a leading setup" - a setup behind
     a `&&` is a setup too, and the guard beside this one therefore does not let it
-    through as an ordinary step. The docstring used to say the opposite; the code
-    does this.
+    through as an ordinary step.
     """
     return tuple(words(command)[:3]) == SETUP_COMMAND
 
@@ -306,20 +282,18 @@ def test_every_ci_step_of_every_job_is_in_a_script() -> None:
 
 
 def test_every_ci_step_keeps_the_one_allowed_form() -> None:
-    """Elke niet-opstapregel in `tests.yaml` houdt de ene toegestane vorm (R36-2).
+    """Elke niet-opstapregel in `tests.yaml` houdt de ene toegestane vorm.
 
     Twee vormen en niets anders: `python -m <module>` of `python script/<bestand>`.
     Eén vorm, dan bestaat de rand niet — geen `python3`, geen kale tool, geen
     `"$PYTHON"` in de CI. Zonder deze eis moet de bewaking hiernaast elke
-    schrijfwijze kennen, en dan is de volgende schrijfwijze de volgende ronde; dat
-    is precies wat deze ronde moest stoppen.
+    schrijfwijze kennen, en elke schrijfwijze die er dan bijkomt is een gat.
 
-    Every non-setup line in `tests.yaml` keeps the one allowed form (R36-2). Two
-    shapes and nothing else: `python -m <module>` or `python script/<file>`. One
+    Every non-setup line in `tests.yaml` keeps the one allowed form. Two shapes
+    and nothing else: `python -m <module>` or `python script/<file>`. One
     form, so the edge does not exist — no `python3`, no bare tool, no `"$PYTHON"`
     in CI. Without this demand the guard beside it has to know every spelling, and
-    then the next spelling is the next round; that is exactly what this round had
-    to stop.
+    every spelling that comes along after that is a hole.
     """
     offenders = [
         f"{job}: {step} ({command})"
