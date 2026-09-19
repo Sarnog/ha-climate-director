@@ -272,22 +272,30 @@ def test_every_language_names_the_shared_heat_source_in_unreadable_entities() ->
 #: Eén begrip, één woord. Per taal het verboden woord, het canonieke woord en de
 #: reden erbij. De lijst groeit per tekstronde; er gaat niets af zonder reden.
 #:
-#: Een naald is een **stam**, niet een heel woord: het Arabisch plakt zijn
-#: lidwoord en zijn voorzetsels aan het woord vast (*ال*, *لل*, *بال*, *وال*),
-#: dus een naald met het lidwoord eraan mist dezelfde stam achter een ander
-#: voorzetsel. Wie een naald opschrijft laat het lidwoord eraf, zodat elke vorm
-#: meetelt; de canonieke vorm eronder draagt het lidwoord wél, want dat is wat de
-#: lezer op het scherm hoort te zien.
+#: Een naald is een **stam** of een **patroon**, niet een heel woord: het
+#: Arabisch plakt zijn lidwoord en zijn voorzetsels aan het woord vast (*ال*,
+#: *لل*, *بال*, *وال*), dus een naald met het lidwoord eraan mist dezelfde stam
+#: achter een ander voorzetsel. En een naald die *ال* op het tweede woord
+#: meeschrijft mist de onbepaalde vorm van diezelfde stam. Wie een naald
+#: opschrijft laat het lidwoord eraf, en waar dat niet kan schrijft hij een
+#: patroon met het lidwoord optioneel, zodat elke vorm meetelt; de canonieke
+#: vorm eronder draagt het lidwoord wél, want dat is wat de lezer op het scherm
+#: hoort te zien. Daarom wordt een naald met `re` gelezen en niet als losse
+#: tekst.
 #:
 #: One concept, one word. Per language the forbidden word, the canonical word and
 #: the reason alongside. The list grows per text round; nothing comes off without
 #: a reason.
 #:
-#: A needle is a **stem**, not a whole word: Arabic glues its article and its
-#: prepositions onto the word (*ال*, *لل*, *بال*, *وال*), so a needle carrying the
-#: article misses the same stem behind another preposition. Whoever writes a
-#: needle leaves the article off, so every form counts; the canonical form below
-#: does carry the article, because that is what the reader should see on screen.
+#: A needle is a **stem** or a **pattern**, not a whole word: Arabic glues its
+#: article and its prepositions onto the word (*ال*, *لل*, *بال*, *وال*), so a
+#: needle carrying the article misses the same stem behind another preposition.
+#: And a needle that also writes *ال* onto the second word misses the indefinite
+#: form of that same stem. Whoever writes a needle leaves the article off, and
+#: where that is impossible he writes a pattern with the article optional, so
+#: every form counts; the canonical form below does carry the article, because
+#: that is what the reader should see on screen. That is why a needle is read
+#: with `re` and not as plain text.
 TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
     "de": (
         (
@@ -322,7 +330,7 @@ TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
     ),
     "ar": (
         (
-            "تدفئة المسبقة",
+            r"تدفئة\s+(ال)?مسبقة",
             "التهيئة المسبقة",
             "het verzoek warmt niet voor maar vraagt vooruit; dezelfde taakneutrale term als "
             "het Nederlands, Duits en Frans gebruiken",
@@ -354,7 +362,8 @@ def test_one_concept_gets_one_word(language: str) -> None:
     begrip" valt nergens aan een object of een echte tool af te meten, want het is
     een afspraak over de tekst zelf. De lijst is daarom letterlijk en noemt per
     regel het verboden woord, het canonieke woord en de reden; de docstring bij de
-    lijst zegt welke spellingen hij dekt. Wie een woord toevoegt, schrijft de reden
+    lijst zegt welke spellingen hij dekt, en elke naald wordt als patroon gelezen
+    (`re`) zodat een lidwoord optioneel kan zijn. Wie een woord toevoegt, schrijft de reden
     erbij op: waarom het ene woord het begrip dekt en het andere een ander begrip
     oproept.
 
@@ -372,7 +381,7 @@ def test_one_concept_gets_one_word(language: str) -> None:
     for where, texts in terminology_texts(language).items():
         for forbidden, canonical, reason in TERMINOLOGY[language]:
             for text in texts:
-                if forbidden in text:
+                if re.search(forbidden, text):
                     problems.append(
                         f"{where}: {forbidden!r} hoort {canonical!r} te zijn - {reason}"
                     )
