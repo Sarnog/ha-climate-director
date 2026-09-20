@@ -357,7 +357,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.resident.data.delete": ("Supprimer cet occupant"),
         "options.step.resident.data.sleep_from": ("Le capteur de sommeil compte à partir de"),
         "options.step.resident.data.sleep_until": ("Le capteur de sommeil compte jusqu'à"),
-        "options.step.residents.data.resident": ("Occupant"),
         "options.step.settings.data.guest_end": ("Mode invités jusqu'à"),
         "options.step.settings.data.guest_start": ("Mode invités à partir de"),
         "options.step.settings.data.holiday_calendars": ("Agendas de vacances"),
@@ -379,7 +378,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
             "Attendre ce délai avant de prendre le relais (minutes)"
         ),
         "options.step.window.data.delete": ("Supprimer ce planning"),
-        "options.step.windows.data.window": ("Planning"),
         "options.step.zone.data.cool_hysteresis": ("Bande morte de refroidissement"),
         "options.step.zone.data.cool_outdoor_min": (
             "Refroidir uniquement au-dessus de cette température extérieure"

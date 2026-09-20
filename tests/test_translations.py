@@ -282,7 +282,11 @@ def test_every_language_names_the_shared_heat_source_in_unreadable_entities() ->
 #: vorm eronder draagt het lidwoord wél, want dat is wat de lezer op het scherm
 #: hoort te zien. Daarom wordt een naald met `re` gelezen en niet als losse
 #: tekst, en mag hij een **woordgrens** dragen waar een dienstnaam hetzelfde
-#: woord bevat: `\boverride\b` telt het losse woord en niet `set_override`.
+#: woord bevat: `\boverrides?\b` telt het losse woord en niet `set_override`.
+#: Een naald dekt **enkelvoud én meervoud**: `\boverrides?\b` telt *override* en
+#: *overrides*, `emplois? du temps` telt *emploi du temps* en *emplois du
+#: temps*, en `résident` telt *résident* en *résidents*. Zonder dat glipt de
+#: buurschrijfwijze er langs en wordt die de volgende ronde.
 #:
 #: One concept, one word. Per language the forbidden word, the canonical word and
 #: the reason alongside. The list grows per text round; nothing comes off without
@@ -297,8 +301,12 @@ def test_every_language_names_the_shared_heat_source_in_unreadable_entities() ->
 #: every form counts; the canonical form below does carry the article, because
 #: that is what the reader should see on screen. That is why a needle is read
 #: with `re` and not as plain text, and why it may carry a **word boundary**
-#: where a service name holds the same word: `\boverride\b` counts the loose
-#: word and not `set_override`.
+#: where a service name holds the same word: `\boverrides?\b` counts the loose
+#: word and not `set_override`. A needle covers **singular and plural**:
+#: `\boverrides?\b` counts *override* and *overrides*, `emplois? du temps`
+#: counts *emploi du temps* and *emplois du temps*, and `résident` counts
+#: *résident* and *résidents*. Without that the neighbouring spelling slips past
+#: and becomes the next round.
 TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
     "de": (
         (
@@ -323,19 +331,27 @@ TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
             "*préchauffage* belooft verwarming die er niet is",
         ),
         (
-            r"\boverride\b",
+            r"\boverrides?\b",
             "dérogation",
             "het scherm noemt de schakelaar *Dérogation {zone}* en de acties *Définir une "
             "dérogation* en *Terminer la dérogation*; *override* is Engels en staat in geen "
-            "enkele Franse schermtekst. De dienstnamen `set_override` en `clear_override` "
-            "blijven Engels en vallen door de woordgrens buiten deze naald",
+            "enkele Franse schermtekst, in het enkelvoud niet en in het meervoud niet. De "
+            "dienstnamen `set_override` en `clear_override` blijven Engels en vallen door de "
+            "woordgrens buiten deze naald",
         ),
         (
-            "emploi du temps",
+            r"emplois? du temps",
             "planning",
             "het scherm noemt het rooster en de poort *Planning* (*Le planning d'un occupant "
             "doit être ouvert*, *La porte de planning*); *emploi du temps* staat in geen "
-            "enkele Franse schermtekst",
+            "enkele Franse schermtekst, in het enkelvoud niet en in het meervoud niet",
+        ),
+        (
+            "résident",
+            "occupant",
+            "het scherm noemt de bewoner *Occupant* (*Occupants*, *Un nom, pour distinguer les "
+            "occupants*, *Supprime l'occupant ainsi que ses plannings*); *résident* staat in "
+            "geen enkele Franse schermtekst, in het enkelvoud niet en in het meervoud niet",
         ),
     ),
     "es": (

@@ -21,7 +21,7 @@ précédente.
 - [Étape 7 — Sources de chaleur partagées](#étape-7--sources-de-chaleur-partagées)
 - [Étape 8 — Groupes exclusifs](#étape-8--groupes-exclusifs)
 - [Étape 9 — Plages de silence](#étape-9--plages-de-silence)
-- [Étape 10 — Résidents](#étape-10--résidents)
+- [Étape 10 — Occupants](#étape-10--occupants)
 - [Étape 11 — Portes et fenêtres](#étape-11--portes-et-fenêtres)
 - [Étape 12 — Enregistrer et fermer](#étape-12--enregistrer-et-fermer)
 - [Ce que vous obtenez dans Home Assistant](#ce-que-vous-obtenez-dans-home-assistant)
@@ -73,8 +73,8 @@ Director sait quelles unités vont ensemble et résout ce conflit pour vous.
 | Un capteur de température par zone | **oui** | sans mesure, l'intégration ne peut pas distinguer trop froid de trop chaud ; une `climate.*` avec `current_temperature` convient |
 | `sensor.*` ou `weather.*` température extérieure | non | seulement pour borner par température extérieure — gaz sous 3 °C, pompe à chaleur au-dessus, par exemple |
 | `weather.*` ou `sensor.*` précipitations | non | seulement si les précipitations peuvent lever la limite « ouvrir une fenêtre » |
-| `person.*` ou `device_tracker.*` par résident | oui, dès que vous configurez des résidents | sinon ce résident ne peut jamais être présent |
-| Un capteur de sommeil par résident | non | sans lui, personne ne compte jamais comme endormi |
+| `person.*` ou `device_tracker.*` par occupant | oui, dès que vous configurez des occupants | sinon cet occupant ne peut jamais être présent |
+| Un capteur de sommeil par occupant | non | sans lui, personne ne compte jamais comme endormi |
 | `binary_sensor.*` présence par zone | seulement si une zone fonctionne sur *la pièce elle-même* | c'est alors la seule porte de la zone |
 | `binary_sensor.*`, `cover.*` ou `sensor.*` porte, fenêtre ou velux | non | suspend les zones liées tant qu'il est ouvert |
 | `calendar.*` | non | active le programme vacances tout seul ; ne fonctionne qu'avec un mot-clé |
@@ -143,7 +143,7 @@ Sous **Configurer** se trouve le menu principal, dans cet ordre :
 | **Sources de chaleur partagées** | une chaudière ou pompe à chaleur desservant plusieurs pièces |
 | **Groupes exclusifs** | des appareils qui ne doivent jamais tourner ensemble |
 | **Plages de silence** | heures où le directeur ne démarre rien de lui-même |
-| **Résidents** | qui est présent, qui dort, et le planning de chacun |
+| **Occupants** | qui est présent, qui dort, et le planning de chacun |
 | **Portes et fenêtres** | quelles ouvertures mettent quelles zones en pause |
 | **✅ Enregistrer et fermer** | rien n'est réellement enregistré avant cet endroit |
 
@@ -470,16 +470,16 @@ telle plage ne s'applique que lorsque le planning de vacances est actif, et
 remplace alors les plages ordinaires ; ses jours de la semaine sont ignorés.
 N'en définissez aucune et un jour de vacances compte comme un samedi.
 
-## Étape 10 — Résidents
+## Étape 10 — Occupants
 
 Laissez vide pour un bâtiment où personne n'est suivi ; les portes de présence
 sont alors ignorées au lieu de tout bloquer pour toujours.
 
 | Réglage | Ce qu'il fait |
 |---|---|
-| **Nom** | un libellé pour distinguer les résidents |
-| **Capteur de présence** | en général une `person.*` ; dit si ce résident est à la maison |
-| **Capteur de sommeil** | quand ce résident dort ; vide = sommeil non suivi |
+| **Nom** | un libellé pour distinguer les occupants |
+| **Capteur de présence** | en général une `person.*` ; dit si cet occupant est à la maison |
+| **Capteur de sommeil** | quand cet occupant dort ; vide = sommeil non suivi |
 | **État signifiant endormi** | l'état que le capteur de sommeil rapporte pendant le sommeil |
 | **Le capteur de sommeil compte de / jusqu'à** | les heures où ce capteur signifie quelque chose ; les deux vides = toute la journée |
 | **Jours de la fenêtre de sommeil** | les jours où cette fenêtre s'applique ; vide = tous les jours |
@@ -560,9 +560,9 @@ occupant n'est de toute façon plus considéré comme endormi à ce moment-là e
 retient personne. Faites donc courir la fenêtre de sommeil au-delà de l'heure
 limite.
 
-### Emplois du temps
+### Plannings
 
-Après avoir enregistré un résident, vous réglez ses emplois du temps :
+Après avoir enregistré un occupant, vous réglez ses plannings :
 
 | Réglage | Ce qu'il fait |
 |---|---|
@@ -570,7 +570,7 @@ Après avoir enregistré un résident, vous réglez ses emplois du temps :
 | **De / Jusqu'à** | la fenêtre ; peut franchir minuit |
 | **Jours** | vide = chaque jour |
 
-Un résident sans planning ne participe pas à la porte de planning.
+Un occupant sans planning ne participe pas à la porte de planning.
 Quelqu'un sans fenêtre un jour donné ne retient pas la maison ce jour-là.
 
 ### Capteur de sommeil : pas de capteur, mais un bouton ?
@@ -582,7 +582,7 @@ capteur de sommeil avec `on` comme état d'endormissement, et laissez un bouton
 le basculer. Qui possède un vrai capteur de sommeil (un capteur de lit, un
 chargeur sans fil) utilise celui-ci : c'est plus précis.
 
-Laissez le capteur de sommeil vide et ce résident ne compte jamais comme
+Laissez le capteur de sommeil vide et cet occupant ne compte jamais comme
 endormi.
 
 ## Étape 11 — Portes et fenêtres
@@ -658,7 +658,7 @@ Un appareil par installation, avec en dessous :
 | `binary_sensor.*_bloque` | activé quand une zone reste trop longtemps sur le même motif d'attente |
 | `switch.*_director` | l'interrupteur principal ; éteint = rien n'est régulé |
 | `switch.*_planning_de_vacances` | fait compter chaque jour comme un samedi, ou comme son propre programme vacances |
-| `switch.*_mode_invites` | continue de réguler pendant que les résidents sont absents |
+| `switch.*_mode_invites` | continue de réguler pendant que les occupants sont absents |
 | `switch.*_derogation_<zone>` | rend une zone entièrement à vous |
 | `sensor.*_fin_de_derogation_<zone>` | quand la dérogation de cette zone se termine ; une carte minuteur compte à rebours |
 | `switch.*_contournement_<opening>` | activé = cette ouverture ne compte plus nulle part ; ni pour ses propres zones, ni pour l'arrêt global |
@@ -1075,7 +1075,6 @@ littéralement.
 | Le capteur de sommeil compte jusqu'à | Occupant |
 | Le capteur de sommeil compte à partir de | Occupant |
 | Supprimer cet occupant | Occupant |
-| Occupant | Occupants |
 | Agendas de vacances | Réglages généraux |
 | Durée maximale de la préparation (minutes) | Réglages généraux |
 | Mode invités jusqu'à | Réglages généraux |
@@ -1091,7 +1090,6 @@ littéralement.
 | Repos avant que cet appareil puisse redémarrer (secondes) | Source |
 | Supprimer cette source | Source |
 | Supprimer ce planning | Planning |
-| Planning | Plannings de {resident} |
 | Bande morte de chauffage | Zone |
 | Bande morte de refroidissement | Zone |
 | Capteur de présence de cette zone | Zone |
