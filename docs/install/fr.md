@@ -799,7 +799,7 @@ La durée survit à un redémarrage.
 | **Zone** (`zone_id`) | l'identifiant de la zone, comme dans les réglages |
 | **Mode** (`hvac_mode`) | `heat`, `cool`, `fan_only` ou `off` ; la zone prend sa source la plus prioritaire capable de fournir ce mode |
 | **Température** (`temperature`) | la consigne, dans l'unité de votre Home Assistant ; omise = le mode seul |
-| **Durée** (`minutes`) | combien de temps ; omise = la dérogation n'expire jamais de lui-même, comme l'interrupteur |
+| **Durée** (`minutes`) | combien de temps ; omise = la dérogation n'expire jamais d'elle-même, comme l'interrupteur |
 | **À l'échéance** (`when_done`) | `turn_off` (par défaut) : l'appareil s'éteint ; `leave` : il reste tel quel |
 
 À l'échéance, le directeur envoie exactement une commande selon *À l'échéance*
