@@ -440,7 +440,7 @@
       },
       "quiets": {
         "title": "Ruhefenster",
-        "description": "Stunden, in denen der Director von sich aus nichts anfängt. Um elf Uhr abends heimkommen und gleich ins Bett gehen muss das Haus nicht aufheizen.\n\nDas bremst das Anfangen, nicht das Weiterlaufen: was schon läuft bleibt geregelt und geht zur Schlafenszeit wie immer aus, und was du selbst einschaltest wird übernommen und weitergeregelt. Ohne Fenster ist die Bremse gelöst.",
+        "description": "Stunden, in denen der Director von sich aus nichts anfängt. Um elf Uhr abends heimkommen und gleich ins Bett gehen muss das Haus nicht aufheizen.\n\nDas bremst das Anfangen, nicht das Weiterlaufen: was schon läuft bleibt geregelt und geht zur Schlafenszeit wie immer aus, und was du selbst einschaltest wird übernommen und weitergeregelt. Ohne Fenster ist die Bremse gelöst. Gebremst wird, wer nach dem Beginn des Fensters heimkommt; wer schon da war, hält das Haus in Gang - Gäste im Gastfenster genauso.",
         "data": {
           "quiet": "Fenster"
         },
@@ -450,7 +450,7 @@
       },
       "quiet": {
         "title": "Ruhefenster",
-        "description": "Stunden, in denen der Director von sich aus nichts anfängt. Um elf Uhr abends heimkommen und gleich ins Bett gehen muss das Haus nicht aufheizen.\n\nDas bremst das Anfangen, nicht das Weiterlaufen: was schon läuft bleibt geregelt und geht zur Schlafenszeit wie immer aus, und was du selbst einschaltest wird übernommen und weitergeregelt. Ohne Fenster ist die Bremse gelöst.",
+        "description": "Stunden, in denen der Director von sich aus nichts anfängt. Um elf Uhr abends heimkommen und gleich ins Bett gehen muss das Haus nicht aufheizen.\n\nDas bremst das Anfangen, nicht das Weiterlaufen: was schon läuft bleibt geregelt und geht zur Schlafenszeit wie immer aus, und was du selbst einschaltest wird übernommen und weitergeregelt. Ohne Fenster ist die Bremse gelöst. Gebremst wird, wer nach dem Beginn des Fensters heimkommt; wer schon da war, hält das Haus in Gang - Gäste im Gastfenster genauso.",
         "data": {
           "start": "Ruhe ab",
           "end": "Ruhe bis",
@@ -460,8 +460,8 @@
           "holiday": "Dies ist ein Urlaubsfenster"
         },
         "data_description": {
-          "start": "Zwischen diesen Zeiten fängt der Director nichts von selbst an. Ein Fenster darf über Mitternacht laufen: 21:00 bis 09:00 ist die Nacht.",
-          "end": "Zwischen diesen Zeiten fängt der Director nichts von selbst an. Ein Fenster darf über Mitternacht laufen: 21:00 bis 09:00 ist die Nacht.",
+          "start": "Zwischen diesen Zeiten fängt der Director nichts von selbst an - außer für alle, die schon da waren, als das Fenster begann. Ein Fenster darf über Mitternacht laufen: 21:00 bis 09:00 ist die Nacht.",
+          "end": "Zwischen diesen Zeiten fängt der Director nichts von selbst an - außer für alle, die schon da waren, als das Fenster begann. Ein Fenster darf über Mitternacht laufen: 21:00 bis 09:00 ist die Nacht.",
           "weekdays": "Leer lassen gilt jeden Tag.",
           "delete": "Entfernt dieses Fenster, sodass der Director in diesen Stunden wieder etwas beginnen darf.",
           "when_done": "Wählst du verwerfen, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst.",

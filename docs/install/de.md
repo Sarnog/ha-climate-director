@@ -448,7 +448,9 @@ Es ist eine Bremse fürs **Starten**, nicht fürs Weitermachen:
 
 - was bereits läuft, bleibt geregelt;
 - schaltest du selbst etwas ein, wird das aufgegriffen;
-- was aus ist, bleibt aus, bis das Fenster vorbei ist.
+- wer schon zu Hause war, als das Fenster begann, wird nicht stillgelegt: er
+  hält das Haus in Gang, auch mit einem Gerät, das aus war. Wer in ein leeres Haus
+  nach dem Beginn heimkommt, bleibt still, bis das Fenster vorbei ist.
 
 Fenster dürfen über Mitternacht laufen und kennen Wochentage. Ein Haushalt, der
 werktags um neun ins Bett geht und am Wochenende um elf, setzt zwei:
@@ -677,7 +679,8 @@ einer Ruhezeit oder einer Anforderung). So bleibt eine Zone, in der sich nichts
   Er lässt alles los und sendet nichts mehr — auch kein Aus. Was in dem Moment
   läuft, läuft also einfach weiter; willst du alles aus, schalte es selbst aus.
 - **Gästemodus** (`switch.*_gastemodus`): Jemand Unverfolgtes wohnt da, also
-  sagt „Haus leer“ nichts. Schlaf der Anwesenden gilt weiter, und außerhalb des
+  sagt „Haus leer“ nichts. Innerhalb des Gastfensters hebt der Gästemodus auch
+  das Ruhefenster auf. Schlaf der Anwesenden gilt weiter, und außerhalb des
   Gastfensters übernehmen die normalen Tore.
 - **Urlaubsplan** (`switch.*_urlaubsplan`): Jeder Tag zählt als Samstag
   oder als eigenes Urlaubsfenster. Schaltet sich auch von selbst ein, sobald ein

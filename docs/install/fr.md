@@ -452,7 +452,9 @@ C'est un frein au **démarrage**, pas à la poursuite :
 
 - ce qui tourne déjà reste régulé ;
 - allumez quelque chose vous-même et c'est repris ;
-- ce qui est éteint le reste jusqu'à la fin de la fenêtre.
+- un occupant déjà présent au début de la plage n'est pas mis au silence : il
+  fait tourner la maison, même avec un appareil éteint. Celui qui rentre dans une
+  maison vide après le début reste silencieux jusqu'à la fin de la plage.
 
 Les fenêtres peuvent franchir minuit et portent des jours de semaine. Un foyer
 qui se couche à neuf heures en semaine et à onze heures le week-end en règle
@@ -689,7 +691,8 @@ il intervient malgré tout dès qu'une limite de temps expire.
   qui tourne à ce moment-là continue donc simplement ; si vous voulez tout
   éteindre, éteignez-le vous-même.
 - **Mode invités** (`switch.*_mode_invites`) : quelqu'un de non suivi loge là,
-  donc « maison vide » ne dit rien. Le sommeil des présents s'applique toujours,
+  donc « maison vide » ne dit rien. Dans la fenêtre invités, le mode invités lève
+  aussi la plage de silence. Le sommeil des présents s'applique toujours,
   et hors de la fenêtre invités, les portes ordinaires reprennent le relais.
 - **Programme vacances** (`switch.*_planning_de_vacances`) : chaque jour compte
   comme un samedi, ou comme sa propre fenêtre de vacances. S'active aussi tout

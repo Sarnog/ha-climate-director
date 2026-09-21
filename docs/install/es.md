@@ -446,7 +446,9 @@ Es un freno al **arranque**, no a la continuación:
 
 - lo que ya funciona sigue regulado;
 - enciende algo tú mismo y se retoma;
-- lo que está apagado sigue apagado hasta que pase la ventana.
+- quien ya estaba en casa cuando empezó la franja no se silencia: sigue
+  haciendo funcionar la casa, incluso con un aparato apagado. Quien llega a una
+  casa vacía después del inicio permanece en silencio hasta que la franja termina.
 
 Las ventanas pueden cruzar la medianoche y llevan días de la semana. Un hogar
 que se acuesta a las nueve entre semana y a las once el fin de semana pone dos:
@@ -675,7 +677,8 @@ interviene en cuanto vence un límite de tiempo.
   que esté funcionando en ese momento sigue funcionando; si quieres apagarlo
   todo, apágalo tú mismo.
 - **Modo invitados** (`switch.*_modo_invitados`): hay alguien no seguido alojado,
-  así que «casa vacía» no dice nada. El sueño de los presentes sigue contando, y
+  así que «casa vacía» no dice nada. Dentro de la ventana de invitados, el modo
+  invitados también levanta la franja de silencio. El sueño de los presentes sigue contando, y
   fuera de la ventana de invitados toman el relevo las puertas normales.
 - **Horario de vacaciones** (`switch.*_horario_de_vacaciones`): cada día cuenta como
   sábado, o como su propia ventana de vacaciones. También se activa solo en

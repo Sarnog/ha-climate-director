@@ -439,7 +439,9 @@ Het is een rem op **beginnen**, niet op doorgaan:
 
 - wat al draait blijft gewoon geregeld;
 - zet je zelf iets aan, dan wordt dat opgepakt;
-- wat uit staat blijft uit tot het venster voorbij is.
+- wie al thuis was toen het venster begon, wordt niet stilgezet: die houdt
+  het huis aan de gang, ook met een apparaat dat uit stond. Wie in een leeg huis
+  ná het begin thuiskomt, blijft stil tot het venster afloopt.
 
 Vensters mogen over middernacht lopen en kennen weekdagen. Een huishouden dat
 doordeweeks om negen uur naar bed gaat en in het weekend om elf uur, zet er
@@ -668,7 +670,8 @@ grijpt hij toch in zodra een tijdsgrens verstrijkt.
   op dat moment draait blijft dus gewoon draaien; wil je alles uit, zet het
   dan zelf uit.
 - **Gastenmodus** (`switch.*_gastenmodus`): er logeert iemand die niet gevolgd
-  wordt, dus "huis leeg" zegt niets. Slaap van wie thuis is blijft gelden, en
+  wordt, dus "huis leeg" zegt niets. Binnen het gastenvenster heft de
+  gastenmodus ook het stiltevenster op. Slaap van wie thuis is blijft gelden, en
   buiten het gastenvenster nemen de gewone poorten het over.
 - **Vakantieschema** (`switch.*_vakantieschema`): elke dag telt als zaterdag,
   of als het eigen vakantievenster. Gaat ook vanzelf aan zodra een ingestelde

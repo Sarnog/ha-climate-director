@@ -440,7 +440,7 @@
       },
       "quiets": {
         "title": "Plages de silence",
-        "description": "Heures pendant lesquelles le directeur ne démarre rien de lui-même. Rentrer à onze heures du soir alors qu'on va se coucher n'oblige pas à chauffer la maison.\n\nCela freine le démarrage, pas la poursuite : ce qui tourne déjà reste régulé et s'éteint au coucher comme d'habitude, et ce que vous allumez vous-même est repris et poursuivi. Sans plage, le frein est relâché.",
+        "description": "Heures pendant lesquelles le directeur ne démarre rien de lui-même. Rentrer à onze heures du soir alors qu'on va se coucher n'oblige pas à chauffer la maison.\n\nCela freine le démarrage, pas la poursuite : ce qui tourne déjà reste régulé et s'éteint au coucher comme d'habitude, et ce que vous allumez vous-même est repris et poursuivi. Sans plage, le frein est relâché. Est freiné celui qui rentre après le début de la plage ; un occupant déjà présent fait tourner la maison - et les invités dans la plage des invités aussi.",
         "data": {
           "quiet": "Plage"
         },
@@ -450,7 +450,7 @@
       },
       "quiet": {
         "title": "Plage de silence",
-        "description": "Heures pendant lesquelles le directeur ne démarre rien de lui-même. Rentrer à onze heures du soir alors qu'on va se coucher n'oblige pas à chauffer la maison.\n\nCela freine le démarrage, pas la poursuite : ce qui tourne déjà reste régulé et s'éteint au coucher comme d'habitude, et ce que vous allumez vous-même est repris et poursuivi. Sans plage, le frein est relâché.",
+        "description": "Heures pendant lesquelles le directeur ne démarre rien de lui-même. Rentrer à onze heures du soir alors qu'on va se coucher n'oblige pas à chauffer la maison.\n\nCela freine le démarrage, pas la poursuite : ce qui tourne déjà reste régulé et s'éteint au coucher comme d'habitude, et ce que vous allumez vous-même est repris et poursuivi. Sans plage, le frein est relâché. Est freiné celui qui rentre après le début de la plage ; un occupant déjà présent fait tourner la maison - et les invités dans la plage des invités aussi.",
         "data": {
           "start": "Silence à partir de",
           "end": "Silence jusqu'à",
@@ -460,8 +460,8 @@
           "holiday": "Ceci est une plage de vacances"
         },
         "data_description": {
-          "start": "Entre ces heures le directeur ne démarre rien de lui-même. Une plage peut franchir minuit : 21:00 à 09:00 est la nuit.",
-          "end": "Entre ces heures le directeur ne démarre rien de lui-même. Une plage peut franchir minuit : 21:00 à 09:00 est la nuit.",
+          "start": "Entre ces heures le directeur ne démarre rien de lui-même, sauf pour les occupants déjà présents au début de la plage. Une plage peut franchir minuit : 21:00 à 09:00 est la nuit.",
+          "end": "Entre ces heures le directeur ne démarre rien de lui-même, sauf pour les occupants déjà présents au début de la plage. Une plage peut franchir minuit : 21:00 à 09:00 est la nuit.",
           "weekdays": "Laisser vide vaut tous les jours.",
           "delete": "Supprime cette fenêtre, de sorte que le directeur puisse de nouveau démarrer quelque chose pendant ces heures.",
           "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",

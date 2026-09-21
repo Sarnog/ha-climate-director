@@ -232,7 +232,66 @@ RETRACTED: tuple[Claim, ...] = (
             "es": "Guardar de todos modos",
         },
     ),
+    Claim(
+        name="wat uit staat blijft uit",
+        reason=(
+            "sinds anker 13 remt het stiltevenster alleen wie er ná het begin thuiskomt: wie al "
+            "thuis was houdt het huis aan de gang, ook met een apparaat dat uit stond, en een "
+            "gast binnen het gastenvenster net zo"
+        ),
+        anchor=(
+            "anker 13 in `ARCHITECTURE.md` en de drie uitzonderingen in `_quiet_hours` "
+            "(`engine/gates.py`)"
+        ),
+        needles={
+            "nl": "wat uit staat blijft uit tot het venster voorbij is",
+            "en": "whatever is off stays off until the window has passed",
+            "strings": "whatever is off stays off until the window has passed",
+            "de": "was aus ist, bleibt aus, bis das Fenster vorbei ist",
+            "fr": "ce qui est éteint le reste jusqu'à la fin de la fenêtre",
+            "es": "lo que está apagado sigue apagado hasta que pase la ventana",
+            "ar": "ما هو مطفأ يبقى مطفأً حتى تمر النافذة",
+        },
+    ),
 )
+
+#: De nieuwe regel van anker 13 per taal, als twee zinsdelen: één voor de gids en
+#: één voor het tekstbestand van die taal. De schermwoorden en de gidswoorden zijn
+#: niet identiek - het scherm zegt "wie ná het begin thuiskomt wordt geremd", de
+#: gids zegt "wie al thuis was wordt niet stilgezet" - dus meet deze bewaking ze
+#: allebei. Alleen groter worden, met een reden.
+#:
+#: Anchor 13's new rule per language, as two fragments: one for the guide and one
+#: for that language's text file. The screen words and the guide words are not
+#: identical - the screen says "whoever comes home after the beginning is braked",
+#: the guide says "whoever was already home is not silenced" - so this guard
+#: measures both. Only ever larger, with a reason.
+NEW_RULE: dict[str, tuple[str, str]] = {
+    "nl": (
+        "wie al thuis was toen het venster begon, wordt niet stilgezet",
+        "wie ná het begin van het venster thuiskomt, wordt geremd",
+    ),
+    "en": (
+        "whoever was already home when the window began is not silenced",
+        "whoever comes home after the window began is braked",
+    ),
+    "de": (
+        "wer schon zu hause war, als das fenster begann, wird nicht stillgelegt",
+        "gebremst wird, wer nach dem beginn des fensters heimkommt",
+    ),
+    "fr": (
+        "un occupant déjà présent au début de la plage n'est pas mis au silence",
+        "est freiné celui qui rentre après le début de la plage",
+    ),
+    "es": (
+        "quien ya estaba en casa cuando empezó la franja no se silencia",
+        "se frena a quien llega a casa después del inicio de la franja",
+    ),
+    "ar": (
+        "من كان في البيت أصلاً عند بداية النافذة لا يُسكَتَ عنه",
+        "يُكبح من يعود بعد بداية النافذة",
+    ),
+}
 
 
 def leaves(node: object, path: str = "") -> dict[str, str]:
@@ -332,3 +391,68 @@ def test_the_guard_reads_seven_files_and_six_guides() -> None:
     for language in LANGUAGES:
         assert (INSTALL / f"{language}.md").exists(), f"{language}.md niet gevonden"
     assert len(RETRACTED) >= 4, "de ratel hoort de ingetrokken beweringen te dragen"
+
+
+def _draagt(texts: dict[str, str], name: str, needle: str) -> bool:
+    """Staat dit zinsdeel ergens in de teksten van dit bestand?
+
+    Does this fragment stand anywhere in this file's texts?
+
+    Hoofdletterongevoelig, en zonder leestekens: de naald is een zinsdeel, geen
+    hele zin (dezelfde regel als bij de ingetrokken beweringen). Zoekt over alle
+    sleutels van dat bestand heen, want het zinsdeel mag in elke sleutel staan -
+    alleen het bestand en de taal liggen vast.
+    """
+    return any(
+        needle.lower() in text.lower() for key, text in texts.items() if key.startswith(name)
+    )
+
+
+@pytest.mark.parametrize("language", LANGUAGES)
+def test_the_new_quiet_rule_stands_in_every_language(language: str) -> None:
+    """Elke taal draagt de nieuwe regel van anker 13, in gids én tekstbestand.
+
+    Every language carries anchor 13's new rule, in guide and text file.
+
+    Waarom dit een tekstbewaking is: de eigenschap is letterlijk "deze taal zegt
+    het". Er is geen runtime-object dat het kan weerspreken - wat de engine doet is
+    in `test_quiet_windows.py` en `test_quiet_windows_live.py` gemeten, en dit gaat
+    over de woorden die de gebruiker leest. Zonder deze bewaking drijven de zes
+    gidsen en de zeven bestanden uit elkaar: vijf talen bijgewerkt en één vergeten
+    is precies wat een gebruiker in die taal op het verkeerde been zet.
+
+    Per taal worden **twee** zinsdelen geëist, want het scherm en de gids zeggen
+    hetzelfde in andere woorden: het scherm noemt wie ná het begin thuiskomt (dat
+    is de rem), de gids noemt wie al thuis was (dat is de uitzondering). Beide zijn
+    even waar, en een bewaking die er één meet laat de andere kant verdwijnen.
+    Engels wordt ook in `strings.json` geëist, want dat is de bron van de zeven
+    bestanden.
+
+    Why this is a text guard: the property is literally "this language says it". No
+    runtime object can contradict it - what the engine does is measured in
+    `test_quiet_windows.py` and `test_quiet_windows_live.py`, and this is about the
+    words the user reads. Without this guard the six guides and the seven files
+    drift apart: five languages updated and one forgotten is exactly what puts a
+    user of that language on the wrong foot.
+
+    Per language **two** fragments are demanded, because the screen and the guide say
+    the same thing in different words: the screen names whoever comes home after the
+    beginning (that is the brake), the guide names whoever was already home (that is
+    the exception). Both are equally true, and a guard measuring one of them lets the
+    other side disappear. English is demanded in `strings.json` too, since that is
+    the source of the seven files.
+    """
+    texts = corpus()
+    in_gids, in_bestand = NEW_RULE[language]
+    missing: list[str] = []
+    if not _draagt(texts, f"{language}.md", in_gids):
+        missing.append(f"{language}.md: {in_gids!r}")
+    if not _draagt(texts, f"{language}.json", in_bestand):
+        missing.append(f"{language}.json: {in_bestand!r}")
+    if language == "en" and not _draagt(texts, "strings.json", in_bestand):
+        missing.append(f"strings.json: {in_bestand!r}")
+    assert not missing, (
+        "deze taal noemt de nieuwe stilte-regel van anker 13 niet "
+        "(wie ná het begin thuiskomt wordt geremd, wie al thuis was niet):"
+        + chr(10).join(["", *missing])
+    )

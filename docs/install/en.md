@@ -439,7 +439,9 @@ It is a brake on **starting**, not on continuing:
 
 - whatever already runs stays regulated;
 - switch something on yourself and it is picked up;
-- whatever is off stays off until the window has passed.
+- whoever was already home when the window began is not silenced: they keep
+  the house going, even with an appliance that was off. Whoever comes home to an
+  empty house after the beginning stays quiet until the window has passed.
 
 Windows may cross midnight and carry weekdays. A household turning in at nine on
 weekdays and at eleven at weekends sets two:
@@ -664,7 +666,8 @@ limit expires.
   Whatever is running at that moment simply keeps running; if you want it all
   off, switch it off yourself.
 - **Guest mode** (`switch.*_guest_mode`): somebody untracked is staying, so
-  "house empty" says nothing. Sleep of those who are home still applies, and
+  "house empty" says nothing. Inside the guest window guest mode lifts the
+  quiet window too. Sleep of those who are home still applies, and
   outside the guest window the ordinary gates take over.
 - **Holiday schedule** (`switch.*_holiday_schedule`): every day counts as a
   Saturday, or as its own holiday window. It also switches on by itself once a
