@@ -15,7 +15,21 @@ vormen hij toetst:
   *sí misma* (Spaans) **in dezelfde zin**, en alleen wanneer daar precies één
   schermwoord uit de lijst in staat. Met twee schermwoorden in één zin kan de
   bewaking niet zien waar het voornaamwoord naar wijst en zwijgt hij liever dan
-  te gokken — dat is de bewuste, smalle kant van deze regel.
+  te gokken — dat is de bewuste, smalle kant van deze regel;
+- het **voltooid deelwoord** na een hulpwerkwoord van zijn, maar alleen wanneer
+  het schermwoord met zijn eigen lidwoord **direct vóór** dat hulpwerkwoord
+  staat: *la dérogation a été posée*, *la zone est activée*, *le contournement
+  est activé*. Frans toetst de uitgangen `-é`/`-és` (mannelijk) tegen `-ée`/
+  `-ées` (vrouwelijk), Spaans `-ado`/`-ados`/`-ido`/`-idos` tegen `-ada`/
+  `-adas`/`-ida`/`-idas`. De bewaking eist die vaste volgorde — lidwoord,
+  schermwoord, hulpwerkwoord, deelwoord — en dat is de smalle kant: een
+  deelwoord verderop in dezelfde zin wordt **niet** getoetst, want daar beslist
+  zijn eigen onderwerp. Dat is geen zuinigheid maar gemeten: in *rien ne s'est
+  passé* naast de tabelrij *Préparation refusée*, in *{openings} est ignoré*
+  naast *{zone}* en in *La porte de planning est activée* is het deelwoord goed
+  en het schermwoord toevallig mede-aanwezig. Een bijvoeglijk naamwoord dat
+  los achter het zelfstandig naamwoord staat (*une zone actif*) valt er ook
+  buiten, om dezelfde reden.
 
 De vergelijking is hoofdletterongevoelig, zodat een kop die met het schermwoord
 begint niet langs de bewaking glipt. Meervouden staan er niet bij waar het
@@ -37,10 +51,22 @@ word (French *le/la*, *un/une*, *ce/cette*; Spanish *el/la*, *un/una*,
 sentence, and only when exactly one screen word from the list stands in it. With
 two screen words in one sentence the guard cannot tell what the pronoun points
 at and prefers to stay silent rather than guess — that is the deliberate, narrow
-side of this rule. The comparison is case-insensitive, plurals are listed only
-where the determiner still carries a gender (Spanish *las* against *los*), and
-German does not take part because its cases make *der Übersteuerung* correct in
-the dative.
+side of this rule. The **past participle** after an auxiliary of *être* is
+checked too, but only when the screen word with its own determiner stands
+**directly before** that auxiliary: *la dérogation a été posée*, *la zone est
+activée*, *le contournement est activé*. French checks the endings
+`-é`/`-és` (masculine) against `-ée`/`-ées` (feminine), Spanish
+`-ado`/`-ados`/`-ido`/`-idos` against `-ada`/`-adas`/`-ida`/`-idas`. That fixed
+order — determiner, screen word, auxiliary, participle — is the narrow side: a
+participle further along in the same sentence is **not** checked, because there
+its own subject decides. That is measured, not thrift: in *rien ne s'est passé*
+next to the table row *Préparation refusée*, in *{openings} est ignoré* next to
+*{zone}*, and in *La porte de planning est activée* the participle is right and
+the screen word merely happens to be nearby. An adjective standing loose behind
+the noun (*une zone actif*) stays outside for the same reason. The comparison is
+case-insensitive, plurals are listed only where the determiner still carries a
+gender (Spanish *las* against *los*), and German does not take part because its
+cases make *der Übersteuerung* correct in the dative.
 """
 
 from __future__ import annotations
@@ -133,6 +159,38 @@ REFLEXIVES: dict[str, tuple[str, dict[str, str]]] = {
 #: inside its own clause, and loose fragments in a table row are not sentences.
 CLAUSE_END = re.compile(r"[.;!?\u2026\n]")
 
+#: Het voltooid deelwoord bij het schermwoord: het hulpwerkwoord van zijn en de
+#: uitgangen die geslacht dragen. Alleen de `-é`-familie (Frans) en de
+#: `-ado`/`-ido`-familie (Spaans) staan erin; de uitgangen `-i`/`-u` van de
+#: onregelmatige deelwoorden blijven erbuiten omdat woorden als *ainsi*, *ici* en
+#: *aussi* dan valse positieven geven. De volgorde waarin de bewaking zoekt staat
+#: in de docstring boven deze lijsten.
+#:
+#: The past participle with the screen word: the auxiliary of *être* and the
+#: endings that carry a gender. Only the `-é` family (French) and the
+#: `-ado`/`-ido` family (Spanish) are in it; the `-i`/`-u` endings of the
+#: irregular participles stay out because words like *ainsi*, *ici* and *aussi*
+#: would then give false positives.
+PARTICIPLES: dict[str, tuple[str, dict[str, str]]] = {
+    "fr": (
+        r"(?:a été|ont été|est|sont|reste|restent)",
+        {"é": "m", "és": "m", "ée": "v", "ées": "v"},
+    ),
+    "es": (
+        r"(?:ha sido|han sido|está|están|fue|fueron|estaba|estaban)",
+        {
+            "ado": "m",
+            "ados": "m",
+            "ada": "v",
+            "adas": "v",
+            "ido": "m",
+            "idos": "m",
+            "ida": "v",
+            "idas": "v",
+        },
+    ),
+}
+
 
 def leaves(node: object, path: str = "") -> dict[str, str]:
     """Return every text in the file, keyed by its dotted path."""
@@ -198,21 +256,55 @@ def wrong_reflexives(language: str, text: str) -> list[str]:
     return wrong
 
 
+def wrong_participles(language: str, text: str) -> list[str]:
+    """Elk voltooid deelwoord dat niet bij zijn schermwoord past.
+
+    Alleen de vaste volgorde *lidwoord - schermwoord - hulpwerkwoord -
+    deelwoord* telt; een deelwoord verderop in dezelfde zin blijft ongetoetst,
+    want daar beslist zijn eigen onderwerp. Zie de docstring boven de lijsten.
+
+    Every past participle that does not fit its screen word.
+
+    Only the fixed order *determiner - screen word - auxiliary - participle*
+    counts; a participle further along in the same sentence stays unchecked,
+    because there its own subject decides. See the docstring above the lists.
+    """
+    if language not in PARTICIPLES:
+        return []
+    auxiliary, endings = PARTICIPLES[language]
+    longest_first = sorted(endings, key=len, reverse=True)
+    wrong = []
+    for word, gender in SCREEN_NOUNS[language]:
+        for determiner in DETERMINERS[language][gender]:
+            pattern = re.compile(
+                rf"\b{determiner}\s+{re.escape(word)}\s+{auxiliary}\s+([a-zà-ÿ]+)\b",
+                re.IGNORECASE,
+            )
+            for match in pattern.finditer(text):
+                form = match.group(1).lower()
+                ending = next((e for e in longest_first if form.endswith(e)), None)
+                if ending is not None and endings[ending] != gender:
+                    wrong.append(f"{word}: {match.group(0)}")
+    return wrong
+
+
 @pytest.mark.parametrize("language", sorted(SCREEN_NOUNS))
 def test_screen_nouns_keep_their_gender(language: str) -> None:
     """Een schermwoord houdt zijn geslacht, in de gids én in het vertaalbestand.
 
     Zie de docstring boven de lijsten: getoetst worden het lidwoord, het
-    onbepaald lidwoord en het aanwijzend voornaamwoord direct vóór het woord, en
-    het wederkerend voornaamwoord in dezelfde zin wanneer daar precies één
-    schermwoord in staat. De zes gidsen en de zeven vertaalbestanden zijn de
-    teksten die een gebruiker leest; een fout geslacht staat daar letterlijk op
-    het scherm.
+    onbepaald lidwoord en het aanwijzend voornaamwoord direct vóór het woord, het
+    wederkerend voornaamwoord in dezelfde zin wanneer daar precies één
+    schermwoord in staat, en het voltooid deelwoord wanneer het schermwoord met
+    zijn eigen lidwoord direct vóór het hulpwerkwoord staat. De zes gidsen en de
+    zeven vertaalbestanden zijn de teksten die een gebruiker leest; een fout
+    geslacht staat daar letterlijk op het scherm.
 
     A screen word keeps its gender, in the guide and in the translation file.
     See the docstring above the lists: what is checked is the determiner directly
-    before the word and the reflexive pronoun in the same sentence when exactly
-    one screen word stands in it.
+    before the word, the reflexive pronoun in the same sentence when exactly
+    one screen word stands in it, and the past participle when the screen word
+    with its own determiner stands directly before the auxiliary.
     """
     problems: list[str] = []
     for where, texts in texts_of(language).items():
@@ -221,5 +313,7 @@ def test_screen_nouns_keep_their_gender(language: str) -> None:
                 for found in wrong_determiners(language, text, word, gender):
                     problems.append(f"{where}: {found!r} — {word!r} is {gender}")
             for found in wrong_reflexives(language, text):
+                problems.append(f"{where}: {found}")
+            for found in wrong_participles(language, text):
                 problems.append(f"{where}: {found}")
     assert not problems, "een schermwoord houdt zijn geslacht:\n" + "\n".join(problems)

@@ -836,7 +836,7 @@ d'une zone se termine. C'est tout ce qu'il faut à une carte minuteur : avec
 `mode: timestamp`, la carte lit l'état comme heure de fin, et `unknown` signifie
 qu'il n'y a rien à décompter — pas de dérogation, une dérogation sans durée, ou une qui
 vient d'expirer. L'attribut `start_time` porte le moment où la dérogation a été
-posé ; c'est la valeur par défaut de `start_time_attr`, et la carte l'utilise pour
+posée ; c'est la valeur par défaut de `start_time_attr`, et la carte l'utilise pour
 son anneau de progression.
 
 Voici ce tableau de bord : d'abord un bouton qui lance la dérogation, en dessous la
