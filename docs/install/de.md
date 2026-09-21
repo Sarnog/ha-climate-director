@@ -448,7 +448,7 @@ Es ist eine Bremse fürs **Starten**, nicht fürs Weitermachen:
 
 - was bereits läuft, bleibt geregelt;
 - schaltest du selbst etwas ein, wird das aufgegriffen;
-- wer schon zu Hause war, als das Fenster begann, wird nicht stillgelegt: er
+- wer schon zu Hause war, als das Fenster begann, wird nicht gebremst: er
   hält das Haus in Gang, auch mit einem Gerät, das aus war. Wer in ein leeres Haus
   nach dem Beginn heimkommt, bleibt still, bis das Fenster vorbei ist.
 

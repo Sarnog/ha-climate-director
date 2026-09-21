@@ -276,7 +276,7 @@ NEW_RULE: dict[str, tuple[str, str]] = {
         "whoever comes home after the window began is braked",
     ),
     "de": (
-        "wer schon zu hause war, als das fenster begann, wird nicht stillgelegt",
+        "wer schon zu hause war, als das fenster begann, wird nicht gebremst",
         "gebremst wird, wer nach dem beginn des fensters heimkommt",
     ),
     "fr": (
