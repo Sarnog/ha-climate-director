@@ -18,6 +18,13 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 
 ## Should have
 
+- **De maandsimulatie dekt `within_deadband` niet meer** — sinds anker 13 verwarmt dat huis
+  's nachts door waar het eerst stilviel, en de uitkomst `within_deadband` kwam in de
+  gemeten maand niet meer voor (18 vóór anker 13, 0 erna, op bijna 40.000 beslissingen; de
+  nacht wordt nu door de slaappoort tegengehouden). De dekking blijft rechtstreeks via
+  `test_hysteresis.py` en `test_heating_layout.py`, maar een maandscenario dat de dode band
+  weer raakt — een bewoner die laat thuiskomt, of een fijnere tijdstap — zou die ratel
+  sterker maken dan de uitzondering die er nu in `test_month_simulation.py` bij staat.
 - **Virtuele `climate` per zone** — één bedieningsentiteit per ruimte, waarmee de gewenste
   temperatuur en stand rechtstreeks op een gewone thermostaatkaart te bedienen zijn. De
   director kiest daar dan de bron bij.
@@ -157,6 +164,14 @@ The worked-out design proposals for everything below live in
 
 ## Should have
 
+- **The month simulation no longer covers `within_deadband`** — since anchor 13 that house
+  keeps heating at night where it first fell silent, and the outcome `within_deadband` no
+  longer occurred in the measured month (18 before anchor 13, 0 after, against nearly
+  40,000 decisions; the night is now held back by the sleep gate). The coverage remains
+  head-on through `test_hysteresis.py` and `test_heating_layout.py`, but a month scenario
+  that hits the deadband again — a resident coming home late, or a finer time step — would
+  make that ratchet stronger than the exception it carries in `test_month_simulation.py`
+  now.
 - **A virtual `climate` per zone** — one control entity per room, so the target temperature
   and mode can be set straight from an ordinary thermostat card. The director then picks the
   source to match.

@@ -446,8 +446,8 @@ is erger dan de gezonde zones bedienen en de rest melden.
 `WorldState` is naast de configuratie de enige invoer. De engine leest nooit zelf
 entiteiten uit. Bevat onder meer de buitentemperatuur, binnentemperatuur per zone, de
 toestand van elke `climate`-entiteit (inclusief `changed_at` voor
-kortcyclusbescherming), bewoners, openingen en per circuit wanneer de huidige taak
-begon.
+kortcyclusbescherming), bewoners (met `home_since`: wanneer iemand thuiskwam),
+openingen en per circuit wanneer de huidige taak begon.
 
 ### gates.py — mag het
 
@@ -719,12 +719,14 @@ die in `engine/`.
 
 De klasse is in vieren geknipt; drie delen staan op zichzelf. `state_store.py`
 bewaart, herstelt en quarantaineert wat een mens met de hand heeft gezegd — een
-vooruit-verzoek en een apparaat dat iemand zelf uitzette —, `preconditions.py`
+vooruit-verzoek en een apparaat dat iemand zelf uitzette — en draagt het
+thuiskomstmoment (`home_since`), dat vervalt voor wie weg is, `preconditions.py`
 beheert de vooruit-verzoeken en hun timers, en `world_builder.py` bouwt de
-momentopname met zijn lezers; de coordinator zelf luistert, beslist, voert uit
-en publiceert.
+momentopname met zijn lezers, waarin `reads_as_home` de enige plek is die een
+aanwezigheidsentiteit als thuis leest; de coordinator zelf luistert, beslist, voert
+uit en publiceert.
 
-Drie dingen zijn er subtiel aan:
+Vier dingen zijn er subtiel aan:
 
 - **Alles in lokale, tijdzonebewuste tijd.** Roostervensters worden in lokale tijd gelezen,
   terwijl tijdstempels van entiteiten in UTC binnenkomen. Die twee mengen zou de leeftijd
@@ -732,6 +734,10 @@ Drie dingen zijn er subtiel aan:
 - **Circuitgeschiedenis komt uit waarnemingen, niet uit het vorige plan.** Een unit die
   iemand met de afstandsbediening omzet verandert de taak van een circuit net zo goed als
   de director, en de minimale-looptijdtimer hoort dat te respecteren.
+- **Het thuiskomstmoment komt uit bewegingen, niet uit een lezing.** Wie thuiskomt zet het
+  moment, wie weggaat verliest het, en bij het opstarten vult de opslag het aan of valt het
+  terug op `last_changed` van de aanwezigheidsentiteit. Eén moment voor de stiltepoort én
+  voor de bestaande slaap-vs-thuiskomst-vergelijking, en in de diagnose gelakt.
 - **Eén event per zone, en alleen bij verandering.** Er wordt herrekend bij elke
   toestandswijziging van elke gevolgde entiteit; elke keer vuren zou elke automatisering
   die erop luistert verzuipen.
@@ -1593,8 +1599,9 @@ worse than serving the sound zones and reporting the rest.
 
 `WorldState` is the only input besides the configuration. The engine never reads entities
 itself. It carries the outdoor temperature, indoor temperature per zone, the state of
-every `climate` entity (including `changed_at` for short-cycle protection), residents,
-openings, and when each circuit took on its current duty.
+every `climate` entity (including `changed_at` for short-cycle protection), residents
+(with `home_since`: when somebody came home), openings, and when each circuit took on its
+current duty.
 
 ### gates.py — is it allowed
 
@@ -1861,11 +1868,13 @@ in `engine/`.
 
 The class is cut into four; three parts stand on their own. `state_store.py` stores,
 restores and quarantines what a person said by hand — a pre-conditioning request and an
-appliance somebody switched off —, `preconditions.py` manages the pre-conditioning
-requests and their timers, and `world_builder.py` builds the snapshot with its readers;
-the coordinator itself listens, decides, executes and publishes.
+appliance somebody switched off — and carries the homecoming moment (`home_since`), which
+lapses for whoever is away, `preconditions.py` manages the pre-conditioning requests and
+their timers, and `world_builder.py` builds the snapshot with its readers, in which
+`reads_as_home` is the only place reading a presence entity as home; the coordinator itself
+listens, decides, executes and publishes.
 
-Three things about it are subtle:
+Four things about it are subtle:
 
 - **Everything in local, timezone-aware time.** Schedule windows are read in local time,
   while entity timestamps arrive in UTC. Mixing the two would put an open door's age hours
@@ -1873,6 +1882,10 @@ Three things about it are subtle:
 - **Circuit history comes from observation, not from the previous plan.** A unit somebody
   switches by remote changes a circuit's duty just as effectively as the director does, and
   the minimum-run timer has to respect that.
+- **The homecoming moment comes from movements, not from a reading.** Whoever comes home
+  sets the moment, whoever leaves loses it, and at startup the store fills it in or it falls
+  back on the presence entity's `last_changed`. One moment for the quiet gate and for the
+  existing sleep-versus-homecoming comparison, and redacted in the diagnostics.
 - **One event per zone, and only on change.** A decision is recomputed on every state change
   of every tracked entity; firing each time would drown any automation listening for it.
 
