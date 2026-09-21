@@ -53,7 +53,7 @@ geen gebruikersweergave.
 Een uitspraak in deze engine hangt altijd aan één ding, en welk ding dat is, is
 een ontwerpbesluit. Waar dat besluit niet opgeschreven stond, is het in vier
 achtereenvolgende reparatierondes telkens één stap opgeschoven — smal, dan te
-breed, dan weer terug. Deze twaalf ankers staan daarom hier, vóór alle modules.
+breed, dan weer terug. Deze dertien ankers staan daarom hier, vóór alle modules.
 Wijk er niet van af zonder ze hier eerst te wijzigen.
 
 1. **Een lopend vooruit-verzoek** is één begrip in de hele engine:
@@ -284,6 +284,47 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     nooit uit zichzelf terug naar koelen. En is de vervangende bron zélf
     onbereikbaar, dan valt er niets over te nemen: er wordt niets stilgezet en
     de gewone bronkeuze doet zijn werk.
+13. **Een stiltevenster remt alleen wie er ná het begin van dat venster
+    thuiskomt.** Was minstens één bewoner al thuis vóórdat het venster begon, dan
+    is er geen stilte: de zones regelen gewoon door, ook als hun apparaat op dat
+    moment toevallig uit stond. Komt er in een leeg huis iemand thuis ná het
+    begin, dan blijft het stil tot het venster afloopt — precies het gedrag van
+    vóór dit anker. Dit anker maakt het stiltevenster dus **smaller**: het remt
+    niet langer iedereen, alleen nog thuiskomers; het lege huis met een aankomst
+    ná het begin dekt de andere kant en blijft stil.
+    Twee losse voorwaarden, en het hoeven niet dezelfde bewoners te zijn: "iemand
+    was al thuis vóór het begin" en "iemand is nu wakker". De slaappoort
+    (`EVERYONE_ASLEEP`, `WAITING_FOR_SLEEPER`) blijft ongewijzigd en doet het
+    tweede; dit anker gaat alleen over thuis-sinds.
+    Het thuiskomstmoment staat per bewoner (`home_since`) en overleeft een
+    herstart van Home Assistant: het wordt bewaard en teruggelezen, een herstart
+    genereert **geen** nieuw moment, en wie bij het terugkomen niet meer thuis is
+    verliest het. Zonder opgeslagen moment valt de lezer terug op HA's
+    `last_changed` van de aanwezigheidsentiteit; direct ná een herstart is dat het
+    herstartmoment, en dan telt de bewoner tot het einde van het venster als "net
+    thuis" — de stille, veilige kant, die hoogstens één keer bijt.
+    Gastenmodus heft de stilte op, maar alleen binnen het gastenvenster:
+    `_guests_carry_the_house` zegt al precies wanneer gasten het huis dragen, en
+    buiten dat venster gelden de gewone regels.
+    Wat "vóór het begin" betekent: `home_since` ligt vóór het begin van de
+    **lopende venstervoorkomst**. Precies op het begin (21:00:00) telt als ná het
+    begin. Een venster over middernacht begint op zijn startdag — om 02:00 dinsdag
+    is het begin maandag 21:00 — en voor een vakantievenster (`holiday`,
+    `any_day`) geldt hetzelfde met de dag waarop het venster begon. Wie ná het
+    begin vertrekt en weer terugkomt is een thuiskomer: het moment vervalt bij
+    vertrek en wordt bij terugkomst opnieuw gezet.
+    Eén `home_since` per bewoner, en **beide** lezers gebruiken hem:
+    `gates._quiet_hours` en de slaap-vs-thuiskomst-vergelijking in
+    `world_builder._resident` (een slaapmelding telt alleen als hij van ná de
+    thuiskomst is). Na een herstart met een opgeslagen moment is
+    `sleeper.last_changed` (het herstartmoment) ≥ dat moment, dus de slaapmelding
+    telt — dezelfde uitkomst als vóór dit anker.
+    De bestaande uitzonderingen blijven precies zoals ze zijn: een open
+    roostervenster van een bewoner die thuis is, en een lopend vooruit-verzoek.
+    De zonepoort (`PRESENCE`, de zolder) verandert niet: de stilte is huisbreed,
+    en de kamerpoort blijft ná de stilte gelden.
+    `home_since` is "wie was wanneer thuis" en wordt in de diagnose **gelakt**,
+    net als `home` en `asleep`.
 
 ### De belangrijkste scheidslijn
 
@@ -469,6 +510,13 @@ het apparaat wacht `OPENING_MIN_REST` (drie minuten) vanaf de stop, met een
 `Deferral` (`SHORT_CYCLE_PROTECTION`) waar de coordinator vanzelf op terugkomt. De stop
 zelf wordt nooit uitgesteld, en een vooruit-verzoek waarop iemand uitdrukkelijk "toch
 doen" zei passeert de rem, precies zoals het de poort zelf passeert.
+
+De **stiltevensters** remmen het beginnen, niet het doorgaan: wat al draait houdt zijn
+gewone regeling. Sinds anker 13 kennen ze drie uitzonderingen, in deze volgorde:
+gastenmodus binnen het gastenvenster (`_guests_carry_the_house`), een bewoner die al
+thuis was vóór het begin van dit venster (`home_since < started_at`), en het bestaande
+open roostervenster van een bewoner die thuis is. Wie in een leeg huis ná het begin
+thuiskomt, blijft stil tot het venster afloopt; dat is de andere kant van anker 13.
 
 ### hysteresis.py — moet het
 
@@ -1163,7 +1211,7 @@ other no user-facing display.
 A statement in this engine always hangs on one thing, and which thing that is, is
 a design decision. Wherever that decision was not written down, it shifted by one
 step in four successive repair rounds — narrow, then too broad, then back again.
-These twelve anchors therefore sit here, ahead of every module. Do not depart from
+These thirteen anchors therefore sit here, ahead of every module. Do not depart from
 them without changing them here first.
 
 1. **A running pre-conditioning request** is one concept throughout the engine:
@@ -1384,6 +1432,48 @@ them without changing them here first.
     control asks for it, but never returns to cooling by itself. And when the
     replacing source is itself unreachable there is nothing to take over:
     nothing is stood down and ordinary source selection does its work.
+13. **A quiet window brakes only whoever comes home *after* that window began.**
+    With at least one resident already home before the window began there is no
+    quiet: the zones simply carry on regulating, even when their appliance
+    happened to stand still at that moment. When somebody comes home to an empty
+    house after the beginning, it stays quiet until the window lapses — exactly
+    the behaviour from before this anchor. This anchor therefore makes the quiet
+    window **narrower**: it no longer brakes everybody, only homecomers; the
+    empty house with an arrival after the beginning covers the other side and
+    stays quiet.
+    Two separate conditions, and they need not be the same residents: "somebody
+    was already home before the beginning" and "somebody is awake now". The sleep
+    gate (`EVERYONE_ASLEEP`, `WAITING_FOR_SLEEPER`) is unchanged and does the
+    second; this anchor is only about home-since.
+    The homecoming moment lives per resident (`home_since`) and survives a
+    restart of Home Assistant: it is stored and read back, a restart generates
+    **no** new moment, and whoever is no longer home when it comes back loses it.
+    Without a stored moment the reader falls back to HA's `last_changed` of the
+    presence entity; right after a restart that is the restart moment, and then
+    the resident counts as "just home" until the window ends — the quiet, safe
+    side, which bites at most once.
+    Guest mode lifts the quiet, but only inside the guest window:
+    `_guests_carry_the_house` already says exactly when guests carry the house,
+    and outside that window the ordinary rules apply.
+    What "before the beginning" means: `home_since` lies before the start of the
+    **current window occurrence**. Exactly on the beginning (21:00:00) counts as
+    after it. A window crossing midnight begins on its start day — at 02:00 on
+    Tuesday the beginning is Monday 21:00 — and for a holiday window (`holiday`,
+    `any_day`) the same holds with the day the window began. Whoever leaves after
+    the beginning and comes back is a homecomer: the moment lapses on leaving and
+    is set again on returning.
+    One `home_since` per resident, and **both** readers use it:
+    `gates._quiet_hours` and the sleep-versus-homecoming comparison in
+    `world_builder._resident` (a sleep reading only counts when it postdates the
+    arrival). After a restart with a stored moment `sleeper.last_changed` (the
+    restart moment) is ≥ that moment, so the sleep reading counts — the same
+    outcome as before this anchor.
+    The existing exceptions stay exactly as they are: an open schedule window of
+    a resident who is home, and a running pre-conditioning request. The zone gate
+    (`PRESENCE`, the attic) does not change: the quiet is house-wide, and the room
+    gate still applies after the quiet.
+    `home_since` is "who was home when" and is **redacted** in the diagnostics,
+    just like `home` and `asleep`.
 
 ### The most important dividing line
 
@@ -1566,6 +1656,13 @@ appliance waits `OPENING_MIN_REST` (three minutes) from the stop, with a
 `Deferral` (`SHORT_CYCLE_PROTECTION`) the coordinator returns on by itself. The stop
 itself is never delayed, and a pre-conditioning request on which somebody expressly said
 "do it anyway" passes the brake, exactly as it passes the gate itself.
+
+The **quiet windows** brake starting, not continuing: whatever already runs keeps its
+ordinary regulation. Since anchor 13 they know three exceptions, in this order: guest
+mode inside the guest window (`_guests_carry_the_house`), a resident who was already
+home before this window began (`home_since < started_at`), and the existing open
+schedule window of a resident who is home. Whoever comes home to an empty house after
+the beginning stays quiet until the window lapses; that is the other side of anchor 13.
 
 ### hysteresis.py — is it needed
 
