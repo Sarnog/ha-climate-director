@@ -440,7 +440,7 @@
       },
       "quiets": {
         "title": "Quiet windows",
-        "description": "Hours in which the director starts nothing of its own accord. Coming home at eleven at night when you are about to turn in need not fire the boiler.\n\nThis brakes starting, not continuing: whatever already runs stays regulated and goes off at bedtime as usual, and switching something on yourself is picked up and carried on. Set no windows and the brake is off. Whoever comes home after the window began is braked; whoever was already home keeps the house going - and so do guests inside the guest window. Whoever comes home after the window began is braked; whoever was already home keeps the house going - and so do guests inside the guest window.",
+        "description": "Hours in which the director starts nothing of its own accord. Coming home at eleven at night when you are about to turn in need not fire the boiler.\n\nThis brakes starting, not continuing: whatever already runs stays regulated and goes off at bedtime as usual, and switching something on yourself is picked up and carried on. Set no windows and the brake is off. Whoever comes home after the window began is braked; whoever was already home keeps the house going - and so do guests inside the guest window.",
         "data": {
           "quiet": "Window"
         },
@@ -450,7 +450,7 @@
       },
       "quiet": {
         "title": "Quiet window",
-        "description": "Hours in which the director starts nothing of its own accord. Coming home at eleven at night when you are about to turn in need not fire the boiler.\n\nThis brakes starting, not continuing: whatever already runs stays regulated and goes off at bedtime as usual, and switching something on yourself is picked up and carried on. Set no windows and the brake is off. Whoever comes home after the window began is braked; whoever was already home keeps the house going - and so do guests inside the guest window. Whoever comes home after the window began is braked; whoever was already home keeps the house going - and so do guests inside the guest window.",
+        "description": "Hours in which the director starts nothing of its own accord. Coming home at eleven at night when you are about to turn in need not fire the boiler.\n\nThis brakes starting, not continuing: whatever already runs stays regulated and goes off at bedtime as usual, and switching something on yourself is picked up and carried on. Set no windows and the brake is off. Whoever comes home after the window began is braked; whoever was already home keeps the house going - and so do guests inside the guest window.",
         "data": {
           "start": "Quiet from",
           "end": "Quiet until",
