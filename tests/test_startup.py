@@ -55,6 +55,9 @@ class StandIn:
     def _note_precipitation_now(self) -> None:
         self.precipitation_noted += 1
 
+    def _note_home_now(self) -> None:
+        """Deze stand-in houdt geen bewoners bij; de stap hoort wel op het pad."""
+
     async def _async_evaluate(self) -> None:
         self.evaluated += 1
 

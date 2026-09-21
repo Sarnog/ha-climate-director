@@ -55,7 +55,10 @@ def handed_back(home) -> set[str]:
     now = coordinator_module.dt_util.now()
     residents = {
         resident.resident_id: coordinator._resident(
-            resident.presence_entity, resident.sleep_entity, resident.sleep_state
+            resident.resident_id,
+            resident.presence_entity,
+            resident.sleep_entity,
+            resident.sleep_state,
         )
         for resident in coordinator.config.residents
     }

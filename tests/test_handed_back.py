@@ -170,6 +170,18 @@ def coordinator(
             self.config = cfg or config(with_residents=bool(states))
             self.zone_overrides: dict[str, bool] = {}
             self._handed_back: dict[str, date] = {}
+            self._home_since: dict[str, datetime] = {}
+            """Leeg: deze stand-in meet de overdracht, niet het stiltevenster.
+
+            `_resident` leest sinds anker 13 het thuiskomstmoment uit de boekhouding
+            van de coördinator. Zonder moment leest een bewoner die thuis is als
+            slapend zodra zijn slaapsensor dat zegt.
+
+            Empty: this stand-in measures the hand-back, not the quiet window. Since
+            anchor 13 `_resident` reads the homecoming moment from the coordinator's
+            bookkeeping. Without a moment a resident who is home reads as asleep
+            whenever their sleep sensor says so.
+            """
             self._commanded_off: dict[str, datetime] = {}
             self._sent_setpoints: dict[str, tuple[str, float]] = {}
             # `data` is het gepubliceerde besluit, `_issued` het besluit dat op
@@ -209,7 +221,11 @@ def coordinator(
         def _residents(self):
             return {
                 resident.resident_id: ClimateDirectorCoordinator._resident(
-                    self, resident.presence_entity, resident.sleep_entity, resident.sleep_state
+                    self,
+                    resident.resident_id,
+                    resident.presence_entity,
+                    resident.sleep_entity,
+                    resident.sleep_state,
                 )
                 for resident in self.config.residents
             }
@@ -784,7 +800,7 @@ class TestAPresenceSensorIsHome:
 
     def test_the_engine_reads_on_as_home(self) -> None:
         item = self._item()
-        assert item._resident("binary_sensor.danny_thuis", "", "on").home is True
+        assert item._resident("danny", "binary_sensor.danny_thuis", "", "on").home is True
 
     def test_the_layer_does_not_see_an_empty_house(self) -> None:
         item = self._item()

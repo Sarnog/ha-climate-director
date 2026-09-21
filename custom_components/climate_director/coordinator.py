@@ -88,6 +88,7 @@ from .world_builder import (
     _as_modes,
     _unreadable,
     _WorldBuilderMixin,
+    reads_as_home,
     season_from_state,
     temperature_from_state,
 )
@@ -182,6 +183,7 @@ class CoordinatorSurface(Protocol):
     _pending_override: dict[str, Change]
     _store: Store[dict[str, Any]]
     _handed_back: dict[str, date]
+    _home_since: dict[str, datetime]
     _precipitation_seen_at: datetime | None
     _cancel_precondition_wake: CALLBACK_TYPE | None
     _cancel_override_wake: CALLBACK_TYPE | None
@@ -393,6 +395,26 @@ class ClimateDirectorCoordinator(
         """
         self._family_since: dict[str, datetime | None] = {}
         self._family_seen: dict[str, ModeFamily] = {}
+        self._home_since: dict[str, datetime] = {}
+        """Wanneer elke bewoner thuiskwam, en alleen voor wie er nu is.
+
+        Anker 13: het stiltevenster remt alleen wie er ná zijn begin thuiskomt, en
+        dit is het moment waarmee dat gemeten wordt - één moment voor de
+        stiltepoort én voor de bestaande slaap-vs-thuiskomst-vergelijking. Het
+        wordt gevuld door de toestandswijziging van de aanwezigheidsentiteit
+        (thuis worden), door het herstel uit de opslag, en bij het opstarten door
+        de terugval op `last_changed`. Wie weggaat verliest zijn moment: weg is
+        weg, en een moment voor iemand die er niet is zou de poort op een leugen
+        laten rusten.
+
+        Anchor 13: the quiet window brakes only whoever comes home after it began,
+        and this is the moment that measures it - one moment for the quiet gate
+        and for the existing sleep-versus-homecoming comparison. It is filled by
+        the presence entity's state change (coming home), by the restore from
+        storage, and at startup by the fallback to `last_changed`. Whoever leaves
+        loses their moment: away is away, and a moment for somebody who is not
+        there would rest the gate on a lie.
+        """
         self._precipitation_seen_at: datetime | None = None
         """Wanneer de neerslagbron voor het laatst neerslag meldde.
 
@@ -500,6 +522,7 @@ class ClimateDirectorCoordinator(
         try:
             await self._async_restore_state()
             self._note_precipitation_now()
+            self._note_home_now()
             await self._async_evaluate()
         except Exception:
             _LOGGER.exception("The first decision of %s failed", self.name)
@@ -582,8 +605,63 @@ class ClimateDirectorCoordinator(
     def _handle_change(self, event: Event[EventStateChangedData]) -> None:
         """Queue a fresh decision after a tracked entity changed."""
         self._notice_precipitation(event)
+        self._notice_home(event)
         self._notice_hand(event)
         self._debouncer.async_schedule_call()
+
+    @callback
+    def _notice_home(self, event: Event[EventStateChangedData]) -> None:
+        """Record when a resident comes home, and forget it when they leave.
+
+        Anker 13: het moment waarop iemand thuiskwam is wat het stiltevenster
+        onderscheidt van "er is iemand thuis", en het hoort hier - in de
+        toestandswijziging van de aanwezigheidsentiteit zelf, niet in een lezer
+        die alleen een antwoord teruggeeft. Alleen een **overgang** telt: iemand
+        die thuis is en wiens entiteit opnieuw gemeld wordt (een GPS-sprietje,
+        een herstelde stand) is geen thuiskomer, en zou met een vers moment het
+        huis de hele nacht laten doorstoken. Wie weggaat verliest zijn moment.
+
+        Het moment is `last_changed` van de entiteit zelf, niet `dt_util.now()`:
+        dat is precies het moment van de overgang, en het is hetzelfde moment dat
+        de slaap-vs-thuiskomst-vergelijking al las. Eén tijdbasis voor beide
+        lezers.
+
+        Anchor 13: the moment somebody came home is what separates the quiet
+        window from "somebody is home", and it belongs here - in the presence
+        entity's own state change, not in a reader that only hands back an answer.
+        Only a **transition** counts: somebody who is home and whose entity is
+        reported again (GPS jitter, a restored state) is not a homecomer, and a
+        fresh moment would let the house keep heating all night. Whoever leaves
+        loses their moment.
+
+        The moment is the entity's own `last_changed`, not `dt_util.now()`: that is
+        exactly the moment of the transition, and it is the same moment the
+        sleep-versus-homecoming comparison already read. One time base for both
+        readers.
+        """
+        entity_id = event.data["entity_id"]
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
+        now_home = reads_as_home(new_state)
+        changed = False
+        # Geen `return` bij de eerste treffer: twee bewoners mogen dezelfde
+        # aanwezigheidsentiteit delen (een "is er iemand thuis"-sensor), en dan
+        # hoort elk van hen het moment te krijgen. Eén schrijfactie na de lus.
+        #
+        # No `return` on the first hit: two residents may share one presence entity
+        # (an "is anybody home" sensor), and then each of them should get the
+        # moment. One write after the loop.
+        for resident in self.config.residents:
+            if resident.presence_entity != entity_id:
+                continue
+            if now_home:
+                if not reads_as_home(old_state):
+                    self._home_since[resident.resident_id] = new_state.last_changed
+                    changed = True
+            elif self._home_since.pop(resident.resident_id, None) is not None:
+                changed = True
+        if changed:
+            self._async_save_state()
 
     @callback
     def _notice_precipitation(self, event: Event[EventStateChangedData]) -> None:
@@ -1523,6 +1601,41 @@ class ClimateDirectorCoordinator(
         state = self.hass.states.get(settings.source)
         if state is not None and state.state in settings.states:
             self._precipitation_seen_at = dt_util.now()
+
+    def _note_home_now(self) -> None:
+        """Fill in the homecoming moments this process has not seen yet.
+
+        Anker 13, besluit 4: de listener ziet alleen overgangen, en wie al thuis
+        was toen dit proces begon heeft er geen gehad. Zonder deze stap zouden al
+        die bewoners een onbekend moment hebben, en dan remt het stiltevenster
+        voor hen - terwijl zij er juist al zaten. De terugval is `last_changed`
+        van de aanwezigheidsentiteit: bij een eerste start is dat "net thuis", en
+        dan blijft het stil tot het venster afloopt. Hooguit één keer, want zodra
+        de bewoner beweegt neemt de listener het over.
+
+        Er wordt niets overschreven: een moment uit de opslag blijft staan, ook
+        als het ouder is dan `last_changed` - dat is precies het verschil dat
+        besluit 3 wil. En er wordt niets gevuld voor wie niet thuis is.
+
+        Anchor 13, decision 4: the listener only sees transitions, and whoever was
+        already home when this process started had none. Without this step all
+        those residents would have an unknown moment, and then the quiet window
+        brakes for them - while they were the ones already sitting there. The
+        fallback is the presence entity's `last_changed`: on a first start that is
+        "just home", and then it stays quiet until the window has passed. At most
+        once, since the listener takes over as soon as the resident moves.
+
+        Nothing is overwritten: a moment from storage stays, even when it is older
+        than `last_changed` - that is exactly the difference decision 3 wants. And
+        nothing is filled in for whoever is not home.
+        """
+        for resident in self.config.residents:
+            if resident.resident_id in self._home_since:
+                continue
+            presence = resident.presence_entity
+            state = self.hass.states.get(presence) if presence else None
+            if reads_as_home(state):
+                self._home_since[resident.resident_id] = state.last_changed
 
     # -- circuitgeschiedenis / circuit history -------------------------------
 

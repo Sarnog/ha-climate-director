@@ -36,6 +36,10 @@ from custom_components.climate_director.engine.world import (
 
 NOW = datetime(2026, 8, 21, 12, 0)
 
+#: Het thuiskomstmoment van anker 13 in deze momentopname: drie uur geleden.
+#: The anchor 13 homecoming moment in this snapshot: three hours ago.
+HOURS = timedelta(hours=3)
+
 
 def _full_world() -> WorldState:
     """Return a snapshot in which every field carries a recognisable value."""
@@ -53,7 +57,7 @@ def _full_world() -> WorldState:
                 changed_at=NOW - timedelta(minutes=3),
             )
         },
-        residents={"danny": ResidentState(home=True, asleep=False)},
+        residents={"danny": ResidentState(home=True, asleep=False, home_since=NOW - HOURS)},
         openings={"binary_sensor.raam": OpeningState(open=False, changed_at=None)},
         presence={"woonkamer": PresenceState(occupied=True, changed_at=NOW - timedelta(minutes=5))},
         circuit_family_since={"c1": NOW - timedelta(minutes=10)},
@@ -111,6 +115,7 @@ class TestTheWorldIsComplete:
         data = _world(_full_world())
         assert data is not None
         assert data["presence"]["woonkamer"]["occupied"] is True
+        assert data["residents"]["danny"]["home_since"] == (NOW - HOURS).isoformat()
         assert data["precondition_until"]["woonkamer"] == (NOW + timedelta(minutes=30)).isoformat()
         assert data["precondition_bypass"] == ["woonkamer"]
         assert data["opening_bypasses"] == ["achterdeur"]
@@ -231,7 +236,9 @@ class TestThePrivacyRedaction:
         from homeassistant.components.diagnostics.util import REDACTED
 
         assert data["world"]["presence"] == REDACTED
-        assert data["world"]["residents"] == {"danny": {"home": REDACTED, "asleep": REDACTED}}
+        assert data["world"]["residents"] == {
+            "danny": {"home": REDACTED, "asleep": REDACTED, "home_since": REDACTED}
+        }
         assert data["installation"]["zones"][0]["presence_entity"] == REDACTED
         resident = data["installation"]["residents"][0]
         for key in (

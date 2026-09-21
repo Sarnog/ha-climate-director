@@ -208,6 +208,7 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
             self._precondition: dict[str, datetime] = {}
             self._precondition_bypass: set[str] = set()
             self._precipitation_seen_at: datetime | None = None
+            self._home_since: dict[str, datetime] = {}
             self._handed_back: dict = {}
             self._waiting: dict = {}
             self._refused: set[str] = set()
@@ -540,7 +541,7 @@ class TestComingHomeIsNotSleeping:
     """
 
     def _world(self, home_at: datetime, charging_since: datetime) -> WorldState:
-        return coordinator(
+        item = coordinator(
             {
                 "sensor.buiten": FakeState("7.5"),
                 "sensor.woonkamer": FakeState("19.0"),
@@ -553,7 +554,18 @@ class TestComingHomeIsNotSleeping:
                 "binary_sensor.achterdeur": FakeState("off"),
                 "binary_sensor.zolder": FakeState("on"),
             }
-        ).build_world()
+        )
+        # Het thuiskomstmoment komt sinds anker 13 uit de boekhouding van de
+        # coördinator (`_home_since`), en daar legt de listener precies het
+        # tijdstempel van de aanwezigheidsentiteit in. Deze opstelling zet dat moment
+        # er dus zelf in; zonder moment zou een lezing altijd tellen.
+        #
+        # Since anchor 13 the homecoming moment comes from the coordinator's
+        # bookkeeping (`_home_since`), and that is exactly where the listener puts the
+        # presence entity's timestamp. This setup therefore puts that moment in
+        # itself; without a moment a reading would always count.
+        item._home_since["danny"] = home_at
+        return item.build_world()
 
     def test_a_reading_from_before_the_arrival_does_not_count(self) -> None:
         world = self._world(

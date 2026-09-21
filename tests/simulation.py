@@ -704,6 +704,22 @@ class _HandStandIn:
         self.shadow = False
         self.zone_overrides: dict[str, bool] = {}
         self._handed_back: dict[str, object] = {}
+        self._home_since: dict[str, datetime] = {}
+        """Leeg: deze stand-in leest alleen welke zones er zijn overgedragen.
+
+        `_resident` leest sinds anker 13 het thuiskomstmoment uit de boekhouding van
+        de coördinator. Zonder moment leest een bewoner die thuis is als slapend
+        zodra zijn slaapsensor dat zegt - en dat is precies wat de simulatie altijd
+        al mat, want daar stond `last_changed` van iedere entiteit op het begin van
+        de tijd en bij gelijke tijdstempels telt de melding.
+
+        Empty: this stand-in only reads which zones were handed over. Since anchor
+        13 `_resident` reads the homecoming moment from the coordinator's
+        bookkeeping. Without a moment a resident who is home reads as asleep
+        whenever their sleep sensor says so - which is exactly what the simulation
+        always measured, since there every entity's `last_changed` sat at the
+        beginning of time and on equal timestamps the reading counts.
+        """
         self._commanded_off: dict[str, object] = {}
         self._sent_setpoints: dict[str, tuple[str, float]] = {}
         self.saved = 0
@@ -734,7 +750,11 @@ class _HandStandIn:
         now = coordinator_module.dt_util.now()
         residents = {
             resident.resident_id: ClimateDirectorCoordinator._resident(
-                self, resident.presence_entity, resident.sleep_entity, resident.sleep_state
+                self,
+                resident.resident_id,
+                resident.presence_entity,
+                resident.sleep_entity,
+                resident.sleep_state,
             )
             for resident in self.config.residents
         }

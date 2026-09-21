@@ -68,24 +68,29 @@ async def async_get_config_entry_diagnostics(
         "would_change": [change.entity_id for change in coordinator.last_changes],
         "did_change": [change.entity_id for change in coordinator.last_applied],
     }
-    # `home`/`asleep` zitten in de wereldmomentopname, `presence` (met
-    # `occupied` en tijdstempel) ook, en `presence_entity`/`sleep_entity`/
+    # `home`/`asleep`/`home_since` zitten in de wereldmomentopname, `presence`
+    # (met `occupied` en tijdstempel) ook, en `presence_entity`/`sleep_entity`/
     # `windows`/`sleep_window`/`wake_deadline` in de installatie: precies het
     # bewonersprofiel
-    # dat hierboven benoemd is. `occupied` staat er apart bij voor het geval
+    # dat hierboven benoemd is. `home_since` is "wie was wanneer thuis" en is
+    # daarmee net zo goed een bewonersgegeven als `home` zelf - het zegt wanneer
+    # iemand thuiskwam. `occupied` staat er apart bij voor het geval
     # kameraanwezigheid ooit buiten `presence` om wordt weggeschreven.
     #
-    # `home`/`asleep` sit in the world snapshot, `presence` (with `occupied`
-    # and its timestamp) too, and `presence_entity`/`sleep_entity`/`windows`/
-    # `sleep_window`/`wake_deadline` in the installation: exactly the resident
-    # profile named
-    # above. `occupied` is listed separately in case room presence is ever
-    # written outside `presence`.
+    # `home`/`asleep`/`home_since` sit in the world snapshot, `presence` (with
+    # `occupied` and its timestamp) too, and `presence_entity`/`sleep_entity`/
+    # `windows`/`sleep_window`/`wake_deadline` in the installation: exactly the
+    # resident profile named
+    # above. `home_since` is "who was home when" and therefore just as much a
+    # resident fact as `home` itself - it says when somebody came home.
+    # `occupied` is listed separately in case room presence is ever written
+    # outside `presence`.
     return async_redact_data(
         found,
         [
             "home",
             "asleep",
+            "home_since",
             "presence",
             "occupied",
             "presence_entity",
@@ -117,7 +122,11 @@ def _world(world: WorldState | None) -> dict[str, Any] | None:
             for entity_id, state in world.climates.items()
         },
         "residents": {
-            resident_id: {"home": state.home, "asleep": state.asleep}
+            resident_id: {
+                "home": state.home,
+                "asleep": state.asleep,
+                "home_since": state.home_since.isoformat() if state.home_since else None,
+            }
             for resident_id, state in world.residents.items()
         },
         "openings": {

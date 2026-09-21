@@ -208,9 +208,21 @@ FUNCTION_LIMIT = 80
 # second time, and then the two could drift apart. `engine/gates.py` stays under
 # 700 with the three exceptions in it, `engine/world.py` with
 # `ResidentState.home_since` too.
+#
+# Anker 13, koppelingslaag: `coordinator.py` 1852 → 1965 door de boekhouding
+# `_home_since` (vullen bij een thuiskomst, wissen bij vertrek, terugval bij het
+# opstarten) met de uitleg erbij waarom één moment voor beide lezers, plus
+# `world_builder.reads_as_home` als de enige plek die een aanwezigheidsentiteit als
+# thuis leest - drie aanroepers, één statenlijst.
+#
+# Anchor 13, binding layer: `coordinator.py` 1852 → 1965 through the `_home_since`
+# bookkeeping (fill on a homecoming, clear on leaving, fallback at startup) with the
+# explanation of why one moment for both readers, plus `world_builder.reads_as_home`
+# as the only place reading a presence entity as home - three callers, one state
+# list.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2198,
-    "coordinator.py": 1852,
+    "coordinator.py": 1965,
     "engine/decide.py": 1677,
     "config_flow.py": 1451,
     "schemas.py": 900,
@@ -219,20 +231,39 @@ MODULE_EXCEPTIONS: dict[str, int] = {
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_build_commands"): 202,
     ("engine/decide.py", "_generator_commands"): 192,
-    ("coordinator.py", "__init__"): 198,
+    ("coordinator.py", "__init__"): 218,
     ("engine/models.py", "_rule_zones"): 142,
     ("engine/constraints.py", "resolve"): 128,
+    ("engine/decide.py", "_collect_wishes"): 126,
     ("coordinator.py", "_refusal_data"): 119,
     ("coordinator.py", "_notice_hand"): 117,
-    ("engine/decide.py", "_collect_wishes"): 126,
-    ("engine/decide.py", "_manual_conflict"): 103,
     ("engine/decide.py", "_build_zone_decisions"): 111,
+    ("engine/decide.py", "_manual_conflict"): 103,
+    ("state_store.py", "_async_restore_state"): 102,
     ("schemas.py", "resident"): 98,
     ("engine/hysteresis.py", "_candidate"): 97,
     ("config_flow.py", "async_step_resident"): 91,
     ("engine/decide.py", "_resolve_with_fallbacks"): 87,
     ("preconditions.py", "async_precondition"): 83,
 }
+
+# Anker 13 (het thuiskomstmoment): `coordinator.py` 1852 → 1957 en zijn `__init__`
+# 198 → 218 door de boekhouding `_home_since` met de docstring die opschrijft waar
+# het moment vandaan komt en wie het verliest, plus `_notice_home` met dezelfde
+# uitleg. `state_store.py::_async_restore_state` komt er voor het eerst boven de 80
+# (102) doordat het herstel er een blok bij kreeg dat het moment alleen terugzet
+# voor een bewoner die thuis is - met de vergevingsgezindheid van de rest erbij.
+# Alle drie zijn ze lineair uitgelegd, geen diep vertakte functies; de grens is een
+# leesbaarheidsgrens en deze uitleg hoort bij de code.
+#
+# Anchor 13 (the homecoming moment): `coordinator.py` 1852 → 1957 and its `__init__`
+# 198 → 218 through the `_home_since` bookkeeping with the docstring stating where
+# the moment comes from and who loses it, plus `_notice_home` with the same
+# explanation. `state_store.py::_async_restore_state` crosses 80 for the first time
+# (102) because the restore gained a block that only puts the moment back for a
+# resident who is home - with the rest's forgiveness included. All three are linear
+# explanations, not deeply branched functions; the limit is a readability limit and
+# this explanation belongs with the code.
 
 
 def _python_files(root: Path) -> list[Path]:

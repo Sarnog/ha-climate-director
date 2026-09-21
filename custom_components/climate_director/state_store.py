@@ -26,6 +26,7 @@ from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
 from . import problems
+from .world_builder import reads_as_home
 
 if TYPE_CHECKING:
     from .coordinator import CoordinatorSurface
@@ -58,11 +59,26 @@ class _StateStoreMixin(_CoordinatorBase):
     # -- met de hand gegeven, dus bewaren / given by hand, so kept ----------
 
     def _store_payload(self) -> dict[str, Any]:
-        """Return the hand-given state worth keeping across a restart."""
+        """Return the hand-given state worth keeping across a restart.
+
+        Sinds anker 13 staat ook het thuiskomstmoment erin: dat is wat een
+        herstart van een thuiskomst onderscheidt. Alleen voor wie op dit moment
+        thuis is - wie weg is heeft geen moment (besluit 3), en dat blijkt hier
+        vanzelf, want de listener en het herstel halen het er dan al uit.
+
+        Since anchor 13 the homecoming moment is in here too: that is what
+        separates a restart from a homecoming. Only for whoever is home right
+        now - somebody away has no moment (decision 3), and that shows here by
+        itself, since the listener and the restore have already taken it out.
+        """
         return {
             "until": {zone_id: until.isoformat() for zone_id, until in self._precondition.items()},
             "bypass": sorted(self._precondition_bypass),
             "handed_back": {zone_id: day.isoformat() for zone_id, day in self._handed_back.items()},
+            "home_since": {
+                resident_id: since.isoformat()
+                for resident_id, since in getattr(self, "_home_since", {}).items()
+            },
             "override_until": {
                 zone_id: until.isoformat()
                 for zone_id, until in getattr(self, "zone_override_until", {}).items()
@@ -136,6 +152,22 @@ class _StateStoreMixin(_CoordinatorBase):
         niets, dus de opslagversie hoeft er niet voor omhoog: er valt niets te
         migreren aan een sleutel die er niet was.
 
+        Het thuiskomstmoment (anker 13) komt alleen terug voor een bewoner die op
+        dit moment thuis **is**: wie weg is heeft geen moment, en er een bewaren
+        zou een leeg huis laten doen alsof er iemand zat. Een onbekende bewoner,
+        een onparseerbare tijd of een waarde met een andere vorm telt als
+        afwezig - geen reden om de opslag opzij te zetten.
+
+        An older file carries no `handed_back` yet. That simply reads as
+        nothing, so the storage version need not go up for it: there is nothing
+        to migrate about a key that was never there.
+
+        The homecoming moment (anchor 13) only comes back for a resident who **is**
+        home right now: somebody away has no moment, and keeping one for them would
+        let an empty house pretend somebody was sitting there. An unknown resident,
+        an unparseable time or a value of a different shape counts as absent - not
+        as a reason to put the store aside.
+
         Elk veld wordt net zo vergevingsgezind gelezen als `serialise.py`: een
         waarde met een andere vorm dan verwacht telt als afwezig, niet als
         reden om de hele integratie stil te leggen. Alleen een bestand dat in
@@ -192,6 +224,19 @@ class _StateStoreMixin(_CoordinatorBase):
                 day = dt_util.parse_date(str(raw))
                 if day == today:
                     self._handed_back[zone_id] = day
+
+        home_raw = stored.get("home_since")
+        if isinstance(home_raw, Mapping):
+            presence = {
+                resident.resident_id: resident.presence_entity for resident in self.config.residents
+            }
+            for resident_id, raw in home_raw.items():
+                if resident_id not in presence:
+                    continue
+                since = dt_util.parse_datetime(str(raw))
+                if since is None or not reads_as_home(self.hass.states.get(presence[resident_id])):
+                    continue
+                self._home_since[resident_id] = since
 
         if hasattr(self, "_restore_overrides"):
             self._restore_overrides(stored, now)
