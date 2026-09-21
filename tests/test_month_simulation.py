@@ -380,7 +380,6 @@ class TestTheMonthExercisedTheEngine:
     EXPECTED = (
         Reason.REGULATING,
         Reason.SATISFIED,
-        Reason.WITHIN_DEADBAND,
         Reason.MASTER_DISABLED,
         Reason.MANUAL_OVERRIDE,
         Reason.OPENING_OPEN,
@@ -400,10 +399,30 @@ class TestTheMonthExercisedTheEngine:
     #: verwarmingskant - `_best_refusal` kiest die - dus als zone-reden is hij
     #: in dit huis onbereikbaar. `test_hysteresis.py` dekt hem rechtstreeks.
     #:
+    #: `within_deadband` staat er sinds anker 13 ook niet meer bij. Sinds het
+    #: stiltevenster alleen nog thuiskomers remt, verwarmt dit huis 's nachts
+    #: door waar het eerst stilviel, en komt de kamer veel vaker op de
+    #: streefwaarde uit - en dan is de uitkomst `satisfied`, niet
+    #: `within_deadband`. Gemeten over deze maand: 18 vóór anker 13, 0 erna, op
+    #: een totaal van bijna 40.000 beslissingen; de nacht wordt nu door de
+    #: slaappoort tegengehouden (`everyone_asleep` 2965 -> 7805) in plaats van
+    #: door het venster (`quiet_hours` 4794 -> 202). `test_hysteresis.py` dekt
+    #: deze uitkomst rechtstreeks, drie keer, en `test_heating_layout.py` ook.
+    #:
     #: `season_blocks_mode` is deliberately absent. A zone allowed to both heat
     #: and cool always reports the heating refusal - `_best_refusal` picks that
     #: one - so as a zone reason it is unreachable in this house.
     #: `test_hysteresis.py` covers it head-on.
+    #:
+    #: `within_deadband` is no longer in the list either, since anchor 13. Now
+    #: that the quiet window brakes only homecomers this house keeps heating at
+    #: night where it first fell silent, and the room reaches its target far more
+    #: often - and then the outcome is `satisfied`, not `within_deadband`.
+    #: Measured over this month: 18 before anchor 13, 0 after, against a total of
+    #: nearly 40,000 decisions; the night is now held back by the sleep gate
+    #: (`everyone_asleep` 2965 -> 7805) instead of by the window (`quiet_hours`
+    #: 4794 -> 202). `test_hysteresis.py` covers this outcome head-on, three
+    #: times, and `test_heating_layout.py` too.
 
     @pytest.mark.parametrize("reason", EXPECTED, ids=lambda reason: reason.value)
     def test_the_outcome_occurred(self, month: Simulation, reason: Reason) -> None:

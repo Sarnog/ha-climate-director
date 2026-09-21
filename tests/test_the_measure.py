@@ -193,8 +193,23 @@ FUNCTION_LIMIT = 80
 # `DataUpdateCoordinator`; an empty stub would make the concrete class abstract.
 # The repair lives in `overrides.py` (one publish method for the three paths) and
 # `switch.py` (the switch calls it) — both below their measure.
+# Anker 13 (het stiltevenster remt alleen thuiskomers): `engine/models.py` 2143 →
+# 2198 door `TimeWindow.started_at`, de methode die teruggeeft wanneer de lopende
+# voorkomst van een venster begon. Eén methode met de middernacht- en de
+# vakantievorm in de docstring; zonder die methode zou de poort dezelfde
+# middernachtberekening nog een keer opschrijven en dan kunnen de twee uit elkaar
+# lopen. `engine/gates.py` blijft onder de 700 met de drie uitzonderingen erin,
+# `engine/world.py` met `ResidentState.home_since` ook.
+#
+# Anchor 13 (the quiet window brakes only homecomers): `engine/models.py` 2143 →
+# 2198 through `TimeWindow.started_at`, the method returning when a window's
+# current occurrence began. One method with the midnight and the holiday shape in
+# its docstring; without it the gate would write that same midnight calculation a
+# second time, and then the two could drift apart. `engine/gates.py` stays under
+# 700 with the three exceptions in it, `engine/world.py` with
+# `ResidentState.home_since` too.
 MODULE_EXCEPTIONS: dict[str, int] = {
-    "engine/models.py": 2143,
+    "engine/models.py": 2198,
     "coordinator.py": 1852,
     "engine/decide.py": 1677,
     "config_flow.py": 1451,

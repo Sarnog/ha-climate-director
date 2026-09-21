@@ -170,6 +170,14 @@ class Simulation:
         self.reachable = dict.fromkeys(self.appliances, True)
 
         self.people = {resident.resident_id: [True, False] for resident in self.config.residents}
+        # Iedereen begint thuis, dus het thuiskomstmoment is het startmoment van
+        # de simulatie (anker 13); vertrek wist het en terugkomst zet het opnieuw.
+        #
+        # Everybody starts at home, so the homecoming moment is the simulation's
+        # own start (anchor 13); leaving clears it and coming back sets it again.
+        self.home_since: dict[str, datetime | None] = {
+            resident.resident_id: self.now for resident in self.config.residents
+        }
         self.open = dict.fromkeys(self.openings, False)
         self.opened_at: dict[str, datetime | None] = dict.fromkeys(self.openings, None)
         self.occupied = dict.fromkeys(self.presence_zones, False)
@@ -250,7 +258,9 @@ class Simulation:
             indoor_temperatures=dict(self.indoor),
             climates=self.climates,
             residents={
-                resident_id: ResidentState(home=home, asleep=asleep)
+                resident_id: ResidentState(
+                    home=home, asleep=asleep, home_since=self.home_since[resident_id]
+                )
                 for resident_id, (home, asleep) in self.people.items()
             },
             openings={
@@ -286,12 +296,23 @@ class Simulation:
             leaving = chance.leaving if 7 <= self.now.hour < 18 else chance.leaving / 10
             returning = chance.returning if 15 <= self.now.hour < 23 else chance.returning / 8
 
+            was_home = home
             if home and not asleep and self.random.random() < leaving:
                 home = False
                 self.events[f"{resident_id}_left"] += 1
             elif not home and self.random.random() < returning:
                 home = True
                 self.events[f"{resident_id}_home"] += 1
+
+            # Vertrek wist het thuiskomstmoment, terugkomst zet het opnieuw; wie
+            # blijft zitten houdt het zijne (anker 13).
+            #
+            # Leaving clears the homecoming moment, coming back sets it again;
+            # whoever stays put keeps theirs (anchor 13).
+            if home and not was_home:
+                self.home_since[resident_id] = self.now
+            elif was_home and not home:
+                self.home_since[resident_id] = None
 
             if home:
                 bedtime = self.now.hour >= 22 or self.now.hour < 7

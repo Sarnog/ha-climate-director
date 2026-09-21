@@ -150,19 +150,27 @@ def make_world(
     )
 
 
-def awake(home: bool = True) -> ResidentState:
-    """Return a resident who is up."""
-    return ResidentState(home=home, asleep=False)
+def awake(home: bool = True, *, home_since: datetime | None = None) -> ResidentState:
+    """Return a resident who is up.
+
+    `home_since` is the homecoming moment of anchor 13. It stays unknown by
+    default, and then a quiet window brakes exactly as it always did; whoever
+    passes a moment says since when this resident is home.
+    """
+    return ResidentState(home=home, asleep=False, home_since=home_since)
 
 
-def asleep(home: bool = True) -> ResidentState:
-    """Return a resident who is in bed."""
-    return ResidentState(home=home, asleep=True)
+def asleep(home: bool = True, *, home_since: datetime | None = None) -> ResidentState:
+    """Return a resident who is in bed; see `awake` for `home_since`."""
+    return ResidentState(home=home, asleep=True, home_since=home_since)
 
 
 def away() -> ResidentState:
-    """Return a resident who is out."""
-    return ResidentState(home=False, asleep=False)
+    """Return a resident who is out.
+
+    Somebody away carries no homecoming moment: it lapses on leaving (anchor 13).
+    """
+    return ResidentState(home=False, asleep=False, home_since=None)
 
 
 def everyone_up() -> dict[str, ResidentState]:

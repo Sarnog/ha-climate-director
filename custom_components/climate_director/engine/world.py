@@ -78,6 +78,21 @@ class ResidentState:
 
     home: bool = False
     asleep: bool = False
+    home_since: datetime | None = None
+    """Wanneer deze bewoner thuiskwam, of `None` als dat onbekend is.
+
+    Anker 13: het stiltevenster remt alleen wie er ná zijn begin thuiskomt, dus
+    de poort moet kunnen zien sinds wanneer iemand thuis is. De koppelingslaag
+    vult dit uit zijn eigen boekhouding (die een herstart overleeft) en valt
+    anders terug op `last_changed` van de aanwezigheidsentiteit; de engine
+    rekent ermee tegen `world.now` en vraagt nooit zelf aan Home Assistant.
+
+    Anchor 13: the quiet window brakes only whoever comes home after it began, so
+    the gate has to be able to see since when somebody is home. The binding layer
+    fills this from its own bookkeeping (which survives a restart) and otherwise
+    falls back to the presence entity's `last_changed`; the engine compares it
+    against `world.now` and never asks Home Assistant itself.
+    """
 
     @property
     def present_and_awake(self) -> bool:
