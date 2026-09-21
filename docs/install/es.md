@@ -681,7 +681,7 @@ interviene en cuanto vence un límite de tiempo.
   sábado, o como su propia ventana de vacaciones. También se activa solo en
   cuanto un calendario configurado tiene un evento en curso con la palabra
   clave. Sin palabra clave, los calendarios se ignoran.
-- **Override** (`switch.*_anulacion_<zone>`): devuelve una zona por completo a
+- **Anulación** (`switch.*_anulacion_<zone>`): devuelve una zona por completo a
   ti. El director no envía nada a esa zona — ni siquiera un apagado. Las reglas
   del circuito siguen aplicándose a las demás habitaciones. Se mantiene hasta
   que lo apagues tú mismo, también a través de la noche y de una casa vacía: es
@@ -730,7 +730,7 @@ fuente eligen el aparato. Si la habitación ya está bien, el aparato sigue
 apagado.
 
 Durante una petición de preacondicionamiento siguen aplicándose el interruptor
-principal, un override, la banda muerta, la estación, la ventana exterior por
+principal, una anulación, la banda muerta, la estación, la ventana exterior por
 fuente, puertas y ventanas, el circuito y los grupos exclusivos. Se omiten:
 *alguien en casa*, *despierto*, *horario*, *presencia en la habitación*, la
 ventana exterior por zona y la ventana silenciosa.
@@ -758,7 +758,7 @@ Cancélalo con `climate_director.cancel_precondition`.
 
 ## Una anulación con duración
 
-El interruptor de override de arriba te devuelve una zona hasta que tú mismo lo
+El interruptor de anulación de arriba te devuelve una zona hasta que tú mismo lo
 apagues. Si quieres ajustar una zona tú mismo durante una hora — «aire
 acondicionado del dormitorio, una hora a 18 °C» — eso es una sola acción, no un
 script con un temporizador al lado:
@@ -774,7 +774,7 @@ data:
 ```
 
 La acción hace tres cosas en la misma ronda de decisión: te entrega la zona (el
-interruptor de override se enciende), pone el aparato en el **Modo** y la
+interruptor de anulación se enciende), pone el aparato en el **Modo** y la
 **Temperatura** pedidos, y recuerda la **Duración**. Como la entrega y el modo
 van juntos, el director no puede volver a apagar tu petición entre medias. La
 duración sobrevive a un reinicio.
@@ -789,7 +789,7 @@ duración sobrevive a un reinicio.
 
 Al vencer, el director envía exactamente una orden según *Al vencer* y después
 vuelve a decidir sobre la zona con normalidad. Si entre medias apagas el
-interruptor de override a mano, o llamas a `climate_director.clear_override`,
+interruptor de anulación a mano, o llamas a `climate_director.clear_override`,
 la duración vence en silencio: no va ninguna orden al aparato, el director
 retoma la zona y solo apaga el aparato si su propia decisión lo exige. Una
 fuente con *Arrancar este aparato automáticamente* desactivado sigue por tanto
@@ -896,10 +896,10 @@ y solo el anillo de progreso se queda al principio hasta que expire.
   `climate_director.set_override` (ver arriba): una sola llamada entrega la
   zona y pone el aparato, y tras la duración el director recoge él mismo. Un
   script al lado que ponga el aparato directamente solo funciona si te
-  devuelves esa zona con el override durante ese tiempo; sin override, el
+  devuelves esa zona con la anulación durante ese tiempo; sin anulación, el
   director recalcula su propio plan en la siguiente evaluación y apaga tu
   aparato. Un aparato con *Arrancar este aparato automáticamente* desactivado
-  no necesita override.
+  no necesita anulación.
 - **Una habitación que manejas siempre tú mismo**: haz de ella una zona igual
   (si no, la integración no sabe de ese aparato), elige la entidad `climate.*`
   del propio aparato como sensor interior y desactiva *Arrancar este aparato

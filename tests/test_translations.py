@@ -361,6 +361,15 @@ TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
             "de interface noemt een vakantiedag *un día de vacaciones*; *un día festivo* is "
             "een feestdag",
         ),
+        (
+            r"\boverrides?\b",
+            "anulación",
+            "het scherm noemt de schakelaar *Anulación {zone}*, de eindtijdsensor *Fin de la "
+            "anulación {zone}* en de acties *Definir anulación* en *Terminar anulación*; "
+            "*override* is Engels en staat in geen enkele Spaanse schermtekst, in het "
+            "enkelvoud niet en in het meervoud niet. De dienstnamen `set_override` en "
+            "`clear_override` blijven Engels en vallen door de woordgrens buiten deze naald",
+        ),
     ),
     "ar": (
         (
