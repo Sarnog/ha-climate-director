@@ -440,7 +440,7 @@
       },
       "quiets": {
         "title": "Franjas de silencio",
-        "description": "Horas en las que el director no arranca nada por su cuenta. Llegar a casa a las once de la noche cuando te vas a acostar no obliga a calentar la casa.\n\nEsto frena el arranque, no la continuación: lo que ya funciona sigue regulado y se apaga al acostarse como siempre, y lo que enciendes tú se recoge y se sigue regulando. Sin franjas el freno está suelto. Se frena a quien llega a casa después del inicio de la franja; quien ya estaba hace funcionar la casa - y los invitados dentro de la franja de invitados también.",
+        "description": "Horas en las que el director no arranca nada por su cuenta. Llegar a casa a las once de la noche cuando te vas a acostar no obliga a calentar la casa.\n\nEsto frena el arranque, no la continuación: lo que ya funciona sigue regulado y se apaga al acostarse como siempre, y lo que enciendes tú se recoge y se sigue regulando. Sin franjas el freno está suelto. Se frena a quien llega a casa después del inicio de la franja; quien ya estaba hace funcionar la casa - y los invitados dentro de la ventana de invitados también.",
         "data": {
           "quiet": "Franja"
         },
@@ -450,7 +450,7 @@
       },
       "quiet": {
         "title": "Franja de silencio",
-        "description": "Horas en las que el director no arranca nada por su cuenta. Llegar a casa a las once de la noche cuando te vas a acostar no obliga a calentar la casa.\n\nEsto frena el arranque, no la continuación: lo que ya funciona sigue regulado y se apaga al acostarse como siempre, y lo que enciendes tú se recoge y se sigue regulando. Sin franjas el freno está suelto. Se frena a quien llega a casa después del inicio de la franja; quien ya estaba hace funcionar la casa - y los invitados dentro de la franja de invitados también.",
+        "description": "Horas en las que el director no arranca nada por su cuenta. Llegar a casa a las once de la noche cuando te vas a acostar no obliga a calentar la casa.\n\nEsto frena el arranque, no la continuación: lo que ya funciona sigue regulado y se apaga al acostarse como siempre, y lo que enciendes tú se recoge y se sigue regulando. Sin franjas el freno está suelto. Se frena a quien llega a casa después del inicio de la franja; quien ya estaba hace funcionar la casa - y los invitados dentro de la ventana de invitados también.",
         "data": {
           "start": "Silencio desde",
           "end": "Silencio hasta",
