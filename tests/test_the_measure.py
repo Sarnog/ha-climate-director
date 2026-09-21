@@ -209,11 +209,22 @@ FUNCTION_LIMIT = 80
 # 700 with the three exceptions in it, `engine/world.py` with
 # `ResidentState.home_since` too.
 #
-# Anker 13, koppelingslaag: `coordinator.py` 1852 → 1965 door de boekhouding
+# Anker 13, koppelingslaag: `coordinator.py` 1852 → 1972 door de boekhouding
 # `_home_since` (vullen bij een thuiskomst, wissen bij vertrek, terugval bij het
 # opstarten) met de uitleg erbij waarom één moment voor beide lezers, plus
 # `world_builder.reads_as_home` als de enige plek die een aanwezigheidsentiteit als
-# thuis leest - drie aanroepers, één statenlijst.
+# thuis leest - drie aanroepers, één statenlijst. Zeven regels daarvan zijn de
+# `TypeGuard`-toets die in de `if` moest staan in plaats van in een variabele: in
+# een variabele versmalt `mypy` hem niet en klaagde de bouwserver over
+# `State | None` (één `union-attr`, lokaal onzichtbaar).
+#
+# Anchor 13, binding layer: `coordinator.py` 1852 → 1972 through the `_home_since`
+# bookkeeping (fill on a homecoming, clear on leaving, fallback at startup) with the
+# explanation of why one moment for both readers, plus `world_builder.reads_as_home`
+# as the only place reading a presence entity as home - three callers, one state
+# list. Seven of those lines are the `TypeGuard` check that had to sit in the `if`
+# instead of in a variable: in a variable `mypy` does not narrow it and the build
+# server complained about `State | None` (one `union-attr`, invisible locally).
 #
 # Anchor 13, binding layer: `coordinator.py` 1852 → 1965 through the `_home_since`
 # bookkeeping (fill on a homecoming, clear on leaving, fallback at startup) with the
@@ -222,7 +233,7 @@ FUNCTION_LIMIT = 80
 # list.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2198,
-    "coordinator.py": 1965,
+    "coordinator.py": 1972,
     "engine/decide.py": 1677,
     "config_flow.py": 1451,
     "schemas.py": 900,

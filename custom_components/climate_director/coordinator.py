@@ -642,7 +642,6 @@ class ClimateDirectorCoordinator(
         entity_id = event.data["entity_id"]
         old_state = event.data["old_state"]
         new_state = event.data["new_state"]
-        now_home = reads_as_home(new_state)
         changed = False
         # Geen `return` bij de eerste treffer: twee bewoners mogen dezelfde
         # aanwezigheidsentiteit delen (een "is er iemand thuis"-sensor), en dan
@@ -654,9 +653,17 @@ class ClimateDirectorCoordinator(
         for resident in self.config.residents:
             if resident.presence_entity != entity_id:
                 continue
-            if now_home:
+            # De toets staat met opzet in de `if` en niet in een variabele: `mypy`
+            # versmalt een `TypeGuard` alleen daar, en in een variabele blijft het
+            # `State | None` - dat is op de bouwserver gemeten (één `union-attr`).
+            #
+            # The check deliberately sits in the `if` and not in a variable: `mypy`
+            # only narrows a `TypeGuard` there, and in a variable it stays
+            # `State | None` - measured on the build server (one `union-attr`).
+            if reads_as_home(new_state):
+                moment = new_state.last_changed
                 if not reads_as_home(old_state):
-                    self._home_since[resident.resident_id] = new_state.last_changed
+                    self._home_since[resident.resident_id] = moment
                     changed = True
             elif self._home_since.pop(resident.resident_id, None) is not None:
                 changed = True
