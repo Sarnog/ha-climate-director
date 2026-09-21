@@ -487,8 +487,8 @@ Anwesenheitstore werden dann übersprungen, statt alles dauerhaft zu blockieren.
 
 ### Ausschlafen, und warum das nicht einfach ein längeres Schlaffenster ist
 
-Das Schlaffenster erledigt zwei Aufgaben zugleich: Es sagt, wann "Telefon am
-Ladegerät" bedeutet, dass jemand im Bett liegt, und schaltet damit abends das
+Das Schlaffenster erledigt zwei Aufgaben zugleich: Es sagt, wann „Telefon am
+Ladegerät“ bedeutet, dass jemand im Bett liegt, und schaltet damit abends das
 Haus aus, sobald alle Anwesenden zu Bett gegangen sind.
 
 Dehnst du dieses Fenster bis ein Uhr mittags, zählt das Ladegerät auch an einem
@@ -810,9 +810,9 @@ dem, was das Gerät annimmt.
 
 **Was du brauchst.** Die Beispiele unten nutzen die Custom Card **Simple Timer
 Card** (<https://github.com/eyalgal/simple-timer-card>), die im normalen
-HACS-Store steht: HACS → Frontend → nach "Simple Timer Card" suchen →
+HACS-Store steht: HACS → Frontend → nach „Simple Timer Card“ suchen →
 Herunterladen → danach die Seite neu laden. Von Hand geht es auch: leg
-`simple-timer-card.js` aus der neuesten Release in `config/www` und füge
+`simple-timer-card.js` aus dem neuesten Release in `config/www` und füge
 `/local/simple-timer-card.js` als Dashboard-Ressource vom Typ `module` hinzu. Die
 Integration funktioniert auch ohne diese Karte — den Endzeit-Sensor gibt es so
 oder so; die Karte ist nur fürs Dashboard.
