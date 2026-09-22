@@ -265,3 +265,42 @@ class TestTheyMatchTheIntegration:
         )
         assert recovered["from"] == "on"
         assert recovered["to"] == "off"
+
+    def test_the_filter_stays_on_the_identifier(self) -> None:
+        """Het filter van de blueprint blijft op `reason` staan.
+
+        `reason` is de stabiele identifier en het contract: automatiseringen
+        filteren erop en die belofte staat in de blueprint. `reason_text` is
+        dezelfde reden als gewone zin - presentatie, geen contract, en hij kan per
+        taal veranderen. Wie het filter op de zin zet, breekt bij de eerste
+        tekstwijziging. Daarom leest deze test het conditietemplate van
+        `decisions.yaml` en eist dat het `reason` noemt en `reason_text` niet, en
+        rendert hij het met de echte sjabloonmachine.
+
+        The blueprint's filter stays on `reason`. `reason` is the stable identifier
+        and the contract: automations filter on it and that promise stands in the
+        blueprint. `reason_text` is that same reason as an ordinary sentence -
+        presentation, not a contract, and it can change per language. Whoever puts
+        the filter on the sentence breaks on the first text change. This test
+        therefore reads the condition template of `decisions.yaml` and requires it
+        to name `reason` and not `reason_text`, and renders it with the real
+        template engine.
+        """
+        data = load(FOLDER / "decisions.yaml")
+        template = data["conditions"][0]["value_template"]
+        assert "trigger.event.data.reason" in template, template
+        assert "trigger.event.data.reason_text" not in template, template
+        engine = jinja2.Environment(undefined=jinja2.StrictUndefined)
+        condition = engine.from_string(template)
+
+        def kept(reason: str, only: list[str]) -> bool:
+            rendered = condition.render(
+                trigger={"event": {"data": {"reason": reason, "zone_id": "woonkamer"}}},
+                only_reasons=only,
+                only_zones=[],
+            )
+            return "True" in rendered
+
+        assert kept("regulating", [])
+        assert kept("regulating", ["regulating"])
+        assert not kept("regulating", ["satisfied"])
