@@ -288,7 +288,7 @@ NEW_RULE: dict[str, tuple[str, str]] = {
         "se frena a quien llega a casa después del inicio de la franja",
     ),
     "ar": (
-        "من كان في البيت أصلاً عند بداية النافذة لا يُسكَتَ عنه",
+        "من كان في البيت أصلًا عند بداية النافذة لا يُكبَح",
         "يُكبح من يعود بعد بداية النافذة",
     ),
 }
