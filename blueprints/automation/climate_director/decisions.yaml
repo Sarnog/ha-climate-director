@@ -98,7 +98,9 @@ blueprint:
         `source_name` en `message`. `reason` blijft de stabiele identifier om op
         te filteren (zie *Alleen deze redenen*); `reason_text` is diezelfde
         reden als gewone zin. Wie hier zijn eigen zin schrijft, houdt hem zoals
-        hij is.
+        hij is. Een event zonder `message` - een oudere integratie - valt terug
+        op de kamer, de stand en de reden in plaats van een sjabloonfout te
+        geven.
 
         EN - A template. By default it shows `message`: the ready-made sentence
         the integration builds itself, in the language of the interface, with
@@ -109,8 +111,10 @@ blueprint:
         `source_name` and `message`. `reason` stays the stable identifier to
         filter on (see *Only these reasons*); `reason_text` is that same reason
         as an ordinary sentence. Whoever writes their own sentence here keeps
-        it as it is.
-      default: "{{ trigger.event.data.message }}"
+        it as it is. An event without `message` - an older integration - falls
+        back to the room, the mode and the reason instead of raising a template
+        error.
+      default: "{{ trigger.event.data.message | default(trigger.event.data.zone_name ~ ': ' ~ trigger.event.data.granted ~ ' (' ~ trigger.event.data.reason ~ ')') }}"
       selector:
         text:
           multiline: true

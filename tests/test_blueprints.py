@@ -23,6 +23,7 @@ from __future__ import annotations
 import pathlib
 import re
 
+import jinja2
 import pytest
 from homeassistant.components.blueprint.models import Blueprint
 from homeassistant.components.blueprint.schemas import BLUEPRINT_SCHEMA
@@ -167,23 +168,72 @@ class TestTheyMatchTheIntegration:
         assert len(named) == len(reasons), sorted(reasons - named)
 
     def test_the_default_message_is_the_readable_sentence(self) -> None:
-        """De standaardmelding is één veld: wat de integratie zelf opbouwt.
+        """De standaardmelding is het veld dat de integratie zelf opbouwt.
 
         Een sjabloon dat zelf velden aaneenplakt zou de vertaling omzeilen en
         weer identifiers tonen (`zone_id`, `granted`, `reason`). Wie zijn eigen
         tekst wil houdt dat veld; wie het met rust laat hoort de zin te zien die
         de integratie meelevert, in de taal van de interface.
 
-        The default message is one field: what the integration builds itself. A
+        Een blueprint van `main` kan naast een oudere integratie draaien, en dat
+        event draagt geen `message`. Dan mag er geen sjabloonfout ontstaan - dat
+        is precies wat de gebruiker zag: een lege melding en een fout in de
+        tracering. De standaard valt daarom terug op velden die elk event al
+        draagt, en die terugval wordt hier met de echte sjabloonmachine gerenderd.
+
+        The default message is the field the integration builds itself. A
         template stitching fields together itself would bypass the translation
         and show identifiers again (`zone_id`, `granted`, `reason`). Whoever wants
         their own text keeps that field; whoever leaves it alone should see the
         sentence the integration hands along, in the interface's language.
+        A blueprint from `main` can run next to an older integration, and that
+        event carries no `message`. No template error may arise then - exactly
+        what the user saw: an empty notification and an error in the trace. The
+        default therefore falls back to fields every event already carries, and
+        that fallback is rendered here with the real template engine.
         """
         data = load(FOLDER / "decisions.yaml")
-        assert (
-            data["blueprint"]["input"]["message"]["default"] == "{{ trigger.event.data.message }}"
+        default = data["blueprint"]["input"]["message"]["default"]
+        assert "trigger.event.data.message" in default
+        assert "default(" in default, default
+        source = (self.COMPONENT / "coordinator.py").read_text(encoding="utf-8")
+        block = source[source.index("def _event_data") :]
+        known = set(re.findall(r'^\s{8}"(\w+)":', block, re.MULTILINE))
+        used = set(re.findall(r"trigger\.event\.data\.(\w+)", default))
+        assert used <= known, sorted(used - known)
+        # HA rendert automatiseringensjablonen met een strikte undefined: een
+        # ontbrekend veld wordt een fout in de tracering in plaats van een lege
+        # regel. Deze test gebruikt daarom dezelfde strikte omgeving.
+        #
+        # HA renders automation templates with a strict undefined: a missing
+        # field becomes a trace error instead of an empty line. This test
+        # therefore uses the same strict environment.
+        engine = jinja2.Environment(undefined=jinja2.StrictUndefined)
+        ready = engine.from_string(default).render(
+            trigger={
+                "event": {
+                    "data": {
+                        "message": "kant-en-klaar",
+                        "zone_name": "Woonkamer",
+                        "granted": "heat",
+                        "reason": "regulating",
+                    }
+                }
+            }
         )
+        older = engine.from_string(default).render(
+            trigger={
+                "event": {
+                    "data": {
+                        "zone_name": "Woonkamer",
+                        "granted": "heat",
+                        "reason": "regulating",
+                    }
+                }
+            }
+        )
+        assert ready == "kant-en-klaar"
+        assert "Woonkamer" in older and "regulating" in older, older
 
     def test_the_refusal_blueprint_leaves_the_duration_to_the_installation(self) -> None:
         """The notification names the configured maximum, so the request must use it."""
