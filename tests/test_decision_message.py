@@ -212,6 +212,46 @@ def test_the_reason_is_a_sentence_without_identifiers_or_jargon(language: str, r
         assert word not in lowered, f"{language}/{reason} gebruikt jargon ({word}): {sentence}"
 
 
+#: Werkwoorden die een richting kiezen - verwarmen of koelen. De redenzin
+#: `opening_open_elsewhere` geldt zowel voor een verwarmend als voor een koelend
+#: huisbreed apparaat, en in die tak noemt de directeur geen apparaat; de zin mag
+#: dus geen van beide richtingen uitspreken. Per taal letterlijk, met stam, want
+#: er is geen runtime-object dat "richting" meet.
+#:
+#: Verbs that pick a direction - heating or cooling. The reason sentence
+#: `opening_open_elsewhere` holds for a heating as well as for a cooling
+#: house-wide appliance, and in that branch the director names no appliance; the
+#: sentence may therefore not speak either direction. Literal per language, as a
+#: stem, because no runtime object measures "direction".
+DIRECTION_WORDS: dict[str, tuple[str, ...]] = {
+    "nl": ("verwarm", "koel"),
+    "en": ("heat", "cool"),
+    "de": ("heiz", "kühl"),
+    "fr": ("chauff", "refroid"),
+    "es": ("calient", "enfrí"),
+    "ar": ("يدفّئ", "يبرّد"),
+}
+
+
+@pytest.mark.parametrize("language", LANGUAGES)
+def test_the_elsewhere_sentence_names_no_direction(language: str) -> None:
+    """De huisbrede-openingszin kiest geen richting.
+
+    `opening_open_elsewhere` valt ook wanneer het huisbrede apparaat koelt: de
+    directeur noemt het apparaat in die tak niet, dus een werkwoord dat
+    verwarmen of koelen zegt liegt tegen de helft van de gevallen. Daarom draagt
+    de zin geen van beide richtingen.
+
+    The elsewhere sentence names no direction. `opening_open_elsewhere` also
+    falls when the house-wide appliance cools: the director names no appliance in
+    that branch, so a verb that says heating or cooling lies to half the cases.
+    The sentence therefore carries neither direction.
+    """
+    sentence = reason_sentences(language)["opening_open_elsewhere"].lower()
+    for word in DIRECTION_WORDS[language]:
+        assert word not in sentence, f"{language}: {sentence}"
+
+
 @pytest.mark.parametrize("language", LANGUAGES)
 def test_the_action_words_carry_no_identifiers(language: str) -> None:
     for action, words in action_sentences(language).items():

@@ -631,7 +631,7 @@
               "master_disabled": "l'interrupteur principal est éteint",
               "manual_override": "cette pièce vous a été confiée",
               "opening_open": "une fenêtre ou une porte est ouverte dans cette pièce",
-              "opening_open_elsewhere": "une fenêtre ou une porte est ouverte quelque part dans la maison et cet appareil chauffe toute la maison",
+              "opening_open_elsewhere": "une fenêtre ou une porte est ouverte quelque part dans la maison, et l'appareil qui travaille ici dessert toute la maison",
               "nobody_home": "il n'y a personne à la maison",
               "everyone_asleep": "tout le monde dort",
               "waiting_for_sleeper": "quelqu'un dort encore ; la maison attend son heure limite",

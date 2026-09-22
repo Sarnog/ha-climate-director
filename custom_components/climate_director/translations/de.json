@@ -631,7 +631,7 @@
               "master_disabled": "der Hauptschalter ist aus",
               "manual_override": "dieser Raum ist an dich übergeben",
               "opening_open": "in diesem Raum steht ein Fenster oder eine Tür offen",
-              "opening_open_elsewhere": "irgendwo im Haus steht ein Fenster oder eine Tür offen und dieses Gerät heizt das ganze Haus",
+              "opening_open_elsewhere": "irgendwo im Haus steht ein Fenster oder eine Tür offen, und das Gerät, das hier arbeitet, versorgt das ganze Haus",
               "nobody_home": "es ist niemand zu Hause",
               "everyone_asleep": "alle schlafen",
               "waiting_for_sleeper": "jemand schläft noch; das Haus wartet bis zu dessen spätester Zeit",

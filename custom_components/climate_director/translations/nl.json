@@ -631,7 +631,7 @@
               "master_disabled": "de hoofdschakelaar staat uit",
               "manual_override": "deze kamer is aan jou overgedragen",
               "opening_open": "er staat een raam of deur open in deze kamer",
-              "opening_open_elsewhere": "er staat ergens in huis een raam of deur open en dit apparaat verwarmt het hele huis",
+              "opening_open_elsewhere": "er staat ergens in huis een raam of deur open, en het apparaat dat hier werkt bedient het hele huis",
               "nobody_home": "er is niemand thuis",
               "everyone_asleep": "iedereen slaapt",
               "waiting_for_sleeper": "er slaapt nog iemand; het huis wacht tot diens uiterste tijd",

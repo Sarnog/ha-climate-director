@@ -631,7 +631,7 @@
               "master_disabled": "the main switch is off",
               "manual_override": "this room has been handed over to you",
               "opening_open": "a window or door is open in this room",
-              "opening_open_elsewhere": "a window or door is open somewhere in the house and this appliance heats the whole house",
+              "opening_open_elsewhere": "a window or door is open somewhere in the house, and the appliance working here serves the whole house",
               "nobody_home": "nobody is home",
               "everyone_asleep": "everyone is asleep",
               "waiting_for_sleeper": "somebody is still asleep; the house waits until their latest time",

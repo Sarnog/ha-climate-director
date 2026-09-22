@@ -1397,3 +1397,88 @@ class TestWithoutAPreviousPlanTheRestIsPinnedDown:
         assert command.hvac_mode == "off"
         assert command.reason is Reason.SATISFIED
         assert GAS not in plan.opening_rest_until
+
+
+# ---------------------------------------------------------------------------
+# De reden is niet aan een richting gebonden / the reason is not tied to a
+# direction
+# ---------------------------------------------------------------------------
+
+
+def cooling_house() -> DirectorConfig:
+    """Twee kamers op één koelend apparaat, met het dakraam open op de zolder.
+
+    Hetzelfde apparaat staat als bron onder beide kamers en op de huisbrede
+    lijst. De woonkamer wil koelen; het dakraam staat open op de zolder, dus het
+    huisbrede apparaat valt stil en de woonkamer krijgt `opening_open_elsewhere`
+    - terwijl er niets verwarmd wordt. Dat is precies het geval waarin de oude
+    zin met "verwarmt" loog.
+
+    Two rooms on one cooling appliance, with the skylight open on the attic. The
+    same appliance sits as a source under both rooms and on the house-wide list.
+    The living room wants to cool; the skylight is open on the attic, so the
+    house-wide appliance stops and the living room gets
+    `opening_open_elsewhere` - while nothing is being heated. That is exactly the
+    case in which the old sentence lied with "heats".
+    """
+    cooling = ModeSettings(target=23.0, start_at=24.0, hysteresis=1.0)
+    living = Zone(
+        zone_id="woonkamer",
+        name="Woonkamer",
+        indoor_sensor="sensor.woonkamer",
+        priority=0,
+        sources=(Source(source_id="airco", entity_id=LIVING_AIRCO, role=SourceRole.COOL_ONLY),),
+        cool=cooling,
+    )
+    attic = Zone(
+        zone_id="zolder",
+        name="Zolder",
+        indoor_sensor="sensor.zolder",
+        priority=1,
+        sources=(Source(source_id="airco", entity_id=LIVING_AIRCO, role=SourceRole.COOL_ONLY),),
+        cool=cooling,
+    )
+    return DirectorConfig(
+        zones=(living, attic),
+        openings=(
+            Opening(
+                entity_id=SKYLIGHT,
+                zone_ids=("zolder",),
+                delay=timedelta(minutes=5),
+                opening_id="dakraam",
+                name="Dakraam",
+            ),
+        ),
+        house_wide_openings=(LIVING_AIRCO,),
+    )
+
+
+def test_the_elsewhere_reason_also_falls_when_the_appliance_cools() -> None:
+    """`opening_open_elsewhere` is niet aan verwarmen gebonden.
+
+    De reden valt zodra een huisbreed apparaat stilvalt door een opening elders,
+    ook als dat apparaat koelt. De zin die de gebruiker dan leest mag dus geen
+    richting noemen; dat de reden hier werkelijk valt, bewijst deze test op de
+    engine.
+
+    `opening_open_elsewhere` is not tied to heating. The reason falls the moment a
+    house-wide appliance stops because of an opening elsewhere, also when that
+    appliance cools. The sentence the user then reads may therefore name no
+    direction; that the reason really falls here, this test proves on the engine.
+    """
+    world = make_world(
+        now=at(12, 0),
+        outdoor=30.0,
+        indoor={"woonkamer": 25.0, "zolder": 25.0},
+        climates={LIVING_AIRCO: climate("cool")},
+        residents=everyone_up(),
+        openings={SKYLIGHT: OpeningState(open=True, changed_at=OPENED_AT)},
+    )
+
+    plan = decide(cooling_house(), world)
+
+    living = decision_for(plan, "woonkamer")
+    assert living.reason is Reason.OPENING_OPEN_ELSEWHERE
+    command = command_for(plan, LIVING_AIRCO)
+    assert command is not None
+    assert command.hvac_mode == "off"
