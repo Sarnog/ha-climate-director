@@ -6,9 +6,11 @@ blueprint:
   source_url: https://github.com/Sarnog/ha-climate-director/blob/main/blueprints/automation/climate_director/decisions.yaml
   description: >-
     NL - Meldt na elke beslissing wat de director met een kamer doet, en waarom.
-    Niet noodzakelijk, wel het handigste gereedschap dat er is bij het
-    inrichten en tijdens een schaduwrun: je ziet zonder in de diagnose te duiken
-    wat er zou gebeuren.
+    Standaard in gewone taal: de integratie levert de zin kant-en-klaar mee in
+    `message`, in de taal van je interface, dus je hoeft zelf geen sjabloon te
+    schrijven. Niet noodzakelijk, wel het handigste gereedschap dat er is bij
+    het inrichten en tijdens een schaduwrun: je ziet zonder in de diagnose te
+    duiken wat er zou gebeuren.
 
 
     Draait alles eenmaal naar wens, dan wil je hem waarschijnlijk beperken tot
@@ -30,9 +32,11 @@ blueprint:
 
 
     EN - Reports what the director does with a room after every decision, and
-    why. Not essential, but the handiest tool there is while setting up and
-    during a shadow run: you see what would happen without diving into the
-    diagnostics.
+    why. In plain language by default: the integration hands the sentence over
+    ready-made in `message`, in the language of your interface, so you do not
+    have to write a template yourself. Not essential, but the handiest tool
+    there is while setting up and during a shadow run: you see what would happen
+    without diving into the diagnostics.
 
 
     Once everything runs the way you want it, you probably want to narrow it to
@@ -85,17 +89,28 @@ blueprint:
     message:
       name: Bericht / Message
       description: >-
-        NL - Een sjabloon. Beschikbaar: `zone_name`, `zone_id`, `wanted`,
-        `granted`, `source_id`, `entity_id`, `hvac_mode`, `temperature`,
-        `temperature_unit` en `reason`.
-
-        EN - A template. Available: `zone_name`, `zone_id`, `wanted`, `granted`,
+        NL - Een sjabloon. Standaard toont hij `message`: de kant-en-klare zin
+        die de integratie zelf opbouwt, in de taal van de interface, met de
+        kamer, wat er gebeurt, het apparaat bij zijn naam en de reden als gewone
+        zin. Beschikbaar: `zone_name`, `zone_id`, `wanted`, `granted`,
         `source_id`, `entity_id`, `hvac_mode`, `temperature`,
-        `temperature_unit` and `reason`.
-      default: >-
-        {{ trigger.event.data.zone_name }}: {{ trigger.event.data.granted }} via
-        {{ trigger.event.data.source_id or 'nothing' }} ({{
-        trigger.event.data.reason }})
+        `temperature_unit`, `reason`, `reason_text`, `action_text`,
+        `source_name` en `message`. `reason` blijft de stabiele identifier om op
+        te filteren (zie *Alleen deze redenen*); `reason_text` is diezelfde
+        reden als gewone zin. Wie hier zijn eigen zin schrijft, houdt hem zoals
+        hij is.
+
+        EN - A template. By default it shows `message`: the ready-made sentence
+        the integration builds itself, in the language of the interface, with
+        the room, what happens, the appliance by its name and the reason as an
+        ordinary sentence. Available: `zone_name`, `zone_id`, `wanted`,
+        `granted`, `source_id`, `entity_id`, `hvac_mode`, `temperature`,
+        `temperature_unit`, `reason`, `reason_text`, `action_text`,
+        `source_name` and `message`. `reason` stays the stable identifier to
+        filter on (see *Only these reasons*); `reason_text` is that same reason
+        as an ordinary sentence. Whoever writes their own sentence here keeps
+        it as it is.
+      default: "{{ trigger.event.data.message }}"
       selector:
         text:
           multiline: true

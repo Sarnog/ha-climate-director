@@ -620,7 +620,51 @@
         "name": "آخر قرار"
       },
       "zone_source": {
-        "name": "مصدر {zone}"
+        "name": "مصدر {zone}",
+        "state_attributes": {
+          "reason": {
+            "name": "السبب",
+            "state": {
+              "regulating": "الغرفة تطلبه",
+              "satisfied": "الغرفة عند درجة الحرارة",
+              "within_deadband": "الغرفة قريبة بما يكفي من الهدف",
+              "master_disabled": "المفتاح الرئيسي مطفأ",
+              "manual_override": "هذه الغرفة مُسلَّمة إليك",
+              "opening_open": "هناك نافذة أو باب مفتوح في هذه الغرفة",
+              "opening_open_elsewhere": "هناك نافذة أو باب مفتوح في مكان ما بالبيت وهذا الجهاز يدفّئ البيت كله",
+              "nobody_home": "لا أحد في البيت",
+              "everyone_asleep": "الجميع نائمون",
+              "waiting_for_sleeper": "لا يزال أحدهم نائمًا؛ والبيت ينتظر حتى وقته الأخير",
+              "outside_schedule": "خارج جدول هذه الغرفة",
+              "zone_unoccupied": "لا أحد في هذه الغرفة",
+              "quiet_hours": "نافذة الهدوء تكبح البدء",
+              "no_indoor_temperature": "لا يمكن قراءة درجة الحرارة الداخلية",
+              "no_outdoor_temperature": "لا يمكن قراءة درجة الحرارة الخارجية",
+              "season_blocks_mode": "هذا الفصل لا يسمح بذلك",
+              "outdoor_outside_window": "الجو خارجًا حار أو بارد أكثر من اللازم لهذا",
+              "mode_not_configured": "هذه الغرفة غير مهيأة لهذا",
+              "no_source_available": "لا يستطيع أي جهاز فعل ذلك الآن",
+              "other_source_chosen": "جهاز آخر يفعل ذلك",
+              "manual_source": "أنت شغّلت الجهاز بنفسك",
+              "source_unreachable": "لا يمكن الوصول إلى الجهاز",
+              "shared_source_took_over": "جهاز يخدم عدة غرف تولّى الأمر",
+              "circuit_conflict_lost": "الوحدة الخارجية تفعل العكس بالفعل لغرفة أخرى",
+              "circuit_switch_too_soon": "الوحدة الخارجية بدّلت للتو ويجب أن تستمر قليلًا",
+              "circuit_switch_pending": "الوحدة الخارجية ستبدّل بعد قليل",
+              "circuit_at_capacity": "الوحدة الخارجية ممتلئة",
+              "short_cycle_protection": "على الجهاز أن يرتاح أولًا",
+              "exclusive_group_lost": "جهاز آخر لا يجوز أن يعمل بجانبه يعمل بالفعل"
+            }
+          },
+          "message": {
+            "state": {
+              "plain": "{zone}: {action} — {reason}.",
+              "target": "{zone}: {action} على {target} — {reason}.",
+              "appliance": "{zone}: {action} مع {source} — {reason}.",
+              "appliance_target": "{zone}: {action} مع {source} على {target} — {reason}."
+            }
+          }
+        }
       },
       "zone_override_ends": {
         "name": "نهاية تجاوز {zone}"
@@ -634,6 +678,18 @@
           "fan_only": "مروحة فقط",
           "left_alone": "مُترَك دون تدخل",
           "unreachable": "غير قابل للوصول"
+        },
+        "state_attributes": {
+          "action": {
+            "name": "الإجراء",
+            "state": {
+              "heat": "سيبدأ التدفئة",
+              "cool": "سيبدأ التبريد",
+              "off": "سيُطفأ",
+              "left_alone": "يُترك كما هو",
+              "stays_off": "يبقى مطفأً"
+            }
+          }
         }
       },
       "mismatch": {

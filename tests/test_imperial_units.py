@@ -130,6 +130,17 @@ class TestWhatTheUserSeesUsesTheUsersUnit:
             await stop_house(live)
 
     async def test_the_decision_event_carries_the_unit(self) -> None:
+        """Het setpoint in `message` staat in de eenheid van de gebruiker.
+
+        De engine rekent in Celsius; wie het bericht leest hoort het getal te
+        zien dat zijn eigen thermostaat toont. Een bericht met `68.0 °F` naast
+        `temperature: 68.0` bewijst dat de omzetting ook in de zin gebeurt.
+
+        The setpoint in `message` is in the user's unit. The engine works in
+        Celsius; whoever reads the message should see the number their own
+        thermostat shows. A message with `68.0 °F` beside `temperature: 68.0`
+        proves the conversion happens in the sentence too.
+        """
         live = await _house(65.0)
         try:
             await live.evaluate()
@@ -137,6 +148,8 @@ class TestWhatTheUserSeesUsesTheUsersUnit:
             assert events, "geen decision-event gevuurd"
             assert events[0]["temperature"] == 68.0
             assert events[0]["temperature_unit"] == "°F"
+            assert "68.0 °F" in events[0]["message"], events[0]["message"]
+            assert "°C" not in events[0]["message"], events[0]["message"]
         finally:
             await stop_house(live)
 
@@ -156,6 +169,7 @@ class TestWhatTheUserSeesUsesTheUsersUnit:
             assert events, "geen decision-event gevuurd"
             assert events[0]["temperature"] == 20.0
             assert events[0]["temperature_unit"] == "°C"
+            assert "20.0 °C" in events[0]["message"], events[0]["message"]
             assert live.values("last_decision")["commands"][0]["temperature"] == 20.0
         finally:
             await stop_house(live)

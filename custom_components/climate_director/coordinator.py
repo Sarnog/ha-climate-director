@@ -78,7 +78,6 @@ from .state_store import _StateStoreMixin
 from .units import (
     display_temperature,
     from_celsius,
-    rounded_from_celsius,
     temperature_unit_of,
     to_celsius,
     unit_of_coordinator,
@@ -1696,7 +1695,9 @@ class ClimateDirectorCoordinator(
                 continue
             self.hass.bus.async_fire(
                 EVENT_DECISION,
-                _event_data(self.config, plan, decision, unit_of_coordinator(self)),
+                _event_data(
+                    self.hass, self.config, self.world, plan, decision, unit_of_coordinator(self)
+                ),
             )
 
     def _fire_refusals(self, plan: Plan) -> None:
@@ -1918,34 +1919,51 @@ class ClimateDirectorCoordinator(
 
 
 def _event_data(
+    hass: HomeAssistant,
     config: DirectorConfig,
+    world: WorldState | None,
     plan: Plan,
     decision: ZoneDecision,
     unit: str,
 ) -> dict[str, Any]:
     """Return the payload of one `climate_director_decision` event.
 
-    `temperature` wordt gepubliceerd in de eenheid van de gebruiker, afgerond
-    op één decimaal, met `temperature_unit` ernaast, zodat een automatisering
-    die op het getal templatet weet waarin ze rekent.
+    `temperature` wordt gepubliceerd in de eenheid van de gebruiker, afgerond op
+    één decimaal, met `temperature_unit` ernaast, zodat een automatisering die
+    op het getal templatet weet waarin ze rekent.
+
+    De vier leesbare velden - `reason_text`, `action_text`, `source_name` en
+    `message` - komen uit `texts.decision_fields`; de identifiers blijven staan
+    en blijven het contract. Wie op `reason` filtert merkt niets van die vier.
 
     `temperature` is published in the user's unit, rounded to one decimal, with
     `temperature_unit` alongside it, so an automation templating on the number
     knows what it is counting in.
+
+    The four readable fields - `reason_text`, `action_text`, `source_name` and
+    `message` - come from `texts.decision_fields`; the identifiers stay and
+    remain the contract. Whoever filters on `reason` notices nothing of those
+    four.
     """
     zone = config.zone(decision.zone_id)
-    command = next((item for item in plan.commands if item.source_id == decision.source_id), None)
+    reading = texts.decision_fields(
+        hass, config=config, world=world, plan=plan, decision=decision, unit=unit
+    )
     return {
         "zone_id": decision.zone_id,
         "zone_name": zone.name if zone else decision.zone_id,
         "wanted": decision.wanted.value,
         "granted": decision.granted.value,
         "source_id": decision.source_id,
-        "entity_id": command.entity_id if command else None,
-        "hvac_mode": command.hvac_mode if command else None,
-        "temperature": rounded_from_celsius(command.temperature, unit) if command else None,
+        "entity_id": reading["entity_id"],
+        "hvac_mode": reading["hvac_mode"],
+        "temperature": reading["temperature"],
         "temperature_unit": unit,
         "reason": decision.reason.value,
+        "reason_text": reading["reason_text"],
+        "action_text": reading["action_text"],
+        "source_name": reading["source_name"],
+        "message": reading["message"],
     }
 
 

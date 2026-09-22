@@ -341,6 +341,7 @@ async def start_house(
     config_dir: str | None = None,
     appliance: str | None = None,
     unit_system: Any | None = None,
+    language: str = "en",
     watch_events: bool = True,
 ) -> LiveHome:
     """Return a running Home Assistant with this installation loaded.
@@ -352,6 +353,11 @@ async def start_house(
     `unit_system` is optioneel en wordt gezet vóór de entry opgezet wordt, zodat
     de coordinator de eenheid van meet af aan leest.
 
+    `language` is de taal van de interface en wordt net als `unit_system` vóór
+    de entry gezet, zodat de vertaalcache in die taal geladen wordt. Een test die
+    een Nederlandstalige melding wil zien vraagt er hier om in plaats van de
+    teksten zelf na te bouwen.
+
     `watch_events` zet de eigen gebeurtenissenrecorder van dit harnas aan; die
     luistert ook naar een geweigerd vooruit-verzoek. Een test die de
     luistermelding (`precondition_unwatched`) wil zien zet hem uit, want die
@@ -359,6 +365,11 @@ async def start_house(
 
     States are set before the entry is set up, so the first decision sees a full
     world - just as on a restart of a house already running.
+
+    `language` is the language of the interface and, like `unit_system`, is set
+    before the entry is set up so the translation cache is loaded in that
+    language. A test that wants a Dutch notice asks for it here instead of
+    rebuilding the texts itself.
 
     `unit_system` is optional and is applied before the entry is set up, so the
     coordinator reads the unit from the start.
@@ -371,6 +382,7 @@ async def start_house(
     hass = HomeAssistant(config_dir or new_config_dir())
     if unit_system is not None:
         hass.config.units = unit_system
+    hass.config.language = language
     loader.async_setup(hass)
     hass.config_entries = ConfigEntries(hass, {})
     await hass.config_entries.async_initialize()

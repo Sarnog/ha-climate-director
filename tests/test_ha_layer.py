@@ -144,6 +144,7 @@ class FakeHass:
         self.services = FakeServices(**kwargs)
         self.bus = FakeBus()
         self.config = FakeConfig()
+        self.data: dict = {}
 
 
 def house() -> DirectorConfig:

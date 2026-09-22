@@ -620,7 +620,51 @@
         "name": "Last decision"
       },
       "zone_source": {
-        "name": "{zone} source"
+        "name": "{zone} source",
+        "state_attributes": {
+          "reason": {
+            "name": "Reason",
+            "state": {
+              "regulating": "the room is asking for it",
+              "satisfied": "the room is at temperature",
+              "within_deadband": "the room is close enough to the target",
+              "master_disabled": "the main switch is off",
+              "manual_override": "this room has been handed over to you",
+              "opening_open": "a window or door is open in this room",
+              "opening_open_elsewhere": "a window or door is open somewhere in the house and this appliance heats the whole house",
+              "nobody_home": "nobody is home",
+              "everyone_asleep": "everyone is asleep",
+              "waiting_for_sleeper": "somebody is still asleep; the house waits until their latest time",
+              "outside_schedule": "outside this room's schedule",
+              "zone_unoccupied": "nobody is in this room",
+              "quiet_hours": "the quiet window holds back starting",
+              "no_indoor_temperature": "the indoor temperature cannot be read",
+              "no_outdoor_temperature": "the outdoor temperature cannot be read",
+              "season_blocks_mode": "this season does not allow it",
+              "outdoor_outside_window": "it is too warm or too cold outside for this",
+              "mode_not_configured": "this room is not set up for this",
+              "no_source_available": "no appliance can do it right now",
+              "other_source_chosen": "another appliance is doing it",
+              "manual_source": "you operated the appliance yourself",
+              "source_unreachable": "the appliance cannot be reached",
+              "shared_source_took_over": "an appliance serving several rooms has taken over",
+              "circuit_conflict_lost": "the outdoor unit is already doing the opposite for another room",
+              "circuit_switch_too_soon": "the outdoor unit has just switched and needs to run on a little",
+              "circuit_switch_pending": "the outdoor unit is about to switch",
+              "circuit_at_capacity": "the outdoor unit is full",
+              "short_cycle_protection": "the appliance needs to rest first",
+              "exclusive_group_lost": "another appliance that may not run alongside this one is already running"
+            }
+          },
+          "message": {
+            "state": {
+              "plain": "{zone}: {action} because {reason}.",
+              "target": "{zone}: {action} at {target} — {reason}.",
+              "appliance": "{zone}: {action} with {source} — {reason}.",
+              "appliance_target": "{zone}: {action} with {source} at {target} — {reason}."
+            }
+          }
+        }
       },
       "zone_override_ends": {
         "name": "{zone} override ends"
@@ -634,6 +678,18 @@
           "fan_only": "Fan only",
           "left_alone": "Left alone",
           "unreachable": "Unreachable"
+        },
+        "state_attributes": {
+          "action": {
+            "name": "Action",
+            "state": {
+              "heat": "is going to heat",
+              "cool": "is going to cool",
+              "off": "is going off",
+              "left_alone": "is left alone",
+              "stays_off": "stays off"
+            }
+          }
         }
       },
       "mismatch": {

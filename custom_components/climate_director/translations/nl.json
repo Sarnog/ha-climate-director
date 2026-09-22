@@ -620,7 +620,51 @@
         "name": "Laatste beslissing"
       },
       "zone_source": {
-        "name": "Bron {zone}"
+        "name": "Bron {zone}",
+        "state_attributes": {
+          "reason": {
+            "name": "Reden",
+            "state": {
+              "regulating": "de kamer vraagt erom",
+              "satisfied": "de kamer is op temperatuur",
+              "within_deadband": "de kamer zit dicht genoeg bij de doeltemperatuur",
+              "master_disabled": "de hoofdschakelaar staat uit",
+              "manual_override": "deze kamer is aan jou overgedragen",
+              "opening_open": "er staat een raam of deur open in deze kamer",
+              "opening_open_elsewhere": "er staat ergens in huis een raam of deur open en dit apparaat verwarmt het hele huis",
+              "nobody_home": "er is niemand thuis",
+              "everyone_asleep": "iedereen slaapt",
+              "waiting_for_sleeper": "er slaapt nog iemand; het huis wacht tot diens uiterste tijd",
+              "outside_schedule": "buiten het rooster van deze kamer",
+              "zone_unoccupied": "er is niemand in deze kamer",
+              "quiet_hours": "het stiltevenster remt het beginnen",
+              "no_indoor_temperature": "de binnentemperatuur is niet te lezen",
+              "no_outdoor_temperature": "de buitentemperatuur is niet te lezen",
+              "season_blocks_mode": "dit seizoen laat dat niet toe",
+              "outdoor_outside_window": "het is buiten te warm of te koud hiervoor",
+              "mode_not_configured": "deze kamer is hier niet voor ingesteld",
+              "no_source_available": "geen apparaat kan het nu doen",
+              "other_source_chosen": "een ander apparaat doet het",
+              "manual_source": "je hebt het apparaat zelf bediend",
+              "source_unreachable": "het apparaat is niet bereikbaar",
+              "shared_source_took_over": "een apparaat dat meerdere kamers bedient heeft het overgenomen",
+              "circuit_conflict_lost": "de buitenunit doet al het tegenovergestelde voor een andere kamer",
+              "circuit_switch_too_soon": "de buitenunit is net omgeschakeld en moet even doordraaien",
+              "circuit_switch_pending": "de buitenunit schakelt zo om",
+              "circuit_at_capacity": "de buitenunit zit vol",
+              "short_cycle_protection": "het apparaat moet eerst even rusten",
+              "exclusive_group_lost": "een ander apparaat dat hier niet naast mag draaien, draait al"
+            }
+          },
+          "message": {
+            "state": {
+              "plain": "{zone}: {action} — {reason}.",
+              "target": "{zone}: {action} op {target} — {reason}.",
+              "appliance": "{zone}: {action} met {source} — {reason}.",
+              "appliance_target": "{zone}: {action} met {source} op {target} — {reason}."
+            }
+          }
+        }
       },
       "zone_override_ends": {
         "name": "Override {zone} verloopt"
@@ -634,6 +678,18 @@
           "fan_only": "Alleen ventileren",
           "left_alone": "Met rust gelaten",
           "unreachable": "Niet bereikbaar"
+        },
+        "state_attributes": {
+          "action": {
+            "name": "Actie",
+            "state": {
+              "heat": "gaat verwarmen",
+              "cool": "gaat koelen",
+              "off": "gaat uit",
+              "left_alone": "wordt met rust gelaten",
+              "stays_off": "blijft uit"
+            }
+          }
         }
       },
       "mismatch": {

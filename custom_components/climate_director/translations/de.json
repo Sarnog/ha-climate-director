@@ -620,7 +620,51 @@
         "name": "Letzte Entscheidung"
       },
       "zone_source": {
-        "name": "Quelle {zone}"
+        "name": "Quelle {zone}",
+        "state_attributes": {
+          "reason": {
+            "name": "Grund",
+            "state": {
+              "regulating": "der Raum fragt danach",
+              "satisfied": "der Raum hat seine Temperatur",
+              "within_deadband": "der Raum ist nah genug am Zielwert",
+              "master_disabled": "der Hauptschalter ist aus",
+              "manual_override": "dieser Raum ist an dich übergeben",
+              "opening_open": "in diesem Raum steht ein Fenster oder eine Tür offen",
+              "opening_open_elsewhere": "irgendwo im Haus steht ein Fenster oder eine Tür offen und dieses Gerät heizt das ganze Haus",
+              "nobody_home": "es ist niemand zu Hause",
+              "everyone_asleep": "alle schlafen",
+              "waiting_for_sleeper": "jemand schläft noch; das Haus wartet bis zu dessen spätester Zeit",
+              "outside_schedule": "außerhalb des Zeitplans dieses Raums",
+              "zone_unoccupied": "in diesem Raum ist niemand",
+              "quiet_hours": "das Ruhefenster hält den Start zurück",
+              "no_indoor_temperature": "die Innentemperatur ist nicht zu lesen",
+              "no_outdoor_temperature": "die Außentemperatur ist nicht zu lesen",
+              "season_blocks_mode": "diese Jahreszeit lässt das nicht zu",
+              "outdoor_outside_window": "es ist draußen zu warm oder zu kalt dafür",
+              "mode_not_configured": "dieser Raum ist dafür nicht eingerichtet",
+              "no_source_available": "kein Gerät kann es gerade tun",
+              "other_source_chosen": "ein anderes Gerät tut es",
+              "manual_source": "du hast das Gerät selbst bedient",
+              "source_unreachable": "das Gerät ist nicht erreichbar",
+              "shared_source_took_over": "ein Gerät, das mehrere Räume bedient, hat übernommen",
+              "circuit_conflict_lost": "das Außengerät macht für einen anderen Raum schon das Gegenteil",
+              "circuit_switch_too_soon": "das Außengerät hat gerade umgeschaltet und muss kurz nachlaufen",
+              "circuit_switch_pending": "das Außengerät schaltet gleich um",
+              "circuit_at_capacity": "das Außengerät ist ausgelastet",
+              "short_cycle_protection": "das Gerät muss sich erst kurz erholen",
+              "exclusive_group_lost": "ein anderes Gerät, das hier nicht daneben laufen darf, läuft schon"
+            }
+          },
+          "message": {
+            "state": {
+              "plain": "{zone}: {action} — {reason}.",
+              "target": "{zone}: {action} auf {target} — {reason}.",
+              "appliance": "{zone}: {action} mit {source} — {reason}.",
+              "appliance_target": "{zone}: {action} mit {source} auf {target} — {reason}."
+            }
+          }
+        }
       },
       "zone_override_ends": {
         "name": "Übersteuerung {zone} endet"
@@ -634,6 +678,18 @@
           "fan_only": "Nur Lüften",
           "left_alone": "In Ruhe gelassen",
           "unreachable": "Nicht erreichbar"
+        },
+        "state_attributes": {
+          "action": {
+            "name": "Aktion",
+            "state": {
+              "heat": "wird heizen",
+              "cool": "wird kühlen",
+              "off": "geht aus",
+              "left_alone": "wird in Ruhe gelassen",
+              "stays_off": "bleibt aus"
+            }
+          }
         }
       },
       "mismatch": {

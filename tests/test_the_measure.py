@@ -231,9 +231,26 @@ FUNCTION_LIMIT = 80
 # explanation of why one moment for both readers, plus `world_builder.reads_as_home`
 # as the only place reading a presence entity as home - three callers, one state
 # list.
+# T6 (de leesbare beslismelding): `coordinator.py` 1972 → 1990. Het event draagt
+# er vier leesbare velden bij (`reason_text`, `action_text`, `source_name`,
+# `message`), en wat hier groeit is de aanroep naar `texts.decision_fields` plus
+# de vier sleutels in `_event_data`. Het samenstellen zelf - welk apparaat, welke
+# actie, welke zin - woont in `texts.py` (584 regels), want deze module staat al
+# op de lijst en de zin is tekst, geen koppeling. `_event_data` ging van 119 naar
+# 47 regels en staat daarmee weer onder de tachtig, dus de functielijst blijft
+# ongewijzigd.
+#
+# T6 (the readable decision message): `coordinator.py` 1972 → 1990. The event
+# gains four readable fields (`reason_text`, `action_text`, `source_name`,
+# `message`), and what grows here is the call to `texts.decision_fields` plus the
+# four keys in `_event_data`. The assembly itself - which appliance, which
+# action, which sentence - lives in `texts.py` (584 lines), because this module
+# already sits on the list and the sentence is text, not binding. `_event_data`
+# went from 119 to 47 lines and is therefore back under eighty, so the function
+# list stays unchanged.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2198,
-    "coordinator.py": 1972,
+    "coordinator.py": 1990,
     "engine/decide.py": 1677,
     "config_flow.py": 1451,
     "schemas.py": 900,

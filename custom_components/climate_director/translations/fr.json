@@ -620,7 +620,51 @@
         "name": "Dernière décision"
       },
       "zone_source": {
-        "name": "Source {zone}"
+        "name": "Source {zone}",
+        "state_attributes": {
+          "reason": {
+            "name": "Raison",
+            "state": {
+              "regulating": "la pièce le demande",
+              "satisfied": "la pièce est à température",
+              "within_deadband": "la pièce est assez proche de la consigne",
+              "master_disabled": "l'interrupteur principal est éteint",
+              "manual_override": "cette pièce vous a été confiée",
+              "opening_open": "une fenêtre ou une porte est ouverte dans cette pièce",
+              "opening_open_elsewhere": "une fenêtre ou une porte est ouverte quelque part dans la maison et cet appareil chauffe toute la maison",
+              "nobody_home": "il n'y a personne à la maison",
+              "everyone_asleep": "tout le monde dort",
+              "waiting_for_sleeper": "quelqu'un dort encore ; la maison attend son heure limite",
+              "outside_schedule": "en dehors du planning de cette pièce",
+              "zone_unoccupied": "il n'y a personne dans cette pièce",
+              "quiet_hours": "la plage de silence retient le démarrage",
+              "no_indoor_temperature": "la température intérieure est illisible",
+              "no_outdoor_temperature": "la température extérieure est illisible",
+              "season_blocks_mode": "cette saison ne le permet pas",
+              "outdoor_outside_window": "il fait trop chaud ou trop froid dehors pour cela",
+              "mode_not_configured": "cette pièce n'est pas configurée pour cela",
+              "no_source_available": "aucun appareil ne peut le faire maintenant",
+              "other_source_chosen": "un autre appareil le fait",
+              "manual_source": "vous avez commandé l'appareil vous-même",
+              "source_unreachable": "l'appareil est injoignable",
+              "shared_source_took_over": "un appareil qui dessert plusieurs pièces a pris le relais",
+              "circuit_conflict_lost": "l'unité extérieure fait déjà l'inverse pour une autre pièce",
+              "circuit_switch_too_soon": "l'unité extérieure vient de basculer et doit tourner encore un peu",
+              "circuit_switch_pending": "l'unité extérieure va bientôt basculer",
+              "circuit_at_capacity": "l'unité extérieure est à plein",
+              "short_cycle_protection": "l'appareil doit d'abord se reposer",
+              "exclusive_group_lost": "un autre appareil qui ne peut pas tourner à côté tourne déjà"
+            }
+          },
+          "message": {
+            "state": {
+              "plain": "{zone} : {action} — {reason}.",
+              "target": "{zone} : {action} à {target} — {reason}.",
+              "appliance": "{zone} : {action} avec {source} — {reason}.",
+              "appliance_target": "{zone} : {action} avec {source} à {target} — {reason}."
+            }
+          }
+        }
       },
       "zone_override_ends": {
         "name": "Fin de dérogation {zone}"
@@ -634,6 +678,18 @@
           "fan_only": "Ventilation seule",
           "left_alone": "Laissé tranquille",
           "unreachable": "Injoignable"
+        },
+        "state_attributes": {
+          "action": {
+            "name": "Action",
+            "state": {
+              "heat": "va chauffer",
+              "cool": "va refroidir",
+              "off": "va s'éteindre",
+              "left_alone": "est laissé tranquille",
+              "stays_off": "reste éteint"
+            }
+          }
         }
       },
       "mismatch": {
