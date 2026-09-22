@@ -841,7 +841,7 @@ onder `exceptions` in `strings.json`, omdat Home Assistant het hoogste niveau va
 tegen een vast schema valideert.
 
 De beslismelding heeft er een tweede woonplaats bij: de negenentwintig redenen, de vijf
-actiewoorden en de vier vormvarianten van de melding staan onder
+actiewoorden en de twee verbindingswoorden van de melding staan onder
 `entity.sensor.zone_source.state_attributes...` en `entity.sensor.would_command...`. Die plek
 is gekozen omdat hassfest hem accepteert en Home Assistant het attribuut dan ook op de
 entiteit zelf vertaald toont. `reason_sentence` en `action_sentence` lezen één stuk, en
@@ -2005,7 +2005,7 @@ sentences live under `exceptions` in `strings.json`, because Home Assistant vali
 level of that file against a fixed schema.
 
 The decision message has a second home here: the twenty-nine reasons, the five action words
-and the four shape variants of the message live under
+and the two connecting words of the message live under
 `entity.sensor.zone_source.state_attributes...` and `entity.sensor.would_command...`. That
 spot was chosen because hassfest accepts it and Home Assistant then shows the attribute
 translated on the entity itself. `reason_sentence` and `action_sentence` read one piece, and

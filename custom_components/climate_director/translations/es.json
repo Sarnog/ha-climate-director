@@ -658,10 +658,8 @@
           },
           "message": {
             "state": {
-              "plain": "{zone}: {action} — {reason}.",
-              "target": "{zone}: {action} a {target} — {reason}.",
-              "appliance": "{zone}: {action} con {source} — {reason}.",
-              "appliance_target": "{zone}: {action} con {source} a {target} — {reason}."
+              "before_appliance": "con",
+              "before_target": "a"
             }
           }
         }

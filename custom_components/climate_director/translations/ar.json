@@ -658,10 +658,8 @@
           },
           "message": {
             "state": {
-              "plain": "{zone}: {action} — {reason}.",
-              "target": "{zone}: {action} على {target} — {reason}.",
-              "appliance": "{zone}: {action} مع {source} — {reason}.",
-              "appliance_target": "{zone}: {action} مع {source} على {target} — {reason}."
+              "before_appliance": "مع",
+              "before_target": "على"
             }
           }
         }

@@ -328,6 +328,28 @@ def action_sentence(hass: HomeAssistant, action: str) -> str:
     return translated_phrase or english.get(f"action.{action}") or action
 
 
+def _connector(hass: HomeAssistant, english: dict[str, str], which: str, fallback: str) -> str:
+    """Return the little word that glues a piece onto the sentence.
+
+    `met`/`op` (en `with`/`at`) staan als losse vertaalwaarden in de
+    tekstbestanden. Losse woorden en geen sjablonen, omdat hassfest geen
+    plaatsaanduidingen in een vertaalwaarde accepteert - en de zin zelf is
+    presentatie die de integratie opbouwt, geen tekst die een vertaler hoort
+    over te typen.
+
+    The little word that glues a piece onto the sentence. They stand as separate
+    translation values in the text files. Separate words and not templates,
+    because hassfest does not accept placeholders in a translation value - and
+    the sentence itself is presentation the integration builds, not text a
+    translator should retype.
+    """
+    return (
+        _entity_cache(hass).get(f"{MESSAGE_KEY}{which}")
+        or english.get(f"message.{which}")
+        or fallback
+    )
+
+
 def decision_message(
     hass: HomeAssistant,
     *,
@@ -341,33 +363,23 @@ def decision_message(
 
     De vorm is `<kamer>: <actie> — <reden>`, met het apparaat en zijn setpoint
     ertussen alleen als er een commando is; een apparaat zonder naam levert dan
-    nog steeds het setpoint op. De verbindingswoorden (`met`, `op`) komen uit
-    het sjabloon van de taal, zodat de zin in elke taal klopt; de aanroeper
-    geeft alleen de stukken.
+    nog steeds het setpoint op. Alleen de verbindingswoorden en de twee zinnen
+    komen uit de taal van de interface: de rest is leestekens en volgorde, en
+    die zijn in deze zeven talen dezelfde.
 
     The shape is `<room>: <action> — <reason>`, with the appliance and its
     setpoint in between only when there is a command; an appliance without a
-    name still yields the setpoint. The connecting words (`with`, `at`) come
-    from the language's template, so the sentence is right in every language;
-    the caller supplies only the pieces.
+    name still yields the setpoint. Only the connecting words and the two
+    sentences come from the interface's language: the rest is punctuation and
+    order, and those are the same in these seven languages.
     """
     english = english_readable() or {}
-    if source and target:
-        shape = "appliance_target"
-    elif source:
-        shape = "appliance"
-    elif target:
-        shape = "target"
-    else:
-        shape = "plain"
-    template = (
-        _entity_cache(hass).get(f"{MESSAGE_KEY}{shape}")
-        or english.get(f"message.{shape}")
-        or "{zone}: {action} — {reason}"
-    )
-    return template.format(
-        zone=zone, action=action, reason=reason, source=source or "", target=target or ""
-    )
+    parts = [f"{zone}: {action}"]
+    if source:
+        parts.append(f"{_connector(hass, english, 'before_appliance', 'with')} {source}")
+    if target:
+        parts.append(f"{_connector(hass, english, 'before_target', 'at')} {target}")
+    return f"{' '.join(parts)} — {reason}."
 
 
 # -- de leesbare kant van één beslissing / the readable side of one decision ---

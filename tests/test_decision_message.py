@@ -58,7 +58,7 @@ REASONS = tuple(item.value for item in Reason)
 
 ACTIONS = ("heat", "cool", "off", "left_alone", "stays_off")
 
-SHAPES = ("plain", "target", "appliance", "appliance_target")
+CONNECTORS = ("before_appliance", "before_target")
 
 #: Woorden die een gebruiker niet kent en die dus niet in zijn melding horen.
 #:
@@ -133,9 +133,39 @@ def action_sentences(language: str) -> dict[str, str]:
     return _entity(language)["sensor"]["would_command"]["state_attributes"]["action"]["state"]
 
 
-def message_templates(language: str) -> dict[str, str]:
-    """Return the four message shapes in one language."""
+def connectors(language: str) -> dict[str, str]:
+    """Return the two connecting words in one language."""
     return _entity(language)["sensor"]["zone_source"]["state_attributes"]["message"]["state"]
+
+
+def render(
+    language: str,
+    *,
+    zone: str,
+    action: str,
+    reason: str,
+    source: str | None = None,
+    target: str | None = None,
+) -> str:
+    """Build the sentence exactly as `texts.decision_message` builds it.
+
+    Dezelfde opbouw als in de integratie: kamer, actie, dan het apparaat en het
+    setpoint met hun verbindingswoord, en de reden achter het streepje. Deze
+    helper staat hier zodat een test de zin kan nabouwen zonder de tekst over te
+    typen.
+
+    The same composition as in the integration: room, action, then the appliance
+    and the setpoint with their connecting word, and the reason after the dash.
+    This helper stands here so a test can rebuild the sentence without retyping
+    the text.
+    """
+    words = connectors(language)
+    parts = [f"{zone}: {action}"]
+    if source:
+        parts.append(f"{words['before_appliance']} {source}")
+    if target:
+        parts.append(f"{words['before_target']} {target}")
+    return f"{' '.join(parts)} — {reason}."
 
 
 def _identified(sentence: str) -> bool:
@@ -151,8 +181,8 @@ class TestEveryLanguageCarriesTheSameSet:
     def test_every_action_has_words(self, language: str) -> None:
         assert set(action_sentences(language)) == set(ACTIONS)
 
-    def test_every_message_shape_exists(self, language: str) -> None:
-        assert set(message_templates(language)) == set(SHAPES)
+    def test_every_connecting_word_exists(self, language: str) -> None:
+        assert set(connectors(language)) == set(CONNECTORS)
 
 
 @pytest.mark.parametrize("language", LANGUAGES)
@@ -193,22 +223,28 @@ def test_the_action_words_carry_no_identifiers(language: str) -> None:
 
 
 @pytest.mark.parametrize("language", LANGUAGES)
-def test_the_templates_ask_for_the_three_pieces(language: str) -> None:
-    """Elk sjabloon vult de kamer, de actie en de reden zelf in.
+def test_the_connecting_words_are_words_and_not_templates(language: str) -> None:
+    """De twee verbindingswoorden zijn woorden: geen placeholder, geen id.
 
-    Een sjabloon zonder `{reason}` zou de reden weglaten, en een sjabloon met
-    een identifier erin zou precies terugbrengen wat deze ronde weghaalt.
+    Hassfest weigert een plaatsaanduiding in een vertaalwaarde, en dat is de
+    reden dat de zin hier opgebouwd wordt en niet in het tekstbestand staat.
+    Deze test houdt die grens vast: een woord van een paar letters, zonder
+    accolade erin en zonder identifier.
 
-    Every template fills in the room, the action and the reason itself. A
-    template without `{reason}` would drop the reason, and one holding an
-    identifier would bring back exactly what this round removes.
+    The two connecting words are words: no placeholder, no id. Hassfest refuses
+    a placeholder inside a translation value, and that is why the sentence is
+    composed here rather than standing in the text file. This test holds that
+    boundary: a word of a few letters, without a brace in it and without an
+    identifier.
     """
-    for shape, template in message_templates(language).items():
-        assert "{zone}" in template, f"{language}/{shape}: {template}"
-        assert "{action}" in template, f"{language}/{shape}: {template}"
-        assert "{reason}" in template, f"{language}/{shape}: {template}"
-        assert not _identified(template), f"{language}/{shape}: {template}"
-        assert "{" in template and template.count("{") == template.count("}"), template
+    for which, word in connectors(language).items():
+        assert word and word == word.strip(), f"{language}/{which}: {word!r}"
+        assert "{" not in word and "}" not in word, f"{language}/{which}: {word}"
+        assert len(word.split()) == 1, f"{language}/{which}: {word}"
+        assert not _identified(word), f"{language}/{which}: {word}"
+        lowered = word.lower()
+        for jargon in JARGON[language]:
+            assert jargon not in lowered, f"{language}/{which} gebruikt jargon ({jargon}): {word}"
 
 
 def test_the_three_examples_are_exactly_this() -> None:
@@ -228,20 +264,10 @@ def test_the_three_examples_are_exactly_this() -> None:
     """
     reasons = reason_sentences("nl")
     actions = action_sentences("nl")
-    templates = message_templates("nl")
-
-    def render(shape: str, **pieces: str) -> str:
-        return templates[shape].format(
-            zone=pieces["zone"],
-            action=pieces["action"],
-            reason=pieces["reason"],
-            source=pieces.get("source", ""),
-            target=pieces.get("target", ""),
-        )
+    sentence = lambda **pieces: render("nl", **pieces)  # noqa: E731
 
     assert (
-        render(
-            "appliance_target",
+        sentence(
             zone="Woonkamer",
             action=actions["heat"],
             reason=reasons["regulating"],
@@ -251,8 +277,7 @@ def test_the_three_examples_are_exactly_this() -> None:
         == "Woonkamer: gaat verwarmen met Cv-ketel op 23.0 °C — de kamer vraagt erom."
     )
     assert (
-        render(
-            "plain",
+        sentence(
             zone="Zolder",
             action=actions["stays_off"],
             reason=reasons["circuit_conflict_lost"],
@@ -260,8 +285,7 @@ def test_the_three_examples_are_exactly_this() -> None:
         == "Zolder: blijft uit — de buitenunit doet al het tegenovergestelde voor een andere kamer."
     )
     assert (
-        render(
-            "plain",
+        sentence(
             zone="Slaapkamer",
             action=actions["left_alone"],
             reason=reasons["manual_override"],
@@ -286,7 +310,8 @@ def test_the_guide_shows_an_example_the_template_really_gives(language: str) -> 
     falls over, not the user.
     """
     room, appliance = GUIDE_EXAMPLES[language]
-    expected = message_templates(language)["appliance_target"].format(
+    expected = render(
+        language,
         zone=room,
         action=action_sentences(language)["heat"],
         reason=reason_sentences(language)["regulating"],
@@ -378,12 +403,11 @@ def _plain_message(event: dict[str, Any]) -> str:
     the English template and the pieces the event itself carries, so a test can
     demand that no appliance stands in the sentence without retyping the words.
     """
-    return message_templates("en")["plain"].format(
+    return render(
+        "en",
         zone=event["zone_name"],
         action=event["action_text"],
         reason=event["reason_text"],
-        source="",
-        target="",
     )
 
 
