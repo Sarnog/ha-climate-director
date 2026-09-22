@@ -691,9 +691,9 @@ il intervient malgré tout dès qu'une limite de temps expire.
   qui tourne à ce moment-là continue donc simplement ; si vous voulez tout
   éteindre, éteignez-le vous-même.
 - **Mode invités** (`switch.*_mode_invites`) : quelqu'un de non suivi loge là,
-  donc « maison vide » ne dit rien. Dans la fenêtre invités, le mode invités lève
-  aussi la plage de silence. Le sommeil des présents s'applique toujours,
-  et hors de la fenêtre invités, les portes ordinaires reprennent le relais.
+  donc « maison vide » ne dit rien. Dans sa fenêtre, le mode invités lève aussi la
+  plage de silence. Le sommeil des présents s'applique toujours, et hors de cette
+  fenêtre, les portes ordinaires reprennent le relais.
 - **Programme vacances** (`switch.*_planning_de_vacances`) : chaque jour compte
   comme un samedi, ou comme sa propre fenêtre de vacances. S'active aussi tout
   seul dès qu'un calendrier configuré a un événement en cours portant le

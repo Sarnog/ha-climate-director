@@ -440,7 +440,7 @@
       },
       "quiets": {
         "title": "Plages de silence",
-        "description": "Heures pendant lesquelles le directeur ne démarre rien de lui-même. Rentrer à onze heures du soir alors qu'on va se coucher n'oblige pas à chauffer la maison.\n\nCela freine le démarrage, pas la poursuite : ce qui tourne déjà reste régulé et s'éteint au coucher comme d'habitude, et ce que vous allumez vous-même est repris et poursuivi. Sans plage, le frein est relâché. Est freiné celui qui rentre après le début de la plage ; un occupant déjà présent fait tourner la maison - et les invités dans la fenêtre invités aussi.",
+        "description": "Heures pendant lesquelles le directeur ne démarre rien de lui-même. Rentrer à onze heures du soir alors qu'on va se coucher n'oblige pas à chauffer la maison.\n\nCela freine le démarrage, pas la poursuite : ce qui tourne déjà reste régulé et s'éteint au coucher comme d'habitude, et ce que vous allumez vous-même est repris et poursuivi. Sans plage, le frein est relâché. Est freiné celui qui rentre après le début de la plage ; un occupant déjà présent fait tourner la maison - et les invités dans la fenêtre du mode invités aussi.",
         "data": {
           "quiet": "Plage"
         },
@@ -450,7 +450,7 @@
       },
       "quiet": {
         "title": "Plage de silence",
-        "description": "Heures pendant lesquelles le directeur ne démarre rien de lui-même. Rentrer à onze heures du soir alors qu'on va se coucher n'oblige pas à chauffer la maison.\n\nCela freine le démarrage, pas la poursuite : ce qui tourne déjà reste régulé et s'éteint au coucher comme d'habitude, et ce que vous allumez vous-même est repris et poursuivi. Sans plage, le frein est relâché. Est freiné celui qui rentre après le début de la plage ; un occupant déjà présent fait tourner la maison - et les invités dans la fenêtre invités aussi.",
+        "description": "Heures pendant lesquelles le directeur ne démarre rien de lui-même. Rentrer à onze heures du soir alors qu'on va se coucher n'oblige pas à chauffer la maison.\n\nCela freine le démarrage, pas la poursuite : ce qui tourne déjà reste régulé et s'éteint au coucher comme d'habitude, et ce que vous allumez vous-même est repris et poursuivi. Sans plage, le frein est relâché. Est freiné celui qui rentre après le début de la plage ; un occupant déjà présent fait tourner la maison - et les invités dans la fenêtre du mode invités aussi.",
         "data": {
           "start": "Silence à partir de",
           "end": "Silence jusqu'à",
