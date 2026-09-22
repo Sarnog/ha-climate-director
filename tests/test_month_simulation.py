@@ -310,7 +310,7 @@ def month():
     lapses and the month tests nothing on that point.
     """
     assert not validate(SCENARIO.config), validate(SCENARIO.config)
-    return run_month(SCENARIO, seed=20260218)
+    return run_month(SCENARIO, seed=7)
 
 
 class TestAMonthOfWeather:
@@ -380,6 +380,7 @@ class TestTheMonthExercisedTheEngine:
     EXPECTED = (
         Reason.REGULATING,
         Reason.SATISFIED,
+        Reason.WITHIN_DEADBAND,
         Reason.MASTER_DISABLED,
         Reason.MANUAL_OVERRIDE,
         Reason.OPENING_OPEN,
@@ -399,24 +400,23 @@ class TestTheMonthExercisedTheEngine:
     #: verwarmingskant - `_best_refusal` kiest die - dus als zone-reden is hij
     #: in dit huis onbereikbaar. `test_hysteresis.py` dekt hem rechtstreeks.
     #:
-    #: `within_deadband` staat er niet bij: in dit huis houdt de slaappoort het
-    #: nachtelijke doorverwarmen tegen, en komt de kamer veel vaker op de
-    #: streefwaarde uit - en dan is de uitkomst `satisfied`, niet
-    #: `within_deadband`. Het zaad van deze maand is daarom gekozen op dekking:
-    #: met dit zaad komt elke reden uit deze lijst voor. `test_hysteresis.py`
-    #: dekt deze uitkomst rechtstreeks, drie keer, en `test_heating_layout.py` ook.
+    #: Het zaad van deze maand is gekozen op dekking: met dit zaad komt elke
+    #: reden uit deze lijst voor, `within_deadband` inbegrepen - een kamer die
+    #: vanuit een lopende regeling op de streefwaarde uitkomt, en de
+    #: slaappoort die het nachtelijke doorverwarmen tegenhoudt.
+    #: `test_hysteresis.py` dekt deze uitkomst rechtstreeks, drie keer, en
+    #: `test_heating_layout.py` ook.
     #:
     #: `season_blocks_mode` is deliberately absent. A zone allowed to both heat
     #: and cool always reports the heating refusal - `_best_refusal` picks that
     #: one - so as a zone reason it is unreachable in this house.
     #: `test_hysteresis.py` covers it head-on.
     #:
-    #: `within_deadband` is not in the list: in this house the sleep gate holds
-    #: back the overnight heating, and the room reaches its target far more
-    #: often - and then the outcome is `satisfied`, not `within_deadband`.
-    #: This month's seed was therefore chosen on coverage: with this seed every
-    #: reason in this list occurs. `test_hysteresis.py` covers this outcome
-    #: head-on, three times, and `test_heating_layout.py` too.
+    #: This month's seed was chosen on coverage: with this seed every reason in
+    #: this list occurs, `within_deadband` included - a room that comes out on
+    #: its target from a running regulation, and the sleep gate holding back the
+    #: overnight heating. `test_hysteresis.py` covers this outcome head-on, three
+    #: times, and `test_heating_layout.py` too.
 
     @pytest.mark.parametrize("reason", EXPECTED, ids=lambda reason: reason.value)
     def test_the_outcome_occurred(self, month: Simulation, reason: Reason) -> None:
