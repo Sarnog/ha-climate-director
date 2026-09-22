@@ -41,7 +41,7 @@ automatiseringen lastig blijven:
 
 ### Voor wie
 
-Voor iedereen met meer dan één klimaatapparaat dat elkaar in de weg kan zitten:
+Voor iedereen met klimaatapparaten die elkaar in de weg kunnen zitten:
 een cv-ketel naast een warmtepomp, een multi-split airco over meerdere kamers,
 of zones die je per ruimte wilt regelen — met bewoners, roosters, aanwezigheid,
 vooruit verwarmen en een optionele neerslagregel als extra's.
@@ -159,7 +159,7 @@ automations struggle with:
 
 ### Who it is for
 
-Anyone with more than one climate appliance that could get in each other's way:
+Anyone with climate appliances that could get in each other's way:
 a gas boiler next to a heat pump, a multi-split air conditioner across several
 rooms, or zones you want to control per room — with residents, schedules,
 presence, pre-conditioning and an optional precipitation rule as extras.
