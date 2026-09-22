@@ -14,6 +14,7 @@ be able to verify real API signatures), but not against a running `hass`. See
 from __future__ import annotations
 
 import inspect
+import json
 from datetime import datetime
 
 import pytest
@@ -1246,3 +1247,85 @@ class TestTheReadablePieces:
         decision = self._decision(source_id="iets_anders")
         found = texts._command_for(plan, decision)
         assert found is not None and found.hvac_mode == "off"
+
+    def test_a_malformed_reason_block_yields_no_sentences(self, monkeypatch) -> None:
+        """Een reden zonder zin en een redenblok zonder `state` leveren niets op.
+
+        De lezer slaat een waarde over die geen tekst is en een blok dat geen
+        `state` heeft; beide kanten van die twee vragen horen bewandeld te
+        worden, want een uitzondering hier zou de melding laten omvallen.
+
+        A reason without a sentence and a reason block without `state` yield
+        nothing. The reader skips a value that is not text and a block without
+        `state`; both sides of those two questions belong walked, since an
+        exception here would bring the message down.
+        """
+        from pathlib import Path as RealPath
+
+        def wrong_values(_self, *_args, **_kwargs) -> str:
+            return json.dumps(
+                {
+                    "entity": {
+                        "sensor": {
+                            "zone_source": {
+                                "state_attributes": {
+                                    "reason": {"state": {"regulating": 5}},
+                                    "message": {},
+                                }
+                            }
+                        }
+                    }
+                }
+            )
+
+        monkeypatch.setattr(RealPath, "read_text", wrong_values)
+        assert texts._read_english_readable() == {}
+
+    def test_a_malformed_exception_block_yields_no_templates(self, monkeypatch) -> None:
+        """Een uitzondering zonder `message` en een die geen blok is, leveren niets.
+
+        An exception without `message` and one that is not a block yield
+        nothing.
+        """
+        from pathlib import Path as RealPath
+
+        def wrong_exceptions(_self, *_args, **_kwargs) -> str:
+            return json.dumps({"exceptions": {"zonder_bericht": {"message": None}, "kaal": 5}})
+
+        monkeypatch.setattr(RealPath, "read_text", wrong_exceptions)
+        assert texts._read_english_templates() == {}
+
+        def no_block_at_all(_self, *_args, **_kwargs) -> str:
+            return json.dumps({"exceptions": 5})
+
+        monkeypatch.setattr(RealPath, "read_text", no_block_at_all)
+        assert texts._read_english_templates() == {}
+
+    def test_the_english_fallback_fills_the_connector(self, monkeypatch) -> None:
+        """Zonder vertaalcache komt het verbindingswoord uit de Engelse terugval.
+
+        De lezer haalt zijn woorden eerst uit de vertaalcache van Home
+        Assistant en pas daarna uit `strings.json`. Deze test zet de cache leeg
+        en de terugval gevuld, zodat die tweede tak ook werkelijk loopt.
+
+        Without a translation cache the connecting word comes from the English
+        fallback. The reader takes its words from Home Assistant's translation
+        cache first and only then from `strings.json`. This test empties the
+        cache and fills the fallback, so that second branch really runs too.
+        """
+        monkeypatch.setattr(
+            texts,
+            "_ENGLISH_READABLE",
+            {"message.before_appliance": "with", "message.before_target": "at"},
+        )
+        sentence = texts.decision_message(
+            _no_hass(),
+            zone="Woonkamer",
+            action="gaat verwarmen",
+            reason="de kamer vraagt erom",
+            source="Cv-ketel",
+            target="23.0 °C",
+        )
+        assert (
+            sentence == "Woonkamer: gaat verwarmen with Cv-ketel at 23.0 °C — de kamer vraagt erom."
+        )
