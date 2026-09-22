@@ -944,7 +944,11 @@ er gebeurt, het apparaat bij de naam die jij het gaf en de reden als gewone zin
 — bijvoorbeeld *Woonkamer: gaat verwarmen met Cv-ketel op 23.0 °C — de kamer
 vraagt erom.* Het veld *Bericht / Message* blijft een sjabloon: laat je het met
 rust, dan krijg je die zin, en schrijf je er je eigen tekst, dan houd je die. De
-reden zelf blijft in beide gevallen de stabiele waarde om op te filteren.
+reden zelf blijft in beide gevallen de stabiele waarde om op te filteren. Het event
+`climate_director_decision` draagt die vier velden kant-en-klaar mee —
+`reason_text`, `action_text`, `source_name` en `message` — zodat een
+automatisering zonder sjablonen een leesbare melding kan maken; `reason` blijft
+het filterwoord en `reason_text` is diezelfde reden als gewone zin.
 
 ## Problemen oplossen
 

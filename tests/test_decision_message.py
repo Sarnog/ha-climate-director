@@ -462,6 +462,38 @@ def test_the_guide_shows_an_example_the_template_really_gives(language: str) -> 
     assert f"*{wrapped}*" in " ".join(guide.split()), expected
 
 
+@pytest.mark.parametrize("language", LANGUAGES)
+def test_the_guide_names_the_four_fields_of_the_event(language: str) -> None:
+    """Elke gids noemt de vier velden waarmee een automatisering leest.
+
+    Het event `climate_director_decision` draagt vier velden die een
+    automatisering zonder sjablonen nodig heeft: `reason_text`, `action_text`,
+    `source_name` en `message`. Wie ze niet in de gids zet, laat de lezer zelf
+    uitzoeken hoe het event heet en welke velden erin zitten, en dat is precies
+    wat een handleiding hoort te zeggen. De vier moeten in één alinea staan - de
+    alinea die over de melding gaat - samen met `reason`, want dat blijft het
+    filterwoord; een veldnaam die los ergens anders in de gids opduikt telt niet
+    mee.
+
+    Every guide names the four fields an automation reads. The
+    `climate_director_decision` event carries four fields an automation needs
+    without templates: `reason_text`, `action_text`, `source_name` and `message`.
+    Whoever leaves them out of the guide makes the reader find out the event's
+    name and its fields alone, and that is exactly what a manual should say. The
+    four must stand in one paragraph - the one about the message - together with
+    `reason`, because that stays the filter word; a field name that turns up
+    loose somewhere else does not count.
+    """
+    guide = (GUIDES / f"{language}.md").read_text(encoding="utf-8")
+    fields = ("reason_text", "action_text", "source_name", "message")
+    for paragraph in re.split(r"\n\s*\n", guide):
+        flat = " ".join(paragraph.split())
+        missing = [field for field in fields if f"`{field}`" not in flat]
+        if not missing and "`reason`" in flat:
+            return
+    raise AssertionError(f"{language}: geen alinea met alle vier de velden en `reason`")
+
+
 # -- de live helft / the live half -------------------------------------------
 
 LIVING = "climate.woonkamer"

@@ -971,7 +971,11 @@ et la raison sous forme de phrase ordinaire — par exemple *Salon : va chauffer
 avec Chaudière à 23.0 °C — la pièce le demande.* Le champ *Bericht / Message*
 reste un modèle : laissez-le tel quel et vous obtenez cette phrase, et si vous
 écrivez votre propre texte, il est conservé. La raison elle-même reste dans les
-deux cas une valeur stable pour filtrer.
+deux cas une valeur stable pour filtrer. L'événement
+`climate_director_decision` porte ces quatre champs déjà prêts — `reason_text`,
+`action_text`, `source_name` et `message` — pour qu'une automatisation compose
+un message lisible sans modèle ; `reason` reste le mot de filtrage et
+`reason_text` est cette même raison en phrase ordinaire.
 
 ## Résoudre les problèmes
 

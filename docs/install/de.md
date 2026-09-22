@@ -957,7 +957,11 @@ ihm gegeben hast, und dem Grund als gewöhnlichem Satz — zum Beispiel
 *Wohnzimmer: wird heizen mit Heizkessel auf 23.0 °C — der Raum fragt danach.*
 Das Feld *Bericht / Message* bleibt eine Vorlage: lässt du es in Ruhe, bekommst
 du diesen Satz, und schreibst du deinen eigenen Text, dann bleibt der stehen.
-Der Grund selbst bleibt in beiden Fällen ein stabiler Wert zum Filtern.
+Der Grund selbst bleibt in beiden Fällen ein stabiler Wert zum Filtern. Das
+Event `climate_director_decision` trägt diese vier Felder fertig mit —
+`reason_text`, `action_text`, `source_name` und `message` —, damit eine
+Automatisierung ohne Vorlagen eine lesbare Meldung bauen kann; `reason` bleibt
+das Filterwort und `reason_text` ist derselbe Grund als gewöhnlicher Satz.
 
 ## Probleme lösen
 

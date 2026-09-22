@@ -936,7 +936,11 @@ an ordinary sentence — for instance *Living room: is going to heat with Boiler
 at 23.0 °C — the room is asking for it.* The *Bericht / Message* field stays a
 template: leave it alone and you get that sentence, and write your own text and
 it is kept as it is. The reason itself stays a stable value to filter on either
-way.
+way. The
+`climate_director_decision` event carries those four fields ready-made —
+`reason_text`, `action_text`, `source_name` and `message` — so an automation
+can build a readable message without templates; `reason` stays the filter word
+and `reason_text` is that same reason as an ordinary sentence.
 
 ## Troubleshooting
 

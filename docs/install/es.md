@@ -953,7 +953,11 @@ como una frase corriente — por ejemplo *Salón: va a calentar con Caldera a
 23.0 °C — la habitación lo pide.* El campo *Bericht / Message* sigue siendo una
 plantilla: si lo dejas como está, obtienes esa frase, y si escribes tu propio
 texto, se respeta. El motivo sigue siendo en ambos casos un valor estable para
-filtrar.
+filtrar. El evento
+`climate_director_decision` lleva ya esos cuatro campos — `reason_text`,
+`action_text`, `source_name` y `message` — para que una automatización componga
+un mensaje legible sin plantillas; `reason` sigue siendo la palabra de filtro y
+`reason_text` es ese mismo motivo como frase corriente.
 
 ## Resolver problemas
 
