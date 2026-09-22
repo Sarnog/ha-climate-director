@@ -166,6 +166,25 @@ class TestTheyMatchTheIntegration:
         named = listed & reasons
         assert len(named) == len(reasons), sorted(reasons - named)
 
+    def test_the_default_message_is_the_readable_sentence(self) -> None:
+        """De standaardmelding is één veld: wat de integratie zelf opbouwt.
+
+        Een sjabloon dat zelf velden aaneenplakt zou de vertaling omzeilen en
+        weer identifiers tonen (`zone_id`, `granted`, `reason`). Wie zijn eigen
+        tekst wil houdt dat veld; wie het met rust laat hoort de zin te zien die
+        de integratie meelevert, in de taal van de interface.
+
+        The default message is one field: what the integration builds itself. A
+        template stitching fields together itself would bypass the translation
+        and show identifiers again (`zone_id`, `granted`, `reason`). Whoever wants
+        their own text keeps that field; whoever leaves it alone should see the
+        sentence the integration hands along, in the interface's language.
+        """
+        data = load(FOLDER / "decisions.yaml")
+        assert (
+            data["blueprint"]["input"]["message"]["default"] == "{{ trigger.event.data.message }}"
+        )
+
     def test_the_refusal_blueprint_leaves_the_duration_to_the_installation(self) -> None:
         """The notification names the configured maximum, so the request must use it."""
         text = self._text("precondition_refused.yaml")
