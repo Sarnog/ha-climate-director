@@ -1,6 +1,6 @@
 """De beslismelding die de blueprint standaard toont.
 
-Het event `climate_director_decision` draagt sinds T6-8 vier velden waarmee een
+Het event `climate_director_decision` draagt vier velden waarmee een
 automatisering zonder sjablonen een leesbare melding kan maken: `reason_text`,
 `action_text`, `source_name` en `message`. Dit bestand bewaakt twee dingen:
 dat de zinnen in alle zeven bestanden staan en nergens jargon of een identifier
@@ -12,7 +12,7 @@ op te filteren. Wie dat doet merkt van dit alles niets.
 
 The decision message the blueprint shows by default.
 
-Since T6-8 the `climate_director_decision` event carries four fields that let an
+The `climate_director_decision` event carries four fields that let an
 automation build a readable message without templates: `reason_text`,
 `action_text`, `source_name` and `message`. This file guards two things: that the
 sentences exist in all seven files and never contain jargon or an identifier
