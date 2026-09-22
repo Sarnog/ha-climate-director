@@ -332,16 +332,18 @@ def _connector(hass: HomeAssistant, english: dict[str, str], which: str, fallbac
     """Return the little word that glues a piece onto the sentence.
 
     `met`/`op` (en `with`/`at`) staan als losse vertaalwaarden in de
-    tekstbestanden. Losse woorden en geen sjablonen, omdat hassfest geen
-    plaatsaanduidingen in een vertaalwaarde accepteert - en de zin zelf is
-    presentatie die de integratie opbouwt, geen tekst die een vertaler hoort
-    over te typen.
+    tekstbestanden, en `after_zone` is het scheidingsteken tussen de kamer en de
+    actie - in het Frans met een spatie ervoor. Losse woorden en geen sjablonen,
+    omdat hassfest geen plaatsaanduidingen in een vertaalwaarde accepteert - en de
+    zin zelf is presentatie die de integratie opbouwt, geen tekst die een vertaler
+    hoort over te typen.
 
-    The little word that glues a piece onto the sentence. They stand as separate
-    translation values in the text files. Separate words and not templates,
-    because hassfest does not accept placeholders in a translation value - and
-    the sentence itself is presentation the integration builds, not text a
-    translator should retype.
+    `met`/`op` (and `with`/`at`) stand as separate translation values in the text
+    files, and `after_zone` is the separator between the room and the action - in
+    French with a space before it. Separate words and not templates, because
+    hassfest does not accept placeholders in a translation value - and the
+    sentence itself is presentation the integration builds, not text a translator
+    should retype.
     """
     return (
         _entity_cache(hass).get(f"{MESSAGE_KEY}{which}")
@@ -361,20 +363,24 @@ def decision_message(
 ) -> str:
     """Return the ready-made sentence the blueprint shows by default.
 
-    De vorm is `<kamer>: <actie> — <reden>`, met het apparaat en zijn setpoint
-    ertussen alleen als er een commando is; een apparaat zonder naam levert dan
-    nog steeds het setpoint op. Alleen de verbindingswoorden en de twee zinnen
-    komen uit de taal van de interface: de rest is leestekens en volgorde, en
-    die zijn in deze zeven talen dezelfde.
+    De vorm is `<kamer> <scheidingsteken> <actie> — <reden>`, met het apparaat en
+    zijn setpoint ertussen alleen als er een commando is; een apparaat zonder naam
+    levert dan nog steeds het setpoint op. De verbindingswoorden, het
+    scheidingsteken tussen kamer en actie en de twee zinnen komen uit de taal van
+    de interface. Het scheidingsteken is een eigen verbindingswoord omdat het
+    Frans een spatie vóór de dubbele punt zet en het Nederlands niet; de rest is
+    volgorde en het streepje, en die zijn in deze zeven talen dezelfde.
 
-    The shape is `<room>: <action> — <reason>`, with the appliance and its
-    setpoint in between only when there is a command; an appliance without a
-    name still yields the setpoint. Only the connecting words and the two
-    sentences come from the interface's language: the rest is punctuation and
-    order, and those are the same in these seven languages.
+    The shape is `<room> <separator> <action> — <reason>`, with the appliance and
+    its setpoint in between only when there is a command; an appliance without a
+    name still yields the setpoint. The connecting words, the separator between
+    room and action and the two sentences come from the interface's language. The
+    separator is a connecting word of its own because French puts a space before
+    the colon and Dutch does not; the rest is order and the dash, and those are
+    the same in these seven languages.
     """
     english = english_readable() or {}
-    parts = [f"{zone}: {action}"]
+    parts = [f"{zone}{_connector(hass, english, 'after_zone', ':')} {action}"]
     if source:
         parts.append(f"{_connector(hass, english, 'before_appliance', 'with')} {source}")
     if target:

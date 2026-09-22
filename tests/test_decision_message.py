@@ -58,7 +58,7 @@ REASONS = tuple(item.value for item in Reason)
 
 ACTIONS = ("heat", "cool", "off", "left_alone", "stays_off")
 
-CONNECTORS = ("before_appliance", "before_target")
+CONNECTORS = ("after_zone", "before_appliance", "before_target")
 
 #: Woorden die een gebruiker niet kent en die dus niet in zijn melding horen.
 #:
@@ -160,7 +160,7 @@ def render(
     the text.
     """
     words = connectors(language)
-    parts = [f"{zone}: {action}"]
+    parts = [f"{zone}{words['after_zone']} {action}"]
     if source:
         parts.append(f"{words['before_appliance']} {source}")
     if target:
@@ -264,22 +264,28 @@ def test_the_action_words_carry_no_identifiers(language: str) -> None:
 
 @pytest.mark.parametrize("language", LANGUAGES)
 def test_the_connecting_words_are_words_and_not_templates(language: str) -> None:
-    """De twee verbindingswoorden zijn woorden: geen placeholder, geen id.
+    """De verbindingswoorden zijn woorden: geen placeholder, geen id.
 
     Hassfest weigert een plaatsaanduiding in een vertaalwaarde, en dat is de
     reden dat de zin hier opgebouwd wordt en niet in het tekstbestand staat.
     Deze test houdt die grens vast: een woord van een paar letters, zonder
-    accolade erin en zonder identifier.
+    accolade erin en zonder identifier. Het scheidingsteken tussen kamer en
+    actie mag de spatie dragen die de taal daar wil - het Frans zet er een vóór
+    de dubbele punt - dus dat ene woord mag randwitruimte hebben; de andere twee
+    zijn kaal.
 
-    The two connecting words are words: no placeholder, no id. Hassfest refuses
-    a placeholder inside a translation value, and that is why the sentence is
+    The connecting words are words: no placeholder, no id. Hassfest refuses a
+    placeholder inside a translation value, and that is why the sentence is
     composed here rather than standing in the text file. This test holds that
     boundary: a word of a few letters, without a brace in it and without an
-    identifier.
+    identifier. The separator between room and action may carry the space the
+    language wants there - French puts one before the colon - so that one word
+    may have surrounding whitespace; the other two are bare.
     """
     for which, word in connectors(language).items():
-        assert word and word == word.strip(), f"{language}/{which}: {word!r}"
+        assert word, f"{language}/{which}: {word!r}"
         assert "{" not in word and "}" not in word, f"{language}/{which}: {word}"
+        assert word == word.strip() or which == "after_zone", f"{language}/{which}: {word!r}"
         assert len(word.split()) == 1, f"{language}/{which}: {word}"
         assert not _identified(word), f"{language}/{which}: {word}"
         lowered = word.lower()
@@ -753,5 +759,37 @@ class TestTheDutchExamplesOnALiveHouse:
                 event["message"]
                 == "Woonkamer: wordt met rust gelaten — deze kamer is aan jou overgedragen."
             ), event["message"]
+        finally:
+            await stop_house(live)
+
+
+class TestTheFrenchExampleOnALiveHouse:
+    """Het Frans zet een spatie vóór de dubbele punt, het Nederlands niet.
+
+    De zin wordt door de integratie opgebouwd, dus het scheidingsteken tussen de
+    kamer en de actie is een vertaalwaarde geworden in plaats van een vaste
+    dubbele punt. Deze test haalt de Franse melding uit een draaiend huis en eist
+    die spatie; de Nederlandse voorbeelden hierboven eisen dat hij er niet staat.
+
+    French puts a space before the colon, Dutch does not. The sentence is built by
+    the integration, so the separator between the room and the action became a
+    translation value instead of a fixed colon. This test takes the French message
+    from a running house and demands that space; the Dutch examples above demand
+    it is absent.
+    """
+
+    async def test_the_french_message_puts_a_space_before_the_colon(self) -> None:
+        live = await start_house(
+            installation(heat_target=23.0),
+            states=world(),
+            appliance="obedient",
+            language="fr",
+        )
+        try:
+            await live.evaluate()
+            events = live.fired("climate_director_decision")
+            assert events, "geen decision-event gevuurd"
+            message = events[-1]["message"]
+            assert "Woonkamer : va chauffer" in message, message
         finally:
             await stop_house(live)

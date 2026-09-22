@@ -658,6 +658,7 @@
           },
           "message": {
             "state": {
+              "after_zone": ":",
               "before_appliance": "with",
               "before_target": "at"
             }

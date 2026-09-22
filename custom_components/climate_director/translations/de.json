@@ -658,6 +658,7 @@
           },
           "message": {
             "state": {
+              "after_zone": ":",
               "before_appliance": "mit",
               "before_target": "auf"
             }
