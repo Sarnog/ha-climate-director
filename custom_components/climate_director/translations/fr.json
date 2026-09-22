@@ -651,7 +651,7 @@
               "circuit_conflict_lost": "l'unité extérieure fait déjà l'inverse pour une autre pièce",
               "circuit_switch_too_soon": "l'unité extérieure vient de basculer et doit tourner encore un peu",
               "circuit_switch_pending": "l'unité extérieure va bientôt basculer",
-              "circuit_at_capacity": "l'unité extérieure est à plein",
+              "circuit_at_capacity": "l'unité extérieure est à pleine charge",
               "short_cycle_protection": "l'appareil doit d'abord se reposer",
               "exclusive_group_lost": "un autre appareil qui ne peut pas tourner à côté tourne déjà"
             }

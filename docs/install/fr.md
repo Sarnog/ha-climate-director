@@ -1051,7 +1051,7 @@ L'intégration connaît trois formes :
 
 1. **Gaz par zone.** Chaque zone a sa propre chaudière ou son poêle à gaz comme
    source.
-2. **Un multi-split.** Plusieurs zones pendent au même circuit de
+2. **Un multi-split.** Plusieurs zones sont reliées au même circuit de
    climatisation, avec une priorité par zone.
 3. **La combinaison.** Des circuits de climatisation pour les pièces, une
    source de chaleur partagée (une chaudière, par exemple) pour le reste.
