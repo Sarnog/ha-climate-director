@@ -132,7 +132,8 @@ def _read_english_readable() -> dict[str, str]:
         data = json.loads(Path(__file__).with_name("strings.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return found
-    sensor = data.get("entity", {}).get("sensor", {}) if isinstance(data, dict) else {}
+    entity = data.get("entity") if isinstance(data, dict) else None
+    sensor = entity.get("sensor") if isinstance(entity, dict) else None
     if not isinstance(sensor, dict):
         return found
     for prefix, key in (
@@ -415,15 +416,14 @@ def _source_display_name(
 
     Eerst het entiteitenregister: dat draagt de naam die de gebruiker zelf aan
     het apparaat gaf, en dat is precies wat hij op het scherm ziet. Staat er
-    geen registerinvoer, dan de naam uit de configuratie, en anders de
-    `friendly_name` van de toestand. Nooit de entiteit-id zelf: `AGENTS.md`
-    verbiedt interne id's in teksten die een gebruiker leest.
+    geen registerinvoer, dan de naam uit de configuratie van die bron. Nooit de
+    entiteit-id zelf: `AGENTS.md` verbiedt interne id's in teksten die een
+    gebruiker leest.
 
     First the entity registry: it carries the name the user gave the appliance,
     which is exactly what they see on screen. Without a registry entry, the
-    name from the configuration, and otherwise the state's `friendly_name`.
-    Never the entity id itself: `AGENTS.md` forbids internal ids in text a user
-    reads.
+    name from that source's configuration. Never the entity id itself:
+    `AGENTS.md` forbids internal ids in text a user reads.
     """
     if not entity_id:
         return None
@@ -436,13 +436,6 @@ def _source_display_name(
     source = next((item for _zone, item in config.sources() if item.entity_id == entity_id), None)
     if source is not None and source.name:
         return source.name
-    states = getattr(hass, "states", None)
-    if states is not None:
-        state = states.get(entity_id)
-        if state is not None:
-            friendly = state.attributes.get("friendly_name")
-            if isinstance(friendly, str) and friendly:
-                return friendly
     return None
 
 

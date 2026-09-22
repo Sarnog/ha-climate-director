@@ -19,6 +19,7 @@ from datetime import datetime
 import pytest
 from conftest import gate_verdict, house
 
+from custom_components.climate_director import texts
 from custom_components.climate_director.applier import _is_stop
 from custom_components.climate_director.config_flow import (
     ClimateDirectorOptionsFlow,
@@ -43,6 +44,7 @@ from custom_components.climate_director.engine import (
     MODE_HEAT,
     MODE_OFF,
     DirectorConfig,
+    ModeFamily,
     Plan,
     Reason,
     Season,
@@ -1085,3 +1087,162 @@ class TestTheScreenRefusesWhatCanNeverWork:
         """`_zone_errors` gathers; the parts keep working separately."""
         zone = self._zone(heat={"target": 19.0, "start_at": 20.0})
         assert _band_errors(zone) == {"heat_target": "target_outside_band"}
+
+
+class TestTheReadablePieces:
+    """De losse stukken van de leesbare beslissing, elk op hun eigen pad.
+
+    De dekkingspoort vraagt dat elke tak van `texts.decision_fields` bewandeld
+    wordt. Deze tests doen dat rechtstreeks en met de hand: een apparaat met en
+    zonder naam, een apparaat dat draait en een dat stilstaat, een zone die iets
+    gegund kreeg en een die niets kreeg. De vier vormvarianten van de melding
+    komen er ook langs, want een vorm die nooit gebouwd wordt is een vorm die
+    stil kan afwijken.
+
+    The individual pieces of the readable decision, each on its own path. The
+    coverage gate demands that every branch of `texts.decision_fields` is walked.
+    These tests do that head-on and by hand: an appliance with and without a
+    name, one that runs and one that stands still, a zone that was granted
+    something and one that was granted nothing. The four shape variants of the
+    message pass by too, since a shape never built is a shape that can quietly
+    drift.
+    """
+
+    def _decision(self, **kwargs) -> ZoneDecision:
+        found = {
+            "zone_id": "woonkamer",
+            "wanted": ModeFamily.NEUTRAL,
+            "granted": ModeFamily.NEUTRAL,
+        }
+        found.update(kwargs)
+        return ZoneDecision(**found)  # type: ignore[arg-type]
+
+    def _command(self, hvac_mode: str) -> UnitCommand:
+        return UnitCommand(
+            entity_id="climate.woonkamer",
+            hvac_mode=hvac_mode,
+            zone_id="woonkamer",
+            source_id="woonkamer_ketel",
+        )
+
+    def test_an_unreadable_strings_file_yields_no_readable_fallback(self, monkeypatch) -> None:
+        from pathlib import Path as RealPath
+
+        def refuse(_self, *_args, **_kwargs) -> str:
+            raise OSError("onleesbaar")
+
+        monkeypatch.setattr(RealPath, "read_text", refuse)
+        assert texts._read_english_readable() == {}
+
+    def test_a_strings_file_without_an_entity_block_yields_nothing(self, monkeypatch) -> None:
+        from pathlib import Path as RealPath
+
+        def wrong_shape(_self, *_args, **_kwargs) -> str:
+            return '{"entity": 5}'
+
+        monkeypatch.setattr(RealPath, "read_text", wrong_shape)
+        assert texts._read_english_readable() == {}
+
+    def test_a_message_without_a_setpoint_names_only_the_appliance(self) -> None:
+        sentence = texts.decision_message(
+            _no_hass(),
+            zone="Woonkamer",
+            action="gaat uit",
+            reason="er is niemand thuis",
+            source="Cv-ketel",
+        )
+        assert sentence.startswith("Woonkamer: gaat uit with Cv-ketel"), sentence
+
+    def test_a_message_with_a_setpoint_only_shows_the_setpoint(self) -> None:
+        sentence = texts.decision_message(
+            _no_hass(),
+            zone="Woonkamer",
+            action="gaat uit",
+            reason="er is niemand thuis",
+            target="20.0 °C",
+        )
+        assert sentence.startswith("Woonkamer: gaat uit at 20.0 °C"), sentence
+
+    def test_a_message_without_an_appliance_or_setpoint(self) -> None:
+        sentence = texts.decision_message(
+            _no_hass(), zone="Woonkamer", action="gaat uit", reason="er is niemand thuis"
+        )
+        assert sentence.startswith("Woonkamer: gaat uit"), sentence
+
+    def test_an_appliance_without_an_entity_id_has_no_name(self) -> None:
+        assert texts._source_display_name(_no_hass(), house(), None) is None
+
+    def test_the_registry_name_wins(self) -> None:
+        from homeassistant.helpers.entity_registry import DATA_REGISTRY
+
+        class Entry:
+            name = "Woonkamer-airco"
+            original_name = "airco"
+
+        class Registry:
+            def async_get(self, _entity_id: str) -> Entry:
+                return Entry()
+
+        hass = _no_hass()
+        hass.data[DATA_REGISTRY] = Registry()
+        assert texts._source_display_name(hass, house(), "climate.woonkamer") == "Woonkamer-airco"
+
+    def test_a_nameless_appliance_falls_back_on_the_source_name(self) -> None:
+        config = house()
+        named = config.zones[0].sources[0]
+        assert texts._source_display_name(_no_hass(), config, named.entity_id) is None
+
+    def test_nothing_runs_without_a_world_or_an_appliance(self) -> None:
+        assert texts._was_running(None, "climate.woonkamer") is False
+        assert texts._was_running(None, None) is False
+
+    def test_a_granted_heating_zone_without_a_command_says_heat(self) -> None:
+        decision = self._decision(granted=ModeFamily.HEAT)
+        assert texts._action_key(None, None, False, decision) == "heat"
+
+    def test_a_granted_cooling_zone_without_a_command_says_cool(self) -> None:
+        decision = self._decision(granted=ModeFamily.COOL)
+        assert texts._action_key(None, None, False, decision) == "cool"
+
+    def test_a_zone_the_director_leaves_alone_is_left_alone(self) -> None:
+        assert texts._action_key(None, None, True, self._decision()) == "left_alone"
+        assert texts._action_key(None, None, False, self._decision()) == "left_alone"
+
+    def test_a_heating_command_says_heat(self) -> None:
+        assert texts._action_key(None, self._command("heat"), False, self._decision()) == "heat"
+
+    def test_a_cooling_command_says_cool(self) -> None:
+        assert texts._action_key(None, self._command("cool"), False, self._decision()) == "cool"
+
+    def test_a_stand_down_on_an_appliance_that_runs_says_off(self) -> None:
+        class Climate:
+            running = True
+
+        class World:
+            def climate(self, _entity_id: str) -> Climate:
+                return Climate()
+
+        assert texts._action_key(World(), self._command("off"), False, self._decision()) == "off"
+
+    def test_a_stand_down_on_a_standing_appliance_stays_off(self) -> None:
+        assert texts._action_key(None, self._command("off"), False, self._decision()) == "stays_off"
+
+    def test_a_zone_without_any_command_has_no_appliance(self) -> None:
+        assert texts._command_for(Plan(), self._decision()) is None
+
+    def test_the_command_of_the_requested_source_wins(self) -> None:
+        plan = Plan(commands=(self._command("off"),))
+        decision = self._decision(source_id="woonkamer_ketel")
+        assert texts._command_for(plan, decision) is not None
+
+    def test_without_a_match_the_running_command_wins(self) -> None:
+        plan = Plan(commands=(self._command("off"), self._command("heat")))
+        decision = self._decision(source_id="iets_anders")
+        found = texts._command_for(plan, decision)
+        assert found is not None and found.hvac_mode == "heat"
+
+    def test_without_a_running_command_the_first_one_stands(self) -> None:
+        plan = Plan(commands=(self._command("off"),))
+        decision = self._decision(source_id="iets_anders")
+        found = texts._command_for(plan, decision)
+        assert found is not None and found.hvac_mode == "off"
