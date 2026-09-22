@@ -556,13 +556,13 @@ class TestComingHomeIsNotSleeping:
                 "binary_sensor.zolder": FakeState("on"),
             }
         )
-        # Het thuiskomstmoment komt sinds anker 13 uit de boekhouding van de
-        # coördinator (`_home_since`), en daar legt de listener precies het
+        # Het thuiskomstmoment komt uit de boekhouding van de coördinator
+        # (`_home_since`), en daar legt de listener precies het
         # tijdstempel van de aanwezigheidsentiteit in. Deze opstelling zet dat moment
         # er dus zelf in; zonder moment zou een lezing altijd tellen.
         #
-        # Since anchor 13 the homecoming moment comes from the coordinator's
-        # bookkeeping (`_home_since`), and that is exactly where the listener puts the
+        # The homecoming moment comes from the coordinator's bookkeeping
+        # (`_home_since`), and that is exactly where the listener puts the
         # presence entity's timestamp. This setup therefore puts that moment in
         # itself; without a moment a reading would always count.
         item._home_since["danny"] = home_at

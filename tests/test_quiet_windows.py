@@ -8,11 +8,11 @@ draait blijft gewoon geregeld, en zet iemand zelf iets aan, dan wordt dat
 opgepakt. Zou de rem ook het doorgaan raken, dan was het een tweede rooster - en
 dan zou je 's avonds niets meer met de hand kunnen aanzetten.
 
-Sinds anker 13 remt een venster alleen wie er **ná het begin van dat venster**
-thuiskomt. Wie er al zat toen het venster inging, zit er wakker bij en houdt het
-huis aan de gang; komt er in een leeg huis iemand thuis ná het begin, dan blijft
-het stil tot het venster afloopt. Zonder bekend thuiskomstmoment (`home_since`)
-remt het venster zoals altijd: stilte is de veilige kant om fout te zitten.
+Een venster remt alleen wie er **ná het begin van dat venster** thuiskomt. Wie er
+al zat toen het venster inging, zit er wakker bij en houdt het huis aan de gang;
+komt er in een leeg huis iemand thuis ná het begin, dan blijft het stil tot het
+venster afloopt. Zonder bekend thuiskomstmoment (`home_since`) remt het venster
+zoals altijd: stilte is de veilige kant om fout te zitten.
 
 Coming home at eleven at night when you are about to turn in need not fire the
 boiler. But it is a brake on starting, not on continuing: whatever already runs
@@ -20,11 +20,11 @@ stays regulated, and switching something on yourself is picked up. Were the brak
 to touch continuing as well it would be a second schedule - and then you could no
 longer switch anything on by hand in the evening.
 
-Since anchor 13 a window brakes only whoever comes home **after that window
-began**. Whoever was already sitting there when it began keeps the house going;
-when somebody comes home to an empty house after the beginning, it stays quiet
-until the window lapses. Without a known homecoming moment (`home_since`) the
-window brakes as it always did: quiet is the safe side to be wrong on.
+A window brakes only whoever comes home **after that window began**. Whoever was
+already sitting there when it began keeps the house going; when somebody comes
+home to an empty house after the beginning, it stays quiet until the window
+lapses. Without a known homecoming moment (`home_since`) the window brakes as it
+always did: quiet is the safe side to be wrong on.
 """
 
 from __future__ import annotations

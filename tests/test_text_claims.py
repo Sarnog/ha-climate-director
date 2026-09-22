@@ -235,7 +235,7 @@ RETRACTED: tuple[Claim, ...] = (
     Claim(
         name="wat uit staat blijft uit",
         reason=(
-            "sinds anker 13 remt het stiltevenster alleen wie er ná het begin thuiskomt: wie al "
+            "het stiltevenster remt alleen wie er ná het begin thuiskomt: wie al "
             "thuis was houdt het huis aan de gang, ook met een apparaat dat uit stond, en een "
             "gast binnen het gastenvenster net zo"
         ),

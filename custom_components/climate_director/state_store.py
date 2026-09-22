@@ -61,13 +61,13 @@ class _StateStoreMixin(_CoordinatorBase):
     def _store_payload(self) -> dict[str, Any]:
         """Return the hand-given state worth keeping across a restart.
 
-        Sinds anker 13 staat ook het thuiskomstmoment erin: dat is wat een
-        herstart van een thuiskomst onderscheidt. Alleen voor wie op dit moment
+        Het thuiskomstmoment staat er ook in: dat is wat een herstart van een
+        thuiskomst onderscheidt. Alleen voor wie op dit moment
         thuis is - wie weg is heeft geen moment (besluit 3), en dat blijkt hier
         vanzelf, want de listener en het herstel halen het er dan al uit.
 
-        Since anchor 13 the homecoming moment is in here too: that is what
-        separates a restart from a homecoming. Only for whoever is home right
+        The homecoming moment is in here too: that is what separates a restart
+        from a homecoming. Only for whoever is home right
         now - somebody away has no moment (decision 3), and that shows here by
         itself, since the listener and the restore have already taken it out.
         """

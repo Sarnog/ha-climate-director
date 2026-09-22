@@ -173,12 +173,12 @@ def coordinator(
             self._home_since: dict[str, datetime] = {}
             """Leeg: deze stand-in meet de overdracht, niet het stiltevenster.
 
-            `_resident` leest sinds anker 13 het thuiskomstmoment uit de boekhouding
-            van de coördinator. Zonder moment leest een bewoner die thuis is als
-            slapend zodra zijn slaapsensor dat zegt.
+            `_resident` leest het thuiskomstmoment uit de boekhouding van de
+            coördinator. Zonder moment leest een bewoner die thuis is als slapend
+            zodra zijn slaapsensor dat zegt.
 
-            Empty: this stand-in measures the hand-back, not the quiet window. Since
-            anchor 13 `_resident` reads the homecoming moment from the coordinator's
+            Empty: this stand-in measures the hand-back, not the quiet window.
+            `_resident` reads the homecoming moment from the coordinator's
             bookkeeping. Without a moment a resident who is home reads as asleep
             whenever their sleep sensor says so.
             """

@@ -707,17 +707,17 @@ class _HandStandIn:
         self._home_since: dict[str, datetime] = {}
         """Leeg: deze stand-in leest alleen welke zones er zijn overgedragen.
 
-        `_resident` leest sinds anker 13 het thuiskomstmoment uit de boekhouding van
-        de coördinator. Zonder moment leest een bewoner die thuis is als slapend
-        zodra zijn slaapsensor dat zegt - en dat is precies wat de simulatie altijd
-        al mat, want daar stond `last_changed` van iedere entiteit op het begin van
-        de tijd en bij gelijke tijdstempels telt de melding.
+        `_resident` leest het thuiskomstmoment uit de boekhouding van de
+        coördinator. Zonder moment leest een bewoner die thuis is als slapend
+        zodra zijn slaapsensor dat zegt - en dat is de uitkomst die de simulatie
+        hoort te meten, want hier staat `last_changed` van iedere entiteit op het
+        begin van de tijd en bij gelijke tijdstempels telt de melding.
 
-        Empty: this stand-in only reads which zones were handed over. Since anchor
-        13 `_resident` reads the homecoming moment from the coordinator's
+        Empty: this stand-in only reads which zones were handed over.
+        `_resident` reads the homecoming moment from the coordinator's
         bookkeeping. Without a moment a resident who is home reads as asleep
-        whenever their sleep sensor says so - which is exactly what the simulation
-        always measured, since there every entity's `last_changed` sat at the
+        whenever their sleep sensor says so - which is the outcome the simulation
+        is meant to measure, since here every entity's `last_changed` sits at the
         beginning of time and on equal timestamps the reading counts.
         """
         self._commanded_off: dict[str, object] = {}
@@ -773,14 +773,14 @@ class _State:
     wanneer een entiteit veranderde, en dat hoeft ook niet: de enige lezer die
     ernaar kijkt is de regel "een slaapmelding van vóór de thuiskomst telt
     niet", en met gelijke tijdstempels valt die naar de kant waarop de melding
-    gewoon telt. De simulatie meet dus wat ze altijd al mat.
+    gewoon telt. De simulatie meet daarmee de uitkomst die ze hoort te meten.
 
     What `hass.states.get()` hands back inside the simulation. `last_changed`
     sits at the beginning of time. The simulation does not track when an entity
     changed, and need not: its only reader is the rule that a sleep reading from
     before the arrival does not count, and with equal timestamps that falls to
-    the side where the reading simply counts. So the simulation measures what it
-    always measured.
+    the side where the reading simply counts. So the simulation measures the
+    outcome it is meant to measure.
     """
 
     state: str

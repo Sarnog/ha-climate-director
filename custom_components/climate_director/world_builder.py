@@ -58,8 +58,8 @@ _HOME_STATES = frozenset({"home", "on", "true"})
 def reads_as_home(state: State | None) -> TypeGuard[State]:
     """Return whether a presence state reads as "home", the one way.
 
-    De enige plek die een aanwezigheidsentiteit als "thuis" leest. Sinds anker 13
-    is er een tweede lezer bij gekomen - de coördinator die een thuiskomst
+    De enige plek die een aanwezigheidsentiteit als "thuis" leest. Er is een
+    tweede lezer bij gekomen - de coördinator die een thuiskomst
     vastlegt en de opslag die bewaart wie er thuis was - en twee lezers van
     dezelfde entiteit mogen het nooit oneens zijn. Vandaar één functie met de
     statenlijst erin, aangeroepen door de wereld, de listener en het herstel.
@@ -67,8 +67,8 @@ def reads_as_home(state: State | None) -> TypeGuard[State]:
     Een onbekende entiteit of `None` is niet thuis: onwetendheid is geen
     aanwezigheid.
 
-    The one place that reads a presence entity as "home". Anchor 13 added a second
-    reader - the coordinator recording a homecoming, and the store keeping who was
+    The one place that reads a presence entity as "home". A second
+    reader came along - the coordinator recording a homecoming, and the store keeping who was
     home - and two readers of the same entity may never disagree. Hence one function
     with the state list in it, called by the world, the listener and the restore.
 
@@ -379,19 +379,19 @@ class _WorldBuilderMixin(_CoordinatorBase):
         herstart krijgt alles hetzelfde moment - telt de melding wél, want
         opschorten is de onschadelijke kant om fout te zitten.
 
-        Het moment komt sinds anker 13 uit de boekhouding van de coördinator
-        (`_home_since`), die een herstart overleeft en bij een terugval op
+        Het moment komt uit de boekhouding van de coördinator (`_home_since`),
+        die een herstart overleeft en bij een terugval op
         `last_changed` van de aanwezigheidsentiteit begint. Deze lezer schrijft
         daar nooit in: de wereld lezen en de wereld veranderen zijn twee dingen.
         Eén gevolg hoort opgeschreven: een bewoner die thuis is zonder bekend
         moment leest als *slapend* zodra zijn slaapsensor dat zegt. Dat is
-        dezelfde uitkomst als vóór anker 13 - daar was het moment het
+        dezelfde uitkomst als zonder die boekhouding - daar was het moment het
         tijdstempel van de aanwezigheidsentiteit, en bij gelijke tijdstempels
         telt de melding - en het is de onschadelijke kant: opschorten remt.
 
         Belangrijker voor het stiltevenster: na een herstart met een opgeslagen
         moment is `sleeper.last_changed` (het herstartmoment) nieuwer dan dat
-        moment, dus de slaapmelding telt gewoon. Precies zoals vandaag.
+        moment, dus de slaapmelding telt gewoon.
 
         Getting up and coming home are two different things, and the sleep
         sensor knows only the first. "Phone on the wireless charger" says
@@ -405,19 +405,19 @@ class _WorldBuilderMixin(_CoordinatorBase):
         same moment - the reading does count, since suspending is the harmless
         direction to be wrong in.
 
-        The moment comes from the coordinator's bookkeeping since anchor 13
-        (`_home_since`), which survives a restart and starts as a fallback on the
+        The moment comes from the coordinator's bookkeeping (`_home_since`),
+        which survives a restart and starts as a fallback on the
         presence entity's `last_changed`. This reader never writes there: reading
         the world and changing the world are two different things. One
         consequence belongs on paper: a resident who is home without a known
         moment reads as *asleep* whenever their sleep sensor says so. That is the
-        same outcome as before anchor 13 - there the moment was the presence
+        same outcome as without that bookkeeping - there the moment was the presence
         entity's timestamp, and on equal timestamps the reading counts - and it is
         the harmless direction: suspending brakes.
 
         More important for the quiet window: after a restart with a stored moment
         `sleeper.last_changed` (the restart moment) is newer than that moment, so
-        the sleep reading simply counts. Exactly as today.
+        the sleep reading simply counts.
         """
         state = self.hass.states.get(presence) if presence else None
         home = reads_as_home(state)

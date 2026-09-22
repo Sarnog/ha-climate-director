@@ -377,14 +377,14 @@ def _open_quiet_windows(
 ) -> tuple[tuple[TimeWindow, datetime], ...]:
     """Return the quiet windows standing open right now, with their beginning.
 
-    Precies dezelfde keuze als vóór anker 13: op een vakantie met eigen
+    Precies dezelfde keuze als buiten een vakantie: op een vakantie met eigen
     vakantievensters tellen alleen die, en dan op elke dag; anders de gewone
     vensters met de vakantiedag als zaterdag. Eén functie, omdat de lezer hierboven
     en de uitzondering van anker 13 hetzelfde venster moeten zien - en de begintijd
     komt uit datzelfde venster, zodat "staat open" en "begon om" niet uit elkaar
     kunnen lopen.
 
-    Exactly the same choice as before anchor 13: on a holiday with holiday windows
+    Exactly the same choice as outside a holiday: on a holiday with holiday windows
     of its own only those count, and then on any day; otherwise the ordinary
     windows with the holiday counted as a Saturday. One function, because the
     reader above and anchor 13's exception must see the same window - and the

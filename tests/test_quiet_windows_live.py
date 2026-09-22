@@ -17,7 +17,7 @@ integratie wordt hier verzet (`clock.place(...)`, `clock.advance(...)`), en de
 vensters worden uit díe klok afgeleid ("begon tien minuten geleden"). De engine
 vergelijkt twee tijdstippen, dus wat telt is of het venster in absolute zin vóór of
 ná dat moment begon - en dat schuift mee met de klok die deze test verzet. Daarom
-meet elke test hieronder op elk uur van de dag hetzelfde (H6 van ronde 13): een klok
+meet elke test hieronder op elk uur van de dag hetzelfde: een klok
 vooruit zet het venster ná elk moment dat deze test vastlegt ("al thuis"), een klok
 gelijk of terug zet het ervoor ("thuiskomer"). Elke test zegt welke van de twee hij
 meet, met `home_before(...)` als bewijs in plaats van als aanname.
@@ -28,7 +28,7 @@ is moved here (`clock.place(...)`, `clock.advance(...)`), and the windows are de
 from that clock ("began ten minutes ago"). The engine compares two instants, so what
 counts is whether the window began before or after that moment in absolute terms -
 and that shifts along with the clock this test moves. Every test below therefore
-measures the same at any hour of the day (H6 of round 13): a clock moved forward puts
+measures the same at any hour of the day: a clock moved forward puts
 the window after every moment this test records ("already home"), a clock level or
 moved back puts it before ("homecomer"). Each test says which of the two it measures,
 with `home_before(...)` as proof instead of an assumption.

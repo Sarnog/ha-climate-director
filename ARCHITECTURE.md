@@ -512,7 +512,7 @@ zelf wordt nooit uitgesteld, en een vooruit-verzoek waarop iemand uitdrukkelijk 
 doen" zei passeert de rem, precies zoals het de poort zelf passeert.
 
 De **stiltevensters** remmen het beginnen, niet het doorgaan: wat al draait houdt zijn
-gewone regeling. Sinds anker 13 kennen ze drie uitzonderingen, in deze volgorde:
+gewone regeling. Ze kennen drie uitzonderingen, in deze volgorde:
 gastenmodus binnen het gastenvenster (`_guests_carry_the_house`), een bewoner die al
 thuis was vóór het begin van dit venster (`home_since < started_at`), en het bestaande
 open roostervenster van een bewoner die thuis is. Wie in een leeg huis ná het begin
@@ -1685,7 +1685,7 @@ itself is never delayed, and a pre-conditioning request on which somebody expres
 "do it anyway" passes the brake, exactly as it passes the gate itself.
 
 The **quiet windows** brake starting, not continuing: whatever already runs keeps its
-ordinary regulation. Since anchor 13 they know three exceptions, in this order: guest
+ordinary regulation. They know three exceptions, in this order: guest
 mode inside the guest window (`_guests_carry_the_house`), a resident who was already
 home before this window began (`home_since < started_at`), and the existing open
 schedule window of a resident who is home. Whoever comes home to an empty house after
@@ -2078,7 +2078,7 @@ the ROADMAP.
 **A virtual `climate` per zone.** One control entity per room: a
 `climate.climate_director_<zone>` that fits an ordinary thermostat card.
 - Config: an option `virtual_climate_per_zone`, off by default. Existing entries lack the
-  option and behave exactly as today (`serialise.py` falls back to the default).
+  option and behave exactly the same (`serialise.py` falls back to the default).
 - HA layer: a new `climate.py` platform; `async_setup_entry` only creates entities when the
   option is on. The entity is input, like the switches: it restores its value after a
   restart, writes to the coordinator (`zone_targets`/`zone_modes`, the same pattern as
