@@ -1029,7 +1029,7 @@
     },
     "set_override": {
       "name": "Override setzen",
-      "description": "Übergibt eine Zone für eine Laufzeit, setzt das Gerät jetzt und schaltet es bei Ablauf aus oder lässt es stehen. Richte dich auf den Übersteuerungsschalter oder den Endzeitsensor der Zone, oder nenne die Zone.",
+      "description": "Übergibt eine Zone für eine Laufzeit, setzt das Gerät jetzt und schaltet es bei Ablauf aus oder lässt es stehen. Richte den Aufruf auf den Übersteuerungsschalter oder den Endzeitsensor der Zone, oder nenne die Zone.",
       "fields": {
         "entry_id": {
           "name": "Anlage",
@@ -1059,7 +1059,7 @@
     },
     "clear_override": {
       "name": "Override beenden",
-      "description": "Beendet die Übersteuerung der Zone wie der Schalter: der Director übernimmt die Zone wieder und sendet nichts extra. Richte dich auf den Übersteuerungsschalter oder den Endzeitsensor der Zone, oder nenne die Zone.",
+      "description": "Beendet die Übersteuerung der Zone wie der Schalter: der Director übernimmt die Zone wieder und sendet nichts extra. Richte den Aufruf auf den Übersteuerungsschalter oder den Endzeitsensor der Zone, oder nenne die Zone.",
       "fields": {
         "entry_id": {
           "name": "Anlage",
