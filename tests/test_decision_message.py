@@ -247,6 +247,92 @@ def test_the_connecting_words_are_words_and_not_templates(language: str) -> None
             assert jargon not in lowered, f"{language}/{which} gebruikt jargon ({jargon}): {word}"
 
 
+#: Het zelfstandig naamwoord waarmee het schermlabel van `require_schedule` de
+#: bewoner noemt, en het woord waarmee een zone naar zijn eigen kamer verwijst.
+#: De redenzin `outside_schedule` hoort het eerste te noemen en het tweede te
+#: vermijden: het rooster dat die reden tegenhoudt is het rooster van de
+#: bewoners (het scherm onder Stap 10) en niet van de zone (Stap 4), en een zone
+#: heeft geen roosterveld - wie de zin leest hoort naar de bewoners te kijken.
+#: De vergelijking is hoofdletterongevoelig, want `Bewohner` en `الساكنين` staan
+#: met een hoofdletter of een lidwoord in het label en zonder in de zin.
+#:
+#: The noun with which the screen label of `require_schedule` names the resident,
+#: and the word with which a zone refers to its own room. The reason sentence
+#: `outside_schedule` has to name the first and avoid the second: the schedule
+#: that reason holds back is the residents' schedule (the screen under step 10)
+#: and not the zone's (step 4), and a zone has no schedule field at all - whoever
+#: reads the sentence has to look at the residents. The comparison is
+#: case-insensitive, because `Bewohner` and `الساكنين` carry a capital or an
+#: article in the label and stand bare in the sentence.
+SCHEDULE_NOUN: dict[str, str] = {
+    "nl": "bewoner",
+    "en": "resident",
+    "de": "bewohner",
+    "fr": "occupant",
+    "es": "residente",
+    "ar": "ساكن",
+}
+
+ROOM_NOUN: dict[str, str] = {
+    "nl": "kamer",
+    "en": "room",
+    "de": "raum",
+    "fr": "pièce",
+    "es": "habitación",
+    "ar": "غرفة",
+}
+
+
+def require_schedule_label(language: str) -> str:
+    """Return the screen label of the schedule switch in one language."""
+    bestand = json.loads((TRANSLATIONS / f"{language}.json").read_text(encoding="utf-8"))
+    return bestand["options"]["step"]["settings"]["data"]["require_schedule"]
+
+
+@pytest.mark.parametrize("language", LANGUAGES)
+def test_the_schedule_noun_is_the_one_the_screen_uses(language: str) -> None:
+    """De woordenlijst hierboven hangt aan het scherm en niet aan zichzelf.
+
+    Een letterlijke lijst is de enige vorm die werkt voor "welk woord noemt deze
+    taal voor een bewoner", maar zo'n lijst veroudert stil. Daarom wordt elk
+    woord uit de lijst hier tegen het echte schermlabel gehouden: verandert
+    iemand het label, dan valt deze test om en moet de lijst mee - en dus ook de
+    zin die de gebruiker leest.
+
+    The word list above hangs on the screen and not on itself. A literal list is
+    the only shape that works for "which word does this language use for a
+    resident", but such a list ages quietly. That is why every word from the list
+    is held against the real screen label here: change the label and this test
+    falls over, so the list has to come along - and with it the sentence the user
+    reads.
+    """
+    label = require_schedule_label(language).lower()
+    assert SCHEDULE_NOUN[language] in label, f"{language}: {label}"
+
+
+@pytest.mark.parametrize("language", LANGUAGES)
+def test_the_schedule_sentence_names_a_resident_and_not_a_room(language: str) -> None:
+    """De redenzin noemt het ding dat op het scherm staat.
+
+    `outside_schedule` betekent "de roosters van de bewoners laten het nu niet
+    toe". De oude zin wees naar een rooster van de kamer, en dat bestaat niet:
+    `Zone` draagt geen roosterveld en het scherm waar de gebruiker het instelt
+    staat bij de bewoners. Wie de zin leest wordt naar het verkeerde scherm
+    gestuurd, dus de zin noemt het bewonerswoord van deze taal en niet het
+    kamerwoord van deze taal.
+
+    The reason sentence names the thing that stands on the screen.
+    `outside_schedule` means "the residents' schedules do not allow it now". The
+    old sentence pointed at a room's schedule, and that does not exist: `Zone`
+    carries no schedule field and the screen where the user sets it lives under
+    the residents. Whoever reads the sentence is sent to the wrong screen, so the
+    sentence names this language's resident word and not its room word.
+    """
+    sentence = reason_sentences(language)["outside_schedule"].lower()
+    assert SCHEDULE_NOUN[language] in sentence, f"{language}: {sentence}"
+    assert ROOM_NOUN[language] not in sentence, f"{language}: {sentence}"
+
+
 def test_the_three_examples_are_exactly_this() -> None:
     """De drie meldingen zoals de blueprint ze toont, in het Nederlands.
 

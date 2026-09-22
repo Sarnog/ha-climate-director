@@ -635,7 +635,7 @@
               "nobody_home": "لا أحد في البيت",
               "everyone_asleep": "الجميع نائمون",
               "waiting_for_sleeper": "لا يزال أحدهم نائمًا؛ والبيت ينتظر حتى وقته الأخير",
-              "outside_schedule": "خارج جدول هذه الغرفة",
+              "outside_schedule": "لا جدول لأي ساكن مفتوح الآن",
               "zone_unoccupied": "لا أحد في هذه الغرفة",
               "quiet_hours": "نافذة الهدوء تكبح البدء",
               "no_indoor_temperature": "لا يمكن قراءة درجة الحرارة الداخلية",

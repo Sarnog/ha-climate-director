@@ -635,7 +635,7 @@
               "nobody_home": "es ist niemand zu Hause",
               "everyone_asleep": "alle schlafen",
               "waiting_for_sleeper": "jemand schläft noch; das Haus wartet bis zu dessen spätester Zeit",
-              "outside_schedule": "außerhalb des Zeitplans dieses Raums",
+              "outside_schedule": "kein Zeitplan eines Bewohners ist offen",
               "zone_unoccupied": "in diesem Raum ist niemand",
               "quiet_hours": "das Ruhefenster hält den Start zurück",
               "no_indoor_temperature": "die Innentemperatur ist nicht zu lesen",

@@ -635,7 +635,7 @@
               "nobody_home": "no hay nadie en casa",
               "everyone_asleep": "todo el mundo duerme",
               "waiting_for_sleeper": "alguien sigue durmiendo; la casa espera hasta su hora límite",
-              "outside_schedule": "fuera del horario de esta habitación",
+              "outside_schedule": "no hay ningún horario de residente abierto",
               "zone_unoccupied": "no hay nadie en esta habitación",
               "quiet_hours": "la franja de silencio frena el arranque",
               "no_indoor_temperature": "no se puede leer la temperatura interior",

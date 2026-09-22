@@ -635,7 +635,7 @@
               "nobody_home": "er is niemand thuis",
               "everyone_asleep": "iedereen slaapt",
               "waiting_for_sleeper": "er slaapt nog iemand; het huis wacht tot diens uiterste tijd",
-              "outside_schedule": "buiten het rooster van deze kamer",
+              "outside_schedule": "het rooster van een bewoner staat niet open",
               "zone_unoccupied": "er is niemand in deze kamer",
               "quiet_hours": "het stiltevenster remt het beginnen",
               "no_indoor_temperature": "de binnentemperatuur is niet te lezen",
