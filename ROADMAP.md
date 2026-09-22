@@ -132,6 +132,25 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   vraagt een nieuwe meting. De poort telt alleen nog statementregels (`statement_lines`);
   de maat zou dat kunnen volgen, zodat commentaar, decorators en vervolgregels buiten de
   maat vallen.
+- **De markdown-bewaking kent `- ` en `* ` maar niet `+ `** — een opsomming met
+  plustekens is geldige Markdown en wordt toch overgeslagen, alsof de regel geen lijstitem
+  is.
+- **Een lijst direct onder een kop zonder lege regel is geldige Markdown en toch rood** —
+  de bewaking eist een lege regel tussen kop en lijst; dat is een smaakregel, geen
+  markdownregel.
+- **Alle zes gidsen zeggen *vóór deze versie* of *avant l'installation de cette
+  version*** — die formulering veroudert met elke uitgave; een gewone voorwaarde (*vóór je
+  begint*) blijft waar.
+- **De geslachtsbewaking dekt geen bijvoeglijk naamwoord** — *une zone actif* glipt
+  erdoor; de bewaking kijkt naar lidwoorden en voornaamwoorden, niet naar de vorm van het
+  bijvoeglijk naamwoord.
+- **Het decimaalteken van `units.display_temperature` is een punt** — de melding leest
+  *23.0 °C*, terwijl de nl-, de-, fr- en es-gidsen zelf *0,5* schrijven. Eén tekenkeuze
+  voor beide zou de gidsen en de melding gelijk maken.
+- **`options.step.zone.data_description.gate` toont de ruwe waarden `'household'` en
+  `'presence'`** — de gebruiker leest de sleutel in plaats van een zin in zijn taal.
+- **De laatste terugval van `reason_sentence` is de identifier zelf** — valt elke
+  vertaling weg, dan leest de gebruiker `circuit_conflict_lost` in plaats van een zin.
 
 ## Would have
 
@@ -268,6 +287,23 @@ The worked-out design proposals for everything below live in
   decorator or a continuation line in a noted file therefore shifts the number and asks for
   a fresh measurement. The gate counts statement lines only (`statement_lines`); the measure
   could follow, so that comments, decorators and continuation lines fall outside the measure.
+- **The markdown guard knows `- ` and `* ` but not `+ `** — a list with plus signs is
+  valid Markdown and is skipped anyway, as if the line were not a list item.
+- **A list straight under a heading without a blank line is valid Markdown and yet red** —
+  the guard demands a blank line between heading and list; that is a taste rule, not a
+  markdown rule.
+- **All six guides say *before this version* or *avant l'installation de cette version*** —
+  that wording ages with every release; an ordinary condition (*before you start*) stays
+  true.
+- **The gender guard does not cover an adjective** — *une zone actif* slips through; the
+  guard looks at articles and pronouns, not at the adjective's form.
+- **The decimal mark of `units.display_temperature` is a point** — the message reads
+  *23.0 °C*, while the nl, de, fr and es guides themselves write *0,5*. One choice of
+  character for both would make the guides and the message agree.
+- **`options.step.zone.data_description.gate` shows the raw values `'household'` and
+  `'presence'`** — the user reads the key instead of a sentence in their language.
+- **The last fallback of `reason_sentence` is the identifier itself** — if every
+  translation falls away, the user reads `circuit_conflict_lost` instead of a sentence.
 
 ## Would have
 
