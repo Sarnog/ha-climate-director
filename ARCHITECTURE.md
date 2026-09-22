@@ -741,6 +741,14 @@ Vier dingen zijn er subtiel aan:
 - **Eén event per zone, en alleen bij verandering.** Er wordt herrekend bij elke
   toestandswijziging van elke gevolgde entiteit; elke keer vuren zou elke automatisering
   die erop luistert verzuipen.
+- **Dat event draagt de beslissing ook in gewone taal.** Naast de identifiers staan er
+  `reason_text`, `action_text`, `source_name` en `message`: de reden als zin, wat er met het
+  apparaat gebeurt, de naam zoals de gebruiker die ziet, en de kant-en-klare melding die de
+  blueprint standaard toont. De zinnen komen uit `texts.py`; de identifier blijft het
+  contract — wie op `reason` filtert merkt van die vier velden niets. De actie volgt het
+  commando dat het plan dit apparaat geeft, niet de reden: een zone die door een poort wordt
+  tegengehouden krijgt evengoed een stand, en "met rust gelaten" zeggen terwijl het apparaat
+  wordt uitgezet is een leugen die de gebruiker ziet gebeuren.
 
 ### applier.py — uitvoeren
 
@@ -831,6 +839,18 @@ Deze module zoekt een zin op in de taal van de interface en valt terug op Engels
 zelfs, want een vertaling kan ontbreken én uit de pas lopen met de code. De zinnen wonen
 onder `exceptions` in `strings.json`, omdat Home Assistant het hoogste niveau van dat bestand
 tegen een vast schema valideert.
+
+De beslismelding heeft er een tweede woonplaats bij: de negenentwintig redenen, de vijf
+actiewoorden en de vier vormvarianten van de melding staan onder
+`entity.sensor.zone_source.state_attributes...` en `entity.sensor.would_command...`. Die plek
+is gekozen omdat hassfest hem accepteert en Home Assistant het attribuut dan ook op de
+entiteit zelf vertaald toont. `reason_sentence` en `action_sentence` lezen één stuk, en
+`decision_message` bouwt de zin: `<kamer>: <actie> — <reden>`, met het apparaat en zijn
+setpoint ertussen alleen als de director dat apparaat werkelijk aanstuurt. `decision_fields`
+is de enige aanroep die de coordinator nog doet: het zoekt de vier leesbare velden bij elkaar
+(welk apparaat, welke actie, welke zin) en woont hier en niet in de coordinator, omdat die al
+op de maatlijst staat en de zin tekst is en geen koppeling. Het resultaat is presentatie; de
+identifier blijft het contract.
 
 ### blueprints/ — de must-have automatiseringen, kant-en-klaar
 
@@ -1888,6 +1908,14 @@ Four things about it are subtle:
   existing sleep-versus-homecoming comparison, and redacted in the diagnostics.
 - **One event per zone, and only on change.** A decision is recomputed on every state change
   of every tracked entity; firing each time would drown any automation listening for it.
+- **That event also carries the decision in plain language.** Beside the identifiers stand
+  `reason_text`, `action_text`, `source_name` and `message`: the reason as a sentence, what
+  happens to the appliance, the name as the user sees it, and the ready-made notice the
+  blueprint shows by default. The sentences come from `texts.py`; the identifier stays the
+  contract — whoever filters on `reason` notices nothing of those four fields. The action
+  follows the command the plan gives this appliance, not the reason: a zone held back by a
+  gate gets a mode all the same, and saying "left alone" while the appliance is switched off
+  is a lie the user watches happen.
 
 ### applier.py — execution
 
@@ -1975,6 +2003,18 @@ This module looks a sentence up in the language of the interface and falls back 
 twice, in fact, since a translation may be missing *and* may have drifted from the code. The
 sentences live under `exceptions` in `strings.json`, because Home Assistant validates the top
 level of that file against a fixed schema.
+
+The decision message has a second home here: the twenty-nine reasons, the five action words
+and the four shape variants of the message live under
+`entity.sensor.zone_source.state_attributes...` and `entity.sensor.would_command...`. That
+spot was chosen because hassfest accepts it and Home Assistant then shows the attribute
+translated on the entity itself. `reason_sentence` and `action_sentence` read one piece, and
+`decision_message` builds the sentence: `<room>: <action> — <reason>`, with the appliance and
+its setpoint in between only when the director really drives that appliance. `decision_fields`
+is the one call the coordinator still makes: it gathers the four readable fields (which
+appliance, which action, which sentence) and lives here rather than in the coordinator,
+because that one already sits on the measure list and the sentence is text, not binding. The
+result is presentation; the identifier stays the contract.
 
 ### blueprints/ — the must-have automations, ready-made
 

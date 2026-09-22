@@ -946,6 +946,15 @@ Mientras nadie escuche una petición de preacondicionamiento rechazada, Home
 Assistant muestra un aviso de reparación al respecto. Desaparece solo en cuanto
 una automatización se apoya en ese evento.
 
+El aviso de **Qué se decidió** habla por defecto en lenguaje llano: la
+integración construye la frase ella misma, en el idioma de tu interfaz, con la
+habitación, lo que ocurre, el aparato con el nombre que tú le diste y el motivo
+como una frase corriente — por ejemplo *Salón: va a calentar con Caldera a
+23.0 °C — la habitación lo pide.* El campo *Bericht / Message* sigue siendo una
+plantilla: si lo dejas como está, obtienes esa frase, y si escribes tu propio
+texto, se respeta. El motivo sigue siendo en ambos casos un valor estable para
+filtrar.
+
 ## Resolver problemas
 
 - **`binary_sensor.*_atascado`** se enciende cuando una zona lleva demasiado tiempo

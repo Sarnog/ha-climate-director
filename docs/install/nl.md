@@ -938,6 +938,14 @@ Zolang er niemand naar een geweigerd vooruit-verzoek luistert, staat daar een
 reparatiemelding over in Home Assistant. Die verdwijnt vanzelf zodra er een
 automatisering op die gebeurtenis staat.
 
+De melding van **Wat er besloten is** staat standaard in gewone taal: de
+integratie bouwt de zin zelf op, in de taal van je interface, met de kamer, wat
+er gebeurt, het apparaat bij de naam die jij het gaf en de reden als gewone zin
+— bijvoorbeeld *Woonkamer: gaat verwarmen met Cv-ketel op 23.0 °C — de kamer
+vraagt erom.* Het veld *Bericht / Message* blijft een sjabloon: laat je het met
+rust, dan krijg je die zin, en schrijf je er je eigen tekst, dan houd je die. De
+reden zelf blijft in beide gevallen de stabiele waarde om op te filteren.
+
 ## Problemen oplossen
 
 - **`binary_sensor.*_vastgelopen`** gaat aan als een zone te lang op dezelfde

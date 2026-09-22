@@ -964,6 +964,15 @@ Tant que personne n'écoute une demande de préparation refusée, Home Assistant
 affiche un avis de réparation à ce sujet. Il disparaît de lui-même dès qu'une
 automatisation repose sur cet événement.
 
+La notification de **Ce qui a été décidé** parle par défaut en langage courant :
+l'intégration construit la phrase elle-même, dans la langue de votre interface,
+avec la pièce, ce qui se passe, l'appareil sous le nom que vous lui avez donné
+et la raison sous forme de phrase ordinaire — par exemple *Salon : va chauffer
+avec Chaudière à 23.0 °C — la pièce le demande.* Le champ *Bericht / Message*
+reste un modèle : laissez-le tel quel et vous obtenez cette phrase, et si vous
+écrivez votre propre texte, il est conservé. La raison elle-même reste dans les
+deux cas une valeur stable pour filtrer.
+
 ## Résoudre les problèmes
 
 - **`binary_sensor.*_bloque`** s'allume quand une zone reste trop longtemps sur

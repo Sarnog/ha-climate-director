@@ -39,9 +39,20 @@ from custom_components.climate_director.engine import Reason
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TRANSLATIONS = ROOT / "custom_components" / "climate_director" / "translations"
+GUIDES = ROOT / "docs" / "install"
 
 #: De zes vertaalbestanden plus het Engels dat `strings.json` zelf draagt.
 LANGUAGES = ("nl", "en", "de", "fr", "es", "ar")
+
+#: De stukken van het voorbeeld dat elke gids toont, in de woorden van die gids.
+GUIDE_EXAMPLES: dict[str, tuple[str, str]] = {
+    "nl": ("Woonkamer", "Cv-ketel"),
+    "en": ("Living room", "Boiler"),
+    "de": ("Wohnzimmer", "Heizkessel"),
+    "fr": ("Salon", "Chaudière"),
+    "es": ("Salón", "Caldera"),
+    "ar": ("غرفة المعيشة", "الغلاية"),
+}
 
 REASONS = tuple(item.value for item in Reason)
 
@@ -257,6 +268,41 @@ def test_the_three_examples_are_exactly_this() -> None:
         )
         == "Slaapkamer: wordt met rust gelaten — deze kamer is aan jou overgedragen."
     )
+
+
+@pytest.mark.parametrize("language", LANGUAGES)
+def test_the_guide_shows_an_example_the_template_really_gives(language: str) -> None:
+    """Het voorbeeld in elke gids is geen losse belofte.
+
+    De zes gidsen tonen elk één melding in hun eigen woorden. Die staat hier
+    niet als zes lossen strings die kunnen afdrijven: de test bouwt hem uit het
+    sjabloon van die taal en eist dat hij letterlijk in de gids staat. Verandert
+    een verbindingswoord, dan valt de gids om en niet pas de gebruiker.
+
+    The example in every guide is not a loose promise. The six guides each show
+    one message in their own words. It does not stand here as six loose strings
+    that can drift: the test builds it from that language's template and demands
+    it stands literally in the guide. Change a connecting word and the guide
+    falls over, not the user.
+    """
+    room, appliance = GUIDE_EXAMPLES[language]
+    expected = message_templates(language)["appliance_target"].format(
+        zone=room,
+        action=action_sentences(language)["heat"],
+        reason=reason_sentences(language)["regulating"],
+        source=appliance,
+        target="23.0 °C",
+    )
+    guide = (GUIDES / f"{language}.md").read_text(encoding="utf-8")
+    # De gidsen zijn op tachtig kolommen afgebroken, dus de zin loopt daar over
+    # twee regels; vergelijken op de woorden in volgorde maakt dat onverschillig
+    # zonder de eis los te laten.
+    #
+    # The guides wrap at eighty columns, so the sentence runs over two lines
+    # there; comparing on the words in order makes that indifferent without
+    # letting the demand go.
+    wrapped = " ".join(expected.split())
+    assert f"*{wrapped}*" in " ".join(guide.split()), expected
 
 
 # -- de live helft / the live half -------------------------------------------

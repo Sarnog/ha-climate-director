@@ -950,6 +950,15 @@ Solange niemand auf eine abgelehnte Vorbereitungs-Anfrage hört, steht dazu ein
 Reparaturhinweis in Home Assistant. Der verschwindet von selbst, sobald eine
 Automatisierung auf diesem Ereignis steht.
 
+Die Meldung von **Was entschieden wurde** spricht standardmäßig in normaler
+Sprache: die Integration baut den Satz selbst, in der Sprache deiner
+Oberfläche, mit dem Raum, dem, was passiert, dem Gerät unter dem Namen, den du
+ihm gegeben hast, und dem Grund als gewöhnlichem Satz — zum Beispiel
+*Wohnzimmer: wird heizen mit Heizkessel auf 23.0 °C — der Raum fragt danach.*
+Das Feld *Bericht / Message* bleibt eine Vorlage: lässt du es in Ruhe, bekommst
+du diesen Satz, und schreibst du deinen eigenen Text, dann bleibt der stehen.
+Der Grund selbst bleibt in beiden Fällen ein stabiler Wert zum Filtern.
+
 ## Probleme lösen
 
 - **`binary_sensor.*_festgefahren`** geht an, wenn eine Zone zu lange auf demselben

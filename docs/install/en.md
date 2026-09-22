@@ -929,6 +929,15 @@ For as long as nobody is listening for a refused pre-conditioning request, Home
 Assistant carries a repair notice about it. That disappears by itself once an
 automation stands on that event.
 
+The **What was decided** notice speaks plain language by default: the
+integration builds the sentence itself, in the language of your interface, with
+the room, what happens, the appliance by the name you gave it and the reason as
+an ordinary sentence — for instance *Living room: is going to heat with Boiler
+at 23.0 °C — the room is asking for it.* The *Bericht / Message* field stays a
+template: leave it alone and you get that sentence, and write your own text and
+it is kept as it is. The reason itself stays a stable value to filter on either
+way.
+
 ## Troubleshooting
 
 - **`binary_sensor.*_stuck`** comes on when a zone sits on the same waiting
