@@ -26,6 +26,12 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   de aanwezigheidssensor en de nalooptijd zijn al per zone; een slaapkamer wil daarnaast
   andere slaap- en stiltevensters dan een woonkamer.
 
+- **De structurele afspraken achter de bronbewakingen staan in een genegeerd bestand** — de
+  docstrings van de tekstbewakingen verwijzen voor de afspraak achter de toets naar
+  `AGENTS.md`, en dat bestand staat in `.gitignore`. Wie de repo kloont kan die afspraak dus
+  niet nalezen, en een bewaking die er zelf naar zou kijken zou in CI omvallen. De afspraken
+  horen in `ARCHITECTURE.md`, dat wél meegaat in de repo.
+
 ## Could have
 
 - **De veldenkaart van de formulierbewaking valt stil terug op de `Call`-knoop** —
@@ -144,6 +150,18 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 - **De geslachtsbewaking dekt geen bijvoeglijk naamwoord** — *une zone actif* glipt
   erdoor; de bewaking kijkt naar lidwoorden en voornaamwoorden, niet naar de vorm van het
   bijvoeglijk naamwoord.
+- **De richtingsbewaking kent alleen de werkwoorden uit `DIRECTION_WORDS`** — een synoniem
+  dat ook een richting uitspreekt, zoals Nederlands *stookt*, blijft groen; een
+  synoniemlijst per taal zou dat dichten.
+- **De actiewoord-bewaking draagt een lijst goedgekeurde tokens** — in het Spaans eindigen
+  *va*, *apaga*, *deja* en *reposo* toevallig op een geslachtsuitgang en in het Arabisch
+  begint *تشغيل* toevallig met een persoonsvoorvoegsel, zonder dat die woorden buigen; een
+  fijnere regel zou die lijst overbodig maken.
+- **De geslachtsbewaking ziet het schermwoord niet binnen een entiteit-id** — de `_` in
+  `switch.*_puenteo_<opening>` is voor een reguliere expressie een letter, dus daar houdt de
+  woordgrens op; de **tabelvorm** (`| ... | activado = ... |`) zet de beschrijvende vorm vóór
+  het scheidingsteken, terwijl de bewaking achter het teken kijkt. Juist op die twee plekken
+  kan het geslacht fout gaan; de bewaking heeft ze met naam in haar docstring staan.
 - **Het decimaalteken van `units.display_temperature` is een punt** — de melding leest
   *23.0 °C*, terwijl de nl-, de-, fr- en es-gidsen zelf *0,5* schrijven. Eén tekenkeuze
   voor beide zou de gidsen en de melding gelijk maken.
@@ -183,6 +201,11 @@ The worked-out design proposals for everything below live in
   live in `GateSettings` for the whole installation. The household-vs-presence choice, the
   presence sensor and the grace period are already per zone; a bedroom also wants different
   sleep and quiet windows from a living room.
+- **The structural agreements behind the source guards stand in an ignored file** — the
+  docstrings of the text guards point for the agreement behind the test at `AGENTS.md`, and
+  that file is in `.gitignore`. Anyone cloning the repo therefore cannot read the agreement,
+  and a guard that looked at it itself would fall over in CI. Those agreements belong in
+  `ARCHITECTURE.md`, which does travel with the repo.
 
 ## Could have
 
@@ -297,6 +320,18 @@ The worked-out design proposals for everything below live in
   true.
 - **The gender guard does not cover an adjective** — *une zone actif* slips through; the
   guard looks at articles and pronouns, not at the adjective's form.
+- **The direction guard only knows the verbs in `DIRECTION_WORDS`** — a synonym that also
+  names a direction, such as Dutch *stookt*, stays green; a synonym list per language would
+  close that.
+- **The action-word guard carries a list of approved tokens** — in Spanish *va*, *apaga*,
+  *deja* and *reposo* happen to end in a gender ending and in Arabic *تشغيل* happens to begin
+  with a person prefix without those words bending; a finer rule would make that list
+  superfluous.
+- **The gender guard does not see the screen word inside an entity id** — the `_` in
+  `switch.*_puenteo_<opening>` counts as a letter to a regular expression, so the word
+  boundary stops there; and the **table shape** (`| ... | activado = ... |`) puts the
+  descriptive form before the separator, while the guard looks behind the sign. Those two are
+  exactly where the gender can go wrong; the guard names them in its docstring.
 - **The decimal mark of `units.display_temperature` is a point** — the message reads
   *23.0 °C*, while the nl, de, fr and es guides themselves write *0,5*. One choice of
   character for both would make the guides and the message agree.
