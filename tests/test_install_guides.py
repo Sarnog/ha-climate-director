@@ -446,7 +446,6 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.settings.data.max_precondition": ("أقصى مدة للتهيئة المسبقة (بالدقائق)"),
         "options.step.settings.data.outdoor_sensor": ("مستشعر حرارة الخارج"),
         "options.step.settings.data.require_awake": ("يجب أن يكون أحد الموجودين مستيقظًا"),
-        "options.step.settings.data.require_schedule": ("يجب أن يكون جدول أحد الساكنين مفتوحًا"),
         "options.step.settings.data.season_entity": ("كيان الموسم"),
         "options.step.settings.data.stuck_after": ("تُعدّ المنطقة متعثّرة بعد (بالدقائق)"),
         "options.step.settings.data.when_done": ("عند الانتهاء هنا"),
