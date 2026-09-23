@@ -235,6 +235,48 @@ class TestTheyMatchTheIntegration:
         assert ready == "kant-en-klaar"
         assert "Woonkamer" in older and "regulating" in older, older
 
+    def test_the_fallback_puts_no_punctuation_that_is_wrong_somewhere(self) -> None:
+        """De terugval van het bericht zet geen dubbele punt.
+
+        Deze test leest de **bron** (het blueprintbestand) en niet een
+        runtimeobject, want de standaardtekst van een automatisering bestaat
+        alleen als tekst in dat YAML-bestand.
+
+        Wat hij **dekt**: een dubbele punt (`:`) waar dan ook in wat de terugval
+        oplevert, met of zonder spatie erna - dus zowel `kamer: stand` als
+        `kamer:stand`, en ook een dubbele punt midden in de zin. Wat hij **niet**
+        dekt: andere leestekens die in één taal ongebruikelijk zijn, de
+        spatieregels rond de em-dash, en een gebruiker die in zijn eigen sjabloon
+        zelf een dubbele punt zet - dat is zijn eigen zin. De structurele
+        afspraak erbij staat in `AGENTS.md`.
+
+        Waarom: de Franse zinsbouw zet een **spatie vóór** de dubbele punt
+        (`Woonkamer : ...`) en een blueprint kan niet vertalen. Het
+        scheidingsteken dat de integratie zelf gebruikt is de em-dash met spaties
+        eromheen, en dat teken is in alle zeven talen goed.
+
+        The fallback puts no colon: French puts a space **before** the colon and
+        a blueprint cannot translate. The separator the integration itself uses
+        is the em dash with spaces around it, which is right in all seven
+        languages.
+        """
+        data = load(FOLDER / "decisions.yaml")
+        default = data["blueprint"]["input"]["message"]["default"]
+        engine = jinja2.Environment(undefined=jinja2.StrictUndefined)
+        older = engine.from_string(default).render(
+            trigger={
+                "event": {
+                    "data": {
+                        "zone_name": "Woonkamer",
+                        "granted": "heat",
+                        "reason": "regulating",
+                    }
+                }
+            }
+        )
+        assert ":" not in older, older
+        assert "Woonkamer" in older and "heat" in older and "regulating" in older, older
+
     def test_the_refusal_blueprint_leaves_the_duration_to_the_installation(self) -> None:
         """The notification names the configured maximum, so the request must use it."""
         text = self._text("precondition_refused.yaml")

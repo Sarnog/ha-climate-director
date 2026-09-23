@@ -114,7 +114,7 @@ blueprint:
         it as it is. An event without `message` - an older integration - falls
         back to the room, the mode and the reason instead of raising a template
         error.
-      default: "{{ trigger.event.data.message | default(trigger.event.data.zone_name ~ ': ' ~ trigger.event.data.granted ~ ' (' ~ trigger.event.data.reason ~ ')') }}"
+      default: "{{ trigger.event.data.message | default(trigger.event.data.zone_name ~ ' — ' ~ trigger.event.data.granted ~ ' (' ~ trigger.event.data.reason ~ ')') }}"
       selector:
         text:
           multiline: true
