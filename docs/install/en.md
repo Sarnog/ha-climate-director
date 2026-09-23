@@ -285,7 +285,7 @@ you pick its sources straight away.
 | **Order within this zone** | which source is preferred; **lower wins** |
 | **Use from this outdoor temperature** | the lower bound; included in the range |
 | **Use up to this outdoor temperature** | the upper bound; excluded from the range |
-| **Zones this appliance also serves** | the rooms it heats or cools along with it the moment it runs; empty = this zone only |
+| **Zones this appliance also serves** | the rooms it heats or cools along with this one the moment it runs; empty = this zone only |
 | **Wait this long before taking over** | how long a source in that area must already have been unreachable; five minutes by default, zero is at once |
 
 ### Outdoor bounds: half open
@@ -966,7 +966,7 @@ and `reason_text` is that same reason as an ordinary sentence.
   restart out of it. It counts especially for an unreadable indoor temperature,
   since the director then leaves a running appliance alone and that appliance
   holds its outdoor unit to its duty.
-- **A role asking a mode the appliance cannot run** appears there too, after
+- **A role asking for a mode the appliance cannot run** appears there too, after
   five minutes. Think of a source with the *heating and cooling* role on a unit
   reporting only `heat` and `off`: the director skips it for cooling, and from
   the outside that looks like a room with nothing to do. Check the role under
@@ -998,7 +998,7 @@ Under **Repairs** you may run into these notices, with what they mean and what t
 - **Nobody hears a refused pre-conditioning request** — no automation listens for the refusal event; import the *Refused pre-conditioning* blueprint (`precondition_refused.yaml`) and build an automation from it.
 - **Climate Director: <name> sets a season that locks <count> duty/duties out** — the season is set to one in which an installed duty can never run; change the season or the duty.
 - **Climate Director: <name> cannot read <count> entity(ies)** — a configured entity does not exist, is gone or produces no number; correct the entity or bring the sensor back.
-- **Climate Director: <name> asks a mode that <count> appliance(s) cannot run** — a role asks for a mode the appliance does not report; change the role or pick another appliance.
+- **Climate Director: <name> asks for a mode that <count> appliance(s) cannot run** — a role asks for a mode the appliance does not report; change the role or pick another appliance.
 
 ## Known limitations
 
