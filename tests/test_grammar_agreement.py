@@ -216,15 +216,39 @@ PARTICIPLES: dict[str, tuple[str, dict[str, str]]] = {
 #: ertussen. Die smalle kant is bewust: zonder scheidingsteken valt niet te zien
 #: waar de vorm bij hoort.
 #:
+#: Twee schrijfwijzen die er daarom naast vallen, met naam:
+#:
+#: (1) het schermwoord **binnen een entiteit-id** (`switch.*_puenteo_<opening>`):
+#:     de `_` is voor een reguliere expressie een letter, dus de woordgrens klopt
+#:     daar niet en de bewaking ziet het woord niet;
+#: (2) de **tabelvorm** waarin de vorm vóór het scheidingsteken staat
+#:     (`| ... | activado = esta abertura ... |`): de bewaking leest de vorm
+#:     áchter het teken en zou daar het eerste woord van de uitleg pakken, wat een
+#:     valse melding zou geven.
+#:
+#: Beide staan als idee in `ROADMAP.md`. Wat ze draagt is de structurele afspraak
+#: in `AGENTS.md`: een beschrijvende vorm hoort bij het schermwoord en draagt dus
+#: diens geslacht, waar hij ook staat.
+#:
 #: The shape in which the guide explains a screen word: the word, then a `:` or an
 #: `=` within eighty characters, and behind it the descriptive form
-#: (`**Puenteo** (...): activado`, or `activado = ...`). In such a definition the
-#: screen word is the subject and nothing else decides, so the descriptive form
-#: ought to carry its gender. The guard looks within one line only, and only at
-#: the form directly behind the separator; an adjective further along the same
-#: line stays out, as does a form without a `:` or `=` in between. That narrow
-#: side is deliberate: without a separator there is no telling what the form
-#: belongs to.
+#: (`**Puenteo** (...): activado`). In such a definition the screen word is the
+#: subject and nothing else decides, so the descriptive form ought to carry its
+#: gender. The guard looks within one line only, and only at the form directly
+#: behind the separator; an adjective further along the same line stays out, as
+#: does a form without a `:` or `=` in between. That narrow side is deliberate:
+#: without a separator there is no telling what the form belongs to.
+#:
+#: Two spellings therefore fall beside it, by name: (1) the screen word **inside an
+#: entity id** (`switch.*_puenteo_<opening>`) - an underscore counts as a letter to
+#: a regular expression, so the word boundary does not hold there and the guard
+#: does not see the word; and (2) the **table shape** in which the form stands
+#: before the separator (`| ... | activado = esta abertura ... |`) - the guard
+#: reads the form behind the sign and would pick up the first word of the
+#: explanation there, which would be a false report. Both stand as ideas in
+#: `ROADMAP.md`. What carries them is the structural agreement in `AGENTS.md`: a
+#: descriptive form belongs to the screen word and therefore carries its gender,
+#: wherever it stands.
 DEFINED_FORM = r"[^\n:=]{0,80}?[:=]\s*(?:no\s+)?([a-zà-ÿ]+)"
 
 
