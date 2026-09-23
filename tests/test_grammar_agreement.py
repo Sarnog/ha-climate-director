@@ -30,6 +30,12 @@ vormen hij toetst:
   en het schermwoord toevallig mede-aanwezig. Een bijvoeglijk naamwoord dat
   los achter het zelfstandig naamwoord staat (*une zone actif*) valt er ook
   buiten, om dezelfde reden.
+- de **beschrijvende vorm achter `:` of `=`** in een definitie van het
+  schermwoord, binnen één regel en binnen tachtig tekens na het woord
+  (`**Puenteo** (...): activado`). Daar is het schermwoord het onderwerp en
+  beslist niets anders, dus de vorm draagt zijn geslacht. Een vorm verderop in
+  dezelfde regel blijft buiten, want daar kan een ander woord het onderwerp
+  zijn.
 
 De vergelijking is hoofdletterongevoelig, zodat een kop die met het schermwoord
 begint niet langs de bewaking glipt. Meervouden staan er niet bij waar het
@@ -63,7 +69,13 @@ its own subject decides. That is measured, not thrift: in *rien ne s'est passé*
 next to the table row *Préparation refusée*, in *{openings} est ignoré* next to
 *{zone}*, and in *La porte de planning est activée* the participle is right and
 the screen word merely happens to be nearby. An adjective standing loose behind
-the noun (*une zone actif*) stays outside for the same reason. The comparison is
+the noun (*une zone actif*) stays outside for the same reason. The
+**descriptive form behind `:` or `=`** in a definition of the screen word is
+checked too, within one line and within eighty characters after the word
+(`**Puenteo** (...): activado`). There the screen word is the subject and
+nothing else decides, so the form carries its gender. A form further along the
+same line stays outside, because there another word can be the subject. The
+comparison is
 case-insensitive, plurals are listed only where the determiner still carries a
 gender (Spanish *las* against *los*), and German does not take part because its
 cases make *der Übersteuerung* correct in the dative.
@@ -109,6 +121,8 @@ SCREEN_NOUNS: dict[str, tuple[tuple[str, str], ...]] = {
         ("zonas", "v"),
         ("fuente", "v"),
         ("fuentes", "v"),
+        ("puenteo", "m"),
+        ("puenteos", "m"),
     ),
     "nl": (
         ("override", "de"),
@@ -190,6 +204,48 @@ PARTICIPLES: dict[str, tuple[str, dict[str, str]]] = {
         },
     ),
 }
+
+
+#: De vorm waarin de gids een schermwoord uitlegt: het woord, dan binnen tachtig
+#: tekens een `:` of een `=`, en daarachter de beschrijvende vorm
+#: (`**Puenteo** (...): activado`, of `activado = ...`). In zo'n definitie is het
+#: schermwoord het onderwerp en beslist niets anders, dus de beschrijvende vorm
+#: hoort zijn geslacht te dragen. De bewaking kijkt alleen binnen één regel en
+#: alleen naar de vorm direct achter het scheidingsteken; een bijvoeglijk naamwoord
+#: verderop in dezelfde regel blijft buiten, net als een vorm zonder `:` of `=`
+#: ertussen. Die smalle kant is bewust: zonder scheidingsteken valt niet te zien
+#: waar de vorm bij hoort.
+#:
+#: The shape in which the guide explains a screen word: the word, then a `:` or an
+#: `=` within eighty characters, and behind it the descriptive form
+#: (`**Puenteo** (...): activado`, or `activado = ...`). In such a definition the
+#: screen word is the subject and nothing else decides, so the descriptive form
+#: ought to carry its gender. The guard looks within one line only, and only at
+#: the form directly behind the separator; an adjective further along the same
+#: line stays out, as does a form without a `:` or `=` in between. That narrow
+#: side is deliberate: without a separator there is no telling what the form
+#: belongs to.
+DEFINED_FORM = r"[^\n:=]{0,80}?[:=]\s*(?:no\s+)?([a-zà-ÿ]+)"
+
+
+def wrong_defined_forms(language: str, text: str) -> list[str]:
+    """Elke beschrijvende vorm achter `:` of `=` die niet bij het schermwoord past.
+
+    Every descriptive form behind `:` or `=` that does not fit the screen word.
+    """
+    if language not in PARTICIPLES:
+        return []
+    _, endings = PARTICIPLES[language]
+    longest_first = sorted(endings, key=len, reverse=True)
+    wrong = []
+    for word, gender in SCREEN_NOUNS[language]:
+        pattern = re.compile(rf"\b{re.escape(word)}\b{DEFINED_FORM}", re.IGNORECASE)
+        for match in pattern.finditer(text):
+            form = match.group(1).lower()
+            ending = next((e for e in longest_first if form.endswith(e)), None)
+            if ending is not None and endings[ending] != gender:
+                wrong.append(f"{word}: {match.group(0)}")
+    return wrong
 
 
 def leaves(node: object, path: str = "") -> dict[str, str]:
@@ -296,7 +352,8 @@ def test_screen_nouns_keep_their_gender(language: str) -> None:
     onbepaald lidwoord en het aanwijzend voornaamwoord direct vóór het woord, het
     wederkerend voornaamwoord in dezelfde zin wanneer daar precies één
     schermwoord in staat, en het voltooid deelwoord wanneer het schermwoord met
-    zijn eigen lidwoord direct vóór het hulpwerkwoord staat. De zes gidsen en de
+    zijn eigen lidwoord direct vóór het hulpwerkwoord staat, en de beschrijvende
+    vorm achter `:` of `=` in een definitie van het schermwoord. De zes gidsen en de
     zeven vertaalbestanden zijn de teksten die een gebruiker leest; een fout
     geslacht staat daar letterlijk op het scherm.
 
@@ -315,5 +372,7 @@ def test_screen_nouns_keep_their_gender(language: str) -> None:
             for found in wrong_reflexives(language, text):
                 problems.append(f"{where}: {found}")
             for found in wrong_participles(language, text):
+                problems.append(f"{where}: {found}")
+            for found in wrong_defined_forms(language, text):
                 problems.append(f"{where}: {found}")
     assert not problems, "een schermwoord houdt zijn geslacht:\n" + "\n".join(problems)

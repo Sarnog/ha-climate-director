@@ -614,7 +614,7 @@ La habitación indica entonces `opening_open_elsewhere` como motivo, para que
 veas por qué no ocurre nada. Dos cosas siguen como siempre: una zona con
 anulación y una fuente manual no se gobiernan, tampoco por esta lista.
 
-Cada abertura tiene su propio identificador, guardado de forma invisible, y de él cuelga el interruptor de puenteo (`switch.*_puenteo_<opening>`), de modo que sigue existiendo al cambiar el sensor; el **Nombre** es solo la etiqueta que ves tú. Si una abertura aún no tenía identificador, ese identificador es el sensor y el interruptor se llama como el nombre que muestra el propio sensor: si aparece más tarde o lo renombras, el nombre del interruptor lo sigue sin recargar. Activada = el director hace como si esta abertura no existiera — sus propias zonas y la parada global la ignoran. No hay duración: se mantiene hasta que la apagues tú mismo. Mientras siga activa con la abertura realmente abierta, el director lo informa en *Reparaciones*.
+Cada abertura tiene su propio identificador, guardado de forma invisible, y de él cuelga el interruptor de puenteo (`switch.*_puenteo_<opening>`), de modo que sigue existiendo al cambiar el sensor; el **Nombre** es solo la etiqueta que ves tú. Si una abertura aún no tenía identificador, ese identificador es el sensor y el interruptor se llama como el nombre que muestra el propio sensor: si aparece más tarde o lo renombras, el nombre del interruptor lo sigue sin recargar. Activado = el director hace como si esta abertura no existiera — sus propias zonas y la parada global la ignoran. No hay duración: se mantiene hasta que lo apagues tú mismo. Mientras siga activo con la abertura realmente abierta, el director lo informa en *Reparaciones*.
 
 ## Paso 12 — Guardar y cerrar
 
@@ -692,7 +692,7 @@ interviene en cuanto vence un límite de tiempo.
   dejar una zona a tus propias automatizaciones durante días. Apagar un aparato
   en el aparato *mismo* sí caduca al acostarse o con la casa vacía; eso está más
   abajo.
-- **Puenteo** (`switch.*_puenteo_<opening>`): activada = esta abertura no existe para el director. Se mantiene hasta que la apagues tú mismo; mientras siga activa con la abertura realmente abierta, el director lo informa en *Reparaciones*.
+- **Puenteo** (`switch.*_puenteo_<opening>`): activado = esta abertura no existe para el director. Se mantiene hasta que lo apagues tú mismo; mientras siga activo con la abertura realmente abierta, el director lo informa en *Reparaciones*.
 - **Botón de preacondicionamiento** (`button.*_preacondicionar_<zone>`) y
   **duración** (`number.*_duracion_del_preacondicionamiento`): ver abajo.
 
