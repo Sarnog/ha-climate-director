@@ -218,11 +218,25 @@ def test_the_reason_is_a_sentence_without_identifiers_or_jargon(language: str, r
 #: dus geen van beide richtingen uitspreken. Per taal letterlijk, met stam, want
 #: er is geen runtime-object dat "richting" meet.
 #:
+#: Wat de toets dekt: elke schrijfwijze van die stammen, want voor de vergelijking
+#: worden de Arabische diakritieken (U+064B-U+0652 en U+0670) uit zowel de zin als
+#: de naald gehaald - Arabisch wordt in de praktijk zonder diakritieken
+#: geschreven, dus `يدفئ` en `يدفّئ` zijn dezelfde verboden richting. Wat zij
+#: bewust niet dekt: een synoniem dat geen richtingswerkwoord uit deze lijst is
+#: (Nederlands *stookt* blijft groen); dat staat als idee in `ROADMAP.md`.
+#:
 #: Verbs that pick a direction - heating or cooling. The reason sentence
 #: `opening_open_elsewhere` holds for a heating as well as for a cooling
 #: house-wide appliance, and in that branch the director names no appliance; the
 #: sentence may therefore not speak either direction. Literal per language, as a
 #: stem, because no runtime object measures "direction".
+#:
+#: What the guard covers: every spelling of those stems, because the Arabic
+#: diacritics (U+064B-U+0652 and U+0670) are stripped from both the sentence and
+#: the needle - Arabic is written without diacritics in practice, so `يدفئ` and
+#: `يدفّئ` are the same forbidden direction. What it deliberately leaves
+#: uncovered: a synonym that is not a direction verb from this list (Dutch
+#: *stookt* stays green); that stands as an idea in `ROADMAP.md`.
 DIRECTION_WORDS: dict[str, tuple[str, ...]] = {
     "nl": ("verwarm", "koel"),
     "en": ("heat", "cool"),
@@ -232,6 +246,21 @@ DIRECTION_WORDS: dict[str, tuple[str, ...]] = {
     "ar": ("يدفّئ", "يبرّد"),
 }
 
+#: De Arabische diakritieken die tussen stam en uitgang staan en die in gewoon
+#: schrift wegblijven. Alleen voor de richtingsvergelijking.
+#:
+#: The Arabic diacritics that sit between stem and ending and are left out in
+#: ordinary writing. Only for the direction comparison.
+ARABIC_DIACRITICS = re.compile("[\u064b-\u0652\u0670]")
+
+
+def without_arabic_diacritics(text: str) -> str:
+    """De tekst zonder de diakritieken die gewoon schrift weglaat.
+
+    The text without the diacritics ordinary writing leaves out.
+    """
+    return ARABIC_DIACRITICS.sub("", text)
+
 
 @pytest.mark.parametrize("language", LANGUAGES)
 def test_the_elsewhere_sentence_names_no_direction(language: str) -> None:
@@ -240,16 +269,23 @@ def test_the_elsewhere_sentence_names_no_direction(language: str) -> None:
     `opening_open_elsewhere` valt ook wanneer het huisbrede apparaat koelt: de
     directeur noemt het apparaat in die tak niet, dus een werkwoord dat
     verwarmen of koelen zegt liegt tegen de helft van de gevallen. Daarom draagt
-    de zin geen van beide richtingen.
+    de zin geen van beide richtingen. Beide kanten van de vergelijking gaan door
+    `without_arabic_diacritics`, zodat de schrijfwijze van het Arabisch de toets
+    niet omzeilt; de dekking en de bewust ongedekte rand staan bij de lijst.
 
     The elsewhere sentence names no direction. `opening_open_elsewhere` also
     falls when the house-wide appliance cools: the director names no appliance in
     that branch, so a verb that says heating or cooling lies to half the cases.
-    The sentence therefore carries neither direction.
+    The sentence therefore carries neither direction. Both sides of the
+    comparison go through `without_arabic_diacritics`, so the Arabic spelling
+    cannot slip past the guard; the coverage and the deliberately uncovered edge
+    stand with the list.
     """
-    sentence = reason_sentences(language)["opening_open_elsewhere"].lower()
+    sentence = without_arabic_diacritics(
+        reason_sentences(language)["opening_open_elsewhere"].lower()
+    )
     for word in DIRECTION_WORDS[language]:
-        assert word not in sentence, f"{language}: {sentence}"
+        assert without_arabic_diacritics(word) not in sentence, f"{language}: {sentence}"
 
 
 @pytest.mark.parametrize("language", LANGUAGES)
