@@ -262,6 +262,108 @@ def test_the_action_words_carry_no_identifiers(language: str) -> None:
             assert word not in lowered, f"{language}/{action} gebruikt jargon ({word}): {words}"
 
 
+#: Waaraan een actiewoord zijn geslacht verraadt, per taal. De kamernaam die de
+#: gebruiker zelf koos is het onderwerp van de zin en de integratie kent zijn
+#: geslacht niet, dus het actiewoord moet onveranderlijk zijn. Alleen de talen
+#: die hier buigen hebben een regel; het Nederlands, Engels en Duits laten het
+#: werkwoord in deze vorm ongemoeid.
+#:
+#: Wat deze toets dekt: de uitgangen waarmee een voltooid deelwoord in het Frans
+#: (-é/-i/-u met hun geslachts- en meervoudsuitgangen) en het Spaans (-ado/-ido)
+#: meebuigt, plus de onregelmatige familie van *éteindre* bij naam, en in het
+#: Arabisch het mannelijke werkwoordsvoorvoegsel ي/س. Wat zij bewust niet dekt:
+#: andere onregelmatige Franse deelwoorden (*mis*, *ouvert*, *épris*),
+#: bijvoeglijke naamwoorden van de -eux/-ive-familie, en een Arabische vorm die
+#: verbogen is zonder met ي of س te beginnen.
+#:
+#: What an action word betrays about gender, per language. The room name the
+#: user chose is the subject of the sentence and the integration does not know
+#: its gender, so the action word has to be invariable. Only the languages that
+#: bend here carry a rule; Dutch, English and German leave the verb alone in
+#: this form.
+#:
+#: What this guard covers: the endings a past participle bends with in French
+#: (-é/-i/-u with their gender and plural endings) and Spanish (-ado/-ido), plus
+#: the irregular *éteindre* family by name, and in Arabic the masculine verb
+#: prefix ي/س. What it deliberately leaves uncovered: other irregular French
+#: participles (*mis*, *ouvert*, *épris*), adjectives of the -eux/-ive family,
+#: and an Arabic form that bends without starting with ي or س.
+AGREEMENT_ENDINGS: dict[str, tuple[str, ...]] = {
+    "nl": (),
+    "en": (),
+    "de": (),
+    "fr": ("é", "ée", "és", "ées", "i", "ie", "is", "ies", "u", "ue", "us", "ues"),
+    "es": ("ado", "ada", "ados", "adas", "ido", "ida", "idos", "idas"),
+    "ar": (),
+}
+
+#: Onregelmatige deelwoorden die geen uitgang uit `AGREEMENT_ENDINGS` dragen maar
+#: evengoed meebuigen. Alleen de familie die deze integratie zelf gebruikte staat
+#: er; de rest is een leesfout, geen meetfout.
+#:
+#: Irregular participles that carry none of the endings in `AGREEMENT_ENDINGS`
+#: but bend all the same. Only the family this integration used itself is here;
+#: the rest is a reading matter, not a measuring matter.
+IRREGULAR_PARTICIPLES: dict[str, tuple[str, ...]] = {
+    "fr": ("éteint", "éteinte", "éteints", "éteintes"),
+}
+
+#: Het mannelijke werkwoordsvoorvoegsel in het Arabisch; de vrouwelijke vorm
+#: begint met ت/ست en is dus niet verboden.
+#:
+#: The masculine verb prefix in Arabic; the feminine form starts with ت/ست and is
+#: therefore not forbidden.
+MALE_VERB_PREFIXES: dict[str, tuple[str, ...]] = {
+    "ar": ("ي", "س"),
+}
+
+#: Witruimte en leestekens die aan een woord kunnen kleven.
+#:
+#: Whitespace and punctuation that can stick to a word.
+_TRIM = ".,;:!?«»\"'()[]—–"
+
+
+def _action_word_tokens(words: str) -> list[str]:
+    """Return the action words without surrounding punctuation."""
+    return [token for token in (part.strip(_TRIM) for part in words.split()) if token]
+
+
+@pytest.mark.parametrize("language", LANGUAGES)
+def test_the_action_word_does_not_bend_with_the_room(language: str) -> None:
+    """Het actiewoord is onveranderlijk, want de kamernaam is het onderwerp.
+
+    `texts.decision_message` bouwt `f"{zone}{after_zone} {action}"`, dus de
+    kamernaam die de gebruiker zelf koos is het onderwerp van de zin. Die naam
+    kan van alles zijn en de integratie kent zijn geslacht niet; een actiewoord
+    dat daarmee meebuigt, zegt dus in de helft van de gevallen het verkeerde.
+    Daarom mag geen enkel actiewoord een verbogen voltooid deelwoord dragen en
+    in het Arabisch geen mannelijk werkwoordsvoorvoegsel. De dekking en de
+    bewust ongedekte randen staan bij de lijsten hierboven.
+
+    The action word is invariable, because the room name is the subject.
+    `texts.decision_message` builds `f"{zone}{after_zone} {action}"`, so the room
+    name the user chose is the subject of the sentence. That name can be
+    anything and the integration does not know its gender; an action word that
+    bends with it therefore says the wrong thing half the time. So no action
+    word may carry a bent past participle and, in Arabic, no masculine verb
+    prefix. The coverage and the deliberately uncovered edges stand with the
+    lists above.
+    """
+    for action, words in action_sentences(language).items():
+        for token in _action_word_tokens(words):
+            lowered = token.lower()
+            assert not lowered.endswith(AGREEMENT_ENDINGS[language]), (
+                f"{language}/{action} buigt mee met de kamernaam: {words!r}"
+            )
+            assert lowered not in IRREGULAR_PARTICIPLES.get(language, ()), (
+                f"{language}/{action} buigt mee met de kamernaam: {words!r}"
+            )
+            for prefix in MALE_VERB_PREFIXES.get(language, ()):
+                assert not token.startswith(prefix), (
+                    f"{language}/{action} buigt mee met de kamernaam: {words!r}"
+                )
+
+
 @pytest.mark.parametrize("language", LANGUAGES)
 def test_the_connecting_words_are_words_and_not_templates(language: str) -> None:
     """De verbindingswoorden zijn woorden: geen placeholder, geen id.

@@ -685,8 +685,8 @@
               "heat": "va chauffer",
               "cool": "va refroidir",
               "off": "va s'éteindre",
-              "left_alone": "est laissé tranquille",
-              "stays_off": "reste éteint"
+              "left_alone": "garde son réglage",
+              "stays_off": "reste à l'arrêt"
             }
           }
         }
