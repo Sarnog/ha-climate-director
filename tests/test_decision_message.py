@@ -300,30 +300,48 @@ def test_the_action_words_carry_no_identifiers(language: str) -> None:
 
 #: Waaraan een actiewoord zijn geslacht verraadt, per taal. De kamernaam die de
 #: gebruiker zelf koos is het onderwerp van de zin en de integratie kent zijn
-#: geslacht niet, dus het actiewoord moet onveranderlijk zijn. Alleen de talen
-#: die hier buigen hebben een regel; het Nederlands, Engels en Duits laten het
-#: werkwoord in deze vorm ongemoeid.
+#: geslacht niet, dus het actiewoord moet onveranderlijk zijn - niet mannelijk en
+#: niet vrouwelijk. Alleen de talen die hier buigen hebben een regel; het
+#: Nederlands, Engels en Duits laten het werkwoord in deze vorm ongemoeid.
 #:
 #: Wat deze toets dekt: de uitgangen waarmee een voltooid deelwoord in het Frans
 #: (-é/-i/-u met hun geslachts- en meervoudsuitgangen) en het Spaans (-ado/-ido)
-#: meebuigt, plus de onregelmatige familie van *éteindre* bij naam, en in het
-#: Arabisch het mannelijke werkwoordsvoorvoegsel ي/س. Wat zij bewust niet dekt:
-#: andere onregelmatige Franse deelwoorden (*mis*, *ouvert*, *épris*),
-#: bijvoeglijke naamwoorden van de -eux/-ive-familie, en een Arabische vorm die
-#: verbogen is zonder met ي of س te beginnen.
+#: meebuigt, de onregelmatige familie van *éteindre* bij naam, in het Spaans elk
+#: token op -o/-a/-os/-as (een bijvoeglijk naamwoord als *quieto* buigt net zo
+#: goed mee als een deelwoord), en in het Arabisch elk token met een
+#: persoonsvoorvoegsel ي/ت/س (dat dekt *يبقى*, *تبقى* en *سيبدأ*) en elk token op
+#: ة. Wat zij bewust niet dekt: andere onregelmatige Franse deelwoorden (*mis*,
+#: *ouvert*, *épris*), bijvoeglijke naamwoorden van de -eux/-ive-familie, en een
+#: Arabische vorm die verbogen is zonder zo'n voorvoegsel of een ة.
+#:
+#: De twee talen waarin die uitgangsregel niet sluitend is dragen daarnaast een
+#: korte lijst goedgekeurde tokens: in het Spaans eindigen *va*, *apaga*, *deja*
+#: en *reposo* toevallig op -o/-a zonder geslacht te dragen, en in het Arabisch
+#: begint *تشغيل* toevallig met ت en eindigt *التدفئة* toevallig op ة terwijl het
+#: zelfstandige naamwoorden zijn. Die lijst is de bewuste smalle kant: een nieuw
+#: actiewoord met zo'n uitgang moet er met de hand bij.
 #:
 #: What an action word betrays about gender, per language. The room name the
 #: user chose is the subject of the sentence and the integration does not know
-#: its gender, so the action word has to be invariable. Only the languages that
-#: bend here carry a rule; Dutch, English and German leave the verb alone in
-#: this form.
+#: its gender, so the action word has to be invariable - neither masculine nor
+#: feminine. Only the languages that bend here carry a rule; Dutch, English and
+#: German leave the verb alone in this form.
 #:
 #: What this guard covers: the endings a past participle bends with in French
-#: (-é/-i/-u with their gender and plural endings) and Spanish (-ado/-ido), plus
-#: the irregular *éteindre* family by name, and in Arabic the masculine verb
-#: prefix ي/س. What it deliberately leaves uncovered: other irregular French
-#: participles (*mis*, *ouvert*, *épris*), adjectives of the -eux/-ive family,
-#: and an Arabic form that bends without starting with ي or س.
+#: (-é/-i/-u with their gender and plural endings) and Spanish (-ado/-ido), the
+#: irregular *éteindre* family by name, in Spanish every token on -o/-a/-os/-as
+#: (an adjective such as *quieto* bends just as well as a participle), and in
+#: Arabic every token with a person prefix ي/ت/س (which covers *يبقى*, *تبقى* and
+#: *سيبدأ*) and every token on ة. What it deliberately leaves uncovered: other
+#: irregular French participles (*mis*, *ouvert*, *épris*), adjectives of the
+#: -eux/-ive family, and an Arabic form that bends without such a prefix or a ة.
+#:
+#: The two languages in which that ending rule is not conclusive carry a short
+#: list of approved tokens beside it: in Spanish *va*, *apaga*, *deja* and
+#: *reposo* happen to end on -o/-a without carrying gender, and in Arabic
+#: *تشغيل* happens to start with ت and *التدفئة* happens to end on ة while they
+#: are nouns. That list is the deliberate narrow side: a new action word with
+#: such an ending has to be added by hand.
 AGREEMENT_ENDINGS: dict[str, tuple[str, ...]] = {
     "nl": (),
     "en": (),
@@ -331,6 +349,33 @@ AGREEMENT_ENDINGS: dict[str, tuple[str, ...]] = {
     "fr": ("é", "ée", "és", "ées", "i", "ie", "is", "ies", "u", "ue", "us", "ues"),
     "es": ("ado", "ada", "ados", "adas", "ido", "ida", "idos", "idas"),
     "ar": (),
+}
+
+#: Spaanse uitgangen die een bijvoeglijk naamwoord of deelwoord van geslacht
+#: laten wisselen. Elke vorm met zo'n uitgang is verdacht, behalve de
+#: goedgekeurde tokens hieronder.
+#:
+#: Spanish endings that make an adjective or participle switch gender. Every form
+#: with such an ending is suspect, except the approved tokens below.
+SPANISH_GENDER_ENDINGS: tuple[str, ...] = ("o", "a", "os", "as")
+
+#: Arabische persoonsvoorvoegsels (ي/س mannelijk, ت/ست vrouwelijk) en de
+#: vrouwelijke uitgang ة. Een werkwoordsvorm met een van deze begint of eindigt
+#: opnieuw met het geslacht van het onderwerp.
+#:
+#: Arabic person prefixes (ي/س masculine, ت/ست feminine) and the feminine ending
+#: ة. A verb form with one of these starts or ends on the subject's gender again.
+ARABIC_PERSON_PREFIXES: tuple[str, ...] = ("ي", "ت", "س")
+ARABIC_FEMININE_ENDINGS: tuple[str, ...] = ("ة",)
+
+#: De tokens die in het Spaans of het Arabisch toevallig als een geslachtsvorm
+#: uitzien maar het niet zijn; zie de uitleg hierboven.
+#:
+#: The tokens that happen to look like a gender form in Spanish or Arabic but are
+#: not one; see the explanation above.
+APPROVED_TOKENS: dict[str, tuple[str, ...]] = {
+    "es": ("va", "a", "calentar", "enfriar", "se", "apaga", "deja", "en", "paz", "sigue", "reposo"),
+    "ar": ("بدء", "التدفئة", "التبريد", "إطفاء", "من", "دون", "تغيير", "بقاء", "تشغيل"),
 }
 
 #: Onregelmatige deelwoorden die geen uitgang uit `AGREEMENT_ENDINGS` dragen maar
@@ -344,14 +389,6 @@ IRREGULAR_PARTICIPLES: dict[str, tuple[str, ...]] = {
     "fr": ("éteint", "éteinte", "éteints", "éteintes"),
 }
 
-#: Het mannelijke werkwoordsvoorvoegsel in het Arabisch; de vrouwelijke vorm
-#: begint met ت/ست en is dus niet verboden.
-#:
-#: The masculine verb prefix in Arabic; the feminine form starts with ت/ست and is
-#: therefore not forbidden.
-MALE_VERB_PREFIXES: dict[str, tuple[str, ...]] = {
-    "ar": ("ي", "س"),
-}
 
 #: Witruimte en leestekens die aan een woord kunnen kleven.
 #:
@@ -372,20 +409,22 @@ def test_the_action_word_does_not_bend_with_the_room(language: str) -> None:
     kamernaam die de gebruiker zelf koos is het onderwerp van de zin. Die naam
     kan van alles zijn en de integratie kent zijn geslacht niet; een actiewoord
     dat daarmee meebuigt, zegt dus in de helft van de gevallen het verkeerde.
-    Daarom mag geen enkel actiewoord een verbogen voltooid deelwoord dragen en
-    in het Arabisch geen mannelijk werkwoordsvoorvoegsel. De dekking en de
-    bewust ongedekte randen staan bij de lijsten hierboven.
+    Daarom mag geen enkel actiewoord een verbogen voltooid deelwoord of een
+    geslachtsdragend bijvoeglijk naamwoord dragen, en in het Arabisch geen
+    persoonsvoorvoegsel en geen vrouwelijke uitgang. De dekking en de bewust
+    ongedekte randen staan bij de lijsten hierboven.
 
     The action word is invariable, because the room name is the subject.
     `texts.decision_message` builds `f"{zone}{after_zone} {action}"`, so the room
     name the user chose is the subject of the sentence. That name can be
     anything and the integration does not know its gender; an action word that
     bends with it therefore says the wrong thing half the time. So no action
-    word may carry a bent past participle and, in Arabic, no masculine verb
-    prefix. The coverage and the deliberately uncovered edges stand with the
-    lists above.
+    word may carry a bent past participle or a gender-carrying adjective, and in
+    Arabic no person prefix and no feminine ending. The coverage and the
+    deliberately uncovered edges stand with the lists above.
     """
     for action, words in action_sentences(language).items():
+        approved = APPROVED_TOKENS.get(language, ())
         for token in _action_word_tokens(words):
             lowered = token.lower()
             assert not lowered.endswith(AGREEMENT_ENDINGS[language]), (
@@ -394,10 +433,21 @@ def test_the_action_word_does_not_bend_with_the_room(language: str) -> None:
             assert lowered not in IRREGULAR_PARTICIPLES.get(language, ()), (
                 f"{language}/{action} buigt mee met de kamernaam: {words!r}"
             )
-            for prefix in MALE_VERB_PREFIXES.get(language, ()):
-                assert not token.startswith(prefix), (
-                    f"{language}/{action} buigt mee met de kamernaam: {words!r}"
-                )
+            assert not (
+                language == "es"
+                and lowered.endswith(SPANISH_GENDER_ENDINGS)
+                and token not in approved
+            ), f"{language}/{action} buigt mee met de kamernaam: {words!r}"
+            assert not (
+                language == "ar"
+                and token.startswith(ARABIC_PERSON_PREFIXES)
+                and token not in approved
+            ), f"{language}/{action} buigt mee met de kamernaam: {words!r}"
+            assert not (
+                language == "ar"
+                and token.endswith(ARABIC_FEMININE_ENDINGS)
+                and token not in approved
+            ), f"{language}/{action} buigt mee met de kamernaam: {words!r}"
 
 
 @pytest.mark.parametrize("language", LANGUAGES)
