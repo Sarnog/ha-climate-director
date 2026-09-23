@@ -440,7 +440,7 @@
       },
       "quiets": {
         "title": "Stiltevensters",
-        "description": "Uren waarin de director uit zichzelf niets begint. Thuiskomen om elf uur 's avonds terwijl je zo naar bed gaat, hoeft het huis niet te laten opstoken.\n\nDit remt het beginnen, niet het doorgaan: wat al draait blijft gewoon geregeld en gaat bij bedtijd uit zoals altijd, en zet je zelf iets aan, dan wordt dat opgepakt en doorgeregeld. Geen vensters instellen zet de rem uit. Wie ná het begin van het venster thuiskomt, wordt geremd; wie er al was, houdt het huis aan de gang - en gasten binnen het gastenvenster net zo.",
+        "description": "Uren waarin de director uit zichzelf niets begint. Thuiskomen om elf uur 's avonds terwijl je zo naar bed gaat, hoeft het huis niet te laten opstoken.\n\nDit houdt het starten tegen, niet het doorgaan: wat al draait blijft gewoon geregeld en gaat bij bedtijd uit zoals altijd, en zet je zelf iets aan, dan wordt dat opgepakt en doorgeregeld. Geen vensters instellen zet de rem uit. Wie ná het begin van het venster thuiskomt, wordt geremd; wie er al was, houdt het huis aan de gang - en gasten binnen het gastenvenster net zo.",
         "data": {
           "quiet": "Venster"
         },
@@ -450,7 +450,7 @@
       },
       "quiet": {
         "title": "Stiltevenster",
-        "description": "Uren waarin de director uit zichzelf niets begint. Thuiskomen om elf uur 's avonds terwijl je zo naar bed gaat, hoeft het huis niet te laten opstoken.\n\nDit remt het beginnen, niet het doorgaan: wat al draait blijft gewoon geregeld en gaat bij bedtijd uit zoals altijd, en zet je zelf iets aan, dan wordt dat opgepakt en doorgeregeld. Geen vensters instellen zet de rem uit. Wie ná het begin van het venster thuiskomt, wordt geremd; wie er al was, houdt het huis aan de gang - en gasten binnen het gastenvenster net zo.",
+        "description": "Uren waarin de director uit zichzelf niets begint. Thuiskomen om elf uur 's avonds terwijl je zo naar bed gaat, hoeft het huis niet te laten opstoken.\n\nDit houdt het starten tegen, niet het doorgaan: wat al draait blijft gewoon geregeld en gaat bij bedtijd uit zoals altijd, en zet je zelf iets aan, dan wordt dat opgepakt en doorgeregeld. Geen vensters instellen zet de rem uit. Wie ná het begin van het venster thuiskomt, wordt geremd; wie er al was, houdt het huis aan de gang - en gasten binnen het gastenvenster net zo.",
         "data": {
           "start": "Stilte vanaf",
           "end": "Stilte tot",
@@ -637,7 +637,7 @@
               "waiting_for_sleeper": "er slaapt nog iemand; het huis wacht tot diens uiterste tijd",
               "outside_schedule": "het rooster van een bewoner staat niet open",
               "zone_unoccupied": "er is niemand in deze kamer",
-              "quiet_hours": "het stiltevenster remt het beginnen",
+              "quiet_hours": "het stiltevenster houdt het starten tegen",
               "no_indoor_temperature": "de binnentemperatuur is niet te lezen",
               "no_outdoor_temperature": "de buitentemperatuur is niet te lezen",
               "season_blocks_mode": "dit seizoen laat dat niet toe",

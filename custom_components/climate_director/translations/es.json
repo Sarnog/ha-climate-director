@@ -645,7 +645,7 @@
               "mode_not_configured": "esta habitación no está configurada para esto",
               "no_source_available": "ningún aparato puede hacerlo ahora",
               "other_source_chosen": "otro aparato lo está haciendo",
-              "manual_source": "has manejado el aparato tú mismo",
+              "manual_source": "lo has manejado tú",
               "source_unreachable": "no se puede llegar al aparato",
               "shared_source_took_over": "un aparato que sirve a varias habitaciones ha tomado el relevo",
               "circuit_conflict_lost": "la unidad exterior ya hace lo contrario para otra habitación",
@@ -653,7 +653,7 @@
               "circuit_switch_pending": "la unidad exterior va a cambiar en breve",
               "circuit_at_capacity": "la unidad exterior está al límite",
               "short_cycle_protection": "el aparato debe descansar primero",
-              "exclusive_group_lost": "ya está funcionando otro aparato que no puede ir a la vez"
+              "exclusive_group_lost": "ya está funcionando otro aparato que no puede funcionar a la vez que este"
             }
           },
           "message": {

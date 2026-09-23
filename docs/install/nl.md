@@ -970,7 +970,7 @@ het filterwoord en `reason_text` is diezelfde reden als gewone zin.
   stukke zone legt de installatie niet stil.
 - **Een entiteit die vijf minuten lang niet te lezen is** komt er ook bij te
   staan, met de lijst erbij. Dat is geen fout in de configuratie maar in de
-  werkelijkheid: een sensor met een lege batterij, een apparaat van het net, of
+  werkelijkheid: een sensor met een lege batterij, een apparaat dat van het net af is, of
   een entiteit die hernoemd is. De wachttijd houdt een korte hapering bij een
   herstart eruit. Juist bij een onleesbare binnentemperatuur telt dit, want dan
   laat de director een draaiend apparaat met rust en houdt dat apparaat zijn
