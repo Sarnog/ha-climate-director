@@ -252,6 +252,47 @@ def test_french_names_the_product_one_way() -> None:
         assert "préchauff" not in text, key
 
 
+def test_the_override_and_the_bypass_do_not_share_one_word() -> None:
+    """De override van een zone en de overbrugging van één opening zijn twee dingen.
+
+    Wie "Anulación" bij een zone leest en "Anulación" bij een opening, kan niet
+    zien welk van de twee hij voor zich heeft; in het Arabisch is het net zo met
+    `تجاوز`. De twee schakelaars staan naast elkaar in hetzelfde scherm, dus ze
+    moeten twee woorden hebben: de gebruiker zoekt op het woord, niet op de
+    plaatsaanduiding erachter.
+
+    Deze test leest de **bron** (de vertaalbestanden) en niet een runtimeobject,
+    want de weergavenaam van een schakelaar wordt nergens in de code opgebouwd -
+    hij komt rechtstreeks uit de vertaling. Daarom staat de structurele afspraak
+    erbij in `AGENTS.md` (taalregel: twee verschillende dingen krijgen twee
+    woorden), en noemt deze docstring de dekking en de bewust ongedekte randen.
+
+    Wat hij **dekt**: `entity.switch.zone_override.name` tegenover
+    `entity.switch.opening_bypass.name` in alle zeven talen, met de
+    plaatsaanduiding eruit gehaald (`{zone}` / `{opening}`), vergeleken als tekst
+    na het strippen van spaties. Wat hij **niet** dekt: een taal die hetzelfde
+    begrip met een ander lidwoord of een verbogen vorm alsnog hetzelfde noemt,
+    een derde schakelaar die toevallig hetzelfde woord draagt, en de rest van het
+    scherm - deze test kijkt naar precies deze twee sleutels.
+
+    The zone override and the opening bypass are two different things. Whoever
+    reads "Anulación" on a zone and "Anulación" on an opening cannot tell which
+    of the two they are looking at, and Arabic has the same problem with
+    `تجاوز`. The two switches stand side by side on one screen, so they need two
+    words. This test reads the **source** (the translation files) rather than a
+    runtime object, because the display name of a switch is never built in code.
+    Hence the structural agreement in `AGENTS.md`, and the coverage named above
+    with its deliberate edges.
+    """
+    for language in ("nl", "en", "de", "fr", "es", "ar"):
+        texts = leaves(load(TRANSLATIONS / f"{language}.json"))
+        override = texts["entity.switch.zone_override.name"].replace("{zone}", "").strip()
+        bypass = texts["entity.switch.opening_bypass.name"].replace("{opening}", "").strip()
+        assert override, language
+        assert bypass, language
+        assert override != bypass, f"{language}: de twee schakelaars delen één woord: {override!r}"
+
+
 def test_every_language_names_the_shared_heat_source_in_unreadable_entities() -> None:
     """Ronde 21: na B1 noemt de reparatiemelding ook de gedeelde warmtebron."""
     needles = {

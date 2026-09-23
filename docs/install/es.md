@@ -614,7 +614,7 @@ La habitación indica entonces `opening_open_elsewhere` como motivo, para que
 veas por qué no ocurre nada. Dos cosas siguen como siempre: una zona con
 anulación y una fuente manual no se gobiernan, tampoco por esta lista.
 
-Cada abertura tiene su propio identificador, guardado de forma invisible, y de él cuelga el interruptor de anulación (`switch.*_anulacion_<opening>`), de modo que sigue existiendo al cambiar el sensor; el **Nombre** es solo la etiqueta que ves tú. Si una abertura aún no tenía identificador, ese identificador es el sensor y el interruptor se llama como el nombre que muestra el propio sensor: si aparece más tarde o lo renombras, el nombre del interruptor lo sigue sin recargar. Activada = el director hace como si esta abertura no existiera — sus propias zonas y la parada global la ignoran. No hay duración: se mantiene hasta que la apagues tú mismo. Mientras siga activa con la abertura realmente abierta, el director lo informa en *Reparaciones*.
+Cada abertura tiene su propio identificador, guardado de forma invisible, y de él cuelga el interruptor de puenteo (`switch.*_puenteo_<opening>`), de modo que sigue existiendo al cambiar el sensor; el **Nombre** es solo la etiqueta que ves tú. Si una abertura aún no tenía identificador, ese identificador es el sensor y el interruptor se llama como el nombre que muestra el propio sensor: si aparece más tarde o lo renombras, el nombre del interruptor lo sigue sin recargar. Activada = el director hace como si esta abertura no existiera — sus propias zonas y la parada global la ignoran. No hay duración: se mantiene hasta que la apagues tú mismo. Mientras siga activa con la abertura realmente abierta, el director lo informa en *Reparaciones*.
 
 ## Paso 12 — Guardar y cerrar
 
@@ -650,7 +650,7 @@ Un dispositivo por instalación, con debajo:
 | `switch.*_modo_invitados` | sigue regulando mientras los residentes están fuera |
 | `switch.*_anulacion_<zone>` | devuelve una zona por completo a ti |
 | `sensor.*_fin_de_la_anulacion_<zone>` | cuándo termina la anulación de esta zona; una tarjeta de temporizador cuenta hasta ahí |
-| `switch.*_anulacion_<opening>` | activado = esta abertura ya no cuenta en ninguna parte; ni para sus propias zonas, ni para la parada global |
+| `switch.*_puenteo_<opening>` | activado = esta abertura ya no cuenta en ninguna parte; ni para sus propias zonas, ni para la parada global |
 | `number.*_prioridad_<zone>` | la precedencia de esta zona; también configurable desde una automatización |
 | `number.*_duracion_del_preacondicionamiento` | cuánto dura una pulsación de un botón de preacondicionamiento |
 | `button.*_preacondicionar_<zone>` | preacondiciona esta zona |
@@ -692,7 +692,7 @@ interviene en cuanto vence un límite de tiempo.
   dejar una zona a tus propias automatizaciones durante días. Apagar un aparato
   en el aparato *mismo* sí caduca al acostarse o con la casa vacía; eso está más
   abajo.
-- **Anulación** (`switch.*_anulacion_<opening>`): activada = esta abertura no existe para el director. Se mantiene hasta que la apagues tú mismo; mientras siga activa con la abertura realmente abierta, el director lo informa en *Reparaciones*.
+- **Puenteo** (`switch.*_puenteo_<opening>`): activada = esta abertura no existe para el director. Se mantiene hasta que la apagues tú mismo; mientras siga activa con la abertura realmente abierta, el director lo informa en *Reparaciones*.
 - **Botón de preacondicionamiento** (`button.*_preacondicionar_<zone>`) y
   **duración** (`number.*_duracion_del_preacondicionamiento`): ver abajo.
 
@@ -1009,7 +1009,7 @@ un mensaje legible sin plantillas; `reason` sigue siendo la palabra de filtro y
 
 En **Reparaciones** puedes encontrarte con estos avisos, con lo que significan y lo que puedes hacer:
 
-- **Climate Director: <count> abertura(s) de <name> están anuladas mientras están abiertas** — has anulado una abertura mientras está realmente abierta; cierra la abertura o desactiva la anulación.
+- **Climate Director: <count> abertura(s) de <name> están puenteadas mientras están abiertas** — has puenteado una abertura mientras está realmente abierta; cierra la abertura o desactiva el puenteo.
 - **Climate Director: <count> aparato(s) de <name> no ejecutan su orden** — un aparato acepta la llamada pero no cambia; comprueba que sea accesible y que nada lo devuelva a su estado anterior.
 - **Climate Director: <name> tuvo que apartar su estado guardado** — el archivo de estado era ilegible y se ha renombrado; las peticiones y los ajustes manuales anteriores al reinicio se han perdido, restaura el archivo desde una copia si los necesitas.
 - **Climate Director: <name> tiene un problema de configuración** — la instalación no es correcta; las zonas que sí lo son siguen regulándose, así que revisa la configuración.
