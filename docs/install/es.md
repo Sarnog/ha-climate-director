@@ -346,7 +346,7 @@ que si queda inalcanzable no se pierde nada y nadie asume el relevo. Un aire
 acondicionado de dormitorio manejado a mano que se desenchufa no pone, por
 tanto, toda la casa a gas.
 
-### Un aparato que enciendes tú mismo
+### Un aparato que enciendes tú
 
 Desactiva **Arrancar este aparato automáticamente** para un aparato que manejas
 a mano (un aire acondicionado en un dormitorio sin sensor de presencia, por
@@ -432,7 +432,7 @@ está bajo tres habitaciones, basta con marcarla una vez: la elijas desde donde
 la elijas, cuenta en todas partes. Y dos habitaciones que piden esa misma
 caldera no se estorban: es un solo aparato funcionando.
 
-Un grupo también ata a los aparatos que enciendes tú mismo: cuando le toca a
+Un grupo también ata a los aparatos que enciendes tú: cuando le toca a
 otro miembro del grupo, el aparato manual se apaga. Y al revés: cuando un
 aparato así ya está en marcha, ocupa el grupo y otro miembro espera.
 
@@ -445,7 +445,7 @@ caldera.
 Es un freno al **arranque**, no a la continuación:
 
 - lo que ya funciona sigue regulado;
-- enciende algo tú mismo y se retoma;
+- enciende algo tú y se retoma;
 - quien ya estaba en casa cuando empezó la franja no se silencia: sigue
   haciendo funcionar la casa, incluso con un aparato apagado. Quien llega a una
   casa vacía después del inicio permanece en silencio hasta que la franja termina.
@@ -614,7 +614,7 @@ La habitación indica entonces `opening_open_elsewhere` como motivo, para que
 veas por qué no ocurre nada. Dos cosas siguen como siempre: una zona con
 anulación y una fuente manual no se gobiernan, tampoco por esta lista.
 
-Cada abertura tiene su propio identificador, guardado de forma invisible, y de él cuelga el interruptor de puenteo (`switch.*_puenteo_<opening>`), de modo que sigue existiendo al cambiar el sensor; el **Nombre** es solo la etiqueta que ves tú. Si una abertura aún no tenía identificador, ese identificador es el sensor y el interruptor se llama como el nombre que muestra el propio sensor: si aparece más tarde o lo renombras, el nombre del interruptor lo sigue sin recargar. Activado = el director hace como si esta abertura no existiera — sus propias zonas y la parada global la ignoran. No hay duración: se mantiene hasta que lo apagues tú mismo. Mientras siga activo con la abertura realmente abierta, el director lo informa en *Reparaciones*.
+Cada abertura tiene su propio identificador, guardado de forma invisible, y de él cuelga el interruptor de puenteo (`switch.*_puenteo_<opening>`), de modo que sigue existiendo al cambiar el sensor; el **Nombre** es solo la etiqueta que ves tú. Si una abertura aún no tenía identificador, ese identificador es el sensor y el interruptor se llama como el nombre que muestra el propio sensor: si aparece más tarde o lo renombras, el nombre del interruptor lo sigue sin recargar. Activado = el director hace como si esta abertura no existiera — sus propias zonas y la parada global la ignoran. No hay duración: se mantiene hasta que lo apagues tú. Mientras siga activo con la abertura realmente abierta, el director lo informa en *Reparaciones*.
 
 ## Paso 12 — Guardar y cerrar
 
@@ -675,7 +675,7 @@ interviene en cuanto vence un límite de tiempo.
 - **Interruptor principal** (`switch.*_director`): apagado = el director no hace
   nada en absoluto. Lo suelta todo y ya no envía nada — tampoco un apagado. Lo
   que esté funcionando en ese momento sigue funcionando; si quieres apagarlo
-  todo, apágalo tú mismo.
+  todo, apágalo tú.
 - **Modo invitados** (`switch.*_modo_invitados`): hay alguien no seguido alojado,
   así que «casa vacía» no dice nada. Dentro de la ventana de invitados, el modo
   invitados también levanta la franja de silencio. El sueño de los presentes sigue contando, y
@@ -687,12 +687,12 @@ interviene en cuanto vence un límite de tiempo.
 - **Anulación** (`switch.*_anulacion_<zone>`): devuelve una zona por completo a
   ti. El director no envía nada a esa zona — ni siquiera un apagado. Las reglas
   del circuito siguen aplicándose a las demás habitaciones. Se mantiene hasta
-  que lo apagues tú mismo, también a través de la noche y de una casa vacía: es
+  que lo apagues tú, también a través de la noche y de una casa vacía: es
   una decisión que deshaces, no la decisión de esta noche. Eso es lo que permite
   dejar una zona a tus propias automatizaciones durante días. Apagar un aparato
   en el aparato *mismo* sí caduca al acostarse o con la casa vacía; eso está más
   abajo.
-- **Puenteo** (`switch.*_puenteo_<opening>`): activado = esta abertura no existe para el director. Se mantiene hasta que lo apagues tú mismo; mientras siga activo con la abertura realmente abierta, el director lo informa en *Reparaciones*.
+- **Puenteo** (`switch.*_puenteo_<opening>`): activado = esta abertura no existe para el director. Se mantiene hasta que lo apagues tú; mientras siga activo con la abertura realmente abierta, el director lo informa en *Reparaciones*.
 - **Botón de preacondicionamiento** (`button.*_preacondicionar_<zone>`) y
   **duración** (`number.*_duracion_del_preacondicionamiento`): ver abajo.
 
@@ -761,8 +761,8 @@ Cancélalo con `climate_director.cancel_precondition`.
 
 ## Una anulación con duración
 
-El interruptor de anulación de arriba te devuelve una zona hasta que tú mismo lo
-apagues. Si quieres ajustar una zona tú mismo durante una hora — «aire
+El interruptor de anulación de arriba te devuelve una zona hasta que lo
+apagues tú. Si quieres ajustar una zona por tu cuenta durante una hora — «aire
 acondicionado del dormitorio, una hora a 18 °C» — eso es una sola acción, no un
 script con un temporizador al lado:
 
@@ -890,7 +890,7 @@ y solo el anillo de progreso se queda al principio hasta que expire.
 
 ## Tomar el mando
 
-- **Apagar un aparato tú mismo** (en el aparato o con el mando) silencia esa
+- **Apagar un aparato a mano** (en el aparato o con el mando) silencia esa
   zona. El director no lo vuelve a encender dos segundos después. La zona
   vuelve a participar en cuanto la enciendes tú, en cuanto alguien llega a una
   casa vacía, en cuanto todos los presentes se acuestan, o en cuanto es el día
@@ -903,7 +903,7 @@ y solo el anillo de progreso se queda al principio hasta que expire.
   director recalcula su propio plan en la siguiente evaluación y apaga tu
   aparato. Un aparato con *Arrancar este aparato automáticamente* desactivado
   no necesita anulación.
-- **Una habitación que manejas siempre tú mismo**: haz de ella una zona igual
+- **Una habitación que manejas siempre a mano**: haz de ella una zona igual
   (si no, la integración no sabe de ese aparato), elige la entidad `climate.*`
   del propio aparato como sensor interior y desactiva *Arrancar este aparato
   automáticamente* en la fuente.
