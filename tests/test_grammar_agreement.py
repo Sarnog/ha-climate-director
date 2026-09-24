@@ -33,9 +33,17 @@ vormen hij toetst:
 - de **beschrijvende vorm achter `:` of `=`** in een definitie van het
   schermwoord, binnen één regel en binnen tachtig tekens na het woord
   (`**Puenteo** (...): activado`). Daar is het schermwoord het onderwerp en
-  beslist niets anders, dus de vorm draagt zijn geslacht. Een vorm verderop in
-  dezelfde regel blijft buiten, want daar kan een ander woord het onderwerp
-  zijn.
+  beslist niets anders, dus de vorm draagt zijn geslacht. Tot die vorm horen de
+  deelwoorden (`-ado`/`-ido` met hun geslachts- en meervoudsuitgangen) én de
+  bijvoeglijke naamwoorden van een **letterlijke familie**: Spaans `activ-` en
+  `desactiv-` dekken *activo*, *activa*, *activos* en *activas* naast *activado*
+  en *activada*. Die familie staat er letterlijk omdat een deelwoordtoets alleen
+  *activa* laat passeren, en dat is precies de fout die deze regel wegnam. Een
+  Spaans token op -o/-a is niet automatisch een bijvoeglijk naamwoord (*junto*
+  betekent samen, *ajústalo* betekent stel het bij), dus een toets op de uitgang
+  alleen zou daar valse meldingen geven; een bijvoeglijk naamwoord buiten die
+  families valt er daarom bewust buiten. Een vorm verderop in dezelfde regel
+  blijft buiten, want daar kan een ander woord het onderwerp zijn.
 
 De vergelijking is hoofdletterongevoelig, zodat een kop die met het schermwoord
 begint niet langs de bewaking glipt. Meervouden staan er niet bij waar het
@@ -73,9 +81,17 @@ the noun (*une zone actif*) stays outside for the same reason. The
 **descriptive form behind `:` or `=`** in a definition of the screen word is
 checked too, within one line and within eighty characters after the word
 (`**Puenteo** (...): activado`). There the screen word is the subject and
-nothing else decides, so the form carries its gender. A form further along the
-same line stays outside, because there another word can be the subject. The
-comparison is
+nothing else decides, so the form carries its gender. That form takes in the
+participles (`-ado`/`-ido` with their gender and plural endings) and the
+adjectives of a **literal family**: Spanish `activ-` and `desactiv-` cover
+*activo*, *activa*, *activos* and *activas* next to *activado* and *activada*.
+That family stands there literally because a participle test alone lets *activa*
+through, and that is exactly the fault this rule took away. A Spanish token in
+-o/-a is not automatically an adjective (*junto* means together, *ajústalo*
+means adjust it), so an ending test alone would report falsely there; an
+adjective outside those families therefore deliberately stays out. A form
+further along the same line stays outside, because there another word can be the
+subject. The comparison is
 case-insensitive, plurals are listed only where the determiner still carries a
 gender (Spanish *las* against *los*), and German does not take part because its
 cases make *der Übersteuerung* correct in the dative.
@@ -226,9 +242,11 @@ PARTICIPLES: dict[str, tuple[str, dict[str, str]]] = {
 #:     áchter het teken en zou daar het eerste woord van de uitleg pakken, wat een
 #:     valse melding zou geven.
 #:
-#: Beide staan als idee in `ROADMAP.md`. Wat ze draagt is de structurele afspraak
-#: in `AGENTS.md`: een beschrijvende vorm hoort bij het schermwoord en draagt dus
-#: diens geslacht, waar hij ook staat.
+#: Beide staan als idee in `ROADMAP.md`. De vorm zelf wordt gelezen als voltooid
+#: deelwoord of als bijvoeglijk naamwoord van de families in `ADJECTIVES`, en wat
+#: die twee wel en niet dekken staat in de docstring boven deze lijsten. Wat ze
+#: draagt is de structurele afspraak in `AGENTS.md`: een beschrijvende vorm hoort
+#: bij het schermwoord en draagt dus diens geslacht, waar hij ook staat.
 #:
 #: The shape in which the guide explains a screen word: the word, then a `:` or an
 #: `=` within eighty characters, and behind it the descriptive form
@@ -252,22 +270,72 @@ PARTICIPLES: dict[str, tuple[str, dict[str, str]]] = {
 DEFINED_FORM = r"[^\n:=]{0,80}?[:=]\s*(?:no\s+)?([a-zà-ÿ]+)"
 
 
+#: De beschrijvende vormen die geen voltooid deelwoord zijn maar wél een geslacht
+#: dragen: per taal een **stam** (van voren gematcht) met de uitgangen en het
+#: geslacht dat elke uitgang draagt. Spaans `activ-` dekt *activo*, *activa*,
+#: *activos* en *activas* naast de deelwoorden *activado* en *activada*, en
+#: hetzelfde met `des-` ervoor; die families zijn de enige die de gidsen en de
+#: vertaalbestanden als beschrijvende vorm gebruiken. Waarom een letterlijke
+#: familie en niet elke uitgang op -o/-a: zo'n token is niet automatisch een
+#: bijvoeglijk naamwoord (*junto* betekent samen, *ajústalo* betekent stel het
+#: bij), dus een toets op de uitgang alleen zou daar valse meldingen geven. Een
+#: bijvoeglijk naamwoord buiten deze families valt er bewust buiten.
+#:
+#: The descriptive forms that are not a past participle but do carry a gender:
+#: per language a **stem** (matched at the front) with the endings and the gender
+#: each ending carries. Spanish `activ-` covers *activo*, *activa*, *activos*
+#: and *activas* next to the participles *activado* and *activada*, and the same
+#: with `des-` in front; those families are the only ones the guides and the
+#: translation files use as a descriptive form. Why a literal family and not
+#: every ending in -o/-a: such a token is not automatically an adjective
+#: (*junto* means together, *ajústalo* means adjust it), so an ending test alone
+#: would report falsely there. An adjective outside these families deliberately
+#: stays out.
+ADJECTIVES: dict[str, tuple[tuple[str, dict[str, str]], ...]] = {
+    "es": ((r"(?:des)?activ", {"o": "m", "os": "m", "a": "v", "as": "v"}),),
+}
+
+
+def gender_of_descriptive_form(language: str, form: str) -> str | None:
+    """Het geslacht dat deze beschrijvende vorm draagt, of `None`.
+
+    De deelwoorduitgangen gaan voor; pas als geen daarvan past kijkt de functie
+    naar de bijvoeglijke families. Zo blijft *activado* een mannelijk deelwoord
+    en wordt *activa* via zijn familie alsnog vrouwelijk gelezen.
+
+    The gender this descriptive form carries, or `None`.
+
+    The participle endings go first; only when none of them fits does the
+    function look at the adjective families. That keeps *activado* a masculine
+    participle while *activa* is still read as feminine through its family.
+    """
+    candidates: list[tuple[str, str]] = []
+    if language in PARTICIPLES:
+        _, endings = PARTICIPLES[language]
+        candidates.extend(endings.items())
+    for stem, endings in ADJECTIVES.get(language, ()):
+        if re.match(stem, form):
+            candidates.extend(endings.items())
+    longest_first = sorted(candidates, key=lambda item: len(item[0]), reverse=True)
+    for ending, gender in longest_first:
+        if form.endswith(ending):
+            return gender
+    return None
+
+
 def wrong_defined_forms(language: str, text: str) -> list[str]:
     """Elke beschrijvende vorm achter `:` of `=` die niet bij het schermwoord past.
 
     Every descriptive form behind `:` or `=` that does not fit the screen word.
     """
-    if language not in PARTICIPLES:
+    if language not in PARTICIPLES and language not in ADJECTIVES:
         return []
-    _, endings = PARTICIPLES[language]
-    longest_first = sorted(endings, key=len, reverse=True)
     wrong = []
     for word, gender in SCREEN_NOUNS[language]:
         pattern = re.compile(rf"\b{re.escape(word)}\b{DEFINED_FORM}", re.IGNORECASE)
         for match in pattern.finditer(text):
-            form = match.group(1).lower()
-            ending = next((e for e in longest_first if form.endswith(e)), None)
-            if ending is not None and endings[ending] != gender:
+            carried = gender_of_descriptive_form(language, match.group(1).lower())
+            if carried is not None and carried != gender:
                 wrong.append(f"{word}: {match.group(0)}")
     return wrong
 
@@ -400,3 +468,30 @@ def test_screen_nouns_keep_their_gender(language: str) -> None:
             for found in wrong_defined_forms(language, text):
                 problems.append(f"{where}: {found}")
     assert not problems, "een schermwoord houdt zijn geslacht:\n" + "\n".join(problems)
+
+
+def test_the_descriptive_form_of_a_screen_word_carries_its_gender() -> None:
+    """De beschrijvende vorm achter `:` of `=` draagt het geslacht van het schermwoord.
+
+    Op verzonnen invoer, zodat de toets de eigenschap meet en niet de toestand
+    van vandaag: *activa* is het vrouwelijke bijvoeglijk naamwoord bij het
+    mannelijke *puenteo* en hoort rood te zijn, terwijl *activado* en *activo*
+    goed zijn. Een token dat toevallig op -o/-a eindigt zonder een bijvoeglijk
+    naamwoord te zijn (*junto*) blijft groen, en dat is de bewust smalle kant van
+    de families. Het omgekeerde geval hoort ook te bijten: *activo* bij het
+    vrouwelijke *zona*.
+
+    The descriptive form behind `:` or `=` carries the gender of the screen
+    word, on invented input, so the test measures the property and not today's
+    state: *activa* is the feminine adjective for the masculine *puenteo* and
+    has to be red, while *activado* and *activo* are right. A token that happens
+    to end in -o/-a without being an adjective (*junto*) stays green, and that
+    is the deliberately narrow side of the families. The other direction has to
+    bite too: *activo* with the feminine *zona*.
+    """
+    assert wrong_defined_forms("es", "**Puenteo** (x): activa") != []
+    assert wrong_defined_forms("es", "**Puenteo** (x): activo") == []
+    assert wrong_defined_forms("es", "**Puenteo** (x): activado") == []
+    assert wrong_defined_forms("es", "**Puenteo** (x): junto") == []
+    assert wrong_defined_forms("es", "**Zona** (x): activo") != []
+    assert wrong_defined_forms("es", "**Zona** (x): activa") == []
