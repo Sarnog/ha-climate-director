@@ -221,9 +221,16 @@ def test_the_reason_is_a_sentence_without_identifiers_or_jargon(language: str, r
 #: Wat de toets dekt: elke schrijfwijze van die stammen, want voor de vergelijking
 #: worden de Arabische diakritieken (U+064B-U+0652 en U+0670) uit zowel de zin als
 #: de naald gehaald - Arabisch wordt in de praktijk zonder diakritieken
-#: geschreven, dus `يدفئ` en `يدفّئ` zijn dezelfde verboden richting. Wat zij
-#: bewust niet dekt: een synoniem dat geen richtingswerkwoord uit deze lijst is
-#: (Nederlands *stookt* blijft groen); dat staat als idee in `ROADMAP.md`.
+#: geschreven, dus `يدفئ` en `يدفّئ` zijn dezelfde verboden richting. De Arabische
+#: naald is de **wortel zonder persoonsvoorvoegsel** (`دفئ`, `برد`) en niet de
+#: vervoegde vorm, want een Arabisch werkwoord draagt zijn persoon en zijn geslacht
+#: in dat voorvoegsel: `يدفئ` (hij verwarmt), `تدفئ` (zij verwarmt) en de maṣdar
+#: `التدفئة` zijn één wortel en één verboden richting, terwijl een naald met `ي`
+#: er alleen de mannelijke vorm uit haalt. Wat de wortel breder dekt dan de
+#: bedoeling is de prijs: elk woord met die wortel telt, ook een zelfstandig
+#: naamwoord als `تبرد` (*het koelen*). Wat zij bewust niet dekt: een synoniem dat
+#: niet van deze wortel komt (Nederlands *stookt*, Arabisch `يخدم` / *dient*) blijft
+#: groen; dat staat als idee in `ROADMAP.md`.
 #:
 #: Verbs that pick a direction - heating or cooling. The reason sentence
 #: `opening_open_elsewhere` holds for a heating as well as for a cooling
@@ -234,16 +241,23 @@ def test_the_reason_is_a_sentence_without_identifiers_or_jargon(language: str, r
 #: What the guard covers: every spelling of those stems, because the Arabic
 #: diacritics (U+064B-U+0652 and U+0670) are stripped from both the sentence and
 #: the needle - Arabic is written without diacritics in practice, so `يدفئ` and
-#: `يدفّئ` are the same forbidden direction. What it deliberately leaves
-#: uncovered: a synonym that is not a direction verb from this list (Dutch
-#: *stookt* stays green); that stands as an idea in `ROADMAP.md`.
+#: `يدفّئ` are the same forbidden direction. The Arabic needle is the
+#: **stem without the person prefix** (`دفئ`, `برد`) and not the inflected form,
+#: because an Arabic verb carries its person and its gender in that prefix:
+#: `يدفئ` (he heats), `تدفئ` (she heats) and the maṣdar
+#: `التدفئة` are one stem and one forbidden direction, while a needle with `ي`
+#: only takes the masculine form out. What the stem covers more broadly than the
+#: intention is the price: every word with that stem counts, including a noun
+#: such as `تبرد` (*the cooling*). What it deliberately leaves uncovered: a
+#: synonym that does not come from that stem (Dutch *stookt*, Arabic `يخدم` /
+#: *serves*) stays green; that stands as an idea in `ROADMAP.md`.
 DIRECTION_WORDS: dict[str, tuple[str, ...]] = {
     "nl": ("verwarm", "koel"),
     "en": ("heat", "cool"),
     "de": ("heiz", "kühl"),
     "fr": ("chauff", "refroid"),
     "es": ("calient", "enfrí"),
-    "ar": ("يدفّئ", "يبرّد"),
+    "ar": ("دفئ", "برد"),
 }
 
 #: De Arabische diakritieken die tussen stam en uitgang staan en die in gewoon
