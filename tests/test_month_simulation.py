@@ -255,10 +255,6 @@ def house() -> DirectorConfig:
     )
 
 
-ZONE_OF = {LIVING: "woonkamer", ATTIC: "zolder", BEDROOM: "slaapkamer"}
-UNITS = (LIVING, ATTIC, BEDROOM)
-
-
 # ---------------------------------------------------------------------------
 # Het huis als natuurkundig speeltje: ruw, maar het beweegt de goede kant op.
 # The house as a toy physics model: crude, but it moves the right way.

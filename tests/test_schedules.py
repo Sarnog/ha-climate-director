@@ -35,7 +35,6 @@ from custom_components.climate_director.engine.serialise import (
     config_to_dict,
 )
 
-WEEKDAYS = frozenset({0, 1, 2, 3, 4})
 WEEKEND = frozenset({5, 6})
 
 #: 11 augustus 2026 is een dinsdag, 15 augustus een zaterdag.

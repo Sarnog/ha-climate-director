@@ -83,11 +83,6 @@ CI_INTERPRETERS = ("python", "python3")
 #: the guard had to guess about.
 CI_PREFIXES = ("python -m ", "python script/")
 
-#: De opstapstap van de CI; die hoort in `script/setup`, niet in een testscript.
-#:
-#: The CI's setup step; that belongs in `script/setup`, not in a test script.
-SETUP = "-m pip"
-
 #: De scheidingstekens waarmee één `run:`-regel meerdere commando's aan elkaar
 #: plakt. Alle drie worden herkend: een regel die de opstap met `&&` aan een tweede
 #: commando koppelt, viel anders in zijn geheel buiten de bewaking.
