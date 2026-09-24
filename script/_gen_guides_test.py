@@ -111,16 +111,6 @@ def interface_labels(lang: str) -> dict[str, str]:
     return labels
 
 
-def docs_from(ref: str, tmp: Path) -> Path:
-    """Extract docs/install from a git ref into a temp dir."""
-    out = tmp / "docs" / "install"
-    out.mkdir(parents=True, exist_ok=True)
-    for lang in LANGUAGES:
-        data = subprocess.check_output(["git", "show", f"{ref}:docs/install/{lang}.md"], cwd=ROOT)
-        (out / f"{lang}.md").write_bytes(data)
-    return out
-
-
 def build(docs: Path, *, entity_guard: bool, slugify_import: bool = False) -> str:
     exceptions: dict[str, dict[str, str]] = {}
     for lang in LANGUAGES:
