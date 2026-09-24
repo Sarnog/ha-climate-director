@@ -21,6 +21,18 @@ so (the live half).
 
 The identifiers stay the contract: `reason` is and remains the stable value to
 filter on. Whoever does that notices nothing of any of this.
+
+Dekking: de vier velden van het event, de actiezinnen, de redenzinnen en de
+richtingzin van de elders-melding, over de zeven tekstbestanden en de zes gidsen.
+Niet gedekt: de schermlabels en de formuliervelden (`tests/test_ui_complete.py`,
+`tests/test_install_guides.py`) en de sleutels die geen code opvraagt
+(`tests/test_text_producers.py`).
+
+Coverage: the event's four fields, the action sentences, the reason sentences and
+the direction sentence of the elsewhere message, across the seven text files and
+the six guides. Not covered: the screen labels and the form fields
+(`tests/test_ui_complete.py`, `tests/test_install_guides.py`) and the keys no
+code asks for (`tests/test_text_producers.py`).
 """
 
 from __future__ import annotations

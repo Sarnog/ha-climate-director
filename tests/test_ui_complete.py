@@ -15,6 +15,18 @@ prints the key. You get `max_precondition` on screen instead of
 That is exactly the kind of fault that only shows when somebody opens the
 screen - so we read the form out of the source and lay it beside every
 translation file.
+
+Dekking: elk veld en elke knop die het formulier uit de bron bouwt, in elk van de
+zeven bestanden, naast de acties uit `services.yaml` en de entiteiten uit
+`icons.json`. Niet gedekt: de sleutels die geen code opvraagt
+(`tests/test_text_producers.py`), de zinnen van de beslismelding
+(`tests/test_decision_message.py`) en de zes gidsen.
+
+Coverage: every field and button the form builds from the source, in each of the
+seven files, next to the actions from `services.yaml` and the entities from
+`icons.json`. Not covered: the keys no code asks for
+(`tests/test_text_producers.py`), the decision message's sentences
+(`tests/test_decision_message.py`) and the six guides.
 """
 
 from __future__ import annotations

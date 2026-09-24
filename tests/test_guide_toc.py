@@ -42,6 +42,17 @@ trace (`Gebruiksscenario's` becomes `gebruiksscenarios`) and Arabic letters stay
 (`متابعة تجاوز بمدة على لوحة التحكم` becomes `متابعة-تجاوز-بمدة-على-لوحة-التحكم`).
 Those three cases stand literally in the test below, so a change in the slug rules
 stands out.
+
+Dekking: de inhoudsopgave van elke gids tegen de kopjes in diezelfde gids, plus
+de drie sluggevallen die er letterlijk in staan. Niet gedekt: de taal van de
+koppen zelf, hun aantal over de zes gidsen (`tests/test_guide_inventory.py`) en
+de opsommingstekens in de lopende tekst (`tests/test_guide_markdown.py`).
+
+Coverage: each guide's table of contents against the headings in that same guide,
+plus the three slug cases standing in it literally. Not covered: the language of
+the headings themselves, their number across the six guides
+(`tests/test_guide_inventory.py`) and the list markers in the running text
+(`tests/test_guide_markdown.py`).
 """
 
 from __future__ import annotations

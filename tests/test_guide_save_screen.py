@@ -25,6 +25,17 @@ number 12, whatever the language) and demands that the screen's title, the field
 name and both `when_done` choices stand in it literally. The words come from that
 language's translation file, not from a list here: change the interface wording and
 this demand changes with it.
+
+Dekking: stap 12 van de zes gidsen tegen het scherm, het veld en de twee
+`when_done`-keuzes uit dat taals vertaalbestand. Niet gedekt: de andere stappen
+(`tests/test_install_guides.py`), de inhoudsopgave (`tests/test_guide_toc.py`) en
+de schermen van de flow zelf - die staan in de live campagnes, niet in een tekst.
+
+Coverage: step 12 of the six guides against the screen, the field and the two
+`when_done` choices from that language's translation file. Not covered: the other
+steps (`tests/test_install_guides.py`), the table of contents
+(`tests/test_guide_toc.py`) and the flow's own screens - those live in the live
+campaigns, not in a text.
 """
 
 from __future__ import annotations

@@ -16,6 +16,18 @@ order. Hence they are read here with Home Assistant's own loader, put through
 the real schema, and checked for what a schema does not see: an `!input` that is
 defined nowhere, an input nobody uses, and a `source_url` not pointing at the
 file itself - since then updating does not work.
+
+Dekking: het inlezen van elke blauwdruk met de loader van Home Assistant, het
+echte schema, de `!input`s, de gebruikte invoervelden, de `source_url`, de
+minimumversie uit `hacs.json`, het event waarop de weigeringsblauwdruk wacht en
+de leestekens in het terugvalbericht. Niet gedekt: de gidsen die de blauwdrukken
+noemen (`tests/test_guide_blueprints.py`) en de YAML buiten deze map.
+
+Coverage: reading every blueprint with Home Assistant's own loader, the real
+schema, the `!input`s, the input fields in use, the `source_url`, the minimum
+version from `hacs.json`, the event the refusal blueprint listens for and the
+punctuation in the fallback message. Not covered: the guides naming the
+blueprints (`tests/test_guide_blueprints.py`) and the YAML outside this folder.
 """
 
 from __future__ import annotations

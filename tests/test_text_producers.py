@@ -36,6 +36,16 @@ This test reads the producers from the source - the step methods from
 `services.yaml` for the actions - and demands that every key has one. The
 computation is a pure function, so the guard itself can be tested on invented
 input too.
+
+Dekking: elke sleutel in `strings.json` tegen de bron van de integratie - de
+stapmethodes en de letterlijke sleutels in de code, `icons.json` en
+`services.yaml`. Niet gedekt: de waarde van een sleutel of zijn vertaling; deze
+toets kijkt alleen of iemand hem opvraagt.
+
+Coverage: every key in `strings.json` against the integration's source - the step
+methods and the literal keys in the code, `icons.json` and `services.yaml`. Not
+covered: the value of a key or its translation; this guard only checks that
+something asks for it.
 """
 
 from __future__ import annotations

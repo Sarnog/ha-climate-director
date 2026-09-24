@@ -12,6 +12,18 @@ Home Assistant picks the file matching the user's language itself and falls
 back to English for whatever is missing from it. That fallback is silent: a
 forgotten key produces no error, just a half-English dialog. Hence the check
 here that every file carries exactly the same keys as `strings.json`.
+
+Dekking: de sleutels van de zeven bestanden tegen `strings.json`, de
+plaatshouders in elke waarde, en de terminologielijst `TERMINOLOGY` die per taal
+één woord per begrip eist. Niet gedekt: de schermlabels en de formuliervelden
+(`tests/test_ui_complete.py`), de sleutels zonder producent
+(`tests/test_text_producers.py`) en de gidsen buiten de twee aangehaalde zinnen.
+
+Coverage: the keys of the seven files against `strings.json`, the placeholders in
+every value, and the `TERMINOLOGY` list demanding one word per concept per
+language. Not covered: the screen labels and form fields
+(`tests/test_ui_complete.py`), the keys without a producer
+(`tests/test_text_producers.py`) and the guides outside the two quoted sentences.
 """
 
 from __future__ import annotations
