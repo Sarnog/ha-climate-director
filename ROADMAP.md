@@ -170,6 +170,21 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 - **De laatste terugval van `reason_sentence` is de identifier zelf** — valt elke
   vertaling weg, dan leest de gebruiker `circuit_conflict_lost` in plaats van een zin.
 
+- **Een bewaking op dode code** — er staat nu geen enkele toets op namen die
+  niemand meer gebruikt; vijf dode namen in `tests/` en `script/` bleven zo staan,
+  en `vulture` op 60% meldt er nog twaalf (de `_fill_*`- en `_check_*`-helpers in
+  `tests/test_campaign_editing.py`). Een ratel met een eigen AST-inventaris, of
+  `vulture` in een CI-baan met een uitzonderingenlijst, houdt dat aantal op nul
+  zonder de terechte meldingen (fixtures, dubbelgangers van Home
+  Assistant-objecten) weg te drukken.
+
+- **A guard on dead code** — no test looks at names nobody uses any more; five
+  dead names in `tests/` and `script/` sat there unnoticed, and `vulture` at 60%
+  reports twelve more (the `_fill_*` and `_check_*` helpers in
+  `tests/test_campaign_editing.py`). A ratchet with its own AST inventory, or
+  `vulture` in a CI job with an exception list, keeps that number at zero without
+  silencing the fair reports (fixtures, stand-ins for Home Assistant objects).
+
 ## Would have
 
 - **Leren van looptijden** — de opwarm- en afkoelsnelheid per zone meten en de dode band
