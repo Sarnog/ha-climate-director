@@ -368,6 +368,21 @@ class TestTheRequestItself:
         granted = coordinator.async_precondition(None, 30)
         assert set(granted) == {"woonkamer", "zolder"}
 
+    def test_the_wake_lands_on_the_first_request_that_runs_out(self) -> None:
+        """De stand-in onthoudt waar de wekker op gezet zou worden, en dat is het
+        verzoek dat het eerst afloopt - niet het laatste. Anders blijft een lege
+        woning doorstoken tot er toevallig iets anders verandert.
+
+        The stand-in records where the alarm would be set, and that is the first
+        request to run out - not the last. Otherwise an empty house keeps burning
+        until something else happens to change.
+        """
+        coordinator = self._coordinator()
+        coordinator.async_precondition(["woonkamer"], 90)
+        later = coordinator.expiry
+        coordinator.async_precondition(["zolder"], 30)
+        assert coordinator.expiry < later
+
     def test_an_unknown_zone_is_dropped_and_warned_about(self, caplog) -> None:
         coordinator = self._coordinator()
         assert coordinator.async_precondition(["kelder"], 30) == {}
