@@ -234,15 +234,20 @@ def test_the_reason_is_a_sentence_without_identifiers_or_jargon(language: str, r
 #: worden de Arabische diakritieken (U+064B-U+0652 en U+0670) uit zowel de zin als
 #: de naald gehaald - Arabisch wordt in de praktijk zonder diakritieken
 #: geschreven, dus `يدفئ` en `يدفّئ` zijn dezelfde verboden richting. De Arabische
-#: naald is de **wortel zonder persoonsvoorvoegsel** (`دفئ`, `برد`) en niet de
-#: vervoegde vorm, want een Arabisch werkwoord draagt zijn persoon en zijn geslacht
-#: in dat voorvoegsel: `يدفئ` (hij verwarmt), `تدفئ` (zij verwarmt) en de maṣdar
-#: `التدفئة` zijn één wortel en één verboden richting, terwijl een naald met `ي`
-#: er alleen de mannelijke vorm uit haalt. Wat de wortel breder dekt dan de
-#: bedoeling is de prijs: elk woord met die wortel telt, ook een zelfstandig
-#: naamwoord als `تبرد` (*het koelen*). Wat zij bewust niet dekt: een synoniem dat
-#: niet van deze wortel komt (Nederlands *stookt*, Arabisch `يخدم` / *dient*) blijft
-#: groen; dat staat als idee in `ROADMAP.md`.
+#: naald is de **wortel zonder persoonsvoorvoegsel**, en waar de maṣdar een letter
+#: toevoegt een **patroon**: `دفئ` voor verwarmen en `بري?د` voor koelen. Een
+#: Arabisch werkwoord draagt zijn persoon en zijn geslacht in dat voorvoegsel:
+#: `يدفئ` (hij verwarmt), `تدفئ` (zij verwarmt) en de maṣdar `التدفئة` zijn één
+#: wortel en één verboden richting, terwijl een naald met `ي` er alleen de
+#: mannelijke vorm uit haalt. Voor koelen is de wortel `برد`, maar de maṣdar
+#: `تبريد` / `التبريد` draagt een `ي` tussen de `ر` en de `د`; die vorm valt
+#: buiten `برد` en binnen `بري?د`, en het is juist het woord dat de interface zelf
+#: gebruikt (`بدء التبريد`). Wat de wortel breder dekt dan de bedoeling is de
+#: prijs: elk woord met die stam telt, ook een werkwoordsvorm als `تبرد` (*zij
+#: koelt af*); het zelfstandig naamwoord is `تبريد` en dat valt er juist binnen.
+#: Wat zij bewust niet dekt: een synoniem dat niet van deze wortel komt
+#: (Nederlands *stookt*, Arabisch `يخدم` / *dient*) blijft groen; dat staat als
+#: idee in `ROADMAP.md`.
 #:
 #: Verbs that pick a direction - heating or cooling. The reason sentence
 #: `opening_open_elsewhere` holds for a heating as well as for a cooling
@@ -254,22 +259,26 @@ def test_the_reason_is_a_sentence_without_identifiers_or_jargon(language: str, r
 #: diacritics (U+064B-U+0652 and U+0670) are stripped from both the sentence and
 #: the needle - Arabic is written without diacritics in practice, so `يدفئ` and
 #: `يدفّئ` are the same forbidden direction. The Arabic needle is the
-#: **stem without the person prefix** (`دفئ`, `برد`) and not the inflected form,
-#: because an Arabic verb carries its person and its gender in that prefix:
-#: `يدفئ` (he heats), `تدفئ` (she heats) and the maṣdar
-#: `التدفئة` are one stem and one forbidden direction, while a needle with `ي`
-#: only takes the masculine form out. What the stem covers more broadly than the
-#: intention is the price: every word with that stem counts, including a noun
-#: such as `تبرد` (*the cooling*). What it deliberately leaves uncovered: a
-#: synonym that does not come from that stem (Dutch *stookt*, Arabic `يخدم` /
-#: *serves*) stays green; that stands as an idea in `ROADMAP.md`.
+#: **stem without the person prefix**, and a **pattern** where the maṣdar adds a
+#: letter: `دفئ` for heating and `بري?د` for cooling. An Arabic verb carries its
+#: person and its gender in that prefix: `يدفئ` (he heats), `تدفئ` (she heats) and
+#: the maṣdar `التدفئة` are one stem and one forbidden direction, while a needle
+#: with `ي` only takes the masculine form out. For cooling the stem is `برد`, but
+#: the maṣdar `تبريد` / `التبريد` carries a `ي` between the `ر` and the `د`; that
+#: form falls outside `برد` and inside `بري?د`, and it is exactly the word the
+#: interface itself uses (`بدء التبريد`). What the stem covers more broadly than
+#: the intention is the price: every word with that stem counts, including a verb
+#: form such as `تبرد` (*she cools*); the noun is `تبريد` and that falls inside
+#: it. What it deliberately leaves uncovered: a synonym that does not come from
+#: that stem (Dutch *stookt*, Arabic `يخدم` / *serves*) stays green; that stands
+#: as an idea in `ROADMAP.md`.
 DIRECTION_WORDS: dict[str, tuple[str, ...]] = {
     "nl": ("verwarm", "koel"),
     "en": ("heat", "cool"),
     "de": ("heiz", "kühl"),
     "fr": ("chauff", "refroid"),
     "es": ("calient", "enfrí"),
-    "ar": ("دفئ", "برد"),
+    "ar": ("دفئ", r"بري?د"),
 }
 
 #: De Arabische diakritieken die tussen stam en uitgang staan en die in gewoon
@@ -311,7 +320,7 @@ def test_the_elsewhere_sentence_names_no_direction(language: str) -> None:
         reason_sentences(language)["opening_open_elsewhere"].lower()
     )
     for word in DIRECTION_WORDS[language]:
-        assert without_arabic_diacritics(word) not in sentence, f"{language}: {sentence}"
+        assert not re.search(without_arabic_diacritics(word), sentence), f"{language}: {sentence}"
 
 
 @pytest.mark.parametrize("language", LANGUAGES)
