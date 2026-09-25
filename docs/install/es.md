@@ -450,7 +450,7 @@ Es un freno al **arranque**, no a la continuación:
   haciendo funcionar la casa, incluso con un aparato apagado. Quien llega a una
   casa vacía después del inicio permanece en silencio hasta que la franja termina.
 
-Las ventanas pueden cruzar la medianoche y llevan días de la semana. Un hogar
+Las franjas pueden cruzar la medianoche y llevan días de la semana. Un hogar
 que se acuesta a las nueve entre semana y a las once el fin de semana pone dos:
 
 | De | Hasta | Días |
@@ -458,7 +458,7 @@ que se acuesta a las nueve entre semana y a las once el fin de semana pone dos:
 | 21:00 | 09:00 | lun mar mié jue dom |
 | 23:00 | 09:00 | vie sáb |
 
-Sin ventanas configuradas, el freno no actúa.
+Sin franjas configuradas, el freno no actúa.
 
 Cada franja lleva además una casilla **Esta es una franja de vacaciones**. Una
 franja así solo se aplica con el horario de vacaciones activo, y entonces
