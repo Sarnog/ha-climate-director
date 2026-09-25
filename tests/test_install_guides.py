@@ -52,18 +52,6 @@ list below, no more and no less, and every row names a label that really stands
 in that language's translation. That comparison lives in
 `script/_gen_guides_test.py`, where the exception list comes from as well - one
 place, so table and list can only change together.
-
-Dekking: elk interfacelabel uit `translations/<taal>.json` tegen de zes
-handleidingen, en de uitzonderingenlijst die daaruit volgt. Niet gedekt: de
-koppen en de inhoudsopgave (`tests/test_guide_toc.py`), het dashboardvoorbeeld
-(`tests/test_guide_dashboard.py`) en de teksten van het bewaarscherm
-(`tests/test_guide_save_screen.py`).
-
-Coverage: every interface label from `translations/<language>.json` against the
-six guides, and the exception list that follows from it. Not covered: the
-headings and the table of contents (`tests/test_guide_toc.py`), the dashboard
-example (`tests/test_guide_dashboard.py`) and the save screen's texts
-(`tests/test_guide_save_screen.py`).
 """
 
 from __future__ import annotations
@@ -412,80 +400,33 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         ),
     },
     "ar": {
-        "options.step.circuit.data.allow_fan_only_during_conflict": (
-            "يجوز للمنطقة الخاسرة تدوير الهواء"
-        ),
-        "options.step.circuit.data.conflict_policy": ("قاعدة التعارض"),
         "options.step.circuit.data.delete": ("حذف هذه الدائرة"),
-        "options.step.circuit.data.family_switch_delay": ("توقف عند تبديل المهمة (ثوانٍ)"),
-        "options.step.circuit.data.max_concurrent_units": ("أقصى عدد وحدات تعمل معًا"),
-        "options.step.circuit.data.min_cycle_time": ("راحة قبل أن تعيد الوحدة التشغيل (ثوانٍ)"),
-        "options.step.circuit.data.min_family_switch_interval": (
-            "أقل مدة تشغيل قبل تبديل المهمة (ثوانٍ)"
-        ),
-        "options.step.circuit.data.simultaneous_heat_cool": ("تستطيع التدفئة والتبريد في آنٍ واحد"),
         "options.step.circuit.data.when_done": ("عند الانتهاء هنا"),
         "options.step.circuit_priorities.data.when_done": ("عند الانتهاء هنا"),
-        "options.step.circuit_priority.data.priority": ("الأولوية على هذه الدائرة"),
         "options.step.circuit_priority.data.when_done": ("عند الانتهاء هنا"),
         "options.step.circuits.data.when_done": ("عند الانتهاء هنا"),
         "options.step.exclusive.data.delete": ("حذف هذه المجموعة"),
-        "options.step.exclusive.data.sources": ("الأجهزة في هذه المجموعة"),
         "options.step.exclusive.data.when_done": ("عند الانتهاء هنا"),
         "options.step.exclusives.data.when_done": ("عند الانتهاء هنا"),
         "options.step.generator.data.delete": ("حذف مصدر الحرارة هذا"),
-        "options.step.generator.data.entity_id": ("كيان climate"),
         "options.step.generator.data.when_done": ("عند الانتهاء هنا"),
         "options.step.generators.data.when_done": ("عند الانتهاء هنا"),
-        "options.step.opening.data.delay": ("التأخير قبل التعليق (ثوانٍ)"),
         "options.step.opening.data.delete": ("حذف هذه الفتحة"),
         "options.step.opening.data.when_done": ("عند الانتهاء هنا"),
-        "options.step.opening.data.zone_ids": ("المناطق المعنية"),
         "options.step.openings.data.when_done": ("عند الانتهاء هنا"),
         "options.step.quiet.data.delete": ("حذف هذه النافذة"),
-        "options.step.quiet.data.end": ("الهدوء حتى"),
-        "options.step.quiet.data.start": ("الهدوء من"),
         "options.step.quiet.data.when_done": ("عند الانتهاء هنا"),
         "options.step.resident.data.delete": ("حذف هذا الساكن"),
-        "options.step.resident.data.presence_entity": ("مستشعر الوجود"),
-        "options.step.resident.data.sleep_from": ("يُحتسب مستشعر النوم من"),
-        "options.step.resident.data.sleep_until": ("يُحتسب مستشعر النوم حتى"),
         "options.step.resident.data.when_done": ("عند الانتهاء هنا"),
         "options.step.residents.data.when_done": ("عند الانتهاء هنا"),
-        "options.step.settings.data.guest_end": ("وضع الضيوف حتى"),
-        "options.step.settings.data.holiday_calendars": ("تقاويم العطلات"),
-        "options.step.settings.data.holiday_keyword": ("الكلمة الدالة على العطلة"),
-        "options.step.settings.data.max_precondition": ("أقصى مدة للتهيئة المسبقة (بالدقائق)"),
-        "options.step.settings.data.outdoor_sensor": ("مستشعر حرارة الخارج"),
-        "options.step.settings.data.require_awake": ("يجب أن يكون أحد الموجودين مستيقظًا"),
-        "options.step.settings.data.season_entity": ("كيان الموسم"),
-        "options.step.settings.data.stuck_after": ("تُعدّ المنطقة متعثّرة بعد (بالدقائق)"),
         "options.step.settings.data.when_done": ("عند الانتهاء هنا"),
         "options.step.source.data.delete": ("حذف هذا المصدر"),
-        "options.step.source.data.entity_id": ("كيان climate"),
-        "options.step.source.data.min_cycle_time": (
-            "مدة الراحة قبل أن يتمكن هذا الجهاز من إعادة التشغيل (بالثواني)"
-        ),
-        "options.step.source.data.outdoor_max": ("يُستخدم حتى درجة الحرارة الخارجية هذه"),
-        "options.step.source.data.outdoor_min": ("يُستخدم ابتداءً من درجة الحرارة الخارجية هذه"),
-        "options.step.source.data.takeover_delay": (
-            "الانتظار هذه المدة قبل تولّي المهمة (بالدقائق)"
-        ),
         "options.step.source.data.when_done": ("عند الانتهاء هنا"),
         "options.step.sources.data.when_done": ("عند الانتهاء هنا"),
         "options.step.window.data.delete": ("حذف هذا الجدول"),
         "options.step.window.data.when_done": ("عند الانتهاء هنا"),
         "options.step.windows.data.when_done": ("عند الانتهاء هنا"),
-        "options.step.zone.data.cool_start_at": ("ابدأ التبريد عند"),
         "options.step.zone.data.delete": ("حذف هذه المنطقة"),
-        "options.step.zone.data.enable_cool": ("يُسمح لهذه المنطقة بالتبريد"),
-        "options.step.zone.data.enable_heat": ("يُسمح لهذه المنطقة بالتدفئة"),
-        "options.step.zone.data.gate": ("ما الذي يقرر تشغيل هذه المنطقة"),
-        "options.step.zone.data.heat_start_at": ("ابدأ التدفئة عند"),
-        "options.step.zone.data.indoor_sensor": ("مستشعر حرارة الداخل"),
-        "options.step.zone.data.presence_entity": ("مستشعر الوجود لهذه المنطقة"),
-        "options.step.zone.data.presence_state": ("الحالة التي تعني مشغولة"),
-        "options.step.zone.data.presence_timeout": ("استمر في اعتبارها مشغولة لمدة (ثوانٍ)"),
         "options.step.zone.data.when_done": ("عند الانتهاء هنا"),
         "options.step.zones.data.when_done": ("عند الانتهاء هنا"),
     },
