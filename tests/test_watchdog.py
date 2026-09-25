@@ -294,7 +294,31 @@ class TestTheManualSignatureIsAStorageFormat:
 class TestTheNoticeIsUsable:
     """Een melding die niet zegt wat je moet doen is een melding die blijft staan.
 
+    Deze bewaking leest de **bron**: `strings.json` en de zes vertaalbestanden.
+    Wat hij dekt: in elke taal een niet-lege titel voor `precondition_unwatched`
+    en een beschrijving die het event `climate_director_precondition_refused`
+    letterlijk noemt; in het Nederlands en het Engels de uitdrukking die zegt dat
+    de blauwdruk ook ingesteld moet worden (*stel* / *set it up*); en dat het anker
+    van `problems.BLUEPRINTS_URL` werkelijk als kop in `README.md` staat. Wat hij
+    **niet** dekt: of de rest van de beschrijving leesbaar is, of de andere vier
+    talen dezelfde instructie geven (die worden alleen op titel en event
+    nagekeken), of de blauwdruk daarna ook echt draait, en de andere meldingen in
+    dezelfde bestanden. De structurele afspraak staat in `AGENTS.md`
+    (projectspecifieke afspraken: welke bronbewakingen er zijn).
+
     A notice that does not say what to do is a notice that stays.
+
+    This guard reads the **source**: `strings.json` and the six translation files.
+    What it covers: a non-empty title for `precondition_unwatched` in every
+    language and a description that names the event
+    `climate_director_precondition_refused` literally; in Dutch and English the
+    wording saying the blueprint must be set up too (*stel* / *set it up*); and
+    that the anchor of `problems.BLUEPRINTS_URL` really stands as a heading in
+    `README.md`. What it does **not** cover: whether the rest of the description
+    reads well, whether the other four languages give the same instruction (they
+    are only checked for title and event), whether the blueprint then really runs,
+    and the other notices in the same files. The structural agreement stands in
+    `AGENTS.md` (project-specific agreements: which source guards there are).
     """
 
     def _issue(self, language: str) -> dict:

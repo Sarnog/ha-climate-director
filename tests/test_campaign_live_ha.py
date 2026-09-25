@@ -1282,7 +1282,29 @@ class TestTheReporting:
     async def test_every_command_state_is_translated(self) -> None:
         """Een stand zonder tekst laat Home Assistant de kale sleutel tonen.
 
+        Deze bewaking leest de **bron**: `strings.json` en de zes
+        vertaalbestanden. Wat hij dekt: de sleutels onder
+        `entity.sensor.would_command.state` zijn in alle zeven bestanden precies
+        dezelfde zes als `COMMAND_STATES` in `sensor.py` (*cool*, *fan_only*,
+        *heat*, *left_alone*, *off*, *unreachable*) - geen ontbrekende en geen
+        extra. Daarmee ligt de verzameling vast, niet de tekst erachter. Wat hij
+        **niet** dekt: of die teksten van elkaar verschillen of leesbaar zijn, of
+        de sleutel ook op een echt scherm terechtkomt, en de andere
+        sensoreigenschappen. De structurele afspraak staat in `AGENTS.md`
+        (projectspecifieke afspraken: welke bronbewakingen er zijn).
+
         A state without wording makes Home Assistant show the bare key.
+
+        This guard reads the **source**: `strings.json` and the six translation
+        files. What it covers: the keys under `entity.sensor.would_command.state`
+        are exactly the same six in all seven files as `COMMAND_STATES` in
+        `sensor.py` (*cool*, *fan_only*, *heat*, *left_alone*, *off*,
+        *unreachable*) - none missing and none extra. That pins the set down, not
+        the wording behind it. What it does **not** cover: whether those texts
+        differ from each other or read well, whether the key reaches a real
+        screen, and the other sensor attributes. The structural agreement stands
+        in `AGENTS.md` (project-specific agreements: which source guards there
+        are).
         """
         import json
         from pathlib import Path

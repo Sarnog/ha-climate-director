@@ -14,16 +14,27 @@ forgotten key produces no error, just a half-English dialog. Hence the check
 here that every file carries exactly the same keys as `strings.json`.
 
 Dekking: de sleutels van de zeven bestanden tegen `strings.json`, de
-plaatshouders in elke waarde, en de terminologielijst `TERMINOLOGY` die per taal
-één woord per begrip eist. Niet gedekt: de schermlabels en de formuliervelden
-(`tests/test_ui_complete.py`), de sleutels zonder producent
-(`tests/test_text_producers.py`) en de gidsen buiten de twee aangehaalde zinnen.
+plaatshouders in elke waarde, de sleutel die binnen één object twee keer staat,
+de aanspreekvorm in de Duitse en de Franse gids, en de terminologielijst
+`TERMINOLOGY` die één woord per begrip eist. Die lijst dekt **vier** van de zes
+talen (`ar`, `de`, `es`, `fr`); voor `nl` en `en` staat er nog geen naald, en dat
+is de enige reden dat ze er niet in staan. Van elke taal in die lijst leest deze
+test het hele vertaalbestand én de hele gids. Niet gedekt: de schermlabels en de
+formuliervelden (`tests/test_ui_complete.py`), de sleutels zonder producent
+(`tests/test_text_producers.py`), de gidsen van `nl`, `en`, `es` en `ar` op
+aanspreekvorm, en de rest van elke gids buiten de terminologienaalden.
 
 Coverage: the keys of the seven files against `strings.json`, the placeholders in
-every value, and the `TERMINOLOGY` list demanding one word per concept per
-language. Not covered: the screen labels and form fields
+every value, the key standing twice inside one object, the form of address in the
+German and French guides, and the `TERMINOLOGY` list demanding one word per
+concept. That list covers **four** of the six languages (`ar`, `de`, `es`, `fr`);
+for `nl` and `en` no needle exists yet, and that is the only reason they are not
+in it. For every language in that list this test reads the whole translation file
+and the whole guide. Not covered: the screen labels and form fields
 (`tests/test_ui_complete.py`), the keys without a producer
-(`tests/test_text_producers.py`) and the guides outside the two quoted sentences.
+(`tests/test_text_producers.py`), the guides of `nl`, `en`, `es` and `ar` for
+their form of address, and the rest of each guide outside the terminology
+needles.
 """
 
 from __future__ import annotations
