@@ -51,6 +51,14 @@ Why a file of its own beside `test_guide_toc.py`: that file guards the table of
 contents (every heading a link, every link a heading) while this guard is about
 the structure of the text itself. Two different properties, two docstrings;
 putting them in one file would make one of the two untrue.
+
+Dekking: elke regel die met `- ` of `* ` begint in de zes gidsen, buiten
+codeblokken en tabelregels. Niet gedekt: de `+ `-marker, de opmaak binnen
+codeblokken en de tabelopmaak.
+
+Coverage: every line starting with `- ` or `* ` in the six guides, outside code
+blocks and table rows. Not covered: the `+ ` marker, the markup inside code blocks
+and the table markup.
 """
 
 from __future__ import annotations

@@ -35,6 +35,18 @@ of `ar.md` and in every value of `ar.json`, outside code spans, fenced code
 blocks and URLs. It deliberately does not cover the normal form (fatḥatān
 followed by alif), the fatḥatān on a hamza (`أً`), the fatḥatān without an alif,
 or a sequence inside a code span or URL.
+
+Dekking: de reeks alif gevolgd door fatḥatān (U+0627 U+064B) in het proza van
+`docs/install/ar.md` en in elke waarde van
+`custom_components/climate_director/translations/ar.json`. Niet gedekt: de goede
+vorm, de fatḥatān op een hamza (`أً`), de fatḥatān zonder alif, en de reeks
+binnen een code-span, codeblok of URL.
+
+Coverage: the sequence alif followed by fatḥatān (U+0627 U+064B) in the prose of
+`docs/install/ar.md` and in every value of
+`custom_components/climate_director/translations/ar.json`. Not covered: the normal
+form, the fatḥatān on a hamza (`أً`), the fatḥatān without an alif, and the
+sequence inside a code span, code block or URL.
 """
 
 from __future__ import annotations

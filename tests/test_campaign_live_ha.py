@@ -11,6 +11,16 @@ Everything here goes through the real setup path: `async_setup_entry`, the
 platforms, the entity registry, the action definitions and the teardown. The
 climate appliances are stand-ins but the rest is not, so what breaks here breaks
 for a user too.
+
+Dekking: de sleutels onder `entity.sensor.would_command.state` in
+`custom_components/climate_director/strings.json` en de zes vertaalbestanden,
+tegen `COMMAND_STATES` in `sensor.py`. Niet gedekt: de overige sleutels van de
+zeven bestanden (`tests/test_translations.py`) en de meldingsteksten.
+
+Coverage: the keys under `entity.sensor.would_command.state` in
+`custom_components/climate_director/strings.json` and the six translation files,
+against `COMMAND_STATES` in `sensor.py`. Not covered: the other keys of the seven
+files (`tests/test_translations.py`) and the notice texts.
 """
 
 from __future__ import annotations

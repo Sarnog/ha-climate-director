@@ -95,6 +95,18 @@ subject. The comparison is
 case-insensitive, plurals are listed only where the determiner still carries a
 gender (Spanish *las* against *los*), and German does not take part because its
 cases make *der Übersteuerung* correct in the dative.
+
+Dekking: het lidwoord, het onbepaald lidwoord, het aanwijzend voornaamwoord, het
+wederkerend voornaamwoord en het voltooid deelwoord bij de schermwoorden van
+`translations/<taal>.json` en in de zes gidsen, met de beschrijvende vorm achter
+`: ` of `=`. Niet gedekt: losse bijvoeglijke naamwoorden buiten de families
+`activ-`/`desactiv-`, zinnen met twee schermwoorden, en het Duits (naamvallen).
+
+Coverage: the article, the indefinite article, the demonstrative, the reflexive
+pronoun and the past participle beside the screen words of
+`translations/<language>.json` and in the six guides, with the descriptive form
+after `: ` or `=`. Not covered: loose adjectives outside the `activ-`/`desactiv-`
+families, sentences with two screen words, and German (cases).
 """
 
 from __future__ import annotations

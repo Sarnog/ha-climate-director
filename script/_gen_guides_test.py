@@ -245,6 +245,18 @@ list below, no more and no less, and every row names a label that really stands
 in that language's translation. That comparison lives in
 `script/_gen_guides_test.py`, where the exception list comes from as well - one
 place, so table and list can only change together.
+
+Dekking: elk interfacelabel uit `translations/<taal>.json` tegen de zes
+handleidingen, en de uitzonderingenlijst die daaruit volgt. Niet gedekt: de
+koppen en de inhoudsopgave (`tests/test_guide_toc.py`), het dashboardvoorbeeld
+(`tests/test_guide_dashboard.py`) en de teksten van het bewaarscherm
+(`tests/test_guide_save_screen.py`).
+
+Coverage: every interface label from `translations/<language>.json` against the
+six guides, and the exception list that follows from it. Not covered: the
+headings and the table of contents (`tests/test_guide_toc.py`), the dashboard
+example (`tests/test_guide_dashboard.py`) and the save screen's texts
+(`tests/test_guide_save_screen.py`).
 """
 
 from __future__ import annotations

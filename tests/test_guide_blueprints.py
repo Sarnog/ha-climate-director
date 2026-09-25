@@ -33,6 +33,16 @@ notice this is about, and the blueprint's file name comes from
 `EVENT_PRECONDITION_REFUSED` in `const.py` - the event the blueprint listens for.
 That way no list of guides or blueprints has to be maintained: change the event
 and this demand changes with it.
+
+Dekking: elke blauwdruknaam uit de zes gidsen tegen
+`blueprints/automation/climate_director/`, en de weigeringsbullet tegen de
+blauwdruk van `EVENT_PRECONDITION_REFUSED`. Niet gedekt: de inhoud van de
+blauwdrukbestanden en de overige bullets van de gidsen.
+
+Coverage: every blueprint name from the six guides against
+`blueprints/automation/climate_director/`, and the refusal bullet against the
+blueprint of `EVENT_PRECONDITION_REFUSED`. Not covered: the content of the
+blueprint files and the other bullets of the guides.
 """
 
 from __future__ import annotations

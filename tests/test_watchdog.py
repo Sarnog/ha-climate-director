@@ -13,6 +13,16 @@ else. If nobody listens, that is indistinguishable from a button that does
 nothing - and then the button is broken, however exactly it works as intended.
 Hence the notice stands from the start rather than only after a request has been
 refused: half a feature is no feature.
+
+Dekking: de melding `precondition_unwatched` in de zeven tekstbestanden (titel,
+uitweg, en in het Nederlands en Engels de instructie dat de blauwdruk ingesteld
+moet worden) en het anker van `problems.BLUEPRINTS_URL` als kop in `README.md`.
+Niet gedekt: de overige meldingen en de blauwdruktekst zelf.
+
+Coverage: the `precondition_unwatched` notice in the seven text files (title, way
+out, and in Dutch and English the instruction that the blueprint must be set up)
+and the anchor of `problems.BLUEPRINTS_URL` as a heading in `README.md`. Not
+covered: the other notices and the blueprint text itself.
 """
 
 from __future__ import annotations

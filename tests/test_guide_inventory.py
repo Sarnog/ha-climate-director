@@ -27,6 +27,19 @@ the notice under the title the user sees in *Repairs* (with its placeholders as
 The options-flow screens' fields are already guarded the same way by
 `tests/test_install_guides.py`, which reads its field map from the schemas and
 demands per label that it stands in the text. That work is not redone here.
+
+Dekking: de zichtbare inventaris uit `icons.json`, `services.yaml` en
+`problems.py`, met de vertaalde namen uit `translations/<taal>.json`, tegen de
+zes gidsen. Niet gedekt: de velden en labels van de options-flowschermen
+(`tests/test_install_guides.py`), het dashboardvoorbeeld
+(`tests/test_guide_dashboard.py`) en de inhoudsopgave (`tests/test_guide_toc.py`).
+
+Coverage: the visible inventory from `icons.json`, `services.yaml` and
+`problems.py`, with the translated names from `translations/<language>.json`,
+against the six guides. Not covered: the fields and labels of the options-flow
+screens (`tests/test_install_guides.py`), the dashboard example
+(`tests/test_guide_dashboard.py`) and the table of contents
+(`tests/test_guide_toc.py`).
 """
 
 from __future__ import annotations

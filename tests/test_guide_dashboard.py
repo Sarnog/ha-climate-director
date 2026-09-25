@@ -34,6 +34,18 @@ without anything turning red. This test keeps the six sections together: it find
 the section with the timer card per guide, takes the YAML block out and parses it
 with `yaml.safe_load` — the real tool, not a text pattern — and demands the same
 example in all six.
+
+Dekking: de dashboardsectie met de timerkaart in de zes gidsen, met het
+`vertical-stack`-blok, de kaart, de twee acties, de kaart-URL en de vertaalde
+slug, geparseerd met `yaml.safe_load`. Niet gedekt: de rest van de gids, de
+blauwdrukvoorbeelden (`tests/test_guide_blueprints.py`) en de opsommingstekens
+(`tests/test_guide_markdown.py`).
+
+Coverage: the dashboard section with the timer card in the six guides, with the
+`vertical-stack` block, the card, the two actions, the card URL and the
+translated slug, parsed with `yaml.safe_load`. Not covered: the rest of the
+guide, the blueprint examples (`tests/test_guide_blueprints.py`) and the list
+markers (`tests/test_guide_markdown.py`).
 """
 
 from __future__ import annotations

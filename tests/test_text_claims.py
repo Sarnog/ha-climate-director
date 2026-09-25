@@ -58,6 +58,15 @@ contexts**: the phrases in which that fragment may stand, because they say the
 opposite or are about something else. A hit counts only outside such a context, and
 every allowed context has to really stand in the texts - a context that occurs
 nowhere any more is a stale permission and is red.
+
+Dekking: de letterlijke zinsneden van de ingetrokken beweringen in de waarden van
+de zeven tekstbestanden en in de volledige tekst van de zes gidsen. Niet gedekt:
+de sleutels van de zeven bestanden (alleen de waarden worden gelezen) en
+beweringen die nog niet op de lijst staan.
+
+Coverage: the literal phrases of the retracted claims in the values of the seven
+text files and in the full text of the six guides. Not covered: the keys of the
+seven files (only the values are read) and claims not yet on the list.
 """
 
 from __future__ import annotations
