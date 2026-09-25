@@ -174,23 +174,24 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   niemand meer gebruikt. `vulture` op 60% over pakket, `tests/` en `script/` meldt
   een stuk of wat namen, en alle zijn te verklaren: de Home Assistant-interface in
   het pakket, autouse-fixtures en dubbelgangers van Home Assistant-objecten. Eén
-  ervan is een valse melding die je niet zomaar wegstreept: de `_fill_*`- en
-  `_check_*`-helpers in `tests/test_campaign_editing.py` worden via
-  `getattr(self, f"_fill_{screen}")` aangeroepen en leven. Een dode-codebewaking op
-  een ratel heeft daar dus een uitzonderingenlijst bij nodig - of een eigen
-  AST-inventaris die de `getattr`-vorm herkent - zodat het aantal onverklaarde
-  treffers op nul blijft zonder de terechte meldingen weg te drukken.
+  ervan is een valse melding die je niet zomaar wegstreept: in
+  `tests/test_campaign_editing.py` loopt de aanroep per scherm via een
+  samengestelde naam (`getattr` op de schermnaam), en zulke helpers leven. Een
+  dode-codebewaking op een ratel heeft daar dus een uitzonderingenlijst bij nodig -
+  of een eigen AST-inventaris die de samengestelde `getattr`-vorm herkent - zodat
+  het aantal onverklaarde treffers op nul blijft zonder de terechte meldingen weg
+  te drukken.
 
 - **A guard on dead code** — no test looks at names nobody uses any more.
   `vulture` at 60% over the package, `tests/` and `script/` reports a handful of
   names, and all of them are explainable: the Home Assistant interface in the
   package, autouse fixtures and stand-ins for Home Assistant objects. One is a
-  false positive you cannot strike out just like that: the `_fill_*` and
-  `_check_*` helpers in `tests/test_campaign_editing.py` are called through
-  `getattr(self, f"_fill_{screen}")` and are alive. A dead-code guard on a ratchet
-  therefore needs an exception list with it - or an AST inventory of its own that
-  recognises the `getattr` shape - so the number of unexplained hits stays at zero
-  without silencing the fair reports.
+  false positive you cannot strike out just like that: in
+  `tests/test_campaign_editing.py` the call runs per screen through an assembled
+  name (`getattr` on the screen name), and such helpers are alive. A dead-code
+  guard on a ratchet therefore needs an exception list with it - or an AST
+  inventory of its own that recognises the assembled `getattr` shape - so the
+  number of unexplained hits stays at zero without silencing the fair reports.
 
 ## Would have
 
