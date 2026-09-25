@@ -456,7 +456,7 @@ C'est un frein au **démarrage**, pas à la poursuite :
   fait tourner la maison, même avec un appareil éteint. Celui qui rentre dans une
   maison vide après le début reste silencieux jusqu'à la fin de la plage.
 
-Les fenêtres peuvent franchir minuit et portent des jours de semaine. Un foyer
+Les plages peuvent franchir minuit et portent des jours de semaine. Un foyer
 qui se couche à neuf heures en semaine et à onze heures le week-end en règle
 deux :
 
@@ -465,7 +465,7 @@ deux :
 | 21:00 | 09:00 | lun mar mer jeu dim |
 | 23:00 | 09:00 | ven sam |
 
-Sans fenêtre réglée, le frein n'agit pas.
+Sans plage réglée, le frein n'agit pas.
 
 Chaque plage porte en outre une case **Ceci est une plage de vacances**. Une
 telle plage ne s'applique que lorsque le planning de vacances est actif, et
