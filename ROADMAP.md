@@ -171,19 +171,26 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   vertaling weg, dan leest de gebruiker `circuit_conflict_lost` in plaats van een zin.
 
 - **Een bewaking op dode code** — er staat nu geen enkele toets op namen die
-  niemand meer gebruikt; vijf dode namen in `tests/` en `script/` bleven zo staan,
-  en `vulture` op 60% meldt er nog twaalf (de `_fill_*`- en `_check_*`-helpers in
-  `tests/test_campaign_editing.py`). Een ratel met een eigen AST-inventaris, of
-  `vulture` in een CI-baan met een uitzonderingenlijst, houdt dat aantal op nul
-  zonder de terechte meldingen (fixtures, dubbelgangers van Home
-  Assistant-objecten) weg te drukken.
+  niemand meer gebruikt. `vulture` op 60% over pakket, `tests/` en `script/` meldt
+  een stuk of wat namen, en alle zijn te verklaren: de Home Assistant-interface in
+  het pakket, autouse-fixtures en dubbelgangers van Home Assistant-objecten. Eén
+  ervan is een valse melding die je niet zomaar wegstreept: de `_fill_*`- en
+  `_check_*`-helpers in `tests/test_campaign_editing.py` worden via
+  `getattr(self, f"_fill_{screen}")` aangeroepen en leven. Een dode-codebewaking op
+  een ratel heeft daar dus een uitzonderingenlijst bij nodig - of een eigen
+  AST-inventaris die de `getattr`-vorm herkent - zodat het aantal onverklaarde
+  treffers op nul blijft zonder de terechte meldingen weg te drukken.
 
-- **A guard on dead code** — no test looks at names nobody uses any more; five
-  dead names in `tests/` and `script/` sat there unnoticed, and `vulture` at 60%
-  reports twelve more (the `_fill_*` and `_check_*` helpers in
-  `tests/test_campaign_editing.py`). A ratchet with its own AST inventory, or
-  `vulture` in a CI job with an exception list, keeps that number at zero without
-  silencing the fair reports (fixtures, stand-ins for Home Assistant objects).
+- **A guard on dead code** — no test looks at names nobody uses any more.
+  `vulture` at 60% over the package, `tests/` and `script/` reports a handful of
+  names, and all of them are explainable: the Home Assistant interface in the
+  package, autouse fixtures and stand-ins for Home Assistant objects. One is a
+  false positive you cannot strike out just like that: the `_fill_*` and
+  `_check_*` helpers in `tests/test_campaign_editing.py` are called through
+  `getattr(self, f"_fill_{screen}")` and are alive. A dead-code guard on a ratchet
+  therefore needs an exception list with it - or an AST inventory of its own that
+  recognises the `getattr` shape - so the number of unexplained hits stays at zero
+  without silencing the fair reports.
 
 ## Would have
 
