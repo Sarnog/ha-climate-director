@@ -56,14 +56,14 @@ Trois concepts forment la base :
 | Concept | Signification |
 |---|---|
 | **Zone** | Une pièce. Décrit *ce que vous voulez* : température cible, quand le chauffage ou le refroidissement peut démarrer, et en quelle saison. |
-| **Source** | Un appareil capable de desservir une zone, avec une fonction (chauffer, refroidir ou les deux), un ordre de préférence et une fenêtre de température extérieure. |
+| **Source** | Un appareil capable de desservir une zone, avec une fonction (chauffer, refroidir ou les deux), un ordre de préférence et une plage de température extérieure. |
 | **Circuit de climatisation** | Une unité extérieure et les unités intérieures qui y sont raccordées. Décrit *ce qui est techniquement possible en même temps*. |
 
 La règle d'or pour une unité extérieure partagée : toutes les unités
 intérieures d'un circuit portent la même fonction — chauffer, refroidir, arrêt
 ou simple ventilation. Deux unités intérieures sur une même unité extérieure ne
-peuvent donc pas avoir l'une qui chauffe pendant que l'autre refroidit. Climate
-Director sait quelles unités vont ensemble et résout ce conflit pour vous.
+peuvent donc pas avoir l'une qui chauffe pendant que l'autre refroidit.
+Climate Director sait quelles unités vont ensemble et résout ce conflit pour vous.
 
 ## Ce dont vous avez besoin
 
@@ -75,7 +75,7 @@ Director sait quelles unités vont ensemble et résout ce conflit pour vous.
 | `weather.*` ou `sensor.*` précipitations | non | seulement si les précipitations peuvent lever la limite « ouvrir une fenêtre » |
 | `person.*` ou `device_tracker.*` par occupant | oui, dès que vous configurez des occupants | sinon cet occupant ne peut jamais être présent |
 | Un capteur de sommeil par occupant | non | sans lui, personne ne compte jamais comme endormi |
-| `binary_sensor.*` présence par zone | seulement si une zone fonctionne sur *la pièce elle-même* | c'est alors la seule porte de la zone |
+| `binary_sensor.*` présence par zone | seulement si une zone fonctionne sur *la pièce elle-même* | c'est alors la seule barrière de la zone |
 | `binary_sensor.*`, `cover.*` ou `sensor.*` porte, fenêtre ou velux | non | suspend les zones liées tant qu'il est ouvert |
 | `calendar.*` | non | active le programme vacances tout seul ; ne fonctionne qu'avec un mot-clé |
 | Une entité de saison | non | seulement si vous ne voulez pas déduire la saison du mois |
@@ -164,19 +164,19 @@ le menu principal.
 |---|---|
 | **Capteur de température extérieure** | alimente chaque limite extérieure. Sans capteur, toute limite compte comme non atteinte et l'installation reste immobile |
 | **Bande morte de température extérieure** | de combien de degrés une tâche en marche peut dépasser sa limite extérieure avant de basculer ; 0,5 par défaut, zéro la désactive |
-| **Système de chauffage** | *Centralisé* ou *Par zone*, voir ci-dessous |
-| **Source de la saison** | d'où vient la saison : le mois, une entité, ou fixée été/hiver |
+| **Système de chauffage** | *Central* ou *Par zone*, voir ci-dessous |
+| **Origine de la saison** | d'où vient la saison : le mois, une entité, ou fixée été/hiver |
 | **Entité de saison** | seulement si la source est réglée sur *entité* ; l’entité intégrée `season.*` est aussi sélectionnable |
 | **Hémisphère** | quels mois comptent comme été lorsque la saison vient du mois : nord avril–septembre, sud octobre–mars |
-| **Choix de saison** | l'entité `select.*` *Saison* règle la saison à la main sur Automatique, Été ou Hiver ; le choix survit à un redémarrage |
-| **Quelqu'un à la maison doit être réveillé** | activé = la maison attend quelqu'un à la maison *et* réveillé ; désactivé = le sommeil ne compte pas |
-| **Le planning d'un occupant doit être ouvert** | activé = la maison attend la première fenêtre de planning ; désactivé = la présence seule décide |
-| **Calendriers de vacances** | quels calendriers peuvent annoncer des vacances ; plusieurs autorisés |
-| **Mot qui marque des vacances** | le mot-clé que doit porter un événement ; vide = calendriers ignorés |
-| **Durée de préparation** | le plafond d'une seule demande ; par défaut 120 minutes |
-| **Mode invités de / jusqu'à** | la fenêtre où le mode invités s'applique ; les deux vides = toute la journée |
-| **Jours du mode invités** | les jours de la semaine où cette fenêtre s'applique ; vide = tous les jours |
-| **Signaler une zone bloquée après** | après combien de minutes d'attente une zone compte comme bloquée ; 0 éteint le capteur |
+| **Une personne présente doit être éveillée** | activé = la maison attend quelqu'un à la maison *et* réveillé ; désactivé = le sommeil ne compte pas |
+| **Le planning d'un occupant doit être ouvert** | activé = la maison attend la première plage de planning ; désactivé = la présence seule décide |
+| **Agendas de vacances** | quels calendriers peuvent annoncer des vacances ; plusieurs autorisés |
+| **Mot qui signale des vacances** | le mot-clé que doit porter un événement ; vide = calendriers ignorés |
+| **Durée maximale de la préparation (minutes)** | le plafond d'une seule demande ; par défaut 120 minutes |
+| **Mode invités à partir de** | début de la plage où le mode invités s'applique ; vide = toute la journée |
+| **Mode invités jusqu'à** | fin de cette plage ; les deux vides = toute la journée |
+| **Jours du mode invités** | les jours de la semaine où cette plage s'applique ; vide = tous les jours |
+| **Zone considérée bloquée après (minutes)** | après combien de minutes d'attente une zone compte comme bloquée ; 0 éteint le capteur |
 | **Source de précipitations** | une entité `weather.*` ou `sensor.*` qui dit s'il y a des précipitations ; vide = la règle de précipitations ne participe pas |
 | **États comptant comme précipitations** | quels états de cette entité signifient des précipitations ; pluie, neige et grêle par défaut |
 | **Combien de temps les précipitations continuent de compter (minutes)** | délai de grâce après l'arrêt des précipitations ; 15 minutes par défaut |
@@ -207,12 +207,12 @@ extérieure continue de s'appliquer même lorsqu'il y a des précipitations.
 
 | Choix | Ce qu'il signifie | Comment le remplir |
 |---|---|---|
-| **Centralisé** | Une source de chaleur pour toute la maison. Allumer pour une pièce réchauffe le reste avec. Pensez à un seul thermostat intelligent, avec ou sans robinets de radiateur. | Mettez le **même** thermostat comme source sous chaque zone |
+| **Central** | Une source de chaleur pour toute la maison. Allumer pour une pièce réchauffe le reste avec. Pensez à un seul thermostat intelligent, avec ou sans robinets de radiateur. | Mettez le **même** thermostat comme source sous chaque zone |
 | **Par zone** | Chaque partie de la maison peut recevoir sa chaleur séparément, via une vanne de zone ou une source propre. | Donnez à chaque zone sa **propre** vanne ou son appareil comme source ; s'il y a une chaudière partagée, ajoutez-la comme source de chaleur partagée |
 
 Des robinets de radiateur intelligents seuls ne sont pas un zonage : la maison
 a encore un circuit et une source de chaleur qui s'allume ou s'éteint pour tout
-le monde en même temps. Choisissez alors **Centralisé**. Une chaudière avec
+le monde en même temps. Choisissez alors **Central**. Une chaudière avec
 trois vannes de zone est en revanche **Par zone**.
 
 Ce réglage ne change rien à qui peut tourner. Il consigne ce qu'est votre
@@ -227,21 +227,23 @@ Une zone est une pièce. Par zone, vous réglez :
 |---|---|
 | **Nom** | le libellé qui apparaît partout |
 | **Capteur de température intérieure** | ce sur quoi la bande morte calcule ; une `climate.*` qui mesure elle-même convient |
-| **Préséance sur une unité extérieure partagée** | avec quelle force cette zone revendique une unité extérieure partagée ; **le plus petit gagne**. Sur un circuit, aucun numéro ne peut apparaître deux fois |
-| **Ce qui décide si cette zone tourne** | *le foyer* (planning, sommeil, quelqu'un à la maison) ou *la pièce elle-même* (seul le capteur de présence) |
-| **Capteur de présence + état + délai de grâce** | quand la pièce compte comme occupée ; le délai absorbe les détecteurs qui clignotent |
-| **Les précipitations ne lèvent pas la règle « ouvrir une fenêtre »** | activé pour une pièce sans fenêtres ; là, la limite extérieure continue de s'appliquer même lorsqu'il y a des précipitations |
+| **Priorité sur une unité extérieure partagée** | avec quelle force cette zone revendique une unité extérieure partagée ; **le plus petit gagne**. Sur un circuit, aucun numéro ne peut apparaître deux fois |
+| **Ce qui décide si cette zone fonctionne** | *le foyer* (planning, sommeil, quelqu'un à la maison) ou *la pièce elle-même* (seul le capteur de présence) |
+| **Capteur de présence de cette zone** | le capteur qui signale que la pièce est occupée |
+| **État signifiant occupée** | l'état que ce capteur renvoie comme occupé |
+| **Continuer à compter comme occupée pendant (secondes)** | le délai qui absorbe les détecteurs qui clignotent |
+| **Les précipitations ne lèvent pas la règle « ouvrir une fenêtre »** | activé pour une pièce où aucune fenêtre ne s'ouvre ; là, la limite extérieure continue de s'appliquer même lorsqu'il y a des précipitations |
 | **Cette zone peut chauffer** | désactivé = cette pièce n'est jamais chauffée |
-| **Température cible chauffage** | la consigne donnée à l'appareil quand le chauffage tourne — pas le point de démarrage |
-| **Démarrer le chauffage à** | le chauffage démarre à cette température intérieure ou en dessous |
-| **Bande morte chauffage** | à quelle distance au-dessus du point de démarrage le chauffage s'arrête |
-| **Chauffer seulement sous cette température extérieure** | au-dessus, le chauffage reste éteint ; vide = aucune limite |
+| **Température cible en chauffage** | la consigne donnée à l'appareil quand le chauffage tourne — pas le point de démarrage |
+| **Commencer à chauffer à** | le chauffage commence à cette température intérieure ou en dessous |
+| **Bande morte de chauffage** | à quelle distance au-dessus du point de démarrage le chauffage s'arrête |
+| **Chauffer uniquement sous cette température extérieure** | au-dessus, le chauffage reste éteint ; vide = aucune limite |
 | **Cette zone peut refroidir** | désactivé = cette pièce n'est jamais refroidie |
-| **Température cible refroidissement** | la consigne donnée à l'appareil quand le refroidissement tourne |
-| **Démarrer le refroidissement à** | le refroidissement démarre à cette température intérieure ou au-dessus |
-| **Bande morte refroidissement** | à quelle distance sous le point de démarrage le refroidissement s'arrête |
-| **Refroidir seulement au-dessus de cette température extérieure** | en dessous, le refroidissement reste éteint ; vide = aucune limite |
-| **Refroidir seulement en été** | lie le refroidissement à la saison des réglages généraux |
+| **Température cible en refroidissement** | la consigne donnée à l'appareil quand le refroidissement tourne |
+| **Commencer à refroidir à** | le refroidissement commence à cette température intérieure ou au-dessus |
+| **Bande morte de refroidissement** | à quelle distance sous le point de démarrage le refroidissement s'arrête |
+| **Refroidir uniquement au-dessus de cette température extérieure** | en dessous, le refroidissement reste éteint ; vide = aucune limite |
+| **Refroidir uniquement en été** | lie le refroidissement à la saison des réglages généraux |
 
 ### Comment fonctionne la bande morte
 
@@ -286,18 +288,18 @@ une zone, vous choisissez immédiatement ses sources.
 | Réglage | Ce qu'il fait |
 |---|---|
 | **Nom** | un nom à vous pour cette source ; vide = le sélecteur nomme l'appareil lui-même |
-| **Entité climatique** | l'appareil lui-même |
-| **Ce que cet appareil peut faire** | chauffer seulement, refroidir seulement, ou les deux. Une chaudière est *chauffage seulement* |
+| **Entité climate** | l'appareil lui-même |
+| **Ce que cet appareil sait faire** | chauffer seulement, refroidir seulement, ou les deux. Une chaudière est *chauffage seulement* |
 | **Démarrer cet appareil automatiquement** | désactivé le laisse tranquille, voir ci-dessous |
-| **Ordre dans cette zone** | quelle source est préférée ; **le plus petit gagne** |
+| **Ordre au sein de cette zone** | quelle source est préférée ; **le plus petit gagne** |
 | **Utiliser à partir de cette température extérieure** | la borne inférieure ; incluse dans la plage |
 | **Utiliser jusqu'à cette température extérieure** | la borne supérieure ; exclue de la plage |
 | **Zones que cet appareil dessert aussi** | les pièces qu'il chauffe ou refroidit en même temps dès qu'il fonctionne ; vide = cette zone seulement |
-| **Attendre ce délai avant de prendre le relais** | depuis combien de temps une source de ce périmètre doit être injoignable ; cinq minutes par défaut, zéro tout de suite |
+| **Attendre ce délai avant de prendre le relais (minutes)** | depuis combien de temps une source de ce périmètre doit être injoignable ; cinq minutes par défaut, zéro tout de suite |
 
 ### Bornes extérieures : à moitié ouvertes
 
-La borne inférieure appartient à la fenêtre, la supérieure non. Deux sources
+La borne inférieure appartient à la plage, la supérieure non. Deux sources
 adjacentes couvrent ainsi toute l'échelle, sans trou ni chevauchement.
 
 Vous voulez le gaz sous 3 °C et le climatiseur au-dessus ? Ne mettez alors
@@ -322,7 +324,7 @@ le champ vide ne remarque rien.
 Avec un périmètre renseigné, voici ce qui se produit dès qu'une source de ce
 périmètre devient injoignable :
 
-- **cet appareil reprend la tâche**, et sa fenêtre extérieure ne l'en empêche
+- **cet appareil reprend la tâche**, et sa plage extérieure ne l'en empêche
   pas. La séparation gaz/climatisation reste, mais elle n'est plus une raison de
   laisser une maison froide ;
 - **plus rien d'autre dans ce périmètre ne chauffe ni ne refroidit** tant que cet
@@ -376,11 +378,11 @@ extérieure. Si chaque unité a la sienne, laissez vide.
 | **Unités intérieures** | quelles entités `climate.*` sont raccordées à cette unité extérieure. Incluez aussi les unités que le directeur ne gère pas : elles réclament le compresseur également |
 | **Peut chauffer et refroidir en même temps** | désactivé pour un multi-split ordinaire ; activé pour un split simple ou un VRF trois tubes à récupération de chaleur |
 | **Règle de conflit** | qui gagne quand deux pièces veulent des fonctions opposées |
-| **Une zone perdante peut ventiler** | activé = la perdante passe en `fan_only` au lieu de s'éteindre, mais seulement si l'unité connaît ce mode ; sinon elle s'éteint |
-| **Pause lors du changement de fonction** | combien de temps tout reste éteint avant le basculement |
-| **Durée minimale avant un changement de fonction** | combien de temps une fonction doit avoir tourné avant que l'autre puisse prendre le relais |
-| **Repos avant qu'une unité puisse redémarrer** | ne retarde que les démarrages, jamais les arrêts ; par défaut 180 secondes |
-| **Nombre maximal d'unités en marche** | la limite de capacité de l'unité extérieure ; vide = pas de plafond |
+| **Une zone perdante peut brasser l'air** | activé = la perdante passe en `fan_only` au lieu de s'éteindre, mais seulement si l'unité connaît ce mode ; sinon elle s'éteint |
+| **Pause lors du changement de tâche (secondes)** | combien de temps tout reste éteint avant le basculement |
+| **Durée minimale avant un changement de tâche (secondes)** | combien de temps une fonction doit avoir tourné avant que l'autre puisse prendre le relais |
+| **Repos avant qu'une unité puisse redémarrer (secondes)** | ne retarde que les démarrages, jamais les arrêts ; par défaut 180 secondes |
+| **Nombre maximal d'unités en marche simultanément** | la limite de capacité de l'unité extérieure ; vide = pas de plafond |
 
 ### Règles de conflit
 
@@ -396,7 +398,7 @@ extérieure. Si chaque unité a la sienne, laissez vide.
 Enregistrez un circuit et vous arrivez sur **Priorités sur ce circuit** : les
 zones présentes sur cette unité extérieure, dans l'ordre où elles gagnent
 actuellement, avec leur numéro derrière. Choisissez-en une pour changer sa
-priorité.
+priorité. Le champ s'appelle **Priorité sur ce circuit**.
 
 C'est le **même champ** que *Priorité sur une unité extérieure partagée* sur
 l'écran de zone — deux entrées, un seul réglage, les deux ne peuvent donc jamais
@@ -412,8 +414,8 @@ vanne le demande.
 | Réglage | Ce qu'il fait |
 |---|---|
 | **Nom** | un libellé pour distinguer les sources de chaleur |
-| **Entité climatique** | la chaudière ou pompe à chaleur elle-même ; ne doit pas aussi être source d'une zone, sinon elle recevrait deux ordres |
-| **Zones qu'elle dessert** | vide = toutes les pièces |
+| **Entité climate** | la chaudière ou pompe à chaleur elle-même ; ne doit pas aussi être source d'une zone, sinon elle recevrait deux ordres |
+| **Zones qu'il dessert** | vide = toutes les pièces |
 | **Température cible fixe** | vide = elle suit la cible la plus chaude parmi les pièces qui demandent |
 
 La source de chaleur tourne tant qu'une pièce qu'elle dessert est chauffée, et
@@ -425,7 +427,7 @@ Vous voulez que deux appareils ne tournent **jamais** en même temps — une
 chaudière à gaz et une pompe à chaleur, par exemple ? Ne confiez pas cela aux
 seules bornes extérieures. Une valeur laissée en arrière suffit à les faire
 s'allumer ensemble. Mettez-les plutôt dans un groupe exclusif : des appareils
-d'un groupe, un seul tourne à la fois.
+d'un groupe, un seul tourne à la fois. Le champ **Appareils de ce groupe** les énumère.
 
 Attention à ce qu'un groupe signifie : **un** appareil du groupe à la fois. Si
 vous voulez que la chaudière à gaz ne gêne aucun climatiseur, tandis que deux
@@ -460,7 +462,7 @@ Les plages peuvent franchir minuit et portent des jours de semaine. Un foyer
 qui se couche à neuf heures en semaine et à onze heures le week-end en règle
 deux :
 
-| De | Jusqu'à | Jours |
+| Silence à partir de | Silence jusqu'à | Jours concernés |
 |---|---|---|
 | 21:00 | 09:00 | lun mar mer jeu dim |
 | 23:00 | 09:00 | ven sam |
@@ -474,7 +476,7 @@ N'en définissez aucune et un jour de vacances compte comme un samedi.
 
 ## Étape 10 — Occupants
 
-Laissez vide pour un bâtiment où personne n'est suivi ; les portes de présence
+Laissez vide pour un bâtiment où personne n'est suivi ; les barrières de présence
 sont alors ignorées au lieu de tout bloquer pour toujours.
 
 | Réglage | Ce qu'il fait |
@@ -483,18 +485,19 @@ sont alors ignorées au lieu de tout bloquer pour toujours.
 | **Capteur de présence** | en général une `person.*` ; dit si cet occupant est à la maison |
 | **Capteur de sommeil** | quand cet occupant dort ; vide = sommeil non suivi |
 | **État signifiant endormi** | l'état que le capteur de sommeil rapporte pendant le sommeil |
-| **Le capteur de sommeil compte de / jusqu'à** | les heures où ce capteur signifie quelque chose ; les deux vides = toute la journée |
-| **Jours de la fenêtre de sommeil** | les jours où cette fenêtre s'applique ; vide = tous les jours |
-| **Faire la grasse matinée jusqu'à** | jusqu'à quelle heure le capteur de sommeil compte encore le matin ; vide = la fenêtre de sommeil dit tout |
+| **Le capteur de sommeil compte à partir de** | à partir de quand ce capteur compte ; vide = toute la journée |
+| **Le capteur de sommeil compte jusqu'à** | jusqu'à quand ce capteur compte ; les deux vides = toute la journée |
+| **Jours de la plage de sommeil** | les jours où cette plage s'applique ; vide = tous les jours |
+| **Faire la grasse matinée jusqu'à** | jusqu'à quelle heure le capteur de sommeil compte encore le matin ; vide = la plage de sommeil dit tout |
 | **Matins où vous faites la grasse matinée** | les matins eux-mêmes, pas les soirs précédents ; vide = tous les jours |
 | **Faire la grasse matinée aussi les jours de vacances** | coché = s'applique tous les jours marqués par votre calendrier de vacances |
 | **Attendre ce dormeur jusqu'à** | jusqu'à quelle heure cet occupant retient la maison pendant son sommeil ; vide = il ne retient personne |
 | **Jours où l'attente s'applique** | les jours où cette heure s'applique ; vide = tous les jours |
 | **Attendre ce dormeur aussi les jours de vacances** | décoché = les jours ci-dessus se lisent littéralement ; coché = l'heure s'applique tous les jours de vacances |
 
-### La grasse matinée, et pourquoi ce n'est pas une fenêtre de sommeil plus longue
+### La grasse matinée, et pourquoi ce n'est pas une plage de sommeil plus longue
 
-La fenêtre de sommeil fait deux choses à la fois : elle dit quand « téléphone sur
+La plage de sommeil fait deux choses à la fois : elle dit quand « téléphone sur
 le chargeur » signifie que quelqu'un est au lit, et elle éteint ainsi la maison
 le soir dès que tous les présents sont couchés.
 
@@ -504,10 +507,10 @@ lui, trouve une maison froide. Réduisez la fenêtre au seul week-end et plus ri
 n'éteint la maison la nuit en semaine : elle chauffe jusqu'à ce que quelqu'un
 parte.
 
-C'est pourquoi la grasse matinée est à part. La fenêtre de sommeil reste la nuit -
+C'est pourquoi la grasse matinée est à part. La plage de sommeil reste la nuit -
 chez la plupart, quelque chose comme 21:00-08:00, tous les jours. *Faire la
 grasse matinée jusqu'à* n'étend que le matin, les matins que vous cochez. Notez
-la différence : une fenêtre de sommeil traverse minuit et dépend donc du jour où
+la différence : une plage de sommeil traverse minuit et dépend donc du jour où
 elle commence, tandis que la grasse matinée dépend du matin lui-même. La grasse
 matinée du samedi, c'est samedi.
 
@@ -542,13 +545,13 @@ donc : l'un est levé à 10:00 et rien ne se passe ; si l'autre se réveille à
 fonctionne dans les deux sens - peu importe lequel des deux fait la grasse
 matinée.
 
-C'est indépendant de l'horaire. Un horaire dit aussi quand la maison doit se
+C'est indépendant du planning. Un planning dit aussi quand la maison doit se
 *couper* ; cette heure dit seulement quand il n'est plus nécessaire d'attendre
 quelqu'un. Tant que tous les présents dorment, la maison reste éteinte - c'est
-la porte du sommeil, pas cette heure, et la maison ne démarre donc qu'au moment
+la barrière du sommeil, pas cette heure, et la maison ne démarre donc qu'au moment
 où la première personne se lève vraiment.
 
-**Un jour de vacances ne compte pas ici comme un samedi**, contrairement aux horaires.
+**Un jour de vacances ne compte pas ici comme un samedi**, contrairement aux plannings.
 Le congé de l'un est la journée de travail de l'autre : si des vacances
 scolaires comptaient comme un samedi, le lève-tard retiendrait la maison pendant
 que l'autre travaille chez lui. Les jours signifient donc littéralement ce qui
@@ -557,9 +560,9 @@ cochez *Attendre ce dormeur aussi les jours de vacances* ; l'heure s'applique al
 tous les jours de vacances, quel que soit le jour de la semaine. Un jour de vacances tombant
 un samedi reste de toute façon un samedi.
 
-Attention à la fenêtre de sommeil : si l'heure limite tombe en dehors, cet
+Attention à la plage de sommeil : si l'heure limite tombe en dehors, cet
 occupant n'est de toute façon plus considéré comme endormi à ce moment-là et ne
-retient personne. Faites donc courir la fenêtre de sommeil au-delà de l'heure
+retient personne. Faites donc courir la plage de sommeil au-delà de l'heure
 limite.
 
 ### Plannings
@@ -568,19 +571,20 @@ Après avoir enregistré un occupant, vous réglez ses plannings :
 
 | Réglage | Ce qu'il fait |
 |---|---|
-| **C'est une fenêtre de vacances** | ne s'applique que pendant le programme vacances, en remplaçant alors les fenêtres ordinaires |
-| **De / Jusqu'à** | la fenêtre ; peut franchir minuit |
+| **Ceci est une plage de vacances** | ne s'applique que pendant le programme vacances, en remplaçant alors les plages ordinaires |
+| **De** | le début de la plage ; peut franchir minuit |
+| **À** | la fin de la plage |
 | **Jours** | vide = chaque jour |
 
-Un occupant sans planning ne participe pas à la porte de planning.
-Quelqu'un sans fenêtre un jour donné ne retient pas la maison ce jour-là.
+Un occupant sans planning ne participe pas à la barrière de planning.
+Quelqu'un sans plage un jour donné ne retient pas la maison ce jour-là.
 
 ### Capteur de sommeil : pas de capteur, mais un bouton ?
 
 Un bouton (`button` ou `input_button`) ne peut pas dire si vous dormez — son
 état est l'instant du dernier appui. Ce qui fonctionne est un `input_boolean`
 que vous basculez avec un bouton : créez l'interrupteur, choisissez-le comme
-capteur de sommeil avec `on` comme état d'endormissement, et laissez un bouton
+capteur de sommeil avec `on` comme état endormi, et laissez un bouton
 le basculer. Qui possède un vrai capteur de sommeil (un capteur de lit, un
 chargeur sans fil) utilise celui-ci : c'est plus précis.
 
@@ -597,7 +601,7 @@ Une ouverture restée ouverte assez longtemps suspend les zones concernées.
 | **Capteur** | le contact de porte, de fenêtre ou de velux ; un `binary_sensor.*`, `cover.*` ou `sensor.*` |
 | **État qui signifie ouvert** | en général `on` pour un contact de fenêtre, `open` pour un velux ou un volet ; `on` par défaut |
 | **Zones concernées** | vide = toute l'installation |
-| **Délai avant suspension** | vide ou 0 = dès l'ouverture |
+| **Délai avant suspension (secondes)** | vide ou 0 = dès l'ouverture |
 
 Choisissez `open` comme état ouvert et `opening` et `closing` comptent eux aussi
 comme ouverts : un volet en mouvement n'est pas fermé.
@@ -627,7 +631,18 @@ voyiez pourquoi rien ne se passe. Deux choses restent comme toujours : une zone
 sous dérogation et une source manuelle ne sont pas pilotées, pas davantage par
 cette liste.
 
-Chaque ouverture a son propre identifiant, stocké de façon invisible, et c'est à lui que s'accroche l'interrupteur de contournement (`switch.*_contournement_<opening>`), si bien qu'il survit au remplacement du capteur ; le **Nom** n'est que l'étiquette que vous voyez. Si une ouverture n'avait pas encore d'identifiant, cet identifiant est le capteur et l'interrupteur porte le nom que le capteur affiche lui-même — s'il apparaît plus tard ou si vous le renommez, le nom de l'interrupteur suit sans rechargement. Activé = le directeur fait comme si cette ouverture n'existait pas — ses propres zones et l'arrêt global l'ignorent tous deux. Il n'y a pas de durée : il reste actif jusqu'à ce que vous l'éteigniez vous-même. Tant qu'il est actif alors que l'ouverture est réellement ouverte, le directeur le signale sous *Réparations*.
+Chaque ouverture a son propre identifiant, stocké de façon invisible, et c'est à
+lui que s'accroche l'interrupteur de contournement. Il survit au remplacement du
+capteur ; le **Nom** n'est que l'étiquette que vous voyez. Si une ouverture
+n'avait pas encore d'identifiant, cet identifiant est le capteur et
+l'interrupteur porte le nom que le capteur affiche lui-même — s'il apparaît plus
+tard ou si vous le renommez, le nom de l'interrupteur suit sans rechargement.
+
+L'interrupteur s'appelle `switch.*_contournement_<opening>`. Activé = le
+directeur fait comme si cette ouverture n'existait pas : ses propres zones et
+l'arrêt global l'ignorent tous deux. Il n'y a pas de durée, il reste actif
+jusqu'à ce que vous l'éteigniez vous-même. Tant qu'il est actif alors que
+l'ouverture est réellement ouverte, le directeur le signale sous *Réparations*.
 
 ## Étape 12 — Enregistrer et fermer
 
@@ -635,7 +650,7 @@ Choisissez **✅ Enregistrer et fermer** dans le menu principal. C'est seulement
 là que l'installation est écrite.
 
 Si quelque chose est structurellement faux — une zone sans source utilisable,
-deux sources sur la même entité, une fenêtre extérieure qui n'admet rien —
+deux sources sur la même entité, une plage extérieure qui n'admet rien —
 vous arrivez sur l'écran **Quelque chose ressort** : le champ **Et maintenant**
 propose deux choix. *Conserver ces modifications et revenir* écrit quand même
 l'installation et revient au menu principal ; *← Abandonner et revenir* laisse
@@ -667,7 +682,7 @@ Un appareil par installation, avec en dessous :
 | `number.*_priorite_<zone>` | la préséance de cette zone ; réglable aussi depuis une automatisation |
 | `number.*_duree_de_la_preparation` | combien de temps dure un appui sur un bouton de préparation |
 | `button.*_preparer_<zone>` | prépare ou pré-refroidit cette zone |
-| `select.*_saison` | règle la saison à la main sur Automatique, Été ou Hiver |
+| `select.*_saison` | règle la saison à la main sur Automatique, Été ou Hiver ; le choix survit à un redémarrage |
 
 Les noms de ces entités sont traduits, et Home Assistant déduit l'identifiant
 d'entité du nom. Si votre Home Assistant est dans une autre langue, elles s'y
@@ -678,7 +693,7 @@ Il existe aussi un export de diagnostic téléchargeable avec la configuration,
 le dernier instantané lu et le dernier plan.
 
 Le directeur redécide à **chaque changement d'état** qui compte pour lui — une
-température, une fenêtre, une présence, un contournement — et en plus selon
+température, une ouverture, une présence, un contournement — et en plus selon
 l'**horloge** : une réévaluation fixe comme filet de sécurité, et exactement aux
 moments qu'il attend lui-même dans le futur (la fin d'un délai, d'un temps de
 repos ou d'une demande). Ainsi, une zone où rien ne change reste tranquille, et
@@ -691,11 +706,11 @@ il intervient malgré tout dès qu'une limite de temps expire.
   qui tourne à ce moment-là continue donc simplement ; si vous voulez tout
   éteindre, éteignez-le vous-même.
 - **Mode invités** (`switch.*_mode_invites`) : quelqu'un de non suivi loge là,
-  donc « maison vide » ne dit rien. Dans sa fenêtre, le mode invités lève aussi la
+  donc « maison vide » ne dit rien. Dans sa plage, le mode invités lève aussi la
   plage de silence. Le sommeil des présents s'applique toujours, et hors de cette
-  fenêtre, les portes ordinaires reprennent le relais.
+  plage, les barrières ordinaires reprennent le relais.
 - **Programme vacances** (`switch.*_planning_de_vacances`) : chaque jour compte
-  comme un samedi, ou comme sa propre fenêtre de vacances. S'active aussi tout
+  comme un samedi, ou comme sa propre plage de vacances. S'active aussi tout
   seul dès qu'un calendrier configuré a un événement en cours portant le
   mot-clé. Sans mot-clé, les calendriers sont ignorés.
 - **Dérogation** (`switch.*_derogation_<zone>`) : rend une zone entièrement à vous.
@@ -706,7 +721,10 @@ il intervient malgré tout dès qu'une limite de temps expire.
   permet de laisser une zone à vos propres automatisations pendant des jours.
   Éteindre un appareil sur l'appareil *lui-même* expire bel et bien au coucher
   ou sur une maison vide ; c'est plus bas.
-- **Contournement** (`switch.*_contournement_<opening>`) : activé = cette ouverture n'existe pas pour le directeur. Il reste actif jusqu'à ce que vous l'éteigniez vous-même ; tant qu'il est actif alors que l'ouverture est réellement ouverte, le directeur le signale sous *Réparations*.
+- **Contournement** (`switch.*_contournement_<opening>`) : activé = cette ouverture
+  n'existe pas pour le directeur. Il reste actif jusqu'à ce que vous l'éteigniez
+  vous-même ; tant qu'il est actif alors que l'ouverture est réellement ouverte, le
+  directeur le signale sous *Réparations*.
 - **Bouton de préparation** (`button.*_preparer_<zone>`) et **durée**
   (`number.*_duree_de_la_preparation`) : voir ci-dessous.
 
@@ -743,14 +761,14 @@ vous devez activer à la main.
 **Important :** vous ne dites pas ce qui doit se passer. La demande ouvre
 seulement la porte ; ensuite l'intégration décide exactement comme d'habitude —
 la bande morte vérifie s'il fait trop froid ou trop chaud, la saison et la
-fenêtre extérieure par source choisissent l'appareil. Si la pièce est déjà
+plage extérieure par source choisissent l'appareil. Si la pièce est déjà
 bien, l'appareil reste éteint.
 
 Pendant une demande de préparation, l'interrupteur principal, une dérogation, la
-bande morte, la saison, la fenêtre extérieure par source, les fenêtres et
+bande morte, la saison, la plage extérieure par source, les fenêtres et
 portes, le circuit et les groupes exclusifs continuent de s'appliquer. Sont
 ignorés : *quelqu'un à la maison*, *réveillé*, *planning*, *présence dans
-la pièce*, la fenêtre extérieure par zone et la fenêtre silencieuse.
+la pièce*, la plage extérieure par zone et la plage de silence.
 
 Une fenêtre ou une porte ouverte **refuse** une demande. Celui qui a ouvert la
 fenêtre peut dire : faites-le quand même.
@@ -1008,14 +1026,14 @@ un message lisible sans modèle ; `reason` reste le mot de filtrage et
   sans besoin. Vérifiez le rôle sous *Configurer*, ou les `hvac_modes` de
   l'appareil sous *Outils de développement*.
 - **Un appareil qui n'exécute pas sa commande** se signale au bout d'une dizaine
-  de minutes. Le director demande la même chose depuis tout ce temps et
+  de minutes. Le directeur demande la même chose depuis tout ce temps et
   l'appareil continue de signaler autre chose : l'appel est accepté et rien ne
   se passe, ou l'appareil se remet aussitôt comme avant. Vérifiez s'il est
   joignable, s'il accepte le mode, et si autre chose le remet en place — un
   programme de thermostat ou une autre automatisation. En mode ombre cet avis
   n'apparaît jamais : rien n'y est exécuté, volontairement.
 - **Un état sauvegardé mis de côté** se signale lui aussi sous *Réparations*.
-  Ce fichier contient les demandes de préparation en cours et les appareils que
+  Le fichier de stockage contient les demandes de préparation en cours et les appareils que
   vous avez éteints à la main. S'il est illisible, il est renommé et le
   directeur repart d'un état vide : ces demandes et extinctions sont perdues, le
   reste de votre installation non. Pour les récupérer, restaurez le fichier
@@ -1026,15 +1044,34 @@ un message lisible sans modèle ; `reason` reste le mot de filtrage et
 
 Sous **Réparations**, vous pouvez rencontrer ces messages, avec ce qu'ils signifient et ce qu'il faut faire :
 
-- **Climate Director : <count> ouverture(s) de <name> sont contournées alors qu'elles sont ouvertes** — vous avez contourné une ouverture alors qu'elle est réellement ouverte ; fermez l'ouverture ou désactivez le contournement.
-- **Climate Director : <count> appareil(s) de <name> n'exécutent pas leur commande** — un appareil accepte l'appel mais ne change pas ; vérifiez qu'il est joignable et que rien ne le remet en place.
-- **Climate Director : <name> a dû mettre son état sauvegardé de côté** — le fichier d'état était illisible et a été renommé ; les demandes et les reprises manuelles d'avant le redémarrage sont perdues, restaurez le fichier depuis une sauvegarde si vous en avez besoin.
-- **Climate Director : <name> a un problème de configuration** — l'installation est incorrecte ; les zones correctes continuent d'être régulées, donc vérifiez la configuration.
-- **Climate Director : <name> a des tâches manuelles** — une zone n'a que des sources qui ne démarrent jamais seules ; activez *Démarrage automatique* ou confirmez le message.
-- **Personne n'entend une demande de préparation refusée** — aucune automatisation n'écoute l'événement de refus ; importez le blueprint *Préparation refusée* (`precondition_refused.yaml`) et créez une automatisation.
-- **Climate Director : <name> règle une saison qui exclut <count> tâche(s)** — la saison est réglée sur une saison où une tâche installée ne peut jamais tourner ; changez la saison ou la tâche.
-- **Climate Director : <name> ne peut pas lire <count> entité(s)** — une entité configurée n'existe pas, a disparu ou ne donne pas de nombre ; corrigez l'entité ou remettez le capteur en place.
-- **Climate Director : <name> demande un mode que <count> appareil(s) ne peuvent exécuter** — un rôle demande un mode que l'appareil ne déclare pas ; changez le rôle ou choisissez un autre appareil.
+- **Climate Director : <count> ouverture(s) de <name> sont contournées alors qu'elles sont ouvertes**
+  — vous avez contourné une ouverture alors qu'elle est réellement ouverte ;
+  fermez l'ouverture ou désactivez le contournement.
+- **Climate Director : <count> appareil(s) de <name> n'exécutent pas leur commande**
+  — un appareil accepte l'appel mais ne change pas ; vérifiez qu'il est joignable
+  et que rien ne le remet en place.
+- **Climate Director : <name> a dû mettre son état sauvegardé de côté**
+  — le fichier d'état était illisible et a été renommé ; les demandes et les
+  reprises manuelles d'avant le redémarrage sont perdues, restaurez le fichier
+  depuis une sauvegarde si vous en avez besoin.
+- **Climate Director : <name> a un problème de configuration**
+  — l'installation est incorrecte ; les zones correctes continuent d'être régulées,
+  donc vérifiez la configuration.
+- **Climate Director : <name> a des tâches manuelles**
+  — une zone n'a que des sources qui ne démarrent jamais seules ; activez
+  *Démarrage automatique* ou confirmez le message.
+- **Personne n'entend une demande de préparation refusée**
+  — aucune automatisation n'écoute l'événement de refus ; importez le blueprint
+  *Préparation refusée* (`precondition_refused.yaml`) et créez une automatisation.
+- **Climate Director : <name> règle une saison qui exclut <count> tâche(s)**
+  — la saison est réglée sur une saison où une tâche installée ne peut jamais
+  tourner ; changez la saison ou la tâche.
+- **Climate Director : <name> ne peut pas lire <count> entité(s)**
+  — une entité configurée n'existe pas, a disparu ou ne donne pas de nombre ;
+  corrigez l'entité ou remettez le capteur en place.
+- **Climate Director : <name> demande un mode que <count> appareil(s) ne peuvent exécuter**
+  — un rôle demande un mode que l'appareil ne déclare pas ; changez le rôle ou
+  choisissez un autre appareil.
 
 ## Limites connues
 
@@ -1043,6 +1080,7 @@ Sous **Réparations**, vous pouvez rencontrer ces messages, avec ce qu'ils signi
   quoi que ce soit. Jugez chaque tour d'après la période ombre : ce qui est
   prouvé dans une maison ne l'est pas encore dans la vôtre.
 - Un appareil **sans circuit** peut avoir son propre temps de repos
+  : le champ **Repos avant que cet appareil puisse redémarrer (secondes)**
   (`min_cycle_time` par source). Il ne se remplit pas tout seul :
   réglez-le à la main sur chaque source sans circuit.
 - Un capteur intérieur par zone : toute la zone suit cette seule mesure.
@@ -1068,58 +1106,17 @@ littéralement.
 
 | Mot | Écran |
 |---|---|
-| Durée minimale avant un changement de tâche (secondes) | Circuit de climatisation |
-| Nombre maximal d'unités en marche simultanément | Circuit de climatisation |
-| Pause lors du changement de tâche (secondes) | Circuit de climatisation |
-| Repos avant qu'une unité puisse redémarrer (secondes) | Circuit de climatisation |
 | Supprimer ce circuit | Circuit de climatisation |
-| Une zone perdante peut brasser l'air | Circuit de climatisation |
-| Priorité sur ce circuit | Priorité de {zone} |
-| Appareils de ce groupe | Groupe exclusif |
 | Supprimer ce groupe | Groupe exclusif |
-| Entité climate | Source de chaleur partagée |
 | Supprimer cette source de chaleur | Source de chaleur partagée |
-| Zones qu'il dessert | Source de chaleur partagée |
 | Source de chaleur | Sources de chaleur partagées |
-| Délai avant suspension (secondes) | Ouverture |
 | Supprimer cette ouverture | Ouverture |
 | Ouverture | Portes et fenêtres |
-| Jours concernés | Plage de silence |
-| Silence jusqu'à | Plage de silence |
-| Silence à partir de | Plage de silence |
 | Supprimer cette plage | Plage de silence |
-| Le capteur de sommeil compte jusqu'à | Occupant |
-| Le capteur de sommeil compte à partir de | Occupant |
 | Supprimer cet occupant | Occupant |
-| Agendas de vacances | Réglages généraux |
-| Durée maximale de la préparation (minutes) | Réglages généraux |
-| Mode invités jusqu'à | Réglages généraux |
-| Mode invités à partir de | Réglages généraux |
-| Mot qui signale des vacances | Réglages généraux |
-| Origine de la saison | Réglages généraux |
-| Une personne présente doit être éveillée | Réglages généraux |
-| Zone considérée bloquée après (minutes) | Réglages généraux |
-| Attendre ce délai avant de prendre le relais (minutes) | Source |
-| Ce que cet appareil sait faire | Source |
-| Entité climate | Source |
-| Ordre au sein de cette zone | Source |
-| Repos avant que cet appareil puisse redémarrer (secondes) | Source |
 | Supprimer cette source | Source |
 | Supprimer ce planning | Planning |
-| Bande morte de chauffage | Zone |
-| Bande morte de refroidissement | Zone |
-| Capteur de présence de cette zone | Zone |
-| Ce qui décide si cette zone fonctionne | Zone |
-| Chauffer uniquement sous cette température extérieure | Zone |
-| Commencer à chauffer à | Zone |
-| Commencer à refroidir à | Zone |
-| Continuer à compter comme occupée pendant (secondes) | Zone |
-| Refroidir uniquement au-dessus de cette température extérieure | Zone |
-| Refroidir uniquement en été | Zone |
 | Supprimer cette zone | Zone |
-| Température cible en chauffage | Zone |
-| Température cible en refroidissement | Zone |
-| État signifiant occupée | Zone |
 
 ## Langues
 

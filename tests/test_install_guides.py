@@ -291,80 +291,17 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.zones.data.when_done": ("Cuando termines aquí"),
     },
     "fr": {
-        "options.step.circuit.data.allow_fan_only_during_conflict": (
-            "Une zone perdante peut brasser l'air"
-        ),
         "options.step.circuit.data.delete": ("Supprimer ce circuit"),
-        "options.step.circuit.data.family_switch_delay": (
-            "Pause lors du changement de tâche (secondes)"
-        ),
-        "options.step.circuit.data.max_concurrent_units": (
-            "Nombre maximal d'unités en marche simultanément"
-        ),
-        "options.step.circuit.data.min_cycle_time": (
-            "Repos avant qu'une unité puisse redémarrer (secondes)"
-        ),
-        "options.step.circuit.data.min_family_switch_interval": (
-            "Durée minimale avant un changement de tâche (secondes)"
-        ),
-        "options.step.circuit_priority.data.priority": ("Priorité sur ce circuit"),
         "options.step.exclusive.data.delete": ("Supprimer ce groupe"),
-        "options.step.exclusive.data.sources": ("Appareils de ce groupe"),
         "options.step.generator.data.delete": ("Supprimer cette source de chaleur"),
-        "options.step.generator.data.entity_id": ("Entité climate"),
-        "options.step.generator.data.zone_ids": ("Zones qu'il dessert"),
         "options.step.generators.data.generator": ("Source de chaleur"),
-        "options.step.opening.data.delay": ("Délai avant suspension (secondes)"),
         "options.step.opening.data.delete": ("Supprimer cette ouverture"),
         "options.step.openings.data.opening": ("Ouverture"),
         "options.step.quiet.data.delete": ("Supprimer cette plage"),
-        "options.step.quiet.data.end": ("Silence jusqu'à"),
-        "options.step.quiet.data.start": ("Silence à partir de"),
-        "options.step.quiet.data.weekdays": ("Jours concernés"),
         "options.step.resident.data.delete": ("Supprimer cet occupant"),
-        "options.step.resident.data.sleep_from": ("Le capteur de sommeil compte à partir de"),
-        "options.step.resident.data.sleep_until": ("Le capteur de sommeil compte jusqu'à"),
-        "options.step.settings.data.guest_end": ("Mode invités jusqu'à"),
-        "options.step.settings.data.guest_start": ("Mode invités à partir de"),
-        "options.step.settings.data.holiday_calendars": ("Agendas de vacances"),
-        "options.step.settings.data.holiday_keyword": ("Mot qui signale des vacances"),
-        "options.step.settings.data.max_precondition": (
-            "Durée maximale de la préparation (minutes)"
-        ),
-        "options.step.settings.data.require_awake": ("Une personne présente doit être éveillée"),
-        "options.step.settings.data.season_source": ("Origine de la saison"),
-        "options.step.settings.data.stuck_after": ("Zone considérée bloquée après (minutes)"),
         "options.step.source.data.delete": ("Supprimer cette source"),
-        "options.step.source.data.entity_id": ("Entité climate"),
-        "options.step.source.data.min_cycle_time": (
-            "Repos avant que cet appareil puisse redémarrer (secondes)"
-        ),
-        "options.step.source.data.priority": ("Ordre au sein de cette zone"),
-        "options.step.source.data.role": ("Ce que cet appareil sait faire"),
-        "options.step.source.data.takeover_delay": (
-            "Attendre ce délai avant de prendre le relais (minutes)"
-        ),
         "options.step.window.data.delete": ("Supprimer ce planning"),
-        "options.step.zone.data.cool_hysteresis": ("Bande morte de refroidissement"),
-        "options.step.zone.data.cool_outdoor_min": (
-            "Refroidir uniquement au-dessus de cette température extérieure"
-        ),
-        "options.step.zone.data.cool_start_at": ("Commencer à refroidir à"),
-        "options.step.zone.data.cool_summer_only": ("Refroidir uniquement en été"),
-        "options.step.zone.data.cool_target": ("Température cible en refroidissement"),
         "options.step.zone.data.delete": ("Supprimer cette zone"),
-        "options.step.zone.data.gate": ("Ce qui décide si cette zone fonctionne"),
-        "options.step.zone.data.heat_hysteresis": ("Bande morte de chauffage"),
-        "options.step.zone.data.heat_outdoor_max": (
-            "Chauffer uniquement sous cette température extérieure"
-        ),
-        "options.step.zone.data.heat_start_at": ("Commencer à chauffer à"),
-        "options.step.zone.data.heat_target": ("Température cible en chauffage"),
-        "options.step.zone.data.presence_entity": ("Capteur de présence de cette zone"),
-        "options.step.zone.data.presence_state": ("État signifiant occupée"),
-        "options.step.zone.data.presence_timeout": (
-            "Continuer à compter comme occupée pendant (secondes)"
-        ),
     },
     "ar": {
         "options.step.circuit.data.delete": ("حذف هذه الدائرة"),

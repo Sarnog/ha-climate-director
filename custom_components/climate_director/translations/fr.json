@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Climate Director",
-        "description": "Créez une installation. Les zones, les sources et les circuits frigorifiques s'ajoutent ensuite via Configurer.",
+        "description": "Créez une installation. Les zones, les sources et les circuits de climatisation s'ajoutent ensuite via Configurer.",
         "data": {
           "name": "Nom",
           "shadow_mode": "Mode ombre"
@@ -72,10 +72,10 @@
           "require_awake": "Une personne présente mais endormie ne compte pas. L'entité qui indique le sommeil se règle par occupant.",
           "holiday_calendars": "Un évènement en cours dans l'un de ces agendas met la maison en vacances. Laisser vide n'utilise que l'interrupteur vacances.",
           "holiday_keyword": "Seuls les évènements portant ce mot comptent, par exemple 'vacances'. La casse et l'orthographe n'importent pas, et le mot compte aussi au milieu d'un mot plus long, si bien que 'Grandes vacances' correspond également. Laissé vide, les agendas sont entièrement ignorés et le planning de vacances ne dépend plus que de l'interrupteur.",
-          "guest_start": "Le mode invités ne porte la maison qu'entre ces heures. Laisser les deux vides pour qu'il s'applique toute la journée. En dehors, les portes ordinaires reprennent la main, afin qu'un interrupteur oublié ne tourne pas toute la nuit.",
-          "guest_end": "Le mode invités ne porte la maison qu'entre ces heures. Laisser les deux vides pour qu'il s'applique toute la journée. En dehors, les portes ordinaires reprennent la main, afin qu'un interrupteur oublié ne tourne pas toute la nuit.",
+          "guest_start": "Le mode invités ne porte la maison qu'entre ces heures. Laissez les deux vides pour qu'il s'applique toute la journée. En dehors, les barrières ordinaires reprennent la main, afin qu'un interrupteur oublié ne tourne pas toute la nuit.",
+          "guest_end": "Le mode invités ne porte la maison qu'entre ces heures. Laissez les deux vides pour qu'il s'applique toute la journée. En dehors, les barrières ordinaires reprennent la main, afin qu'un interrupteur oublié ne tourne pas toute la nuit.",
           "max_precondition": "Une demande ne s'oublie pas, elle se saisit mal. Ce plafond empêche une faute de frappe de chauffer une maison vide tout un après-midi. Demander plus long raccourcit la demande au lieu de la refuser.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
           "stuck_after": "Une pause lors d'un changement de tâche doit durer des secondes. Une pièce qui y reste au-delà n'attend plus, elle est bloquée - ce qui, vu de l'extérieur, ressemble exactement à ne rien faire. Gardez la valeur bien au-dessus de votre plus longue pause ; une fausse alerte apprend à ignorer l'alerte. Zéro désactive le capteur.",
           "precipitation_source": "Une entité météo ou un capteur de précipitations. Tant qu'elle signale l'un des états ci-dessous, la limite « ouvrir une fenêtre » par zone est ignorée. Laissez vide pour que la règle ordinaire s'applique toujours.",
           "precipitation_states": "Séparés par des virgules. Pour une entité météo, ce sont ses conditions ; pour un capteur, ses états. La valeur par défaut couvre la pluie, la neige et la grêle.",
@@ -92,7 +92,7 @@
         },
         "data_description": {
           "zone": "Choisissez-en une à modifier, ou ajoutez-en une nouvelle.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "zone": {
@@ -129,20 +129,20 @@
           "presence_entity": "Laissez vide pour réguler cette pièce, que quelqu'un s'y trouve ou non. Quelqu'un à la maison ne dit rien sur la présence dans le grenier.",
           "presence_state": "Un capteur de présence rapporte on.",
           "presence_timeout": "Laissez vide ou mettez zéro pour réagir dès que la présence disparaît. Les capteurs de présence clignotent, donc quelques secondes ici épargnent au compresseur un arrêt inutile.",
-          "ignore_precipitation": "Activé pour une pièce sans fenêtres : la règle « ouvrir une fenêtre » ne lui apporte rien, donc les précipitations ne doivent pas la lever là.",
+          "ignore_precipitation": "Activé pour une pièce où aucune fenêtre ne s'ouvre : la règle « ouvrir une fenêtre » ne lui apporte rien, donc les précipitations ne doivent pas la lever là.",
           "name": "Le nom de la zone partout. Son identifiant interne est dérivé une fois puis reste en place, un renommage ultérieur est donc sans risque.",
           "enable_heat": "Désactivé signifie que cette pièce n'est jamais chauffée, quoi que dise le thermomètre.",
           "heat_target": "La consigne transmise à l'appareil une fois le chauffage lancé. Pas le point auquel il démarre.",
-          "heat_start_at": "Le chauffage démarre à cette température intérieure ou en dessous.",
+          "heat_start_at": "Le chauffage commence à cette température intérieure ou en dessous.",
           "heat_outdoor_max": "Au-dessus de cette température extérieure, le chauffage reste éteint. Laissez vide pour aucune limite.",
           "enable_cool": "Désactivé signifie que cette pièce n'est jamais refroidie, quoi que dise le thermomètre.",
           "cool_target": "La consigne transmise à l'appareil une fois le refroidissement lancé. Pas le point auquel il démarre.",
-          "cool_start_at": "Le refroidissement démarre à cette température intérieure ou au-dessus.",
+          "cool_start_at": "Le refroidissement commence à cette température intérieure ou au-dessus.",
           "cool_hysteresis": "Le refroidissement s'arrête une bande sous le point d'enclenchement. Zéro fait osciller la zone sur une seule température.",
           "cool_outdoor_min": "Sous cette température extérieure, le refroidissement reste éteint. Laissez vide pour aucune limite.",
           "cool_summer_only": "Lie le refroidissement à la saison définie dans les Réglages généraux.",
           "gate": "'household' suit le planning, le sommeil et la présence de quelqu'un à la maison ; un capteur de présence resserre ensuite. 'presence' laisse la pièce décider seule, si bien qu'une pièce occupée passe outre le planning - ce dont a besoin une pièce utilisée de temps en temps. Ce choix exige un capteur de présence.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "sources": {
@@ -154,12 +154,12 @@
         },
         "data_description": {
           "source": "Choisissez-en une à modifier, ou ajoutez-en une nouvelle.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "source": {
         "title": "Source",
-        "description": "La fenêtre extérieure est ce qui sépare une chaudière d'une pompe à chaleur. Deux fenêtres adjacentes se rejoignent exactement, aucune température extérieure ne tombe donc entre les deux.",
+        "description": "La plage extérieure est ce qui sépare une chaudière d'une pompe à chaleur. Deux fenêtres adjacentes se rejoignent exactement, aucune température extérieure ne tombe donc entre les deux.",
         "data": {
           "name": "Nom",
           "entity_id": "Entité climate",
@@ -183,7 +183,7 @@
           "role": "Si cet appareil peut chauffer, refroidir, ou les deux. Une chaudière ne fait que chauffer.",
           "delete": "Retire la source de cette zone. L'appareil lui-même reste intact.",
           "autostart": "Désactivé le laisse tranquille : le directeur ne l'allume jamais et ne l'éteint que s'il exécute une tâche que l'unité extérieure partagée n'autorise pas. Pour un appareil que vous allumez vous-même et voulez laisser tel quel.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
           "min_cycle_time": "Retarde uniquement le démarrage, jamais l'arrêt. Ne s'applique que lorsque l'appareil n'est sur aucun circuit; sur un circuit, c'est le repos du circuit qui compte. Laisser vide signifie aucun repos propre.",
           "covers_zones": "Les pièces que cet appareil chauffe ou refroidit en même temps dès qu'il fonctionne. Vide signifie cette zone seulement. Si une source de ce périmètre devient injoignable, cet appareil reprend la tâche et plus rien d'autre ne chauffe ni ne refroidit dans tout ce périmètre. Le même appareil sous plusieurs pièces partage un seul périmètre : le remplir une fois suffit.",
           "takeover_delay": "Depuis combien de temps une source du périmètre doit être injoignable avant que cet appareil prenne le relais. Compté à partir du moment où elle est devenue injoignable, pour qu'une intégration instable n'allume pas le brûleur toutes les quelques minutes. Zéro prend le relais tout de suite, et un moment illisible aussi."
@@ -198,7 +198,7 @@
         },
         "data_description": {
           "circuit": "Choisissez-en un à modifier, ou ajoutez-en un nouveau.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "circuit": {
@@ -228,7 +228,7 @@
           "min_family_switch_interval": "Empêche une zone de tirer le compresseur d'avant en arrière entre chauffage et refroidissement.",
           "max_concurrent_units": "Pour une unité extérieure qui ne peut pas porter toutes ses unités intérieures à la fois. Laissez vide pour aucune limite.",
           "delete": "Supprime le circuit. Les unités continuent de fonctionner ; elles ne sont simplement plus liées entre elles.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "circuit_priorities": {
@@ -240,7 +240,7 @@
         },
         "data_description": {
           "zone": "Choisissez-en une pour changer sa priorité, ou revenez en arrière.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "circuit_priority": {
@@ -251,7 +251,7 @@
         },
         "data_description": {
           "priority": "Le nombre le plus bas gagne le circuit. Les zones partageant un nombre sont départagées par leur nom.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "generators": {
@@ -263,7 +263,7 @@
         },
         "data_description": {
           "generator": "Choisissez-en une à modifier, ou ajoutez-en une nouvelle.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "generator": {
@@ -283,19 +283,19 @@
           "zone_ids": "Laissez vide pour toutes les pièces.",
           "setpoint": "Laissez vide pour suivre la consigne la plus élevée parmi les pièces qui demandent. Prendre la plus basse laisserait la pièce la plus demandeuse à court.",
           "delete": "Supprime la source de chaleur ; les vannes continuent de fonctionner seules.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "residents": {
         "title": "Occupants",
-        "description": "Laissez vide pour un bâtiment où personne n'est suivi ; les portes de présence sont alors ignorées au lieu de bloquer indéfiniment.",
+        "description": "Laissez vide pour un bâtiment où personne n'est suivi ; les barrières de présence sont alors ignorées au lieu de bloquer indéfiniment.",
         "data": {
           "resident": "Occupant",
           "when_done": "Quand vous avez terminé ici"
         },
         "data_description": {
           "resident": "Choisissez-en un à modifier, ou ajoutez-en un nouveau.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "resident": {
@@ -309,7 +309,7 @@
           "when_done": "Quand vous avez terminé ici",
           "sleep_from": "Le capteur de sommeil compte à partir de",
           "sleep_until": "Le capteur de sommeil compte jusqu'à",
-          "sleep_days": "Jours de la fenêtre de sommeil",
+          "sleep_days": "Jours de la plage de sommeil",
           "wake_by": "Attendre ce dormeur jusqu'à",
           "wake_days": "Jours où l'attente s'applique",
           "wake_holiday": "Attendre ce dormeur aussi les jours de vacances",
@@ -323,14 +323,14 @@
           "name": "Un nom, pour distinguer les occupants.",
           "presence_entity": "Généralement une entité person. Indique si cet occupant est à la maison.",
           "delete": "Supprime l'occupant ainsi que ses plannings.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
-          "sleep_from": "Un téléphone sur le chargeur à trois heures de l'après-midi ne veut pas dire que quelqu'un se couche. Entre ces heures le capteur de sommeil compte ; en dehors, un chargeur n'est qu'un chargeur. Laisser les deux vides pour qu'il vaille en permanence.",
-          "sleep_until": "Un téléphone sur le chargeur à trois heures de l'après-midi ne veut pas dire que quelqu'un se couche. Entre ces heures le capteur de sommeil compte ; en dehors, un chargeur n'est qu'un chargeur. Laisser les deux vides pour qu'il vaille en permanence.",
-          "sleep_days": "Laissez vide pour tous les jours. Une fenêtre qui passe minuit est rattachée à son jour de début : une fenêtre du vendredi 23:00-09:00 compte encore à 07:00 le samedi.",
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
+          "sleep_from": "Un téléphone sur le chargeur à trois heures de l'après-midi ne veut pas dire que quelqu'un se couche. Entre ces heures le capteur de sommeil compte ; en dehors, un chargeur n'est qu'un chargeur. Laissez les deux vides pour qu'il vaille en permanence.",
+          "sleep_until": "Un téléphone sur le chargeur à trois heures de l'après-midi ne veut pas dire que quelqu'un se couche. Entre ces heures le capteur de sommeil compte ; en dehors, un chargeur n'est qu'un chargeur. Laissez les deux vides pour qu'il vaille en permanence.",
+          "sleep_days": "Laissez vide pour tous les jours. Une plage qui passe minuit est rattachée à son jour de début : une plage du vendredi 23:00-09:00 compte encore à 07:00 le samedi.",
           "wake_by": "Si quelqu'un est levé alors que cet occupant dort encore à la maison, la maison attend. Passé cette heure, elle n'attend plus : elle suit alors celles et ceux qui sont levés. Laissez vide pour que cet occupant ne retienne personne.",
           "wake_days": "Laissez vide pour tous les jours.",
-          "wake_holiday": "Un jour de vacances compte comme un samedi pour les horaires, mais pas pour cette heure : le congé de l'un est la journée de travail de l'autre, et le lève-tard retiendrait alors la maison pendant que quelqu'un travaille. Cochez ceci si vous voulez qu'on vous attende aussi un jour de vacances - l'heure s'applique alors tous les jours.",
-          "sleep_in_until": "La fenêtre de sommeil, c'est la nuit : elle éteint la maison à l'heure du coucher. Ceci n'étend que le matin, les jours indiqués ci-dessous, pour que le capteur de sommeil continue de compter pendant que vous êtes encore au lit. Laissez vide et la fenêtre de sommeil dit tout.",
+          "wake_holiday": "Un jour de vacances compte comme un samedi pour les plannings, mais pas pour cette heure : le congé de l'un est la journée de travail de l'autre, et le lève-tard retiendrait alors la maison pendant que quelqu'un travaille. Cochez ceci si vous voulez qu'on vous attende aussi un jour de vacances - l'heure s'applique alors tous les jours.",
+          "sleep_in_until": "La plage de sommeil, c'est la nuit : elle éteint la maison à l'heure du coucher. Ceci n'étend que le matin, les jours indiqués ci-dessous, pour que le capteur de sommeil continue de compter pendant que vous êtes encore au lit. Laissez vide et la plage de sommeil dit tout.",
           "sleep_in_days": "Ce sont les matins où vous faites la grasse matinée, pas les soirs précédents. Laissez vide pour tous les jours.",
           "sleep_in_holiday": "Tous les jours marqués par votre calendrier de vacances, quel que soit le jour de la semaine. Vous réglez ainsi la grasse matinée une seule fois."
         }
@@ -344,7 +344,7 @@
         },
         "data_description": {
           "window": "Choisissez-en un à modifier, ajoutez-en un, ou revenez au menu.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "window": {
@@ -360,11 +360,11 @@
         },
         "data_description": {
           "weekdays": "Laissez vide pour tous les jours.",
-          "end": "Cet horaire tombe en dehors de la fenêtre, de sorte que deux fenêtres à la suite se rejoignent exactement.",
-          "start": "Cet horaire tombe à l'intérieur de la fenêtre.",
+          "end": "Ce planning tombe en dehors de la plage, de sorte que deux fenêtres à la suite se rejoignent exactement.",
+          "start": "Ce planning tombe à l'intérieur de la plage.",
           "delete": "Supprime ce planning.",
           "holiday": "Une plage de vacances ne s'applique que lorsque le planning de vacances est actif, et remplace alors les plages ordinaires. Ses jours de la semaine sont ignorés. Sans elle, un jour de vacances compte comme un samedi.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "openings": {
@@ -377,7 +377,7 @@
         },
         "data_description": {
           "opening": "Choisissez-en une à modifier, ou ajoutez-en une nouvelle.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
           "house_wide_openings": "Ceux-ci s'arrêtent dès qu'une ouverture de l'installation reste ouverte, où qu'elle soit. Prévu pour une chaudière partagée par toutes les zones : lier cette ouverture à toutes les zones arrêterait aussi les climatiseurs de ces pièces, toute l'année. Laissez vide pour que tout reste réglé par zone. Une zone sous dérogation et une source manuelle restent intouchées, comme toujours."
         }
       },
@@ -398,7 +398,7 @@
           "entity_id": "Le contact de porte, de fenêtre ou de velux. L'état qui signifie ouvert se règle ci-dessous.",
           "open_state": "L'état qui compte comme ouvert. Pour un contact de fenêtre, c'est généralement 'on', pour un velux ou un volet, 'open'.",
           "delete": "Supprime l'ouverture ; elle ne suspend plus rien.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
           "name": "Un nom, pour distinguer les ouvertures."
         }
       },
@@ -421,7 +421,7 @@
         },
         "data_description": {
           "group": "Choisissez-en un à modifier, ou ajoutez-en un.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "exclusive": {
@@ -435,12 +435,12 @@
         "data_description": {
           "sources": "Un seul d'entre eux peut fonctionner à la fois. Moins de deux ne fait pas un groupe.",
           "delete": "Supprime le groupe. Les appareils continuent de fonctionner ; ils cessent simplement de s'exclure.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       },
       "quiets": {
         "title": "Plages de silence",
-        "description": "Heures pendant lesquelles le directeur ne démarre rien de lui-même. Rentrer à onze heures du soir alors qu'on va se coucher n'oblige pas à chauffer la maison.\n\nCela freine le démarrage, pas la poursuite : ce qui tourne déjà reste régulé et s'éteint au coucher comme d'habitude, et ce que vous allumez vous-même est repris et poursuivi. Sans plage, le frein est relâché. Est freiné celui qui rentre après le début de la plage ; un occupant déjà présent fait tourner la maison - et les invités dans la fenêtre du mode invités aussi.",
+        "description": "Heures pendant lesquelles le directeur ne démarre rien de lui-même. Rentrer à onze heures du soir alors qu'on va se coucher n'oblige pas à chauffer la maison.\n\nCela freine le démarrage, pas la poursuite : ce qui tourne déjà reste régulé et s'éteint au coucher comme d'habitude, et ce que vous allumez vous-même est repris et poursuivi. Sans plage, le frein est relâché. Est freiné celui qui rentre après le début de la plage ; un occupant déjà présent fait tourner la maison - et les invités dans la plage du mode invités aussi.",
         "data": {
           "quiet": "Plage"
         },
@@ -450,7 +450,7 @@
       },
       "quiet": {
         "title": "Plage de silence",
-        "description": "Heures pendant lesquelles le directeur ne démarre rien de lui-même. Rentrer à onze heures du soir alors qu'on va se coucher n'oblige pas à chauffer la maison.\n\nCela freine le démarrage, pas la poursuite : ce qui tourne déjà reste régulé et s'éteint au coucher comme d'habitude, et ce que vous allumez vous-même est repris et poursuivi. Sans plage, le frein est relâché. Est freiné celui qui rentre après le début de la plage ; un occupant déjà présent fait tourner la maison - et les invités dans la fenêtre du mode invités aussi.",
+        "description": "Heures pendant lesquelles le directeur ne démarre rien de lui-même. Rentrer à onze heures du soir alors qu'on va se coucher n'oblige pas à chauffer la maison.\n\nCela freine le démarrage, pas la poursuite : ce qui tourne déjà reste régulé et s'éteint au coucher comme d'habitude, et ce que vous allumez vous-même est repris et poursuivi. Sans plage, le frein est relâché. Est freiné celui qui rentre après le début de la plage ; un occupant déjà présent fait tourner la maison - et les invités dans la plage du mode invités aussi.",
         "data": {
           "start": "Silence à partir de",
           "end": "Silence jusqu'à",
@@ -463,8 +463,8 @@
           "start": "Entre ces heures le directeur ne démarre rien de lui-même, sauf pour les occupants déjà présents au début de la plage. Une plage peut franchir minuit : 21:00 à 09:00 est la nuit.",
           "end": "Entre ces heures le directeur ne démarre rien de lui-même, sauf pour les occupants déjà présents au début de la plage. Une plage peut franchir minuit : 21:00 à 09:00 est la nuit.",
           "weekdays": "Laisser vide vaut tous les jours.",
-          "delete": "Supprime cette fenêtre, de sorte que le directeur puisse de nouveau démarrer quelque chose pendant ces heures.",
-          "when_done": "En choisissant d'abandonner, vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
+          "delete": "Supprime cette plage, de sorte que le directeur puisse de nouveau démarrer quelque chose pendant ces heures.",
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
           "holiday": "Une plage de vacances ne s'applique que lorsque le planning de vacances est actif, et remplace alors les plages ordinaires. Ses jours de la semaine sont ignorés. Sans elle, un jour de vacances compte comme un samedi."
         }
       }
@@ -506,13 +506,13 @@
     },
     "resident_list": {
       "options": {
-        "add_new": "+ Ajouter un habitant",
+        "add_new": "+ Ajouter un occupant",
         "back_to_menu": "← Retour au menu principal"
       }
     },
     "window_list": {
       "options": {
-        "add_new": "+ Ajouter un horaire",
+        "add_new": "+ Ajouter un planning",
         "back_to_menu": "← Retour au menu principal"
       }
     },
@@ -806,7 +806,7 @@
       "message": "La zone {zone} fonctionne sur la présence dans la pièce mais n'a pas de capteur de présence ; elle ne peut donc jamais fonctionner — pas même pour éteindre l'appareil. Choisissez un capteur, ou remettez-la sur le foyer."
     },
     "resident_without_presence": {
-      "message": "L'habitant {resident} n'a pas de capteur de présence et ne peut donc jamais compter comme présent. Choisissez une personne ou un traqueur d'appareil."
+      "message": "L'occupant {resident} n'a pas de capteur de présence et ne peut donc jamais compter comme présent. Choisissez une personne ou un traqueur d'appareil."
     },
     "shared_priority": {
       "message": "Les zones {first} et {second} ont toutes deux la priorité {priority} sur le circuit {circuit}. Sur une même unité extérieure, cela laisse le gagnant au hasard ; donnez à chacune son propre numéro."
@@ -857,7 +857,7 @@
       "message": "{zone} démarre quand même, {openings} est ignoré. Actuellement {indoor} - cette pièce n'a rien le droit de faire pour le moment, donc rien ne se passe."
     },
     "quiet_covers_the_day": {
-      "message": "Les fenêtres de silence laissent moins de {minutes} minutes sur {days} jour(s), et personne n'a d'horaire qui les emporte. Rien ne peut démarrer de lui-même ces jours-là. Une fenêtre de silence est l'inverse d'un horaire : elle dit quand rien ne doit commencer."
+      "message": "Les plages de silence laissent moins de {minutes} minutes sur {days} jour(s), et personne n'a de planning qui les emporte. Rien ne peut démarrer de lui-même ces jours-là. Une plage de silence est l'inverse d'un planning : elle dit quand rien ne doit commencer."
     },
     "switch_timings_without_a_switch": {
       "message": "Le circuit {circuit} peut assurer les deux fonctions à la fois, il ne change donc jamais de fonction. Sa pause de commutation et sa durée minimale avant changement ne s'appliquent jamais. Le temps anti-court-cycle et la limite de capacité fonctionnent bien, eux."
@@ -893,7 +893,7 @@
       "message": "La zone {zone} commence à refroidir à la température où elle commence à chauffer ou en dessous, si bien que les deux tâches demandent la même pièce en même temps."
     },
     "source_window_admits_nothing": {
-      "message": "La source {source} a une fenêtre extérieure qui n'admet rien et ne peut donc jamais tourner."
+      "message": "La source {source} a une plage extérieure qui n'admet rien et ne peut donc jamais tourner."
     },
     "source_outdoor_without_sensor": {
       "message": "La source {source} est limitée par la température extérieure, mais aucun capteur extérieur n'est défini."
@@ -902,7 +902,7 @@
       "message": "La zone {zone} a une hystérésis de {mode} négative."
     },
     "zone_window_admits_nothing": {
-      "message": "La zone {zone} a une fenêtre extérieure de {mode} qui n'admet rien."
+      "message": "La zone {zone} a une plage extérieure de {mode} qui n'admet rien."
     },
     "season_excludes_mode": {
       "message": "La zone {zone} ne peut {mode} qu'en {allowed}, mais la saison est fixée sur {season}."
@@ -911,10 +911,10 @@
       "message": "La zone {zone} a une hystérésis de {mode} non finie."
     },
     "nonfinite_outdoor_deadband": {
-      "message": "La zone morte extérieure n'est pas un nombre fini."
+      "message": "La bande morte extérieure n'est pas un nombre fini."
     },
     "zero_outdoor_deadband_no_circuit": {
-      "message": "L'appareil {entity} a une fenêtre extérieure bornée et n'est sur aucun circuit ; avec la zone morte extérieure à zéro, rien ne freine son brûleur."
+      "message": "L'appareil {entity} a une plage extérieure bornée et n'est sur aucun circuit ; avec la bande morte extérieure à zéro, rien ne freine son brûleur."
     },
     "zone_outdoor_without_sensor": {
       "message": "La zone {zone} limite {mode} par la température extérieure, mais aucun capteur extérieur n'est défini."
@@ -938,7 +938,7 @@
       "message": "L'ouverture {opening} a un retard négatif."
     },
     "schedule_gate_without_schedules": {
-      "message": "La porte de planning est activée mais personne n'a de planning, donc rien ne peut jamais démarrer."
+      "message": "La barrière de planning est activée mais personne n'a de planning, donc rien ne peut jamais démarrer."
     },
     "negative_stuck_time": {
       "message": "Le temps de détection de blocage est négatif."
