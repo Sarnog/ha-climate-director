@@ -501,9 +501,9 @@ La plage de sommeil fait deux choses à la fois : elle dit quand « téléphone 
 le chargeur » signifie que quelqu'un est au lit, et elle éteint ainsi la maison
 le soir dès que tous les présents sont couchés.
 
-Étendez cette fenêtre jusqu'à treize heures et le chargeur compte aussi comme du
+Étendez cette plage jusqu'à treize heures et le chargeur compte aussi comme du
 sommeil un mercredi ordinaire : qui rentre à dix heures, ou travaille depuis chez
-lui, trouve une maison froide. Réduisez la fenêtre au seul week-end et plus rien
+lui, trouve une maison froide. Réduisez la plage au seul week-end et plus rien
 n'éteint la maison la nuit en semaine : elle chauffe jusqu'à ce que quelqu'un
 parte.
 

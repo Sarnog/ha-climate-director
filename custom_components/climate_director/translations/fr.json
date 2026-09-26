@@ -159,7 +159,7 @@
       },
       "source": {
         "title": "Source",
-        "description": "La plage extérieure est ce qui sépare une chaudière d'une pompe à chaleur. Deux fenêtres adjacentes se rejoignent exactement, aucune température extérieure ne tombe donc entre les deux.",
+        "description": "La plage extérieure est ce qui sépare une chaudière d'une pompe à chaleur. Deux plages adjacentes se rejoignent exactement, aucune température extérieure ne tombe donc entre les deux.",
         "data": {
           "name": "Nom",
           "entity_id": "Entité climate",
@@ -360,8 +360,8 @@
         },
         "data_description": {
           "weekdays": "Laissez vide pour tous les jours.",
-          "end": "Ce planning tombe en dehors de la plage, de sorte que deux fenêtres à la suite se rejoignent exactement.",
-          "start": "Ce planning tombe à l'intérieur de la plage.",
+          "end": "Cette heure tombe en dehors de la plage, de sorte que deux plages à la suite se rejoignent exactement.",
+          "start": "Cette heure tombe à l'intérieur de la plage.",
           "delete": "Supprime ce planning.",
           "holiday": "Une plage de vacances ne s'applique que lorsque le planning de vacances est actif, et remplace alors les plages ordinaires. Ses jours de la semaine sont ignorés. Sans elle, un jour de vacances compte comme un samedi.",
           "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
