@@ -55,7 +55,7 @@ Tres conceptos forman la base:
 | Concepto | Significado |
 |---|---|
 | **Zona** | Una habitación. Describe *lo que quieres*: temperatura objetivo, cuándo puede empezar a calentar o enfriar y en qué estación. |
-| **Fuente** | Un aparato capaz de servir a una zona, con una función (calentar, enfriar o ambas), un orden de preferencia y una ventana de temperatura exterior. |
+| **Fuente** | Un aparato capaz de servir a una zona, con una función (calentar, enfriar o ambas), un orden de preferencia y una franja de temperatura exterior. |
 | **Circuito de aire acondicionado** | Una unidad exterior y las unidades interiores que cuelgan de ella. Describe *qué es técnicamente posible a la vez*. |
 
 La regla de oro para una unidad exterior compartida: todas las unidades
@@ -74,7 +74,7 @@ unidades van juntas y resuelve ese conflicto por ti.
 | `weather.*` o `sensor.*` precipitación | no | solo si las precipitaciones pueden levantar el límite de «abrir una ventana» |
 | `person.*` o `device_tracker.*` por residente | sí, en cuanto configures residentes | si no, ese residente nunca puede estar en casa |
 | Un sensor de sueño por residente | no | sin él, nadie cuenta nunca como dormido |
-| `binary_sensor.*` presencia por zona | solo si una zona funciona por *la habitación en sí* | entonces es la única puerta de la zona |
+| `binary_sensor.*` presencia por zona | solo si una zona funciona por *la habitación en sí* | entonces es la única barrera de la zona |
 | `binary_sensor.*`, `cover.*` o `sensor.*` puerta, ventana o claraboya | no | suspende las zonas vinculadas mientras está abierto |
 | `calendar.*` | no | activa el horario de vacaciones por sí solo; solo funciona con una palabra clave |
 | Una entidad de estación | no | solo si no quieres deducir la estación del mes |
@@ -148,7 +148,7 @@ En **Configurar** encuentras el menú principal, en este orden:
 
 Dos cosas hacen el menú agradable:
 
-- Cada pantalla termina con **Cuando hayas terminado aquí**, con la opción
+- Cada pantalla termina con **Cuando termines aquí**, con la opción
   *Conservar estos cambios y volver* o *Descartar y volver*.
 - Cada lista lleva una fila **← Volver al menú principal**.
 
@@ -163,18 +163,18 @@ hasta que eliges **Guardar y cerrar** en el menú principal.
 | **Sensor de temperatura exterior** | alimenta cada límite exterior. Sin sensor, todo límite cuenta como no alcanzado y la instalación se queda quieta |
 | **Banda muerta de temperatura exterior** | cuántos grados puede seguir una tarea en marcha más allá de su límite exterior antes de cambiar; 0,5 por defecto, cero la desactiva |
 | **Sistema de calefacción** | *Central* o *Por zona*, ver abajo |
-| **Fuente de la estación** | de dónde sale la estación: el mes, una entidad, o fijada verano/invierno |
+| **Origen de la estación** | de dónde sale la estación: el mes, una entidad, o fijada verano/invierno |
 | **Entidad de estación** | solo si la fuente está en *entidad*; la entidad integrada `season.*` también se puede elegir |
 | **Hemisferio** | qué meses cuentan como verano cuando la estación sale del mes: norte abril–septiembre, sur octubre–marzo |
-| **Elección de estación** | la entidad `select.*` *Estación* fija la estación a mano en Automático, Verano o Invierno; la elección sobrevive a un reinicio |
 | **Alguien en casa debe estar despierto** | activado = la casa espera a alguien en casa *y* despierto; desactivado = dormir no cuenta |
-| **El horario de un residente debe estar abierto** | activado = la casa espera la primera ventana de horario; desactivado = solo la presencia decide |
+| **El horario de un residente debe estar abierto** | activado = la casa espera la primera franja de horario; desactivado = solo la presencia decide |
 | **Calendarios de vacaciones** | qué calendarios pueden anunciar vacaciones; se permiten varios |
-| **Palabra que marca vacaciones** | la palabra clave que debe llevar un evento; vacío = se ignoran los calendarios |
-| **Duración del preacondicionamiento** | el tope de una sola petición; por defecto 120 minutos |
-| **Modo invitados de / hasta** | la ventana en la que se aplica el modo invitados; ambos vacíos = todo el día |
-| **Días del modo invitados** | en qué días de la semana se aplica esa ventana; vacío = todos los días |
-| **Avisar de zona atascada tras** | tras cuántos minutos de espera una zona cuenta como atascada; 0 apaga el sensor |
+| **Palabra que indica vacaciones** | la palabra clave que debe llevar un evento; vacío = se ignoran los calendarios |
+| **Tiempo máximo de preacondicionamiento (minutos)** | el tope de una sola petición; por defecto 120 minutos |
+| **Modo invitados desde** | inicio de la franja en la que se aplica el modo invitados; vacío = todo el día |
+| **Modo invitados hasta** | fin de esta franja; ambos vacíos = todo el día |
+| **Días del modo invitados** | en qué días de la semana se aplica esa franja; vacío = todos los días |
+| **Zona se considera atascada tras (minutos)** | tras cuántos minutos de espera una zona cuenta como atascada; 0 apaga el sensor |
 | **Fuente de precipitaciones** | una entidad `weather.*` o `sensor.*` que dice si hay precipitaciones; vacío = la regla de precipitaciones no participa |
 | **Estados que cuentan como precipitación** | qué estados de esa entidad significan precipitaciones; lluvia, nieve y granizo por defecto |
 | **Cuánto tiempo siguen contando las precipitaciones (minutos)** | margen tras cesar las precipitaciones; 15 minutos por defecto |
@@ -224,26 +224,28 @@ Una zona es una habitación. Por zona configuras:
 |---|---|
 | **Nombre** | la etiqueta que aparece en todas partes |
 | **Sensor de temperatura interior** | sobre qué calcula la banda muerta; una `climate.*` que mida por sí misma sirve |
-| **Precedencia en una unidad exterior compartida** | con qué fuerza reclama esta zona una unidad exterior compartida; **el más bajo gana**. En un circuito no puede repetirse ningún número |
+| **Prioridad en una unidad exterior compartida** | con qué fuerza reclama esta zona una unidad exterior compartida; **el más bajo gana**. En un circuito no puede repetirse ningún número |
 | **Qué decide si esta zona funciona** | *el hogar* (horario, sueño, alguien en casa) o *la habitación en sí* (solo el sensor de presencia) |
-| **Sensor de presencia + estado + margen** | cuándo la habitación cuenta como ocupada; el margen absorbe detectores parpadeantes |
+| **Sensor de presencia de esta zona** | el sensor que indica que la habitación está ocupada |
+| **Estado que significa ocupada** | el estado que ese sensor devuelve como ocupada |
+| **Seguir contando como ocupada durante (segundos)** | el margen que absorbe detectores parpadeantes |
 | **Las precipitaciones no levantan la regla de «abrir una ventana»** | actívalo en una habitación sin ventanas; ahí el límite exterior sigue aplicándose incluso con precipitaciones |
 | **Esta zona puede calentar** | desactivado = esta habitación nunca se calienta |
-| **Temperatura objetivo calefacción** | la consigna que recibe el aparato cuando calienta — no el punto de arranque |
-| **Empezar a calentar a** | la calefacción arranca a esta temperatura interior o por debajo |
-| **Banda muerta calefacción** | cuánto por encima del punto de arranque se detiene la calefacción |
+| **Temperatura objetivo al calentar** | la consigna que recibe el aparato cuando calienta — no el punto de arranque |
+| **Empezar a calentar en** | la calefacción arranca a esta temperatura interior o por debajo |
+| **Banda muerta de calefacción** | cuánto por encima del punto de arranque se detiene la calefacción |
 | **Calentar solo por debajo de esta temperatura exterior** | por encima, la calefacción sigue apagada; vacío = sin límite |
 | **Esta zona puede enfriar** | desactivado = esta habitación nunca se enfría |
-| **Temperatura objetivo refrigeración** | la consigna que recibe el aparato cuando enfría |
-| **Empezar a enfriar a** | la refrigeración arranca a esta temperatura interior o por encima |
-| **Banda muerta refrigeración** | cuánto por debajo del punto de arranque se detiene la refrigeración |
+| **Temperatura objetivo al enfriar** | la consigna que recibe el aparato cuando enfría |
+| **Empezar a enfriar en** | la refrigeración arranca a esta temperatura interior o por encima |
+| **Banda muerta de refrigeración** | cuánto por debajo del punto de arranque se detiene la refrigeración |
 | **Enfriar solo por encima de esta temperatura exterior** | por debajo, la refrigeración sigue apagada; vacío = sin límite |
 | **Enfriar solo en verano** | liga la refrigeración a la estación de los ajustes generales |
 
 ### Cómo funciona la banda muerta
 
 Encender y apagar ocurren a dos temperaturas distintas, para que un aparato no
-titile con una décima de grado:
+conmute sin parar por una décima de grado:
 
 - calentar arranca con `interior ≤ punto de arranque` y para con `interior ≥ punto de arranque + banda`;
 - enfriar arranca con `interior ≥ punto de arranque` y para con `interior ≤ punto de arranque − banda`.
@@ -283,18 +285,18 @@ eliges enseguida sus fuentes.
 | Ajuste | Qué hace |
 |---|---|
 | **Nombre** | un nombre propio para esta fuente; vacío = el selector nombra el aparato en sí |
-| **Entidad climática** | el aparato en sí |
-| **Qué puede hacer este aparato** | solo calentar, solo enfriar, o ambas cosas. Una caldera es *solo calentar* |
-| **Arrancar este aparato automáticamente** | desactivado lo deja en paz, ver abajo |
+| **Entidad climate** | el aparato en sí |
+| **Lo que puede hacer este aparato** | solo calentar, solo enfriar, o ambas cosas. Una caldera es *solo calentar* |
+| **Encender este aparato automáticamente** | desactivado lo deja en paz, ver abajo |
 | **Orden dentro de esta zona** | qué fuente se prefiere; **el más bajo gana** |
-| **Usar desde esta temperatura exterior** | el límite inferior; incluido en el rango |
+| **Usar a partir de esta temperatura exterior** | el límite inferior; incluido en el rango |
 | **Usar hasta esta temperatura exterior** | el límite superior; excluido del rango |
 | **Zonas que este aparato también atiende** | las habitaciones que calienta o enfría de paso en cuanto funciona; vacío = solo esta zona |
-| **Esperar este tiempo antes de asumir el relevo** | cuánto tiempo debe llevar inalcanzable una fuente de ese ámbito; cinco minutos por defecto, cero de inmediato |
+| **Esperar este tiempo antes de asumir el relevo (minutos)** | cuánto tiempo debe llevar inalcanzable una fuente de ese ámbito; cinco minutos por defecto, cero de inmediato |
 
 ### Límites exteriores: medio abiertos
 
-El límite inferior pertenece a la ventana, el superior no. Dos fuentes
+El límite inferior pertenece a la franja, el superior no. Dos fuentes
 adyacentes cubren así toda la escala, sin hueco ni solape.
 
 ¿Quieres gas por debajo de 3 °C y el aire acondicionado por encima? Entonces
@@ -319,7 +321,7 @@ nota nada.
 Con un ámbito relleno, esto ocurre en cuanto una fuente de ese ámbito queda
 inalcanzable:
 
-- **este aparato asume la tarea**, y su ventana exterior no se lo impide. La
+- **este aparato asume la tarea**, y su franja exterior no se lo impide. La
   separación gas/aire acondicionado se mantiene, pero deja de ser motivo para
   dejar una casa fría;
 - **nada más en ese ámbito calienta ni enfría** mientras este aparato funciona.
@@ -372,19 +374,19 @@ cada unidad tiene la suya, déjalo vacío.
 | **Nombre** | una etiqueta para distinguir circuitos |
 | **Unidades interiores** | qué entidades `climate.*` cuelgan de esta unidad exterior. Incluye también unidades que el director no gestiona: también reclaman el compresor |
 | **Puede calentar y enfriar a la vez** | desactivado para un multisplit normal; activado para un split simple o un VRF de tres tubos con recuperación de calor |
-| **Política de conflicto** | quién gana cuando dos habitaciones quieren funciones opuestas |
-| **Una zona perdedora puede ventilar** | activado = la perdedora pasa a `fan_only` en vez de apagarse, pero solo si la unidad conoce ese modo; si no, se apaga |
-| **Pausa al cambiar de función** | cuánto tiempo está todo apagado antes del cambio |
-| **Mínimo antes de un cambio de función** | cuánto tiempo debe haber funcionado una función antes de que la otra pueda tomar el relevo |
-| **Descanso antes de que una unidad pueda rearrancar** | solo retrasa arranques, nunca paradas; por defecto 180 segundos |
-| **Máximo de unidades a la vez** | el límite de capacidad de la unidad exterior; vacío = sin tope |
+| **Regla de conflicto** | quién gana cuando dos habitaciones quieren funciones opuestas |
+| **Una zona que pierde puede mover aire** | activado = la perdedora pasa a `fan_only` en vez de apagarse, pero solo si la unidad conoce ese modo; si no, se apaga |
+| **Pausa al cambiar de tarea (segundos)** | cuánto tiempo está todo apagado antes del cambio |
+| **Tiempo mínimo antes de cambiar de tarea (segundos)** | cuánto tiempo debe haber funcionado una función antes de que la otra pueda tomar el relevo |
+| **Descanso antes de que una unidad pueda rearrancar (segundos)** | solo retrasa arranques, nunca paradas; por defecto 180 segundos |
+| **Número máximo de unidades funcionando a la vez** | el límite de capacidad de la unidad exterior; vacío = sin tope |
 
 ### Políticas de conflicto
 
 | Política | Comportamiento |
 |---|---|
 | **Prioridad** (por defecto) | gana la zona con el número de prioridad más bajo |
-| **Quien llegó primero** | la función ya en marcha conserva el circuito; una petición nueva espera |
+| **El primero** | la función ya en marcha conserva el circuito; una petición nueva espera |
 | **Demanda** | gana la mayor desviación respecto a la consigna |
 | **Estación** | la estación dicta la función; todo lo que vaya en contra se aparta |
 
@@ -392,7 +394,8 @@ cada unidad tiene la suya, déjalo vacío.
 
 Al guardar un circuito llegas a **Prioridades en este circuito**: las zonas que
 están en esta unidad exterior, en el orden en que ganan ahora, con su número
-detrás. Elige una para cambiar su prioridad.
+detrás. Elige una para cambiar su prioridad. El campo se llama
+**Prioridad en este circuito**.
 
 Es el **mismo campo** que *Prioridad en una unidad exterior compartida* en la
 pantalla de zona — dos entradas, un solo ajuste, así que nunca pueden
@@ -408,8 +411,8 @@ cuanto una válvula lo pide.
 | Ajuste | Qué hace |
 |---|---|
 | **Nombre** | una etiqueta para distinguir fuentes de calor |
-| **Entidad climática** | la caldera o bomba de calor en sí; no debe ser también fuente de una zona, o recibiría dos órdenes |
-| **Zonas que sirve** | vacío = todas las habitaciones |
+| **Entidad climate** | la caldera o bomba de calor en sí; no debe ser también fuente de una zona, o recibiría dos órdenes |
+| **Zonas a las que sirve** | vacío = todas las habitaciones |
 | **Temperatura objetivo fija** | vacío = sigue el objetivo más cálido entre las habitaciones que piden |
 
 La fuente de calor funciona mientras una habitación a la que sirve se está
@@ -420,7 +423,8 @@ calentando, y se detiene cuando no queda ninguna.
 ¿Quieres que dos aparatos no funcionen **nunca** a la vez — una caldera de gas
 y una bomba de calor, por ejemplo? No lo confíes solo a los límites exteriores.
 Un valor olvidado basta para que arranquen juntos. Ponlos en cambio en un grupo
-exclusivo: de los aparatos de un grupo, solo uno funciona a la vez.
+exclusivo: de los aparatos de un grupo, solo uno funciona a la vez. El campo
+**Aparatos de este grupo** los enumera.
 
 Atento a lo que significa un grupo: **un** aparato del grupo a la vez. Si
 quieres que la caldera de gas no estorbe a ningún aire acondicionado, mientras
@@ -453,7 +457,7 @@ Es un freno al **arranque**, no a la continuación:
 Las franjas pueden cruzar la medianoche y llevan días de la semana. Un hogar
 que se acuesta a las nueve entre semana y a las once el fin de semana pone dos:
 
-| De | Hasta | Días |
+| Silencio desde | Silencio hasta | Días en que se aplica |
 |---|---|---|
 | 21:00 | 09:00 | lun mar mié jue dom |
 | 23:00 | 09:00 | vie sáb |
@@ -476,30 +480,31 @@ presencia se omiten entonces en vez de bloquearlo todo para siempre.
 | **Sensor de presencia** | normalmente una `person.*`; dice si este residente está en casa |
 | **Sensor de sueño** | cuándo duerme este residente; vacío = no se sigue el sueño |
 | **Estado que significa dormido** | el estado que el sensor de sueño informa al dormir |
-| **El sensor de sueño cuenta de / hasta** | las horas en las que ese sensor significa algo; ambos vacíos = todo el día |
-| **Días de la ventana de sueño** | los días en los que se aplica esa ventana; vacío = todos los días |
-| **Dormir hasta** | hasta qué hora cuenta aún el sensor de sueño por la mañana; vacío = la ventana de sueño lo dice todo |
+| **El sensor de sueño cuenta desde** | inicio de las horas en las que ese sensor significa algo; vacío = todo el día |
+| **El sensor de sueño cuenta hasta** | fin de esas horas; ambos vacíos = todo el día |
+| **Días de la franja de sueño** | los días en los que se aplica esa franja; vacío = todos los días |
+| **Dormir hasta** | hasta qué hora cuenta aún el sensor de sueño por la mañana; vacío = la franja de sueño lo dice todo |
 | **Mañanas en las que duermes hasta tarde** | las mañanas mismas, no las noches anteriores; vacío = todos los días |
 | **Dormir hasta tarde también en días de vacaciones** | marcado = se aplica en cada día que marque tu calendario de vacaciones |
 | **Esperar a esta persona dormida hasta** | hasta qué hora este residente retiene la casa mientras duerme; vacío = no retiene a nadie |
 | **Días en los que se espera** | los días en los que se aplica esa hora; vacío = todos los días |
 | **Esperar a esta persona también en días de vacaciones** | desmarcado = los días de arriba se leen literalmente; marcado = la hora se aplica en todos los días de vacaciones |
 
-### Dormir hasta tarde, y por qué no es simplemente una ventana de sueño más larga
+### Dormir hasta tarde, y por qué no es simplemente una franja de sueño más larga
 
-La ventana de sueño hace dos cosas a la vez: dice cuándo «teléfono en el
+La franja de sueño hace dos cosas a la vez: dice cuándo «teléfono en el
 cargador» significa que alguien está en la cama, y con ello apaga la casa por la
 noche en cuanto todos los presentes se acuestan.
 
-Si estiras esa ventana hasta la una, el cargador también cuenta como sueño un
+Si estiras esa franja hasta la una de la tarde, el cargador también cuenta como sueño un
 miércoles cualquiera: quien llega a las diez, o trabaja desde casa, se encuentra
 una casa fría. Si la recortas al fin de semana, entre semana ya nada apaga la
 casa de noche y sigue calentando hasta que alguien se marcha.
 
-Por eso dormir hasta tarde va aparte. La ventana de sueño sigue siendo la noche -
+Por eso dormir hasta tarde va aparte. La franja de sueño sigue siendo la noche -
 en la mayoría de los casos algo como 21:00-08:00, todos los días. *Dormir
 hasta* solo alarga la mañana, en las mañanas que marques. Fíjate en la
-diferencia: una ventana de sueño cruza la medianoche y por eso depende del día en
+diferencia: una franja de sueño cruza la medianoche y por eso depende del día en
 que empieza, mientras que dormir hasta tarde depende de la mañana misma. Dormir
 hasta tarde el sábado es sábado.
 
@@ -536,7 +541,7 @@ ambos sentidos: da igual cuál de los dos se quede en la cama.
 Esto es independiente del horario. Un horario también dice cuándo debe
 *apagarse* la casa; esta hora solo dice cuándo ya no hace falta esperar a
 alguien. Mientras todos los presentes duermen, la casa sigue apagada: eso es la
-puerta del sueño, no esta hora, así que la casa solo arranca cuando la primera
+barrera del sueño, no esta hora, así que la casa solo arranca cuando la primera
 persona se levanta de verdad.
 
 **Aquí un día de vacaciones no cuenta como sábado**, a diferencia de los horarios. El
@@ -548,9 +553,9 @@ persona también en días de vacaciones*; entonces la hora se aplica en todos lo
 de vacaciones, sea cual sea el día de la semana. Un día de vacaciones que caiga en sábado
 sigue siendo un sábado.
 
-Ojo con la ventana de sueño: si la hora límite cae fuera de ella, este residente
+Ojo con la franja de sueño: si la hora límite cae fuera de ella, este residente
 ya no cuenta como dormido en ese momento y no retiene a nadie. Deja que la
-ventana de sueño siga más allá de la hora límite.
+franja de sueño siga más allá de la hora límite.
 
 ### Horarios
 
@@ -558,12 +563,13 @@ Tras guardar un residente, configuras sus horarios:
 
 | Ajuste | Qué hace |
 |---|---|
-| **Es una ventana de vacaciones** | solo se aplica durante el horario de vacaciones, sustituyendo entonces las ventanas normales |
-| **De / Hasta** | la ventana; puede cruzar la medianoche |
+| **Esta es una franja de vacaciones** | solo se aplica durante el horario de vacaciones, sustituyendo entonces las franjas normales |
+| **Desde** | inicio de la franja; puede cruzar la medianoche |
+| **Hasta** | fin de la franja; ambos vacíos = todo el día |
 | **Días** | vacío = todos los días |
 
-Un residente sin horario no participa en la puerta de horario. Quien no tiene
-ventana un día no retiene la casa ese día.
+Un residente sin horario no participa en la barrera de horario. Quien no tiene
+franja un día no retiene la casa ese día.
 
 ### Sensor de sueño: ¿sin sensor, pero con un botón?
 
@@ -586,7 +592,7 @@ Una abertura abierta el tiempo suficiente suspende las zonas afectadas.
 | **Sensor** | el contacto de puerta, ventana o claraboya; un `binary_sensor.*`, `cover.*` o `sensor.*` |
 | **Estado que significa abierto** | para un contacto de ventana suele ser `on`; para una claraboya o persiana, `open`; `on` por defecto |
 | **Zonas afectadas** | vacío = toda la instalación |
-| **Retardo antes de suspender** | vacío o 0 = en el momento de abrirse |
+| **Retardo antes de suspender (segundos)** | vacío o 0 = en el momento de abrirse |
 
 Si eliges `open` como estado abierto, también `opening` y `closing` cuentan como
 abierto: una persiana en movimiento no está cerrada.
@@ -614,7 +620,18 @@ La habitación indica entonces `opening_open_elsewhere` como motivo, para que
 veas por qué no ocurre nada. Dos cosas siguen como siempre: una zona con
 anulación y una fuente manual no se gobiernan, tampoco por esta lista.
 
-Cada abertura tiene su propio identificador, guardado de forma invisible, y de él cuelga el interruptor de puenteo (`switch.*_puenteo_<opening>`), de modo que sigue existiendo al cambiar el sensor; el **Nombre** es solo la etiqueta que ves tú. Si una abertura aún no tenía identificador, ese identificador es el sensor y el interruptor se llama como el nombre que muestra el propio sensor: si aparece más tarde o lo renombras, el nombre del interruptor lo sigue sin recargar. Activado = el director hace como si esta abertura no existiera — sus propias zonas y la parada global la ignoran. No hay duración: se mantiene hasta que lo apagues tú. Mientras siga activo con la abertura realmente abierta, el director lo informa en *Reparaciones*.
+Cada abertura tiene su propio identificador, guardado de forma invisible, y de él
+cuelga el interruptor de puenteo. Sigue existiendo al cambiar el sensor; el
+**Nombre** es solo la etiqueta que ves tú. Si una abertura aún no tenía
+identificador, ese identificador es el sensor y el interruptor se llama como el
+nombre que muestra el propio sensor: si aparece más tarde o lo renombras, el
+nombre del interruptor lo sigue sin recargar.
+
+El interruptor se llama `switch.*_puenteo_<opening>`. Activado = el director hace
+como si esta abertura no existiera: sus propias zonas y la parada global la
+ignoran. No hay duración, se mantiene hasta que lo apagues tú. Mientras siga
+activo con la abertura realmente abierta, el director lo informa en
+*Reparaciones*.
 
 ## Paso 12 — Guardar y cerrar
 
@@ -622,7 +639,7 @@ Elige **✅ Guardar y cerrar** en el menú principal. Solo entonces se escribe l
 instalación.
 
 Si algo está estructuralmente mal — una zona sin fuente útil, dos fuentes sobre
-la misma entidad, una ventana exterior que no admite nada — llegas a la pantalla
+la misma entidad, una franja exterior que no admite nada — llegas a la pantalla
 **Algo llama la atención**. Allí el campo **Y ahora** ofrece dos opciones.
 *Conservar estos cambios y volver* escribe la instalación igualmente y vuelve al
 menú principal; *← Descartar y volver* descarta tu cambio y te devuelve para
@@ -654,7 +671,7 @@ Un dispositivo por instalación, con debajo:
 | `number.*_prioridad_<zone>` | la precedencia de esta zona; también configurable desde una automatización |
 | `number.*_duracion_del_preacondicionamiento` | cuánto dura una pulsación de un botón de preacondicionamiento |
 | `button.*_preacondicionar_<zone>` | preacondiciona esta zona |
-| `select.*_estacion` | pone la estación a mano en Automático, Verano o Invierno |
+| `select.*_estacion` | pone la estación a mano en Automático, Verano o Invierno; la elección sobrevive a un reinicio |
 
 Los nombres de estas entidades están traducidos, y Home Assistant deduce el id
 de entidad del nombre. Si tu Home Assistant está en otro idioma, allí se llaman
@@ -677,11 +694,11 @@ interviene en cuanto vence un límite de tiempo.
   que esté funcionando en ese momento sigue funcionando; si quieres apagarlo
   todo, apágalo tú.
 - **Modo invitados** (`switch.*_modo_invitados`): hay alguien no seguido alojado,
-  así que «casa vacía» no dice nada. Dentro de la ventana de invitados, el modo
+  así que «casa vacía» no dice nada. Dentro de la franja de invitados, el modo
   invitados también levanta la franja de silencio. El sueño de los presentes sigue contando, y
-  fuera de la ventana de invitados toman el relevo las puertas normales.
+  fuera de la franja de invitados toman el relevo las barreras normales.
 - **Horario de vacaciones** (`switch.*_horario_de_vacaciones`): cada día cuenta como
-  sábado, o como su propia ventana de vacaciones. También se activa solo en
+  sábado, o como su propia franja de vacaciones. También se activa solo en
   cuanto un calendario configurado tiene un evento en curso con la palabra
   clave. Sin palabra clave, los calendarios se ignoran.
 - **Anulación** (`switch.*_anulacion_<zone>`): devuelve una zona por completo a
@@ -692,7 +709,9 @@ interviene en cuanto vence un límite de tiempo.
   dejar una zona a tus propias automatizaciones durante días. Apagar un aparato
   en el aparato *mismo* sí caduca al acostarse o con la casa vacía; eso está más
   abajo.
-- **Puenteo** (`switch.*_puenteo_<opening>`): activado = esta abertura no existe para el director. Se mantiene hasta que lo apagues tú; mientras siga activo con la abertura realmente abierta, el director lo informa en *Reparaciones*.
+- **Puenteo** (`switch.*_puenteo_<opening>`): activado = esta abertura no existe
+  para el director. Se mantiene hasta que lo apagues tú; mientras siga activo con
+  la abertura realmente abierta, el director lo informa en *Reparaciones*.
 - **Botón de preacondicionamiento** (`button.*_preacondicionar_<zone>`) y
   **duración** (`number.*_duracion_del_preacondicionamiento`): ver abajo.
 
@@ -728,15 +747,15 @@ que debes activar a mano.
 
 **Importante:** no dices qué debe pasar. La petición solo abre la puerta;
 después la integración decide exactamente igual que siempre — la banda muerta
-comprueba si hace demasiado frío o calor, la estación y la ventana exterior por
+comprueba si hace demasiado frío o calor, la estación y la franja exterior por
 fuente eligen el aparato. Si la habitación ya está bien, el aparato sigue
 apagado.
 
 Durante una petición de preacondicionamiento siguen aplicándose el interruptor
-principal, una anulación, la banda muerta, la estación, la ventana exterior por
+principal, una anulación, la banda muerta, la estación, la franja exterior por
 fuente, puertas y ventanas, el circuito y los grupos exclusivos. Se omiten:
 *alguien en casa*, *despierto*, *horario*, *presencia en la habitación*, la
-ventana exterior por zona y la ventana silenciosa.
+franja exterior por zona y la franja silenciosa.
 
 Una ventana o puerta abierta **rechaza** una petición. Quien abrió la ventana
 puede decir: hazlo de todos modos.
@@ -980,8 +999,8 @@ un mensaje legible sin plantillas; `reason` sigue siendo la palabra de filtro y
 - **Una entidad que no se puede leer durante cinco minutos** también aparece
   ahí, con la lista. No es un error de la configuración sino de la realidad: un
   sensor con la pila agotada, un aparato fuera de la red, o una entidad
-  renombrada. La espera deja fuera un tropiezo breve durante un reinicio. Cuenta
-  sobre todo con una temperatura interior ilegible, porque entonces el director
+  renombrada. La espera deja fuera un tropiezo breve durante un reinicio. Esto importa
+  sobre todo cuando la temperatura interior es ilegible, porque entonces el director
   deja en paz un aparato en marcha y ese aparato mantiene su unidad exterior en
   su tarea.
 - **Un rol que pide un modo que el aparato no puede ejecutar** también aparece
@@ -990,15 +1009,15 @@ un mensaje legible sin plantillas; `reason` sigue siendo la palabra de filtro y
   omite para refrigerar, y desde fuera eso parece una habitación sin necesidad.
   Comprueba el rol en *Configurar*, o los `hvac_modes` del aparato en
   *Herramientas de desarrollo*.
-- **Un aparato que no ejecuta su orden** se avisa a sí mismo al cabo de unos
+- **Un aparato que no ejecuta su orden** genera un aviso al cabo de unos
   diez minutos. El director lleva todo ese tiempo pidiendo lo mismo y el aparato
   sigue notificando otra cosa: la llamada se acepta y no pasa nada, o el aparato
   se vuelve a poner como estaba. Comprueba si el aparato está accesible, si
   acepta el modo, y si algo más lo devuelve a su sitio: un programa del
   termostato u otra automatización. En modo sombra este aviso no aparece nunca:
   ahí no se ejecuta nada a propósito.
-- **Un estado guardado que hubo que apartar** también se avisa bajo
-  *Reparaciones*. En ese archivo están las peticiones de preacondicionamiento en
+- **Un estado guardado que hubo que apartar** también aparece como aviso en
+  *Reparaciones*. En el archivo de almacenamiento están las peticiones de preacondicionamiento en
   curso y los aparatos que apagaste a mano. Si resulta ilegible, se renombra y
   el director empieza con un estado vacío: esas peticiones y apagados se
   pierden, el resto de tu instalación no. Para recuperarlos, restaura el archivo
@@ -1009,24 +1028,45 @@ un mensaje legible sin plantillas; `reason` sigue siendo la palabra de filtro y
 
 En **Reparaciones** puedes encontrarte con estos avisos, con lo que significan y lo que puedes hacer:
 
-- **Climate Director: <count> abertura(s) de <name> están puenteadas mientras están abiertas** — has puenteado una abertura mientras está realmente abierta; cierra la abertura o desactiva el puenteo.
-- **Climate Director: <count> aparato(s) de <name> no ejecutan su orden** — un aparato acepta la llamada pero no cambia; comprueba que sea accesible y que nada lo devuelva a su estado anterior.
-- **Climate Director: <name> tuvo que apartar su estado guardado** — el archivo de estado era ilegible y se ha renombrado; las peticiones y los ajustes manuales anteriores al reinicio se han perdido, restaura el archivo desde una copia si los necesitas.
-- **Climate Director: <name> tiene un problema de configuración** — la instalación no es correcta; las zonas que sí lo son siguen regulándose, así que revisa la configuración.
-- **Climate Director: <name> tiene tareas manuales** — una zona solo tiene fuentes que nunca arrancan solas; activa *Inicio automático* o confirma el aviso.
-- **Nadie escucha una petición de preacondicionamiento rechazada** — ninguna automatización escucha el evento de rechazo; importa el blueprint *Preacondicionamiento rechazado* (`precondition_refused.yaml`) y crea una automatización.
-- **Climate Director: <name> fija una estación que excluye <count> tarea(s)** — la estación está puesta en una en la que una tarea configurada nunca puede funcionar; cambia la estación o la tarea.
-- **Climate Director: <name> no puede leer <count> entidad(es)** — una entidad configurada no existe, se ha ido o no da un número; corrige la entidad o recupera el sensor.
-- **Climate Director: <name> pide un modo que <count> aparato(s) no pueden ejecutar** — un rol pide un modo que el aparato no declara; cambia el rol o elige otro aparato.
+- **Climate Director: <count> abertura(s) de <name> están puenteadas mientras están abiertas**
+  — has puenteado una abertura mientras está realmente abierta; cierra la
+  abertura o desactiva el puenteo.
+- **Climate Director: <count> aparato(s) de <name> no ejecutan su orden**
+  — un aparato acepta la llamada pero no cambia; comprueba que sea accesible y
+  que nada lo devuelva a su estado anterior.
+- **Climate Director: <name> tuvo que apartar su estado guardado**
+  — el archivo de estado era ilegible y se ha renombrado; las peticiones y los
+  ajustes manuales anteriores al reinicio se han perdido, restaura el archivo
+  desde una copia si los necesitas.
+- **Climate Director: <name> tiene un problema de configuración**
+  — la instalación no es correcta; las zonas que sí lo son siguen regulándose,
+  así que revisa la configuración.
+- **Climate Director: <name> tiene tareas manuales**
+  — una zona solo tiene fuentes que nunca arrancan solas; activa *Inicio
+  automático* o confirma el aviso.
+- **Nadie escucha una petición de preacondicionamiento rechazada**
+  — ninguna automatización escucha el evento de rechazo; importa el blueprint
+  *Preacondicionamiento rechazado* (`precondition_refused.yaml`) y crea una
+  automatización.
+- **Climate Director: <name> fija una estación que excluye <count> tarea(s)**
+  — la estación está puesta en una en la que una tarea configurada nunca puede
+  funcionar; cambia la estación o la tarea.
+- **Climate Director: <name> no puede leer <count> entidad(es)**
+  — una entidad configurada no existe, se ha ido o no da un número; corrige la
+  entidad o recupera el sensor.
+- **Climate Director: <name> pide un modo que <count> aparato(s) no pueden ejecutar**
+  — un rol pide un modo que el aparato no declara; cambia el rol o elige otro
+  aparato.
 
 ## Limitaciones conocidas
 
 - El modo sombra existe para que el director observe primero tu instalación
   unas semanas antes de poder conmutar nada. Juzga cada ronda con la prueba en
   modo sombra: lo que está probado en una casa aún no lo está en la tuya.
-- Un aparato **sin circuito** puede tener su propio tiempo de reposo
-  (`min_cycle_time` por fuente). No se rellena solo: ajústalo a mano en
-  cada fuente sin circuito.
+- Un aparato **sin circuito** puede tener su propio tiempo de reposo: el campo
+  **Descanso antes de que este aparato pueda reiniciarse (segundos)**
+  (`min_cycle_time` por fuente). No se rellena solo: ajústalo a mano en cada
+  fuente sin circuito.
 - Un sensor interior por zona: toda la zona sigue esa única lectura.
 - El modo Dry no es una tarea propia del director.
 - La lluvia cuenta como sí/no: no hay umbral.
@@ -1049,74 +1089,17 @@ porque el texto de arriba no las nombra todas literalmente.
 
 | Palabra | Pantalla |
 |---|---|
-| Cuando termines aquí | Circuito de climatización |
-| Descanso antes de que una unidad pueda rearrancar (segundos) | Circuito de climatización |
 | Eliminar este circuito | Circuito de climatización |
-| Número máximo de unidades funcionando a la vez | Circuito de climatización |
-| Pausa al cambiar de tarea (segundos) | Circuito de climatización |
-| Regla de conflicto | Circuito de climatización |
-| Tiempo mínimo antes de cambiar de tarea (segundos) | Circuito de climatización |
-| Una zona que pierde puede mover aire | Circuito de climatización |
-| Cuando termines aquí | Prioridades en {circuit} |
-| Cuando termines aquí | Prioridad de {zone} |
-| Prioridad en este circuito | Prioridad de {zone} |
-| Cuando termines aquí | Circuitos de climatización |
-| Aparatos de este grupo | Grupo exclusivo |
-| Cuando termines aquí | Grupo exclusivo |
 | Eliminar este grupo | Grupo exclusivo |
-| Cuando termines aquí | Grupos exclusivos |
-| Cuando termines aquí | Fuente de calor compartida |
 | Eliminar esta fuente de calor | Fuente de calor compartida |
-| Entidad climate | Fuente de calor compartida |
-| Zonas a las que sirve | Fuente de calor compartida |
-| Cuando termines aquí | Fuentes de calor compartidas |
 | Fuente de calor | Fuentes de calor compartidas |
-| Cuando termines aquí | Abertura |
 | Eliminar esta abertura | Abertura |
-| Retardo antes de suspender (segundos) | Abertura |
 | Abertura | Puertas y ventanas |
-| Cuando termines aquí | Puertas y ventanas |
-| Cuando termines aquí | Franja de silencio |
-| Días en que se aplica | Franja de silencio |
 | Eliminar esta franja | Franja de silencio |
-| Silencio desde | Franja de silencio |
-| Silencio hasta | Franja de silencio |
-| Cuando termines aquí | Residente |
-| El sensor de sueño cuenta desde | Residente |
-| El sensor de sueño cuenta hasta | Residente |
 | Eliminar este residente | Residente |
-| Cuando termines aquí | Residentes |
-| Cuando termines aquí | Ajustes generales |
-| Modo invitados desde | Ajustes generales |
-| Modo invitados hasta | Ajustes generales |
-| Origen de la estación | Ajustes generales |
-| Palabra que indica vacaciones | Ajustes generales |
-| Tiempo máximo de preacondicionamiento (minutos) | Ajustes generales |
-| Zona se considera atascada tras (minutos) | Ajustes generales |
-| Cuando termines aquí | Fuente |
-| Descanso antes de que este aparato pueda reiniciarse (segundos) | Fuente |
 | Eliminar esta fuente | Fuente |
-| Entidad climate | Fuente |
-| Esperar este tiempo antes de asumir el relevo (minutos) | Fuente |
-| Lo que puede hacer este aparato | Fuente |
-| Usar a partir de esta temperatura exterior | Fuente |
-| Cuando termines aquí | Fuentes de {zone} |
-| Cuando termines aquí | Horario |
-| Desde | Horario |
 | Eliminar este horario | Horario |
-| Cuando termines aquí | Horarios de {resident} |
-| Banda muerta de calefacción | Zona |
-| Banda muerta de refrigeración | Zona |
-| Cuando termines aquí | Zona |
 | Eliminar esta zona | Zona |
-| Empezar a calentar en | Zona |
-| Empezar a enfriar en | Zona |
-| Estado que significa ocupada | Zona |
-| Seguir contando como ocupada durante (segundos) | Zona |
-| Sensor de presencia de esta zona | Zona |
-| Temperatura objetivo al calentar | Zona |
-| Temperatura objetivo al enfriar | Zona |
-| Cuando termines aquí | Zonas |
 
 ## Idiomas
 

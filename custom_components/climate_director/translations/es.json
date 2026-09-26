@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Climate Director",
-        "description": "Crea una instalación. Las zonas, las fuentes y los circuitos frigoríficos se añaden después, en Configurar.",
+        "description": "Crea una instalación. Las zonas, las fuentes y los circuitos de climatización se añaden después, en Configurar.",
         "data": {
           "name": "Nombre",
           "shadow_mode": "Modo sombra"
@@ -75,7 +75,7 @@
           "guest_start": "El modo invitados solo sostiene la casa entre estas horas. Deja ambas vacías para que se aplique todo el día. Fuera de ellas vuelven a mandar las puertas ordinarias, de modo que un interruptor olvidado no funcione toda la noche.",
           "guest_end": "El modo invitados solo sostiene la casa entre estas horas. Deja ambas vacías para que se aplique todo el día. Fuera de ellas vuelven a mandar las puertas ordinarias, de modo que un interruptor olvidado no funcione toda la noche.",
           "max_precondition": "Una petición no se olvida, solo se teclea mal. Este techo evita que una errata caliente una casa vacía toda la tarde. Pedir más tiempo acorta la petición en lugar de rechazarla.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
           "stuck_after": "Una pausa al cambiar de tarea debe durar segundos. Una zona que sigue en ella pasado este tiempo ya no espera, está atascada, y desde fuera eso se parece exactamente a no hacer nada. Mantenlo bien por encima de tu pausa más larga; una falsa alarma enseña a ignorar la alarma. Cero apaga el sensor.",
           "precipitation_source": "Una entidad meteorológica o un sensor de precipitaciones. Mientras informe de uno de los estados de abajo, el límite de «abrir una ventana» por zona se omite. Déjalo vacío para que la regla ordinaria se aplique siempre.",
           "precipitation_states": "Separados por comas. Para una entidad meteorológica son sus condiciones; para un sensor, sus estados. El valor por defecto cubre lluvia, nieve y granizo.",
@@ -92,7 +92,7 @@
         },
         "data_description": {
           "zone": "Elige una para cambiarla, o añade una nueva.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "zone": {
@@ -142,7 +142,7 @@
           "cool_outdoor_min": "Por debajo de esta temperatura exterior la refrigeración sigue apagada. Déjalo vacío para no poner límite.",
           "cool_summer_only": "Ata la refrigeración a la estación definida en Ajustes generales.",
           "gate": "'household' sigue el horario, el sueño y si hay alguien en casa; un sensor de presencia lo estrecha después. 'presence' deja que la habitación decida sola, de modo que una habitación ocupada anula el horario, que es lo que necesita una habitación de uso ocasional. Elegirlo exige un sensor de presencia.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "sources": {
@@ -154,12 +154,12 @@
         },
         "data_description": {
           "source": "Elige una para cambiarla, o añade una nueva.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "source": {
         "title": "Fuente",
-        "description": "La ventana exterior es lo que separa una caldera de una bomba de calor. Dos ventanas contiguas se encuentran exactamente, así que ninguna temperatura exterior cae entre ellas.",
+        "description": "La franja exterior es lo que separa una caldera de una bomba de calor. Dos franjas contiguas se encuentran exactamente, así que ninguna temperatura exterior cae entre ellas.",
         "data": {
           "name": "Nombre",
           "entity_id": "Entidad climate",
@@ -183,7 +183,7 @@
           "role": "Si este aparato puede calentar, enfriar, o ambas cosas. Una caldera solo calienta.",
           "delete": "Saca la fuente de esta zona. El aparato en sí queda intacto.",
           "autostart": "Desactivado lo deja en paz: el director nunca lo enciende, y solo lo apaga si realiza una tarea que la unidad exterior compartida no permite. Para un aparato que enciendes tú y quieres dejar como está.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
           "min_cycle_time": "Solo retrasa el arranque, nunca la parada. Solo se aplica cuando el aparato no está en ningún circuito; en un circuito cuenta el descanso de ese circuito. Dejarlo vacío significa que no hay descanso propio.",
           "covers_zones": "Las habitaciones que este aparato calienta o enfría de paso en cuanto funciona. Vacío significa solo esta zona. Si una fuente de ese ámbito queda inalcanzable, este aparato asume la tarea y en todo ese ámbito nada más calienta ni enfría. El mismo aparato bajo varias habitaciones comparte un solo ámbito, así que rellenarlo una vez basta.",
           "takeover_delay": "Cuánto tiempo debe llevar inalcanzable una fuente del ámbito antes de que este aparato asuma el relevo. Se cuenta desde el momento en que quedó inalcanzable, para que una integración inestable no encienda el quemador cada pocos minutos. Cero asume el relevo de inmediato, y un momento ilegible también."
@@ -198,7 +198,7 @@
         },
         "data_description": {
           "circuit": "Elige uno para cambiarlo, o añade uno nuevo.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "circuit": {
@@ -228,7 +228,7 @@
           "min_family_switch_interval": "Evita que una zona arrastre el compresor de un lado a otro entre calentar y enfriar.",
           "max_concurrent_units": "Para una unidad exterior que no puede con todas sus unidades interiores a la vez. Déjalo vacío para no poner límite.",
           "delete": "Elimina el circuito. Las unidades siguen funcionando; simplemente dejan de estar atadas entre sí.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "circuit_priorities": {
@@ -240,7 +240,7 @@
         },
         "data_description": {
           "zone": "Elige una para cambiar su prioridad, o vuelve atrás.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "circuit_priority": {
@@ -251,7 +251,7 @@
         },
         "data_description": {
           "priority": "El número más bajo gana el circuito. Las zonas que comparten número se separan por su nombre.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "generators": {
@@ -263,7 +263,7 @@
         },
         "data_description": {
           "generator": "Elige una para cambiarla, o añade una nueva.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "generator": {
@@ -283,19 +283,19 @@
           "zone_ids": "Déjalo vacío para todas las habitaciones.",
           "setpoint": "Déjalo vacío para seguir la consigna más alta entre las habitaciones que piden. Tomar la más baja dejaría corta a la que más pide.",
           "delete": "Elimina la fuente de calor; las válvulas siguen funcionando por su cuenta.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "residents": {
         "title": "Residentes",
-        "description": "Déjalo vacío para un edificio donde no se sigue a nadie; las puertas de presencia se omiten entonces en lugar de bloquear para siempre.",
+        "description": "Déjalo vacío para un edificio donde no se sigue a nadie; las barreras de presencia se omiten entonces en lugar de bloquear para siempre.",
         "data": {
           "resident": "Residente",
           "when_done": "Cuando termines aquí"
         },
         "data_description": {
           "resident": "Elige uno para cambiarlo, o añade uno nuevo.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "resident": {
@@ -309,7 +309,7 @@
           "when_done": "Cuando termines aquí",
           "sleep_from": "El sensor de sueño cuenta desde",
           "sleep_until": "El sensor de sueño cuenta hasta",
-          "sleep_days": "Días de la ventana de sueño",
+          "sleep_days": "Días de la franja de sueño",
           "wake_by": "Esperar a esta persona dormida hasta",
           "wake_days": "Días en los que se espera",
           "wake_holiday": "Esperar a esta persona también en días de vacaciones",
@@ -323,14 +323,14 @@
           "name": "Un nombre, para distinguir residentes.",
           "presence_entity": "Normalmente una entidad person. Indica si este residente está en casa.",
           "delete": "Elimina al residente junto con sus horarios.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
           "sleep_from": "Un teléfono en el cargador a las tres de la tarde no significa que alguien se acueste. Entre estas horas el sensor de sueño cuenta; fuera de ellas un cargador es solo un cargador. Deja ambas vacías para que valga a todas horas.",
           "sleep_until": "Un teléfono en el cargador a las tres de la tarde no significa que alguien se acueste. Entre estas horas el sensor de sueño cuenta; fuera de ellas un cargador es solo un cargador. Deja ambas vacías para que valga a todas horas.",
-          "sleep_days": "Déjalo vacío para todos los días. Una ventana que cruza la medianoche se ancla en el día en que empieza: una ventana del viernes 23:00-09:00 sigue contando el sábado a las 07:00.",
+          "sleep_days": "Déjalo vacío para todos los días. Una franja que cruza la medianoche se ancla en el día en que empieza: una franja del viernes 23:00-09:00 sigue contando el sábado a las 07:00.",
           "wake_by": "Si alguien está levantado mientras este residente sigue durmiendo en casa, la casa espera. Pasada esta hora ya no: entonces sigue a quien esté levantado. Déjalo vacío para que este residente no retenga a nadie.",
           "wake_days": "Déjalo vacío para todos los días.",
           "wake_holiday": "Un día de vacaciones cuenta como sábado para los horarios, pero no para esta hora: el día libre de uno es el día laboral del otro, y quien se levanta tarde retendría la casa mientras alguien trabaja. Marca esto si quieres que también te esperen en un día de vacaciones: entonces la hora se aplica cualquier día de la semana.",
-          "sleep_in_until": "La ventana de sueño es la noche: apaga la casa a la hora de acostarse. Esto solo alarga la mañana, en los días de abajo, para que el sensor de sueño siga contando mientras sigues en la cama. Déjalo vacío y la ventana de sueño lo dice todo.",
+          "sleep_in_until": "La franja de sueño es la noche: apaga la casa a la hora de acostarse. Esto solo alarga la mañana, en los días de abajo, para que el sensor de sueño siga contando mientras sigues en la cama. Déjalo vacío y la franja de sueño lo dice todo.",
           "sleep_in_days": "Estas son las mañanas en las que duermes hasta tarde, no las noches anteriores. Déjalo vacío para todos los días.",
           "sleep_in_holiday": "En cada día que marque tu calendario de vacaciones, sea cual sea el día de la semana. Así configuras dormir hasta tarde una sola vez."
         }
@@ -344,7 +344,7 @@
         },
         "data_description": {
           "window": "Elige uno para cambiarlo, añade uno, o vuelve al menú.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "window": {
@@ -360,11 +360,11 @@
         },
         "data_description": {
           "weekdays": "Déjalo vacío para todos los días.",
-          "end": "Esta hora cae fuera de la ventana, de modo que dos ventanas seguidas enlazan exactamente.",
-          "start": "Esta hora cae dentro de la ventana.",
+          "end": "Esta hora cae fuera de la franja, de modo que dos franjas seguidas enlazan exactamente.",
+          "start": "Esta hora cae dentro de la franja.",
           "delete": "Elimina este horario.",
           "holiday": "Una franja de vacaciones solo se aplica con el horario de vacaciones activo, y entonces sustituye a las franjas ordinarias. Sus días de la semana no cuentan. Sin ella, un día de vacaciones cuenta como un sábado.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "openings": {
@@ -377,7 +377,7 @@
         },
         "data_description": {
           "opening": "Elige una para cambiarla, o añade una nueva.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
           "house_wide_openings": "Estos se detienen en cuanto cualquier abertura de la instalación queda abierta, esté donde esté. Pensado para una caldera que comparten todas las zonas: vincular esa abertura a todas las zonas detendría también los aires acondicionados de esas habitaciones, todo el año. Déjalo vacío para que todo siga regulado por zona. Una zona con anulación y una fuente manual siguen intactas, como siempre."
         }
       },
@@ -398,7 +398,7 @@
           "entity_id": "El contacto de puerta, ventana o claraboya. Qué estado significa abierto se ajusta debajo.",
           "open_state": "El estado que cuenta como abierto. Para un contacto de ventana suele ser 'on'; para una claraboya o persiana, 'open'.",
           "delete": "Elimina la abertura; deja de suspender nada.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
           "name": "Un nombre, para distinguir aberturas."
         }
       },
@@ -421,7 +421,7 @@
         },
         "data_description": {
           "group": "Elige uno para modificar, o añade uno.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "exclusive": {
@@ -435,12 +435,12 @@
         "data_description": {
           "sources": "Solo uno de ellos puede funcionar a la vez. Menos de dos no es un grupo.",
           "delete": "Elimina el grupo. Los aparatos siguen funcionando; solo dejan de excluirse.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       },
       "quiets": {
         "title": "Franjas de silencio",
-        "description": "Horas en las que el director no arranca nada por su cuenta. Llegar a casa a las once de la noche cuando te vas a acostar no obliga a calentar la casa.\n\nEsto frena el arranque, no la continuación: lo que ya funciona sigue regulado y se apaga al acostarse como siempre, y lo que enciendes tú se recoge y se sigue regulando. Sin franjas el freno está suelto. Se frena a quien llega a casa después del inicio de la franja; quien ya estaba hace funcionar la casa - y los invitados dentro de la ventana de invitados también.",
+        "description": "Horas en las que el director no arranca nada por su cuenta. Llegar a casa a las once de la noche cuando te vas a acostar no obliga a calentar la casa.\n\nEsto frena el arranque, no la continuación: lo que ya funciona sigue regulado y se apaga al acostarse como siempre, y lo que enciendes tú se recoge y se sigue regulando. Sin franjas el freno está suelto. Se frena a quien llega a casa después del inicio de la franja; quien ya estaba hace funcionar la casa - y los invitados dentro de la franja de invitados también.",
         "data": {
           "quiet": "Franja"
         },
@@ -450,7 +450,7 @@
       },
       "quiet": {
         "title": "Franja de silencio",
-        "description": "Horas en las que el director no arranca nada por su cuenta. Llegar a casa a las once de la noche cuando te vas a acostar no obliga a calentar la casa.\n\nEsto frena el arranque, no la continuación: lo que ya funciona sigue regulado y se apaga al acostarse como siempre, y lo que enciendes tú se recoge y se sigue regulando. Sin franjas el freno está suelto. Se frena a quien llega a casa después del inicio de la franja; quien ya estaba hace funcionar la casa - y los invitados dentro de la ventana de invitados también.",
+        "description": "Horas en las que el director no arranca nada por su cuenta. Llegar a casa a las once de la noche cuando te vas a acostar no obliga a calentar la casa.\n\nEsto frena el arranque, no la continuación: lo que ya funciona sigue regulado y se apaga al acostarse como siempre, y lo que enciendes tú se recoge y se sigue regulando. Sin franjas el freno está suelto. Se frena a quien llega a casa después del inicio de la franja; quien ya estaba hace funcionar la casa - y los invitados dentro de la franja de invitados también.",
         "data": {
           "start": "Silencio desde",
           "end": "Silencio hasta",
@@ -463,8 +463,8 @@
           "start": "Entre estas horas el director no arranca nada por su cuenta, salvo para quien ya estaba en casa cuando empezó la franja. Una franja puede cruzar la medianoche: de 21:00 a 09:00 es la noche.",
           "end": "Entre estas horas el director no arranca nada por su cuenta, salvo para quien ya estaba en casa cuando empezó la franja. Una franja puede cruzar la medianoche: de 21:00 a 09:00 es la noche.",
           "weekdays": "Dejarlo vacío vale todos los días.",
-          "delete": "Elimina esta ventana, de modo que el director pueda volver a empezar algo durante esas horas.",
-          "when_done": "Si eliges descartar, sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
+          "delete": "Elimina esta franja, de modo que el director pueda volver a empezar algo durante esas horas.",
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
           "holiday": "Una franja de vacaciones solo se aplica con el horario de vacaciones activo, y entonces sustituye a las franjas ordinarias. Sus días de la semana no cuentan. Sin ella, un día de vacaciones cuenta como un sábado."
         }
       }
@@ -518,7 +518,7 @@
     },
     "opening_list": {
       "options": {
-        "add_new": "+ Añadir apertura",
+        "add_new": "+ Añadir abertura",
         "back_to_menu": "← Volver al menú principal"
       }
     },
@@ -857,10 +857,10 @@
       "message": "{zone} sigue adelante, ignorando {openings}. Ahora {indoor}: esta habitación no puede hacer nada en este momento, así que no pasa nada."
     },
     "quiet_covers_the_day": {
-      "message": "Las ventanas de silencio dejan menos de {minutes} minutos en {days} día(s), y nadie tiene un horario que las supere. Esos días no puede arrancar nada por sí solo. Una ventana de silencio es lo contrario de un horario: dice cuándo no debe empezar nada."
+      "message": "Las franjas de silencio dejan menos de {minutes} minutos en {days} día(s), y nadie tiene un horario que las supere. Esos días no puede arrancar nada por sí solo. Una franja de silencio es lo contrario de un horario: dice cuándo no debe empezar nada."
     },
     "switch_timings_without_a_switch": {
-      "message": "El circuito {circuit} puede hacer ambas funciones a la vez, así que nunca cambia de función. Su pausa de conmutación y su tiempo mínimo antes de cambiar no se aplican nunca. El tiempo anticiclado y el límite de capacidad sí funcionan."
+      "message": "El circuito {circuit} puede hacer ambas funciones a la vez, así que nunca cambia de función. Su pausa de conmutación y su tiempo mínimo antes de cambiar no se aplican nunca. El tiempo de descanso y el límite de capacidad sí funcionan."
     },
     "house_wide_without_openings": {
       "message": "{entity} debe detenerse en cuanto haya una abertura abierta, pero la instalación no tiene ninguna abertura, así que nunca puede detenerse nada."
@@ -893,7 +893,7 @@
       "message": "La zona {zone} empieza a enfriar en el punto donde empieza a calentar o por debajo, así que ambas tareas piden la misma habitación a la vez."
     },
     "source_window_admits_nothing": {
-      "message": "La fuente {source} tiene una ventana exterior que no admite nada y nunca podrá funcionar."
+      "message": "La fuente {source} tiene una franja exterior que no admite nada y nunca podrá funcionar."
     },
     "source_outdoor_without_sensor": {
       "message": "La fuente {source} está limitada por la temperatura exterior, pero no hay sensor exterior configurado."
@@ -902,7 +902,7 @@
       "message": "La zona {zone} tiene una histéresis de {mode} negativa."
     },
     "zone_window_admits_nothing": {
-      "message": "La zona {zone} tiene una ventana exterior de {mode} que no admite nada."
+      "message": "La zona {zone} tiene una franja exterior de {mode} que no admite nada."
     },
     "season_excludes_mode": {
       "message": "La zona {zone} solo puede {mode} en {allowed}, pero la estación está fijada en {season}."
@@ -914,7 +914,7 @@
       "message": "La banda muerta exterior no es un número finito."
     },
     "zero_outdoor_deadband_no_circuit": {
-      "message": "El aparato {entity} tiene una ventana exterior acotada y no está en ningún circuito; con la banda muerta exterior a cero, nada frena su quemador."
+      "message": "El aparato {entity} tiene una franja exterior acotada y no está en ningún circuito; con la banda muerta exterior a cero, nada frena su quemador."
     },
     "zone_outdoor_without_sensor": {
       "message": "La zona {zone} limita {mode} por la temperatura exterior, pero no hay sensor exterior configurado."
@@ -938,13 +938,13 @@
       "message": "La abertura {opening} tiene un retardo negativo."
     },
     "schedule_gate_without_schedules": {
-      "message": "La puerta de horario está activada pero nadie tiene horario, así que nada puede arrancar nunca."
+      "message": "La barrera de horario está activada pero nadie tiene horario, así que nada puede arrancar nunca."
     },
     "negative_stuck_time": {
       "message": "El tiempo de detección de bloqueo es negativo."
     },
     "stuck_after_below_opening_rest": {
-      "message": "El tiempo de detección de bloqueo es más corto que el reposo de apertura integrado, por lo que este puede dar falsas alarmas de bloqueo."
+      "message": "El tiempo de detección de bloqueo es más corto que el reposo de abertura integrado, por lo que este puede dar falsas alarmas de bloqueo."
     },
     "negative_outdoor_deadband": {
       "message": "La banda muerta de temperatura exterior es negativa."

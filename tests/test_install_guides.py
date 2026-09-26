@@ -205,90 +205,17 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.zone.data.delete": ("Diese Zone löschen"),
     },
     "es": {
-        "options.step.circuit.data.allow_fan_only_during_conflict": (
-            "Una zona que pierde puede mover aire"
-        ),
-        "options.step.circuit.data.conflict_policy": ("Regla de conflicto"),
         "options.step.circuit.data.delete": ("Eliminar este circuito"),
-        "options.step.circuit.data.family_switch_delay": ("Pausa al cambiar de tarea (segundos)"),
-        "options.step.circuit.data.max_concurrent_units": (
-            "Número máximo de unidades funcionando a la vez"
-        ),
-        "options.step.circuit.data.min_cycle_time": (
-            "Descanso antes de que una unidad pueda rearrancar (segundos)"
-        ),
-        "options.step.circuit.data.min_family_switch_interval": (
-            "Tiempo mínimo antes de cambiar de tarea (segundos)"
-        ),
-        "options.step.circuit.data.when_done": ("Cuando termines aquí"),
-        "options.step.circuit_priorities.data.when_done": ("Cuando termines aquí"),
-        "options.step.circuit_priority.data.priority": ("Prioridad en este circuito"),
-        "options.step.circuit_priority.data.when_done": ("Cuando termines aquí"),
-        "options.step.circuits.data.when_done": ("Cuando termines aquí"),
         "options.step.exclusive.data.delete": ("Eliminar este grupo"),
-        "options.step.exclusive.data.sources": ("Aparatos de este grupo"),
-        "options.step.exclusive.data.when_done": ("Cuando termines aquí"),
-        "options.step.exclusives.data.when_done": ("Cuando termines aquí"),
         "options.step.generator.data.delete": ("Eliminar esta fuente de calor"),
-        "options.step.generator.data.entity_id": ("Entidad climate"),
-        "options.step.generator.data.when_done": ("Cuando termines aquí"),
-        "options.step.generator.data.zone_ids": ("Zonas a las que sirve"),
         "options.step.generators.data.generator": ("Fuente de calor"),
-        "options.step.generators.data.when_done": ("Cuando termines aquí"),
-        "options.step.opening.data.delay": ("Retardo antes de suspender (segundos)"),
         "options.step.opening.data.delete": ("Eliminar esta abertura"),
-        "options.step.opening.data.when_done": ("Cuando termines aquí"),
         "options.step.openings.data.opening": ("Abertura"),
-        "options.step.openings.data.when_done": ("Cuando termines aquí"),
         "options.step.quiet.data.delete": ("Eliminar esta franja"),
-        "options.step.quiet.data.end": ("Silencio hasta"),
-        "options.step.quiet.data.start": ("Silencio desde"),
-        "options.step.quiet.data.weekdays": ("Días en que se aplica"),
-        "options.step.quiet.data.when_done": ("Cuando termines aquí"),
         "options.step.resident.data.delete": ("Eliminar este residente"),
-        "options.step.resident.data.sleep_from": ("El sensor de sueño cuenta desde"),
-        "options.step.resident.data.sleep_until": ("El sensor de sueño cuenta hasta"),
-        "options.step.resident.data.when_done": ("Cuando termines aquí"),
-        "options.step.residents.data.when_done": ("Cuando termines aquí"),
-        "options.step.settings.data.guest_end": ("Modo invitados hasta"),
-        "options.step.settings.data.guest_start": ("Modo invitados desde"),
-        "options.step.settings.data.holiday_keyword": ("Palabra que indica vacaciones"),
-        "options.step.settings.data.max_precondition": (
-            "Tiempo máximo de preacondicionamiento (minutos)"
-        ),
-        "options.step.settings.data.season_source": ("Origen de la estación"),
-        "options.step.settings.data.stuck_after": ("Zona se considera atascada tras (minutos)"),
-        "options.step.settings.data.when_done": ("Cuando termines aquí"),
         "options.step.source.data.delete": ("Eliminar esta fuente"),
-        "options.step.source.data.entity_id": ("Entidad climate"),
-        "options.step.source.data.min_cycle_time": (
-            "Descanso antes de que este aparato pueda reiniciarse (segundos)"
-        ),
-        "options.step.source.data.outdoor_min": ("Usar a partir de esta temperatura exterior"),
-        "options.step.source.data.role": ("Lo que puede hacer este aparato"),
-        "options.step.source.data.takeover_delay": (
-            "Esperar este tiempo antes de asumir el relevo (minutos)"
-        ),
-        "options.step.source.data.when_done": ("Cuando termines aquí"),
-        "options.step.sources.data.when_done": ("Cuando termines aquí"),
         "options.step.window.data.delete": ("Eliminar este horario"),
-        "options.step.window.data.start": ("Desde"),
-        "options.step.window.data.when_done": ("Cuando termines aquí"),
-        "options.step.windows.data.when_done": ("Cuando termines aquí"),
-        "options.step.zone.data.cool_hysteresis": ("Banda muerta de refrigeración"),
-        "options.step.zone.data.cool_start_at": ("Empezar a enfriar en"),
-        "options.step.zone.data.cool_target": ("Temperatura objetivo al enfriar"),
         "options.step.zone.data.delete": ("Eliminar esta zona"),
-        "options.step.zone.data.heat_hysteresis": ("Banda muerta de calefacción"),
-        "options.step.zone.data.heat_start_at": ("Empezar a calentar en"),
-        "options.step.zone.data.heat_target": ("Temperatura objetivo al calentar"),
-        "options.step.zone.data.presence_entity": ("Sensor de presencia de esta zona"),
-        "options.step.zone.data.presence_state": ("Estado que significa ocupada"),
-        "options.step.zone.data.presence_timeout": (
-            "Seguir contando como ocupada durante (segundos)"
-        ),
-        "options.step.zone.data.when_done": ("Cuando termines aquí"),
-        "options.step.zones.data.when_done": ("Cuando termines aquí"),
     },
     "fr": {
         "options.step.circuit.data.delete": ("Supprimer ce circuit"),
