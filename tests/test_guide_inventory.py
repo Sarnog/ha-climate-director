@@ -30,16 +30,21 @@ demands per label that it stands in the text. That work is not redone here.
 
 Dekking: de zichtbare inventaris uit `icons.json`, `services.yaml` en
 `problems.py`, met de vertaalde namen uit `translations/<taal>.json`, tegen de
-zes gidsen. Niet gedekt: de velden en labels van de options-flowschermen
+zes gidsen. Van een melding telt de titel mee als hij in een alinea staat met
+genoeg tekst erachter, en de vervolgregels van een afgebroken bullet tellen
+daarbij mee. Niet gedekt: de velden en labels van de options-flowschermen
 (`tests/test_install_guides.py`), het dashboardvoorbeeld
-(`tests/test_guide_dashboard.py`) en de inhoudsopgave (`tests/test_guide_toc.py`).
+(`tests/test_guide_dashboard.py`), de inhoudsopgave (`tests/test_guide_toc.py`)
+en de vraag of de uitleg zelf klopt.
 
 Coverage: the visible inventory from `icons.json`, `services.yaml` and
 `problems.py`, with the translated names from `translations/<language>.json`,
-against the six guides. Not covered: the fields and labels of the options-flow
+against the six guides. For a notice, the title counts when it stands in a
+paragraph with enough text behind it, and the continuation lines of a wrapped
+bullet count along. Not covered: the fields and labels of the options-flow
 screens (`tests/test_install_guides.py`), the dashboard example
-(`tests/test_guide_dashboard.py`) and the table of contents
-(`tests/test_guide_toc.py`).
+(`tests/test_guide_dashboard.py`), the table of contents
+(`tests/test_guide_toc.py`) and whether the explanation itself is right.
 """
 
 from __future__ import annotations
@@ -150,13 +155,13 @@ def _notice_title(language: str, key: str) -> str:
     return MARKER.sub(lambda match: f"<{match.group(0)[1:-1]}>", BRAND.sub("", title))
 
 
-#: Hoeveel tekens er ná de titel op dezelfde regel moeten staan voordat het een
+#: Hoeveel tekens er ná de titel in dezelfde alinea moeten staan voordat het een
 #: uitleg is en geen kale titelopsomming. De titel zelf is per taal 30-80 tekens;
 #: de uitleg erachter is in elke taal ruim langer dan dit.
 #:
-#: How many characters must stand after the title on the same line before it
-#: counts as an explanation rather than a bare title list. The title itself is
-#: 30-80 characters per language; the explanation behind it is comfortably
+#: How many characters must stand after the title in the same paragraph before
+#: it counts as an explanation rather than a bare title list. The title itself
+#: is 30-80 characters per language; the explanation behind it is comfortably
 #: longer than this in every language.
 MIN_EXPLANATION = 25
 
@@ -165,25 +170,68 @@ MIN_EXPLANATION = 25
 #: Characters that are not explanation: the markdown emphasis and the separator.
 DECORATION = " \t*_—–-.:;،"
 
+#: Wat een nieuwe alinea begint: een opsommingsteken of een genummerd punt, en
+#: alles wat op zichzelf staat (een tabelrij of een kop).
+#:
+#: What starts a new paragraph: a bullet or a numbered item, and everything
+#: that stands on its own (a table row or a heading).
+ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s")
+OWN_LINE = re.compile(r"^\s*[|#]")
+
+
+def paragraphs(text: str) -> list[str]:
+    """Elke alinea van de tekst, met zijn vervolgregels eraan vast.
+
+    Een opsomming die over meerdere regels loopt is één alinea: de gids breekt
+    een lange bullet af op de regellengte, en dat mag de uitleg erachter niet
+    laten verdwijnen. Een tabelrij en een kop staan elk op zichzelf.
+
+    Every paragraph of the text, its continuation lines joined together. A
+    bullet that runs over several lines is one paragraph: the guide breaks a
+    long bullet on the line length, and that must not make the explanation
+    behind it disappear. A table row and a heading each stand on their own.
+    """
+    blocks: list[str] = []
+    current: list[str] = []
+
+    def flush() -> None:
+        if current:
+            blocks.append("\n".join(current))
+            current.clear()
+
+    for line in text.splitlines():
+        if not line.strip():
+            flush()
+        elif ITEM.match(line) or OWN_LINE.match(line):
+            flush()
+            current.append(line)
+        else:
+            current.append(line)
+    flush()
+    return blocks
+
 
 def _explained(text: str, needle: str) -> bool:
-    """Staat de titel ergens op een regel mét uitleg erachter?
+    """Staat de titel ergens in een alinea mét uitleg erachter?
 
     Een kale opsomming van titels is geen handleiding: de lezer weet dan nog
     niet wat een melding betekent of wat hij eraan doet. Deze functie eist dat
-    de titel op minstens één regel staat met genoeg tekst erachter.
+    de titel in minstens één alinea staat met genoeg tekst erachter; de
+    vervolgregels van die alinea tellen mee, want een lange bullet wordt op de
+    regellengte afgebroken. Een losse regel met alleen de titel telt niet.
 
-    Is the title somewhere on a line with an explanation behind it?
-
-    A bare list of titles is no manual: the reader still does not know what a
-    notice means or what to do about it. This function demands that the title
-    stands on at least one line with enough text behind it.
+    Is the title somewhere in a paragraph with an explanation behind it? A bare
+    list of titles is no manual: the reader still does not know what a notice
+    means or what to do about it. This function demands that the title stands
+    in at least one paragraph with enough text behind it; that paragraph's
+    continuation lines count, because a long bullet is broken on the line
+    length. A separate line carrying only the title does not count.
     """
-    for line in text.splitlines():
-        if needle not in line:
+    for block in paragraphs(text):
+        if needle not in block:
             continue
-        rest = line.partition(needle)[2].strip(DECORATION)
-        if len(rest) >= MIN_EXPLANATION:
+        rest = " ".join(block.partition(needle)[2].split())
+        if len(rest.strip(DECORATION)) >= MIN_EXPLANATION:
             return True
     return False
 

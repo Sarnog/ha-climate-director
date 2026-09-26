@@ -7,7 +7,8 @@ De gidsentest hiernaast meet kopjes, woorden en entiteit-id's; de blauwdrukken
 vielen daarbuiten. Deze test haalt daarom elke blauwdruknaam uit de gidstekst en
 eist dat hij in `blueprints/automation/climate_director/` staat, en hij eist dat
 de bullet over een weigering die niemand hoort naar de weigeringsblauwdruk wijst
-en niet naar de algemene beslissingsblauwdruk.
+en niet naar de algemene beslissingsblauwdruk. Die bullet mag over meerdere
+regels afgebroken zijn; de bewaking leest de hele alinea.
 
 Welke bullet dat is, komt uit de code: de meldingssleutel `UNWATCHED_ISSUE` uit
 `problems.py` (gelezen via de AST-hulp van de gidsentest) bepaalt over welke
@@ -25,7 +26,8 @@ test beside this one measures headings, words and entity ids; the blueprints fel
 outside that. This test therefore takes every blueprint name out of the guide text
 and demands that it stands in `blueprints/automation/climate_director/`, and it
 demands that the bullet about a refusal nobody hears points at the refusal
-blueprint and not at the general decision blueprint.
+blueprint and not at the general decision blueprint. That bullet may be wrapped
+over several lines; the guard reads the whole paragraph.
 
 Which bullet that is comes from the code: the notice key `UNWATCHED_ISSUE` from
 `problems.py` (read through the guide test's AST helper) determines which repair
@@ -35,14 +37,16 @@ That way no list of guides or blueprints has to be maintained: change the event
 and this demand changes with it.
 
 Dekking: elke blauwdruknaam uit de zes gidsen tegen
-`blueprints/automation/climate_director/`, en de weigeringsbullet tegen de
-blauwdruk van `EVENT_PRECONDITION_REFUSED`. Niet gedekt: de inhoud van de
+`blueprints/automation/climate_director/`, en de alinea met de weigeringsmelding
+tegen de blauwdruk van `EVENT_PRECONDITION_REFUSED` - ook als de gids die
+alinea over meerdere regels afbreekt. Niet gedekt: de inhoud van de
 blauwdrukbestanden en de overige bullets van de gidsen.
 
 Coverage: every blueprint name from the six guides against
-`blueprints/automation/climate_director/`, and the refusal bullet against the
-blueprint of `EVENT_PRECONDITION_REFUSED`. Not covered: the content of the
-blueprint files and the other bullets of the guides.
+`blueprints/automation/climate_director/`, and the paragraph carrying the
+refusal notice against the blueprint of `EVENT_PRECONDITION_REFUSED` - also
+when the guide wraps that paragraph over several lines. Not covered: the
+content of the blueprint files and the other bullets of the guides.
 """
 
 from __future__ import annotations
@@ -50,7 +54,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from test_guide_inventory import _notice_title, notice_keys
+from test_guide_inventory import _notice_title, notice_keys, paragraphs
 
 from custom_components.climate_director.const import DOMAIN, EVENT_PRECONDITION_REFUSED
 
@@ -121,12 +125,12 @@ def test_the_refusal_bullet_points_at_the_refusal_blueprint() -> None:
     problems: list[str] = []
     for language in LANGUAGES:
         title = _notice_title(language, "precondition_unwatched")
-        lines = [line for line in guide_text(language).splitlines() if title in line]
-        assert lines, f"{language}.md: de melding {title!r} staat er niet in"
-        for line in lines:
-            if f"{REFUSED_EVENT}.yaml" not in line:
+        bullets = [block for block in paragraphs(guide_text(language)) if title in block]
+        assert bullets, f"{language}.md: de melding {title!r} staat er niet in"
+        for bullet in bullets:
+            if f"{REFUSED_EVENT}.yaml" not in bullet:
                 problems.append(
-                    f"{language}.md: de bullet {title!r} noemt {REFUSED_EVENT}.yaml niet: {line}"
+                    f"{language}.md: de bullet {title!r} noemt {REFUSED_EVENT}.yaml niet: {bullet}"
                 )
     assert not problems, (
         "de weigeringsbullet wijst niet naar de blauwdruk die erbij hoort:\n" + "\n".join(problems)

@@ -194,60 +194,15 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.zone.data.presence_timeout": ("Nog zo lang als bezet tellen (seconden)"),
     },
     "de": {
-        "options.step.circuit.data.allow_fan_only_during_conflict": (
-            "Eine unterlegene Zone darf Luft umwälzen"
-        ),
         "options.step.circuit.data.delete": ("Diesen Kreis löschen"),
-        "options.step.circuit.data.family_switch_delay": ("Pause beim Aufgabenwechsel (Sekunden)"),
-        "options.step.circuit.data.max_concurrent_units": (
-            "Höchstzahl gleichzeitig laufender Geräte"
-        ),
-        "options.step.circuit.data.min_cycle_time": (
-            "Ruhezeit, bevor ein Gerät neu starten darf (Sekunden)"
-        ),
-        "options.step.circuit.data.min_family_switch_interval": (
-            "Mindestlaufzeit vor einem Aufgabenwechsel (Sekunden)"
-        ),
-        "options.step.circuit_priority.data.priority": ("Vorrang in diesem Kreis"),
         "options.step.exclusive.data.delete": ("Diese Gruppe löschen"),
-        "options.step.exclusive.data.sources": ("Geräte in dieser Gruppe"),
         "options.step.generator.data.delete": ("Diese Wärmequelle löschen"),
-        "options.step.generator.data.entity_id": ("Climate-Entität"),
-        "options.step.generator.data.zone_ids": ("Zonen, die er versorgt"),
-        "options.step.opening.data.delay": ("Verzögerung vor dem Aussetzen (Sekunden)"),
         "options.step.opening.data.delete": ("Diese Öffnung löschen"),
         "options.step.quiet.data.delete": ("Dieses Fenster löschen"),
-        "options.step.quiet.data.end": ("Ruhe bis"),
-        "options.step.quiet.data.start": ("Ruhe ab"),
-        "options.step.quiet.data.weekdays": ("Tage, an denen das gilt"),
         "options.step.resident.data.delete": ("Diesen Bewohner löschen"),
-        "options.step.resident.data.sleep_from": ("Schlafsensor zählt ab"),
-        "options.step.resident.data.sleep_state": ("Zustand, der schlafend bedeutet"),
-        "options.step.resident.data.sleep_until": ("Schlafsensor zählt bis"),
-        "options.step.settings.data.guest_end": ("Gästemodus bis"),
-        "options.step.settings.data.heating_layout": ("Heizungsanlage"),
-        "options.step.settings.data.max_precondition": ("Maximale Vorbereitungszeit (Minuten)"),
-        "options.step.settings.data.require_awake": ("Wer zu Hause ist, muss wach sein"),
-        "options.step.settings.data.season_entity": ("Jahreszeit-Entität"),
-        "options.step.settings.data.season_source": ("Herkunft der Jahreszeit"),
-        "options.step.settings.data.stuck_after": ("Zone gilt als festgefahren nach (Minuten)"),
         "options.step.source.data.delete": ("Diese Quelle löschen"),
-        "options.step.source.data.entity_id": ("Climate-Entität"),
-        "options.step.source.data.min_cycle_time": (
-            "Ruhezeit, bevor dieses Gerät erneut starten darf (Sekunden)"
-        ),
-        "options.step.source.data.takeover_delay": (
-            "So lange warten, bevor übernommen wird (Minuten)"
-        ),
         "options.step.window.data.delete": ("Diesen Zeitplan löschen"),
-        "options.step.zone.data.cool_outdoor_min": ("Nur kühlen über dieser Außentemperatur"),
-        "options.step.zone.data.cool_start_at": ("Kühlen beginnen bei"),
         "options.step.zone.data.delete": ("Diese Zone löschen"),
-        "options.step.zone.data.heat_outdoor_max": ("Nur heizen unter dieser Außentemperatur"),
-        "options.step.zone.data.heat_start_at": ("Heizen beginnen bei"),
-        "options.step.zone.data.presence_entity": ("Anwesenheitssensor dieser Zone"),
-        "options.step.zone.data.presence_state": ("Zustand, der belegt bedeutet"),
-        "options.step.zone.data.presence_timeout": ("Noch so lange als belegt zählen (Sekunden)"),
     },
     "es": {
         "options.step.circuit.data.allow_fan_only_during_conflict": (

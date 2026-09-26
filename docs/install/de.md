@@ -17,7 +17,7 @@ durch; jeder Schritt baut auf dem vorherigen auf.
 - [Schritt 3 — Allgemeine Einstellungen](#schritt-3--allgemeine-einstellungen)
 - [Schritt 4 — Zonen](#schritt-4--zonen)
 - [Schritt 5 — Quellen](#schritt-5--quellen)
-- [Schritt 6 — Klimakreisläufe](#schritt-6--klimakreisläufe)
+- [Schritt 6 — Klimakreise](#schritt-6--klimakreise)
 - [Schritt 7 — Gemeinsame Wärmequellen](#schritt-7--gemeinsame-wärmequellen)
 - [Schritt 8 — Exklusive Gruppen](#schritt-8--exklusive-gruppen)
 - [Schritt 9 — Ruhefenster](#schritt-9--ruhefenster)
@@ -28,8 +28,8 @@ durch; jeder Schritt baut auf dem vorherigen auf.
 - [Die Schalter und Tasten](#die-schalter-und-tasten)
 - [Aktionen](#aktionen)
 - [Vorbereiten und Vorkühlen](#vorbereiten-und-vorkühlen)
-- [Ein Override mit Laufzeit](#ein-override-mit-laufzeit)
-- [Einen Override mit Laufzeit auf dem Dashboard](#einen-override-mit-laufzeit-auf-dem-dashboard)
+- [Eine Übersteuerung mit Laufzeit](#eine-übersteuerung-mit-laufzeit)
+- [Eine Übersteuerung mit Laufzeit auf dem Dashboard](#eine-übersteuerung-mit-laufzeit-auf-dem-dashboard)
 - [Selbst das Kommando übernehmen](#selbst-das-kommando-übernehmen)
 - [Einen Schattenlauf beurteilen](#einen-schattenlauf-beurteilen)
 - [Blueprints und Meldungen](#blueprints-und-meldungen)
@@ -57,10 +57,10 @@ Drei Begriffe bilden die Grundlage:
 |---|---|
 | **Zone** | Ein Raum. Beschreibt *was du willst*: Zieltemperatur, wann Heizen oder Kühlen beginnen darf und in welcher Jahreszeit. |
 | **Quelle** | Ein Gerät, das eine Zone bedienen kann, mit einer Aufgabe (Heizen, Kühlen oder beides), einer Vorzugsreihenfolge und einem Außentemperaturfenster. |
-| **Klimakreislauf** | Ein Außengerät mit den Innengeräten, die daran hängen. Beschreibt *was technisch gleichzeitig geht*. |
+| **Klimakreis** | Ein Außengerät mit den Innengeräten, die daran hängen. Beschreibt *was technisch gleichzeitig geht*. |
 
 Die Faustregel für ein gemeinsames Außengerät: Alle Innengeräte an einem
-Kreislauf tragen dieselbe Aufgabe — Heizen, Kühlen, Aus oder nur Lüften. Zwei
+Kreis tragen dieselbe Aufgabe — Heizen, Kühlen, Aus oder nur Lüften. Zwei
 Innengeräte an einem Außengerät können also nicht gleichzeitig das eine heizen
 und das andere kühlen. Climate Director weiß, welche Geräte zusammengehören,
 und löst diesen Konflikt für dich.
@@ -139,7 +139,7 @@ Unter **Konfigurieren** findest du das Hauptmenü, in dieser Reihenfolge:
 |---|---|
 | **Allgemeine Einstellungen** | Außentemperatur, Jahreszeit, Tore, Fenster, Kalender, Schattenmodus |
 | **Zonen und Quellen** | pro Raum: Temperatur, Ein- und Ausschaltpunkte und die zugehörigen Geräte |
-| **Klimakreisläufe** | welche Innengeräte sich ein Außengerät teilen |
+| **Klimakreise** | welche Innengeräte sich ein Außengerät teilen |
 | **Gemeinsame Wärmequellen** | ein Kessel oder eine Wärmepumpe, an dem/der mehrere Räume hängen |
 | **Exklusive Gruppen** | Geräte, die nie gleichzeitig laufen dürfen |
 | **Ruhefenster** | Stunden, in denen der Director von sich aus nichts beginnt |
@@ -163,20 +163,20 @@ wählst.
 | Einstellung | Was sie tut |
 |---|---|
 | **Außentemperatursensor** | speist jede Außengrenze. Ohne Sensor gilt jede gesetzte Grenze als nicht erreicht und die Installation steht still |
-| **Totband Außentemperatur** | wie viele Grad eine laufende Betriebsart über ihre Außengrenze hinaus weiterlaufen darf, bevor gewechselt wird; standardmäßig 0,5, null schaltet es ab |
-| **Heizsystem** | *Zentral* oder *Pro Zone*, siehe unten |
-| **Jahreszeitenquelle** | woher die Jahreszeit kommt: der Monat, eine Entität oder fest Sommer/Winter |
-| **Jahreszeiten-Entität** | nur nötig, wenn die Quelle auf *Entität* steht; auch die eingebaute `season.*`-Entität ist wählbar |
+| **Totzone der Außentemperatur** | wie viele Grad eine laufende Betriebsart über ihre Außengrenze hinaus weiterlaufen darf, bevor gewechselt wird; standardmäßig 0,5, null schaltet sie ab |
+| **Heizungsanlage** | *Zentral* oder *Pro Zone*, siehe unten |
+| **Herkunft der Jahreszeit** | woher die Jahreszeit kommt: der Monat, eine Entität oder fest Sommer/Winter |
+| **Jahreszeit-Entität** | nur nötig, wenn die Quelle auf *Entität* steht; auch die eingebaute `season.*`-Entität ist wählbar |
 | **Hemisphäre** | welche Monate als Sommer zählen, wenn die Jahreszeit aus dem Monat kommt: Nord April–September, Süd Oktober–März |
-| **Jahreszeitenwahl** | die `select.*`-Entität *Jahreszeit* stellt die Jahreszeit von Hand auf Automatisch, Sommer oder Winter; die Wahl überlebt einen Neustart |
-| **Jemand zu Hause muss wach sein** | an = das Haus wartet auf jemanden zu Hause *und* wach; aus = Schlaf zählt nicht |
+| **Wer zu Hause ist, muss wach sein** | an = das Haus wartet auf jemanden zu Hause *und* wach; aus = Schlaf zählt nicht |
 | **Der Zeitplan eines Bewohners muss offen sein** | an = das Haus wartet auf das erste Zeitfenster; aus = Anwesenheit allein entscheidet |
 | **Urlaubskalender** | welche Kalender Urlaub ankündigen dürfen; mehrere erlaubt |
 | **Wort, das Urlaub kennzeichnet** | das Stichwort, das ein Ereignis tragen muss; leer = Kalender werden ignoriert |
-| **Vorbereitungsdauer** | die Obergrenze einer einzelnen Anfrage; Standard 120 Minuten |
-| **Gästemodus ab / bis** | das Fenster, in dem der Gästemodus gilt; beide leer = den ganzen Tag |
-| **Tage des Gastmodus** | an welchen Wochentagen dieses Fenster gilt; leer = jeder Tag |
-| **Zone nach … Minuten als festgefahren melden** | nach wie vielen Minuten Wartezeit eine Zone als festgefahren gilt; 0 schaltet den Sensor aus |
+| **Maximale Vorbereitungszeit (Minuten)** | die Obergrenze einer einzelnen Anforderung; Standard 120 Minuten |
+| **Gästemodus ab** | Beginn des Fensters, in dem der Gästemodus gilt; leer = den ganzen Tag |
+| **Gästemodus bis** | Ende dieses Fensters; beide leer = den ganzen Tag |
+| **Tage des Gästemodus** | an welchen Wochentagen dieses Fenster gilt; leer = jeder Tag |
+| **Zone gilt als festgefahren nach (Minuten)** | nach wie vielen Minuten Wartezeit eine Zone als festgefahren gilt; 0 schaltet den Sensor aus |
 | **Niederschlagsquelle** | eine `weather.*`- oder `sensor.*`-Entität, die sagt, ob Niederschlag fällt; leer = die Niederschlagsregel macht nicht mit |
 | **Zustände, die als Niederschlag zählen** | welche Zustände dieser Entität Niederschlag bedeuten; standardmäßig Regen, Schnee und Hagel |
 | **Wie lange Niederschlag weiter zählt (Minuten)** | Nachlaufzeit nach dem Aufhören des Niederschlags; Standard 15 Minuten |
@@ -191,7 +191,7 @@ passiert nichts, während es drinnen zu warm oder zu kalt bleibt.
 
 Richte deshalb eine **Niederschlagsquelle** ein. Solange sie Niederschlag
 meldet, überspringt Climate Director die **Außengrenze pro Zone** — genau wie
-eine Vorbereitungs-Anfrage. Die Totzone, die Jahreszeit und die Außengrenze **pro
+eine Vorbereitungs-Anforderung. Die Totzone, die Jahreszeit und die Außengrenze **pro
 Quelle** gelten weiter; die wählen immer noch das Gerät. Die Nachlaufzeit
 sorgt dafür, dass ein Fünf-Minuten-Schauer die Regelung nicht ins Schwingen
 bringt. Ohne Quelle macht die Niederschlagsregel nicht mit.
@@ -208,7 +208,7 @@ Außengrenze gilt auch bei Niederschlag weiter.
 | **Pro Zone** | Jeder Teil des Hauses kann seine Wärme separat bekommen, über ein Zonenventil oder eine eigene Wärmequelle. | Gib jeder Zone ihr **eigenes** Ventil oder Gerät als Quelle; gibt es einen gemeinsamen Kessel, trage ihn als gemeinsame Wärmequelle ein |
 
 Smarte Heizkörperregler allein sind keine Zonierung: Das Haus hat dann immer
-noch einen Kreislauf und eine Wärmequelle, die für alle gleichzeitig an- oder
+noch einen Kreis und eine Wärmequelle, die für alle gleichzeitig an- oder
 ausgeht. Wähle dann **Zentral**. Ein Kessel mit drei Zonenventilen ist
 hingegen **Pro Zone**.
 
@@ -224,20 +224,22 @@ Eine Zone ist ein Raum. Pro Zone stellst du ein:
 |---|---|
 | **Name** | das Label, das überall erscheint |
 | **Innentemperatursensor** | worauf die Totzone rechnet; eine `climate.*`, die selbst misst, geht auch |
-| **Vorrang an einem gemeinsamen Außengerät** | wie stark diese Zone ein gemeinsames Außengerät beansprucht; **niedriger gewinnt**. An einem Kreislauf darf keine Nummer doppelt vorkommen |
+| **Vorrang an einem gemeinsamen Außengerät** | wie stark diese Zone ein gemeinsames Außengerät beansprucht; **niedriger gewinnt**. An einem Kreis darf keine Nummer doppelt vorkommen |
 | **Was entscheidet, ob diese Zone läuft** | *der Haushalt* (Zeitplan, Schlaf, jemand zu Hause) oder *der Raum selbst* (nur der Anwesenheitssensor) |
-| **Anwesenheitssensor + Status + Nachlaufzeit** | wann der Raum als belegt zählt; die Nachlaufzeit fängt flackernde Melder auf |
+| **Anwesenheitssensor dieser Zone** | welcher Sensor meldet, dass der Raum belegt ist |
+| **Zustand, der belegt bedeutet** | der Zustand, den dieser Sensor als belegt meldet |
+| **Noch so lange als belegt zählen (Sekunden)** | wie lange der Raum nach der letzten Meldung noch als belegt zählt; fängt flackernde Melder auf |
 | **Niederschlag hebt die 'Fenster-öffnen'-Regel nicht auf** | an für einen Raum ohne Fenster; dort gilt die Außengrenze auch bei Niederschlag weiter |
 | **Diese Zone darf heizen** | aus = dieser Raum wird nie geheizt |
 | **Zieltemperatur Heizen** | der Sollwert, den das Gerät beim Heizen bekommt — nicht der Startpunkt |
-| **Heizen starten bei** | Heizen startet bei dieser Innentemperatur oder darunter |
+| **Heizen beginnen bei** | Heizen beginnt bei dieser Innentemperatur oder darunter |
 | **Totzone Heizen** | wie weit über dem Startpunkt das Heizen stoppt |
-| **Nur unter dieser Außentemperatur heizen** | darüber bleibt Heizen aus; leer = keine Grenze |
+| **Nur heizen unter dieser Außentemperatur** | darüber bleibt Heizen aus; leer = keine Grenze |
 | **Diese Zone darf kühlen** | aus = dieser Raum wird nie gekühlt |
 | **Zieltemperatur Kühlen** | der Sollwert, den das Gerät beim Kühlen bekommt |
-| **Kühlen starten bei** | Kühlen startet bei dieser Innentemperatur oder darüber |
+| **Kühlen beginnen bei** | Kühlen beginnt bei dieser Innentemperatur oder darüber |
 | **Totzone Kühlen** | wie weit unter dem Startpunkt das Kühlen stoppt |
-| **Nur über dieser Außentemperatur kühlen** | darunter bleibt Kühlen aus; leer = keine Grenze |
+| **Nur kühlen über dieser Außentemperatur** | darunter bleibt Kühlen aus; leer = keine Grenze |
 | **Nur im Sommer kühlen** | koppelt Kühlen an die Jahreszeit aus den allgemeinen Einstellungen |
 
 ### So funktioniert die Totzone
@@ -283,14 +285,14 @@ gespeichert hast, wählst du sofort ihre Quellen.
 | Einstellung | Was sie tut |
 |---|---|
 | **Name** | ein eigener Name für diese Quelle; leer = die Auswahl nennt das Gerät selbst |
-| **Klima-Entität** | das Gerät selbst |
+| **Climate-Entität** | das Gerät selbst |
 | **Was dieses Gerät kann** | nur heizen, nur kühlen oder beides. Ein Kessel ist *nur heizen* |
-| **Dieses Gerät automatisch starten** | aus lässt es in Ruhe, siehe unten |
+| **Dieses Gerät automatisch einschalten** | aus lässt es in Ruhe, siehe unten |
 | **Reihenfolge innerhalb dieser Zone** | welche Quelle bevorzugt wird; **niedriger gewinnt** |
 | **Verwenden ab dieser Außentemperatur** | die Untergrenze; gehört zum Fenster |
 | **Verwenden bis zu dieser Außentemperatur** | die Obergrenze; gehört nicht zum Fenster |
 | **Zonen, die dieses Gerät mitversorgt** | die Räume, die es mitheizt oder mitkühlt, sobald es läuft; leer = nur diese Zone |
-| **So lange warten, bevor übernommen wird** | wie lange eine Quelle in diesem Gebiet schon nicht erreichbar sein muss; standardmäßig fünf Minuten, null ist sofort |
+| **So lange warten, bevor übernommen wird (Minuten)** | wie lange eine Quelle in diesem Gebiet schon nicht erreichbar sein muss; standardmäßig fünf Minuten, null ist sofort |
 
 ### Außengrenzen: halboffen
 
@@ -325,7 +327,7 @@ erreichbar ist:
 - **nichts anderes in diesem Gebiet heizt oder kühlt noch**, solange dieses
   Gerät läuft. Die Geräte, die dadurch stillstehen, melden
   `shared_source_took_over`. Auch ein Gerät, das du selbst eingeschaltet hast,
-  geht aus — hier steht es der Physik im Weg und nicht einer Außeneinheit;
+  geht aus — hier steht es der Physik im Weg und nicht einem Außengerät;
 - **kein Raum im Gebiet rückt auf seine nächste Quelle vor.** Sonst heizt ein
   Elektroofen in einem Raum, den der Kessel bereits wärmt.
 
@@ -346,7 +348,7 @@ wird, stellt das ganze Haus also nicht auf Gas um.
 
 ### Ein Gerät, das du selbst einschaltest
 
-Schalte **Dieses Gerät automatisch starten** aus für ein Gerät, das du von Hand
+Schalte **Dieses Gerät automatisch einschalten** aus für ein Gerät, das du von Hand
 bedienst (zum Beispiel eine Klimaanlage in einem Schlafzimmer ohne
 Anwesenheitssensor). Der Director:
 
@@ -360,43 +362,43 @@ Integration das einmal unter *Reparaturen*. Bestätigst du den Hinweis, bleibt
 er weg — auch nach einem Neustart. Kommt später eine neue handbediente Aufgabe
 in der Zone dazu, folgt ein neuer Hinweis.
 
-## Schritt 6 — Klimakreisläufe
+## Schritt 6 — Klimakreise
 
 Nur nötig, wenn Innengeräte sich ein Außengerät teilen. Hat jedes Gerät sein
 eigenes Außengerät, lass das leer.
 
 | Einstellung | Was sie tut |
 |---|---|
-| **Name** | ein Label, um Kreisläufe auseinanderzuhalten |
+| **Name** | ein Label, um Kreise auseinanderzuhalten |
 | **Innengeräte** | welche `climate.*`-Entitäten an diesem Außengerät hängen. Nimm auch Geräte auf, die der Director nicht verwaltet: sie beanspruchen den Verdichter ebenfalls |
 | **Kann gleichzeitig heizen und kühlen** | aus für ein gewöhnliches Multi-Split; an für ein Single-Split oder Drei-Leiter-VRF mit Wärmerückgewinnung |
 | **Konfliktregel** | wer gewinnt, wenn zwei Räume gegensätzliche Aufgaben wollen |
-| **Eine verlierende Zone darf lüften** | an = der Verlierer geht auf `fan_only` statt auf aus, aber nur wenn das Gerät diesen Modus kennt; sonst geht es aus |
-| **Pause beim Aufgabenwechsel** | wie lange alles aus ist vor dem Umschalten |
-| **Mindestlaufzeit vor einem Aufgabenwechsel** | wie lange eine Aufgabe gelaufen sein muss, bevor die andere übernehmen darf |
-| **Ruhe, bevor ein Gerät neu starten darf** | verzögert nur Starten, nie Stoppen; Standard 180 Sekunden |
-| **Maximale Anzahl gleichzeitig laufender Geräte** | die Kapazitätsgrenze des Außengeräts; leer = keine Grenze |
+| **Eine unterlegene Zone darf Luft umwälzen** | an = die unterlegene Zone geht auf `fan_only` statt auf aus, aber nur wenn das Gerät diesen Modus kennt; sonst geht es aus |
+| **Pause beim Aufgabenwechsel (Sekunden)** | wie lange alles aus ist vor dem Umschalten |
+| **Mindestlaufzeit vor einem Aufgabenwechsel (Sekunden)** | wie lange eine Aufgabe gelaufen sein muss, bevor die andere übernehmen darf |
+| **Ruhezeit, bevor ein Gerät neu starten darf (Sekunden)** | verzögert nur Starten, nie Stoppen; Standard 180 Sekunden |
+| **Höchstzahl gleichzeitig laufender Geräte** | die Kapazitätsgrenze des Außengeräts; leer = keine Grenze |
 
 ### Konfliktregeln
 
 | Regel | Verhalten |
 |---|---|
 | **Priorität** (Standard) | die Zone mit der niedrigsten Prioritätsnummer gewinnt |
-| **Wer zuerst kam** | die bereits laufende Aufgabe behält den Kreislauf; eine neue Anfrage wartet |
-| **Größte Abweichung** | die größte Abweichung vom Sollwert gewinnt |
+| **Wer zuerst kam** | die bereits laufende Aufgabe behält den Kreis; eine neue Anforderung wartet |
+| **Bedarf** | die größte Abweichung vom Sollwert gewinnt |
 | **Jahreszeit** | die Jahreszeit bestimmt die Aufgabe; alles in die andere Richtung tritt ab |
 
-### Der Vorrang, vom Kreislauf aus
+### Der Vorrang, vom Kreis aus
 
-Speicherst du einen Kreislauf, landest du auf **Prioritäten auf diesem
-Kreislauf**: die Zonen an diesem Außengerät, in der Reihenfolge, in der sie
+Speicherst du einen Kreis, landest du auf **Prioritäten auf diesem
+Kreis**: die Zonen an diesem Außengerät, in der Reihenfolge, in der sie
 derzeit gewinnen, mit ihrer Nummer dahinter. Wähle eine aus, um ihren Vorrang
-zu ändern.
+zu ändern. Das Feld heißt **Vorrang in diesem Kreis**.
 
 Das ist **dasselbe Feld** wie *Vorrang an einem gemeinsamen Außengerät* auf dem
 Zonenbildschirm — zwei Wege hinein, eine Einstellung, die beiden können sich
 also nie widersprechen. Hier siehst du nur sofort, wer gegen wen steht. Zwei
-Zonen auf einem Kreislauf dürfen nicht dieselbe Nummer haben; der Bildschirm
+Zonen auf einem Kreis dürfen nicht dieselbe Nummer haben; der Bildschirm
 lehnt das ab.
 
 ## Schritt 7 — Gemeinsame Wärmequellen
@@ -408,8 +410,8 @@ sobald ein Ventil darum bittet.
 | Einstellung | Was sie tut |
 |---|---|
 | **Name** | ein Label, um Wärmequellen auseinanderzuhalten |
-| **Klima-Entität** | der Kessel oder die Wärmepumpe selbst; darf nicht auch Quelle einer Zone sein, sonst bekäme er zwei Befehle |
-| **Zonen, die er bedient** | leer = alle Räume |
+| **Climate-Entität** | der Kessel oder die Wärmepumpe selbst; darf nicht auch Quelle einer Zone sein, sonst bekäme er zwei Befehle |
+| **Zonen, die er versorgt** | leer = alle Räume |
 | **Feste Zieltemperatur** | leer = er folgt dem wärmsten Ziel der fragenden Räume |
 
 Die Wärmequelle läuft, solange ein Raum, den sie bedient, geheizt wird, und
@@ -421,11 +423,11 @@ Sollen zwei Geräte **nie** gleichzeitig laufen — ein Gaskessel und eine
 Wärmepumpe, zum Beispiel? Verlass dich dafür nicht auf die Außengrenzen allein.
 Ein zurückgebliebener Wert genügt, um beide gemeinsam anspringen zu lassen.
 Setze sie stattdessen in eine exklusive Gruppe: Von den Geräten einer Gruppe
-läuft immer nur eines.
+läuft immer nur eines. Das Feld **Geräte in dieser Gruppe** listet sie auf.
 
 Bedenke, was eine Gruppe bedeutet: **ein** Gerät aus der Gruppe zur Zeit. Soll
 der Gaskessel keiner Klimaanlage im Weg stehen, während zwei Klimaanlagen am
-selben Kreislauf durchaus gemeinsam kühlen dürfen, dann mach eine Gruppe pro
+selben Kreis durchaus gemeinsam kühlen dürfen, dann mach eine Gruppe pro
 Paar — Gas mit der einen, Gas mit der anderen.
 
 Eine Gruppe betrifft das **Gerät**, nicht den Raum. Hängt derselbe Kessel
@@ -455,7 +457,7 @@ Es ist eine Bremse fürs **Starten**, nicht fürs Weitermachen:
 Fenster dürfen über Mitternacht laufen und kennen Wochentage. Ein Haushalt, der
 werktags um neun ins Bett geht und am Wochenende um elf, setzt zwei:
 
-| Von | Bis | Tage |
+| Ruhe ab | Ruhe bis | Tage, an denen das gilt |
 |---|---|---|
 | 21:00 | 09:00 | Mo Di Mi Do So |
 | 23:00 | 09:00 | Fr Sa |
@@ -477,8 +479,9 @@ Anwesenheitstore werden dann übersprungen, statt alles dauerhaft zu blockieren.
 | **Name** | ein Label, um Bewohner auseinanderzuhalten |
 | **Anwesenheitssensor** | meist eine `person.*`; sagt, ob dieser Bewohner zu Hause ist |
 | **Schlafsensor** | wann dieser Bewohner schläft; leer = Schlaf wird nicht verfolgt |
-| **Status, der Schlafen bedeutet** | der Zustand, den der Schlafsensor beim Schlafen meldet |
-| **Schlafsensor zählt von / bis** | die Stunden, in denen dieser Sensor etwas bedeutet; beide leer = rund um die Uhr |
+| **Zustand, der schlafend bedeutet** | der Zustand, den der Schlafsensor beim Schlafen meldet |
+| **Schlafsensor zählt ab** | ab wann dieser Sensor etwas bedeutet; leer = rund um die Uhr |
+| **Schlafsensor zählt bis** | bis wann dieser Sensor etwas bedeutet; beide leer = rund um die Uhr |
 | **Tage des Schlaffensters** | an welchen Tagen dieses Fenster gilt; leer = jeden Tag |
 | **Ausschlafen bis** | bis wann der Schlafsensor morgens noch zählt; leer = das Schlaffenster ist die ganze Geschichte |
 | **Morgen, an denen du ausschläfst** | die Morgen selbst, nicht die Abende davor; leer = jeden Tag |
@@ -545,7 +548,7 @@ aufsteht.
 Zeitplänen. Der freie Tag des einen ist der Arbeitstag des anderen: Zählten die
 Schulferien als Samstag, hielte der Langschläfer das Haus auf, während der
 andere zu Hause arbeitet. Die Tage bedeuten hier also wörtlich, was dort steht.
-Wer auch an einem freien Wochentag erwartet werden möchte, setzt das Häkchen
+Soll auch an einem freien Wochentag auf dich gewartet werden, setz das Häkchen
 *Auch an Urlaubstagen auf diese Person warten*; dann gilt die Uhrzeit an jedem
 Urlaubstag, unabhängig vom Wochentag. Ein Urlaubstag, der auf einen Samstag fällt,
 bleibt in jedem Fall ein Samstag.
@@ -561,7 +564,8 @@ Nachdem du einen Bewohner gespeichert hast, legst du seine Zeitpläne an:
 | Einstellung | Was sie tut |
 |---|---|
 | **Dies ist ein Urlaubsfenster** | gilt nur während des Urlaubsplans und ersetzt dann die normalen Fenster |
-| **Von / Bis** | das Fenster; darf über Mitternacht laufen |
+| **Von** | der Beginn des Fensters; darf über Mitternacht laufen |
+| **Bis** | das Ende des Fensters |
 | **Tage** | leer = jeden Tag |
 
 Ein Bewohner ohne Zeitplan nimmt nicht am Zeitplantor teil. Wer an einem Tag
@@ -588,7 +592,7 @@ Eine Öffnung, die lange genug offen steht, legt die betroffenen Zonen still.
 | **Sensor** | der Tür-, Fenster- oder Dachfensterkontakt; ein `binary_sensor.*`, `cover.*` oder `sensor.*` |
 | **Zustand, der „offen“ bedeutet** | bei einem Fensterkontakt meist `on`, bei einem Dachfenster oder Rollladen `open`; Standard `on` |
 | **Betroffene Zonen** | leer = die ganze Installation |
-| **Verzögerung vor dem Stilllegen** | leer oder 0 = sofort beim Öffnen |
+| **Verzögerung vor dem Aussetzen (Sekunden)** | leer oder 0 = sofort beim Öffnen |
 
 Wählst du `open` als Offen-Zustand, zählen auch `opening` und `closing` als
 offen: Ein Rollladen unterwegs ist nicht zu.
@@ -616,7 +620,18 @@ Der Raum nennt dann `opening_open_elsewhere` als Grund, sodass du siehst, warum
 nichts geschieht. Zwei Dinge bleiben wie immer: Eine Zone mit Übersteuerung und
 eine handbediente Quelle werden nicht gesteuert, auch von dieser Liste nicht.
 
-Jede Öffnung hat eine eigene, unsichtbar gespeicherte ID, und daran hängt der Überbrückungsschalter (`switch.*_uberbruckung_<opening>`), sodass er bestehen bleibt, wenn du den Sensor ersetzt; der **Name** ist nur das Etikett, das du selbst siehst. Hatte eine Öffnung noch keine ID, dann ist diese ID der Sensor und heißt der Schalter nach dem Namen, den der Sensor selbst anzeigt — erscheint er erst später oder benennst du ihn um, folgt der Schaltername ohne Neuladen. An = der Director tut so, als gäbe es diese Öffnung nicht — ihre eigenen Zonen und der hausweite Stopp ignorieren sie beide. Es gibt keine Laufzeit: der Schalter bleibt an, bis du ihn selbst ausschaltest. Steht er an, während die Öffnung wirklich offensteht, meldet der Director das unter *Reparaturen*.
+Jede Öffnung hat eine eigene, unsichtbar gespeicherte ID, und daran hängt der
+Überbrückungsschalter. Er bleibt bestehen, wenn du den Sensor ersetzt; der
+**Name** ist nur das Etikett, das du selbst siehst. Hatte eine Öffnung noch
+keine ID, dann ist diese ID der Sensor und heißt der Schalter nach dem Namen,
+den der Sensor selbst anzeigt — erscheint er erst später oder benennst du ihn
+um, folgt der Schaltername ohne Neuladen.
+
+Der Schalter heißt `switch.*_uberbruckung_<opening>`. An = der Director tut so,
+als gäbe es diese Öffnung nicht: ihre eigenen Zonen und der hausweite Stopp
+ignorieren sie beide. Es gibt keine Laufzeit, der Schalter bleibt an, bis du
+ihn selbst ausschaltest. Steht er an, während die Öffnung wirklich offensteht,
+meldet der Director das unter *Reparaturen*.
 
 ## Schritt 12 — Speichern und schließen
 
@@ -651,12 +666,12 @@ Ein Gerät pro Installation, darunter:
 | `switch.*_urlaubsplan` | lässt jeden Tag als Samstag zählen, oder als eigenen Urlaubsplan |
 | `switch.*_gastemodus` | regelt weiter, während die Bewohner weg sind |
 | `switch.*_ubersteuerung_<zone>` | übergibt eine Zone vollständig an dich |
-| `sensor.*_ubersteuerung_<zone>_endet` | wann der Override dieser Zone endet; eine Timer-Karte zählt darauf zu |
+| `sensor.*_ubersteuerung_<zone>_endet` | wann die Übersteuerung dieser Zone endet; eine Timer-Karte zählt darauf zu |
 | `switch.*_uberbruckung_<opening>` | an = diese Öffnung zählt nirgends mehr; nicht für ihre eigenen Zonen und nicht für den hausweiten Stopp |
 | `number.*_prioritat_<zone>` | der Vorrang dieser Zone; auch aus einer Automatisierung setzbar |
 | `number.*_vorbereitungsdauer` | wie lange eine Vorbereitung nach einem Tastendruck dauert |
 | `button.*_<zone>_vorbereiten` | heizt oder kühlt diese Zone vor |
-| `select.*_jahreszeit` | stellt die Jahreszeit von Hand auf Automatisch, Sommer oder Winter |
+| `select.*_jahreszeit` | stellt die Jahreszeit von Hand auf Automatisch, Sommer oder Winter; die Wahl überlebt einen Neustart |
 
 Die Namen dieser Entitäten werden übersetzt, und Home Assistant leitet die
 Entitäts-ID vom Namen ab. Steht dein Home Assistant in einer anderen Sprache,
@@ -679,14 +694,14 @@ einer Ruhezeit oder einer Anforderung). So bleibt eine Zone, in der sich nichts
   Er lässt alles los und sendet nichts mehr — auch kein Aus. Was in dem Moment
   läuft, läuft also einfach weiter; willst du alles aus, schalte es selbst aus.
 - **Gästemodus** (`switch.*_gastemodus`): Jemand Unverfolgtes wohnt da, also
-  sagt „Haus leer“ nichts. Innerhalb des Gastfensters hebt der Gästemodus auch
-  das Ruhefenster auf. Schlaf der Anwesenden gilt weiter, und außerhalb des
-  Gastfensters übernehmen die normalen Tore.
+  sagt „Haus leer“ nichts. Innerhalb des Fensters des Gästemodus hebt der
+  Gästemodus auch das Ruhefenster auf. Schlaf der Anwesenden gilt weiter, und
+  außerhalb dieses Fensters übernehmen die normalen Tore.
 - **Urlaubsplan** (`switch.*_urlaubsplan`): Jeder Tag zählt als Samstag
   oder als eigenes Urlaubsfenster. Schaltet sich auch von selbst ein, sobald ein
   eingerichteter Kalender ein laufendes Ereignis mit dem Stichwort hat. Ohne
   Stichwort werden die Kalender ignoriert.
-- **Override** (`switch.*_ubersteuerung_<zone>`): übergibt eine Zone vollständig an
+- **Übersteuerung** (`switch.*_ubersteuerung_<zone>`): übergibt eine Zone vollständig an
   dich. Der Director sendet dieser Zone nichts mehr — auch kein Aus. Die
   Kreisregeln gelten für die anderen Räume weiter. Er bleibt stehen, bis du
   ihn selbst wieder ausschaltest, auch über die Nacht und über ein leeres Haus
@@ -694,7 +709,10 @@ einer Ruhezeit oder einer Anforderung). So bleibt eine Zone, in der sich nichts
   Abend. Damit lässt sich eine Zone tagelang eigenen Automationen überlassen.
   Ein Gerät, das du am Gerät *selbst* ausschaltest, erlischt sehr wohl zur
   Schlafenszeit oder bei leerem Haus; das steht weiter unten.
-- **Überbrückung** (`switch.*_uberbruckung_<opening>`): an = diese Öffnung existiert für den Director nicht. Der Schalter bleibt an, bis du ihn selbst ausschaltest; steht er an, während die Öffnung wirklich offensteht, meldet der Director das unter *Reparaturen*.
+- **Überbrückung** (`switch.*_uberbruckung_<opening>`): an = diese Öffnung
+  existiert für den Director nicht. Der Schalter bleibt an, bis du ihn selbst
+  ausschaltest; steht er an, während die Öffnung wirklich offensteht, meldet der
+  Director das unter *Reparaturen*.
 - **Taste „Vorbereiten“** (`button.*_<zone>_vorbereiten`) und **Dauer**
   (`number.*_vorbereitungsdauer`): siehe unten.
 
@@ -704,7 +722,7 @@ einer Ruhezeit oder einer Anforderung). So bleibt eine Zone, in der sich nichts
 |---|---|
 | `climate_director.evaluate` | sofort neu entscheiden, ohne auf eine Zustandsänderung zu warten |
 | `climate_director.precondition` | Vorbereiten oder Vorkühlen starten |
-| `climate_director.cancel_precondition` | eine laufende Vorbereitungs-Anfrage abbrechen |
+| `climate_director.cancel_precondition` | eine laufende Vorbereitungs-Anforderung abbrechen |
 | `climate_director.set_override` | eine Zone für eine Laufzeit übergeben, ihr Gerät setzen und bei Ablauf die Wahl ausführen (`turn_off` / `leave`) |
 | `climate_director.clear_override` | eine Zonen-Übersteuerung so beenden, wie der Schalter es tut: still |
 
@@ -728,18 +746,18 @@ einzige, die du von Hand einschalten musst.
     minutes: 45
   ```
 
-**Wichtig:** Du sagst nicht, was passieren soll. Die Anfrage öffnet nur die
+**Wichtig:** Du sagst nicht, was passieren soll. Die Anforderung öffnet nur die
 Tür; danach entscheidet die Integration genau wie sonst — die Totzone prüft,
 ob es zu kalt oder zu warm ist, die Jahreszeit und das Außenfenster pro Quelle
 wählen das Gerät. Liegt der Raum bereits richtig, bleibt das Gerät aus.
 
-Während einer Vorbereitungs-Anfrage gelten Hauptschalter, ein Override, die Totzone,
-die Jahreszeit, das Außenfenster pro Quelle, Fenster und Türen, der Kreislauf
+Während einer Vorbereitungs-Anforderung gelten Hauptschalter, eine Übersteuerung, die
+Totzone, die Jahreszeit, das Außenfenster pro Quelle, Fenster und Türen, der Kreis
 und die exklusiven Gruppen weiter. Übersprungen werden: *jemand zu Hause*,
 *wach*, *Zeitplan*, *Anwesenheit im Raum*, das Außenfenster pro Zone und das
 Ruhefenster.
 
-Ein offenes Fenster oder eine offene Tür **verweigert** eine Anfrage. Wer das
+Ein offenes Fenster oder eine offene Tür **verweigert** eine Anforderung. Wer das
 Fenster selbst geöffnet hat, darf sagen: Trotzdem starten.
 
 ```yaml
@@ -751,18 +769,18 @@ data:
 ```
 
 Eine Grenze, die du nicht vergessen kannst: **sie läuft von selbst ab.** Fragst
-du länger als das eingestellte Maximum, wird deine Anfrage gekürzt. Keine Zeit
+du länger als das eingestellte Maximum, wird deine Anforderung gekürzt. Keine Zeit
 anzugeben gibt dir das Maximum; null oder weniger wird abgelehnt, denn das ist
-keine Anfrage, sondern ein Tippfehler.
+keine Anforderung, sondern ein Tippfehler.
 
-Eine Anfrage geht immer vor, zu jeder Stunde des Tages. Nur eine offene Tür
-verlangt eine Bestätigung: ohne *Trotzdem tun* weist die Tür die Anfrage ab.
+Eine Anforderung geht immer vor, zu jeder Stunde des Tages. Nur eine offene Tür
+verlangt eine Bestätigung: ohne *Trotzdem tun* weist die Tür die Anforderung ab.
 
 Abbrechen geht mit `climate_director.cancel_precondition`.
 
-## Ein Override mit Laufzeit
+## Eine Übersteuerung mit Laufzeit
 
-Der Override-Schalter oben gibt dir eine Zone zurück, bis du ihn selbst wieder
+Der Übersteuerungsschalter oben gibt dir eine Zone zurück, bis du ihn selbst wieder
 ausschaltest. Willst du eine Zone eine Stunde lang selbst setzen —
 „Klimaanlage Schlafzimmer, eine Stunde auf 18 °C“ — dann ist das eine Aktion,
 kein Script mit einem Timer daneben:
@@ -778,9 +796,9 @@ data:
 ```
 
 Die Aktion tut in derselben Entscheidungsrunde drei Dinge: Die Zone geht an dich
-über (der Override-Schalter geht an), das Gerät bekommt den gewünschten
+über (der Übersteuerungsschalter geht an), das Gerät bekommt den gewünschten
 **Modus** und die **Temperatur**, und die **Laufzeit** wird gemerkt. Weil
-Übergabe und Modus zusammen gehen, kann der Director deinen Wunsch
+Übergabe und Modus zusammen gehen, kann der Director deine Anforderung
 zwischendurch nicht wieder ausschalten. Die Laufzeit übersteht einen Neustart.
 
 | Feld | Bedeutung |
@@ -788,16 +806,16 @@ zwischendurch nicht wieder ausschalten. Die Laufzeit übersteht einen Neustart.
 | **Zone** (`zone_id`) | die ID der Zone, wie in den Einstellungen |
 | **Modus** (`hvac_mode`) | `heat`, `cool`, `fan_only` oder `off`; die Zone nimmt die Quelle mit dem meisten Vorrang, die diesen Modus liefern kann |
 | **Temperatur** (`temperature`) | der Sollwert, in der Einheit deines Home Assistant; weglassen = nur der Modus |
-| **Laufzeit** (`minutes`) | wie lange; weglassen = der Override läuft nie von selbst ab, genau wie der Schalter |
+| **Laufzeit** (`minutes`) | wie lange; weglassen = die Übersteuerung läuft nie von selbst ab, genau wie der Schalter |
 | **Bei Ablauf** (`when_done`) | `turn_off` (Standard): das Gerät geht aus; `leave`: es bleibt, wie es steht |
 
 Bei Ablauf schickt der Director genau einen Befehl gemäß *Bei Ablauf* und
 entscheidet danach einfach wieder über die Zone. Schaltest du den
-Override-Schalter zwischendurch von Hand aus oder rufst du
+Übersteuerungsschalter zwischendurch von Hand aus oder rufst du
 `climate_director.clear_override` auf, dann verfällt die Laufzeit still: Es geht
 kein Befehl an das Gerät, der Director übernimmt die Zone wieder und schaltet
 das Gerät nur aus, wenn seine eigene Entscheidung das verlangt. Eine Quelle mit
-*Dieses Gerät automatisch starten* aus läuft also weiter, bis sie im Weg steht.
+*Dieses Gerät automatisch einschalten* aus läuft also weiter, bis sie im Weg steht.
 
 Das ersetzt eine Dashboard-Taste mit einem Timer-Script: eine Taste, ein Aufruf
 von `set_override`. Zwei Dinge solltest du wissen: Hat die Zone keine Quelle,
@@ -809,7 +827,7 @@ Und eine **Temperatur**, die das Gerät nicht annimmt, wird auf die
 nächstgelegene Grenze gebracht: Der Director lehnt nichts ab, er fragt nach
 dem, was das Gerät annimmt.
 
-## Einen Override mit Laufzeit auf dem Dashboard
+## Eine Übersteuerung mit Laufzeit auf dem Dashboard
 
 **Was du brauchst.** Die Beispiele unten nutzen die Custom Card **Simple Timer
 Card** (<https://github.com/eyalgal/simple-timer-card>), die im normalen
@@ -820,15 +838,15 @@ Herunterladen → danach die Seite neu laden. Von Hand geht es auch: leg
 Integration funktioniert auch ohne diese Karte — den Endzeit-Sensor gibt es so
 oder so; die Karte ist nur fürs Dashboard.
 
-`sensor.*_ubersteuerung_<zone>_endet` trägt den Moment, an dem der Override
+`sensor.*_ubersteuerung_<zone>_endet` trägt den Moment, an dem die Übersteuerung
 einer Zone endet. Mehr braucht eine Timer-Karte nicht: mit `mode: timestamp`
 liest die Karte den Zustand als Endzeit, und `unknown` heißt, dass es nichts
-herunterzuzählen gibt — kein Override, ein Override ohne Laufzeit oder einer,
-der gerade abgelaufen ist. Das Attribut `start_time` trägt den Moment, an dem
-der Override gesetzt wurde; das ist die Voreinstellung von `start_time_attr`, und
+herunterzuzählen gibt — keine Übersteuerung, eine Übersteuerung ohne Laufzeit oder eine,
+die gerade abgelaufen ist. Das Attribut `start_time` trägt den Moment, an dem
+die Übersteuerung gesetzt wurde; das ist die Voreinstellung von `start_time_attr`, und
 die Karte nutzt es für ihren Fortschrittsring.
 
-Das ist dieses Dashboard: zuerst eine Taste, die den Override startet, darunter
+Das ist dieses Dashboard: zuerst eine Taste, die die Übersteuerung startet, darunter
 die Karte mit der Abbrechen-Taste. Eine Taste, ein Aufruf — das ist die Taste,
 die die alten Timer-Scripts ersetzt, und du machst eine pro gewünschter Dauer:
 
@@ -880,13 +898,13 @@ eigene Karte daneben.
 Die Taste trägt keine `data`: `simple-timer-card` sendet den Sensor selbst als
 Ziel mit, und `climate_director.clear_override` nimmt das an. Das ist der zweite
 Weg, eine Zone zu benennen: neben **Zone** (`zone_id`) nehmen beide Aktionen
-auch **Entität** (`entity_id`) an — den Override-Schalter
+auch **Entität** (`entity_id`) an — den Übersteuerungsschalter
 (`switch.*_ubersteuerung_<zone>`) oder den Endzeitsensor einer Zone. Eine
 Automatisierung kann also auf das zeigen, was sie schon hat, ohne die Zone zu
-nennen. Nur eine Override-Entität dieser Integration zählt; jede andere Entität
+nennen. Nur eine Übersteuerungs-Entität dieser Integration zählt; jede andere Entität
 wird mit einer Meldung abgelehnt.
 
-Ein Override, der schon lief, bevor du diese Version installiert hast, hat keine
+Eine Übersteuerung, die schon lief, bevor du diese Version installiert hast, hat keine
 Startzeit in der Zustandsdatei: Der Sensor zeigt seine Endzeit weiterhin, und
 nur der Fortschrittsring bleibt bis zum Ablauf am Anfang stehen.
 
@@ -901,14 +919,14 @@ nur der Fortschrittsring bleibt bis zum Ablauf am Anfang stehen.
   `climate_director.set_override` (siehe oben): Ein Aufruf übergibt die Zone
   und setzt das Gerät, und nach der Laufzeit räumt der Director selbst auf. Ein
   Script daneben, das das Gerät direkt setzt, geht nur, solange du diese Zone
-  für die Dauer mit dem Override an dich zurückgibst; ohne Override rechnet der
+  für die Dauer mit der Übersteuerung an dich zurückgibst; ohne Übersteuerung rechnet der
   Director bei der nächsten Auswertung seinen eigenen Plan durch und schaltet
-  dein Gerät wieder aus. Ein Gerät mit *Dieses Gerät automatisch starten* aus
-  braucht keinen Override.
+  dein Gerät wieder aus. Ein Gerät mit *Dieses Gerät automatisch einschalten*
+  aus braucht keine Übersteuerung.
 - **Ein Raum, den du immer selbst bedienst**: Mach trotzdem eine Zone daraus
   (sonst kennt die Integration dieses Gerät nicht), wähle als
   Innentemperatursensor die `climate.*`-Entität des Geräts selbst und schalte
-  bei der Quelle *Dieses Gerät automatisch starten* aus.
+  bei der Quelle *Dieses Gerät automatisch einschalten* aus.
 
 ## Einen Schattenlauf beurteilen
 
@@ -946,7 +964,7 @@ Blueprints → Blueprint importieren**, mit dem Link oben.
 > erst etwas zu, wenn du eine Automatisierung daraus baust. Tu das sofort nach
 > dem Importieren.
 
-Solange niemand auf eine abgelehnte Vorbereitungs-Anfrage hört, steht dazu ein
+Solange niemand auf eine abgelehnte Vorbereitungs-Anforderung hört, steht dazu ein
 Reparaturhinweis in Home Assistant. Der verschwindet von selbst, sobald eine
 Automatisierung auf diesem Ereignis steht.
 
@@ -967,7 +985,7 @@ das Filterwort und `reason_text` ist derselbe Grund als gewöhnlicher Satz.
 
 - **`binary_sensor.*_festgefahren`** geht an, wenn eine Zone zu lange auf demselben
   Wartegrund sitzt (Standard 15 Minuten) — und nur dafür. Eine volle
-  Außeneinheit zählt nicht mit: Die wird erst frei, wenn ein anderer Raum
+  Außengerät zählt nicht mit: Das wird erst frei, wenn ein anderer Raum
   aufhört zu fragen, und das darf Stunden dauern. Dieser Raum gilt sehr wohl als
   blockiert. Im Attribut `unusable_entities` steht daneben, welche
   eingerichteten Entitäten nicht lesbar sind — vertippt, gelöscht oder
@@ -986,8 +1004,8 @@ das Filterwort und `reason_text` ist derselbe Grund als gewöhnlicher Satz.
   Wirklichkeit: ein Sensor mit leerer Batterie, ein Gerät ohne Netz oder eine
   umbenannte Entität. Die Wartezeit hält ein kurzes Stocken beim Neustart
   heraus. Besonders bei einer unlesbaren Raumtemperatur zählt das, denn dann
-  lässt der Director ein laufendes Gerät in Ruhe und dieses Gerät hält seine
-  Außeneinheit auf seiner Betriebsart fest.
+  lässt der Director ein laufendes Gerät in Ruhe und dieses Gerät hält sein
+  Außengerät auf seiner Betriebsart fest.
 - **Eine Rolle, die einen Modus verlangt, den das Gerät nicht fahren kann**,
   erscheint dort nach fünf Minuten ebenfalls. Etwa eine Quelle mit der Rolle
   *Heizen und Kühlen* an einem Gerät, das nur `heat` und `off` meldet: Der
@@ -1002,10 +1020,10 @@ das Filterwort und `reason_text` ist derselbe Grund als gewöhnlicher Satz.
   Thermostatzeitplan oder eine andere Automatisierung. Im Schattenmodus kommt
   diese Meldung nie: Dort wird absichtlich nichts ausgeführt.
 - **Ein gespeicherter Zustand, der beiseitegelegt werden musste**, meldet sich
-  ebenfalls unter *Reparaturen*. In dieser Datei stehen die laufenden
-  Vorbereitungs-Anfragen und die Geräte, die du von Hand ausgeschaltet hast. Ist sie
+  ebenfalls unter *Reparaturen*. In der Speicherdatei stehen die laufenden
+  Vorbereitungs-Anforderungen und die Geräte, die du von Hand ausgeschaltet hast. Ist sie
   unlesbar, wird sie umbenannt und der Director beginnt mit leerem Zustand:
-  diese Anfragen und Abschaltungen sind weg, der Rest deiner Anlage nicht.
+  diese Anforderungen und Abschaltungen sind weg, der Rest deiner Anlage nicht.
   Willst du sie zurück, stelle die Datei aus einem Backup wieder her und lade
   die Integration neu.
 - **Die Diagnose** (bei der Integration herunterladbar) enthält die
@@ -1014,15 +1032,35 @@ das Filterwort und `reason_text` ist derselbe Grund als gewöhnlicher Satz.
 
 Unter **Reparaturen** kannst du diesen Meldungen begegnen, mit dem, was sie bedeuten und was du dagegen tust:
 
-- **Climate Director: <count> Öffnung(en) von <name> sind überbrückt, während sie offenstehen** — du hast eine Öffnung überbrückt, während sie wirklich offensteht; schließe die Öffnung oder schalte die Überbrückung aus.
-- **Climate Director: <count> Gerät(e) von <name> führen ihren Befehl nicht aus** — ein Gerät nimmt den Aufruf an, ändert sich aber nicht; prüfe, ob es erreichbar ist und ob etwas anderes es zurücksetzt.
-- **Climate Director: <name> musste seinen gespeicherten Zustand beiseitelegen** — die Zustandsdatei war unlesbar und wurde umbenannt; Anfragen und Handeingriffe von vor dem Neustart sind weg, stelle die Datei aus einer Sicherung wieder her, wenn du sie brauchst.
-- **Climate Director: <name> hat ein Konfigurationsproblem** — die Installation ist strukturell falsch; die Zonen, die stimmen, werden weiter geregelt, also prüfe die Konfiguration.
-- **Climate Director: <name> hat handbediente Aufgaben** — eine Zone hat nur Quellen, die nie von selbst starten; schalte *Automatisch starten* ein oder bestätige die Meldung.
-- **Niemand hört eine abgelehnte Vorbereitungs-Anforderung** — keine Automatisierung hört auf das Ablehnungsereignis; importiere das Blueprint *Abgelehntes Vorbereiten* (`precondition_refused.yaml`) und baue daraus eine Automatisierung.
-- **Climate Director: <name> stellt eine Jahreszeit ein, die <count> Aufgabe(n) aussperrt** — die Jahreszeit steht auf einer, in der eine eingestellte Aufgabe nie laufen darf; ändere die Jahreszeit oder die Aufgabe.
-- **Climate Director: <name> kann <count> Entität(en) nicht lesen** — eine eingestellte Entität gibt es nicht, sie ist weg oder liefert keine Zahl; korrigiere die Entität oder bring den Sensor zurück.
-- **Climate Director: <name> verlangt einen Modus, den <count> Gerät(e) nicht fahren können** — eine Rolle verlangt einen Modus, den das Gerät nicht meldet; ändere die Rolle oder wähle ein anderes Gerät.
+- **Climate Director: <count> Öffnung(en) von <name> sind überbrückt, während sie offenstehen**
+  — du hast eine Öffnung überbrückt, während sie wirklich offensteht; schließe die
+  Öffnung oder schalte die Überbrückung aus.
+- **Climate Director: <count> Gerät(e) von <name> führen ihren Befehl nicht aus**
+  — ein Gerät nimmt den Aufruf an, ändert sich aber nicht; prüfe, ob es
+  erreichbar ist und ob etwas anderes es zurücksetzt.
+- **Climate Director: <name> musste seinen gespeicherten Zustand beiseitelegen**
+  — die Zustandsdatei war unlesbar und wurde umbenannt; Anforderungen und
+  Handeingriffe von vor dem Neustart sind weg, stelle die Datei aus einer
+  Sicherung wieder her, wenn du sie brauchst.
+- **Climate Director: <name> hat ein Konfigurationsproblem** — die Installation
+  ist strukturell falsch; die Zonen, die stimmen, werden weiter geregelt, also
+  prüfe die Konfiguration.
+- **Climate Director: <name> hat handbediente Aufgaben** — eine Zone hat nur
+  Quellen, die nie von selbst starten; bei einer Quelle muss *Dieses Gerät
+  automatisch einschalten* an sein, oder bestätige die Meldung.
+- **Niemand hört eine abgelehnte Vorbereitungs-Anforderung** — keine
+  Automatisierung hört auf das Ablehnungsereignis; importiere das Blueprint
+  *Abgelehntes Vorbereiten* (`precondition_refused.yaml`) und baue daraus eine
+  Automatisierung.
+- **Climate Director: <name> stellt eine Jahreszeit ein, die <count> Aufgabe(n) aussperrt**
+  — die Jahreszeit steht auf einer, in der eine eingestellte Aufgabe nie laufen
+  darf; ändere die Jahreszeit oder die Aufgabe.
+- **Climate Director: <name> kann <count> Entität(en) nicht lesen** — eine
+  eingestellte Entität gibt es nicht, sie ist weg oder liefert keine Zahl;
+  korrigiere die Entität oder bring den Sensor zurück.
+- **Climate Director: <name> verlangt einen Modus, den <count> Gerät(e) nicht fahren können**
+  — eine Rolle verlangt einen Modus, den das Gerät nicht meldet; ändere die
+  Rolle oder wähle ein anderes Gerät.
 
 ## Bekannte Einschränkungen
 
@@ -1030,9 +1068,10 @@ Unter **Reparaturen** kannst du diesen Meldungen begegnen, mit dem, was sie bede
   paar Wochen zusieht, bevor er etwas schalten darf. Beurteile jede Runde
   anhand des Schattenlaufs: Was in einem Haus bewiesen ist, ist es in deinem
   noch nicht.
-- Ein Gerät **ohne Kreis** kann eine eigene Ruhezeit haben
-  (`min_cycle_time` pro Quelle). Die Ruhezeit füllt sich nicht von selbst: Trage sie bei
-  jeder Quelle ohne Kreis von Hand ein.
+- Ein Gerät **ohne Kreis** kann eine eigene Ruhezeit haben: das Feld
+  **Ruhezeit, bevor dieses Gerät erneut starten darf (Sekunden)**
+  (`min_cycle_time` pro Quelle). Die Ruhezeit füllt sich nicht von selbst: Trage
+  sie bei jeder Quelle ohne Kreis von Hand ein.
 - Ein Innensensor pro Zone: Die ganze Zone folgt dieser einen Messung.
 - Trocknen ist keine eigene Aufgabe des Directors.
 - Niederschlag zählt als Ja/Nein: Es gibt keinen Schwellenwert.
@@ -1056,47 +1095,14 @@ hier zusammen, weil der Text oben sie nicht überall wörtlich nennt.
 | Wort | Bildschirm |
 |---|---|
 | Diesen Kreis löschen | Klimakreis |
-| Eine unterlegene Zone darf Luft umwälzen | Klimakreis |
-| Höchstzahl gleichzeitig laufender Geräte | Klimakreis |
-| Mindestlaufzeit vor einem Aufgabenwechsel (Sekunden) | Klimakreis |
-| Pause beim Aufgabenwechsel (Sekunden) | Klimakreis |
-| Ruhezeit, bevor ein Gerät neu starten darf (Sekunden) | Klimakreis |
-| Vorrang in diesem Kreis | Priorität für {zone} |
 | Diese Gruppe löschen | Exklusive Gruppe |
-| Geräte in dieser Gruppe | Exklusive Gruppe |
-| Climate-Entität | Gemeinsame Wärmequelle |
 | Diese Wärmequelle löschen | Gemeinsame Wärmequelle |
-| Zonen, die er versorgt | Gemeinsame Wärmequelle |
 | Diese Öffnung löschen | Öffnung |
-| Verzögerung vor dem Aussetzen (Sekunden) | Öffnung |
 | Dieses Fenster löschen | Ruhefenster |
-| Ruhe ab | Ruhefenster |
-| Ruhe bis | Ruhefenster |
-| Tage, an denen das gilt | Ruhefenster |
 | Diesen Bewohner löschen | Bewohner |
-| Schlafsensor zählt ab | Bewohner |
-| Schlafsensor zählt bis | Bewohner |
-| Zustand, der schlafend bedeutet | Bewohner |
-| Gästemodus bis | Allgemeine Einstellungen |
-| Heizungsanlage | Allgemeine Einstellungen |
-| Herkunft der Jahreszeit | Allgemeine Einstellungen |
-| Jahreszeit-Entität | Allgemeine Einstellungen |
-| Maximale Vorbereitungszeit (Minuten) | Allgemeine Einstellungen |
-| Wer zu Hause ist, muss wach sein | Allgemeine Einstellungen |
-| Zone gilt als festgefahren nach (Minuten) | Allgemeine Einstellungen |
-| Climate-Entität | Quelle |
 | Diese Quelle löschen | Quelle |
-| Ruhezeit, bevor dieses Gerät erneut starten darf (Sekunden) | Quelle |
-| So lange warten, bevor übernommen wird (Minuten) | Quelle |
 | Diesen Zeitplan löschen | Zeitplan |
-| Anwesenheitssensor dieser Zone | Zone |
 | Diese Zone löschen | Zone |
-| Heizen beginnen bei | Zone |
-| Kühlen beginnen bei | Zone |
-| Noch so lange als belegt zählen (Sekunden) | Zone |
-| Nur heizen unter dieser Außentemperatur | Zone |
-| Nur kühlen über dieser Außentemperatur | Zone |
-| Zustand, der belegt bedeutet | Zone |
 
 ## Sprachen
 
