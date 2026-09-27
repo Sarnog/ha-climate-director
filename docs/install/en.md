@@ -1024,7 +1024,7 @@ Under **Repairs** you may run into these notices, with what they mean and what t
   is structurally wrong; the zones that are fine are still regulated, so check
   the configuration.
 - **Climate Director: <name> has hand-operated duties** — a zone only has
-  sources that never start by themselves; switch *Automatic start* on or
+  sources that never start by themselves; switch *Start this appliance automatically* on or
   confirm the notice.
 - **Nobody hears a refused pre-conditioning request** — no automation listens
   for the refusal event; import the *Refused pre-conditioning* blueprint

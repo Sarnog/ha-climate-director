@@ -1059,7 +1059,7 @@ Sous **Réparations**, vous pouvez rencontrer ces messages, avec ce qu'ils signi
   donc vérifiez la configuration.
 - **Climate Director : <name> a des tâches manuelles**
   — une zone n'a que des sources qui ne démarrent jamais seules ; activez
-  *Démarrage automatique* ou confirmez le message.
+  *Démarrer cet appareil automatiquement* ou confirmez le message.
 - **Personne n'entend une demande de préparation refusée**
   — aucune automatisation n'écoute l'événement de refus ; importez le blueprint
   *Préparation refusée* (`precondition_refused.yaml`) et créez une automatisation.

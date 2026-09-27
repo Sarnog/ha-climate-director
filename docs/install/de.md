@@ -228,7 +228,7 @@ Eine Zone ist ein Raum. Pro Zone stellst du ein:
 | **Was entscheidet, ob diese Zone läuft** | *der Haushalt* (Zeitplan, Schlaf, jemand zu Hause) oder *der Raum selbst* (nur der Anwesenheitssensor) |
 | **Anwesenheitssensor dieser Zone** | welcher Sensor meldet, dass der Raum belegt ist |
 | **Zustand, der belegt bedeutet** | der Zustand, den dieser Sensor als belegt meldet |
-| **Noch so lange als belegt zählen (Sekunden)** | wie lange der Raum nach der letzten Meldung noch als belegt zählt; fängt flackernde Melder auf |
+| **Noch so lange als belegt zählen (Sekunden)** | wie lange der Raum nach der letzten Meldung noch als belegt zählt; das fängt flackernde Melder auf |
 | **Niederschlag hebt die 'Fenster-öffnen'-Regel nicht auf** | an für einen Raum ohne Fenster; dort gilt die Außengrenze auch bei Niederschlag weiter |
 | **Diese Zone darf heizen** | aus = dieser Raum wird nie geheizt |
 | **Zieltemperatur Heizen** | der Sollwert, den das Gerät beim Heizen bekommt — nicht der Startpunkt |

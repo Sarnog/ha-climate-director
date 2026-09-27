@@ -350,7 +350,7 @@ tanto, toda la casa a gas.
 
 ### Un aparato que enciendes tú
 
-Desactiva **Arrancar este aparato automáticamente** para un aparato que manejas
+Desactiva **Encender este aparato automáticamente** para un aparato que manejas
 a mano (un aire acondicionado en un dormitorio sin sensor de presencia, por
 ejemplo). El director:
 
@@ -620,15 +620,15 @@ La habitación indica entonces `opening_open_elsewhere` como motivo, para que
 veas por qué no ocurre nada. Dos cosas siguen como siempre: una zona con
 anulación y una fuente manual no se gobiernan, tampoco por esta lista.
 
-Cada abertura tiene su propio identificador, guardado de forma invisible, y de él
-cuelga el interruptor de puenteo. Sigue existiendo al cambiar el sensor; el
+Cada abertura tiene su propio identificador, guardado de forma invisible, y de
+él cuelga el interruptor de puenteo. Sigue existiendo al cambiar el sensor; el
 **Nombre** es solo la etiqueta que ves tú. Si una abertura aún no tenía
 identificador, ese identificador es el sensor y el interruptor se llama como el
 nombre que muestra el propio sensor: si aparece más tarde o lo renombras, el
 nombre del interruptor lo sigue sin recargar.
 
-El interruptor se llama `switch.*_puenteo_<opening>`. Activado = el director hace
-como si esta abertura no existiera: sus propias zonas y la parada global la
+El interruptor se llama `switch.*_puenteo_<opening>`. Activado = el director
+hace como si esta abertura no existiera: sus propias zonas y la parada global la
 ignoran. No hay duración, se mantiene hasta que lo apagues tú. Mientras siga
 activo con la abertura realmente abierta, el director lo informa en
 *Reparaciones*.
@@ -814,7 +814,7 @@ vuelve a decidir sobre la zona con normalidad. Si entre medias apagas el
 interruptor de anulación a mano, o llamas a `climate_director.clear_override`,
 la duración vence en silencio: no va ninguna orden al aparato, el director
 retoma la zona y solo apaga el aparato si su propia decisión lo exige. Una
-fuente con *Arrancar este aparato automáticamente* desactivado sigue por tanto
+fuente con *Encender este aparato automáticamente* desactivado sigue por tanto
 funcionando hasta que estorbe.
 
 Esto sustituye a un botón del panel con un script temporizador: un botón, una
@@ -920,11 +920,11 @@ y solo el anillo de progreso se queda al principio hasta que expire.
   script al lado que ponga el aparato directamente solo funciona si te
   devuelves esa zona con la anulación durante ese tiempo; sin anulación, el
   director recalcula su propio plan en la siguiente evaluación y apaga tu
-  aparato. Un aparato con *Arrancar este aparato automáticamente* desactivado
+  aparato. Un aparato con *Encender este aparato automáticamente* desactivado
   no necesita anulación.
 - **Una habitación que manejas siempre a mano**: haz de ella una zona igual
   (si no, la integración no sabe de ese aparato), elige la entidad `climate.*`
-  del propio aparato como sensor interior y desactiva *Arrancar este aparato
+  del propio aparato como sensor interior y desactiva *Encender este aparato
   automáticamente* en la fuente.
 
 ## Evaluar una prueba en modo sombra
@@ -1042,8 +1042,8 @@ En **Reparaciones** puedes encontrarte con estos avisos, con lo que significan y
   — la instalación no es correcta; las zonas que sí lo son siguen regulándose,
   así que revisa la configuración.
 - **Climate Director: <name> tiene tareas manuales**
-  — una zona solo tiene fuentes que nunca arrancan solas; activa *Inicio
-  automático* o confirma el aviso.
+  — una zona solo tiene fuentes que nunca arrancan solas; activa *Encender este aparato
+  automáticamente* o confirma el aviso.
 - **Nadie escucha una petición de preacondicionamiento rechazada**
   — ninguna automatización escucha el evento de rechazo; importa el blueprint
   *Preacondicionamiento rechazado* (`precondition_refused.yaml`) y crea una

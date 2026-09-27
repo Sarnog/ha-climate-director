@@ -812,7 +812,7 @@
       "message": "Zones {first} and {second} both hold priority {priority} on circuit {circuit}. On one outdoor unit that leaves the winner to chance; give each its own number."
     },
     "calendars_without_keyword": {
-      "message": "Holiday calendars are set but no keyword is, so no event can ever switch holiday schedule on. Fill in the word an event must carry, or clear the calendars."
+      "message": "Holiday calendars are set but no keyword is, so no event can ever switch the holiday schedule on. Fill in the word an event must carry, or clear the calendars."
     },
     "zone_only_manual_sources": {
       "message": "Zone {zone} wants {mode} but every source able to deliver it has automatic start off, so it never starts by itself."

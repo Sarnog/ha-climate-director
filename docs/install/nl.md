@@ -345,7 +345,7 @@ hele huis op gas.
 
 ### Een apparaat dat je zelf aanzet
 
-Zet **Dit apparaat automatisch starten** uit voor een apparaat dat je met de
+Zet **Dit apparaat automatisch aanzetten** uit voor een apparaat dat je met de
 hand bedient (bijvoorbeeld een airco op een slaapkamer zonder
 aanwezigheidssensor). De director:
 
@@ -808,7 +808,7 @@ beslist daarna gewoon weer over de zone. Zet je de overrideschakelaar
 tussendoor met de hand uit, of roep je `climate_director.clear_override` aan,
 dan vervalt de looptijd stil: er gaat géén commando naar het apparaat, de
 director neemt de zone weer over en zet het apparaat alleen uit als zijn eigen
-beslissing dat nodig maakt. Een bron met *Dit apparaat automatisch starten* uit
+beslissing dat nodig maakt. Een bron met *Dit apparaat automatisch aanzetten* uit
 blijft dus draaien tot hij in de weg staat.
 
 Dit is de vervanging van een dashboardknop met een timerscript: één knop, één
@@ -914,7 +914,7 @@ voortgangsring blijft tot het aflopen aan het begin staan.
   ernaast dat het apparaat rechtstreeks zet werkt alleen als je die zone zolang
   met de override aan jezelf teruggeeft; zonder override rekent de director bij
   de eerstvolgende evaluatie zijn eigen plan door en zet hij je apparaat weer
-  uit. Een apparaat met *Dit apparaat automatisch starten* uit heeft die
+  uit. Een apparaat met *Dit apparaat automatisch aanzetten* uit heeft die
   override niet nodig.
 - **Een kamer die je altijd zelf bedient**: maak er tóch een zone van (anders
   weet de integratie niet van dat apparaat af), kies als binnentemperatuursensor
@@ -1036,7 +1036,7 @@ Onder **Reparaties** kun je deze meldingen tegenkomen, met wat ze betekenen en w
   klopt structureel niet; de zones die wel kloppen worden gewoon geregeld, loop
   de configuratie na.
 - **Climate Director: <name> heeft handbediende taken** — een zone heeft alleen
-  bronnen die niet vanzelf starten; zet *Automatisch starten* aan of bevestig de
+  bronnen die niet vanzelf starten; zet *Dit apparaat automatisch aanzetten* aan of bevestig de
   melding.
 - **Niemand hoort een geweigerd vooruit-verzoek** — er is geen automatisering op
   het weigerings-event; importeer de blueprint *Geweigerd vooruit-verzoek*
