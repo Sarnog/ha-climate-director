@@ -129,20 +129,20 @@ def _count_publishes(monkeypatch: pytest.MonkeyPatch) -> list[int]:
 async def test_the_zone_switches_publish_nothing_before_the_first_decision(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Bij het opstarten publiceert alleen de eerste beslissing (ronde 35, R35-8).
+    """Bij het opstarten publiceert alleen de eerste beslissing.
 
     Elke zoneschakelaar zet bij het herstellen van zijn stand de override in de
     coordinator, maar hoort daarbij niet te publiceren: er is nog niets besloten.
-    Tot ronde 35 deed hij dat wel, want `_push` publiceerde mee - dus publiceerde
-    een huis met twee zones drie keer voordat de eerste beslissing klaar was: twee
-    keer om niets en één keer echt. Deze test telt elke bijwerking van de
+    Publiceerde `_push` mee, dan publiceerde een huis met twee zones drie keer
+    voordat de eerste beslissing klaar was: twee keer om niets en één keer
+    echt. Deze test telt elke bijwerking van de
     luisteraars vanaf het opzetten en eist er precies één.
 
-    At startup only the first decision publishes (round 35, R35-8). Every zone
+    At startup only the first decision publishes. Every zone
     switch writes its override into the coordinator while restoring its state, but
-    must not publish along with it: nothing has been decided yet. Until round 35
-    it did, since `_push` published too - so a two-zone house published three
-    times before the first decision was done: twice for nothing and once for real.
+    must not publish along with it: nothing has been decided yet. Were `_push` to
+    publish too, a two-zone house would publish three times before the first
+    decision was done: twice for nothing and once for real.
     This test counts every listener update from setup on and demands exactly one.
     """
     published = _count_publishes(monkeypatch)
@@ -159,19 +159,19 @@ async def test_the_zone_switches_publish_nothing_before_the_first_decision(
 async def test_a_hand_off_publishes_at_once(
     home: LiveHome, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Een wijziging door de gebruiker publiceert nog steeds direct (ronde 35, R35-8).
+    """Een wijziging door de gebruiker publiceert nog steeds direct.
 
     De drie paden die de eindtijdsensor meteen bij moeten werken: de schakelaar
     met de hand omzetten, `set_override` en `clear_override`. De debouncer wacht
-    een seconde, dus zonder deze stap blijft de sensor staan tot de volgende ronde
-    (R34-7). Wat niet mag is publiceren bij het opstarten; wat moet blijven is
+    een seconde, dus zonder deze stap blijft de sensor staan tot de volgende
+    ronde. Wat niet mag is publiceren bij het opstarten; wat moet blijven is
     publiceren bij een wijziging.
 
-    A change by the user still publishes at once (round 35, R35-8). The three
+    A change by the user still publishes at once. The three
     paths that have to bring the end-time sensor up to date immediately: flipping
     the switch by hand, `set_override` and `clear_override`. The debouncer waits a
-    second, so without this step the sensor stays put until the next round
-    (R34-7). What must not happen is publishing at startup; what must stay is
+    second, so without this step the sensor stays put until the next
+    round. What must not happen is publishing at startup; what must stay is
     publishing on a change.
     """
     published = _count_publishes(monkeypatch)
@@ -300,8 +300,8 @@ async def test_the_handover_stands_before_the_apply() -> None:
 
 
 # ---------------------------------------------------------------------------
-# De eindtijdsensor: wat het dashboard laat zien (ronde 33).
-# The end-time sensor: what the dashboard shows (round 33).
+# De eindtijdsensor: wat het dashboard laat zien.
+# The end-time sensor: what the dashboard shows.
 # ---------------------------------------------------------------------------
 
 ENDS = "zone_woonkamer_override_ends"
@@ -334,7 +334,7 @@ async def call_with_target(home: LiveHome, service: str, data: dict, entity_id: 
 async def test_the_end_time_sensor_shows_the_running_override(home: LiveHome) -> None:
     """De toestand is de eindtijd, met de starttijd als attribuut.
 
-    Géén `evaluate()` erna: de actie laat de sensor zelf meeschrijven (R34-7).
+    Géén `evaluate()` erna: de actie laat de sensor zelf meeschrijven.
     Met een beslisronde ertussen zou deze test de debouncer meten in plaats van
     de eigenschap - de ronde komt pas een seconde later langs.
     """
@@ -385,7 +385,7 @@ async def test_without_an_override_the_end_time_is_unknown(home: LiveHome) -> No
     """Zonder override is er geen eindtijd, geen starttijd en geen doel.
 
     De regel die hier stond was een dode assertie: `assert X if False else True`
-    is `assert True` en kon dus nooit rood worden (R34-8). Er zat geen eigenschap
+    is `assert True` en kon dus nooit rood worden. Er zat geen eigenschap
     achter die de regel eronder niet al vastpint — `start_time` hoort te
     ontbreken, en dat is precies wat de assertie hierna eist. De regel is daarom
     weg en niet herschreven; wie de eigenschap wil zien bijten, haalt in
@@ -393,7 +393,7 @@ async def test_without_an_override_the_end_time_is_unknown(home: LiveHome) -> No
 
     Without an override there is no end time, no start time and no target. The
     line that stood here was a dead assertion: `assert X if False else True` is
-    `assert True` and could never go red (R34-8). There was no property behind it
+    `assert True` and could never go red. There was no property behind it
     that the line below does not already pin down — `start_time` is supposed to
     be absent, which is exactly what the next assertion demands. So the line is
     gone rather than rewritten; whoever wants to see the property bite removes
@@ -438,7 +438,7 @@ async def test_the_end_time_disappears_when_the_switch_goes_off_by_hand(home: Li
     """Met de hand uitzetten laat de looptijd stil vervallen - en de sensor mee.
 
     Zonder beslisronde erna: de schakelaar laat alles wat aan de override hangt
-    direct volgen (R34-7). De looptijd van een handmatig uitgezette zone vervalt
+    direct volgen. De looptijd van een handmatig uitgezette zone vervalt
     dus meteen, en niet pas wanneer de debouncer een seconde later langskomt.
     """
     await call_set_override(home, minutes=60)
@@ -450,7 +450,7 @@ async def test_the_end_time_disappears_when_the_switch_goes_off_by_hand(home: Li
 
 
 async def test_clear_override_makes_the_end_time_unknown(home: LiveHome) -> None:
-    """De annuleerknop van de kaart: de sensor als doel, en meteen `unknown` (R34-7)."""
+    """De annuleerknop van de kaart: de sensor als doel, en meteen `unknown`."""
     await call_set_override(home, minutes=60)
     sensor = home.by_key(ENDS)
     await call_with_target(home, "clear_override", {}, sensor)
@@ -702,8 +702,8 @@ async def test_a_leftover_start_time_without_an_ending_is_dropped() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Alleen onze eigen entiteiten zijn een override-doel (R34-9).
-# Only our own entities are an override target (R34-9).
+# Alleen onze eigen entiteiten zijn een override-doel.
+# Only our own entities are an override target.
 # ---------------------------------------------------------------------------
 
 
@@ -803,7 +803,7 @@ async def test_an_entity_that_only_looks_like_an_override_is_refused(
     unique_id: str,
     foreign: bool,
 ) -> None:
-    """Een look-alike id van elders is een typefout, geen override-doel (R34-9).
+    """Een look-alike id van elders is een typefout, geen override-doel.
 
     De vier gevallen zijn precies de vier toetsen van de resolver: het
     entiteitsdomein, de entry, de prefix en het platform. Zonder die toetsen

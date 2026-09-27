@@ -926,17 +926,17 @@ class TestCapacity:
         return decide(config, world)
 
     def test_a_hand_operated_unit_that_runs_occupies_capacity(self) -> None:
-        """Tot 6.6.0 telde die niet mee, en dan draaide de buitenunit met drie.
+        """Telt die niet mee, dan draait de buitenunit met drie.
 
-        Een slaapkamerairco die je zelf aanzette werd met rust gelaten - terecht
+        Een slaapkamerairco die je zelf aanzet wordt met rust gelaten - terecht
         - maar hij bezet wel een plek. Hem netjes als handbediende bron
-        instellen maakte de bescherming daarmee zwakker dan hem helemaal
+        instellen zou de bescherming anders zwakker maken dan hem helemaal
         weglaten, en dat is precies andersom dan het hoort.
 
-        Up to 6.6.0 it did not count, and then the outdoor unit ran with three.
-        A bedroom unit you switched on yourself was left alone - rightly - but
+        If it did not count, the outdoor unit would run with three.
+        A bedroom unit you switch on yourself is left alone - rightly - but
         it does occupy a place. Configuring it tidily as a hand-operated source
-        thereby made the protection weaker than leaving it out altogether,
+        would otherwise make the protection weaker than leaving it out altogether,
         which is exactly the wrong way round.
         """
         config = self._house_with_a_third_unit(autostart=False)
@@ -1163,10 +1163,10 @@ class TestAmbiguousModesLockTheCircuit:
         self, mode: str, wanted: str
     ) -> None:
         """Een handbediende unit op `auto` die een gedeeld circuit blokkeert wordt
-        weggeschakeld - dat is beslissing 2 van ronde 8.
+        weggeschakeld - dat is een bewuste beslissing.
 
         A hand-operated unit on `auto` blocking a shared circuit is stood down -
-        that is decision 2 of round 8.
+        that is a deliberate decision.
         """
         warm = Zone(
             zone_id="woonkamer",

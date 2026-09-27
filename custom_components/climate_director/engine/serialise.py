@@ -302,7 +302,7 @@ def opening_ids(items: Iterable[Mapping[str, Any]]) -> list[str]:
     de `entity_id` en niet uit de naam, want de entity_id is de identiteit en
     blijft dezelfde als iemand er later een naam aan hangt - anders wisselt de
     `unique_id` van de overbruggingsschakelaar en verdwijnt de entiteit met
-    geschiedenis en dashboardverwijzingen erbij. Alleen opslag van vóór 7.5.3
+    geschiedenis en dashboardverwijzingen erbij. Alleen oudere opslag
     heeft geen id; een tweede opening op dezelfde sensor krijgt `_<n>` erachter.
     Een opgeslagen id wordt nooit veranderd, ook een dubbele niet: dat is iets
     voor `validate()` om te melden, niet voor deze lezer om stil op te lossen.
@@ -312,7 +312,7 @@ def opening_ids(items: Iterable[Mapping[str, Any]]) -> list[str]:
     from the `entity_id` and not from the name, because the entity id is the
     identity and stays the same once somebody hangs a name on it - otherwise the
     bypass switch's `unique_id` changes and the entity disappears, history and
-    dashboard references included. Only storage from before 7.5.3 has no id; a
+    dashboard references included. Only older storage has no id; a
     second opening on the same sensor gets `_<n>` appended. A stored id is never
     changed, not even a duplicate one: that is for `validate()` to report, not
     for this reader to solve quietly.

@@ -162,7 +162,7 @@ class TestEveryFormField:
     def test_the_source_screen_is_its_table_plus_its_own_rows(self) -> None:
         """De veldtabel telt op bij wat het scherm zelf nog letterlijk noemt.
 
-        Het bronscherm leest zijn velden sinds ronde 24 uit `SOURCE_FIELDS`.
+        Het bronscherm leest zijn velden uit `SOURCE_FIELDS`.
         Deze bewaking pint vast dat de kaart hierboven dáár werkelijk uit komt:
         de tabelrijen plus de twee regels die het scherm zelf draagt — de
         verwijderregel en de afsluitregel — zijn samen wat de veldenkaart voor
@@ -170,7 +170,7 @@ class TestEveryFormField:
         meer gelezen wordt hierboven onopgemerkt blijven.
 
         The field table adds up with what the screen itself still names
-        literally. Since round 24 the source screen reads its fields from
+        literally. The source screen reads its fields from
         `SOURCE_FIELDS`. This guard pins down that the map above genuinely comes
         from there: the table rows plus the two rows the screen carries itself —
         the delete row and the exit row — together are what the field map sees

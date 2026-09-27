@@ -2,14 +2,14 @@
 
 The ignition boundary measures the gap between two ignitions, not the count.
 
-De opgetilde invariant uit `a972579` telde ontstekingen per uur; met een
+Een invariant die ontstekingen per uur telt, ziet dit niet; met een
 tijdstap van tien minuten kan die telling de grens voor een apparaat zonder
 circuit (twintig per uur) nooit bereiken, en twee ontstekingen twee minuten na
 elkaar telt hij sowieso niet. Deze simulatie draait daarom op een tijdstap van
 één minuut - fijn genoeg om een gat van twee minuten te kúnnen zien - en pint
 vast dat de ontstekingsgrens daarmee écht kan falen.
 
-The lifted invariant from `a972579` counted ignitions per hour; with a
+An invariant counting ignitions per hour does not see this; with a
 ten-minute time step that count can never reach the boundary for an appliance
 without a circuit (twenty per hour), and two ignitions two minutes apart are not
 counted anyway. This simulation therefore runs on a one-minute time step - fine

@@ -81,16 +81,16 @@ class _DirectorSwitch(ClimateDirectorEntity, SwitchEntity, RestoreEntity):
         """Restore the saved state before the first decision is made.
 
         De stand gaat hier de coordinator in, maar er wordt niet gepubliceerd: bij
-        het opstarten publiceert alleen de eerste beslissing. Tot ronde 35
-        publiceerde elke zoneschakelaar hier, dus publiceerde een huis met twee
-        zones drie keer voordat er iets besloten was - twee keer om niets en één
-        keer echt (ronde 35, R35-8).
+        het opstarten publiceert alleen de eerste beslissing. Publiceerde elke
+        zoneschakelaar hier, dan publiceerde een huis met twee zones drie keer
+        voordat er iets besloten was - twee keer om niets en één keer
+        echt.
 
         The state goes into the coordinator here, but nothing is published: at
-        startup only the first decision publishes. Until round 35 every zone
-        switch published here, so a two-zone house published three times before
-        anything had been decided - twice for nothing and once for real (round 35,
-        R35-8).
+        startup only the first decision publishes. Were every zone switch to
+        publish here, a two-zone house would publish three times before
+        anything had been decided - twice for nothing and once for
+        real.
         """
         await super().async_added_to_hass()
         last = await self.async_get_last_state()
@@ -122,12 +122,12 @@ class _DirectorSwitch(ClimateDirectorEntity, SwitchEntity, RestoreEntity):
         """Write this switch's state into the coordinator, without publishing.
 
         Publiceert bewust niet: bij een wijziging door de gebruiker doet
-        `_publish` dat, en bij het opstarten de eerste beslissing (ronde 35,
-        R35-8). Een schakelaar is invoer voor de beslissing, geen uitvoer, dus het
+        `_publish` dat, en bij het opstarten de eerste
+        beslissing. Een schakelaar is invoer voor de beslissing, geen uitvoer, dus het
         herstellen van zijn stand hoeft de rest van het huis niet wakker te maken.
 
         Deliberately does not publish: on a change by the user `_publish` does
-        that, and at startup the first decision does (round 35, R35-8). A switch is
+        that, and at startup the first decision does. A switch is
         input to the decision, not output, so restoring its state need not wake up
         the rest of the house.
         """
@@ -137,11 +137,11 @@ class _DirectorSwitch(ClimateDirectorEntity, SwitchEntity, RestoreEntity):
         """Let everything that hangs on this state follow at once.
 
         Alleen een wijziging door de gebruiker publiceert; bij het opstarten doet
-        de eerste beslissing dat (ronde 35, R35-8). Een schakelaar die niets extra
+        de eerste beslissing dat. Een schakelaar die niets extra
         te vertellen heeft laat dit leeg.
 
         Only a change by the user publishes; at startup the first decision does
-        (round 35, R35-8). A switch with nothing extra to say leaves this empty.
+        A switch with nothing extra to say leaves this empty.
         """
 
     def _handle_coordinator_update(self) -> None:
@@ -209,7 +209,7 @@ class ZoneOverrideSwitch(_DirectorSwitch):
         self._attr_translation_placeholders = {"zone": zone.name if zone else zone_id}
 
     def _push(self) -> None:
-        """Zet de stand van deze zone in de coordinator (R34-7, R35-8).
+        """Zet de stand van deze zone in de coordinator.
 
         De schakelaar schrijft alleen `zone_overrides`; wie daarna publiceert
         staat in `_publish` - bij een wijziging door de gebruiker dus, en niet bij
@@ -222,7 +222,7 @@ class ZoneOverrideSwitch(_DirectorSwitch):
         self.coordinator.zone_overrides[self._zone_id] = self._is_on
 
     def _publish(self) -> None:
-        """Laat de looptijd vervallen en werk de luisteraars bij (R34-7, R35-8).
+        """Laat de looptijd vervallen en werk de luisteraars bij.
 
         De coordinator laat de looptijd van een handmatig uitgezette zone stil
         vervallen en werkt zijn luisteraars bij, zodat de eindtijdsensor meteen
@@ -257,14 +257,14 @@ class ZoneOverrideSwitch(_DirectorSwitch):
         worse: a restart restores that `on` back into the coordinator, reviving a
         handover that was gone.
 
-        Geschreven wordt er alleen bij een **echte** verandering (R34-7). Sinds de
+        Geschreven wordt er alleen bij een **echte** verandering. Omdat de
         override zijn stand direct publiceert komt deze tak ook langs op het
         moment dat de schakelaar zelf net schreef, en dan is er niets veranderd:
         `async_write_ha_state` zou daar een `state_reported` van maken en geen
         `state_changed`, dus dat is ruis. Zo blijft er precies één schrijfactie
         per echte overgang over.
 
-        This writes only on a **real** change (R34-7). Since the override
+        This writes only on a **real** change. Since the override
         publishes its state at once, this branch also comes past the moment the
         switch itself just wrote, and then nothing has changed: `async_write_ha_state`
         would make a `state_reported` of that and no `state_changed`, so it is
@@ -336,8 +336,8 @@ class OpeningBypassSwitch(_DirectorSwitch):
         denkt, dan stond hij aan terwijl de opening allang weer meetelt - en
         erger: een herstart herstelt die `on` terug de coordinator in.
 
-        Sinds R28-1 ververst deze ronde ook de naam, want die werd eerder alleen
-        bij het opzetten gelezen en bleef dan staan. In productie zijn de vijf
+        Deze ronde ververst ook de naam; wie hem alleen bij het opzetten leest,
+        laat hem daarna staan. In productie zijn de vijf
         openingen Zigbee-contacten die bij een herstart net zo goed ná de
         integratie kunnen verschijnen, en een sensor hernoemen komt ook voor;
         zonder deze verversing heette de schakelaar in beide gevallen naar de
@@ -352,8 +352,8 @@ class OpeningBypassSwitch(_DirectorSwitch):
         the opening has long since counted again - and worse: a restart restores
         that `on` back into the coordinator.
 
-        Since R28-1 this round refreshes the name too, which used to be read at
-        setup only and then stayed put. In production the five openings are
+        This round refreshes the name too, since reading it at setup only
+        would leave it standing. In production the five openings are
         Zigbee contacts that can just as well appear *after* the integration on
         a restart, and renaming a sensor happens too; without this refresh the
         switch read as the bare `entity_id` in both cases. No reload needed: the
@@ -365,7 +365,7 @@ class OpeningBypassSwitch(_DirectorSwitch):
         self.async_write_ha_state()
 
     def _refresh_label(self) -> None:
-        """Follow the sensor's friendly name without a reload (R28-1).
+        """Follow the sensor's friendly name without a reload.
 
         Gemeten op deze Home Assistant-versie: `translation_placeholders` staat
         net als `name` wél in HA's `CACHED_PROPERTIES_WITH_ATTR_`, en de

@@ -1,6 +1,6 @@
-"""R27-3: een override-setpoint blijft binnen het bereik van het apparaat.
+"""Een override-setpoint blijft binnen het bereik van het apparaat.
 
-R27-3: an override setpoint stays inside the appliance's range.
+An override setpoint stays inside the appliance's range.
 
 `_async_set_override` gaf het setpoint ongeklemd door. Een koppig apparaat
 weigert een waarde buiten zijn `min_temp`/`max_temp` stil - `applier.apply()`
@@ -164,7 +164,7 @@ class TestAnOverrideSetpointStaysInsideTheAppliance:
 
 
 class TestTheClampHangsOnSending:
-    """R28-2: de klem hangt aan het versturen, niet aan de aanroep.
+    """De klem hangt aan het versturen, niet aan de aanroep.
 
     Tussen de service-aanroep en de beslisronde waarin het commando de deur uit
     gaat, kan het apparaat zijn bereik gaan melden - of juist kwijtraken. De
@@ -173,7 +173,7 @@ class TestTheClampHangsOnSending:
     loopt de override door met een waarde die nooit aankwam: de zone staat op
     "van mij" terwijl het apparaat op zijn oude waarde blijft staan.
 
-    R28-2: the clamp hangs on sending, not on the call.
+    The clamp hangs on sending, not on the call.
 
     Between the service call and the decision round that puts the command on the
     wire, the appliance can start reporting its range - or lose it. The clamp

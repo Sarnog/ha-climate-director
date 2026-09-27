@@ -63,15 +63,15 @@ PACKAGE_ROOT = Path(__file__).resolve().parents[1] / "custom_components" / "clim
 MODULE_LIMIT = 700
 FUNCTION_LIMIT = 80
 
-# De stand van dit moment, gemeten op cf3e4bf (2026-09-07). Deze lijst is de
+# De gemeten stand. Deze lijst is de
 # uitzondering op de norm uit ARCHITECTURE.md, niet de norm zelf: hij kan
 # alleen kleiner worden.
 #
-# The state of this moment, measured on cf3e4bf (2026-09-07). This list is the
+# The measured state. This list is the
 # exception to the norm in ARCHITECTURE.md, not the norm itself: it can only
 # get shorter.
-# Sinds cf3e4bf zijn er zes genoteerde getallen bewogen, en dat was een bewuste
-# keuze: `engine/models.py` 2039 → 2100 (anker 12 voegt `covers_zones` en
+# Zes genoteerde getallen zijn bewust gegroeid, met de reden erbij:
+# `engine/models.py` 2039 → 2100 (anker 12 voegt `covers_zones` en
 # `takeover_delay` aan `Source` toe, plus de regel die een onbekende zone in
 # dat gebied meldt), `engine/decide.py` 1618 → 1647 (de overname moet vóór de
 # bronkeuze staan en wordt door de functies heen meegegeven), `_build_commands`
@@ -79,12 +79,12 @@ FUNCTION_LIMIT = 80
 # en `_build_zone_decisions` is met 82 nieuw op de lijst. Let op dat de regel
 # `only, unbounded = takeover.narrowing(...)` op drie paden staat
 # (`_collect_wishes`, `_resolve_with_fallbacks`, `_build_zone_decisions`) —
-# de vorm "op het ene pad gerepareerd, op het pad ernaast vergeten", vandaag
-# gedekt door 32 tests. Een veld toevoegen kan niet zonder regels; de ratel
+# de vorm "op het ene pad gerepareerd, op het pad ernaast vergeten", gedekt
+# door tests. Een veld toevoegen kan niet zonder regels; de ratel
 # maakt die groei zichtbaar in plaats van hem te verbieden. Verhoog een
 # genoteerd getal daarom alleen met een reden erbij, precies zoals hier.
 #
-# Since cf3e4bf six noted numbers have moved, and that was a deliberate choice:
+# Six noted numbers grew deliberately, with the reason alongside:
 # `engine/models.py` 2039 → 2100 (anchor 12 adds `covers_zones` and
 # `takeover_delay` to `Source`, plus the rule reporting an unknown zone in that
 # area), `engine/decide.py` 1618 → 1647 (the takeover must sit before source
@@ -93,39 +93,39 @@ FUNCTION_LIMIT = 80
 # `_build_zone_decisions` is new on the list at 82. Note that the line
 # `only, unbounded = takeover.narrowing(...)` stands on three paths
 # (`_collect_wishes`, `_resolve_with_fallbacks`, `_build_zone_decisions`) —
-# the shape "fixed on one path, forgotten on the one beside it", today covered
-# by 32 tests. Adding a field cannot happen without lines; the ratchet makes
+# the shape "fixed on one path, forgotten on the one beside it", covered by
+# tests. Adding a field cannot happen without lines; the ratchet makes
 # that growth visible rather than forbidding it. Only ever raise a noted
 # number with a reason alongside, exactly as here.
 #
-# Ronde 25, fase 1 (anker 8): de opening kreeg een eigen identiteit en een
+# Anker 8: de opening kreeg een eigen identiteit en een
 # overbruggingsschakelaar; dat raakt de models, de coordinator, de config flow
 # en de schema's, dus deze vijf getallen groeiden mee. De lijst zelf is even
 # lang gebleven.
 #
-# Round 25, phase 1 (anchor 8): the opening gained an identity of its own and a
+# Anchor 8: the opening gained an identity of its own and a
 # bypass switch; that touches the models, the coordinator, the config flow and
 # the schemas, so these five numbers grew along. The list itself stayed the
 # same length.
 #
-# Ronde 26 (R2): `engine/models.py` 2120 → 2143 door de nieuwe
+# `engine/models.py` 2120 → 2143 door de nieuwe
 # `_rule_duplicate_opening_ids` — een dubbel opening_id moet een `Problem`-code
 # krijgen in plaats van stil twee schakelaars te laten delen. Een nieuwe
 # validatieregel kan niet zonder regels; de ratel maakt die groei zichtbaar.
 #
-# Round 26 (R2): `engine/models.py` 2120 → 2143 through the new
+# `engine/models.py` 2120 → 2143 through the new
 # `_rule_duplicate_opening_ids` — a doubled opening id must get a `Problem`
 # code instead of silently sharing two switches. A new validation rule cannot
 # exist without lines; the ratchet makes that growth visible.
 #
-# Ronde 27 (R27-2): `config_flow.py` 1418 → 1444 door `_normalise_opening_ids`
+# `config_flow.py` 1418 → 1444 door `_normalise_opening_ids`
 # — de options flow leest de ruwe opslag, dus een opening zonder `opening_id`
 # kreeg bij de eerste bewerking een id uit de naam en daarmee een nieuwe
 # `unique_id`. De afleiding zelf woont in `engine/serialise.opening_ids`, dat
 # daardoor onder de 700 blijft: `_unique_opening_id` ging erin op in plaats van
 # ernaast te staan. Wat hier groeit is de aanroep plus de uitleg waarom.
 #
-# Round 27 (R27-2): `config_flow.py` 1418 → 1444 through `_normalise_opening_ids`
+# `config_flow.py` 1418 → 1444 through `_normalise_opening_ids`
 # — the options flow reads the raw storage, so an opening without an
 # `opening_id` got an id from its name on the first edit, and with it a new
 # `unique_id`. The derivation itself lives in `engine/serialise.opening_ids`,
@@ -133,7 +133,7 @@ FUNCTION_LIMIT = 80
 # function instead of standing beside it. What grows here is the call plus the
 # explanation of why.
 #
-# Ronde 30, fase 4 (mypy strict schoon): `coordinator.py` 1756 → 1840 door het
+# Mypy strict schoon: `coordinator.py` 1756 → 1840 door het
 # `CoordinatorSurface`-protocol plus de `entry`-property. De vier mixins liggen
 # op de coördinator maar erven er niet van — de coördinator erft van hén — dus
 # zonder dat protocol ziet mypy hun `self` als de mixin en klaagt hij op elk
@@ -143,7 +143,7 @@ FUNCTION_LIMIT = 80
 # lijsten, en één getypeerde lezer is eerlijker dan twee `list[dict]`-casts op
 # de plek waar de bron-ID's wonen.
 #
-# Round 30, phase 4 (mypy strict clean): `coordinator.py` 1756 → 1840 through the
+# Mypy strict clean: `coordinator.py` 1756 → 1840 through the
 # `CoordinatorSurface` protocol plus the `entry` property. The four mixins sit on
 # the coordinator but do not inherit from it — the coordinator inherits from
 # them — so without that protocol mypy sees their `self` as the mixin and
@@ -153,28 +153,28 @@ FUNCTION_LIMIT = 80
 # list of lists, and one typed reader is more honest than two `list[dict]` casts
 # where the source ids live.
 #
-# Ronde 33 (override op het dashboard): `coordinator.py` 1840 → 1842 en
+# Override op het dashboard: `coordinator.py` 1840 → 1842 en
 # `coordinator.py::__init__` 197 → 198 door de **starttijd** van een override
 # (`zone_override_started`). Eén regel in het `CoordinatorSurface`-protocol en
 # één in `__init__`, want de mixin `overrides.py` zet die tijd en mypy moet hem
 # daar kennen; zonder die twee regels klapt de typecontrole op een lid dat de
-# coördinator werkelijk draagt. De rest van deze ronde woont in `sensor.py` (de
+# coördinator werkelijk draagt. De rest van die wijziging woont in `sensor.py` (de
 # eindtijdsensor met zijn apparaatklasse), `state_store.py` (opslag en herstel,
 # met een oude opslag die zonder dat veld gewoon laadt) en `__init__.py` (de
 # servicelaag die een entiteit als doel aanneemt) — alle drie onder hun maat.
 #
-# Round 33 (override on the dashboard): `coordinator.py` 1840 → 1842 and
+# Override on the dashboard: `coordinator.py` 1840 → 1842 and
 # `coordinator.py::__init__` 197 → 198 through an override's **start time**
 # (`zone_override_started`). One line in the `CoordinatorSurface` protocol and
 # one in `__init__`, because the `overrides.py` mixin sets that time and mypy has
 # to know it there; without those two lines the type check trips over a member
-# the coordinator really carries. The rest of this round lives in `sensor.py`
+# the coordinator really carries. The rest of that change lives in `sensor.py`
 # (the end-time sensor with its device class), `state_store.py` (storage and
 # restore, where an old file without that field simply loads) and `__init__.py`
 # (the service layer accepting an entity as its target) — all three below their
 # measure.
 #
-# Ronde 34 (R34-7): `coordinator.py` 1842 → 1852 door de declaratie van
+# `coordinator.py` 1842 → 1852 door de declaratie van
 # `async_update_listeners` in het `CoordinatorSurface`-protocol, met de reden
 # erbij waarom die geen kale `...`-stub is: de mixin `overrides.py` laat de
 # eindtijdsensor na het uitzetten van de schakelaar, `set_override` en
@@ -184,7 +184,7 @@ FUNCTION_LIMIT = 80
 # De reparatie woont in `overrides.py` (één publishmethode voor de drie paden) en
 # `switch.py` (de schakelaar roept hem aan) — allebei onder hun maat.
 #
-# Round 34 (R34-7): `coordinator.py` 1842 → 1852 through the declaration of
+# `coordinator.py` 1842 → 1852 through the declaration of
 # `async_update_listeners` in the `CoordinatorSurface` protocol, with the reason
 # alongside why it is no bare `...` stub: the `overrides.py` mixin has the
 # end-time sensor write along at once after switching the override off,

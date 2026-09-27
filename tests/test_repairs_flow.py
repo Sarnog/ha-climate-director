@@ -7,7 +7,7 @@ zodat dezelfde situatie zich niet opnieuw meldt. Deze tests pinnen dat vast
 zonder heel Home Assistant op te tuigen.
 
 De flow-manager van Home Assistant opent de flow met `{"issue_id": ...}` als
-eerste `user_input`; sinds 7.2.3 telt alleen de tweede aanroep als bevestiging,
+eerste `user_input`; daarom telt alleen de tweede aanroep als bevestiging,
 zodat het dialoog eerst echt verschijnt.
 
 The flow fixes nothing but stores a signature in the entry options, so the same
@@ -15,7 +15,7 @@ situation does not report itself again. These tests pin that down without
 setting up a whole Home Assistant.
 
 Home Assistant's flow manager opens the flow with `{"issue_id": ...}` as its
-first `user_input`; since 7.2.3 only the second call counts as a confirmation,
+first `user_input`; hence only the second call counts as a confirmation,
 so the dialog really appears first.
 """
 

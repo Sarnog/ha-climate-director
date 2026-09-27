@@ -4,27 +4,27 @@
 Draai dit ná `coverage run -m pytest`. Het leest de meetgegevens die coverage
 heeft achtergelaten en telt de gemiste regels. Dat is de deterministische kant
 van de meting: welke *tak* wel of niet twee kanten op gaat wiebelt tussen twee
-runs (ronde 31 mat 20 en 21 partiële takken op identieke code), maar of een
+runs (gemeten: 20 en 21 partiële takken op identieke code), maar of een
 *regel* is uitgevoerd niet. Daarom is dit de bewaking van "nul gemiste regels"
 en niet de percentage-ratel in `pyproject.toml` alleen: die zakt pas bij twee
 gemiste regels, omdat hij de wiebel moet verdragen.
 
 De poort keurt alleen een meting goed **waarin het pakket werkelijk voorkomt**.
 Zonder dat voorwerk is "nul gemiste regels" vacuüm waar, en dat is gemeten
-(ronde 31: `--data-file <bestaat niet>` gaf "OK" en exit 0). Daarom weigert hij
+(`--data-file <bestaat niet>` gaf "OK" en exit 0). Daarom weigert hij
 vier metingen: een ontbrekend gegevensbestand, een lege meting, een meting
 zonder één bestand onder het pakket, en een meting waarin niet élk `.py`-bestand
 van het pakket voorkomt — een module die nooit geïmporteerd wordt is anders
 onzichtbaar.
 
-Daar komt sinds ronde 34 (R34-2) een vijfde weigering bij: een meting waarin een
+Daar komt een vijfde weigering bij: een meting waarin een
 regel buiten de telling valt die geen naam heeft in `NAMED_EXCLUSIONS`. Coverage
 laat regels weg op een patroon (`# pragma: no cover`, een `...` als blokinhoud,
 een `if TYPE_CHECKING:`-blok), en een patroon verbergt stil: zo'n regel verdwijnt
 uit "nul gemiste regels" zonder dat iemand hem noemt. De poort noemt ze daarom
 allemaal, met hun inhoud erbij, en laat zowel een regel zonder naam als een naam
-zonder regel vallen. Sinds ronde 35 (R35-5) telt alleen het begin van een
-statement: een commentaarregel, een decorator of een vervolgregel kan zonder de
+zonder regel vallen. Alleen het begin van een statement telt:
+een commentaarregel, een decorator of een vervolgregel kan zonder de
 uitsluiting nooit een gemeten regel zijn, dus die vraagt geen naam — anders hing
 de poort aan de letterlijke tekst van een commentaar.
 
@@ -37,26 +37,26 @@ Gebruik / usage:
     integration. Run this after `coverage run -m pytest`. It reads the data
     coverage left behind and counts the missed lines. That is the deterministic
     side of the measurement: which *branch* goes both ways wobbles between two
-    runs (round 31 measured 20 and 21 partial branches on identical code), but
+    runs (measured: 20 and 21 partial branches on identical code), but
     whether a *line* ran does not. Hence this guards "zero missed lines" rather
     than the percentage ratchet in `pyproject.toml` alone, which only drops at
     two missed lines because it has to absorb the wobble.
 
     The gate only approves a measurement **in which the package really
     appears**. Without that groundwork "zero missed lines" is vacuously true,
-    and that was measured (round 31: `--data-file <does not exist>` printed "OK"
+    and that was measured (`--data-file <does not exist>` printed "OK"
     and exited 0). Hence it refuses four measurements: a missing data file, an
     empty measurement, a measurement without a single file under the package,
     and a measurement missing one of the package's `.py` files — a module that
     is never imported is invisible otherwise.
 
-    Round 34 (R34-2) adds a fifth refusal: a measurement in which a line falls
+    A fifth refusal comes on top: a measurement in which a line falls
     outside the count without a name in `NAMED_EXCLUSIONS`. Coverage drops lines
     on a pattern (`# pragma: no cover`, a `...` as a block's content, an
     `if TYPE_CHECKING:` block), and a pattern hides silently: such a line
     disappears from "zero missed lines" without anyone naming it. Hence the gate
     names them all, with their content alongside, and drops both a line without
-    a name and a name without a line. Since round 35 (R35-5) only the start of a
+    a name and a name without a line. Only the start of a
     statement counts: a comment line, a decorator or a continuation line could
     never be a measured line without the exclusion, so it asks for no name —
     otherwise the gate hung on the literal text of a comment.
@@ -121,11 +121,11 @@ EXCLUSION_HINT = (
 #: van een statement telt hier: een commentaarregel, een decorator of een
 #: vervolgregel kan zonder uitsluiting nooit een gemeten regel zijn, dus die hoort
 #: niet in deze lijst — anders hing de poort aan de letterlijke tekst van een
-#: commentaar (ronde 35, R35-5).
+#: commentaar.
 #:
 #: Coverage laat drie soorten regels weg op een patroon: `# pragma: no cover`,
 #: een `...` als enige inhoud van een blok, en een `if TYPE_CHECKING:`-blok. Die
-#: patronen staan sinds ronde 34 (R34-2) uitgeschreven in `pyproject.toml`, zodat
+#: patronen staan uitgeschreven in `pyproject.toml`, zodat
 #: de meting niet op verborgen standaardpatronen leunt, maar een patroon verbergt
 #: nog steeds stil: elke regel die eronder valt verdwijnt uit "nul gemiste regels"
 #: zonder dat iemand hem noemt. Daarom staat hieronder elke statementregel met
@@ -139,12 +139,11 @@ EXCLUSION_HINT = (
 #: The lines the measurement does not count, by name. Only the start of a
 #: statement counts here: a comment line, a decorator or a continuation line
 #: could never be a measured line without the exclusion, so it does not belong in
-#: this list — otherwise the gate hung on the literal text of a comment (round
-#: 35, R35-5).
+#: this list — otherwise the gate hung on the literal text of a comment.
 #:
 #: Coverage drops three kinds of lines on a pattern: `# pragma: no cover`, a `...`
-#: as a block's only content, and an `if TYPE_CHECKING:` block. Since round 34
-#: (R34-2) those patterns are written out in `pyproject.toml`, so the measurement
+#: as a block's only content, and an `if TYPE_CHECKING:` block. Those patterns
+#: are written out in `pyproject.toml`, so the measurement
 #: does not lean on hidden defaults, but a pattern still hides silently: every
 #: line it hits disappears from "zero missed lines" without anyone naming it.
 #: Hence every statement line stands below with its own content — nine in
@@ -268,7 +267,7 @@ def statement_lines(path: Path) -> set[int]:
     commentaarregel ertussen en de vervolgregels van een meerregelige `def`
     horen daar bij. Die kunnen zonder de uitsluiting nooit gemeten worden, dus
     ze horen niet in de whitelist; anders hing de poort aan de letterlijke tekst
-    van een commentaar (ronde 35, R35-5).
+    van een commentaar.
 
     De regelnummers komen uit `ast`: elke `ast.stmt` begint ergens, en een
     `Expr` met `...` als lichaam begint op de regel van die `...`. Daarmee valt
@@ -281,7 +280,7 @@ def statement_lines(path: Path) -> set[int]:
     the decorator above it, a comment line in between and the continuation lines
     of a multi-line `def` come along. Those could never be measured without the
     exclusion, so they do not belong in the whitelist; otherwise the gate hung on
-    the literal text of a comment (round 35, R35-5).
+    the literal text of a comment.
 
     The line numbers come from `ast`: every `ast.stmt` starts somewhere, and an
     `Expr` with `...` as its body starts on the line of that `...`. That drops

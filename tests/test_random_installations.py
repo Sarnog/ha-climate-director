@@ -456,12 +456,12 @@ def _installation(rng: random.Random) -> dict:
     )
     # Staat het seizoen vast, dan hoort een taak die dat seizoen uitsluit niet
     # uit een generator van geldige huizen te komen: `validate()` meldt die
-    # combinatie sinds ronde 21 terecht. De dichtstbijzijnde geldige vorm is
+    # combinatie terecht. De dichtstbijzijnde geldige vorm is
     # "alleen in het vaste seizoen".
     #
     # With the season pinned, a duty that excludes that season should not come
     # out of a generator of valid houses: `validate()` rightly reports that
-    # combination since round 21. The nearest valid shape is "only in the
+    # combination. The nearest valid shape is "only in the
     # pinned season".
     pinned = season_source.get("source")
     if pinned in ("summer", "winter"):

@@ -84,7 +84,7 @@ def display_temperature(value: float | None, unit: str) -> str:
 
     De reparatiemeldingen zijn voor de gebruiker, dus daar staat geen kale
     `°` en geen onafgeronde float. Eén decimaal, in beide stelsels
-    (beslissing 1 van ronde 12): liggen twee getallen minder dan één graad
+    (een bewuste beslissing): liggen twee getallen minder dan één graad
     Fahrenheit uit elkaar, dan blijven ze zo in de zin van elkaar te
     onderscheiden (`67.6 °F` tegenover `68.0 °F`) in plaats van na afronding
     op hele graden hetzelfde te lezen. Dat een melding op Fahrenheit iets
@@ -92,7 +92,7 @@ def display_temperature(value: float | None, unit: str) -> str:
     één afrondingsregel die overal geldt.
 
     The repair notices are for the user, so they carry no bare `°` and no
-    unrounded float. One decimal, in both systems (decision 1 of round 12):
+    unrounded float. One decimal, in both systems (a deliberate decision):
     when two numbers sit less than one degree Fahrenheit apart they stay
     distinguishable in the sentence (`67.6 °F` versus `68.0 °F`) instead of
     reading the same after rounding to whole degrees. A Fahrenheit notice

@@ -26,14 +26,14 @@ QUALITY_SCALE = (
     / "quality_scale.yaml"
 )
 
-# De letterlijke checklist van de officiële HA-pagina, opgehaald 2026-09-06:
+# De letterlijke checklist van de officiële HA-pagina:
 # https://developers.home-assistant.io/docs/core/integration-quality-scale/checklist/
 #
 # hassfest bewaakt deze eigenschap NIET zolang manifest.json geen `quality_scale`
 # draagt — zijn quality-scale-plugin draait alleen dán. Deze test is dus de enige
 # die de lijst compleet houdt; haal hem niet weg met "hassfest doet dat toch".
 #
-# The literal checklist from the official HA page, retrieved 2026-09-06:
+# The literal checklist from the official HA page:
 # https://developers.home-assistant.io/docs/core/integration-quality-scale/checklist/
 #
 # hassfest does NOT guard this property as long as manifest.json carries no
@@ -148,7 +148,7 @@ def test_every_rule_has_a_known_status() -> None:
 def test_the_quality_scale_is_complete() -> None:
     """Elke officiële regel-identifier staat in het bestand, en andersom.
 
-    De bron is de officiële HA-checklist (opgehaald 2026-09-06), en die telt
+    De bron is de officiële HA-checklist, en die telt
     54 identifiers over Bronze, Silver, Gold en Platinum. Ontbreekt er één in
     `quality_scale.yaml`, dan faalt deze test en noemt hem bij naam; staat er
     een identifier in die niet op de lijst voorkomt, dan faalt hij daar óók op.
@@ -159,7 +159,7 @@ def test_the_quality_scale_is_complete() -> None:
 
     Every official rule identifier sits in the file, and the other way around.
 
-    The source is the official HA checklist (retrieved 2026-09-06), which has
+    The source is the official HA checklist, which has
     54 identifiers across Bronze, Silver, Gold and Platinum. When one is missing
     from `quality_scale.yaml`, this test fails and names it; when the file holds
     an identifier that is not on the list, it fails on that too.

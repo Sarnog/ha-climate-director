@@ -2,12 +2,12 @@
 
 Shared AST helpers for the guards on the repair notices.
 
-Ronde 35 (R35-1): vier lezers in de testset liepen elk hun eigen AST af en
+Vier lezers in de testset liepen elk hun eigen AST af en
 matchten alleen `ast.Attribute` — `ir.async_create_issue(...)`. Daarmee hing de
 hele meldingsbewaking (het wissen bij het uitladen, de fixable-inventarisatie,
 de gidsen-inventarisatie en de placeholder-controle) aan één schrijfwijze: een
 kale naam na `from homeassistant.helpers.issue_registry import async_create_issue`
-glipte er langs, en dat was gemeten (ronde 34: 2775 groen). Deze module is de
+glipte er langs, en dat was gemeten (de suite bleef groen). Deze module is de
 enige plek waar die match woont; de vier lezers gebruiken hem.
 
 De eigenschap die hier vastligt: élke aanroep van `async_create_issue` of
@@ -18,12 +18,12 @@ bewust ruim: elke `iets.async_create_issue` telt, ook als de module niet in het
 bestand gedefinieerd is — dat is precies wat de verzonnen pakketjes van de
 bewakingen zelf doen (`ir.async_create_issue` zonder import ernaast).
 
-Round 35 (R35-1): four readers in the suite each walked their own AST and
+Four readers in the suite each walked their own AST and
 matched only `ast.Attribute` — `ir.async_create_issue(...)`. That hung the whole
 notice guard (clearing on unload, the fixable inventory, the guide inventory and
 the placeholder check) on one spelling: a bare name after
 `from homeassistant.helpers.issue_registry import async_create_issue` slipped
-past it, and that was measured (round 34: 2775 green). This module is the only
+past it, and that was measured (the suite stayed green). This module is the only
 place that match lives; the four readers use it.
 
 The property pinned here: every call of `async_create_issue` or

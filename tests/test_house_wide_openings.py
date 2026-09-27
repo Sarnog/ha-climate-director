@@ -916,11 +916,11 @@ def test_the_outdoor_dead_band_does_not_hold_a_stopped_appliance() -> None:
     config = shared_boiler(house_wide_openings=(GAS,))
     config = replace(config, zones=(replace(config.zones[0], sources=(boiler,)), config.zones[1]))
 
-    # Ronde 1: binnen het venster, deur dicht - de ketel levert deze zone.
+    # Stap 1: binnen het venster, deur dicht - de ketel levert deze zone.
     running = decide(config, cold_house(outdoor=2.0, openings={}))
     assert decision_for(running, "woonkamer").source_id == "ketel_woonkamer"
 
-    # Ronde 2: buiten het venster maar binnen de dode band van 0,5, deur open.
+    # Stap 2: buiten het venster maar binnen de dode band van 0,5, deur open.
     plan = decide(config, cold_house(outdoor=3.2), running)
 
     # Het commando is uit - maar dat zegt het vangnet ook zonder deze grens.
@@ -1346,9 +1346,9 @@ class TestOnlyARunningApplianceRestsAfterAnOpening:
 
 
 class TestWithoutAPreviousPlanTheRestIsPinnedDown:
-    """Beslissing 1 (2026-08-25): na een herstart rust alleen de gewone bron.
+    """Een bewuste beslissing: na een herstart rust alleen de gewone bron.
 
-    Decision 1 (2026-08-25): after a restart only the ordinary source rests.
+    A deliberate decision: after a restart only the ordinary source rests.
     """
 
     def test_a_running_source_rests_after_a_restart(self) -> None:

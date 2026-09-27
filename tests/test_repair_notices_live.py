@@ -4,15 +4,15 @@ Every notice of the package is raised in a real house and cleared again on unloa
 
 De bewaking in `test_repair_notices.py` leest de **bron**: hij zoekt elke
 `async_create_issue`-aanroep en eist dat het uitlaadpad een `async_delete_issue`
-op hetzelfde id bereikt. Dat is een bewaking op de vorm, en sinds ronde 36
-(R36-1) staat daar de structurele afspraak naast dat `issue_registry` alleen als
+op hetzelfde id bereikt. Dat is een bewaking op de vorm, en daar staat de
+structurele afspraak naast dat `issue_registry` alleen als
 `ir` geïmporteerd en alleen direct aangeroepen wordt. Deze test doet het
 omgekeerde: hij leest **geen enkele regel bron**, maar omhult de échte
 `ir.async_create_issue` en `ir.async_delete_issue` op moduleniveau en laat een
 paar echte huizen elke melding van het pakket minstens één keer aanmaken. Daarna
 laadt elk huis uit, en elk aangemaakt id moet ook gewist zijn.
 
-Elke melding van het pakket telt mee: de negen die er vandaag zijn, in één huis
+Elke melding van het pakket telt mee, in één huis
 per situatie — een fout in de configuratie en een handbediend-only taak, een
 onleesbare sensor met een bron die een onmogelijke stand vraagt, een seizoen dat
 een taak uitsluit, een overbrugde open deur, een apparaat dat zijn commando niet
@@ -22,15 +22,15 @@ melding bij, dan is deze test rood totdat het live-scenario hem ook aanmaakt.
 
 The guard in `test_repair_notices.py` reads the **source**: it looks for every
 `async_create_issue` call and demands that the unload path reaches an
-`async_delete_issue` on the same id. That is a guard on the form, and since round
-36 (R36-1) a structural agreement stands beside it: `issue_registry` is imported
+`async_delete_issue` on the same id. That is a guard on the form, and a
+structural agreement stands beside it: `issue_registry` is imported
 only as `ir` and called only directly. This test does the opposite: it reads **no
 source line at all**, but wraps the real `ir.async_create_issue` and
 `ir.async_delete_issue` at module level and lets a few real houses raise every
 notice of the package at least once. Then each house unloads, and every id raised
 must also be cleared.
 
-Every notice of the package counts: today's nine, in one house per situation — a
+Every notice of the package counts, in one house per situation — a
 mistake in the configuration and a hand-operated-only duty, an unreadable sensor
 with a source asking an impossible mode, a season that locks a duty out, a
 bypassed open door, an appliance that does not take its command, an unreadable
@@ -265,9 +265,9 @@ async def _an_unreadable_store() -> None:
 
 
 class TestEveryNoticeIsRaisedLiveAndClearedAtUnload:
-    """Het runtime-net onder de meldingsbewaking (ronde 36, R36-1).
+    """Het runtime-net onder de meldingsbewaking.
 
-    The runtime net under the notice guard (round 36, R36-1).
+    The runtime net under the notice guard.
     """
 
     async def test_every_notice_is_raised_live_and_cleared_at_unload(

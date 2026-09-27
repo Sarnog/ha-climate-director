@@ -1704,9 +1704,9 @@ class TestTheHarnessApplianceKinds:
 
 
 class TestBranchesThatWerePragmaUntilNow:
-    """De takken die ronde 30 nog met een pragma afving (ronde 31, R31-5).
+    """De takken die eerder met een pragma waren afgevangen.
 
-    The branches round 30 still caught with a pragma (round 31, R31-5).
+    The branches that used to be caught with a pragma.
 
     Elk van deze vier is in het live harnas te bereiken: een afsluiting die op
     een lopende ronde wacht, een opslag die niet te lezen is, een toestand die

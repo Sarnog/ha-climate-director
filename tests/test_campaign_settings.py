@@ -43,11 +43,11 @@ VALVE = "climate.keuken_kraan"
 def handed_back(home) -> set[str]:
     """Return the zones handed back, through the coordinator's own reader.
 
-    De coordinator leest bewoners sinds 7.0.1 één keer in `build_world` en geeft
+    De coordinator leest bewoners één keer in `build_world` en geeft
     ze door aan `_zones_handed_back`. Deze helper doet hier hetzelfde, zodat de
     tests de methode niet met losse, onderling afwijkende argumenten aanroepen.
 
-    The coordinator has read residents once in `build_world` since 7.0.1 and
+    The coordinator reads residents once in `build_world` and
     passes them to `_zones_handed_back`. This helper does the same here, so the
     tests do not call the method with loose, mutually inconsistent arguments.
     """

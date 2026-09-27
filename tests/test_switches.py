@@ -88,13 +88,13 @@ class _Coordinator:
         """Stand-in: laat de luisteraars opnieuw schrijven, net als het origineel.
 
         De echte coordinator laat hier ook de looptijd van een met de hand
-        uitgezette zone stil vervallen en werkt daarna zijn luisteraars bij
-        (R34-7); die boekhouding hangt aan `zone_override_until` en raakt de twee
+        uitgezette zone stil vervallen en werkt daarna zijn luisteraars bij;
+        die boekhouding hangt aan `zone_override_until` en raakt de twee
         tests hier niet. Wat de schakelaar van dit lid merkt is de tweede helft.
 
         Stand-in: have the listeners write again, just like the real coordinator.
         The real one also lets the duration of a hand-switched-off zone lapse
-        silently here and then updates its listeners (R34-7); that bookkeeping
+        silently here and then updates its listeners; that bookkeeping
         hangs on `zone_override_until` and does not touch the two tests here.
         What the switch notices of this member is the second half.
         """

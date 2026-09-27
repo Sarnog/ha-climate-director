@@ -111,12 +111,12 @@ _OVERRIDE_WHEN_DONE = vol.In([WHEN_DONE_TURN_OFF, WHEN_DONE_LEAVE])
 _OVERRIDE_TARGET = re.compile(r"^zone_(?P<zone>.+)_override(?P<sensor>_ends)?$")
 
 #: De twee entiteitsdomeinen waarin deze integratie een override-entiteit maakt.
-#: Een entiteit van een ander domein met een look-alike `unique_id` is geen doel
-#: (R34-9), hoe toevallig de id ook op het patroon past.
+#: Een entiteit van een ander domein met een look-alike `unique_id` is geen doel,
+#: hoe toevallig de id ook op het patroon past.
 #:
 #: The two entity domains in which this integration creates an override entity.
-#: An entity from another domain with a look-alike `unique_id` is not a target
-#: (R34-9), however coincidentally the id fits the pattern.
+#: An entity from another domain with a look-alike `unique_id` is not a target,
+#: however coincidentally the id fits the pattern.
 _OVERRIDE_DOMAINS = ("sensor", "switch")
 
 _SET_OVERRIDE_FIELDS: dict[Any, Any] = {
@@ -336,14 +336,14 @@ def _override_setpoint(temperature: float | None, unit: str) -> float | None:
 
     Alleen de eenheidsomrekening. Het klemmen naar `min_temp`/`max_temp` van het
     apparaat gebeurt in de beslisronde waarin het commando werkelijk de deur uit
-    gaat (R28-2): daar is de wereld al in de hand, en tussen de aanroep en die
+    gaat: daar is de wereld al in de hand, en tussen de aanroep en die
     ronde kan het bereik van het apparaat veranderen - een cloud-drop-out laat
     `min_temp` even verdwijnen, of een apparaat meldt zijn bereik pas later.
     Beide paden gebruiken daar dezelfde `engine.clamped_target`.
 
     Only the unit conversion. Pressing the setpoint into the appliance's
     `min_temp`/`max_temp` happens in the decision round that really puts the
-    command on the wire (R28-2): the world is already in hand there, and between
+    command on the wire: the world is already in hand there, and between
     the call and that round the appliance's range can change - a cloud drop-out
     makes `min_temp` disappear for a while, or an appliance only reports its
     range later. Both paths use the same `engine.clamped_target` there.
@@ -420,7 +420,7 @@ def _override_entity_target(
     eindtijdsensor van diezelfde zone. Al het andere is een typefout en hoort te
     botsen in plaats van stil niets te doen.
 
-    Die toets is sinds ronde 34 (R34-9) volledig: entry, platform, domein én
+    Die toets is volledig: entry, platform, domein én
     prefix moeten alle vier kloppen voordat de `unique_id` op het patroon mag
     passen. Zie anker 11 in ARCHITECTURE.md voor waarom.
 
@@ -433,7 +433,7 @@ def _override_entity_target(
     end-time sensor. Anything else is a typo and should collide instead of
     quietly doing nothing.
 
-    That check has been complete since round 34 (R34-9): entry, platform, domain
+    That check is complete: entry, platform, domain
     and prefix all have to hold before the `unique_id` may fit the pattern. See
     anchor 11 in ARCHITECTURE.md for why.
     """

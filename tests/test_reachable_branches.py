@@ -1,21 +1,20 @@
-"""De bereikbare takken die de suite nog niet aanraakte (ronde 30, fase 3b).
+"""De bereikbare takken die de rest van de suite niet aanraakt.
 
-The reachable branches the suite had not touched yet (round 30, phase 3b).
+The reachable branches the rest of the suite does not touch.
 
-De dekkingsmeting van 2026-09-14 wees 107 gemiste statements aan. Deze module
+Een dekkingsmeting wees 107 gemiste statements aan. Deze module
 dekt de takken die **bereikbaar** zijn: de terugkeer naar het hoofdmenu, het
 verwijderen en bewerken van een item, de foutherhalingen van de formulieren, en
 de kleine engine- en opslagtakken. Die meting telde ook regels die met
-`# pragma: no cover` waren afgevangen; ronde 32 (R32-1) heeft de laatste zes
-daarvan alsnog gemeten, en sindsdien draagt het pakket **geen enkele** pragma
-meer (`tests/test_reachable_branches_deep.py` houdt dat vast).
+`# pragma: no cover` waren afgevangen; ook die worden gemeten, en het pakket
+draagt **geen enkele** pragma (`tests/test_reachable_branches_deep.py` houdt dat vast).
 
-The coverage run of 2026-09-14 pointed at 107 missed statements. This module
+A coverage run pointed at 107 missed statements. This module
 covers the branches that are **reachable**: returning to the main menu, deleting
 and editing an item, the forms' error repeats, and the small engine and storage
 branches. That measurement also counted lines caught with `# pragma: no cover`;
-round 32 (R32-1) measured the last six of those after all, and the package has
-carried **no** pragma since (`tests/test_reachable_branches_deep.py` holds that
+those are measured too, and the package carries
+**no** pragma (`tests/test_reachable_branches_deep.py` holds that
 down).
 """
 
@@ -434,7 +433,7 @@ async def test_a_resident_form_comes_back_with_what_you_typed(home: LiveHome) ->
 
 
 def test_the_protocol_stub_of_the_listener_update_returns_nothing() -> None:
-    """coordinator.py: de stub in het protocol doet niets (ronde 34, R34-7).
+    """coordinator.py: de stub in het protocol doet niets.
 
     `CoordinatorSurface` draagt `async_update_listeners` zodat mypy hem in de
     mixins kent. Die regel staat er voor de typecontrole, niet voor het draaien:
@@ -445,10 +444,10 @@ def test_the_protocol_stub_of_the_listener_update_returns_nothing() -> None:
     komt nooit langs tenzij iemand hem aanroept, en dat is precies wat hier
     gebeurt: met een verzonnen `self`, want van een protocol bestaan geen
     instanties. Zonder deze test is het een gemiste regel in de dekkingsmeting, en
-    dat was hij ook: de poort viel erop toen de methode in ronde 34 werd
+    dat was hij ook: de poort viel erop toen de methode werd
     toegevoegd.
 
-    coordinator.py: the protocol's stub does nothing (round 34, R34-7).
+    coordinator.py: the protocol's stub does nothing.
     `CoordinatorSurface` carries `async_update_listeners` so that mypy knows it in
     the mixins. That line exists for the type check, not for run time: at run time
     the method comes from `DataUpdateCoordinator`, and this protocol is not in the
@@ -457,6 +456,6 @@ def test_the_protocol_stub_of_the_listener_update_returns_nothing() -> None:
     the explicit `return`. That line never comes past unless someone calls it, and
     that is exactly what happens here: with an invented `self`, since a protocol
     has no instances. Without this test it is a missed line in the measurement,
-    and it was: the gate caught it when the method was added in round 34.
+    and it was: the gate caught it when the method was added.
     """
     assert CoordinatorSurface.async_update_listeners(SimpleNamespace()) is None

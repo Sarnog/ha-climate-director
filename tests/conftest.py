@@ -469,7 +469,7 @@ def form_field_nodes(
 
     Bestaat `schemas.<naam>` niet, dan is dat een duidelijke fout en geen stille
     lege kaart: anders valt de dekking van precies dat scherm weg zonder dat
-    iemand het merkt. En sinds ronde 23 kan een schema uit een veldtabel komen:
+    iemand het merkt. En een schema kan uit een veldtabel komen:
     roept de schemafunctie `_table_schema(<tabel>, ...)` aan, dan telt elke rij
     van die tabel als een veld van het scherm. De tabel komt uit
     `engine/fields.py` — dezelfde module die de productiecode leest — zodat de
@@ -490,7 +490,7 @@ def form_field_nodes(
 
     When `schemas.<name>` does not exist that is a clear error, not a silently
     empty map: otherwise the coverage of exactly that screen drops away without
-    anybody noticing. And since round 23 a schema can come from a field table:
+    anybody noticing. And a schema can come from a field table:
     when the schema function calls `_table_schema(<table>, ...)`, every row of
     that table counts as a field of the screen. The table comes from
     `engine/fields.py` — the same module the production code reads — so the

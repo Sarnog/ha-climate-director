@@ -1,24 +1,24 @@
-"""Kleine, bereikbare engine- en opslagtakken (ronde 30, fase 3b).
+"""Kleine, bereikbare engine- en opslagtakken.
 
-Small, reachable engine and storage branches (round 30, phase 3b).
+Small, reachable engine and storage branches.
 
-De tweede helft van de dekkingsronde: de takken die geen eigen scherm hebben
+De takken die geen eigen scherm hebben
 maar wel degelijk te bereiken zijn — een commando zonder setpoint, een bron die
 naar een onbekende zone wijst, een override die afloopt, een opgeslagen
 override die terugkomt. Elk daarvan is een gewone toestand van de integratie,
-geen verdediging tegen Home Assistant. Ronde 32 (R32-1) heeft de laatste zes
-regels die nog met `# pragma: no cover` waren afgevangen ook gemeten; zie
-`TestTheLastSixExcludedLines` onderaan. Het pakket draagt sindsdien **geen
-enkele** pragma meer, en dat houdt `test_nothing_is_hidden_from_the_measurement`
+geen verdediging tegen Home Assistant. Ook de zes regels die met
+`# pragma: no cover` waren afgevangen worden gemeten; zie
+`TestTheLastSixExcludedLines` onderaan. Het pakket draagt **geen
+enkele** pragma, en dat houdt `test_nothing_is_hidden_from_the_measurement`
 vast.
 
-The second half of the coverage round: the branches that have no screen of their
+The branches that have no screen of their
 own but are perfectly reachable — a command without a setpoint, a source naming
 an unknown zone, an override running out, a stored override coming back. Each of
 these is an ordinary state of the integration, not a defence against Home
-Assistant. Round 32 (R32-1) measured the last six lines that were still caught
-with `# pragma: no cover` as well; see `TestTheLastSixExcludedLines` at the
-bottom. The package has carried **no** pragma since, and
+Assistant. The six lines that were caught with `# pragma: no cover` are
+measured as well; see `TestTheLastSixExcludedLines` at the
+bottom. The package carries **no** pragma, and
 `test_nothing_is_hidden_from_the_measurement` holds that down.
 """
 
@@ -511,19 +511,19 @@ def test_an_unreadable_strings_file_yields_no_english_templates(monkeypatch) -> 
 
 
 class TestTheLastSixExcludedLines:
-    """De zes regels die ronde 31 nog met een pragma afving (ronde 32, R32-1).
+    """De zes regels die eerder met een pragma waren afgevangen.
 
-    The six lines round 31 still caught with a pragma (round 32, R32-1).
+    The six lines that used to be caught with a pragma.
 
     Alle zes stonden met de reden "onbereikbaar in een test" in de bron, en alle
     zes zijn met een monkeypatch, een stand-in of een rechtstreekse aanroep te
-    bereiken — precies de techniek die `4a5b9e8` voor de vijf eerdere pragma's
-    gebruikte. Ze verliezen daarom hun `# pragma: no cover`: de bewaking is dat
+    bereiken — precies de techniek die voor de vijf eerdere pragma's werd
+    gebruikt. Ze verliezen daarom hun `# pragma: no cover`: de bewaking is dat
     ze gedekt zijn, niet dat ze uitgesloten zijn.
 
     All six stood in the source with the reason "unreachable in a test", and all
     six can be reached with a monkeypatch, a stand-in or a direct call — exactly
-    the technique `4a5b9e8` used for the five earlier pragmas. They therefore
+    the technique used for the five earlier pragmas. They therefore
     lose their `# pragma: no cover`: the guard is that they are covered, not
     that they are excluded.
     """
@@ -603,7 +603,7 @@ class TestTheLastSixExcludedLines:
 
 
 def test_nothing_is_hidden_from_the_measurement() -> None:
-    """Het pakket draagt geen enkele `pragma: no cover` meer (ronde 32, R32-1).
+    """Het pakket draagt geen enkele `pragma: no cover`.
 
     De dekkingspoort (`script/coverage_gate.py`) kan alleen zien wat coverage
     meekrijgt: een `pragma: no cover` haalt een regel uit de meting, en dan zegt
@@ -632,7 +632,7 @@ def test_nothing_is_hidden_from_the_measurement() -> None:
 
 
 def test_every_line_outside_the_measurement_has_a_name() -> None:
-    """Elke regel die buiten de meting valt heeft een naam (ronde 34, R34-2).
+    """Elke regel die buiten de meting valt heeft een naam.
 
     De poort (`script/coverage_gate.py`) kan alleen zien wat coverage meekrijgt,
     en coverage houdt drie soorten regels buiten de telling op een patroon. Een
@@ -644,7 +644,7 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
     hangt aan het bestand en het patroon, niet aan wat er gedraaid is. Zonder
     enige uitsluiting zou deze test niets meten, en dat is dan ook een fout.
 
-    Ronde 36 (R36-4): die meting krijgt `data_file=None` mee, en dat is geen
+    Die meting krijgt `data_file=None` mee, en dat is geen
     detail. `Coverage()` zonder dat argument wijst naar het standaardbestand
     `.coverage`, en `hidden_lines()` roept `analysis2()` aan; gemeten liet dat het
     bestaande `.coverage` leeg achter (39 → 0 gemeten bestanden), waarna
@@ -654,7 +654,7 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
     niet aan te raken; `test_the_guards_themselves.py` pint dat met een verzonnen
     meetbestand vast.
 
-    Every line that falls outside the measurement has a name (round 34, R34-2).
+    Every line that falls outside the measurement has a name.
     The gate (`script/coverage_gate.py`) can only see what coverage is given, and
     coverage keeps three kinds of lines out of the count on a pattern. A pattern
     hides silently, so the gate names every line in `NAMED_EXCLUSIONS`. This test
@@ -665,7 +665,7 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
     and the pattern, not on what ran. Without any exclusion this test would
     measure nothing, and that too is an error.
 
-    Round 36 (R36-4): that measurement takes `data_file=None`, and that is no
+    That measurement takes `data_file=None`, and that is no
     detail. `Coverage()` without that argument points at the default
     `.coverage`, and `hidden_lines()` calls `analysis2()`; measured, that left
     the existing `.coverage` empty (39 → 0 measured files), after which
@@ -682,34 +682,34 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
 
 #: Het aantal benoemde uitsluitingen van de poort. De whitelist mag alleen korter
 #: worden: elke regel die erbij komt is een regel die de meting niet meer dekt, en
-#: zonder deze ratel groeit dat stil door. Het getal is gemeten op `c3e7957` +
-#: ronde 35 (R35-5): negen statements in `coordinator.py` en drie in elk van de
+#: zonder deze ratel groeit dat stil door. Het getal is gemeten:
+#: negen statements in `coordinator.py` en drie in elk van de
 #: vier mixins die het protocol onder `TYPE_CHECKING` importeren.
 #:
 #: The number of named exclusions of the gate. The whitelist may only get shorter:
 #: every line added to it is a line the measurement no longer covers, and without
-#: this ratchet that grows silently. The number was measured on `c3e7957` + round
-#: 35 (R35-5): nine statements in `coordinator.py` and three in each of the four
+#: this ratchet that grows silently. The number is measured:
+#: nine statements in `coordinator.py` and three in each of the four
 #: mixins that import the protocol under `TYPE_CHECKING`.
 NAMED_EXCLUSIONS_BUDGET = 21
 
 
 def test_the_named_exclusions_are_a_ratchet() -> None:
-    """Het aantal benoemde uitsluitingen mag alleen dalen (ronde 35, R35-4).
+    """Het aantal benoemde uitsluitingen mag alleen dalen.
 
     De whitelist is er voor regels die de meting niet kán meenemen; elke regel die
     erbij komt is er één die de meting niet meer dekt. Zonder deze ratel groeit dat
-    stil door — gemeten in ronde 34: een nieuwe dode stub plus zijn naam in
+    stil door — gemeten: een nieuwe dode stub plus zijn naam in
     `NAMED_EXCLUSIONS` liet de hele suite én de poort groen, terwijl de maat in
     `test_the_measure.py` alleen de modulegrootte zag. Wordt het getal groter, dan
     is deze test rood en somt hij de huidige inhoud op (met de nieuwe naam erbij);
     wordt het kleiner, dan is hij óók rood met de vraag het getal te verlagen. Zo
     kan de whitelist alleen korter worden.
 
-    The number of named exclusions may only go down (round 35, R35-4). The
+    The number of named exclusions may only go down. The
     whitelist exists for lines the measurement cannot include; every line added to
     it is one the measurement no longer covers. Without this ratchet that grows
-    silently — measured in round 34: a new dead stub plus its name in
+    silently — measured: a new dead stub plus its name in
     `NAMED_EXCLUSIONS` left the whole suite and the gate green, while the measure
     in `test_the_measure.py` only saw the module size. When the number grows, this
     test is red and lists the current content (with the new name in it); when it

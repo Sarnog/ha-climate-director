@@ -5,16 +5,16 @@ Every field in a field table points to a place that exists.
 Een `target` in `engine/fields.py` is een puntpad naar de opgeslagen installatie
 en naar de dataclass eronder. Een typefout in dat pad is **stil**: het formulier
 leest niets, toont daarom de standaard, en `config_flow.py` schrijft die
-standaard bij het eerstvolgende opslaan over de echte waarde heen. Gemeten in
-ronde 24: `stuck_after` -> `stuk_after` liet de volledige suite groen (2508
-passed) terwijl het scherm 15 minuten toonde in plaats van de opgeslagen 30.
+standaard bij het eerstvolgende opslaan over de echte waarde heen. Gemeten:
+`stuck_after` -> `stuk_after` liet de volledige suite groen terwijl het scherm
+15 minuten toonde in plaats van de opgeslagen 30.
 
 A `target` in `engine/fields.py` is a dotted path into the stored installation
 and into the dataclass underneath. A typo in that path is **silent**: the form
 reads nothing, therefore shows the default, and `config_flow.py` writes that
-default over the real value on the next save. Measured in round 24:
-`stuck_after` -> `stuk_after` left the whole suite green (2508 passed) while the
-screen showed 15 minutes instead of the stored 30.
+default over the real value on the next save. Measured: `stuck_after` ->
+`stuk_after` left the whole suite green while the screen showed 15 minutes
+instead of the stored 30.
 
 Deze bewaking loopt over **élke** veldtabel in `engine/fields.py` — ze worden
 gevonden, niet opgesomd — zodat een derde tabel vanzelf meedoet. Welk model bij

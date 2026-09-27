@@ -125,7 +125,7 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 - **De opruimbeurt van verweesde entiteiten mist dezelfde volledigheidstoets** —
   `_async_remove_stale_entities` verwijdert een entiteit als zijn `config_entry_id` de onze is
   én zijn `unique_id` met onze prefix begint, maar kijkt niet naar het platform of het domein;
-  het override-doel doet dat sinds ronde 34 wél. Bereikbaar is het nauwelijks (een andere
+  het override-doel doet dat wél. Bereikbaar is het nauwelijks (een andere
   integratie zou een entiteit aan onze entry moeten hangen), dus dit is een harding met een
   test, geen reparatie.
 - **De maat in `test_the_measure.py` telt fysieke regels** — een commentaarregel, een
@@ -316,7 +316,7 @@ The worked-out design proposals for everything below live in
 - **The sweep of orphaned entities misses the same completeness check** —
   `_async_remove_stale_entities` removes an entity when its `config_entry_id` is ours and its
   `unique_id` starts with our prefix, but it does not look at the platform or the domain; the
-  override target has done that since round 34. It is hardly reachable (another integration
+  override target does. It is hardly reachable (another integration
   would have to hang an entity off our entry), so this is a hardening with a test rather than
   a repair.
 - **The measure in `test_the_measure.py` counts physical lines** — a comment line, a

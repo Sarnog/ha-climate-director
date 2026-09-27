@@ -471,7 +471,7 @@ def _refused_world(refusal: str, reserve_running: bool):
 
 
 class TestTheCircuitRefusedZoneTriesItsNextSource:
-    """Ronde 21, anker 7: a circuit refusal refuses the appliance, not the zone."""
+    """Anchor 7: a circuit refusal refuses the appliance, not the zone."""
 
     @pytest.mark.parametrize("refusal", ["short_cycle", "capacity", "conflict"])
     @pytest.mark.parametrize("reserve_running", [True, False])

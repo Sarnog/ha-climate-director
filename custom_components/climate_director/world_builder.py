@@ -443,13 +443,13 @@ class _WorldBuilderMixin(_CoordinatorBase):
 
         `_started_at` schuift bij elke reload op: een raam dat vlak vóór een
         wijziging in de options flow openging telt daarna meteen als lang genoeg
-        open en slaat zijn `delay` over. Dat is de veilige kant, precies zoals
-        L2 van ronde 8 al vastlegde.
+        open en slaat zijn `delay` over. Dat is de veilige kant, en die is
+        bewust gekozen.
 
         `_started_at` moves with every reload: a window that opened just before
         an options-flow change counts as open long enough right away and skips
-        its `delay`. That is the safe side, exactly as L2 of round 8 already
-        recorded.
+        its `delay`. That is the safe side, and it was chosen
+        deliberately.
         """
         state = self.hass.states.get(entity_id)
         if state is None:

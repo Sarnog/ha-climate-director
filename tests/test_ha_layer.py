@@ -830,8 +830,8 @@ class TestAFailedSetpointComesBack:
                         change.command.temperature,
                     )
 
-        # Ronde 1: het setpoint wordt aangeboden, maar de aanroep mislukt.
-        # Round 1: the setpoint is offered, but the call fails.
+        # Stap 1: het setpoint wordt aangeboden, maar de aanroep mislukt.
+        # Step 1: the setpoint is offered, but the call fails.
         failing = FakeHass(failing={LIVING})
         first = changes(plan, world, sent)
         assert first and first[0].set_temperature
@@ -839,9 +839,9 @@ class TestAFailedSetpointComesBack:
         assert executed == ()
         remember(executed)
 
-        # Ronde 2: zonder "uitgevoerd" in de boekhouding wordt het opnieuw
+        # Stap 2: zonder "uitgevoerd" in de boekhouding wordt het opnieuw
         # aangeboden, en nu komt de aanroep aan.
-        # Round 2: with nothing "executed" in the bookkeeping it is offered
+        # Step 2: with nothing "executed" in the bookkeeping it is offered
         # again, and now the call lands.
         healed = FakeHass()
         second = changes(plan, world, sent)
@@ -850,8 +850,8 @@ class TestAFailedSetpointComesBack:
         assert [change.entity_id for change in executed] == [LIVING]
         remember(executed)
 
-        # Ronde 3: het setpoint is uitgevoerd, dus er valt niets meer te doen.
-        # Round 3: the setpoint was executed, so nothing remains to do.
+        # Stap 3: het setpoint is uitgevoerd, dus er valt niets meer te doen.
+        # Step 3: the setpoint was executed, so nothing remains to do.
         assert changes(plan, world, sent) == ()
 
 

@@ -6,7 +6,7 @@ Technisch ontwerpdocument voor wie aan de code werkt (geen gebruikershandleiding
 dat is [`README.md`](README.md)). Elke laag heeft precies één verantwoordelijkheid.
 
 **Eenheden:** de engine en de opgeslagen configuratie rekenen in graden Celsius
-— dat is de bewuste keuze (beslissing 3 van 2026-08-25: de eenheid van Home
+— dat is de bewuste keuze (de eenheid van Home
 Assistant volgen, niet de engine er een tweede stelsel bij geven). De
 koppelingslaag is de enige plek die omrekent: de coordinator leest
 HA-temperaturen om naar Celsius, de applier zet setpoints terug naar de eenheid
@@ -18,7 +18,7 @@ bij een sensor, `temperature_unit` bij een weersbron, en pas anders in het
 systeemstelsel. De uitgaande kant — sensorattributen en het event — rondt af
 op één decimaal, in beide stelsels. De weergave voor de gebruiker
 (`display_temperature`) rondt eveneens af op één decimaal, in beide stelsels
-(beslissing 1 van ronde 12, 2026-08-26): zo blijven twee getallen die minder
+(een bewuste beslissing): zo blijven twee getallen die minder
 dan één graad Fahrenheit uit elkaar liggen in de zin van elkaar te
 onderscheiden (`67.6 °F` tegenover `68.0 °F`) in plaats van na afronding op
 hele graden hetzelfde te lezen en de zin met zichzelf in tegenspraak te
@@ -28,8 +28,8 @@ applier rekenen ongeafgerond verder.
 **De diagnose blijft Celsius**: dat is een ontwikkelaarsdump, geen
 gebruikersweergave.
 
-**Inventarisatielijst "elke tekst voor de gebruiker noemt zijn eenheid"**
-(ronde 11, G1): een volgende ronde kan aan deze lijst zíén of hij compleet is
+**Inventarisatielijst "elke tekst voor de gebruiker noemt zijn eenheid"**:
+een volgende controle kan aan deze lijst zíén of hij compleet is
 in plaats van het te moeten hopen. Elke zin hieronder zet Celsius om met
 `display_temperature` — afgerond, met de eenheid erachter:
 
@@ -68,8 +68,8 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
    bevestiging bij een openstaande deur — hetzelfde principe als: wie laat
    opblijft, houdt zijn verwarming. Er zijn twee manieren om dat *toch doen*
    te zeggen: de vlag `ignore_openings` op één verzoek, en de overbrugging per
-   opening uit anker 8. Ze betekenen hetzelfde en stapelen niet. Sinds ronde 4
-   is er bewust géén vooruit-venster meer; een vooruit-venster per weekdag is
+   opening uit anker 8. Ze betekenen hetzelfde en stapelen niet. Er is
+   bewust géén vooruit-venster; een vooruit-venster per weekdag is
    daarom geen idee maar een terugdraaiing van dat besluit.
 2. **Een onleesbare buitentemperatuur** weigert een taak alleen als díe taak zelf
    een begrensd venster moet passeren — op de zone, of op een bron die deze taak
@@ -92,7 +92,7 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
    plan dat zegt welke zone werkelijk warmte kreeg (`_received_heat`).
    Bewust geen instelling: één knop minder om verkeerd te zetten, en drie minuten
    is veilig voor elke brander.
-   Sinds 7.4.2 staat daar een tweede rem naast: een bron kan een eigen
+   Daar staat een tweede rem naast: een bron kan een eigen
    `min_cycle_time` dragen (`Source.min_cycle_time`), ook als hij op geen circuit
    zit; leeg of nul betekent geen eigen rem. Een bron op een circuit houdt de
    rusttijd van dat circuit — de eigen rem is een ondergrens per apparaat en
@@ -122,7 +122,7 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
    gewoon door. Een opening draagt hiervoor een eigen `opening_id` én een naam,
    net als elk ander objecttype — zonder eigen identiteit hangt de schakelaar aan
    de `entity_id` van de sensor en verdwijnt hij zodra die sensor vervangen wordt.
-   Ontbreekt het id in opslag van vóór 7.5.3, dan leidt de serialisatie het af
+   Ontbreekt het id in oudere opslag, dan leidt de serialisatie het af
    uit de `entity_id`, uniek per sensor — twee openingen op dezelfde sensor
    krijgen zo elk een eigen schakelaar. Die afleiding staat op één plek
    (`serialise.opening_ids`) met twee lezers: de opslaglezer en de options
@@ -139,7 +139,7 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
    zijn nieuwe naam. Home Assistant cachet de naam van een entiteit en maakt die
    cache niet ongeldig als alleen de placeholder verandert, dus de schakelaar
    gooit hem zelf weg zodra het label werkelijk wijzigt (`switch._refresh_label`)
-   — dat is dezelfde klasse als R27-2: één momentopname bij het opzetten waar de
+   — dat is een bekende klasse: één momentopname bij het opzetten waar de
    wereld daarna nog kan veranderen. Een opgeslagen dubbel `opening_id` weigert
    `validate()` met `duplicate_opening_id`.
 9. **Een vakantiedag telt als zaterdag, behalve waar dat één bewoner het huis
@@ -180,7 +180,7 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     engine-pad (`clamped_target`). **Klemmen, niet weigeren** — weigeren zou een
     tweede regel naast de eerste zijn, en dan lopen de twee paden uit elkaar.
     Die klem hangt aan het moment van **versturen**, niet aan het moment van de
-    aanroep (R28-2): tussen die twee kan het apparaat zijn bereik gaan melden of
+    aanroep: tussen die twee kan het apparaat zijn bereik gaan melden of
     juist kwijtraken — een cloud-drop-out laat `min_temp` even verdwijnen — en
     de beslisronde heeft de wereld van dat moment al in de hand. De servicelaag
     rekent daarom alleen nog de eenheid om; de klem staat in de ronde waarin het
@@ -198,7 +198,7 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     plakt dat doel vóór de schemavalidatie aan de data. Een entiteit bepaalt dan
     de installatie én de zone; alleen de overrideschakelaar en de eindtijdsensor
     van deze integratie tellen, elke andere entiteit is een typefout en wordt
-    geweigerd. Die toets is sinds ronde 34 volledig: de entry moet bestaan en de
+    geweigerd. Die toets is volledig: de entry moet bestaan en de
     onze zijn, het platform moet dit zijn, het domein moet `sensor` of `switch`
     zijn, en de `unique_id` moet met onze prefix beginnen én pas daarna op het
     patroon passen. Zonder die vier krijgt een entiteit van een andere integratie
@@ -625,7 +625,7 @@ Twee eigenschappen die de rest van het systeem dragen:
   taak wisselt de nieuwe taak eerst starten, dan delen twee bedrijven één compressor
   zolang de service calls onderweg zijn.
 
-De **hoofdschakelaar is een noodknop**, geen uitknop (besloten na reviewronde 4, H1):
+De **hoofdschakelaar is een noodknop**, geen uitknop (een bewuste beslissing):
 met `MASTER_DISABLED` stuurt de director helemaal niets — ook geen `off`. Elk beheerd
 apparaat staat dan als `UntouchedSource` in het plan, precies zoals een overgedragen
 zone. Wie de ketel daarna met de hand aanzet houdt hem aan; zou de director hem tóch
@@ -644,8 +644,8 @@ daarbij geen tegenstanders — dat is één apparaat dat draait.
 
 Staan een handbediend apparaat én zijn groepstegenstander op hetzelfde circuit, dan
 bezet het handbediende apparaat zelf de plek (`_keeps_claiming` telt hem mee) en krijgt
-de tegenstander blijvend `CIRCUIT_AT_CAPACITY`; per beslissing 2 van 2026-08-25 blijft
-dat zo. Een exclusieve groep waarvan de leden dezelfde buitenunit delen kan zichzelf dus
+de tegenstander blijvend `CIRCUIT_AT_CAPACITY`; dat blijft bewust
+zo. Een exclusieve groep waarvan de leden dezelfde buitenunit delen kan zichzelf dus
 klemzetten — gebruik groepen alleen voor apparaten die geen buitenunit delen.
 
 In de bronkeuze stopt de huisbrede stop de **zone**, niet alleen het apparaat: is de
@@ -785,7 +785,7 @@ de **optionele** velden staat of juist niet staat. "Verwerpen en teruggaan" komt
 de verplichte velden geldig zijn. Elk optioneel veld staat daarom als kale selector in het
 schema. De omzetter kent maar één `vol.Any`-vorm: `vol.Any(None, validator)` — dat is wat
 `vol.Maybe(validator)` oplevert — en maakt daar `allow_none: true` van; élke andere vorm
-(een derde tak, een lege string) maakt het scherm onrenderbaar, en dat was 7.2.1. Die ene
+(een derde tak, een lege string) maakt het scherm onrenderbaar (gemeten). Die ene
 vorm gooit alsnog wanneer de binnenste validator een mapping-schema is
 (`vol.Maybe(vol.Schema({...}))`), en de omgekeerde volgorde `vol.Any(validator, None)`
 serialiseert niet — de volgorde in het anker is dus niet toevallig. De
@@ -795,7 +795,7 @@ en zou alleen het scenario dekken waarin de interface een leeggemaakt veld als `
 doorgeeft. Dát is een **aanname over de interface, geen meting**: de interface stuurt een
 leeggemaakt optioneel veld door als ontbrekende sleutel. Klopt die aanname niet, dan
 weigeren 31 van de 33 optionele velden zowel `None` als `""` — alleen de twee tekstvelden
-komen erdoor — en is het 7.2.1-symptoom in volle omvang terug. Een ingevuld veld gaat
+komen erdoor — en is hetzelfde symptoom in volle omvang terug. Een ingevuld veld gaat
 gewoon door de selector en wordt dus nog steeds gevalideerd; verplichte velden vallen
 bewust buiten deze belofte (een leeggemaakt verplicht getalveld kan het scherm nog steeds
 op slot zetten), en een lege waarde mag nooit als zodanig de configuratie in
@@ -817,7 +817,7 @@ overschrijven.
 De platforms worden vóór de eerste beslissing opgezet, zodat een uitgeschakelde
 hoofdschakelaar niet één ronde lang aan lijkt te staan.
 
-**Categorieën (7.4.2).** Elke entiteit kent haar `entity_category`, en die keuze
+**Categorieën.** Elke entiteit kent haar `entity_category`, en die keuze
 verandert wat een gebruiker in zijn lijst ziet: de waarneemsensoren
 (`sensor.*`) en de blokkade/valt-terug/vast-binaire sensoren staan op
 `DIAGNOSTIC`; de twee `number`-entiteiten en de seizoenskeuze op `CONFIG`; de
@@ -1063,7 +1063,7 @@ aanmeldt.
 **De maat.** Een module blijft onder ~700 regels, een functie onder ~80. Geen wet, wel de
 grens waarboven de vraag hoort te vallen: *doet dit ding er inmiddels twee?*
 
-**Waar de code die maat vandaag niet haalt.** Gemeten na S1 t/m S6, op `28846e7` — 33
+**Waar de code die maat niet haalt.** Gemeten na S1 t/m S6 — 33
 bestanden, 15.309 regels: zes modules staan boven de 700 regels, zeventien functies boven
 de 80, en die zes grootste bestanden dragen samen 8.638 regels, 56,4% van het geheel. Dat
 is geen schoonheidsfout: vier van de zes — `coordinator.py`, `config_flow.py`,
@@ -1098,8 +1098,8 @@ telkens dezelfde vorm.
   `_untouched_reason` (onbereikbaar, hoofdschakelaar uit, anker 2),
   `_opening_stop_reason` (anker 5), `_opening_rest_hold` (de herstart-rem),
   `_unreadable_reason` (de blind-reden) en `_idle_mode`. Een eigenschap die op het
-  ene pad gerepareerd wordt kan daardoor niet meer op het andere blijven staan — H1
-  (ronde 1), H3 (ronde 2) en B1 (ronde 21) waren alle drie díé fout. Wat per pad
+  ene pad gerepareerd wordt kan daardoor niet meer op het andere blijven staan — drie
+  eerdere bevindingen waren alle drie díé fout. Wat per pad
   blijft zijn de pad-eigen keuzes: override, handbediende bron en gekozen-bron-commando
   bij de zone-bron; vraagvolging en stop-reden bij de gedeelde warmtebron.
 
@@ -1113,12 +1113,12 @@ gedrag — de volledige suite bleef bij elke stap even groen als ervoor, met
 `python tests/measure_short_cycles.py` onveranderd op **OK**. Wat de maat voortaan
 vasthoudt is de bewaking hierboven (`tests/test_the_measure.py`), niet dit document.
 
-**De veldtabel (ronde 23).** Eén instelling toevoegen raakte nog steeds te veel
+**De veldtabel.** Eén instelling toevoegen raakte nog steeds te veel
 plaatsen: de dataclass in `engine/models.py`, lezen en schrijven in
 `engine/serialise.py`, het formulier in `schemas.py`, de opslag in `config_flow.py`,
 en bij een veld met bedieningstoestand ook de verbruiker in de engine — plus de zeven
 tekstbestanden. Dat is de fabriek van "op het ene pad gerepareerd, op het pad ernaast
-vergeten". Sinds ronde 23 is de ketting voor het instellingenscherm korter:
+vergeten". Daarom is de ketting voor het instellingenscherm korter:
 `engine/fields.py` draagt één declaratieve veldtabel per scherm — naam, type,
 standaard, vertaalsleutel en doel in het model — en zowel `schemas.py` (het
 formulier) als `engine/serialise.py` (de opslag van dat scherm) lezen daaruit. De
@@ -1131,10 +1131,10 @@ veldenkaarten) zijn meeverhuisd: een veld in de tabel telt als een veld in het
 schema, en een `schemas.<naam>` die niet bestaat is een fout in plaats van een
 stille lege kaart.
 
-**De veldtabel wordt het patroon voor lijst-itemschermen (ronde 24).** Het
+**De veldtabel wordt het patroon voor lijst-itemschermen.** Het
 instellingenscherm was de eerste tabel, en het is het minst representatieve
-scherm dat er is: het is het enige scherm dat geen lijst-item bewerkt. Sinds
-ronde 24 leest het **bronscherm** zijn velden uit `SOURCE_FIELDS`, en daarmee
+scherm dat er is: het is het enige scherm dat geen lijst-item bewerkt. Daarom
+leest ook het **bronscherm** zijn velden uit `SOURCE_FIELDS`, en daarmee
 staat het patroon vast voor elk scherm dat één item uit een lijst bewerkt: de
 tabel zegt wélke velden er zijn, `schema_fields._table_schema` krijgt de
 waardebron expliciet mee — de installatie voor het instellingenscherm, het item
@@ -1180,7 +1180,7 @@ bewaking, want die regressie is oneindig. Wie een bewaking wijzigt, wijzigt
 haar unittests mee; wie een bewaking alleen met een losse mutatierun valideert,
 heeft haar niet gevalideerd.
 
-**Stopregel** (beslissing 4, 2026-08-29): ná ronde 19 telt iets alleen nog als
+**Stopregel** (een bewuste beslissing): iets telt alleen als
 bevinding wanneer het gedrag raakt dat een gebruiker merkt, óf met een
 gedraaide mutatie in deze repo bereikbaar is zónder een plugin te installeren
 die niet in `requirements_test.txt` staat. Randen in de testset zonder
@@ -1192,7 +1192,7 @@ Technical design document for anyone working on the code (not a user manual —
 that is [`README.md`](README.md)). Each layer has exactly one responsibility.
 
 **Units:** the engine and the stored configuration work in degrees Celsius —
-that is the deliberate choice (decision 3 of 2026-08-25: follow Home
+that is the deliberate choice (follow Home
 Assistant's unit rather than giving the engine a second system). The binding
 layer is the one place that converts: the coordinator reads HA temperatures
 into Celsius, the applier turns setpoints back into the user's unit, the form
@@ -1203,7 +1203,7 @@ itself: `unit_of_measurement` on a sensor, `temperature_unit` on a weather
 source, and only otherwise in the system unit. The outgoing side — sensor
 attributes and the event — rounds to one decimal, in both systems. The display
 for the user (`display_temperature`) also rounds to one decimal, in both
-systems (decision 1 of round 12, 2026-08-26): two numbers less than one degree
+systems (a deliberate decision): two numbers less than one degree
 Fahrenheit apart stay distinguishable in the sentence (`67.6 °F` versus
 `68.0 °F`) instead of reading the same after rounding to whole degrees and
 making the sentence contradict itself. One rounding rule for the whole display;
@@ -1212,8 +1212,8 @@ times. The engine and the applier keep computing unrounded.
 **The diagnostics stay Celsius**: that is a developer dump, not a user-facing
 display.
 
-**Inventory list "every user-facing text names its unit"** (round 11, G1): a
-next round can *see* whether this list is complete instead of having to hope so.
+**Inventory list "every user-facing text names its unit"**: a
+next review can *see* whether this list is complete instead of having to hope so.
 Each sentence below converts Celsius with `display_temperature` — rounded, with
 the unit behind it:
 
@@ -1251,7 +1251,7 @@ them without changing them here first.
    principle as: whoever stays up late keeps their heating. There are two ways
    to say that *do it anyway*: the `ignore_openings` flag on a single request,
    and the per-opening bypass of anchor 8. They mean the same and do not stack.
-   Since round 4 there is deliberately no pre-conditioning window any more; a
+   There is deliberately no pre-conditioning window; a
    pre-conditioning window per weekday is therefore not an idea but a reversal
    of that decision.
 2. **An unreadable outdoor temperature** refuses a duty only when that duty
@@ -1274,7 +1274,7 @@ them without changing them here first.
    source does not, since its stop only counts with a previous plan saying which
    zone really received heat (`_received_heat`). Deliberately not a setting: one
    knob fewer to get wrong, and three minutes is safe for any burner.
-   Since 7.4.2 a second brake stands beside it: a source may carry its own
+   A second brake stands beside it: a source may carry its own
    `min_cycle_time` (`Source.min_cycle_time`), even when it sits on no circuit;
    empty or zero means no own brake. A source on a circuit keeps that circuit's
    rest — the own brake is a per-appliance lower bound and applies only to a
@@ -1303,7 +1303,7 @@ them without changing them here first.
    from anchor 5 does keep running. An opening carries its own `opening_id` and a
    name for this, like every other object type — without its own identity the
    switch hangs on the sensor's `entity_id` and disappears the moment that sensor
-   is replaced. When the id is missing in storage from before 7.5.3,
+   is replaced. When the id is missing in older storage,
    serialisation derives it from the `entity_id`, unique per sensor — two
    openings on the same sensor each get their own switch. That derivation lives
    in one place (`serialise.opening_ids`) with two readers: the storage reader
@@ -1319,7 +1319,7 @@ them without changing them here first.
    the switch its new name without a reload. Home Assistant caches an entity's
    name and does not invalidate that cache when only the placeholder changes, so
    the switch drops it itself as soon as the label really differs
-   (`switch._refresh_label`) — the same class as R27-2: a snapshot taken at
+   (`switch._refresh_label`) — a known class: a snapshot taken at
    setup where the world can still change afterwards. A stored duplicate
    `opening_id` is refused by `validate()` with `duplicate_opening_id`.
 9. **A holiday counts as a Saturday, except where that would let one resident
@@ -1356,8 +1356,8 @@ them without changing them here first.
     clamped to the chosen source's `min_temp`/`max_temp`, by the same rule as the
     engine path (`clamped_target`). **Clamping, not refusing** — refusing would be
     a second rule beside the first, and then the two paths drift apart. That
-    clamp hangs on the moment of **sending**, not on the moment of the call
-    (R28-2): between those two the appliance can start reporting its range or
+    clamp hangs on the moment of **sending**, not on the moment of the call:
+    between those two the appliance can start reporting its range or
     lose it — a cloud drop-out makes `min_temp` disappear for a while — and the
     decision round already holds the world of that moment. The service layer
     therefore only converts the unit; the clamp sits in the round that puts the
@@ -1375,7 +1375,7 @@ them without changing them here first.
     into the data before schema validation. An entity then settles both the
     installation and the zone; only this integration's override switch and
     end-time sensor count, any other entity is a typo and is refused. That check
-    has been complete since round 34: the entry has to exist and be ours, the
+    is complete: the entry has to exist and be ours, the
     platform has to be this one, the domain has to be `sensor` or `switch`, and
     the `unique_id` has to start with our prefix and only then fit the pattern.
     Without those four, an entity of another integration with a look-alike id
@@ -1796,8 +1796,8 @@ Two properties carry the rest of the system:
   circuit that is swapping would put two duties on one compressor for as long as the
   service calls take to land.
 
-The **master switch is an emergency stop, not an off switch** (decided after review
-round 4, H1): under `MASTER_DISABLED` the director sends nothing at all — an `off`
+The **master switch is an emergency stop, not an off switch** (a deliberate
+decision): under `MASTER_DISABLED` the director sends nothing at all — an `off`
 included. Every managed appliance then stands in the plan as an `UntouchedSource`,
 exactly like a handed-over zone. Whoever switches the boiler on by hand afterwards keeps
 it on; were the director to switch it off anyway, the emergency stop would be a lock.
@@ -1815,7 +1815,7 @@ another room's source id. Two rooms asking for the same appliance are no rivals 
 
 When a hand-operated appliance and its group rival sit on the same circuit, the
 hand-operated appliance occupies the slot itself (`_keeps_claiming` counts it), the rival
-gets `CIRCUIT_AT_CAPACITY` for good, and per decision 2 of 2026-08-25 that stays. An
+gets `CIRCUIT_AT_CAPACITY` for good, and that deliberately stays so. An
 exclusive group whose members share an outdoor unit can therefore clamp itself shut —
 use groups only for appliances that do not share an outdoor unit.
 
@@ -1951,7 +1951,7 @@ fields hold or do not hold. "Discard and go back" arrives whenever the required 
 valid. Every optional field therefore stands as a plain selector in the schema. The
 converter knows exactly one `vol.Any` shape: `vol.Any(None, validator)` — which is what
 `vol.Maybe(validator)` produces — and turns it into `allow_none: true`; every other shape
-(a third branch, an empty string) makes the screen undrawable, and that was 7.2.1. That
+(a third branch, an empty string) makes the screen undrawable (measured). That
 one shape still throws when the inner validator is a mapping schema
 (`vol.Maybe(vol.Schema({...}))`), and the reversed order `vol.Any(validator, None)` does
 not serialize — the order in the anchor is therefore not accidental. The
@@ -1961,7 +1961,7 @@ holds and would only cover the scenario where the frontend hands in a cleared fi
 `None`. That is an **assumption about the frontend, not a measurement**: the frontend
 sends a cleared optional field as a missing key. Should that assumption fail, 31 of the 33
 optional fields refuse both `None` and `""` — only the two text fields get through — and
-the 7.2.1 symptom is back in full. A filled-in value still goes through the selector and
+the same symptom is back in full. A filled-in value still goes through the selector and
 is therefore still validated; required fields are deliberately outside this promise (a
 cleared required numeric field can still lock the screen), and an empty value must never
 land in the configuration as such (`_blank_to_none`).
@@ -1981,7 +1981,7 @@ otherwise the outcome of one decision would overwrite the input to the next.
 The platforms are set up before the first decision, so a master switch left off does not
 appear on for one round.
 
-**Categories (7.4.2).** Every entity carries its `entity_category`, and that
+**Categories.** Every entity carries its `entity_category`, and that
 choice changes what a user sees in their list: the observation sensors
 (`sensor.*`) and the blocked/fallback/stuck binary sensors sit on
 `DIAGNOSTIC`; the two `number` entities and the season picker on `CONFIG`; the
@@ -2224,8 +2224,8 @@ longest is guarded. Unreachable today — there are 18 same-named pairs and the 
 **The measure.** A module stays under ~700 lines, a function under ~80. Not a law, but
 the point past which the question should arise: *is this thing doing two jobs by now?*
 
-**Where the code does not meet that measure today.** Measured after S1 through S6, at
-`28846e7` — 33 files, 15,309 lines: six modules sit above 700 lines, seventeen functions
+**Where the code does not meet that measure.** Measured after S1 through S6 —
+33 files, 15,309 lines: six modules sit above 700 lines, seventeen functions
 above 80, and those six largest files carry 8,638 lines between them, 56.4% of the whole.
 That is not a cosmetic flaw: four of the six — `coordinator.py`, `config_flow.py`,
 `engine/models.py` and `engine/decide.py` — have demonstrably produced bugs, each time
@@ -2259,7 +2259,7 @@ the same shape.
   (unreachable, master off, anchor 2), `_opening_stop_reason` (anchor 5),
   `_opening_rest_hold` (the restart brake), `_unreadable_reason` (the blind reason)
   and `_idle_mode`. A property repaired on one path can therefore no longer stay
-  broken on the other — H1 (round 1), H3 (round 2) and B1 (round 21) were all three
+  broken on the other — three earlier findings were all three
   *that* mistake. What remains per path are the path-specific choices: override,
   manual source and chosen-source command for the zone source; demand-following and
   stop reason for the shared heat source.
@@ -2274,11 +2274,11 @@ behaviour — the full suite stayed exactly as green at every step, with
 `python tests/measure_short_cycles.py` unchanged at **OK**. What holds the measure from
 now on is the guard above (`tests/test_the_measure.py`), not this document.
 
-**The field table (round 23).** Adding one setting still touched too many places: the
+**The field table.** Adding one setting still touched too many places: the
 dataclass in `engine/models.py`, reading and writing in `engine/serialise.py`, the form
 in `schemas.py`, the storage in `config_flow.py`, and — for a field carrying control
 state — also the consumer in the engine, plus the seven translation files. That is the
-factory of "fixed on one path, forgotten on the one beside it". Since round 23 the
+factory of "fixed on one path, forgotten on the one beside it". Hence the
 chain is shorter for the settings screen: `engine/fields.py` carries one declarative
 field table per screen — name, type, default, translation key and target in the model —
 and both `schemas.py` (the form) and `engine/serialise.py` (that screen's storage) read
@@ -2290,10 +2290,10 @@ guards that read the form source with an AST (`form_field_nodes` and the field m
 moved along with it: a field in the table counts as a field in the schema, and a
 `schemas.<name>` that does not exist is an error rather than a silently empty map.
 
-**The field table becomes the pattern for list-item screens (round 24).** The
+**The field table becomes the pattern for list-item screens.** The
 settings screen was the first table, and it is the least representative screen
-there is: it is the only screen that does not edit a list item. Since round 24
-the **source screen** reads its fields from `SOURCE_FIELDS`, and that fixes the
+there is: it is the only screen that does not edit a list item. Hence the
+**source screen** also reads its fields from `SOURCE_FIELDS`, and that fixes the
 pattern for every screen that edits one item out of a list: the table says which
 fields exist, `schema_fields._table_schema` is handed its value source
 explicitly — the installation for the settings screen, the item itself
@@ -2338,7 +2338,7 @@ guard, because that regression is infinite. Whoever changes a guard changes
 its unit tests along with it; whoever validates a guard only with an ad-hoc
 mutation run has not validated it.
 
-**Stop rule** (decision 4, 2026-08-29): after round 19 something only counts
+**Stop rule** (a deliberate decision): something only counts
 as a finding when it touches behaviour a user notices, or when it can be
 reached with a mutation run in this repo without installing a plugin that is
 not in `requirements_test.txt`. Test-suite edges without a reachable scenario

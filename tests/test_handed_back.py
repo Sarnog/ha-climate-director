@@ -875,18 +875,18 @@ class TestASleepWindowRestrainsTheCharger:
 class TestItSurvivesARestart:
     """Een besluit van een mens hoort niet in het werkgeheugen alleen.
 
-    Tot 6.4.2 stond een handmatige uitzetting alleen in het geheugen van de
-    coordinator. Herstart Home Assistant - een update, een herstart om iets
-    heel anders - en de zone deed weer gewoon mee, terwijl er iemand met de
-    hand had gezegd: laat maar. Precies de fout die de vooruit-verzoeken in
-    6.4.0 al hadden.
+    Stond een handmatige uitzetting alleen in het geheugen van de
+    coordinator, dan deed de zone na een herstart van Home Assistant - een
+    update, een herstart om iets heel anders - weer gewoon mee, terwijl er
+    iemand met de hand had gezegd: laat maar. Voor de vooruit-verzoeken geldt
+    hetzelfde.
 
     A person's decision does not belong in working memory alone.
 
-    Up to 6.4.2 a hand-back only lived in the coordinator's memory. Restart
-    Home Assistant - an update, a restart over something else entirely - and
-    the zone simply took part again, while somebody had said by hand: leave it.
-    Exactly the fault the pre-conditioning requests already had in 6.4.0.
+    Were a hand-back to live only in the coordinator's memory, a restart of
+    Home Assistant - an update, a restart over something else entirely - would
+    let the zone simply take part again, while somebody had said by hand: leave
+    it. The same holds for the pre-conditioning requests.
     """
 
     def _coordinator(self, stored: dict | None = None):
@@ -938,14 +938,14 @@ class TestItSurvivesARestart:
     def test_a_closing_coordinator_does_not_schedule_a_new_save(self) -> None:
         """P1: ná de flush mag een nog lopende ronde geen opslag meer plannen.
 
-        De goedkoopste dekking voor het opslagvenster uit ronde 8: zodra
+        De goedkoopste dekking voor het opslagvenster: zodra
         `_closing` waar is, is de uitgestelde schrijfactie van `_async_save_state`
         verboden. Anders zou een ronde die de vijf-seconden-time-out van
         `async_shutdown` overleeft het bestand ná `async_remove_entry`
         terugschrijven.
 
         P1: after the flush a still-running round must not schedule another save.
-        The cheapest cover for the storage window from round 8: once `_closing`
+        The cheapest cover for the storage window: once `_closing`
         is true, the delayed write of `_async_save_state` is forbidden.
         Otherwise a round that outlives the five-second `async_shutdown` timeout
         would resurrect the file after `async_remove_entry`.

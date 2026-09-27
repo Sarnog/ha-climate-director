@@ -34,18 +34,18 @@ PARALLEL_UPDATES = 0
 #: De toestand van een apparaat dat de director met opzet met rust laat: een
 #: overgedragen zone, of een handbediend apparaat dat niemand in de weg staat.
 #:
-#: Tot 6.5.0 stond hier `unmanaged`, en dat woord betekent in deze integratie
-#: al iets anders: een unit die aan een buitenunit hangt maar in geen enkele
-#: zone staat. Twee lezers zijn erover gestruikeld en dachten dat de director
-#: hun apparaat niet kende, terwijl hij er juist bewust van afbleef.
+#: Bewust niet `unmanaged`: dat woord betekent in deze integratie al iets
+#: anders, een unit die aan een buitenunit hangt maar in geen enkele zone
+#: staat. Een lezer zou dan denken dat de director zijn apparaat niet kent,
+#: terwijl hij er juist bewust van afblijft.
 #:
 #: The state of an appliance the director deliberately leaves alone: a zone
 #: handed over, or a hand-operated appliance nobody needs out of the way.
 #:
-#: Up to 6.5.0 this said `unmanaged`, and in this integration that word already
-#: means something else: a unit hanging on an outdoor unit but appearing in no
-#: zone. Two readers stumbled over it and took it to mean the director did not
-#: know their appliance, while it was deliberately keeping its hands off.
+#: Deliberately not `unmanaged`: in this integration that word already means
+#: something else, a unit hanging on an outdoor unit but appearing in no zone.
+#: A reader would then take it to mean the director does not know their
+#: appliance, while it is deliberately keeping its hands off.
 STATE_LEFT_ALONE = "left_alone"
 
 #: De toestand van een apparaat dat niet te bereiken is. Er valt niets te
@@ -397,7 +397,7 @@ class ZoneOverrideEndsSensor(ClimateDirectorEntity, SensorEntity):
 
     De toestand volgt de coordinator en niet de schakelaar. Het zetten, het
     annuleren en het met de hand uitzetten laten deze sensor **direct**
-    meeschrijven (`coordinator.async_publish_override_state`, R34-7); bij het
+    meeschrijven (`coordinator.async_publish_override_state`); bij het
     aflopen gebeurt dat via de beslisronde die het plan publiceert. Een eigen
     listener heeft hij dus niet nodig.
 
@@ -410,7 +410,7 @@ class ZoneOverrideEndsSensor(ClimateDirectorEntity, SensorEntity):
 
     The state follows the coordinator rather than the switch. Setting,
     cancelling and switching the override off by hand have this sensor **write
-    along at once** (`coordinator.async_publish_override_state`, R34-7); on
+    along at once** (`coordinator.async_publish_override_state`); on
     expiry that happens through the decision round that publishes the plan. So it
     needs no listener of its own.
     """

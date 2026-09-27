@@ -121,9 +121,9 @@ def test_legacy_openings_get_their_identity_from_the_entity() -> None:
 
 
 def test_two_openings_on_the_same_sensor_get_distinct_ids() -> None:
-    """Twee openingen op één sensor (opslag van vóór 7.5.3) delen niet één id.
+    """Twee openingen op één sensor (oudere opslag, zonder id) delen niet één id.
 
-    Two openings on one sensor (storage from before 7.5.3) do not share one id.
+    Two openings on one sensor (older storage, without ids) do not share one id.
     """
     raw = {
         "openings": [

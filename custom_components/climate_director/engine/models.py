@@ -1268,13 +1268,13 @@ def _rule_duplicate_opening_ids(config: DirectorConfig) -> Iterator[Problem]:
 
     Anker 8: een opening draagt een eigen `opening_id`; twee openingen met
     dezelfde id delen de overbruggingsschakelaar, en dan verdwijnt er één stil
-    uit het entiteitenregister. Opslag van vóór 7.5.3 kent die ids niet; ze
+    uit het entiteitenregister. Oudere opslag kent die ids niet; ze
     worden bij het lezen afgeleid (`serialise.opening_ids`); een opgeslagen
     dubbel id laat die lezer staan, dus deze controle ziet hem.
 
     Anchor 8: an opening carries its own `opening_id`; two openings sharing one
     share the bypass switch, and then one disappears quietly from the entity
-    registry. Storage from before 7.5.3 has no such ids; they are derived
+    registry. Older storage has no such ids; they are
     derived on read (`serialise.opening_ids`); a stored duplicate is left
     alone by that reader, so this check sees it.
     """

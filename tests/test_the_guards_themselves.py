@@ -2,16 +2,16 @@
 
 The guards of the test suite are themselves guarded.
 
-Ronde 19, beslissing 2: we bewaken één niveau en niet het niveau daarboven.
-Acht rondes lang is elke bewaking alleen met losse mutatieruns gevalideerd;
-die toetsen staan nergens in de suite, dus ze verroten en de volgende ronde
+Een bewuste beslissing: we bewaken één niveau en niet het niveau daarboven.
+Een bewaking die alleen met losse mutatieruns gevalideerd is, heeft die
+toetsen nergens in de suite staan, dus ze verroten en de volgende ronde
 vindt een nieuwe rand. Dit bestand pint elke bewaking vast op **verzonnen**
 invoer — niet op de echte boom, want dan test je opnieuw de toestand van
 vandaag in plaats van de eigenschap.
 
-Round 19, decision 2: we guard one level, and not the level above it. For
-eight rounds every guard was validated only with ad-hoc mutation runs; those
-checks live nowhere in the suite, so they rot and the next round finds a new
+A deliberate decision: we guard one level, and not the level above it. A
+guard validated only with ad-hoc mutation runs has those checks living
+nowhere in the suite, so they rot and the next round finds a new
 edge. This file pins every guard on **invented** input — not on the real tree,
 because that would again test today's state instead of the property.
 """
@@ -64,14 +64,14 @@ def _write_package(
 
 
 def _assert_multiline_hint(out: str) -> None:
-    """De hint van de vijfde weigering gaat over echte regels (R35-6).
+    """De hint van de vijfde weigering gaat over echte regels.
 
     Een hint met een letterlijke `\\n` erin is één lange regel met zichtbare
     `\\n`; deze helper eist dat er geen letterlijke `\\n` meer in staat en dat de
     uitvoer over meerdere regels valt. Draait in de twee weigertests van
     `TestTheCoverageGate`; de constante zelf wordt apart gemeten.
 
-    The fifth refusal's hint spans real lines (R35-6). A hint with a literal `\\n`
+    The fifth refusal's hint spans real lines. A hint with a literal `\\n`
     in it is one long line with visible `\\n`; this helper demands that no literal
     `\\n` stands in it and that the output falls over several lines. It runs in
     the two refusal tests of `TestTheCoverageGate`; the constant itself is
@@ -217,13 +217,13 @@ class TestFixFlowSteps:
     ) -> None:
         """Een fix-flow die in een functie staat hoort ook mee te tellen.
 
-        Ronde 20, B2: de loop ging over `tree.body` en zag daardoor alleen
-        klassen op modulehoogte; een fabrieksfunctie die een `RepairsFlow`
-        teruggeeft viel er stil uit.
+        Een loop over `tree.body` ziet alleen klassen op modulehoogte; een
+        fabrieksfunctie die een `RepairsFlow` teruggeeft valt er dan stil
+        uit.
 
-        A fix flow defined inside a function must count too. Round 20, B2: the
-        loop walked `tree.body` and therefore saw only module-level classes; a
-        factory function returning a `RepairsFlow` silently dropped out.
+        A fix flow defined inside a function must count too. A loop over
+        `tree.body` sees only module-level classes; a factory function
+        returning a `RepairsFlow` then silently drops out.
         """
         root = _write_package(
             monkeypatch,
@@ -505,20 +505,20 @@ class TestTheWalkGuard:
     ) -> None:
         """Een leugenachtige `open_screen` hoort de doorlooptest rood te maken.
 
-        Dit is de eigenschap waar het schrappen van de dekkingsbewaking (ronde
-        19, V1) op leunt: de doorloop vergelijkt de **teruggekregen** step_id
+        Dit is de eigenschap waar het ontbreken van een aparte
+        dekkingsbewaking op leunt: de doorloop vergelijkt de **teruggekregen** step_id
         met de gevraagde, en kijkt niet alleen of er íets terugkomt. Hier wordt
         dat met een gedraaide meting vastgepind in plaats van met een zoekactie
         in de brontekst — die laatste vorm ging rood zodra iemand dezelfde
-        assertie anders opschreef (ronde 20, B3).
+        assertie anders opschreef.
 
         A lying `open_screen` must turn the walk test red. This is the property
-        the removal of the coverage guard (round 19, V1) leans on: the walk
+        the absence of a separate coverage guard leans on: the walk
         compares the **returned** step id with the requested one, and does not
         merely check that something came back. It is pinned here with a real
         measurement instead of a search through the source text — that earlier
-        form went red as soon as anyone wrote the same assertion differently
-        (round 20, B3).
+        form went red as soon as anyone wrote the same assertion
+        differently.
         """
         import test_campaign_editing as walk
 
@@ -641,9 +641,9 @@ class TestTheBorderGuard:
 
 
 class TestTheCoverageGate:
-    """De dekkingspoort keurt geen lege of halve meting goed (ronde 32, R32-4).
+    """De dekkingspoort keurt geen lege of halve meting goed.
 
-    The coverage gate approves no empty or half measurement (round 32, R32-4).
+    The coverage gate approves no empty or half measurement.
 
     Alle invoer hier is verzonnen: een pakketje in `tmp_path` met één of twee
     bestanden, en een gegevensbestand dat die bestanden wel of niet noemt. Zo
@@ -728,14 +728,14 @@ class TestTheCoverageGate:
         assert "a.py" in out and "2" in out and "3" in out
 
     def test_a_line_the_patterns_hide_must_be_named(self, tmp_path: Path, capsys) -> None:
-        """Een regel die coverage overslaat hoort een naam te hebben (R34-2).
+        """Een regel die coverage overslaat hoort een naam te hebben.
 
         Coverage houdt een `...`-stub buiten de telling op een patroon, en zonder
         whitelist zou die regel stil uit "nul gemiste regels" verdwijnen: de poort
         zou groen staan over een regel die hij nooit gezien heeft. Hier is de
         stub niet genoemd, dus valt de poort om en noemt hij de regel zelf.
 
-        A line coverage skips has to have a name (R34-2). Coverage keeps a `...`
+        A line coverage skips has to have a name. Coverage keeps a `...`
         stub out of the count on a pattern, and without the whitelist that line
         would quietly disappear from "zero missed lines": the gate would stand
         green about a line it never saw. Here the stub is unnamed, so the gate
@@ -754,12 +754,12 @@ class TestTheCoverageGate:
     def test_a_named_line_the_patterns_hide_is_accepted(
         self, tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Met een naam erbij is precies diezelfde meting wel goed (R34-2).
+        """Met een naam erbij is precies diezelfde meting wel goed.
 
         De whitelist wordt hier verzonnen in plaats van gelezen, want hij hoort
         bij dit pakket en niet bij een pakketje in `tmp_path`.
 
-        With a name alongside, that very measurement is fine (R34-2). The
+        With a name alongside, that very measurement is fine. The
         whitelist is invented here rather than read, since it belongs to this
         package and not to a small package in `tmp_path`.
         """
@@ -778,13 +778,13 @@ class TestTheCoverageGate:
     def test_a_name_that_hides_nothing_is_refused(
         self, tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Een whitelist die niets meer verbergt is verouderd, geen goedkeuring (R34-2).
+        """Een whitelist die niets meer verbergt is verouderd, geen goedkeuring.
 
         Een naam zonder regel wekt de indruk dat er iets afgesproken is terwijl de
         meting die regel gewoon meet; dan hoort de naam eruit in plaats van te
         blijven staan.
 
-        A whitelist that hides nothing anymore is stale, not an approval (R34-2).
+        A whitelist that hides nothing anymore is stale, not an approval.
         A name without a line suggests something was agreed while the measurement
         simply measures that line; then the name belongs out instead of staying.
         """
@@ -800,7 +800,7 @@ class TestTheCoverageGate:
     def test_a_comment_behind_a_stub_is_not_a_line_without_a_name(
         self, tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Een commentaarregel achter een stub vraagt geen naam (R35-5).
+        """Een commentaarregel achter een stub vraagt geen naam.
 
         Coverage sluit de hele regio van een `...`-stub mee uit — de decorator
         erboven, een commentaarregel ertussen, de vervolgregels van een
@@ -808,7 +808,7 @@ class TestTheCoverageGate:
         gemeten worden. De whitelist hoort hem dus niet te noemen; anders hing de
         poort aan de letterlijke tekst van een commentaar.
 
-        A comment line behind a stub asks for no name (R35-5). Coverage excludes
+        A comment line behind a stub asks for no name. Coverage excludes
         the whole region of a `...` stub — the decorator above it, a comment line
         in between, the continuation lines of a multi-line `def` — but such a line
         could never be measured without the exclusion. The whitelist should
@@ -844,14 +844,14 @@ class TestTheCoverageGate:
         assert "regels buiten de meting: 2" in capsys.readouterr().out
 
     def test_the_exclusion_hint_breaks_its_lines(self) -> None:
-        """De hint van de vijfde weigering breekt zijn regels echt af (R35-6).
+        """De hint van de vijfde weigering breekt zijn regels echt af.
 
-        Ronde 34 schreef de hint met `"\\\\n"` in plaats van `"\\n"`, dus drukte hij
+        Met `"\\\\n"` in plaats van `"\\n"` drukt de hint
         één lange regel met zichtbare `\\n` af. Deze test meet de constante zelf, en
         de twee weigertests hierboven (`_assert_multiline_hint`) meten de uitvoer.
 
-        The fifth refusal's hint really breaks its lines (R35-6). Round 34 wrote
-        the hint with `"\\\\n"` instead of `"\\n"`, so it printed one long line with
+        The fifth refusal's hint really breaks its lines. Written
+        with `"\\\\n"` instead of `"\\n"`, the hint prints one long line with
         visible `\\n`. This test measures the constant itself, and the two refusal
         tests above (`_assert_multiline_hint`) measure the output.
         """
@@ -863,7 +863,7 @@ class TestTheCoverageGate:
 
 
 class TestTheMeasurementNextToATestStaysUntouched:
-    """Een test raakt de dekkingsmeting naast zich niet aan (ronde 36, R36-4).
+    """Een test raakt de dekkingsmeting naast zich niet aan.
 
     `test_reachable_branches_deep.py::test_every_line_outside_the_measurement_has_a_name`
     bouwde een `Coverage()` zonder `data_file`, en dat wijst naar het
@@ -880,7 +880,7 @@ class TestTheMeasurementNextToATestStaysUntouched:
     maakt deze test rood, en dat is precies de bedoeling: de meting waar een test
     naast staat hoort hij niet aan te raken.
 
-    A test does not touch the coverage measurement next to it (round 36, R36-4).
+    A test does not touch the coverage measurement next to it.
     `test_reachable_branches_deep.py::test_every_line_outside_the_measurement_has_a_name`
     built a `Coverage()` without `data_file`, which points at the default
     `.coverage`. `hidden_lines()` calls `analysis2()`, and measured, that left the
@@ -955,15 +955,15 @@ class TestTheRepairNoticeGuard:
 
     An unfollowable issue id reports itself instead of being skipped silently.
 
-    Ronde 32 (R32-6): `_issue_id_key` gaf `None` voor een f-string, een
-    samenvoeging of een variabele, en de verzamelfunctie sloeg die melding
-    vervolgens over. Daarmee viel ze uit de unload-controle zonder één woord.
+    Gaf `_issue_id_key` `None` voor een f-string, een samenvoeging of een
+    variabele, dan sloeg de verzamelfunctie die melding over. Daarmee viel ze
+    uit de unload-controle zonder één woord.
     Volgbaar is een hulpje, een moduleconstante met een letterlijke string, of de
     letterlijke string zelf — de rest is een fout met bestand en regelnummer.
 
-    Round 32 (R32-6): `_issue_id_key` returned `None` for an f-string, a
-    concatenation or a variable, and the collector then skipped that notice. That
-    took it out of the unload check without a word. Followable is a helper, a
+    Were `_issue_id_key` to return `None` for an f-string, a concatenation or a
+    variable, the collector would skip that notice. That would take it out of
+    the unload check without a word. Followable is a helper, a
     module constant holding a literal string, or the literal string itself — the
     rest is an error with file and line number.
     """
@@ -1057,23 +1057,23 @@ class TestTheRepairNoticeGuard:
 
 
 class TestTheNoticeCallMatch:
-    """Elke meldingsaanroep telt mee, hoe hij ook geïmporteerd is (ronde 35, R35-1).
+    """Elke meldingsaanroep telt mee, hoe hij ook geïmporteerd is.
 
     Vier lezers in de testset liepen elk hun eigen AST af en matchten alleen
     `ast.Attribute` — `ir.async_create_issue(...)`. Een kale naam of een
     `from … import … as x`-alias glipte er langs, en daarmee hing de hele
     meldingsbewaking (wissen bij het uitladen, de fixable-inventarisatie, de
-    gidsen en de placeholders) aan één schrijfwijze. De match woont sinds ronde
-    35 in `tests/_ast_helpers.py`; deze tests pinnen hem op verzonnen invoer
+    gidsen en de placeholders) aan één schrijfwijze. De match woont in
+    `tests/_ast_helpers.py`; deze tests pinnen hem op verzonnen invoer
     vast: beide spellingen tellen, een naam zonder de juiste import niet.
 
-    Every notice call counts, however it was imported (round 35, R35-1). Four
+    Every notice call counts, however it was imported. Four
     readers in the suite each walked their own AST and matched only
     `ast.Attribute` — `ir.async_create_issue(...)`. A bare name or a
     `from … import … as x` alias slipped past it, and with that the whole notice
     guard (clearing on unload, the fixable inventory, the guides and the
     placeholders) hung on one spelling. The match lives in
-    `tests/_ast_helpers.py` since round 35; these tests pin it on invented input:
+    `tests/_ast_helpers.py`; these tests pin it on invented input:
     both spellings count, a name without the right import does not.
     """
 
@@ -1166,7 +1166,7 @@ class TestTheIssueRegistryForm:
 
     De meldingsbewaking leest de bron; een aanroep onder een eigen naam
     (`_create = ir.async_create_issue`), via `getattr` of in een
-    `functools.partial` glipt er langs (ronde 35, R35-1). In plaats van een derde
+    `functools.partial` glipt er langs (gemeten). In plaats van een derde
     spelling aan `_ast_helpers` toe te voegen legt `issue_registry_form_problems`
     vast dat zulke vormen niet bestaan. Deze tests pinnen die afspraak op
     **verzonnen** invoer vast: elke verboden vorm meldt zich, de toegestane vorm
@@ -1174,7 +1174,7 @@ class TestTheIssueRegistryForm:
 
     The notice guard reads the source; a call under its own name
     (`_create = ir.async_create_issue`), through `getattr` or inside a
-    `functools.partial` slips past it (round 35, R35-1). Instead of adding a third
+    `functools.partial` slips past it (measured). Instead of adding a third
     spelling to `_ast_helpers`, `issue_registry_form_problems` pins down that such
     shapes do not exist. These tests pin that agreement on **invented** input:
     every forbidden shape reports itself, the allowed one does not.
@@ -1230,7 +1230,7 @@ class TestTheIssueRegistryForm:
     def test_a_module_level_alias_is_refused(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        """`_create = ir.async_create_issue` is precies het gat van ronde 35."""
+        """`_create = ir.async_create_issue` is precies het gemeten gat."""
         problems = self._problems(
             monkeypatch,
             tmp_path,

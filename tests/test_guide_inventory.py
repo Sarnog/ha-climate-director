@@ -277,13 +277,13 @@ def test_every_visible_feature_stands_in_every_guide(language: str) -> None:
 SLUG_MENTION = re.compile(r"\b(switch|sensor|binary_sensor|button|number|select)\.([a-z0-9_*<>]+)")
 
 #: De zes domeinen waarvan deze bewaking de slugs leest. Ze doen alle zes mee: een
-#: slug van het ene domein achter het andere is precies de fout van ronde 34, en
+#: slug van het ene domein achter het andere is een gemeten fout, en
 #: die fout bestaat net zo goed voor `binary_sensor`, `button`, `number` en
 #: `select`. Alle zes staan er, zodat de bewaking niet opnieuw aan een lijstje
 #: hangt waar het volgende domein naast valt.
 #:
 #: The six domains this guard reads the slugs of. All six take part: a slug of one
-#: domain behind another is exactly round 34's mistake, and that mistake exists
+#: domain behind another is a measured mistake, and that mistake exists
 #: just as well for `binary_sensor`, `button`, `number` and `select`. All six stand
 #: here, so the guard does not hang on a list the next domain can fall beside.
 SLUG_DOMAINS = ("switch", "sensor", "binary_sensor", "button", "number", "select")
@@ -329,7 +329,7 @@ def _translated_slugs(language: str) -> dict[str, list[re.Pattern[str]]]:
 
 
 def _mention_problem(domain: str, rest: str, slugs: dict[str, list[re.Pattern[str]]]) -> str | None:
-    """Of deze vermelding een bestaande entiteit kan aanduiden (R36-3).
+    """Of deze vermelding een bestaande entiteit kan aanduiden.
 
     `rest` is wat in de gids achter `switch.` of `sensor.` staat. De gids schrijft
     een voorvoegsel (`*`, een plaatshouder of de naam van de installatie) en
@@ -337,18 +337,18 @@ def _mention_problem(domain: str, rest: str, slugs: dict[str, list[re.Pattern[st
     probeert deze functie elke knip op een `_`: is de rest achter de eerste knip
     een vertaalde slug van **dit** domein, dan klopt de vermelding. Is die rest
     een slug van een ánder domein, dan noemt de gids een entiteit die niet bestaat
-    — precies de fout van ronde 34 (`switch.*_nhy_tjwz_<zone>`). Vindt geen enkele
+    — een gemeten fout (`switch.*_nhy_tjwz_<zone>`). Vindt geen enkele
     knip een slug, dan is de slug zelf verkeerd. De oude regel zocht alleen
     `domein.*_`, en daarmee glipte elke andere schrijfwijze van het voorvoegsel
     erlangs (gemeten: `switch.climate_director_nhy_tjwz_<zone>` bleef groen).
 
-    Whether this mention can point at an existing entity (R36-3). `rest` is what
+    Whether this mention can point at an existing entity. `rest` is what
     stands behind `switch.` or `sensor.` in the guide. The guide writes a prefix
     (`*`, a placeholder or the installation's name) and then the slug; which prefix
     that is depends on the installation. This function therefore tries every split
     on a `_`: if the remainder behind the first split is a translated slug of
     **this** domain, the mention is right. If that remainder is a slug of another
-    domain, the guide names an entity that does not exist — exactly round 34's
+    domain, the guide names an entity that does not exist — a measured
     mistake (`switch.*_nhy_tjwz_<zone>`). When no split yields a slug, the slug
     itself is wrong. The old rule only looked for `domain.*_`, and every other
     spelling of the prefix slipped past it (measured:
@@ -370,24 +370,24 @@ def _mention_problem(domain: str, rest: str, slugs: dict[str, list[re.Pattern[st
 
 @pytest.mark.parametrize("language", LANGUAGES)
 def test_every_entity_id_a_guide_names_comes_from_its_translation(language: str) -> None:
-    """Elke entiteit-id in de gids komt uit de vertaling van die taal (R35-3, R36-3).
+    """Elke entiteit-id in de gids komt uit de vertaling van die taal.
 
     Home Assistant leidt de entiteit-id af uit de vertaalde naam, dus een gids die
     de slug van een ánder domein noemt — de sensorslug achter `switch.` — stuurt de
-    lezer naar een entiteit die niet bestaat. Gemeten in ronde 34: `ar.md:764`
-    noemde `switch.*_nhy_tjwz_<zone>` terwijl de schakelaar `switch.*_tjwz_<zone>`
-    heet; de andere vijf gidsen klopten. Ronde 36 (R36-3) haalt de schrijfwijze van
-    het voorvoegsel eruit: de test knipt op elke `_`, accepteert `*`, een
+    lezer naar een entiteit die niet bestaat. Gemeten: de Arabische gids noemde
+    `switch.*_nhy_tjwz_<zone>` terwijl de schakelaar `switch.*_tjwz_<zone>`
+    heet; de andere vijf gidsen klopten. De schrijfwijze van het voorvoegsel
+    doet er niet toe: de test knipt op elke `_`, accepteert `*`, een
     plaatshouder en een echte naam, en toetst zes domeinen. De test loopt regel
     voor regel, zodat de melding het bestand én de regel noemt.
 
-    Every entity id in the guide comes from that language's translation (R35-3,
-    R36-3). Home Assistant derives the entity id from the translated name, so a
+    Every entity id in the guide comes from that language's translation.
+    Home Assistant derives the entity id from the translated name, so a
     guide naming another domain's slug — the sensor slug after `switch.` — sends
-    the reader to an entity that does not exist. Measured in round 34: `ar.md:764`
+    the reader to an entity that does not exist. Measured: the Arabic guide
     named `switch.*_nhy_tjwz_<zone>` while the switch is called
-    `switch.*_tjwz_<zone>`; the other five guides were right. Round 36 (R36-3)
-    takes the spelling of the prefix out of it: the test splits on every `_`,
+    `switch.*_tjwz_<zone>`; the other five guides were right. The spelling of
+    the prefix does not matter: the test splits on every `_`,
     accepts `*`, a placeholder and a real name, and covers six domains. The test
     walks line by line, so the message names both the file and the line.
     """

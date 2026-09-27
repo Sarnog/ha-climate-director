@@ -2,12 +2,12 @@
 
 One commit, one run: no `push` trigger can fire on a tag ref.
 
-R29-2: zonder branchfilter start `git push --tags` naast de gewone push nog een
+Zonder branchfilter start `git push --tags` naast de gewone push nog een
 keer élke baan op dezelfde commit - twee runs per release, en de tweede voegt
 niets toe. De drie workflowbestanden dragen daarom `push: branches: [main]`;
 `pull_request`, `schedule` en `workflow_dispatch` blijven gewoon staan.
 
-R29-2: without a branch filter `git push --tags` starts every job a second time
+Without a branch filter `git push --tags` starts every job a second time
 on the same commit - two runs per release, and the second one adds nothing. The
 three workflow files therefore carry `push: branches: [main]`; `pull_request`,
 `schedule` and `workflow_dispatch` simply stay.
@@ -18,22 +18,22 @@ De eigenschap die deze test vastpint is breder dan de schrijfwijze `branches ==
 De bestanden komen daarom uit een glob en niet uit een lijst hier; een vierde
 workflow valt er vanzelf onder, en een bestand zonder `push` (zoals
 `mutation.yaml`) valt er vanzelf buiten. De regel van GitHub zelf, gemeten aan
-de hand van de documentatie en de mutatiemetingen van ronde 30:
+de hand van de documentatie en mutatiemetingen:
 
   * `push:` met alleen een `branches`-filter  -> **geen** tag-events;
   * `push:` met `branches` én `tags`          -> **allebei**, dus de tag-push
-    start de banen opnieuw (precies de dubbele run die R29-2 weghaalde);
+    start de banen opnieuw (precies de dubbele run die het branchfilter weghaalt);
   * `push:` zonder enig filter                -> alle branches én alle tags;
   * `push:` met een `tags-ignore` naast `branches` -> onschadelijk.
 
 Daarnaast zijn er events die niet `push` heten maar wél op een tag afgaan, en
-die kende deze bewaking tot ronde 32 (R32-5) niet — gemeten: `create:` naast
+die horen er ook bij — gemeten: `create:` naast
 `push: branches: [main]` in `tests.yaml` liet de suite **groen** terwijl GitHub
 de baan dan bij elke `git push --tags` opnieuw start:
 
   * `on: create`  -> GitHub start de baan zodra er een branch **of een tag**
-    wordt aangemaakt, dus ook bij `git push --tags` (dezelfde dubbele run als
-    R29-2, onder een andere naam);
+    wordt aangemaakt, dus ook bij `git push --tags` (dezelfde dubbele run, onder
+    een andere naam);
   * `on: delete`  -> idem bij het verwijderen van een branch of een tag;
   * `on: release` -> elke releaseactiviteit, dus ook de release die deze repo via
     de REST API aanmaakt;
@@ -55,21 +55,21 @@ The property this test pins down is broader than the spelling `branches ==
 files therefore come from a glob rather than from a list here; a fourth workflow
 falls under it by itself, and a file without `push` (such as `mutation.yaml`)
 falls outside it by itself. GitHub's own rule, measured against the
-documentation and round 30's mutation runs:
+documentation and mutation runs:
 
   * `push:` with only a `branches` filter  -> **no** tag events;
   * `push:` with `branches` and `tags`     -> **both**, so the tag push starts
-    the jobs again (exactly the double run R29-2 removed);
+    the jobs again (exactly the double run the branch filter removes);
   * `push:` without any filter             -> all branches and all tags;
   * `push:` with `tags-ignore` next to `branches` -> harmless.
 
 Extra to that, there are events that are not called `push` yet still fire on a
-tag, and this guard did not know them until round 32 (R32-5) — measured:
+tag, and they belong here too — measured:
 `create:` next to `push: branches: [main]` in `tests.yaml` left the suite
 **green**, while GitHub then starts the job again on every `git push --tags`:
 
   * `on: create`  -> GitHub starts the job the moment a branch **or a tag** is
-    created, so also on `git push --tags` (the same double run as R29-2, under
+    created, so also on `git push --tags` (the same double run, under
     another name);
   * `on: delete`  -> likewise when a branch or a tag is deleted;
   * `on: release` -> every release activity, so also the release this repo
@@ -140,13 +140,13 @@ REMAINING = {
 # branch. `create` draait zodra een branch of een tag wordt aangemaakt - dus ook
 # bij `git push --tags` - `delete` bij het verwijderen, en `release` bij elke
 # releaseactiviteit. Ze mogen hier geen van drieën voorkomen: dezelfde dubbele
-# run als R29-2, alleen onder een andere naam.
+# run, alleen onder een andere naam.
 #
 # Events that fire on a **tag ref** or a release rather than on a branch.
 # `create` runs the moment a branch or a tag is created - so also on
 # `git push --tags` - `delete` when one is removed, and `release` on every
-# release activity. None of the three may appear here: the same double run as
-# R29-2, only under another name.
+# release activity. None of the three may appear here: the same double run,
+# only under another name.
 TAG_EVENTS = ("create", "delete", "release")
 
 
@@ -185,7 +185,7 @@ def test_no_other_trigger_can_fire_on_a_tag(name: str) -> None:
     `create`, `delete` en `release` heten niet `push`, maar GitHub start de baan
     er net zo goed mee op een tag-ref: `git push --tags` maakt een tag aan
     (`create`), de release via de REST API is een releaseactiviteit, en het
-    opruimen van een tag is een `delete`. Dat is de dubbele run van R29-2 onder
+    opruimen van een tag is een `delete`. Dat is dezelfde dubbele run onder
     een andere naam, en daarom staat de GitHub-regel per event in de docstring
     hierboven.
     """

@@ -193,14 +193,14 @@ class TestEveryLanguage:
 
 @pytest.mark.parametrize("formal", ["Sie", "Ihr", "Ihre", "Ihnen"])
 def test_german_no_longer_mixes_formal_and_du(formal: str) -> None:
-    """Ronde 21: het Duits trekt alle formele vormen naar `du`; C3 verbreedt dat.
+    """Het Duits trekt alle formele vormen naar `du`, niet alleen `Sie`.
 
     De bewaking keek eerst alleen naar het losse woord `Sie`. Het Duits kent
     zijn formele aanspreekvorm net zo goed in `Ihr`, `Ihre` en `Ihnen`, dus wie
     alleen op `Sie` let, laat die drie erlangs glippen. Daarom hier het hele
     rijtje, als parametrisatie.
 
-    Round 21: the German pulls every formal form towards `du`; C3 broadens that.
+    The German pulls every formal form towards `du`, not only `Sie`.
     The guard first looked only at the word `Sie`. German knows its formal
     address just as well in `Ihr`, `Ihre` and `Ihnen`, so a guard that only
     watches `Sie` lets those three slip through. Hence the whole row here, as a
@@ -214,7 +214,7 @@ def test_german_no_longer_mixes_formal_and_du(formal: str) -> None:
 
 @pytest.mark.parametrize("formal", ["Sie", "Ihr", "Ihre", "Ihnen"])
 def test_german_guide_no_longer_mixes_formal_and_du(formal: str) -> None:
-    """Ronde 25 (D3): de Duitse handleiding spreekt `du`, net als de interface.
+    """De Duitse handleiding spreekt `du`, net als de interface.
 
     De aanspreekvorm-bewaking hierboven keek alleen naar `de.json`; de
     handleiding viel op twee regels terug in de Sie-vorm en een paar
@@ -223,7 +223,7 @@ def test_german_guide_no_longer_mixes_formal_and_du(formal: str) -> None:
     terugvallen. Bewuste prijs: de tekst vermijdt ook de hoofdletter `Sie` als
     verwijzing naar een zelfstandig naamwoord, en noemt dat naamwoord gewoon.
 
-    Round 25 (D3): the German guide speaks `du`, exactly like the interface.
+    The German guide speaks `du`, exactly like the interface.
     The address guard above only looked at `de.json`; the guide fell back into
     the Sie-form on two lines, with a few capital-`Sie` forms meant as "she".
     The same demand now applies to `docs/install/de.md`, so the guide cannot
@@ -236,7 +236,7 @@ def test_german_guide_no_longer_mixes_formal_and_du(formal: str) -> None:
 
 
 def test_french_guide_speaks_vous_not_tu() -> None:
-    """Ronde 25 (D3): de Franse handleiding spreekt `vous`, net als de interface.
+    """De Franse handleiding spreekt `vous`, net als de interface.
 
     De sectie *Limites connues* viel terug in tutoiement (`laisse`, `juge`,
     `règle-le`) midden in een vous-tekst. Hier dezelfde eis als bij het Duits:
@@ -245,7 +245,7 @@ def test_french_guide_speaks_vous_not_tu() -> None:
     de tu-vormen die kunnen terugkomen; een derde-persoons-`laisse`
     ("une installation qui laisse") hoort er niet onder.
 
-    Round 25 (D3): the French guide speaks `vous`, exactly like the interface.
+    The French guide speaks `vous`, exactly like the interface.
     The *Known limitations* section fell back into tutoiement (`laisse`,
     `juge`, `règle-le`) in the middle of a vous-text. The same demand as for
     German: no tu-pronouns and no tu-imperative, so the guide cannot silently
@@ -267,7 +267,7 @@ def test_french_guide_speaks_vous_not_tu() -> None:
 
 
 def test_french_names_the_product_one_way() -> None:
-    """Ronde 21: `directeur` overal, rechte apostroffen, geen `préchauffage`."""
+    """`directeur` overal, rechte apostroffen, geen `préchauffage`."""
     texts = leaves(load(TRANSLATIONS / "fr.json"))
     for key, text in texts.items():
         assert not re.search(r"\bdirector\b", text), key
@@ -317,7 +317,7 @@ def test_the_override_and_the_bypass_do_not_share_one_word() -> None:
 
 
 def test_every_language_names_the_shared_heat_source_in_unreadable_entities() -> None:
-    """Ronde 21: na B1 noemt de reparatiemelding ook de gedeelde warmtebron."""
+    """De reparatiemelding noemt ook de gedeelde warmtebron."""
     needles = {
         "strings": "shared heat source",
         "nl": "gedeelde warmtebron",

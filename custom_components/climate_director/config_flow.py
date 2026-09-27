@@ -1025,7 +1025,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
     def _normalise_opening_ids(self) -> None:
         """Fill a derived `opening_id` for every opening that lacks one.
 
-        De opslag van vóór 7.5.3 draagt geen `opening_id`, en deze flow leest de
+        Oudere opslag draagt geen `opening_id`, en deze flow leest de
         ruwe opslag. Zonder deze stap leidt het bewerkscherm het id af uit de
         naam die je net intypt, en dan wisselt de `unique_id` van de
         overbruggingsschakelaar: entiteit weg, geschiedenis weg, elke
@@ -1033,7 +1033,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         uit één functie, en wat die toevoegt schrijft het opslagscherm meteen
         mee - de migratie die `async_migrate_entry` niet doet.
 
-        Storage from before 7.5.3 carries no `opening_id`, and this flow reads
+        Older storage carries no `opening_id`, and this flow reads
         the raw storage. Without this step the edit screen derives the id from
         the name you just typed, and then the bypass switch's `unique_id`
         changes: entity gone, history gone, every dashboard reference broken.

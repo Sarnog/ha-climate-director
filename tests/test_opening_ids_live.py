@@ -1,6 +1,6 @@
-"""R27-2: een opening zonder `opening_id` houdt zijn id in de interface.
+"""Een opening zonder `opening_id` houdt zijn id in de interface.
 
-R27-2: an opening without an `opening_id` keeps its id in the interface.
+An opening without an `opening_id` keeps its id in the interface.
 
 `serialise` leidt een ontbrekend `opening_id` af uit de `entity_id` van de
 sensor; `config_flow.async_step_opening` leidde hem af uit de **naam**. De
@@ -26,13 +26,13 @@ switch of a legacy opening is named after the sensor's friendly name, so the
 five production switches read properly without anybody having to edit them
 first.
 
-Sinds R27-4 staat hier ook de andere kant: een **opgeslagen** dubbel
+Hier staat ook de andere kant: een **opgeslagen** dubbel
 `opening_id` is geen stille afwijking maar komt als reparatiemelding
 (`invalid_config`) in het echte `issue_registry`, waar de gebruiker hem ziet.
 Zonder deze bewaking verdwijnt zo'n dubbele id in de diagnose en lijkt de
 installatie gezond.
 
-Since R27-4 the other side stands here too: a **stored** duplicate
+The other side stands here too: a **stored** duplicate
 `opening_id` is not a silent deviation but arrives as a repair notice
 (`invalid_config`) in the real `issue_registry`, where the user sees it. Without
 this guard such a duplicate id disappears into the diagnostics and the

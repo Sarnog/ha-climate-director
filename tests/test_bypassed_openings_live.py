@@ -125,9 +125,9 @@ class TestTheBypassedOpeningsNotice:
         assert issue_for(home) is None
 
     async def test_the_notice_goes_when_the_entry_unloads(self, home: LiveHome) -> None:
-        """R30-2: ook deze melding verdwijnt als de installatie uitlaadt.
+        """Ook deze melding verdwijnt als de installatie uitlaadt.
 
-        R30-2: this notice too disappears when the installation unloads.
+        This notice too disappears when the installation unloads.
 
         Zonder de clear-aanroep in `async_unload_entry` bleef de
         overbruggingsmelding in de échte `issue_registry` staan terwijl de entry

@@ -2,13 +2,13 @@
 
 Every repair notice disappears when the installation unloads.
 
-R30-2: `problems.async_clear_bypassed_openings` bestond wel maar werd nergens
-aangeroepen. Zes van de zeven per-installatie meldingen werden bij het uitladen
-opgeruimd, deze niet - een overbruggingsmelding bleef dus staan nadat de entry
-weg was. De functie ernaast was dode code die precies dat gat markeerde.
+Een functie als `problems.async_clear_bypassed_openings` kan bestaan zonder dat
+iets hem aanroept. Dan wordt die melding bij het uitladen niet opgeruimd - een
+overbruggingsmelding blijft staan nadat de entry weg is - en is de functie
+ernaast dode code die precies dat gat markeert.
 
 De vorige bewaking hing aan de **naam** van de fabriek (`async_report_*` in
-`problems.py`). Gemeten in ronde 31: een melding die je onder een andere naam
+`problems.py`). Gemeten: een melding die je onder een andere naam
 opzet (`async_note_probe`, of dezelfde aanroep in `state_store.py`) glipte er
 langs - de unload-bewaking bleef groen. Daarom loopt deze test nu met een AST
 over **álle** `ir.async_create_issue`-aanroepen in het hele pakket, haalt het
@@ -18,11 +18,11 @@ die het aanroept - een `ir.async_delete_issue` op **datzelfde** hulpje bereikt.
 Zo hangt de bewaking aan de eigenschap en niet aan hoe een melding heet of in
 welk bestand hij woont.
 
-Ronde 32 (R32-6) dichtte het laatste gat: een id dat de bewaking niet kán volgen
-- een f-string, een samenvoeging, een variabele - werd **stil overgeslagen**, en
-zo'n melding viel dus zonder één woord uit de controle. Dat is nu een fout met
-bestand en regelnummer (`_refuse_unfollowable`), dezelfde regel als ronde 19 voor
-een berekende `translation_key`. Volgbaar is: een hulpje (`_issue_id(entry_id)`),
+Een id dat de bewaking niet kán volgen - een f-string, een samenvoeging, een
+variabele - zou **stil overgeslagen** worden, en zo'n melding zou dan zonder
+één woord uit de controle vallen. Dat is een fout met bestand en regelnummer
+(`_refuse_unfollowable`), dezelfde regel als voor een berekende
+`translation_key`. Volgbaar is: een hulpje (`_issue_id(entry_id)`),
 een moduleconstante die op moduleniveau een letterlijke string krijgt
 (`UNWATCHED_ISSUE`), of een letterlijke string. Al het andere meldt zich.
 
@@ -32,13 +32,13 @@ installatie verdwijnt (`async_clear_watchers`, en die is wel vanuit
 `async_unload_entry` bereikbaar). De bewaking eist daarom ook van die melding dat
 er een bereikbare delete is, maar niet dat hij bij élke unload verdwijnt.
 
-R30-2: `problems.async_clear_bypassed_openings` existed but was never called.
-Six of the seven per-installation notices were cleaned up on unload, this one
-was not - so a bypass notice stayed behind after the entry was gone. The
-function next to it was dead code marking exactly that gap.
+A function such as `problems.async_clear_bypassed_openings` can exist while
+nothing calls it. Then that notice is not cleaned up on unload - a bypass
+notice stays behind after the entry is gone - and the function next to it is
+dead code marking exactly that gap.
 
 The previous guard hung on the **name** of the factory (`async_report_*` in
-`problems.py`). Measured in round 31: a notice set up under another name
+`problems.py`). Measured: a notice set up under another name
 (`async_note_probe`, or the same call in `state_store.py`) slipped past it - the
 unload guard stayed green. This test therefore walks **every**
 `ir.async_create_issue` call in the whole package with an AST, pulls the issue-id
@@ -48,11 +48,11 @@ function it calls - reaches an `ir.async_delete_issue` on **that same** helper.
 That way the guard hangs on the property, not on what a notice is called or which
 file it lives in.
 
-Round 32 (R32-6) closed the last gap: an id the guard **cannot** follow - an
-f-string, a concatenation, a variable - was **silently skipped**, so such a
-notice dropped out of the check without a word. That is now an error with file
-and line number (`_refuse_unfollowable`), the same rule as round 19 for a
-computed `translation_key`. Followable is: a helper (`_issue_id(entry_id)`), a
+An id the guard **cannot** follow - an f-string, a concatenation, a variable -
+would be **silently skipped**, and such a notice would drop out of the check
+without a word. That is an error with file and line number
+(`_refuse_unfollowable`), the same rule as for a computed `translation_key`.
+Followable is: a helper (`_issue_id(entry_id)`), a
 module constant that gets a literal string at module level (`UNWATCHED_ISSUE`),
 or a literal string. Anything else reports itself.
 
@@ -62,29 +62,29 @@ installation does (`async_clear_watchers`, which is reachable from
 `async_unload_entry`). The guard therefore demands a reachable delete for it too,
 but not that it disappears on every unload.
 
-Ronde 35 (R35-1): de match zelf woont nu in `tests/_ast_helpers.py`. Vier lezers
+De match zelf woont in `tests/_ast_helpers.py`. Vier lezers
 in de testset gebruiken daar dezelfde definitie — attribuut én kale naam, met
 opgeloste import-aliassen — in plaats van vier keer hun eigen
 `ast.Attribute`-variant.
 
-Round 35 (R35-1): the match itself now lives in `tests/_ast_helpers.py`. Four
+The match itself lives in `tests/_ast_helpers.py`. Four
 readers in the suite use the same definition there — attribute and bare name,
 with resolved import aliases — instead of four of their own `ast.Attribute`
 variants.
 
-Ronde 36 (R36-1): de match kent nog steeds geen aanroep onder een eigen naam
+De match kent geen aanroep onder een eigen naam
 (`_create = ir.async_create_issue`), en een derde spelling in de helper zou
-alleen de vólgende spelling openlaten. Daarom staat er sinds deze ronde een
+alleen de vólgende spelling openlaten. Daarom staat er een
 **structurele afspraak** naast: `test_the_issue_registry_is_only_used_as_ir` eist
 dat `issue_registry` alleen als `ir` geïmporteerd en alleen rechtstreeks
 aangeroepen wordt — geen alias, geen `functools.partial`, geen callback, geen
 `getattr`. De runtime-kant staat in `tests/test_repair_notices_live.py`, dat de
 échte meldingsfuncties omhult en geen enkele regel bron leest.
 
-Round 36 (R36-1): the match still does not know a call under its own name
+The match does not know a call under its own name
 (`_create = ir.async_create_issue`), and a third spelling in the helper would
 only leave the *next* spelling open. Hence a **structural agreement** stands
-beside it since this round: `test_the_issue_registry_is_only_used_as_ir` demands
+beside it: `test_the_issue_registry_is_only_used_as_ir` demands
 that `issue_registry` is imported only as `ir` and called only directly — no
 alias, no `functools.partial`, no callback, no `getattr`. The runtime side lives
 in `tests/test_repair_notices_live.py`, which wraps the real notice functions and
@@ -204,9 +204,9 @@ def unfollowable_issue_ids(root: Path = PACKAGE) -> list[str]:
 
 
 def _refuse_unfollowable(root: Path = PACKAGE) -> None:
-    """Meld een onvolgbaar issue-id in plaats van het over te slaan (R32-6).
+    """Meld een onvolgbaar issue-id in plaats van het over te slaan.
 
-    Report an unfollowable issue id instead of skipping it (R32-6).
+    Report an unfollowable issue id instead of skipping it.
     """
     offenders = unfollowable_issue_ids(root)
     assert not offenders, (
@@ -377,14 +377,14 @@ def test_the_guard_reads_the_real_source() -> None:
 
 
 def test_every_issue_id_can_be_followed() -> None:
-    """Elke melding heeft een id dat de bewaking kan volgen (ronde 32, R32-6).
+    """Elke melding heeft een id dat de bewaking kan volgen.
 
-    Een id dat ze niet kan volgen werd tot ronde 32 **stil overgeslagen**, en dan
+    Een id dat ze niet kan volgen zou **stil overgeslagen** worden, en dan
     valt zo'n melding zonder één woord uit de unload-controle. Deze test is de
     expliciete kant daarvan; de twee verzamelfuncties weigeren zo'n id ook zelf.
 
-    Every notice has an id the guard can follow (round 32, R32-6). Until round 32
-    an id it could not follow was **silently skipped**, and then such a notice
+    Every notice has an id the guard can follow. An id it could not follow
+    would be **silently skipped**, and then such a notice
     dropped out of the unload check without a word. This test is the explicit
     side of that; the two collector functions refuse such an id themselves too.
     """
@@ -396,7 +396,7 @@ def test_every_issue_id_can_be_followed() -> None:
 
 
 # ---------------------------------------------------------------------------
-# De vorm van de issue-registry / the shape of the issue registry (R36-1)
+# De vorm van de issue-registry / the shape of the issue registry
 # ---------------------------------------------------------------------------
 
 
@@ -406,8 +406,8 @@ def test_every_issue_id_can_be_followed() -> None:
 #: rechtstreeks aangeroepen. Een alias op moduleniveau (`_create =
 #: ir.async_create_issue`), een `getattr`, een `functools.partial` of een
 #: doorgegeven functie haalt de aanroep uit die vorm, en dan is de bewaking stil
-#: groen over een melding die hij nooit ziet. Dat is precies wat ronde 35
-#: (R35-1) mat: `_create = ir.async_create_issue` plus een aanroep eronder liet
+#: groen over een melding die hij nooit ziet. Dat is gemeten:
+#: `_create = ir.async_create_issue` plus een aanroep eronder liet
 #: de hele suite groen.
 #:
 #: The only name under which `issue_registry` may be imported in this package.
@@ -416,7 +416,7 @@ def test_every_issue_id_can_be_followed() -> None:
 #: directly. A module-level alias (`_create = ir.async_create_issue`), a
 #: `getattr`, a `functools.partial` or a passed function takes the call out of
 #: that shape, and then the guard is quietly green about a notice it never sees.
-#: That is exactly what round 35 (R35-1) measured.
+#: That was measured.
 ISSUE_ALIAS = "ir"
 
 #: De bovenliggende module waaruit de registry geïmporteerd hoort te worden.
@@ -527,7 +527,7 @@ def issue_registry_form_problems(root: Path = PACKAGE) -> list[str]:
 
 
 def test_the_issue_registry_is_only_used_as_ir() -> None:
-    """De enige bestaande schrijfwijze is ook de enige die de bewaking dekt (R36-1).
+    """De enige bestaande schrijfwijze is ook de enige die de bewaking dekt.
 
     De meldingsbewaking hierboven leest de bron, dus elke vorm die ze niet kent
     is een gat. In plaats van een derde spelling aan `_ast_helpers` toe te
@@ -538,7 +538,7 @@ def test_the_issue_registry_is_only_used_as_ir() -> None:
     échte meldingsfuncties omhuld en moet elke melding die een huis aanmaakt bij
     het uitladen ook weer gewist zijn — zonder één regel bron te lezen.
 
-    The only existing spelling is also the only one the guard covers (R36-1).
+    The only existing spelling is also the only one the guard covers.
     The notice guard above reads the source, so every shape it does not know is a
     gap. Instead of adding a third spelling to `_ast_helpers` — which would make
     the next spelling the next round — this agreement pins down that

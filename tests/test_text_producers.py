@@ -2,14 +2,14 @@
 
 Every key in `strings.json` has a producer in the code.
 
-R30-3c. De bestaande bewakingen kijken één kant op: elke `Problem`-code heeft
+De bestaande bewakingen kijken één kant op: elke `Problem`-code heeft
 een tekst, elke vertaling heeft de sleutels van het Engels, elk formulierveld
 heeft een label. Wat nergens bewaakt werd is de andere kant - een sleutel die
 in alle zeven bestanden staat terwijl geen enkele code, entiteit, actie of
 `Problem`-code hem ooit opvraagt. Zo'n sleutel kan jaren blijven staan, en dan
 is "alles is vertaald" een getal zonder betekenis.
 
-Gemeten op 2026-09-14: `selector.save_exit` was zo'n sleutel. `schemas.save()`
+Gemeten: `selector.save_exit` was zo'n sleutel. `schemas.save()`
 bouwt zijn afsluitregel met `_exit_row()`, en die draagt
 `translation_key="when_done"`; het hele `save_exit`-blok in de zeven bestanden
 werd door niets gelezen.
@@ -20,13 +20,13 @@ entiteiten, `services.yaml` voor de acties - en eist dat elke sleutel er een
 heeft. De rekenkern is een pure functie, zodat de bewaking zelf ook getest kan
 worden op verzonnen invoer.
 
-R30-3c. The existing guards look one way only: every `Problem` code has a text,
+The existing guards look one way only: every `Problem` code has a text,
 every translation has the English keys, every form field has a label. What was
 guarded nowhere is the other side - a key that stands in all seven files while
 no code, entity, action or `Problem` code ever asks for it. Such a key can stay
 for years, and then "everything is translated" is a number without meaning.
 
-Measured on 2026-09-14: `selector.save_exit` was such a key. `schemas.save()`
+Measured: `selector.save_exit` was such a key. `schemas.save()`
 builds its exit row with `_exit_row()`, and that carries
 `translation_key="when_done"`; the whole `save_exit` block in the seven files
 was read by nothing.

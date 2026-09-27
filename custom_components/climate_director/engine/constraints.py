@@ -414,9 +414,9 @@ def _standing_claims(
     - en een handbediend apparaat dat hetzelfde doet als wat er nu gevraagd
     wordt, want dat wordt niet weggeschakeld.
 
-    Tot 6.6.0 telde alleen de eerste soort mee. Daardoor beschermde de grens
-    een huis mínder zodra je je slaapkamerairco netjes als handbediende bron
-    configureerde dan wanneer je hem helemaal wegliet - precies andersom dan
+    Telde alleen de eerste soort mee, dan beschermde de grens een huis
+    mínder zodra je je slaapkamerairco netjes als handbediende bron
+    configureert dan wanneer je hem helemaal weglaat - precies andersom dan
     het hoort.
 
     A limit in units is about what the outdoor unit can take, and that counts
@@ -428,9 +428,9 @@ def _standing_claims(
     and a hand-operated appliance doing the same duty as the one being asked
     for, since that one is not stood down.
 
-    Up to 6.6.0 only the first kind counted. That made the limit protect a house
-    *less* once you tidily configured your bedroom unit as a hand-operated
-    source than when you left it out altogether - exactly the wrong way round.
+    Counting only the first kind would make the limit protect a house
+    *less* once you tidily configure your bedroom unit as a hand-operated
+    source than when you leave it out altogether - exactly the wrong way round.
     """
     asking = {request.source.entity_id for request in requests}
     return sum(

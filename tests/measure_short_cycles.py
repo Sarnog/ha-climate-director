@@ -8,8 +8,8 @@ voert het plan elke minuut uit, en meet het **kleinste gat tussen twee
 ontstekingen** van elk apparaat zonder circuit.
 
 Waarom dit bestaat: kortcyclusbescherming hangt aan een circuit, en een gasketel
-of een gedeelde warmtebron hangt aan geen circuit. Dat gat is in ronde 3 (H2) en
-ronde 4 (H3, R1) drie keer opnieuw opgedoken, telkens langs een ander pad. Deze
+of een gedeelde warmtebron hangt aan geen circuit. Dat gat is drie keer opnieuw
+opgedoken, telkens langs een ander pad. Deze
 meting vindt het ongeacht het pad, want hij kijkt naar de uitkomst.
 
 Verwachting bij een gezonde engine: het kleinste gat is >= OPENING_MIN_REST
@@ -19,25 +19,20 @@ druk dan de configuratie en de reden af en bouw er een deterministische probe va
 
 Het weer is bewust traag (0,05 graad per minuut). Met een wilder random-walk
 kruist de buitentemperatuur de gas/airco-grens zo vaak dat je je eigen artefact
-meet in plaats van de engine; dat is tijdens ronde 4 één keer gebeurd.
+meet in plaats van de engine; dat is één keer gebeurd.
 
-IJKPUNT. Op `1057126` (2026-08-24, versie 7.1.5, dus **ná** de reparatie van R1)
-meldt dit instrument nog stééds **FOUT: 2 < 3** op `climate.cv` in run 329. R1
-zette alleen het gemelde pad dicht: een generator krijgt zijn openingsrust
-alleen als élke bediende zone door een opening geweigerd is, en in run 329 is de
-andere kamer gewoon op temperatuur. Dat is R14 op de restlijst. Zolang R14 open
-staat is dit de verwachte uitslag; komt er iets ánders uit, dan is er iets
-nieuws.
+IJKPUNT. Met de standaardinstellingen (400 huizen, 180 minuten, `seed=99`) meldt
+dit instrument **OK**: het kleinste gat is 4 minuten, op `climate.ketel`
+in run 1. Komt er iets ánders uit, dan is er iets nieuws.
 
 Draai dit instrument **ná** elke reparatie aan de openingsrust, niet ervoor.
-Tijdens ronde 4 is dat niet gebeurd, en daardoor ging een reparatie de deur uit
-die zijn eigen ijkpunt niet haalde.
+Anders gaat er een reparatie de deur uit die zijn eigen ijkpunt niet haalt.
 
 En een waarschuwing over dit instrument zelf: een groene uitslag is géén bewijs.
 Twee eerdere versies meldden OK terwijl de deterministische probe rood stond,
 omdat de zoekruimte de vorm miste die breekt (`min_cycle_time = 0`, en een kamer
 zonder de ketel als reserve). Een sweep vindt bugs; hij bewijst hun afwezigheid
-niet. De probes in `review-probes-2026-08-24c.py` zijn het bewijs.
+niet. Een deterministische probe is het bewijs.
 """
 
 from __future__ import annotations

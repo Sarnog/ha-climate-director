@@ -159,15 +159,15 @@ class _OverridesMixin(_CoordinatorBase):
 
     @callback
     def async_publish_override_state(self) -> None:
-        """Laat alles wat aan de override hangt direct volgen (R34-7).
+        """Laat alles wat aan de override hangt direct volgen.
 
         De eindtijdsensor leest `zone_overrides`, `zone_override_until` en
         `zone_override_started` rechtstreeks van deze coordinator, maar een
         entiteit publiceert pas als de coordinator zijn luisteraars bijwerkt - en
-        dat gebeurde tot nu toe alleen aan het eind van een beslisronde. De
+        dat gebeurt anders pas aan het eind van een beslisronde. De
         debouncer wacht een seconde, dus na het uitzetten van de schakelaar,
-        `set_override` of `clear_override` bleef de sensor staan tot die ronde
-        langskwam (ronde 34, R34-7).
+        `set_override` of `clear_override` zou de sensor blijven staan tot die
+        ronde langskomt.
 
         Eén mechanisme voor die drie paden, en géén eigen listener op de sensor:
         dat zou een vierde plek zijn die iemand kan vergeten. De looptijd van een
@@ -178,11 +178,11 @@ class _OverridesMixin(_CoordinatorBase):
 
         The end-time sensor reads `zone_overrides`, `zone_override_until` and
         `zone_override_started` straight from this coordinator, but an entity only
-        publishes once the coordinator updates its listeners - and until now that
-        happened only at the end of a decision round. The debouncer waits a
+        publishes once the coordinator updates its listeners - and otherwise that
+        happens only at the end of a decision round. The debouncer waits a
         second, so after turning the switch off, `set_override` or
-        `clear_override` the sensor stayed put until that round came by (round 34,
-        R34-7).
+        `clear_override` the sensor would stay put until that round comes
+        by.
 
         One mechanism for those three paths, and no listener of its own on the
         sensor: that would be a fourth place somebody can forget. The duration of
@@ -231,7 +231,7 @@ class _OverridesMixin(_CoordinatorBase):
     def _consume_pending_override_changes(self, world: WorldState) -> tuple[Change, ...]:
         """Return the same-round override commands, clamped to this round.
 
-        De klem hoort hier en niet bij de service-aanroep (R28-2): tussen die
+        De klem hoort hier en niet bij de service-aanroep: tussen die
         twee kan het apparaat zijn bereik gaan melden - of juist kwijtraken.
         Deze ronde heeft de wereld al in de hand; `_override_setpoint` doet
         daarom alleen nog de eenheidsomrekening. Beide paden gebruiken dezelfde
@@ -239,7 +239,7 @@ class _OverridesMixin(_CoordinatorBase):
         ontstaat. Daarna is de wachtrij leeg: een commando gaat precies één keer
         de deur uit.
 
-        The clamp belongs here and not with the service call (R28-2): between
+        The clamp belongs here and not with the service call: between
         those two the appliance can start reporting its range - or lose it. This
         round already holds the world; `_override_setpoint` therefore only does
         the unit conversion. Both paths use the same `engine.clamped_target`, so

@@ -2,22 +2,22 @@
 
 Appliances the director issues nothing to, and why not.
 
-Niets sturen is iets anders dan niets willen, en tot 6.5.0 zag je dat verschil
-niet: de "zou aansturen"-sensor zei `unmanaged`, en dat woord betekent in deze
-integratie al iets anders - een unit die aan een buitenunit hangt maar in geen
-enkele zone staat. Wie het las dacht dat de director zijn apparaat niet kende,
-terwijl hij er juist met opzet vanaf bleef.
+Niets sturen is iets anders dan niets willen, en dat verschil hoort zichtbaar te
+zijn. Zei de "zou aansturen"-sensor `unmanaged`, dan las je iets anders: dat
+woord betekent in deze integratie een unit die aan een buitenunit hangt maar in
+geen enkele zone staat. Wie het las zou denken dat de director zijn apparaat
+niet kent, terwijl hij er juist met opzet vanaf blijft.
 
 Er zijn drie gevallen, en ze vragen niet hetzelfde van je: een overgedragen
 zone (jij hebt hem overgenomen), een handbediend apparaat dat niemand in de weg
 staat (zo hoort het), en een apparaat dat niet te bereiken is (daar is iets
 stuk).
 
-Issuing nothing is not the same as wanting nothing, and up to 6.5.0 you could
-not see the difference: the "would command" sensor said `unmanaged`, and in
-this integration that word already means something else - a unit hanging on an
-outdoor unit but appearing in no zone. Whoever read it took it to mean the
-director did not know their appliance, while it was deliberately keeping its
+Issuing nothing is not the same as wanting nothing, and that difference should
+be visible. Were the "would command" sensor to say `unmanaged`, you would read
+something else: in this integration that word means a unit hanging on an
+outdoor unit but appearing in no zone. Whoever read it would take it to mean the
+director does not know their appliance, while it is deliberately keeping its
 hands off.
 
 There are three cases, and they do not ask the same of you: a zone handed over

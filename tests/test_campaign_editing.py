@@ -323,10 +323,10 @@ class TestEveryFormInTheSourceIsWalkedTo:
     `TestEveryScreenCanBeLeft.test_each_one_offers_a_way_back` en
     `TestDiscardArrivesOnEveryScreen.test_the_example_values_cover_exactly_the_schema`.
     De **dekking** van álle formulieren ligt bij deze test zelf: hij leest zijn
-    lijst uit de bron, niet uit een handkaart. Sinds ronde 19 is dit de **enige**
-    bewaking op de formulierdekking; er stond er een tweede naast in
-    `pytest_sessionfinish` (`conftest.py`), en die is geschrapt omdat hij dezelfde
-    invariant bewaakte met een extra aanname over de runconditie.
+    lijst uit de bron, niet uit een handkaart. Dit is de **enige**
+    bewaking op de formulierdekking; een tweede in `pytest_sessionfinish`
+    (`conftest.py`) zou dezelfde invariant bewaken met een extra aanname over de
+    runconditie.
 
     M1: every form in the source has an explicit walk.
 
@@ -344,10 +344,9 @@ class TestEveryFormInTheSourceIsWalkedTo:
     `TestEveryScreenCanBeLeft.test_each_one_offers_a_way_back` and
     `TestDiscardArrivesOnEveryScreen.test_the_example_values_cover_exactly_the_schema`.
     The **coverage** of all forms lies with this test itself: it reads its list
-    from the source, not from a hand-kept map. Since round 19 this is the **only**
-    guard on the form coverage; a second one used to stand beside it in
-    `pytest_sessionfinish` (`conftest.py`), and it was removed because it guarded
-    the same invariant with an extra assumption about the run condition.
+    from the source, not from a hand-kept map. This is the **only** guard on the
+    form coverage; a second one in `pytest_sessionfinish` (`conftest.py`) would
+    guard the same invariant with an extra assumption about the run condition.
     """
 
     async def test_every_step_id_in_the_source_opens(self) -> None:
@@ -1723,7 +1722,7 @@ class TestDiscardArrivesOnEveryScreen:
 
     Home Assistant valideert het formulier vóórdat de stap draait. De interface
     stuurt een leeggemaakt optioneel veld als **ontbrekende sleutel** door — niet
-    als `None` of `""` (die aanname kostte 7.2.1 de interface; de fixture
+    als `None` of `""` (die aanname maakt de interface onbruikbaar; de fixture
     `every_drawn_form_must_serialize` in `conftest.py` bewaakt dat elk scherm
     tekenbaar blijft). Deze test laat daarom op elk bewerkingsscherm álle
     optionele velden weg en eist dat "verwerpen en teruggaan" aankomt op de lijst
@@ -1734,7 +1733,7 @@ class TestDiscardArrivesOnEveryScreen:
 
     Home Assistant validates the form before the step runs. The frontend sends a
     cleared optional field as a **missing key** — not as `None` or `""` (that
-    assumption cost 7.2.1 its interface; the `every_drawn_form_must_serialize`
+    assumption makes the interface unusable; the `every_drawn_form_must_serialize`
     fixture in `conftest.py` guards that every screen stays drawable). This test
     therefore omits every optional field on every edit screen and requires
     "discard and go back" to arrive on the list above; then it fills those same
