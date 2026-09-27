@@ -31,6 +31,8 @@ import ast
 import json
 import pathlib
 import re
+from itertools import compress
+from operator import itemgetter
 
 import pytest
 from _ast_helpers import issue_calls
@@ -366,6 +368,21 @@ class TestTheNoticeIsUsable:
     #: sentence has to say what the user still has to do.
     WORDING: dict[str, str] = {"nl": r"\bstel\b", "en": r"\bset it up\b"}
 
+    #: De bestanden waarop de woordtoets loopt: alleen die van de talen in
+    #: `WORDING`, dus drie (`strings.json`, `en.json` en `nl.json`). De andere
+    #: vier talen doen hier niet mee in plaats van dat ze worden overgeslagen: wat
+    #: nooit gemeten wordt, hoort geen skip in de suite te geven. Afgeleid van
+    #: `WORDING` en niet met de hand, zodat een taal die erbij komt vanzelf meedoet.
+    #:
+    #: The files the wording check runs on: only those of the languages in
+    #: `WORDING`, so three (`strings.json`, `en.json` and `nl.json`). The other
+    #: four languages take no part here instead of being skipped: what is never
+    #: measured should not show up as a skip in the suite. Derived from `WORDING`
+    #: and not by hand, so a language added there joins in by itself.
+    WORDED_FILES: tuple[tuple[str, pathlib.Path], ...] = tuple(
+        compress(FILES, map(WORDING.__contains__, map(itemgetter(0), FILES)))
+    )
+
     @staticmethod
     def _issue(path: pathlib.Path) -> dict:
         return json.loads(path.read_text(encoding="utf-8"))["issues"]["precondition_unwatched"]
@@ -378,14 +395,12 @@ class TestTheNoticeIsUsable:
         assert issue["title"].strip(), f"{language}: geen titel"
         assert EVENT_PRECONDITION_REFUSED in issue["description"], f"{language}: geen event"
 
-    @pytest.mark.parametrize(("language", "path"), FILES)
+    @pytest.mark.parametrize(("language", "path"), WORDED_FILES)
     def test_it_says_the_blueprint_must_also_be_set_up(
         self, language: str, path: pathlib.Path
     ) -> None:
         """Importing alone listens to nothing, and that is the trap to name."""
-        wording = self.WORDING.get(language)
-        if wording is None:
-            pytest.skip(f"{language}: deze instructie staat alleen in het Nederlands en Engels")
+        wording = self.WORDING[language]
         description = self._issue(path)["description"]
         assert re.search(wording, description), f"{path}: mist {wording}"
 

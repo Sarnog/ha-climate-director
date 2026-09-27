@@ -17,7 +17,7 @@ Dekking: de sleutels van de zeven bestanden tegen `strings.json`, de
 plaatshouders in elke waarde, de sleutel die binnen één object twee keer staat,
 de aanspreekvorm in de Duitse en de Franse gids, en de terminologielijst
 `TERMINOLOGY` die één woord per begrip eist. Die lijst dekt **alle zes** talen, met
-ruim veertig naalden; van elke taal leest deze test het hele vertaalbestand én de
+ruim vijftig naalden; van elke taal leest deze test het hele vertaalbestand én de
 hele gids, en voor `en` ook `strings.json`, want dat is de bron die Home Assistant
 zelf leest. Niet gedekt: de schermlabels en de
 formuliervelden (`tests/test_ui_complete.py`), de sleutels zonder producent
@@ -27,7 +27,7 @@ aanspreekvorm, en de rest van elke gids buiten de terminologienaalden.
 Coverage: the keys of the seven files against `strings.json`, the placeholders in
 every value, the key standing twice inside one object, the form of address in the
 German and French guides, and the `TERMINOLOGY` list demanding one word per
-concept. That list covers **all six** languages, with well over forty needles; for
+concept. That list covers **all six** languages, with well over fifty needles; for
 every language it reads the whole translation file and the whole guide, and for
 `en` also `strings.json`, because that is the source Home Assistant itself reads.
 Not covered: the screen labels and form fields
@@ -335,7 +335,7 @@ def test_every_language_names_the_shared_heat_source_in_unreadable_entities() ->
 
 #: Eén begrip, één woord. Per taal het verboden woord, het canonieke woord en de
 #: reden erbij. De lijst groeit per tekstronde; er gaat niets af zonder reden. Hij
-#: dekt **alle zes** talen en telt ruim veertig naalden; voor het Engels wordt ook
+#: dekt **alle zes** talen en telt ruim vijftig naalden; voor het Engels wordt ook
 #: `strings.json` gelezen, want dat is de bron die Home Assistant zelf leest.
 #:
 #: Een naald is een **stam** of een **patroon**, niet een heel woord: het
@@ -356,7 +356,7 @@ def test_every_language_names_the_shared_heat_source_in_unreadable_entities() ->
 #:
 #: One concept, one word. Per language the forbidden word, the canonical word and
 #: the reason alongside. The list grows per text round; nothing comes off without
-#: a reason. It covers **all six** languages and counts well over forty needles;
+#: a reason. It covers **all six** languages and counts well over fifty needles;
 #: for English it is also measured against `strings.json`, that being the source
 #: Home Assistant itself reads.
 #:
@@ -642,6 +642,13 @@ TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
             "raam",
         ),
         (
+            r"franjas?\s+silenciosas?",
+            "franja de silencio",
+            "het scherm heet *Franja de silencio*; *franja silenciosa* is een eigen vorm voor "
+            "hetzelfde ding, in het enkelvoud en het meervoud, ook over een regelafbreking "
+            "heen. *fallos silenciosos* (stille storingen) valt buiten deze naald",
+        ),
+        (
             "titil",
             "no conmute sin parar",
             "het scherm zegt *no conmute sin parar por una décima de grado*; *titile* is een "
@@ -674,10 +681,24 @@ TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
             "circuit",
         ),
         (
-            "المنظومة",
+            "منظوم",
             "المنشأة",
             "het scherm noemt de installatie *المنشأة*; *المنظومة* is een eigen woord voor "
-            "hetzelfde ding",
+            "hetzelfde ding. De stam vangt ook de vorm met een bezittelijk achtervoegsel "
+            "(*منظومتك*), die *المنظومة* als naald liet passeren",
+        ),
+        (
+            "موسم",
+            "الفصل",
+            "het scherm noemt het seizoen *الفصل* (*كيان الفصل*, *الفصل: الفصل يحدد المهمة*); "
+            "*الموسم* is een eigen woord voor hetzelfde ding. De naald is de stam zonder "
+            "lidwoord, zodat ook de onbepaalde vorm (*كيان موسم*) meetelt",
+        ),
+        (
+            "حضور",
+            "وجود",
+            "het scherm noemt de sensor *مستشعر الوجود* en de melding zegt *بلا مستشعر وجود*; "
+            "*حضور* is een eigen woord voor hetzelfde ding, met en zonder lidwoord",
         ),
         (
             "التكاملة",
