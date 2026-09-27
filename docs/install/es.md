@@ -755,7 +755,7 @@ Durante una petición de preacondicionamiento siguen aplicándose el interruptor
 principal, una anulación, la banda muerta, la estación, la franja exterior por
 fuente, puertas y ventanas, el circuito y los grupos exclusivos. Se omiten:
 *alguien en casa*, *despierto*, *horario*, *presencia en la habitación*, la
-franja exterior por zona y la franja silenciosa.
+franja exterior por zona y la franja de silencio.
 
 Una ventana o puerta abierta **rechaza** una petición. Quien abrió la ventana
 puede decir: hazlo de todos modos.
