@@ -137,7 +137,7 @@ Sous **Configurer** se trouve le menu principal, dans cet ordre :
 
 | Menu | Pour quoi |
 |---|---|
-| **Réglages généraux** | température extérieure, saison, portes, fenêtres, calendriers, mode ombre |
+| **Réglages généraux** | température extérieure, saison, barrières, plages, calendriers, mode ombre |
 | **Zones et sources** | par pièce : température, points de démarrage et d'arrêt, et les appareils associés |
 | **Circuits de climatisation** | quelles unités intérieures partagent une unité extérieure |
 | **Sources de chaleur partagées** | une chaudière ou pompe à chaleur desservant plusieurs pièces |
@@ -670,7 +670,7 @@ Un appareil par installation, avec en dessous :
 | `sensor.*_commanderait_<entity>` | le mode dans lequel le directeur mettrait cet appareil — un capteur par appareil |
 | `sensor.*_ecarts` | combien d'appareils se trouvent ailleurs que là où le plan les veut ; 0 = directeur et maison d'accord |
 | `sensor.*_source_<zone>` | quelle source dessert cette zone, avec ce que la zone voulait, a obtenu et pourquoi |
-| `binary_sensor.*_<zone>_bloquee` | activé quand une zone a reçu moins que demandé, ou voulait tourner mais qu'une circonstance l'a retenue ; les portes fermées sont dans les attributs |
+| `binary_sensor.*_<zone>_bloquee` | activé quand une zone a reçu moins que demandé, ou voulait tourner mais qu'une circonstance l'a retenue ; les barrières fermées sont dans les attributs |
 | `binary_sensor.*_<zone>_sur_appareil_de_secours` | activé quand une zone tourne sur un appareil de secours parce que le premier choix est injoignable |
 | `binary_sensor.*_bloque` | activé quand une zone reste trop longtemps sur le même motif d'attente |
 | `switch.*_director` | l'interrupteur principal ; éteint = rien n'est régulé |
@@ -954,7 +954,7 @@ Trois capteurs rendent une période en mode ombre évaluable après coup :
   l'entité `climate` du même nom. Deux lignes qui se suivent = le directeur a
   décidé la même chose que vos automatisations.
 - **`sensor.*_source_<zone>`** et **`binary_sensor.*_<zone>_bloquee`** disent
-  ensuite *pourquoi* : quelle source a été choisie, et quelle porte a retenu une
+  ensuite *pourquoi* : quelle source a été choisie, et quelle barrière a retenu une
   zone.
 
 ## Blueprints et notifications

@@ -136,7 +136,7 @@ En **Configurar** encuentras el menú principal, en este orden:
 
 | Menú | Para qué |
 |---|---|
-| **Ajustes generales** | temperatura exterior, estación, puertas, ventanas, calendarios, modo sombra |
+| **Ajustes generales** | temperatura exterior, estación, barreras, franjas, calendarios, modo sombra |
 | **Zonas y fuentes** | por habitación: temperatura, puntos de arranque y parada, y los aparatos correspondientes |
 | **Circuitos de climatización** | qué unidades interiores comparten una unidad exterior |
 | **Fuentes de calor compartidas** | una caldera o bomba de calor de la que tiran varias habitaciones |
@@ -471,7 +471,7 @@ ninguna, un día de vacaciones cuenta como un sábado.
 
 ## Paso 10 — Residentes
 
-Déjalo vacío para un edificio donde no se sigue a nadie; las puertas de
+Déjalo vacío para un edificio donde no se sigue a nadie; las barreras de
 presencia se omiten entonces en vez de bloquearlo todo para siempre.
 
 | Ajuste | Qué hace |
@@ -659,7 +659,7 @@ Un dispositivo por instalación, con debajo:
 | `sensor.*_gobernaria_<entity>` | el modo en que el director pondría este aparato — un sensor por aparato |
 | `sensor.*_discrepancias` | cuántos aparatos están ahora en un sitio distinto del que el plan quiere; 0 = director y casa de acuerdo |
 | `sensor.*_fuente_<zone>` | qué fuente sirve esta zona, con lo que la zona quería, obtuvo y por qué |
-| `binary_sensor.*_<zone>_bloqueada` | activado cuando una zona recibió menos de lo pedido, o quería funcionar pero una circunstancia la retuvo; las puertas cerradas están en los atributos |
+| `binary_sensor.*_<zone>_bloqueada` | activado cuando una zona recibió menos de lo pedido, o quería funcionar pero una circunstancia la retuvo; las barreras cerradas están en los atributos |
 | `binary_sensor.*_<zone>_en_equipo_suplente` | activado cuando una zona funciona con un aparato suplente porque la primera opción es inalcanzable |
 | `binary_sensor.*_atascado` | activado cuando una zona lleva demasiado tiempo con el mismo motivo de espera |
 | `switch.*_director` | el interruptor principal; apagado = no se regula nada |
@@ -939,7 +939,7 @@ Tres sensores hacen que una prueba en modo sombra sea evaluable después:
   entidad `climate` del mismo nombre. Dos líneas que se siguen = el director
   decidió lo mismo que tus automatizaciones.
 - **`sensor.*_fuente_<zone>`** y **`binary_sensor.*_<zone>_bloqueada`** dicen
-  después *por qué*: qué fuente se eligió y qué puerta retuvo una zona.
+  después *por qué*: qué fuente se eligió y qué barrera retuvo una zona.
 
 ## Blueprints y notificaciones
 
