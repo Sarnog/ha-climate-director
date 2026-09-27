@@ -164,29 +164,46 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   `'presence'`** — de gebruiker leest de sleutel in plaats van een zin in zijn taal.
 - **De laatste terugval van `reason_sentence` is de identifier zelf** — valt elke
   vertaling weg, dan leest de gebruiker `circuit_conflict_lost` in plaats van een zin.
-
-- **Een bewaking op dode code** — er staat nu geen enkele toets op namen die
-  niemand meer gebruikt. `vulture` op 60% over pakket, `tests/` en `script/` meldt
-  een stuk of wat namen, en alle zijn te verklaren: de Home Assistant-interface in
-  het pakket, autouse-fixtures en dubbelgangers van Home Assistant-objecten. Eén
-  ervan is een valse melding die je niet zomaar wegstreept: in
-  `tests/test_campaign_editing.py` loopt de aanroep per scherm via een
-  samengestelde naam (`getattr` op de schermnaam), en zulke helpers leven. Een
-  dode-codebewaking op een ratel heeft daar dus een uitzonderingenlijst bij nodig -
-  of een eigen AST-inventaris die de samengestelde `getattr`-vorm herkent - zodat
-  het aantal onverklaarde treffers op nul blijft zonder de terechte meldingen weg
-  te drukken.
-
-- **A guard on dead code** — no test looks at names nobody uses any more.
-  `vulture` at 60% over the package, `tests/` and `script/` reports a handful of
-  names, and all of them are explainable: the Home Assistant interface in the
-  package, autouse fixtures and stand-ins for Home Assistant objects. One is a
-  false positive you cannot strike out just like that: in
-  `tests/test_campaign_editing.py` the call runs per screen through an assembled
-  name (`getattr` on the screen name), and such helpers are alive. A dead-code
-  guard on a ratchet therefore needs an exception list with it - or an AST
-  inventory of its own that recognises the assembled `getattr` shape - so the
-  number of unexplained hits stays at zero without silencing the fair reports.
+- **Een bewaking op dode code** — er staat geen enkele toets op namen die niemand meer
+  gebruikt: een ongebruikte functie in het pakket of een ongebruikte testhulp maakt
+  niets rood. `vulture` op 60% over pakket, `tests/` en `script/` meldt namen die alle
+  te verklaren zijn: de Home Assistant-interface in het pakket, autouse-fixtures,
+  dubbelgangers van Home Assistant-objecten, en de helpers `_fill_*` en `_check_*` in
+  `tests/test_campaign_editing.py`. Die helpers zijn één mechanisme en leven: de
+  aanroep per scherm loopt via een samengestelde naam (`getattr` op de schermnaam), en
+  die vorm ziet `vulture` niet. Een dode-codebewaking op een ratel heeft daar dus een
+  uitzonderingenlijst bij nodig - of een eigen AST-inventaris die de samengestelde
+  `getattr`-vorm herkent - zodat het aantal onverklaarde treffers op nul blijft zonder
+  de terechte meldingen weg te drukken.
+- **De filtertoets van de blauwdruk rendert met `StrictUndefined`** — elk nieuw
+  filterveld in de blauwdruk maakt die toets rood totdat de toets het veld zelf ook
+  meegeeft; een toets die de velden uit de blauwdruk leest, groeit vanzelf mee.
+- **De uitleg bij `outdoor_hysteresis` staat in de verleden tijd** — in alle zes talen
+  (*buiten was elke grens hard*). De uitleg hoort te zeggen wat het veld doet, niet hoe
+  het vroeger was.
+- **De Arabische reden `outside_schedule` zegt *الآن*** — *لا جدول لأي ساكن مفتوح الآن*
+  noemt een moment ("nu") dat de andere talen niet noemen en dat de zin niet nodig heeft.
+- **De terugval van het standaardbericht van de blauwdruk toont ruwe identifiers** —
+  valt een vertaling weg, dan leest de gebruiker een waarde als `neutral` in plaats van
+  een woord in zijn taal.
+- **Het Arabische actiewoord *بقاء من دون تشغيل* kan korter** — *من دون تشغيل* zegt
+  hetzelfde; *بقاء* ("blijven") voegt niets toe.
+- **Het Engelse actiewoord *is going off* is dubbelzinnig** — het leest ook als een
+  wekker die afgaat; een eenduidig werkwoord zegt dat het apparaat uitgaat.
+- **De geslachtsbewaking op de beschrijvende vorm kijkt alleen direct achter `:` of
+  `=`** — een beschrijvende vorm verderop in de regel, zoals es *mientras siga activa*,
+  glipt erdoor.
+- **Het Arabisch gebruikt twee keer één woord voor drie begrippen** — *نافذة* staat voor
+  het raam, het tijdvenster en het buitentemperatuurvenster, en *النطاق* voor het
+  temperatuurbereik, de zonegroep van `covers_zones` en de dode band. Eén woord per
+  begrip zou gids en scherm eenduidig maken.
+- **De Arabische reden `circuit_at_capacity` zegt *الوحدة الخارجية ممتلئة*** — *ممتلئة*
+  leest als "vol", alsof er iets in de buitenunit zit; bedoeld is dat hij al zoveel
+  binnenunits bedient als hij kan.
+- **De gidsen noemen de verwerp-knop cursief in plaats van tussen aanhalingstekens** — de
+  vertaalbestanden citeren het label tussen aanhalingstekens, de gidsen zetten het
+  cursief, en alleen `nl.md` zet het op één plek tussen aanhalingstekens. Eén vorm in
+  gids en scherm, met een toets erop, zou dat gelijktrekken.
 
 ## Would have
 
@@ -352,6 +369,47 @@ The worked-out design proposals for everything below live in
   `'presence'`** — the user reads the key instead of a sentence in their language.
 - **The last fallback of `reason_sentence` is the identifier itself** — if every
   translation falls away, the user reads `circuit_conflict_lost` instead of a sentence.
+- **A guard on dead code** — no test looks at names nobody uses any more: an unused
+  function in the package or an unused test helper turns nothing red. `vulture` at 60%
+  over the package, `tests/` and `script/` reports names that are all explainable: the
+  Home Assistant interface in the package, autouse fixtures, stand-ins for Home
+  Assistant objects, and the helpers `_fill_*` and `_check_*` in
+  `tests/test_campaign_editing.py`. Those helpers are one mechanism and alive: the call
+  runs per screen through an assembled name (`getattr` on the screen name), and
+  `vulture` does not see that shape. A dead-code guard on a ratchet therefore needs an
+  exception list with it - or an AST inventory of its own that recognises the assembled
+  `getattr` shape - so the number of unexplained hits stays at zero without silencing
+  the fair reports.
+- **The blueprint's filter test renders with `StrictUndefined`** — every new filter
+  field in the blueprint turns that test red until the test passes the field itself; a
+  test reading the fields from the blueprint grows along by itself.
+- **The explanation of `outdoor_hysteresis` is in the past tense** — in all six
+  languages (*outdoors every bound was hard*). The explanation should say what the
+  field does, not how things used to be.
+- **The Arabic reason `outside_schedule` says *الآن*** — *لا جدول لأي ساكن مفتوح الآن*
+  names a moment ("now") that the other languages do not name and the sentence does not
+  need.
+- **The fallback of the blueprint's default message shows raw identifiers** — if a
+  translation falls away, the user reads a value such as `neutral` instead of a word in
+  their language.
+- **The Arabic action word *بقاء من دون تشغيل* can be shorter** — *من دون تشغيل* says
+  the same; *بقاء* ("staying") adds nothing.
+- **The English action word *is going off* is ambiguous** — it also reads as an alarm
+  going off; an unambiguous verb says the appliance switches off.
+- **The gender guard on the descriptive form only looks right behind `:` or `=`** — a
+  descriptive form further along the line, such as es *mientras siga activa*, slips
+  through.
+- **Arabic uses one word for three concepts, twice** — *نافذة* stands for the window,
+  the time window and the outdoor temperature window, and *النطاق* for the temperature
+  range, the zone group of `covers_zones` and the dead band. One word per concept would
+  make guide and screen unambiguous.
+- **The Arabic reason `circuit_at_capacity` says *الوحدة الخارجية ممتلئة*** — *ممتلئة*
+  reads as "full", as if something were inside the outdoor unit; what is meant is that
+  it already serves as many indoor units as it can.
+- **The guides name the discard button in italics rather than between quotation
+  marks** — the translation files quote the label between quotation marks, the guides
+  set it in italics, and only `nl.md` quotes it in one place. One form in guide and
+  screen, with a test on it, would even that out.
 
 ## Would have
 

@@ -939,6 +939,19 @@ installatieniveau naar de zone.
 - Risico: de migratie is de kern — zonder terugval op de oude waarde verandert gedrag
   stilletjes bij de eerste upgrade.
 
+**De afspraken achter de bronbewakingen in de repo.** De structurele afspraken die
+een bronbewaking aanvullen - de bewakingsregel, welke bronbewakingen er zijn en wat
+ze dekken - staan in `AGENTS.md`, en dat bestand staat in `.gitignore`.
+- Plek: een eigen hoofdstuk *Bewakingen en hun afspraken* in dit document, NL + EN,
+  met per bronbewaking het bestand, de afspraak en wat hij dekt en niet dekt.
+- Verwijzing: de docstrings van de bewakingen wijzen naar dat hoofdstuk in plaats
+  van naar `AGENTS.md`; `AGENTS.md` houdt alleen de samenwerkingsafspraken.
+- Bewaakt: `test_every_source_guard_names_its_coverage` kan dan ook eisen dat elke
+  bronbewaking in dat hoofdstuk staat, want dit document gaat mee in de repo en de
+  CI kan het lezen.
+- Risico: twee plekken voor dezelfde afspraak. De verhuizing haalt de afspraken in
+  dezelfde wijziging uit `AGENTS.md` weg.
+
 #### Could have
 
 **Huisbreed vermogensplafond.** `Source.wattage` + `DirectorConfig.watt_limit`; na de
@@ -2102,6 +2115,20 @@ installation level to the zone.
   the validations (`_quiet_problems`) run per zone.
 - Risk: the migration is the heart of it — without a fallback to the old value, behaviour
   changes silently on the first upgrade.
+
+**The agreements behind the source guards in the repo.** The structural agreements
+that complement a source guard - the guard rule, which source guards there are and
+what they cover - stand in `AGENTS.md`, and that file is in `.gitignore`.
+- Place: a chapter of its own, *Guards and their agreements*, in this document,
+  NL + EN, with per source guard the file, the agreement and what it covers and does
+  not cover.
+- Reference: the docstrings of the guards point at that chapter instead of at
+  `AGENTS.md`; `AGENTS.md` keeps only the collaboration agreements.
+- Guarded: `test_every_source_guard_names_its_coverage` can then also demand that
+  every source guard stands in that chapter, since this document travels with the
+  repo and CI can read it.
+- Risk: two places for the same agreement. The move takes the agreements out of
+  `AGENTS.md` in the same change.
 
 #### Could have
 
