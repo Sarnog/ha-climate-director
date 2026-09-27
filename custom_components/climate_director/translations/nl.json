@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Climate Director",
-        "description": "Maak een installatie aan. Zones, bronnen en koelcircuits voeg je daarna toe via Configureren.",
+        "description": "Maak een installatie aan. Zones, bronnen en airco-circuits voeg je daarna toe via Configureren.",
         "data": {
           "name": "Naam",
           "shadow_mode": "Schaduwmodus"
@@ -75,7 +75,7 @@
           "guest_start": "De gastenmodus draagt het huis alleen tussen deze tijden. Laat beide leeg om hem de hele dag te laten gelden. Daarbuiten nemen de gewone poorten het over, zodat een schakelaar die niemand uitzette niet de hele nacht doordraait.",
           "guest_end": "De gastenmodus draagt het huis alleen tussen deze tijden. Laat beide leeg om hem de hele dag te laten gelden. Daarbuiten nemen de gewone poorten het over, zodat een schakelaar die niemand uitzette niet de hele nacht doordraait.",
           "max_precondition": "Een verzoek kun je niet vergeten, alleen verkeerd intikken. Dit plafond voorkomt dat een vertypte tijd een hele middag een leeg huis verwarmt. Vraag je langer, dan wordt het verzoek ingekort in plaats van geweigerd.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
           "stuck_after": "Een pauze bij het wisselen van taak hoort seconden te duren. Een zone die er na deze tijd nog op staat wacht niet meer maar zit vast, en dat lijkt van buiten precies op niets doen. Houd hem ruim boven je langste pauze; een valse melding leert je de melder te negeren. Nul zet de melder uit.",
           "precipitation_source": "Een weather-entiteit of neerslagsensor. Zolang die een van de staten hieronder meldt, wordt de 'zet een raam open'-grens per zone overgeslagen. Laat leeg om de gewone regel altijd te laten gelden.",
           "precipitation_states": "Komma-gescheiden. Voor een weather-entiteit zijn dit zijn condities; voor een sensor zijn het zijn toestanden. De standaard dekt regen, sneeuw en hagel.",
@@ -92,7 +92,7 @@
         },
         "data_description": {
           "zone": "Kies er een om aan te passen, of voeg er een toe.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "zone": {
@@ -142,7 +142,7 @@
           "cool_outdoor_min": "Onder deze buitentemperatuur blijft koelen uit. Laat leeg voor geen grens.",
           "cool_summer_only": "Koppelt koelen aan het seizoen dat je bij Algemene instellingen hebt gezet.",
           "gate": "'household' volgt het rooster, de slaap en of er iemand thuis is; een aanwezigheidssensor knijpt het daarna verder dicht. 'presence' laat de kamer zelf beslissen, zodat een bezette ruimte het rooster overstemt - wat een kamer die je af en toe gebruikt nodig heeft. Kiezen hiervoor vereist een aanwezigheidssensor.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "sources": {
@@ -154,7 +154,7 @@
         },
         "data_description": {
           "source": "Kies er een om aan te passen, of voeg er een toe.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "source": {
@@ -183,7 +183,7 @@
           "role": "Of dit apparaat kan verwarmen, koelen, of allebei. Een cv-ketel kan alleen verwarmen.",
           "delete": "Haalt de bron uit deze zone. Het apparaat zelf blijft ongemoeid.",
           "autostart": "Uit laat hem met rust: de director zet hem nooit aan, en zet hem alleen uit als hij een taak draait die de gedeelde buitenunit niet toestaat. Voor een apparaat dat je zelf aanzet en zo wilt laten staan.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
           "min_cycle_time": "Vertraagt alleen starten, nooit stoppen. Geldt alleen als het apparaat op geen circuit zit; op een circuit telt de rusttijd van dat circuit. Leeg laten betekent geen eigen rusttijd.",
           "covers_zones": "De kamers die dit apparaat meeverwarmt of meekoelt zodra het draait. Leeg betekent alleen deze zone. Valt een bron in dat gebied weg, dan neemt dit apparaat de taak over en verwarmt of koelt er in dat hele gebied niets anders meer. Hetzelfde apparaat onder meerdere kamers deelt één gebied, dus één keer invullen is genoeg.",
           "takeover_delay": "Hoe lang een bron in het gebied al onbereikbaar moet zijn voordat dit apparaat overneemt. Geteld vanaf het moment dat hij onbereikbaar werd, zodat een klapperende integratie de brander niet elke paar minuten ontsteekt. Nul neemt meteen over, en een moment dat niet te lezen is ook."
@@ -198,7 +198,7 @@
         },
         "data_description": {
           "circuit": "Kies er een om aan te passen, of voeg er een toe.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "circuit": {
@@ -228,7 +228,7 @@
           "min_family_switch_interval": "Voorkomt dat een zone de compressor heen en weer trekt tussen verwarmen en koelen.",
           "max_concurrent_units": "Voor een buitenunit die niet al zijn binnenunits tegelijk aankan. Laat leeg voor geen grens.",
           "delete": "Verwijdert het circuit. De units blijven werken; ze zijn alleen niet langer aan elkaar gekoppeld.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "circuit_priorities": {
@@ -240,7 +240,7 @@
         },
         "data_description": {
           "zone": "Kies er een om zijn prioriteit te wijzigen, of ga terug.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "circuit_priority": {
@@ -251,7 +251,7 @@
         },
         "data_description": {
           "priority": "Het laagste nummer wint het circuit. Zones met hetzelfde nummer worden op naam gescheiden.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "generators": {
@@ -263,7 +263,7 @@
         },
         "data_description": {
           "generator": "Kies er een om aan te passen, of voeg er een toe.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "generator": {
@@ -283,7 +283,7 @@
           "zone_ids": "Laat leeg voor alle kamers.",
           "setpoint": "Laat leeg om het warmste doel te volgen van de kamers die vragen. Het koudste nemen zou de kamer die het hardst vraagt tekortdoen.",
           "delete": "Verwijdert de warmtebron; de kranen blijven op zichzelf werken.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "residents": {
@@ -295,7 +295,7 @@
         },
         "data_description": {
           "resident": "Kies er een om aan te passen, of voeg er een toe.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "resident": {
@@ -323,7 +323,7 @@
           "name": "Een naam, om bewoners uit elkaar te houden.",
           "presence_entity": "Meestal een person-entiteit. Zegt of deze bewoner thuis is.",
           "delete": "Verwijdert de bewoner inclusief zijn roosters.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
           "sleep_from": "Een telefoon die om drie uur 's middags op de lader ligt betekent niet dat er iemand naar bed gaat. Tussen deze tijden telt de slaapsensor mee; daarbuiten is een oplader gewoon een oplader. Laat beide leeg om hem de klok rond te laten gelden.",
           "sleep_until": "Een telefoon die om drie uur 's middags op de lader ligt betekent niet dat er iemand naar bed gaat. Tussen deze tijden telt de slaapsensor mee; daarbuiten is een oplader gewoon een oplader. Laat beide leeg om hem de klok rond te laten gelden.",
           "sleep_days": "Laat leeg voor elke dag. Een venster over middernacht hangt aan de dag waarop het begint, dus een venster van vrijdag 23:00-09:00 telt zaterdag om 07:00 nog mee.",
@@ -344,7 +344,7 @@
         },
         "data_description": {
           "window": "Kies er een om aan te passen, voeg er een toe, of ga terug naar het menu.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "window": {
@@ -364,7 +364,7 @@
           "start": "Dit tijdstip valt binnen het venster.",
           "delete": "Verwijdert dit rooster.",
           "holiday": "Een vakantievenster geldt alleen als het vakantieschema aan staat, en vervangt dan de gewone vensters. De dagen van de week tellen er niet in mee. Zonder vakantievenster telt een vakantiedag als zaterdag.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "openings": {
@@ -377,7 +377,7 @@
         },
         "data_description": {
           "opening": "Kies er een om aan te passen, of voeg er een toe.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
           "house_wide_openings": "Deze vallen stil zodra welke opening in de installatie dan ook openstaat, waar hij ook zit. Bedoeld voor een ketel die alle zones delen: die opening aan alle zones koppelen zou ook de airco's in die kamers stilzetten, het hele jaar door. Laat leeg om alles per zone geregeld te houden. Een zone met een override en een handbediende bron blijven met rust, zoals altijd."
         }
       },
@@ -398,7 +398,7 @@
           "entity_id": "Het deur-, raam- of dakraamcontact. Welke toestand open betekent, staat eronder.",
           "open_state": "De toestand die telt als open. Voor een raamcontact is dat meestal 'on', voor een dakraam of rolluik 'open'.",
           "delete": "Verwijdert de opening; hij schort dan niets meer op.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
           "name": "Een naam, om openingen uit elkaar te houden."
         }
       },
@@ -421,7 +421,7 @@
         },
         "data_description": {
           "group": "Kies er een om aan te passen, of voeg er een toe.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "exclusive": {
@@ -435,7 +435,7 @@
         "data_description": {
           "sources": "Hiervan mag er maar één tegelijk draaien. Minder dan twee is geen groep.",
           "delete": "Verwijdert de groep. De apparaten blijven werken; ze sluiten elkaar alleen niet meer uit.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       },
       "quiets": {
@@ -464,7 +464,7 @@
           "end": "Tussen deze tijden begint de director niets uit zichzelf, behalve voor wie er al was toen het venster begon. Een venster mag over middernacht heen lopen: 21:00 tot 09:00 is de nacht.",
           "weekdays": "Leeg laten geldt elke dag.",
           "delete": "Verwijdert dit venster, zodat de director in die uren weer iets mag beginnen.",
-          "when_done": "Kies je verwerpen, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
           "holiday": "Een vakantievenster geldt alleen als het vakantieschema aan staat, en vervangt dan de gewone vensters. De dagen van de week tellen er niet in mee. Zonder vakantievenster telt een vakantiedag als zaterdag."
         }
       }
@@ -494,7 +494,7 @@
     },
     "circuit_list": {
       "options": {
-        "add_new": "+ Koelcircuit toevoegen",
+        "add_new": "+ Airco-circuit toevoegen",
         "back_to_menu": "← Terug naar het hoofdmenu"
       }
     },
@@ -899,7 +899,7 @@
       "message": "Bron {source} wordt begrensd door de buitentemperatuur, maar er is geen buitensensor ingesteld."
     },
     "zone_negative_hysteresis": {
-      "message": "Zone {zone} heeft een negatieve {mode}-hysteresis."
+      "message": "Zone {zone} heeft een negatieve {mode}-hysterese."
     },
     "zone_window_admits_nothing": {
       "message": "Zone {zone} heeft een {mode}-buitenvenster dat niets toelaat."
@@ -911,10 +911,10 @@
       "message": "Zone {zone} heeft een niet-eindige {mode}-hysterese."
     },
     "nonfinite_outdoor_deadband": {
-      "message": "De buitendode band is geen eindig getal."
+      "message": "De dode band op de buitentemperatuur is geen eindig getal."
     },
     "zero_outdoor_deadband_no_circuit": {
-      "message": "Apparaat {entity} heeft een begrensd buitenvenster en zit op geen circuit; met de buitendode band op nul remt niets zijn brander."
+      "message": "Apparaat {entity} heeft een begrensd buitenvenster en zit op geen circuit; met de dode band op de buitentemperatuur op nul remt niets zijn brander."
     },
     "zone_outdoor_without_sensor": {
       "message": "Zone {zone} begrenst {mode} door de buitentemperatuur, maar er is geen buitensensor ingesteld."
@@ -953,7 +953,7 @@
       "message": "De maximale vooruitlooptijd is nul of negatief, dus een verzoek kan nooit lopen."
     },
     "exclusive_group_unknown_source": {
-      "message": "Een uitsluitende groep noemt onbekende bron {source}."
+      "message": "Een exclusieve groep noemt onbekende bron {source}."
     },
     "unknown_installation": {
       "message": "Onbekende installatie: {installation}"

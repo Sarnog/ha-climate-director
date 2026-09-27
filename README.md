@@ -44,7 +44,7 @@ automatiseringen lastig blijven:
 Voor iedereen met klimaatapparaten die elkaar in de weg kunnen zitten:
 een cv-ketel naast een warmtepomp, een multi-split airco over meerdere kamers,
 of zones die je per ruimte wilt regelen — met bewoners, roosters, aanwezigheid,
-vooruit verwarmen en een optionele neerslagregel als extra's.
+vooruit verwarmen en koelen, en een optionele neerslagregel als extra's.
 
 <!-- Ko-fi badge via shields.io, geen externe tracking -->
 [![Koop me een koffie op Ko-fi](https://img.shields.io/badge/Ko--fi-Koop%20me%20een%20koffie-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white)](https://ko-fi.com/sarnog)

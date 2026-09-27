@@ -141,57 +141,18 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.zone.data.presence_timeout": ("Keep counting as occupied for (seconds)"),
     },
     "nl": {
-        "options.step.circuit.data.allow_fan_only_during_conflict": (
-            "Een zone die verliest mag lucht blijven circuleren"
-        ),
         "options.step.circuit.data.delete": ("Dit circuit verwijderen"),
-        "options.step.circuit.data.family_switch_delay": (
-            "Pauze bij het wisselen van taak (seconden)"
-        ),
-        "options.step.circuit.data.max_concurrent_units": ("Maximaal aantal units tegelijk aan"),
-        "options.step.circuit.data.min_cycle_time": (
-            "Rusttijd voordat een unit opnieuw mag starten (seconden)"
-        ),
-        "options.step.circuit.data.min_family_switch_interval": (
-            "Minimale looptijd voor een taakwissel (seconden)"
-        ),
-        "options.step.circuit_priority.data.priority": ("Voorrang op dit circuit"),
         "options.step.circuits.data.circuit": ("Circuit"),
         "options.step.exclusive.data.delete": ("Deze groep verwijderen"),
-        "options.step.exclusive.data.sources": ("Apparaten in deze groep"),
-        "options.step.exclusives.data.group": ("Groep"),
         "options.step.generator.data.delete": ("Deze warmtebron verwijderen"),
-        "options.step.generator.data.setpoint": ("Vaste doeltemperatuur"),
         "options.step.generators.data.generator": ("Warmtebron"),
-        "options.step.opening.data.delay": ("Vertraging voordat er opgeschort wordt (seconden)"),
         "options.step.opening.data.delete": ("Deze opening verwijderen"),
-        "options.step.opening.data.zone_ids": ("Zones die dit raakt"),
         "options.step.openings.data.opening": ("Opening"),
         "options.step.quiet.data.delete": ("Dit venster verwijderen"),
-        "options.step.quiet.data.end": ("Stilte tot"),
-        "options.step.quiet.data.start": ("Stilte vanaf"),
-        "options.step.quiet.data.weekdays": ("Dagen waarop dit geldt"),
         "options.step.resident.data.delete": ("Deze bewoner verwijderen"),
-        "options.step.resident.data.sleep_state": ("Toestand die slapen betekent"),
-        "options.step.resident.data.sleep_until": ("Slaapsensor telt tot"),
-        "options.step.settings.data.guest_end": ("Gastenmodus tot"),
-        "options.step.settings.data.require_awake": ("Iemand die thuis is moet wakker zijn"),
-        "options.step.settings.data.stuck_after": ("Zone geldt als vastgelopen na (minuten)"),
         "options.step.source.data.delete": ("Deze bron verwijderen"),
-        "options.step.source.data.min_cycle_time": (
-            "Rusttijd voordat dit apparaat opnieuw mag starten (seconden)"
-        ),
-        "options.step.source.data.takeover_delay": (
-            "Wachttijd voordat dit apparaat overneemt (minuten)"
-        ),
         "options.step.window.data.delete": ("Dit rooster verwijderen"),
-        "options.step.zone.data.cool_start_at": ("Begin met koelen bij"),
-        "options.step.zone.data.cool_target": ("Doeltemperatuur koelen"),
         "options.step.zone.data.delete": ("Deze zone verwijderen"),
-        "options.step.zone.data.heat_start_at": ("Begin met verwarmen bij"),
-        "options.step.zone.data.presence_entity": ("Aanwezigheidssensor van deze zone"),
-        "options.step.zone.data.presence_state": ("Toestand die bezet betekent"),
-        "options.step.zone.data.presence_timeout": ("Nog zo lang als bezet tellen (seconden)"),
     },
     "de": {
         "options.step.circuit.data.delete": ("Diesen Kreis löschen"),

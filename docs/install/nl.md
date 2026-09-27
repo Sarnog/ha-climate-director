@@ -147,7 +147,8 @@ Onder **Configureren** vind je het hoofdmenu, in deze volgorde:
 
 Twee dingen maken het menu prettig:
 
-- Elk scherm eindigt met **Als je hier klaar bent**, met de keuze *Deze wijzigingen bewaren en teruggaan* of *Verwerpen en teruggaan*.
+- Elk scherm eindigt met **Als je hier klaar bent**, met de keuze “Deze
+  wijzigingen bewaren en teruggaan” of “Verwerpen en teruggaan”.
 - Elke keuzelijst heeft een regel **← Terug naar het hoofdmenu**.
 
 Je zit dus nergens vast. Teruggaan kan altijd, ook met een half ingevuld
@@ -164,15 +165,15 @@ je in het hoofdmenu **Opslaan en sluiten** kiest.
 | **Herkomst seizoen** | waar het seizoen vandaan komt: de maand, een entiteit, of vast zomer/winter |
 | **Seizoensentiteit** | alleen nodig als de bron op *entiteit* staat; ook de ingebouwde `season.*`-entiteit is kiesbaar |
 | **Halfrond** | welke maanden als zomer tellen wanneer het seizoen uit de maand komt: noordelijk april–september, zuidelijk oktober–maart |
-| **Seizoenskeuze** | de `select.*`-entiteit *Seizoen* zet het seizoen met de hand op Automatisch, Zomer of Winter; de keuze overleeft een herstart |
-| **Iemand thuis moet wakker zijn** | aan = het huis wacht tot er iemand thuis én wakker is; uit = slapen telt niet |
+| **Iemand die thuis is moet wakker zijn** | aan = het huis wacht tot er iemand thuis én wakker is; uit = slapen telt niet |
 | **Het rooster van een bewoner moet openstaan** | aan = het huis wacht op het eerste roostervenster; uit = alleen aanwezigheid telt |
 | **Vakantieagenda's** | welke agenda's een vakantie mogen aankondigen; meerdere toegestaan |
 | **Woord dat vakantie aangeeft** | het trefwoord dat een agenda-item moet dragen; leeg = agenda's worden genegeerd |
 | **Maximale vooruitlooptijd (minuten)** | het plafond op één verzoek; standaard 120 minuten |
-| **Gastenmodus vanaf / tot** | het venster waarin de gastenmodus geldt; beide leeg = de hele dag |
+| **Gastenmodus vanaf** | het begin van het venster waarin de gastenmodus geldt; leeg = de hele dag |
+| **Gastenmodus tot** | het einde van dat venster; leeg = de hele dag |
 | **Dagen van de gastenmodus** | op welke weekdagen dat venster geldt; leeg = elke dag |
-| **Meld een zone vastgelopen na** | na hoeveel minuten wachten een zone als vastgelopen geldt; 0 zet de melder uit |
+| **Zone geldt als vastgelopen na (minuten)** | na hoeveel minuten wachten een zone als vastgelopen geldt; 0 zet de melder uit |
 | **Neerslagbron** | een `weather.*`- of `sensor.*`-entiteit die zegt of er neerslag valt; leeg = de neerslagregel doet niet mee |
 | **Toestanden die als neerslag tellen** | welke standen van die entiteit neerslag betekenen; standaard regen, sneeuw en hagel |
 | **Hoe lang neerslag blijft tellen (minuten)** | nalooptijd na het stoppen van de neerslag; standaard 15 minuten |
@@ -221,16 +222,18 @@ Een zone is een ruimte. Per zone stel je in:
 | **Binnentemperatuursensor** | waarop de dode band rekent; een `climate.*` die zelf meet mag ook |
 | **Voorrang op een gedeelde buitenunit** | hoe hard deze zone een gedeelde buitenunit claimt; **lager wint**. Op één circuit mag geen nummer dubbel voorkomen |
 | **Wat bepaalt of deze zone draait** | *het huishouden* (rooster, slaap, iemand thuis) of *de ruimte zelf* (alleen de aanwezigheidssensor) |
-| **Aanwezigheidssensor + status + nalooptijd** | wanneer de kamer als bezet telt; de nalooptijd vangt knipperende melders op |
+| **Aanwezigheidssensor van deze zone** | de sensor die zegt dat de kamer bezet is |
+| **Toestand die bezet betekent** | de toestand die die sensor als bezet teruggeeft |
+| **Nog zo lang als bezet tellen (seconden)** | de marge die knipperende melders opvangt |
 | **Neerslag heft de 'zet een raam open'-regel niet op** | aan voor een ruimte zonder ramen; daar blijft de buitengrens ook bij neerslag gelden |
 | **Deze zone mag verwarmen** | uit = deze kamer wordt nooit verwarmd |
 | **Doeltemperatuur verwarmen** | het setpoint dat het apparaat krijgt als verwarmen draait — niet het startpunt |
-| **Verwarmen starten bij** | verwarmen start bij deze binnentemperatuur of lager |
+| **Begin met verwarmen bij** | verwarmen start bij deze binnentemperatuur of lager |
 | **Dode band verwarmen** | hoe ver boven het startpunt verwarmen stopt |
 | **Alleen verwarmen onder deze buitentemperatuur** | daarboven blijft verwarmen uit; leeg = geen grens |
 | **Deze zone mag koelen** | uit = deze kamer wordt nooit gekoeld |
-| **Streeftemperatuur koelen** | het setpoint dat het apparaat krijgt als koelen draait |
-| **Koelen starten bij** | koelen start bij deze binnentemperatuur of hoger |
+| **Doeltemperatuur koelen** | het setpoint dat het apparaat krijgt als koelen draait |
+| **Begin met koelen bij** | koelen start bij deze binnentemperatuur of hoger |
 | **Dode band koelen** | hoe ver onder het startpunt koelen stopt |
 | **Alleen koelen boven deze buitentemperatuur** | daaronder blijft koelen uit; leeg = geen grens |
 | **Alleen koelen in de zomer** | koppelt koelen aan het seizoen uit de algemene instellingen |
@@ -280,12 +283,12 @@ opgeslagen, kies je meteen de bronnen ervan.
 | **Naam** | een eigen naam voor deze bron; leeg = de kiezer noemt het apparaat zelf |
 | **Climate-entiteit** | het apparaat zelf |
 | **Wat dit apparaat kan** | alleen verwarmen, alleen koelen, of allebei. Een ketel is *alleen verwarmen* |
-| **Dit apparaat automatisch starten** | uit laat hem met rust, zie hieronder |
+| **Dit apparaat automatisch aanzetten** | uit laat hem met rust, zie hieronder |
 | **Volgorde binnen deze zone** | welke bron de voorkeur heeft; **lager wint** |
 | **Gebruiken vanaf deze buitentemperatuur** | de ondergrens; hoort bij het venster |
 | **Gebruiken tot deze buitentemperatuur** | de bovengrens; hoort niet bij het venster |
 | **Zones die dit apparaat mee bedient** | de kamers die dit apparaat meeverwarmt of meekoelt zodra het draait; leeg = alleen deze zone |
-| **Wachttijd voordat dit apparaat overneemt** | hoe lang een bron in dat gebied al onbereikbaar moet zijn; standaard vijf minuten, nul is meteen |
+| **Wachttijd voordat dit apparaat overneemt (minuten)** | hoe lang een bron in dat gebied al onbereikbaar moet zijn; standaard vijf minuten, nul is meteen |
 
 ### Buitengrenzen: half open
 
@@ -367,11 +370,11 @@ buitenunit, laat dit dan leeg.
 | **Binnenunits** | welke `climate.*`-entiteiten aan deze buitenunit hangen. Neem ook units mee die de director niet beheert: die claimen de compressor ook |
 | **Kan tegelijk verwarmen en koelen** | uit voor een gewone multi-split; aan voor een losse split of driepijps-VRF met warmteterugwinning |
 | **Conflictbeleid** | wie wint als twee kamers tegengestelde taken willen |
-| **Een verliezende zone mag ventileren** | aan = de verliezer gaat naar `fan_only` in plaats van uit, maar alleen als de unit die stand kent; anders gaat hij uit |
-| **Pauze bij taakwissel** | hoe lang alles uit staat vóór de omschakeling |
-| **Minimale looptijd voor een taakwissel** | hoe lang een taak minstens moet hebben gedraaid voor de andere hem mag overnemen |
-| **Rust voor een unit opnieuw mag starten** | vertraagt alleen starten, nooit stoppen; standaard 180 seconden |
-| **Maximum aantal units tegelijk** | de capaciteitsgrens van de buitenunit; leeg = geen grens |
+| **Een zone die verliest mag lucht blijven circuleren** | aan = de verliezer gaat naar `fan_only` in plaats van uit, maar alleen als de unit die stand kent; anders gaat hij uit |
+| **Pauze bij het wisselen van taak (seconden)** | hoe lang alles uit staat vóór de omschakeling |
+| **Minimale looptijd voor een taakwissel (seconden)** | hoe lang een taak minstens moet hebben gedraaid voor de andere hem mag overnemen |
+| **Rusttijd voordat een unit opnieuw mag starten (seconden)** | vertraagt alleen starten, nooit stoppen; standaard 180 seconden |
+| **Maximaal aantal units tegelijk aan** | de capaciteitsgrens van de buitenunit; leeg = geen grens |
 
 ### Conflictbeleid
 
@@ -379,14 +382,15 @@ buitenunit, laat dit dan leeg.
 |---|---|
 | **Prioriteit** (standaard) | de zone met het laagste prioriteitsnummer wint |
 | **Wie eerst was** | de taak die al draait houdt het circuit; een nieuwe aanvraag wacht |
-| **Grootste afwijking** | de grootste afwijking van het setpoint wint |
+| **Vraag** | de grootste afwijking van het setpoint wint |
 | **Seizoen** | het seizoen bepaalt de taak; alles wat de andere kant op wil staat af |
 
 ### De voorrang, vanaf het circuit
 
 Sla je een circuit op, dan kom je op **Prioriteiten op dit circuit**: de zones
 die op deze buitenunit zitten, in de volgorde waarin ze nu winnen, met hun
-nummer erachter. Kies er een om zijn voorrang te wijzigen.
+nummer erachter. Kies er een om zijn voorrang te wijzigen. Het veld heet
+**Voorrang op dit circuit**.
 
 Dat is **hetzelfde veld** als *Voorrang op een gedeelde buitenunit* op het
 zonescherm — twee ingangen, één instelling, dus de twee kunnen het nooit
@@ -404,7 +408,7 @@ vraagt.
 | **Naam** | een label om warmtebronnen uit elkaar te houden |
 | **Climate-entiteit** | de ketel of warmtepomp zelf; mag niet óók een bron van een zone zijn, anders krijgt hij twee opdrachten |
 | **Zones die hij bedient** | leeg = alle kamers |
-| **Vaste streeftemperatuur** | leeg = hij volgt het warmste doel van de kamers die vragen |
+| **Vaste doeltemperatuur** | leeg = hij volgt het warmste doel van de kamers die vragen |
 
 De warmtebron draait zolang een kamer die hij bedient verwarmd wordt, en stopt
 zodra er geen meer is.
@@ -416,7 +420,9 @@ warmtepomp bijvoorbeeld — vertrouw dat dan niet op de buitengrenzen alleen. E�
 achtergebleven waarde is genoeg om ze samen te laten aanslaan. Zet ze daarom in
 een exclusieve groep: van de apparaten in één groep draait er altijd maar één.
 
-Let op wat een groep betekent: **één** apparaat uit de groep tegelijk. Wil je
+Een **Groep** is de naam die je zo'n groep geeft, en **Apparaten in deze groep**
+somt de apparaten op die erin zitten. Let op wat dat betekent: **één** apparaat
+uit de groep tegelijk. Wil je
 dat de gasketel geen enkele airco in de weg zit, maar dat twee airco's op
 hetzelfde circuit wél samen mogen koelen, maak dan één groep per paar — gas met
 de ene airco, gas met de andere.
@@ -447,7 +453,7 @@ Vensters mogen over middernacht lopen en kennen weekdagen. Een huishouden dat
 doordeweeks om negen uur naar bed gaat en in het weekend om elf uur, zet er
 twee:
 
-| Van | Tot | Dagen |
+| Stilte vanaf | Stilte tot | Dagen waarop dit geldt |
 |---|---|---|
 | 21:00 | 09:00 | ma di wo do zo |
 | 23:00 | 09:00 | vr za |
@@ -470,8 +476,9 @@ tegenhouden.
 | **Naam** | een label om bewoners uit elkaar te houden |
 | **Aanwezigheidssensor** | meestal een `person.*`; zegt of deze bewoner thuis is |
 | **Slaapsensor** | wanneer deze bewoner slaapt; leeg = slaap wordt niet bijgehouden |
-| **Status die slapen betekent** | de stand die de slaapsensor meldt bij slapen |
-| **Slaapsensor telt vanaf / tot** | de uren waarin die sensor iets betekent; beide leeg = de klok rond |
+| **Toestand die slapen betekent** | de stand die de slaapsensor meldt bij slapen |
+| **Slaapsensor telt vanaf** | het begin van de uren waarin die sensor iets betekent; beide leeg = de klok rond |
+| **Slaapsensor telt tot** | het einde van die uren; beide leeg = de klok rond |
 | **Dagen van het slaapvenster** | op welke dagen dat venster geldt; leeg = elke dag |
 | **Uitslapen tot** | tot hoe laat de slaapsensor 's ochtends nog telt; leeg = het slaapvenster is het hele verhaal |
 | **Ochtenden waarop je uitslaapt** | de ochtenden zelf, niet de avonden ervoor; leeg = elke dag |
@@ -535,9 +542,9 @@ niet deze tijd, en het huis begint dus pas wanneer de eerste werkelijk opstaat.
 **Een vakantiedag telt hier niet vanzelf als zaterdag**, anders dan bij de
 roosters. De vakantie van de één is namelijk de werkdag van de ander: telde een
 schoolvakantie als zaterdag, dan hield de uitslaper het huis op terwijl de ander
-thuis zat te werken. De dagen betekenen hier dus letterlijk wat er staat. Wie
-ook op een vrije doordeweekse dag gewacht wil worden, vinkt *Ook op
-vakantiedagen op deze slaper wachten* aan; dan geldt de tijd op elke
+thuis zat te werken. De dagen betekenen hier dus letterlijk wat er staat. Wil
+je dat er ook op een vrije doordeweekse dag op je gewacht wordt, vink dan *Ook
+op vakantiedagen op deze slaper wachten* aan; dan geldt de tijd op elke
 vakantiedag, ongeacht de weekdag. Een vakantie-zaterdag blijft hoe dan ook een
 zaterdag.
 
@@ -552,7 +559,8 @@ Na het opslaan van een bewoner stel je zijn roosters in:
 | Instelling | Wat het doet |
 |---|---|
 | **Dit is een vakantievenster** | geldt alleen tijdens het vakantieschema en vervangt dan de gewone vensters |
-| **Van / Tot** | het venster; mag over middernacht lopen |
+| **Van** | het begin van het venster; mag over middernacht lopen |
+| **Tot** | het einde van het venster |
 | **Dagen** | leeg = elke dag |
 
 Een bewoner zonder rooster doet niet mee aan de roosterpoort. Wie op een dag
@@ -577,8 +585,8 @@ Een opening die lang genoeg openstaat, zet de gekoppelde zones stil.
 | **Naam** | een label om openingen uit elkaar te houden |
 | **Sensor** | het deur-, raam- of dakraamcontact; een `binary_sensor.*`, `cover.*` of `sensor.*` |
 | **Toestand die 'open' betekent** | voor een raamcontact meestal `on`, voor een dakraam of rolluik `open`; standaard `on` |
-| **Zones die het raakt** | leeg = de hele installatie |
-| **Vertraging voor het stilzetten** | leeg of 0 = meteen bij openen |
+| **Zones die dit raakt** | leeg = de hele installatie |
+| **Vertraging voordat er opgeschort wordt (seconden)** | leeg of 0 = meteen bij openen |
 
 Kies je `open` als openstand, dan tellen ook `opening` en `closing` als open:
 een rolluik dat onderweg is staat niet dicht.
@@ -607,7 +615,18 @@ niets gebeurt. Twee dingen blijven zoals ze altijd waren: een zone met een
 override en een handbediende bron worden niet aangestuurd, ook niet door deze
 lijst.
 
-Elke opening heeft een eigen id dat onzichtbaar in de opslag staat, en daar hangt de overbruggingsschakelaar aan (`switch.*_overbrugging_<opening>`), zodat die blijft bestaan als je de sensor vervangt; de **Naam** is alleen het label dat je zelf ziet. Had een opening nog geen eigen id, dan is dat id de sensor en heet de schakelaar naar de naam die de sensor zelf toont — verschijnt die pas later of hernoem je hem, dan volgt de schakelaarnaam zonder herladen. Aan = de director doet alsof deze opening er niet is — zijn eigen zones en de huisbrede stop negeren hem allebei. Er is geen looptijd: hij blijft aan tot je hem zelf uitzet. Staat hij aan terwijl de opening werkelijk openstaat, dan meldt de director dat onder *Reparaties*.
+Elke opening heeft een eigen id dat onzichtbaar in de opslag staat, en daar
+hangt de overbruggingsschakelaar aan. Dat id blijft bestaan als je de sensor
+vervangt; de **Naam** is alleen het label dat je zelf ziet. Had een opening nog
+geen eigen id, dan is dat id de sensor en heet de schakelaar naar de naam die
+de sensor zelf toont — verschijnt die pas later of hernoem je hem, dan volgt de
+schakelaarnaam zonder herladen.
+
+De schakelaar heet `switch.*_overbrugging_<opening>`. Aan = de director doet
+alsof deze opening er niet is: zijn eigen zones en de huisbrede stop negeren
+hem allebei. Er is geen looptijd, hij blijft aan tot je hem zelf uitzet. Staat
+hij aan terwijl de opening werkelijk openstaat, dan meldt de director dat onder
+*Reparaties*.
 
 ## Stap 12 — Opslaan en sluiten
 
@@ -647,7 +666,7 @@ Eén device per installatie, met daaronder:
 | `number.*_prioriteit_<zone>` | de voorrang van deze zone; ook vanuit een automatisering te wijzigen |
 | `number.*_vooruitduur` | hoe lang één druk op een vooruit-knop duurt |
 | `button.*_<zone>_vooruit` | laat deze zone vooruit verwarmen of koelen |
-| `select.*_seizoen` | zet het seizoen met de hand op Automatisch, Zomer of Winter |
+| `select.*_seizoen` | zet het seizoen met de hand op Automatisch, Zomer of Winter; de keuze overleeft een herstart |
 
 De namen van deze entiteiten worden vertaald, en Home Assistant leidt de
 entiteit-ID van de naam af. Staat je Home Assistant in een andere taal, dan
@@ -685,7 +704,10 @@ grijpt hij toch in zodra een tijdsgrens verstrijkt.
   zone dagenlang aan je eigen automatiseringen te laten. Een apparaat dat je
   bij het apparaat zélf uitzet vervalt wél bij bedtijd of een leeg huis; dat
   staat hieronder.
-- **Overbrugging** (`switch.*_overbrugging_<opening>`): aan = deze opening bestaat niet voor de director. Hij blijft aan tot je hem zelf uitzet; staat hij aan terwijl de opening werkelijk openstaat, dan meldt de director dat onder *Reparaties*.
+- **Overbrugging** (`switch.*_overbrugging_<opening>`): aan = deze opening
+  bestaat niet voor de director. Hij blijft aan tot je hem zelf uitzet; staat
+  hij aan terwijl de opening werkelijk openstaat, dan meldt de director dat
+  onder *Reparaties*.
 - **Vooruit-knop** (`button.*_<zone>_vooruit`) en **vooruitduur**
   (`number.*_vooruitduur`): zie hieronder.
 
@@ -726,7 +748,7 @@ apparaat. Ligt de kamer al goed, dan blijft het apparaat uit.
 
 Bij een vooruit-verzoek blijven de hoofdschakelaar, een override, de dode band,
 het seizoen, de buitengrens per bron, ramen en deuren, het circuit en de
-uitsluitende groepen gewoon gelden. Overgeslagen worden: *iemand thuis*,
+exclusieve groepen gewoon gelden. Overgeslagen worden: *iemand thuis*,
 *wakker*, *rooster*, *aanwezigheid in de ruimte*, de buitengrens per zone en
 het stiltevenster.
 
@@ -1000,15 +1022,34 @@ het filterwoord en `reason_text` is diezelfde reden als gewone zin.
 
 Onder **Reparaties** kun je deze meldingen tegenkomen, met wat ze betekenen en wat je eraan doet:
 
-- **Climate Director: <count> opening(en) van <name> zijn overbrugd terwijl ze openstaan** — je hebt een opening overbrugd terwijl hij echt openstaat; sluit de opening of zet de overbrugging uit.
-- **Climate Director: <count> apparaat/apparaten van <name> voeren hun commando niet uit** — een apparaat neemt de aanroep aan maar verandert niet; kijk of het bereikbaar is en of iets anders het terugzet.
-- **Climate Director: <name> moest zijn bewaarde toestand opzij zetten** — het opslagbestand was onleesbaar en is hernoemd; verzoeken en handmatige uitzettingen van vóór de herstart zijn weg, zet het bestand terug uit een back-up als je ze nodig hebt.
-- **Climate Director: <name> heeft een configuratieprobleem** — de installatie klopt structureel niet; de zones die wel kloppen worden gewoon geregeld, loop de configuratie na.
-- **Climate Director: <name> heeft handbediende taken** — een zone heeft alleen bronnen die niet vanzelf starten; zet *Automatisch starten* aan of bevestig de melding.
-- **Niemand hoort een geweigerd vooruit-verzoek** — er is geen automatisering op het weigerings-event; importeer de blueprint *Geweigerd vooruit-verzoek* (`precondition_refused.yaml`) en maak er een automatisering van.
-- **Climate Director: <name> zet een seizoen dat <count> taak/taken buitensluit** — het seizoen staat op een seizoen waarin een ingestelde taak nooit mag draaien; zet het seizoen of de taak bij.
-- **Climate Director: <name> kan <count> entiteit(en) niet lezen** — een ingestelde entiteit bestaat niet, is weg of levert geen getal; corrigeer de entiteit of breng de sensor terug.
-- **Climate Director: <name> vraagt een stand die <count> apparaat/apparaten niet kunnen draaien** — een rol vraagt een stand die het apparaat niet meldt; pas de rol aan of kies een ander apparaat.
+- **Climate Director: <count> opening(en) van <name> zijn overbrugd terwijl ze openstaan**
+  — je hebt een opening overbrugd terwijl hij echt openstaat; sluit de opening of
+  zet de overbrugging uit.
+- **Climate Director: <count> apparaat/apparaten van <name> voeren hun commando niet uit**
+  — een apparaat neemt de aanroep aan maar verandert niet; kijk of het bereikbaar
+  is en of iets anders het terugzet.
+- **Climate Director: <name> moest zijn bewaarde toestand opzij zetten** — het
+  opslagbestand was onleesbaar en is hernoemd; verzoeken en handmatige
+  uitzettingen van vóór de herstart zijn weg, zet het bestand terug uit een
+  back-up als je ze nodig hebt.
+- **Climate Director: <name> heeft een configuratieprobleem** — de installatie
+  klopt structureel niet; de zones die wel kloppen worden gewoon geregeld, loop
+  de configuratie na.
+- **Climate Director: <name> heeft handbediende taken** — een zone heeft alleen
+  bronnen die niet vanzelf starten; zet *Automatisch starten* aan of bevestig de
+  melding.
+- **Niemand hoort een geweigerd vooruit-verzoek** — er is geen automatisering op
+  het weigerings-event; importeer de blueprint *Geweigerd vooruit-verzoek*
+  (`precondition_refused.yaml`) en maak er een automatisering van.
+- **Climate Director: <name> zet een seizoen dat <count> taak/taken buitensluit**
+  — het seizoen staat op een seizoen waarin een ingestelde taak nooit mag
+  draaien; zet het seizoen of de taak bij.
+- **Climate Director: <name> kan <count> entiteit(en) niet lezen** — een
+  ingestelde entiteit bestaat niet, is weg of levert geen getal; corrigeer de
+  entiteit of breng de sensor terug.
+- **Climate Director: <name> vraagt een stand die <count> apparaat/apparaten niet kunnen draaien**
+  — een rol vraagt een stand die het apparaat niet meldt; pas de rol aan of kies
+  een ander apparaat.
 
 ## Bekende beperkingen
 
@@ -1016,8 +1057,10 @@ Onder **Reparaties** kun je deze meldingen tegenkomen, met wat ze betekenen en w
   weken te laten meekijken voordat hij iets mag schakelen. Beoordeel elke ronde
   aan de hand van de schaduwrun: wat in het ene huis bewezen is, is dat in het
   jouwe nog niet.
-- Een apparaat **zonder circuit** kan een eigen rusttijd hebben (`min_cycle_time` per bron). Die wordt niet vanzelf ingevuld: stel hem
-  met de hand in bij elke bron zonder circuit.
+- Een apparaat **zonder circuit** kan een eigen rusttijd hebben: het veld
+  **Rusttijd voordat dit apparaat opnieuw mag starten (seconden)**
+  (`min_cycle_time` per bron). Die wordt niet vanzelf ingevuld: stel hem met de
+  hand in bij elke bron zonder circuit.
 - Eén binnensensor per zone: de hele zone volgt die ene meting.
 - Droogstand is geen eigen taak van de director.
 - Neerslag telt als ja/nee: er is geen drempelwaarde.
@@ -1040,44 +1083,17 @@ elkaar omdat de tekst hierboven ze niet allemaal letterlijk noemt.
 | Woord | Scherm |
 |---|---|
 | Dit circuit verwijderen | Airco-circuit |
-| Een zone die verliest mag lucht blijven circuleren | Airco-circuit |
-| Maximaal aantal units tegelijk aan | Airco-circuit |
-| Minimale looptijd voor een taakwissel (seconden) | Airco-circuit |
-| Pauze bij het wisselen van taak (seconden) | Airco-circuit |
-| Rusttijd voordat een unit opnieuw mag starten (seconden) | Airco-circuit |
-| Voorrang op dit circuit | Prioriteit voor {zone} |
 | Circuit | Airco-circuits |
-| Apparaten in deze groep | Exclusieve groep |
 | Deze groep verwijderen | Exclusieve groep |
-| Groep | Exclusieve groepen |
 | Deze warmtebron verwijderen | Gedeelde warmtebron |
-| Vaste doeltemperatuur | Gedeelde warmtebron |
 | Warmtebron | Gedeelde warmtebronnen |
 | Deze opening verwijderen | Opening |
-| Vertraging voordat er opgeschort wordt (seconden) | Opening |
-| Zones die dit raakt | Opening |
 | Opening | Deuren en ramen |
-| Dagen waarop dit geldt | Stiltevenster |
 | Dit venster verwijderen | Stiltevenster |
-| Stilte tot | Stiltevenster |
-| Stilte vanaf | Stiltevenster |
 | Deze bewoner verwijderen | Bewoner |
-| Slaapsensor telt tot | Bewoner |
-| Toestand die slapen betekent | Bewoner |
-| Gastenmodus tot | Algemene instellingen |
-| Iemand die thuis is moet wakker zijn | Algemene instellingen |
-| Zone geldt als vastgelopen na (minuten) | Algemene instellingen |
 | Deze bron verwijderen | Bron |
-| Rusttijd voordat dit apparaat opnieuw mag starten (seconden) | Bron |
-| Wachttijd voordat dit apparaat overneemt (minuten) | Bron |
 | Dit rooster verwijderen | Rooster |
-| Aanwezigheidssensor van deze zone | Zone |
-| Begin met koelen bij | Zone |
-| Begin met verwarmen bij | Zone |
 | Deze zone verwijderen | Zone |
-| Doeltemperatuur koelen | Zone |
-| Nog zo lang als bezet tellen (seconden) | Zone |
-| Toestand die bezet betekent | Zone |
 
 ## Talen
 
