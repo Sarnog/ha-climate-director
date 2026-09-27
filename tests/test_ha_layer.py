@@ -249,6 +249,9 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
         _friendly = ClimateDirectorCoordinator._friendly
         _open_openings = ClimateDirectorCoordinator._open_openings
 
+        def _async_save_state(self) -> None:
+            pass
+
     return StandIn()
 
 

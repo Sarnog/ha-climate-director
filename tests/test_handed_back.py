@@ -18,6 +18,7 @@ next day - since last night's decision should not still hold this morning.
 from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
+from types import SimpleNamespace
 
 import pytest
 from homeassistant.util import dt as dt_util
@@ -905,6 +906,17 @@ class TestItSurvivesARestart:
                 self._precondition_bypass: set[str] = set()
                 self._handed_back: dict[str, date] = {}
                 self._store = FakeStore()
+                # Wat het herstel van het thuiskomstmoment en de foutmeldingen
+                # aanraken: een installatie zonder bewoners, geen toestanden en een
+                # naam. Zonder bewoners komt er geen moment terug.
+                #
+                # What restoring the homecoming moment and the error logs touch: an
+                # installation without residents, no states and a name. Without
+                # residents no moment comes back.
+                self._home_since: dict[str, datetime] = {}
+                self.config = config()
+                self.hass = SimpleNamespace(states={})
+                self.name = "Climate Director"
 
             def _preconditions_expire_at(self, until) -> None:
                 pass
