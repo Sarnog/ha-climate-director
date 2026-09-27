@@ -165,15 +165,15 @@ what you typed is then thrown away. And **nothing** is stored until you pick
 | **Season source** | where the season comes from: the month, an entity, or pinned to summer/winter |
 | **Season entity** | only needed when the source is set to *entity*; the built-in `season.*` entity can be picked too |
 | **Hemisphere** | which months count as summer when the season comes from the month: northern April–September, southern October–March |
-| **Season choice** | the `select.*` entity *Season* sets the season by hand to Automatic, Summer or Winter; the choice survives a restart |
 | **Somebody home must be awake** | on = the house waits for somebody home *and* awake; off = sleep does not count |
 | **A resident's schedule must be open** | on = the house waits for the first schedule window; off = presence alone decides |
 | **Holiday calendars** | which calendars may announce a holiday; several allowed |
 | **Word that marks a holiday** | the keyword an event must carry; empty = calendars are ignored |
-| **Pre-conditioning duration** | the ceiling on a single request; default 120 minutes |
-| **Guest mode from / until** | the window in which guest mode applies; both empty = all day |
-| **Days of guest mode** | on which weekdays that window applies; empty = every day |
-| **Report a zone stuck after** | after how many minutes of waiting a zone counts as stuck; 0 switches the sensor off |
+| **Maximum pre-conditioning time (minutes)** | the ceiling on a single request; default 120 minutes |
+| **Guest mode from** | the start of the window in which guest mode applies; both empty = all day |
+| **Guest mode until** | the end of that window; both empty = all day |
+| **Guest mode days** | on which weekdays that window applies; empty = every day |
+| **Report a zone stuck after (minutes)** | after how many minutes of waiting a zone counts as stuck; 0 switches the sensor off |
 | **Precipitation source** | a `weather.*` or `sensor.*` entity that says whether precipitation falls; empty = the precipitation rule does not take part |
 | **States that count as precipitation** | which states of that entity mean precipitation; rain, snow and hail by default |
 | **How long precipitation keeps counting (minutes)** | grace period after the precipitation stops; 15 minutes by default |
@@ -201,7 +201,7 @@ bound keeps applying even while precipitation falls.
 
 | Choice | What it means | How you fill it in |
 |---|---|---|
-| **Central** | One heat source for the whole house. Switching on for one room warms the rest along with it. Think of a single smart thermostat, with or without radiator knobs. | Put the **same** thermostat as a source under every zone |
+| **Central** | One heat source for the whole house. Switching on for one room warms the rest along with this one. Think of a single smart thermostat, with or without radiator knobs. | Put the **same** thermostat as a source under every zone |
 | **Per zone** | Each part of the house can get its heat separately, through a zone valve or a heat source of its own. | Give each zone its **own** valve or appliance as a source; if there is one shared boiler, add it as a shared heat source |
 
 Smart radiator knobs alone are not zoning: the house still has one circuit and
@@ -222,7 +222,9 @@ A zone is a room. Per zone you set:
 | **Indoor temperature sensor** | what the dead band works from; a `climate.*` measuring itself will do |
 | **Precedence on a shared outdoor unit** | how strongly this zone claims a shared outdoor unit; **lower wins**. On one circuit no number may appear twice |
 | **What decides whether this zone runs** | *the household* (schedule, sleep, somebody home) or *the room itself* (only the presence sensor) |
-| **Presence sensor + state + grace period** | when the room counts as occupied; the grace period absorbs flickering detectors |
+| **Presence sensor for this zone** | the sensor that says the room is occupied |
+| **State meaning occupied** | the state that sensor reports as occupied |
+| **Keep counting as occupied for (seconds)** | the margin that absorbs flickering detectors |
 | **Precipitation does not lift the open-a-window rule** | on for a room without windows; there the outdoor bound keeps applying even while precipitation falls |
 | **This zone may heat** | off = this room is never heated |
 | **Target temperature for heating** | the setpoint handed to the appliance once heating runs — not the start point |
@@ -286,7 +288,7 @@ you pick its sources straight away.
 | **Use from this outdoor temperature** | the lower bound; included in the range |
 | **Use up to this outdoor temperature** | the upper bound; excluded from the range |
 | **Zones this appliance also serves** | the rooms it heats or cools along with this one the moment it runs; empty = this zone only |
-| **Wait this long before taking over** | how long a source in that area must already have been unreachable; five minutes by default, zero is at once |
+| **Wait this long before taking over (minutes)** | how long a source in that area must already have been unreachable; five minutes by default, zero is at once |
 
 ### Outdoor bounds: half open
 
@@ -368,9 +370,9 @@ leave this empty.
 | **Can heat and cool at the same time** | off for an ordinary multi-split; on for a single split or three-pipe VRF with heat recovery |
 | **Conflict policy** | who wins when two rooms want opposing duties |
 | **A zone that loses may circulate air** | on = the loser goes to `fan_only` instead of off, but only when the unit knows that mode; otherwise it goes off |
-| **Pause when swapping duty** | how long everything is off before the changeover |
-| **Minimum run before swapping duty** | how long a duty must have run before the other may take over |
-| **Rest before a unit may restart** | only ever delays starting, never stopping; default 180 seconds |
+| **Pause when swapping duty (seconds)** | how long everything is off before the changeover |
+| **Minimum run before swapping duty (seconds)** | how long a duty must have run before the other may take over |
+| **Rest before a unit may restart (seconds)** | only ever delays starting, never stopping; default 180 seconds |
 | **Maximum units running at once** | the capacity limit of the outdoor unit; empty = no cap |
 
 ### Conflict policies
@@ -386,7 +388,8 @@ leave this empty.
 
 Save a circuit and you land on **Priorities on this circuit**: the zones sitting
 on this outdoor unit, in the order they currently win in, with their number
-behind them. Pick one to change its precedence.
+behind them. Pick one to change its precedence. The field is called
+**Precedence on this circuit**.
 
 That is the **same field** as *Precedence on a shared outdoor unit* on the zone
 screen — two ways in, one setting, so the two can never disagree. Here you
@@ -415,7 +418,9 @@ pump, say? Do not entrust that to the outdoor bounds alone. One value left
 behind is enough to have them fire together. Put them in an exclusive group
 instead: of the appliances in one group only one ever runs.
 
-Mind what a group means: **one** appliance from the group at a time. If you want
+A **Group** is the name you give such a group, and **Appliances in this group**
+lists the appliances in it. Mind what a group means: **one** appliance from the
+group at a time. If you want
 the gas boiler to stay out of every air conditioner's way, while two air
 conditioners on the same circuit may still cool together, make one group per
 pair — gas with the one, gas with the other.
@@ -446,7 +451,7 @@ It is a brake on **starting**, not on continuing:
 Windows may cross midnight and carry weekdays. A household turning in at nine on
 weekdays and at eleven at weekends sets two:
 
-| From | Until | Days |
+| Quiet from | Quiet until | Days this applies |
 |---|---|---|
 | 21:00 | 09:00 | Mon Tue Wed Thu Sun |
 | 23:00 | 09:00 | Fri Sat |
@@ -469,7 +474,8 @@ then skipped instead of blocking everything forever.
 | **Presence sensor** | usually a `person.*`; says whether this resident is home |
 | **Sleep sensor** | when this resident is asleep; empty = sleep is not tracked |
 | **State meaning asleep** | the state the sleep sensor reports when asleep |
-| **Sleep sensor counts from / until** | the hours in which that sensor means anything; both empty = around the clock |
+| **Sleep sensor counts from** | the start of the hours in which that sensor means anything; both empty = around the clock |
+| **Sleep sensor counts until** | the end of those hours; both empty = around the clock |
 | **Sleep window days** | the days that window applies on; empty = every day |
 | **Sleeping in until** | how late the sleep sensor still counts in the morning; empty = the sleep window is the whole story |
 | **Mornings you may sleep in** | the mornings themselves, not the evenings before; empty = every day |
@@ -549,7 +555,8 @@ Once you have saved a resident, you set their schedules:
 | Setting | What it does |
 |---|---|
 | **This is a holiday window** | applies only during the holiday schedule, replacing the ordinary windows then |
-| **From / Until** | the window; may cross midnight |
+| **From** | the start of the window; may cross midnight |
+| **Until** | the end of the window |
 | **Days** | empty = every day |
 
 A resident without a schedule does not take part in the schedule gate. Somebody
@@ -575,7 +582,7 @@ An opening standing open long enough suspends the zones it affects.
 | **Sensor** | the door, window or skylight contact; a `binary_sensor.*`, `cover.*` or `sensor.*` |
 | **State that means open** | usually `on` for a window contact, `open` for a skylight or shutter; `on` by default |
 | **Zones affected** | empty = the whole installation |
-| **Delay before suspending** | empty or 0 = the moment it opens |
+| **Delay before suspending (seconds)** | empty or 0 = the moment it opens |
 
 Pick `open` as the open state and `opening` and `closing` count as open too: a
 shutter on its way is not shut.
@@ -603,7 +610,18 @@ The room then names `opening_open_elsewhere` as its reason, so you can see why
 nothing is happening. Two things stay as they always were: a zone under override
 and a hand-operated source are not steered, by this list either.
 
-Every opening has its own id, stored invisibly, and that is what the bypass switch hangs on (`switch.*_<opening>_bypass`), so it keeps existing when you replace the sensor; the **Name** is just the label you see yourself. When an opening had no id yet, that id is the sensor and the switch is named after the name that sensor itself shows — should it appear later or be renamed, the switch name follows it without a reload. On = the director pretends this opening is not there — its own zones and the house-wide stop both ignore it. There is no timer: it stays on until you turn it off yourself. While it stands on with the opening really open, the director reports it under *Repairs*.
+Every opening has its own id, stored invisibly, and that is what the bypass
+switch hangs on. That id keeps existing when you replace the sensor; the
+**Name** is just the label you see yourself. When an opening had no id yet,
+that id is the sensor and the switch is named after the name that sensor
+itself shows — should it appear later or be renamed, the switch name follows
+it without a reload.
+
+The switch is called `switch.*_<opening>_bypass`. On = the director pretends
+this opening is not there: its own zones and the house-wide stop both ignore
+it. There is no timer, it stays on until you turn it off yourself. While it
+stands on with the opening really open, the director reports it under
+*Repairs*.
 
 ## Step 12 — Save and close
 
@@ -643,7 +661,7 @@ One device per installation, holding:
 | `number.*_<zone>_priority` | this zone's precedence; settable from an automation too |
 | `number.*_pre_conditioning_duration` | how long one press of a pre-conditioning button lasts |
 | `button.*_<zone>_pre_condition` | pre-conditions this zone |
-| `select.*_season` | sets the season by hand to Automatic, Summer or Winter |
+| `select.*_season` | sets the season by hand to Automatic, Summer or Winter; the choice survives a restart |
 
 The names of these entities are translated, and Home Assistant derives the
 entity id from the name. With Home Assistant in another language they are
@@ -681,7 +699,10 @@ limit expires.
   leave a zone to automations of your own for days. Switching an appliance off
   at the appliance *itself* does lapse at bedtime or on an empty house; that is
   below.
-- **Opening bypass** (`switch.*_<opening>_bypass`): on = this opening does not exist for the director. It holds until you turn it off yourself; while it stands on with the opening really open, the director reports that under *Repairs*.
+- **Opening bypass** (`switch.*_<opening>_bypass`): on = this opening does not
+  exist for the director. It holds until you turn it off yourself; while it
+  stands on with the opening really open, the director reports that under
+  *Repairs*.
 - **Pre-conditioning button** (`button.*_<zone>_pre_condition`) and **duration**
   (`number.*_pre_conditioning_duration`): see below.
 
@@ -947,7 +968,7 @@ and `reason_text` is that same reason as an ordinary sentence.
 - **`binary_sensor.*_stuck`** comes on when a zone sits on the same waiting
   reason too long (15 minutes by default) — and only for that. A full outdoor
   unit does not count: it only frees up once another room stops asking, and that
-  may take hours. That room does stand recorded as blocked. The
+  may take hours. That room is still recorded as blocked. The
   `unusable_entities` attribute additionally lists which configured entities
   cannot be read — mistyped, deleted, or temporarily `unavailable`, and a sensor
   that reads fine but yields no number as well (`no number`). That does not
@@ -979,7 +1000,7 @@ and `reason_text` is that same reason as an ordinary sentence.
   else is putting it back — a thermostat schedule or another automation. In
   shadow mode this notice never appears: nothing is executed there on purpose.
 - **A saved state that had to be set aside** reports itself under *Repairs*
-  too. That file holds the running pre-conditioning requests and the appliances
+  too. The storage file holds the running pre-conditioning requests and the appliances
   you switched off by hand. When it turns out unreadable it is renamed and the
   director starts with an empty state: those requests and switch-offs are gone,
   the rest of your installation is not. To get them back, restore the file from
@@ -990,24 +1011,43 @@ and `reason_text` is that same reason as an ordinary sentence.
 
 Under **Repairs** you may run into these notices, with what they mean and what to do:
 
-- **Climate Director: <count> opening(s) of <name> are bypassed while open** — you bypassed an opening while it really stands open; close the opening or switch the bypass off.
-- **Climate Director: <count> appliance(s) of <name> do not carry out their command** — an appliance accepts the call but does not change; check that it is reachable and that nothing else puts it back.
-- **Climate Director: <name> had to set its saved state aside** — the state file was unreadable and has been renamed; requests and hand-backs from before the restart are gone, so restore the file from a backup if you need them.
-- **Climate Director: <name> has a configuration problem** — the installation is structurally wrong; the zones that are fine are still regulated, so check the configuration.
-- **Climate Director: <name> has hand-operated duties** — a zone only has sources that never start by themselves; switch *Automatic start* on or confirm the notice.
-- **Nobody hears a refused pre-conditioning request** — no automation listens for the refusal event; import the *Refused pre-conditioning* blueprint (`precondition_refused.yaml`) and build an automation from it.
-- **Climate Director: <name> sets a season that locks <count> duty/duties out** — the season is set to one in which an installed duty can never run; change the season or the duty.
-- **Climate Director: <name> cannot read <count> entity(ies)** — a configured entity does not exist, is gone or produces no number; correct the entity or bring the sensor back.
-- **Climate Director: <name> asks for a mode that <count> appliance(s) cannot run** — a role asks for a mode the appliance does not report; change the role or pick another appliance.
+- **Climate Director: <count> opening(s) of <name> are bypassed while open**
+  — you bypassed an opening while it really stands open; close the opening or
+  switch the bypass off.
+- **Climate Director: <count> appliance(s) of <name> do not carry out their command**
+  — an appliance accepts the call but does not change; check that it is
+  reachable and that nothing else puts it back.
+- **Climate Director: <name> had to set its saved state aside** — the state
+  file was unreadable and has been renamed; requests and hand-backs from before
+  the restart are gone, so restore the file from a backup if you need them.
+- **Climate Director: <name> has a configuration problem** — the installation
+  is structurally wrong; the zones that are fine are still regulated, so check
+  the configuration.
+- **Climate Director: <name> has hand-operated duties** — a zone only has
+  sources that never start by themselves; switch *Automatic start* on or
+  confirm the notice.
+- **Nobody hears a refused pre-conditioning request** — no automation listens
+  for the refusal event; import the *Refused pre-conditioning* blueprint
+  (`precondition_refused.yaml`) and build an automation from it.
+- **Climate Director: <name> sets a season that locks <count> duty/duties out**
+  — the season is set to one in which an installed duty can never run; change
+  the season or the duty.
+- **Climate Director: <name> cannot read <count> entity(ies)** — a configured
+  entity does not exist, is gone or produces no number; correct the entity or
+  bring the sensor back.
+- **Climate Director: <name> asks for a mode that <count> appliance(s) cannot run**
+  — a role asks for a mode the appliance does not report; change the role or
+  pick another appliance.
 
 ## Known limitations
 
 - Shadow mode exists to let the director watch along on your installation
   for a few weeks first, before it may switch anything. Judge every round by
   the shadow run: what is proven in one house is not yet proven in yours.
-- An appliance **without a circuit** can have its own rest time
-  (`min_cycle_time` per source). It is not filled in automatically: set it by
-  hand on every source without a circuit.
+- An appliance **without a circuit** can have its own rest time: the field
+  **Rest before this appliance may restart (seconds)** (`min_cycle_time` per
+  source). It is not filled in automatically: set it by hand on every source
+  without a circuit.
 - One indoor sensor per zone: the whole zone follows that single reading.
 - Dry (dehumidifying) is not a task of its own for the director.
 - Precipitation counts as yes/no: there is no threshold.
@@ -1030,36 +1070,16 @@ because the text above does not name all of them literally.
 | Word | Screen |
 |---|---|
 | Delete this circuit | Air conditioning circuit |
-| Minimum run before swapping duty (seconds) | Air conditioning circuit |
-| Pause when swapping duty (seconds) | Air conditioning circuit |
-| Rest before a unit may restart (seconds) | Air conditioning circuit |
-| Precedence on this circuit | Priority for {zone} |
 | Circuit | Air conditioning circuits |
-| Appliances in this group | Exclusive group |
 | Delete this group | Exclusive group |
-| Group | Exclusive groups |
 | Delete this heat source | Shared heat source |
 | Heat source | Shared heat sources |
-| Delay before suspending (seconds) | Opening |
 | Delete this opening | Opening |
-| Days this applies | Quiet window |
 | Delete this window | Quiet window |
-| Quiet from | Quiet window |
-| Quiet until | Quiet window |
 | Delete this resident | Resident |
-| Sleep sensor counts until | Resident |
-| Guest mode days | General settings |
-| Guest mode until | General settings |
-| Maximum pre-conditioning time (minutes) | General settings |
-| Report a zone stuck after (minutes) | General settings |
 | Delete this source | Source |
-| Rest before this appliance may restart (seconds) | Source |
-| Wait this long before taking over (minutes) | Source |
 | Delete this schedule | Schedule |
 | Delete this zone | Zone |
-| Keep counting as occupied for (seconds) | Zone |
-| Presence sensor for this zone | Zone |
-| State meaning occupied | Zone |
 
 ## Languages
 

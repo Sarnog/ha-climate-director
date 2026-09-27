@@ -105,40 +105,16 @@ GLOSSARY: dict[str, str] = {
 EXCEPTIONS: dict[str, dict[str, str]] = {
     "en": {
         "options.step.circuit.data.delete": ("Delete this circuit"),
-        "options.step.circuit.data.family_switch_delay": ("Pause when swapping duty (seconds)"),
-        "options.step.circuit.data.min_cycle_time": ("Rest before a unit may restart (seconds)"),
-        "options.step.circuit.data.min_family_switch_interval": (
-            "Minimum run before swapping duty (seconds)"
-        ),
-        "options.step.circuit_priority.data.priority": ("Precedence on this circuit"),
         "options.step.circuits.data.circuit": ("Circuit"),
         "options.step.exclusive.data.delete": ("Delete this group"),
-        "options.step.exclusive.data.sources": ("Appliances in this group"),
-        "options.step.exclusives.data.group": ("Group"),
         "options.step.generator.data.delete": ("Delete this heat source"),
         "options.step.generators.data.generator": ("Heat source"),
-        "options.step.opening.data.delay": ("Delay before suspending (seconds)"),
         "options.step.opening.data.delete": ("Delete this opening"),
         "options.step.quiet.data.delete": ("Delete this window"),
-        "options.step.quiet.data.end": ("Quiet until"),
-        "options.step.quiet.data.start": ("Quiet from"),
-        "options.step.quiet.data.weekdays": ("Days this applies"),
         "options.step.resident.data.delete": ("Delete this resident"),
-        "options.step.resident.data.sleep_until": ("Sleep sensor counts until"),
-        "options.step.settings.data.guest_days": ("Guest mode days"),
-        "options.step.settings.data.guest_end": ("Guest mode until"),
-        "options.step.settings.data.max_precondition": ("Maximum pre-conditioning time (minutes)"),
-        "options.step.settings.data.stuck_after": ("Report a zone stuck after (minutes)"),
         "options.step.source.data.delete": ("Delete this source"),
-        "options.step.source.data.min_cycle_time": (
-            "Rest before this appliance may restart (seconds)"
-        ),
-        "options.step.source.data.takeover_delay": ("Wait this long before taking over (minutes)"),
         "options.step.window.data.delete": ("Delete this schedule"),
         "options.step.zone.data.delete": ("Delete this zone"),
-        "options.step.zone.data.presence_entity": ("Presence sensor for this zone"),
-        "options.step.zone.data.presence_state": ("State meaning occupied"),
-        "options.step.zone.data.presence_timeout": ("Keep counting as occupied for (seconds)"),
     },
     "nl": {
         "options.step.circuit.data.delete": ("Dit circuit verwijderen"),

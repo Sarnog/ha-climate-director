@@ -71,11 +71,11 @@
           "heating_layout": "Central: one heat source for the whole house, which cannot warm one room without warming the rest — a single thermostat, with or without radiator knobs. Per zone: each part of the house can get its heat separately, through a zone valve or a heat source of its own. Radiator knobs alone are not zoning. This changes nothing about who may run; it lets the check warn you when your setup does not match.",
           "require_awake": "Somebody home but asleep does not count. Which entity says they are asleep is set per resident.",
           "holiday_calendars": "A running event on one of these calendars puts the house on holiday. Leave empty to use only the holiday switch.",
-          "holiday_keyword": "Only events carrying this word count, for example 'holiday'. Spelling and capitals do not matter, and the word counts inside a longer one too, so 'Summer holiday' and 'holidays' both match. Leave it empty and the calendars are ignored entirely, leaving holiday schedule to the switch alone.",
+          "holiday_keyword": "Only events carrying this word count, for example 'holiday'. Spelling and capitals do not matter, and the word counts inside a longer one too, so 'Summer holiday' and 'holidays' both match. Leave it empty and the calendars are ignored entirely, leaving the holiday schedule to the switch alone.",
           "guest_start": "Guest mode only carries the house between these times. Leave both empty to let it apply all day. Outside them the ordinary gates take over, so a switch nobody remembered to turn off does not run all night.",
           "guest_end": "Guest mode only carries the house between these times. Leave both empty to let it apply all day. Outside them the ordinary gates take over, so a switch nobody remembered to turn off does not run all night.",
           "max_precondition": "A request cannot be forgotten, only mistyped, so this ceiling is what keeps a slip of the thumb from heating an empty house all afternoon. Asking for longer shortens the request rather than refusing it.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
           "stuck_after": "A pause when switching duty should last seconds. A zone still sitting on one after this long is no longer waiting but stuck, which from the outside looks exactly like doing nothing. Keep it comfortably above your longest pause; a false alarm teaches you to ignore the alarm. Zero switches the sensor off.",
           "precipitation_source": "A weather entity or precipitation sensor. While it reports one of the states below, the per-zone open-a-window bound is skipped. Leave empty to keep the ordinary rule always.",
           "precipitation_states": "Comma-separated. For a weather entity these are its conditions; for a sensor its states. The default covers rain, snow and hail.",
@@ -92,7 +92,7 @@
         },
         "data_description": {
           "zone": "Pick one to change it, or add a new one.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "zone": {
@@ -142,7 +142,7 @@
           "cool_outdoor_min": "Below this outdoor temperature cooling stays off. Leave empty for no limit.",
           "cool_summer_only": "Ties cooling to the season set under General settings.",
           "gate": "'household' follows the schedule, sleep and somebody being home; a presence sensor then narrows it further. 'presence' lets the room decide on its own, so an occupied room overrules the schedule - which is what a room used now and then needs. Choosing it requires a presence sensor.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "sources": {
@@ -154,7 +154,7 @@
         },
         "data_description": {
           "source": "Pick one to change it, or add a new one.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "source": {
@@ -183,7 +183,7 @@
           "role": "Whether this appliance can heat, cool, or both. A boiler is heating only.",
           "delete": "Removes the source from this zone. The appliance itself is left alone.",
           "autostart": "Off leaves it alone: the director never switches it on, and switches it off only when it runs a duty the shared outdoor unit cannot allow. For an appliance you switch on yourself and want left as you left it.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
           "min_cycle_time": "Only ever delays starting, never stopping. Applies only when the appliance sits on no circuit; on a circuit the circuit's rest counts. Leave empty for no own rest.",
           "covers_zones": "The rooms this appliance heats or cools along with this one the moment it runs. Empty means this zone only. If a source in that area becomes unreachable, this appliance takes over the duty and nothing else in that whole area heats or cools. The same appliance under several rooms shares one area, so filling it in once is enough.",
           "takeover_delay": "How long a source in the area must already have been unreachable before this appliance takes over. Counted from the moment it became unreachable, so a flapping integration does not fire the burner every few minutes. Zero takes over at once, and so does a moment nobody can read."
@@ -198,7 +198,7 @@
         },
         "data_description": {
           "circuit": "Pick one to change it, or add a new one.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "circuit": {
@@ -228,7 +228,7 @@
           "min_family_switch_interval": "Stops one zone dragging the compressor back and forth between heating and cooling.",
           "max_concurrent_units": "For an outdoor unit that cannot carry all its indoor units at once. Leave empty for no cap.",
           "delete": "Removes the circuit. The units keep working; they simply stop being tied to one another.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "circuit_priorities": {
@@ -240,7 +240,7 @@
         },
         "data_description": {
           "zone": "Pick one to change its priority, or go back.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "circuit_priority": {
@@ -251,7 +251,7 @@
         },
         "data_description": {
           "priority": "The lowest number wins the circuit. Zones sharing a number are separated by their name.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "generators": {
@@ -263,7 +263,7 @@
         },
         "data_description": {
           "generator": "Pick one to change it, or add a new one.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "generator": {
@@ -283,7 +283,7 @@
           "zone_ids": "Leave empty for every room.",
           "setpoint": "Leave empty to follow the warmest target among the rooms asking. Taking the coldest would leave the room asking hardest short.",
           "delete": "Removes the heat source; the valves keep working on their own.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "residents": {
@@ -295,7 +295,7 @@
         },
         "data_description": {
           "resident": "Pick one to change it, or add a new one.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "resident": {
@@ -323,7 +323,7 @@
           "name": "A label, to tell residents apart.",
           "presence_entity": "Usually a person entity. Says whether this resident is home.",
           "delete": "Removes the resident along with their schedules.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
           "sleep_from": "A phone on the charger at three in the afternoon does not mean somebody is turning in. Between these times the sleep sensor counts; outside them a charger is just a charger. Leave both empty to have it count around the clock.",
           "sleep_until": "A phone on the charger at three in the afternoon does not mean somebody is turning in. Between these times the sleep sensor counts; outside them a charger is just a charger. Leave both empty to have it count around the clock.",
           "sleep_days": "Leave empty for every day. A window running past midnight is anchored on the day it starts, so a Friday 23:00-09:00 window still counts at 07:00 on Saturday.",
@@ -344,7 +344,7 @@
         },
         "data_description": {
           "window": "Pick one to change it, add one, or go back to the menu.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "window": {
@@ -363,8 +363,8 @@
           "end": "This time falls outside the window, so two windows in a row meet exactly.",
           "start": "This time falls inside the window.",
           "delete": "Removes this schedule.",
-          "holiday": "A holiday window applies only while holiday schedule is on, and then replaces the ordinary windows. Its days of the week are ignored. Without one, a holiday counts as a Saturday.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "holiday": "A holiday window applies only while the holiday schedule is on, and then replaces the ordinary windows. Its days of the week are ignored. Without one, a holiday counts as a Saturday.",
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "openings": {
@@ -377,7 +377,7 @@
         },
         "data_description": {
           "opening": "Pick one to change it, or add a new one.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
           "house_wide_openings": "These stop the moment any opening in the installation stands open, wherever it is. Meant for a boiler every zone shares: linking that opening to all zones would stop those rooms' air conditioners too, all year round. Leave empty to keep everything governed per zone. A zone under override and a hand-operated source stay untouched, as they always are."
         }
       },
@@ -398,7 +398,7 @@
           "entity_id": "The door, window or skylight contact. Which state means open is set below.",
           "open_state": "The state that counts as open. For a window contact that is usually 'on', for a skylight or shutter 'open'.",
           "delete": "Removes the opening; it stops suspending anything.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
           "name": "A label, to tell openings apart."
         }
       },
@@ -421,7 +421,7 @@
         },
         "data_description": {
           "group": "Pick one to edit, or add one.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "exclusive": {
@@ -435,7 +435,7 @@
         "data_description": {
           "sources": "Only one of these may run at once. Fewer than two makes no group.",
           "delete": "Removes the group. The appliances keep working; they simply stop ruling each other out.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       },
       "quiets": {
@@ -464,8 +464,8 @@
           "end": "Between these times the director starts nothing by itself, except for whoever was already home when the window began. A window may cross midnight: 21:00 to 09:00 is the night.",
           "weekdays": "Leave empty for every day.",
           "delete": "Removes this window, so the director may start something during those hours again.",
-          "when_done": "Choosing to discard leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
-          "holiday": "A holiday window applies only while holiday schedule is on, and then replaces the ordinary windows. Its days of the week are ignored. Without one, a holiday counts as a Saturday."
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
+          "holiday": "A holiday window applies only while the holiday schedule is on, and then replaces the ordinary windows. Its days of the week are ignored. Without one, a holiday counts as a Saturday."
         }
       }
     },
@@ -637,7 +637,7 @@
               "waiting_for_sleeper": "somebody is still asleep; the house waits until their latest time",
               "outside_schedule": "no resident's schedule is open",
               "zone_unoccupied": "nobody is in this room",
-              "quiet_hours": "the quiet window holds back starting",
+              "quiet_hours": "the quiet window holds back the start",
               "no_indoor_temperature": "the indoor temperature cannot be read",
               "no_outdoor_temperature": "the outdoor temperature cannot be read",
               "season_blocks_mode": "this season does not allow it",
@@ -968,7 +968,7 @@
       "message": "Zone {zone} has no source for {mode}."
     },
     "source_unknown_covered_zone": {
-      "message": "Source {source} names unknown zone {zone} in the area it serves along."
+      "message": "Source {source} names unknown zone {zone} in the area it also serves."
     },
     "not_an_override_entity": {
       "message": "Entity {entity} is not an override of this integration."
@@ -1001,7 +1001,7 @@
         },
         "zone_ids": {
           "name": "Rooms",
-          "description": "Which rooms to pre-condition, by their zone id. Leave the field away for the whole house; an empty list means no rooms."
+          "description": "Which rooms to pre-condition, by their zone id. Leave the field out for the whole house; an empty list means no rooms."
         },
         "minutes": {
           "name": "Minutes",
@@ -1023,7 +1023,7 @@
         },
         "zone_ids": {
           "name": "Rooms",
-          "description": "Which rooms to call the request off for, by their zone id. Leave the field away for the whole house; an empty list cancels nothing."
+          "description": "Which rooms to call the request off for, by their zone id. Leave the field out for the whole house; an empty list cancels nothing."
         }
       }
     },
