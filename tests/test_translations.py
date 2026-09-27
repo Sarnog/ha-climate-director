@@ -16,10 +16,10 @@ here that every file carries exactly the same keys as `strings.json`.
 Dekking: de sleutels van de zeven bestanden tegen `strings.json`, de
 plaatshouders in elke waarde, de sleutel die binnen één object twee keer staat,
 de aanspreekvorm in de Duitse en de Franse gids, en de terminologielijst
-`TERMINOLOGY` die één woord per begrip eist. Die lijst dekt **vier** van de zes
-talen (`ar`, `de`, `es`, `fr`); voor `nl` en `en` staat er nog geen naald, en dat
-is de enige reden dat ze er niet in staan. Van elke taal in die lijst leest deze
-test het hele vertaalbestand én de hele gids. Niet gedekt: de schermlabels en de
+`TERMINOLOGY` die één woord per begrip eist. Die lijst dekt **alle zes** talen, met
+ruim veertig naalden; van elke taal leest deze test het hele vertaalbestand én de
+hele gids, en voor `en` ook `strings.json`, want dat is de bron die Home Assistant
+zelf leest. Niet gedekt: de schermlabels en de
 formuliervelden (`tests/test_ui_complete.py`), de sleutels zonder producent
 (`tests/test_text_producers.py`), de gidsen van `nl`, `en`, `es` en `ar` op
 aanspreekvorm, en de rest van elke gids buiten de terminologienaalden.
@@ -27,10 +27,10 @@ aanspreekvorm, en de rest van elke gids buiten de terminologienaalden.
 Coverage: the keys of the seven files against `strings.json`, the placeholders in
 every value, the key standing twice inside one object, the form of address in the
 German and French guides, and the `TERMINOLOGY` list demanding one word per
-concept. That list covers **four** of the six languages (`ar`, `de`, `es`, `fr`);
-for `nl` and `en` no needle exists yet, and that is the only reason they are not
-in it. For every language in that list this test reads the whole translation file
-and the whole guide. Not covered: the screen labels and form fields
+concept. That list covers **all six** languages, with well over forty needles; for
+every language it reads the whole translation file and the whole guide, and for
+`en` also `strings.json`, because that is the source Home Assistant itself reads.
+Not covered: the screen labels and form fields
 (`tests/test_ui_complete.py`), the keys without a producer
 (`tests/test_text_producers.py`), the guides of `nl`, `en`, `es` and `ar` for
 their form of address, and the rest of each guide outside the terminology
@@ -334,7 +334,9 @@ def test_every_language_names_the_shared_heat_source_in_unreadable_entities() ->
 
 
 #: Eén begrip, één woord. Per taal het verboden woord, het canonieke woord en de
-#: reden erbij. De lijst groeit per tekstronde; er gaat niets af zonder reden.
+#: reden erbij. De lijst groeit per tekstronde; er gaat niets af zonder reden. Hij
+#: dekt **alle zes** talen en telt ruim veertig naalden; voor het Engels wordt ook
+#: `strings.json` gelezen, want dat is de bron die Home Assistant zelf leest.
 #:
 #: Een naald is een **stam** of een **patroon**, niet een heel woord: het
 #: Arabisch plakt zijn lidwoord en zijn voorzetsels aan het woord vast (*ال*,
@@ -354,7 +356,9 @@ def test_every_language_names_the_shared_heat_source_in_unreadable_entities() ->
 #:
 #: One concept, one word. Per language the forbidden word, the canonical word and
 #: the reason alongside. The list grows per text round; nothing comes off without
-#: a reason.
+#: a reason. It covers **all six** languages and counts well over forty needles;
+#: for English it is also measured against `strings.json`, that being the source
+#: Home Assistant itself reads.
 #:
 #: A needle is a **stem** or a **pattern**, not a whole word: Arabic glues its
 #: article and its prepositions onto the word (*ال*, *لل*, *بال*, *وال*), so a
@@ -372,12 +376,143 @@ def test_every_language_names_the_shared_heat_source_in_unreadable_entities() ->
 #: *résident* and *résidents*. Without that the neighbouring spelling slips past
 #: and becomes the next round.
 TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
+    "nl": (
+        (
+            r"\bhysteresis\b",
+            "hysterese",
+            "het scherm noemt de band *Dode band* en de melding *een negatieve "
+            "{mode}-hysterese*; *hysteresis* is de Engelse vorm en staat in geen enkele "
+            "Nederlandse schermtekst",
+        ),
+        (
+            "buitendode",
+            "dode band op de buitentemperatuur",
+            "het veld heet *Dode band buitentemperatuur* en de melding zegt *de dode band op "
+            "de buitentemperatuur*; *buitendode* is een samenstelling die het scherm nergens "
+            "gebruikt",
+        ),
+        (
+            r"\buitsluitende?\b",
+            "exclusieve",
+            "het scherm noemt de groep *Exclusieve groepen* en het veld *Apparaten in deze "
+            "groep*; *uitsluitende* is een eigen woord voor hetzelfde ding",
+        ),
+        (
+            "koelcircuit",
+            "airco-circuit",
+            "het scherm noemt de stap *Airco-circuits* en de knop *+ Airco-circuit "
+            "toevoegen*; *koelcircuit* staat in geen enkele Nederlandse schermtekst",
+        ),
+    ),
+    "en": (
+        (
+            "leave the field away",
+            "leave the field out",
+            "het scherm zegt *Leave the field out for the whole house*; *away* laat de lezer "
+            "denken dat het veld weg moet in plaats van leeg te blijven",
+        ),
+        (
+            "serves along",
+            "it also serves",
+            "de melding zegt *the area it also serves*; *serves along* is geen Engels dat "
+            "het scherm gebruikt",
+        ),
+        (
+            r"along with it\b",
+            "along with this one",
+            "de gids zegt *warms the rest along with this one*, naar het apparaat van deze "
+            "bron; *it* slaat op niets terug",
+        ),
+        (
+            "while holiday schedule is on",
+            "while the holiday schedule is on",
+            "de schermtekst zegt *while the holiday schedule is on*; het lidwoord hoort erbij",
+        ),
+        (
+            "leaving holiday schedule to",
+            "leaving the holiday schedule to",
+            "idem in *leaving the holiday schedule to the switch alone*",
+        ),
+        (
+            "holds back starting",
+            "holds back the start",
+            "het optielabel zegt *the quiet window holds back the start*; *starting* is geen "
+            "zelfstandig naamwoord dat het scherm gebruikt",
+        ),
+        (
+            "asks a mode",
+            "asks for a mode",
+            "de melding zegt *asks for a mode that {count} appliance(s) cannot run*; *asks a "
+            "mode* laat het voorzetsel weg en is geen Engels dat het scherm gebruikt",
+        ),
+    ),
     "de": (
         (
             "Feiertag",
             "Urlaubstag",
             "de interface noemt een vakantiedag een *Urlaubstag*; een *Feiertag* is een "
             "feestdag en dat verschil is precies wat de uitleg bij de uiterste opsta-tijd maakt",
+        ),
+        (
+            "Kältekreis",
+            "Klimakreis",
+            "de kop en de stap heten *Klimakreise*; *Kältekreis* is een eigen woord voor "
+            "hetzelfde ding",
+        ),
+        (
+            r"\bKreislauf",
+            "Kreis",
+            "het scherm zegt *Kreis*; *Kreislauf* staat in geen enkele Duitse schermtekst",
+        ),
+        (
+            "Kreisläufe",
+            "Kreise",
+            "idem in het meervoud: de stap heet *Klimakreise* en het veld noemt *Kreise*",
+        ),
+        (
+            "Außeneinheit",
+            "Außengerät",
+            "het scherm noemt het apparaat *Außengerät*; *Außeneinheit* staat in geen enkele "
+            "Duitse schermtekst",
+        ),
+        (
+            "Gastmodus",
+            "Gästemodus",
+            "de stap heet *Gästemodus*; *Gastmodus* mist de umlaut en staat er nergens",
+        ),
+        (
+            "Gastfenster",
+            "Fenster des Gästemodus",
+            "het veld heet *Fenster des Gästemodus*; *Gastfenster* is geen schermtekst",
+        ),
+        (
+            r"\bAnfrage",
+            "Anforderung",
+            "het scherm noemt het verzoek *Anforderung*; *Anfrage* staat er nergens",
+        ),
+        (
+            r"\bWunsch",
+            "Anforderung",
+            "idem: *Wunsch* is een eigen woord voor hetzelfde ding",
+        ),
+        (
+            r"\boverrides?\b",
+            "Übersteuerung",
+            "het scherm noemt de schakelaar *Übersteuerung {zone}* en de diensten "
+            "*Übersteuerung setzen* en *Übersteuerung beenden*; *Override* is Engels en staat "
+            "in geen enkele Duitse schermtekst. De dienstnamen `set_override` en "
+            "`clear_override` blijven Engels en vallen door de woordgrens buiten deze naald",
+        ),
+        (
+            "Totband",
+            "Totzone",
+            "het scherm zegt *Totzone*; *Totband* staat in geen enkele Duitse schermtekst",
+        ),
+        (
+            "Außentotzone",
+            "Totzone der Außentemperatur",
+            "het veld heet *Totzone der Außentemperatur*; *Außentotzone* is een eigen "
+            "samenstelling",
         ),
     ),
     "fr": (
@@ -407,7 +542,7 @@ TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
             r"emplois? du temps",
             "planning",
             "het scherm noemt het rooster en de poort *Planning* (*Le planning d'un occupant "
-            "doit être ouvert*, *La porte de planning*); *emploi du temps* staat in geen "
+            "doit être ouvert*, *La barrière de planning*); *emploi du temps* staat in geen "
             "enkele Franse schermtekst, in het enkelvoud niet en in het meervoud niet",
         ),
         (
@@ -416,6 +551,52 @@ TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
             "het scherm noemt de bewoner *Occupant* (*Occupants*, *Un nom, pour distinguer les "
             "occupants*, *Supprime l'occupant ainsi que ses plannings*); *résident* staat in "
             "geen enkele Franse schermtekst, in het enkelvoud niet en in het meervoud niet",
+        ),
+        (
+            "frigorifique",
+            "de climatisation",
+            "het scherm zegt *circuit de climatisation* en *Circuits de climatisation*; "
+            "*circuit frigorifique* staat in geen enkele Franse schermtekst",
+        ),
+        (
+            r"habitants?\b",
+            "occupant",
+            "het scherm noemt de bewoner *Occupant*; *habitant* staat er nergens, in het "
+            "enkelvoud niet en in het meervoud niet",
+        ),
+        (
+            r"horaires?\b",
+            "planning",
+            "het scherm noemt het rooster *Planning*; *horaire* staat er nergens, in het "
+            "enkelvoud niet en in het meervoud niet",
+        ),
+        (
+            "zone morte",
+            "bande morte",
+            "het scherm noemt de band *Bande morte*; *zone morte* is een eigen woord voor "
+            "hetzelfde ding",
+        ),
+        (
+            "Laisser les deux vides",
+            "Laissez les deux vides",
+            "de schermtekst staat in de gebiedende wijs (*Laissez les deux vides pour qu'il "
+            "s'applique toute la journée*); de infinitief leest als een beschrijving in "
+            "plaats van een opdracht",
+        ),
+        (
+            r"\bportes? (de|du|des) ",
+            "barrière",
+            "de poort heet *barrière* (*la barrière de présence*, *de planning*, *du "
+            "sommeil*, *de silence*); *porte* blijft voor de echte deur (*une fenêtre ou une "
+            "porte est ouverte*)",
+        ),
+        (
+            r"\bfenêtres? (de sommeil|de vacances|du mode invités|de silence|silencieuse"
+            r"|extérieure|ordinaire)",
+            "plage",
+            "het tijdvenster heet *plage* (*plage de sommeil*, *plage de vacances*, *plage du "
+            "mode invités*, *plages de silence*, *plage extérieure*); *fenêtre* blijft voor "
+            "het echte raam",
         ),
     ),
     "es": (
@@ -434,6 +615,44 @@ TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
             "enkelvoud niet en in het meervoud niet. De dienstnamen `set_override` en "
             "`clear_override` blijven Engels en vallen door de woordgrens buiten deze naald",
         ),
+        (
+            r"\baperturas?\b",
+            "abertura",
+            "het scherm noemt de opening *Abertura* en de knop *+ Añadir abertura*; "
+            "*apertura* staat in geen enkele Spaanse schermtekst",
+        ),
+        (
+            "frigorífico",
+            "de climatización",
+            "het scherm zegt *circuito de climatización* en *Circuitos de climatización*; "
+            "*frigorífico* staat in geen enkele Spaanse schermtekst",
+        ),
+        (
+            r"\bpuertas? (de|del) ",
+            "barrera",
+            "de poort heet *barrera* (*la barrera de presencia*, *de horario*, *del sueño*); "
+            "*puerta* blijft voor de echte deur (*el contacto de puerta, ventana o "
+            "claraboya*)",
+        ),
+        (
+            r"\bventanas? (de sueño|de vacaciones|de invitados|de silencio|exterior|ordinaria)",
+            "franja",
+            "het tijdvenster heet *franja* (*franja de sueño*, *de vacaciones*, *de "
+            "invitados*, *de silencio*, *franja exterior*); *ventana* blijft voor het echte "
+            "raam",
+        ),
+        (
+            "titil",
+            "no conmute sin parar",
+            "het scherm zegt *no conmute sin parar por una décima de grado*; *titile* is een "
+            "eigen werkwoord voor hetzelfde verschijnsel",
+        ),
+        (
+            "anticiclado",
+            "de descanso",
+            "het scherm zegt *tiempo de descanso*; *anticiclado* is een eigen woord voor "
+            "hetzelfde ding",
+        ),
     ),
     "ar": (
         (
@@ -442,6 +661,58 @@ TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
             "het verzoek warmt niet voor maar vraagt vooruit; dezelfde taakneutrale term als "
             "het Nederlands, Duits en Frans gebruiken",
         ),
+        (
+            "المخرج",
+            "المدير",
+            "het scherm noemt de integratie *المدير*; *المخرج* is een eigen woord voor "
+            "hetzelfde ding",
+        ),
+        (
+            "دوائر التبريد",
+            "دوائر التكييف",
+            "de stap heet *دوائر التكييف*; *التبريد* hoort bij de taak koelen en niet bij het "
+            "circuit",
+        ),
+        (
+            "المنظومة",
+            "المنشأة",
+            "het scherm noemt de installatie *المنشأة*; *المنظومة* is een eigen woord voor "
+            "hetzelfde ding",
+        ),
+        (
+            "التكاملة",
+            "التكامل",
+            "het scherm schrijft *التكامل*; de vorm met de taa-marbuta is een eigen spelling",
+        ),
+        (
+            r"حس[ّ]?اس",
+            "مستشعر",
+            "het scherm noemt de sensor *مستشعر*; *حسّاس* staat in geen enkele Arabische "
+            "schermtekst, met of zonder shadda",
+        ),
+        (
+            "تثبيتك",
+            "منشأتك",
+            "het scherm zegt *منشأتك* voor jouw installatie; *تثبيتك* betekent het installeren "
+            "zelf",
+        ),
+        (
+            "المقيم",
+            "الساكن",
+            "het scherm noemt de bewoner *الساكن* (*حذف هذا الساكن*); *المقيم* is een eigen "
+            "woord voor hetzelfde ding",
+        ),
+        (
+            "لكل تثبيت",
+            "لكل منشأة",
+            "idem: *لكل منشأة* is per installatie; *لكل تثبيت* is per installatiehandeling",
+        ),
+        (
+            r"التركيب(?!ة)",
+            "المنشأة",
+            "het scherm noemt de installatie *المنشأة*; *التركيب* is een eigen woord voor "
+            "hetzelfde ding, terwijl de vorm *التركيبة* buiten deze naald blijft",
+        ),
     ),
 }
 
@@ -449,16 +720,24 @@ GUIDES = Path(__file__).parent.parent / "docs" / "install"
 
 
 def terminology_texts(language: str) -> dict[str, list[str]]:
-    """De teksten van één taal: het vertaalbestand en de gids van die taal.
+    """De teksten van één taal: het vertaalbestand, de gids en de bron van Engels.
 
-    The texts of one language: its translation file and its guide.
+    `strings.json` is voor het Engels de bron die Home Assistant zelf leest; staat
+    daar een woord dat de vertaling al kwijt is, dan leest de gebruiker het toch.
+
+    The texts of one language: its translation file, its guide and the English
+    source. For English `strings.json` is the source Home Assistant itself reads; a
+    word lost there while the translation still has it is read by the user anyway.
     """
-    return {
+    texts = {
         f"translations/{language}.json": list(
             leaves(load(TRANSLATIONS / f"{language}.json")).values()
         ),
         f"docs/install/{language}.md": [(GUIDES / f"{language}.md").read_text(encoding="utf-8")],
     }
+    if language == "en":
+        texts["strings.json"] = list(leaves(load(STRINGS)).values())
+    return texts
 
 
 @pytest.mark.parametrize("language", sorted(TERMINOLOGY))
