@@ -9,8 +9,8 @@ draad niet kwijtraakt.
 Wat hier vastligt: elke prozaregel in de zes gidsen is hoogstens 120 tekens. Niet
 meegeteld: **tabelregels** (een tabel is per definitie breed en de kolommen zijn
 de opmaak), **codeblokken** (inhoud die niet af te breken valt) en **regels met
-een URL** (een adres mag niet in tweeën). Elf tekens aan het begin van een regel is
-nergens anders mee te meten dan op de tekst zelf, dus de bewaking leest de bron.
+een URL** (een adres mag niet in tweeën). Een regelbreedte is nergens anders mee
+te meten dan op de tekst zelf, dus de bewaking leest de bron.
 Geen uitzonderingenlijst: de grens geldt voor alle zes de gidsen, en een nieuwe
 lange regel is rood met de taal, het regelnummer en de lengte erbij.
 
@@ -20,13 +20,15 @@ van de regel. Twee verschillende eigenschappen, twee docstrings; ze in één bes
 zetten zou één van de twee onwaar maken.
 
 Dekking: de zes gidsen, op regelbreedte, met tabellen, codeblokken en URL-regels
-uitgezonderd. Niet gedekt: de breedte van een tabelkolom, de opmaak binnen een
-codeblok, en of een afgebroken regel op een goede plek is afgebroken - dat leest de
-proeflezing.
+uitgezonderd. Niet gedekt: de strengere grens van 80 tekens voor de opening-id-
+alinea's van Stap 11 (dat leest de proeflezing), de breedte van een tabelkolom, de
+opmaak binnen een codeblok, en of een afgebroken regel op een goede plek is
+afgebroken.
 
 Coverage: the six guides, on line width, with tables, code blocks and URL lines
-excluded. Not covered: the width of a table column, the shape inside a code block,
-and whether a broken line broke in a good place - the proofreading reads that.
+excluded. Not covered: the stricter limit of 80 characters for the opening-id
+paragraphs of Step 11 (the proofreading reads that), the width of a table column,
+the shape inside a code block, and whether a broken line broke in a good place.
 """
 
 from __future__ import annotations

@@ -313,7 +313,8 @@ class TestTheNoticeIsUsable:
     event `climate_director_precondition_refused` letterlijk noemt; in het
     Nederlands en het Engels de uitdrukking die zegt dat de blauwdruk ook
     ingesteld moet worden, als **heel woord** (`\bstel\b` / `\bset it up\b`, zodat
-    *ingesteld* niet voldoet); en dat het anker
+    *ingesteld* niet voldoet, en zonder op de hoofdletter te letten, zodat ook een
+    zin die met *Stel* begint telt); en dat het anker
     van `problems.BLUEPRINTS_URL` werkelijk als kop in `README.md` staat. Wat hij
     **niet** dekt: of de rest van de beschrijving leesbaar is, of de andere vier
     talen dezelfde instructie geven (die worden alleen op titel en event
@@ -329,7 +330,8 @@ class TestTheNoticeIsUsable:
     `precondition_unwatched` in every language and a description that names the
     event `climate_director_precondition_refused` literally; in Dutch and English
     the wording saying the blueprint must be set up too, searched as a **whole
-    word** (`\bstel\b` / `\bset it up\b`, so *ingesteld* does not pass); and that
+    word** (`\bstel\b` / `\bset it up\b`, so *ingesteld* does not pass, and
+    regardless of capitals, so a sentence opening with *Stel* counts too); and that
     the anchor of `problems.BLUEPRINTS_URL` really stands as a heading in
     `README.md`. What it does **not** cover: whether the rest of the description
     reads well, whether the other four languages give the same instruction (they
@@ -402,7 +404,7 @@ class TestTheNoticeIsUsable:
         """Importing alone listens to nothing, and that is the trap to name."""
         wording = self.WORDING[language]
         description = self._issue(path)["description"]
-        assert re.search(wording, description), f"{path}: mist {wording}"
+        assert re.search(wording, description, re.IGNORECASE), f"{path}: mist {wording}"
 
     def test_the_link_lands_on_a_heading_that_exists(self) -> None:
         """A learn-more link into thin air is worse than no link."""

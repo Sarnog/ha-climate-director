@@ -434,6 +434,11 @@ TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
             "idem in *leaving the holiday schedule to the switch alone*",
         ),
         (
+            "switch holiday schedule",
+            "switch the holiday schedule",
+            "idem in *switch the holiday schedule on*: het lidwoord hoort erbij",
+        ),
+        (
             "holds back starting",
             "holds back the start",
             "het optielabel zegt *the quiet window holds back the start*; *starting* is geen "
@@ -584,15 +589,15 @@ TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
             "plaats van een opdracht",
         ),
         (
-            r"\bportes? (de|du|des) ",
+            r"\bportes?\s+(de|du|des)\s",
             "barrière",
             "de poort heet *barrière* (*la barrière de présence*, *de planning*, *du "
             "sommeil*, *de silence*); *porte* blijft voor de echte deur (*une fenêtre ou une "
             "porte est ouverte*)",
         ),
         (
-            r"\bfenêtres? (de sommeil|de vacances|du mode invités|de silence|silencieuse"
-            r"|extérieure|ordinaire)",
+            r"\bfenêtres?\s+(de\s+sommeil|de\s+vacances|du\s+mode\s+invités"
+            r"|de\s+silence|silencieuse|extérieure|ordinaire)",
             "plage",
             "het tijdvenster heet *plage* (*plage de sommeil*, *plage de vacances*, *plage du "
             "mode invités*, *plages de silence*, *plage extérieure*); *fenêtre* blijft voor "
@@ -628,14 +633,15 @@ TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
             "*frigorífico* staat in geen enkele Spaanse schermtekst",
         ),
         (
-            r"\bpuertas? (de|del) ",
+            r"\bpuertas?\s+(de|del)\s",
             "barrera",
             "de poort heet *barrera* (*la barrera de presencia*, *de horario*, *del sueño*); "
             "*puerta* blijft voor de echte deur (*el contacto de puerta, ventana o "
             "claraboya*)",
         ),
         (
-            r"\bventanas? (de sueño|de vacaciones|de invitados|de silencio|exterior|ordinaria)",
+            r"\bventanas?\s+(de\s+sueño|de\s+vacaciones|de\s+invitados|de\s+silencio"
+            r"|silenciosa|exterior|ordinaria)",
             "franja",
             "het tijdvenster heet *franja* (*franja de sueño*, *de vacaciones*, *de "
             "invitados*, *de silencio*, *franja exterior*); *ventana* blijft voor het echte "
@@ -699,6 +705,20 @@ TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
             "وجود",
             "het scherm noemt de sensor *مستشعر الوجود* en de melding zegt *بلا مستشعر وجود*; "
             "*حضور* is een eigen woord voor hetzelfde ding, met en zonder lidwoord",
+        ),
+        (
+            r"المنظ[ّ]?م\b",
+            "المدير",
+            "het scherm noemt de integratie *المدير*; *المنظّم* is een eigen woord voor "
+            "hetzelfde ding. De woordgrens laat *المنظمة* en *منظّم الحرارة* (de thermostaat, "
+            "zonder lidwoord) buiten de naald",
+        ),
+        (
+            r"المنس[ّ]?ق(?!$)",
+            "المدير",
+            "het scherm noemt de integratie *المدير*; *المنسّق* is een eigen woord voor "
+            "hetzelfde ding. Alleen de entiteitsnaam van de hoofdschakelaar heet zo, en die "
+            "blijft om haar id: een waarde die precies dat woord is, valt buiten de naald",
         ),
         (
             "التكاملة",

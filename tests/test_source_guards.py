@@ -9,23 +9,31 @@ project eerder is vastgelopen. Deze bewaking leest daarom, met `ast`, elk
 `README.md`, `ROADMAP.md`, `ARCHITECTURE.md` of `strings.json`, en eist dat de
 moduledocstring van dat bestand *Dekking* én *Coverage* draagt.
 
-De bronnen worden gevonden via de stringliteralen in `Path`-samenstellingen en in
-`read_text`/`read_bytes`/`open`/`glob`/`rglob`/`load`/`loads`-aanroepen: een
-bestand telt mee zodra het zo'n pad noemt. De melding noemt elk bestand dat zijn
+De bronnen worden gevonden via de stringliteralen in `Path`-samenstellingen, in
+`read_text`/`read_bytes`/`open`/`glob`/`rglob`/`load`/`loads`-aanroepen en in
+een tabel op moduleniveau (een dict, tuple, lijst of set die aan een naam wordt
+toegekend, met de vaste delen van een f-string erin): een bestand telt mee zodra
+het zo'n pad noemt. De melding noemt elk bestand dat zijn
 alinea mist, met het woord dat ontbreekt.
 
 Dekking: elk `tests/test_*.py` dat een pad onder `docs/` of `translations/`
 leest, of `README.md`, `ROADMAP.md`, `ARCHITECTURE.md` of `strings.json`, tegen
 de eis dat zijn moduledocstring *Dekking* én *Coverage* draagt. Niet gedekt: of
-die dekking klopt - dat leest de controleronde - en bestanden die alleen code,
-workflows, opslagbestanden of blueprint-YAML lezen.
+die dekking klopt - dat leest de controleronde -, bestanden die alleen code,
+workflows, opslagbestanden of blueprint-YAML lezen, en een pad dat pas tijdens
+het draaien uit losse namen wordt samengesteld zonder dat een van de drie vormen
+hierboven het noemt.
 
 Coverage: every `tests/test_*.py` that reads a path under `docs/` or
 `translations/`, or `README.md`, `ROADMAP.md`, `ARCHITECTURE.md` or
 `strings.json`, against the demand that its module docstring carries *Dekking*
-and *Coverage*. Not covered: whether that coverage is correct - the control round
-reads it - and files that only read code, workflows, storage files or blueprint
-YAML.
+and *Coverage*. The sources are found through the string literals in `Path`
+compositions, in read calls and in a table at module level (a dict, tuple, list
+or set assigned to a name, with the fixed parts of an f-string in it). Not
+covered: whether that coverage is correct - the control round reads it -, files
+that only read code, workflows, storage files or blueprint YAML, and a path that
+is only put together at run time from loose names without any of those three
+shapes naming it.
 """
 
 from __future__ import annotations
@@ -84,6 +92,33 @@ def guarded_literals(tree: ast.AST) -> set[str]:
                 for argument in arguments:
                     if isinstance(argument, ast.Constant) and isinstance(argument.value, str):
                         found.add(argument.value)
+    return found | table_literals(tree)
+
+
+def table_literals(tree: ast.AST) -> set[str]:
+    """De stringliteralen in een tabel op moduleniveau.
+
+    Een bewaking die haar bronnen in een dict of tuple opsomt en ze daarna via een
+    variabele leest (`ROOT / name`), noemt het pad nergens in een leesaanroep. De
+    tabel zelf noemt het wel: elke string in de waarde van een toekenning op
+    moduleniveau aan een dict, tuple, lijst of set telt mee, ook de vaste delen van
+    een f-string daarin (`f"docs/install/{language}.md"`).
+
+    The string literals in a table at module level. A guard that lists its sources
+    in a dict or tuple and then reads them through a variable (`ROOT / name`)
+    names the path in no read call. The table itself does: every string in the
+    value of a module-level assignment of a dict, tuple, list or set counts, the
+    fixed parts of an f-string in it too.
+    """
+    found: set[str] = set()
+    for statement in getattr(tree, "body", []):
+        if not isinstance(statement, (ast.Assign, ast.AnnAssign)):
+            continue
+        if not isinstance(statement.value, (ast.Dict, ast.Tuple, ast.List, ast.Set)):
+            continue
+        for node in ast.walk(statement.value):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                found.add(node.value)
     return found
 
 
