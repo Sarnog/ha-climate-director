@@ -118,8 +118,9 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   geleende methodes aanraken, maar het neerzetten blijft handwerk: elk nieuw lid kost een
   aanpassing in elke stand-in die het raakt. Ze zouden hun attributen kunnen afleiden uit
   `CoordinatorSurface`.
-- **De 20 open takken van de dekkingsmeting** — `branch = true` meldt twintig keer één
-  kant van een lus of een kortsluiting die nooit langskomt. Ze zijn nu met een pragma noch
+- **De open takken van de dekkingsmeting** — `branch = true` meldt op zo'n twintig
+  plekken één kant van een lus of een kortsluiting die nooit langskomt; het precieze
+  aantal schommelt tussen twee runs. Ze zijn nu met een pragma noch
   een test gedicht; per stuk is de vraag of de tweede kant te bereiken is (dan een test)
   of niet (dan een herschrijving die de tak laat verdwijnen).
 - **De opruimbeurt van verweesde entiteiten mist dezelfde volledigheidstoets** —
@@ -204,6 +205,23 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   vertaalbestanden citeren het label tussen aanhalingstekens, de gidsen zetten het
   cursief, en alleen `nl.md` zet het op één plek tussen aanhalingstekens. Eén vorm in
   gids en scherm, met een toets erop, zou dat gelijktrekken.
+- **Geen toets legt een veldnaam in het proza naast het label** — de tabeltoets meet
+  alleen de vette tabelrijen. Een cursieve of vette veldnaam in de lopende tekst kan
+  daardoor van het scherm afwijken zonder dat iets rood wordt. Een toets die zo'n naam
+  naast de labels van die taal legt, zou dat vangen.
+- **De grens van 80 tekens voor de opening-id-alinea's van Stap 11 wordt niet
+  bewaakt** — de regellengtetoets kent alleen de grens van 120 tekens, dus een regel
+  van 81 tekens in die twee alinea's valt alleen bij het proeflezen op.
+- **Het Frans en het Spaans noemen een taak in de gids ook *fonction* / *función*** —
+  het scherm zegt *tâche* / *tarea* (*Pause lors du changement de tâche*), maar de uitleg
+  in de tabel en in de lopende tekst zegt vaak *fonction* / *función*, een woord dat de
+  gids ook voor de rol van een bron gebruikt.
+- **Het Frans noemt het vakantierooster in de gids *programme vacances*** — de
+  schakelaar heet *Planning de vacances*, en de rest van de gids en het scherm zeggen
+  *planning*.
+- **Het Duitse lidwoord bij de nieuwe woorden wordt niet bewaakt** — *der Übersteuerung*
+  als onderwerp, *die Außengerät* of *das Totzone* maakt niets rood; alleen de
+  proeflezing ziet het.
 
 ## Would have
 
@@ -326,8 +344,9 @@ The worked-out design proposals for everything below live in
   that every stand-in carries each protocol member its borrowed methods touch, but setting
   them stays handwork: every new member costs an edit in each stand-in it reaches. They
   could derive their attributes from `CoordinatorSurface`.
-- **The 20 open branches of the coverage measurement** — `branch = true` reports twenty
-  times one side of a loop or a short-circuit that never comes past. Neither a pragma nor a
+- **The open branches of the coverage measurement** — `branch = true` reports, in some
+  twenty places, one side of a loop or a short-circuit that never comes past; the exact
+  number wobbles between two runs. Neither a pragma nor a
   test covers them now; per one the question is whether the second side is reachable (then a
   test) or not (then a rewrite that removes the branch).
 - **The sweep of orphaned entities misses the same completeness check** —
@@ -410,6 +429,23 @@ The worked-out design proposals for everything below live in
   marks** — the translation files quote the label between quotation marks, the guides
   set it in italics, and only `nl.md` quotes it in one place. One form in guide and
   screen, with a test on it, would even that out.
+- **No test lays a field name in the prose next to the label** — the table test only
+  measures the bold table rows. An italic or bold field name in running text can
+  therefore differ from the screen without anything turning red. A test laying such a
+  name next to that language's labels would catch it.
+- **The 80-character limit for the opening-id paragraphs of Step 11 is not
+  guarded** — the line-length test only knows the 120-character limit, so an
+  81-character line in those two paragraphs only shows up when proofreading.
+- **French and Spanish also call a duty *fonction* / *función* in the guide** — the
+  screen says *tâche* / *tarea* (*Pause lors du changement de tâche*), but the
+  explanation in the table and in running text often says *fonction* / *función*, a
+  word the guide also uses for a source's role.
+- **French calls the holiday schedule *programme vacances* in the guide** — the switch
+  is called *Planning de vacances*, and the rest of the guide and the screen say
+  *planning*.
+- **The German article with the new words is not guarded** — *der Übersteuerung* as
+  a subject, *die Außengerät* or *das Totzone* turns nothing red; only proofreading
+  sees it.
 
 ## Would have
 
