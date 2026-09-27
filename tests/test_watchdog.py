@@ -304,11 +304,14 @@ class TestTheManualSignatureIsAStorageFormat:
 class TestTheNoticeIsUsable:
     """Een melding die niet zegt wat je moet doen is een melding die blijft staan.
 
-    Deze bewaking leest de **bron**: `strings.json` en de zes vertaalbestanden.
-    Wat hij dekt: in elke taal een niet-lege titel voor `precondition_unwatched`
-    en een beschrijving die het event `climate_director_precondition_refused`
-    letterlijk noemt; in het Nederlands en het Engels de uitdrukking die zegt dat
-    de blauwdruk ook ingesteld moet worden (*stel* / *set it up*); en dat het anker
+    Deze bewaking leest alle zeven bestanden: `strings.json` en de zes
+    vertaalbestanden, waarbij het Engels twee keer meetelt - de bron die Home
+    Assistant zelf leest én de Engelse vertaling. Wat hij dekt: in elke taal een
+    niet-lege titel voor `precondition_unwatched` en een beschrijving die het
+    event `climate_director_precondition_refused` letterlijk noemt; in het
+    Nederlands en het Engels de uitdrukking die zegt dat de blauwdruk ook
+    ingesteld moet worden, als **heel woord** (`\bstel\b` / `\bset it up\b`, zodat
+    *ingesteld* niet voldoet); en dat het anker
     van `problems.BLUEPRINTS_URL` werkelijk als kop in `README.md` staat. Wat hij
     **niet** dekt: of de rest van de beschrijving leesbaar is, of de andere vier
     talen dezelfde instructie geven (die worden alleen op titel en event
@@ -318,12 +321,14 @@ class TestTheNoticeIsUsable:
 
     A notice that does not say what to do is a notice that stays.
 
-    This guard reads the **source**: `strings.json` and the six translation files.
-    What it covers: a non-empty title for `precondition_unwatched` in every
-    language and a description that names the event
-    `climate_director_precondition_refused` literally; in Dutch and English the
-    wording saying the blueprint must be set up too (*stel* / *set it up*); and
-    that the anchor of `problems.BLUEPRINTS_URL` really stands as a heading in
+    This guard reads all seven files: `strings.json` and the six translation
+    files, so English counts twice - the source Home Assistant itself reads and
+    the English translation. What it covers: a non-empty title for
+    `precondition_unwatched` in every language and a description that names the
+    event `climate_director_precondition_refused` literally; in Dutch and English
+    the wording saying the blueprint must be set up too, searched as a **whole
+    word** (`\bstel\b` / `\bset it up\b`, so *ingesteld* does not pass); and that
+    the anchor of `problems.BLUEPRINTS_URL` really stands as a heading in
     `README.md`. What it does **not** cover: whether the rest of the description
     reads well, whether the other four languages give the same instruction (they
     are only checked for title and event), whether the blueprint then really runs,
@@ -331,26 +336,58 @@ class TestTheNoticeIsUsable:
     `AGENTS.md` (project-specific agreements: which source guards there are).
     """
 
-    def _issue(self, language: str) -> dict:
-        path = (
-            COMPONENT / "strings.json"
-            if language == "en"
-            else COMPONENT / "translations" / f"{language}.json"
-        )
+    #: De zeven bestanden die deze melding dragen: `strings.json` is de bron die
+    #: Home Assistant zelf leest en daaronder staan de zes vertaalbestanden. Engels
+    #: staat er dus twee keer in, met opzet: bron en vertaling horen dezelfde tekst
+    #: te dragen, en alleen de bron lezen liet de vertaling weglopen.
+    #:
+    #: The seven files that carry this notice: `strings.json` is the source Home
+    #: Assistant itself reads, and below it stand the six translation files.
+    #: English therefore appears twice, on purpose: source and translation must
+    #: carry the same text, and reading the source alone let the translation drift.
+    FILES: tuple[tuple[str, pathlib.Path], ...] = (
+        ("en", COMPONENT / "strings.json"),
+        ("en", COMPONENT / "translations" / "en.json"),
+        ("nl", COMPONENT / "translations" / "nl.json"),
+        ("de", COMPONENT / "translations" / "de.json"),
+        ("fr", COMPONENT / "translations" / "fr.json"),
+        ("es", COMPONENT / "translations" / "es.json"),
+        ("ar", COMPONENT / "translations" / "ar.json"),
+    )
+
+    #: De uitdrukking die zegt dat de blauwdruk ook opgezet moet worden, per taal
+    #: als **heel woord**: *stel* in *en stel hem in*, *set it up* in *and set it
+    #: up*. Zo voldoet *daarmee is alles ingesteld* niet, en dat is de bedoeling:
+    #: de zin moet zeggen wat de gebruiker nog moet doen.
+    #:
+    #: The wording that says the blueprint must be set up as well, per language as
+    #: a **whole word**: *stel* in *en stel hem in*, *set it up* in *and set it up*.
+    #: That way *daarmee is alles ingesteld* does not pass, which is the point: the
+    #: sentence has to say what the user still has to do.
+    WORDING: dict[str, str] = {"nl": r"\bstel\b", "en": r"\bset it up\b"}
+
+    @staticmethod
+    def _issue(path: pathlib.Path) -> dict:
         return json.loads(path.read_text(encoding="utf-8"))["issues"]["precondition_unwatched"]
 
-    @pytest.mark.parametrize("language", ["en", "nl", "de", "fr", "es", "ar"])
-    def test_every_language_has_a_title_and_a_way_out(self, language: str) -> None:
-        issue = self._issue(language)
-        assert issue["title"].strip()
-        assert EVENT_PRECONDITION_REFUSED in issue["description"]
+    @pytest.mark.parametrize(("language", "path"), FILES)
+    def test_every_language_has_a_title_and_a_way_out(
+        self, language: str, path: pathlib.Path
+    ) -> None:
+        issue = self._issue(path)
+        assert issue["title"].strip(), f"{language}: geen titel"
+        assert EVENT_PRECONDITION_REFUSED in issue["description"], f"{language}: geen event"
 
-    @pytest.mark.parametrize("language", ["en", "nl"])
-    def test_it_says_the_blueprint_must_also_be_set_up(self, language: str) -> None:
+    @pytest.mark.parametrize(("language", "path"), FILES)
+    def test_it_says_the_blueprint_must_also_be_set_up(
+        self, language: str, path: pathlib.Path
+    ) -> None:
         """Importing alone listens to nothing, and that is the trap to name."""
-        description = self._issue(language)["description"]
-        wording = "set it up" if language == "en" else "stel"
-        assert wording in description
+        wording = self.WORDING.get(language)
+        if wording is None:
+            pytest.skip(f"{language}: deze instructie staat alleen in het Nederlands en Engels")
+        description = self._issue(path)["description"]
+        assert re.search(wording, description), f"{path}: mist {wording}"
 
     def test_the_link_lands_on_a_heading_that_exists(self) -> None:
         """A learn-more link into thin air is worse than no link."""
