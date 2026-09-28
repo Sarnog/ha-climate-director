@@ -6,7 +6,9 @@ The house's night: when did everybody at home go to sleep.
 is. Dat wachten hoort bij de ochtend, niet bij de avond ervoor: gaat de één om
 elf uur naar bed terwijl de ander nog op is, dan is het na middernacht al "vandaag,
 vóór de uiterste tijd", maar de nacht is voor het huis nog niet begonnen. Pas als
-iedereen die thuis is slaapt, begint de nacht; wie daarna opstaat, staat op.
+iedereen die thuis is slaapt, begint de nacht; wie daarna opstaat, staat op. Het moment
+waarop de nacht begon blijft daarna staan tot het buiten de lopende nacht valt: wie
+'s ochtends alleen opstaat, maakt de nacht waarin het huis sliep niet ongedaan.
 
 Dit bestand beantwoordt twee vragen. Wanneer begon de lopende nacht van een
 bewoner - de laatste start van zijn slaapvenster. En valt het moment waarop het
@@ -20,7 +22,9 @@ is awake. That waiting belongs to the morning, not to the evening before: when o
 resident turns in at eleven while the other is still up, it is already "today,
 before the deadline" after midnight, but the house's night has not begun yet. The
 night begins only once everybody at home is asleep; whoever gets up after that is
-getting up.
+getting up. The moment the night began stays after that until it falls outside the
+running night: whoever gets up alone in the morning does not undo the night in which
+the house slept.
 
 This file answers two questions. When did a resident's current night begin - the
 latest start of their sleep window. And does the moment the house went to sleep
@@ -126,29 +130,57 @@ def slept_tonight(resident: Resident, world: WorldState) -> bool:
     return began is None or since >= began
 
 
+def _night_runs_for_somebody(at_home: list[Resident], world: WorldState) -> bool:
+    """Return whether the moment still falls inside somebody's running night.
+
+    Alleen een bewoner **mét** slaapvenster heeft een nacht om aan af te lezen: voor wie
+    zonder venster thuis is telt de slaapsensor de klok rond en is er geen grens waar het
+    moment in moet vallen (`slept_tonight` zegt daar ja bij elk bekend moment). Een huis
+    waar niemand een slaapvenster heeft houdt het moment dus niet vast - de grens tussen
+    twee nachten is daar het moment zelf, en dat vervalt zodra er niemand thuis meer
+    slaapt. De prijs daarvan is dat de opsta-rem in zo'n huis niets doet; dat staat als
+    idee in `ROADMAP.md`.
+
+    Only a resident **with** a sleep window has a night to read: for whoever is home
+    without one the sleep sensor counts around the clock and there is no boundary the
+    moment has to fall inside (`slept_tonight` says yes at any known moment there). A house
+    in which nobody has a sleep window therefore does not hold the moment - the boundary
+    between two nights is the moment itself there, and it lapses the moment nobody at home
+    is asleep any more. The price of that is that the rise brake does nothing in such a
+    house; that stands as an idea in `ROADMAP.md`.
+    """
+    return any(
+        resident.sleep_window is not None and slept_tonight(resident, world) for resident in at_home
+    )
+
+
 def house_asleep_since(config: DirectorConfig, world: WorldState) -> datetime | None:
     """Return when everybody at home went to sleep, carrying `world.asleep_since` on.
 
-    De koppelingslaag roept dit elke ronde aan en bewaart de uitkomst voor de
-    volgende. Drie gevallen. Slaapt er niemand die thuis is, dan is de nacht voorbij
-    (of nog niet begonnen) en is het moment weg. Is er nog iemand thuis op, dan
-    blijft staan wat er stond: wie om drie uur even opstaat, maakt de nacht niet
-    ongedaan. Slaapt iedereen die thuis is, dan blijft een moment uit deze nacht
-    staan, en anders is het nu: het huis gaat op dit moment slapen.
+    De koppelingslaag roept dit elke ronde aan en bewaart de uitkomst voor de volgende.
+    Drie gevallen. Slaapt er niemand die thuis is, dan blijft het moment staan zolang het
+    nog in de lopende nacht van iemand valt: wie om half zes opstaat maakt de nacht niet
+    ongedaan, en wie 's avonds laat nog op is houdt het moment niet vast. Valt het
+    erbuiten, dan is de nacht voorbij (of nog niet begonnen) en is het moment weg. Is er
+    nog iemand thuis op terwijl een ander slaapt, dan blijft staan wat er stond. Slaapt
+    iedereen die thuis is, dan blijft een moment uit deze nacht staan, en anders is het
+    nu: het huis gaat op dit moment slapen.
 
-    The binding layer calls this every round and keeps the outcome for the next.
-    Three cases. When nobody at home is asleep, the night is over (or has not begun)
-    and the moment goes. When somebody at home is still up, whatever stood stays:
-    whoever gets up at three for a moment does not undo the night. When everybody at
-    home is asleep, a moment from this night stays, and otherwise it is now: the
-    house goes to sleep at this moment.
+    The binding layer calls this every round and keeps the outcome for the next. Three
+    cases. When nobody at home is asleep, the moment stays as long as it still falls
+    inside somebody's running night: whoever gets up at half past five does not undo the
+    night, and whoever is still up late in the evening does not hold the moment. When it
+    falls outside, the night is over (or has not begun) and the moment goes. When somebody
+    at home is still up while another sleeps, whatever stood stays. When everybody at home
+    is asleep, a moment from this night stays, and otherwise it is now: the house goes to
+    sleep at this moment.
     """
     at_home = [
         resident for resident in config.residents if world.resident(resident.resident_id).home
     ]
     sleeping = [resident for resident in at_home if asleep(resident, world)]
     if not sleeping:
-        return None
+        return world.asleep_since if _night_runs_for_somebody(at_home, world) else None
     if len(sleeping) < len(at_home):
         return world.asleep_since
     if all(slept_tonight(resident, world) for resident in sleeping):

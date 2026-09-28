@@ -262,12 +262,76 @@ class TestTheNight:
 class TestTheMoment:
     """Het bijhouden zelf, los van de poort. The bookkeeping itself, apart from the gate."""
 
-    def test_nobody_home_asleep_forgets_the_moment(self) -> None:
+    def test_nobody_asleep_at_home_keeps_the_moment_within_the_night(self) -> None:
+        """Er slaapt niemand thuis, maar het moment valt nog in de lopende nacht.
+
+        Wie opstaat maakt de nacht niet ongedaan: het moment waarop het huis ging slapen
+        blijft staan zolang het in iemands lopende nacht valt. Daar hangt de opsta-rem aan
+        (*Opstaan zet het huis pas aan vanaf*), ook als de bewoner met de rem de enige is
+        die thuis opstaat; vervalt het bij het opstaan, dan remt die rem niets meer.
+
+        Nobody at home is asleep, but the moment still falls inside the running night:
+        getting up does not undo the night, and the rise brake hangs on that moment.
+        """
         worlds = walk(
             live_house(),
             [(at(1, 30, day=SAT), bed(), bed()), (at(9, 0, day=SAT), up(), away())],
         )
-        assert [world.asleep_since for world in worlds] == [at(1, 30, day=SAT), None]
+        assert [world.asleep_since for world in worlds] == [
+            at(1, 30, day=SAT),
+            at(1, 30, day=SAT),
+        ]
+
+    def test_the_moment_lapses_when_the_next_night_begins(self) -> None:
+        """Het moment blijft de hele dag staan en vervalt bij het begin van de volgende nacht.
+
+        Om 21:00 's avonds begint de volgende nacht van de bewoners, en dan valt het moment
+        van de nacht ervoor erbuiten: vanaf dat moment is het weg.
+
+        The moment stays all day and lapses when the next night begins: from 21:00 in the
+        evening the moment of the night before falls outside the running night.
+        """
+        worlds = walk(
+            live_house(),
+            [
+                (at(1, 30, day=SAT), bed(), bed()),
+                (at(9, 0, day=SAT), up(), up()),
+                (at(20, 59, day=SAT), up(), up()),
+                (at(21, 0, day=SAT), up(), up()),
+            ],
+        )
+        assert [world.asleep_since for world in worlds] == [
+            at(1, 30, day=SAT),
+            at(1, 30, day=SAT),
+            at(1, 30, day=SAT),
+            None,
+        ]
+
+    def test_last_nights_moment_no_longer_counts_on_the_next_evening(self) -> None:
+        """Het moment van vrijdagnacht telt op zaterdagavond niet meer mee."""
+        config = live_house()
+        world = walk(config, [(at(21, 30, day=SAT), up(), up())], since=at(1, 30, day=SAT))[-1]
+        assert world.asleep_since is None
+        assert not any(night.slept_tonight(resident, world) for resident in config.residents)
+
+    def test_without_a_sleep_window_the_moment_lapses_at_getting_up(self) -> None:
+        """Zonder slaapvenster is er geen nacht om het moment aan af te lezen: het vervalt.
+
+        De bewoners van de standaardopstelling hebben geen slaapvenster; de grens tussen
+        twee nachten is daar het moment zelf. Zodra er niemand thuis meer slaapt is er dus
+        geen lopende nacht om het moment in te plaatsen en is het weg - met als prijs dat de
+        opsta-rem in zo'n huis niets doet. Dat staat als idee in `ROADMAP.md`.
+
+        Without a sleep window there is no night to read the moment against, so it lapses
+        the moment nobody at home is asleep any more - at the price that the rise brake does
+        nothing in such a house, which stands as an idea in `ROADMAP.md`.
+        """
+        config = house()
+        worlds = walk(
+            config,
+            [(at(23, 0, day=MON), bed(), away()), (at(6, 0, day=TUE), up(), away())],
+        )
+        assert [world.asleep_since for world in worlds] == [at(23, 0, day=MON), None]
 
     def test_a_house_asleep_since_last_night_starts_a_new_night(self) -> None:
         """Slaapt iedereen, maar is het moment van gisternacht, dan is het nu."""
