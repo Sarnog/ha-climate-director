@@ -554,6 +554,10 @@ tras un reinicio mientras alguien estaba levantado, la casa no espera a nadie es
 mañana. **Esperar a esta persona dormida hasta** lo hace por sí solo; no hay
 nada más que ajustar.
 
+Un residente en casa sin sensor de sueño nunca duerme, y una casa con alguien así
+nunca se duerme: por la mañana no espera a nadie, y el freno **Levantarse solo arranca
+la casa desde** tampoco hace nada.
+
 Esto es independiente del horario. Un horario también dice cuándo debe
 *apagarse* la casa; esta hora solo dice cuándo ya no hace falta esperar a
 alguien. Mientras todos los presentes duermen, la casa sigue apagada: eso es la

@@ -490,7 +490,7 @@ then skipped instead of blocking everything forever.
 | **Days that waiting applies** | the days that deadline applies on; empty = every day |
 | **Wait for this sleeper on holidays too** | off = the days above are read literally; on = the time applies on every holiday |
 | **Getting up only starts the house from** | before this time this resident does not count as awake and getting up does not start the house; never on a holiday; empty = getting up always starts it |
-| **Days getting up does not start the house** | which days that time applies on; empty = every day |
+| **Days on which getting up does not start the house** | which days that time applies on; empty = every day |
 
 ### Sleeping in, and why that is not simply a longer sleep window
 
@@ -546,6 +546,10 @@ midnight too. When that moment is unknown, for instance after a restart while
 somebody was up, the house waits for nobody that morning. **Wait for this sleeper
 until** does this by itself; there is nothing extra to set.
 
+A resident at home without a sleep sensor never sleeps, and a house with one never
+goes to sleep: it waits for nobody in the morning, and the brake **Getting up only
+starts the house from** does nothing then.
+
 This stands apart from the schedule. A schedule also says when the house should
 go *off* again; this time only says when you need no longer wait for somebody.
 While everybody home is asleep the house stays off - that is the sleep gate, not
@@ -567,7 +571,7 @@ sleep window run on past the deadline.
 
 Whoever gets up at a quarter to six on a working day and leaves at half past six
 need not start the house. Fill in **Getting up only starts the house from** for
-that resident, for instance 07:00, and Monday to Friday under **Days getting up
+that resident, for instance 07:00, and Monday to Friday under **Days on which getting up
 does not start the house**. Getting up before that, they do not count as awake
 yet. With nobody else up, the house stays off, with the reason *whoever gets up
 early does not start the house yet*. When somebody else without this brake gets

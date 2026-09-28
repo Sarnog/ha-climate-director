@@ -554,6 +554,10 @@ jemand auf war, wartet das Haus an diesem Morgen auf niemanden. **Auf diese
 schlafende Person warten bis** tut das von selbst; es gibt nichts zusätzlich
 einzustellen.
 
+Wer zu Hause keinen Schlafsensor hat, schläft nie, und ein Haus mit so jemandem geht
+nie schlafen: es wartet morgens auf niemanden, und die Bremse **Aufstehen startet das
+Haus erst ab** bewirkt dann nichts.
+
 Das steht getrennt vom Zeitplan. Ein Zeitplan sagt auch, wann das Haus wieder
 *aus* soll; diese Uhrzeit sagt nur, wann man nicht länger auf jemanden warten
 muss. Schlafen alle Anwesenden, bleibt das Haus aus - das ist das Schlaftor,

@@ -314,7 +314,7 @@
           "wake_days": "Days that waiting applies",
           "wake_holiday": "Wait for this sleeper on holidays too",
           "rise_from": "Getting up only starts the house from",
-          "rise_days": "Days getting up does not start the house",
+          "rise_days": "Days on which getting up does not start the house",
           "sleep_in_until": "Sleeping in until",
           "sleep_in_days": "Mornings you may sleep in",
           "sleep_in_holiday": "Sleep in on holidays too"
@@ -329,7 +329,7 @@
           "sleep_from": "A phone on the charger at three in the afternoon does not mean somebody is turning in. Between these times the sleep sensor counts; outside them a charger is just a charger. Leave both empty to have it count around the clock.",
           "sleep_until": "A phone on the charger at three in the afternoon does not mean somebody is turning in. Between these times the sleep sensor counts; outside them a charger is just a charger. Leave both empty to have it count around the clock.",
           "sleep_days": "Leave empty for every day. A window running past midnight is anchored on the day it starts, so a Friday 23:00-09:00 window still counts at 07:00 on Saturday.",
-          "wake_by": "With somebody up while this resident is still asleep at home, the house waits. Past this time it no longer does: it then follows whoever is up. The waiting only begins once everybody at home has been to bed: while somebody is still up in the evening, the house simply carries on. Leave empty to have this resident hold nobody back.",
+          "wake_by": "With somebody up while this resident is still asleep at home, the house waits. Past this time it no longer does: it then follows whoever is up. The waiting only begins once everybody at home has been to bed: while somebody is still up in the evening, the house simply carries on. Leave empty to have this resident hold nobody back. A resident at home without a sleep sensor never sleeps, and a house with one never goes to sleep: it waits for nobody in the morning, and the brake “Getting up only starts the house from” does nothing then.",
           "wake_days": "Leave empty for every day.",
           "wake_holiday": "A holiday counts as a Saturday for the schedules, but not for this time: one person's holiday is another's working day, and the late riser would hold the house up while somebody is working. Tick this when you do want to be waited for on a holiday - then it applies whatever the weekday.",
           "rise_from": "Before this time, on the days below, this resident getting up does not start the house: they do not count as awake yet. Whatever already runs keeps running, and on a holiday this never applies. Somebody still up from the evening before is not getting up. Leave empty to have getting up always start the house.",

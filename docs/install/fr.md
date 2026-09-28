@@ -562,6 +562,10 @@ par exemple après un redémarrage alors que quelqu'un était levé, la maison
 n'attend personne ce matin-là. **Attendre ce dormeur jusqu'à** le fait de
 lui-même ; il n'y a rien de plus à régler.
 
+Un occupant à la maison sans capteur de sommeil ne dort jamais, et une maison avec un
+tel occupant ne s'endort jamais : elle n'attend personne le matin, et le frein
+**Le lever ne démarre la maison qu'à partir de** ne fait alors rien.
+
 C'est indépendant du planning. Un planning dit aussi quand la maison doit se
 *couper* ; cette heure dit seulement quand il n'est plus nécessaire d'attendre
 quelqu'un. Tant que tous les présents dorment, la maison reste éteinte - c'est

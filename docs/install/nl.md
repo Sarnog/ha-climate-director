@@ -549,6 +549,10 @@ middernacht. Is dat moment onbekend, bijvoorbeeld na een herstart terwijl iemand
 op was, dan wacht het huis die ochtend op niemand. **Wacht op deze slaper tot**
 doet dit vanzelf; er is niets extra's in te stellen.
 
+Een bewoner die thuis is zonder slaapsensor slaapt nooit, en een huis met zo iemand
+gaat nooit slapen: het wacht 's ochtends op niemand, en de rem **Opstaan zet het huis
+pas aan vanaf** doet dan ook niets.
+
 Dit staat los van het rooster. Een rooster zegt ook wanneer het huis weer *uit*
 moet; deze tijd zegt alleen wanneer je niet langer op iemand hoeft te wachten.
 Slaapt iedereen die thuis is, dan blijft het huis uit — dat is de slaappoort,
