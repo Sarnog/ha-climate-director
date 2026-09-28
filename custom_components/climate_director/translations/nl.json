@@ -641,7 +641,7 @@
               "no_indoor_temperature": "de binnentemperatuur is niet te lezen",
               "no_outdoor_temperature": "de buitentemperatuur is niet te lezen",
               "season_blocks_mode": "dit seizoen laat dat niet toe",
-              "outdoor_outside_window": "het is buiten te warm of te koud hiervoor",
+              "outdoor_outside_window": "het is buiten te warm om te verwarmen of te koud om te koelen",
               "mode_not_configured": "deze kamer is hier niet voor ingesteld",
               "no_source_available": "geen apparaat kan het nu doen",
               "other_source_chosen": "een ander apparaat doet het",
@@ -661,6 +661,12 @@
               "after_zone": ":",
               "before_appliance": "met",
               "before_target": "op"
+            }
+          },
+          "outdoor_outside_window": {
+            "state": {
+              "heat": "het is buiten te warm om te verwarmen",
+              "cool": "het is buiten te koud om te koelen"
             }
           }
         }

@@ -641,7 +641,7 @@
               "no_indoor_temperature": "لا يمكن قراءة درجة الحرارة الداخلية",
               "no_outdoor_temperature": "لا يمكن قراءة درجة الحرارة الخارجية",
               "season_blocks_mode": "هذا الفصل لا يسمح بذلك",
-              "outdoor_outside_window": "الجو خارجًا حار أو بارد أكثر من اللازم لهذا",
+              "outdoor_outside_window": "الجو خارجًا حار أكثر من اللازم للتدفئة أو بارد أكثر من اللازم للتبريد",
               "mode_not_configured": "هذه الغرفة غير مهيأة لهذا",
               "no_source_available": "لا يستطيع أي جهاز فعل ذلك الآن",
               "other_source_chosen": "جهاز آخر يفعل ذلك",
@@ -661,6 +661,12 @@
               "after_zone": ":",
               "before_appliance": "مع",
               "before_target": "على"
+            }
+          },
+          "outdoor_outside_window": {
+            "state": {
+              "heat": "الجو خارجًا حار أكثر من اللازم للتدفئة",
+              "cool": "الجو خارجًا بارد أكثر من اللازم للتبريد"
             }
           }
         }

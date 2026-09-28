@@ -249,6 +249,12 @@ apparaat niet op één tiende graad blijft klepperen:
 Het startpunt telt als bereikt, het stoppunt als gepasseerd. Eén graad band is
 een verstandig begin.
 
+Stopt een taak omdat de kamer op temperatuur is, dan zegt de melding van **Wat er
+besloten is** precies dat. Houdt een buitengrens een taak tegen, dan noemt de
+melding die taak: *het is buiten te warm om te verwarmen* bij **Alleen verwarmen
+onder deze buitentemperatuur**, en *het is buiten te koud om te koelen* bij
+**Alleen koelen boven deze buitentemperatuur**.
+
 ### Wat het scherm weigert
 
 Vier dingen worden bij het opslaan geweigerd, omdat ze een zone opleveren die

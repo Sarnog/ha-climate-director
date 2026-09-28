@@ -256,6 +256,13 @@ appareil ne cliquette pas sur un dixième de degré :
 Le point de démarrage compte comme atteint, le point d'arrêt comme dépassé. Un
 degré de bande est un bon début.
 
+Si une tâche s'arrête parce que la pièce est à température, la notification de
+**Ce qui a été décidé** le dit tel quel. Si une limite extérieure retient une
+tâche, la notification nomme cette tâche : *il fait trop chaud dehors pour
+chauffer* avec **Chauffer uniquement sous cette température extérieure**, et
+*il fait trop froid dehors pour refroidir* avec **Refroidir uniquement au-dessus
+de cette température extérieure**.
+
 ### Ce que l'écran refuse
 
 Quatre choses sont refusées à l'enregistrement, car chacune produit une zone

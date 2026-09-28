@@ -120,12 +120,14 @@ def _read_english_readable() -> dict[str, str]:
     """Read the English reason sentences, action words and message templates.
 
     Puur bestandswerk voor `async_add_executor_job`. De sleutels zijn `reason.*`,
-    `action.*` en `message.*`, zodat één opzoeking volstaat. Een onleesbaar
-    bestand levert een lege dict op, nooit een uitzondering.
+    `action.*`, `message.*` en `outdoor_outside_window.*` (de zin per taak), zodat
+    één opzoeking volstaat. Een onleesbaar bestand levert een lege dict op, nooit
+    een uitzondering.
 
     Pure file work for `async_add_executor_job`. The keys are `reason.*`,
-    `action.*` and `message.*`, so one lookup suffices. An unreadable file
-    yields an empty dict, never an exception.
+    `action.*`, `message.*` and `outdoor_outside_window.*` (the sentence per duty),
+    so one lookup suffices. An unreadable file yields an empty dict, never an
+    exception.
     """
     found: dict[str, str] = {}
     try:
@@ -140,6 +142,7 @@ def _read_english_readable() -> dict[str, str]:
         ("reason", "zone_source"),
         ("action", "would_command"),
         ("message", "zone_source"),
+        ("outdoor_outside_window", "zone_source"),
     ):
         block = sensor.get(key)
         attributes = block.get("state_attributes") if isinstance(block, dict) else None
@@ -277,7 +280,8 @@ def translated(hass: HomeAssistant, code: str, fallback: str, **params: Any) -> 
 #:
 #: The dotted paths under which the decision texts live in the seven text files.
 #: One source for the lookup, so a test can hold them against the real files.
-REASON_KEY = f"component.{DOMAIN}.entity.sensor.zone_source.state_attributes.reason.state."
+ATTRIBUTE_KEY = f"component.{DOMAIN}.entity.sensor.zone_source.state_attributes."
+REASON_KEY = f"{ATTRIBUTE_KEY}reason.state."
 ACTION_KEY = f"component.{DOMAIN}.entity.sensor.would_command.state_attributes.action.state."
 MESSAGE_KEY = f"component.{DOMAIN}.entity.sensor.zone_source.state_attributes.message.state."
 
@@ -294,8 +298,18 @@ def _entity_cache(hass: HomeAssistant) -> dict[str, str]:
     return translation.async_get_cached_translations(hass, hass.config.language, "entity", DOMAIN)
 
 
-def reason_sentence(hass: HomeAssistant, reason: str) -> str:
+def reason_sentence(hass: HomeAssistant, reason: str, duty: str | None = None) -> str:
     """Return the reason of a decision as one ordinary sentence.
+
+    Met een taak (`heat` of `cool`) komt eerst de zin voor die taak, als de reden er
+    een heeft: `outdoor_outside_window` is bij verwarmen "te warm om te verwarmen" en
+    bij koelen "te koud om te koelen". Zonder taak, of zonder zin voor die taak, is
+    het de algemene zin van de reden, met dezelfde terugvallen.
+
+    With a duty (`heat` or `cool`) the sentence for that duty comes first, when the
+    reason has one: `outdoor_outside_window` is "too warm to heat" for heating and
+    "too cold to cool" for cooling. Without a duty, or without a sentence for that
+    duty, it is the reason's general sentence, with the same fallbacks.
 
     De eigenschap is "wat de gebruiker leest is een zin in zijn taal, geen
     identifier". Twee terugvallen, net als `translated`: de vertaling kan
@@ -310,7 +324,14 @@ def reason_sentence(hass: HomeAssistant, reason: str) -> str:
     guard demands all twenty-nine reasons in all seven files.
     """
     english = english_readable() or {}
-    translated_sentence = _entity_cache(hass).get(f"{REASON_KEY}{reason}")
+    cache = _entity_cache(hass)
+    if duty is not None:
+        for_duty = cache.get(f"{ATTRIBUTE_KEY}{reason}.state.{duty}") or english.get(
+            f"{reason}.{duty}"
+        )
+        if for_duty:
+            return for_duty
+    translated_sentence = cache.get(f"{REASON_KEY}{reason}")
     return translated_sentence or english.get(f"reason.{reason}") or reason
 
 
@@ -573,7 +594,8 @@ def decision_fields(
     active = action in ("heat", "cool")
     entity_id = command.entity_id if command else None
     source_name = _source_display_name(hass, config, entity_id) if active and entity_id else None
-    reason_text = reason_sentence(hass, decision.reason.value)
+    duty = decision.duty.value if decision.duty is not ModeFamily.NEUTRAL else None
+    reason_text = reason_sentence(hass, decision.reason.value, duty)
     action_text = action_sentence(hass, action)
     target = (
         display_temperature(from_celsius(command.temperature, unit), unit)

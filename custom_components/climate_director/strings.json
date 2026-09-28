@@ -641,7 +641,7 @@
               "no_indoor_temperature": "the indoor temperature cannot be read",
               "no_outdoor_temperature": "the outdoor temperature cannot be read",
               "season_blocks_mode": "this season does not allow it",
-              "outdoor_outside_window": "it is too warm or too cold outside for this",
+              "outdoor_outside_window": "it is too warm outside to heat or too cold to cool",
               "mode_not_configured": "this room is not set up for this",
               "no_source_available": "no appliance can do it right now",
               "other_source_chosen": "another appliance is doing it",
@@ -661,6 +661,12 @@
               "after_zone": ":",
               "before_appliance": "with",
               "before_target": "at"
+            }
+          },
+          "outdoor_outside_window": {
+            "state": {
+              "heat": "it is too warm outside to heat",
+              "cool": "it is too cold outside to cool"
             }
           }
         }

@@ -280,6 +280,35 @@ class TestTheDutyThatRanGivesItsOwnReason:
         assert demand.family is ModeFamily.NEUTRAL
         assert demand.reason is expected
 
+    @pytest.mark.parametrize(
+        ("running", "indoor", "outdoor", "duty"),
+        [
+            pytest.param(ModeFamily.COOL, 22.8, 25.0, ModeFamily.COOL, id="bug1-a"),
+            pytest.param(ModeFamily.COOL, 25.0, 22.0, ModeFamily.COOL, id="bug1-b"),
+            pytest.param(ModeFamily.HEAT, 23.2, 10.0, ModeFamily.HEAT, id="bug1-c"),
+            pytest.param(ModeFamily.HEAT, 20.0, 21.0, ModeFamily.HEAT, id="bug1-d"),
+            pytest.param(ModeFamily.NEUTRAL, 22.8, 25.0, ModeFamily.HEAT, id="bug1-idle"),
+        ],
+    )
+    def test_the_refusal_names_its_duty(
+        self, running: ModeFamily, indoor: float, outdoor: float, duty: ModeFamily
+    ) -> None:
+        """Een weigering zegt ook voor welke taak ze geldt.
+
+        `outdoor_outside_window` betekent bij verwarmen "te warm om te verwarmen" en
+        bij koelen "te koud om te koelen"; de melding kan de goede zin alleen kiezen
+        als de engine zegt welke taak weigerde. Bij bug1-b en bug1-d is de reden-id
+        dezelfde als die van de andere taak, en alleen de taak scheidt ze.
+
+        A refusal also says which duty it applies to. `outdoor_outside_window` means
+        "too warm to heat" for heating and "too cold to cool" for cooling; the notice
+        can only pick the right sentence when the engine says which duty refused. In
+        bug1-b and bug1-d the reason id is the same as the other duty's, and only
+        the duty tells them apart.
+        """
+        world = make_world(indoor={"z": indoor}, outdoor=outdoor, season=Season.SUMMER)
+        assert hysteresis.evaluate(self.zone, world, running, 0.5).duty is duty
+
     def test_a_duty_running_by_hand_without_settings_does_not_answer(self) -> None:
         """Draait er een taak die deze zone niet kent, dan kiest de gewone rangorde.
 

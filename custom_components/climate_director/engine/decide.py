@@ -72,7 +72,7 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
     # Anchor 12: which source takes an area over is settled before source
     # selection, since it decides which source a room may still choose.
     takeovers = takeover.in_force(config, world)
-    wishes, refusals, shut, woulds, rest_deferrals = _collect_wishes(
+    wishes, refusals, shut, demands, rest_deferrals = _collect_wishes(
         config, world, previous, blocked, takeovers
     )
 
@@ -97,7 +97,7 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
             grants,
             refusals,
             shut,
-            woulds,
+            demands,
             previous,
             blocked,
             refused_by_circuit,
@@ -122,12 +122,12 @@ def _collect_wishes(
     dict[str, constraints.Request],
     dict[str, Reason],
     dict[str, tuple[Reason, ...]],
-    dict[str, ModeFamily],
+    dict[str, hysteresis.Demand],
     tuple[Deferral, ...],
 ]:
     """Return each zone's request, its refusal reason, every gate shut on it,
-    the duty it would want regardless of those gates, and the house-wide rest
-    deferrals.
+    what it would want regardless of those gates (the duty, or the duty that
+    refused and why), and the house-wide rest deferrals.
 
     De dichte poorten worden voor elke zone opgehaald, ook voor de zones die
     gewoon doorlopen: dan staat er een lege lijst, en dat is precies wat een
@@ -144,7 +144,7 @@ def _collect_wishes(
     wishes: dict[str, constraints.Request] = {}
     refusals: dict[str, Reason] = {}
     shut: dict[str, tuple[Reason, ...]] = {}
-    woulds: dict[str, ModeFamily] = {}
+    demands: dict[str, hysteresis.Demand] = {}
     rest_deferrals: list[Deferral] = []
 
     margin = config.outdoor_hysteresis
@@ -154,7 +154,7 @@ def _collect_wishes(
         demand = hysteresis.evaluate(
             zone, world, hysteresis.running_family(config, zone, world, previous), margin
         )
-        woulds[zone.zone_id] = demand.family
+        demands[zone.zone_id] = demand
         if shut[zone.zone_id]:
             refusals[zone.zone_id] = shut[zone.zone_id][0]
             continue
@@ -237,7 +237,7 @@ def _collect_wishes(
             priority=world.priority_for(zone.zone_id, zone.priority),
         )
 
-    return wishes, refusals, shut, woulds, tuple(rest_deferrals)
+    return wishes, refusals, shut, demands, tuple(rest_deferrals)
 
 
 def _serving(previous: Plan | None, zone_id: str) -> str | None:
@@ -1572,7 +1572,7 @@ def _build_zone_decisions(
     grants: dict[str, constraints.Grant],
     refusals: dict[str, Reason],
     shut: dict[str, tuple[Reason, ...]],
-    woulds: dict[str, ModeFamily],
+    demands: dict[str, hysteresis.Demand],
     previous: Plan | None = None,
     blocked: frozenset[str] = frozenset(),
     refused_by_circuit: dict[str, frozenset[str]] | None = None,
@@ -1585,26 +1585,26 @@ def _build_zone_decisions(
 
     for zone in config.zones:
         request = wishes.get(zone.zone_id)
-        would = woulds.get(zone.zone_id, ModeFamily.NEUTRAL)
+        demand = demands.get(zone.zone_id)
+        would = demand.family if demand else ModeFamily.NEUTRAL
 
         if request is None:
             # A zone that lost a shared appliance still had a wish; keep it, so
             # the decision reads "wanted heat, got nothing" rather than hiding
             # the request that was made.
             loser = dropped.get(zone.zone_id)
+            refused = refusals.get(zone.zone_id, Reason.SATISFIED)
+            reason = Reason.EXCLUSIVE_GROUP_LOST if loser else refused
             decisions.append(
                 ZoneDecision(
                     zone_id=zone.zone_id,
                     wanted=loser.family if loser else ModeFamily.NEUTRAL,
                     granted=ModeFamily.NEUTRAL,
                     source_id=loser.source.source_id if loser else None,
-                    reason=(
-                        Reason.EXCLUSIVE_GROUP_LOST
-                        if loser
-                        else refusals.get(zone.zone_id, Reason.SATISFIED)
-                    ),
+                    reason=reason,
                     closed_gates=shut.get(zone.zone_id, ()),
                     would_want=would,
+                    duty=demand.duty if demand and demand.reason is reason else ModeFamily.NEUTRAL,
                 )
             )
             continue

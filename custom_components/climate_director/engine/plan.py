@@ -228,6 +228,23 @@ class ZoneDecision:
     fires its event only on a changed decision.
     """
 
+    duty: ModeFamily = field(default=ModeFamily.NEUTRAL, compare=False)
+    """De taak waarvoor `reason` geldt, als de temperatuurregeling zelf weigerde.
+
+    `outdoor_outside_window` zegt bij verwarmen iets anders dan bij koelen, en de
+    melding kiest daarmee de goede zin. Neutraal bij een reden die uit een poort, een
+    circuit of een groep komt: die geldt voor de zone, niet voor een taak. Zoals
+    `would_want` buiten de gelijkheid: wisselt alleen de taak onder dezelfde reden,
+    dan verandert het besluit niet.
+
+    The duty `reason` applies to, when the temperature regulation itself refused.
+    `outdoor_outside_window` says something different for heating than for cooling,
+    and the notice picks the right sentence with it. Neutral for a reason coming
+    from a gate, a circuit or a group: that applies to the zone, not to a duty. Like
+    `would_want`, outside equality: when only the duty changes under the same
+    reason, the decision does not change.
+    """
+
     @property
     def blocked(self) -> bool:
         """Return whether the zone got less than it asked for."""

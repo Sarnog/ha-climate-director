@@ -641,7 +641,7 @@
               "no_indoor_temperature": "no se puede leer la temperatura interior",
               "no_outdoor_temperature": "no se puede leer la temperatura exterior",
               "season_blocks_mode": "esta estación no lo permite",
-              "outdoor_outside_window": "hace demasiado calor o frío fuera para esto",
+              "outdoor_outside_window": "hace demasiado calor fuera para calentar o demasiado frío para enfriar",
               "mode_not_configured": "esta habitación no está configurada para esto",
               "no_source_available": "ningún aparato puede hacerlo ahora",
               "other_source_chosen": "otro aparato lo está haciendo",
@@ -661,6 +661,12 @@
               "after_zone": ":",
               "before_appliance": "con",
               "before_target": "a"
+            }
+          },
+          "outdoor_outside_window": {
+            "state": {
+              "heat": "hace demasiado calor fuera para calentar",
+              "cool": "hace demasiado frío fuera para enfriar"
             }
           }
         }

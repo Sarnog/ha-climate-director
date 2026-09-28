@@ -249,6 +249,12 @@ cannot chatter on a tenth of a degree:
 The start point counts as reached, the stop point as passed. One degree of band
 is a sensible start.
 
+When a duty stops because the room is at temperature, the **What was decided**
+notice says exactly that. When an outdoor bound holds a duty back, the notice
+names that duty: *it is too warm outside to heat* with **Only heat below this
+outdoor temperature**, and *it is too cold outside to cool* with **Only cool
+above this outdoor temperature**.
+
 ### What the screen refuses
 
 Four things are refused on saving, because each produces a zone that is there

@@ -15,7 +15,7 @@ automations nearly always make somewhere.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from .families import ModeFamily, family_of
 from .models import DirectorConfig, ModeSettings, Source, Zone
@@ -31,6 +31,22 @@ class Demand:
     reason: Reason
     deviation: float = 0.0
     """How far the indoor temperature sits past the switch-on point."""
+
+    duty: ModeFamily = ModeFamily.NEUTRAL
+    """De taak waarvoor dit antwoord geldt; bij een weigering de taak die weigerde.
+
+    Dezelfde reden betekent per taak iets anders: `outdoor_outside_window` is bij
+    verwarmen "te warm om te verwarmen" en bij koelen "te koud om te koelen". Wie de
+    reden aan een gebruiker vertelt, heeft de taak erbij nodig. Neutraal als het
+    antwoord voor geen van beide taken apart geldt, zoals een onleesbare
+    binnentemperatuur.
+
+    The duty this answer is about; for a refusal, the duty that refused. The same
+    reason means something different per duty: `outdoor_outside_window` is "too
+    warm to heat" for heating and "too cold to cool" for cooling. Whoever tells a
+    user the reason needs the duty with it. Neutral when the answer is about
+    neither duty on its own, such as an unreadable indoor temperature.
+    """
 
 
 def source_counts_for(
@@ -141,8 +157,10 @@ def evaluate(
     if indoor is None:
         return Demand(ModeFamily.NEUTRAL, Reason.NO_INDOOR_TEMPERATURE)
 
-    heat = _candidate(zone, world, ModeFamily.HEAT, indoor, running, outdoor_margin)
-    cool = _candidate(zone, world, ModeFamily.COOL, indoor, running, outdoor_margin)
+    heat, cool = (
+        replace(_candidate(zone, world, family, indoor, running, outdoor_margin), duty=family)
+        for family in (ModeFamily.HEAT, ModeFamily.COOL)
+    )
 
     wanted = [demand for demand in (heat, cool) if demand.family is not ModeFamily.NEUTRAL]
     if not wanted:

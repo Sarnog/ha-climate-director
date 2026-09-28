@@ -253,6 +253,12 @@ conmute sin parar por una décima de grado:
 El punto de arranque cuenta como alcanzado, el de parada como superado. Un
 grado de banda es un comienzo sensato.
 
+Si una tarea para porque la habitación está a temperatura, el aviso de **Qué se
+decidió** dice exactamente eso. Si un límite exterior frena una tarea, el aviso
+nombra esa tarea: *hace demasiado calor fuera para calentar* con **Calentar solo
+por debajo de esta temperatura exterior**, y *hace demasiado frío fuera para
+enfriar* con **Enfriar solo por encima de esta temperatura exterior**.
+
 ### Lo que la pantalla rechaza
 
 Cuatro cosas se rechazan al guardar, porque cada una produce una zona que está

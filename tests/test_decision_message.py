@@ -26,7 +26,10 @@ Dekking: de vier velden van het event, de actiezinnen, de redenzinnen en de
 richtingzin van de elders-melding, over de zeven tekstbestanden en de zes gidsen;
 het vaste veld `action` in het event, en in elke gids de alinea die `action`, de
 vijf waarden met hun woord in die taal en de invoer *Alleen deze acties* noemt (de
-naam komt uit `blueprints/automation/climate_director/decisions.yaml`).
+naam komt uit `blueprints/automation/climate_director/decisions.yaml`); de zin per
+taak van `outdoor_outside_window` (elk met het werkwoord van zijn eigen taak en
+nooit dat van de andere), en de gidsalinea die beide zinnen bij de twee
+buitengrenzen van het zonescherm citeert.
 Niet gedekt: de schermlabels en de formuliervelden (`tests/test_ui_complete.py`,
 `tests/test_install_guides.py`) en de sleutels die geen code opvraagt
 (`tests/test_text_producers.py`).
@@ -36,8 +39,11 @@ the direction sentence of the elsewhere message, across the seven text files and
 the six guides; the fixed `action` field in the event, and in every guide the
 paragraph naming `action`, the five values with their word in that language and
 the *Only these actions* input (the name comes from
-`blueprints/automation/climate_director/decisions.yaml`). Not covered: the screen
-labels and the form fields (`tests/test_ui_complete.py`,
+`blueprints/automation/climate_director/decisions.yaml`); the sentence per duty of
+`outdoor_outside_window` (each with the verb of its own duty and never the
+other's), and the guide paragraph quoting both sentences with the zone screen's
+two outdoor bounds. Not covered: the screen labels and the form fields
+(`tests/test_ui_complete.py`,
 `tests/test_install_guides.py`) and the keys no code asks for
 (`tests/test_text_producers.py`).
 """
@@ -151,6 +157,23 @@ def reason_sentences(language: str) -> dict[str, str]:
 def action_sentences(language: str) -> dict[str, str]:
     """Return every action's words in one language."""
     return _entity(language)["sensor"]["would_command"]["state_attributes"]["action"]["state"]
+
+
+def outdoor_sentences(language: str) -> dict[str, str]:
+    """Return the outdoor-bound reason per duty in one language."""
+    attributes = _entity(language)["sensor"]["zone_source"]["state_attributes"]
+    return attributes["outdoor_outside_window"]["state"]
+
+
+def zone_fields(language: str) -> dict[str, str]:
+    """Return the field labels of the zone screen in one language."""
+    data = json.loads((TRANSLATIONS / f"{language}.json").read_text(encoding="utf-8"))
+    return data["options"]["step"]["zone"]["data"]
+
+
+def task_word(language: str, action: str) -> str:
+    """Return the verb of an action phrase: its last word, without the Arabic article."""
+    return action_sentences(language)[action].split()[-1].lower().removeprefix("ال")
 
 
 def connectors(language: str) -> dict[str, str]:
@@ -729,6 +752,58 @@ def test_the_guide_names_the_four_fields_of_the_event(language: str) -> None:
 
 
 @pytest.mark.parametrize("language", LANGUAGES)
+def test_the_outdoor_sentence_names_the_duty(language: str) -> None:
+    """De buitengrens zegt welke taak ze tegenhoudt, en nooit de andere.
+
+    `outdoor_outside_window` heeft een zin per taak: bij verwarmen is het buiten te
+    warm, bij koelen te koud. Elke zin noemt het werkwoord van zijn eigen taak, zoals
+    de actiezin het schrijft (*verwarmen*, *koelen*), en niet dat van de andere; de
+    algemene zin op het attribuut `reason`, waar de taak niet bekend is, noemt ze
+    allebei. Een zin met de verkeerde taak erin zou de klacht terugbrengen die deze
+    zinnen oplossen.
+
+    The outdoor bound says which duty it holds back, and never the other. Each
+    sentence names the verb of its own duty, as the action phrase writes it, and
+    not the other one; the general sentence on the `reason` attribute, where the
+    duty is not known, names both. A sentence with the wrong duty in it would bring
+    back the complaint these sentences solve.
+    """
+    duty = outdoor_sentences(language)
+    assert set(duty) == {"heat", "cool"}
+    heat, cool = task_word(language, "heat"), task_word(language, "cool")
+    assert heat in duty["heat"].lower() and cool not in duty["heat"].lower(), duty
+    assert cool in duty["cool"].lower() and heat not in duty["cool"].lower(), duty
+    general = reason_sentences(language)["outdoor_outside_window"].lower()
+    assert heat in general and cool in general, general
+    for sentence in duty.values():
+        assert not _identified(sentence), sentence
+        assert not any(word in sentence.lower() for word in JARGON[language]), sentence
+
+
+@pytest.mark.parametrize("language", LANGUAGES)
+def test_the_guide_quotes_the_outdoor_sentences(language: str) -> None:
+    """Elke gids citeert beide taakzinnen bij de twee buitengrenzen, in één alinea.
+
+    Every guide quotes both duty sentences with the two outdoor bounds, in one
+    paragraph: the sentences come from the translation file, the labels from the
+    zone screen, so a changed sentence or label stands out here.
+    """
+    duty = outdoor_sentences(language)
+    fields = zone_fields(language)
+    needed = (
+        f"*{duty['heat']}*",
+        f"*{duty['cool']}*",
+        f"**{fields['heat_outdoor_max']}**",
+        f"**{fields['cool_outdoor_min']}**",
+    )
+    guide = (GUIDES / f"{language}.md").read_text(encoding="utf-8")
+    for paragraph in re.split(r"\n\s*\n", guide):
+        if all(item in " ".join(paragraph.split()) for item in needed):
+            return
+    raise AssertionError(f"{language}: geen alinea met {needed}")
+
+
+@pytest.mark.parametrize("language", LANGUAGES)
 def test_the_guide_names_the_action_field_and_its_filter(language: str) -> None:
     """Elke gids noemt `action`, de vijf waarden en *Alleen deze acties* in één alinea.
 
@@ -969,6 +1044,37 @@ class TestWhatALiveHouseShows:
             assert event["action"] == "off", event["action"]
             assert event["action_text"] == action_sentences("en")["off"], event["action_text"]
             assert event["message"] == _plain_message(event), event["message"]
+        finally:
+            await stop_house(live)
+
+    @pytest.mark.parametrize("duty", ["heat", "cool"])
+    async def test_an_outdoor_bound_names_its_duty(self, duty: str) -> None:
+        """De buitengrens noemt de taak die ze tegenhoudt, in een draaiend huis.
+
+        Verwarmen mag hier alleen onder 19 °C buiten, koelen alleen boven 24 °C. Bij
+        25 °C en een koude kamer houdt de grens het verwarmen tegen; bij 20 °C stopt
+        een koelende airco omdat het buiten te koud is om te koelen. De reden-id is
+        in beide gevallen `outdoor_outside_window`, de zin niet.
+
+        The outdoor bound names the duty it holds back, in a running house. Heating
+        is allowed only below 19 °C outside here, cooling only above 24 °C. At 25 °C
+        and a cold room the bound holds heating back; at 20 °C a cooling air
+        conditioner stops because it is too cold outside to cool. The reason id is
+        `outdoor_outside_window` in both cases, the sentence is not.
+        """
+        house = installation()
+        house["zones"][0]["heat"] = settings(21.0, 20.0, outdoor={"maximum": 19.0})
+        house["zones"][0]["cool"] = settings(23.0, 24.0, outdoor={"minimum": 24.0})
+        states = world(indoor="18.0" if duty == "heat" else "26.0")
+        states["sensor.buiten"] = ("25.0" if duty == "heat" else "20.0", {})
+        if duty == "cool":
+            states[LIVING] = ("cool", {"temperature": 23.0})
+        live = await start_house(house, states=states, appliance="obedient")
+        try:
+            event = await self._event(live)
+            assert_readable(event, "outdoor_outside_window")
+            assert event["reason_text"] == outdoor_sentences("en")[duty], event["reason_text"]
+            assert event["action"] == ("stays_off" if duty == "heat" else "off"), event
         finally:
             await stop_house(live)
 

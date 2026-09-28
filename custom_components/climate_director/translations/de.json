@@ -641,7 +641,7 @@
               "no_indoor_temperature": "die Innentemperatur ist nicht zu lesen",
               "no_outdoor_temperature": "die Außentemperatur ist nicht zu lesen",
               "season_blocks_mode": "diese Jahreszeit lässt das nicht zu",
-              "outdoor_outside_window": "es ist draußen zu warm oder zu kalt dafür",
+              "outdoor_outside_window": "es ist draußen zu warm zum Heizen oder zu kalt zum Kühlen",
               "mode_not_configured": "dieser Raum ist dafür nicht eingerichtet",
               "no_source_available": "kein Gerät kann es gerade tun",
               "other_source_chosen": "ein anderes Gerät tut es",
@@ -661,6 +661,12 @@
               "after_zone": ":",
               "before_appliance": "mit",
               "before_target": "auf"
+            }
+          },
+          "outdoor_outside_window": {
+            "state": {
+              "heat": "es ist draußen zu warm zum Heizen",
+              "cool": "es ist draußen zu kalt zum Kühlen"
             }
           }
         }

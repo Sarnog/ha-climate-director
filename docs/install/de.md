@@ -253,6 +253,12 @@ Gerät nicht auf ein Zehntelgrad flattert:
 Der Startpunkt gilt als erreicht, der Stopppunkt als überschritten. Ein Grad
 Totzone ist ein vernünftiger Anfang.
 
+Stoppt eine Aufgabe, weil der Raum seine Temperatur hat, dann sagt die Meldung von
+**Was entschieden wurde** genau das. Hält eine Außengrenze eine Aufgabe zurück,
+dann nennt die Meldung diese Aufgabe: *es ist draußen zu warm zum Heizen* bei
+**Nur heizen unter dieser Außentemperatur**, und *es ist draußen zu kalt zum
+Kühlen* bei **Nur kühlen über dieser Außentemperatur**.
+
 ### Was der Bildschirm verweigert
 
 Vier Dinge werden beim Speichern abgelehnt, weil sie eine Zone ergeben, die

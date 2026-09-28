@@ -641,7 +641,7 @@
               "no_indoor_temperature": "la température intérieure est illisible",
               "no_outdoor_temperature": "la température extérieure est illisible",
               "season_blocks_mode": "cette saison ne le permet pas",
-              "outdoor_outside_window": "il fait trop chaud ou trop froid dehors pour cela",
+              "outdoor_outside_window": "il fait trop chaud dehors pour chauffer ou trop froid pour refroidir",
               "mode_not_configured": "cette pièce n'est pas configurée pour cela",
               "no_source_available": "aucun appareil ne peut le faire maintenant",
               "other_source_chosen": "un autre appareil le fait",
@@ -661,6 +661,12 @@
               "after_zone": " :",
               "before_appliance": "avec",
               "before_target": "à"
+            }
+          },
+          "outdoor_outside_window": {
+            "state": {
+              "heat": "il fait trop chaud dehors pour chauffer",
+              "cool": "il fait trop froid dehors pour refroidir"
             }
           }
         }
