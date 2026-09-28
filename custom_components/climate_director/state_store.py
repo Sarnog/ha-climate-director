@@ -55,6 +55,29 @@ def _isoformat(moment: datetime | None) -> str | None:
     return moment.isoformat() if moment else None
 
 
+def _stored_time(raw: object) -> datetime | None:
+    """Return the moment in a stored value, or `None` when there is none to read.
+
+    `dt_util.parse_datetime` geeft `None` terug voor iets dat het niet herkent, maar gooit
+    een `ValueError` voor iets dat er wel op lijkt en het niet is:
+    `"2026-13-45T10:00:00+00:00"` heeft geen maand 13. Zo'n waarde hoort net zo goed als
+    afwezig te tellen, anders valt de eerste beslissing om en staat de integratie stil tot de
+    volgende herstart. Elk opgeslagen tijdstip leest daarom langs deze functie: `until`,
+    `home_since` en `asleep_since`.
+
+    `dt_util.parse_datetime` returns `None` for something it does not recognise, but raises a
+    `ValueError` for something that does look like a date and is not one:
+    `"2026-13-45T10:00:00+00:00"` has no month 13. Such a value should count as absent just
+    the same, otherwise the first decision falls over and the integration stands still until
+    the next restart. Every stored moment therefore reads through this function: `until`,
+    `home_since` and `asleep_since`.
+    """
+    try:
+        return dt_util.parse_datetime(str(raw))
+    except ValueError:
+        return None
+
+
 class _StateStoreMixin(_CoordinatorBase):
     """Opslag, herstel en quarantaine van wat een mens met de hand heeft gezegd.
 
@@ -214,7 +237,7 @@ class _StateStoreMixin(_CoordinatorBase):
         until_raw = stored.get("until")
         if isinstance(until_raw, Mapping):
             for zone_id, raw in until_raw.items():
-                until = dt_util.parse_datetime(str(raw))
+                until = _stored_time(raw)
                 if until is not None and now < until:
                     self._precondition[zone_id] = until
 
@@ -240,12 +263,12 @@ class _StateStoreMixin(_CoordinatorBase):
             for resident_id, raw in home_raw.items():
                 if resident_id not in presence:
                     continue
-                since = dt_util.parse_datetime(str(raw))
+                since = _stored_time(raw)
                 if since is None or not reads_as_home(self.hass.states.get(presence[resident_id])):
                     continue
                 self._home_since[resident_id] = since
 
-        self._asleep_since = dt_util.parse_datetime(str(stored.get("asleep_since") or ""))
+        self._asleep_since = _stored_time(stored.get("asleep_since"))
         if hasattr(self, "_restore_overrides"):
             self._restore_overrides(stored, now)
 

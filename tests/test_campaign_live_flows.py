@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import pathlib
+from datetime import timedelta
 from typing import Any
 
 import pytest
@@ -33,6 +34,7 @@ from harness_live import (
     zone,
 )
 from homeassistant.helpers.storage import Store
+from homeassistant.util import dt as dt_util
 
 from custom_components.climate_director.const import CONF_INSTALLATION, DOMAIN, STORAGE_VERSION
 from custom_components.climate_director.coordinator import storage_key
@@ -1044,6 +1046,64 @@ def _write_store(config_dir: str, entry_id: str, data: Any) -> pathlib.Path:
     return path
 
 
+#: De twee bewoners van het huis met een gebroken opslag, als (aanwezigheid, lader).
+#: The two residents of the house with a broken store, as (presence, charger).
+PEOPLE = {
+    "danny": ("person.danny", "sensor.danny_lader"),
+    "nancy": ("person.nancy", "sensor.nancy_lader"),
+}
+
+#: Een tijd die Home Assistant niet kan lezen: maand 13 bestaat niet, en
+#: `dt_util.parse_datetime` gooit daar een `ValueError` op in plaats van `None` terug te
+#: geven. Zo'n waarde hoort als afwezig te tellen.
+#:
+#: A time Home Assistant cannot read: month 13 does not exist, and `dt_util.parse_datetime`
+#: raises a `ValueError` on it instead of returning `None`. Such a value should count as
+#: absent.
+IMPOSSIBLE = "2026-13-45T10:00:00+00:00"
+
+
+def _resident(resident_id: str) -> dict[str, Any]:
+    """Return one resident in stored form, with a deadline late enough for any test run.
+
+    Zonder slaapvenster telt de lader de klok rond, zodat een bewoner in bed ook echt als
+    slapend geldt op het moment dat deze toets draait - dat is wat het slaapmoment hier
+    meetbaar maakt.
+
+    Without a sleep window the charger counts around the clock, so a resident in bed really
+    counts as asleep at the moment this test runs - that is what makes the sleep moment
+    measurable here.
+    """
+    person, charger = PEOPLE[resident_id]
+    return {
+        "resident_id": resident_id,
+        "name": resident_id.title(),
+        "presence_entity": person,
+        "sleep_entity": charger,
+        "sleep_state": "wireless",
+        "wake_deadline": {"at": "23:59:59"},
+    }
+
+
+def _house_with_two_residents() -> dict[str, Any]:
+    """Return the cold one-room house with two residents whose moments come from the store."""
+    installation = simple_installation()
+    installation["residents"] = [_resident("danny"), _resident("nancy")]
+    return installation
+
+
+def _two_residents(
+    *, danny: str = "up", nancy: str = "up"
+) -> dict[str, tuple[str, dict[str, Any]]]:
+    """Return the cold room with each resident at home in bed (`bed`), up or `away`."""
+    found = cold()
+    for resident_id, how in (("danny", danny), ("nancy", nancy)):
+        person, charger = PEOPLE[resident_id]
+        found[person] = ("not_home" if how == "away" else "home", {})
+        found[charger] = ("wireless" if how == "bed" else "none", {})
+    return found
+
+
 class TestAStartupWithBrokenStorage:
     """Het bewaarde werk van een herstart mag nooit het opstarten verhinderen.
 
@@ -1099,6 +1159,93 @@ class TestAStartupWithBrokenStorage:
             assert ("climate_director", "corrupt_storage_kapot") in registry.issues
         finally:
             await stop_house(home)
+
+    async def test_an_impossible_precondition_time_counts_as_unknown(self) -> None:
+        """Een onmogelijke tijd bij `until` laat de eerste beslissing gewoon doorgaan.
+
+        `dt_util.parse_datetime` gooit een `ValueError` bij iets dat op een datum lijkt maar
+        er geen is. Zo'n waarde hoort als afwezig te tellen, net als onzin en een verkeerde
+        vorm - anders valt de eerste beslissing om en blijft de kamer koud tot de volgende
+        herstart.
+
+        An impossible time at `until` lets the first decision simply go through.
+        """
+        config_dir = new_config_dir()
+        _write_store(config_dir, "tot", {"until": {"woonkamer": IMPOSSIBLE}})
+        home = await start_house(
+            _house_with_two_residents(),
+            states=_two_residents(),
+            config_dir=config_dir,
+            entry_id="tot",
+        )
+        try:
+            assert home.state(LIVING) == "heat", "de eerste beslissing hoort te draaien"
+            assert home.coordinator._precondition == {}, "het onmogelijke tijdstip telt als afwezig"
+        finally:
+            await stop_house(home)
+
+    async def test_an_impossible_homecoming_counts_as_unknown(self) -> None:
+        """Een onmogelijke tijd bij `home_since` telt als een onbekende thuiskomst.
+
+        De bewoner is weg, dus er valt ook niets terug te zetten; waar het hier om gaat is
+        dat het lezen van dat tijdstip de rest van het bestand niet tegenhoudt.
+
+        An impossible time at `home_since` counts as an unknown homecoming.
+        """
+        config_dir = new_config_dir()
+        _write_store(config_dir, "thuis", {"home_since": {"nancy": IMPOSSIBLE}})
+        home = await start_house(
+            _house_with_two_residents(),
+            states=_two_residents(nancy="away"),
+            config_dir=config_dir,
+            entry_id="thuis",
+        )
+        try:
+            assert home.state(LIVING) == "heat", "de eerste beslissing hoort te draaien"
+            assert "nancy" not in home.coordinator._home_since
+        finally:
+            await stop_house(home)
+
+    async def test_an_impossible_sleep_moment_counts_as_unknown(self) -> None:
+        """Een onmogelijk slaapmoment wacht op niemand; een leesbaar moment wel.
+
+        De eerste start is de tegenproef: met een leesbaar moment in de opslag houdt de
+        bewoner in bed het huis tegen (`waiting_for_sleeper`). Met het onmogelijke moment
+        telt dat moment als afwezig, dus wacht het huis op niemand en start de kamer.
+
+        An impossible sleep moment waits for nobody; a readable one does.
+        """
+        config_dir = new_config_dir()
+        readable = (dt_util.now() - timedelta(hours=1)).isoformat()
+        _write_store(config_dir, "nacht", {"asleep_since": readable})
+        home = await start_house(
+            _house_with_two_residents(),
+            states=_two_residents(danny="bed"),
+            config_dir=config_dir,
+            entry_id="nacht",
+        )
+        try:
+            decision = home.coordinator.data.decision_for("woonkamer")
+            assert decision is not None
+            assert decision.reason.value == "waiting_for_sleeper"
+            assert home.state(LIVING) == "off"
+        finally:
+            await stop_house(home)
+        _write_store(config_dir, "nacht", {"asleep_since": IMPOSSIBLE})
+        again = await start_house(
+            _house_with_two_residents(),
+            states=_two_residents(danny="bed"),
+            config_dir=config_dir,
+            entry_id="nacht",
+        )
+        try:
+            assert again.coordinator._asleep_since is None
+            decision = again.coordinator.data.decision_for("woonkamer")
+            assert decision is not None
+            assert decision.reason.value != "waiting_for_sleeper"
+            assert again.state(LIVING) == "heat"
+        finally:
+            await stop_house(again)
 
 
 # ---------------------------------------------------------------------------
