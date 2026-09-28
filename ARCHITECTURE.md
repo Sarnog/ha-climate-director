@@ -53,7 +53,7 @@ geen gebruikersweergave.
 Een uitspraak in deze engine hangt altijd aan één ding, en welk ding dat is, is
 een ontwerpbesluit. Waar dat besluit niet opgeschreven stond, is het in vier
 achtereenvolgende reparatierondes telkens één stap opgeschoven — smal, dan te
-breed, dan weer terug. Deze dertien ankers staan daarom hier, vóór alle modules.
+breed, dan weer terug. Deze zestien ankers staan daarom hier, vóór alle modules.
 Wijk er niet van af zonder ze hier eerst te wijzigen.
 
 1. **Een lopend vooruit-verzoek** is één begrip in de hele engine:
@@ -326,6 +326,45 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     `home_since` is "wie was wanneer thuis" en wordt in de diagnose **gelakt**,
     net als `home` en `asleep`.
 
+14. **De reden van een zone die stopt, hoort bij de taak die draaide.** Weigeren
+    verwarmen en koelen allebei en draaide er net één van de twee, dan zegt díe taak
+    waarom ze stopt: koelen dat stopt omdat de kamer koel genoeg is, meldt
+    `satisfied`, ook als verwarmen op dat moment niet zou mogen van het buitenweer.
+    Dit anker maakt de reden **smaller** dan "de informatiefste weigering van de
+    twee". Een zone die niets deed houdt die rangorde (`_best_refusal`), en ook een
+    taak die de zone niet kent - koelen met de hand in een zone zonder koelen - valt
+    erop terug. De taak reist met de reden mee (`Demand.duty`, `ZoneDecision.duty`,
+    buiten de gelijkheid), zodat de melding bij `outdoor_outside_window` kan zeggen of
+    het buiten te warm is om te verwarmen of te koud om te koelen. Een reden uit een
+    poort, een circuit of een groep heeft geen taak.
+15. ***Wacht op deze slaper tot* geldt voor de ochtend na een nacht waarin het huis
+    sliep.** Het huis gaat slapen op het moment dat iedereen die thuis is slaapt
+    (`night.house_asleep_since`); zolang er thuis nog iemand op is, houdt een slaper
+    niemand tegen, ook niet na middernacht. Het moment (`WorldState.asleep_since`)
+    blijft staan zolang er thuis nog iemand slaapt - wie om drie uur even opstaat
+    maakt de nacht niet ongedaan - en vervalt zodra niemand thuis meer slaapt. Een
+    slaper wacht alleen op een moment ná de laatste start van zijn eigen
+    slaapvenster (`night.slept_tonight`), dus het moment van vrijdagnacht telt
+    zaterdagnacht niet. Dit anker maakt het wachten **smaller** dan "thuis, slapend
+    en vóór de uiterste tijd van vandaag"; de avond ervoor dekt de slaappoort
+    (`EVERYONE_ASLEEP`), zoals altijd. Het moment overleeft een herstart via de
+    opslag. Is het onbekend, bijvoorbeeld na een herstart terwijl iemand op was, dan
+    wordt er niet gewacht, en zodra iedereen slaapt wordt het alsnog vastgelegd. Een
+    bewoner die thuis is zonder slaapsensor slaapt nooit, dus zo'n huis gaat nooit
+    slapen en wacht 's ochtends op niemand. In de diagnose wordt het moment gelakt,
+    net als `home_since`.
+16. ***Opstaan zet het huis pas aan vanaf* remt het opstaan van één bewoner, en
+    alleen het beginnen.** Vóór die tijd, op de dagen van de rem (`RiseBrake`), telt
+    die bewoner niet als "op" voor de wakker-poort; telt daardoor niemand als op, dan
+    start het huis niet, met `EARLY_RISER`. Staat een ander op zonder rem, dan start
+    het huis gewoon. De rem geldt nooit op een vakantiedag en remt alleen wie
+    **opstaat**, dus na een nacht waarin het huis sliep (anker 15): wie 's avonds
+    laat nog op is en een onbekend moment worden niet geremd. Het is een rem op
+    beginnen: een zone die al draait, regelt door. Gastenmodus binnen het
+    gastenvenster heft de rem op, een vooruit-verzoek gaat er altijd voor, en het
+    stiltevenster en de roosters zijn niet geraakt. *Wacht op deze slaper tot* blijft
+    ernaast gewoon gelden.
+
 ### De belangrijkste scheidslijn
 
 Het project bestaat uit twee helften met een harde grens ertussen:
@@ -397,6 +436,8 @@ Home Assistant (entiteitstoestanden, klokgebeurtenissen)
 │  plan.py        uitvoer (UnitCommand, ZoneDecision, Reason, …)   │
 │  diff.py        Plan vs werkelijkheid → wat er echt moet         │
 │  serialise.py   dict ↔ dataclasses                               │
+│    resident_storage.py  de ochtendinstellingen van een bewoner   │
+│  night.py       de nacht: wie slaapt, sinds wanneer, wie opstaat │
 └──────────────────────────────────────────────────────────────────┘
       │
       ▼
@@ -470,6 +511,11 @@ instelling — dan opent de eerste die opstaat het huis. De tijd staat met opzet
 rooster: een roostervenster zegt óók wanneer het huis weer uit moet, deze tijd zegt alleen
 tot wanneer je op iemand wacht.
 
+Dat wachten geldt pas als het huis deze nacht geslapen heeft (anker 15): een slaper houdt
+niemand tegen zolang er thuis nog iemand op is. En staat iedereen die op is te vroeg op
+(`Resident.rise_brake`, anker 16), dan is dat `EARLY_RISER`, maar alleen voor een zone die
+nog niet draait: `_household` krijgt daarvoor mee of de zone draait.
+
 De slaapsensor zelf kent twee grenzen. Het **slaapvenster** is de nacht: daarbinnen
 betekent "telefoon op de lader" dat iemand in bed ligt, en het is dat venster dat het huis
 om bedtijd uitzet. **`Resident.sleep_in`** rekt daar alleen de ochtend van op, op de dagen
@@ -518,6 +564,16 @@ thuis was vóór het begin van dit venster (`home_since < started_at`), en het b
 open roostervenster van een bewoner die thuis is. Wie in een leeg huis ná het begin
 thuiskomt, blijft stil tot het venster afloopt; dat is de andere kant van anker 13.
 
+### night.py — de nacht van het huis
+
+Alles over de slaap van het huis op één plek, puur en zonder Home Assistant: wie als
+slapend telt (`asleep_at`, `asleep`: de slaapsensor binnen het slaapvenster, met het
+uitslapen erbij), wanneer de lopende nacht van een bewoner begon (`night_began`: de laatste
+start van zijn slaapvenster), of het huis in die nacht geslapen heeft (`slept_tonight`),
+het bijhouden van dat moment ronde na ronde (`house_asleep_since`, anker 15) en de
+opstaan-rem (`rise_braked`, anker 16). `gates.py` leest het; de koppelingslaag bewaart het
+moment en geeft het de engine terug in `WorldState.asleep_since`.
+
 ### hysteresis.py — moet het
 
 Bepaalt de gevraagde taak uit de binnentemperatuur, het seizoen en het
@@ -533,6 +589,10 @@ Vraagt de zone niets, dan zegt de reden wélk soort niets: `satisfied` als de ka
 voorbij de verre rand van de band ligt, `within_deadband` als hij erbinnen ligt en wacht
 tot het aanpunt weer gehaald wordt. Dat onderscheid beantwoordt de vraag die gebruikers
 stellen: het is 20,5 en het aanpunt staat op 20, waarom slaat hij niet aan?
+
+Weigeren beide taken, dan zegt de taak die net draaide waarom ze stopt (anker 14); alleen
+een zone die niets deed krijgt de informatiefste van de twee weigeringen. Elk antwoord zegt
+voor welke taak het geldt (`Demand.duty`).
 
 ### takeover.py — wie het overneemt
 
@@ -701,6 +761,10 @@ plaats van bij het opstarten om te vallen. Wat structureel niet klopt komt uit
 Booleans worden expliciet níét als getal gelezen: `True` is in Python een `int`, en een
 prioriteit van `True` zou stilletjes 1 worden.
 
+De drie ochtendinstellingen van een bewoner - *Uitslapen tot*, *Wacht op deze slaper tot*
+en *Opstaan zet het huis pas aan vanaf* - lezen en schrijven in `resident_storage.py`, met
+één regel voor alle drie: zonder tijd is er geen instelling, ook als er dagen staan.
+
 ### diff.py — wat moet er echt gebeuren
 
 Het plan beschrijft eindtoestanden; deze pure functie bepaalt welke daarvan nog niet
@@ -726,7 +790,7 @@ momentopname met zijn lezers, waarin `reads_as_home` de enige plek is die een
 aanwezigheidsentiteit als thuis leest; de coordinator zelf luistert, beslist, voert
 uit en publiceert.
 
-Vier dingen zijn er subtiel aan:
+Zes dingen zijn er subtiel aan:
 
 - **Alles in lokale, tijdzonebewuste tijd.** Roostervensters worden in lokale tijd gelezen,
   terwijl tijdstempels van entiteiten in UTC binnenkomen. Die twee mengen zou de leeftijd
@@ -749,6 +813,14 @@ Vier dingen zijn er subtiel aan:
   commando dat het plan dit apparaat geeft, niet de reden: een zone die door een poort wordt
   tegengehouden krijgt evengoed een stand, en "met rust gelaten" zeggen terwijl het apparaat
   wordt uitgezet is een leugen die de gebruiker ziet gebeuren.
+- **Het event draagt de actie ook als vaste sleutel.** `action` is `heat`, `cool`, `off`,
+  `stays_off` of `left_alone`: de sleutel waarvan `action_text` de zin is, uit dezelfde
+  aanroep, zodat de twee niet uit elkaar lopen. Wie alleen wil horen dat iets uitgaat,
+  filtert daarop in plaats van op een vertaalde zin.
+- **Het moment waarop het huis ging slapen komt uit de rondes zelf.** `build_world` leest
+  het alleen; `world_builder._note_house_asleep` vraagt elke ronde
+  `night.house_asleep_since` en schrijft het weg zodra het verandert, zodat een herstart
+  midden in de nacht het niet kwijtraakt. In de diagnose gelakt.
 
 ### applier.py — uitvoeren
 
@@ -840,7 +912,7 @@ zelfs, want een vertaling kan ontbreken én uit de pas lopen met de code. De zin
 onder `exceptions` in `strings.json`, omdat Home Assistant het hoogste niveau van dat bestand
 tegen een vast schema valideert.
 
-De beslismelding heeft er een tweede woonplaats bij: de negenentwintig redenen, de vijf
+De beslismelding heeft er een tweede woonplaats bij: de dertig redenen, de vijf
 actiewoorden en de twee verbindingswoorden van de melding staan onder
 `entity.sensor.zone_source.state_attributes...` en `entity.sensor.would_command...`. Die plek
 is gekozen omdat hassfest hem accepteert en Home Assistant het attribuut dan ook op de
@@ -851,6 +923,12 @@ is de enige aanroep die de coordinator nog doet: het zoekt de vier leesbare veld
 (welk apparaat, welke actie, welke zin) en woont hier en niet in de coordinator, omdat die al
 op de maatlijst staat en de zin tekst is en geen koppeling. Het resultaat is presentatie; de
 identifier blijft het contract.
+
+Eén reden heeft een zin per taak: `outdoor_outside_window` is bij verwarmen *het is buiten
+te warm om te verwarmen* en bij koelen *het is buiten te koud om te koelen*
+(`state_attributes.outdoor_outside_window.state.<taak>`). `reason_sentence` neemt die als
+de beslissing een taak meedraagt (`ZoneDecision.duty`); zonder taak is het de algemene zin,
+die beide noemt.
 
 ### blueprints/ — de must-have automatiseringen, kant-en-klaar
 
@@ -864,6 +942,10 @@ De vindbaarheid wordt in plaats daarvan opgelost met een reparatiemelding: zodra
 `climate_director_precondition_refused` luistert, staat dat in Home Assistant. Meetbaar via
 `hass.bus.async_listeners()`, herbeoordeeld zodra Home Assistant klaar is met starten en bij
 elke herlaadbeurt van de automatiseringen.
+
+De besluitmelder filtert op `reason` (*Alleen deze redenen*), op `action` (*Alleen deze
+acties*) en op zone. Een event zonder `action`, van een oudere integratie, valt niet weg op
+het actiefilter: een filter dat nooit kan slagen zou anders alles stil maken.
 
 ### problems.py — configuratiefouten zichtbaar maken
 
@@ -1250,7 +1332,7 @@ other no user-facing display.
 A statement in this engine always hangs on one thing, and which thing that is, is
 a design decision. Wherever that decision was not written down, it shifted by one
 step in four successive repair rounds — narrow, then too broad, then back again.
-These thirteen anchors therefore sit here, ahead of every module. Do not depart from
+These sixteen anchors therefore sit here, ahead of every module. Do not depart from
 them without changing them here first.
 
 1. **A running pre-conditioning request** is one concept throughout the engine:
@@ -1514,6 +1596,45 @@ them without changing them here first.
     `home_since` is "who was home when" and is **redacted** in the diagnostics,
     just like `home` and `asleep`.
 
+14. **The reason of a zone that stops belongs to the duty that ran.** When heating and
+    cooling both refuse and one of the two just ran, *that* duty says why it stops:
+    cooling that stops because the room is cool enough reports `satisfied`, even when
+    heating would not be allowed by the weather outside at that moment. This anchor
+    makes the reason **narrower** than "the more informative of the two refusals". A
+    zone that was doing nothing keeps that ranking (`_best_refusal`), and so does a
+    duty the zone does not know - cooling by hand in a zone without cooling. The duty
+    travels along with the reason (`Demand.duty`, `ZoneDecision.duty`, outside
+    equality), so the notice can say for `outdoor_outside_window` whether it is too
+    warm outside to heat or too cold to cool. A reason from a gate, a circuit or a
+    group carries no duty.
+15. ***Wait for this sleeper until* applies to the morning after a night the house
+    slept.** The house goes to sleep the moment everybody at home is asleep
+    (`night.house_asleep_since`); while somebody at home is still up, a sleeper
+    holds nobody back, not after midnight either. The moment
+    (`WorldState.asleep_since`) stays while somebody at home is still asleep -
+    whoever gets up for a moment at three does not undo the night - and lapses as
+    soon as nobody at home sleeps any more. A sleeper only waits on a moment after
+    the latest start of their own sleep window (`night.slept_tonight`), so Friday
+    night's moment does not count on Saturday night. This anchor makes the waiting
+    **narrower** than "home, asleep and before today's deadline"; the evening before
+    is covered by the sleep gate (`EVERYONE_ASLEEP`), as always. The moment survives
+    a restart through the store. When it is unknown, for instance after a restart
+    while somebody was up, nobody is waited for, and once everybody sleeps it is
+    recorded after all. A resident at home without a sleep sensor never sleeps, so
+    such a house never goes to sleep and waits for nobody in the morning. The moment
+    is redacted in the diagnostics, just like `home_since`.
+16. ***Getting up only starts the house from* brakes one resident's getting up, and
+    only the starting.** Before that time, on the brake's days (`RiseBrake`), that
+    resident does not count as "up" for the wake gate; when nobody counts as up
+    because of it, the house does not start, with `EARLY_RISER`. When somebody else
+    without a brake gets up, the house simply starts. The brake never applies on a
+    holiday and only brakes whoever **gets up**, so after a night the house slept
+    (anchor 15): whoever is still up late in the evening and an unknown moment are
+    not braked. It is a brake on starting: a zone already running carries on
+    regulating. Guest mode inside the guest window lifts the brake, a
+    pre-conditioning request always goes first, and the quiet window and the
+    schedules are untouched. *Wait for this sleeper until* keeps applying beside it.
+
 ### The most important dividing line
 
 The project consists of two halves with a hard border between them:
@@ -1584,6 +1705,8 @@ Home Assistant (entity states, clock events)
 │  plan.py        output (UnitCommand, ZoneDecision, Reason, …)    │
 │  diff.py        Plan vs reality → what actually has to happen    │
 │  serialise.py   dict ↔ dataclasses                               │
+│    resident_storage.py  a resident's morning settings            │
+│  night.py       the night: who sleeps, since when, who gets up   │
 └──────────────────────────────────────────────────────────────────┘
       │
       ▼
@@ -1656,6 +1779,11 @@ that setting — the first one up then opens the house. The time stands delibera
 from the schedule: a schedule window also says when the house should go off again, this
 time only says how long you wait for somebody.
 
+That waiting only applies once the house has slept this night (anchor 15): a sleeper holds
+nobody back while somebody at home is still up. And when everybody who is up got up too
+early (`Resident.rise_brake`, anchor 16), that is `EARLY_RISER`, but only for a zone not yet
+running: `_household` is told for that whether the zone runs.
+
 The sleep sensor itself knows two bounds. The **sleep window** is the night: inside it
 "phone on the charger" means somebody is in bed, and it is that window which switches the
 house off at bedtime. **`Resident.sleep_in`** stretches only its morning, on the days that
@@ -1704,6 +1832,16 @@ home before this window began (`home_since < started_at`), and the existing open
 schedule window of a resident who is home. Whoever comes home to an empty house after
 the beginning stays quiet until the window lapses; that is the other side of anchor 13.
 
+### night.py — the house's night
+
+Everything about the house's sleep in one place, pure and without Home Assistant: who counts
+as asleep (`asleep_at`, `asleep`: the sleep sensor inside the sleep window, with sleeping in
+added), when a resident's current night began (`night_began`: the latest start of their
+sleep window), whether the house slept during that night (`slept_tonight`), keeping that
+moment round after round (`house_asleep_since`, anchor 15) and the rise brake
+(`rise_braked`, anchor 16). `gates.py` reads it; the binding layer stores the moment and
+hands it back to the engine in `WorldState.asleep_since`.
+
 ### hysteresis.py — is it needed
 
 Derives the requested duty from indoor temperature, season and outdoor window. It
@@ -1720,6 +1858,10 @@ the room lies past the far edge of the band, `within_deadband` when it lies insi
 waiting for the switch-on point to be reached again. That distinction answers the
 question users actually ask: it is 20.5 and the switch-on point is 20, so why does it
 not kick in?
+
+When both duties refuse, the duty that just ran says why it stops (anchor 14); only a zone
+that was doing nothing gets the more informative of the two refusals. Every answer says which
+duty it is about (`Demand.duty`).
 
 ### takeover.py — who takes over
 
@@ -1884,6 +2026,10 @@ out of `validate()`, not out of an exception here.
 Booleans are explicitly *not* read as numbers: `True` is an `int` in Python, and a priority
 of `True` would silently become 1.
 
+A resident's three morning settings - *Sleeping in until*, *Wait for this sleeper until* and
+*Getting up only starts the house from* - are read and written in `resident_storage.py`,
+with one rule for all three: without a time there is no setting, even when days stand there.
+
 ### diff.py — what actually has to happen
 
 The plan describes end states; this pure function works out which of them do not hold yet.
@@ -1907,7 +2053,7 @@ their timers, and `world_builder.py` builds the snapshot with its readers, in wh
 `reads_as_home` is the only place reading a presence entity as home; the coordinator itself
 listens, decides, executes and publishes.
 
-Four things about it are subtle:
+Six things about it are subtle:
 
 - **Everything in local, timezone-aware time.** Schedule windows are read in local time,
   while entity timestamps arrive in UTC. Mixing the two would put an open door's age hours
@@ -1929,6 +2075,14 @@ Four things about it are subtle:
   follows the command the plan gives this appliance, not the reason: a zone held back by a
   gate gets a mode all the same, and saying "left alone" while the appliance is switched off
   is a lie the user watches happen.
+- **The event carries the action as a fixed key too.** `action` is `heat`, `cool`, `off`,
+  `stays_off` or `left_alone`: the key `action_text` is the sentence of, from the same call,
+  so the two cannot drift apart. Whoever only wants to hear that something goes off filters
+  on it instead of on a translated sentence.
+- **The moment the house went to sleep comes from the rounds themselves.** `build_world`
+  only reads it; `world_builder._note_house_asleep` asks `night.house_asleep_since` every
+  round and writes it away as soon as it changes, so a restart in the middle of the night
+  does not lose it. Redacted in the diagnostics.
 
 ### applier.py — execution
 
@@ -2017,7 +2171,7 @@ twice, in fact, since a translation may be missing *and* may have drifted from t
 sentences live under `exceptions` in `strings.json`, because Home Assistant validates the top
 level of that file against a fixed schema.
 
-The decision message has a second home here: the twenty-nine reasons, the five action words
+The decision message has a second home here: the thirty reasons, the five action words
 and the two connecting words of the message live under
 `entity.sensor.zone_source.state_attributes...` and `entity.sensor.would_command...`. That
 spot was chosen because hassfest accepts it and Home Assistant then shows the attribute
@@ -2028,6 +2182,12 @@ is the one call the coordinator still makes: it gathers the four readable fields
 appliance, which action, which sentence) and lives here rather than in the coordinator,
 because that one already sits on the measure list and the sentence is text, not binding. The
 result is presentation; the identifier stays the contract.
+
+One reason has a sentence per duty: `outdoor_outside_window` is *it is too warm outside to
+heat* for heating and *it is too cold outside to cool* for cooling
+(`state_attributes.outdoor_outside_window.state.<duty>`). `reason_sentence` takes that one
+when the decision carries a duty (`ZoneDecision.duty`); without a duty it is the general
+sentence, which names both.
 
 ### blueprints/ — the must-have automations, ready-made
 
@@ -2041,6 +2201,10 @@ Findability is solved with a repair notice instead: the moment nobody is listeni
 `climate_director_precondition_refused`, Home Assistant says so. Measured through
 `hass.bus.async_listeners()`, judged afresh once Home Assistant has finished starting and on
 every automation reload.
+
+The decision notifier filters on `reason` (*Only these reasons*), on `action` (*Only these
+actions*) and on zone. An event without `action`, from an older integration, does not drop
+out on the action filter: a filter that can never match would otherwise silence everything.
 
 ### problems.py — surfacing configuration mistakes
 

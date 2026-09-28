@@ -31,24 +31,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   `AGENTS.md`, en dat bestand staat in `.gitignore`. Wie de repo kloont kan die afspraak dus
   niet nalezen, en een bewaking die er zelf naar zou kijken zou in CI omvallen. De afspraken
   horen in `ARCHITECTURE.md`, dat wél meegaat in de repo.
-- **Een kamer op temperatuur meldt de reden van de andere taak** — stopt het koelen omdat de
-  kamer koel genoeg is, dan kan de beslismelding toch zeggen dat het buiten te warm of te
-  koud is. Weigeren beide taken, dan laat `evaluate` de "informatiefste" weigering winnen,
-  ook als de taak die net draaide gewoon tevreden is; de reden van die taak hoort dan te
-  winnen. Daarbij: een vast veld `action` in het event (`heat`, `cool`, `off`, `stays_off`,
-  `left_alone`), een blueprint-invoer *Alleen deze acties*, en een redenzin voor
-  `outdoor_outside_window` die de taak noemt (*te warm om te verwarmen*, *te koud om te
-  koelen*).
-- **Opstaan remt het huis per bewoner** — wie op werkdagen vroeg opstaat en kort daarna de
-  deur uit gaat, zet het huis nu aan, ook als er verder niemand thuis is. Een tijd per
-  bewoner, met eigen weekdagen, waarvóór die bewoner niet als "op" telt. De rem geldt nooit
-  op een vakantiedag, en remt alleen het beginnen, niet het doorgaan. Met een eigen reden,
-  `early_riser`.
-- ***Wacht op deze slaper tot* houdt het huis al 's nachts tegen** — gaat de één naar bed
-  terwijl de ander nog op is, dan stopt het huis na middernacht, want dan is het al
-  "vandaag, vóór de uiterste tijd". Het wachten hoort pas te beginnen als iedereen die thuis
-  is naar bed is geweest, en het moment waarop dat gebeurde hoort een herstart te
-  overleven.
 
 ## Could have
 
@@ -240,6 +222,15 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 - **Het Duitse lidwoord bij de nieuwe woorden wordt niet bewaakt** — *der Übersteuerung*
   als onderwerp, *die Außengerät* of *das Totzone* maakt niets rood; alleen de
   proeflezing ziet het.
+- **De zin over wanneer het wachten begint wordt niet bewaakt** — de beschrijving van
+  *Wacht op deze slaper tot* en de gidsalinea zeggen dat het wachten pas begint als
+  iedereen die thuis is naar bed is geweest. Schrapt iemand die zin in één taal, dan blijft
+  alles groen; alleen de proeflezing ziet het.
+- **Een bewoner zonder slaapsensor laat het huis nooit slapen** — het huis gaat pas slapen
+  als iedereen die thuis is slaapt, en wie geen slaapsensor heeft, slaapt nooit. Heeft een
+  ander *Wacht op deze slaper tot* of *Opstaan zet het huis pas aan vanaf* ingevuld, dan
+  doet die instelling dus niets zolang die bewoner thuis is. Een melding in het scherm
+  *Bewoner* zou dat zichtbaar maken.
 
 ## Would have
 
@@ -277,24 +268,6 @@ The worked-out design proposals for everything below live in
   that file is in `.gitignore`. Anyone cloning the repo therefore cannot read the agreement,
   and a guard that looked at it itself would fall over in CI. Those agreements belong in
   `ARCHITECTURE.md`, which does travel with the repo.
-- **A room at temperature reports the other duty's reason** — when cooling stops because
-  the room is cool enough, the decision notifier can still say it is too warm or too cold
-  outside. When both duties refuse, `evaluate` lets the "most informative" refusal win,
-  even when the duty that just ran is simply satisfied; that duty's own reason should win
-  then. Along with it: a fixed `action` field in the event (`heat`, `cool`, `off`,
-  `stays_off`, `left_alone`), a blueprint input *Only these actions*, and a reason sentence
-  for `outdoor_outside_window` that names the duty (*too warm to heat*, *too cold to
-  cool*).
-- **Getting up brakes the house per resident** — whoever gets up early on working days and
-  leaves shortly after now sets the house going, even with nobody else home. A time per
-  resident, with weekdays of its own, before which that resident does not count as "up".
-  The brake never applies on a holiday, and it only holds back starting, not continuing.
-  With a reason of its own, `early_riser`.
-- ***Wait for this sleeper until* holds the house back at night already** — when one
-  resident turns in while the other is still up, the house stops after midnight, because
-  it is then already "today, before the deadline". The waiting should only begin once
-  everybody at home has been to bed, and the moment that happened should survive a
-  restart.
 
 ## Could have
 
@@ -482,6 +455,15 @@ The worked-out design proposals for everything below live in
 - **The German article with the new words is not guarded** — *der Übersteuerung* as
   a subject, *die Außengerät* or *das Totzone* turns nothing red; only proofreading
   sees it.
+- **The sentence about when the waiting begins is not guarded** — the description of
+  *Wait for this sleeper until* and the guide paragraph say the waiting only begins once
+  everybody at home has been to bed. Whoever drops that sentence in one language keeps
+  everything green; only proofreading sees it.
+- **A resident without a sleep sensor never lets the house sleep** — the house only goes
+  to sleep once everybody at home is asleep, and whoever has no sleep sensor never sleeps.
+  When somebody else filled in *Wait for this sleeper until* or *Getting up only starts
+  the house from*, that setting therefore does nothing while that resident is home. A
+  notice on the *Resident* screen would make that visible.
 
 ## Would have
 
