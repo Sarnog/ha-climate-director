@@ -14,7 +14,8 @@ blueprint:
 
 
     Draait alles eenmaal naar wens, dan wil je hem waarschijnlijk beperken tot
-    de redenen die je echt wilt weten - of uitzetten.
+    de redenen of de acties die je echt wilt weten - of uitzetten. Wie alleen
+    wil horen dat een apparaat uitgaat, kiest bij *Alleen deze acties* `off`.
 
 
     Redenen zijn stabiele identifiers, dus je kunt erop filteren:
@@ -40,7 +41,9 @@ blueprint:
 
 
     Once everything runs the way you want it, you probably want to narrow it to
-    the reasons you actually care about - or switch it off.
+    the reasons or the actions you actually care about - or switch it off.
+    Whoever only wants to hear that an appliance goes off picks `off` under
+    *Only these actions*.
 
 
     Reasons are stable identifiers, so you can filter on them; the list is
@@ -70,6 +73,34 @@ blueprint:
       selector:
         text:
           multiple: true
+    only_actions:
+      name: Alleen deze acties / Only these actions
+      description: >-
+        NL - Laat leeg om elke actie te melden. Kies er een of meer om alleen die
+        te krijgen, bijvoorbeeld alleen `off` (gaat uit): dan hoor je het zodra
+        een apparaat uitgaat, en niet telkens wanneer een kamer uit blijft. Een
+        event zonder `action` - een oudere integratie - wordt hier niet op
+        gefilterd.
+
+        EN - Leave empty to report every action. Pick one or more to get only
+        those, for instance only `off` (is going off): then you hear it as soon
+        as an appliance goes off, and not every time a room stays off. An event
+        without `action` - an older integration - is not filtered on this.
+      default: []
+      selector:
+        select:
+          multiple: true
+          options:
+            - label: heat - gaat verwarmen / is going to heat
+              value: heat
+            - label: cool - gaat koelen / is going to cool
+              value: cool
+            - label: off - gaat uit / is going off
+              value: "off"
+            - label: stays_off - blijft uit / stays off
+              value: stays_off
+            - label: left_alone - wordt met rust gelaten / is left alone
+              value: left_alone
     only_zones:
       name: Alleen deze zones / Only these zones
       description: >-
@@ -94,10 +125,11 @@ blueprint:
         kamer, wat er gebeurt, het apparaat bij zijn naam en de reden als gewone
         zin. Beschikbaar: `zone_name`, `zone_id`, `wanted`, `granted`,
         `source_id`, `entity_id`, `hvac_mode`, `temperature`,
-        `temperature_unit`, `reason`, `reason_text`, `action_text`,
-        `source_name` en `message`. `reason` blijft de stabiele identifier om op
-        te filteren (zie *Alleen deze redenen*); `reason_text` is diezelfde
-        reden als gewone zin. Wie hier zijn eigen zin schrijft, houdt hem zoals
+        `temperature_unit`, `reason`, `reason_text`, `action`, `action_text`,
+        `source_name` en `message`. `reason` en `action` blijven de stabiele
+        identifiers om op te filteren (zie *Alleen deze redenen* en *Alleen deze
+        acties*); `reason_text` en `action_text` zijn dezelfde reden en actie als
+        gewone zin. Wie hier zijn eigen zin schrijft, houdt hem zoals
         hij is. Een event zonder `message` - een oudere integratie - valt terug
         op de kamer, de stand en de reden in plaats van een sjabloonfout te
         geven.
@@ -107,10 +139,11 @@ blueprint:
         the room, what happens, the appliance by its name and the reason as an
         ordinary sentence. Available: `zone_name`, `zone_id`, `wanted`,
         `granted`, `source_id`, `entity_id`, `hvac_mode`, `temperature`,
-        `temperature_unit`, `reason`, `reason_text`, `action_text`,
-        `source_name` and `message`. `reason` stays the stable identifier to
-        filter on (see *Only these reasons*); `reason_text` is that same reason
-        as an ordinary sentence. Whoever writes their own sentence here keeps
+        `temperature_unit`, `reason`, `reason_text`, `action`, `action_text`,
+        `source_name` and `message`. `reason` and `action` stay the stable
+        identifiers to filter on (see *Only these reasons* and *Only these
+        actions*); `reason_text` and `action_text` are that same reason and
+        action as an ordinary sentence. Whoever writes their own sentence here keeps
         it as it is. An event without `message` - an older integration - falls
         back to the room, the mode and the reason instead of raising a template
         error.
@@ -128,14 +161,16 @@ triggers:
 
 variables:
   only_reasons: !input only_reasons
+  only_actions: !input only_actions
   only_zones: !input only_zones
 
 conditions:
   - condition: template
     value_template: >-
       {{ (only_reasons | length == 0 or trigger.event.data.reason in
-      only_reasons) and (only_zones | length == 0 or trigger.event.data.zone_id
-      in only_zones) }}
+      only_reasons) and (only_actions | length == 0 or 'action' not in
+      trigger.event.data or trigger.event.data.action in only_actions) and
+      (only_zones | length == 0 or trigger.event.data.zone_id in only_zones) }}
 
 actions:
   - action: !input notify_action

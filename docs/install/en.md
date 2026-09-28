@@ -963,6 +963,14 @@ way. The
 can build a readable message without templates; `reason` stays the filter word
 and `reason_text` is that same reason as an ordinary sentence.
 
+To hear only when something really changes, fill in *Alleen deze acties / Only
+these actions* in the blueprint. The event carries the fixed field `action` for
+that, with one of five values: `heat` (*is going to heat*), `cool` (*is going to
+cool*), `off` (*is going off*), `stays_off` (*stays off*) or `left_alone` (*is
+left alone*). Pick only `off` and you get a notice whenever an appliance goes
+off, with the reason, and not every time a room stays off. Leave that field empty
+and you get every action.
+
 ## Troubleshooting
 
 - **`binary_sensor.*_stuck`** comes on when a zone sits on the same waiting

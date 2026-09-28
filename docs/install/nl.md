@@ -972,6 +972,14 @@ reden zelf blijft in beide gevallen de stabiele waarde om op te filteren. Het ev
 automatisering zonder sjablonen een leesbare melding kan maken; `reason` blijft
 het filterwoord en `reason_text` is diezelfde reden als gewone zin.
 
+Wil je alleen horen wanneer er werkelijk iets verandert, vul dan in de blueprint
+*Alleen deze acties / Only these actions* in. Het event draagt daarvoor het vaste
+veld `action`, met één van vijf waarden: `heat` (*gaat verwarmen*), `cool` (*gaat
+koelen*), `off` (*gaat uit*), `stays_off` (*blijft uit*) of `left_alone` (*wordt
+met rust gelaten*). Kies je alleen `off`, dan krijg je een melding zodra een
+apparaat uitgaat, met de reden erbij, en niet telkens wanneer een kamer uit
+blijft. Laat je dat veld leeg, dan krijg je elke actie.
+
 ## Problemen oplossen
 
 - **`binary_sensor.*_vastgelopen`** gaat aan als een zone te lang op dezelfde

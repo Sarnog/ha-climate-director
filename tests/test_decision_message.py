@@ -23,16 +23,23 @@ The identifiers stay the contract: `reason` is and remains the stable value to
 filter on. Whoever does that notices nothing of any of this.
 
 Dekking: de vier velden van het event, de actiezinnen, de redenzinnen en de
-richtingzin van de elders-melding, over de zeven tekstbestanden en de zes gidsen.
+richtingzin van de elders-melding, over de zeven tekstbestanden en de zes gidsen;
+het vaste veld `action` in het event, en in elke gids de alinea die `action`, de
+vijf waarden met hun woord in die taal en de invoer *Alleen deze acties* noemt (de
+naam komt uit `blueprints/automation/climate_director/decisions.yaml`).
 Niet gedekt: de schermlabels en de formuliervelden (`tests/test_ui_complete.py`,
 `tests/test_install_guides.py`) en de sleutels die geen code opvraagt
 (`tests/test_text_producers.py`).
 
 Coverage: the event's four fields, the action sentences, the reason sentences and
 the direction sentence of the elsewhere message, across the seven text files and
-the six guides. Not covered: the screen labels and the form fields
-(`tests/test_ui_complete.py`, `tests/test_install_guides.py`) and the keys no
-code asks for (`tests/test_text_producers.py`).
+the six guides; the fixed `action` field in the event, and in every guide the
+paragraph naming `action`, the five values with their word in that language and
+the *Only these actions* input (the name comes from
+`blueprints/automation/climate_director/decisions.yaml`). Not covered: the screen
+labels and the form fields (`tests/test_ui_complete.py`,
+`tests/test_install_guides.py`) and the keys no code asks for
+(`tests/test_text_producers.py`).
 """
 
 from __future__ import annotations
@@ -52,6 +59,7 @@ from custom_components.climate_director.engine import Reason
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TRANSLATIONS = ROOT / "custom_components" / "climate_director" / "translations"
 GUIDES = ROOT / "docs" / "install"
+DECISIONS = ROOT / "blueprints" / "automation" / "climate_director" / "decisions.yaml"
 
 #: De zes vertaalbestanden plus het Engels dat `strings.json` zelf draagt.
 LANGUAGES = ("nl", "en", "de", "fr", "es", "ar")
@@ -720,6 +728,40 @@ def test_the_guide_names_the_four_fields_of_the_event(language: str) -> None:
     raise AssertionError(f"{language}: geen alinea met alle vier de velden en `reason`")
 
 
+@pytest.mark.parametrize("language", LANGUAGES)
+def test_the_guide_names_the_action_field_and_its_filter(language: str) -> None:
+    """Elke gids noemt `action`, de vijf waarden en *Alleen deze acties* in één alinea.
+
+    Het veld `action` bestaat om op te filteren, en de blueprint-invoer *Alleen deze
+    acties* is waar dat gebeurt. Een gids die het veld noemt maar niet zegt welke
+    waarden het draagt, laat de lezer raden wat hij moet kiezen; daarom staan de vijf
+    sleutels er, elk met het woord dat de melding in die taal voor die actie
+    gebruikt. De naam van de invoer komt uit de blueprint zelf, zodat een hernoemde
+    invoer hier opvalt.
+
+    Every guide names `action`, the five values and *Only these actions* in one
+    paragraph. The `action` field exists to filter on, and the blueprint input
+    *Only these actions* is where that happens. A guide naming the field without
+    saying which values it carries leaves the reader guessing what to pick; so the
+    five keys stand there, each with the word the notice uses for that action in
+    that language. The input's name comes from the blueprint itself, so a renamed
+    input stands out here.
+    """
+    from homeassistant.util import yaml as yaml_util
+
+    name = yaml_util.load_yaml(str(DECISIONS))["blueprint"]["input"]["only_actions"]["name"]
+    words = action_sentences(language)
+    guide = (GUIDES / f"{language}.md").read_text(encoding="utf-8")
+    for paragraph in re.split(r"\n\s*\n", guide):
+        flat = " ".join(paragraph.split())
+        if "`action`" not in flat or f"*{name}*" not in flat:
+            continue
+        missing = [action for action in ACTIONS if f"`{action}` (*{words[action]}*)" not in flat]
+        assert not missing, f"{language}: {missing}"
+        return
+    raise AssertionError(f"{language}: geen alinea met `action` en *{name}*")
+
+
 # -- de live helft / the live half -------------------------------------------
 
 LIVING = "climate.woonkamer"
@@ -811,9 +853,17 @@ def assert_readable(event: dict[str, Any], reason: str) -> None:
     The message must carry the room, the action and the reason as an ordinary
     sentence, and no identifier at all: no source id, no entity id, no reason
     code and no `_` word. Whoever filters on `reason` can still do just that.
+
+    Naast de zin draagt het event de actie ook als vaste sleutel, `action`: een
+    van de vijf, en precies de actie waarvan `action_text` de zin is.
+
+    Beside the sentence the event carries the action as a fixed key too, `action`:
+    one of the five, and exactly the action `action_text` is the sentence of.
     """
     message = event["message"]
     assert event["reason"] == reason, event["reason"]
+    assert event["action"] in ACTIONS, event.get("action")
+    assert action_sentences("en")[event["action"]] == event["action_text"], event
     assert event["reason_text"], "geen reason_text"
     assert event["action_text"], "geen action_text"
     assert message.startswith(event["zone_name"]), message
@@ -854,6 +904,7 @@ class TestWhatALiveHouseShows:
         try:
             event = await self._event(live)
             assert_readable(event, "regulating")
+            assert event["action"] == "heat", event["action"]
             assert "Cv-ketel" in event["message"], event["message"]
             assert "°C" in event["message"], event["message"]
             assert event["source_name"] == "Cv-ketel"
@@ -874,6 +925,7 @@ class TestWhatALiveHouseShows:
         try:
             event = await self._event(live)
             assert_readable(event, "satisfied")
+            assert event["action"] == "stays_off", event["action"]
             assert event["action_text"] == action_sentences("en")["stays_off"], event["action_text"]
             assert event["source_name"] is None, event["source_name"]
             assert event["message"] == _plain_message(event), event["message"]
@@ -914,6 +966,7 @@ class TestWhatALiveHouseShows:
         try:
             event = await self._event(live)
             assert_readable(event, "nobody_home")
+            assert event["action"] == "off", event["action"]
             assert event["action_text"] == action_sentences("en")["off"], event["action_text"]
             assert event["message"] == _plain_message(event), event["message"]
         finally:
@@ -937,6 +990,7 @@ class TestWhatALiveHouseShows:
             live.coordinator.zone_overrides["woonkamer"] = True
             event = await self._event(live)
             assert_readable(event, "manual_override")
+            assert event["action"] == "left_alone", event["action"]
             assert event["action_text"] == action_sentences("en")["left_alone"], event[
                 "action_text"
             ]

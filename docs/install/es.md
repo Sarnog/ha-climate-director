@@ -978,6 +978,14 @@ filtrar. El evento
 un mensaje legible sin plantillas; `reason` sigue siendo la palabra de filtro y
 `reason_text` es ese mismo motivo como frase corriente.
 
+Si solo quieres enterarte cuando algo cambia de verdad, rellena *Alleen deze
+acties / Only these actions* en el blueprint. El evento lleva para ello el campo
+fijo `action`, con uno de estos cinco valores: `heat` (*va a calentar*), `cool`
+(*va a enfriar*), `off` (*se apaga*), `stays_off` (*sigue en reposo*) o
+`left_alone` (*se deja en paz*). Si eliges solo `off`, recibes un aviso en cuanto
+un aparato se apaga, con el motivo, y no cada vez que una habitación sigue en
+reposo. Si dejas ese campo vacío, recibes todas las acciones.
+
 ## Resolver problemas
 
 - **`binary_sensor.*_atascado`** se enciende cuando una zona lleva demasiado tiempo

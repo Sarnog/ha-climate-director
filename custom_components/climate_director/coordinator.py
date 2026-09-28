@@ -1932,18 +1932,17 @@ def _event_data(
     één decimaal, met `temperature_unit` ernaast, zodat een automatisering die
     op het getal templatet weet waarin ze rekent.
 
-    De vier leesbare velden - `reason_text`, `action_text`, `source_name` en
-    `message` - komen uit `texts.decision_fields`; de identifiers blijven staan
-    en blijven het contract. Wie op `reason` filtert merkt niets van die vier.
+    De vier leesbare velden - `reason_text`, `action_text`, `source_name` en `message` - komen
+    uit `texts.decision_fields`; de identifiers, `action` erbij, blijven staan en blijven het
+    contract. Wie op `reason` of `action` filtert, merkt niets van die vier.
 
     `temperature` is published in the user's unit, rounded to one decimal, with
     `temperature_unit` alongside it, so an automation templating on the number
     knows what it is counting in.
 
-    The four readable fields - `reason_text`, `action_text`, `source_name` and
-    `message` - come from `texts.decision_fields`; the identifiers stay and
-    remain the contract. Whoever filters on `reason` notices nothing of those
-    four.
+    The four readable fields - `reason_text`, `action_text`, `source_name` and `message` - come
+    from `texts.decision_fields`; the identifiers, `action` among them, stay and remain the
+    contract. Whoever filters on `reason` or `action` notices nothing of those four.
     """
     zone = config.zone(decision.zone_id)
     reading = texts.decision_fields(
@@ -1961,6 +1960,7 @@ def _event_data(
         "temperature_unit": unit,
         "reason": decision.reason.value,
         "reason_text": reading["reason_text"],
+        "action": reading["action"],
         "action_text": reading["action_text"],
         "source_name": reading["source_name"],
         "message": reading["message"],

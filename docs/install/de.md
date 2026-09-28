@@ -981,6 +981,14 @@ Event `climate_director_decision` trägt diese vier Felder fertig mit —
 Automatisierung ohne Vorlagen eine lesbare Meldung bauen kann; `reason` bleibt
 das Filterwort und `reason_text` ist derselbe Grund als gewöhnlicher Satz.
 
+Willst du nur hören, wenn sich wirklich etwas ändert, dann fülle im Blueprint
+*Alleen deze acties / Only these actions* aus. Das Event trägt dafür das feste
+Feld `action`, mit einem von fünf Werten: `heat` (*wird heizen*), `cool` (*wird
+kühlen*), `off` (*geht aus*), `stays_off` (*bleibt aus*) oder `left_alone` (*wird
+in Ruhe gelassen*). Wählst du nur `off`, bekommst du eine Meldung, sobald ein
+Gerät ausgeht, mit dem Grund dazu, und nicht jedes Mal, wenn ein Raum aus bleibt.
+Lässt du das Feld leer, bekommst du jede Aktion.
+
 ## Probleme lösen
 
 - **`binary_sensor.*_festgefahren`** geht an, wenn eine Zone zu lange auf demselben

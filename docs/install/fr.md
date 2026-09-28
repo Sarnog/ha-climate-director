@@ -995,6 +995,15 @@ deux cas une valeur stable pour filtrer. L'événement
 un message lisible sans modèle ; `reason` reste le mot de filtrage et
 `reason_text` est cette même raison en phrase ordinaire.
 
+Pour n'être prévenu que lorsque quelque chose change vraiment, remplissez
+*Alleen deze acties / Only these actions* dans le blueprint. L'événement porte
+pour cela le champ fixe `action`, avec l'une des cinq valeurs suivantes : `heat`
+(*va chauffer*), `cool` (*va refroidir*), `off` (*va s'éteindre*), `stays_off`
+(*reste à l'arrêt*) ou `left_alone` (*garde son réglage*). Si vous ne choisissez
+que `off`, vous recevez une notification dès qu'un appareil s'éteint, avec la
+raison, et non chaque fois qu'une pièce reste à l'arrêt. Laissez ce champ vide
+pour recevoir toutes les actions.
+
 ## Résoudre les problèmes
 
 - **`binary_sensor.*_bloque`** s'allume quand une zone reste trop longtemps sur

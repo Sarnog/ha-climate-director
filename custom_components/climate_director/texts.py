@@ -542,7 +542,9 @@ def decision_fields(
     blueprint standaard toont). Daarnaast de drie stukken die de koppelingslaag
     zelf al publiceert - het apparaat, zijn stand en zijn setpoint in de eenheid
     van de gebruiker - zodat de coordinator ze niet nog een keer hoeft uit te
-    zoeken.
+    zoeken. En `action`: de sleutel van de actie zelf (`heat`, `cool`, `off`,
+    `stays_off`, `left_alone`), een vaste waarde om op te filteren naast `reason`,
+    waar `action_text` de zin is.
 
     `source_name` en het setpoint horen bij een apparaat dat de director
     werkelijk aanstuurt: bij "blijft uit" of "wordt met rust gelaten" noemt de
@@ -556,7 +558,9 @@ def decision_fields(
     blueprint shows by default). Beside them the three pieces the binding layer
     already publishes itself - the appliance, its mode and its setpoint in the
     user's unit - so the coordinator does not have to look them up a second
-    time.
+    time. And `action`: the key of the action itself (`heat`, `cool`, `off`,
+    `stays_off`, `left_alone`), a fixed value to filter on beside `reason`, where
+    `action_text` is the sentence.
 
     `source_name` and the setpoint belong to an appliance the director really
     drives: with "stays off" or "is left alone" the sentence names no appliance,
@@ -578,6 +582,7 @@ def decision_fields(
     )
     zone = config.zone(decision.zone_id)
     return {
+        "action": action,
         "entity_id": entity_id,
         "hvac_mode": command.hvac_mode if command else None,
         "temperature": rounded_from_celsius(command.temperature, unit) if command else None,

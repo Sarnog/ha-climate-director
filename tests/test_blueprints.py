@@ -46,6 +46,12 @@ FOLDER = ROOT / "blueprints" / "automation" / "climate_director"
 
 REPOSITORY = "https://github.com/Sarnog/ha-climate-director/blob/main"
 
+#: De vijf waarden van `action` in het beslissings-event; `tests/test_decision_message.py`
+#: houdt dezelfde vijf tegen de vertaalsleutels en tegen een draaiend huis.
+#: The five values of `action` in the decision event; `tests/test_decision_message.py`
+#: holds the same five against the translation keys and against a running house.
+ACTIONS = ("heat", "cool", "off", "stays_off", "left_alone")
+
 
 def blueprint_files() -> list[pathlib.Path]:
     return sorted(FOLDER.glob("*.yaml"))
@@ -351,6 +357,7 @@ class TestTheyMatchTheIntegration:
             rendered = condition.render(
                 trigger={"event": {"data": {"reason": reason, "zone_id": "woonkamer"}}},
                 only_reasons=only,
+                only_actions=[],
                 only_zones=[],
             )
             return "True" in rendered
@@ -358,3 +365,53 @@ class TestTheyMatchTheIntegration:
         assert kept("regulating", [])
         assert kept("regulating", ["regulating"])
         assert not kept("regulating", ["satisfied"])
+
+    def test_the_action_filter_keeps_only_the_chosen_actions(self) -> None:
+        """*Alleen deze acties* filtert op het vaste veld `action`, en leeg is alles.
+
+        Wie alleen wil horen dat een apparaat uitgaat, kiest `off`; dan valt "blijft
+        uit" weg, en daarmee de melding die bij elke wisseling van reden kwam. De
+        keuzes zijn precies de vijf acties die de integratie meestuurt, en het
+        filter staat op `action`, niet op de vertaalde `action_text`. Een event van
+        een oudere integratie draagt geen `action`: dat rendert zonder fout en valt
+        niet weg, zodat een filter dat nooit kan slagen niet alles stil maakt. Het
+        sjabloon wordt gerenderd met `StrictUndefined`, zodat een veld dat er niet
+        is een fout geeft in plaats van stil leeg te zijn.
+
+        *Only these actions* filters on the fixed `action` field, and empty is
+        everything. Whoever only wants to hear that an appliance goes off picks
+        `off`; "stays off" then drops out, and with it the notice that came with
+        every change of reason. The choices are exactly the five actions the
+        integration sends along, and the filter stands on `action`, not on the
+        translated `action_text`. An event from an older integration carries no
+        `action`: it renders without an error and does not drop out, so a filter
+        that can never match does not silence everything. The template is
+        rendered with `StrictUndefined`, so a field that is not there raises
+        rather than being quietly empty.
+        """
+        data = load(FOLDER / "decisions.yaml")
+        options = data["blueprint"]["input"]["only_actions"]["selector"]["select"]["options"]
+        offered = [option["value"] for option in options]
+        assert sorted(offered) == sorted(ACTIONS), offered
+        assert data["blueprint"]["input"]["only_actions"]["default"] == []
+
+        template = data["conditions"][0]["value_template"]
+        assert "trigger.event.data.action " in template, template
+        assert "action_text" not in template, template
+        condition = jinja2.Environment(undefined=jinja2.StrictUndefined).from_string(template)
+
+        def kept(event: dict[str, str], only: list[str]) -> bool:
+            rendered = condition.render(
+                trigger={"event": {"data": {"reason": "satisfied", "zone_id": "z", **event}}},
+                only_reasons=[],
+                only_actions=only,
+                only_zones=[],
+            )
+            return "True" in rendered
+
+        for action in ACTIONS:
+            assert kept({"action": action}, []), action
+            assert kept({"action": action}, [action]), action
+        assert not kept({"action": "stays_off"}, ["off"])
+        assert kept({"action": "off"}, ["off", "heat"])
+        assert kept({}, ["off"])
