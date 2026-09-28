@@ -248,9 +248,27 @@ FUNCTION_LIMIT = 80
 # already sits on the list and the sentence is text, not binding. `_event_data`
 # went from 119 to 47 lines and is therefore back under eighty, so the function
 # list stays unchanged.
+#
+# Het moment waarop het huis ging slapen (*Wacht op deze slaper* pas als iedereen
+# thuis heeft geslapen): `coordinator.py` 1990 → 1993 en zijn `__init__` 218 → 220
+# door het lid `_asleep_since` in het protocol en in `__init__`, plus de aanroep in
+# `_async_evaluate`. `state_store.py::_async_restore_state` 102 → 104: één regel
+# herstel en de uitleg ervan; een dubbele Engelse alinea in die docstring maakte er
+# plaats voor. De regel zelf woont in `engine/night.py`, en het vastleggen in
+# `world_builder.py`, beide onder hun maat; `engine/gates.py` ging daardoor van 670
+# naar 651.
+#
+# The moment the house went to sleep (*Wait for this sleeper* only once everybody at
+# home has slept): `coordinator.py` 1990 → 1993 and its `__init__` 218 → 220 through
+# the `_asleep_since` member in the protocol and in `__init__`, plus the call in
+# `_async_evaluate`. `state_store.py::_async_restore_state` 102 → 104: one line of
+# restore and its explanation; a doubled English paragraph in that docstring made
+# room for it. The rule itself lives in `engine/night.py`, and the recording in
+# `world_builder.py`, both below their measure; `engine/gates.py` went from 670 to
+# 651 because of it.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2198,
-    "coordinator.py": 1990,
+    "coordinator.py": 1993,
     "engine/decide.py": 1677,
     "config_flow.py": 1451,
     "schemas.py": 900,
@@ -259,7 +277,7 @@ MODULE_EXCEPTIONS: dict[str, int] = {
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_build_commands"): 202,
     ("engine/decide.py", "_generator_commands"): 192,
-    ("coordinator.py", "__init__"): 218,
+    ("coordinator.py", "__init__"): 220,
     ("engine/models.py", "_rule_zones"): 142,
     ("engine/constraints.py", "resolve"): 128,
     ("engine/decide.py", "_collect_wishes"): 126,
@@ -267,7 +285,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("coordinator.py", "_notice_hand"): 117,
     ("engine/decide.py", "_build_zone_decisions"): 111,
     ("engine/decide.py", "_manual_conflict"): 103,
-    ("state_store.py", "_async_restore_state"): 102,
+    ("state_store.py", "_async_restore_state"): 104,
     ("schemas.py", "resident"): 98,
     ("engine/hysteresis.py", "_candidate"): 97,
     ("config_flow.py", "async_step_resident"): 91,

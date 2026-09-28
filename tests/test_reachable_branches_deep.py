@@ -378,6 +378,7 @@ def test_a_guest_house_waits_for_the_last_sleeper() -> None:
         now=at(10, 0, day=15),
         residents={"danny": awake(), "nancy": asleep()},
         guest_mode=True,
+        asleep_since=at(1, 0, day=15),
     )
     zone = config.zones[0]
     assert not gate_verdict(config, world, zone).allowed

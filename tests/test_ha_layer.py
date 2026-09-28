@@ -210,6 +210,7 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
             self._precondition_bypass: set[str] = set()
             self._precipitation_seen_at: datetime | None = None
             self._home_since: dict[str, datetime] = {}
+            self._asleep_since: datetime | None = None
             self._handed_back: dict = {}
             self._waiting: dict = {}
             self._refused: set[str] = set()

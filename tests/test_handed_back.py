@@ -914,6 +914,7 @@ class TestItSurvivesARestart:
                 # installation without residents, no states and a name. Without
                 # residents no moment comes back.
                 self._home_since: dict[str, datetime] = {}
+                self._asleep_since: datetime | None = None
                 self.config = config()
                 self.hass = SimpleNamespace(states={})
                 self.name = "Climate Director"

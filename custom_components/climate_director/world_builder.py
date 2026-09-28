@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping
+from dataclasses import replace
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, TypeGuard
 
@@ -33,6 +34,7 @@ from .engine import (
     WorldState,
 )
 from .engine.models import SeasonSource
+from .engine.night import house_asleep_since
 from .units import to_celsius, unit_of_coordinator
 
 if TYPE_CHECKING:
@@ -266,6 +268,7 @@ class _WorldBuilderMixin(_CoordinatorBase):
             },
             climates={entity_id: self._climate(entity_id) for entity_id in self._climate_ids()},
             residents=residents,
+            asleep_since=self._asleep_since,
             openings={
                 opening.entity_id: self._opening(opening.entity_id, opening.open_state)
                 for opening in self.config.openings
@@ -288,6 +291,27 @@ class _WorldBuilderMixin(_CoordinatorBase):
             ),
             precipitation=self._precipitation(),
         )
+
+    def _note_house_asleep(self, world: WorldState) -> WorldState:
+        """Record when everybody at home went to sleep, and hand the world that moment.
+
+        De wereld lezen en de wereld veranderen zijn twee dingen, dus dit staat naast
+        `build_world` en niet erin. De engine zegt wat het moment nu is
+        (`night.house_asleep_since`); hier wordt het alleen onthouden en, als het
+        verandert, weggeschreven, zodat een herstart midden in de nacht het niet
+        kwijtraakt. Zonder dat moment wacht het huis 's ochtends op niemand.
+
+        Reading the world and changing it are two things, so this stands beside
+        `build_world` rather than in it. The engine says what the moment is now
+        (`night.house_asleep_since`); here it is only remembered and, when it
+        changes, written away, so a restart in the middle of the night does not lose
+        it. Without that moment the house waits for nobody in the morning.
+        """
+        moment = house_asleep_since(self.config, world)
+        if moment != self._asleep_since:
+            self._asleep_since: datetime | None = moment
+            self._async_save_state()
+        return replace(world, asleep_since=moment)
 
     def _overridden_zones(
         self, now: datetime, residents: dict[str, ResidentState]

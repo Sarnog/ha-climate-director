@@ -137,6 +137,21 @@ class WorldState:
     residents: dict[str, ResidentState] = field(default_factory=dict)
     """Keyed by `resident_id`."""
 
+    asleep_since: datetime | None = None
+    """Wanneer iedereen die thuis is ging slapen, of `None` als dat onbekend is.
+
+    *Wacht op deze slaper* geldt pas als het huis deze nacht geslapen heeft (zie
+    `night.py`). De koppelingslaag houdt dit moment bij met
+    `gates.house_asleep_since` en bewaart het over een herstart; de engine rekent
+    ermee tegen `now` en vraagt nooit zelf aan Home Assistant.
+
+    When everybody at home went to sleep, or `None` when that is unknown. *Wait
+    for this sleeper* only applies once the house has slept this night (see
+    `night.py`). The binding layer keeps this moment with
+    `gates.house_asleep_since` and stores it across a restart; the engine compares
+    it against `now` and never asks Home Assistant itself.
+    """
+
     openings: dict[str, OpeningState] = field(default_factory=dict)
     """Keyed by opening entity id."""
 

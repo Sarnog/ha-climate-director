@@ -65,12 +65,12 @@ from .engine.constraints import active_family
 from .engine.diff import Change, changes
 from .engine.families import family_of, preferred_mode
 from .engine.gates import (
-    asleep_at,
     house_wide_blocked,
     opening_bypassed_and_open,
     opening_standing,
 )
 from .engine.models import SeasonSource
+from .engine.night import asleep_at
 from .engine.serialise import config_from_dict
 from .overrides import _OverridesMixin
 from .preconditions import _PreconditionsMixin, _still_running
@@ -183,6 +183,7 @@ class CoordinatorSurface(Protocol):
     _store: Store[dict[str, Any]]
     _handed_back: dict[str, date]
     _home_since: dict[str, datetime]
+    _asleep_since: datetime | None
     _precipitation_seen_at: datetime | None
     _cancel_precondition_wake: CALLBACK_TYPE | None
     _cancel_override_wake: CALLBACK_TYPE | None
@@ -414,6 +415,8 @@ class ClimateDirectorCoordinator(
         loses their moment: away is away, and a moment for somebody who is not
         there would rest the gate on a lie.
         """
+        self._asleep_since: datetime | None = None
+        """Wanneer iedereen thuis ging slapen / when everybody at home went to sleep."""
         self._precipitation_seen_at: datetime | None = None
         """Wanneer de neerslagbron voor het laatst neerslag meldde.
 
@@ -1111,7 +1114,7 @@ class ClimateDirectorCoordinator(
             return
         async with self._lock:
             self._drop_lapsed_override_timers()
-            world = self.build_world()
+            world = self._note_house_asleep(self.build_world())
             self._remember_families(world)
             world = self._with_family_history(world)
 

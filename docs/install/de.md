@@ -544,6 +544,14 @@ Einer ist um 10:00 auf und nichts passiert; wacht der andere um 10:30 auf,
 beginnt es um 10:30; schläft er weiter, beginnt es um 11:00. Es wirkt in beide
 Richtungen - wer von beiden ausschläft, spielt keine Rolle.
 
+Das Warten gehört zum Morgen, nicht zum Abend davor. Es beginnt erst, wenn alle,
+die zu Hause sind, im Bett waren: Geht einer um elf schlafen, während der andere
+noch auf ist, läuft das Haus für den, der auf ist, einfach weiter, auch nach
+Mitternacht. Ist dieser Moment unbekannt, etwa nach einem Neustart, während
+jemand auf war, wartet das Haus an diesem Morgen auf niemanden. **Auf diese
+schlafende Person warten bis** tut das von selbst; es gibt nichts zusätzlich
+einzustellen.
+
 Das steht getrennt vom Zeitplan. Ein Zeitplan sagt auch, wann das Haus wieder
 *aus* soll; diese Uhrzeit sagt nur, wann man nicht länger auf jemanden warten
 muss. Schlafen alle Anwesenden, bleibt das Haus aus - das ist das Schlaftor,

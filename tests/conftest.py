@@ -122,6 +122,7 @@ def make_world(
     zone_priorities: dict[str, int] | None = None,
     opening_bypasses: frozenset[str] = frozenset(),
     precipitation: bool = False,
+    asleep_since: datetime | None = None,
 ) -> WorldState:
     """Return a `WorldState`, accepting bare mode strings for climate entities."""
     resolved = {
@@ -135,6 +136,7 @@ def make_world(
         indoor_temperatures=dict(indoor or {}),
         climates=resolved,
         residents=dict(residents or {}),
+        asleep_since=asleep_since,
         openings=dict(openings or {}),
         presence=dict(presence or {}),
         circuit_family_since=dict(circuit_family_since or {}),

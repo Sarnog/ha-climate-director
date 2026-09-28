@@ -537,6 +537,13 @@ is up at 10:00 and nothing happens; if the other wakes at 10:30 it starts at
 10:30; if they sleep on it starts at 11:00. It works both ways round - which of
 the two sleeps in makes no difference.
 
+The waiting belongs to the morning, not to the evening before. It only begins
+once everybody at home has been to bed: when one resident turns in at eleven
+while the other is still up, the house simply carries on for whoever is up, past
+midnight too. When that moment is unknown, for instance after a restart while
+somebody was up, the house waits for nobody that morning. **Wait for this sleeper
+until** does this by itself; there is nothing extra to set.
+
 This stands apart from the schedule. A schedule also says when the house should
 go *off* again; this time only says when you need no longer wait for somebody.
 While everybody home is asleep the house stays off - that is the sleep gate, not

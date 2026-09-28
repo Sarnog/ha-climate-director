@@ -58,6 +58,7 @@ def _full_world() -> WorldState:
             )
         },
         residents={"danny": ResidentState(home=True, asleep=False, home_since=NOW - HOURS)},
+        asleep_since=NOW - HOURS,
         openings={"binary_sensor.raam": OpeningState(open=False, changed_at=None)},
         presence={"woonkamer": PresenceState(occupied=True, changed_at=NOW - timedelta(minutes=5))},
         circuit_family_since={"c1": NOW - timedelta(minutes=10)},
@@ -220,6 +221,7 @@ class TestThePrivacyRedaction:
             "indoor_temperatures",
             "climates",
             "residents",
+            "asleep_since",
             "openings",
             "presence",
             "precondition_until",
@@ -236,6 +238,7 @@ class TestThePrivacyRedaction:
         from homeassistant.components.diagnostics.util import REDACTED
 
         assert data["world"]["presence"] == REDACTED
+        assert data["world"]["asleep_since"] == REDACTED
         assert data["world"]["residents"] == {
             "danny": {"home": REDACTED, "asleep": REDACTED, "home_since": REDACTED}
         }

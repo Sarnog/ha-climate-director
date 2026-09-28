@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import time, timedelta
+from typing import Any
 
 from conftest import (
     BACK_DOOR,
@@ -33,6 +34,7 @@ from custom_components.climate_director.engine import (
     Source,
     TimeWindow,
     WakeDeadline,
+    WorldState,
     Zone,
 )
 
@@ -335,7 +337,19 @@ class TestWaitingForSleeper:
     """De uiterste opsta-tijd: wachten op de laatste slaper, maar niet eeuwig.
 
     The wake deadline: waiting for the last sleeper, though not forever.
+
+    Het huis heeft in deze toetsen die nacht al geslapen (om 01:00), zodat alleen de
+    uiterste tijd telt; wat zonder zo'n moment gebeurt, staat in
+    `tests/test_the_night.py`. The house has already slept that night in these tests
+    (at 01:00), so only the deadline counts; what happens without such a moment
+    stands in `tests/test_the_night.py`.
     """
+
+    @staticmethod
+    def _world(**kwargs: Any) -> WorldState:
+        """Return `make_world(...)` for a morning after a night the house slept."""
+        now = kwargs["now"]
+        return make_world(asleep_since=now.replace(hour=1, minute=0), **kwargs)
 
     @staticmethod
     def _with_deadlines(config: DirectorConfig, **deadlines: WakeDeadline | None) -> DirectorConfig:
@@ -354,29 +368,29 @@ class TestWaitingForSleeper:
 
     def test_without_a_deadline_the_first_one_up_decides(self) -> None:
         config = house()
-        world = make_world(now=at(10, 0, day=15), residents={"danny": awake(), "nancy": asleep()})
+        world = self._world(now=at(10, 0, day=15), residents={"danny": awake(), "nancy": asleep()})
         assert gate_verdict(config, world, living_room(config)).allowed
 
     def test_waits_while_the_other_is_still_in_bed(self) -> None:
         config = self._weekend_house()
-        world = make_world(now=at(10, 0, day=15), residents={"danny": awake(), "nancy": asleep()})
+        world = self._world(now=at(10, 0, day=15), residents={"danny": awake(), "nancy": asleep()})
         verdict = gate_verdict(config, world, living_room(config))
         assert verdict.reason is Reason.WAITING_FOR_SLEEPER
 
     def test_waking_up_early_releases_the_house(self) -> None:
         config = self._weekend_house()
-        world = make_world(now=at(10, 30, day=15), residents=everyone_up())
+        world = self._world(now=at(10, 30, day=15), residents=everyone_up())
         assert gate_verdict(config, world, living_room(config)).allowed
 
     def test_the_deadline_releases_the_house_on_its_own(self) -> None:
         config = self._weekend_house()
-        world = make_world(now=at(11, 0, day=15), residents={"danny": awake(), "nancy": asleep()})
+        world = self._world(now=at(11, 0, day=15), residents={"danny": awake(), "nancy": asleep()})
         assert gate_verdict(config, world, living_room(config)).allowed
 
     def test_it_works_the_other_way_round_too(self) -> None:
         config = self._weekend_house()
-        early = make_world(now=at(10, 0, day=15), residents={"danny": asleep(), "nancy": awake()})
-        late = make_world(now=at(11, 0, day=15), residents={"danny": asleep(), "nancy": awake()})
+        early = self._world(now=at(10, 0, day=15), residents={"danny": asleep(), "nancy": awake()})
+        late = self._world(now=at(11, 0, day=15), residents={"danny": asleep(), "nancy": awake()})
         assert gate_verdict(config, early, living_room(config)).reason is (
             Reason.WAITING_FOR_SLEEPER
         )
@@ -384,7 +398,7 @@ class TestWaitingForSleeper:
 
     def test_a_sleeper_who_is_out_holds_nobody(self) -> None:
         config = self._weekend_house()
-        world = make_world(
+        world = self._world(
             now=at(10, 0, day=15), residents={"danny": awake(), "nancy": asleep(home=False)}
         )
         assert gate_verdict(config, world, living_room(config)).allowed
@@ -395,7 +409,7 @@ class TestWaitingForSleeper:
         Otherwise a consequence would pass for a cause.
         """
         config = self._weekend_house()
-        world = make_world(now=at(10, 0, day=15), residents={"danny": asleep(), "nancy": asleep()})
+        world = self._world(now=at(10, 0, day=15), residents={"danny": asleep(), "nancy": asleep()})
         assert gate_verdict(config, world, living_room(config)).reason is Reason.EVERYONE_ASLEEP
 
     def test_the_deadline_only_counts_on_its_own_days(self) -> None:
@@ -404,7 +418,7 @@ class TestWaitingForSleeper:
         10 August 2026 is a Monday; the weekend arrangement does not touch it.
         """
         config = self._weekend_house()
-        world = make_world(now=at(10, 0, day=10), residents={"danny": awake(), "nancy": asleep()})
+        world = self._world(now=at(10, 0, day=10), residents={"danny": awake(), "nancy": asleep()})
         assert gate_verdict(config, world, living_room(config)).allowed
 
     def test_a_holiday_weekday_is_not_a_saturday(self) -> None:
@@ -422,7 +436,7 @@ class TestWaitingForSleeper:
         test below.
         """
         config = self._weekend_house()
-        world = make_world(
+        world = self._world(
             now=at(10, 0, day=10),
             residents={"danny": awake(), "nancy": asleep()},
             holiday_mode=True,
@@ -436,7 +450,7 @@ class TestWaitingForSleeper:
         """
         config = self._weekend_house()
         for holiday in (False, True):
-            world = make_world(
+            world = self._world(
                 now=at(10, 0, day=15),
                 residents={"danny": awake(), "nancy": asleep()},
                 holiday_mode=holiday,
@@ -452,7 +466,7 @@ class TestWaitingForSleeper:
         """
         eleven = WakeDeadline(at=time(11, 0), weekdays=frozenset({5, 6}), holiday=True)
         config = self._with_deadlines(house(), danny=eleven, nancy=eleven)
-        monday = make_world(
+        monday = self._world(
             now=at(10, 0, day=10),
             residents={"danny": awake(), "nancy": asleep()},
             holiday_mode=True,
@@ -462,15 +476,17 @@ class TestWaitingForSleeper:
         )
         # Zonder vakantie blijft de maandag een gewone maandag.
         # Without a holiday the Monday stays an ordinary Monday.
-        ordinary = make_world(
+        ordinary = self._world(
             now=at(10, 0, day=10), residents={"danny": awake(), "nancy": asleep()}
         )
         assert gate_verdict(config, ordinary, living_room(config)).allowed
 
     def test_one_resident_may_be_waited_for_and_the_other_not(self) -> None:
         config = self._with_deadlines(house(), nancy=WakeDeadline(at=time(11, 0)), danny=None)
-        waiting = make_world(now=at(10, 0, day=15), residents={"danny": awake(), "nancy": asleep()})
-        free = make_world(now=at(10, 0, day=15), residents={"danny": asleep(), "nancy": awake()})
+        waiting = self._world(
+            now=at(10, 0, day=15), residents={"danny": awake(), "nancy": asleep()}
+        )
+        free = self._world(now=at(10, 0, day=15), residents={"danny": asleep(), "nancy": awake()})
         assert gate_verdict(config, waiting, living_room(config)).reason is (
             Reason.WAITING_FOR_SLEEPER
         )
@@ -484,7 +500,7 @@ class TestWaitingForSleeper:
         """
         config = self._weekend_house()
         relaxed = replace(config, gates=GateSettings(require_awake=False))
-        world = make_world(now=at(10, 0, day=15), residents={"danny": awake(), "nancy": asleep()})
+        world = self._world(now=at(10, 0, day=15), residents={"danny": awake(), "nancy": asleep()})
         assert gate_verdict(relaxed, world, living_room(config)).allowed
 
 
@@ -579,11 +595,20 @@ class TestSleepingIn:
             ),
         )
         zone = living_room(config)
-        # Eén op, één in bed: wachten tot de uiterste tijd.
-        waiting = make_world(now=at(10, 0, day=15), residents={"danny": awake(), "nancy": asleep()})
+        # Eén op, één in bed, na een nacht waarin het huis sliep: wachten tot de
+        # uiterste tijd. One up, one in bed, after a night the house slept: wait
+        # until the deadline.
+        night = at(1, 0, day=15)
+        waiting = make_world(
+            now=at(10, 0, day=15),
+            residents={"danny": awake(), "nancy": asleep()},
+            asleep_since=night,
+        )
         assert gate_verdict(config, waiting, zone).reason is Reason.WAITING_FOR_SLEEPER
         released = make_world(
-            now=at(11, 0, day=15), residents={"danny": awake(), "nancy": asleep()}
+            now=at(11, 0, day=15),
+            residents={"danny": awake(), "nancy": asleep()},
+            asleep_since=night,
         )
         assert gate_verdict(config, released, zone).allowed
         # Allebei in bed: het huis wacht op de eerste die werkelijk opstaat.

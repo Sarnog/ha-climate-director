@@ -540,6 +540,13 @@ een staat om 10:00 op en er gebeurt niets; wordt de ander om 10:30 wakker, dan
 begint het om 10:30; slaapt die door, dan begint het om 11:00. Het werkt beide
 kanten op — wie van de twee uitslaapt maakt niet uit.
 
+Het wachten hoort bij de ochtend, niet bij de avond ervoor. Het begint pas als
+iedereen die thuis is naar bed is geweest: gaat de één om elf uur slapen terwijl
+de ander nog op is, dan gaat het huis voor wie op is gewoon door, ook na
+middernacht. Is dat moment onbekend, bijvoorbeeld na een herstart terwijl iemand
+op was, dan wacht het huis die ochtend op niemand. **Wacht op deze slaper tot**
+doet dit vanzelf; er is niets extra's in te stellen.
+
 Dit staat los van het rooster. Een rooster zegt ook wanneer het huis weer *uit*
 moet; deze tijd zegt alleen wanneer je niet langer op iemand hoeft te wachten.
 Slaapt iedereen die thuis is, dan blijft het huis uit — dat is de slaappoort,

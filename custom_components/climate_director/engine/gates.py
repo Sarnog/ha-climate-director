@@ -25,6 +25,7 @@ from .models import (
     Zone,
     ZoneGate,
 )
+from .night import asleep, slept_tonight
 from .plan import OPENING_MIN_REST, Plan, Reason  # noqa: F401  # OPENING_MIN_REST is a re-export
 from .world import WorldState
 
@@ -212,40 +213,6 @@ def _preconditioning(world: WorldState, zone: Zone) -> bool:
     return world.preconditioning(zone.zone_id)
 
 
-def asleep_at(resident: Resident, is_asleep: bool, now: datetime, *, holiday: bool = False) -> bool:
-    """Return whether this resident counts as asleep at `now`.
-
-    De sensor zegt wat hij ziet; het venster zegt wanneer dat iets betekent.
-    Buiten die uren is een oplader gewoon een oplader. Op een ochtend waarop
-    uitslapen mag, loopt dat venster door tot de tijd die de bewoner daarvoor
-    heeft opgegeven - zie `Resident.sleep_in`, en zie waarom dat niet gewoon een
-    langer slaapvenster is.
-
-    The sensor says what it sees; the window says when that means anything.
-    Outside those hours a charger is just a charger. On a morning that allows
-    sleeping in, that window runs on until the time the resident gave for it -
-    see `Resident.sleep_in`, and why that is not simply a longer sleep window.
-    """
-    if not is_asleep:
-        return False
-    window = resident.sleep_window
-    if window is None:
-        return True
-    if window.contains(now.time(), now.weekday()):
-        return True
-    return resident.sleeps_in_at(now.time(), now.weekday(), holiday=holiday)
-
-
-def asleep(resident: Resident, world: WorldState) -> bool:
-    """Return whether this resident counts as asleep right now."""
-    return asleep_at(
-        resident,
-        world.resident(resident.resident_id).asleep,
-        world.now,
-        holiday=world.holiday_mode,
-    )
-
-
 def _up_and_about(resident: Resident, world: WorldState) -> bool:
     """Return whether this resident is home and not asleep."""
     return world.resident(resident.resident_id).home and not asleep(resident, world)
@@ -270,8 +237,22 @@ def _still_in_bed(resident: Resident, world: WorldState) -> bool:
     Somebody away does not count: sleeping at somebody else's place is no
     reason to leave this house cold. That is the same rule as for the hand at
     the appliance.
+
+    En het huis moet deze nacht geslapen hebben: iedereen die thuis is, is naar
+    bed geweest (`night.slept_tonight`). Gaat de één naar bed terwijl de ander nog
+    op is, dan is het na middernacht al "vandaag, vóór de uiterste tijd", maar wie
+    op is houdt het huis gewoon aan de gang. Is het moment onbekend - na een
+    herstart terwijl iemand op was - dan wordt er niet gewacht.
+
+    And the house must have slept this night: everybody at home has been to bed
+    (`night.slept_tonight`). When one resident turns in while the other is still
+    up, it is already "today, before the deadline" after midnight, but whoever is
+    up simply keeps the house going. When the moment is unknown - after a restart
+    while somebody was up - nobody is waited for.
     """
     if not world.resident(resident.resident_id).home or not asleep(resident, world):
+        return False
+    if not slept_tonight(resident, world):
         return False
     until = resident.waits_until(world.now.weekday(), holiday=world.holiday_mode)
     return until is not None and world.now.time() < until

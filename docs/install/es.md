@@ -544,6 +544,14 @@ uno se levanta a las 10:00 y no ocurre nada; si el otro se despierta a las
 10:30, arranca a las 10:30; si sigue durmiendo, arranca a las 11:00. Funciona en
 ambos sentidos: da igual cuál de los dos se quede en la cama.
 
+La espera pertenece a la mañana, no a la noche anterior. Solo empieza cuando
+todos los que están en casa se han ido a la cama: si uno se acuesta a las once
+mientras el otro sigue levantado, la casa sigue funcionando para quien está
+levantado, también pasada la medianoche. Si ese momento se desconoce, por ejemplo
+tras un reinicio mientras alguien estaba levantado, la casa no espera a nadie esa
+mañana. **Esperar a esta persona dormida hasta** lo hace por sí solo; no hay
+nada más que ajustar.
+
 Esto es independiente del horario. Un horario también dice cuándo debe
 *apagarse* la casa; esta hora solo dice cuándo ya no hace falta esperar a
 alguien. Mientras todos los presentes duermen, la casa sigue apagada: eso es la

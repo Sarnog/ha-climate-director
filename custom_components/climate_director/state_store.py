@@ -50,6 +50,11 @@ else:
 _LOGGER = logging.getLogger(f"{__package__}.coordinator")
 
 
+def _isoformat(moment: datetime | None) -> str | None:
+    """Return a moment as stored text, or `None` when there is none."""
+    return moment.isoformat() if moment else None
+
+
 class _StateStoreMixin(_CoordinatorBase):
     """Opslag, herstel en quarantaine van wat een mens met de hand heeft gezegd.
 
@@ -79,6 +84,7 @@ class _StateStoreMixin(_CoordinatorBase):
                 resident_id: since.isoformat()
                 for resident_id, since in getattr(self, "_home_since", {}).items()
             },
+            "asleep_since": _isoformat(getattr(self, "_asleep_since", None)),
             "override_until": {
                 zone_id: until.isoformat()
                 for zone_id, until in getattr(self, "zone_override_until", {}).items()
@@ -158,9 +164,10 @@ class _StateStoreMixin(_CoordinatorBase):
         een onparseerbare tijd of een waarde met een andere vorm telt als
         afwezig - geen reden om de opslag opzij te zetten.
 
-        An older file carries no `handed_back` yet. That simply reads as
-        nothing, so the storage version need not go up for it: there is nothing
-        to migrate about a key that was never there.
+        Het moment waarop het huis ging slapen komt zonder toets terug: de engine kijkt
+        zelf of het in de lopende nacht valt; onleesbaar telt als onbekend.
+        The moment the house went to sleep comes back unchecked: the engine sees for
+        itself whether it falls in the current night; unreadable counts as unknown.
 
         The homecoming moment (anchor 13) only comes back for a resident who **is**
         home right now: somebody away has no moment, and keeping one for them would
@@ -238,6 +245,7 @@ class _StateStoreMixin(_CoordinatorBase):
                     continue
                 self._home_since[resident_id] = since
 
+        self._asleep_since = dt_util.parse_datetime(str(stored.get("asleep_since") or ""))
         if hasattr(self, "_restore_overrides"):
             self._restore_overrides(stored, now)
 

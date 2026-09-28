@@ -552,6 +552,14 @@ donc : l'un est levé à 10:00 et rien ne se passe ; si l'autre se réveille à
 fonctionne dans les deux sens - peu importe lequel des deux fait la grasse
 matinée.
 
+L'attente appartient au matin, pas à la veille au soir. Elle ne commence que
+lorsque toutes les personnes à la maison sont allées se coucher : si l'un se
+couche à onze heures alors que l'autre est encore levé, la maison continue
+simplement pour celui qui est levé, même après minuit. Si ce moment est inconnu,
+par exemple après un redémarrage alors que quelqu'un était levé, la maison
+n'attend personne ce matin-là. **Attendre ce dormeur jusqu'à** le fait de
+lui-même ; il n'y a rien de plus à régler.
+
 C'est indépendant du planning. Un planning dit aussi quand la maison doit se
 *couper* ; cette heure dit seulement quand il n'est plus nécessaire d'attendre
 quelqu'un. Tant que tous les présents dorment, la maison reste éteinte - c'est

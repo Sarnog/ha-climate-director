@@ -74,7 +74,8 @@ async def async_get_config_entry_diagnostics(
     # bewonersprofiel
     # dat hierboven benoemd is. `home_since` is "wie was wanneer thuis" en is
     # daarmee net zo goed een bewonersgegeven als `home` zelf - het zegt wanneer
-    # iemand thuiskwam. `occupied` staat er apart bij voor het geval
+    # iemand thuiskwam; `asleep_since` zegt op dezelfde manier wanneer het huis ging
+    # slapen. `occupied` staat er apart bij voor het geval
     # kameraanwezigheid ooit buiten `presence` om wordt weggeschreven.
     #
     # `home`/`asleep`/`home_since` sit in the world snapshot, `presence` (with
@@ -82,7 +83,8 @@ async def async_get_config_entry_diagnostics(
     # `windows`/`sleep_window`/`wake_deadline` in the installation: exactly the
     # resident profile named
     # above. `home_since` is "who was home when" and therefore just as much a
-    # resident fact as `home` itself - it says when somebody came home.
+    # resident fact as `home` itself - it says when somebody came home;
+    # `asleep_since` says in the same way when the house went to sleep.
     # `occupied` is listed separately in case room presence is ever written
     # outside `presence`.
     return async_redact_data(
@@ -91,6 +93,7 @@ async def async_get_config_entry_diagnostics(
             "home",
             "asleep",
             "home_since",
+            "asleep_since",
             "presence",
             "occupied",
             "presence_entity",
@@ -129,6 +132,7 @@ def _world(world: WorldState | None) -> dict[str, Any] | None:
             }
             for resident_id, state in world.residents.items()
         },
+        "asleep_since": world.asleep_since.isoformat() if world.asleep_since else None,
         "openings": {
             entity_id: {
                 "open": state.open,
