@@ -225,6 +225,79 @@ class TestRefusals:
         assert demand.reason is Reason.OUTDOOR_OUTSIDE_WINDOW
 
 
+class TestTheDutyThatRanGivesItsOwnReason:
+    """Een taak die net draaide en nu weigert, noemt haar eigen reden.
+
+    De instellingen van een echt huis: verwarmen vanaf 22 °C en alleen onder 19 °C
+    buiten, koelen vanaf 24 °C en alleen boven 24 °C buiten, met een dode band van
+    een halve graad op de buitengrens. Stopt het koelen omdat de kamer koel genoeg
+    is terwijl het buiten 25 °C is, dan weigert de verwarmingskant op de buitengrens.
+    Die weigering is waar voor verwarmen, maar niet de reden dat het koelen stopt:
+    de kamer is op temperatuur. Een zone die niets deed kiest nog altijd de
+    informatiefste weigering van de twee.
+
+    A duty that just ran and refuses now names its own reason.
+
+    The settings of a real house: heating from 22 °C and only below 19 °C outside,
+    cooling from 24 °C and only above 24 °C outside, with a dead band of half a
+    degree on the outdoor bound. When cooling stops because the room is cool
+    enough while it is 25 °C outside, the heating side refuses on the outdoor
+    bound. That refusal is true for heating, but it is not why cooling stops: the
+    room is at temperature. A zone that did nothing still picks the more
+    informative of the two refusals.
+    """
+
+    zone = zone_with(
+        heat=ModeSettings(
+            target=23.0, start_at=22.0, hysteresis=1.0, outdoor=OutdoorWindow(maximum=19.0)
+        ),
+        cool=ModeSettings(
+            target=23.0,
+            start_at=24.0,
+            hysteresis=1.0,
+            outdoor=OutdoorWindow(minimum=24.0),
+            seasons=frozenset({Season.SUMMER}),
+        ),
+    )
+
+    @pytest.mark.parametrize(
+        ("running", "indoor", "outdoor", "expected"),
+        [
+            pytest.param(ModeFamily.COOL, 22.8, 25.0, Reason.SATISFIED, id="bug1-a"),
+            pytest.param(ModeFamily.COOL, 25.0, 22.0, Reason.OUTDOOR_OUTSIDE_WINDOW, id="bug1-b"),
+            pytest.param(ModeFamily.HEAT, 23.2, 10.0, Reason.SATISFIED, id="bug1-c"),
+            pytest.param(ModeFamily.HEAT, 20.0, 21.0, Reason.OUTDOOR_OUTSIDE_WINDOW, id="bug1-d"),
+            pytest.param(
+                ModeFamily.NEUTRAL, 22.8, 25.0, Reason.OUTDOOR_OUTSIDE_WINDOW, id="bug1-idle"
+            ),
+        ],
+    )
+    def test_the_duty_that_ran_names_its_own_reason(
+        self, running: ModeFamily, indoor: float, outdoor: float, expected: Reason
+    ) -> None:
+        world = make_world(indoor={"z": indoor}, outdoor=outdoor, season=Season.SUMMER)
+        demand = hysteresis.evaluate(self.zone, world, running, 0.5)
+        assert demand.family is ModeFamily.NEUTRAL
+        assert demand.reason is expected
+
+    def test_a_duty_running_by_hand_without_settings_does_not_answer(self) -> None:
+        """Draait er een taak die deze zone niet kent, dan kiest de gewone rangorde.
+
+        Een airco die iemand met de hand op koelen zette, in een zone die alleen
+        verwarmen kent: "deze kamer is hiervoor niet ingericht" is het minst
+        bruikbare antwoord, en de verwarmingskant weet het beter.
+
+        When a duty runs that this zone does not know, the ordinary ranking picks.
+        An air conditioner somebody set to cooling by hand, in a zone that only
+        knows heating: "this room is not set up for this" is the least useful
+        answer, and the heating side knows better.
+        """
+        zone = zone_with(heat=ModeSettings(target=23.0, start_at=22.0, hysteresis=1.0))
+        world = make_world(indoor={"z": 23.5}, outdoor=25.0)
+        demand = hysteresis.evaluate(zone, world, ModeFamily.COOL, 0.5)
+        assert demand.reason is Reason.SATISFIED
+
+
 class TestAnOutdoorBoundOnlyHoldsBackItsOwnDuty:
     """Een grens op koelen mag verwarmen niet stilleggen, en omgekeerd.
 

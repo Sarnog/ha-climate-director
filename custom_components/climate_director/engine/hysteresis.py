@@ -146,6 +146,22 @@ def evaluate(
 
     wanted = [demand for demand in (heat, cool) if demand.family is not ModeFamily.NEUTRAL]
     if not wanted:
+        # Draaide er net een taak, dan zegt die waarom ze stopt. Stopt het koelen
+        # omdat de kamer koel genoeg is, dan is dat de reden - niet dat verwarmen
+        # bij dit buitenweer niet mag, want om verwarmen ging het niet. Kent deze
+        # zone de taak niet (iemand zette het apparaat met de hand op koelen in een
+        # zone die alleen verwarmt), dan weet de taak het niet beter, en kiest de
+        # gewone rangorde hieronder.
+        #
+        # When a duty just ran, that duty says why it stops. When cooling stops
+        # because the room is cool enough, that is the reason - not that heating is
+        # not allowed in this weather, since heating was never the point. When this
+        # zone does not know the duty (somebody set the appliance to cooling by hand
+        # in a zone that only heats), the duty knows no better, and the ordinary
+        # ranking below picks.
+        own = {ModeFamily.HEAT: heat, ModeFamily.COOL: cool}.get(running)
+        if own is not None and own.reason is not Reason.MODE_NOT_CONFIGURED:
+            return own
         # Both duties declined. Report the more informative refusal rather than
         # a fixed one, so "the season forbids cooling" does not get hidden
         # behind "heating is not configured".
@@ -298,6 +314,10 @@ def _threshold(settings: ModeSettings, family: ModeFamily, running: bool) -> flo
 
 def _best_refusal(heat: Demand, cool: Demand) -> Demand:
     """Return the more informative of two refusals.
+
+    Alleen voor een zone die niets deed: een taak die net draaide noemt haar eigen
+    reden (zie `evaluate`). Only for a zone that was doing nothing: a duty that just
+    ran names its own reason (see `evaluate`).
 
     The ranking, from most to least useful to a user:
 
