@@ -31,29 +31,17 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   `AGENTS.md`, en dat bestand staat in `.gitignore`. Wie de repo kloont kan die afspraak dus
   niet nalezen, en een bewaking die er zelf naar zou kijken zou in CI omvallen. De afspraken
   horen in `ARCHITECTURE.md`, dat wél meegaat in de repo.
-- **Het slaapmoment van het huis vervalt niet meer bij het opstaan** — `night.house_asleep_since`
-  geeft `None` zodra er niemand thuis meer slaapt, en daarmee is het moment waarop het huis
-  ging slapen al weg in de ronde waarin de enige thuisblijver opstaat. *Opstaan zet het huis
-  pas aan vanaf* van die bewoner remt dan niet meer, terwijl hij juist na een nacht slapen
-  opstaat: de bewoner met de rem is alleen thuis, dus houdt niemand het moment vast. Het
-  moment hoort pas te vervallen als het niet meer in de lopende nacht valt, zodat wie 's ochtends
-  alleen opstaat wel geremd wordt en wie van de avond ervoor nog op is niet.
-- **De handleiding zegt niet wat een bewoner zonder slaapsensor met het wachten doet** — het
-  huis gaat pas slapen als iedereen die thuis is slaapt, en wie geen slaapsensor heeft slaapt
-  nooit. Woont er zo iemand thuis, dan wacht het huis 's ochtends op niemand en remt de rem
-  ook niet, wat een ander ook bij *Wacht op deze slaper tot* invult. De beschrijving van dat
-  veld en de alinea *Wachten op de laatste slaper* in de gids horen dat gevolg te noemen.
-- **Het Engelse label *Days getting up does not start the house* leest stroef** — *Days on
-  which getting up does not start the house* leest als een gewone bijzin; het label staat in
-  `strings.json`, in `translations/en.json` en in de tabelrij en de lopende tekst van de
-  Engelse gids. Daarbij hoort in `docs/install/ar.md` de jawāb na *إن* met een muḍāriʿ met
-  *لم*: *فيبقى المنزل متوقفًا* in plaats van *يبقى المنزل متوقفًا*.
-- **Een onmogelijke datum in de opslag laat de eerste beslissing vallen** — staat er
-  `2026-13-45T10:00:00+00:00` in het bewaarde bestand, dan gooit `dt_util.parse_datetime` een
-  `ValueError` en valt de eerste beslissing om, terwijl de docstring van
-  `_async_restore_state` belooft dat zo'n waarde als afwezig telt. Eén hulpfunctie die die
-  fout opvangt en `None` geeft hoort dat voor `until`, `home_since` en `asleep_since` recht te
-  zetten; dezelfde vorm zit mogelijk ook bij `handed_back`, dat met `parse_date` leest.
+- **Een huis zonder slaapvenster remt wie alleen opstaat nooit** — het slaapmoment van het
+  huis blijft alleen staan zolang het in de lopende nacht van een bewoner **met** een
+  slaapvenster valt. Woont er niemand met zo'n venster, dan is de grens tussen twee nachten
+  het moment zelf, en is het weg zodra de laatste thuisblijver opstaat: *Opstaan zet het huis
+  pas aan vanaf* remt die bewoner dan niet. Een eigen grens per bewoner - sinds wanneer is
+  deze bewoner op - zou dat dichten zonder een slaapvenster te eisen; zie *Nog te bouwen* in
+  `ARCHITECTURE.md`.
+- **Dezelfde vorm zit ook bij de looptijd van een override** — `state_store._restore_overrides`
+  leest `until` en `started` nog zonder opvang, en `handed_back` leest met `parse_date`. Een
+  onmogelijke waarde laat daar net zo goed de eerste beslissing vallen; de opvang die
+  `until`, `home_since` en `asleep_since` nu hebben hoort ook daar langs.
 
 ## Could have
 
@@ -291,32 +279,17 @@ The worked-out design proposals for everything below live in
   that file is in `.gitignore`. Anyone cloning the repo therefore cannot read the agreement,
   and a guard that looked at it itself would fall over in CI. Those agreements belong in
   `ARCHITECTURE.md`, which does travel with the repo.
-- **The house's sleep moment no longer lapses at getting up** — `night.house_asleep_since`
-  returns `None` the moment nobody at home is asleep any more, so the moment the house went
-  to sleep is already gone in the round in which the only one left at home gets up. *Getting
-  up only starts the house from* of that resident then no longer brakes, while he gets up
-  exactly after a night's sleep: the resident with the brake is alone at home, so nobody
-  holds the moment. The moment should only lapse once it falls outside the running night, so
-  that whoever gets up alone in the morning is braked and whoever is still up from the
-  evening before is not.
-- **The manual does not say what a resident without a sleep sensor does to the waiting** —
-  the house only goes to sleep once everybody at home is asleep, and whoever has no sleep
-  sensor never sleeps. With such a resident at home the house waits for nobody in the
-  morning, and the brake does not brake either, whatever somebody else fills in for *Wait
-  for this sleeper until*. The description of that field and the *Waiting for the last
-  sleeper* paragraph of the guide should name that consequence.
-- **The English label *Days getting up does not start the house* reads awkwardly** — *Days on
-  which getting up does not start the house* reads as an ordinary clause; the label stands in
-  `strings.json`, in `translations/en.json` and in the table row and the running text of the
-  English guide. Along with it, in `docs/install/ar.md` the jawāb after *إن* belongs with a
-  muḍāriʿ with *لم*: *فيبقى المنزل متوقفًا* instead of *يبقى المنزل متوقفًا*.
-- **An impossible date in the storage brings down the first decision** — with
-  `2026-13-45T10:00:00+00:00` in the stored file, `dt_util.parse_datetime` raises a
-  `ValueError` and the first decision falls over, while the docstring of
-  `_async_restore_state` promises that such a value counts as absent. One helper function
-  catching that error and returning `None` should put that right for `until`, `home_since`
-  and `asleep_since`; the same shape may also sit at `handed_back`, which reads with
-  `parse_date`.
+- **A house without a sleep window never brakes whoever gets up alone** — the house's sleep
+  moment only stays as long as it falls inside the running night of a resident **with** a
+  sleep window. With nobody carrying one, the boundary between two nights is the moment
+  itself, and it is gone the moment the last one at home gets up: *Getting up only starts the
+  house from* then does not brake that resident. A boundary of its own per resident - since
+  when this resident is up - would close that without demanding a sleep window; see *Still to
+  build* in `ARCHITECTURE.md`.
+- **The same shape also sits at an override's duration** — `state_store._restore_overrides`
+  still reads `until` and `started` without a catch, and `handed_back` reads with
+  `parse_date`. An impossible value brings the first decision down there just the same; the
+  catch that `until`, `home_since` and `asleep_since` now have belongs there too.
 
 ## Could have
 

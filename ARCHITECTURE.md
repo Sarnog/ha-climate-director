@@ -341,8 +341,12 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     sliep.** Het huis gaat slapen op het moment dat iedereen die thuis is slaapt
     (`night.house_asleep_since`); zolang er thuis nog iemand op is, houdt een slaper
     niemand tegen, ook niet na middernacht. Het moment (`WorldState.asleep_since`)
-    blijft staan zolang er thuis nog iemand slaapt - wie om drie uur even opstaat
-    maakt de nacht niet ongedaan - en vervalt zodra niemand thuis meer slaapt. Een
+    blijft staan zolang het in de lopende nacht van minstens één bewoner **met** een
+    slaapvenster valt: wie om drie uur even opstaat, of 's ochtends als enige thuis
+    opstaat, maakt de nacht niet ongedaan, en wie 's avonds laat nog op is houdt het
+    moment niet vast. Valt het erbuiten, dan is het weg - in een huis waar niemand een
+    slaapvenster heeft is de grens tussen twee nachten het moment zelf, dus daar
+    vervalt het zodra niemand thuis meer slaapt. Een
     slaper wacht alleen op een moment ná de laatste start van zijn eigen
     slaapvenster (`night.slept_tonight`), dus het moment van vrijdagnacht telt
     zaterdagnacht niet. Dit anker maakt het wachten **smaller** dan "thuis, slapend
@@ -351,15 +355,17 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     opslag. Is het onbekend, bijvoorbeeld na een herstart terwijl iemand op was, dan
     wordt er niet gewacht, en zodra iedereen slaapt wordt het alsnog vastgelegd. Een
     bewoner die thuis is zonder slaapsensor slaapt nooit, dus zo'n huis gaat nooit
-    slapen en wacht 's ochtends op niemand. In de diagnose wordt het moment gelakt,
-    net als `home_since`.
+    slapen, wacht 's ochtends op niemand en remt ook niet (anker 16). In de diagnose wordt
+    het moment gelakt, net als `home_since`.
 16. ***Opstaan zet het huis pas aan vanaf* remt het opstaan van één bewoner, en
     alleen het beginnen.** Vóór die tijd, op de dagen van de rem (`RiseBrake`), telt
     die bewoner niet als "op" voor de wakker-poort; telt daardoor niemand als op, dan
     start het huis niet, met `EARLY_RISER`. Staat een ander op zonder rem, dan start
     het huis gewoon. De rem geldt nooit op een vakantiedag en remt alleen wie
     **opstaat**, dus na een nacht waarin het huis sliep (anker 15): wie 's avonds
-    laat nog op is en een onbekend moment worden niet geremd. Het is een rem op
+    laat nog op is en een onbekend moment worden niet geremd; wie in een huis waar
+    niemand een slaapvenster heeft als enige thuis opstaat, evenmin, want daar is het
+    moment in diezelfde ronde al weg (anker 15). Het is een rem op
     beginnen: een zone die al draait, regelt door. Gastenmodus binnen het
     gastenvenster heft de rem op, een vooruit-verzoek gaat er altijd voor, en het
     stiltevenster en de roosters zijn niet geraakt. *Wacht op deze slaper tot* blijft
@@ -1034,6 +1040,16 @@ ze dekken - staan in `AGENTS.md`, en dat bestand staat in `.gitignore`.
 - Risico: twee plekken voor dezelfde afspraak. De verhuizing haalt de afspraken in
   dezelfde wijziging uit `AGENTS.md` weg.
 
+**Een rem die ook in een huis zonder slaapvenster remt.** `night.house_asleep_since`
+houdt het moment alleen vast zolang het in de lopende nacht van een bewoner **met** een
+slaapvenster valt; zonder zo'n venster is de grens tussen twee nachten het moment zelf,
+en dan is het weg zodra de laatste thuisblijver opstaat. `Resident` zou een eigen grens
+kunnen dragen - sinds wanneer deze bewoner op is, door de koppelingslaag gevuld zoals
+`home_since` - en `rise_braked` zou daaraan lezen in plaats van aan `slept_tonight`:
+een bewoner die na een nacht slapen opstaat is dan ook zonder slaapvenster te remmen.
+Let op dat dit dezelfde vraag is als bij `home_since`: wie was wanneer thuis, en wie was
+wanneer op.
+
 #### Could have
 
 **Huisbreed vermogensplafond.** `Source.wattage` + `DirectorConfig.watt_limit`; na de
@@ -1611,9 +1627,13 @@ them without changing them here first.
     slept.** The house goes to sleep the moment everybody at home is asleep
     (`night.house_asleep_since`); while somebody at home is still up, a sleeper
     holds nobody back, not after midnight either. The moment
-    (`WorldState.asleep_since`) stays while somebody at home is still asleep -
-    whoever gets up for a moment at three does not undo the night - and lapses as
-    soon as nobody at home sleeps any more. A sleeper only waits on a moment after
+    (`WorldState.asleep_since`) stays as long as it falls inside the running night of
+    at least one resident **with** a sleep window: whoever gets up for a moment at
+    three, or gets up alone in the morning, does not undo the night, and whoever is
+    still up late in the evening does not hold the moment. When it falls outside, the
+    moment goes - in a house where nobody has a sleep window the boundary between two
+    nights is the moment itself, so there it lapses as soon as nobody at home is
+    asleep any more. A sleeper only waits on a moment after
     the latest start of their own sleep window (`night.slept_tonight`), so Friday
     night's moment does not count on Saturday night. This anchor makes the waiting
     **narrower** than "home, asleep and before today's deadline"; the evening before
@@ -1621,7 +1641,8 @@ them without changing them here first.
     a restart through the store. When it is unknown, for instance after a restart
     while somebody was up, nobody is waited for, and once everybody sleeps it is
     recorded after all. A resident at home without a sleep sensor never sleeps, so
-    such a house never goes to sleep and waits for nobody in the morning. The moment
+    such a house never goes to sleep, waits for nobody in the morning and does not
+    brake either (anchor 16). The moment
     is redacted in the diagnostics, just like `home_since`.
 16. ***Getting up only starts the house from* brakes one resident's getting up, and
     only the starting.** Before that time, on the brake's days (`RiseBrake`), that
@@ -1630,7 +1651,9 @@ them without changing them here first.
     without a brake gets up, the house simply starts. The brake never applies on a
     holiday and only brakes whoever **gets up**, so after a night the house slept
     (anchor 15): whoever is still up late in the evening and an unknown moment are
-    not braked. It is a brake on starting: a zone already running carries on
+    not braked; neither is whoever gets up alone at home in a house where nobody has a
+    sleep window, since the moment is already gone in that same round there (anchor 15).
+    It is a brake on starting: a zone already running carries on
     regulating. Guest mode inside the guest window lifts the brake, a
     pre-conditioning request always goes first, and the quiet window and the
     schedules are untouched. *Wait for this sleeper until* keeps applying beside it.
@@ -2293,6 +2316,15 @@ what they cover - stand in `AGENTS.md`, and that file is in `.gitignore`.
   repo and CI can read it.
 - Risk: two places for the same agreement. The move takes the agreements out of
   `AGENTS.md` in the same change.
+
+**A brake that also brakes in a house without a sleep window.** `night.house_asleep_since`
+only holds the moment as long as it falls inside the running night of a resident **with**
+a sleep window; without one the boundary between two nights is the moment itself, and it
+is gone the moment the last one at home gets up. `Resident` could carry a boundary of its
+own - since when this resident is up, filled by the binding layer like `home_since` - and
+`rise_braked` could read that instead of `slept_tonight`: a resident who gets up after a
+night's sleep could then be braked without a sleep window too. Note that this is the same
+question as with `home_since`: who was home when, and who was up when.
 
 #### Could have
 
