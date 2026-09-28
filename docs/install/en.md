@@ -489,6 +489,8 @@ then skipped instead of blocking everything forever.
 | **Wait for this sleeper until** | how late this resident holds the house back while asleep; empty = they hold nobody back |
 | **Days that waiting applies** | the days that deadline applies on; empty = every day |
 | **Wait for this sleeper on holidays too** | off = the days above are read literally; on = the time applies on every holiday |
+| **Getting up only starts the house from** | before this time this resident does not count as awake and getting up does not start the house; never on a holiday; empty = getting up always starts it |
+| **Days getting up does not start the house** | which days that time applies on; empty = every day |
 
 ### Sleeping in, and why that is not simply a longer sleep window
 
@@ -560,6 +562,23 @@ Saturday stays a Saturday either way.
 Mind the sleep window: with the deadline falling outside it, this resident no
 longer counts as asleep at that moment anyway and holds nobody back. So let the
 sleep window run on past the deadline.
+
+### Getting up early without starting the house
+
+Whoever gets up at a quarter to six on a working day and leaves at half past six
+need not start the house. Fill in **Getting up only starts the house from** for
+that resident, for instance 07:00, and Monday to Friday under **Days getting up
+does not start the house**. Getting up before that, they do not count as awake
+yet. With nobody else up, the house stays off, with the reason *whoever gets up
+early does not start the house yet*. When somebody else without this brake gets
+up, the house simply starts.
+
+It is a brake on **starting**, just like the quiet window: a zone already running
+keeps running. On a holiday the brake never applies, so there is no tick for it.
+Whoever is still up late in the evening is not getting up: the brake only applies
+after a night in which everybody at home has been to bed. Inside the guest window
+the brake does not apply either, and a pre-conditioning request always lets the
+house start.
 
 ### Schedules
 

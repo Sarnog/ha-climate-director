@@ -154,3 +154,26 @@ def house_asleep_since(config: DirectorConfig, world: WorldState) -> datetime | 
     if all(slept_tonight(resident, world) for resident in sleeping):
         return world.asleep_since
     return world.now
+
+
+def rise_braked(resident: Resident, world: WorldState) -> bool:
+    """Return whether this resident, getting up early, does not count as up yet.
+
+    *Opstaan zet het huis pas aan vanaf*: vóór die tijd, op de dagen van de rem en op
+    een dag die geen vakantie is, telt deze bewoner niet als "op". Alleen wie
+    **opstaat** - na een nacht waarin het huis sliep (`slept_tonight`) - wordt
+    geremd: wie 's avonds laat nog op is, is geen vroege opstaander, en een onbekend
+    moment remt niemand. Of er daarna nog iets draait, beslist de poort: dit is een
+    rem op beginnen, niet op doorgaan.
+
+    *Getting up only starts the house from*: before that time, on the brake's days
+    and on a day that is no holiday, this resident does not count as "up". Only
+    whoever **gets up** - after a night the house slept (`slept_tonight`) - is
+    braked: whoever is still up late in the evening is no early riser, and an unknown
+    moment brakes nobody. Whether anything runs already is up to the gate: this is a
+    brake on starting, not on continuing.
+    """
+    brake = resident.rise_brake
+    if brake is None or world.holiday_mode or not brake.applies_on(world.now.weekday()):
+        return False
+    return world.now.time() < brake.at and slept_tonight(resident, world)

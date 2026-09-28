@@ -266,12 +266,30 @@ FUNCTION_LIMIT = 80
 # room for it. The rule itself lives in `engine/night.py`, and the recording in
 # `world_builder.py`, both below their measure; `engine/gates.py` went from 670 to
 # 651 because of it.
+#
+# *Opstaan zet het huis pas aan vanaf*: `engine/models.py` 2198 → 2227 door
+# `RiseBrake` (een tijd en de dagen, met de uitleg waarom er geen vinkje voor
+# vakantiedagen is) en het veld op `Resident`. `config_flow.py` 1451 → 1457 en
+# `async_step_resident` 91 → 97 door de opgeslagen vorm van de twee nieuwe velden.
+# `schemas.py` 900 → 893, en `schemas.resident` 98 → 70 staat niet meer op de lijst:
+# de weekdagkiezer die er drie keer letterlijk stond, is één hulpfunctie geworden.
+# `engine/serialise.py` 696 → 637: de drie ochtendinstellingen van een bewoner lezen
+# en schrijven nu in `engine/resident_storage.py`.
+#
+# *Getting up only starts the house from*: `engine/models.py` 2198 → 2227 through
+# `RiseBrake` (a time and the days, with the explanation why there is no holiday
+# tick) and the field on `Resident`. `config_flow.py` 1451 → 1457 and
+# `async_step_resident` 91 → 97 through the stored form of the two new fields.
+# `schemas.py` 900 → 893, and `schemas.resident` 98 → 70 is off the list: the weekday
+# picker that stood there three times literally became one helper.
+# `engine/serialise.py` 696 → 637: a resident's three morning settings are now read
+# and written in `engine/resident_storage.py`.
 MODULE_EXCEPTIONS: dict[str, int] = {
-    "engine/models.py": 2198,
+    "engine/models.py": 2227,
     "coordinator.py": 1993,
     "engine/decide.py": 1677,
-    "config_flow.py": 1451,
-    "schemas.py": 900,
+    "config_flow.py": 1457,
+    "schemas.py": 893,
 }
 
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
@@ -286,9 +304,8 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_build_zone_decisions"): 111,
     ("engine/decide.py", "_manual_conflict"): 103,
     ("state_store.py", "_async_restore_state"): 104,
-    ("schemas.py", "resident"): 98,
     ("engine/hysteresis.py", "_candidate"): 97,
-    ("config_flow.py", "async_step_resident"): 91,
+    ("config_flow.py", "async_step_resident"): 97,
     ("engine/decide.py", "_resolve_with_fallbacks"): 87,
     ("preconditions.py", "async_precondition"): 83,
 }

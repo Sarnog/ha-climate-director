@@ -313,6 +313,8 @@
           "wake_by": "Wait for this sleeper until",
           "wake_days": "Days that waiting applies",
           "wake_holiday": "Wait for this sleeper on holidays too",
+          "rise_from": "Getting up only starts the house from",
+          "rise_days": "Days getting up does not start the house",
           "sleep_in_until": "Sleeping in until",
           "sleep_in_days": "Mornings you may sleep in",
           "sleep_in_holiday": "Sleep in on holidays too"
@@ -330,6 +332,8 @@
           "wake_by": "With somebody up while this resident is still asleep at home, the house waits. Past this time it no longer does: it then follows whoever is up. The waiting only begins once everybody at home has been to bed: while somebody is still up in the evening, the house simply carries on. Leave empty to have this resident hold nobody back.",
           "wake_days": "Leave empty for every day.",
           "wake_holiday": "A holiday counts as a Saturday for the schedules, but not for this time: one person's holiday is another's working day, and the late riser would hold the house up while somebody is working. Tick this when you do want to be waited for on a holiday - then it applies whatever the weekday.",
+          "rise_from": "Before this time, on the days below, this resident getting up does not start the house: they do not count as awake yet. Whatever already runs keeps running, and on a holiday this never applies. Somebody still up from the evening before is not getting up. Leave empty to have getting up always start the house.",
+          "rise_days": "Leave empty for every day. There is no tick for holidays: on a holiday getting up always starts the house.",
           "sleep_in_until": "The sleep window is the night: it switches the house off at bedtime. This stretches only the morning, on the days below, so the sleep sensor keeps counting while you are still in bed. Leave it empty and the sleep window is the whole story.",
           "sleep_in_days": "These are the mornings you sleep in on, not the evenings before. Leave empty for every day.",
           "sleep_in_holiday": "On every day your holiday calendar marks, whatever the weekday. That way you set sleeping in once instead of per holiday."
@@ -635,6 +639,7 @@
               "nobody_home": "nobody is home",
               "everyone_asleep": "everyone is asleep",
               "waiting_for_sleeper": "somebody is still asleep; the house waits until their latest time",
+              "early_riser": "whoever gets up early does not start the house yet",
               "outside_schedule": "no resident's schedule is open",
               "zone_unoccupied": "nobody is in this room",
               "quiet_hours": "the quiet window holds back the start",

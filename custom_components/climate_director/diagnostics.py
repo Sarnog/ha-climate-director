@@ -70,7 +70,7 @@ async def async_get_config_entry_diagnostics(
     }
     # `home`/`asleep`/`home_since` zitten in de wereldmomentopname, `presence`
     # (met `occupied` en tijdstempel) ook, en `presence_entity`/`sleep_entity`/
-    # `windows`/`sleep_window`/`wake_deadline` in de installatie: precies het
+    # `windows`/`sleep_window`/`wake_deadline`/`rise_brake` in de installatie: precies het
     # bewonersprofiel
     # dat hierboven benoemd is. `home_since` is "wie was wanneer thuis" en is
     # daarmee net zo goed een bewonersgegeven als `home` zelf - het zegt wanneer
@@ -80,7 +80,7 @@ async def async_get_config_entry_diagnostics(
     #
     # `home`/`asleep`/`home_since` sit in the world snapshot, `presence` (with
     # `occupied` and its timestamp) too, and `presence_entity`/`sleep_entity`/
-    # `windows`/`sleep_window`/`wake_deadline` in the installation: exactly the
+    # `windows`/`sleep_window`/`wake_deadline`/`rise_brake` in the installation: exactly the
     # resident profile named
     # above. `home_since` is "who was home when" and therefore just as much a
     # resident fact as `home` itself - it says when somebody came home;
@@ -101,6 +101,7 @@ async def async_get_config_entry_diagnostics(
             "windows",
             "sleep_window",
             "wake_deadline",
+            "rise_brake",
         ],
     )
 

@@ -315,13 +315,13 @@ def reason_sentence(hass: HomeAssistant, reason: str, duty: str | None = None) -
     identifier". Twee terugvallen, net als `translated`: de vertaling kan
     ontbreken, en de Engelse zin uit `strings.json` is dan de tweede. `reason`
     zelf is de allerlaatste terugval en hoort nooit bereikt te worden - de
-    bewaking eist dat alle negenentwintig redenen in alle zeven bestanden staan.
+    bewaking eist dat alle dertig redenen in alle zeven bestanden staan.
 
     The property is "what the user reads is a sentence in their language, not an
     identifier". Two fallbacks, like `translated`: the translation may be
     missing, and the English sentence from `strings.json` is then the second.
     `reason` itself is the very last fallback and should never be reached - the
-    guard demands all twenty-nine reasons in all seven files.
+    guard demands all thirty reasons in all seven files.
     """
     english = english_readable() or {}
     cache = _entity_cache(hass)

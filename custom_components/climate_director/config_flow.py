@@ -862,6 +862,12 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                     "weekdays": ([int(day) for day in user_input.get("wake_days") or ()] or None),
                     "holiday": user_input.get("wake_holiday", False),
                 },
+                # Geen tijd = geen rem; de dagen blijven staan, zoals hierboven.
+                # No time = no brake; the days are kept, as above.
+                "rise_brake": {
+                    "at": user_input.get("rise_from") or "",
+                    "weekdays": ([int(day) for day in user_input.get("rise_days") or ()] or None),
+                },
                 # De roosters van deze bewoner blijven staan; die worden in de
                 # volgende stap bewerkt, niet in dit formulier.
                 #

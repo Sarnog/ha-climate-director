@@ -313,6 +313,8 @@
           "wake_by": "Auf diese schlafende Person warten bis",
           "wake_days": "Tage, an denen gewartet wird",
           "wake_holiday": "Auch an Urlaubstagen auf diese Person warten",
+          "rise_from": "Aufstehen startet das Haus erst ab",
+          "rise_days": "Tage, an denen Aufstehen das Haus nicht startet",
           "sleep_in_until": "Ausschlafen bis",
           "sleep_in_days": "Morgen, an denen du ausschläfst",
           "sleep_in_holiday": "Auch an Urlaubstagen ausschlafen"
@@ -330,6 +332,8 @@
           "wake_by": "Ist jemand auf, während diese Person zu Hause noch schläft, wartet das Haus. Nach dieser Uhrzeit nicht mehr: dann richtet es sich nach denen, die auf sind. Das Warten beginnt erst, wenn alle, die zu Hause sind, im Bett waren: ist abends noch jemand auf, läuft das Haus einfach weiter. Leer lassen, damit diese Person niemanden aufhält.",
           "wake_days": "Leer lassen gilt für jeden Tag.",
           "wake_holiday": "Ein Urlaubstag zählt bei den Zeitplänen als Samstag, bei dieser Uhrzeit aber nicht: Der freie Tag des einen ist der Arbeitstag des anderen, und dann hält der Langschläfer das Haus auf, während jemand arbeitet. Setz das Häkchen, wenn auch an einem Urlaubstag auf dich gewartet werden soll - dann gilt die Uhrzeit an jedem Wochentag.",
+          "rise_from": "Vor dieser Uhrzeit, an den Tagen darunter, startet das Aufstehen dieser Person das Haus nicht: sie zählt dann noch nicht als wach. Was schon läuft, läuft weiter, und an einem Urlaubstag gilt das nie. Wer vom Abend davor noch auf ist, steht nicht auf. Leer lassen, damit Aufstehen das Haus immer startet.",
+          "rise_days": "Leer lassen gilt für jeden Tag. Ein Häkchen für Urlaubstage gibt es nicht: An einem Urlaubstag startet Aufstehen das Haus immer.",
           "sleep_in_until": "Das Schlaffenster ist die Nacht: Es schaltet das Haus zur Schlafenszeit aus. Dies dehnt nur den Morgen aus, an den Tagen unten, damit der Schlafsensor weiterzählt, während du noch im Bett liegst. Leer lassen heißt: Das Schlaffenster ist die ganze Geschichte.",
           "sleep_in_days": "Das sind die Morgen, an denen du ausschläfst, nicht die Abende davor. Leer lassen gilt für jeden Tag.",
           "sleep_in_holiday": "An jedem Tag, den dein Urlaubskalender markiert, unabhängig vom Wochentag. So stellst du das Ausschlafen einmal ein statt pro Urlaub."
@@ -635,6 +639,7 @@
               "nobody_home": "es ist niemand zu Hause",
               "everyone_asleep": "alle schlafen",
               "waiting_for_sleeper": "jemand schläft noch; das Haus wartet bis zu dessen spätester Zeit",
+              "early_riser": "wer früh aufsteht, startet das Haus noch nicht",
               "outside_schedule": "kein Zeitplan eines Bewohners ist offen",
               "zone_unoccupied": "in diesem Raum ist niemand",
               "quiet_hours": "das Ruhefenster hält den Start zurück",

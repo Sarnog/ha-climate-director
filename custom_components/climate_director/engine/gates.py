@@ -25,7 +25,7 @@ from .models import (
     Zone,
     ZoneGate,
 )
-from .night import asleep, slept_tonight
+from .night import asleep, rise_braked, slept_tonight
 from .plan import OPENING_MIN_REST, Plan, Reason  # noqa: F401  # OPENING_MIN_REST is a re-export
 from .world import WorldState
 
@@ -124,7 +124,7 @@ def _closed(
     # are skipped there, since they could never pass. The room gate below still
     # applies: that one is about the room, not about who is in the house.
     if config.residents:
-        yield from _household(config, world)
+        yield from _household(config, world, _zone_running(config, world, zone, previous))
 
     # Het smalst van allemaal, en daarom als laatste: iemand thuis zegt niets
     # over of er iemand op zolder zit.
@@ -135,7 +135,7 @@ def _closed(
         yield Reason.ZONE_UNOCCUPIED
 
 
-def _household(config: DirectorConfig, world: WorldState) -> Iterator[Reason]:
+def _household(config: DirectorConfig, world: WorldState, running: bool) -> Iterator[Reason]:
     """Yield the gates about the people in the house, the shut ones only.
 
     Gastenmodus neemt de poorten over die over afwezigheid gaan. Er logeert
@@ -189,9 +189,22 @@ def _household(config: DirectorConfig, world: WorldState) -> Iterator[Reason]:
     # late riser below would mistake a consequence for a cause. With somebody
     # up, whoever is still in bed counts: the house waits for the last sleeper
     # until their deadline, and no longer than that.
+    #
+    # Staat iedereen die op is te vroeg op (*Opstaan zet het huis pas aan vanaf*),
+    # dan begint het huis niet: `early_riser`. Een rem op beginnen, zoals het
+    # stiltevenster, dus een zone die al draait regelt gewoon door. Binnen het
+    # gastenvenster geldt de rem niet: die tak hierboven kent haar niet.
+    #
+    # When everybody who is up got up too early (*Getting up only starts the house
+    # from*), the house does not start: `early_riser`. A brake on starting, like the
+    # quiet window, so a zone already running carries on regulating. Inside the guest
+    # window the brake does not apply: the branch above does not know it.
     if gates.require_awake:
-        if not any(_up_and_about(resident, world) for resident in config.residents):
+        up = [resident for resident in config.residents if _up_and_about(resident, world)]
+        if not up:
             yield Reason.EVERYONE_ASLEEP
+        elif not running and all(rise_braked(resident, world) for resident in up):
+            yield Reason.EARLY_RISER
         elif any(_still_in_bed(resident, world) for resident in config.residents):
             yield Reason.WAITING_FOR_SLEEPER
 

@@ -492,6 +492,8 @@ tegenhouden.
 | **Wacht op deze slaper tot** | tot hoe laat deze bewoner het huis tegenhoudt terwijl hij slaapt; leeg = hij houdt niemand tegen |
 | **Dagen waarop gewacht wordt** | op welke dagen die uiterste tijd geldt; leeg = elke dag |
 | **Ook op vakantiedagen op deze slaper wachten** | uit = de dagen hierboven gelden letterlijk; aan = de tijd geldt op elke vakantiedag |
+| **Opstaan zet het huis pas aan vanaf** | vóór deze tijd telt deze bewoner niet als wakker en zet opstaan het huis niet aan; nooit op een vakantiedag; leeg = opstaan zet het huis altijd aan |
+| **Dagen waarop opstaan het huis niet aanzet** | op welke dagen die tijd geldt; leeg = elke dag |
 
 ### Uitslapen, en waarom dat niet gewoon een langer slaapvenster is
 
@@ -564,6 +566,22 @@ zaterdag.
 Let op het slaapvenster: valt de uiterste tijd erbuiten, dan telt deze bewoner
 op dat moment sowieso niet meer als slapend en houdt hij niemand tegen. Laat het
 slaapvenster dus doorlopen tot na de uiterste tijd.
+
+### Vroeg opstaan zonder het huis aan te zetten
+
+Wie op een werkdag om kwart voor zes opstaat en om half zeven de deur uit gaat,
+hoeft het huis niet aan te zetten. Vul bij die bewoner **Opstaan zet het huis pas
+aan vanaf** in, bijvoorbeeld 07:00, en bij **Dagen waarop opstaan het huis niet
+aanzet** maandag tot en met vrijdag. Staat hij daarvóór op, dan telt hij nog niet
+als wakker. Is er niemand anders op, dan blijft het huis uit, met de reden *wie vroeg
+opstaat, zet het huis nog niet aan*. Staat een ander op die deze rem niet heeft,
+dan begint het huis gewoon.
+
+Het is een rem op **beginnen**, net als het stiltevenster: draait een zone al, dan
+blijft ze draaien. Op een vakantiedag geldt de rem nooit; een vinkje daarvoor is er
+dus niet. Wie 's avonds laat nog op is, staat niet op: de rem geldt alleen na een
+nacht waarin iedereen die thuis was naar bed is geweest. Binnen het gastenvenster
+geldt de rem ook niet, en een vooruit-verzoek laat het huis altijd starten.
 
 ### Roosters
 

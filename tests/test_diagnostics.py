@@ -165,6 +165,7 @@ def _sensitive_installation() -> dict:
                 "sleep_state": "wireless",
                 "sleep_window": {"start": "23:00:00", "end": "09:00:00"},
                 "wake_deadline": {"at": "11:00:00", "weekdays": [5, 6]},
+                "rise_brake": {"at": "07:00:00", "weekdays": [0, 1, 2, 3, 4]},
                 "windows": [{"start": "08:00:00", "end": "18:00:00"}],
             }
         ],
@@ -249,6 +250,7 @@ class TestThePrivacyRedaction:
             "sleep_entity",
             "sleep_window",
             "wake_deadline",
+            "rise_brake",
             "windows",
         ):
             assert resident[key] == REDACTED, key

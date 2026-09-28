@@ -495,6 +495,8 @@ Anwesenheitstore werden dann übersprungen, statt alles dauerhaft zu blockieren.
 | **Auf diese schlafende Person warten bis** | bis wann diese Person das Haus im Schlaf aufhält; leer = sie hält niemanden auf |
 | **Tage, an denen gewartet wird** | an welchen Tagen diese Uhrzeit gilt; leer = jeden Tag |
 | **Auch an Urlaubstagen auf diese Person warten** | aus = die Tage oben gelten wörtlich; ein = die Uhrzeit gilt an jedem Urlaubstag |
+| **Aufstehen startet das Haus erst ab** | vor dieser Uhrzeit zählt diese Person nicht als wach, und Aufstehen startet das Haus nicht; nie an einem Urlaubstag; leer = Aufstehen startet es immer |
+| **Tage, an denen Aufstehen das Haus nicht startet** | an welchen Tagen diese Uhrzeit gilt; leer = jeden Tag |
 
 ### Ausschlafen, und warum das nicht einfach ein längeres Schlaffenster ist
 
@@ -570,6 +572,23 @@ bleibt in jedem Fall ein Samstag.
 Achte auf das Schlaffenster: Liegt die Uhrzeit außerhalb, gilt diese Person
 ohnehin nicht mehr als schlafend und hält niemanden auf. Lass das
 Schlaffenster also über die Uhrzeit hinaus laufen.
+
+### Früh aufstehen, ohne das Haus zu starten
+
+Wer an einem Arbeitstag um Viertel vor sechs aufsteht und um halb sieben aus dem
+Haus geht, muss das Haus nicht starten. Trage bei dieser Person **Aufstehen
+startet das Haus erst ab** ein, zum Beispiel 07:00, und bei **Tage, an denen
+Aufstehen das Haus nicht startet** Montag bis Freitag. Steht sie früher auf, zählt
+sie noch nicht als wach. Ist sonst niemand auf, bleibt das Haus aus, mit dem Grund
+*wer früh aufsteht, startet das Haus noch nicht*. Steht jemand anderes ohne diese
+Bremse auf, beginnt das Haus ganz normal.
+
+Das ist eine Bremse für das **Beginnen**, genau wie das Ruhefenster: Läuft eine
+Zone schon, läuft sie weiter. An einem Urlaubstag gilt die Bremse nie; ein Häkchen
+dafür gibt es also nicht. Wer abends noch spät auf ist, steht nicht auf: Die
+Bremse gilt nur nach einer Nacht, in der alle, die zu Hause waren, im Bett waren.
+In den Stunden des Gästemodus gilt die Bremse ebenfalls nicht, und eine
+Vorbereitungs-Anforderung lässt das Haus immer starten.
 
 ### Zeitpläne
 

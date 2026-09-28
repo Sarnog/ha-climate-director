@@ -501,6 +501,8 @@ sont alors ignorées au lieu de tout bloquer pour toujours.
 | **Attendre ce dormeur jusqu'à** | jusqu'à quelle heure cet occupant retient la maison pendant son sommeil ; vide = il ne retient personne |
 | **Jours où l'attente s'applique** | les jours où cette heure s'applique ; vide = tous les jours |
 | **Attendre ce dormeur aussi les jours de vacances** | décoché = les jours ci-dessus se lisent littéralement ; coché = l'heure s'applique tous les jours de vacances |
+| **Le lever ne démarre la maison qu'à partir de** | avant cette heure, cet occupant ne compte pas comme réveillé et son lever ne démarre pas la maison ; jamais les jours de vacances ; vide = le lever la démarre toujours |
+| **Jours où le lever ne démarre pas la maison** | les jours où cette heure s'applique ; vide = tous les jours |
 
 ### La grasse matinée, et pourquoi ce n'est pas une plage de sommeil plus longue
 
@@ -579,6 +581,24 @@ Attention à la plage de sommeil : si l'heure limite tombe en dehors, cet
 occupant n'est de toute façon plus considéré comme endormi à ce moment-là et ne
 retient personne. Faites donc courir la plage de sommeil au-delà de l'heure
 limite.
+
+### Se lever tôt sans démarrer la maison
+
+Qui se lève à six heures moins le quart un jour de travail et part à six heures et
+demie n'a pas besoin de démarrer la maison. Renseignez pour cet occupant **Le lever
+ne démarre la maison qu'à partir de**, par exemple 07:00, et du lundi au vendredi
+dans **Jours où le lever ne démarre pas la maison**. S'il se lève avant, il ne
+compte pas encore comme réveillé. Si personne d'autre n'est levé, la maison reste
+éteinte, avec la raison *qui se lève tôt ne démarre pas encore la maison*. Si
+quelqu'un d'autre sans ce frein se lève, la maison démarre normalement.
+
+C'est un frein au **démarrage**, comme la plage de silence : une zone qui tourne
+déjà continue de tourner. Les jours de vacances, le frein ne s'applique jamais ; il
+n'y a donc pas de case pour cela. Qui est encore debout tard le soir ne se lève
+pas : le frein ne s'applique qu'après une nuit où toutes les personnes à la
+maison sont allées se coucher. Pendant les heures du mode invités, le frein ne
+s'applique pas non plus, et une demande de préparation fait toujours démarrer la
+maison.
 
 ### Plannings
 

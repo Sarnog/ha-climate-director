@@ -495,6 +495,8 @@ presencia se omiten entonces en vez de bloquearlo todo para siempre.
 | **Esperar a esta persona dormida hasta** | hasta qué hora este residente retiene la casa mientras duerme; vacío = no retiene a nadie |
 | **Días en los que se espera** | los días en los que se aplica esa hora; vacío = todos los días |
 | **Esperar a esta persona también en días de vacaciones** | desmarcado = los días de arriba se leen literalmente; marcado = la hora se aplica en todos los días de vacaciones |
+| **Levantarse solo arranca la casa desde** | antes de esta hora este residente no cuenta como despierto y levantarse no arranca la casa; nunca en días de vacaciones; vacío = levantarse siempre la arranca |
+| **Días en que levantarse no arranca la casa** | en qué días se aplica esa hora; vacío = todos los días |
 
 ### Dormir hasta tarde, y por qué no es simplemente una franja de sueño más larga
 
@@ -570,6 +572,23 @@ sigue siendo un sábado.
 Ojo con la franja de sueño: si la hora límite cae fuera de ella, este residente
 ya no cuenta como dormido en ese momento y no retiene a nadie. Deja que la
 franja de sueño siga más allá de la hora límite.
+
+### Madrugar sin arrancar la casa
+
+Quien se levanta a las seis menos cuarto un día laborable y sale a las seis y
+media no necesita arrancar la casa. Rellena para ese residente **Levantarse solo
+arranca la casa desde**, por ejemplo 07:00, y de lunes a viernes en **Días en que
+levantarse no arranca la casa**. Si se levanta antes, todavía no cuenta como
+despierto. Si no hay nadie más levantado, la casa sigue apagada, con el motivo
+*quien madruga todavía no arranca la casa*. Si se levanta otra persona sin este
+freno, la casa arranca con normalidad.
+
+Es un freno al **arranque**, igual que la franja de silencio: una zona que ya
+funciona sigue funcionando. En días de vacaciones el freno nunca se aplica, así que
+no hay casilla para ello. Quien sigue levantado tarde por la noche no se está
+levantando: el freno solo se aplica tras una noche en la que todos los que estaban
+en casa se han ido a la cama. Dentro de la franja de invitados el freno tampoco se
+aplica, y una petición de preacondicionamiento siempre hace arrancar la casa.
 
 ### Horarios
 

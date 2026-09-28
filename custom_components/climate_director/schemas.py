@@ -647,16 +647,38 @@ def residents(flow: Any) -> vol.Schema:
     )
 
 
-def resident(current: dict[str, Any]) -> vol.Schema:
-    """Return the single resident schema."""
-    stored_days = (current.get("sleep_window") or {}).get("weekdays")
-    sleep_days = None if stored_days is None else [str(day) for day in stored_days]
-    stored_sleep_in_days = (current.get("sleep_in") or {}).get("weekdays")
-    sleep_in_days = (
-        None if stored_sleep_in_days is None else [str(day) for day in stored_sleep_in_days]
+def _weekday_picker() -> selector.SelectSelector:
+    """Return the weekday picker the resident screen uses four times."""
+    return selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=[
+                selector.SelectOptionDict(value=str(number), label=label)
+                for number, label in enumerate(_WEEKDAYS)
+            ],
+            multiple=True,
+            mode=selector.SelectSelectorMode.LIST,
+            translation_key="weekday",
+        )
     )
-    stored_wake_days = (current.get("wake_deadline") or {}).get("weekdays")
-    wake_days = None if stored_wake_days is None else [str(day) for day in stored_wake_days]
+
+
+def _stored_days(block: Any) -> list[str] | None:
+    """Return the stored weekdays of one resident setting as the picker wants them."""
+    days = (block or {}).get("weekdays")
+    return None if days is None else [str(day) for day in days]
+
+
+def resident(current: dict[str, Any]) -> vol.Schema:
+    """Return the single resident schema.
+
+    De opsta-instellingen van één bewoner staan bij elkaar: eerst *Wacht op deze
+    slaper tot* met zijn vinkje en dagen, direct daaronder *Opstaan zet het huis pas
+    aan vanaf* met zijn dagen (zonder vinkje voor vakantiedagen: daar geldt de rem
+    nooit). One resident's getting-up settings stand together: first *Wait for this
+    sleeper until* with its tick and days, right below it *Getting up only starts the
+    house from* with its days (no holiday tick: the brake never applies there).
+    """
+    wake = current.get("wake_deadline") or {}
     return vol.Schema(
         {
             vol.Required(CONF_NAME, default=current.get("name", "")): _TEXT,
@@ -685,18 +707,8 @@ def resident(current: dict[str, Any]) -> vol.Schema:
             ): _TIME,
             vol.Optional(
                 "sleep_days",
-                description={"suggested_value": sleep_days},
-            ): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[
-                        selector.SelectOptionDict(value=str(number), label=label)
-                        for number, label in enumerate(_WEEKDAYS)
-                    ],
-                    multiple=True,
-                    mode=selector.SelectSelectorMode.LIST,
-                    translation_key="weekday",
-                )
-            ),
+                description={"suggested_value": _stored_days(current.get("sleep_window"))},
+            ): _weekday_picker(),
             vol.Optional(
                 "sleep_in_until",
                 description={"suggested_value": (current.get("sleep_in") or {}).get("until")},
@@ -707,40 +719,21 @@ def resident(current: dict[str, Any]) -> vol.Schema:
             ): bool,
             vol.Optional(
                 "sleep_in_days",
-                description={"suggested_value": sleep_in_days},
-            ): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[
-                        selector.SelectOptionDict(value=str(number), label=label)
-                        for number, label in enumerate(_WEEKDAYS)
-                    ],
-                    multiple=True,
-                    mode=selector.SelectSelectorMode.LIST,
-                    translation_key="weekday",
-                )
-            ),
+                description={"suggested_value": _stored_days(current.get("sleep_in"))},
+            ): _weekday_picker(),
+            vol.Optional("wake_by", description={"suggested_value": wake.get("at")}): _TIME,
+            vol.Required("wake_holiday", default=wake.get("holiday", False)): bool,
             vol.Optional(
-                "wake_by",
-                description={"suggested_value": (current.get("wake_deadline") or {}).get("at")},
+                "wake_days", description={"suggested_value": _stored_days(wake)}
+            ): _weekday_picker(),
+            vol.Optional(
+                "rise_from",
+                description={"suggested_value": (current.get("rise_brake") or {}).get("at")},
             ): _TIME,
-            vol.Required(
-                "wake_holiday",
-                default=(current.get("wake_deadline") or {}).get("holiday", False),
-            ): bool,
             vol.Optional(
-                "wake_days",
-                description={"suggested_value": wake_days},
-            ): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[
-                        selector.SelectOptionDict(value=str(number), label=label)
-                        for number, label in enumerate(_WEEKDAYS)
-                    ],
-                    multiple=True,
-                    mode=selector.SelectSelectorMode.LIST,
-                    translation_key="weekday",
-                )
-            ),
+                "rise_days",
+                description={"suggested_value": _stored_days(current.get("rise_brake"))},
+            ): _weekday_picker(),
             vol.Required("delete", default=False): bool,
             vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
         }

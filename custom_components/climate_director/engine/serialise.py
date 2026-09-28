@@ -44,13 +44,19 @@ from .models import (
     Season,
     SeasonSettings,
     SeasonSource,
-    SleepIn,
     Source,
     SourceRole,
     TimeWindow,
-    WakeDeadline,
     Zone,
     ZoneGate,
+)
+from .resident_storage import (
+    rise_brake_from,
+    rise_brake_to_dict,
+    sleep_in_from,
+    sleep_in_to_dict,
+    wake_deadline_from,
+    wake_deadline_to_dict,
 )
 from .storage_helpers import (
     _as_dict,
@@ -237,51 +243,9 @@ def _resident(raw: Mapping[str, Any]) -> Resident:
         sleep_entity=_text(raw.get("sleep_entity")),
         sleep_state=_text(raw.get("sleep_state")) or "on",
         sleep_window=_sleep_window(_as_dict(raw.get("sleep_window"))),
-        sleep_in=_sleep_in(_as_dict(raw.get("sleep_in"))),
-        wake_deadline=_wake_deadline(_as_dict(raw.get("wake_deadline"))),
-    )
-
-
-def _sleep_in(raw: dict[str, Any]) -> SleepIn | None:
-    """Return the sleep-in time, or `None` when no hour was filled in.
-
-    Geen tijd betekent geen uitslapen: het slaapvenster is dan het hele
-    verhaal. Een half ingevuld veld - wel dagen, geen tijd - is dus geen
-    uitslapen tot middernacht.
-
-    No time means no sleeping in: the sleep window is then the whole story. A
-    half-filled field - days but no time - is therefore not sleeping in until
-    midnight.
-    """
-    until = raw.get("until")
-    if not until:
-        return None
-    return SleepIn(
-        until=_time(until, time(0, 0)),
-        weekdays=_weekdays(raw.get("weekdays")),
-        holiday=_bool(raw.get("holiday"), False),
-    )
-
-
-def _wake_deadline(raw: dict[str, Any]) -> WakeDeadline | None:
-    """Return the wake deadline, or `None` when no time was filled in.
-
-    Geen tijd betekent: deze bewoner houdt niemand tegen. Een half ingevuld
-    veld - wel dagen, geen tijd - is dus geen uiterste tijd, en niet een
-    uiterste tijd om middernacht: dat laatste zou het huis stilzetten op een
-    uur dat de gebruiker nooit koos.
-
-    No time means: this resident holds nobody back. A half-filled field - days
-    but no time - is therefore no deadline, rather than a deadline at midnight:
-    that last would hold the house on an hour the user never picked.
-    """
-    at = raw.get("at")
-    if not at:
-        return None
-    return WakeDeadline(
-        at=_time(at, time(0, 0)),
-        weekdays=_weekdays(raw.get("weekdays")),
-        holiday=_bool(raw.get("holiday"), False),
+        sleep_in=sleep_in_from(_as_dict(raw.get("sleep_in"))),
+        wake_deadline=wake_deadline_from(_as_dict(raw.get("wake_deadline"))),
+        rise_brake=rise_brake_from(_as_dict(raw.get("rise_brake"))),
     )
 
 
@@ -581,32 +545,9 @@ def _resident_to_dict(resident: Resident) -> dict[str, Any]:
                 ),
             }
         ),
-        "sleep_in": (
-            None
-            if resident.sleep_in is None
-            else {
-                "until": resident.sleep_in.until.isoformat(),
-                "weekdays": (
-                    None
-                    if resident.sleep_in.weekdays is None
-                    else sorted(resident.sleep_in.weekdays)
-                ),
-                "holiday": resident.sleep_in.holiday,
-            }
-        ),
-        "wake_deadline": (
-            None
-            if resident.wake_deadline is None
-            else {
-                "at": resident.wake_deadline.at.isoformat(),
-                "weekdays": (
-                    None
-                    if resident.wake_deadline.weekdays is None
-                    else sorted(resident.wake_deadline.weekdays)
-                ),
-                "holiday": resident.wake_deadline.holiday,
-            }
-        ),
+        "sleep_in": sleep_in_to_dict(resident.sleep_in),
+        "wake_deadline": wake_deadline_to_dict(resident.wake_deadline),
+        "rise_brake": rise_brake_to_dict(resident.rise_brake),
         "windows": [
             {
                 "start": window.start.strftime("%H:%M:%S"),

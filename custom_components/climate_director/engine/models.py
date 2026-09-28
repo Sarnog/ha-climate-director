@@ -642,6 +642,32 @@ class WakeDeadline:
 
 
 @dataclass(frozen=True, slots=True)
+class RiseBrake:
+    """Until when getting up does not set the house going, for one resident.
+
+    Wie op een werkdag om kwart voor zes opstaat en om half zeven de deur uit gaat,
+    hoeft het huis niet aan te zetten. Vóór deze tijd, op deze dagen, telt deze
+    bewoner niet als "op" voor de wakker-poort. Nooit op een vakantiedag, en alleen
+    een rem op beginnen: wat al draait, blijft draaien.
+
+    Whoever gets up at a quarter to six on a working day and leaves at half past six
+    need not set the house going. Before this time, on these days, this resident does
+    not count as "up" for the wake gate. Never on a holiday, and only a brake on
+    starting: whatever runs already keeps running.
+    """
+
+    at: time
+    """From this time on, getting up starts the house again."""
+
+    weekdays: frozenset[int] | None = None
+    """`datetime.weekday()` numbers (Monday is 0). `None` means every day."""
+
+    def applies_on(self, weekday: int) -> bool:
+        """Return whether the brake is set for that weekday."""
+        return self.weekdays is None or weekday in self.weekdays
+
+
+@dataclass(frozen=True, slots=True)
 class Resident:
     """Someone whose presence and sleep gate the installation."""
 
@@ -682,6 +708,9 @@ class Resident:
     the first one up sets the house going. Only whoever fills in a time here is
     asking to be waited for - and says in the same breath until when.
     """
+
+    rise_brake: RiseBrake | None = None
+    """Until when this resident getting up does not start the house. `None`: never."""
 
     presence_entity: str = ""
     """Entity saying whether this person is home, usually a `person`."""
