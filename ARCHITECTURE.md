@@ -1050,6 +1050,15 @@ een bewoner die na een nacht slapen opstaat is dan ook zonder slaapvenster te re
 Let op dat dit dezelfde vraag is als bij `home_since`: wie was wanneer thuis, en wie was
 wanneer op.
 
+**Elk opgeslagen tijdstip langs één lezer.** `state_store._stored_time` geeft `None` voor
+een waarde die geen tijdstip is en voor een onmogelijke datum. Twee stappen maken dat
+af: `_restore_overrides` (`until`, `started`) en `handed_back` (met een datumvariant van
+dezelfde lezer) lezen er ook langs, en de lezer geeft ook `None` voor een tijdstip zonder
+tijdzone, want dat laat zich niet vergelijken met de klok van de integratie. Dan breekt geen
+enkele opgeslagen sleutel het herstel af, en blijft geen onleesbaar moment elke ronde
+terugkomen. De acceptatie is een toets per sleutel met een onmogelijke en met een naïeve
+waarde, zoals `TestAStartupWithBrokenStorage`.
+
 #### Could have
 
 **Huisbreed vermogensplafond.** `Source.wattage` + `DirectorConfig.watt_limit`; na de
@@ -2325,6 +2334,14 @@ own - since when this resident is up, filled by the binding layer like `home_sin
 `rise_braked` could read that instead of `slept_tonight`: a resident who gets up after a
 night's sleep could then be braked without a sleep window too. Note that this is the same
 question as with `home_since`: who was home when, and who was up when.
+
+**Every stored moment through one reader.** `state_store._stored_time` returns `None` for a
+value that is no moment and for an impossible date. Two steps finish that: `_restore_overrides`
+(`until`, `started`) and `handed_back` (with a date variant of the same reader) read through
+it too, and the reader also returns `None` for a moment without a time zone, since that
+cannot be compared with the integration's clock. Then no stored key breaks off the restore,
+and no unreadable moment keeps coming back every round. The acceptance is a test per key
+with an impossible and with a naive value, like `TestAStartupWithBrokenStorage`.
 
 #### Could have
 
