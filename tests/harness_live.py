@@ -343,6 +343,7 @@ async def start_house(
     unit_system: Any | None = None,
     language: str = "en",
     watch_events: bool = True,
+    core_state: CoreState = CoreState.running,
 ) -> LiveHome:
     """Return a running Home Assistant with this installation loaded.
 
@@ -378,6 +379,18 @@ async def start_house(
     refused pre-conditioning request too. A test that wants to see the listener
     notice (`precondition_unwatched`) turns it off, since that notice is exactly
     about a missing listener.
+
+    `core_state` is de stand waarin Home Assistant gezet wordt vóór de entry
+    opgezet wordt: standaard `running`, zoals een huis dat al draait. Een test
+    die het opstartpad zelf wil meten geeft `CoreState.starting` mee en laat HA
+    daarna zelf op `running` gaan; `async_at_started` vuurt dan pas op
+    `EVENT_HOMEASSISTANT_STARTED` in plaats van meteen.
+
+    `core_state` is the state Home Assistant is put in before the entry is set
+    up: `running` by default, like a house that already runs. A test that wants
+    to measure the startup path itself passes `CoreState.starting` and lets HA
+    go to `running` afterwards; `async_at_started` then fires on
+    `EVENT_HOMEASSISTANT_STARTED` instead of at once.
     """
     hass = HomeAssistant(config_dir or new_config_dir())
     if unit_system is not None:
@@ -429,13 +442,17 @@ async def start_house(
     # `running` zodra de entry opgezet wordt; dit harnas roept `async_start()`
     # nooit aan, dus wordt die stand hier gezet zodat `async_at_started` meteen
     # vuurt - precies zoals een draaiende Home Assistant dat zou doen.
+    # `core_state` laat een test die het opstartpad zelf meet daar `starting` van
+    # maken: dan wacht `async_at_started` op `EVENT_HOMEASSISTANT_STARTED`.
     #
     # The integration hangs its first decision off `async_at_started`, which
     # looks at `hass.state`. In a real Home Assistant that reads `running` by
     # the time the entry is set up; this harness never calls `async_start()`,
     # so the state is set here to make `async_at_started` fire at once - exactly
-    # as a running Home Assistant would.
-    hass.set_state(CoreState.running)
+    # as a running Home Assistant would. `core_state` lets a test that measures
+    # the startup path itself make that `starting`: `async_at_started` then waits
+    # for `EVENT_HOMEASSISTANT_STARTED`.
+    hass.set_state(core_state)
 
     # Een bewaarde entry betekent dat dit een herstart is: dan hoort hij
     # opgezet te worden zoals hij bewaard staat, niet opnieuw aangemaakt.

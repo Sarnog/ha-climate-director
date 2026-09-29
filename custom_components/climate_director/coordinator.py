@@ -393,6 +393,22 @@ class ClimateDirectorCoordinator(
 
         Once the installation is being torn down, nothing may go out anymore.
         """
+        self._restored = False
+        """Pas ná het herstel van de opslag mag er beslist worden.
+
+        De listeners staan meteen aan, zodat een toestandswijziging tijdens het
+        opstarten van Home Assistant niet verloren gaat; beslissen op een half
+        herstelde wereld mag niet. `_async_on_hass_started` zet deze vlag ná
+        `_async_restore_state` en vóór de eerste beslissing, en `_async_evaluate`
+        wacht erop.
+
+        Only after the store has been restored may a decision be taken. The
+        listeners are on from the start, so a state change during Home
+        Assistant's startup is not lost; deciding on a half-restored world is not
+        allowed. `_async_on_hass_started` raises this flag after
+        `_async_restore_state` and before the first decision, and
+        `_async_evaluate` waits for it.
+        """
         self._family_since: dict[str, datetime | None] = {}
         self._family_seen: dict[str, ModeFamily] = {}
         self._home_since: dict[str, datetime] = {}
@@ -520,15 +536,35 @@ class ClimateDirectorCoordinator(
         never starts either: every time rule then waits for a chance change that
         never comes. The clock is therefore armed no matter what, and the
         exception is logged rather than silencing the integration.
+
+        De vlag `_restored` gaat hier omhoog en niet eerder: pas als de opslag
+        gelezen is, mag `_async_evaluate` iets doen. Wat de listeners intussen
+        genoteerd hebben blijft staan - het herstel voegt samen en vervangt niet.
+
+        The `_restored` flag goes up here and not earlier: only once the store
+        has been read may `_async_evaluate` do anything. What the listeners noted
+        in the meantime stays put - the restore merges rather than replaces. It
+        goes up in the `finally` as well: after one broken reading the director
+        must not fall silent for good, which is worse than a world without the
+        stored hand.
         """
         try:
             await self._async_restore_state()
             self._note_precipitation_now()
             self._note_home_now()
+            self._restored = True
             await self._async_evaluate()
         except Exception:
             _LOGGER.exception("The first decision of %s failed", self.name)
         finally:
+            # Ook als het herstel omviel gaat de poort open: anders zou de
+            # director na één kapotte lezing nooit meer beslissen, en dat is
+            # erger dan een wereld zonder de bewaarde hand.
+            #
+            # Even when the restore fell over the gate opens: otherwise the
+            # director would never decide again after one broken reading, and
+            # that is worse than a world without the stored hand.
+            self._restored = True
             self._schedule_clock_reeval()
 
     def tracked_entities(self) -> set[str]:
@@ -1110,7 +1146,8 @@ class ClimateDirectorCoordinator(
 
     async def _async_evaluate(self) -> None:
         """Read the world, decide, apply, and report."""
-        if self._closing:
+        # `_restored` is de opstartpoort en `_closing` de afbraakpoort; zie `__init__`.
+        if self._closing or not self._restored:
             return
         async with self._lock:
             self._drop_lapsed_override_timers()

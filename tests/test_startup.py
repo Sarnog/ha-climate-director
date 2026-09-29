@@ -39,9 +39,28 @@ class StandIn:
         self.evaluated = 0
         self.clock_armed = 0
         self.precipitation_noted = 0
+        # De opstartpoort van de echte coördinator; een stand-in draagt hem ook,
+        # zodat de toets hem kan volgen.
+        # The real coordinator's startup gate; the stand-in carries it too, so the
+        # test can follow it.
+        self._restored = False
 
     def tracked_entities(self) -> set[str]:
-        return set()
+        """Eén gevolgde entiteit, zodat het opzetten de listener echt aanraakt.
+
+        Een lege verzameling liet `async_start` de listener overslaan, en dan
+        bewees deze toets niets over het opstarten: juist tijdens het opstarten
+        gebeurt er iets met een gevolgde entiteit - daarom is de poort er.
+
+        One tracked entity, so that setting up really touches the listener. An
+        empty set made `async_start` skip the listener, and then this test proved
+        nothing about the startup: it is exactly during the startup that
+        something happens to a tracked entity - which is why the gate exists.
+        """
+        return {"sensor.room"}
+
+    def _handle_change(self, _event) -> None:
+        """Deze stand-in beslist niets; de listener wordt hier niet aangeroepen."""
 
     def _cancel_pending_deferral(self) -> None:
         pass
@@ -71,7 +90,16 @@ class StandIn:
 async def test_the_first_decision_waits_for_hass_to_start(monkeypatch) -> None:
     """Opzetten beslist nog niet; pas als Home Assistant meldt dat hij draait.
 
+    De listener staat er wél al: een toestandswijziging tijdens het opstarten
+    mag niet verloren gaan, en juist daarom wacht het beslissen op een poort.
+    Zonder gevolgde entiteit sloeg de stand-in die stap over en zei deze toets
+    niets over het opstarten zelf.
+
     Setting up does not decide yet; only once Home Assistant reports it is up.
+    The listener is already there, though: a state change during the startup must
+    not get lost, and that is exactly why deciding waits for a gate. Without a
+    tracked entity the stand-in skipped that step and this test said nothing
+    about the startup itself.
     """
     scheduled: dict[str, object] = {}
     monkeypatch.setattr(
@@ -79,12 +107,21 @@ async def test_the_first_decision_waits_for_hass_to_start(monkeypatch) -> None:
         "async_at_started",
         lambda _hass, callback: scheduled.__setitem__("callback", callback) or (lambda: None),
     )
+    watched: list[list[str]] = []
+
+    def _track(_hass, entities, _callback) -> object:
+        watched.append(list(entities))
+        return lambda: None
+
+    monkeypatch.setattr(module, "async_track_state_change_event", _track)
 
     item = StandIn()
     await item.async_start()
 
+    assert watched == [["sensor.room"]], "de listener hoort er vóór het opstarten te staan"
     assert item.restored == 0
     assert item.evaluated == 0
+    assert item._restored is False, "de opstartpoort hoort nog dicht te staan"
     assert "callback" in scheduled
 
     await scheduled["callback"](item.hass)  # type: ignore[misc]
@@ -93,6 +130,36 @@ async def test_the_first_decision_waits_for_hass_to_start(monkeypatch) -> None:
     assert item.precipitation_noted == 1
     assert item.evaluated == 1
     assert item.clock_armed == 1
+    assert item._restored is True, "na het herstel hoort de poort open te staan"
+
+
+async def test_a_broken_restore_still_opens_the_gate() -> None:
+    """Eén kapotte lezing mag de director niet voorgoed stil leggen.
+
+    Herstellen, beslissen en de klok zetten zijn vier stappen op één pad. Valt
+    het herstel zelf om, dan is er niets hersteld - maar de poort moet alsnog
+    opengaan. Bleef hij dicht, dan besliste de director nooit meer, en dat is
+    erger dan een wereld zonder de bewaarde hand: elke tijdregel zou dan op een
+    toevallige wijziging wachten die niet meer beslist.
+
+    One broken reading must not silence the director for good. Restoring,
+    deciding and arming the clock are four steps on one path. When the restore
+    itself falls over, nothing has been restored - but the gate has to open all
+    the same. If it stayed shut the director would never decide again, and that
+    is worse than a world without the stored hand: every time rule would then
+    wait for a chance change that no longer decides.
+    """
+    item = StandIn()
+
+    async def broken_restore() -> None:
+        raise RuntimeError("kapotte opslag")
+
+    item._async_restore_state = broken_restore  # type: ignore[method-assign]
+
+    await item._async_on_hass_started(item.hass)  # type: ignore[arg-type]
+
+    assert item.clock_armed == 1, "de vangnetklok hoort ondanks de fout te lopen"
+    assert item._restored is True, "de poort hoort ook na een kapotte lezing open te gaan"
 
 
 async def test_an_exception_from_the_first_decision_still_arms_the_clock() -> None:

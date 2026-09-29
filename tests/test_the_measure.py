@@ -284,9 +284,24 @@ FUNCTION_LIMIT = 80
 # picker that stood there three times literally became one helper.
 # `engine/serialise.py` 696 → 637: a resident's three morning settings are now read
 # and written in `engine/resident_storage.py`.
+#
+# De opstartpoort (H1): `coordinator.py` 1993 → 2030 en zijn `__init__` 220 → 236 door
+# het lid `_restored` met de uitleg waarom er niet beslist mag worden vóór het herstel.
+# `_async_evaluate` blijft onder de tachtig: de poort staat op de regel die er al stond
+# (`if self._closing or not self._restored`), met de uitleg hier en in `__init__` in
+# plaats van als nieuw commentaarblok in de functie zelf - een commentaarregel telt
+# fysiek mee en zou de functie over de grens tillen.
+#
+# The startup gate (H1): `coordinator.py` 1993 → 2030 and its `__init__` 220 → 236
+# through the `_restored` member with the explanation of why no decision may be taken
+# before the restore. `_async_evaluate` stays below eighty: the gate sits on the line
+# that was already there (`if self._closing or not self._restored`), with the
+# explanation here and in `__init__` rather than as a new comment block inside the
+# function itself - a comment line counts physically and would push the function over
+# the limit.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2227,
-    "coordinator.py": 1993,
+    "coordinator.py": 2030,
     "engine/decide.py": 1677,
     "config_flow.py": 1457,
     "schemas.py": 893,
@@ -295,7 +310,7 @@ MODULE_EXCEPTIONS: dict[str, int] = {
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_build_commands"): 202,
     ("engine/decide.py", "_generator_commands"): 192,
-    ("coordinator.py", "__init__"): 220,
+    ("coordinator.py", "__init__"): 236,
     ("engine/models.py", "_rule_zones"): 142,
     ("engine/constraints.py", "resolve"): 128,
     ("engine/decide.py", "_collect_wishes"): 126,
