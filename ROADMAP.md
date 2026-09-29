@@ -228,8 +228,10 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 - **Een bewoner zonder slaapsensor laat het huis nooit slapen** — het huis gaat pas slapen
   als iedereen die thuis is slaapt, en wie geen slaapsensor heeft, slaapt nooit. Heeft een
   ander *Wacht op deze slaper tot* of *Opstaan zet het huis pas aan vanaf* ingevuld, dan
-  doet die instelling dus niets zolang die bewoner thuis is. Een melding in het scherm
-  *Bewoner* zou dat zichtbaar maken.
+  doet die instelling dus niets zolang die bewoner thuis is. Andersom remt een eigen
+  *Opstaan zet het huis pas aan vanaf* bij zo'n bewoner zonder slaapvenster elke remdag
+  van middernacht tot de remtijd: er valt geen opstaan te zien. Een melding in het scherm
+  *Bewoner* zou beide zichtbaar maken.
 
 ## Would have
 
@@ -460,8 +462,10 @@ The worked-out design proposals for everything below live in
 - **A resident without a sleep sensor never lets the house sleep** — the house only goes
   to sleep once everybody at home is asleep, and whoever has no sleep sensor never sleeps.
   When somebody else filled in *Wait for this sleeper until* or *Getting up only starts
-  the house from*, that setting therefore does nothing while that resident is home. A
-  notice on the *Resident* screen would make that visible.
+  the house from*, that setting therefore does nothing while that resident is home. The
+  other way round, such a resident's own *Getting up only starts the house from* without
+  a sleep window brakes every brake day from midnight until the brake time: there is no
+  getting up to see. A notice on the *Resident* screen would make both visible.
 
 ## Would have
 

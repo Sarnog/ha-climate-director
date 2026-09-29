@@ -355,9 +355,10 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     opslag. Is het onbekend, bijvoorbeeld na een herstart terwijl iemand op was, dan
     wordt er niet gewacht, en zodra iedereen slaapt wordt het alsnog vastgelegd. Een
     bewoner die thuis is zonder slaapsensor slaapt nooit, dus zo'n huis gaat nooit
-    slapen en wacht 's ochtends op niemand. De opsta-rem leest dat moment niet: die
-    eist alleen voor een bewoner **met** een slaapvenster een nacht (anker 16). In de
-    diagnose wordt het moment gelakt, net als `home_since`.
+    slapen en wacht 's ochtends op niemand. Zo'n bewoner is altijd wakker, dus de
+    opsta-rem van een ander remt daar niet, tenzij de bewoner zonder slaapsensor zelf
+    ook geremd wordt (anker 16). In de diagnose wordt het moment gelakt, net als
+    `home_since`.
 16. ***Opstaan zet het huis pas aan vanaf* remt het opstaan van één bewoner, en
     alleen het beginnen.** Vóór die tijd, op de dagen van de rem (`RiseBrake`), telt
     die bewoner niet als "op" voor de wakker-poort; telt daardoor niemand als op, dan
@@ -1634,10 +1635,10 @@ them without changing them here first.
     a restart through the store. When it is unknown, for instance after a restart
     while somebody was up, nobody is waited for, and once everybody sleeps it is
     recorded after all. A resident at home without a sleep sensor never sleeps, so
-    such a house never goes to sleep and waits for nobody in the morning. The rise
-    brake does not read that moment: it demands a night only for a resident **with** a
-    sleep window (anchor 16). The moment
-    is redacted in the diagnostics, just like `home_since`.
+    such a house never goes to sleep and waits for nobody in the morning. Such a
+    resident is always awake, so another resident's rise brake does not brake
+    there, unless the resident without a sleep sensor is braked too (anchor 16). The
+    moment is redacted in the diagnostics, just like `home_since`.
 16. ***Getting up only starts the house from* brakes one resident's getting up, and
     only the starting.** Before that time, on the brake's days (`RiseBrake`), that
     resident does not count as "up" for the wake gate; when nobody counts as up

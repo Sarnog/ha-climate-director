@@ -592,7 +592,7 @@ Zone schon, läuft sie weiter. An einem Urlaubstag gilt die Bremse nie; ein Häk
 dafür gibt es also nicht. Wer abends noch spät auf ist, steht nicht auf, solange
 diese Person ein Schlaffenster hat: Die Bremse gilt dann nur nach einer Nacht, in der
 alle, die zu Hause waren, im Bett waren. Ohne Schlaffenster zählt der Schlafsensor
-rund um die Uhr, und dann bremst sie an ihren Tagen auch, wer nach Mitternacht noch
+rund um die Uhr, und dann wird an ihren Tagen auch gebremst, wer nach Mitternacht noch
 auf ist. In den Stunden des Gästemodus gilt die Bremse ebenfalls nicht, und eine
 Vorbereitungs-Anforderung lässt das Haus immer starten.
 

@@ -262,6 +262,28 @@ RETRACTED: tuple[Claim, ...] = (
             "ar": "ما هو مطفأ يبقى مطفأً حتى تمر النافذة",
         },
     ),
+    Claim(
+        name="de opsta-rem leest het slaapmoment niet",
+        reason=(
+            "een bewoner zonder slaapsensor is altijd wakker en telt voor de wakker-poort als "
+            "op, dus zolang die zelf niet geremd wordt remt de opsta-rem van een ander niemand, "
+            "ook zonder slaapvenster; de beschrijving van *Wacht op deze slaper tot* beloofde "
+            "dat die rem daar zonder slaapvenster wél remde"
+        ),
+        anchor=(
+            "anker 15 en 16 in `ARCHITECTURE.md`: `EARLY_RISER` in `gates._household` vraagt "
+            "dat iedereen die op is geremd wordt"
+        ),
+        needles={
+            "nl": "leest dat moment niet",
+            "en": "does not read that moment",
+            "strings": "does not read that moment",
+            "de": "liest diesen moment nicht",
+            "fr": "ne lit pas ce moment",
+            "es": "no lee ese momento",
+            "ar": "لا يقرأ ذلك الوقت",
+        },
+    ),
 )
 
 #: De nieuwe regel van anker 13 per taal, als twee zinsdelen: één voor de gids en
