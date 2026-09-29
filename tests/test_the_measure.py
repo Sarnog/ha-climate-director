@@ -299,29 +299,49 @@ FUNCTION_LIMIT = 80
 # explanation here and in `__init__` rather than as a new comment block inside the
 # function itself - a comment line counts physically and would push the function over
 # the limit.
+#
+# De override-overdracht (H2): `engine/decide.py` 1677 → 1735 door `_handed_over`, de
+# ene plek die bepaalt welke apparaten een overgedragen zone heeft overgedragen, met
+# vijf aanroepen (`_collect_wishes`, `_resolve_with_fallbacks`, `_standing_firm`,
+# `_build_commands`, `_build_zone_decisions`) en de uitleg per plek. Die vier functies
+# groeien daardoor mee: `_collect_wishes` 126 → 137, `_resolve_with_fallbacks` 87 → 92,
+# `_build_commands` 202 → 210, `_build_zone_decisions` 111 → 116. Eén regel per plek is
+# de prijs van "niet de zone maar het apparaat": `sources.select(..., excluding=...)`
+# en de `passed_over`-lijst moesten het allebei weten, anders glipt een overgedragen
+# ketel er via een omweg alsnog door.
+#
+# The override handover (H2): `engine/decide.py` 1677 → 1735 through `_handed_over`, the
+# one place deciding which appliances a handed-over zone handed over, with five calls
+# (`_collect_wishes`, `_resolve_with_fallbacks`, `_standing_firm`, `_build_commands`,
+# `_build_zone_decisions`) and the explanation per place. Those four functions grow
+# along: `_collect_wishes` 126 → 137, `_resolve_with_fallbacks` 87 → 92,
+# `_build_commands` 202 → 210, `_build_zone_decisions` 111 → 116. One line per place is
+# the price of "not the zone but the appliance": `sources.select(..., excluding=...)`
+# and the `passed_over` list both had to know, or a handed-over boiler slips through by
+# a detour after all.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2227,
     "coordinator.py": 2030,
-    "engine/decide.py": 1677,
+    "engine/decide.py": 1735,
     "config_flow.py": 1457,
     "schemas.py": 893,
 }
 
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
-    ("engine/decide.py", "_build_commands"): 202,
+    ("engine/decide.py", "_build_commands"): 210,
     ("engine/decide.py", "_generator_commands"): 192,
     ("coordinator.py", "__init__"): 236,
     ("engine/models.py", "_rule_zones"): 142,
     ("engine/constraints.py", "resolve"): 128,
-    ("engine/decide.py", "_collect_wishes"): 126,
+    ("engine/decide.py", "_collect_wishes"): 137,
     ("coordinator.py", "_refusal_data"): 119,
     ("coordinator.py", "_notice_hand"): 117,
-    ("engine/decide.py", "_build_zone_decisions"): 111,
+    ("engine/decide.py", "_build_zone_decisions"): 116,
     ("engine/decide.py", "_manual_conflict"): 103,
     ("state_store.py", "_async_restore_state"): 104,
     ("engine/hysteresis.py", "_candidate"): 97,
     ("config_flow.py", "async_step_resident"): 97,
-    ("engine/decide.py", "_resolve_with_fallbacks"): 87,
+    ("engine/decide.py", "_resolve_with_fallbacks"): 92,
     ("preconditions.py", "async_precondition"): 83,
 }
 

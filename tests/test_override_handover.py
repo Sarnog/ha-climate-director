@@ -21,9 +21,12 @@ from conftest import climate, make_world
 from custom_components.climate_director.engine import (
     MODE_HEAT,
     MODE_OFF,
+    Circuit,
     DirectorConfig,
     Generator,
+    ModeFamily,
     ModeSettings,
+    Reason,
     Source,
     SourceRole,
     Zone,
@@ -31,7 +34,9 @@ from custom_components.climate_director.engine import (
 )
 
 HEAT = ModeSettings(target=21.0, start_at=20.0, hysteresis=1.0)
+COOL = ModeSettings(target=24.0, start_at=25.0, hysteresis=1.0)
 BOILER = "climate.boiler"
+SHARED = "climate.ketel"
 
 
 def room(zone_id: str, entity_id: str, priority: int = 0) -> Zone:
@@ -137,3 +142,144 @@ class TestMigratingOneRoomAtATime:
         # The attic is migrated and gets regulated, boiler included.
         assert commands["climate.valve_at"] == MODE_HEAT
         assert commands[BOILER] == MODE_HEAT
+
+
+# ---------------------------------------------------------------------------
+# De bronvariant: dezelfde ketel als bron onder twee kamers, geen Generator.
+# The source variant: the same boiler as a source under two rooms, no Generator.
+# ---------------------------------------------------------------------------
+
+
+def shared_room(zone_id: str, *extra: Source, priority: int = 0, cool=None) -> Zone:
+    """Return a room whose first source is the shared boiler."""
+    return Zone(
+        zone_id=zone_id,
+        name=zone_id,
+        indoor_sensor=f"sensor.{zone_id}",
+        priority=priority,
+        sources=(
+            Source(source_id=f"{zone_id}_ketel", entity_id=SHARED, role=SourceRole.HEAT_ONLY),
+            *extra,
+        ),
+        heat=HEAT,
+        cool=cool,
+    )
+
+
+SHARED_CONFIG = DirectorConfig(zones=(shared_room("living_room"), shared_room("attic", priority=1)))
+
+
+def shared_plan(overrides: dict[str, bool], climates: dict[str, object], **indoor: float):
+    """Return the plan for the two-room house with one shared boiler."""
+    return decide(
+        SHARED_CONFIG,
+        make_world(indoor=dict(indoor), outdoor=5.0, climates=climates, zone_overrides=overrides),
+    )
+
+
+class TestASharedSourceIsHandedOverToo:
+    """Anker 11 geldt ook voor een apparaat dat als bron onder de zone hangt.
+
+    Anchor 11 holds for an appliance hanging under the zone as a source too.
+    """
+
+    def test_nothing_is_sent_to_the_shared_source(self) -> None:
+        """De andere zone is tevreden, maar de ketel krijgt evengoed niets."""
+        plan = shared_plan(
+            {"living_room": True}, {SHARED: climate(MODE_HEAT)}, living_room=18.0, attic=23.0
+        )
+        assert plan.commands == ()
+        assert [(item.entity_id, item.reason) for item in plan.untouched] == [
+            (SHARED, Reason.MANUAL_OVERRIDE)
+        ]
+
+    def test_the_other_zone_cannot_choose_it(self) -> None:
+        """De zolder wil warmte, maar de ketel is geen kandidaat meer."""
+        plan = shared_plan(
+            {"living_room": True}, {SHARED: climate(MODE_HEAT)}, living_room=18.0, attic=18.0
+        )
+        attic = plan.decision_for("attic")
+        assert attic is not None
+        assert attic.granted is ModeFamily.NEUTRAL
+        assert attic.reason is Reason.NO_SOURCE_AVAILABLE
+        assert attic.passed_over == ()
+        assert plan.commands == ()
+
+    def test_a_second_source_still_serves_the_other_zone(self) -> None:
+        """Een zone met een eigen tweede bron schuift daar gewoon naartoe."""
+        config = DirectorConfig(
+            zones=(
+                shared_room("living_room"),
+                shared_room(
+                    "attic",
+                    Source("attic_klep", "climate.klep", role=SourceRole.HEAT_ONLY),
+                    priority=1,
+                ),
+            )
+        )
+        plan = decide(
+            config,
+            make_world(
+                indoor={"living_room": 18.0, "attic": 18.0},
+                outdoor=5.0,
+                climates={SHARED: climate(MODE_HEAT), "climate.klep": climate(MODE_OFF)},
+                zone_overrides={"living_room": True},
+            ),
+        )
+        assert {command.entity_id: command.hvac_mode for command in plan.commands} == {
+            "climate.klep": MODE_HEAT
+        }
+
+    def test_without_an_override_the_shared_source_is_commanded(self) -> None:
+        """De regel mag de director niet in het algemeen schuw maken."""
+        plan = shared_plan({}, {SHARED: climate(MODE_OFF)}, living_room=18.0, attic=23.0)
+        assert {command.entity_id: command.hvac_mode for command in plan.commands} == {
+            SHARED: MODE_HEAT
+        }
+
+    def test_a_running_handed_over_appliance_holds_its_duty(self) -> None:
+        """Het circuit mag de tegenovergestelde taak niet gaan draaien.
+
+        De overgedragen ketel staat te verwarmen, en de zolder wil koelen op een
+        unit van hetzelfde circuit. Zonder de overgedragen ketel als vaststaand
+        apparaat zou dat circuit koelen en zou er één ruimte verwarmd en gekoeld
+        tegelijk worden - precies wat dit ontwerp onbereikbaar hoort te maken.
+
+        The handed-over boiler is heating, and the attic wants to cool on a unit
+        of the same circuit. Without the handed-over boiler counted as standing
+        firm, that circuit would cool and one room would be heated and cooled at
+        once - exactly what this design is meant to make unreachable.
+        """
+        config = DirectorConfig(
+            zones=(
+                shared_room("living_room"),
+                shared_room(
+                    "attic",
+                    Source("attic_andere", "climate.andere", role=SourceRole.HEAT_COOL),
+                    priority=1,
+                    cool=COOL,
+                ),
+            ),
+            circuits=(
+                Circuit(
+                    circuit_id="c",
+                    name="C",
+                    units=(SHARED, "climate.andere"),
+                    simultaneous_heat_cool=False,
+                ),
+            ),
+        )
+        plan = decide(
+            config,
+            make_world(
+                indoor={"living_room": 18.0, "attic": 27.0},
+                outdoor=5.0,
+                climates={SHARED: climate(MODE_HEAT), "climate.andere": climate(MODE_OFF)},
+                zone_overrides={"living_room": True},
+            ),
+        )
+        attic = plan.decision_for("attic")
+        assert attic is not None
+        assert attic.granted is ModeFamily.NEUTRAL
+        assert attic.reason is Reason.CIRCUIT_CONFLICT_LOST
+        assert SHARED not in {command.entity_id for command in plan.commands}

@@ -112,6 +112,24 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
     )
 
 
+def _handed_over(config: DirectorConfig, world: WorldState) -> frozenset[str]:
+    """Return every appliance an overridden zone has handed over (anker 11).
+
+    Niet de zone maar het apparaat is overgedragen: staat één zone onder
+    override, dan stuurt de director dat apparaat nergens meer naartoe, ook niet
+    vanuit een andere zone. Voor die andere zones is het dus geen kandidaat, net
+    als `excluding` in `sources.select`; het anker draagt de aanvaarde prijs.
+
+    Not the zone but the appliance is handed over: with one zone under override,
+    the director sends that appliance nothing anywhere, not from another zone
+    either. For those other zones it is therefore no candidate, just as
+    `excluding` in `sources.select`; the anchor carries the accepted price.
+    """
+    return frozenset(
+        source.entity_id for zone, source in config.sources() if world.overridden(zone.zone_id)
+    )
+
+
 def _collect_wishes(
     config: DirectorConfig,
     world: WorldState,
@@ -148,6 +166,10 @@ def _collect_wishes(
     rest_deferrals: list[Deferral] = []
 
     margin = config.outdoor_hysteresis
+    # Wat een overgedragen zone heeft overgedragen is in elke andere zone geen
+    # kandidaat (anker 11). / What a handed-over zone handed over is no candidate
+    # in every other zone (anchor 11).
+    handed_over = _handed_over(config, world)
 
     for zone in config.zones:
         shut[zone.zone_id] = gates.closed(config, world, zone, previous)
@@ -174,7 +196,14 @@ def _collect_wishes(
         stopped = frozenset() if world.precondition_ignores_openings(zone.zone_id) else blocked
         only, unbounded = takeover.narrowing(takeovers, zone.zone_id, demand.family)
         first_choice = sources.select(
-            zone, demand.family, world, serving, margin, only=only, unbounded=unbounded
+            zone,
+            demand.family,
+            world,
+            serving,
+            margin,
+            excluding=handed_over,
+            only=only,
+            unbounded=unbounded,
         )
         if first_choice is not None and first_choice.entity_id in stopped:
             # De huisbrede stop stopt de zone, niet alleen het apparaat. Zou de
@@ -397,6 +426,11 @@ def _standing_firm(
     een onleesbare thermometer wordt die namelijk niet met rust gelaten maar
     door `_manual_conflict` beoordeeld, en die kan hem alsnog wegschakelen.
 
+    Een apparaat dat een overgedragen zone heeft overgedragen staat er huisbreed
+    bij: het is van de beheerder, ook in de andere zones die het als bron
+    dragen. Daarmee houdt het zijn taak vast op het circuit waar het op staat, en
+    dat is precies wat anker 11 belooft.
+
     Een gedeeld apparaat telt alleen mee als élke zone die het bedient het met
     rust laat. Doet één zone dat niet, dan krijgt het apparaat via die zone
     gewoon een opdracht en valt er niets vast te houden.
@@ -411,13 +445,19 @@ def _standing_firm(
     an unreadable thermometer it is not left alone but judged by
     `_manual_conflict`, which may stand it down after all.
 
+    An appliance that a handed-over zone handed over counts house-wide: it
+    belongs to the administrator, in the other zones carrying it as a source
+    too. That is how it holds on to its duty on the circuit it sits on, which is
+    exactly what anchor 11 promises.
+
     A shared appliance counts only when every zone it serves leaves it alone.
     If one of them does not, the appliance gets a command through that zone and
     there is nothing to hold on to.
     """
+    handed_over = _handed_over(config, world)
 
     def left_alone(zone: Zone, source: Source) -> bool:
-        if world.overridden(zone.zone_id):
+        if source.entity_id in handed_over:
             return True
         return source.autostart and refusals.get(zone.zone_id) in (
             Reason.NO_INDOOR_TEMPERATURE,
@@ -479,6 +519,11 @@ def _resolve_with_fallbacks(
     dropped: dict[str, constraints.Request] = {}
 
     margin = config.outdoor_hysteresis
+    # Een overgedragen apparaat valt ook hier af als kandidaat: de zone schuift
+    # niet door naar een apparaat dat de beheerder al heeft (anker 11).
+    # A handed-over appliance drops out as a candidate here too: the zone does
+    # not slide on to an appliance the administrator already has (anchor 11).
+    handed_over = _handed_over(config, world)
     attempts = max(1, max((len(zone.sources) for zone in config.zones), default=0))
     for _ in range(attempts):
         wishes, dropped_now = _apply_exclusive_groups(config, world, wishes)
@@ -503,7 +548,7 @@ def _resolve_with_fallbacks(
                 _serving(previous, zone.zone_id),
                 margin,
                 stopped,
-                excluding=refused,
+                excluding=refused | handed_over,
                 only=only,
                 unbounded=unbounded,
             )
@@ -958,6 +1003,11 @@ def _build_commands(
     """
     commands: list[UnitCommand] = []
     untouched: list[UntouchedSource] = []
+    # Huisbreed overgedragen apparaten: de director stuurt ze nergens meer
+    # naartoe, ook niet vanuit een andere zone (anker 11).
+    # Appliances handed over house-wide: the director sends them nothing
+    # anywhere, not from another zone either (anchor 11).
+    handed_over = _handed_over(config, world)
 
     # De blind-reden van een apparaat wordt over ál zijn zones bepaald, zodat
     # NO_OUTDOOR_TEMPERATURE vóór NO_INDOOR_TEMPERATURE gaat ongeacht de
@@ -989,19 +1039,22 @@ def _build_commands(
             untouched.append(UntouchedSource(source.entity_id, zone.zone_id, shared))
             continue
 
-        # Een zone met een override is van de beheerder, niet van de director.
-        # Overnemen betekent hier: niet aansturen - ook niet uitzetten. Wie de
-        # noodknop gebruikt wil het apparaat zelf zetten en houden, ongeacht
-        # buitengrenzen, seizoen of een openstaand raam. Zou de director hem
-        # alsnog uitzetten, dan was de override geen noodknop maar een slot.
+        # Een apparaat van een overgedragen zone is van de beheerder, niet van de
+        # director. Overnemen betekent hier: niet aansturen - ook niet uitzetten
+        # vanuit een andere zone. Wie de noodknop gebruikt wil het apparaat zelf
+        # zetten en houden, ongeacht buitengrenzen, seizoen of een openstaand
+        # raam. Zou de director hem alsnog uitzetten, dan was de override geen
+        # noodknop maar een slot - en dat geldt huisbreed, want een gedeelde ketel
+        # is één apparaat (anker 11).
         #
-        # A zone under override belongs to the administrator, not to the
-        # director. Taking over means: issue nothing - not even an off. Whoever
-        # reaches for the override wants to set the appliance themselves and
-        # keep it there, whatever the outdoor bounds, the season or an open
-        # window say. Were the director to switch it off anyway, the override
-        # would be a lock rather than an override.
-        if world.overridden(zone.zone_id):
+        # An appliance of a handed-over zone belongs to the administrator, not to
+        # the director. Taking over means: issue nothing - not even an off from
+        # another zone. Whoever reaches for the override wants to set the
+        # appliance themselves and keep it there, whatever the outdoor bounds,
+        # the season or an open window say. Were the director to switch it off
+        # anyway, the override would be a lock rather than an override - and that
+        # goes house-wide, since a shared boiler is one appliance (anchor 11).
+        if source.entity_id in handed_over:
             untouched.append(
                 UntouchedSource(source.entity_id, zone.zone_id, Reason.MANUAL_OVERRIDE)
             )
@@ -1582,6 +1635,11 @@ def _build_zone_decisions(
     """Return one decision per zone, saying what it asked for and what it got."""
     refused_by_circuit = refused_by_circuit or {}
     decisions: list[ZoneDecision] = []
+    # Een huisbreed overgedragen apparaat is geen storing maar een overdracht:
+    # het hoort dus niet als "op reserve" in `passed_over` (anker 11).
+    # A house-wide handed-over appliance is no fault but a handover: it therefore
+    # does not belong in `passed_over` as "on reserve" (anchor 11).
+    handed_over = _handed_over(config, world)
 
     for zone in config.zones:
         request = wishes.get(zone.zone_id)
@@ -1666,7 +1724,7 @@ def _build_zone_decisions(
                     _serving(previous, zone.zone_id),
                     config.outdoor_hysteresis,
                     zone_blocked,
-                    refused_by_circuit.get(zone.zone_id, frozenset()),
+                    refused_by_circuit.get(zone.zone_id, frozenset()) | handed_over,
                     only,
                     unbounded,
                 ),

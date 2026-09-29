@@ -182,8 +182,22 @@ class TestItStaysConsistentWithTheCommands:
         assert result.command_for(BEDROOM) is not None
         assert result.untouched_for(BEDROOM) is None
 
-    def test_a_shared_appliance_commanded_by_one_zone_is_not_left_alone(self) -> None:
-        """The attic hands over, the living room still wants the boiler: it is driven."""
+    def test_a_shared_appliance_of_a_handed_over_zone_is_left_alone_house_wide(self) -> None:
+        """De zolder draagt over: de woonkamer krijgt de ketel dan ook niet.
+
+        De oude regel liet de woonkamer de ketel nog aansturen. Dat is precies
+        wat anker 11 niet meer doet: niet de zone maar het apparaat is
+        overgedragen, en één ketel kan niet half van de beheerder zijn. De
+        aanvaarde prijs staat in het anker - de "1 uur"-knop van de zolder neemt
+        de ketel dat uur over.
+
+        The attic hands over: the living room then does not get the boiler
+        either. The old rule still let the living room drive the boiler. That is
+        exactly what anchor 11 no longer does: the appliance is handed over, not
+        the zone, and one boiler cannot be half the administrator's. The accepted
+        price stands in the anchor - the attic's "1 hour" button takes the boiler
+        over for that hour.
+        """
         config = shared_boiler()
         world = make_world(
             now=NOON,
@@ -194,8 +208,10 @@ class TestItStaysConsistentWithTheCommands:
             zone_overrides={"zolder": True},
         )
         result = decide(config, world)
-        assert result.command_for(BOILER) is not None
-        assert result.untouched_for(BOILER) is None
+        assert result.command_for(BOILER) is None
+        leaving = result.untouched_for(BOILER)
+        assert leaving is not None
+        assert leaving.reason is Reason.MANUAL_OVERRIDE
 
     def test_a_shared_appliance_nobody_commands_is_named_once(self) -> None:
         config = shared_boiler()
