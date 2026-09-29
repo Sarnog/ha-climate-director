@@ -579,8 +579,11 @@ up, the house simply starts.
 
 It is a brake on **starting**, just like the quiet window: a zone already running
 keeps running. On a holiday the brake never applies, so there is no tick for it.
-Whoever is still up late in the evening is not getting up: the brake only applies
-after a night in which everybody at home has been to bed. Inside the guest window
+Whoever is still up late in the evening is not getting up as long as this resident
+has a sleep window: the brake then only applies after a night in which everybody at
+home has been to bed. Without a sleep window the sleep sensor counts around the clock,
+and then the brake also brakes whoever is still up after midnight on the brake's days.
+Inside the guest window
 the brake does not apply either, and a pre-conditioning request always lets the
 house start.
 

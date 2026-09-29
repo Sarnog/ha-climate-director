@@ -583,8 +583,10 @@ dan begint het huis gewoon.
 
 Het is een rem op **beginnen**, net als het stiltevenster: draait een zone al, dan
 blijft ze draaien. Op een vakantiedag geldt de rem nooit; een vinkje daarvoor is er
-dus niet. Wie 's avonds laat nog op is, staat niet op: de rem geldt alleen na een
-nacht waarin iedereen die thuis was naar bed is geweest. Binnen het gastenvenster
+dus niet. Wie 's avonds laat nog op is, staat niet op zolang deze bewoner een
+slaapvenster heeft: de rem geldt dan alleen na een nacht waarin iedereen die thuis was
+naar bed is geweest. Zonder slaapvenster telt de slaapsensor de klok rond, en dan remt
+de rem op de remdagen ook wie na middernacht nog op is. Binnen het gastenvenster
 geldt de rem ook niet, en een vooruit-verzoek laat het huis altijd starten.
 
 ### Roosters

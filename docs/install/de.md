@@ -589,9 +589,11 @@ Bremse auf, beginnt das Haus ganz normal.
 
 Das ist eine Bremse für das **Beginnen**, genau wie das Ruhefenster: Läuft eine
 Zone schon, läuft sie weiter. An einem Urlaubstag gilt die Bremse nie; ein Häkchen
-dafür gibt es also nicht. Wer abends noch spät auf ist, steht nicht auf: Die
-Bremse gilt nur nach einer Nacht, in der alle, die zu Hause waren, im Bett waren.
-In den Stunden des Gästemodus gilt die Bremse ebenfalls nicht, und eine
+dafür gibt es also nicht. Wer abends noch spät auf ist, steht nicht auf, solange
+diese Person ein Schlaffenster hat: Die Bremse gilt dann nur nach einer Nacht, in der
+alle, die zu Hause waren, im Bett waren. Ohne Schlaffenster zählt der Schlafsensor
+rund um die Uhr, und dann bremst sie an ihren Tagen auch, wer nach Mitternacht noch
+auf ist. In den Stunden des Gästemodus gilt die Bremse ebenfalls nicht, und eine
 Vorbereitungs-Anforderung lässt das Haus immer starten.
 
 ### Zeitpläne

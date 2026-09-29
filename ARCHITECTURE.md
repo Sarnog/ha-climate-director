@@ -355,18 +355,21 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     opslag. Is het onbekend, bijvoorbeeld na een herstart terwijl iemand op was, dan
     wordt er niet gewacht, en zodra iedereen slaapt wordt het alsnog vastgelegd. Een
     bewoner die thuis is zonder slaapsensor slaapt nooit, dus zo'n huis gaat nooit
-    slapen, wacht 's ochtends op niemand en remt ook niet (anker 16). In de diagnose wordt
-    het moment gelakt, net als `home_since`.
+    slapen en wacht 's ochtends op niemand. De opsta-rem leest dat moment niet: die
+    eist alleen voor een bewoner **met** een slaapvenster een nacht (anker 16). In de
+    diagnose wordt het moment gelakt, net als `home_since`.
 16. ***Opstaan zet het huis pas aan vanaf* remt het opstaan van één bewoner, en
     alleen het beginnen.** Vóór die tijd, op de dagen van de rem (`RiseBrake`), telt
     die bewoner niet als "op" voor de wakker-poort; telt daardoor niemand als op, dan
     start het huis niet, met `EARLY_RISER`. Staat een ander op zonder rem, dan start
-    het huis gewoon. De rem geldt nooit op een vakantiedag en remt alleen wie
-    **opstaat**, dus na een nacht waarin het huis sliep (anker 15): wie 's avonds
-    laat nog op is en een onbekend moment worden niet geremd; wie in een huis waar
-    niemand een slaapvenster heeft als enige thuis opstaat, evenmin, want daar is het
-    moment in diezelfde ronde al weg (anker 15). Het is een rem op
-    beginnen: een zone die al draait, regelt door. Gastenmodus binnen het
+    het huis gewoon. De rem geldt nooit op een vakantiedag. Voor een bewoner **met**
+    een slaapvenster remt ze alleen wie **opstaat**, dus na een nacht waarin het huis
+    sliep (anker 15): wie 's avonds laat nog op is en een onbekend moment worden daar
+    niet geremd. Zonder slaapvenster valt er geen nacht te lezen - de slaapsensor
+    telt dan de klok rond - en telt die bewoner op de remdagen vóór de remtijd niet
+    als op, ook als het moment van het huis onbekend is. De aanvaarde prijs daarvan:
+    wie in zo'n huis 's nachts nog op is, start het huis niet vóór de remtijd. Het is
+    een rem op beginnen: een zone die al draait, regelt door. Gastenmodus binnen het
     gastenvenster heft de rem op, een vooruit-verzoek gaat er altijd voor, en het
     stiltevenster en de roosters zijn niet geraakt. *Wacht op deze slaper tot* blijft
     ernaast gewoon gelden.
@@ -1040,25 +1043,6 @@ ze dekken - staan in `AGENTS.md`, en dat bestand staat in `.gitignore`.
 - Risico: twee plekken voor dezelfde afspraak. De verhuizing haalt de afspraken in
   dezelfde wijziging uit `AGENTS.md` weg.
 
-**Een rem die ook in een huis zonder slaapvenster remt.** `night.house_asleep_since`
-houdt het moment alleen vast zolang het in de lopende nacht van een bewoner **met** een
-slaapvenster valt; zonder zo'n venster is de grens tussen twee nachten het moment zelf,
-en dan is het weg zodra de laatste thuisblijver opstaat. `Resident` zou een eigen grens
-kunnen dragen - sinds wanneer deze bewoner op is, door de koppelingslaag gevuld zoals
-`home_since` - en `rise_braked` zou daaraan lezen in plaats van aan `slept_tonight`:
-een bewoner die na een nacht slapen opstaat is dan ook zonder slaapvenster te remmen.
-Let op dat dit dezelfde vraag is als bij `home_since`: wie was wanneer thuis, en wie was
-wanneer op.
-
-**Elk opgeslagen tijdstip langs één lezer.** `state_store._stored_time` geeft `None` voor
-een waarde die geen tijdstip is en voor een onmogelijke datum. Twee stappen maken dat
-af: `_restore_overrides` (`until`, `started`) en `handed_back` (met een datumvariant van
-dezelfde lezer) lezen er ook langs, en de lezer geeft ook `None` voor een tijdstip zonder
-tijdzone, want dat laat zich niet vergelijken met de klok van de integratie. Dan breekt geen
-enkele opgeslagen sleutel het herstel af, en blijft geen onleesbaar moment elke ronde
-terugkomen. De acceptatie is een toets per sleutel met een onmogelijke en met een naïeve
-waarde, zoals `TestAStartupWithBrokenStorage`.
-
 #### Could have
 
 **Huisbreed vermogensplafond.** `Source.wattage` + `DirectorConfig.watt_limit`; na de
@@ -1650,18 +1634,22 @@ them without changing them here first.
     a restart through the store. When it is unknown, for instance after a restart
     while somebody was up, nobody is waited for, and once everybody sleeps it is
     recorded after all. A resident at home without a sleep sensor never sleeps, so
-    such a house never goes to sleep, waits for nobody in the morning and does not
-    brake either (anchor 16). The moment
+    such a house never goes to sleep and waits for nobody in the morning. The rise
+    brake does not read that moment: it demands a night only for a resident **with** a
+    sleep window (anchor 16). The moment
     is redacted in the diagnostics, just like `home_since`.
 16. ***Getting up only starts the house from* brakes one resident's getting up, and
     only the starting.** Before that time, on the brake's days (`RiseBrake`), that
     resident does not count as "up" for the wake gate; when nobody counts as up
     because of it, the house does not start, with `EARLY_RISER`. When somebody else
     without a brake gets up, the house simply starts. The brake never applies on a
-    holiday and only brakes whoever **gets up**, so after a night the house slept
-    (anchor 15): whoever is still up late in the evening and an unknown moment are
-    not braked; neither is whoever gets up alone at home in a house where nobody has a
-    sleep window, since the moment is already gone in that same round there (anchor 15).
+    holiday. For a resident **with** a sleep window it only brakes whoever **gets
+    up**, so after a night the house slept (anchor 15): whoever is still up late in
+    the evening and an unknown moment are not braked there. Without a sleep window
+    there is no night to read - the sleep sensor then counts around the clock - and
+    that resident does not count as up on the brake's days before the brake time,
+    even when the house's moment is unknown. The accepted price of that: whoever is
+    still up at night in such a house does not start the house before the brake time.
     It is a brake on starting: a zone already running carries on
     regulating. Guest mode inside the guest window lifts the brake, a
     pre-conditioning request always goes first, and the quiet window and the
@@ -2325,23 +2313,6 @@ what they cover - stand in `AGENTS.md`, and that file is in `.gitignore`.
   repo and CI can read it.
 - Risk: two places for the same agreement. The move takes the agreements out of
   `AGENTS.md` in the same change.
-
-**A brake that also brakes in a house without a sleep window.** `night.house_asleep_since`
-only holds the moment as long as it falls inside the running night of a resident **with**
-a sleep window; without one the boundary between two nights is the moment itself, and it
-is gone the moment the last one at home gets up. `Resident` could carry a boundary of its
-own - since when this resident is up, filled by the binding layer like `home_since` - and
-`rise_braked` could read that instead of `slept_tonight`: a resident who gets up after a
-night's sleep could then be braked without a sleep window too. Note that this is the same
-question as with `home_since`: who was home when, and who was up when.
-
-**Every stored moment through one reader.** `state_store._stored_time` returns `None` for a
-value that is no moment and for an impossible date. Two steps finish that: `_restore_overrides`
-(`until`, `started`) and `handed_back` (with a date variant of the same reader) read through
-it too, and the reader also returns `None` for a moment without a time zone, since that
-cannot be compared with the integration's clock. Then no stored key breaks off the restore,
-and no unreadable moment keeps coming back every round. The acceptance is a test per key
-with an impossible and with a naive value, like `TestAStartupWithBrokenStorage`.
 
 #### Could have
 

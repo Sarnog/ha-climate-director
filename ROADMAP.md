@@ -31,24 +31,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   `AGENTS.md`, en dat bestand staat in `.gitignore`. Wie de repo kloont kan die afspraak dus
   niet nalezen, en een bewaking die er zelf naar zou kijken zou in CI omvallen. De afspraken
   horen in `ARCHITECTURE.md`, dat wél meegaat in de repo.
-- **Een huis zonder slaapvenster remt wie alleen opstaat nooit** — het slaapmoment van het
-  huis blijft alleen staan zolang het in de lopende nacht van een bewoner **met** een
-  slaapvenster valt. Is er thuis niemand met zo'n venster, dan is de grens tussen twee nachten
-  het moment zelf, en is het weg zodra de laatste thuisblijver opstaat: *Opstaan zet het huis
-  pas aan vanaf* remt die bewoner dan niet, terwijl de gids zegt dat het huis uit blijft als
-  er niemand anders op is. Een eigen grens per bewoner - sinds wanneer is deze bewoner op -
-  zou dat dichten zonder een slaapvenster te eisen; zie *Nog te bouwen* in `ARCHITECTURE.md`.
-- **Dezelfde vorm zit ook bij de looptijd van een override, en een tijd zonder tijdzone glipt
-  erdoor** — `state_store._restore_overrides` leest `until` en `started` nog zonder opvang,
-  en `handed_back` leest met `parse_date`. Een onmogelijke waarde laat daar net zo goed de
-  eerste beslissing vallen; de opvang die `until`, `home_since` en `asleep_since` nu hebben
-  hoort ook daar langs. Ook bij die drie zit nog een gat: voor een tijd zonder tijdzone (een
-  ISO-tijd zonder `+00:00`, of een getal van acht cijfers dat als datum leest) geeft
-  `dt_util.parse_datetime` geen `None` maar een tijdstip zonder tijdzone, en de eerste
-  beslissing valt dan om met een `TypeError`. Bij `until` en `home_since` beslist de volgende
-  ronde van de klok weer gewoon; bij `asleep_since` valt elke ronde om, want dat moment wordt
-  elke ronde vergeleken en ongewijzigd weer bewaard.
-
 ## Could have
 
 - **De veldenkaart van de formulierbewaking valt stil terug op de `Call`-knoop** —
@@ -285,25 +267,6 @@ The worked-out design proposals for everything below live in
   that file is in `.gitignore`. Anyone cloning the repo therefore cannot read the agreement,
   and a guard that looked at it itself would fall over in CI. Those agreements belong in
   `ARCHITECTURE.md`, which does travel with the repo.
-- **A house without a sleep window never brakes whoever gets up alone** — the house's sleep
-  moment only stays as long as it falls inside the running night of a resident **with** a
-  sleep window. With nobody at home carrying one, the boundary between two nights is the
-  moment itself, and it is gone the moment the last one at home gets up: *Getting up only
-  starts the house from* then does not brake that resident, while the guide says the house
-  stays off when nobody else is up. A boundary of its own per resident - since when this
-  resident is up - would close that without demanding a sleep window; see *Still to build* in
-  `ARCHITECTURE.md`.
-- **The same shape also sits at an override's duration, and a time without a time zone slips
-  through** — `state_store._restore_overrides` still reads `until` and `started` without a
-  catch, and `handed_back` reads with `parse_date`. An impossible value brings the first
-  decision down there just the same; the catch that `until`, `home_since` and `asleep_since`
-  now have belongs there too. Those three still have a gap as well: for a time without a time
-  zone (an ISO time without `+00:00`, or an eight-digit number that reads as a date)
-  `dt_util.parse_datetime` does not return `None` but a moment without a time zone, and the
-  first decision then falls over with a `TypeError`. With `until` and `home_since` the next
-  round of the clock decides as usual again; with `asleep_since` every round falls over,
-  since that moment is compared every round and stored again unchanged.
-
 ## Could have
 
 - **The form guard's field map silently falls back to the `Call` node** —

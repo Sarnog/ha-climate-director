@@ -590,8 +590,11 @@ freno, la casa arranca con normalidad.
 Es un freno al **arranque**, igual que la franja de silencio: una zona que ya
 funciona sigue funcionando. En días de vacaciones el freno nunca se aplica, así que
 no hay casilla para ello. Quien sigue levantado tarde por la noche no se está
-levantando: el freno solo se aplica tras una noche en la que todos los que estaban
-en casa se han ido a la cama. Dentro de la franja de invitados el freno tampoco se
+levantando mientras este residente tenga una franja de sueño: el freno solo se
+aplica entonces tras una noche en la que todos los que estaban en casa se han ido a
+la cama. Sin franja de sueño el sensor de sueño cuenta las veinticuatro horas, y
+entonces el freno también frena a quien siga levantado tras la
+medianoche. Dentro de la franja de invitados el freno tampoco se
 aplica, y una petición de preacondicionamiento siempre hace arrancar la casa.
 
 ### Horarios

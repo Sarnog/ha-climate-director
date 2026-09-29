@@ -598,9 +598,11 @@ quelqu'un d'autre sans ce frein se lève, la maison démarre normalement.
 
 C'est un frein au **démarrage**, comme la plage de silence : une zone qui tourne
 déjà continue de tourner. Les jours de vacances, le frein ne s'applique jamais ; il
-n'y a donc pas de case pour cela. Qui est encore debout tard le soir ne se lève
-pas : le frein ne s'applique qu'après une nuit où toutes les personnes à la
-maison sont allées se coucher. Pendant les heures du mode invités, le frein ne
+n'y a donc pas de case pour cela. Qui est encore debout tard le soir ne se lève pas
+tant que cet occupant a une plage de sommeil : le frein ne s'applique alors qu'après
+une nuit où toutes les personnes à la maison sont allées se coucher. Sans plage de
+sommeil, le capteur de sommeil compte jour et nuit, et le frein s'applique alors aussi
+à qui est encore debout après minuit. Pendant les heures du mode invités, le frein ne
 s'applique pas non plus, et une demande de préparation fait toujours démarrer la
 maison.
 
