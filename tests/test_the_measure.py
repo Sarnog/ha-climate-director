@@ -310,6 +310,18 @@ FUNCTION_LIMIT = 80
 # en de `passed_over`-lijst moesten het allebei weten, anders glipt een overgedragen
 # ketel er via een omweg alsnog door.
 #
+# De mislukte stop en een ontbrekend `off` (H3): `coordinator.py` 2030 → 2042 door de
+# melding van een ontbrekend `off` in `unsupported_modes` (tien regels uitleg plus de
+# regel zelf en de import van `MODE_OFF`). `applier.apply` en `engine/diff.changes`
+# blijven onder hun maat: de eerste kreeg een vlag en een `continue` in plaats van een
+# `break`, de tweede één `continue` met de uitleg erboven.
+#
+# The failed stop and a missing `off` (H3): `coordinator.py` 2030 → 2042 through the
+# report of a missing `off` in `unsupported_modes` (ten lines of explanation plus the
+# line itself and the `MODE_OFF` import). `applier.apply` and `engine/diff.changes`
+# stay below their measure: the first got a flag and a `continue` instead of a `break`,
+# the second one `continue` with the explanation above it.
+#
 # The override handover (H2): `engine/decide.py` 1677 → 1735 through `_handed_over`, the
 # one place deciding which appliances a handed-over zone handed over, with five calls
 # (`_collect_wishes`, `_resolve_with_fallbacks`, `_standing_firm`, `_build_commands`,
@@ -321,7 +333,7 @@ FUNCTION_LIMIT = 80
 # a detour after all.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2227,
-    "coordinator.py": 2030,
+    "coordinator.py": 2042,
     "engine/decide.py": 1735,
     "config_flow.py": 1457,
     "schemas.py": 893,

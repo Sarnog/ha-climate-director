@@ -11,9 +11,11 @@ from custom_components.climate_director.engine import (
     MODE_COOL,
     MODE_HEAT,
     MODE_OFF,
+    ClimateState,
     Plan,
     Season,
     UnitCommand,
+    WorldState,
     decide,
 )
 from custom_components.climate_director.engine.diff import TEMPERATURE_TOLERANCE, changes
@@ -245,3 +247,40 @@ class TestAgainstTheRealEngine:
         )
         result = changes(decide(house(), current), current)
         assert [change.command.hvac_mode for change in result] == [MODE_COOL]
+
+
+class TestAModeTheApplianceDoesNotReport:
+    """Een stand die het apparaat uitdrukkelijk niet meldt, wordt niet gevraagd.
+
+    A mode the appliance explicitly does not report is not asked of it.
+
+    Home Assistant weigert zo'n aanroep met een `ServiceValidationError`, en dan
+    valt elke ronde de rest van het plan mee: een apparaat zonder `off` hield zo
+    de hele huisbreed stop tegen. Onbekend is toegestaan, precies zoals
+    `sources._reachable` dat al voor verwarmen en koelen doet.
+    """
+
+    def _world(self, climates: dict[str, ClimateState]) -> WorldState:
+        return make_world(outdoor=10.0, indoor={"woonkamer": 20.0}, climates=climates)
+
+    def test_an_unreported_mode_produces_no_change(self) -> None:
+        plan = plan_of(UnitCommand(LIVING, MODE_OFF, None))
+        current = self._world(
+            {LIVING: ClimateState(hvac_mode=MODE_HEAT, hvac_modes=frozenset({MODE_HEAT}))}
+        )
+        assert changes(plan, current) == ()
+
+    def test_an_unknown_listing_is_still_commanded(self) -> None:
+        """Onbekend krijgt het voordeel van de twijfel."""
+        plan = plan_of(UnitCommand(LIVING, MODE_OFF, None))
+        current = self._world({LIVING: ClimateState(hvac_mode=MODE_HEAT)})
+        assert [change.entity_id for change in changes(plan, current)] == [LIVING]
+
+    def test_a_reported_mode_is_still_commanded(self) -> None:
+        plan = plan_of(UnitCommand(LIVING, MODE_HEAT, 21.0))
+        current = self._world(
+            {LIVING: ClimateState(hvac_mode=MODE_OFF, hvac_modes=frozenset({MODE_OFF, MODE_HEAT}))}
+        )
+        result = changes(plan, current)
+        assert [change.entity_id for change in result] == [LIVING]
+        assert result[0].command.hvac_mode == MODE_HEAT

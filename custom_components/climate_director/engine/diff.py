@@ -74,6 +74,22 @@ def changes(
         if not state.available:
             continue
 
+        # Een stand die het apparaat uitdrukkelijk niet meldt, wordt niet
+        # gevraagd: Home Assistant weigert hem met een `ServiceValidationError`,
+        # en dan valt elke ronde de rest van het plan mee - een apparaat zonder
+        # `off` hield zo de hele huisbrede stop tegen. Onbekend (geen
+        # `hvac_modes`) is toegestaan, precies zoals `sources._reachable` dat al
+        # voor verwarmen en koelen doet.
+        #
+        # A mode the appliance explicitly does not report is not asked of it:
+        # Home Assistant refuses it with a `ServiceValidationError`, and then the
+        # rest of the plan falls along every round - an appliance without `off`
+        # held back the whole house-wide stop that way. Unknown (no `hvac_modes`)
+        # is allowed, exactly as `sources._reachable` already does for heating
+        # and cooling.
+        if not state.supports(command.hvac_mode):
+            continue
+
         set_mode = state.hvac_mode != command.hvac_mode
 
         # A unit being switched off keeps whatever setpoint it had; pushing a

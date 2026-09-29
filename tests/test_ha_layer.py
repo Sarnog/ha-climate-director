@@ -793,16 +793,40 @@ class TestTheApplier:
         applied = await apply(hass, pending, shadow=False)
         assert LIVING not in [change.entity_id for change in applied]
 
-    async def test_a_failed_stop_abandons_the_rest_of_the_plan(self) -> None:
-        """De starts erachteraan zouden landen op een apparaat dat had moeten stoppen."""
-        hass = FakeHass(failing={ATTIC})
-        pending = self._changes({LIVING: "off", BACKUP: "off", ATTIC: "heat"}, indoor=18.0)
-        stops = [change for change in pending if applier_module._is_stop(change)]
-        assert stops, "dit scenario levert geen stop op"
+    async def test_a_failed_stop_only_lets_the_starts_lapse(self) -> None:
+        """De overige stops gaan door; alleen de starts vervallen.
 
-        await apply(hass, pending, shadow=False)
-        stopped_at = [call for call in hass.services.calls]
-        assert len(stopped_at) <= len(pending)
+        De commando's staan al gesorteerd met de stops vooraan. Eén weigerend
+        apparaat mag een open deur elders niet open laten: de stop van het
+        tweede apparaat hoort gewoon de deur uit te gaan, en alleen de start
+        erachter vervalt - die zou op een apparaat landen dat had moeten
+        stoppen. De oude toets hier bewees niets: `len(a) <= len(b)` is altijd
+        waar, ook als er niets gebeurde.
+
+        The remaining stops carry on; only the starts lapse. The commands are
+        already sorted with the stops first. One refusing appliance must not
+        leave a door elsewhere open: the second appliance's stop has to go out
+        just the same, and only the start behind it lapses - it would land on an
+        appliance that should have stopped. The old test here proved nothing:
+        `len(a) <= len(b)` is always true, even when nothing happened.
+        """
+        hass = FakeHass(failing={BACKUP})
+        pending = self._changes({LIVING: "heat", BACKUP: "heat", ATTIC: "heat"})
+        stops = [change for change in pending if applier_module._is_stop(change)]
+        starts = [change for change in pending if not applier_module._is_stop(change)]
+        assert len(stops) == 2, f"dit scenario levert niet twee stops op: {stops}"
+        assert starts, "dit scenario levert geen start op"
+
+        applied = await apply(hass, pending, shadow=False)
+
+        called = [call[2]["entity_id"] for call in hass.services.calls]
+        # De stand-in schrijft de aanroep op vóór hij omvalt, dus de mislukte stop
+        # staat wél in `called`; wat telt is wat er echt uitgevoerd is.
+        # The stand-in records the call before it falls over, so the failed stop
+        # is in `called`; what counts is what was really carried out.
+        assert ATTIC in called, "de tweede stop hoort gewoon de deur uit te gaan"
+        assert LIVING not in called, "de start hoort na een mislukte stop te vervallen"
+        assert [change.entity_id for change in applied] == [ATTIC]
 
 
 class TestAFailedSetpointComesBack:

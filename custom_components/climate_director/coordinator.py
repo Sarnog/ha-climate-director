@@ -49,6 +49,7 @@ from .const import (
     UNUSABLE_GRACE_SECONDS,
 )
 from .engine import (
+    MODE_OFF,
     WAITING_REASONS,
     DirectorConfig,
     ModeFamily,
@@ -1399,6 +1400,17 @@ class ClimateDirectorCoordinator(
                     for family in (ModeFamily.HEAT, ModeFamily.COOL)
                     if source.supports(family) and preferred_mode(family) not in modes
                 )
+                # De director wil een apparaat ook kunnen uitzetten; meldt het
+                # `off` niet, dan valt die aanroep elke ronde om. Het verschil
+                # zelf wordt niet meer gestuurd (`engine.diff.changes`), maar
+                # stilzwijgen zou de instelfout verbergen.
+                #
+                # The director also wants to be able to switch an appliance off;
+                # if it does not report `off`, that call falls over every round.
+                # The mode itself is no longer sent (`engine.diff.changes`), but
+                # staying silent would hide the configuration mistake.
+                if MODE_OFF not in modes:
+                    complaints.add(MODE_OFF)
             minimum = to_celsius(
                 _as_float(state.attributes.get("min_temp")), unit_of_coordinator(self)
             )

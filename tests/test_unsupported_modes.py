@@ -224,3 +224,71 @@ class TestTheNoticeNamesTheUsersUnit:
             assert expected in placeholders["entities"]
         finally:
             await stop_house(live)
+
+
+class TestAnApplianceWithoutOff:
+    """Een apparaat dat `off` niet meldt: geen off-aanroep, wel een melding.
+
+    An appliance that does not report `off`: no off call, but a notice.
+
+    Zo'n apparaat liet elke ronde het hele plan omvallen: Home Assistant weigert
+    de stand met een `ServiceValidationError`, en de applier brak daarna alles
+    af. De director stuurt hem daarom geen `off` meer (`engine.diff.changes`),
+    maar zwijgt er niet over - het blijft een instelfout die je wilt zien.
+    """
+
+    def _installation(self) -> dict[str, Any]:
+        return {
+            "zones": [
+                zone(
+                    "woonkamer",
+                    sources=[source("w_ketel", LIVING, role="heat_only")],
+                    indoor_sensor="sensor.woonkamer",
+                    heat=settings(21.0, 20.0),
+                )
+            ],
+            "outdoor_sensor": "sensor.buiten",
+        }
+
+    def _states(self) -> dict[str, tuple[str, dict[str, Any]]]:
+        # De kamer is warm genoeg, dus de director wil de ketel uitzetten.
+        # The room is warm enough, so the director wants to switch the boiler off.
+        return {
+            "sensor.woonkamer": ("23.0", {}),
+            "sensor.buiten": ("4.0", {}),
+            LIVING: ("heat", {"hvac_modes": ["heat"]}),
+        }
+
+    async def test_no_off_is_sent(self) -> None:
+        live = await start_house(self._installation(), states=self._states())
+        try:
+            live.clear_calls()
+            await live.evaluate()
+            await live.settle()
+            assert live.climate_calls() == [], "een apparaat zonder off hoort geen off te krijgen"
+            assert live.state(LIVING) == "heat", "het apparaat blijft zoals het staat"
+        finally:
+            await stop_house(live)
+
+    async def test_the_notice_names_the_missing_mode(self) -> None:
+        live = await start_house(self._installation(), states=self._states())
+        try:
+            await live.evaluate()
+            await age(live, 10)
+            issue = issue_for(live)
+            assert issue is not None
+            placeholders = issue.translation_placeholders or {}
+            assert "off" in placeholders["entities"]
+        finally:
+            await stop_house(live)
+
+    async def test_a_device_with_off_stays_green(self) -> None:
+        """De tegenproef: een apparaat dat `off` wél meldt levert geen melding op."""
+        live = await start_house(self._installation(), states=self._states())
+        try:
+            live.set(LIVING, "heat", hvac_modes=["heat", "off"])
+            await live.evaluate()
+            await age(live, 10)
+            assert issue_for(live) is None
+        finally:
+            await stop_house(live)

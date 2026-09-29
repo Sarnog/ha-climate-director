@@ -60,28 +60,37 @@ async def apply(
         return ()
 
     applied: list[Change] = []
+    abandon_starts = False
     for change in pending:
+        # Een mislukte stop breekt de aanname waar de rest van het plan op rust:
+        # de starts die erachteraan komen zouden dan bovenop een apparaat landen
+        # dat had moeten stoppen - precies de combinatie die dit ontwerp
+        # onbereikbaar hoort te maken. Alleen de **starts** vervallen daarom; de
+        # overige **stops** gaan gewoon door. De commando's staan al gesorteerd
+        # met de stops vooraan, en een apparaat dat moet stoppen hoort te stoppen
+        # ook als een ánder apparaat weigert: één weerspannige cloudkoppeling
+        # houdt zo niet langer de hele huisbrede stop tegen.
+        #
+        # A failed stop breaks the assumption the rest of the plan rests on: the
+        # starts behind it would land on top of an appliance that should have
+        # stopped - exactly the combination this design is meant to make
+        # unreachable. Only the **starts** therefore lapse; the remaining
+        # **stops** carry on. The commands are already sorted with the stops
+        # first, and an appliance that has to stop should stop even when a
+        # different appliance refuses: one stubborn cloud link no longer holds
+        # back the whole house-wide stop.
+        if abandon_starts and not _is_stop(change):
+            continue
         try:
             await _execute(hass, change)
         except Exception:
             _LOGGER.exception("Could not steer %s", change.entity_id)
-            # Een mislukte stop breekt de aanname waar de rest van het plan op
-            # rust. De starts die erachteraan komen zouden dan bovenop een
-            # apparaat landen dat had moeten stoppen - precies de combinatie
-            # die dit ontwerp onbereikbaar hoort te maken. Een mislukte start
-            # is onschuldig: dan gebeurt er alleen minder dan gepland.
-            #
-            # A failed stop breaks the assumption the rest of the plan rests
-            # on. The starts behind it would land on top of an appliance that
-            # should have stopped - exactly the combination this design is
-            # meant to make unreachable. A failed start is harmless: it only
-            # means less happens than planned.
-            if _is_stop(change):
+            if _is_stop(change) and not abandon_starts:
+                abandon_starts = True
                 _LOGGER.error(
-                    "Abandoning the rest of the plan: %s could not be stopped",
+                    "Carrying on with the stops only: %s could not be stopped",
                     change.entity_id,
                 )
-                break
             continue
         applied.append(change)
 
