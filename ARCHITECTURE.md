@@ -209,6 +209,30 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     toestand van de coordinator, dus zonder die stap zou de debouncer er een
     seconde tussen zitten en pas de volgende beslisronde de eindtijd of `unknown`
     tonen.
+
+    **Een override draagt elk apparaat van die zone over, huisbreed.** Staat een
+    zone onder override — de schakelaar of de actie `set_override` — dan is elk
+    apparaat dat in die zone bron is overgedragen: de director stuurt het geen
+    enkel commando meer, ook geen aan of uit vanuit een andere zone, en ook niet
+    de huisbrede openingsstop. Een override is een noodknop, geen slot, en dat
+    geldt voor de hele zone: wie hem indrukt weet iets wat de director niet
+    weet. De aanvaarde prijs is even groot als de regel: de "1 uur"-knop van een
+    slaapkamer met de cv-thermostaat als tweede bron draagt die ketel dat uur
+    over, dus de andere kamers krijgen dan geen gasverwarming en een brandende
+    ketel gaat niet uit. Wie de knop indrukt wil die kamer, en een centrale
+    installatie is nu eenmaal niet per kamer te verdelen. Dit is **breder** dan
+    de zone zelf: de overdracht gaat over de apparaten die er bron zijn,
+    huisbreed. De andere kant blijft zoals hij was — een apparaat dat alleen in
+    díe zone bron is verandert niets, en zonder override is er geen overdracht:
+    staat de schakelaar weer uit, dan neemt de engine de zone en haar apparaten
+    gewoon terug. Voor de andere zones is zo'n apparaat geen kandidaat, precies
+    zoals `excluding` in `sources.select` er geen is; het staat niet in
+    `passed_over` (het is geen storing, dus niet "op reserve"), en een zone
+    zonder andere bron meldt `no_source_available`. Een draaiend overgedragen
+    apparaat telt als vaststaand (`_standing_firm`) voor het circuit en de
+    capaciteit, want er valt niets meer aan te verzetten. De `Generator` houdt
+    voorlopig zijn eigen regel — aanzetten mag, uitzetten niet — en dat verschil
+    staat als idee in `ROADMAP.md`.
 12. **Het bereik van een bron hangt aan de bron en noemt zones.** Een bron draagt
     `covers_zones`: de zones die hij meeverwarmt of meekoelt zodra hij draait.
     Leeg betekent *alleen de eigen zone* — het gedrag van vóór deze instelling,
@@ -229,6 +253,17 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     apparaten die zo stilvallen krijgen `SHARED_SOURCE_TOOK_OVER`; de zone met
     de weggevallen bron blijft melden wat er werkelijk aan de hand is
     (`op_reserve`, `SOURCE_UNREACHABLE`).
+
+    **De overname is per taak.** Een overname voor verwarmen gaat alleen in als
+    een weggevallen bron in het gebied zelf kon verwarmen; voor koelen idem. Een
+    bron die alleen koelt en uit het stopcontact raakt is dus geen reden om het
+    gebied van verwarmen te voorzien: de ketel zou anders de hele winter het
+    huis op gas zetten — zijn buitenvenster opzij — omdat er een stekker uit
+    ligt. Dit maakt de overname **smaller** dan "een bron valt weg, dus neemt de
+    vervangende bron het gebied over". De andere kant dekt het bestaande
+    scenario: valt een airco weg die zelf ook verwarmt, dan neemt de ketel het
+    verwarmen nog steeds over, en de overnemer levert er nog steeds geen andere
+    taak naast.
 
     **Onbereikbaarheid maakt het buitenvenster van de vervangende bron
     voorwaardelijk.** Ligt de buitentemperatuur buiten zijn venster terwijl een
@@ -832,6 +867,19 @@ Zes dingen zijn er subtiel aan:
   `night.house_asleep_since` en schrijft het weg zodra het verandert, zodat een herstart
   midden in de nacht het niet kwijtraakt. In de diagnose gelakt.
 
+De listeners staan meteen aan — een toestandswijziging tijdens het opstarten van Home
+Assistant gaat dus niet verloren — maar er wordt niet beslist voordat het herstel gedraaid
+heeft: `_async_evaluate` doet niets zolang de vlag `_restored` niet staat, en die vlag gaat
+aan in `_async_on_hass_started`, ná het herstel van de opslag en vóór de eerste beslissing.
+Zonder die poort besliste de director op een half huis: de sensoren die tijdens het laden
+binnenkomen wekken de debouncer, en een apparaat dat iemand gisteren met de hand uitzette
+stond dan al weer aan voordat `_handed_back` gelezen was — de rest van de dag. Noteren
+(`_notice_home`, `_notice_hand`, de neerslag) mag intussen wel, en het herstel **voegt
+samen** in plaats van te vervangen, zodat een hand van tijdens het opstarten niet stil
+verdwijnt onder een ouder opgeslagen oordeel. Een actie of schakelaar van vóór het herstel
+wordt in de eerste ronde daarna gewoon meegenomen: er gaat alleen een beslissing verloren,
+geen invoer.
+
 ### applier.py — uitvoeren
 
 Beslist niets. Vraagt `diff.py` wat er moet gebeuren en zet dat om in service calls, of
@@ -842,8 +890,17 @@ aanroepen zouden hem kort op de nieuwe stand met het oude setpoint laten draaien
 Faalt een aanroep, dan hangt de reactie af van wat er faalde. Een mislukte **stop** breekt
 de aanname waar de rest van het plan op rust: de starts erachteraan zouden landen bovenop
 een apparaat dat had moeten stoppen, precies de combinatie die dit ontwerp onbereikbaar
-hoort te maken. Dan wordt de rest van het plan afgebroken. Een mislukte **start** is
-onschuldig — er gebeurt alleen minder dan gepland — en de rest gaat gewoon door.
+hoort te maken. Die **starts** vervallen dan ook — maar de overige **stops** gaan gewoon
+door. De commando's staan al gesorteerd met de stops vooraan, en een apparaat dat moet
+stoppen hoort te stoppen ook als een ánder apparaat weigert; één weerspannige cloudkoppeling
+houdt zo niet langer de hele huisbrede stop tegen. Een mislukte **start** blijft onschuldig
+— er gebeurt alleen minder dan gepland — en de rest gaat gewoon door.
+
+Een stand die een apparaat uitdrukkelijk niet in `hvac_modes` meldt, krijgt het niet
+gevraagd: `diff.changes` laat zo'n commando vallen (onbekend is toegestaan, precies zoals
+`sources._reachable` dat al voor verwarmen en koelen doet), zodat een apparaat zonder `off`
+niet elke ronde opnieuw omvalt en elke ronde de starts meesleept. `unsupported_modes` meldt
+dat ontbrekende `off` net zo goed als een ontbrekende `heat` of `cool`.
 
 ### config_flow.py — de wizard
 
@@ -1491,6 +1548,30 @@ them without changing them here first.
     the coordinator, so without that step the debouncer would sit a second in
     between and only the next decision round would show the end time or
     `unknown`.
+
+    **An override hands over every appliance of that zone, house-wide.** With a
+    zone under override — the switch or the `set_override` action — every
+    appliance that is a source in that zone is handed over: the director sends
+    it no command at all, not even an on or off from another zone, and not the
+    house-wide opening stop either. An override is an emergency button, not a
+    lock, and that goes for the whole zone: whoever presses it knows something
+    the director does not. The accepted price is as large as the rule: the
+    "1 hour" button of a bedroom with the boiler thermostat as its second source
+    hands that boiler over for that hour, so the other rooms get no gas heating
+    then and a burning boiler does not go off. Whoever presses the button wants
+    that room, and a central installation simply cannot be split per room. This
+    is **broader** than the zone itself: the handover covers the appliances that
+    are a source in it, house-wide. The other side stays as it was — an
+    appliance that is a source in that zone alone changes nothing, and without
+    an override there is no handover: with the switch off again, the engine
+    simply takes the zone and its appliances back. For the other zones such an
+    appliance is no candidate, exactly as `excluding` in `sources.select` is
+    none; it is not in `passed_over` (it is no fault, so not "on reserve"), and
+    a zone without another source reports `no_source_available`. A running
+    handed-over appliance counts as standing firm (`_standing_firm`) for the
+    circuit and the capacity, since there is nothing left to move about it. The
+    `Generator` keeps its own rule for now — switching on is allowed, switching
+    off is not — and that difference stands as an idea in `ROADMAP.md`.
 12. **A source's reach hangs on the source and names zones.** A source carries
     `covers_zones`: the zones it heats or cools along with it the moment it runs.
     Empty means *its own zone only* — the behaviour from before this setting, so
@@ -1511,6 +1592,17 @@ them without changing them here first.
     appliances stood down this way carry `SHARED_SOURCE_TOOK_OVER`; the zone
     whose source dropped out keeps reporting what is really the matter
     (`op_reserve`, `SOURCE_UNREACHABLE`).
+
+    **The takeover is per duty.** A takeover for heating only starts when a
+    dropped-out source in the area could itself heat; for cooling likewise. A
+    cooling-only source that comes out of its socket is therefore no reason to
+    cover the area for heating: the boiler would otherwise put the whole house
+    on gas all winter — its outdoor window set aside — because a plug came out.
+    This makes the takeover **smaller** than "a source drops out, so the
+    replacing source takes the area over". The other side is covered by the
+    existing scenario: when an air conditioner that also heats drops out, the
+    boiler still takes the heating over, and the taker-over still delivers no
+    other duty beside it.
 
     **Unreachability makes the replacing source's outdoor window conditional.**
     With the outdoor temperature outside its window while a source in its area
@@ -2105,6 +2197,18 @@ Six things about it are subtle:
   round and writes it away as soon as it changes, so a restart in the middle of the night
   does not lose it. Redacted in the diagnostics.
 
+The listeners are on from the start — so a state change during Home Assistant's startup is
+not lost — but no decision is taken before the restore has run: `_async_evaluate` does
+nothing while the `_restored` flag is unset, and that flag goes up in
+`_async_on_hass_started`, after the restore of the store and before the first decision.
+Without that gate the director decided on half a house: the sensors arriving during loading
+wake the debouncer, and an appliance somebody switched off by hand yesterday was switched on
+again before `_handed_back` had been read — for the rest of the day. Noting (`_notice_home`,
+`_notice_hand`, the precipitation) is allowed in the meantime, and the restore **merges**
+rather than replaces, so a hand from during the startup does not quietly disappear under an
+older stored verdict. An action or switch from before the restore is simply carried into the
+first round after it: only a decision is lost, no input.
+
 ### applier.py — execution
 
 Decides nothing. Asks `diff.py` what has to happen and turns that into service calls, or in
@@ -2115,8 +2219,17 @@ leave it running the new mode on the old setpoint.
 When a call fails, the response depends on what failed. A failed **stop** breaks the
 assumption the rest of the plan rests on: the starts behind it would land on top of an
 appliance that should have stopped, exactly the combination this design is meant to make
-unreachable. The rest of the plan is then abandoned. A failed **start** is harmless — only
-less happens than planned — and the rest carries on.
+unreachable. Those **starts** therefore lapse — but the remaining **stops** carry on. The
+commands are already sorted with the stops first, and an appliance that has to stop should
+stop even when a different appliance refuses; one stubborn cloud link no longer holds back
+the whole house-wide stop. A failed **start** stays harmless — only less happens than
+planned — and the rest carries on.
+
+A mode an appliance explicitly does not list in `hvac_modes` is not asked of it:
+`diff.changes` drops such a command (unknown is allowed, exactly as `sources._reachable`
+already does for heating and cooling), so an appliance without `off` does not fall over
+every round and drag the starts along with it each time. `unsupported_modes` reports that
+missing `off` just as it does a missing `heat` or `cool`.
 
 ### config_flow.py — the wizard
 

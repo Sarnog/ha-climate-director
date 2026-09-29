@@ -31,6 +31,21 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   `AGENTS.md`, en dat bestand staat in `.gitignore`. Wie de repo kloont kan die afspraak dus
   niet nalezen, en een bewaking die er zelf naar zou kijken zou in CI omvallen. De afspraken
   horen in `ARCHITECTURE.md`, dat wél meegaat in de repo.
+- **De generator gelijktrekken met de override-overdracht** — een `Generator` mag onder een
+  override nog wél aangezet worden door een andere zone; alleen het uitzetten wordt
+  ingehouden. Een apparaat dat als bron onder een overgedragen zone hangt krijgt helemaal
+  geen commando meer, ook geen aan. Eén regel voor beide haalt dat verschil weg.
+- **Vakantieagenda: alle overlappende afspraken lezen** — Home Assistant toont per
+  agenda-entiteit maar één evenement, en een langere afspraak die eerder begon kan een
+  vakantie-item maskeren; dan blijft de vakantiemodus ongemerkt uit. `calendar.get_events`
+  over het huidige moment zou alle afspraken zien.
+- **Een time-out op de service calls** — `apply` wacht met `blocking=True` zonder time-out
+  terwijl de beslislock vastzit; één hangende cloudaanroep houdt elke volgende ronde tegen.
+  Een begrensde wachttijd laat de director doorgaan met de rest.
+- **Waarschuwen als de streeftemperatuur op het uitschakelpunt ligt** — de taak eindigt pas
+  als de ruimtesensor het uitschakelpunt haalt; regelt het apparaat op zijn eigen sensor net
+  daaronder, dan blijft de taak (en het circuit) eindeloos doorlopen. Het scherm kan zeggen
+  dat een doel gelijk aan het uitschakelpunt geen marge laat.
 ## Could have
 
 - **De veldenkaart van de formulierbewaking valt stil terug op de `Call`-knoop** —
@@ -269,6 +284,21 @@ The worked-out design proposals for everything below live in
   that file is in `.gitignore`. Anyone cloning the repo therefore cannot read the agreement,
   and a guard that looked at it itself would fall over in CI. Those agreements belong in
   `ARCHITECTURE.md`, which does travel with the repo.
+- **Align the generator with the override handover** — under an override a `Generator` may
+  still be switched on by another zone; only the switching off is withheld. An appliance
+  that is a source under a handed-over zone gets no command at all any more, not even an on.
+  One rule for both would take that difference away.
+- **Holiday calendar: read every overlapping appointment** — Home Assistant shows only one
+  event per calendar entity, and a longer appointment that started earlier can mask a
+  holiday item; the holiday mode then stays off unnoticed. `calendar.get_events` over the
+  current moment would see all appointments.
+- **A timeout on the service calls** — `apply` waits with `blocking=True` without a timeout
+  while the decision lock is held; one hanging cloud call holds up every following round. A
+  bounded wait lets the director carry on with the rest.
+- **Warn when the target temperature sits on the switch-off point** — the duty only ends once
+  the room sensor reaches the switch-off point; if the appliance regulates on its own sensor
+  just below it, the duty (and the circuit) keeps running endlessly. The screen could say
+  that a target equal to the switch-off point leaves no margin.
 ## Could have
 
 - **The form guard's field map silently falls back to the `Call` node** —
