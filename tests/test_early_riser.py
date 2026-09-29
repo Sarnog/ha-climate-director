@@ -364,6 +364,26 @@ class TestWithoutASleepWindow:
         world = walk(config, [*ALONE, getting_up(TUE, 7, 5, nancy="away")])
         assert shut(config, world) == ()
 
+    def test_wens2_5_without_a_sleep_window_a_holiday_lifts_the_brake(self) -> None:
+        """5: di 05:50, vakantie, geen slaapvenster, Danny op en de enige thuis: het huis start.
+
+        Zonder venster valt alleen de nachtvoorwaarde weg; op een vakantiedag geldt de rem
+        nog steeds nooit.
+        """
+        config = without_a_sleep_window()
+        world = walk(config, [*ALONE, getting_up(TUE, 5, 50, nancy="away")], holiday=True)
+        assert shut(config, world) == ()
+
+    def test_wens2_9_without_a_sleep_window_saturday_is_no_brake_day(self) -> None:
+        """9: za 05:50, geen slaapvenster, Danny op en de enige thuis: de rem geldt alleen ma-vr.
+
+        Zonder venster valt alleen de nachtvoorwaarde weg; de dagen van de rem blijven gelden.
+        """
+        config = without_a_sleep_window()
+        steps = [turning_in(FRI, nancy="away"), getting_up(SAT, 5, 50, nancy="away")]
+        world = walk(config, steps)
+        assert shut(config, world) == ()
+
     def test_whoever_is_alone_up_at_half_past_twelve_is_braked_all_the_same(self) -> None:
         """Zonder venster om 00:30 nog op terwijl het huis uit staat: `early_riser`.
 
