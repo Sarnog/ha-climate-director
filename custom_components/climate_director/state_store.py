@@ -18,7 +18,7 @@ from __future__ import annotations
 import logging
 import os
 from collections.abc import Mapping
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -61,19 +61,42 @@ def _stored_time(raw: object) -> datetime | None:
     `dt_util.parse_datetime` geeft `None` terug voor iets dat het niet herkent, maar gooit
     een `ValueError` voor iets dat er wel op lijkt en het niet is:
     `"2026-13-45T10:00:00+00:00"` heeft geen maand 13. Zo'n waarde hoort net zo goed als
-    afwezig te tellen, anders valt de eerste beslissing om en staat de integratie stil tot de
-    volgende herstart. Elk opgeslagen tijdstip leest daarom langs deze functie: `until`,
-    `home_since` en `asleep_since`.
+    afwezig te tellen. Een tijdstip zonder tijdzone leest wel, maar het laat zich niet met
+    de klok van de integratie vergelijken - dat geeft een `TypeError` zodra er iets beslist
+    wordt - dus telt ook dat als afwezig. Elk opgeslagen tijdstip leest daarom langs deze
+    functie: `until`, `home_since`, `asleep_since` en de looptijd en starttijd van een
+    override.
 
-    `dt_util.parse_datetime` returns `None` for something it does not recognise, but raises a
-    `ValueError` for something that does look like a date and is not one:
+    `dt_util.parse_datetime` returns `None` for something it does not recognise, but raises
+    a `ValueError` for something that does look like a date and is not one:
     `"2026-13-45T10:00:00+00:00"` has no month 13. Such a value should count as absent just
-    the same, otherwise the first decision falls over and the integration stands still until
-    the next restart. Every stored moment therefore reads through this function: `until`,
-    `home_since` and `asleep_since`.
+    the same. A moment without a time zone does read, but it cannot be compared with the
+    integration's clock - that raises a `TypeError` the moment anything is decided - so
+    that counts as absent too. Every stored moment therefore reads through this function:
+    `until`, `home_since`, `asleep_since` and an override's duration and start time.
     """
     try:
-        return dt_util.parse_datetime(str(raw))
+        moment = dt_util.parse_datetime(str(raw))
+    except ValueError:
+        return None
+    if moment is None or moment.tzinfo is None:
+        return None
+    return moment
+
+
+def _stored_date(raw: object) -> date | None:
+    """Return the day in a stored value, or `None` when there is none to read.
+
+    De datumvariant van `_stored_time`, voor `handed_back`: één plek waar een opgeslagen
+    tijd gelezen wordt, met dezelfde vergevingsgezindheid. `dt_util.parse_date` kent alleen
+    `JJJJ-MM-DD` en geeft voor al het andere `None` terug.
+
+    The date variant of `_stored_time`, for `handed_back`: one place where a stored time is
+    read, with the same forgiveness. `dt_util.parse_date` knows only `JJJJ-MM-DD` and
+    returns `None` for everything else.
+    """
+    try:
+        return dt_util.parse_date(str(raw))
     except ValueError:
         return None
 
@@ -251,7 +274,7 @@ class _StateStoreMixin(_CoordinatorBase):
         if isinstance(handed_raw, Mapping):
             today = now.date()
             for zone_id, raw in handed_raw.items():
-                day = dt_util.parse_date(str(raw))
+                day = _stored_date(raw)
                 if day == today:
                     self._handed_back[zone_id] = day
 
@@ -312,7 +335,7 @@ class _StateStoreMixin(_CoordinatorBase):
             for zone_id, raw in until_raw.items():
                 if zone_id not in known_zones:
                     continue
-                until = dt_util.parse_datetime(str(raw))
+                until = _stored_time(raw)
                 if until is None or not now < until:
                     self.zone_overrides.pop(zone_id, None)
                     continue
@@ -322,7 +345,7 @@ class _StateStoreMixin(_CoordinatorBase):
             for zone_id, raw in started_raw.items():
                 if zone_id not in self.zone_override_until:
                     continue
-                started = dt_util.parse_datetime(str(raw))
+                started = _stored_time(raw)
                 if started is not None:
                     self.zone_override_started[zone_id] = started
         if isinstance(when_raw, Mapping):
