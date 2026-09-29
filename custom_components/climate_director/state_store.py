@@ -88,17 +88,16 @@ def _stored_date(raw: object) -> date | None:
     """Return the day in a stored value, or `None` when there is none to read.
 
     De datumvariant van `_stored_time`, voor `handed_back`: één plek waar een opgeslagen
-    tijd gelezen wordt, met dezelfde vergevingsgezindheid. `dt_util.parse_date` kent alleen
-    `JJJJ-MM-DD` en geeft voor al het andere `None` terug.
+    dag gelezen wordt, met dezelfde vergevingsgezindheid. Anders dan `parse_datetime` gooit
+    `dt_util.parse_date` zelf niets: hij kent alleen `JJJJ-MM-DD` en geeft voor al het
+    andere `None` terug, dus hier hoort geen opvang omheen.
 
-    The date variant of `_stored_time`, for `handed_back`: one place where a stored time is
-    read, with the same forgiveness. `dt_util.parse_date` knows only `JJJJ-MM-DD` and
-    returns `None` for everything else.
+    The date variant of `_stored_time`, for `handed_back`: one place where a stored day is
+    read, with the same forgiveness. Unlike `parse_datetime`, `dt_util.parse_date` raises
+    nothing itself: it knows only `JJJJ-MM-DD` and returns `None` for everything else, so
+    no catch belongs around it.
     """
-    try:
-        return dt_util.parse_date(str(raw))
-    except ValueError:
-        return None
+    return dt_util.parse_date(str(raw))
 
 
 class _StateStoreMixin(_CoordinatorBase):
