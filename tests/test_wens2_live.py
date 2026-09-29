@@ -26,6 +26,18 @@ round) and in `tests/test_the_night.py` (the moment itself); here it goes throug
 binding layer, with a real night from Monday 23:30 into Tuesday, and with a restart at
 06:00 after which the stored moment comes back. The integration's clock is set to that
 night; the entities' timestamps stay real.
+
+Eén reeks gaat over hetzelfde huis zonder slaapvenster: daar telt de slaapsensor de klok
+rond, remt de rem wie op de remdagen vóór de remtijd op is ook als het moment van het
+huis onbekend is, en is er dus geen moment dat een herstart kan overleven. De aanvaarde
+prijs staat er met de andere kant naast: om half één nog op terwijl het huis uit staat
+remt zonder venster wel, met venster niet.
+
+One series goes over the same house without a sleep window: there the sleep sensor counts
+around the clock, the brake brakes whoever is up before the brake time on the brake's days
+even when the house's moment is unknown, and so there is no moment a restart could carry
+over. The accepted price stands there with the other side beside it: still up at half past
+midnight with the house off is braked without a window, not with one.
 """
 
 from __future__ import annotations
@@ -76,8 +88,22 @@ def brake_for(resident_id: str, *, danny: bool, nancy: bool) -> dict[str, Any] |
     return None
 
 
-def installation(*, danny_brake: bool = True, nancy_brake: bool = False) -> dict[str, Any]:
-    """Return a cold single-zone house of two residents, with the brake as asked."""
+def installation(
+    *,
+    danny_brake: bool = True,
+    nancy_brake: bool = False,
+    sleep_window: bool = True,
+) -> dict[str, Any]:
+    """Return a cold single-zone house of two residents, with the brake as asked.
+
+    Zonder slaapvenster (`sleep_window=False`) telt de slaapsensor de klok rond en is er
+    geen nacht om het moment van het huis aan af te lezen.
+
+    Without a sleep window (`sleep_window=False`) the sleep sensor counts around the clock
+    and there is no night to read the house's moment against.
+    """
+    night = {"start": "21:00:00", "end": "08:00:00", "weekdays": None} if sleep_window else None
+    sleep_in = {"until": "13:00:00", "weekdays": [5, 6], "holiday": True} if sleep_window else None
     return {
         "zones": [
             zone(
@@ -95,8 +121,8 @@ def installation(*, danny_brake: bool = True, nancy_brake: bool = False) -> dict
                 "presence_entity": person,
                 "sleep_entity": charger,
                 "sleep_state": "wireless",
-                "sleep_window": {"start": "21:00:00", "end": "08:00:00", "weekdays": None},
-                "sleep_in": {"until": "13:00:00", "weekdays": [5, 6], "holiday": True},
+                "sleep_window": night,
+                "sleep_in": sleep_in,
                 "wake_deadline": {"at": "11:00:00", "weekdays": [5, 6], "holiday": True},
                 "rise_brake": brake_for(resident_id, danny=danny_brake, nancy=nancy_brake),
             }
@@ -246,3 +272,118 @@ class TestTheRiseBrakeInARunningHouse:
             assert again.state(LIVING) == "off"
         finally:
             await stop_house(again)
+
+
+class TestWithoutASleepWindow:
+    """Wens 2 in een huis zonder slaapvenster: de slaapsensor telt de klok rond.
+
+    Wish 2 in a house without a sleep window: the sleep sensor counts around the clock.
+    """
+
+    async def test_wens2_2_live_without_a_sleep_window_danny_alone_gets_up_early(
+        self, clock
+    ) -> None:
+        """2 live: di 05:50, geen venster, Danny op en de enige thuis: `early_riser`, huis uit.
+
+        Het moment van het huis is in deze ronde al weg - er slaapt niemand thuis - en toch
+        remt de rem: zonder venster is er geen nacht om aan af te lezen.
+
+        The house's moment is already gone in this round - nobody at home is asleep - and
+        the brake still brakes: without a window there is no night to read.
+        """
+        bedtime = clock.at(10, 23, 30)
+        home = await start_house(
+            installation(sleep_window=False), states=world(danny="bed", nancy="away")
+        )
+        try:
+            assert near(home.coordinator._asleep_since, bedtime)
+            clock.at(11, 5, 50)
+            await wakes(home, "danny")
+            assert home.coordinator._asleep_since is None
+            assert reason(home) == "early_riser"
+            assert home.state(LIVING) == "off"
+        finally:
+            await stop_house(home)
+
+    async def test_wens2_4_live_without_a_sleep_window_the_house_starts_at_seven(
+        self, clock
+    ) -> None:
+        """4 live: di 07:05, geen venster, dezelfde lege kamer: de rem is over, huis aan."""
+        clock.at(10, 23, 30)
+        home = await start_house(
+            installation(sleep_window=False), states=world(danny="bed", nancy="away")
+        )
+        try:
+            clock.at(11, 7, 5)
+            await wakes(home, "danny")
+            assert reason(home) != "early_riser"
+            assert home.state(LIVING) == "heat"
+        finally:
+            await stop_house(home)
+
+    async def test_the_brake_stays_over_a_restart_without_a_sleep_window(self, clock) -> None:
+        """Een herstart om 06:00 terwijl de bewoner met de rem al op is: de rem blijft.
+
+        Zonder slaapvenster valt er geen moment te bewaren - dat is juist de prijs - en
+        toch remt de rem na de herstart, want zonder venster eist ze geen nacht.
+
+        A restart at 06:00 while the resident with the brake is already up: the brake
+        stays. Without a sleep window there is no moment to keep - that is the price - and
+        the brake still brakes after the restart, since without a window it demands no
+        night.
+        """
+        config_dir = new_config_dir()
+        clock.at(10, 23, 30)
+        home = await start_house(
+            installation(sleep_window=False),
+            states=world(danny="bed", nancy="away"),
+            config_dir=config_dir,
+        )
+        try:
+            clock.at(11, 5, 50)
+            await wakes(home, "danny")
+            assert reason(home) == "early_riser"
+            assert home.coordinator._store_payload()["asleep_since"] is None
+        finally:
+            await stop_house(home)
+        clock.at(11, 6, 0)
+        again = await start_house(
+            installation(sleep_window=False),
+            states=world(danny="up", nancy="away"),
+            config_dir=config_dir,
+        )
+        try:
+            assert reason(again) == "early_riser"
+            assert again.state(LIVING) == "off"
+        finally:
+            await stop_house(again)
+
+    async def test_the_accepted_price_whoever_is_up_after_midnight_is_braked(self, clock) -> None:
+        """De prijs: zonder venster om 00:30 nog op terwijl het huis uit staat: `early_riser`."""
+        clock.at(11, 0, 30)
+        home = await start_house(
+            installation(sleep_window=False), states=world(danny="up", nancy="away")
+        )
+        try:
+            assert reason(home) == "early_riser"
+            assert home.state(LIVING) == "off"
+        finally:
+            await stop_house(home)
+
+    async def test_with_a_sleep_window_whoever_is_up_late_is_not_braked(self, clock) -> None:
+        """De andere kant: mét venster is wie 's nachts nog op is geen opstaander.
+
+        Het huis heeft deze nacht niet geslapen, dus valt er geen nacht te lezen en remt de
+        rem niet: het huis start gewoon.
+
+        The other side: with a window whoever is still up at night is no riser. The house
+        has not slept this night, so there is no night to read and the brake does not
+        brake: the house simply starts.
+        """
+        clock.at(11, 0, 30)
+        home = await start_house(installation(), states=world(danny="up", nancy="away"))
+        try:
+            assert reason(home) != "early_riser"
+            assert home.state(LIVING) == "heat"
+        finally:
+            await stop_house(home)

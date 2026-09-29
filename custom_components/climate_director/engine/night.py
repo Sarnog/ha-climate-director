@@ -138,16 +138,16 @@ def _night_runs_for_somebody(at_home: list[Resident], world: WorldState) -> bool
     moment in moet vallen (`slept_tonight` zegt daar ja bij elk bekend moment). Een huis
     waar niemand een slaapvenster heeft houdt het moment dus niet vast - de grens tussen
     twee nachten is daar het moment zelf, en dat vervalt zodra er niemand thuis meer
-    slaapt. De prijs daarvan is dat de opsta-rem in zo'n huis niets doet; dat staat als
-    idee in `ROADMAP.md`.
+    slaapt. De opsta-rem leest daar niet aan: zonder venster eist die geen nacht
+    (`rise_braked`).
 
     Only a resident **with** a sleep window has a night to read: for whoever is home
     without one the sleep sensor counts around the clock and there is no boundary the
     moment has to fall inside (`slept_tonight` says yes at any known moment there). A house
     in which nobody has a sleep window therefore does not hold the moment - the boundary
     between two nights is the moment itself there, and it lapses the moment nobody at home
-    is asleep any more. The price of that is that the rise brake does nothing in such a
-    house; that stands as an idea in `ROADMAP.md`.
+    is asleep any more. The rise brake does not read it there: without a window it demands
+    no night (`rise_braked`).
     """
     return any(
         resident.sleep_window is not None and slept_tonight(resident, world) for resident in at_home
@@ -192,20 +192,26 @@ def rise_braked(resident: Resident, world: WorldState) -> bool:
     """Return whether this resident, getting up early, does not count as up yet.
 
     *Opstaan zet het huis pas aan vanaf*: vóór die tijd, op de dagen van de rem en op
-    een dag die geen vakantie is, telt deze bewoner niet als "op". Alleen wie
-    **opstaat** - na een nacht waarin het huis sliep (`slept_tonight`) - wordt
-    geremd: wie 's avonds laat nog op is, is geen vroege opstaander, en een onbekend
-    moment remt niemand. Of er daarna nog iets draait, beslist de poort: dit is een
-    rem op beginnen, niet op doorgaan.
+    een dag die geen vakantie is, telt deze bewoner niet als "op". Een bewoner **met**
+    een slaapvenster wordt alleen geremd als hij **opstaat** - na een nacht waarin het
+    huis sliep (`slept_tonight`) -: wie 's avonds laat nog op is, is geen vroege
+    opstaander, en een onbekend moment remt niemand. Zonder slaapvenster is er geen
+    nacht om aan af te lezen: de slaapsensor telt de klok rond, dus wie op is, staat op,
+    ook als het moment van het huis onbekend is. Of er daarna nog iets draait, beslist
+    de poort: dit is een rem op beginnen, niet op doorgaan.
 
     *Getting up only starts the house from*: before that time, on the brake's days
-    and on a day that is no holiday, this resident does not count as "up". Only
-    whoever **gets up** - after a night the house slept (`slept_tonight`) - is
-    braked: whoever is still up late in the evening is no early riser, and an unknown
-    moment brakes nobody. Whether anything runs already is up to the gate: this is a
-    brake on starting, not on continuing.
+    and on a day that is no holiday, this resident does not count as "up". A resident
+    **with** a sleep window is only braked when he **gets up** - after a night the
+    house slept (`slept_tonight`): whoever is still up late in the evening is no early
+    riser, and an unknown moment brakes nobody. Without a sleep window there is no
+    night to read: the sleep sensor counts around the clock, so whoever is up has got
+    up, even when the house's moment is unknown. Whether anything runs already is up to
+    the gate: this is a brake on starting, not on continuing.
     """
     brake = resident.rise_brake
     if brake is None or world.holiday_mode or not brake.applies_on(world.now.weekday()):
         return False
-    return world.now.time() < brake.at and slept_tonight(resident, world)
+    if world.now.time() >= brake.at:
+        return False
+    return resident.sleep_window is None or slept_tonight(resident, world)

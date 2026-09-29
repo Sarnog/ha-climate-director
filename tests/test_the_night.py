@@ -319,12 +319,16 @@ class TestTheMoment:
 
         De bewoners van de standaardopstelling hebben geen slaapvenster; de grens tussen
         twee nachten is daar het moment zelf. Zodra er niemand thuis meer slaapt is er dus
-        geen lopende nacht om het moment in te plaatsen en is het weg - met als prijs dat de
-        opsta-rem in zo'n huis niets doet. Dat staat als idee in `ROADMAP.md`.
+        geen lopende nacht om het moment in te plaatsen en is het weg. Dat het huis dan
+        geen moment meer heeft, betekent niet dat de opsta-rem niets doet: zonder venster
+        kent die geen nachtvoorwaarde en remt wie op de remdagen vóór de remtijd op is
+        (`tests/test_early_riser.py`).
 
         Without a sleep window there is no night to read the moment against, so it lapses
-        the moment nobody at home is asleep any more - at the price that the rise brake does
-        nothing in such a house, which stands as an idea in `ROADMAP.md`.
+        the moment nobody at home is asleep any more. That the house has no moment left
+        then does not mean the rise brake does nothing: without a window it knows no night
+        condition and brakes whoever is up before the brake time on the brake's days
+        (`tests/test_early_riser.py`).
         """
         config = house()
         worlds = walk(

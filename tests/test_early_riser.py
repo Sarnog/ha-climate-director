@@ -32,6 +32,17 @@ layer does: `night.house_asleep_since` hands the moment to the next round. With 
 moment a case could be green while the binding layer had long forgotten that moment in
 that round - and then the test does not measure what a user goes through. The cases
 stand by their number in the test ids (wens2-1 through wens2-12).
+
+Eén reeks gevallen heeft geen slaapvenster: daar telt de slaapsensor de klok rond, en
+telt een bewoner op de remdagen vóór de remtijd niet als op, ook als het moment van het
+huis onbekend is. De prijs daarvan staat er met de andere kant naast: zonder venster is
+wie om half één nog op is terwijl het huis uit staat geremd, met venster niet.
+
+One series of cases has no sleep window: there the sleep sensor counts around the clock,
+and a resident on the brake's days before the brake time does not count as up, even when
+the house's moment is unknown. The price stands there with the other side beside it:
+without a window whoever is still up at half past midnight with the house off is braked,
+with a window is not.
 """
 
 from __future__ import annotations
@@ -97,8 +108,37 @@ def live_house(*, danny: bool = True, nancy: bool = False) -> DirectorConfig:
             ),
         ),
     )
-    seven = RiseBrake(at=time(7, 0), weekdays=WORKDAYS)
+    seven = brake_time()
     return with_brakes(config, danny=seven if danny else None, nancy=seven if nancy else None)
+
+
+def brake_time() -> RiseBrake:
+    """Return the brake of a working day: getting up before 07:00 does not start the house."""
+    return RiseBrake(at=time(7, 0), weekdays=WORKDAYS)
+
+
+def without_a_sleep_window(*, danny: bool = True, nancy: bool = False) -> DirectorConfig:
+    """Return the standard house, whose residents have no sleep window, with the brakes asked."""
+    return with_brakes(
+        house(),
+        danny=brake_time() if danny else None,
+        nancy=brake_time() if nancy else None,
+    )
+
+
+def with_a_sleep_window(*, danny: bool = True, nancy: bool = False) -> DirectorConfig:
+    """Return that same house with a sleep window of 21:00–08:00 for both residents."""
+    night = TimeWindow(start=time(21, 0), end=time(8, 0))
+    base = house()
+    base = replace(
+        base,
+        residents=tuple(replace(resident, sleep_window=night) for resident in base.residents),
+    )
+    return with_brakes(
+        base,
+        danny=brake_time() if danny else None,
+        nancy=brake_time() if nancy else None,
+    )
 
 
 def evening(day: int) -> datetime:
@@ -297,6 +337,65 @@ class TestTheCases:
         )
         found = shut(config, world)
         assert found and found[0] is Reason.EARLY_RISER
+
+
+class TestWithoutASleepWindow:
+    """Zonder slaapvenster telt de slaapsensor de klok rond: wie op is, staat op.
+
+    Without a sleep window the sleep sensor counts around the clock: whoever is up has
+    got up.
+    """
+
+    def test_wens2_2_without_a_sleep_window_danny_alone_gets_up_early(self) -> None:
+        """2: di 05:50, geen slaapvenster, Danny op en de enige thuis: `early_riser`.
+
+        Het moment van het huis is in deze ronde al weg, want er slaapt niemand thuis
+        meer, en toch remt de rem: zonder venster is er geen nacht om aan af te lezen.
+        """
+        config = without_a_sleep_window()
+        world = walk(config, [*ALONE, getting_up(TUE, 5, 50, nancy="away")])
+        assert world.asleep_since is None
+        found = shut(config, world)
+        assert found and found[0] is Reason.EARLY_RISER
+
+    def test_wens2_4_without_a_sleep_window_the_brake_is_over(self) -> None:
+        """4: di 07:05, geen slaapvenster, dezelfde lege kamer: het huis start."""
+        config = without_a_sleep_window()
+        world = walk(config, [*ALONE, getting_up(TUE, 7, 5, nancy="away")])
+        assert shut(config, world) == ()
+
+    def test_whoever_is_alone_up_at_half_past_twelve_is_braked_all_the_same(self) -> None:
+        """Zonder venster om 00:30 nog op terwijl het huis uit staat: `early_riser`.
+
+        Dit is de prijs van het besluit: zonder slaapvenster is er geen nacht om wie
+        opstaat van wie nog op is te onderscheiden, en telt deze bewoner op de remdagen
+        vóór de remtijd niet als op.
+        """
+        config = without_a_sleep_window()
+        world = walk(config, [*ALONE, (at(0, 30, day=TUE), up(TUE), away())])
+        assert world.asleep_since is None
+        found = shut(config, world)
+        assert found and found[0] is Reason.EARLY_RISER
+
+    def test_a_running_zone_without_a_sleep_window_keeps_running(self) -> None:
+        """Zonder venster en met een zone die al draait: de rem houdt niets tegen."""
+        config = without_a_sleep_window()
+        world = walk(config, [*ALONE, (at(0, 30, day=TUE), up(TUE), away())], running=True)
+        assert shut(config, world) == ()
+
+    def test_with_a_sleep_window_whoever_is_up_late_is_not_braked(self) -> None:
+        """De andere kant: mét venster is wie 's nachts nog op is geen opstaander.
+
+        Het huis heeft deze nacht niet geslapen - de één is op, de ander ligt er net in
+        - dus valt er geen nacht te lezen en remt de rem niet: het huis start gewoon.
+        """
+        config = with_a_sleep_window()
+        world = walk(
+            config,
+            [(at(23, 30, day=MON), up(MON), up(MON)), (at(0, 30, day=TUE), up(MON), bed(MON))],
+        )
+        assert world.asleep_since is None
+        assert shut(config, world) == ()
 
 
 class TestTheEdges:
