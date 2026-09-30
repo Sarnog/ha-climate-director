@@ -52,16 +52,6 @@ _CIRCUIT_REFUSALS = (
 )
 
 
-#: Redenen waarop een gedeeld apparaat de taak van een ándere zone uitvoert.
-#:
-#: Reasons on which a shared appliance carries out another zone's duty.
-_LOST_TO_ANOTHER_ZONE = (
-    Reason.CIRCUIT_CONFLICT_LOST,
-    Reason.CIRCUIT_AT_CAPACITY,
-    Reason.SHARED_SOURCE_TOOK_OVER,
-)
-
-
 def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = None) -> Plan:
     """Return the complete, consistent end state the installation should be in.
 
@@ -1640,10 +1630,11 @@ def _lost_to_another_zone(
     functie geeft de reden die daarbij hoort, zodat de zonebeslissing niet blijft
     zeggen dat zij een taak krijgt die het apparaat niet uitvoert.
 
-    Alleen een apparaat dat voor een ándere kamer regelt, of dat geweigerd is of
-    overgenomen, telt hier mee. Een stop van buitenaf - een openstaande deur, een
-    rooster - valt er bewust buiten: die zegt niets over welke kamer het apparaat
-    volgt, en hoort dus niet als circuitconflict te lezen.
+    Alleen een apparaat dat de tegenovergestelde taak draait telt hier mee: het
+    apparaat volgt dan een andere kamer. Een stop van buitenaf komt hier niet,
+    want die zet de zone haar verzoek al af - een openstaande deur of een
+    gesloten rooster laat `_collect_wishes` geen verzoek achter, dus er valt dan
+    geen `grant` meer te verliezen.
 
     `_collapse_shared` keeps one command per appliance. If one room asks for heat
     and another for cool, that appliance follows the room with the most claim,
@@ -1651,10 +1642,10 @@ def _lost_to_another_zone(
     returns the reason that goes with it, so the zone decision stops claiming a
     duty the appliance does not carry out.
 
-    Only an appliance regulating for a different room, or one that was refused or
-    taken over, counts here. A stop from outside - an open door, a schedule -
-    deliberately falls outside: it says nothing about which room the appliance
-    follows, so it should not read as a circuit conflict.
+    Only an appliance running the opposite duty counts here: it is then following
+    a different room. A stop from outside does not arrive here, because it
+    already drops the zone's request - an open door or a closed schedule leaves
+    `_collect_wishes` without a request, so there is no `grant` left to lose.
     """
     if grant is None or grant.family is ModeFamily.NEUTRAL:
         return None
@@ -1663,10 +1654,6 @@ def _lost_to_another_zone(
     )
     if surviving is None or family_of(surviving.hvac_mode) is grant.family:
         return None
-    if surviving.reason not in (*_LOST_TO_ANOTHER_ZONE, Reason.REGULATING):
-        return None
-    if surviving.reason in _LOST_TO_ANOTHER_ZONE:
-        return surviving.reason
     return Reason.CIRCUIT_CONFLICT_LOST
 
 

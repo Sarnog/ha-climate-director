@@ -442,6 +442,54 @@ class TestBuildingAnInstallationInTheWizard:
         finally:
             await stop_house(home)
 
+    async def test_the_settings_step_refuses_a_season_entity_source_without_an_entity(self) -> None:
+        """Het scherm weigert een seizoen dat nooit te lezen valt (M2).
+
+        De herkomst op *entiteit* zonder gekozen entiteit laat het seizoen
+        onbekend, en dan doet elke taak met een seizoensbeperking niets. Dit
+        scherm is de enige plek waar de gebruiker dat recht kan zetten, dus het
+        hoort te weigeren in plaats van het stil op te slaan.
+
+        The screen refuses a season that can never be read (M2). The source on
+        *entity* with no entity chosen leaves the season unknown, and then every
+        duty with a season restriction does nothing. This screen is the only
+        place the user can put it right, so it should refuse rather than store it
+        quietly.
+        """
+        home = await start_house(simple_installation(), states=cold())
+        try:
+            flow = home.hass.config_entries.options
+            result = await flow.async_init(home.entry.entry_id)
+            result = await flow.async_configure(result["flow_id"], {"next_step_id": "settings"})
+            assert result["step_id"] == "settings"
+
+            fields = {str(key): key for key in result["data_schema"].schema}
+            filled: dict[str, Any] = {}
+            # `season_entity` bewust niet ingevuld: het schema weigert een lege
+            # string al ("geen geldige entiteit"), dus de gebruiker die niets
+            # kiest stuurt het veld helemaal niet mee - en juist die weg moet dit
+            # scherm zelf afvangen.
+            #
+            # `season_entity` deliberately left unfilled: the schema already
+            # refuses an empty string ("not a valid entity"), so a user who picks
+            # nothing does not send the field at all - and that is the route this
+            # screen has to catch itself.
+            for name in fields:
+                if name == "season_source":
+                    filled[name] = "entity"
+                elif name == "season_entity":
+                    continue
+                elif name == "when_done":
+                    filled[name] = "keep"
+
+            result = await flow.async_configure(result["flow_id"], filled)
+            assert result["step_id"] == "settings", "het scherm hoort terug te komen"
+            assert result["errors"] == {"season_entity": "season_entity_missing"}
+            stored = home.entry.options["installation"].get("seasons", {})
+            assert stored.get("source") != "entity", "er is niets opgeslagen"
+        finally:
+            await stop_house(home)
+
     async def test_a_full_settings_save_keeps_optional_fields(self) -> None:
         """De echte interface stuurt voorgevulde selectors mee; die horen te overleven.
 

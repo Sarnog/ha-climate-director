@@ -312,10 +312,12 @@ FUNCTION_LIMIT = 80
 # band check on the zone screen. Both sides say the same thing, since
 # `test_random_installations.py` holds screen and `validate()` against each other.
 #
-# De verliezer van een gedeeld apparaat (M4): `engine/decide.py` 1735 → 1802 en
+# De verliezer van een gedeeld apparaat (M4): `engine/decide.py` 1735 → 1789 en
 # `_build_zone_decisions` 116 → 130 door `_lost_to_another_zone`, dat opzoekt welke opdracht
-# het gedeelde apparaat werkelijk kreeg, plus het `_LOST_TO_ANOTHER_ZONE`-rijtje redenen
-# waarop dat "jij krijgt het niet" betekent. De uitleg staat in de docstring van de helper
+# het gedeelde apparaat werkelijk kreeg. Die helper kijkt naar de taak en niet naar de reden
+# van die opdracht: een stop van buitenaf laat de zone haar verzoek al af, dus er valt dan geen
+# `grant` te verliezen - en een reden-onderscheid dat nergens te bereiken is hoort niet in de
+# code te staan (de coverage-poort wees het aan). De uitleg staat in de docstring van de helper
 # (Nederlands en Engels) en niet in de zonebeslissing zelf, zodat de functie die al een
 # uitzondering is zo weinig mogelijk groeit.
 #
@@ -360,7 +362,7 @@ FUNCTION_LIMIT = 80
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2272,
     "coordinator.py": 2042,
-    "engine/decide.py": 1802,
+    "engine/decide.py": 1789,
     "config_flow.py": 1492,
     "schemas.py": 893,
 }
