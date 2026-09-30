@@ -263,8 +263,9 @@ but never does anything:
 - an **empty name** — the name settles the internal id of a new zone;
 - a **target on the wrong side of the start point** — the appliance is then set
   to a temperature it need do nothing for;
-- **bands that touch or overlap**: the heating switch-off point sits at or above
-  the cooling switch-on point — the room would then heat and cool by turns;
+- **bands that touch or overlap**: the heating stop point sits at or above the
+  cooling start point, or the cooling stop point at or below the heating start
+  point — the room would then heat and cool by turns;
 - the zone set to **the room itself without a presence sensor**, or a zone that
   **may neither heat nor cool**.
 

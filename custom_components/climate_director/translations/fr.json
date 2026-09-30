@@ -474,7 +474,7 @@
       }
     },
     "error": {
-      "bands_overlap": "Les bandes du chauffage et du refroidissement se touchent ou se chevauchent : le point d'arrêt du chauffage se trouve au niveau ou au-dessus du point de démarrage du refroidissement. La pièce chaufferait et refroidirait alors tour à tour. Placez le point de démarrage du refroidissement au-dessus du point d'arrêt du chauffage, avec de la marge entre les deux.",
+      "bands_overlap": "Les bandes du chauffage et du refroidissement se touchent ou se chevauchent : le point d'arrêt du chauffage se trouve au niveau ou au-dessus du point de démarrage du refroidissement, ou le point d'arrêt du refroidissement se trouve au niveau ou en dessous du point de démarrage du chauffage. La pièce chaufferait et refroidirait alors tour à tour. Montez le point de démarrage du refroidissement ou réduisez une bande morte, pour garder de la marge entre les deux bandes.",
       "duplicate_priority": "Une autre pièce sur la même unité extérieure a déjà cette priorité. Deux pièces partageant un nombre font dépendre le résultat de leur nom ; choisissez-en un libre.",
       "presence_gate_without_sensor": "Cette zone fonctionne selon la présence dans la pièce, mais aucun capteur de présence n'est choisi. La pièce compte alors comme vide pour de bon et la zone ne fonctionnera plus jamais. Choisissez un capteur, ou laissez le foyer décider.",
       "required": "Ce champ est nécessaire pour enregistrer. Remplissez-le, ou choisissez « Abandonner et revenir » en bas pour partir sans enregistrer.",

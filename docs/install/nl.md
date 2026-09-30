@@ -263,9 +263,9 @@ er wel staat maar nooit iets doet:
 - een **lege naam** — de naam bepaalt het interne id van een nieuwe zone;
 - een **streeftemperatuur aan de verkeerde kant van het startpunt** — het
   apparaat krijgt dan een temperatuur waar het niets voor hoeft te doen;
-- **banden die elkaar raken of overlappen**: het uitschakelpunt van verwarmen
-  ligt op of boven het aanpunt van koelen — dan zou de kamer om de beurt
-  verwarmen en koelen;
+- **banden die elkaar raken of overlappen**: het stoppunt van verwarmen ligt op
+  of boven het startpunt van koelen, of het stoppunt van koelen op of onder het
+  startpunt van verwarmen — dan zou de kamer om de beurt verwarmen en koelen;
 - de zone op **de ruimte zelf zonder aanwezigheidssensor**, of een zone die
   **niet mag verwarmen en niet mag koelen**.
 

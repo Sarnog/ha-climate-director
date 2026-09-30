@@ -474,7 +474,7 @@
       }
     },
     "error": {
-      "bands_overlap": "The heating and cooling bands touch or overlap: the heating switch-off point sits at or above the cooling switch-on point. The room would then heat and cool by turns. Put the cooling switch-on point above the heating switch-off point, with room in between.",
+      "bands_overlap": "The heating and cooling bands touch or overlap: the heating switch-off point sits at or above the cooling switch-on point, or the cooling switch-off point sits at or below the heating switch-on point. The room would then heat and cool by turns. Raise the cooling switch-on point or narrow a dead band, so there is room between the two bands.",
       "duplicate_priority": "Another room on the same outdoor unit already has this priority. Two rooms sharing a number leaves the outcome hanging on their name, so pick a free one.",
       "presence_gate_without_sensor": "This zone is set to run on room presence, but no presence sensor is chosen. The room would then count as empty for good and the zone would never run again. Pick a sensor, or let the household decide.",
       "required": "This field is needed to save. Fill it in, or choose “Discard and go back” at the bottom to leave without saving.",

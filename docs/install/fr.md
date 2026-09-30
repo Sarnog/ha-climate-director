@@ -272,8 +272,9 @@ qui existe mais ne fait jamais rien :
 - une **cible du mauvais côté du point de démarrage** — l'appareil reçoit alors
   une température pour laquelle il n'a rien à faire ;
 - des **bandes qui se touchent ou se chevauchent** : le point d'arrêt du chauffage
-  se trouve au niveau ou au-dessus du point de démarrage du refroidissement — la
-  pièce chaufferait et refroidirait alors tour à tour ;
+  se trouve au niveau ou au-dessus du point de démarrage du refroidissement, ou le
+  point d'arrêt du refroidissement au niveau ou en dessous du point de démarrage
+  du chauffage — la pièce chaufferait et refroidirait alors tour à tour ;
 - la zone réglée sur **la pièce elle-même sans capteur de présence**, ou une
   zone qui **ne peut ni chauffer ni refroidir**.
 

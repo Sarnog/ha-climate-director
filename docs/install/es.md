@@ -267,8 +267,9 @@ ahí pero nunca hace nada:
 - un **nombre vacío** — el nombre fija el id interno de una zona nueva;
 - un **objetivo en el lado equivocado del punto de arranque** — el aparato
   recibe entonces una temperatura para la que no tiene nada que hacer;
-- **bandas que se tocan o se solapan**: el punto de apagado de calentar está en el
-  punto de arranque de enfriar o por encima — la habitación calentaría y enfriaría
+- **bandas que se tocan o se solapan**: el punto de parada de calentar está en el
+  punto de arranque de enfriar o por encima, o el de enfriar está en el punto de
+  arranque de calentar o por debajo — la habitación calentaría y enfriaría
   entonces por turnos;
 - la zona en **la habitación en sí sin sensor de presencia**, o una zona que
   **no puede calentar ni enfriar**.

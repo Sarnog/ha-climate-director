@@ -267,8 +267,9 @@ zwar da ist, aber nie etwas tut:
 - ein **leerer Name** — der Name legt die interne ID einer neuen Zone fest;
 - eine **Zieltemperatur auf der falschen Seite des Startpunkts** — das Gerät
   bekommt dann eine Temperatur, für die es nichts tun muss;
-- **Bänder, die sich berühren oder überlappen**: der Ausschaltpunkt des Heizens
-  liegt auf oder über dem Einschaltpunkt des Kühlens — der Raum würde dann
+- **Bänder, die sich berühren oder überlappen**: Der Stopppunkt des Heizens
+  liegt auf oder über dem Startpunkt des Kühlens, oder der Stopppunkt des
+  Kühlens auf oder unter dem Startpunkt des Heizens — der Raum würde dann
   abwechselnd heizen und kühlen;
 - die Zone auf **den Raum selbst ohne Anwesenheitssensor**, oder eine Zone, die
   **weder heizen noch kühlen darf**.

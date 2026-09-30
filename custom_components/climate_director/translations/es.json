@@ -474,7 +474,7 @@
       }
     },
     "error": {
-      "bands_overlap": "Las bandas de calentar y enfriar se tocan o se solapan: el punto de apagado de calentar está en el punto de arranque de enfriar o por encima. Entonces la habitación calentaría y enfriaría por turnos. Pon el punto de arranque de enfriar por encima del punto de apagado de calentar, con espacio entre los dos.",
+      "bands_overlap": "Las bandas de calentar y enfriar se tocan o se solapan: el punto de apagado de calentar está en el punto de arranque de enfriar o por encima, o el punto de apagado de enfriar está en el punto de arranque de calentar o por debajo. Entonces la habitación calentaría y enfriaría por turnos. Sube el punto de arranque de enfriar o estrecha una banda muerta, para que quede espacio entre las dos bandas.",
       "duplicate_priority": "Otra habitación en la misma unidad exterior ya tiene esta prioridad. Dos habitaciones con el mismo número hacen que el resultado dependa de su nombre; elige uno libre.",
       "presence_gate_without_sensor": "Esta zona funciona según la presencia en la habitación, pero no hay ningún sensor de presencia elegido. La habitación contará como vacía para siempre y la zona no funcionará nunca más. Elige un sensor, o deja que decida la casa.",
       "required": "Este campo hace falta para guardar. Rellénalo, o elige «Descartar y volver» abajo para salir sin guardar.",

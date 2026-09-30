@@ -474,7 +474,7 @@
       }
     },
     "error": {
-      "bands_overlap": "De banden van verwarmen en koelen raken elkaar of overlappen: het uitschakelpunt van verwarmen ligt op of boven het aanpunt van koelen. Dan zou de kamer om de beurt verwarmen en koelen. Zet het aanpunt van koelen boven het uitschakelpunt van verwarmen, met ruimte ertussen.",
+      "bands_overlap": "De banden van verwarmen en koelen raken elkaar of overlappen: het uitschakelpunt van verwarmen ligt op of boven het aanpunt van koelen, of het uitschakelpunt van koelen ligt op of onder het aanpunt van verwarmen. Dan zou de kamer om de beurt verwarmen en koelen. Zet het aanpunt van koelen hoger of maak een dode band smaller, zodat er ruimte tussen de twee banden blijft.",
       "duplicate_priority": "Een andere kamer op dezelfde buitenunit heeft deze prioriteit al. Twee kamers met hetzelfde nummer laten de uitkomst van hun naam afhangen, dus kies een vrij nummer.",
       "presence_gate_without_sensor": "Deze zone staat op aanwezigheid in de ruimte, maar er is geen aanwezigheidssensor gekozen. De kamer telt dan voorgoed als leeg en de zone doet nooit meer iets. Kies een sensor, of laat het huishouden beslissen.",
       "required": "Dit veld is nodig om te bewaren. Vul het in, of kies onderaan “Verwerpen en teruggaan” om weg te gaan zonder op te slaan.",

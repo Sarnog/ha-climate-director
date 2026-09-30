@@ -474,7 +474,7 @@
       }
     },
     "error": {
-      "bands_overlap": "Die Bänder von Heizen und Kühlen berühren sich oder überlappen: Der Ausschaltpunkt des Heizens liegt auf oder über dem Einschaltpunkt des Kühlens. Dann würde der Raum abwechselnd heizen und kühlen. Leg den Einschaltpunkt fürs Kühlen über den Ausschaltpunkt fürs Heizen, mit Abstand dazwischen.",
+      "bands_overlap": "Die Bänder von Heizen und Kühlen berühren sich oder überlappen: Der Ausschaltpunkt des Heizens liegt auf oder über dem Einschaltpunkt des Kühlens, oder der Ausschaltpunkt des Kühlens liegt auf oder unter dem Einschaltpunkt des Heizens. Dann würde der Raum abwechselnd heizen und kühlen. Leg den Einschaltpunkt fürs Kühlen höher oder mach eine Totzone schmaler, damit zwischen den beiden Bändern Abstand bleibt.",
       "duplicate_priority": "Ein anderer Raum an demselben Außengerät hat diese Priorität bereits. Zwei Räume mit derselben Zahl lassen das Ergebnis von ihrem Namen abhängen, wähle also eine freie.",
       "presence_gate_without_sensor": "Diese Zone läuft nach Anwesenheit im Raum, aber es ist kein Anwesenheitssensor gewählt. Der Raum gilt dann dauerhaft als leer und die Zone läuft nie wieder. Wähl einen Sensor, oder lass den Haushalt entscheiden.",
       "required": "Dieses Feld wird zum Speichern gebraucht. Fülle es aus, oder wähle unten „Verwerfen und zurück“, um ohne Speichern zu gehen.",
