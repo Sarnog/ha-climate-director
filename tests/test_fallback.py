@@ -17,6 +17,7 @@ electricity. Hence the decision carries what was skipped.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime, timedelta
 
 import pytest
@@ -45,6 +46,9 @@ COOL = ModeSettings(target=22.0, start_at=24.0, hysteresis=1.0)
 
 GAS = "climate.gas_thermostat"
 AIRCO = "climate.living_room_airco"
+KETEL = "climate.ketel"
+KLEP = "climate.klep"
+OUD = "climate.klep_oud"
 
 
 def living_room(*, cool: bool = True) -> Zone:
@@ -64,6 +68,59 @@ def living_room(*, cool: bool = True) -> Zone:
         ),
         heat=HEAT,
         cool=COOL if cool else None,
+    )
+
+
+def two_rooms_on_one_boiler() -> DirectorConfig:
+    """Return a living room on the boiler and an attic with a valve of its own.
+
+    De zolder hangt aan dezelfde ketel als de woonkamer en heeft daarnaast een
+    eigen klep: raakt die ketel overgedragen, dan zakt de zolder naar de klep.
+
+    The attic hangs off the same boiler as the living room and has a valve of its
+    own beside it: once that boiler is handed over, the attic drops to the valve.
+    """
+    return DirectorConfig(
+        zones=(
+            Zone(
+                zone_id="woonkamer",
+                name="Woonkamer",
+                indoor_sensor="sensor.woonkamer",
+                sources=(Source(source_id="w_ketel", entity_id=KETEL, role=SourceRole.HEAT_ONLY),),
+                heat=HEAT,
+            ),
+            Zone(
+                zone_id="zolder",
+                name="Zolder",
+                indoor_sensor="sensor.zolder",
+                sources=(
+                    Source(
+                        source_id="z_ketel",
+                        entity_id=KETEL,
+                        priority=1,
+                        role=SourceRole.HEAT_ONLY,
+                    ),
+                    Source(
+                        source_id="z_klep",
+                        entity_id=KLEP,
+                        priority=2,
+                        role=SourceRole.HEAT_ONLY,
+                    ),
+                ),
+                heat=HEAT,
+            ),
+        ),
+    )
+
+
+def attic_with_a_broken_first_choice() -> DirectorConfig:
+    """Return the same house, with a broken valve ahead of the boiler for the attic."""
+    config = two_rooms_on_one_boiler()
+    attic = config.zone("zolder")
+    assert attic is not None
+    broken = Source(source_id="z_oud", entity_id=OUD, priority=0, role=SourceRole.HEAT_ONLY)
+    return DirectorConfig(
+        zones=(config.zone("woonkamer"), replace(attic, sources=(broken, *attic.sources)))
     )
 
 
@@ -683,3 +740,84 @@ class TestTheCircuitsAreResolvedAtLeastOnce:
         plan = decide(config, world)
         assert len(plan.circuits) == 1
         assert plan.circuits[0].circuit_id == "buitenunit"
+
+
+class TestAHandedOverApplianceIsNoStandIn:
+    """N3: een overgedragen apparaat is geen kandidaat en staat niet "op reserve".
+
+    N3: a handed-over appliance is no candidate and does not stand "on reserve".
+
+    De "op reserve"-sensor hoort een storing te melden, geen besluit van de
+    gebruiker zelf. Een huisbreed overgedragen ketel valt daarom wel uit de keuze -
+    de zolder zakt naar zijn eigen klep - maar niet in de lijst, terwijl een
+    onbereikbare bron die vóór de ketel in de voorkeur staat er gewoon in blijft.
+
+    The "on reserve" sensor is meant to report a fault, not a decision of the user.
+    A house-wide handed-over boiler therefore drops out of the choice - the attic
+    sinks to its own valve - but not into the list, while an unreachable source
+    ahead of the boiler in preference simply stays in it.
+    """
+
+    def test_the_handed_over_boiler_is_not_reported(self) -> None:
+        plan = decide(
+            two_rooms_on_one_boiler(),
+            make_world(
+                indoor={"woonkamer": 18.0, "zolder": 18.0},
+                outdoor=5.0,
+                climates={KETEL: climate("off"), KLEP: climate("off")},
+                zone_overrides={"woonkamer": True},
+            ),
+        )
+        decision = plan.decision_for("zolder")
+        assert decision is not None
+        assert decision.source_id == "z_klep", "de overgedragen ketel is geen kandidaat"
+        assert decision.passed_over == (), "een overdracht is geen storing"
+        assert decision.on_fallback is False
+
+    def test_a_broken_source_ahead_of_it_is_still_reported(self) -> None:
+        """De tegenproef: de onbereikbare bron vóór de overgedragen ketel blijft staan."""
+        plan = decide(
+            attic_with_a_broken_first_choice(),
+            make_world(
+                indoor={"woonkamer": 18.0, "zolder": 18.0},
+                outdoor=5.0,
+                climates={
+                    KETEL: climate("off"),
+                    KLEP: climate("off"),
+                    OUD: climate("off", available=False),
+                },
+                zone_overrides={"woonkamer": True},
+            ),
+        )
+        decision = plan.decision_for("zolder")
+        assert decision is not None
+        assert decision.source_id == "z_klep"
+        assert decision.passed_over == ("z_oud",)
+        assert decision.on_fallback is True
+
+    def test_a_handed_over_boiler_that_is_unreachable_too_is_not_reported(self) -> None:
+        """Ook een onbereikbare overgedragen ketel is geen storing van de zolder.
+
+        Een onbereikbare bron telt alleen mee als hij *niet* overgedragen is: de
+        overdracht van de gebruiker gaat eraan vooraf, en de "op reserve"-sensor
+        hoort niet aan te gaan voor iets waar de director niet aankomt.
+
+        An unreachable handed-over boiler is no fault of the attic either. An
+        unreachable source only counts when it is *not* handed over: the user's
+        handover comes first, and the "on reserve" sensor should not come on for
+        something the director does not touch.
+        """
+        plan = decide(
+            two_rooms_on_one_boiler(),
+            make_world(
+                indoor={"woonkamer": 18.0, "zolder": 18.0},
+                outdoor=5.0,
+                climates={KETEL: climate("off", available=False), KLEP: climate("off")},
+                zone_overrides={"woonkamer": True},
+            ),
+        )
+        decision = plan.decision_for("zolder")
+        assert decision is not None
+        assert decision.source_id == "z_klep"
+        assert decision.passed_over == (), "een overdracht gaat voor een storing"
+        assert decision.on_fallback is False

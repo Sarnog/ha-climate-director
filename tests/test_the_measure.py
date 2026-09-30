@@ -392,10 +392,22 @@ FUNCTION_LIMIT = 80
 # `_async_on_hass_started` with the explanation of why nothing may be written before
 # the restore. That last part lives in `state_store.py::_async_save_state` and
 # `_async_save_pending_state`; that module stays below its measure.
+#
+# Een overgedragen apparaat is geen kandidaat en staat niet "op reserve" (N3):
+# `engine/decide.py` 1806 → 1811 en `_build_zone_decisions` 130 → 135. Wat groeit is
+# de uitleg bij `handed_over` in `_build_zone_decisions` en het extra argument in de
+# aanroep van `sources.passed_over`; `engine/sources.py` (het nieuwe argument en de
+# uitsluiting in de lijst) blijft onder zijn maat.
+#
+# A handed-over appliance is no candidate and does not stand "on reserve" (N3):
+# `engine/decide.py` 1806 → 1811 and `_build_zone_decisions` 130 → 135. What grows is
+# the explanation beside `handed_over` in `_build_zone_decisions` and the extra
+# argument in the call to `sources.passed_over`; `engine/sources.py` (the new argument
+# and the exclusion in the list) stays below its measure.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2272,
     "coordinator.py": 2065,
-    "engine/decide.py": 1806,
+    "engine/decide.py": 1811,
     "config_flow.py": 1492,
     "schemas.py": 893,
 }
@@ -409,7 +421,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_collect_wishes"): 137,
     ("coordinator.py", "_refusal_data"): 119,
     ("coordinator.py", "_notice_hand"): 117,
-    ("engine/decide.py", "_build_zone_decisions"): 130,
+    ("engine/decide.py", "_build_zone_decisions"): 135,
     ("engine/decide.py", "_manual_conflict"): 103,
     ("state_store.py", "_async_restore_state"): 104,
     ("engine/hysteresis.py", "_candidate"): 97,

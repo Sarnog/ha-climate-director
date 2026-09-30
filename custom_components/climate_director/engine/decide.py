@@ -1693,9 +1693,13 @@ def _build_zone_decisions(
     refused_by_circuit = refused_by_circuit or {}
     decisions: list[ZoneDecision] = []
     # Een huisbreed overgedragen apparaat is geen storing maar een overdracht:
-    # het hoort dus niet als "op reserve" in `passed_over` (anker 11).
+    # het hoort dus niet als "op reserve" in `passed_over` (anker 11). Het valt
+    # daarom alleen uit de keuze, via het eigen argument `handed_over`, en niet in
+    # de lijst zoals een geweigerd of onbereikbaar apparaat.
     # A house-wide handed-over appliance is no fault but a handover: it therefore
-    # does not belong in `passed_over` as "on reserve" (anchor 11).
+    # does not belong in `passed_over` as "on reserve" (anchor 11). It drops out of
+    # the choice only, through its own `handed_over` argument, and not into the list
+    # like a refused or unreachable appliance.
     handed_over = _handed_over(config, world)
 
     for zone in config.zones:
@@ -1795,9 +1799,10 @@ def _build_zone_decisions(
                     _serving(previous, zone.zone_id),
                     config.outdoor_hysteresis,
                     zone_blocked,
-                    refused_by_circuit.get(zone.zone_id, frozenset()) | handed_over,
+                    refused_by_circuit.get(zone.zone_id, frozenset()),
                     only,
                     unbounded,
+                    handed_over=handed_over,
                 ),
                 would_want=would,
             )

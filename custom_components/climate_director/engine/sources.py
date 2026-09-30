@@ -154,6 +154,7 @@ def passed_over(
     refused: frozenset[str] = frozenset(),
     only: frozenset[str] | None = None,
     unbounded: frozenset[str] = frozenset(),
+    handed_over: frozenset[str] = frozenset(),
 ) -> tuple[str, ...]:
     """Return the preferred sources this duty had to skip.
 
@@ -181,9 +182,29 @@ def passed_over(
     because an opening elsewhere in the house stops them (`blocked`) - and that
     outrank what is running now. What was not chosen because another appliance
     simply fits better is therefore absent - that is no fault.
+
+    `handed_over` zijn de apparaten die een overgedragen zone huisbreed met rust
+    laat. Ze zijn geen kandidaat - de director komt er niet aan - maar ze horen
+    ook niet in de lijst: er mankeert niets aan, en de "op reserve"-sensor hoort
+    niet aan te gaan voor een besluit van de gebruiker zelf. Ze vallen daarom
+    alleen uit de keuze, niet in de melding.
+
+    `handed_over` are the appliances a handed-over zone leaves alone house-wide.
+    They are no candidate - the director does not touch them - but they do not
+    belong in the list either: nothing is wrong with them, and the "on reserve"
+    sensor should not come on for a decision of the user. They therefore drop out
+    of the choice only, not into the report.
     """
     chosen = select(
-        zone, family, world, serving, margin, blocked, refused, only=only, unbounded=unbounded
+        zone,
+        family,
+        world,
+        serving,
+        margin,
+        blocked,
+        refused | handed_over,
+        only=only,
+        unbounded=unbounded,
     )
     if chosen is None:
         return ()
@@ -192,6 +213,7 @@ def passed_over(
         source.source_id
         for source in sorted(zone.sources, key=lambda item: (item.priority, item.source_id))
         if (source.priority, source.source_id) < rank
+        and source.entity_id not in handed_over
         and _suitable(source, family, world)
         and (
             not world.climate(source.entity_id).available

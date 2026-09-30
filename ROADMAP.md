@@ -254,6 +254,13 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   *Opstaan zet het huis pas aan vanaf* bij zo'n bewoner zonder slaapvenster elke remdag
   van middernacht tot de remtijd: er valt geen opstaan te zien. Een melding in het scherm
   *Bewoner* zou beide zichtbaar maken.
+- **Een schakelaar of annulering tijdens het opstarten wordt niet apart onthouden** — bij
+  het herstel blijft de opgeslagen looptijd de baas over de stand die de schakelaar
+  meekreeg. Zet iemand de overdracht tijdens het opstarten van Home Assistant uit of aan
+  terwijl er een looptijd in de opslag staat, dan wint die opgeslagen looptijd: een
+  lopende looptijd komt terug, een verlopen looptijd vervalt. Alleen de actie
+  `set_override` met een nog lopende looptijd houdt stand. Een aparte administratie van
+  wat de gebruiker zelf deed zou dit precies maken.
 
 ## Would have
 
@@ -510,6 +517,12 @@ The worked-out design proposals for everything below live in
   other way round, such a resident's own *Getting up only starts the house from* without
   a sleep window brakes every brake day from midnight until the brake time: there is no
   getting up to see. A notice on the *Resident* screen would make both visible.
+- **A switch or cancellation during the startup is not remembered separately** — at the
+  restore the stored duration stays in charge of the state the switch was given. When
+  somebody turns the handover off or on during Home Assistant's startup while a duration
+  sits in the store, that stored duration wins: a running one comes back, an expired one
+  lapses. Only the `set_override` action with a duration still running holds its ground.
+  A separate record of what the user did would make this exact.
 
 ## Would have
 
