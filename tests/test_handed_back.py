@@ -906,6 +906,13 @@ class TestItSurvivesARestart:
                 self._precondition_bypass: set[str] = set()
                 self._handed_back: dict[str, date] = {}
                 self._store = FakeStore()
+                # Vóór het herstel onthoudt `_async_save_state` alleen dát er iets
+                # te bewaren viel; deze stand-in zet de vlag op zijn beginwaarde.
+                #
+                # Before the restore `_async_save_state` only remembers *that*
+                # something needed saving; this stand-in sets the flag to its
+                # starting value.
+                self._save_pending = False
                 # Wat het herstel van het thuiskomstmoment en de foutmeldingen
                 # aanraken: een installatie zonder bewoners, geen toestanden en een
                 # naam. Zonder bewoners komt er geen moment terug.

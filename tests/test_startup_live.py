@@ -47,6 +47,10 @@ from homeassistant.util import dt as dt_util
 LIVING = "climate.woonkamer"
 SENSOR = "sensor.woonkamer"
 OUTDOOR = "sensor.buiten"
+ATTIC = "climate.zolder"
+ATTIC_SENSOR = "sensor.zolder"
+PERSON = "person.danny"
+MODES = {"hvac_modes": ["off", "heat", "cool"], "current_temperature": 18.5}
 
 #: De sleutel waaronder de coordinator zijn stand bewaart, met de entry-id van
 #: dit harnas (`live`).
@@ -79,6 +83,12 @@ def write_store(config_dir: str, data: dict[str, Any]) -> None:
     }
     with open(store_path(config_dir), "w", encoding="utf-8") as handle:
         json.dump(payload, handle)
+
+
+def read_store(config_dir: str) -> dict[str, Any]:
+    """Return the data in the state file, as a later reader would see it."""
+    with open(store_path(config_dir), encoding="utf-8") as handle:
+        return json.load(handle)["data"]
 
 
 def installation() -> dict[str, Any]:
@@ -253,5 +263,280 @@ class TestWithoutAnythingToRestore:
             assert reason_of(home) == "regulating"
             assert home.state(LIVING) == "heat"
             assert [call[0] for call in home.climate_calls()], "de ketel is nooit aangestuurd"
+        finally:
+            await stop_house(home)
+
+
+def two_rooms() -> dict[str, Any]:
+    """Return two rooms with an appliance of their own, and one resident.
+
+    Twee zones met elk een eigen apparaat, zodat een hand in de ene zone niets
+    over de andere zegt; de bewoner houdt het huis bewoond, zodat een hand niet om
+    die reden vervalt.
+
+    Two zones with an appliance of their own, so that a hand in one zone says
+    nothing about the other; the resident keeps the house occupied, so a hand does
+    not lapse for that reason.
+    """
+    return {
+        "zones": [
+            zone(
+                "woonkamer",
+                sources=[source("w_living", LIVING, role="heat_cool")],
+                heat=settings(21.0, 20.0),
+            ),
+            zone(
+                "zolder",
+                sources=[source("z_attic", ATTIC, role="heat_cool")],
+                heat=settings(21.0, 20.0),
+            ),
+        ],
+        "residents": [{"resident_id": "danny", "presence_entity": PERSON}],
+    }
+
+
+def two_room_world(
+    *, living: str = "off", attic: str = "off", person: str = "home"
+) -> dict[str, tuple[str, dict[str, Any]]]:
+    """Return a cold two-room world with the resident at home, or away."""
+    return {
+        SENSOR: ("18.5", {"unit_of_measurement": "°C"}),
+        ATTIC_SENSOR: ("18.5", {"unit_of_measurement": "°C"}),
+        LIVING: (living, dict(MODES)),
+        ATTIC: (attic, dict(MODES)),
+        PERSON: (person, {}),
+    }
+
+
+class TestASaveDuringTheStartupLeavesTheStoreAlone:
+    """Wat tijdens het opstarten genoteerd wordt wist de opslag niet.
+
+    What is noted during the startup does not wipe the store.
+
+    Een bewoner die tijdens het opstarten thuiskomt, laat de coordinator bewaren -
+    en zonder de poort schreef die schrijfactie het bestand vóór het herstel vol
+    met de half opgebouwde staat van dit moment. Dan was de hand van de gebruiker
+    weg en stond het apparaat na de start weer aan.
+    """
+
+    async def test_the_stored_hand_survives_a_homecoming_during_the_startup(self) -> None:
+        config_dir = new_config_dir()
+        today = dt_util.now().date().isoformat()
+        write_store(config_dir, {"handed_back": {"woonkamer": today}})
+
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(person="not_home"),
+        )
+        try:
+            home.clear_calls()
+            home.hass.states.async_set(PERSON, "home", {})
+            await settle_the_debouncer(home)
+
+            assert read_store(config_dir)["handed_back"] == {"woonkamer": today}, (
+                "er is vóór het herstel in de opslag geschreven"
+            )
+
+            await start_up(home)
+
+            assert home.state(LIVING) == "off", "het apparaat hoort uit te blijven"
+            assert reason_of(home) == "manual_override"
+        finally:
+            await stop_house(home)
+
+
+class TestAHandDuringTheStartupJoinsTheStoredOne:
+    """Een hand van tijdens het opstarten komt naast de bewaarde hand te staan.
+
+    A hand from during the startup stands beside the stored hand.
+
+    De opslag houdt de woonkamer stil en iemand zet tijdens het opstarten de zolder
+    uit. Het herstel voegt samen in plaats van te vervangen, en wat tijdens het
+    opstarten bleef liggen wordt ná het herstel één keer weggeschreven - dus staan
+    beide zones in het bestand en krijgt geen van beide apparaten een commando.
+    """
+
+    async def test_both_hands_end_up_in_the_store(self) -> None:
+        config_dir = new_config_dir()
+        today = dt_util.now().date().isoformat()
+        write_store(config_dir, {"handed_back": {"woonkamer": today}})
+
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(attic="heat"),
+        )
+        try:
+            home.clear_calls()
+            home.hass.states.async_set(ATTIC, "off", dict(MODES))
+            await settle_the_debouncer(home)
+
+            await start_up(home)
+
+            assert set(home.coordinator._handed_back) == {"woonkamer", "zolder"}, (
+                "het herstel en de hand van tijdens het opstarten zijn niet samengevoegd"
+            )
+            assert home.climate_calls() == [], (
+                "geen van beide apparaten hoort een commando te krijgen"
+            )
+            assert set(read_store(config_dir)["handed_back"]) == {"woonkamer", "zolder"}, (
+                "wat tijdens het opstarten bleef liggen is nooit weggeschreven"
+            )
+        finally:
+            await stop_house(home)
+
+
+class TestAPreconditionDuringTheStartupJoinsTheStoredOne:
+    """Een vooruit-verzoek van tijdens het opstarten komt naast het bewaarde.
+
+    A pre-conditioning request from during the startup stands beside the stored one.
+
+    De opslag draagt een verzoek voor de woonkamer; tijdens het opstarten vraagt
+    iemand vooruit voor de zolder. Beide horen in de eerste beslissing te zitten,
+    en de zolder hoort er na de start ook warm van te worden.
+    """
+
+    async def test_both_requests_stand_in_the_first_round(self) -> None:
+        config_dir = new_config_dir()
+        until = dt_util.now() + timedelta(minutes=40)
+        write_store(config_dir, {"until": {"woonkamer": until.isoformat()}})
+
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(),
+        )
+        try:
+            home.clear_calls()
+            await home.call(
+                "climate_director", "precondition", {"zone_ids": ["zolder"], "minutes": 30}
+            )
+            await settle_the_debouncer(home)
+
+            await start_up(home)
+
+            assert set(home.coordinator._precondition) == {"woonkamer", "zolder"}, (
+                "het herstel en het verzoek van tijdens het opstarten zijn niet samengevoegd"
+            )
+            assert home.state(LIVING) == "heat"
+            assert home.state(ATTIC) == "heat"
+        finally:
+            await stop_house(home)
+
+
+class TestAFreshOverrideDuringTheStartupSurvivesAnExpiredOne:
+    """Een verse overdracht van tijdens het opstarten overleeft een verlopen looptijd.
+
+    A fresh handover from during the startup survives an expired duration.
+
+    De opslag draagt een override die allang verlopen is; tijdens het opstarten zet
+    iemand de zone met de actie `set_override` een uur op warm. Het herstel voegt
+    samen: de verlopen looptijd komt niet terug, maar de verse overdracht mag er
+    ook niet door worden gewist.
+    """
+
+    async def test_the_fresh_override_stays(self) -> None:
+        config_dir = new_config_dir()
+        past = (dt_util.now() - timedelta(hours=2)).isoformat()
+        write_store(
+            config_dir,
+            {"override_until": {"woonkamer": past}, "override_started": {"woonkamer": past}},
+        )
+
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(),
+        )
+        try:
+            await home.call(
+                "climate_director",
+                "set_override",
+                {"zone_id": "woonkamer", "hvac_mode": "heat", "temperature": 23, "minutes": 60},
+            )
+            await settle_the_debouncer(home)
+
+            await start_up(home)
+
+            assert home.coordinator.zone_overrides.get("woonkamer") is True
+            assert "woonkamer" in home.coordinator.zone_override_until
+            assert reason_of(home) == "manual_override"
+            assert home.state(LIVING) == "heat"
+        finally:
+            await stop_house(home)
+
+
+class TestNothingToSaveCostsNoWrite:
+    """Een herstart waarin niets te bewaren viel schrijft niets weg.
+
+    A restart in which nothing needed saving writes nothing away.
+
+    De tegenproef bij het geval met de thuiskomer: daar viel er wél iets te
+    bewaren. Hier alleen een sensorwijziging, en dan hoort de flush geen
+    schrijfactie te plannen - elke herstart zou anders het bestand opnieuw
+    schrijven zonder dat er iets veranderde.
+    """
+
+    async def test_the_flush_plans_no_write(self, monkeypatch) -> None:
+        home = await start_house(
+            installation(),
+            core_state=CoreState.starting,
+            states=cold_world(),
+        )
+        try:
+            scheduled: list[object] = []
+            monkeypatch.setattr(
+                home.coordinator._store,
+                "async_delay_save",
+                lambda writer, _delay: scheduled.append(writer),
+            )
+
+            home.hass.states.async_set(SENSOR, "18.4", {"unit_of_measurement": "°C"})
+            await settle_the_debouncer(home)
+            await start_up(home)
+
+            assert scheduled == [], "er is weggeschreven zonder dat er iets te bewaren viel"
+        finally:
+            await stop_house(home)
+
+
+class TestAnEntryRemovedDuringTheStartupLeavesNoFile:
+    """Een installatie die tijdens het opstarten weer weggaat schrijft niets terug.
+
+    An installation removed again during the startup writes nothing back.
+
+    De poort staat nog dicht, dus het herstel draait nooit; de afbraakpoort
+    (`_closing`) houdt de schrijfactie tegen, ook de uitgestelde. Zou die er toch
+    komen, dan schrijft hij het bestand terug ná `async_remove_entry`.
+    """
+
+    async def test_no_state_file_is_left_behind(self) -> None:
+        config_dir = new_config_dir()
+        today = dt_util.now().date().isoformat()
+        write_store(config_dir, {"handed_back": {"woonkamer": today}})
+
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(attic="heat"),
+        )
+        try:
+            home.hass.states.async_set(ATTIC, "off", dict(MODES))
+            await settle_the_debouncer(home)
+
+            await home.hass.config_entries.async_remove(home.entry.entry_id)
+            await home.hass.async_block_till_done()
+            await asyncio.sleep(1.5)
+            await home.hass.async_block_till_done()
+
+            assert not os.path.exists(store_path(config_dir)), (
+                "een uitgestelde schrijfactie heeft het bestand teruggezet"
+            )
         finally:
             await stop_house(home)

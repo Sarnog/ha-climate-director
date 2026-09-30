@@ -378,9 +378,23 @@ FUNCTION_LIMIT = 80
 # explanation; the functions themselves stay below their measure, and
 # `engine/world.py` (the field) and `world_builder.py` (the split) stay below their
 # measure.
+#
+# Niets wegschrijven vóór het herstel (N2): `coordinator.py` 2042 → 2065 en zijn
+# `__init__` 236 → 246 door het veld `_save_pending` (protocolregel, beginwaarde en
+# korte uitleg) en de stap `_async_save_pending_state` in `_async_on_hass_started`
+# met de uitleg erbij waarom er vóór het herstel niets geschreven mag worden. Dat
+# laatste woont in `state_store.py::_async_save_state` en
+# `_async_save_pending_state`; die module blijft onder zijn maat.
+#
+# No write before the restore (N2): `coordinator.py` 2042 → 2065 and its `__init__`
+# 236 → 246 through the `_save_pending` field (protocol line, starting value and a
+# short explanation) and the `_async_save_pending_state` step in
+# `_async_on_hass_started` with the explanation of why nothing may be written before
+# the restore. That last part lives in `state_store.py::_async_save_state` and
+# `_async_save_pending_state`; that module stays below its measure.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2272,
-    "coordinator.py": 2042,
+    "coordinator.py": 2065,
     "engine/decide.py": 1806,
     "config_flow.py": 1492,
     "schemas.py": 893,
@@ -389,7 +403,7 @@ MODULE_EXCEPTIONS: dict[str, int] = {
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_build_commands"): 211,
     ("engine/decide.py", "_generator_commands"): 192,
-    ("coordinator.py", "__init__"): 236,
+    ("coordinator.py", "__init__"): 246,
     ("engine/models.py", "_rule_zones"): 164,
     ("engine/constraints.py", "resolve"): 128,
     ("engine/decide.py", "_collect_wishes"): 137,

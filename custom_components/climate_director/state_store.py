@@ -189,7 +189,44 @@ class _StateStoreMixin(_CoordinatorBase):
         # that would resurrect the file after `async_remove_entry`.
         if getattr(self, "_closing", False):
             return
+        # Vóór het herstel wordt er niets geschreven. HA's `Store.async_load`
+        # leest een wachtende schrijfactie in plaats van het bestand, dus een
+        # schrijfactie tijdens het opstarten laat het herstel op de half
+        # opgebouwde staat van dit moment uitkomen - en dan is het oordeel van de
+        # gebruiker weg. Alleen dát er iets te bewaren viel wordt onthouden;
+        # `_async_save_pending_state` schrijft het één keer weg ná het herstel.
+        #
+        # Nothing is written before the restore. HA's `Store.async_load` reads a
+        # pending write instead of the file, so a write during the startup makes
+        # the restore come out on this moment's half-built state - and then the
+        # user's verdict is gone. Only the fact *that* something needed saving is
+        # remembered; `_async_save_pending_state` writes it away once after the
+        # restore.
+        if not getattr(self, "_restored", True):
+            self._save_pending = True
+            return
         self._store.async_delay_save(self._store_payload, 1)
+
+    @callback
+    def _async_save_pending_state(self) -> None:
+        """Write away once what was noted before the restore finished.
+
+        Wat `_async_save_state` tijdens het opstarten liet liggen gaat hier in één
+        keer de deur uit, ná het herstel: dan is het samengevoegd met wat de
+        listeners intussen noteerden, en overschrijft het de opslag niet met een
+        half opgebouwde staat. Zonder iets te bewaren gebeurt er niets - een
+        herstart met alleen een sensorwijziging hoort geen schrijfactie te kosten.
+
+        What `_async_save_state` left standing during the startup goes out here in
+        one go, after the restore: by then it is merged with what the listeners
+        noted in the meantime, and it does not overwrite the store with a
+        half-built state. Without anything to save nothing happens - a restart with
+        only a sensor change should cost no write.
+        """
+        if not self._save_pending:
+            return
+        self._save_pending = False
+        self._async_save_state()
 
     async def _async_restore_state(self) -> None:
         """Read back what was standing before the restart.
@@ -310,6 +347,11 @@ class _StateStoreMixin(_CoordinatorBase):
         staan. Dat is geen reden om de opslagversie te verhogen - er valt niets
         te migreren aan een sleutel die er niet was.
 
+        Het herstel **voegt samen**: een zone die tijdens het opstarten al een
+        override met een lopende looptijd kreeg blijft zoals die is - anders zou
+        een verlopen opgeslagen looptijd de verse overdracht van de gebruiker
+        wissen.
+
         An expired duration does not come back: time ran on while Home Assistant
         was away, and carrying out yesterday's expiry choice after the fact is
         worse than forgetting it. The handover itself then lapses too: the
@@ -320,6 +362,10 @@ class _StateStoreMixin(_CoordinatorBase):
         unknown, and the dashboard leaves that override's progress at zero. That
         is no reason to raise the storage version - there is nothing to migrate
         about a key that was never there.
+
+        The restore **merges**: a zone that already got an override with a
+        duration still running during the startup stays as it is - otherwise an
+        expired stored duration would wipe the user's fresh handover.
         """
         if not hasattr(self, "zone_override_until"):
             # Een stand-in zonder override-staat (tests) laadt gewoon wat hij kent.
@@ -330,9 +376,15 @@ class _StateStoreMixin(_CoordinatorBase):
         when_raw = stored.get("override_when_done")
         entity_raw = stored.get("override_entity")
         known_zones = {zone.zone_id for zone in self.config.zones}
+        restored: set[str] = set()
         if isinstance(until_raw, Mapping):
             for zone_id, raw in until_raw.items():
                 if zone_id not in known_zones:
+                    continue
+                live = self.zone_override_until.get(zone_id)
+                if live is not None and now < live:
+                    # Een verse overdracht van tijdens het opstarten niet wissen.
+                    # Do not wipe a fresh handover from during the startup.
                     continue
                 until = _stored_time(raw)
                 if until is None or not now < until:
@@ -340,20 +392,21 @@ class _StateStoreMixin(_CoordinatorBase):
                     continue
                 self.zone_override_until[zone_id] = until
                 self.zone_overrides[zone_id] = True
+                restored.add(zone_id)
         if isinstance(started_raw, Mapping):
             for zone_id, raw in started_raw.items():
-                if zone_id not in self.zone_override_until:
+                if zone_id not in restored:
                     continue
                 started = _stored_time(raw)
                 if started is not None:
                     self.zone_override_started[zone_id] = started
         if isinstance(when_raw, Mapping):
             for zone_id, raw in when_raw.items():
-                if zone_id in self.zone_override_until and isinstance(raw, str):
+                if zone_id in restored and isinstance(raw, str):
                     self.zone_override_when_done[zone_id] = raw
         if isinstance(entity_raw, Mapping):
             for zone_id, raw in entity_raw.items():
-                if zone_id in self.zone_override_until and isinstance(raw, str):
+                if zone_id in restored and isinstance(raw, str):
                     self.zone_override_entity[zone_id] = raw
         self._override_wake_at_first_expiry()
 

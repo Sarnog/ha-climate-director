@@ -185,6 +185,7 @@ class CoordinatorSurface(Protocol):
     _handed_back: dict[str, date]
     _home_since: dict[str, datetime]
     _asleep_since: datetime | None
+    _save_pending: bool
     _precipitation_seen_at: datetime | None
     _cancel_precondition_wake: CALLBACK_TYPE | None
     _cancel_override_wake: CALLBACK_TYPE | None
@@ -410,6 +411,16 @@ class ClimateDirectorCoordinator(
         `_async_restore_state` and before the first decision, and
         `_async_evaluate` waits for it.
         """
+        self._save_pending = False
+        """Wat tijdens het opstarten te bewaren viel gaat ná het herstel één keer weg.
+
+        Wat `_async_save_state` vóór het herstel niet mocht schrijven, staat hier;
+        `state_store._async_save_pending_state` haalt het op.
+
+        What needed saving during the startup goes out once after the restore. What
+        `_async_save_state` was not allowed to write before the restore stands here;
+        `state_store._async_save_pending_state` picks it up.
+        """
         self._family_since: dict[str, datetime | None] = {}
         self._family_seen: dict[str, ModeFamily] = {}
         self._home_since: dict[str, datetime] = {}
@@ -548,12 +559,23 @@ class ClimateDirectorCoordinator(
         goes up in the `finally` as well: after one broken reading the director
         must not fall silent for good, which is worse than a world without the
         stored hand.
+
+        Hier gaat ook één keer naar buiten wat tijdens het opstarten bleef liggen:
+        `_async_save_state` schreef niet, want HA's `Store.async_load` leest een
+        wachtende schrijfactie in plaats van het bestand. Dat schrijven staat
+        daarom ná het herstel, en ook in de `finally`.
+
+        One write also goes out here for what stayed behind during the startup:
+        `_async_save_state` did not write, since HA's `Store.async_load` reads a
+        pending write instead of the file. That write therefore stands after the
+        restore, and in the `finally` as well.
         """
         try:
             await self._async_restore_state()
             self._note_precipitation_now()
             self._note_home_now()
             self._restored = True
+            self._async_save_pending_state()
             await self._async_evaluate()
         except Exception:
             _LOGGER.exception("The first decision of %s failed", self.name)
@@ -566,6 +588,7 @@ class ClimateDirectorCoordinator(
             # director would never decide again after one broken reading, and
             # that is worse than a world without the stored hand.
             self._restored = True
+            self._async_save_pending_state()
             self._schedule_clock_reeval()
 
     def tracked_entities(self) -> set[str]:

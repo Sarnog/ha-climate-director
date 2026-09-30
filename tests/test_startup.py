@@ -44,6 +44,13 @@ class StandIn:
         # The real coordinator's startup gate; the stand-in carries it too, so the
         # test can follow it.
         self._restored = False
+        self.saved_pending = 0
+        # Het opslaggeheugen van de echte coördinator: alleen de vlag en de stap,
+        # want deze stand-in heeft geen opslag. De toets volgt of de stap loopt.
+        #
+        # The real coordinator's store memory: only the flag and the step, since
+        # this stand-in has no store. The test follows whether the step runs.
+        self._save_pending = False
 
     def tracked_entities(self) -> set[str]:
         """Eén gevolgde entiteit, zodat het opzetten de listener echt aanraakt.
@@ -70,6 +77,20 @@ class StandIn:
 
     async def _async_restore_state(self) -> None:
         self.restored += 1
+
+    def _async_save_pending_state(self) -> None:
+        """Deze stand-in bewaart niets; de stap hoort wel op het pad.
+
+        `_async_on_hass_started` schrijft ná het herstel één keer weg wat tijdens
+        het opstarten bleef liggen. Zonder opslag valt er niets te schrijven, maar
+        de toets volgt of die stap werkelijk loopt.
+
+        This stand-in stores nothing; the step does belong on the path.
+        `_async_on_hass_started` writes once after the restore for what stayed
+        behind during the startup. Without a store there is nothing to write, but
+        the test follows whether that step really runs.
+        """
+        self.saved_pending += 1
 
     def _note_precipitation_now(self) -> None:
         self.precipitation_noted += 1
