@@ -283,3 +283,52 @@ class TestASharedSourceIsHandedOverToo:
         assert attic.granted is ModeFamily.NEUTRAL
         assert attic.reason is Reason.CIRCUIT_CONFLICT_LOST
         assert SHARED not in {command.entity_id for command in plan.commands}
+
+    def test_a_running_handed_over_appliance_holds_its_capacity_slot(self) -> None:
+        """Het overgedragen apparaat bezet zijn plek op het circuit.
+
+        De capaciteit hing aan een eigen controle in `constraints._keeps_claiming`;
+        sinds anker 11 loopt dat via `standing`, en deze toets houdt vast dat die
+        weg hetzelfde doet: de ketel draait, niemand stuurt hem, en de zolder mag
+        er niet naast gaan draaien.
+
+        The handed-over appliance occupies its slot on the circuit. Capacity used
+        to hang on a check of its own in `constraints._keeps_claiming`; since
+        anchor 11 that runs through `standing`, and this test pins down that the
+        new route does the same: the boiler runs, nobody steers it, and the attic
+        may not start beside it.
+        """
+        config = DirectorConfig(
+            zones=(
+                shared_room("living_room"),
+                shared_room(
+                    "attic",
+                    Source("attic_andere", "climate.andere", role=SourceRole.HEAT_ONLY),
+                    priority=1,
+                ),
+            ),
+            circuits=(
+                Circuit(
+                    circuit_id="c",
+                    name="C",
+                    units=(SHARED, "climate.andere"),
+                    max_concurrent_units=1,
+                ),
+            ),
+        )
+        plan = decide(
+            config,
+            make_world(
+                indoor={"living_room": 18.0, "attic": 18.0},
+                outdoor=5.0,
+                climates={SHARED: climate(MODE_HEAT), "climate.andere": climate(MODE_OFF)},
+                zone_overrides={"living_room": True},
+            ),
+        )
+        attic = plan.decision_for("attic")
+        assert attic is not None
+        assert attic.granted is ModeFamily.NEUTRAL
+        assert attic.reason is Reason.CIRCUIT_AT_CAPACITY
+        commands = {command.entity_id: command.hvac_mode for command in plan.commands}
+        assert commands.get("climate.andere") == MODE_OFF, "de zolderunit mag niet gaan draaien"
+        assert SHARED not in commands, "de overgedragen ketel krijgt niets"

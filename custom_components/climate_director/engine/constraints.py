@@ -438,13 +438,12 @@ def _standing_claims(
         for entity_id in circuit.units
         if entity_id not in asking
         and world.climate(entity_id).running
-        and _keeps_claiming(config, world, circuit, entity_id, standing)
+        and _keeps_claiming(config, circuit, entity_id, standing)
     )
 
 
 def _keeps_claiming(
     config: DirectorConfig,
-    world: WorldState,
     circuit: Circuit,
     entity_id: str,
     standing: frozenset[str] = frozenset(),
@@ -452,9 +451,11 @@ def _keeps_claiming(
     """Return whether this running unit holds its place whatever we grant.
 
     Drie soorten doen dat, en geen van drieën vraagt deze ronde iets: een unit
-    die in geen enkele zone staat, een unit in een overgedragen zone - daar
-    stuurt de director niets naartoe, ook geen uit - en een handbediend
-    apparaat, dat alleen opzij gaat als het iemand in de weg staat.
+    die in geen enkele zone staat, een unit die deze ronde met opzet niets
+    krijgt (`standing`, uit `_standing_firm`) - daar zit ook de overgedragen
+    unit in, want een override draagt het apparaat zelf over en niet de zone -
+    en een handbediend apparaat, dat alleen opzij gaat als het iemand in de weg
+    staat.
 
     Dat laatste wordt hier niet nagerekend maar aangenomen. Gaat het apparaat
     deze ronde alsnog opzij, dan is er één beoordelingsronde lang een plek te
@@ -463,9 +464,11 @@ def _keeps_claiming(
     werk waar hij niet op gebouwd is, en dat duurt niet één ronde.
 
     Three kinds do, and none of the three asks for anything this round: a unit
-    sitting in no zone at all, a unit in a zone that has been handed over -
-    the director sends that nothing, an off included - and a hand-operated
-    appliance, which only steps aside when it is in somebody's way.
+    sitting in no zone at all, a unit that deliberately gets nothing this round
+    (`standing`, from `_standing_firm`) - which includes the handed-over unit,
+    since an override hands the appliance itself over rather than the zone - and
+    a hand-operated appliance, which only steps aside when it is in somebody's
+    way.
 
     That last one is assumed rather than worked out here. If the appliance does
     step aside this round, there is one evaluation round with a place too few,
@@ -481,8 +484,6 @@ def _keeps_claiming(
         if source.entity_id == entity_id
     ]
     if not owners:
-        return True
-    if any(world.overridden(zone.zone_id) for zone, _ in owners):
         return True
     return all(not source.autostart for _, source in owners)
 
