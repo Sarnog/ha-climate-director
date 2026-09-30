@@ -872,7 +872,7 @@ Assistant gaat dus niet verloren — maar er wordt niet beslist voordat het hers
 heeft: `_async_evaluate` doet niets zolang de vlag `_restored` niet staat, en die vlag gaat
 aan in `_async_on_hass_started`, ná het herstel van de opslag en vóór de eerste beslissing.
 Zonder die poort besliste de director op een half huis: de sensoren die tijdens het laden
-binnenkomen wekken de debouncer, en een apparaat dat iemand gisteren met de hand uitzette
+binnenkomen wekken de debouncer, en een apparaat dat iemand eerder die dag met de hand uitzette
 stond dan al weer aan voordat `_handed_back` gelezen was — de rest van de dag. Noteren
 (`_notice_home`, `_notice_hand`, de neerslag) mag intussen wel, en het herstel **voegt
 samen** in plaats van te vervangen, zodat een hand van tijdens het opstarten niet stil
@@ -1100,6 +1100,40 @@ ze dekken - staan in `AGENTS.md`, en dat bestand staat in `.gitignore`.
   CI kan het lezen.
 - Risico: twee plekken voor dezelfde afspraak. De verhuizing haalt de afspraken in
   dezelfde wijziging uit `AGENTS.md` weg.
+
+**De generator gelijktrekken met de override-overdracht.** Eén regel voor een
+overgedragen apparaat, of het nu als bron of als `Generator` onder de zone hangt.
+- Engine: `decide._generator_commands` leest dezelfde overdracht als `_handed_over`: een
+  generator die een zone onder override bedient krijgt geen enkel commando meer, ook geen
+  aan vanuit een andere zone.
+- Prijs: de andere zones op die generator krijgen die tijd geen warmte van hem, precies
+  zoals bij een gedeelde bron (anker 11).
+- Bewaakt: de generatorvariant in `tests/test_override_handover.py` legt "aanzetten mag"
+  vast en verandert mee; de bronvariant ernaast is het voorbeeld.
+
+**Vakantieagenda: alle overlappende afspraken lezen.** De toestand van een
+agenda-entiteit toont maar één lopende afspraak.
+- HA-laag: `_calendar_says_holiday` vraagt `calendar.get_events` op over het huidige
+  moment en zoekt het trefwoord in elke afspraak die dan loopt, in plaats van alleen de
+  toestand van de entiteit te lezen.
+- Risico: een service-aanroep met antwoord per beslisronde; de uitkomst hoort bewaard te
+  worden tot de agenda-entiteit zelf verandert.
+
+**Een time-out op de service calls.** Een hangende cloudkoppeling houdt de beslislock
+vast.
+- HA-laag: `applier._execute` begrenst elke aanroep met `asyncio.timeout`; een aanroep die
+  niet op tijd terugkomt telt als mislukt, met de bestaande regel: een mislukte stop laat
+  de overige stops door en alleen de starts vervallen.
+- Open keuze: één vaste grens voor alle apparaten, of een grens per bron.
+
+**Waarschuwen als de streeftemperatuur op het uitschakelpunt ligt.** De taak eindigt pas
+als de ruimtesensor het uitschakelpunt haalt.
+- Config: het zonescherm en `validate()` noemen een streeftemperatuur die op of voorbij
+  het uitschakelpunt ligt (`start_at + hysteresis` bij verwarmen, `start_at - hysteresis` bij
+  koelen) als waarschuwing, niet als weigering: het kan werken, maar alleen als het
+  apparaat zelf verder regelt dan de ruimtesensor.
+- Risico: een gangbare instelling valt hier zelf onder; de melding legt uit en weigert
+  niets.
 
 #### Could have
 
@@ -2202,7 +2236,7 @@ not lost — but no decision is taken before the restore has run: `_async_evalua
 nothing while the `_restored` flag is unset, and that flag goes up in
 `_async_on_hass_started`, after the restore of the store and before the first decision.
 Without that gate the director decided on half a house: the sensors arriving during loading
-wake the debouncer, and an appliance somebody switched off by hand yesterday was switched on
+wake the debouncer, and an appliance somebody switched off by hand earlier that day was switched on
 again before `_handed_back` had been read — for the rest of the day. Noting (`_notice_home`,
 `_notice_hand`, the precipitation) is allowed in the meantime, and the restore **merges**
 rather than replaces, so a hand from during the startup does not quietly disappear under an
@@ -2427,6 +2461,39 @@ what they cover - stand in `AGENTS.md`, and that file is in `.gitignore`.
   repo and CI can read it.
 - Risk: two places for the same agreement. The move takes the agreements out of
   `AGENTS.md` in the same change.
+
+**Align the generator with the override handover.** One rule for a handed-over
+appliance, whether it hangs under the zone as a source or as a `Generator`.
+- Engine: `decide._generator_commands` reads the same handover as `_handed_over`: a
+  generator serving a zone under override gets no command at all any more, not even an
+  on from another zone.
+- Price: the other zones on that generator get no heat from it for that time, exactly as
+  with a shared source (anchor 11).
+- Guarded: the generator variant in `tests/test_override_handover.py` pins "switching on
+  is allowed" and changes along; the source variant beside it is the example.
+
+**Holiday calendar: read every overlapping appointment.** A calendar entity's state
+shows only one running appointment.
+- HA layer: `_calendar_says_holiday` asks `calendar.get_events` over the current moment
+  and looks for the keyword in every appointment running then, rather than reading only
+  the entity's state.
+- Risk: a service call with a response per decision round; the outcome should be kept
+  until the calendar entity itself changes.
+
+**A timeout on the service calls.** A hanging cloud link holds the decision lock.
+- HA layer: `applier._execute` bounds every call with `asyncio.timeout`; a call that does
+  not come back in time counts as failed, under the existing rule: a failed stop lets the
+  remaining stops through and only the starts lapse.
+- Open choice: one fixed bound for every appliance, or a bound per source.
+
+**Warn when the target temperature sits on the switch-off point.** The duty only ends
+once the room sensor reaches the switch-off point.
+- Config: the zone screen and `validate()` name a target at or beyond the switch-off point
+  (`start_at + hysteresis` for heating, `start_at - hysteresis` for cooling) as a warning,
+  not a refusal: it can work, but only when the appliance itself regulates further than
+  the room sensor.
+- Risk: a common setting falls under this itself; the notice explains and refuses
+  nothing.
 
 #### Could have
 

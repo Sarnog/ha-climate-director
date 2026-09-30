@@ -7,7 +7,7 @@ is nog bezig: herstelde standen, automatiseringen en andere integraties komen pa
 daarna. Wat er dan wél al gebeurt is een toestandswijziging van een gevolgde
 entiteit - een sensor die binnenkomt terwijl de integraties laden. Die wekt de
 debouncer, en zonder een poort besloot de director een seconde later op een half
-herstelde wereld: een apparaat dat iemand gisteren met de hand uitzette stond dan
+herstelde wereld: een apparaat dat iemand eerder die dag met de hand uitzette stond dan
 al weer aan, en bleef de rest van de dag aan. `tests/test_startup.py` legt de
 poort in de coordinator vast; dit bestand meet hem in een echte Home Assistant,
 met het harnas in `CoreState.starting` in plaats van meteen op `running`.
@@ -17,7 +17,7 @@ busy: restored states, automations and other integrations come only afterwards.
 What does already happen is a state change of a tracked entity - a sensor arriving
 while the integrations load. That wakes the debouncer, and without a gate the
 director decided a second later on a half-restored world: an appliance somebody
-switched off by hand yesterday stood on again and stayed on for the rest of the
+switched off by hand earlier that day stood on again and stayed on for the rest of the
 day. `tests/test_startup.py` pins the gate down in the coordinator; this file
 measures it inside a real Home Assistant, with the harness in `CoreState.starting`
 rather than on `running` at once.
