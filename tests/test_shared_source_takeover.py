@@ -551,3 +551,43 @@ class TestAHandOperatedSourceIsNoTrigger:
         living_rows = (*living.sources, airco_source("living_attic_airco", ATTIC_AIRCO))
         config = replace(base, zones=(replace(living, sources=living_rows), base.zones[1]))
         assert takeover_module.in_force(config, world()) != ()
+
+
+class TestTheTakeoverIsPerDuty:
+    """Een overname geldt per taak, niet voor het hele gebied (anker 12).
+
+    A takeover holds per duty, not for the whole area (anchor 12).
+
+    Valt een bron weg die alleen kan koelen, dan is dat geen aanleiding om het
+    gebied van verwarmen te voorzien: de ketel zou de hele winter op gas gaan
+    omdat er een stekker uit ligt, en haar buitenvenster wordt daarvoor
+    opzijgezet. De andere kant is het bestaande scenario - valt een airco weg die
+    ook verwarmt, dan neemt de ketel het verwarmen nog steeds over - en dat is
+    hieronder de tegenproef.
+    """
+
+    COOLER = "climate.attic_cooler"
+
+    def _config(self) -> DirectorConfig:
+        return house(
+            attic_extra=(
+                Source("attic_cooler", self.COOLER, priority=0, role=SourceRole.COOL_ONLY),
+            )
+        )
+
+    def _world(self):
+        return world(
+            attic_available=True,
+            extra={self.COOLER: climate("off", available=False)},
+        )
+
+    def test_a_cooling_only_source_gives_no_heating_takeover(self) -> None:
+        assert takeover_module.in_force(self._config(), self._world()) == ()
+
+    def test_the_area_keeps_its_own_sources(self) -> None:
+        plan = decide(self._config(), self._world())
+        assert modes(plan)[LIVING_AIRCO] == MODE_HEAT, "de woonkamer regelt zichzelf"
+
+    def test_a_heating_source_still_gives_a_heating_takeover(self) -> None:
+        """De tegenproef: een airco die ook verwarmt geeft wél een overname."""
+        assert takeover_module.in_force(house(), world()) != ()

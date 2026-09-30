@@ -121,9 +121,21 @@ def in_force(config: DirectorConfig, world: WorldState) -> tuple[Takeover, ...]:
             continue
         # `areas()` levert alleen apparaten met een bronrij, en elke rol dekt
         # minstens één taak: dit apparaat heeft er dus altijd een.
-        if not _dropped_out(config, world, entity_id, zones, _delay(config, entity_id)):
+        dropped = _dropped_out(config, world, entity_id, zones, _delay(config, entity_id))
+        # Alleen de taken die de weggevallen bron zelf kon leveren (anker 12).
+        # Valt een bron weg die alleen kan koelen, dan is dat geen aanleiding om
+        # het gebied van verwarmen te voorzien: de ketel zou de hele winter op
+        # gas gaan omdat er een stekker uit ligt, en haar buitenvenster wordt
+        # daarvoor opzijgezet.
+        #
+        # Only the duties the dropped-out source could deliver itself (anchor
+        # 12). When a source that can only cool drops out, that is no reason to
+        # provide the area with heating: the boiler would go on gas all winter
+        # because a plug came out, and its outdoor window is set aside for it.
+        families = _families(config, entity_id) & dropped
+        if not families:
             continue
-        found.append(Takeover(entity_id, zones, _families(config, entity_id)))
+        found.append(Takeover(entity_id, zones, families))
     return tuple(found)
 
 
@@ -294,8 +306,18 @@ def _dropped_out(
     entity_id: str,
     zones: frozenset[str],
     delay: timedelta,
-) -> bool:
-    """Return whether a source in this area has been unreachable long enough.
+) -> frozenset[ModeFamily]:
+    """Return the duties this area is missing because a source dropped out.
+
+    Het antwoord is een verzameling taken en geen ja/nee: een bron die alleen
+    kan koelen kan haar taak niet overdragen aan een apparaat dat alleen kan
+    verwarmen, en andersom. `in_force` houdt daarom alleen de taken over die de
+    overnemer zelf aankan.
+
+    The answer is a set of duties rather than a yes/no: a source that can only
+    cool cannot hand its duty to an appliance that can only heat, and the other
+    way round. `in_force` therefore keeps only the duties the taker-over can
+    deliver itself.
 
     Onbereikbaar is wat de wereld onbereikbaar noemt (`ClimateState.available`):
     `unavailable`, `unknown`, of een entiteit die er niet is. Een apparaat dat
@@ -321,6 +343,7 @@ def _dropped_out(
     on the row, not on the appliance - a second row of the same appliance with
     `autostart` under another room does count.
     """
+    dropped: set[ModeFamily] = set()
     for zone, source in config.sources():
         if zone.zone_id not in zones or source.entity_id == entity_id:
             continue
@@ -329,6 +352,9 @@ def _dropped_out(
         state = world.climate(source.entity_id)
         if state.available:
             continue
-        if state.changed_at is None or world.now - state.changed_at >= delay:
-            return True
-    return False
+        if state.changed_at is not None and world.now - state.changed_at < delay:
+            continue
+        dropped |= {
+            family for family in (ModeFamily.HEAT, ModeFamily.COOL) if source.supports(family)
+        }
+    return frozenset(dropped)
