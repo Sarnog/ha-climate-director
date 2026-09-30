@@ -52,6 +52,16 @@ _CIRCUIT_REFUSALS = (
 )
 
 
+#: Redenen waarop een gedeeld apparaat de taak van een ándere zone uitvoert.
+#:
+#: Reasons on which a shared appliance carries out another zone's duty.
+_LOST_TO_ANOTHER_ZONE = (
+    Reason.CIRCUIT_CONFLICT_LOST,
+    Reason.CIRCUIT_AT_CAPACITY,
+    Reason.SHARED_SOURCE_TOOK_OVER,
+)
+
+
 def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = None) -> Plan:
     """Return the complete, consistent end state the installation should be in.
 
@@ -1617,6 +1627,49 @@ def _command_order(config: DirectorConfig, command: UnitCommand) -> tuple[int, s
     return (rank, command.entity_id)
 
 
+def _lost_to_another_zone(
+    commands: tuple[UnitCommand, ...],
+    request: constraints.Request,
+    grant: constraints.Grant | None,
+) -> Reason | None:
+    """Return why this zone does not get its duty, or `None` when it does.
+
+    `_collapse_shared` houdt per apparaat één opdracht over. Vraagt de ene kamer
+    warmte en de andere koelte, dan volgt dat apparaat de kamer met de meeste
+    voorrang, en houdt de andere kamer een `grant` over die niet gebeurt. Deze
+    functie geeft de reden die daarbij hoort, zodat de zonebeslissing niet blijft
+    zeggen dat zij een taak krijgt die het apparaat niet uitvoert.
+
+    Alleen een apparaat dat voor een ándere kamer regelt, of dat geweigerd is of
+    overgenomen, telt hier mee. Een stop van buitenaf - een openstaande deur, een
+    rooster - valt er bewust buiten: die zegt niets over welke kamer het apparaat
+    volgt, en hoort dus niet als circuitconflict te lezen.
+
+    `_collapse_shared` keeps one command per appliance. If one room asks for heat
+    and another for cool, that appliance follows the room with the most claim,
+    and the other room is left with a `grant` that does not happen. This function
+    returns the reason that goes with it, so the zone decision stops claiming a
+    duty the appliance does not carry out.
+
+    Only an appliance regulating for a different room, or one that was refused or
+    taken over, counts here. A stop from outside - an open door, a schedule -
+    deliberately falls outside: it says nothing about which room the appliance
+    follows, so it should not read as a circuit conflict.
+    """
+    if grant is None or grant.family is ModeFamily.NEUTRAL:
+        return None
+    surviving = next(
+        (command for command in commands if command.entity_id == request.source.entity_id), None
+    )
+    if surviving is None or family_of(surviving.hvac_mode) is grant.family:
+        return None
+    if surviving.reason not in (*_LOST_TO_ANOTHER_ZONE, Reason.REGULATING):
+        return None
+    if surviving.reason in _LOST_TO_ANOTHER_ZONE:
+        return surviving.reason
+    return Reason.CIRCUIT_CONFLICT_LOST
+
+
 def _build_zone_decisions(
     config: DirectorConfig,
     world: WorldState,
@@ -1704,6 +1757,20 @@ def _build_zone_decisions(
                     granted=ModeFamily.NEUTRAL,
                     source_id=request.source.source_id,
                     reason=Reason.SHARED_SOURCE_TOOK_OVER,
+                    closed_gates=shut.get(zone.zone_id, ()),
+                    would_want=would,
+                )
+            )
+            continue
+        lost = _lost_to_another_zone(commands, request, grant)
+        if lost is not None:
+            decisions.append(
+                ZoneDecision(
+                    zone_id=zone.zone_id,
+                    wanted=request.family,
+                    granted=ModeFamily.NEUTRAL,
+                    source_id=request.source.source_id,
+                    reason=lost,
                     closed_gates=shut.get(zone.zone_id, ()),
                     would_want=would,
                 )

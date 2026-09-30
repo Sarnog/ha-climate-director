@@ -300,6 +300,20 @@ FUNCTION_LIMIT = 80
 # function itself - a comment line counts physically and would push the function over
 # the limit.
 #
+# De verliezer van een gedeeld apparaat (M4): `engine/decide.py` 1735 → 1802 en
+# `_build_zone_decisions` 116 → 130 door `_lost_to_another_zone`, dat opzoekt welke opdracht
+# het gedeelde apparaat werkelijk kreeg, plus het `_LOST_TO_ANOTHER_ZONE`-rijtje redenen
+# waarop dat "jij krijgt het niet" betekent. De uitleg staat in de docstring van de helper
+# (Nederlands en Engels) en niet in de zonebeslissing zelf, zodat de functie die al een
+# uitzondering is zo weinig mogelijk groeit.
+#
+# The loser of a shared appliance (M4): `engine/decide.py` 1735 → 1802 and
+# `_build_zone_decisions` 116 → 130 through `_lost_to_another_zone`, which looks up which
+# command the shared appliance really got, plus the `_LOST_TO_ANOTHER_ZONE` tuple of reasons
+# on which that means "you do not get it". The explanation sits in the helper's docstring
+# (Dutch and English) rather than in the zone decision itself, so the function that is
+# already an exception grows as little as possible.
+#
 # De override-overdracht (H2): `engine/decide.py` 1677 → 1735 door `_handed_over`, de
 # ene plek die bepaalt welke apparaten een overgedragen zone heeft overgedragen, met
 # vijf aanroepen (`_collect_wishes`, `_resolve_with_fallbacks`, `_standing_firm`,
@@ -334,7 +348,7 @@ FUNCTION_LIMIT = 80
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2227,
     "coordinator.py": 2042,
-    "engine/decide.py": 1735,
+    "engine/decide.py": 1802,
     "config_flow.py": 1457,
     "schemas.py": 893,
 }
@@ -348,7 +362,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_collect_wishes"): 137,
     ("coordinator.py", "_refusal_data"): 119,
     ("coordinator.py", "_notice_hand"): 117,
-    ("engine/decide.py", "_build_zone_decisions"): 116,
+    ("engine/decide.py", "_build_zone_decisions"): 130,
     ("engine/decide.py", "_manual_conflict"): 103,
     ("state_store.py", "_async_restore_state"): 104,
     ("engine/hysteresis.py", "_candidate"): 97,

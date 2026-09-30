@@ -25,6 +25,7 @@ from custom_components.climate_director.engine import (
     MODE_HEAT,
     MODE_OFF,
     DirectorConfig,
+    HeatingLayout,
     ModeFamily,
     ModeSettings,
     Reason,
@@ -574,3 +575,70 @@ def test_a_setpoint_outside_the_appliance_range_is_clamped() -> None:
     assert command is not None
     assert command.hvac_mode == MODE_HEAT
     assert command.temperature == 30.0
+
+
+SHARED_HEAT_COOL = "climate.wp"
+
+
+class TestTheZoneThatLosesTheSharedAppliance:
+    """Een gedeeld apparaat volgt één kamer; de andere meldt wat zij krijgt.
+
+    A shared appliance follows one room; the other reports what it gets.
+
+    Vraagt de ene kamer warmte en de andere koelte op hetzelfde apparaat, dan
+    houdt `_collapse_shared` één opdracht over: die van de kamer met de meeste
+    voorrang. De andere kamer hield tot nu toe haar `grant` vast en meldde een
+    taak die het apparaat niet uitvoerde - precies de melding waar niemand iets
+    aan heeft, want de kamer bleef koud of warm zonder dat er iets te zien was.
+    """
+
+    def _config(self) -> DirectorConfig:
+        heat = ModeSettings(target=21.0, start_at=20.0, hysteresis=1.0)
+        cool = ModeSettings(target=24.0, start_at=25.0, hysteresis=1.0)
+        return DirectorConfig(
+            zones=(
+                Zone(
+                    zone_id="noord",
+                    name="Noord",
+                    indoor_sensor="sensor.noord",
+                    sources=(Source("noord_wp", SHARED_HEAT_COOL, role=SourceRole.HEAT_COOL),),
+                    heat=heat,
+                    cool=cool,
+                ),
+                Zone(
+                    zone_id="zuid",
+                    name="Zuid",
+                    indoor_sensor="sensor.zuid",
+                    priority=1,
+                    sources=(Source("zuid_wp", SHARED_HEAT_COOL, role=SourceRole.HEAT_COOL),),
+                    heat=heat,
+                    cool=cool,
+                ),
+            ),
+            heating_layout=HeatingLayout.CENTRAL,
+        )
+
+    def _world(self):
+        """Noord vraagt warmte, Zuid vraagt koeling, op hetzelfde apparaat."""
+        return make_world(
+            outdoor=10.0,
+            indoor={"noord": 19.0, "zuid": 26.0},
+            climates={SHARED_HEAT_COOL: climate(MODE_OFF)},
+            residents=everyone_up(),
+        )
+
+    def test_the_winning_zone_keeps_its_duty(self) -> None:
+        plan = decide(self._config(), self._world())
+        noord = plan.decision_for("noord")
+        assert noord is not None
+        assert noord.wanted is ModeFamily.HEAT
+        assert noord.granted is ModeFamily.HEAT
+        assert [command.hvac_mode for command in plan.commands] == [MODE_HEAT]
+
+    def test_the_losing_zone_reports_what_it_gets(self) -> None:
+        plan = decide(self._config(), self._world())
+        zuid = plan.decision_for("zuid")
+        assert zuid is not None
+        assert zuid.wanted is ModeFamily.COOL
+        assert zuid.granted is ModeFamily.NEUTRAL
+        assert zuid.reason is Reason.CIRCUIT_CONFLICT_LOST
