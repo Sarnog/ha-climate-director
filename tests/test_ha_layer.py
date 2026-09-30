@@ -793,6 +793,39 @@ class TestTheApplier:
         applied = await apply(hass, pending, shadow=False)
         assert LIVING not in [change.entity_id for change in applied]
 
+    async def test_a_failed_start_lets_the_later_starts_through(self) -> None:
+        """Een mislukte start kost alleen dat ene apparaat; de starts erachter gaan door.
+
+        Alleen een mislukte **stop** laat de starts vervallen. Een mislukte start
+        is onschuldig: er gebeurt alleen minder dan gepland, en het volgende
+        apparaat hoort zijn start gewoon te krijgen. De toets hierboven heeft maar
+        één start en kan dat verschil dus niet zien.
+
+        A failed start only costs that one appliance; the starts behind it go
+        through. Only a failed **stop** lets the starts lapse. A failed start is
+        harmless: less happens than planned, and the next appliance should simply
+        get its start. The test above has a single start and so cannot see that
+        difference.
+        """
+        from custom_components.climate_director.engine.diff import Change
+        from custom_components.climate_director.engine.plan import UnitCommand
+
+        hass = FakeHass(failing={LIVING})
+        pending = tuple(
+            Change(
+                UnitCommand(entity_id, "heat", temperature=21.0, reason=Reason.REGULATING),
+                True,
+                True,
+            )
+            for entity_id in (LIVING, ATTIC)
+        )
+        assert not any(applier_module._is_stop(change) for change in pending)
+
+        applied = await apply(hass, pending, shadow=False)
+
+        assert [change.entity_id for change in applied] == [ATTIC]
+        assert ATTIC in [call[2]["entity_id"] for call in hass.services.calls]
+
     async def test_a_failed_stop_only_lets_the_starts_lapse(self) -> None:
         """De overige stops gaan door; alleen de starts vervallen.
 

@@ -42,6 +42,7 @@ from custom_components.climate_director.engine import (
     MODE_HEAT,
     MODE_OFF,
     DirectorConfig,
+    ModeFamily,
     ModeSettings,
     OutdoorWindow,
     Reason,
@@ -591,3 +592,62 @@ class TestTheTakeoverIsPerDuty:
     def test_a_heating_source_still_gives_a_heating_takeover(self) -> None:
         """De tegenproef: een airco die ook verwarmt geeft wél een overname."""
         assert takeover_module.in_force(house(), world()) != ()
+
+    def test_a_cooling_source_gives_a_cooling_takeover_only(self) -> None:
+        """Voor koelen idem: alleen de taak die de weggevallen bron zelf kon leveren.
+
+        Een warmtepomp die ook koelt bedient het hele gebied, en in de zolder valt
+        een bron uit die alleen kan koelen. De warmtepomp neemt dan het koelen
+        over en niet het verwarmen - de spiegel van de ketel hierboven, die bij
+        een weggevallen koeler niets overneemt.
+
+        Likewise for cooling: only the duty the dropped-out source could deliver
+        itself. A heat pump that also cools serves the whole area, and in the attic
+        a source drops out that can only cool. The heat pump then takes the cooling
+        over and not the heating - the mirror of the boiler above, which takes
+        nothing over when a cooler drops out.
+        """
+        pump = Source(
+            source_id="living_pump",
+            entity_id="climate.pump",
+            priority=0,
+            role=SourceRole.HEAT_COOL,
+            covers_zones=("living", "attic"),
+        )
+        cooler = Source("attic_cooler", self.COOLER, priority=0, role=SourceRole.COOL_ONLY)
+        config = DirectorConfig(
+            zones=(
+                Zone(
+                    zone_id="living",
+                    name="Living",
+                    indoor_sensor="sensor.living",
+                    sources=(pump,),
+                    heat=HEAT,
+                    cool=COOL,
+                ),
+                Zone(
+                    zone_id="attic",
+                    name="Attic",
+                    indoor_sensor="sensor.attic",
+                    sources=(cooler,),
+                    heat=HEAT,
+                    cool=COOL,
+                    priority=1,
+                ),
+            )
+        )
+        found = takeover_module.in_force(
+            config,
+            make_world(
+                now=NOW,
+                indoor={"living": 21.0, "attic": 21.0},
+                outdoor=8.0,
+                climates={
+                    "climate.pump": climate("off"),
+                    self.COOLER: climate("off", available=False),
+                },
+            ),
+        )
+        assert [(item.entity_id, item.families) for item in found] == [
+            ("climate.pump", frozenset({ModeFamily.COOL}))
+        ]
