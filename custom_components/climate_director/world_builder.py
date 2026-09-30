@@ -226,6 +226,29 @@ def _as_modes(raw: Any) -> frozenset[str] | None:
     return frozenset(modes) if modes else None
 
 
+def _override_split(
+    handed_back: set[str], zone_overrides: dict[str, bool]
+) -> tuple[dict[str, bool], frozenset[str]]:
+    """Return the overridden zones and the ones standing still through a hand alone.
+
+    Twee vragers, één som: `zone_overrides` noemt elke zone die van de gebruiker
+    is, hoe dan ook, terwijl `zone_hands` alleen de zones noemt die door een hand
+    stilstaan en niet door een overdracht. Alleen de schakelaar en de actie
+    `set_override` dragen over (anker 11), dus een zone die ook door de schakelaar
+    wordt overgedragen hoort niet in `zone_hands`. De twee delen staan daarom
+    hier naast elkaar in plaats van twee keer berekend te worden.
+
+    Two askers, one sum: `zone_overrides` names every zone that is the user's,
+    however it got there, while `zone_hands` names only the zones standing still
+    through a hand and not through a handover. Only the switch and the
+    `set_override` action hand over (anchor 11), so a zone the switch hands over as
+    well does not belong in `zone_hands`. The two parts therefore stand side by
+    side here instead of being worked out twice.
+    """
+    thrown = {zone_id for zone_id, on in zone_overrides.items() if on}
+    return dict.fromkeys(handed_back | thrown, True), frozenset(handed_back - thrown)
+
+
 class _WorldBuilderMixin(_CoordinatorBase):
     """De momentopname en de lezers die hem vullen.
 
@@ -285,6 +308,7 @@ class _WorldBuilderMixin(_CoordinatorBase):
             precondition_until=self._live_preconditions(),
             precondition_bypass=frozenset(self._precondition_bypass),
             zone_overrides=self._overridden_zones(now, residents),
+            zone_hands=self._zone_hands(now, residents),
             zone_priorities=dict(self.zone_priorities),
             opening_bypasses=frozenset(
                 opening_id for opening_id, on in self.opening_bypasses.items() if on
@@ -334,8 +358,29 @@ class _WorldBuilderMixin(_CoordinatorBase):
         hand at a shared appliance counts for every zone it serves.
         """
         handed_back = self._zones_handed_back(now, residents)
-        thrown = {zone_id for zone_id, on in self.zone_overrides.items() if on}
-        return dict.fromkeys(handed_back | thrown, True)
+        overridden, _hands = _override_split(handed_back, self.zone_overrides)
+        return overridden
+
+    def _zone_hands(self, now: datetime, residents: dict[str, ResidentState]) -> frozenset[str]:
+        """Return the zones that stand still through a hand alone (anker 11).
+
+        Niet elke zone in `zone_overrides` is overgedragen. Een hand aan het
+        apparaat zet de zone stil maar draagt niets over: een gedeeld apparaat
+        blijft dan beschikbaar voor de andere zones. Alleen de schakelaar en de
+        actie `set_override` dragen over, en die twee staan wel in
+        `zone_overrides` maar niet hier. `_override_split` trekt de twee uit
+        dezelfde twee bronnen, zodat ze niet uit elkaar kunnen lopen.
+
+        Not every zone in `zone_overrides` is handed over. A hand at the appliance
+        silences the zone but hands nothing over: a shared appliance then stays
+        available to the other zones. Only the switch and the `set_override`
+        action hand over, and those two stand in `zone_overrides` but not here.
+        `_override_split` draws the two from the same two sources, so they cannot
+        drift apart.
+        """
+        handed_back = self._zones_handed_back(now, residents)
+        _overridden, hands = _override_split(handed_back, self.zone_overrides)
+        return hands
 
     def _climate_ids(self) -> set[str]:
         """Return every climate entity the engine may need to read."""

@@ -163,6 +163,7 @@ def _world(world: WorldState | None) -> dict[str, Any] | None:
         "master_enabled": world.master_enabled,
         "holiday_mode": world.holiday_mode,
         "zone_overrides": dict(world.zone_overrides),
+        "zone_hands": sorted(world.zone_hands),
     }
 
 

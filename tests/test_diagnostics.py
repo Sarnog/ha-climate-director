@@ -70,6 +70,7 @@ def _full_world() -> WorldState:
         guest_mode=True,
         precipitation=True,
         zone_overrides={"zolder": True},
+        zone_hands=frozenset({"zolder"}),
         zone_priorities={"woonkamer": 1},
     )
 
@@ -123,6 +124,7 @@ class TestTheWorldIsComplete:
         assert data["guest_mode"] is True
         assert data["precipitation"] is True
         assert data["zone_priorities"] == {"woonkamer": 1}
+        assert data["zone_hands"] == ["zolder"]
 
 
 class TestThePlanIsComplete:
@@ -235,6 +237,7 @@ class TestThePrivacyRedaction:
             "master_enabled",
             "holiday_mode",
             "zone_overrides",
+            "zone_hands",
         }
         from homeassistant.components.diagnostics.util import REDACTED
 

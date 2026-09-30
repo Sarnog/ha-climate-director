@@ -224,6 +224,7 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
 
         build_world = ClimateDirectorCoordinator.build_world
         _overridden_zones = ClimateDirectorCoordinator._overridden_zones
+        _zone_hands = ClimateDirectorCoordinator._zone_hands
         tracked_entities = ClimateDirectorCoordinator.tracked_entities
         unusable_entities = ClimateDirectorCoordinator.unusable_entities
         stuck_zones = ClimateDirectorCoordinator.stuck_zones

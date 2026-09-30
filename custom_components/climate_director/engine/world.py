@@ -210,6 +210,23 @@ class WorldState:
     zone_overrides: dict[str, bool] = field(default_factory=dict)
     """Manual override per `zone_id`; a missing zone counts as no override."""
 
+    zone_hands: frozenset[str] = frozenset()
+    """De zones die alleen door een hand stilstaan, niet door een overdracht.
+
+    Een hand aan het apparaat zet de zone stil maar draagt niets over; alleen de
+    schakelaar en de actie `set_override` dragen elk apparaat van de zone
+    huisbreed over (anker 11). `zone_overrides` noemt de zone in beide gevallen,
+    dit veld alleen het eerste: `decide._handed_over` slaat deze zones over, zodat
+    een gedeeld apparaat voor de andere zones beschikbaar blijft.
+
+    The zones standing still through a hand alone, not through a handover. A hand
+    at the appliance silences the zone but hands nothing over; only the switch and
+    the `set_override` action hand every appliance of the zone over house-wide
+    (anchor 11). `zone_overrides` names the zone in both cases, this field only the
+    first: `decide._handed_over` skips these zones, so a shared appliance stays
+    available to the other zones.
+    """
+
     zone_priorities: dict[str, int] = field(default_factory=dict)
     """Live priority per `zone_id`, overriding the configured one.
 

@@ -359,16 +359,35 @@ FUNCTION_LIMIT = 80
 # the price of "not the zone but the appliance": `sources.select(..., excluding=...)`
 # and the `passed_over` list both had to know, or a handed-over boiler slips through by
 # a detour after all.
+#
+# Een hand draagt niet over (anker 11): `engine/decide.py` 1789 → 1806 en
+# `_build_commands` 210 → 211. `_handed_over` onderscheidt de hand van de
+# schakelaar via het nieuwe `WorldState.zone_hands`, en de untouched-regel in
+# `_build_commands` laat een apparaat van een zone die van de gebruiker is weer met
+# rust (`world.overridden`) naast de huisbreed overgedragen apparaten
+# (`handed_over`) - precies zoals vóór de override-overdracht. Wat groeit is
+# vooral uitleg; de functies zelf blijven onder hun maat, en `engine/world.py`
+# (het veld) en `world_builder.py` (de splitsing) blijven onder hun maat.
+#
+# A hand does not hand over (anchor 11): `engine/decide.py` 1789 → 1806 and
+# `_build_commands` 210 → 211. `_handed_over` tells the hand from the switch by way
+# of the new `WorldState.zone_hands`, and the untouched rule in `_build_commands`
+# leaves an appliance of a zone that is the user's alone again
+# (`world.overridden`) beside the house-wide handed-over appliances
+# (`handed_over`) - exactly as before the override handover. What grows is mostly
+# explanation; the functions themselves stay below their measure, and
+# `engine/world.py` (the field) and `world_builder.py` (the split) stay below their
+# measure.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2272,
     "coordinator.py": 2042,
-    "engine/decide.py": 1789,
+    "engine/decide.py": 1806,
     "config_flow.py": 1492,
     "schemas.py": 893,
 }
 
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
-    ("engine/decide.py", "_build_commands"): 210,
+    ("engine/decide.py", "_build_commands"): 211,
     ("engine/decide.py", "_generator_commands"): 192,
     ("coordinator.py", "__init__"): 236,
     ("engine/models.py", "_rule_zones"): 164,

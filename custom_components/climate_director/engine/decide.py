@@ -113,20 +113,36 @@ def decide(config: DirectorConfig, world: WorldState, previous: Plan | None = No
 
 
 def _handed_over(config: DirectorConfig, world: WorldState) -> frozenset[str]:
-    """Return every appliance an overridden zone has handed over (anker 11).
+    """Return every appliance a handed-over zone has given up (anker 11).
 
-    Niet de zone maar het apparaat is overgedragen: staat één zone onder
-    override, dan stuurt de director dat apparaat nergens meer naartoe, ook niet
-    vanuit een andere zone. Voor die andere zones is het dus geen kandidaat, net
-    als `excluding` in `sources.select`; het anker draagt de aanvaarde prijs.
+    Niet de zone maar het apparaat is overgedragen: draagt een zone over, dan
+    stuurt de director dat apparaat nergens meer naartoe, ook niet vanuit een
+    andere zone. Voor die andere zones is het dus geen kandidaat, net als
+    `excluding` in `sources.select`; het anker draagt de aanvaarde prijs.
 
-    Not the zone but the appliance is handed over: with one zone under override,
-    the director sends that appliance nothing anywhere, not from another zone
-    either. For those other zones it is therefore no candidate, just as
-    `excluding` in `sources.select`; the anchor carries the accepted price.
+    Niet elke zone in `zone_overrides` draagt over. Een zone die alleen door een
+    hand stilstaat valt stil zonder dat er een apparaat wordt overgedragen
+    (`world.zone_hands`), en dan blijft een gedeeld apparaat voor de andere zones
+    beschikbaar. Alleen de schakelaar en de actie `set_override` zetten een zone in
+    `zone_overrides` zonder in `zone_hands`, en dat zijn precies de twee die het
+    anker noemt.
+
+    Not the zone but the appliance is handed over: when a zone hands over, the
+    director sends that appliance nothing anywhere, not from another zone either.
+    For those other zones it is therefore no candidate, just as `excluding` in
+    `sources.select`; the anchor carries the accepted price.
+
+    Not every zone in `zone_overrides` hands over. A zone standing still through a
+    hand alone falls silent without an appliance being handed over
+    (`world.zone_hands`), and then a shared appliance stays available to the other
+    zones. Only the switch and the `set_override` action put a zone in
+    `zone_overrides` without putting it in `zone_hands`, and those are exactly the
+    two the anchor names.
     """
     return frozenset(
-        source.entity_id for zone, source in config.sources() if world.overridden(zone.zone_id)
+        source.entity_id
+        for zone, source in config.sources()
+        if world.overridden(zone.zone_id) and zone.zone_id not in world.zone_hands
     )
 
 
@@ -1039,22 +1055,23 @@ def _build_commands(
             untouched.append(UntouchedSource(source.entity_id, zone.zone_id, shared))
             continue
 
-        # Een apparaat van een overgedragen zone is van de beheerder, niet van de
-        # director. Overnemen betekent hier: niet aansturen - ook niet uitzetten
-        # vanuit een andere zone. Wie de noodknop gebruikt wil het apparaat zelf
-        # zetten en houden, ongeacht buitengrenzen, seizoen of een openstaand
-        # raam. Zou de director hem alsnog uitzetten, dan was de override geen
-        # noodknop maar een slot - en dat geldt huisbreed, want een gedeelde ketel
-        # is één apparaat (anker 11).
+        # Een apparaat van een zone die van de gebruiker is krijgt niets: niet
+        # aansturen en ook niet uitzetten, want wie zelf ingrijpt wil het apparaat
+        # houden zoals het staat. Een huisbreed overgedragen apparaat krijgt om
+        # dezelfde reden van niemand een commando, ook niet van een zone die het
+        # anders zou uitzetten (`_handed_over`). Een hand zet alleen deze zone
+        # stil, dus een gedeeld apparaat blijft voor de andere zones beschikbaar -
+        # wordt het daar gekozen, dan valt het hieronder vanzelf af (`commanded`).
         #
-        # An appliance of a handed-over zone belongs to the administrator, not to
-        # the director. Taking over means: issue nothing - not even an off from
-        # another zone. Whoever reaches for the override wants to set the
-        # appliance themselves and keep it there, whatever the outdoor bounds,
-        # the season or an open window say. Were the director to switch it off
-        # anyway, the override would be a lock rather than an override - and that
-        # goes house-wide, since a shared boiler is one appliance (anchor 11).
-        if source.entity_id in handed_over:
+        # An appliance of a zone that is the user's gets nothing: not steered and
+        # not switched off either, since whoever steps in wants to keep the
+        # appliance as it stands. For the same reason a house-wide handed-over
+        # appliance gets no command from anyone, not even from a zone that would
+        # otherwise switch it off (`_handed_over`). A hand silences this zone
+        # alone, so a shared appliance stays available to the other zones - and
+        # when it is chosen there, it drops out from under this rule by itself
+        # (`commanded`).
+        if world.overridden(zone.zone_id) or source.entity_id in handed_over:
             untouched.append(
                 UntouchedSource(source.entity_id, zone.zone_id, Reason.MANUAL_OVERRIDE)
             )
