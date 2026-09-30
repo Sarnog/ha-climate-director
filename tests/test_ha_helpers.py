@@ -29,6 +29,7 @@ from custom_components.climate_director.config_flow import (
     _blank_to_none,
     _deep_copy,
     _next_priority,
+    _settings_errors,
     _unique_id,
     _zone_errors,
     _zone_from_form,
@@ -721,14 +722,14 @@ class TestTheEnglishTemplatesLiveInTheCache:
         De Engelse terugval dekt élke code; mist er één, dan valt die ene melding
         terug op de rauwe engine-tekst zonder eenheidomrekening. De codes worden
         met een AST-loop uit de engine verzameld, niet uit een met de hand
-        bijgehouden lijst; `47` is de telling die de loop vandaag moet vinden en
+        bijgehouden lijst; `49` is de telling die de loop vandaag moet vinden en
         bewaakt dat de loop zelf nog werkt.
 
         Every `Problem` code is in `strings.json["exceptions"]`.
         The English fallback covers every code; if one is missing, that one
         notice falls back to the raw engine text without unit conversion. The
         codes are gathered from the engine with an AST walk, not from a
-        hand-kept list; `47` is the count the walk must find today and guards
+        hand-kept list; `49` is the count the walk must find today and guards
         that the walk itself still works.
         """
         import ast
@@ -747,7 +748,7 @@ class TestTheEnglishTemplatesLiveInTheCache:
             and node.args
             and isinstance(node.args[0], ast.Constant)
         ]
-        assert len(codes) == 47
+        assert len(codes) == 49
         templates = texts.english_templates()
         assert templates is not None
         missing = [code for code in codes if code not in templates]
@@ -1011,6 +1012,35 @@ class TestTheBandIsRefusedAtTheScreen:
         assert _band_errors({"heat": {"target": 19.0, "start_at": 20.0}, "cool": None}) != {}
 
 
+class TestTheSettingsScreenRefusesAMissingSeasonEntity:
+    """Een seizoen dat nooit te lezen valt, houdt elke taak stil (M2).
+
+    A season that can never be read silences every duty (M2).
+
+    De herkomst op *entiteit* zonder gekozen entiteit laat het seizoen onbekend:
+    elke taak met een seizoensbeperking doet dan niets. Dit scherm is de enige
+    plek waar de gebruiker dat recht kan zetten, dus het hoort het te weigeren in
+    plaats van het stil op te slaan.
+    """
+
+    def test_an_entity_source_without_an_entity_is_refused(self) -> None:
+        assert _settings_errors({"season_source": "entity", "season_entity": ""}) == {
+            "season_entity": "season_entity_missing"
+        }
+
+    def test_an_entity_source_with_a_blank_entity_is_refused(self) -> None:
+        assert _settings_errors({"season_source": "entity", "season_entity": "   "}) == {
+            "season_entity": "season_entity_missing"
+        }
+
+    def test_an_entity_source_with_an_entity_passes(self) -> None:
+        settings = {"season_source": "entity", "season_entity": "sensor.seizoen"}
+        assert _settings_errors(settings) == {}
+
+    def test_the_month_source_needs_no_entity(self) -> None:
+        assert _settings_errors({"season_source": "auto", "season_entity": ""}) == {}
+
+
 class TestTheScreenRefusesWhatCanNeverWork:
     """Drie instellingen die een zone stilzetten zonder dat er iets kapot is.
 
@@ -1069,6 +1099,23 @@ class TestTheScreenRefusesWhatCanNeverWork:
 
     def test_a_zone_that_only_cools_never_overlaps(self) -> None:
         assert _zone_errors(self._zone(heat=None)) == {}
+
+    def test_bands_that_only_touch_are_refused(self) -> None:
+        """Verwarmen houdt pas op bij `start_at + hysteresis` (V4)."""
+        zone = self._zone(
+            heat={"target": 21.0, "start_at": 20.0, "hysteresis": 2.0},
+            cool={"target": 23.0, "start_at": 22.0, "hysteresis": 1.0},
+        )
+        assert _zone_errors(zone)["cool_start_at"] == "bands_overlap"
+
+    def test_bands_that_overlap_at_the_cooling_end_are_refused(self) -> None:
+        """Koelen houdt op bij `start_at - hysteresis`, en dat mag niet onder
+        het aanpunt van verwarmen komen."""
+        zone = self._zone(
+            heat={"target": 21.0, "start_at": 20.0, "hysteresis": 0.5},
+            cool={"target": 23.0, "start_at": 21.0, "hysteresis": 2.0},
+        )
+        assert _zone_errors(zone)["cool_start_at"] == "bands_overlap"
 
     def test_it_gathers_every_complaint_at_once(self) -> None:
         """Fixing one and meeting the next on the following screen is a round too many."""

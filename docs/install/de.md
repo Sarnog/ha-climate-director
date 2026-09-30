@@ -166,7 +166,7 @@ wählst.
 | **Totzone der Außentemperatur** | wie viele Grad eine laufende Betriebsart über ihre Außengrenze hinaus weiterlaufen darf, bevor gewechselt wird; standardmäßig 0,5, null schaltet sie ab |
 | **Heizungsanlage** | *Zentral* oder *Pro Zone*, siehe unten |
 | **Herkunft der Jahreszeit** | woher die Jahreszeit kommt: der Monat, eine Entität oder fest Sommer/Winter |
-| **Jahreszeit-Entität** | nur nötig, wenn die Quelle auf *Entität* steht; auch die eingebaute `season.*`-Entität ist wählbar |
+| **Jahreszeit-Entität** | nur nötig, wenn die Quelle auf *Entität* steht; auch die eingebaute `season.*`-Entität ist wählbar. Steht die Quelle auf *Entität* ohne gewählte Entität, verweigert der Bildschirm das Speichern: die Jahreszeit bleibt dann unbekannt und jede Aufgabe mit einer Jahreszeitenbeschränkung tut nichts |
 | **Hemisphäre** | welche Monate als Sommer zählen, wenn die Jahreszeit aus dem Monat kommt: Nord April–September, Süd Oktober–März |
 | **Wer zu Hause ist, muss wach sein** | an = das Haus wartet auf jemanden zu Hause *und* wach; aus = Schlaf zählt nicht |
 | **Der Zeitplan eines Bewohners muss offen sein** | an = das Haus wartet auf das erste Zeitfenster; aus = Anwesenheit allein entscheidet |
@@ -267,8 +267,9 @@ zwar da ist, aber nie etwas tut:
 - ein **leerer Name** — der Name legt die interne ID einer neuen Zone fest;
 - eine **Zieltemperatur auf der falschen Seite des Startpunkts** — das Gerät
   bekommt dann eine Temperatur, für die es nichts tun muss;
-- **Kühlen, das am oder unter dem Punkt startet, an dem Heizen startet** — dann
-  verlangen beide gleichzeitig denselben Raum;
+- **Bänder, die sich berühren oder überlappen**: der Ausschaltpunkt des Heizens
+  liegt auf oder über dem Einschaltpunkt des Kühlens — der Raum würde dann
+  abwechselnd heizen und kühlen;
 - die Zone auf **den Raum selbst ohne Anwesenheitssensor**, oder eine Zone, die
   **weder heizen noch kühlen darf**.
 

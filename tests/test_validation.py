@@ -174,6 +174,35 @@ def test_a_fixed_season_that_admits_every_duty_is_not_reported() -> None:
         assert "season_excludes_mode" not in _season_problem_codes(config)
 
 
+def test_an_entity_season_without_an_entity_is_reported() -> None:
+    """Een seizoen dat nooit te lezen valt, houdt elke taak stil.
+
+    Een bron die een entiteit hoort te lezen maar er geen heeft, laat het
+    seizoen onbekend - en dan doet elke taak met een seizoensbeperking niets,
+    zonder dat er iets te herlezen valt. Precies het stille niets waarvoor
+    `unreadable_entities` bestaat, maar dan zonder oorzaak in de wereld.
+
+    A season that can never be read silences every duty. A source that should
+    read an entity but has none leaves the season unknown - and then every duty
+    with a season restriction does nothing, with nothing to re-read. Exactly the
+    silent nothing `unreadable_entities` exists for, but without a cause in the
+    world.
+    """
+    from dataclasses import replace
+
+    config = replace(house(), seasons=SeasonSettings(source=SeasonSource.ENTITY, entity_id=""))
+    assert "season_entity_missing" in _season_problem_codes(config)
+
+
+def test_an_entity_season_with_an_entity_is_fine() -> None:
+    from dataclasses import replace
+
+    config = replace(
+        house(), seasons=SeasonSettings(source=SeasonSource.ENTITY, entity_id="sensor.seizoen")
+    )
+    assert "season_entity_missing" not in _season_problem_codes(config)
+
+
 def test_a_zero_outdoor_deadband_without_a_circuit_is_reported() -> None:
     """Dode band nul en een begrensd apparaat op geen circuit: niets remt.
 
@@ -298,6 +327,44 @@ class TestZonesThatCanNeverAct:
             zones=(zone("a", heat=ModeSettings(21.0, 20.0), cool=ModeSettings(23.0, 25.0)),)
         )
         assert not problem(config, "starts cooling")
+
+    def test_bands_that_touch_are_reported(self) -> None:
+        """Verwarmen houdt pas op bij zijn uitschakelpunt: `start_at + hysteresis`.
+
+        Heating only stops at its switch-off point: `start_at + hysteresis`.
+        """
+        config = DirectorConfig(
+            zones=(
+                zone(
+                    "a",
+                    heat=ModeSettings(21.0, 20.0, hysteresis=2.0),
+                    cool=ModeSettings(23.0, 22.0, hysteresis=1.0),
+                ),
+            )
+        )
+        assert problem(config, "band that overlap")
+
+    def test_overlapping_cooling_bands_are_reported(self) -> None:
+        """Ook aan de koele kant: koelen houdt op bij `start_at - hysteresis`."""
+        config = DirectorConfig(
+            zones=(
+                zone(
+                    "a",
+                    heat=ModeSettings(21.0, 20.0, hysteresis=0.5),
+                    cool=ModeSettings(23.0, 21.0, hysteresis=2.0),
+                ),
+            )
+        )
+        assert problem(config, "band that overlap")
+
+    def test_the_cooling_below_heating_code_still_wins(self) -> None:
+        """Ligt koelen op of onder verwarmen, dan blijft de oude code staan."""
+        config = DirectorConfig(
+            zones=(zone("a", heat=ModeSettings(21.0, 20.0), cool=ModeSettings(20.0, 19.0)),)
+        )
+        codes = _season_problem_codes(config)
+        assert "zone_cools_at_or_below_heats" in codes
+        assert "zone_bands_overlap" not in codes
 
 
 class TestCircuitsThatCanNeverAct:

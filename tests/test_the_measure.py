@@ -300,6 +300,18 @@ FUNCTION_LIMIT = 80
 # function itself - a comment line counts physically and would push the function over
 # the limit.
 #
+# De banden en de seizoensbron (M1/V4 en M2): `engine/models.py` 2227 → 2272 met
+# `_rule_zones` 142 → 164 (de bandencontrole op het uitschakelpunt) en de nieuwe
+# `_rule_seasons`; `config_flow.py` 1457 → 1492 met `_settings_errors` en de
+# verruimde bandencontrole op het zonescherm. Beide kanten zeggen hetzelfde, want
+# `test_random_installations.py` houdt scherm en `validate()` tegen elkaar.
+#
+# The bands and the season source (M1/V4 and M2): `engine/models.py` 2227 → 2272 with
+# `_rule_zones` 142 → 164 (the band check on the switch-off point) and the new
+# `_rule_seasons`; `config_flow.py` 1457 → 1492 with `_settings_errors` and the widened
+# band check on the zone screen. Both sides say the same thing, since
+# `test_random_installations.py` holds screen and `validate()` against each other.
+#
 # De verliezer van een gedeeld apparaat (M4): `engine/decide.py` 1735 → 1802 en
 # `_build_zone_decisions` 116 → 130 door `_lost_to_another_zone`, dat opzoekt welke opdracht
 # het gedeelde apparaat werkelijk kreeg, plus het `_LOST_TO_ANOTHER_ZONE`-rijtje redenen
@@ -346,10 +358,10 @@ FUNCTION_LIMIT = 80
 # and the `passed_over` list both had to know, or a handed-over boiler slips through by
 # a detour after all.
 MODULE_EXCEPTIONS: dict[str, int] = {
-    "engine/models.py": 2227,
+    "engine/models.py": 2272,
     "coordinator.py": 2042,
     "engine/decide.py": 1802,
-    "config_flow.py": 1457,
+    "config_flow.py": 1492,
     "schemas.py": 893,
 }
 
@@ -357,7 +369,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_build_commands"): 210,
     ("engine/decide.py", "_generator_commands"): 192,
     ("coordinator.py", "__init__"): 236,
-    ("engine/models.py", "_rule_zones"): 142,
+    ("engine/models.py", "_rule_zones"): 164,
     ("engine/constraints.py", "resolve"): 128,
     ("engine/decide.py", "_collect_wishes"): 137,
     ("coordinator.py", "_refusal_data"): 119,

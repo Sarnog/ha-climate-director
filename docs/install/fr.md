@@ -166,7 +166,7 @@ le menu principal.
 | **Bande morte de température extérieure** | de combien de degrés une tâche en marche peut dépasser sa limite extérieure avant de basculer ; 0,5 par défaut, zéro la désactive |
 | **Système de chauffage** | *Central* ou *Par zone*, voir ci-dessous |
 | **Origine de la saison** | d'où vient la saison : le mois, une entité, ou fixée été/hiver |
-| **Entité de saison** | seulement si la source est réglée sur *entité* ; l’entité intégrée `season.*` est aussi sélectionnable |
+| **Entité de saison** | seulement si la source est réglée sur *entité* ; l’entité intégrée `season.*` est aussi sélectionnable. Si la source est sur *entité* sans entité choisie, l’écran refuse d’enregistrer : la saison reste alors inconnue et chaque tâche avec une restriction de saison ne fait rien |
 | **Hémisphère** | quels mois comptent comme été lorsque la saison vient du mois : nord avril–septembre, sud octobre–mars |
 | **Une personne présente doit être éveillée** | activé = la maison attend quelqu'un à la maison *et* réveillé ; désactivé = le sommeil ne compte pas |
 | **Le planning d'un occupant doit être ouvert** | activé = la maison attend la première plage de planning ; désactivé = la présence seule décide |
@@ -271,8 +271,9 @@ qui existe mais ne fait jamais rien :
 - un **nom vide** — le nom détermine l'identifiant interne d'une nouvelle zone ;
 - une **cible du mauvais côté du point de démarrage** — l'appareil reçoit alors
   une température pour laquelle il n'a rien à faire ;
-- un **refroidissement qui démarre au niveau ou sous le point où le chauffage
-  démarre** — les deux demandent alors la même pièce en même temps ;
+- des **bandes qui se touchent ou se chevauchent** : le point d'arrêt du chauffage
+  se trouve au niveau ou au-dessus du point de démarrage du refroidissement — la
+  pièce chaufferait et refroidirait alors tour à tour ;
 - la zone réglée sur **la pièce elle-même sans capteur de présence**, ou une
   zone qui **ne peut ni chauffer ni refroidir**.
 

@@ -99,14 +99,18 @@ def _quiet_window(rng: random.Random) -> dict:
 
 def _mode_settings(rng: random.Random, *, heating: bool) -> dict:
     """Return a sound band: heating aims above its switch-on point, cooling below."""
-    # De twee bereiken raken elkaar niet: koelen dat op hetzelfde punt begint als
-    # verwarmen is een configuratiefout, en die hoort niet uit een generator van
-    # geldige huizen te komen. Eén op de paar duizend keer vielen ze samen.
+    # De twee bereiken raken elkaar niet: koelen dat op of onder het punt begint
+    # waar verwarmen begint is een configuratiefout, en die hoort niet uit een
+    # generator van geldige huizen te komen. Eén op de paar duizend keer vielen ze
+    # samen. Sinds de bandencontrole telt ook de dode band mee: verwarmen houdt
+    # pas op bij `start_at + hysteresis`, dus het koelbereik begint daarboven.
     #
-    # The two ranges do not touch: cooling that starts where heating starts is a
-    # configuration mistake, and that should not come out of a generator of valid
-    # houses. One in a few thousand they coincided.
-    start = rng.uniform(16.0, 21.0) if heating else rng.uniform(22.0, 28.0)
+    # The two ranges do not touch: cooling that starts at or below where heating
+    # starts is a configuration mistake, and that should not come out of a
+    # generator of valid houses. One in a few thousand they coincided. Since the
+    # band check the hysteresis counts too: heating only stops at `start_at +
+    # hysteresis`, so the cooling range starts above that.
+    start = rng.uniform(16.0, 21.0) if heating else rng.uniform(23.5, 28.0)
     offset = rng.choice([0.0, 0.5, 1.0, 2.0])
     return {
         "target": round(start + offset if heating else start - offset, 1),

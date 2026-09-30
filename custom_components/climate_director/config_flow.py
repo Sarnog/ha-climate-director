@@ -27,7 +27,7 @@ from .const import CONF_INSTALLATION, CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE, DOM
 from .coordinator import ClimateDirectorEntry
 from .engine import validate
 from .engine.fields import SETTINGS_FIELDS, SOURCE_FIELDS
-from .engine.models import Season, ZoneGate
+from .engine.models import Season, SeasonSource, ZoneGate
 from .engine.serialise import config_from_dict, opening_ids
 from .schema_fields import write_table
 from .schemas import (
@@ -248,6 +248,13 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         if user_input is not None:
             if user_input.get(_EXIT) == _EXIT_DROP:
                 return await self.async_step_init()
+            errors = _settings_errors(user_input)
+            if errors:
+                return self.async_show_form(
+                    step_id="settings",
+                    data_schema=schemas.settings(self),
+                    errors=errors,
+                )
             # Elke rij van de tabel schrijft zichzelf terug naar haar puntpad;
             # de eigenzinnige velden (zomermaanden, neerslagstanden, het
             # vakantietrefwoord en de schaduwmodus) dragen daarvoor een `hook`
@@ -1172,6 +1179,27 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         return zones[self._zone_index]
 
 
+def _settings_errors(user_input: dict[str, Any]) -> dict[str, str]:
+    """Return what the settings screen refuses to store.
+
+    Staat de herkomst van het seizoen op *entiteit* zonder dat er een gekozen is,
+    dan blijft het seizoen onbekend en doet elke taak met een seizoensbeperking
+    niets. Dat is het stille niets waarvoor `unreadable_entities` bestaat, maar
+    dan zonder dat er iets te herlezen valt - en dit scherm is de enige plek waar
+    de gebruiker het recht kan zetten.
+
+    With the season source on *entity* and none chosen, the season stays unknown
+    and every duty with a season restriction does nothing. That is the silent
+    nothing `unreadable_entities` exists for, but with nothing to re-read - and
+    this screen is the only place the user can put it right.
+    """
+    source = str(user_input.get("season_source") or "")
+    entity = str(user_input.get("season_entity") or "")
+    if source == SeasonSource.ENTITY.value and not entity.strip():
+        return {"season_entity": "season_entity_missing"}
+    return {}
+
+
 def _zone_errors(zone: dict[str, Any]) -> dict[str, str]:
     """Return every complaint this screen can make about one zone.
 
@@ -1279,16 +1307,23 @@ def _band_errors(zone: dict[str, Any]) -> dict[str, str]:
     if cool and cool["target"] > cool["start_at"]:
         errors["cool_target"] = "target_outside_band"
 
-    # Begint koelen op of onder het punt waar verwarmen begint, dan vragen de
-    # twee tegelijk om dezelfde kamer. De engine kiest dan nog steeds
-    # deterministisch, maar dat het zover komt kan niemand bedoeld hebben - en
-    # het is aan dit scherm om dat te zeggen, niet aan een melding achteraf.
+    # Raken of overlappen de twee banden elkaar, dan vragen verwarmen en koelen
+    # om de beurt dezelfde kamer: de kamer zou verwarmen tot het uitschakelpunt
+    # en meteen daarna gaan koelen. Dat mag dit scherm zeggen en niet pas een
+    # melding achteraf.
     #
-    # If cooling starts at or below where heating starts, the two ask for the
-    # same room at once. The engine still picks deterministically, but getting
-    # there is something nobody can have meant - and it is for this screen to
-    # say so, rather than for a notice afterwards.
-    if heat and cool and cool["start_at"] <= heat["start_at"]:
+    # If the two bands touch or overlap, heating and cooling ask for the same room
+    # by turns: the room would heat up to the switch-off point and start cooling
+    # right after. This screen is the place to say so, not a notice afterwards.
+    if (
+        heat
+        and cool
+        and (
+            cool["start_at"] <= heat["start_at"]
+            or heat["start_at"] + heat.get("hysteresis", 0.0) >= cool["start_at"]
+            or cool["start_at"] - cool.get("hysteresis", 0.0) <= heat["start_at"]
+        )
+    ):
         errors["cool_start_at"] = "bands_overlap"
 
     return errors

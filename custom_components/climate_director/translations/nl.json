@@ -474,10 +474,11 @@
       }
     },
     "error": {
-      "bands_overlap": "Koelen begint op of onder het punt waar verwarmen begint, dus allebei zouden ze deze kamer tegelijk vragen. Zet het aanpunt van koelen boven dat van verwarmen, met ruimte ertussen.",
+      "bands_overlap": "De banden van verwarmen en koelen raken elkaar of overlappen: het uitschakelpunt van verwarmen ligt op of boven het aanpunt van koelen. Dan zou de kamer om de beurt verwarmen en koelen. Zet het aanpunt van koelen boven het uitschakelpunt van verwarmen, met ruimte ertussen.",
       "duplicate_priority": "Een andere kamer op dezelfde buitenunit heeft deze prioriteit al. Twee kamers met hetzelfde nummer laten de uitkomst van hun naam afhangen, dus kies een vrij nummer.",
       "presence_gate_without_sensor": "Deze zone staat op aanwezigheid in de ruimte, maar er is geen aanwezigheidssensor gekozen. De kamer telt dan voorgoed als leeg en de zone doet nooit meer iets. Kies een sensor, of laat het huishouden beslissen.",
       "required": "Dit veld is nodig om te bewaren. Vul het in, of kies onderaan “Verwerpen en teruggaan” om weg te gaan zonder op te slaan.",
+      "season_entity_missing": "De herkomst van het seizoen staat op een entiteit, maar er is geen seizoensentiteit gekozen. Het seizoen blijft dan onbekend en elke taak met een seizoensbeperking doet niets. Kies een entiteit, of zet de herkomst op de maand of op vast zomer of winter.",
       "target_outside_band": "De streeftemperatuur ligt aan de verkeerde kant van het aanpunt. Verwarmen streeft boven het punt waarop het begint, koelen eronder; andersom krijgt het apparaat een temperatuur waar het niets voor hoeft te doen, wat eruitziet alsof het weigert.",
       "too_few": "Kies minstens twee apparaten; een groep van één sluit niets uit.",
       "zone_without_modes": "Deze zone mag niet verwarmen en niet koelen, dus hij kan nooit iets doen. Zet er minstens één van de twee aan, of verwijder de zone."
@@ -989,6 +990,12 @@
     },
     "override_target_conflict": {
       "message": "Zone {zone} hoort niet bij de entiteit die je als doel gaf."
+    },
+    "zone_bands_overlap": {
+      "message": "Zone {zone} heeft een verwarmings- en een koelband die elkaar raken of overlappen, zodat de kamer om de beurt zou verwarmen en koelen."
+    },
+    "season_entity_missing": {
+      "message": "De herkomst van het seizoen staat op een entiteit, maar er is geen seizoensentiteit gekozen; het seizoen blijft daardoor onbekend en elke taak met een seizoensbeperking doet niets."
     }
   },
   "services": {

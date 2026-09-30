@@ -474,10 +474,11 @@
       }
     },
     "error": {
-      "bands_overlap": "Enfriar empieza en el punto en que empieza calentar o por debajo, así que ambos pedirían esta habitación a la vez. Pon el punto de arranque de enfriar por encima del de calentar, con espacio entre los dos.",
+      "bands_overlap": "Las bandas de calentar y enfriar se tocan o se solapan: el punto de apagado de calentar está en el punto de arranque de enfriar o por encima. Entonces la habitación calentaría y enfriaría por turnos. Pon el punto de arranque de enfriar por encima del punto de apagado de calentar, con espacio entre los dos.",
       "duplicate_priority": "Otra habitación en la misma unidad exterior ya tiene esta prioridad. Dos habitaciones con el mismo número hacen que el resultado dependa de su nombre; elige uno libre.",
       "presence_gate_without_sensor": "Esta zona funciona según la presencia en la habitación, pero no hay ningún sensor de presencia elegido. La habitación contará como vacía para siempre y la zona no funcionará nunca más. Elige un sensor, o deja que decida la casa.",
       "required": "Este campo hace falta para guardar. Rellénalo, o elige «Descartar y volver» abajo para salir sin guardar.",
+      "season_entity_missing": "El origen de la estación está en una entidad, pero no hay ninguna entidad de estación elegida. La estación queda entonces desconocida y cada tarea con una restricción de estación no hace nada. Elige una entidad, o pon el origen en el mes o en verano o invierno fijo.",
       "target_outside_band": "La temperatura objetivo está al lado equivocado del punto de arranque. Calentar apunta por encima del punto en que empieza, y enfriar por debajo; al revés, el aparato recibe una temperatura para la que no tiene nada que hacer, lo que parece que se niega.",
       "too_few": "Elige al menos dos aparatos; un grupo de uno no excluye nada.",
       "zone_without_modes": "Esta zona no puede calentar ni enfriar, así que nunca podrá hacer nada. Activa al menos una de las dos, o elimina la zona."
@@ -989,6 +990,12 @@
     },
     "override_target_conflict": {
       "message": "La zona {zone} no pertenece a la entidad a la que apuntaste."
+    },
+    "zone_bands_overlap": {
+      "message": "La zona {zone} tiene una banda de calentar y una de enfriar que se tocan o se solapan, así que la habitación calentaría y enfriaría por turnos."
+    },
+    "season_entity_missing": {
+      "message": "El origen de la estación está en una entidad, pero no hay ninguna entidad de estación elegida; la estación queda por tanto desconocida y cada tarea con una restricción de estación no hace nada."
     }
   },
   "services": {

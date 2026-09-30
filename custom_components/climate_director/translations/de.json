@@ -474,10 +474,11 @@
       }
     },
     "error": {
-      "bands_overlap": "Kühlen beginnt auf oder unter dem Punkt, an dem Heizen beginnt, also würden beide diesen Raum gleichzeitig anfordern. Leg den Einschaltpunkt fürs Kühlen über den fürs Heizen, mit Abstand dazwischen.",
+      "bands_overlap": "Die Bänder von Heizen und Kühlen berühren sich oder überlappen: Der Ausschaltpunkt des Heizens liegt auf oder über dem Einschaltpunkt des Kühlens. Dann würde der Raum abwechselnd heizen und kühlen. Leg den Einschaltpunkt fürs Kühlen über den Ausschaltpunkt fürs Heizen, mit Abstand dazwischen.",
       "duplicate_priority": "Ein anderer Raum an demselben Außengerät hat diese Priorität bereits. Zwei Räume mit derselben Zahl lassen das Ergebnis von ihrem Namen abhängen, wähle also eine freie.",
       "presence_gate_without_sensor": "Diese Zone läuft nach Anwesenheit im Raum, aber es ist kein Anwesenheitssensor gewählt. Der Raum gilt dann dauerhaft als leer und die Zone läuft nie wieder. Wähl einen Sensor, oder lass den Haushalt entscheiden.",
       "required": "Dieses Feld wird zum Speichern gebraucht. Fülle es aus, oder wähle unten „Verwerfen und zurück“, um ohne Speichern zu gehen.",
+      "season_entity_missing": "Die Herkunft der Jahreszeit steht auf einer Entität, aber es ist keine Jahreszeit-Entität gewählt. Die Jahreszeit bleibt dann unbekannt und jede Aufgabe mit einer Jahreszeitenbeschränkung tut nichts. Wähl eine Entität, oder stell die Herkunft auf den Monat oder auf fest Sommer oder Winter.",
       "target_outside_band": "Die Zieltemperatur liegt auf der falschen Seite des Einschaltpunkts. Heizen zielt über den Punkt, an dem es beginnt, Kühlen darunter; umgekehrt bekommt das Gerät eine Temperatur, für die es nichts tun muss, was aussieht, als würde es sich weigern.",
       "too_few": "Wähle mindestens zwei Geräte; eine Gruppe aus einem schließt nichts aus.",
       "zone_without_modes": "Diese Zone darf weder heizen noch kühlen, kann also nie etwas tun. Schalte mindestens eines von beiden ein, oder lösch die Zone."
@@ -989,6 +990,12 @@
     },
     "override_target_conflict": {
       "message": "Zone {zone} gehört nicht zu der Entität, die du als Ziel gewählt hast."
+    },
+    "zone_bands_overlap": {
+      "message": "Zone {zone} hat ein Heiz- und ein Kühlband, die sich berühren oder überlappen, sodass der Raum abwechselnd heizen und kühlen würde."
+    },
+    "season_entity_missing": {
+      "message": "Die Herkunft der Jahreszeit steht auf einer Entität, aber es ist keine Jahreszeit-Entität gewählt; die Jahreszeit bleibt dadurch unbekannt und jede Aufgabe mit einer Jahreszeitenbeschränkung tut nichts."
     }
   },
   "services": {

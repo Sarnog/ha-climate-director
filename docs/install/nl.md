@@ -163,7 +163,7 @@ je in het hoofdmenu **Opslaan en sluiten** kiest.
 | **Dode band buitentemperatuur** | hoeveel graden een lopende taak voorbij zijn buitengrens mag doorlopen voordat hij omslaat; standaard 0,5, nul zet hem uit |
 | **Verwarmingssysteem** | *Centraal* of *Per zone*, zie hieronder |
 | **Herkomst seizoen** | waar het seizoen vandaan komt: de maand, een entiteit, of vast zomer/winter |
-| **Seizoensentiteit** | alleen nodig als de bron op *entiteit* staat; ook de ingebouwde `season.*`-entiteit is kiesbaar |
+| **Seizoensentiteit** | alleen nodig als de bron op *entiteit* staat; ook de ingebouwde `season.*`-entiteit is kiesbaar. Staat de bron op *entiteit* zonder gekozen entiteit, dan weigert het scherm op te slaan: het seizoen blijft dan onbekend en elke taak met een seizoensbeperking doet niets |
 | **Halfrond** | welke maanden als zomer tellen wanneer het seizoen uit de maand komt: noordelijk april–september, zuidelijk oktober–maart |
 | **Iemand die thuis is moet wakker zijn** | aan = het huis wacht tot er iemand thuis én wakker is; uit = slapen telt niet |
 | **Het rooster van een bewoner moet openstaan** | aan = het huis wacht op het eerste roostervenster; uit = alleen aanwezigheid telt |
@@ -263,8 +263,9 @@ er wel staat maar nooit iets doet:
 - een **lege naam** — de naam bepaalt het interne id van een nieuwe zone;
 - een **streeftemperatuur aan de verkeerde kant van het startpunt** — het
   apparaat krijgt dan een temperatuur waar het niets voor hoeft te doen;
-- **koelen dat start op of onder het punt waar verwarmen start** — dan vragen
-  de twee tegelijk om dezelfde kamer;
+- **banden die elkaar raken of overlappen**: het uitschakelpunt van verwarmen
+  ligt op of boven het aanpunt van koelen — dan zou de kamer om de beurt
+  verwarmen en koelen;
 - de zone op **de ruimte zelf zonder aanwezigheidssensor**, of een zone die
   **niet mag verwarmen en niet mag koelen**.
 

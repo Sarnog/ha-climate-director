@@ -163,7 +163,7 @@ what you typed is then thrown away. And **nothing** is stored until you pick
 | **Outdoor dead band** | how many degrees a running duty may carry on past its outdoor bound before it changes over; 0.5 by default, zero switches it off |
 | **Heating system** | *Central* or *Per zone*, see below |
 | **Season source** | where the season comes from: the month, an entity, or pinned to summer/winter |
-| **Season entity** | only needed when the source is set to *entity*; the built-in `season.*` entity can be picked too |
+| **Season entity** | only needed when the source is set to *entity*; the built-in `season.*` entity can be picked too. With the source on *entity* and none chosen, the screen refuses to save: the season then stays unknown and every duty with a season restriction does nothing |
 | **Hemisphere** | which months count as summer when the season comes from the month: northern April–September, southern October–March |
 | **Somebody home must be awake** | on = the house waits for somebody home *and* awake; off = sleep does not count |
 | **A resident's schedule must be open** | on = the house waits for the first schedule window; off = presence alone decides |
@@ -263,8 +263,8 @@ but never does anything:
 - an **empty name** — the name settles the internal id of a new zone;
 - a **target on the wrong side of the start point** — the appliance is then set
   to a temperature it need do nothing for;
-- **cooling that starts at or below where heating starts** — the two then ask
-  for the same room at once;
+- **bands that touch or overlap**: the heating switch-off point sits at or above
+  the cooling switch-on point — the room would then heat and cool by turns;
 - the zone set to **the room itself without a presence sensor**, or a zone that
   **may neither heat nor cool**.
 

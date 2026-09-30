@@ -164,7 +164,7 @@ hasta que eliges **Guardar y cerrar** en el menú principal.
 | **Banda muerta de temperatura exterior** | cuántos grados puede seguir una tarea en marcha más allá de su límite exterior antes de cambiar; 0,5 por defecto, cero la desactiva |
 | **Sistema de calefacción** | *Central* o *Por zona*, ver abajo |
 | **Origen de la estación** | de dónde sale la estación: el mes, una entidad, o fijada verano/invierno |
-| **Entidad de estación** | solo si la fuente está en *entidad*; la entidad integrada `season.*` también se puede elegir |
+| **Entidad de estación** | solo si la fuente está en *entidad*; la entidad integrada `season.*` también se puede elegir. Con la fuente en *entidad* y sin ninguna elegida, la pantalla se niega a guardar: la estación queda entonces desconocida y cada tarea con una restricción de estación no hace nada |
 | **Hemisferio** | qué meses cuentan como verano cuando la estación sale del mes: norte abril–septiembre, sur octubre–marzo |
 | **Alguien en casa debe estar despierto** | activado = la casa espera a alguien en casa *y* despierto; desactivado = dormir no cuenta |
 | **El horario de un residente debe estar abierto** | activado = la casa espera la primera franja de horario; desactivado = solo la presencia decide |
@@ -267,8 +267,9 @@ ahí pero nunca hace nada:
 - un **nombre vacío** — el nombre fija el id interno de una zona nueva;
 - un **objetivo en el lado equivocado del punto de arranque** — el aparato
   recibe entonces una temperatura para la que no tiene nada que hacer;
-- **enfriar que arranca en o por debajo del punto donde arranca calentar** —
-  ambos piden entonces la misma habitación a la vez;
+- **bandas que se tocan o se solapan**: el punto de apagado de calentar está en el
+  punto de arranque de enfriar o por encima — la habitación calentaría y enfriaría
+  entonces por turnos;
 - la zona en **la habitación en sí sin sensor de presencia**, o una zona que
   **no puede calentar ni enfriar**.
 

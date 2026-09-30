@@ -1598,6 +1598,28 @@ def _rule_zones(config: DirectorConfig) -> Iterator[Problem]:
                 f"zone {zone.zone_id} starts cooling at or below where it starts heating",
                 zone=zone.zone_id,
             )
+        elif (
+            zone.heat is not None
+            and zone.cool is not None
+            and (
+                zone.heat.start_at + zone.heat.hysteresis >= zone.cool.start_at
+                or zone.cool.start_at - zone.cool.hysteresis <= zone.heat.start_at
+            )
+        ):
+            # De twee banden raken elkaar of overlappen: het uitschakelpunt van
+            # verwarmen ligt op of boven het aanpunt van koelen. Dan zou de kamer
+            # om de beurt verwarmen en koelen - een instelfout die het scherm al
+            # weigert, maar die uit een oudere opslag kan komen.
+            #
+            # The two bands touch or overlap: the heating switch-off point sits at
+            # or above the cooling switch-on point. The room would then heat and
+            # cool by turns - a mistake the screen already refuses, but one that
+            # can come from older storage.
+            yield Problem(
+                "zone_bands_overlap",
+                f"zone {zone.zone_id} has a heating and a cooling band that overlap",
+                zone=zone.zone_id,
+            )
         for source in zone.sources:
             yield from _rule_source_outdoor_window(source, outdoor_known)
         for family in (ModeFamily.HEAT, ModeFamily.COOL):
@@ -2099,6 +2121,28 @@ def _timing_problems(config: DirectorConfig) -> list[Problem]:
     ]
 
 
+def _rule_seasons(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint when the season can never be read.
+
+    Staat de herkomst van het seizoen op *entiteit* zonder dat er een gekozen is,
+    dan blijft het seizoen onbekend en doet elke taak met een seizoensbeperking
+    niets. Dat is het stille niets waarvoor `unreadable_entities` bestaat, maar
+    dan zonder dat er iets te herlezen valt: de entiteit die ontbreekt is er niet
+    een die even wegvalt, maar een die nooit gekozen is.
+
+    With the season source on *entity* and none chosen, the season stays unknown
+    and every duty with a season restriction does nothing. That is the silent
+    nothing `unreadable_entities` exists for, but with nothing to re-read: the
+    entity that is missing is not one that dropped out for a moment, but one that
+    was never chosen.
+    """
+    if config.seasons.source is SeasonSource.ENTITY and not config.seasons.entity_id:
+        yield Problem(
+            "season_entity_missing",
+            "the season source is an entity, but none is chosen",
+        )
+
+
 def _layout_problems(config: DirectorConfig) -> list[str]:
     """Return the complaints about a heating layout that does not match the wiring.
 
@@ -2221,6 +2265,7 @@ _RULES = (
     _rule_holiday_calendars,
     _rule_resident_without_presence,
     _rule_exclusive_groups,
+    _rule_seasons,
     _layout_problems,
     _quiet_problems,
     _timing_problems,
