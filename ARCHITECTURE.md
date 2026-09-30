@@ -233,6 +233,21 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     capaciteit, want er valt niets meer aan te verzetten. De `Generator` houdt
     voorlopig zijn eigen regel — aanzetten mag, uitzetten niet — en dat verschil
     staat als idee in `ROADMAP.md`.
+
+    **Een hand aan het apparaat draagt niet huisbreed over.** Drukt iemand bij het
+    apparaat zelf op uit, dan valt de zone stil waarin dat apparaat hangt — elke
+    zone die eraan hangt, als het apparaat gedeeld is, want `_zones_of` legt ze
+    allemaal stil. Wat er níét gebeurt is een overdracht in de zin van dit anker:
+    alleen de schakelaar en de actie `set_override` dragen een zone over, en alleen
+    die twee nemen elk apparaat van de zone huisbreed mee. Een gedeeld apparaat
+    blijft dus beschikbaar voor de andere zones — de hand zegt iets over de kamer,
+    niet over de ketel die er toevallig ook hangt. Wie een gedeeld apparaat echt
+    weg wil hebben, drukt op dat apparaat zelf uit, of gebruikt de schakelaar om de
+    hele zone over te dragen. Dit anker wordt hier niet breder of smaller van: het
+    noemde de schakelaar en de actie al als de twee manieren om over te dragen, en
+    dat is wat de code doet. De andere kant blijft zoals hij is: de schakelaar op
+    de slaapkamer met de cv-thermostaat als tweede bron draagt die ketel nog
+    steeds over, en dan krijgen de andere kamers geen gasverwarming.
 12. **Het bereik van een bron hangt aan de bron en noemt zones.** Een bron draagt
     `covers_zones`: de zones die hij meeverwarmt of meekoelt zodra hij draait.
     Leeg betekent *alleen de eigen zone* — het gedrag van vóór deze instelling,
@@ -678,6 +693,12 @@ De zone kijkt zo netjes door naar zijn volgende bron, en heeft hij die niet, dan
 op neutraal uit met `opening_open_elsewhere` als reden in plaats van het misleidende
 `no_source_available`.
 
+`select()` laat ook een overgedragen apparaat vallen (`excluding`), precies zoals een
+huisbreed stilgezet apparaat, en `passed_over` noemt het niet. Een overdracht is geen
+storing maar een besluit van de gebruiker, dus zo'n apparaat hoort niet als "op reserve" op
+het scherm. Wat er naast ligt blijft staan: een onbereikbare bron die voorrang had op de
+gekozen bron staat nog gewoon in die lijst, ook als er een overgedragen apparaat tussen zit.
+
 ### constraints.py — wat mag tegelijk
 
 De circuitregel:
@@ -878,7 +899,14 @@ stond dan al weer aan voordat `_handed_back` gelezen was — de rest van de dag.
 samen** in plaats van te vervangen, zodat een hand van tijdens het opstarten niet stil
 verdwijnt onder een ouder opgeslagen oordeel. Een actie of schakelaar van vóór het herstel
 wordt in de eerste ronde daarna gewoon meegenomen: er gaat alleen een beslissing verloren,
-geen invoer.
+geen invoer. Er wordt vóór het herstel ook niets weggeschreven. Noteren mag, maar de opslag
+blijft onaangeroerd tot hij gelezen is: `Store.async_load` leest een wachtende schrijfactie
+in plaats van het bestand, dus staat er één klaar, dan komt het herstel uit op de half
+opgebouwde staat van dit moment en is het opgeslagen oordeel van de gebruiker verdwenen.
+`_async_save_state` onthoudt daarom alleen dát er iets te bewaren viel, en
+`_async_on_hass_started` schrijft één keer direct ná het herstel — ook als het herstel zelf
+omviel. Een installatie die tijdens het opstarten weer weggehaald wordt schrijft niets
+terug: de afbraakpoort (`_closing`) staat daar vóór.
 
 ### applier.py — uitvoeren
 
@@ -1606,6 +1634,21 @@ them without changing them here first.
     circuit and the capacity, since there is nothing left to move about it. The
     `Generator` keeps its own rule for now — switching on is allowed, switching
     off is not — and that difference stands as an idea in `ROADMAP.md`.
+
+    **A hand at the appliance does not hand over house-wide.** Pressing off at the
+    appliance itself silences the zone that appliance hangs in — every zone hanging
+    off it when the appliance is shared, since `_zones_of` silences them all. What
+    does *not* happen is a handover in the sense of this anchor: only the switch and
+    the `set_override` action hand a zone over, and only those two carry every
+    appliance of the zone along house-wide. A shared appliance therefore stays
+    available to the other zones — the hand says something about the room, not
+    about the boiler that happens to hang there too. Whoever really wants a shared
+    appliance out, presses off at that appliance itself, or uses the switch to hand
+    the whole zone over. This makes the anchor neither broader nor narrower: it
+    already named the switch and the action as the two ways to hand over, and that
+    is what the code does. The other side stays as it was: the switch on the
+    bedroom with the boiler thermostat as its second source still hands that boiler
+    over, and then the other rooms get no gas heating.
 12. **A source's reach hangs on the source and names zones.** A source carries
     `covers_zones`: the zones it heats or cools along with it the moment it runs.
     Empty means *its own zone only* — the behaviour from before this setting, so
@@ -2047,6 +2090,12 @@ source anyway, `sensor.…_source_<zone>` would name an appliance that then goes
 zone thus looks neatly on to its next source, and having none it lands on neutral with
 `opening_open_elsewhere` as its reason instead of the misleading `no_source_available`.
 
+`select()` also drops a handed-over appliance (`excluding`), exactly like a house-wide
+stopped one, and `passed_over` does not name it. A handover is no fault but a decision by
+the user, so such an appliance does not belong on screen as "on reserve". What lies beside
+it stays: an unreachable source that outranked the chosen one still stands in that list,
+even when a handed-over appliance sits in between.
+
 ### constraints.py — what may run together
 
 The circuit rule:
@@ -2241,7 +2290,14 @@ again before `_handed_back` had been read — for the rest of the day. Noting (`
 `_notice_hand`, the precipitation) is allowed in the meantime, and the restore **merges**
 rather than replaces, so a hand from during the startup does not quietly disappear under an
 older stored verdict. An action or switch from before the restore is simply carried into the
-first round after it: only a decision is lost, no input.
+first round after it: only a decision is lost, no input. Nothing is written before the
+restore either. Noting is allowed, but the store stays untouched until it has been read:
+`Store.async_load` reads a pending write instead of the file, so if one is standing ready
+the restore comes out on this moment's half-built state and the user's stored verdict is
+gone. `_async_save_state` therefore only remembers *that* something needed saving, and
+`_async_on_hass_started` writes once directly after the restore — also when the restore
+itself fell over. An installation removed again during the startup writes nothing back: the
+teardown gate (`_closing`) stands before that.
 
 ### applier.py — execution
 
