@@ -248,6 +248,23 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     dat is wat de code doet. De andere kant blijft zoals hij is: de schakelaar op
     de slaapkamer met de cv-thermostaat als tweede bron draagt die ketel nog
     steeds over, en dan krijgen de andere kamers geen gasverwarming.
+
+    **Een hand vervalt alleen door dezelfde hand, door slapen, door een leeg huis of
+    door de volgende dag.** Dat zijn de vier uitwegen, en er is geen vijfde: zet de
+    director een apparaat zelf weer aan, dan is dat geen hand aan het apparaat.
+    `_notice_hand` heft de hand daarom alleen op als de actieve stand niet van ons
+    komt: niet als het plan dat op tafel ligt (`_issued` of `data`) dat apparaat een
+    commando in dezelfde taakfamilie geeft, en niet als de boekhouding van een net
+    verstuurd aan-commando die stand nog verklaart (een apparaat meldt zijn nieuwe
+    stand soms pas een ronde later). Precies zoals `_we_wanted_it_off` een eigen
+    uit-commando niet als hand leest. Zo laat een gedeelde ketel die voor de
+    woonkamer aangaat de hand aan de zolder-airco staan — dezelfde regel als
+    hierboven, van de andere kant bekeken. Zet iemand het apparaat zelf weer aan, dan
+    vervalt de hand voor elke zone die aan dat apparaat hangt, zoals altijd. Dit
+    maakt het anker niet breder en niet smaller: het noemde de vier uitwegen al, en
+    hier staat welke gebeurtenis er *niet* bij hoort. De andere kant blijft zoals hij
+    is: dezelfde hand die het apparaat weer aanzet heft de hand op, net als slapen,
+    een leeg huis en de volgende dag.
 12. **Het bereik van een bron hangt aan de bron en noemt zones.** Een bron draagt
     `covers_zones`: de zones die hij meeverwarmt of meekoelt zodra hij draait.
     Leeg betekent *alleen de eigen zone* — het gedrag van vóór deze instelling,
@@ -897,9 +914,22 @@ binnenkomen wekken de debouncer, en een apparaat dat iemand eerder die dag met d
 stond dan al weer aan voordat `_handed_back` gelezen was — de rest van de dag. Noteren
 (`_notice_home`, `_notice_hand`, de neerslag) mag intussen wel, en het herstel **voegt
 samen** in plaats van te vervangen, zodat een hand van tijdens het opstarten niet stil
-verdwijnt onder een ouder opgeslagen oordeel. Een actie of schakelaar van vóór het herstel
-wordt in de eerste ronde daarna gewoon meegenomen: er gaat alleen een beslissing verloren,
-geen invoer. Er wordt vóór het herstel ook niets weggeschreven. Noteren mag, maar de opslag
+verdwijnt onder een ouder opgeslagen oordeel.
+
+**Wat iemand in die seconden aan een override of een vooruit-verzoek doet, wint van het
+herstel.** Wie tijdens het opstarten de overrideschakelaar omzet, `set_override` of
+`clear_override` aanroept, of een vooruit-verzoek zet of annuleert, zegt iets over dit
+moment; in de opslag staat een oordeel van vóór de herstart. De coordinator noteert daarom
+per zone dat de gebruiker er vóór het herstel met de hand aan zat, en `_restore_overrides`
+en het herstel van `until` slaan zo'n zone over: `clear_override` houdt de opgeslagen
+looptijd niet in leven, `set_override` zonder looptijd erft de opgeslagen eindtijd en
+afloopkeuze niet, en een vers verzoek houdt zijn eigen eindtijd. Het herstel van `bypass`
+vervangt niet maar **voegt samen**, zodat de keuze `ignore_openings` van een vers verzoek
+blijft staan naast wat er al lag. Een zone waar niets met de hand gebeurde leest gewoon de
+opslag, precies zoals eerst. De notitie gaat na het herstel weg; het herstel van de
+schakelaarstand zelf (de `RestoreEntity` in `async_added_to_hass`) is geen handeling van
+de gebruiker en telt dus niet mee. Zo gaat er alleen een beslissing verloren, geen invoer.
+Er wordt vóór het herstel ook niets weggeschreven. Noteren mag, maar de opslag
 blijft onaangeroerd tot hij gelezen is: `Store.async_load` leest een wachtende schrijfactie
 in plaats van het bestand, dus staat er één klaar, dan komt het herstel uit op de half
 opgebouwde staat van dit moment en is het opgeslagen oordeel van de gebruiker verdwenen.
@@ -1673,6 +1703,23 @@ them without changing them here first.
     is what the code does. The other side stays as it was: the switch on the
     bedroom with the boiler thermostat as its second source still hands that boiler
     over, and then the other rooms get no gas heating.
+
+    **A hand lapses only through the same hand, through sleeping, through an empty
+    house or through the next day.** Those are the four ways out, and there is no
+    fifth: when the director switches an appliance on itself, that is not a hand at
+    the appliance. `_notice_hand` therefore lifts the hand only when the active mode
+    does not come from us: not when the plan on the table (`_issued` or `data`)
+    carries a command in the same duty family for that appliance, and not when the
+    bookkeeping of a switch-on just sent still explains that mode (an appliance
+    sometimes reports its new mode a round later). Exactly as `_we_wanted_it_off`
+    does not read our own off command as a hand. That is how a shared boiler switched
+    on for the living room leaves the hand at the attic air conditioner standing —
+    the same rule as above, seen from the other side. Switch an appliance on
+    yourself, and the hand lapses for every zone hanging off that appliance, as
+    always. This makes the anchor neither broader nor narrower: it already named the
+    four ways out, and this names the event that is *not* one of them. The other side
+    stays as it was: the same hand switching the appliance back on lifts the hand,
+    just like sleeping, an empty house and the next day.
 12. **A source's reach hangs on the source and names zones.** A source carries
     `covers_zones`: the zones it heats or cools along with it the moment it runs.
     Empty means *its own zone only* — the behaviour from before this setting, so
@@ -2313,8 +2360,21 @@ wake the debouncer, and an appliance somebody switched off by hand earlier that 
 again before `_handed_back` had been read — for the rest of the day. Noting (`_notice_home`,
 `_notice_hand`, the precipitation) is allowed in the meantime, and the restore **merges**
 rather than replaces, so a hand from during the startup does not quietly disappear under an
-older stored verdict. An action or switch from before the restore is simply carried into the
-first round after it: only a decision is lost, no input. Nothing is written before the
+older stored verdict.
+
+**What somebody does to an override or a pre-conditioning request in those seconds wins over
+the restore.** Whoever turns the override switch during the startup, calls `set_override` or
+`clear_override`, or sets or cancels a pre-conditioning request, says something about this
+moment; the store holds a verdict from before the restart. The coordinator therefore notes per
+zone that the user touched it by hand before the restore, and `_restore_overrides` and the
+restore of `until` skip such a zone: `clear_override` does not keep the stored duration alive,
+`set_override` without a duration does not inherit the stored end time and expiry choice, and
+a fresh request keeps its own end time. The restore of `bypass` does not replace but
+**merges**, so the `ignore_openings` choice of a fresh request stands beside what was already
+there. A zone where nothing happened by hand simply reads the store, exactly as before. The
+note goes once the restore is done; the restore of the switch position itself (the
+`RestoreEntity` in `async_added_to_hass`) is no action by the user and therefore does not
+count. That way only a decision is lost here too, no input. Nothing is written before the
 restore either. Noting is allowed, but the store stays untouched until it has been read:
 `Store.async_load` reads a pending write instead of the file, so if one is standing ready
 the restore comes out on this moment's half-built state and the user's stored verdict is
