@@ -253,18 +253,21 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     door de volgende dag.** Dat zijn de vier uitwegen, en er is geen vijfde: zet de
     director een apparaat zelf weer aan, dan is dat geen hand aan het apparaat.
     `_notice_hand` heft de hand daarom alleen op als de actieve stand niet van ons
-    komt: niet als het plan dat op tafel ligt (`_issued` of `data`) dat apparaat een
-    commando in dezelfde taakfamilie geeft, en niet als de boekhouding van een net
+    komt: niet als de wijzigingen van deze ronde (`last_changes`) dat apparaat een
+    commando in dezelfde taakfamilie geven, en niet als de boekhouding van een net
     verstuurd aan-commando die stand nog verklaart (een apparaat meldt zijn nieuwe
     stand soms pas een ronde later). Precies zoals `_we_wanted_it_off` een eigen
-    uit-commando niet als hand leest. Zo laat een gedeelde ketel die voor de
-    woonkamer aangaat de hand aan de zolder-airco staan — dezelfde regel als
-    hierboven, van de andere kant bekeken. Zet iemand het apparaat zelf weer aan, dan
-    vervalt de hand voor elke zone die aan dat apparaat hangt, zoals altijd. Dit
-    maakt het anker niet breder en niet smaller: het noemde de vier uitwegen al, en
-    hier staat welke gebeurtenis er *niet* bij hoort. De andere kant blijft zoals hij
-    is: dezelfde hand die het apparaat weer aanzet heft de hand op, net als slapen,
-    een leeg huis en de volgende dag.
+    uit-commando niet als hand leest. Het plan dat op tafel ligt doet hier niet
+    mee: zodra de hand er staat laat de director de zone met rust, dus een plan dat
+    dat apparaat vraagt is het plan van vóór de hand — en dan zou dezelfde hand die
+    het apparaat weer aanzet zijn eigen hand niet meer opheffen. Zo laat een
+    gedeelde ketel die voor de woonkamer aangaat de hand aan de zolder-airco staan:
+    dezelfde regel als hierboven, van de andere kant bekeken. Zet iemand het
+    apparaat zelf weer aan, dan vervalt de hand voor elke zone die aan dat apparaat
+    hangt, zoals altijd. Dit maakt het anker niet breder en niet smaller: het noemde
+    de vier uitwegen al, en hier staat welke gebeurtenis er *niet* bij hoort. De
+    andere kant blijft zoals hij is: dezelfde hand die het apparaat weer aanzet heft
+    de hand op, net als slapen, een leeg huis en de volgende dag.
 12. **Het bereik van een bron hangt aan de bron en noemt zones.** Een bron draagt
     `covers_zones`: de zones die hij meeverwarmt of meekoelt zodra hij draait.
     Leeg betekent *alleen de eigen zone* — het gedrag van vóór deze instelling,
@@ -1193,19 +1196,6 @@ als de ruimtesensor het uitschakelpunt haalt.
 - Risico: een gangbare instelling valt hier zelf onder; de melding legt uit en weigert
   niets.
 
-**Een hand die niet vervalt door onze eigen aanzet van een gedeeld apparaat.** Alleen
-dezelfde hand, slapen, een leeg huis of de volgende dag heffen een hand op.
-- HA-laag: `_notice_hand` heft bij een actieve stand de hand alleen op als die stand niet
-  van de director zelf komt. Staat het apparaat in het plan dat op tafel ligt (`_issued`)
-  met een commando in dezelfde taakfamilie, dan is de melding ons eigen aanzetten en blijft
-  de hand van elke zone eraan staan - zoals `_we_wanted_it_off` een eigen uit-commando ook
-  niet als hand leest.
-- Open keuze: hoe lang een eigen aanzet als "van ons" telt - alleen het plan op tafel, of
-  ook een venster zoals `_commanded_off` voor een melding die een poll later komt.
-- Bewaakt: een livetoets met een gedeelde ketel en een airco met *Dit apparaat automatisch
-  aanzetten* in de zone met de hand: de ketel gaat aan voor de andere zone, en de airco
-  blijft ronde na ronde uit.
-
 **Wat er tijdens het opstarten aan een override of vooruit-verzoek gebeurt, wint van het
 herstel.** De schakelaar, `set_override`, `clear_override` en de keuze `ignore_openings` van
 een vooruit-verzoek van vóór het herstel blijven staan zoals de gebruiker ze zette.
@@ -1708,18 +1698,21 @@ them without changing them here first.
     house or through the next day.** Those are the four ways out, and there is no
     fifth: when the director switches an appliance on itself, that is not a hand at
     the appliance. `_notice_hand` therefore lifts the hand only when the active mode
-    does not come from us: not when the plan on the table (`_issued` or `data`)
-    carries a command in the same duty family for that appliance, and not when the
-    bookkeeping of a switch-on just sent still explains that mode (an appliance
-    sometimes reports its new mode a round later). Exactly as `_we_wanted_it_off`
-    does not read our own off command as a hand. That is how a shared boiler switched
-    on for the living room leaves the hand at the attic air conditioner standing —
-    the same rule as above, seen from the other side. Switch an appliance on
-    yourself, and the hand lapses for every zone hanging off that appliance, as
-    always. This makes the anchor neither broader nor narrower: it already named the
-    four ways out, and this names the event that is *not* one of them. The other side
-    stays as it was: the same hand switching the appliance back on lifts the hand,
-    just like sleeping, an empty house and the next day.
+    does not come from us: not when this round's changes (`last_changes`) carry a
+    command in the same duty family for that appliance, and not when the bookkeeping
+    of a switch-on just sent still explains that mode (an appliance sometimes reports
+    its new mode a round later). Exactly as `_we_wanted_it_off` does not read our own
+    off command as a hand. The plan on the table plays no part here: the moment the
+    hand stands, the director leaves the zone alone, so a plan asking for that
+    appliance is the plan from before the hand — and the same hand switching the
+    appliance back on would then no longer lift its own hand. That is how a shared
+    boiler switched on for the living room leaves the hand at the attic air
+    conditioner standing: the same rule as above, seen from the other side. Switch an
+    appliance on yourself, and the hand lapses for every zone hanging off that
+    appliance, as always. This makes the anchor neither broader nor narrower: it
+    already named the four ways out, and this names the event that is *not* one of
+    them. The other side stays as it was: the same hand switching the appliance back
+    on lifts the hand, just like sleeping, an empty house and the next day.
 12. **A source's reach hangs on the source and names zones.** A source carries
     `covers_zones`: the zones it heats or cools along with it the moment it runs.
     Empty means *its own zone only* — the behaviour from before this setting, so
@@ -2634,19 +2627,6 @@ once the room sensor reaches the switch-off point.
   the room sensor.
 - Risk: a common setting falls under this itself; the notice explains and refuses
   nothing.
-
-**A hand not lapsed by our own switch-on of a shared appliance.** Only the same hand,
-sleeping, an empty house or the next day lift a hand.
-- HA layer: on an active mode `_notice_hand` lifts the hand only when that mode does not
-  come from the director itself. When the appliance stands in the plan on the table
-  (`_issued`) with a command in the same duty family, the report is our own switch-on and
-  the hand of every zone on it stays - just as `_we_wanted_it_off` does not read our own
-  off command as a hand either.
-- Open choice: how long our own switch-on counts as "ours" - only the plan on the table,
-  or also a window like `_commanded_off` for a report that comes one poll later.
-- Guarded: a live test with a shared boiler and an air conditioner with *Start this
-  appliance automatically* in the zone with the hand: the boiler goes on for the other
-  zone, and the air conditioner stays off round after round.
 
 **What happens to an override or a pre-conditioning request during the startup wins over
 the restore.** The switch, `set_override`, `clear_override` and the `ignore_openings`

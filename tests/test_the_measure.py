@@ -404,9 +404,35 @@ FUNCTION_LIMIT = 80
 # the explanation beside `handed_over` in `_build_zone_decisions` and the extra
 # argument in the call to `sources.passed_over`; `engine/sources.py` (the new argument
 # and the exclusion in the list) stays below its measure.
+#
+# Een hand vervalt niet door onze eigen aanzet (N4): `coordinator.py` 2065 → 2201, zijn
+# `__init__` 246 → 258 en `_notice_hand` 117 → 137. De reparatie leest een actieve stand
+# alleen nog als hand als die niet van ons komt: het lid `_commanded_on` (beginwaarde en
+# de uitleg dat het het spiegelbeeld van `_commanded_off` is - net als dat lid buiten het
+# protocol, want alleen `coordinator.py` leest het),
+# `_note_commanded_on` naast `_note_commanded_off` in `_async_evaluate`, `_we_wanted_it_on`
+# met de uitleg waarom het plan op tafel hier *niet* meedoet (`last_changes`, gezet vóór
+# `apply`, plus het venster `_COMMANDED_WINDOW` op de notitie), en in `_notice_hand` de
+# `if` met de uitleg waarom een eigen aanzet geen hand is. Wat groeit is vooral uitleg;
+# de functies zelf blijven lineair. De stand-ins van die reparatie wonen in
+# `tests/simulation.py` en `tests/test_handed_back.py`, die geen maat hebben. Het anker
+# (NL + EN) noemt de nieuwe maatstaf, want daar hangt de uitspraak aan.
+#
+# A hand does not lapse through our own switch-on (N4): `coordinator.py` 2065 → 2201, its
+# `__init__` 246 → 258 and `_notice_hand` 117 → 137. The repair reads an active mode as a
+# hand only when it does not come from us: the `_commanded_on` member (starting value and
+# the explanation that it is the mirror image of `_commanded_off` - outside the protocol
+# like that member, since only `coordinator.py` reads it),
+# `_note_commanded_on` beside `_note_commanded_off` in `_async_evaluate`, `_we_wanted_it_on`
+# with the explanation of why the plan on the table plays *no* part here (`last_changes`,
+# set before `apply`, plus the `_COMMANDED_WINDOW` window on the note), and inside
+# `_notice_hand` the `if` with the explanation of why our own switch-on is no hand. What
+# grows is mostly explanation; the functions themselves stay linear. The stand-ins of that
+# repair live in `tests/simulation.py` and `tests/test_handed_back.py`, which have no
+# measure. The anchor (NL + EN) names the new yardstick, since the statement hangs on it.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2272,
-    "coordinator.py": 2065,
+    "coordinator.py": 2201,
     "engine/decide.py": 1811,
     "config_flow.py": 1492,
     "schemas.py": 893,
@@ -415,12 +441,12 @@ MODULE_EXCEPTIONS: dict[str, int] = {
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_build_commands"): 211,
     ("engine/decide.py", "_generator_commands"): 192,
-    ("coordinator.py", "__init__"): 246,
+    ("coordinator.py", "__init__"): 258,
     ("engine/models.py", "_rule_zones"): 164,
     ("engine/constraints.py", "resolve"): 128,
     ("engine/decide.py", "_collect_wishes"): 137,
     ("coordinator.py", "_refusal_data"): 119,
-    ("coordinator.py", "_notice_hand"): 117,
+    ("coordinator.py", "_notice_hand"): 137,
     ("engine/decide.py", "_build_zone_decisions"): 135,
     ("engine/decide.py", "_manual_conflict"): 103,
     ("state_store.py", "_async_restore_state"): 104,

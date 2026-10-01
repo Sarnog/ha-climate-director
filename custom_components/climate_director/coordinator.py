@@ -112,18 +112,21 @@ type ClimateDirectorEntry = ConfigEntry[ClimateDirectorCoordinator]
 #: two notices.
 _COMMAND_NOT_TAKING_ROUNDS = 10
 
-#: Hoe lang een eigen uit-commando geldt als verklaring voor een laat gemelde
-#: `off`. Sommige integraties (melcloud) melden de stand pas een poll later;
-#: meldt het apparaat dan alsnog `off`, dan is dat ons eigen commando en geen
-#: hand aan het apparaat. Een kwartier dekt een trage poll ruimschoots, en is
-#: kort genoeg dat een échte hand erna niet de hele dag onzichtbaar blijft.
+#: Hoe lang een eigen commando geldt als verklaring voor een laat gemelde stand.
+#: Sommige integraties (melcloud) melden de staat pas een poll later; meldt het
+#: apparaat dan alsnog `off`, dan is dat ons eigen commando en geen hand aan het
+#: apparaat - en meldt het de actieve stand die wij net vroegen, dan is dat onze
+#: eigen aanzet en evenmin een hand. Een kwartier dekt een trage poll ruimschoots,
+#: en is kort genoeg dat een échte hand erna niet de hele dag onzichtbaar blijft.
 #:
-#: How long our own off command counts as the explanation for a late-reported
-#: `off`. Some integrations (melcloud) report the state only a poll later; when
-#: the appliance then reports `off`, that is our own command and not a hand at
-#: the appliance. A quarter of an hour covers a slow poll amply, and is short
-#: enough that a real hand afterwards does not stay invisible all day.
-_COMMANDED_OFF_WINDOW = timedelta(minutes=15)
+#: How long our own command counts as the explanation for a late-reported mode.
+#: Some integrations (melcloud) report the state only a poll later; when the
+#: appliance then reports `off`, that is our own command and not a hand at the
+#: appliance - and when it reports the active mode we just asked for, that is our
+#: own switch-on and no hand either. A quarter of an hour covers a slow poll
+#: amply, and is short enough that a real hand afterwards does not stay invisible
+#: all day.
+_COMMANDED_WINDOW = timedelta(minutes=15)
 
 
 def storage_key(entry_id: str) -> str:
@@ -320,6 +323,18 @@ class ClimateDirectorCoordinator(
         """Sinds wanneer elk apparaat voor het laatst een uit-commando kreeg.
 
         Since when each appliance last received an off command.
+        """
+        self._commanded_on: dict[str, tuple[datetime, ModeFamily]] = {}
+        """Sinds wanneer elk apparaat voor het laatst een aan-commando kreeg, en
+        in welke taakfamilie: het spiegelbeeld van `_commanded_off`, voor een
+        apparaat dat zijn nieuwe stand pas een ronde later meldt. Zonder deze
+        boekhouding las die late melding als een hand aan het apparaat - zie
+        `_we_wanted_it_on`.
+
+        Since when each appliance last received an on command, and in which duty
+        family: the mirror image of `_commanded_off`, for an appliance reporting
+        its new mode one round late. Without this bookkeeping that late report
+        read as a hand at the appliance - see `_we_wanted_it_on`.
         """
         self.zone_overrides: dict[str, bool] = {}
         self._handed_back: dict[str, date] = {}
@@ -766,13 +781,15 @@ class ClimateDirectorCoordinator(
         overstemmen door het meteen weer aan te zetten is het ergste wat deze
         integratie kan doen. Dus: die zone valt stil tot dezelfde hand hem weer
         aanzet, of tot de volgende dag - want een besluit van gisteravond hoort
-        vanochtend niet meer te gelden.
+        vanochtend niet meer te gelden. Onze eigen aanzet van dat apparaat is
+        diezelfde hand niet (anker 11); zie `_we_wanted_it_on`.
 
         Somebody pressing off on the appliance itself is saying something, and
         overriding that by switching it straight back on is the worst thing this
         integration can do. So: that zone falls silent until the same hand turns
         it back on, or until the next day - since last night's decision should
-        not still hold this morning.
+        not still hold this morning. Our own switch-on of that appliance is not
+        that same hand (anchor 11); see `_we_wanted_it_on`.
         """
         # In schaduwmodus stuurt de director niets, dus valt er ook niemand te
         # overstemmen - en daarmee vervalt de reden waarom dit bestaat. Wat er
@@ -834,6 +851,17 @@ class ClimateDirectorCoordinator(
             # off command" explanation is spent by definition - however the
             # `off` in between was reported, `unavailable` included.
             self._commanded_off.pop(entity_id, None)
+
+            # Onze eigen aanzet is geen hand aan het apparaat (anker 11); anders
+            # hief de ene kamer met een gedeelde ketel de hand aan de andere kamer
+            # op. Zie `_we_wanted_it_on`.
+            #
+            # Our own switch-on is no hand at the appliance (anchor 11); see
+            # `_we_wanted_it_on`.
+            if self._we_wanted_it_on(entity_id, now):
+                self._commanded_on.pop(entity_id, None)
+                return
+
             cleared = False
             for zone in zones:
                 cleared = self._handed_back.pop(zone, None) is not None or cleared
@@ -849,6 +877,13 @@ class ClimateDirectorCoordinator(
         # start must carry it again, since nobody knows what the appliance did
         # with its own setpoint in the meantime.
         self._sent_setpoints.pop(entity_id, None)
+
+        # Het apparaat staat nu uit: de verklaring "ons aan-commando" is daarmee
+        # verbruikt, hoe dat `off` ook gemeld is.
+        #
+        # The appliance stands off now: that spends the "our on command"
+        # explanation with it, however that `off` was reported.
+        self._commanded_on.pop(entity_id, None)
 
         # Alleen als wíj hem niet net hebben uitgezet. Ons eigen commando is
         # geen handmatige ingreep, en zou de zone anders permanent stilleggen.
@@ -958,6 +993,54 @@ class ClimateDirectorCoordinator(
             else:
                 self._commanded_off[change.entity_id] = now
 
+    def _note_commanded_on(self, applied: tuple[Change, ...]) -> None:
+        """Remember when we last told each appliance to run, and doing what.
+
+        Het spiegelbeeld van `_note_commanded_off`, en om dezelfde reden: een
+        apparaat dat zijn stand pas een poll later meldt, meldt onze eigen aanzet
+        soms pas nadat het plan alweer is omgeslagen. Zonder deze boekhouding zou
+        `_we_wanted_it_on` die late melding voor een hand aan het apparaat
+        aanzien, en verviel de hand van elke zone eraan.
+
+        De taakfamilie gaat mee: een apparaat dat wij `heat` vroegen en dat
+        vervolgens `cool` meldt, meldt iets wat wij niet vroegen - dat is een hand
+        en geen eigen aanzet.
+
+        The mirror image of `_note_commanded_off`, and for the same reason: an
+        appliance reporting its mode one poll late sometimes reports our own
+        switch-on only after the plan has flipped back. Without this bookkeeping
+        `_we_wanted_it_on` would take that late report for a hand at the
+        appliance, and the hand of every zone hanging off it would lapse.
+
+        The duty family comes along: an appliance we asked for `heat` and that
+        then reports `cool` reports something we did not ask for - that is a hand,
+        not our own switch-on.
+        """
+        now = dt_util.now()
+        for change in applied:
+            family = family_of(change.command.hvac_mode)
+            if family is ModeFamily.NEUTRAL:
+                continue
+            reported = self.hass.states.get(change.entity_id)
+            if (
+                reported is not None
+                and not _unreadable(reported.state)
+                and family_of(reported.state) is family
+            ):
+                # Het apparaat meldt onze aanzet al: er is geen late melding meer
+                # te verklaren, en een oude notitie is daarmee ook verbruikt.
+                # `_notice_hand` kan deze notitie niet zelf opruimen op dit
+                # moment, want die liep al tijdens `apply` - vóórdat deze
+                # boekhouding geschreven werd.
+                #
+                # The appliance already reports our switch-on: there is no late
+                # report left to explain, and any old note is spent with it.
+                # `_notice_hand` cannot clear it here itself, because it already
+                # ran during `apply` - before this bookkeeping was written.
+                self._commanded_on.pop(change.entity_id, None)
+            else:
+                self._commanded_on[change.entity_id] = (now, family)
+
     def _we_wanted_it_off(self, entity_id: str) -> bool:
         """Return whether we told this appliance to stand down, or meant to.
 
@@ -976,7 +1059,7 @@ class ClimateDirectorCoordinator(
         previous round's.
         """
         when = self._commanded_off.get(entity_id)
-        if when is not None and dt_util.now() - when <= _COMMANDED_OFF_WINDOW:
+        if when is not None and dt_util.now() - when <= _COMMANDED_WINDOW:
             return True
 
         plan = self._issued or self.data
@@ -986,6 +1069,58 @@ class ClimateDirectorCoordinator(
             if command.entity_id == entity_id:
                 return family_of(command.hvac_mode) is ModeFamily.NEUTRAL
         return False
+
+    def _we_wanted_it_on(self, entity_id: str, family: ModeFamily) -> bool:
+        """Return whether the active mode this appliance reports is our own doing.
+
+        `_notice_hand` gebruikt dit om onze eigen aanzet niet voor een hand aan
+        het apparaat aan te zien (anker 11): alleen dezelfde hand, slapen, een
+        leeg huis en de volgende dag heffen een hand op, niet het feit dat de
+        director een gedeeld apparaat voor een andere kamer aanzet.
+
+        Twee sporen, en allebei nodig. De boekhouding van wat er écht is
+        uitgezonden (`_commanded_on`) dekt het apparaat dat zijn stand pas een
+        poll later meldt, wanneer het plan alweer is omgeslagen; de familie moet
+        daar kloppen - vroegen wij `heat` en meldt het apparaat `cool`, dan is dat
+        niet onze aanzet maar een hand. De wijzigingen van deze ronde
+        (`last_changes`, gezet vóór `apply`) dekken de melding die tijdens de
+        service call zelf binnenkomt - op dat moment is de boekhouding nog niet
+        geschreven.
+
+        Het plan dat op tafel ligt doet hier bewust **niet** mee, anders dan bij
+        `_we_wanted_it_off`: zodra de hand er staat laat de director de zone met
+        rust, dus een plan dat dit apparaat vraagt is het plan van vóór de hand -
+        en dan zou dezelfde hand die het apparaat weer aanzet zijn eigen hand niet
+        meer opheffen. `last_changes` zegt precies wat wij net stuurden.
+
+        `_notice_hand` uses this so it does not take our own switch-on for a hand
+        at the appliance (anchor 11): only the same hand, sleeping, an empty house
+        and the next day lift a hand, not the director switching a shared
+        appliance on for another room.
+
+        Two traces, and both are needed. The bookkeeping of what was really sent
+        (`_commanded_on`) covers the appliance reporting its mode one poll late,
+        when the plan has already flipped back; the family has to match there - we
+        asked for `heat` and the appliance reports `cool`, and that is not our
+        switch-on but a hand. The changes of this round (`last_changes`, set
+        before `apply`) cover the report arriving during the service call itself -
+        at that moment the bookkeeping has not been written yet.
+
+        The plan on the table deliberately plays no part here, unlike in
+        `_we_wanted_it_off`: the moment the hand stands, the director leaves the
+        zone alone, so a plan asking for this appliance is the plan from before
+        the hand - and the same hand switching the appliance back on would then no
+        longer lift its own hand. `last_changes` says exactly what we just sent.
+        """
+        noted = self._commanded_on.get(entity_id)
+        if noted is not None:
+            when, duty = noted
+            if duty is family and dt_util.now() - when <= _COMMANDED_WINDOW:
+                return True
+        return any(
+            change.entity_id == entity_id and family_of(change.command.hvac_mode) is family
+            for change in self.last_changes
+        )
 
     def _zones_handed_back(self, now: datetime, residents: dict[str, ResidentState]) -> set[str]:
         """Return the zones a hand stood down today, forgetting yesterday's.
@@ -1215,6 +1350,7 @@ class ClimateDirectorCoordinator(
             except Exception:  # noqa: BLE001
                 _LOGGER.exception("Applying the climate plan failed")
             self._note_commanded_off(self.last_applied)
+            self._note_commanded_on(self.last_applied)
             for change in self.last_applied:
                 if change.set_temperature and change.command.temperature is not None:
                     self._sent_setpoints[change.entity_id] = (

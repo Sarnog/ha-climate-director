@@ -721,6 +721,12 @@ class _HandStandIn:
         beginning of time and on equal timestamps the reading counts.
         """
         self._commanded_off: dict[str, object] = {}
+        self._commanded_on: dict[str, object] = {}
+        self.last_changes: tuple[object, ...] = ()
+        """Leeg: de simulatie voedt de hand zelf, er is geen eigen ronde.
+
+        Empty: the simulation feeds the hand itself; there is no round of ours.
+        """
         self._sent_setpoints: dict[str, tuple[str, float]] = {}
         self.saved = 0
         self.hass = _Hass(sim)
@@ -737,6 +743,7 @@ class _HandStandIn:
     _notice_hand = ClimateDirectorCoordinator._notice_hand
     _zones_of = ClimateDirectorCoordinator._zones_of
     _we_wanted_it_off = ClimateDirectorCoordinator._we_wanted_it_off
+    _we_wanted_it_on = ClimateDirectorCoordinator._we_wanted_it_on
     _everyone_asleep = ClimateDirectorCoordinator._everyone_asleep
     _house_is_empty = ClimateDirectorCoordinator._house_is_empty
 

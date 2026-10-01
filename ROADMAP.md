@@ -46,13 +46,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   als de ruimtesensor het uitschakelpunt haalt; regelt het apparaat op zijn eigen sensor net
   daaronder, dan blijft de taak (en het circuit) eindeloos doorlopen. Het scherm kan zeggen
   dat een doel gelijk aan het uitschakelpunt geen marge laat.
-- **Een hand die niet vervalt door onze eigen aanzet van een gedeeld apparaat** — meldt een
-  apparaat weer een actieve stand, dan heft de coordinator de hand op voor *elke* zone die
-  aan dat apparaat hangt. Voor een apparaat van de zone zelf is dat terecht, maar bij een
-  gedeeld apparaat niet: zet de director de ketel aan voor de woonkamer, dan vervalt daarmee
-  ook de hand aan de zolder-airco, en springt die airco alsnog aan. Een hand hoort alleen te
-  vervallen door dezelfde hand, door slapen, door een leeg huis of door de volgende dag -
-  niet doordat een ander apparaat van de zone werd aangezet.
 - **Wat er tijdens het opstarten aan een override of vooruit-verzoek gebeurt, wint van het
   herstel** — een schakelaar, `set_override` of `clear_override` van tijdens het opstarten
   van Home Assistant wordt niet apart onthouden: bij het herstel blijft de opgeslagen
@@ -315,13 +308,6 @@ The worked-out design proposals for everything below live in
   the room sensor reaches the switch-off point; if the appliance regulates on its own sensor
   just below it, the duty (and the circuit) keeps running endlessly. The screen could say
   that a target equal to the switch-off point leaves no margin.
-- **A hand not lapsed by our own switch-on of a shared appliance** — when an appliance reports an
-  active mode again, the coordinator lifts the hand for *every* zone hanging off that appliance.
-  For an appliance of the zone itself that is right, but not for a shared one: when the director
-  switches the boiler on for the living room, the hand at the attic air conditioner lapses along
-  with it, and that air conditioner comes on after all. A hand should lapse only through the same
-  hand, through sleeping, through an empty house or through the next day - not because another
-  appliance of the zone was switched on.
 - **What happens to an override or a pre-conditioning request during the startup wins over the
   restore** — a switch, `set_override` or `clear_override` from during Home Assistant's startup
   is not remembered separately: at the restore the stored duration stays in charge of the state

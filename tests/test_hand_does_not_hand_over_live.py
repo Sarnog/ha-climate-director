@@ -21,7 +21,8 @@ living room - a hand hands nothing over (anchor 11). The second test measures th
 other side: a hand at the shared boiler itself silences every room hanging off it,
 since that appliance belongs to no room in particular. The third puts the switch
 beside the hand in the same zone: then the switch wins and the boiler is handed over
-house-wide.
+house-wide. The fourth is the counter-test beside our own switch-on: the same hand
+switching the air conditioner back on lifts the hand again, and the zone rejoins.
 """
 
 from __future__ import annotations
@@ -130,23 +131,80 @@ class TestAHandAtTheAtticAirConditioner:
             home.hass.states.async_set(LIVING, "18.0", {"unit_of_measurement": "°C"})
             await settle(home)
 
-            # De zolder komt hier terug: onze eigen aanzet van de gedeelde ketel
-            # geldt voor elke zone die eraan hangt als "weer aangezet", en dat is
-            # het oude gedrag van een hand - dezelfde uitkomst als vóór de
-            # override-overdracht, met precies deze stappen nagemeten. Wat deze
-            # toets vastlegt is de kern van de reparatie: de woonkamer krijgt de
-            # ketel, want een hand draagt hem niet over.
+            # De hand blijft staan: onze eigen aanzet van de gedeelde ketel is geen
+            # hand aan de zolder (anker 11). De airco van de zolder krijgt daarom
+            # geen commando en blijft uit, ronde na ronde - anders hief de
+            # woonkamer met de ketel de hand aan de zolder op, en sprong die airco
+            # alsnog aan.
             #
-            # The attic rejoins here: our own switch-on of the shared boiler counts
-            # for every zone hanging off it as "switched on again", and that is the
-            # old meaning of a hand - the same outcome as before the override
-            # handover, measured with exactly these steps. What this test pins down
-            # is the heart of the repair: the living room gets the boiler, since a
-            # hand does not hand it over.
+            # The hand stays: our own switch-on of the shared boiler is no hand at
+            # the attic (anchor 11). The attic air conditioner therefore gets no
+            # command and stays off, round after round - otherwise the living room
+            # would lift the hand at the attic with the boiler, and that air
+            # conditioner would come on after all. What this test pins down is the
+            # heart of the repair: the living room gets the boiler, since a hand
+            # does not hand it over.
             assert home.state(BOILER) == "heat", (
                 "de woonkamer hoort de ketel te krijgen; de hand aan de zolder draagt hem niet over"
             )
             assert reason_of(home, "woonkamer") == "regulating"
+
+            assert home.coordinator._handed_back.get("zolder") is not None, (
+                "onze eigen aanzet van de ketel hief de hand aan de zolder op"
+            )
+            assert reason_of(home, "zolder") == "manual_override"
+
+            for _ in range(3):
+                home.clear_calls()
+                await home.evaluate()
+                await settle(home)
+                assert home.state(AIRCO) == "off", "de met de hand uitgezette airco ging toch aan"
+                airco_calls = [
+                    call for call in home.climate_calls() if call[1]["entity_id"] == AIRCO
+                ]
+                assert not airco_calls, "de airco van een hand-zone kreeg een commando"
+        finally:
+            await stop_house(home)
+
+
+class TestTheSameHandSwitchingItBackOn:
+    """Dezelfde hand die het apparaat weer aanzet heft de hand op (anker 11).
+
+    The same hand switching the appliance back on lifts the hand (anchor 11).
+
+    De tegenproef bij de eigen aanzet: een actieve stand die niet van ons komt is
+    een hand, en die heft de hand op voor elke zone aan dat apparaat - ook als het
+    plan van vóór de hand dat apparaat nog vraagt.
+
+    The counter-test beside our own switch-on: an active mode that does not come
+    from us is a hand, and it lifts the hand for every zone hanging off that
+    appliance - even when the plan from before the hand still asks for it.
+    """
+
+    async def test_the_hand_lapses(self) -> None:
+        home = await start_house(
+            installation(), config_dir=new_config_dir(), states=world(living="22.5", attic="18.5")
+        )
+        try:
+            await home.evaluate()
+            await settle(home)
+            assert home.state(AIRCO) == "heat", "de zolder verwarmt met zijn eigen airco"
+
+            home.clear_calls()
+            home.hass.states.async_set(AIRCO, "off", dict(MODES))
+            await settle(home)
+            assert home.coordinator._handed_back.get("zolder") is not None, (
+                "de hand aan de airco is niet opgemerkt"
+            )
+
+            home.clear_calls()
+            home.hass.states.async_set(AIRCO, "heat", dict(MODES))
+            await settle(home)
+
+            assert home.coordinator._handed_back == {}, (
+                "dezelfde hand die de airco weer aanzette hief de hand niet op"
+            )
+            assert reason_of(home, "zolder") == "regulating", "de zolder hoort weer mee te doen"
         finally:
             await stop_house(home)
 

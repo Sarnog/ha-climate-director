@@ -26,6 +26,7 @@ from homeassistant.util import dt as dt_util
 from custom_components.climate_director.coordinator import ClimateDirectorCoordinator
 from custom_components.climate_director.engine import (
     DirectorConfig,
+    ModeFamily,
     ModeSettings,
     Source,
     Zone,
@@ -184,6 +185,14 @@ def coordinator(
             whenever their sleep sensor says so.
             """
             self._commanded_off: dict[str, datetime] = {}
+            self._commanded_on: dict[str, tuple[datetime, object]] = {}
+            self.last_changes: tuple[Change, ...] = ()
+            """Leeg: deze stand-in meet de hand, niet wat een ronde net stuurde.
+
+            Empty: this stand-in measures the hand, not what a round just sent.
+            `_we_wanted_it_on` reads this round's changes here; without a round
+            there is nothing to read.
+            """
             self._sent_setpoints: dict[str, tuple[str, float]] = {}
             # `data` is het gepubliceerde besluit, `_issued` het besluit dat op
             # tafel ligt. Tijdens het uitvoeren zijn dat er twee; hier gaat het
@@ -214,6 +223,7 @@ def coordinator(
         _note_commanded_off = ClimateDirectorCoordinator._note_commanded_off
         _zones_of = ClimateDirectorCoordinator._zones_of
         _we_wanted_it_off = ClimateDirectorCoordinator._we_wanted_it_off
+        _we_wanted_it_on = ClimateDirectorCoordinator._we_wanted_it_on
         _resident = ClimateDirectorCoordinator._resident
 
         def _now(self) -> datetime:
@@ -541,6 +551,122 @@ class TestAnOwnStartConsumesTheOffNote:
         self._freeze(monkeypatch, now + timedelta(minutes=6))
         item._notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item._zones_handed_back() == {"slaapkamer"}
+
+
+class TestOurOwnSwitchOnIsNotAHand:
+    """Onze eigen aanzet van een gedeeld apparaat heft de hand niet op (anker 11).
+
+    Our own switch-on of a shared appliance does not lift the hand (anchor 11).
+
+    Wie bij het apparaat zelf op uit drukt zegt iets over die kamer. Zet de
+    director hetzelfde apparaat daarna voor een ándere kamer aan, dan is dat geen
+    hand aan het apparaat: een hand vervalt alleen door dezelfde hand, door
+    slapen, door een leeg huis of door de volgende dag. Anders heft de ene kamer
+    met een gedeelde ketel de hand aan de andere kamer op, en springt dat
+    apparaat alsnog aan.
+
+    Whoever presses off at the appliance itself says something about that room.
+    When the director then switches the same appliance on for *another* room, that
+    is no hand at the appliance: a hand lapses only through the same hand, through
+    sleeping, through an empty house or through the next day. Otherwise one room
+    with a shared boiler lifts the hand at another room, and that appliance comes
+    on after all.
+    """
+
+    BOILER = "climate.ketel"
+
+    @staticmethod
+    def _our_own_switch_on(item, entity_id: str, mode: str = "heat") -> None:
+        """Zet neer wat een eigen aanzet achterlaat: de wijziging van deze ronde.
+
+        Put down what our own switch-on leaves behind: the change of this round.
+        """
+        item.last_changes = (Change(UnitCommand(entity_id=entity_id, hvac_mode=mode), True, True),)
+
+    @staticmethod
+    def _a_hand_at_the_boiler(item) -> None:
+        """Leg een hand aan de ketel neer, en eis dat hij er echt staat.
+
+        De ketel moet in het plan gevraagd worden, anders leest zijn eigen `off`
+        als ons uit-commando en staat er helemaal geen hand. Zo kan geen enkele
+        toets hieronder groen blijven omdat er niets te meten viel.
+
+        Put a hand at the boiler down, and demand that it really stands. The plan
+        must ask for the boiler, or its own `off` reads as our off command and no
+        hand stands at all - so none of the tests below can stay green because
+        there was nothing to measure.
+        """
+        item._notice_hand(_Event(TestOurOwnSwitchOnIsNotAHand.BOILER, "heat", "off"))
+        assert set(item._handed_back) == {"woonkamer", "zolder"}, "de hand staat er niet"
+
+    def test_the_appliance_we_switched_on_keeps_the_hand(self) -> None:
+        item = coordinator(running_plan(self.BOILER), cfg=shared_config())
+        self._a_hand_at_the_boiler(item)
+
+        self._our_own_switch_on(item, self.BOILER)
+        item._notice_hand(_Event(self.BOILER, "off", "heat"))
+        assert set(item._handed_back) == {"woonkamer", "zolder"}, (
+            "onze eigen aanzet van de ketel hief de hand op"
+        )
+
+    def test_the_same_hand_switching_it_on_lifts_the_hand(self) -> None:
+        """De tegenproef: wij stuurden dit apparaat niets, dus dit is een hand.
+
+        Het plan dat op tafel ligt vraagt de ketel nog wel - dat is het plan van
+        vóór de hand, want zodra de hand er staat laat de director de zone met
+        rust. Dat plan maakt de aanzet dus niet van ons: anders hief dezelfde hand
+        die het apparaat weer aanzet zijn eigen hand niet meer op.
+
+        The counter-test: we sent this appliance nothing, so this is a hand. The
+        plan on the table does still ask for the boiler - that is the plan from
+        before the hand, since the director leaves the zone alone once the hand
+        stands. That plan therefore does not make the switch-on ours: otherwise
+        the same hand switching the appliance back on would no longer lift its own
+        hand.
+        """
+        item = coordinator(running_plan(self.BOILER), cfg=shared_config())
+        self._a_hand_at_the_boiler(item)
+
+        item._notice_hand(_Event(self.BOILER, "off", "heat"))
+        assert item._handed_back == {}
+
+    def test_a_late_report_of_our_own_switch_on_keeps_the_hand(self) -> None:
+        """Het plan is alweer omgeslagen; onze eigen aanzet meldt zich pas nu."""
+        item = coordinator(running_plan(self.BOILER), cfg=shared_config())
+        self._a_hand_at_the_boiler(item)
+
+        item._commanded_on[self.BOILER] = (dt_util.now(), ModeFamily.HEAT)
+        item._notice_hand(_Event(self.BOILER, "off", "heat"))
+        assert set(item._handed_back) == {"woonkamer", "zolder"}
+        assert item._commanded_on == {}, "de notitie hoort met de melding verbruikt te zijn"
+
+    def test_an_old_switch_on_note_no_longer_explains_a_hand(self, monkeypatch) -> None:
+        now = dt_util.now()
+        item = coordinator(running_plan(self.BOILER), cfg=shared_config())
+        self._a_hand_at_the_boiler(item)
+
+        monkeypatch.setattr(dt_util, "now", lambda: now + timedelta(minutes=20))
+        item._commanded_on[self.BOILER] = (now, ModeFamily.HEAT)
+        item._notice_hand(_Event(self.BOILER, "off", "heat"))
+        assert item._handed_back == {}
+
+    def test_another_duty_family_is_not_our_switch_on(self) -> None:
+        item = coordinator(running_plan(self.BOILER), cfg=shared_config())
+        self._a_hand_at_the_boiler(item)
+
+        self._our_own_switch_on(item, self.BOILER, "heat")
+        item._notice_hand(_Event(self.BOILER, "off", "cool"))
+        assert item._handed_back == {}, "een andere taakfamilie is een hand, geen eigen aanzet"
+
+    def test_an_off_in_between_spends_the_switch_on_note(self) -> None:
+        item = coordinator(running_plan(self.BOILER), cfg=shared_config())
+        item._commanded_on[self.BOILER] = (dt_util.now(), ModeFamily.HEAT)
+
+        self._a_hand_at_the_boiler(item)
+        assert item._commanded_on == {}, "het `off` ertussenin verbruikt de aan-notitie"
+
+        item._notice_hand(_Event(self.BOILER, "off", "heat"))
+        assert item._handed_back == {}
 
 
 class TestAGeneratorCountsForItsZones:
