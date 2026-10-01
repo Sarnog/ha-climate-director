@@ -540,3 +540,53 @@ class TestAnEntryRemovedDuringTheStartupLeavesNoFile:
             )
         finally:
             await stop_house(home)
+
+
+class TestABrokenRestoreStillWritesWhatWasNoted:
+    """Ook na een kapotte lezing gaat wat tijdens het opstarten bleef liggen de deur uit.
+
+    Even after a broken reading, what stayed behind during the startup goes out.
+
+    Vóór het herstel schrijft `_async_save_state` niets; het onthoudt alleen dát er
+    iets te bewaren viel. Valt het herstel zelf om, dan komt de schrijfstap in het
+    `try`-blok nooit langs, en dan hoort de `finally` het alsnog weg te schrijven - ná
+    de poort, anders blijft het weer liggen. Zonder die stap stond een thuiskomst van
+    tijdens het opstarten alleen in het geheugen, tot er toevallig weer iets bewaard
+    werd.
+
+    Before the restore `_async_save_state` writes nothing; it only remembers *that*
+    something needed saving. When the restore itself falls over, the write step in the
+    `try` block never comes by, and then the `finally` should write it away all the
+    same - after the gate, or it stays behind again. Without that step a homecoming
+    from during the startup stood in memory only, until something happened to be saved
+    again.
+    """
+
+    async def test_the_homecoming_reaches_the_store(self, monkeypatch) -> None:
+        config_dir = new_config_dir()
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(person="not_home"),
+        )
+        try:
+
+            async def broken_restore() -> None:
+                raise RuntimeError("kapotte opslag")
+
+            monkeypatch.setattr(home.coordinator, "_async_restore_state", broken_restore)
+            home.hass.states.async_set(PERSON, "home", {})
+            await settle_the_debouncer(home)
+            assert not os.path.exists(store_path(config_dir)), (
+                "er is vóór het herstel in de opslag geschreven"
+            )
+
+            await start_up(home)
+
+            assert os.path.exists(store_path(config_dir)), (
+                "wat tijdens het opstarten bleef liggen is nooit weggeschreven"
+            )
+            assert "danny" in read_store(config_dir)["home_since"]
+        finally:
+            await stop_house(home)

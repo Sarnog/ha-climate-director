@@ -9,7 +9,8 @@ tweede bron: iemand zet die airco met de afstandsbediening uit, en daarna wordt 
 woonkamer koud. De ketel hoort dan voor de woonkamer te gaan draaien - een hand
 draagt niets over (anker 11). De tweede toets meet de andere kant: een hand aan de
 gedeelde ketel zelf legt elke kamer erop stil, want dat apparaat is van niemand in
-het bijzonder.
+het bijzonder. De derde zet de schakelaar naast de hand in dezelfde zone: dan wint
+de schakelaar en is de ketel huisbreed overgedragen.
 
 `tests/test_hand_does_not_hand_over.py` pins that down in the engine; this file
 measures the same inside a running Home Assistant, with the cv thermostat as a
@@ -18,7 +19,9 @@ boiler as its second source: somebody switches that air conditioner off with the
 remote, and then the living room goes cold. The boiler should then run for the
 living room - a hand hands nothing over (anchor 11). The second test measures the
 other side: a hand at the shared boiler itself silences every room hanging off it,
-since that appliance belongs to no room in particular.
+since that appliance belongs to no room in particular. The third puts the switch
+beside the hand in the same zone: then the switch wins and the boiler is handed over
+house-wide.
 """
 
 from __future__ import annotations
@@ -174,5 +177,53 @@ class TestAHandAtTheSharedBoiler:
             )
             assert home.climate_calls() == [], "een van de kamers zette de ketel weer aan"
             assert home.state(BOILER) == "off"
+        finally:
+            await stop_house(home)
+
+
+class TestTheSwitchBesideAHand:
+    """Staan een hand en de schakelaar in dezelfde zone, dan wint de schakelaar.
+
+    When a hand and the switch stand in the same zone, the switch wins.
+
+    De hand alleen draagt niets over, maar de schakelaar draagt elk apparaat van de
+    zone huisbreed over (anker 11). Een hand die er al stond mag die overdracht niet
+    terugdraaien: `zone_hands` noemt alleen de zones die door een hand stilstaan en
+    níét door de schakelaar. Dan krijgt de ketel van niemand een commando, en de
+    woonkamer, die alleen aan de ketel hangt, heeft niets te kiezen.
+
+    The hand alone hands nothing over, but the switch hands every appliance of the
+    zone over house-wide (anchor 11). A hand already standing there must not undo that
+    handover: `zone_hands` names only the zones standing still through a hand and
+    *not* through the switch. Then the boiler gets a command from nobody, and the
+    living room, which hangs on the boiler alone, has nothing to choose.
+    """
+
+    async def test_the_boiler_is_handed_over_all_the_same(self) -> None:
+        home = await start_house(
+            installation(), config_dir=new_config_dir(), states=world(living="22.5", attic="18.5")
+        )
+        try:
+            await home.evaluate()
+            await settle(home)
+            home.hass.states.async_set(AIRCO, "off", dict(MODES))
+            await settle(home)
+            assert home.coordinator._handed_back.get("zolder") is not None, (
+                "de hand aan de airco is niet opgemerkt"
+            )
+
+            switch = home.by_key("zone_zolder_override")
+            await home.call("switch", "turn_on", {"entity_id": switch})
+            await settle(home)
+
+            home.clear_calls()
+            home.hass.states.async_set(LIVING, "18.0", {"unit_of_measurement": "°C"})
+            await settle(home)
+
+            assert home.state(BOILER) == "off", "de schakelaar hoort de ketel over te dragen"
+            assert not [call for call in home.climate_calls() if call[1]["entity_id"] == BOILER], (
+                "de overgedragen ketel kreeg toch een commando"
+            )
+            assert reason_of(home, "woonkamer") == "no_source_available"
         finally:
             await stop_house(home)
