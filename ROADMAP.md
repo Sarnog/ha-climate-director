@@ -53,6 +53,15 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   ook de hand aan de zolder-airco, en springt die airco alsnog aan. Een hand hoort alleen te
   vervallen door dezelfde hand, door slapen, door een leeg huis of door de volgende dag -
   niet doordat een ander apparaat van de zone werd aangezet.
+- **Wat er tijdens het opstarten aan een override of vooruit-verzoek gebeurt, wint van het
+  herstel** — een schakelaar, `set_override` of `clear_override` van tijdens het opstarten
+  van Home Assistant wordt niet apart onthouden: bij het herstel blijft de opgeslagen
+  looptijd de baas over de stand die de gebruiker zette. Na een annulering komt een lopende
+  opgeslagen looptijd terug, een `set_override` zonder looptijd krijgt de opgeslagen eindtijd
+  en afloopkeuze erbij, en een vooruit-verzoek met `ignore_openings` verliest die keuze,
+  omdat het herstel `bypass` vervangt in plaats van het samen te voegen. Alleen
+  `set_override` met een nog lopende looptijd houdt stand.
+
 ## Could have
 
 - **De veldenkaart van de formulierbewaking valt stil terug op de `Call`-knoop** —
@@ -254,13 +263,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   *Opstaan zet het huis pas aan vanaf* bij zo'n bewoner zonder slaapvenster elke remdag
   van middernacht tot de remtijd: er valt geen opstaan te zien. Een melding in het scherm
   *Bewoner* zou beide zichtbaar maken.
-- **Een schakelaar of annulering tijdens het opstarten wordt niet apart onthouden** — bij
-  het herstel blijft de opgeslagen looptijd de baas over de stand die de schakelaar
-  meekreeg. Zet iemand de overdracht tijdens het opstarten van Home Assistant uit of aan
-  terwijl er een looptijd in de opslag staat, dan wint die opgeslagen looptijd: een
-  lopende looptijd komt terug, een verlopen looptijd vervalt. Alleen de actie
-  `set_override` met een nog lopende looptijd houdt stand. Een aparte administratie van
-  wat de gebruiker zelf deed zou dit precies maken.
 
 ## Would have
 
@@ -320,6 +322,14 @@ The worked-out design proposals for everything below live in
   with it, and that air conditioner comes on after all. A hand should lapse only through the same
   hand, through sleeping, through an empty house or through the next day - not because another
   appliance of the zone was switched on.
+- **What happens to an override or a pre-conditioning request during the startup wins over the
+  restore** — a switch, `set_override` or `clear_override` from during Home Assistant's startup
+  is not remembered separately: at the restore the stored duration stays in charge of the state
+  the user set. After a cancellation a running stored duration comes back, a `set_override`
+  without a duration gets the stored end time and expiry choice added, and a pre-conditioning
+  request with `ignore_openings` loses that choice, since the restore replaces `bypass` instead
+  of merging it. Only `set_override` with a duration still running holds its ground.
+
 ## Could have
 
 - **The form guard's field map silently falls back to the `Call` node** —
@@ -517,12 +527,6 @@ The worked-out design proposals for everything below live in
   other way round, such a resident's own *Getting up only starts the house from* without
   a sleep window brakes every brake day from midnight until the brake time: there is no
   getting up to see. A notice on the *Resident* screen would make both visible.
-- **A switch or cancellation during the startup is not remembered separately** — at the
-  restore the stored duration stays in charge of the state the switch was given. When
-  somebody turns the handover off or on during Home Assistant's startup while a duration
-  sits in the store, that stored duration wins: a running one comes back, an expired one
-  lapses. Only the `set_override` action with a duration still running holds its ground.
-  A separate record of what the user did would make this exact.
 
 ## Would have
 

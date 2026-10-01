@@ -1163,6 +1163,30 @@ als de ruimtesensor het uitschakelpunt haalt.
 - Risico: een gangbare instelling valt hier zelf onder; de melding legt uit en weigert
   niets.
 
+**Een hand die niet vervalt door onze eigen aanzet van een gedeeld apparaat.** Alleen
+dezelfde hand, slapen, een leeg huis of de volgende dag heffen een hand op.
+- HA-laag: `_notice_hand` heft bij een actieve stand de hand alleen op als die stand niet
+  van de director zelf komt. Staat het apparaat in het plan dat op tafel ligt (`_issued`)
+  met een commando in dezelfde taakfamilie, dan is de melding ons eigen aanzetten en blijft
+  de hand van elke zone eraan staan - zoals `_we_wanted_it_off` een eigen uit-commando ook
+  niet als hand leest.
+- Open keuze: hoe lang een eigen aanzet als "van ons" telt - alleen het plan op tafel, of
+  ook een venster zoals `_commanded_off` voor een melding die een poll later komt.
+- Bewaakt: een livetoets met een gedeelde ketel en een airco met *Dit apparaat automatisch
+  aanzetten* in de zone met de hand: de ketel gaat aan voor de andere zone, en de airco
+  blijft ronde na ronde uit.
+
+**Wat er tijdens het opstarten aan een override of vooruit-verzoek gebeurt, wint van het
+herstel.** De schakelaar, `set_override`, `clear_override` en de keuze `ignore_openings` van
+een vooruit-verzoek van vóór het herstel blijven staan zoals de gebruiker ze zette.
+- HA-laag: de coordinator noteert per zone dat de override of het verzoek tijdens het
+  opstarten met de hand gezet of beëindigd is; `_restore_overrides` slaat zo'n zone over in
+  plaats van alleen een zone met een nog lopende looptijd, en het herstel van `bypass` voegt
+  samen in plaats van te vervangen. Na het herstel gaat de notitie weg.
+- Bewaakt: livetoetsen in `CoreState.starting` met een lopende opgeslagen looptijd en
+  `clear_override`, met de schakelaar uit en aan, met `set_override` zonder looptijd, en met
+  een vooruit-verzoek met `ignore_openings` naast een opgeslagen verzoek.
+
 #### Could have
 
 **Huisbreed vermogensplafond.** `Source.wattage` + `DirectorConfig.watt_limit`; na de
@@ -1643,7 +1667,7 @@ them without changing them here first.
     appliance of the zone along house-wide. A shared appliance therefore stays
     available to the other zones — the hand says something about the room, not
     about the boiler that happens to hang there too. Whoever really wants a shared
-    appliance out, presses off at that appliance itself, or uses the switch to hand
+    appliance out presses off at that appliance itself, or uses the switch to hand
     the whole zone over. This makes the anchor neither broader nor narrower: it
     already named the switch and the action as the two ways to hand over, and that
     is what the code does. The other side stays as it was: the switch on the
@@ -2550,6 +2574,30 @@ once the room sensor reaches the switch-off point.
   the room sensor.
 - Risk: a common setting falls under this itself; the notice explains and refuses
   nothing.
+
+**A hand not lapsed by our own switch-on of a shared appliance.** Only the same hand,
+sleeping, an empty house or the next day lift a hand.
+- HA layer: on an active mode `_notice_hand` lifts the hand only when that mode does not
+  come from the director itself. When the appliance stands in the plan on the table
+  (`_issued`) with a command in the same duty family, the report is our own switch-on and
+  the hand of every zone on it stays - just as `_we_wanted_it_off` does not read our own
+  off command as a hand either.
+- Open choice: how long our own switch-on counts as "ours" - only the plan on the table,
+  or also a window like `_commanded_off` for a report that comes one poll later.
+- Guarded: a live test with a shared boiler and an air conditioner with *Start this
+  appliance automatically* in the zone with the hand: the boiler goes on for the other
+  zone, and the air conditioner stays off round after round.
+
+**What happens to an override or a pre-conditioning request during the startup wins over
+the restore.** The switch, `set_override`, `clear_override` and the `ignore_openings`
+choice of a pre-conditioning request from before the restore stay as the user set them.
+- HA layer: the coordinator notes per zone that the override or the request was set or
+  ended by hand during the startup; `_restore_overrides` skips such a zone instead of only
+  a zone with a duration still running, and the restore of `bypass` merges instead of
+  replacing. After the restore the note goes.
+- Guarded: live tests in `CoreState.starting` with a running stored duration and
+  `clear_override`, with the switch off and on, with `set_override` without a duration, and
+  with a pre-conditioning request with `ignore_openings` beside a stored request.
 
 #### Could have
 
