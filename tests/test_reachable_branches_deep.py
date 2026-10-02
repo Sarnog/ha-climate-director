@@ -278,6 +278,36 @@ def test_a_live_override_comes_back_and_an_expired_one_does_not() -> None:
     assert store.wakes == 1
 
 
+def test_a_live_handover_in_memory_survives_an_older_stored_duration() -> None:
+    """Een lopende overdracht in het geheugen blijft staan naast een oudere opslag.
+
+    Het herstel wist geen overdracht die in het geheugen al loopt: de opgeslagen
+    looptijd komt er niet overheen. Een zone waar de gebruiker zelf iets zette wordt
+    al overgeslagen op `_by_hand_before_restore`; deze wacht dekt elke andere
+    schrijver van `zone_override_until`, en daarom staat de eigenschap hier op
+    verzonnen invoer vast.
+
+    The restore does not wipe a handover that is already running in memory: the stored
+    duration does not come over it. A zone the user touched himself is already skipped
+    on `_by_hand_before_restore`; this guard covers every other writer of
+    `zone_override_until`, and that is why the property is pinned down here on invented
+    input.
+    """
+    now = dt_util.utcnow()
+    zone_id = house().zones[0].zone_id
+    store = StoreHost(house())
+    live = now + timedelta(hours=1)
+    store.zone_override_until[zone_id] = live
+    store.zone_overrides[zone_id] = True
+
+    store._restore_overrides(
+        {"override_until": {zone_id: (now + timedelta(hours=2)).isoformat()}}, now
+    )
+
+    assert store.zone_override_until[zone_id] == live
+    assert store.zone_overrides[zone_id] is True
+
+
 # -- problemen en teksten -----------------------------------------------------
 # -- problems and texts -------------------------------------------------------
 
