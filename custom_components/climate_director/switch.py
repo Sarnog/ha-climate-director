@@ -221,6 +221,23 @@ class ZoneOverrideSwitch(_DirectorSwitch):
         """
         self.coordinator.zone_overrides[self._zone_id] = self._is_on
 
+    async def _set(self, value: bool) -> None:
+        """Zet de schakelaar en noteer dat de gebruiker dit zelf deed.
+
+        Valt dit vóór het herstel, dan wint deze handeling van de opgeslagen
+        looptijd: `state_store` slaat de zone dan over. Het herstel van de
+        schakelaarstand zelf (`async_added_to_hass`) loopt hier niet langs en telt
+        dus niet mee.
+
+        Set the switch and note that the user did this himself. When it falls
+        before the restore, this action wins over the stored duration:
+        `state_store` then skips that zone. The restore of the switch position
+        itself (`async_added_to_hass`) does not come past here and therefore does
+        not count.
+        """
+        self.coordinator._note_by_hand_before_restore(self._zone_id)
+        await super()._set(value)
+
     def _publish(self) -> None:
         """Laat de looptijd vervallen en werk de luisteraars bij.
 

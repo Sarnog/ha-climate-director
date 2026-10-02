@@ -189,6 +189,7 @@ class CoordinatorSurface(Protocol):
     _home_since: dict[str, datetime]
     _asleep_since: datetime | None
     _save_pending: bool
+    _by_hand_before_restore: set[str]
     _precipitation_seen_at: datetime | None
     _cancel_precondition_wake: CALLBACK_TYPE | None
     _cancel_override_wake: CALLBACK_TYPE | None
@@ -208,6 +209,7 @@ class CoordinatorSurface(Protocol):
         return None
 
     def _async_save_state(self) -> None: ...
+    def _note_by_hand_before_restore(self, zone_id: str) -> None: ...
     def _live_preconditions(self) -> dict[str, datetime]: ...
     def _wake_at_the_first_expiry(self) -> None: ...
     def _override_wake_at_first_expiry(self) -> None: ...
@@ -436,6 +438,17 @@ class ClimateDirectorCoordinator(
         `_async_save_state` was not allowed to write before the restore stands here;
         `state_store._async_save_pending_state` picks it up.
         """
+        self._by_hand_before_restore: set[str] = set()
+        """De zones waar de gebruiker vóór het herstel zelf iets zette of stopte:
+        een override of een vooruit-verzoek van tijdens het opstarten wint van de
+        opslag, dus `state_store` slaat zo'n zone over. Alleen een handeling van de
+        gebruiker telt, en de notitie gaat weg zodra het herstel geweest is.
+
+        The zones where the user set or stopped something himself before the
+        restore: an override or a pre-conditioning request from during the startup
+        wins over the store, so `state_store` skips such a zone. Only an action by
+        the user counts, and the note goes as soon as the restore has been.
+        """
         self._family_since: dict[str, datetime | None] = {}
         self._family_seen: dict[str, ModeFamily] = {}
         self._home_since: dict[str, datetime] = {}
@@ -603,6 +616,12 @@ class ClimateDirectorCoordinator(
             # director would never decide again after one broken reading, and
             # that is worse than a world without the stored hand.
             self._restored = True
+            # Wat de gebruiker vóór het herstel zelf deed is nu verwerkt: de
+            # notitie gaat weg, zodat een handeling daarna gewoon een handeling is.
+            #
+            # What the user did himself before the restore has been handled now:
+            # the note goes, so an action afterwards is simply an action.
+            self._by_hand_before_restore.clear()
             self._async_save_pending_state()
             self._schedule_clock_reeval()
 

@@ -158,6 +158,7 @@ NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {
         "def entry(self) -> ClimateDirectorEntry: ...",
         "def async_request_evaluation(self) -> None: ...",
         "def _async_save_state(self) -> None: ...",
+        "def _note_by_hand_before_restore(self, zone_id: str) -> None: ...",
         "def _live_preconditions(self) -> dict[str, datetime]: ...",
         "def _wake_at_the_first_expiry(self) -> None: ...",
         "def _override_wake_at_first_expiry(self) -> None: ...",

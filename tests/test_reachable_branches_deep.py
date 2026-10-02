@@ -227,6 +227,14 @@ class StoreHost(_StateStoreMixin):
             self.zone_override_until: dict[str, Any] = {}
             self.zone_override_when_done: dict[str, str] = {}
             self.zone_override_entity: dict[str, str] = {}
+        # De notitie van wat de gebruiker vóór het herstel zelf deed: het herstel
+        # leest hem. Deze stand-in draait geen opstart, dus de verzameling blijft
+        # leeg en slaat niets over.
+        #
+        # The note of what the user did himself before the restore: the restore
+        # reads it. This stand-in runs no startup, so the set stays empty and skips
+        # nothing.
+        self._by_hand_before_restore: set[str] = set()
         self.wakes = 0
 
     def _override_wake_at_first_expiry(self) -> None:
@@ -685,14 +693,19 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
 #: worden: elke regel die erbij komt is een regel die de meting niet meer dekt, en
 #: zonder deze ratel groeit dat stil door. Het getal is gemeten:
 #: negen statements in `coordinator.py` en drie in elk van de
-#: vier mixins die het protocol onder `TYPE_CHECKING` importeren.
+#: vier mixins die het protocol onder `TYPE_CHECKING` importeren. 21 → 22: de
+#: protocolregel `_note_by_hand_before_restore` in `CoordinatorSurface` (N5) is één
+#: statement erbij, en die regel hoort daar - de mixins roepen hem aan en mypy heeft
+#: hem nodig.
 #:
 #: The number of named exclusions of the gate. The whitelist may only get shorter:
 #: every line added to it is a line the measurement no longer covers, and without
 #: this ratchet that grows silently. The number is measured:
 #: nine statements in `coordinator.py` and three in each of the four
-#: mixins that import the protocol under `TYPE_CHECKING`.
-NAMED_EXCLUSIONS_BUDGET = 21
+#: mixins that import the protocol under `TYPE_CHECKING`. 21 → 22: the protocol line
+#: `_note_by_hand_before_restore` in `CoordinatorSurface` (N5) is one statement more,
+#: and that line belongs there - the mixins call it and mypy needs it.
+NAMED_EXCLUSIONS_BUDGET = 22
 
 
 def test_the_named_exclusions_are_a_ratchet() -> None:

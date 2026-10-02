@@ -1196,17 +1196,6 @@ als de ruimtesensor het uitschakelpunt haalt.
 - Risico: een gangbare instelling valt hier zelf onder; de melding legt uit en weigert
   niets.
 
-**Wat er tijdens het opstarten aan een override of vooruit-verzoek gebeurt, wint van het
-herstel.** De schakelaar, `set_override`, `clear_override` en de keuze `ignore_openings` van
-een vooruit-verzoek van vóór het herstel blijven staan zoals de gebruiker ze zette.
-- HA-laag: de coordinator noteert per zone dat de override of het verzoek tijdens het
-  opstarten met de hand gezet of beëindigd is; `_restore_overrides` slaat zo'n zone over in
-  plaats van alleen een zone met een nog lopende looptijd, en het herstel van `bypass` voegt
-  samen in plaats van te vervangen. Na het herstel gaat de notitie weg.
-- Bewaakt: livetoetsen in `CoreState.starting` met een lopende opgeslagen looptijd en
-  `clear_override`, met de schakelaar uit en aan, met `set_override` zonder looptijd, en met
-  een vooruit-verzoek met `ignore_openings` naast een opgeslagen verzoek.
-
 #### Could have
 
 **Huisbreed vermogensplafond.** `Source.wattage` + `DirectorConfig.watt_limit`; na de
@@ -2627,17 +2616,6 @@ once the room sensor reaches the switch-off point.
   the room sensor.
 - Risk: a common setting falls under this itself; the notice explains and refuses
   nothing.
-
-**What happens to an override or a pre-conditioning request during the startup wins over
-the restore.** The switch, `set_override`, `clear_override` and the `ignore_openings`
-choice of a pre-conditioning request from before the restore stay as the user set them.
-- HA layer: the coordinator notes per zone that the override or the request was set or
-  ended by hand during the startup; `_restore_overrides` skips such a zone instead of only
-  a zone with a duration still running, and the restore of `bypass` merges instead of
-  replacing. After the restore the note goes.
-- Guarded: live tests in `CoreState.starting` with a running stored duration and
-  `clear_override`, with the switch off and on, with `set_override` without a duration, and
-  with a pre-conditioning request with `ignore_openings` beside a stored request.
 
 #### Could have
 

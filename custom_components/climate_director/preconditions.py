@@ -151,6 +151,12 @@ class _PreconditionsMixin(_CoordinatorBase):
             )
         chosen = [zone_id for zone_id in requested if zone_id in known]
         for zone_id in chosen:
+            # Deze handeling van de gebruiker wint van de opslag: viel dit vóór
+            # het herstel, dan komt een opgeslagen verzoek van deze zone niet terug.
+            #
+            # This action by the user wins over the store: when it fell before the
+            # restore, a stored request for this zone does not come back.
+            self._note_by_hand_before_restore(zone_id)
             self._precondition[zone_id] = until
             if ignore_openings:
                 self._precondition_bypass.add(zone_id)
@@ -184,6 +190,13 @@ class _PreconditionsMixin(_CoordinatorBase):
             for zone_id in zone_ids:
                 self._precondition.pop(zone_id, None)
                 self._precondition_bypass.discard(zone_id)
+        # Deze annulering wint van de opslag: viel dit vóór het herstel, dan komt
+        # een opgeslagen verzoek van deze zones niet terug.
+        #
+        # This cancellation wins over the store: when it fell before the restore,
+        # a stored request for these zones does not come back.
+        for zone_id in known if zone_ids is None else [item for item in zone_ids if item in known]:
+            self._note_by_hand_before_restore(zone_id)
         # De wekker gaat mee met de verzoeken die er nog staan. Is er niets
         # meer, dan blijft de staande wekker gewoon aflopen: hij vraagt dan een
         # beslisronde die niets te doen vindt, en een ronde zonder verschil kost

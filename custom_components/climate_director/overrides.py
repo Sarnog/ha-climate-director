@@ -97,6 +97,13 @@ class _OverridesMixin(_CoordinatorBase):
             _LOGGER.warning("set_override: zone %s has no source for %s", zone_id, hvac_mode)
             return False
 
+        # Deze handeling van de gebruiker wint van een opgeslagen looptijd: viel
+        # dit vóór het herstel, dan slaat `state_store` de zone over.
+        #
+        # This action by the user wins over a stored duration: when it fell before
+        # the restore, `state_store` skips that zone.
+        self._note_by_hand_before_restore(zone_id)
+
         self.zone_overrides[zone_id] = True
         self._pending_override[zone_id] = Change(
             command=UnitCommand(
@@ -149,6 +156,12 @@ class _OverridesMixin(_CoordinatorBase):
         off if the decision needs it to. A source with `autostart: false`
         therefore keeps running until it stands in the way (anchor 11).
         """
+        # Een annulering van de gebruiker wint van een opgeslagen looptijd: viel
+        # dit vóór het herstel, dan slaat `state_store` de zone over.
+        #
+        # A cancellation by the user wins over a stored duration: when it fell
+        # before the restore, `state_store` skips that zone.
+        self._note_by_hand_before_restore(zone_id)
         self.zone_overrides[zone_id] = False
         self._drop_override_timers(zone_id)
         self._pending_override.pop(zone_id, None)

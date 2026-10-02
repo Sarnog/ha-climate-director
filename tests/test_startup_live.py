@@ -21,6 +21,20 @@ switched off by hand earlier that day stood on again and stayed on for the rest 
 day. `tests/test_startup.py` pins the gate down in the coordinator; this file
 measures it inside a real Home Assistant, with the harness in `CoreState.starting`
 rather than on `running` at once.
+
+Wat er in die seconden aan een override of een vooruit-verzoek gebeurt, wint van
+het herstel: de schakelaar, `set_override`, `clear_override` en de keuze
+`ignore_openings` zijn jonger dan het bestand, dus het herstel slaat zo'n zone
+over (en `bypass` wordt samengevoegd in plaats van vervangen). Alleen een echte
+overgang van de schakelaar telt: het herstellen van zijn eigen stand
+(`RestoreEntity`) is geen handeling van de gebruiker.
+
+What happens in those seconds to an override or a pre-conditioning request wins
+over the restore: the switch, `set_override`, `clear_override` and the
+`ignore_openings` choice are younger than the file, so the restore skips such a
+zone (and `bypass` is merged rather than replaced). Only a real transition of the
+switch counts: restoring its own position (`RestoreEntity`) is no action by the
+user.
 """
 
 from __future__ import annotations
@@ -43,6 +57,8 @@ from harness_live import (
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState
 from homeassistant.util import dt as dt_util
+
+from custom_components.climate_director.const import WHEN_DONE_LEAVE, WHEN_DONE_TURN_OFF
 
 LIVING = "climate.woonkamer"
 SENSOR = "sensor.woonkamer"
@@ -467,6 +483,305 @@ class TestAFreshOverrideDuringTheStartupSurvivesAnExpiredOne:
             assert "woonkamer" in home.coordinator.zone_override_until
             assert reason_of(home) == "manual_override"
             assert home.state(LIVING) == "heat"
+        finally:
+            await stop_house(home)
+
+
+class TestAnOverrideEndedDuringTheStartupWins:
+    """`clear_override` van tijdens het opstarten wint van de opgeslagen looptijd.
+
+    A `clear_override` from during the startup wins over the stored duration.
+
+    De opslag draagt een lopende override; iemand beëindigt hem terwijl Home
+    Assistant nog bezig is. Het herstel mag hem niet terugzetten: die handeling van
+    de gebruiker is jonger dan het bestand, en anders staat de zone na de start
+    stil terwijl de gebruiker hem net teruggaf.
+    """
+
+    async def test_the_stored_override_does_not_come_back(self) -> None:
+        config_dir = new_config_dir()
+        until = dt_util.now() + timedelta(hours=2)
+        write_store(
+            config_dir,
+            {
+                "override_until": {"woonkamer": until.isoformat()},
+                "override_started": {"woonkamer": until.isoformat()},
+                "override_when_done": {"woonkamer": WHEN_DONE_LEAVE},
+                "override_entity": {"woonkamer": LIVING},
+            },
+        )
+
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(),
+        )
+        try:
+            home.clear_calls()
+            await home.call("climate_director", "clear_override", {"zone_id": "woonkamer"})
+            await settle_the_debouncer(home)
+
+            await start_up(home)
+
+            assert home.coordinator.zone_overrides.get("woonkamer") is not True, (
+                "het herstel zette de override van vóór de herstart weer aan"
+            )
+            assert "woonkamer" not in home.coordinator.zone_override_until
+            assert reason_of(home) == "regulating", "de woonkamer hoort weer mee te doen"
+            assert "woonkamer" not in read_store(config_dir).get("override_until", {}), (
+                "de opgeslagen looptijd staat nog in het bestand"
+            )
+        finally:
+            await stop_house(home)
+
+
+class TestAFreshOverrideDuringTheStartupKeepsNoDuration:
+    """`set_override` zonder looptijd erft de opgeslagen eindtijd niet.
+
+    A `set_override` without a duration does not inherit the stored end time.
+
+    De opslag draagt een override met nog een half uur te gaan en de keuze
+    *uitzetten bij afloop*; iemand zet de zone tijdens het opstarten zonder
+    looptijd over. Dat is een onbeperkte overdracht: erfde hij de opgeslagen
+    eindtijd, dan ging het apparaat een half uur later uit terwijl de gebruiker
+    juist niets van een einde had gezegd.
+    """
+
+    async def test_the_fresh_override_stands_without_an_end_time(self) -> None:
+        config_dir = new_config_dir()
+        until = dt_util.now() + timedelta(minutes=30)
+        write_store(
+            config_dir,
+            {
+                "override_until": {"woonkamer": until.isoformat()},
+                "override_when_done": {"woonkamer": WHEN_DONE_TURN_OFF},
+                "override_entity": {"woonkamer": LIVING},
+            },
+        )
+
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(),
+        )
+        try:
+            await home.call(
+                "climate_director",
+                "set_override",
+                {"zone_id": "woonkamer", "hvac_mode": "heat", "temperature": 23},
+            )
+            await settle_the_debouncer(home)
+
+            await start_up(home)
+
+            assert home.coordinator.zone_overrides.get("woonkamer") is True
+            assert "woonkamer" not in home.coordinator.zone_override_until, (
+                "de verse overdracht erfde de opgeslagen eindtijd"
+            )
+            assert "woonkamer" not in home.coordinator.zone_override_when_done
+            assert reason_of(home) == "manual_override"
+        finally:
+            await stop_house(home)
+
+
+class TestARequestDuringTheStartupKeepsItsOwnEndTime:
+    """Een vers vooruit-verzoek van tijdens het opstarten houdt zijn eigen eindtijd.
+
+    A fresh pre-conditioning request from during the startup keeps its own end time.
+
+    De opslag draagt een verzoek van negentig minuten; tijdens het opstarten vraagt
+    iemand dertig minuten voor dezelfde kamer. Dat verse verzoek is jonger, dus
+    geldt het - anders stookt het huis door op een oordeel van vóór de herstart.
+    """
+
+    async def test_the_fresh_request_wins(self) -> None:
+        config_dir = new_config_dir()
+        until = dt_util.now() + timedelta(minutes=90)
+        write_store(config_dir, {"until": {"woonkamer": until.isoformat()}})
+
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(),
+        )
+        try:
+            await home.call(
+                "climate_director", "precondition", {"zone_ids": ["woonkamer"], "minutes": 30}
+            )
+            await settle_the_debouncer(home)
+
+            await start_up(home)
+
+            stored = dt_util.parse_datetime(read_store(config_dir)["until"]["woonkamer"])
+            assert stored is not None
+            assert stored < until, "de opgeslagen eindtijd wint nog van het verse verzoek"
+            assert home.coordinator._precondition["woonkamer"] < until
+        finally:
+            await stop_house(home)
+
+
+class TestARequestDuringTheStartupKeepsItsIgnoreOpenings:
+    """De keuze `ignore_openings` van een vers verzoek blijft naast de opslag staan.
+
+    The `ignore_openings` choice of a fresh request stands beside the store.
+
+    Het herstel van `bypass` voegde niet samen maar verving, dus een verzoek met
+    *toch doen* van tijdens het opstarten verloor die keuze zodra er een opgeslagen
+    verzoek in een andere kamer lag. Het opgeslagen verzoek hoort gewoon terug te
+    komen; de verse keuze hoort te blijven.
+    """
+
+    async def test_the_fresh_request_keeps_its_choice(self) -> None:
+        config_dir = new_config_dir()
+        until = dt_util.now() + timedelta(minutes=40)
+        # De opslag draagt een lege `bypass`-lijst: alleen dan loopt het herstel van
+        # `bypass` langs deze regel, en alleen dan kan het de verse keuze vervangen.
+        #
+        # The store carries an empty `bypass` list: only then does the restore of
+        # `bypass` come past this line, and only then can it replace the fresh choice.
+        write_store(config_dir, {"until": {"woonkamer": until.isoformat()}, "bypass": []})
+
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(),
+        )
+        try:
+            await home.call(
+                "climate_director",
+                "precondition",
+                {"zone_ids": ["zolder"], "minutes": 30, "ignore_openings": True},
+            )
+            await settle_the_debouncer(home)
+
+            await start_up(home)
+
+            assert set(home.coordinator._precondition) == {"woonkamer", "zolder"}
+            assert home.coordinator._precondition_bypass == {"zolder"}, (
+                "de verse keuze *toch doen* is door het herstel vervangen"
+            )
+            stored = read_store(config_dir)
+            assert stored["bypass"] == ["zolder"]
+            assert "woonkamer" in stored["until"]
+        finally:
+            await stop_house(home)
+
+
+class TestACancelledRequestDuringTheStartupStaysCancelled:
+    """Een annulering van tijdens het opstarten laat het verzoek niet terugkomen.
+
+    A cancellation from during the startup does not let the request come back.
+
+    De gebruiker zegt *nee* tegen een verzoek dat in het bestand nog loopt. Kwam
+    dat verzoek na de start alsnog terug, dan stookte het huis door op een oordeel
+    waar de gebruiker net vanaf wilde.
+    """
+
+    async def test_the_stored_request_stays_away(self) -> None:
+        config_dir = new_config_dir()
+        until = dt_util.now() + timedelta(minutes=40)
+        write_store(config_dir, {"until": {"woonkamer": until.isoformat()}})
+
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(),
+        )
+        try:
+            await home.call("climate_director", "cancel_precondition", {"zone_ids": ["woonkamer"]})
+            await settle_the_debouncer(home)
+
+            await start_up(home)
+
+            assert "woonkamer" not in home.coordinator._precondition, (
+                "het opgeslagen verzoek kwam terug nadat de gebruiker het annuleerde"
+            )
+            assert "woonkamer" not in read_store(config_dir).get("until", {})
+        finally:
+            await stop_house(home)
+
+
+class TestASwitchDuringTheStartupWins:
+    """De overrideschakelaar van tijdens het opstarten wint van de opgeslagen stand.
+
+    The override switch from during the startup wins over the stored state.
+
+    De schakelaar zelf herstelt zijn stand (`RestoreEntity`) en dat is geen
+    handeling van de gebruiker; alleen een echte overgang telt. Uit en weer aan
+    tijdens het opstarten laat dus geen override achter, en aan naast een verlopen
+    opgeslagen looptijd geeft een onbeperkte overdracht.
+    """
+
+    async def test_switching_it_off_and_on_leaves_no_override(self) -> None:
+        config_dir = new_config_dir()
+        until = dt_util.now() + timedelta(hours=1)
+        write_store(
+            config_dir,
+            {
+                "override_until": {"woonkamer": until.isoformat()},
+                "override_entity": {"woonkamer": LIVING},
+            },
+        )
+
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(),
+        )
+        try:
+            switch = home.by_key("zone_woonkamer_override")
+            await home.call("switch", "turn_on", {"entity_id": switch})
+            await settle_the_debouncer(home)
+            await home.call("switch", "turn_off", {"entity_id": switch})
+            await settle_the_debouncer(home)
+
+            await start_up(home)
+
+            assert home.coordinator.zone_overrides.get("woonkamer") is not True, (
+                "de uit- en aan-stand van de schakelaar is door het herstel ongedaan gemaakt"
+            )
+            assert home.state(switch) == "off"
+            assert reason_of(home) == "regulating"
+        finally:
+            await stop_house(home)
+
+    async def test_switching_it_on_gives_an_unlimited_override(self) -> None:
+        config_dir = new_config_dir()
+        past = (dt_util.now() - timedelta(hours=2)).isoformat()
+        write_store(
+            config_dir,
+            {
+                "override_until": {"woonkamer": past},
+                "override_when_done": {"woonkamer": WHEN_DONE_TURN_OFF},
+                "override_entity": {"woonkamer": LIVING},
+            },
+        )
+
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(),
+        )
+        try:
+            switch = home.by_key("zone_woonkamer_override")
+            await home.call("switch", "turn_on", {"entity_id": switch})
+            await settle_the_debouncer(home)
+
+            await start_up(home)
+
+            assert home.coordinator.zone_overrides.get("woonkamer") is True
+            assert "woonkamer" not in home.coordinator.zone_override_until, (
+                "de verlopen opgeslagen looptijd hangt toch aan de verse overdracht"
+            )
+            assert home.state(switch) == "on"
+            assert reason_of(home) == "manual_override"
         finally:
             await stop_house(home)
 

@@ -228,6 +228,36 @@ class _StateStoreMixin(_CoordinatorBase):
         self._save_pending = False
         self._async_save_state()
 
+    @callback
+    def _note_by_hand_before_restore(self, zone_id: str) -> None:
+        """Note that the user touched this zone by hand before the restore.
+
+        Wie tijdens het opstarten de overrideschakelaar omzet, `set_override` of
+        `clear_override` aanroept, of een vooruit-verzoek zet of annuleert, zegt
+        iets over dít moment; in de opslag staat een oordeel van vóór de
+        herstart. Zo'n zone wordt bij het herstel overgeslagen, anders draait het
+        herstel de handeling van de gebruiker stil terug. Na het herstel gaat de
+        notitie weg: daarna is een handeling gewoon een handeling.
+
+        Alleen vóór het herstel telt dit: het herstel van de schakelaarstand zelf
+        (de `RestoreEntity` in `async_added_to_hass`) is geen handeling van de
+        gebruiker, en een aanroep daarna hoeft niets meer te weten.
+
+        Whoever turns the override switch during the startup, calls
+        `set_override` or `clear_override`, or sets or cancels a pre-conditioning
+        request, says something about *this* moment; the store holds a verdict
+        from before the restart. Such a zone is skipped at the restore, or the
+        restore quietly turns the user's action back. The note goes once the
+        restore is done: after that an action is simply an action.
+
+        This only counts before the restore: the restore of the switch position
+        itself (the `RestoreEntity` in `async_added_to_hass`) is no action by the
+        user, and a call afterwards needs to know nothing.
+        """
+        if getattr(self, "_restored", True):
+            return
+        self._by_hand_before_restore.add(zone_id)
+
     async def _async_restore_state(self) -> None:
         """Read back what was standing before the restart.
 
@@ -296,13 +326,25 @@ class _StateStoreMixin(_CoordinatorBase):
         until_raw = stored.get("until")
         if isinstance(until_raw, Mapping):
             for zone_id, raw in until_raw.items():
+                # De gebruiker was hier zelf al tijdens het opstarten: zijn verzoek
+                # (of zijn annulering) wint van de opslag.
+                #
+                # The user was already here himself during the startup: his request
+                # (or his cancellation) wins over the store.
+                if zone_id in self._by_hand_before_restore:
+                    continue
                 until = _stored_time(raw)
                 if until is not None and now < until:
                     self._precondition[zone_id] = until
 
         bypass_raw = stored.get("bypass")
         if isinstance(bypass_raw, (list, tuple, set)):
-            self._precondition_bypass = {
+            # Samenvoegen, niet vervangen: de keuze `ignore_openings` van een vers
+            # verzoek van tijdens het opstarten blijft staan naast wat er al lag.
+            #
+            # Merge, do not replace: the `ignore_openings` choice of a fresh
+            # request from during the startup stands beside what was already there.
+            self._precondition_bypass |= {
                 zone_id for zone_id in bypass_raw if zone_id in self._precondition
             }
 
@@ -379,7 +421,10 @@ class _StateStoreMixin(_CoordinatorBase):
         restored: set[str] = set()
         if isinstance(until_raw, Mapping):
             for zone_id, raw in until_raw.items():
-                if zone_id not in known_zones:
+                # Onbekende zone, of de gebruiker zat hier zelf al vóór het herstel.
+                #
+                # Unknown zone, or the user was already here himself before the restore.
+                if zone_id not in known_zones or zone_id in self._by_hand_before_restore:
                     continue
                 live = self.zone_override_until.get(zone_id)
                 if live is not None and now < live:

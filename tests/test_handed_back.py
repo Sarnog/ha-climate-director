@@ -186,6 +186,7 @@ def coordinator(
             """
             self._commanded_off: dict[str, datetime] = {}
             self._commanded_on: dict[str, tuple[datetime, object]] = {}
+            self._by_hand_before_restore: set[str] = set()
             self.last_changes: tuple[Change, ...] = ()
             """Leeg: deze stand-in meet de hand, niet wat een ronde net stuurde.
 
@@ -1048,6 +1049,12 @@ class TestItSurvivesARestart:
                 # residents no moment comes back.
                 self._home_since: dict[str, datetime] = {}
                 self._asleep_since: datetime | None = None
+                # Geen handeling van de gebruiker vóór het herstel in deze
+                # stand-in; het herstel leest de notitie dus leeg.
+                #
+                # No action by the user before the restore in this stand-in; the
+                # restore therefore reads the note empty.
+                self._by_hand_before_restore: set[str] = set()
                 self.config = config()
                 self.hass = SimpleNamespace(states={})
                 self.name = "Climate Director"

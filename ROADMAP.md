@@ -46,14 +46,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   als de ruimtesensor het uitschakelpunt haalt; regelt het apparaat op zijn eigen sensor net
   daaronder, dan blijft de taak (en het circuit) eindeloos doorlopen. Het scherm kan zeggen
   dat een doel gelijk aan het uitschakelpunt geen marge laat.
-- **Wat er tijdens het opstarten aan een override of vooruit-verzoek gebeurt, wint van het
-  herstel** — een schakelaar, `set_override` of `clear_override` van tijdens het opstarten
-  van Home Assistant wordt niet apart onthouden: bij het herstel blijft de opgeslagen
-  looptijd de baas over de stand die de gebruiker zette. Na een annulering komt een lopende
-  opgeslagen looptijd terug, een `set_override` zonder looptijd krijgt de opgeslagen eindtijd
-  en afloopkeuze erbij, en een vooruit-verzoek met `ignore_openings` verliest die keuze,
-  omdat het herstel `bypass` vervangt in plaats van het samen te voegen. Alleen
-  `set_override` met een nog lopende looptijd houdt stand.
 
 ## Could have
 
@@ -308,13 +300,6 @@ The worked-out design proposals for everything below live in
   the room sensor reaches the switch-off point; if the appliance regulates on its own sensor
   just below it, the duty (and the circuit) keeps running endlessly. The screen could say
   that a target equal to the switch-off point leaves no margin.
-- **What happens to an override or a pre-conditioning request during the startup wins over the
-  restore** — a switch, `set_override` or `clear_override` from during Home Assistant's startup
-  is not remembered separately: at the restore the stored duration stays in charge of the state
-  the user set. After a cancellation a running stored duration comes back, a `set_override`
-  without a duration gets the stored end time and expiry choice added, and a pre-conditioning
-  request with `ignore_openings` loses that choice, since the restore replaces `bypass` instead
-  of merging it. Only `set_override` with a duration still running holds its ground.
 
 ## Could have
 

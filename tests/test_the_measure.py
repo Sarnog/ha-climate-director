@@ -430,9 +430,35 @@ FUNCTION_LIMIT = 80
 # grows is mostly explanation; the functions themselves stay linear. The stand-ins of that
 # repair live in `tests/simulation.py` and `tests/test_handed_back.py`, which have no
 # measure. The anchor (NL + EN) names the new yardstick, since the statement hangs on it.
+#
+# Wat de gebruiker tijdens het opstarten zelf doet, wint van het herstel (N5):
+# `coordinator.py` 2201 → 2220 en zijn `__init__` 258 → 269 door het lid
+# `_by_hand_before_restore` (protocolregel, beginwaarde en de uitleg wat het is),
+# `state_store.py::_async_restore_state` 104 → 116 doordat het herstel van `until` en
+# van een override zo'n zone overslaat en `bypass` samenvoegt in plaats van te
+# vervangen (elk met de uitleg waarom: de handeling van de gebruiker is jonger dan
+# het bestand), en `preconditions.py::async_precondition` 83 → 89 doordat elke
+# toegekende zone genoteerd wordt. De notitie zelf woont in
+# `state_store.py::_note_by_hand_before_restore`, en de vijf aanroepen staan in
+# `preconditions.py` (zetten en annuleren), `overrides.py` (zetten en beëindigen) en
+# `switch.py` (de overrideschakelaar) - alle drie onder hun maat, net als
+# `state_store.py` (493). Wat groeit is vooral uitleg.
+#
+# What the user does himself during the startup wins over the restore (N5):
+# `coordinator.py` 2201 → 2220 and its `__init__` 258 → 269 through the
+# `_by_hand_before_restore` member (protocol line, starting value and the
+# explanation of what it is), `state_store.py::_async_restore_state` 104 → 116
+# because the restore of `until` and of an override skips such a zone and merges
+# `bypass` instead of replacing it (each with the explanation of why: the user's
+# action is younger than the file), and `preconditions.py::async_precondition`
+# 83 → 89 because every granted zone is noted. The note itself lives in
+# `state_store.py::_note_by_hand_before_restore`, and the five calls stand in
+# `preconditions.py` (setting and cancelling), `overrides.py` (setting and ending) and
+# `switch.py` (the override switch) - all three below their measure, like
+# `state_store.py` (493). What grows is mostly explanation.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2272,
-    "coordinator.py": 2201,
+    "coordinator.py": 2220,
     "engine/decide.py": 1811,
     "config_flow.py": 1492,
     "schemas.py": 893,
@@ -441,7 +467,7 @@ MODULE_EXCEPTIONS: dict[str, int] = {
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_build_commands"): 211,
     ("engine/decide.py", "_generator_commands"): 192,
-    ("coordinator.py", "__init__"): 258,
+    ("coordinator.py", "__init__"): 269,
     ("engine/models.py", "_rule_zones"): 164,
     ("engine/constraints.py", "resolve"): 128,
     ("engine/decide.py", "_collect_wishes"): 137,
@@ -449,11 +475,11 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("coordinator.py", "_notice_hand"): 137,
     ("engine/decide.py", "_build_zone_decisions"): 135,
     ("engine/decide.py", "_manual_conflict"): 103,
-    ("state_store.py", "_async_restore_state"): 104,
+    ("state_store.py", "_async_restore_state"): 116,
     ("engine/hysteresis.py", "_candidate"): 97,
     ("config_flow.py", "async_step_resident"): 97,
     ("engine/decide.py", "_resolve_with_fallbacks"): 92,
-    ("preconditions.py", "async_precondition"): 83,
+    ("preconditions.py", "async_precondition"): 89,
 }
 
 # Anker 13 (het thuiskomstmoment): `coordinator.py` 1852 → 1957 en zijn `__init__`

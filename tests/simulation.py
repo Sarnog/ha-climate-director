@@ -671,6 +671,7 @@ class _PreconditionStandIn:
         self.config = sim.config
         self._precondition: dict[str, datetime] = {}
         self._precondition_bypass: set[str] = set()
+        self._by_hand_before_restore: set[str] = set()
 
     # De echte methodes, zodat de begrenzing en het opschonen meegetest worden.
     # The real methods, so the capping and the pruning are tested along.
@@ -679,6 +680,7 @@ class _PreconditionStandIn:
     live = ClimateDirectorCoordinator._live_preconditions
     _live_preconditions = ClimateDirectorCoordinator._live_preconditions
     _wake_at_the_first_expiry = ClimateDirectorCoordinator._wake_at_the_first_expiry
+    _note_by_hand_before_restore = ClimateDirectorCoordinator._note_by_hand_before_restore
 
     @property
     def bypass(self) -> set[str]:
