@@ -923,15 +923,19 @@ verdwijnt onder een ouder opgeslagen oordeel.
 herstel.** Wie tijdens het opstarten de overrideschakelaar omzet, `set_override` of
 `clear_override` aanroept, of een vooruit-verzoek zet of annuleert, zegt iets over dit
 moment; in de opslag staat een oordeel van vóór de herstart. De coordinator noteert daarom
-per zone dat de gebruiker er vóór het herstel met de hand aan zat, en `_restore_overrides`
+per zone dat de gebruiker er vóór het herstel zelf iets aan deed, en `_restore_overrides`
 en het herstel van `until` slaan zo'n zone over: `clear_override` houdt de opgeslagen
 looptijd niet in leven, `set_override` zonder looptijd erft de opgeslagen eindtijd en
 afloopkeuze niet, en een vers verzoek houdt zijn eigen eindtijd. Het herstel van `bypass`
 vervangt niet maar **voegt samen**, zodat de keuze `ignore_openings` van een vers verzoek
-blijft staan naast wat er al lag. Een zone waar niets met de hand gebeurde leest gewoon de
-opslag, precies zoals eerst. De notitie gaat na het herstel weg; het herstel van de
-schakelaarstand zelf (de `RestoreEntity` in `async_added_to_hass`) is geen handeling van
-de gebruiker en telt dus niet mee. Zo gaat er alleen een beslissing verloren, geen invoer.
+blijft staan naast wat er al lag. Een zone waaraan de gebruiker niets deed, leest gewoon de
+opslag, precies zoals eerst. De notitie geldt voor de hele zone en niet per soort: een
+vooruit-verzoek of een annulering daarvan houdt ook een opgeslagen override van die zone
+tegen, `cancel_precondition` zonder zones die van elke zone, en een override houdt een
+opgeslagen verzoek tegen. De notitie gaat na het herstel weg; het herstel van de
+schakelaarstand zelf (de `RestoreEntity` in `async_added_to_hass`) is geen handeling van de
+gebruiker en telt dus niet mee. Op dat ene punt na gaat er zo alleen een beslissing
+verloren, geen invoer.
 Er wordt vóór het herstel ook niets weggeschreven. Noteren mag, maar de opslag
 blijft onaangeroerd tot hij gelezen is: `Store.async_load` leest een wachtende schrijfactie
 in plaats van het bestand, dus staat er één klaar, dan komt het herstel uit op de half
@@ -1195,6 +1199,24 @@ als de ruimtesensor het uitschakelpunt haalt.
   apparaat zelf verder regelt dan de ruimtesensor.
 - Risico: een gangbare instelling valt hier zelf onder; de melding legt uit en weigert
   niets.
+
+**Een override naast een hand neemt de hand mee.** Een override is een handeling van de
+gebruiker voor de hele zone, ook als er een hand aan een van haar apparaten staat.
+- HA-laag: `set_override` en de overrideschakelaar heffen de hand van die zone op, zodat
+  de zone na het einde van de override weer meedoet in plaats van het apparaat dat de
+  override aanzette ongeregeld te laten draaien tot het huis slaapt, leeg is of de
+  volgende dag begint.
+- Open keuze: de hand opheffen bij het begin van de override, of pas bij het einde.
+- Bewaakt: een livetoets met een hand aan de zolder-airco, `set_override` op de zolder en
+  daarna `clear_override`: de zolder doet weer mee en de airco wordt weer geregeld.
+
+**Wat er tijdens het opstarten gebeurt, telt per soort.** De notitie van wat de gebruiker
+vóór het herstel deed, onderscheidt de override van het vooruit-verzoek.
+- HA-laag: twee verzamelingen in plaats van één; `_restore_overrides` leest alleen die
+  van de override, het herstel van `until` alleen die van het verzoek.
+- Bewaakt: livetoetsen in `CoreState.starting` met een opgeslagen override naast een
+  vooruit-verzoek en naast `cancel_precondition` zonder zones (de override blijft), en
+  met `set_override` naast een opgeslagen verzoek (het verzoek blijft).
 
 #### Could have
 
@@ -2348,15 +2370,18 @@ older stored verdict.
 the restore.** Whoever turns the override switch during the startup, calls `set_override` or
 `clear_override`, or sets or cancels a pre-conditioning request, says something about this
 moment; the store holds a verdict from before the restart. The coordinator therefore notes per
-zone that the user touched it by hand before the restore, and `_restore_overrides` and the
+zone that the user did something to it before the restore, and `_restore_overrides` and the
 restore of `until` skip such a zone: `clear_override` does not keep the stored duration alive,
 `set_override` without a duration does not inherit the stored end time and expiry choice, and
 a fresh request keeps its own end time. The restore of `bypass` does not replace but
 **merges**, so the `ignore_openings` choice of a fresh request stands beside what was already
-there. A zone where nothing happened by hand simply reads the store, exactly as before. The
-note goes once the restore is done; the restore of the switch position itself (the
-`RestoreEntity` in `async_added_to_hass`) is no action by the user and therefore does not
-count. That way only a decision is lost here too, no input. Nothing is written before the
+there. A zone the user did nothing to simply reads the store, exactly as before. The note
+holds for the whole zone and not per kind: a pre-conditioning request or its cancellation also
+holds back a stored override of that zone, `cancel_precondition` without zones that of every
+zone, and an override holds back a stored request. The note goes once the restore is done; the
+restore of the switch position itself (the `RestoreEntity` in `async_added_to_hass`) is no
+action by the user and therefore does not count. Apart from that one point, only a decision is
+lost that way too, no input. Nothing is written before the
 restore either. Noting is allowed, but the store stays untouched until it has been read:
 `Store.async_load` reads a pending write instead of the file, so if one is standing ready
 the restore comes out on this moment's half-built state and the user's stored verdict is
@@ -2616,6 +2641,24 @@ once the room sensor reaches the switch-off point.
   the room sensor.
 - Risk: a common setting falls under this itself; the notice explains and refuses
   nothing.
+
+**An override beside a hand takes the hand along.** An override is an action by the user
+for the whole zone, even when a hand stands at one of its appliances.
+- HA layer: `set_override` and the override switch lift that zone's hand, so the zone
+  rejoins once the override ends instead of leaving the appliance the override switched
+  on running unregulated until the house sleeps, empties or the next day begins.
+- Open choice: lift the hand when the override begins, or only when it ends.
+- Guarded: a live test with a hand at the attic air conditioner, `set_override` on the
+  attic and then `clear_override`: the attic rejoins and the air conditioner is regulated
+  again.
+
+**What happens during the startup counts per kind.** The note of what the user did before
+the restore tells the override apart from the pre-conditioning request.
+- HA layer: two sets instead of one; `_restore_overrides` reads only the override's, the
+  restore of `until` only the request's.
+- Guarded: live tests in `CoreState.starting` with a stored override beside a
+  pre-conditioning request and beside `cancel_precondition` without zones (the override
+  stays), and with `set_override` beside a stored request (the request stays).
 
 #### Could have
 

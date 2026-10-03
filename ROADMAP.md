@@ -46,6 +46,16 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   als de ruimtesensor het uitschakelpunt haalt; regelt het apparaat op zijn eigen sensor net
   daaronder, dan blijft de taak (en het circuit) eindeloos doorlopen. Het scherm kan zeggen
   dat een doel gelijk aan het uitschakelpunt geen marge laat.
+- **Een override naast een hand neemt de hand mee** — zet iemand een apparaat met de hand uit
+  en daarna met de overrideschakelaar of `set_override` dezelfde kamer toch aan, dan blijft de
+  hand staan. Is de override voorbij, dan doet de kamer niet meer mee: het apparaat dat de
+  override aanzette blijft draaien zonder dat de director het nog regelt, tot het huis slaapt,
+  leeg is of de volgende dag begint.
+- **Wat er tijdens het opstarten gebeurt, telt per soort en niet per kamer** — de notitie van
+  wat de gebruiker tijdens het opstarten deed, geldt voor de hele kamer. Een vooruit-verzoek of
+  een annulering daarvan houdt daardoor ook een opgeslagen override van die kamer tegen
+  (`cancel_precondition` zonder kamers die van elke kamer), en een override houdt een
+  opgeslagen vooruit-verzoek tegen.
 
 ## Could have
 
@@ -300,6 +310,16 @@ The worked-out design proposals for everything below live in
   the room sensor reaches the switch-off point; if the appliance regulates on its own sensor
   just below it, the duty (and the circuit) keeps running endlessly. The screen could say
   that a target equal to the switch-off point leaves no margin.
+- **An override beside a hand takes the hand along** — when somebody switches an appliance off by
+  hand and then switches the same room on after all with the override switch or `set_override`,
+  the hand stays. Once the override is over the room no longer takes part: the appliance the
+  override switched on keeps running without the director regulating it, until the house
+  sleeps, empties or the next day begins.
+- **What happens during the startup counts per kind, not per room** — the note of what the user
+  did during the startup holds for the whole room. A pre-conditioning request or its
+  cancellation therefore also holds back a stored override of that room (`cancel_precondition`
+  without rooms that of every room), and an override holds back a stored pre-conditioning
+  request.
 
 ## Could have
 
