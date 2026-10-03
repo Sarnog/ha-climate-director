@@ -55,7 +55,7 @@ class StandIn:
         # `_async_on_hass_started` maakt hem na het herstel leeg, en deze stand-in
         # begint leeg.
         #
-        # The note of what the user did himself before the restore:
+        # The note of what the user did before the restore:
         # `_async_on_hass_started` empties it after the restore, and this stand-in
         # starts empty.
         self._by_hand_before_restore: set[str] = set()
@@ -160,6 +160,9 @@ async def test_the_first_decision_waits_for_hass_to_start(monkeypatch) -> None:
     assert item.evaluated == 1
     assert item.clock_armed == 1
     assert item._restored is True, "na het herstel hoort de poort open te staan"
+    assert item.saved_pending >= 1, (
+        "wat tijdens het opstarten bleef liggen, hoort na het herstel weggeschreven te worden"
+    )
 
 
 async def test_a_broken_restore_still_opens_the_gate() -> None:
@@ -189,6 +192,9 @@ async def test_a_broken_restore_still_opens_the_gate() -> None:
 
     assert item.clock_armed == 1, "de vangnetklok hoort ondanks de fout te lopen"
     assert item._restored is True, "de poort hoort ook na een kapotte lezing open te gaan"
+    assert item.saved_pending >= 1, (
+        "ook na een kapotte lezing hoort weggeschreven te worden wat bleef liggen"
+    )
 
 
 async def test_an_exception_from_the_first_decision_still_arms_the_clock() -> None:

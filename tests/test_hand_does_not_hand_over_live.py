@@ -10,7 +10,10 @@ woonkamer koud. De ketel hoort dan voor de woonkamer te gaan draaien - een hand
 draagt niets over (anker 11). De tweede toets meet de andere kant: een hand aan de
 gedeelde ketel zelf legt elke kamer erop stil, want dat apparaat is van niemand in
 het bijzonder. De derde zet de schakelaar naast de hand in dezelfde zone: dan wint
-de schakelaar en is de ketel huisbreed overgedragen.
+de schakelaar en is de ketel huisbreed overgedragen. De vierde is de tegenproef bij
+onze eigen aanzet: dezelfde hand die de airco weer aanzet heft de hand op, en de
+zone doet weer mee. De vijfde laat de ketel zijn stand pas een ronde later melden:
+ook die late melding van onze eigen aanzet heft de hand aan de zolder niet op.
 
 `tests/test_hand_does_not_hand_over.py` pins that down in the engine; this file
 measures the same inside a running Home Assistant, with the cv thermostat as a
@@ -23,6 +26,8 @@ since that appliance belongs to no room in particular. The third puts the switch
 beside the hand in the same zone: then the switch wins and the boiler is handed over
 house-wide. The fourth is the counter-test beside our own switch-on: the same hand
 switching the air conditioner back on lifts the hand again, and the zone rejoins.
+The fifth lets the boiler report its mode only a round later: that late report of
+our own switch-on does not lift the hand at the attic either.
 """
 
 from __future__ import annotations
@@ -283,5 +288,76 @@ class TestTheSwitchBesideAHand:
                 "de overgedragen ketel kreeg toch een commando"
             )
             assert reason_of(home, "woonkamer") == "no_source_available"
+        finally:
+            await stop_house(home)
+
+
+class TestALateReportOfOurOwnBoiler:
+    """Een late melding van onze eigen aanzet heft de hand evenmin op (anker 11).
+
+    A late report of our own switch-on does not lift the hand either (anchor 11).
+
+    Een apparaat zoals melcloud meldt zijn stand pas een ronde later. Is het plan
+    intussen alweer omgeslagen, dan staat de aanzet niet meer in de wijzigingen van
+    de ronde; alleen de boekhouding van wat er echt verstuurd is verklaart de
+    melding dan nog. Zonder die boekhouding hief de late melding de hand aan de
+    zolder op, en sprong de airco die iemand met de hand uitzette alsnog aan.
+
+    An appliance such as melcloud reports its mode only a round later. When the plan
+    has flipped back in the meantime, the switch-on is no longer in the round's
+    changes; only the bookkeeping of what was really sent still explains the report.
+    Without that bookkeeping the late report lifted the hand at the attic, and the
+    air conditioner somebody switched off by hand came on after all.
+    """
+
+    async def test_the_hand_at_the_attic_stays(self) -> None:
+        home = await start_house(
+            installation(),
+            config_dir=new_config_dir(),
+            states=world(living="22.5", attic="18.5"),
+            appliance="late_reporter",
+        )
+        try:
+            # Twee rondes: de aanzet van de airco komt pas een ronde later binnen.
+            #
+            # Two rounds: the air conditioner's switch-on only lands a round later.
+            await home.evaluate()
+            await settle(home)
+            await home.evaluate()
+            await settle(home)
+            assert home.state(AIRCO) == "heat", "de zolder verwarmt met zijn eigen airco"
+
+            home.hass.states.async_set(AIRCO, "off", dict(MODES))
+            await settle(home)
+            assert home.coordinator._handed_back.get("zolder") is not None, (
+                "de hand aan de airco is niet opgemerkt"
+            )
+
+            # De woonkamer wordt koud: de ketel krijgt zijn commando, maar meldt nog
+            # niets. Daarna is de woonkamer weer warm, zodat het plan de ketel niet
+            # meer vraagt vóórdat de melding binnenkomt.
+            #
+            # The living room goes cold: the boiler gets its command but reports
+            # nothing yet. Then the living room is warm again, so the plan no longer
+            # asks for the boiler before the report lands.
+            home.hass.states.async_set(LIVING, "18.0", {"unit_of_measurement": "°C"})
+            await asyncio.sleep(1.5)
+            await home.hass.async_block_till_done()
+            assert home.state(BOILER) == "off", "de ketel hoort zijn stand pas later te melden"
+            home.hass.states.async_set(LIVING, "22.5", {"unit_of_measurement": "°C"})
+            await asyncio.sleep(1.5)
+            await home.hass.async_block_till_done()
+
+            await home.settle()
+            assert home.state(BOILER) == "heat", "de late melding van de ketel kwam niet binnen"
+            assert home.coordinator._handed_back.get("zolder") is not None, (
+                "de late melding van onze eigen ketel-aanzet hief de hand aan de zolder op"
+            )
+
+            for _ in range(3):
+                await home.evaluate()
+                await settle(home)
+                assert home.state(AIRCO) == "off", "de met de hand uitgezette airco ging toch aan"
+                assert reason_of(home, "zolder") == "manual_override"
         finally:
             await stop_house(home)

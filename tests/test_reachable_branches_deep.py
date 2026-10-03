@@ -231,7 +231,7 @@ class StoreHost(_StateStoreMixin):
         # leest hem. Deze stand-in draait geen opstart, dus de verzameling blijft
         # leeg en slaat niets over.
         #
-        # The note of what the user did himself before the restore: the restore
+        # The note of what the user did before the restore: the restore
         # reads it. This stand-in runs no startup, so the set stays empty and skips
         # nothing.
         self._by_hand_before_restore: set[str] = set()
@@ -288,7 +288,7 @@ def test_a_live_handover_in_memory_survives_an_older_stored_duration() -> None:
     verzonnen invoer vast.
 
     The restore does not wipe a handover that is already running in memory: the stored
-    duration does not come over it. A zone the user touched himself is already skipped
+    duration does not come over it. A zone the user touched is already skipped
     on `_by_hand_before_restore`; this guard covers every other writer of
     `zone_override_until`, and that is why the property is pinned down here on invented
     input.

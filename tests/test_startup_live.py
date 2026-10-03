@@ -712,12 +712,17 @@ class TestASwitchDuringTheStartupWins:
     The override switch from during the startup wins over the stored state.
 
     De schakelaar zelf herstelt zijn stand (`RestoreEntity`) en dat is geen
-    handeling van de gebruiker; alleen een echte overgang telt. Uit en weer aan
+    handeling van de gebruiker; alleen een echte overgang telt. Aan en weer uit
     tijdens het opstarten laat dus geen override achter, en aan naast een verlopen
     opgeslagen looptijd geeft een onbeperkte overdracht.
+
+    The switch restores its own position (`RestoreEntity`), and that is no action
+    by the user; only a real transition counts. On and off again during the
+    startup therefore leaves no override behind, and on beside an expired stored
+    duration gives an unlimited handover.
     """
 
-    async def test_switching_it_off_and_on_leaves_no_override(self) -> None:
+    async def test_switching_it_on_and_off_leaves_no_override(self) -> None:
         config_dir = new_config_dir()
         until = dt_util.now() + timedelta(hours=1)
         write_store(

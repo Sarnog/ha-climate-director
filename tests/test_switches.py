@@ -85,7 +85,7 @@ class _Coordinator:
         # `_note_by_hand_before_restore` ziet `_restored` ontbreken en laat de
         # notitie meteen gaan.
         #
-        # The note of what the user did himself before the restore: the switch
+        # The note of what the user did before the restore: the switch
         # notes every real transition. This stand-in runs no startup, so
         # `_note_by_hand_before_restore` finds `_restored` missing and lets the
         # note go at once.

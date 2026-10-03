@@ -444,7 +444,7 @@ FUNCTION_LIMIT = 80
 # `switch.py` (de overrideschakelaar) - alle drie onder hun maat, net als
 # `state_store.py` (493). Wat groeit is vooral uitleg.
 #
-# What the user does himself during the startup wins over the restore (N5):
+# What the user does during the startup wins over the restore (N5):
 # `coordinator.py` 2201 → 2220 and its `__init__` 258 → 269 through the
 # `_by_hand_before_restore` member (protocol line, starting value and the
 # explanation of what it is), `state_store.py::_async_restore_state` 104 → 116
