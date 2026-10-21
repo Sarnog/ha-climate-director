@@ -210,6 +210,21 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     seconde tussen zitten en pas de volgende beslisronde de eindtijd of `unknown`
     tonen.
 
+    **Een override begint met het opheffen van de hand van zijn zone.** Een hand aan
+    een apparaat en een override zijn allebei een ingreep van de gebruiker; zet
+    iemand na een hand de overrideschakelaar of `set_override` aan, dan is die
+    override het jongste oordeel en vervalt de hand van die zone op dat moment.
+    Dat is **breder** dan de regel dat alleen dezelfde hand een hand opheft: een
+    override is ook een ingreep van de gebruiker, maar dan een die de hele zone
+    aangaat. Anders bleef de zone na het einde van de override overgedragen aan een
+    hand die allang door een nieuwe ingreep was ingehaald, en bleef het apparaat dat
+    de override aanzette ongeregeld draaien tot het huis sliep, leeg was of de
+    volgende dag begon. De andere kant blijft staan: de hand vervalt bij het
+    **begin**, niet bij het einde, dus een hand die tijdens de override ontstaat
+    (iemand zet het apparaat zelf uit) blijft staan en overleeft `clear_override`.
+    En alleen de zone van de override verliest haar hand; een gedeeld apparaat dat
+    ook een andere zone bedient, laat de hand van die andere zone staan.
+
     **Een override draagt elk apparaat van die zone over, huisbreed.** Staat een
     zone onder override — de schakelaar of de actie `set_override` — dan is elk
     apparaat dat in die zone bron is overgedragen: de director stuurt het geen
@@ -583,6 +598,17 @@ tijdstempel blokkeert direct: opschorten is de onschadelijke richting om fout in
 zitten, en weigeren te handelen op een onbekende leeftijd zou een openstaande kamer
 blijven verwarmen.
 
+De kamerpoort kent een nalooptijd: een kamer die net leeg werd, telt nog
+`presence_timeout` seconden als bezet, zodat iemand die de deur uitloopt niet meteen
+de verwarming voelt afslaan. Die tijd begint alleen bij een **echte overgang van
+bezet naar niet-bezet**. Een aanwezigheidssensor die na een herstart of na een
+verbroken verbinding opnieuw `off` meldt, draagt een vers tijdstip dat niets over het
+vertrek zegt; een overgang van of naar `unavailable` of `unknown` telt daarom niet.
+De coordinator noteert het moment van de laatste echte overgang per zone en bewaart
+het in de opslag, en `world_builder._presence` geeft dat moment door in plaats van
+`last_changed`. Zonder bewaard moment is het moment onbekend, en dan telt de kamer
+als leeg: een lege kamer met rust laten is de onschadelijke kant om fout in te zitten.
+
 De slaappoort kent twee standen. Is er niemand op, dan is dat `EVERYONE_ASLEEP`. Staat er
 wél iemand op terwijl een ander thuis nog slaapt, dan geldt de uiterste opsta-tijd van die
 slaper (`Resident.wake_deadline`): vóór dat tijdstip houdt hij het huis tegen met
@@ -923,19 +949,21 @@ verdwijnt onder een ouder opgeslagen oordeel.
 herstel.** Wie tijdens het opstarten de overrideschakelaar omzet, `set_override` of
 `clear_override` aanroept, of een vooruit-verzoek zet of annuleert, zegt iets over dit
 moment; in de opslag staat een oordeel van vóór de herstart. De coordinator noteert daarom
-per zone dat de gebruiker er vóór het herstel zelf iets aan deed, en `_restore_overrides`
-en het herstel van `until` slaan zo'n zone over: `clear_override` houdt de opgeslagen
-looptijd niet in leven, `set_override` zonder looptijd erft de opgeslagen eindtijd en
-afloopkeuze niet, en een vers verzoek houdt zijn eigen eindtijd. Het herstel van `bypass`
-vervangt niet maar **voegt samen**, zodat de keuze `ignore_openings` van een vers verzoek
-blijft staan naast wat er al lag. Een zone waaraan de gebruiker niets deed, leest gewoon de
-opslag, precies zoals eerst. De notitie geldt voor de hele zone en niet per soort: een
-vooruit-verzoek of een annulering daarvan houdt ook een opgeslagen override van die zone
-tegen, `cancel_precondition` zonder zones die van elke zone, en een override houdt een
-opgeslagen verzoek tegen. De notitie gaat na het herstel weg; het herstel van de
-schakelaarstand zelf (de `RestoreEntity` in `async_added_to_hass`) is geen handeling van de
-gebruiker en telt dus niet mee. Op dat ene punt na gaat er zo alleen een beslissing
-verloren, geen invoer.
+per zone **en per soort** wat de gebruiker er vóór het herstel zelf deed: een override (de
+schakelaar, `set_override`, `clear_override`) staat in de ene notitie, een vooruit-verzoek
+of zijn annulering in de andere. `_restore_overrides` leest alleen de overridenotitie en
+het herstel van `until` alleen de verzoeknotitie. Zo houdt een vers vooruit-verzoek geen
+opgeslagen override meer tegen, en een verse override geen opgeslagen verzoek:
+`clear_override` houdt de opgeslagen looptijd niet in leven, `set_override` zonder
+looptijd erft de opgeslagen eindtijd en afloopkeuze niet, en een vers verzoek houdt zijn
+eigen eindtijd, maar elk laat de andere soort met rust. `cancel_precondition` zonder zones
+noteert elke zone in de verzoeknotitie en laat een opgeslagen override dus staan. Het
+herstel van `bypass` vervangt niet maar **voegt samen**, zodat de keuze `ignore_openings`
+van een vers verzoek blijft staan naast wat er al lag. Een zone waaraan de gebruiker niets
+deed, leest gewoon de opslag, precies zoals eerst. De notities gaan na het herstel weg; het
+herstel van de schakelaarstand zelf (de `RestoreEntity` in `async_added_to_hass`) is geen
+handeling van de gebruiker en telt dus niet mee. Op dat ene punt na gaat er zo alleen een
+beslissing verloren, geen invoer.
 Er wordt vóór het herstel ook niets weggeschreven. Noteren mag, maar de opslag
 blijft onaangeroerd tot hij gelezen is: `Store.async_load` leest een wachtende schrijfactie
 in plaats van het bestand, dus staat er één klaar, dan komt het herstel uit op de half
@@ -1696,6 +1724,21 @@ them without changing them here first.
     between and only the next decision round would show the end time or
     `unknown`.
 
+    **An override begins by lifting its zone's hand.** A hand at an appliance and an
+    override are both interventions by the user; when somebody turns the override
+    switch or `set_override` on after a hand, that override is the newer verdict and
+    the zone's hand lapses at that moment. That is **broader** than the rule that only
+    the same hand lifts a hand: an override is an intervention by the user too, but
+    one that concerns the whole zone. Otherwise the zone would stay handed over after
+    the override ended to a hand that a newer intervention had long overtaken, and the
+    appliance the override switched on would keep running unregulated until the house
+    slept, emptied or the next day began. The other side stays as it was: the hand
+    lapses at the **beginning**, not at the ending, so a hand that arises during the
+    override (somebody switches the appliance off at the appliance itself) stays and
+    survives `clear_override`. And only the override's own zone loses its hand; a
+    shared appliance that also serves another zone leaves that other zone's hand
+    standing.
+
     **An override hands over every appliance of that zone, house-wide.** With a
     zone under override — the switch or the `set_override` action — every
     appliance that is a source in that zone is handed over: the director sends
@@ -2066,6 +2109,17 @@ house. An opening without a
 timestamp blocks immediately: suspending is the harmless direction to be wrong in, and
 refusing to act on an unknown age would keep heating an open room.
 
+The room gate has a grace period: a room that has just become empty still counts as
+occupied for `presence_timeout` seconds, so somebody walking out of the door does not
+feel the heating switch off at once. That period starts only at a **real transition
+from occupied to not occupied**. A presence sensor that reports `off` again after a
+restart or after losing its connection carries a fresh timestamp that says nothing
+about the departure; a transition from or to `unavailable` or `unknown` therefore does
+not count. The coordinator notes the moment of the last real transition per zone and
+keeps it in the store, and `world_builder._presence` passes that moment on instead of
+`last_changed`. Without a stored moment the moment is unknown, and then the room
+counts as empty: leaving an empty room alone is the harmless side to be wrong on.
+
 The sleep gate has two states. With nobody up, that is `EVERYONE_ASLEEP`. With somebody up
 while another is still asleep at home, that sleeper's wake deadline
 (`Resident.wake_deadline`) decides: before it they hold the house back with
@@ -2400,18 +2454,21 @@ older stored verdict.
 the restore.** Whoever turns the override switch during the startup, calls `set_override` or
 `clear_override`, or sets or cancels a pre-conditioning request, says something about this
 moment; the store holds a verdict from before the restart. The coordinator therefore notes per
-zone that the user did something to it before the restore, and `_restore_overrides` and the
-restore of `until` skip such a zone: `clear_override` does not keep the stored duration alive,
-`set_override` without a duration does not inherit the stored end time and expiry choice, and
-a fresh request keeps its own end time. The restore of `bypass` does not replace but
-**merges**, so the `ignore_openings` choice of a fresh request stands beside what was already
-there. A zone the user did nothing to simply reads the store, exactly as before. The note
-holds for the whole zone and not per kind: a pre-conditioning request or its cancellation also
-holds back a stored override of that zone, `cancel_precondition` without zones that of every
-zone, and an override holds back a stored request. The note goes once the restore is done; the
-restore of the switch position itself (the `RestoreEntity` in `async_added_to_hass`) is no
-action by the user and therefore does not count. Apart from that one point, only a decision is
-lost that way too, no input. Nothing is written before the
+zone **and per kind** what the user did to it before the restore: an override (the switch,
+`set_override`, `clear_override`) goes into one note, a pre-conditioning request or its
+cancellation into the other. `_restore_overrides` reads only the override note and the restore
+of `until` only the request note. A fresh pre-conditioning request therefore no longer holds
+back a stored override, and a fresh override no longer holds back a stored request:
+`clear_override` does not keep the stored duration alive, `set_override` without a duration
+does not inherit the stored end time and expiry choice, and a fresh request keeps its own end
+time, but each leaves the other kind alone. `cancel_precondition` without zones notes every
+zone in the request note and therefore leaves a stored override standing. The restore of
+`bypass` does not replace but **merges**, so the `ignore_openings` choice of a fresh request
+stands beside what was already there. A zone the user did nothing to simply reads the store,
+exactly as before. The notes go once the restore is done; the restore of the switch position
+itself (the `RestoreEntity` in `async_added_to_hass`) is no action by the user and therefore
+does not count. Apart from that one point, only a decision is lost that way too, no input.
+Nothing is written before the
 restore either. Noting is allowed, but the store stays untouched until it has been read:
 `Store.async_load` reads a pending write instead of the file, so if one is standing ready
 the restore comes out on this moment's half-built state and the user's stored verdict is
