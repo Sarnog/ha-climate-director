@@ -1206,7 +1206,7 @@ gebruiker voor de hele zone, ook als er een hand aan een van haar apparaten staa
   de zone na het einde van de override weer meedoet in plaats van het apparaat dat de
   override aanzette ongeregeld te laten draaien tot het huis slaapt, leeg is of de
   volgende dag begint.
-- Open keuze: de hand opheffen bij het begin van de override, of pas bij het einde.
+- Keuze: de hand vervalt bij het **begin** van de override, niet pas bij het einde.
 - Bewaakt: een livetoets met een hand aan de zolder-airco, `set_override` op de zolder en
   daarna `clear_override`: de zolder doet weer mee en de airco wordt weer geregeld.
 
@@ -1217,6 +1217,36 @@ vóór het herstel deed, onderscheidt de override van het vooruit-verzoek.
 - Bewaakt: livetoetsen in `CoreState.starting` met een opgeslagen override naast een
   vooruit-verzoek en naast `cancel_precondition` zonder zones (de override blijft), en
   met `set_override` naast een opgeslagen verzoek (het verzoek blijft).
+
+**De nalooptijd van een kamer begint alleen bij een echte overgang naar leeg.** Een
+aanwezigheidssensor die na een herstart of na het wegvallen van zijn verbinding weer
+`off` meldt, draagt een vers `last_changed`, en dan telt een kamer die al uren leeg is
+nog een hele nalooptijd als bezet.
+- HA-laag: de coordinator noteert per zone het moment van de laatste overgang van bezet
+  naar niet-bezet (een listener zoals `_notice_home`) en bewaart het in de opslag; een
+  overgang van of naar `unavailable` of `unknown` telt niet. `world_builder._presence`
+  geeft dat moment door in plaats van `last_changed`; zonder bewaard moment is het
+  `None`, en dan telt de kamer als leeg - de bestaande regel in `_room_occupied`.
+- Bewaakt: een livetoets met een herstart en een sensor die `unavailable` -> `off` gaat:
+  de kamer telt als leeg en het apparaat gaat niet aan; en de tegenproef: wie net de
+  kamer uitliep, houdt zijn nalooptijd, ook over een herstart heen.
+
+**Met de hand starten terwijl het huis nog wacht.** Wie een apparaat zelf aanzet terwijl
+zijn zone wacht op een slaper, op de opsta-rem of op het stiltevenster, laat de
+director die zone overnemen: hij regelt hem daarna op binnen- en buitentemperatuur,
+met uit en weer aan, tot het wachten vanzelf voorbij is.
+- HA-laag: `_notice_hand` herkent een actieve stand die niet van ons komt op een
+  apparaat met *Dit apparaat automatisch aanzetten* aan, terwijl de zone wacht; een
+  nieuwe knop per zone doet hetzelfde. De coordinator noteert per zone een handstart,
+  en `WorldState` draagt die; een gedeeld apparaat start elke zone die erop zit.
+- Engine: een zone met een handstart passeert `WAITING_FOR_SLEEPER`, `EARLY_RISER` en
+  `QUIET_HOURS`, en verder niets: de hoofdschakelaar, openingen, buitengrenzen en het
+  seizoen blijven gelden. De handstart vervalt in de eerste ronde waarin die drie de
+  zone ook zonder hem doorlaten, en verder bij slapen, een leeg huis of de volgende dag.
+- Bewaakt: livetoetsen met de productie-instellingen - za 08:30 met een slapende
+  bewoner, di 07:00 met de opsta-rem, en de cv met de hand aan - waarin de zone na de
+  eerste stop ook weer start; en de tegenproef dat de zone na het wachten gewoon
+  doorloopt zonder handstart.
 
 #### Could have
 
@@ -2647,7 +2677,7 @@ for the whole zone, even when a hand stands at one of its appliances.
 - HA layer: `set_override` and the override switch lift that zone's hand, so the zone
   rejoins once the override ends instead of leaving the appliance the override switched
   on running unregulated until the house sleeps, empties or the next day begins.
-- Open choice: lift the hand when the override begins, or only when it ends.
+- Choice: the hand lapses when the override **begins**, not only when it ends.
 - Guarded: a live test with a hand at the attic air conditioner, `set_override` on the
   attic and then `clear_override`: the attic rejoins and the air conditioner is regulated
   again.
@@ -2659,6 +2689,38 @@ the restore tells the override apart from the pre-conditioning request.
 - Guarded: live tests in `CoreState.starting` with a stored override beside a
   pre-conditioning request and beside `cancel_precondition` without zones (the override
   stays), and with `set_override` beside a stored request (the request stays).
+
+**A room's grace period starts only at a real transition to empty.** A presence sensor
+that reports `off` again after a restart or after losing its connection carries a fresh
+`last_changed`, and then a room that has been empty for hours still counts as occupied
+for a whole grace period.
+- HA layer: the coordinator notes per zone the moment of the last transition from
+  occupied to not occupied (a listener like `_notice_home`) and keeps it in the store; a
+  transition from or to `unavailable` or `unknown` does not count.
+  `world_builder._presence` passes that moment on instead of `last_changed`; without a
+  stored moment it is `None`, and then the room counts as empty - the existing rule in
+  `_room_occupied`.
+- Guarded: a live test with a restart and a sensor going `unavailable` -> `off`: the room
+  counts as empty and the appliance does not come on; and the counter-test: whoever just
+  left the room keeps the grace period, across a restart too.
+
+**Starting by hand while the house is still waiting.** Whoever switches an appliance on
+themselves while its zone waits for a sleeper, for the rise brake or for the quiet window,
+lets the director take that zone over: it then regulates it on indoor and outdoor
+temperature, off and on again, until the waiting is over by itself.
+- HA layer: `_notice_hand` recognises an active mode that does not come from us on an
+  appliance with *Start this appliance automatically* on, while the zone waits; a new
+  button per zone does the same. The coordinator notes a hand start per zone, and
+  `WorldState` carries it; a shared appliance starts every zone hanging off it.
+- Engine: a zone with a hand start passes `WAITING_FOR_SLEEPER`, `EARLY_RISER` and
+  `QUIET_HOURS`, and nothing else: the master switch, openings, outdoor bounds and the
+  season keep applying. The hand start lapses in the first round in which those three
+  let the zone through without it, and further on sleeping, an empty house or the next
+  day.
+- Guarded: live tests with the production settings - Saturday 08:30 with a sleeping
+  resident, Tuesday 07:00 with the rise brake, and the boiler switched on by hand - in
+  which the zone also starts again after its first stop; and the counter-test that the
+  zone simply carries on after the waiting without a hand start.
 
 #### Could have
 
