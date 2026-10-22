@@ -58,7 +58,8 @@ class StandIn:
         # The note of what the user did before the restore:
         # `_async_on_hass_started` empties it after the restore, and this stand-in
         # starts empty.
-        self._by_hand_before_restore: set[str] = set()
+        self._override_before_restore: set[str] = set()
+        self._request_before_restore: set[str] = set()
 
     def tracked_entities(self) -> set[str]:
         """Eén gevolgde entiteit, zodat het opzetten de listener echt aanraakt.

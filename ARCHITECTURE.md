@@ -1228,14 +1228,6 @@ als de ruimtesensor het uitschakelpunt haalt.
 - Risico: een gangbare instelling valt hier zelf onder; de melding legt uit en weigert
   niets.
 
-**Wat er tijdens het opstarten gebeurt, telt per soort.** De notitie van wat de gebruiker
-vóór het herstel deed, onderscheidt de override van het vooruit-verzoek.
-- HA-laag: twee verzamelingen in plaats van één; `_restore_overrides` leest alleen die
-  van de override, het herstel van `until` alleen die van het verzoek.
-- Bewaakt: livetoetsen in `CoreState.starting` met een opgeslagen override naast een
-  vooruit-verzoek en naast `cancel_precondition` zonder zones (de override blijft), en
-  met `set_override` naast een opgeslagen verzoek (het verzoek blijft).
-
 **Met de hand starten terwijl het huis nog wacht.** Wie een apparaat zelf aanzet terwijl
 zijn zone wacht op een slaper, op de opsta-rem of op het stiltevenster, laat de
 director die zone overnemen: hij regelt hem daarna op binnen- en buitentemperatuur,
@@ -2705,14 +2697,6 @@ once the room sensor reaches the switch-off point.
   the room sensor.
 - Risk: a common setting falls under this itself; the notice explains and refuses
   nothing.
-
-**What happens during the startup counts per kind.** The note of what the user did before
-the restore tells the override apart from the pre-conditioning request.
-- HA layer: two sets instead of one; `_restore_overrides` reads only the override's, the
-  restore of `until` only the request's.
-- Guarded: live tests in `CoreState.starting` with a stored override beside a
-  pre-conditioning request and beside `cancel_precondition` without zones (the override
-  stays), and with `set_override` beside a stored request (the request stays).
 
 **Starting by hand while the house is still waiting.** Whoever switches an appliance on
 themselves while its zone waits for a sleeper, for the rise brake or for the quiet window,

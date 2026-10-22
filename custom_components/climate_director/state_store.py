@@ -20,7 +20,7 @@ import os
 from collections.abc import Mapping
 from datetime import date, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
@@ -237,15 +237,20 @@ class _StateStoreMixin(_CoordinatorBase):
         self._async_save_state()
 
     @callback
-    def _note_by_hand_before_restore(self, zone_id: str) -> None:
+    def _note_by_hand_before_restore(
+        self, zone_id: str, kind: Literal["override", "request"]
+    ) -> None:
         """Note that the user touched this zone by hand before the restore.
 
         Wie tijdens het opstarten de overrideschakelaar omzet, `set_override` of
         `clear_override` aanroept, of een vooruit-verzoek zet of annuleert, zegt
         iets over dít moment; in de opslag staat een oordeel van vóór de
-        herstart. Zo'n zone wordt bij het herstel overgeslagen, anders draait het
-        herstel de handeling van de gebruiker stil terug. Na het herstel gaat de
-        notitie weg: daarna is een handeling gewoon een handeling.
+        herstart. De notitie telt **per soort**: een override staat in de ene
+        verzameling, een vooruit-verzoek in de andere. `_restore_overrides` leest
+        alleen de eerste en het herstel van `until` alleen de tweede, zodat een
+        verse handeling de opgeslagen handeling van de andere soort met rust
+        laat. Na het herstel gaan beide notities weg: daarna is een handeling
+        gewoon een handeling.
 
         Alleen vóór het herstel telt dit: het herstel van de schakelaarstand zelf
         (de `RestoreEntity` in `async_added_to_hass`) is geen handeling van de
@@ -254,9 +259,12 @@ class _StateStoreMixin(_CoordinatorBase):
         Whoever turns the override switch during the startup, calls
         `set_override` or `clear_override`, or sets or cancels a pre-conditioning
         request, says something about *this* moment; the store holds a verdict
-        from before the restart. Such a zone is skipped at the restore, or the
-        restore quietly turns the user's action back. The note goes once the
-        restore is done: after that an action is simply an action.
+        from before the restart. The note counts **per kind**: an override goes
+        into one set, a pre-conditioning request into the other.
+        `_restore_overrides` reads only the first and the restore of `until` only
+        the second, so a fresh action leaves the stored action of the other kind
+        alone. Both notes go once the restore is done: after that an action is
+        simply an action.
 
         This only counts before the restore: the restore of the switch position
         itself (the `RestoreEntity` in `async_added_to_hass`) is no action by the
@@ -264,7 +272,10 @@ class _StateStoreMixin(_CoordinatorBase):
         """
         if getattr(self, "_restored", True):
             return
-        self._by_hand_before_restore.add(zone_id)
+        if kind == "override":
+            self._override_before_restore.add(zone_id)
+        else:
+            self._request_before_restore.add(zone_id)
 
     async def _async_restore_state(self) -> None:
         """Read back what was standing before the restart.
@@ -348,12 +359,12 @@ class _StateStoreMixin(_CoordinatorBase):
         until_raw = stored.get("until")
         if isinstance(until_raw, Mapping):
             for zone_id, raw in until_raw.items():
-                # De gebruiker was hier zelf al tijdens het opstarten: zijn verzoek
-                # (of zijn annulering) wint van de opslag.
+                # De gebruiker zette of annuleerde tijdens het opstarten zelf een
+                # verzoek: dat jongere oordeel wint van de opslag.
                 #
-                # The user was already here himself during the startup: his request
-                # (or his cancellation) wins over the store.
-                if zone_id in self._by_hand_before_restore:
+                # The user set or cancelled a request during the startup: that
+                # younger verdict wins over the store.
+                if zone_id in self._request_before_restore:
                     continue
                 until = _stored_time(raw)
                 if until is not None and now < until:
@@ -479,10 +490,12 @@ class _StateStoreMixin(_CoordinatorBase):
         restored: set[str] = set()
         if isinstance(until_raw, Mapping):
             for zone_id, raw in until_raw.items():
-                # Onbekende zone, of de gebruiker zat hier zelf al vóór het herstel.
+                # Onbekende zone, of de gebruiker zette of beëindigde vóór het
+                # herstel zelf een override.
                 #
-                # Unknown zone, or the user was already here himself before the restore.
-                if zone_id not in known_zones or zone_id in self._by_hand_before_restore:
+                # Unknown zone, or the user set or ended an override before the
+                # restore.
+                if zone_id not in known_zones or zone_id in self._override_before_restore:
                     continue
                 live = self.zone_override_until.get(zone_id)
                 if live is not None and now < live:

@@ -102,7 +102,7 @@ class _OverridesMixin(_CoordinatorBase):
         #
         # This action by the user wins over a stored duration: when it fell before
         # the restore, `state_store` skips that zone.
-        self._note_by_hand_before_restore(zone_id)
+        self._note_by_hand_before_restore(zone_id, "override")
         self._lift_hand(zone_id)
         self.zone_overrides[zone_id] = True
         self._pending_override[zone_id] = Change(
@@ -161,7 +161,7 @@ class _OverridesMixin(_CoordinatorBase):
         #
         # A cancellation by the user wins over a stored duration: when it fell
         # before the restore, `state_store` skips that zone.
-        self._note_by_hand_before_restore(zone_id)
+        self._note_by_hand_before_restore(zone_id, "override")
         self.zone_overrides[zone_id] = False
         self._drop_override_timers(zone_id)
         self._pending_override.pop(zone_id, None)

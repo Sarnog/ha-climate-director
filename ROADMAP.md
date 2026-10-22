@@ -46,11 +46,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   als de ruimtesensor het uitschakelpunt haalt; regelt het apparaat op zijn eigen sensor net
   daaronder, dan blijft de taak (en het circuit) eindeloos doorlopen. Het scherm kan zeggen
   dat een doel gelijk aan het uitschakelpunt geen marge laat.
-- **Wat er tijdens het opstarten gebeurt, telt per soort en niet per kamer** — de notitie van
-  wat de gebruiker tijdens het opstarten deed, geldt voor de hele kamer. Een vooruit-verzoek of
-  een annulering daarvan houdt daardoor ook een opgeslagen override van die kamer tegen
-  (`cancel_precondition` zonder kamers die van elke kamer), en een override houdt een
-  opgeslagen vooruit-verzoek tegen.
 - **Met de hand starten terwijl het huis nog wacht** — zet je in het weekend vóór de ander
   wakker is, of doordeweeks vóór je opsta-rem, een apparaat zelf aan, dan zet de director
   het meteen weer uit of start hij na de eerste stop niet meer. Met de hand aanzetten (aan
@@ -311,11 +306,6 @@ The worked-out design proposals for everything below live in
   the room sensor reaches the switch-off point; if the appliance regulates on its own sensor
   just below it, the duty (and the circuit) keeps running endlessly. The screen could say
   that a target equal to the switch-off point leaves no margin.
-- **What happens during the startup counts per kind, not per room** — the note of what the user
-  did during the startup holds for the whole room. A pre-conditioning request or its
-  cancellation therefore also holds back a stored override of that room (`cancel_precondition`
-  without rooms that of every room), and an override holds back a stored pre-conditioning
-  request.
 - **Starting by hand while the house is still waiting** — when you switch an appliance on
   yourself at the weekend before the other person is awake, or on a weekday before your
   rise brake, the director switches it straight back off or no longer starts after the

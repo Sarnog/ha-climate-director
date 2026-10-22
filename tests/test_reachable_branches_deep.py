@@ -235,7 +235,8 @@ class StoreHost(_StateStoreMixin):
         # The note of what the user did before the restore: the restore
         # reads it. This stand-in runs no startup, so the set stays empty and skips
         # nothing.
-        self._by_hand_before_restore: set[str] = set()
+        self._override_before_restore: set[str] = set()
+        self._request_before_restore: set[str] = set()
         self.wakes = 0
 
     def _override_wake_at_first_expiry(self) -> None:
@@ -283,16 +284,16 @@ def test_a_live_handover_in_memory_survives_an_older_stored_duration() -> None:
     """Een lopende overdracht in het geheugen blijft staan naast een oudere opslag.
 
     Het herstel wist geen overdracht die in het geheugen al loopt: de opgeslagen
-    looptijd komt er niet overheen. Een zone waar de gebruiker zelf iets zette wordt
-    al overgeslagen op `_by_hand_before_restore`; deze wacht dekt elke andere
-    schrijver van `zone_override_until`, en daarom staat de eigenschap hier op
-    verzonnen invoer vast.
+    looptijd komt er niet overheen. Een zone waar de gebruiker zelf een override
+    zette wordt al overgeslagen op `_override_before_restore`; deze wacht dekt elke
+    andere schrijver van `zone_override_until`, en daarom staat de eigenschap hier
+    op verzonnen invoer vast.
 
     The restore does not wipe a handover that is already running in memory: the stored
-    duration does not come over it. A zone the user touched is already skipped
-    on `_by_hand_before_restore`; this guard covers every other writer of
-    `zone_override_until`, and that is why the property is pinned down here on invented
-    input.
+    duration does not come over it. A zone the user set an override on is already
+    skipped on `_override_before_restore`; this guard covers every other writer of
+    `zone_override_until`, and that is why the property is pinned down here on
+    invented input.
     """
     now = dt_util.utcnow()
     zone_id = house().zones[0].zone_id
@@ -723,24 +724,29 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
 #: Het aantal benoemde uitsluitingen van de poort. De whitelist mag alleen korter
 #: worden: elke regel die erbij komt is een regel die de meting niet meer dekt, en
 #: zonder deze ratel groeit dat stil door. Het getal is gemeten:
-#: tien statements in `coordinator.py` en drie in elk van de
+#: elf statements in `coordinator.py` en drie in elk van de
 #: vier mixins die het protocol onder `TYPE_CHECKING` importeren. 21 → 22: de
 #: protocolregel `_note_by_hand_before_restore` in `CoordinatorSurface` (N5) is één
 #: statement erbij, en die regel hoort daar - de mixins roepen hem aan en mypy heeft
 #: hem nodig. 22 → 23: de protocolregel `_lift_hand` (N6) is één statement erbij, en
 #: die regel hoort daar - de overrides en de schakelaar roepen hem aan en mypy heeft
-#: hem nodig.
+#: hem nodig. 23 → 24: de protocolregel `_note_by_hand_before_restore` (N7) is
+#: meerregelig geworden; de `def`-regel en de `) -> None: ...`-regel vragen elk een
+#: naam, waar er eerst één was.
 #:
 #: The number of named exclusions of the gate. The whitelist may only get shorter:
 #: every line added to it is a line the measurement no longer covers, and without
 #: this ratchet that grows silently. The number is measured:
-#: ten statements in `coordinator.py` and three in each of the four
+#: eleven statements in `coordinator.py` and three in each of the four
 #: mixins that import the protocol under `TYPE_CHECKING`. 21 → 22: the protocol line
 #: `_note_by_hand_before_restore` in `CoordinatorSurface` (N5) is one statement more,
 #: and that line belongs there - the mixins call it and mypy needs it. 22 → 23: the
 #: protocol line `_lift_hand` (N6) is one statement more, and that line belongs
-#: there - the overrides and the switch call it and mypy needs it.
-NAMED_EXCLUSIONS_BUDGET = 23
+#: there - the overrides and the switch call it and mypy needs it. 23 → 24: the
+#: protocol line `_note_by_hand_before_restore` (N7) became multi-line; the `def`
+#: line and the `) -> None: ...` line each ask for a name, where there was one
+#: before.
+NAMED_EXCLUSIONS_BUDGET = 24
 
 
 def test_the_named_exclusions_are_a_ratchet() -> None:

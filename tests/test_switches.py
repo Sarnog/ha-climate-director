@@ -89,7 +89,8 @@ class _Coordinator:
         # notes every real transition. This stand-in runs no startup, so
         # `_note_by_hand_before_restore` finds `_restored` missing and lets the
         # note go at once.
-        self._by_hand_before_restore: set[str] = set()
+        self._override_before_restore: set[str] = set()
+        self._request_before_restore: set[str] = set()
         self._handed_back: dict = {}
 
     _note_by_hand_before_restore = ClimateDirectorCoordinator._note_by_hand_before_restore

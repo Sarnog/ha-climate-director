@@ -42,7 +42,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from harness_live import (
@@ -440,6 +440,156 @@ class TestAPreconditionDuringTheStartupJoinsTheStoredOne:
             )
             assert home.state(LIVING) == "heat"
             assert home.state(ATTIC) == "heat"
+        finally:
+            await stop_house(home)
+
+
+class TestTheStartupNoteCountsPerKind:
+    """De notitie van wat de gebruiker tijdens het opstarten deed, telt per soort.
+
+    Een vooruit-verzoek houdt geen opgeslagen override meer tegen, en een
+    override houdt geen opgeslagen verzoek meer tegen.
+
+    The startup note counts per kind: a pre-conditioning request no longer holds
+    back a stored override, and an override no longer holds back a stored
+    request.
+    """
+
+    def _stored_override(self, zone_id: str, entity_id: str, until: datetime) -> dict:
+        return {
+            "override_until": {zone_id: until.isoformat()},
+            "override_started": {zone_id: dt_util.now().isoformat()},
+            "override_when_done": {zone_id: WHEN_DONE_LEAVE},
+            "override_entity": {zone_id: entity_id},
+        }
+
+    async def test_a_fresh_request_keeps_a_stored_override(self) -> None:
+        config_dir = new_config_dir()
+        until = dt_util.now() + timedelta(hours=2)
+        write_store(config_dir, self._stored_override("woonkamer", LIVING, until))
+
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(),
+        )
+        try:
+            await home.call(
+                "climate_director", "precondition", {"zone_ids": ["woonkamer"], "minutes": 30}
+            )
+            await settle_the_debouncer(home)
+            await start_up(home)
+
+            assert home.coordinator.zone_overrides.get("woonkamer") is True, (
+                "het verse verzoek hield de opgeslagen override tegen"
+            )
+            assert "woonkamer" in home.coordinator.zone_override_until
+            assert "woonkamer" in home.coordinator._precondition, "het verse verzoek is weg"
+            assert home.value("zone_woonkamer_override") == "on"
+            assert reason_of(home) == "manual_override"
+        finally:
+            await stop_house(home)
+
+    async def test_cancelling_requests_keeps_stored_overrides(self) -> None:
+        config_dir = new_config_dir()
+        until = dt_util.now() + timedelta(hours=2)
+        stored = self._stored_override("woonkamer", LIVING, until)
+        for key, value in self._stored_override("zolder", ATTIC, until).items():
+            stored[key].update(value)
+        write_store(config_dir, stored)
+
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(),
+        )
+        try:
+            await home.call("climate_director", "cancel_precondition", {})
+            await settle_the_debouncer(home)
+            await start_up(home)
+
+            assert home.coordinator.zone_overrides.get("woonkamer") is True, (
+                "de annulering hield de opgeslagen override van de woonkamer tegen"
+            )
+            assert home.coordinator.zone_overrides.get("zolder") is True, (
+                "de annulering hield de opgeslagen override van de zolder tegen"
+            )
+            assert "woonkamer" in home.coordinator.zone_override_until
+            assert "zolder" in home.coordinator.zone_override_until
+        finally:
+            await stop_house(home)
+
+    async def test_a_fresh_override_keeps_a_stored_request(self) -> None:
+        config_dir = new_config_dir()
+        until = dt_util.now() + timedelta(minutes=40)
+        write_store(config_dir, {"until": {"woonkamer": until.isoformat()}})
+
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(),
+        )
+        try:
+            await home.call(
+                "climate_director",
+                "set_override",
+                {
+                    "zone_id": "woonkamer",
+                    "hvac_mode": "heat",
+                    "temperature": 22,
+                    "minutes": 60,
+                },
+            )
+            await settle_the_debouncer(home)
+            await start_up(home)
+
+            assert "woonkamer" in home.coordinator._precondition, (
+                "de verse override hield het opgeslagen verzoek tegen"
+            )
+            assert home.coordinator.zone_overrides.get("woonkamer") is True
+            assert "woonkamer" in home.coordinator.zone_override_until
+        finally:
+            await stop_house(home)
+
+
+class TestAStoredOverrideRemovesTheStoredHand:
+    """Een opgeslagen override laat de opgeslagen hand van die zone niet terugkomen.
+
+    A stored override does not let that zone's stored hand come back.
+    """
+
+    async def test_the_stored_hand_does_not_come_back(self) -> None:
+        config_dir = new_config_dir()
+        today = dt_util.now().date().isoformat()
+        until = dt_util.now() + timedelta(hours=2)
+        write_store(
+            config_dir,
+            {
+                "handed_back": {"woonkamer": today},
+                "override_until": {"woonkamer": until.isoformat()},
+                "override_started": {"woonkamer": dt_util.now().isoformat()},
+                "override_when_done": {"woonkamer": WHEN_DONE_LEAVE},
+                "override_entity": {"woonkamer": LIVING},
+            },
+        )
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(),
+        )
+        try:
+            await settle_the_debouncer(home)
+            await start_up(home)
+
+            assert "woonkamer" not in home.coordinator._handed_back, (
+                "de opgeslagen hand kwam terug naast de override"
+            )
+            assert home.coordinator.zone_overrides.get("woonkamer") is True
+            assert reason_of(home) == "manual_override"
         finally:
             await stop_house(home)
 

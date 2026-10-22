@@ -21,7 +21,7 @@ import asyncio
 import logging
 from dataclasses import replace
 from datetime import date, datetime, timedelta
-from typing import Any, Protocol, cast
+from typing import Any, Literal, Protocol, cast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, Event, EventStateChangedData, HomeAssistant, callback
@@ -190,7 +190,8 @@ class CoordinatorSurface(Protocol):
     _home_since: dict[str, datetime]
     _asleep_since: datetime | None
     _save_pending: bool
-    _by_hand_before_restore: set[str]
+    _override_before_restore: set[str]
+    _request_before_restore: set[str]
     _precipitation_seen_at: datetime | None
     _cancel_precondition_wake: CALLBACK_TYPE | None
     _cancel_override_wake: CALLBACK_TYPE | None
@@ -210,7 +211,9 @@ class CoordinatorSurface(Protocol):
         return None
 
     def _async_save_state(self) -> None: ...
-    def _note_by_hand_before_restore(self, zone_id: str) -> None: ...
+    def _note_by_hand_before_restore(
+        self, zone_id: str, kind: Literal["override", "request"]
+    ) -> None: ...
     def _lift_hand(self, zone_id: str) -> None: ...
     def _live_preconditions(self) -> dict[str, datetime]: ...
     def _wake_at_the_first_expiry(self) -> None: ...
@@ -456,16 +459,24 @@ class ClimateDirectorCoordinator(
         `_async_save_state` was not allowed to write before the restore stands here;
         `state_store._async_save_pending_state` picks it up.
         """
-        self._by_hand_before_restore: set[str] = set()
-        """De zones waar de gebruiker vóór het herstel zelf iets zette of stopte:
-        een override of een vooruit-verzoek van tijdens het opstarten wint van de
-        opslag, dus `state_store` slaat zo'n zone over. Alleen een handeling van de
-        gebruiker telt, en de notitie gaat weg zodra het herstel geweest is.
+        self._override_before_restore: set[str] = set()
+        self._request_before_restore: set[str] = set()
+        """De zones waar de gebruiker vóór het herstel zelf een override of een
+        vooruit-verzoek zette of stopte.
 
-        The zones where the user set or stopped something himself before the
-        restore: an override or a pre-conditioning request from during the startup
-        wins over the store, so `state_store` skips such a zone. Only an action by
-        the user counts, and the note goes as soon as the restore has been.
+        De notitie telt per soort: `_restore_overrides` leest alleen de
+        overridenotitie en het herstel van `until` alleen de verzoeknotitie. Zo
+        houdt een vers verzoek geen opgeslagen override meer tegen, en een verse
+        override geen opgeslagen verzoek. Alleen een handeling van de gebruiker
+        telt, en beide notities gaan weg zodra het herstel geweest is.
+
+        The zones where the user set or stopped an override or a pre-conditioning
+        request before the restore. The note counts per kind:
+        `_restore_overrides` reads only the override note and the restore of
+        `until` only the request note. A fresh request therefore no longer holds
+        back a stored override, and a fresh override no longer holds back a
+        stored request. Only an action by the user counts, and both notes go as
+        soon as the restore has been.
         """
         self._family_since: dict[str, datetime | None] = {}
         self._family_seen: dict[str, ModeFamily] = {}
@@ -635,11 +646,12 @@ class ClimateDirectorCoordinator(
             # that is worse than a world without the stored hand.
             self._restored = True
             # Wat de gebruiker vóór het herstel zelf deed is nu verwerkt: de
-            # notitie gaat weg, zodat een handeling daarna gewoon een handeling is.
+            # notities gaan weg, zodat een handeling daarna gewoon een handeling is.
             #
-            # What the user did himself before the restore has been handled now:
-            # the note goes, so an action afterwards is simply an action.
-            self._by_hand_before_restore.clear()
+            # What the user did before the restore has been handled now:
+            # the notes go, so an action afterwards is simply an action.
+            self._override_before_restore.clear()
+            self._request_before_restore.clear()
             self._async_save_pending_state()
             self._schedule_clock_reeval()
 

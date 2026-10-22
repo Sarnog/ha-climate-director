@@ -944,7 +944,8 @@ class TestTheActionAcceptsAnything:
                 self.config = config
                 self._precondition: dict[str, datetime] = {}
                 self._precondition_bypass: set[str] = set()
-                self._by_hand_before_restore: set[str] = set()
+                self._override_before_restore: set[str] = set()
+                self._request_before_restore: set[str] = set()
 
             def async_request_evaluation(self) -> None:
                 pass

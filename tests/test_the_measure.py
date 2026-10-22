@@ -458,7 +458,7 @@ FUNCTION_LIMIT = 80
 # `state_store.py` (493). What grows is mostly explanation.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2272,
-    "coordinator.py": 2306,
+    "coordinator.py": 2318,
     "engine/decide.py": 1811,
     "config_flow.py": 1492,
     "schemas.py": 893,
@@ -467,7 +467,7 @@ MODULE_EXCEPTIONS: dict[str, int] = {
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_build_commands"): 211,
     ("engine/decide.py", "_generator_commands"): 192,
-    ("coordinator.py", "__init__"): 285,
+    ("coordinator.py", "__init__"): 293,
     ("engine/models.py", "_rule_zones"): 164,
     ("engine/constraints.py", "resolve"): 128,
     ("engine/decide.py", "_collect_wishes"): 137,
@@ -476,6 +476,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_build_zone_decisions"): 135,
     ("engine/decide.py", "_manual_conflict"): 103,
     ("state_store.py", "_async_restore_state"): 166,
+    ("state_store.py", "_restore_overrides"): 81,
     ("engine/hysteresis.py", "_candidate"): 97,
     ("config_flow.py", "async_step_resident"): 97,
     ("engine/decide.py", "_resolve_with_fallbacks"): 92,
@@ -542,6 +543,22 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # `_lift_hand` (stays below its measure), `async_set_override` stays at 80
 # because the call replaces the blank line, and `switch.py` stays below its
 # measure. What grows is mostly explanation.
+#
+# Wat er tijdens het opstarten gebeurt, telt per soort (N7): `coordinator.py`
+# 2306 → 2318 en zijn `__init__` 285 → 293 door twee notities in plaats van één
+# (twee protocolregels, twee beginwaarden en de uitleg per soort);
+# `state_store.py::_restore_overrides` 80 → 81 doordat het alleen de
+# overridenotitie leest, met de uitleg erbij. `_async_restore_state` blijft
+# gelijk: het herstel van `until` leest de verzoeknotitie op dezelfde plek. Wat
+# groeit is vooral uitleg.
+#
+# What happens during the startup counts per kind (N7): `coordinator.py`
+# 2306 → 2318 and its `__init__` 285 → 293 through two notes instead of one (two
+# protocol lines, two starting values and the explanation per kind);
+# `state_store.py::_restore_overrides` 80 → 81 because it reads only the
+# override note, with the explanation beside it. `_async_restore_state` stays
+# the same: the restore of `until` reads the request note in the same place.
+# What grows is mostly explanation.
 
 
 def _python_files(root: Path) -> list[Path]:
