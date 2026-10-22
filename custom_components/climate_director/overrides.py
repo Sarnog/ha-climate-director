@@ -103,7 +103,7 @@ class _OverridesMixin(_CoordinatorBase):
         # This action by the user wins over a stored duration: when it fell before
         # the restore, `state_store` skips that zone.
         self._note_by_hand_before_restore(zone_id)
-
+        self._lift_hand(zone_id)
         self.zone_overrides[zone_id] = True
         self._pending_override[zone_id] = Change(
             command=UnitCommand(
@@ -169,6 +169,35 @@ class _OverridesMixin(_CoordinatorBase):
         self._override_wake_at_first_expiry()
         self.async_publish_override_state()
         self.async_request_evaluation()
+
+    @callback
+    def _lift_hand(self, zone_id: str) -> None:
+        """Lift the zone's hand at the beginning of an override.
+
+        Een override en een hand zijn allebei een ingreep van de gebruiker. Zet
+        iemand na een hand de overrideschakelaar of `set_override` aan, dan is de
+        override het jongste oordeel over de hele zone en vervalt de hand op dat
+        moment - niet pas bij het einde. Anders bleef de zone na de override
+        overgedragen aan een hand die allang door een nieuwe ingreep was
+        ingehaald, en bleef het apparaat dat de override aanzette ongeregeld
+        draaien tot het huis sliep, leeg was of de volgende dag begon. Alleen de
+        zone van de override verliest haar hand; een gedeeld apparaat laat de hand
+        van een andere zone staan. Een hand die tijdens de override ontstaat,
+        blijft staan en overleeft `clear_override`.
+
+        An override and a hand are both interventions by the user. When somebody
+        turns the override switch or `set_override` on after a hand, the override
+        is the newer verdict for the whole zone and the hand lapses at that
+        moment - not only at the ending. Otherwise the zone would stay handed
+        over after the override ended to a hand that a newer intervention had
+        long overtaken, and the appliance the override switched on would keep
+        running unregulated until the house slept, emptied or the next day
+        began. Only the override's own zone loses its hand; a shared appliance
+        leaves another zone's hand standing. A hand that arises during the
+        override stays and survives `clear_override`.
+        """
+        if self._handed_back.pop(zone_id, None) is not None:
+            self._async_save_state()
 
     @callback
     def async_publish_override_state(self) -> None:

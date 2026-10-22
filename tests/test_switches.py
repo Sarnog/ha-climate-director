@@ -90,8 +90,16 @@ class _Coordinator:
         # `_note_by_hand_before_restore` finds `_restored` missing and lets the
         # note go at once.
         self._by_hand_before_restore: set[str] = set()
+        self._handed_back: dict = {}
 
     _note_by_hand_before_restore = ClimateDirectorCoordinator._note_by_hand_before_restore
+
+    def _async_save_state(self) -> None:
+        pass
+
+    def _lift_hand(self, zone_id: str) -> None:
+        if self._handed_back.pop(zone_id, None) is not None:
+            self._async_save_state()
 
     def async_add_listener(self, listener, _context=None):
         self._listener = listener

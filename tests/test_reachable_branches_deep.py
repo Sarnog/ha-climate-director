@@ -723,20 +723,24 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
 #: Het aantal benoemde uitsluitingen van de poort. De whitelist mag alleen korter
 #: worden: elke regel die erbij komt is een regel die de meting niet meer dekt, en
 #: zonder deze ratel groeit dat stil door. Het getal is gemeten:
-#: negen statements in `coordinator.py` en drie in elk van de
+#: tien statements in `coordinator.py` en drie in elk van de
 #: vier mixins die het protocol onder `TYPE_CHECKING` importeren. 21 → 22: de
 #: protocolregel `_note_by_hand_before_restore` in `CoordinatorSurface` (N5) is één
 #: statement erbij, en die regel hoort daar - de mixins roepen hem aan en mypy heeft
+#: hem nodig. 22 → 23: de protocolregel `_lift_hand` (N6) is één statement erbij, en
+#: die regel hoort daar - de overrides en de schakelaar roepen hem aan en mypy heeft
 #: hem nodig.
 #:
 #: The number of named exclusions of the gate. The whitelist may only get shorter:
 #: every line added to it is a line the measurement no longer covers, and without
 #: this ratchet that grows silently. The number is measured:
-#: nine statements in `coordinator.py` and three in each of the four
+#: ten statements in `coordinator.py` and three in each of the four
 #: mixins that import the protocol under `TYPE_CHECKING`. 21 → 22: the protocol line
 #: `_note_by_hand_before_restore` in `CoordinatorSurface` (N5) is one statement more,
-#: and that line belongs there - the mixins call it and mypy needs it.
-NAMED_EXCLUSIONS_BUDGET = 22
+#: and that line belongs there - the mixins call it and mypy needs it. 22 → 23: the
+#: protocol line `_lift_hand` (N6) is one statement more, and that line belongs
+#: there - the overrides and the switch call it and mypy needs it.
+NAMED_EXCLUSIONS_BUDGET = 23
 
 
 def test_the_named_exclusions_are_a_ratchet() -> None:

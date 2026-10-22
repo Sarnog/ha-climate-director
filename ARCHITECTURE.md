@@ -1228,16 +1228,6 @@ als de ruimtesensor het uitschakelpunt haalt.
 - Risico: een gangbare instelling valt hier zelf onder; de melding legt uit en weigert
   niets.
 
-**Een override naast een hand neemt de hand mee.** Een override is een handeling van de
-gebruiker voor de hele zone, ook als er een hand aan een van haar apparaten staat.
-- HA-laag: `set_override` en de overrideschakelaar heffen de hand van die zone op, zodat
-  de zone na het einde van de override weer meedoet in plaats van het apparaat dat de
-  override aanzette ongeregeld te laten draaien tot het huis slaapt, leeg is of de
-  volgende dag begint.
-- Keuze: de hand vervalt bij het **begin** van de override, niet pas bij het einde.
-- Bewaakt: een livetoets met een hand aan de zolder-airco, `set_override` op de zolder en
-  daarna `clear_override`: de zolder doet weer mee en de airco wordt weer geregeld.
-
 **Wat er tijdens het opstarten gebeurt, telt per soort.** De notitie van wat de gebruiker
 vóór het herstel deed, onderscheidt de override van het vooruit-verzoek.
 - HA-laag: twee verzamelingen in plaats van één; `_restore_overrides` leest alleen die
@@ -2715,16 +2705,6 @@ once the room sensor reaches the switch-off point.
   the room sensor.
 - Risk: a common setting falls under this itself; the notice explains and refuses
   nothing.
-
-**An override beside a hand takes the hand along.** An override is an action by the user
-for the whole zone, even when a hand stands at one of its appliances.
-- HA layer: `set_override` and the override switch lift that zone's hand, so the zone
-  rejoins once the override ends instead of leaving the appliance the override switched
-  on running unregulated until the house sleeps, empties or the next day begins.
-- Choice: the hand lapses when the override **begins**, not only when it ends.
-- Guarded: a live test with a hand at the attic air conditioner, `set_override` on the
-  attic and then `clear_override`: the attic rejoins and the air conditioner is regulated
-  again.
 
 **What happens during the startup counts per kind.** The note of what the user did before
 the restore tells the override apart from the pre-conditioning request.

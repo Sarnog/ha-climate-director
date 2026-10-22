@@ -458,7 +458,7 @@ FUNCTION_LIMIT = 80
 # `state_store.py` (493). What grows is mostly explanation.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2272,
-    "coordinator.py": 2305,
+    "coordinator.py": 2306,
     "engine/decide.py": 1811,
     "config_flow.py": 1492,
     "schemas.py": 893,
@@ -475,7 +475,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("coordinator.py", "_notice_hand"): 137,
     ("engine/decide.py", "_build_zone_decisions"): 135,
     ("engine/decide.py", "_manual_conflict"): 103,
-    ("state_store.py", "_async_restore_state"): 153,
+    ("state_store.py", "_async_restore_state"): 166,
     ("engine/hysteresis.py", "_candidate"): 97,
     ("config_flow.py", "async_step_resident"): 97,
     ("engine/decide.py", "_resolve_with_fallbacks"): 92,
@@ -522,6 +522,26 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # `diagnostics.py::async_get_config_entry_diagnostics` 80 → 82 with the pointer
 # to the module docstring, where the choice stands: the moment falls under
 # `presence` and is redacted there. What grows is mostly explanation.
+#
+# Een override heft de hand van zijn zone bij het begin op (N6):
+# `coordinator.py` 2305 → 2306 door de protocolregel `_lift_hand`;
+# `state_store.py::_async_restore_state` 153 → 166 doordat een opgeslagen hand
+# van een zone met een override na het herstel niet terugkomt - ook niet als de
+# override tijdens het opstarten zelf gezet werd, want dan was de hand nog niet
+# in het geheugen en had `_lift_hand` niets te wissen. `overrides.py` krijgt
+# `_lift_hand` (blijft onder de maat), `async_set_override` blijft op 80 doordat
+# de aanroep de lege regel vervangt, en `switch.py` blijft onder zijn maat. Wat
+# groeit is vooral uitleg.
+#
+# An override lifts its zone's hand at the beginning (N6):
+# `coordinator.py` 2305 → 2306 through the protocol line `_lift_hand`;
+# `state_store.py::_async_restore_state` 153 → 166 because a stored hand of a
+# zone with an override does not come back after the restore - also not when the
+# override was set during the startup itself, since then the hand was not in
+# memory yet and `_lift_hand` had nothing to drop. `overrides.py` gains
+# `_lift_hand` (stays below its measure), `async_set_override` stays at 80
+# because the call replaces the blank line, and `switch.py` stays below its
+# measure. What grows is mostly explanation.
 
 
 def _python_files(root: Path) -> list[Path]:

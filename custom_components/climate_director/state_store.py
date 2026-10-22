@@ -417,6 +417,19 @@ class _StateStoreMixin(_CoordinatorBase):
         self._asleep_since = _stored_time(stored.get("asleep_since"))
         if hasattr(self, "_restore_overrides"):
             self._restore_overrides(stored, now)
+            # Een override heft de hand van zijn zone bij het begin op (anker 11).
+            # Staat er na het herstel een override, dan mag een opgeslagen hand van
+            # die zone niet terugkomen - ook niet als de gebruiker de override
+            # tijdens het opstarten zelf zette, want dan was de hand nog niet in het
+            # geheugen en had `_lift_hand` niets te wissen.
+            #
+            # An override lifts its zone's hand at the beginning (anchor 11). With
+            # an override standing after the restore, a stored hand of that zone
+            # must not come back - also not when the user set the override during
+            # the startup itself, since then the hand was not in memory yet and
+            # `_lift_hand` had nothing to drop.
+            for zone_id in [z for z in self._handed_back if self.zone_overrides.get(z, False)]:
+                self._handed_back.pop(zone_id)
 
         self._wake_at_the_first_expiry()
 

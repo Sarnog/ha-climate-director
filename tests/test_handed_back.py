@@ -1016,7 +1016,7 @@ class TestItSurvivesARestart:
     it. The same holds for the pre-conditioning requests.
     """
 
-    def _coordinator(self, stored: dict | None = None):
+    def _coordinator(self, stored: dict | None = None, director_config=None):
         class FakeStore:
             def __init__(self) -> None:
                 self.written: dict | None = None
@@ -1032,6 +1032,12 @@ class TestItSurvivesARestart:
                 self._precondition: dict = {}
                 self._precondition_bypass: set[str] = set()
                 self._handed_back: dict[str, date] = {}
+                # Een override in deze stand-in is er niet; het herstel leest de
+                # lege stand en laat een hand dus staan.
+                #
+                # This stand-in has no override; the restore reads the empty
+                # state and therefore leaves a hand standing.
+                self.zone_overrides: dict[str, bool] = {}
                 self._store = FakeStore()
                 # Vóór het herstel onthoudt `_async_save_state` alleen dát er iets
                 # te bewaren viel; deze stand-in zet de vlag op zijn beginwaarde.
@@ -1063,7 +1069,7 @@ class TestItSurvivesARestart:
                 # No action by the user before the restore in this stand-in; the
                 # restore therefore reads the note empty.
                 self._by_hand_before_restore: set[str] = set()
-                self.config = config()
+                self.config = director_config or config()
                 self.hass = SimpleNamespace(states={})
                 self.name = "Climate Director"
 
@@ -1132,6 +1138,45 @@ class TestItSurvivesARestart:
         item._async_save_state()
         assert item._store.written is not None
         assert item._store.written["empty_since"] == {"slaapkamer": "2026-08-18T12:00:00+00:00"}
+
+    async def test_only_a_known_empty_room_gets_its_moment_back(self) -> None:
+        """Onbekend, onleesbaar of nu bezet: geen moment; een lege kamer wel."""
+
+        def room(zone_id: str, presence: str) -> Zone:
+            return Zone(
+                zone_id=zone_id,
+                name=zone_id,
+                indoor_sensor=f"sensor.{zone_id}",
+                sources=(Source(f"{zone_id}_bron", f"climate.{zone_id}"),),
+                presence_entity=presence,
+                presence_timeout=timedelta(minutes=15),
+            )
+
+        item = self._coordinator(
+            {
+                "empty_since": {
+                    "bestaat_niet": "2026-08-18T12:00:00+00:00",
+                    "slaapkamer": "geen tijd",
+                    "keuken": "2026-08-18T12:00:00+00:00",
+                    "zolder": "2026-08-18T12:00:00+00:00",
+                }
+            },
+            director_config=DirectorConfig(
+                zones=(
+                    room("slaapkamer", "binary_sensor.slaapkamer"),
+                    room("keuken", "binary_sensor.keuken"),
+                    room("zolder", "binary_sensor.zolder"),
+                )
+            ),
+        )
+        item.hass = SimpleNamespace(
+            states={
+                "binary_sensor.keuken": _State("on"),
+                "binary_sensor.zolder": _State("off"),
+            }
+        )
+        await item._async_restore_state()
+        assert item._empty_since == {"zolder": datetime(2026, 8, 18, 12, 0, tzinfo=UTC)}
 
     async def test_rubbish_in_the_file_does_not_stop_the_load(self) -> None:
         item = self._coordinator({"handed_back": {"slaapkamer": "not a date"}})
