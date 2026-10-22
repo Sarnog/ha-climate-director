@@ -56,10 +56,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   een annulering daarvan houdt daardoor ook een opgeslagen override van die kamer tegen
   (`cancel_precondition` zonder kamers die van elke kamer), en een override houdt een
   opgeslagen vooruit-verzoek tegen.
-- **De nalooptijd van een kamer begint alleen bij een echte overgang naar leeg** — na een
-  herstart van Home Assistant, of als de aanwezigheidssensor even zijn verbinding kwijt was,
-  meldt die sensor opnieuw `off` met een vers tijdstip. Een kamer die al uren leeg is telt
-  dan nog een hele nalooptijd als bezet, en wordt al die tijd verwarmd of gekoeld.
 - **Met de hand starten terwijl het huis nog wacht** — zet je in het weekend vóór de ander
   wakker is, of doordeweeks vóór je opsta-rem, een apparaat zelf aan, dan zet de director
   het meteen weer uit of start hij na de eerste stop niet meer. Met de hand aanzetten (aan
@@ -330,10 +326,6 @@ The worked-out design proposals for everything below live in
   cancellation therefore also holds back a stored override of that room (`cancel_precondition`
   without rooms that of every room), and an override holds back a stored pre-conditioning
   request.
-- **A room's grace period starts only at a real transition to empty** — after a restart of
-  Home Assistant, or when the presence sensor briefly lost its connection, that sensor
-  reports `off` again with a fresh timestamp. A room that has been empty for hours then
-  counts as occupied for a whole grace period, and is heated or cooled all that time.
 - **Starting by hand while the house is still waiting** — when you switch an appliance on
   yourself at the weekend before the other person is awake, or on a weekday before your
   rise brake, the director switches it straight back off or no longer starts after the

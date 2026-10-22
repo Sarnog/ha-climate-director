@@ -161,7 +161,8 @@ def test_a_presence_entity_that_is_missing_counts_as_nobody_home() -> None:
     """Zonder aanwezigheidsentiteit is er niemand thuis, en dat is geen fout."""
     builder = _WorldBuilderMixin.__new__(_WorldBuilderMixin)
     builder.hass = SimpleNamespace(states=SimpleNamespace(get=lambda _entity_id: None))
-    assert builder._presence("person.bestaat_niet", "on").occupied is False
+    builder._empty_since = {}
+    assert builder._presence("zolder", "person.bestaat_niet", "on").occupied is False
 
 
 # -- overrides ----------------------------------------------------------------

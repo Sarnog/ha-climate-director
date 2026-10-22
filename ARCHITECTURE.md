@@ -1246,19 +1246,6 @@ vóór het herstel deed, onderscheidt de override van het vooruit-verzoek.
   vooruit-verzoek en naast `cancel_precondition` zonder zones (de override blijft), en
   met `set_override` naast een opgeslagen verzoek (het verzoek blijft).
 
-**De nalooptijd van een kamer begint alleen bij een echte overgang naar leeg.** Een
-aanwezigheidssensor die na een herstart of na het wegvallen van zijn verbinding weer
-`off` meldt, draagt een vers `last_changed`, en dan telt een kamer die al uren leeg is
-nog een hele nalooptijd als bezet.
-- HA-laag: de coordinator noteert per zone het moment van de laatste overgang van bezet
-  naar niet-bezet (een listener zoals `_notice_home`) en bewaart het in de opslag; een
-  overgang van of naar `unavailable` of `unknown` telt niet. `world_builder._presence`
-  geeft dat moment door in plaats van `last_changed`; zonder bewaard moment is het
-  `None`, en dan telt de kamer als leeg - de bestaande regel in `_room_occupied`.
-- Bewaakt: een livetoets met een herstart en een sensor die `unavailable` -> `off` gaat:
-  de kamer telt als leeg en het apparaat gaat niet aan; en de tegenproef: wie net de
-  kamer uitliep, houdt zijn nalooptijd, ook over een herstart heen.
-
 **Met de hand starten terwijl het huis nog wacht.** Wie een apparaat zelf aanzet terwijl
 zijn zone wacht op een slaper, op de opsta-rem of op het stiltevenster, laat de
 director die zone overnemen: hij regelt hem daarna op binnen- en buitentemperatuur,
@@ -2746,20 +2733,6 @@ the restore tells the override apart from the pre-conditioning request.
 - Guarded: live tests in `CoreState.starting` with a stored override beside a
   pre-conditioning request and beside `cancel_precondition` without zones (the override
   stays), and with `set_override` beside a stored request (the request stays).
-
-**A room's grace period starts only at a real transition to empty.** A presence sensor
-that reports `off` again after a restart or after losing its connection carries a fresh
-`last_changed`, and then a room that has been empty for hours still counts as occupied
-for a whole grace period.
-- HA layer: the coordinator notes per zone the moment of the last transition from
-  occupied to not occupied (a listener like `_notice_home`) and keeps it in the store; a
-  transition from or to `unavailable` or `unknown` does not count.
-  `world_builder._presence` passes that moment on instead of `last_changed`; without a
-  stored moment it is `None`, and then the room counts as empty - the existing rule in
-  `_room_occupied`.
-- Guarded: a live test with a restart and a sensor going `unavailable` -> `off`: the room
-  counts as empty and the appliance does not come on; and the counter-test: whoever just
-  left the room keeps the grace period, across a restart too.
 
 **Starting by hand while the house is still waiting.** Whoever switches an appliance on
 themselves while its zone waits for a sleeper, for the rise brake or for the quiet window,

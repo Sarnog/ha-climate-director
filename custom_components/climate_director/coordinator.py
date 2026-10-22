@@ -186,6 +186,7 @@ class CoordinatorSurface(Protocol):
     _pending_override: dict[str, Change]
     _store: Store[dict[str, Any]]
     _handed_back: dict[str, date]
+    _empty_since: dict[str, datetime]
     _home_since: dict[str, datetime]
     _asleep_since: datetime | None
     _save_pending: bool
@@ -340,6 +341,22 @@ class ClimateDirectorCoordinator(
         """
         self.zone_overrides: dict[str, bool] = {}
         self._handed_back: dict[str, date] = {}
+        self._empty_since: dict[str, datetime] = {}
+        """Wanneer elke kamer voor het laatst echt leeg werd.
+
+        Alleen een overgang van bezet naar niet-bezet telt; een sensor die na een
+        herstart of een verbindingstoring opnieuw `off` meldt zegt niets over het
+        vertrek. `world_builder._presence` leest dit moment, en zonder moment telt
+        de kamer als leeg. Het staat in de opslag, want juist over een herstart
+        heen moet de nalooptijd doorlopen.
+
+        When each room last really became empty. Only a transition from occupied
+        to not occupied counts; a sensor reporting `off` again after a restart or
+        a connection loss says nothing about the departure.
+        `world_builder._presence` reads this moment, and without a moment the room
+        counts as empty. It sits in the store, since the grace period must run on
+        across a restart above all.
+        """
         self.zone_priorities: dict[str, int] = {}
         self.zone_override_until: dict[str, datetime] = {}
         self.zone_override_started: dict[str, datetime] = {}
@@ -702,6 +719,7 @@ class ClimateDirectorCoordinator(
         """Queue a fresh decision after a tracked entity changed."""
         self._notice_precipitation(event)
         self._notice_home(event)
+        self._notice_room_empty(event)
         self._notice_hand(event)
         self._debouncer.async_schedule_call()
 
@@ -762,6 +780,73 @@ class ClimateDirectorCoordinator(
                     self._home_since[resident.resident_id] = moment
                     changed = True
             elif self._home_since.pop(resident.resident_id, None) is not None:
+                changed = True
+        if changed:
+            self._async_save_state()
+
+    @callback
+    def _notice_room_empty(self, event: Event[EventStateChangedData]) -> None:
+        """Record the moment a room really became empty.
+
+        De nalooptijd van een kamer begint bij het vertrek, en dat moment hoort
+        hier - in de toestandswijziging van de aanwezigheidsentiteit zelf, niet in
+        een lezer die alleen een antwoord teruggeeft. Alleen een **echte overgang**
+        van bezet naar niet-bezet telt. `unavailable` en `unknown` zijn geen standen
+        maar het ontbreken van een stand: een sensor die na een herstart of na een
+        verbroken verbinding opnieuw `off` meldt, draagt een vers `last_changed` dat
+        niets over het vertrek zegt. Zo'n overgang laat het bewaarde moment staan;
+        anders zou een kamer die al uren leeg is opnieuw een hele nalooptijd als
+        bezet tellen.
+
+        Het moment is `last_changed` van de entiteit zelf, precies zoals bij
+        `_notice_home`: dat is het moment van de overgang, en het is dezelfde
+        tijdbasis die de lezer vroeger las. Komt de kamer weer bezet, dan gaat het
+        moment weg - de kamer is niet leeg meer. Zonder moment telt de kamer als
+        leeg, de bestaande regel in `_room_occupied`; dat is ook wat een oud
+        opslagbestand zonder dit veld oplevert, en dus de onschadelijke kant.
+
+        The room's grace period starts at the departure, and that moment belongs
+        here - in the presence entity's own state change, not in a reader that only
+        hands back an answer. Only a **real transition** from occupied to not
+        occupied counts. `unavailable` and `unknown` are not states but the absence
+        of one: a sensor reporting `off` again after a restart or a broken
+        connection carries a fresh `last_changed` that says nothing about the
+        departure. Such a transition leaves the stored moment standing; otherwise a
+        room that has been empty for hours would count as occupied for a whole
+        grace period again.
+
+        The moment is the entity's own `last_changed`, exactly as in
+        `_notice_home`: that is the moment of the transition, and it is the same
+        time base the reader used before. When the room becomes occupied again the
+        moment goes - the room is no longer empty. Without a moment the room counts
+        as empty, the existing rule in `_room_occupied`; that is also what an old
+        store without this field yields, and therefore the harmless side.
+        """
+        entity_id = event.data["entity_id"]
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
+        if old_state is None or new_state is None:
+            return
+
+        # Wegvallen en terugkomen is geen vertrek. `unavailable` en `unknown`
+        # zeggen niets over de vraag of er iemand was; ze zeggen alleen dat de
+        # sensor het niet weet. Dezelfde regel als bij `_notice_hand`.
+        #
+        # Dropping out and coming back is no departure. `unavailable` and
+        # `unknown` say nothing about whether somebody was there; they only say
+        # that the sensor does not know. The same rule as in `_notice_hand`.
+        if _unreadable(old_state.state) or _unreadable(new_state.state):
+            return
+
+        changed = False
+        for zone in self.config.zones:
+            if zone.presence_entity != entity_id:
+                continue
+            if new_state.state == zone.presence_state:
+                if self._empty_since.pop(zone.zone_id, None) is not None:
+                    changed = True
+            elif old_state.state == zone.presence_state:
+                self._empty_since[zone.zone_id] = new_state.last_changed
                 changed = True
         if changed:
             self._async_save_state()

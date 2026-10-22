@@ -1049,6 +1049,14 @@ class TestItSurvivesARestart:
                 # residents no moment comes back.
                 self._home_since: dict[str, datetime] = {}
                 self._asleep_since: datetime | None = None
+                # Het leeg-moment van een kamer: deze stand-in leest geen
+                # `empty_since`, maar het herstel raakt de boekhouding aan.
+                # Zonder sleutel in het bestand blijft hij leeg.
+                #
+                # The room's empty moment: this stand-in reads no `empty_since`,
+                # but the restore touches the bookkeeping. Without the key in
+                # the file it stays empty.
+                self._empty_since: dict[str, datetime] = {}
                 # Geen handeling van de gebruiker vóór het herstel in deze
                 # stand-in; het herstel leest de notitie dus leeg.
                 #
@@ -1115,6 +1123,15 @@ class TestItSurvivesARestart:
         item = self._coordinator({"until": {}, "bypass": []})
         await item._async_restore_state()
         assert item._handed_back == {}
+        assert item._empty_since == {}
+
+    def test_the_empty_moment_is_written_away(self) -> None:
+        """Het leeg-moment hoort in het bestand, anders begint de nalooptijd opnieuw."""
+        item = self._coordinator()
+        item._empty_since = {"slaapkamer": datetime(2026, 8, 18, 12, 0, tzinfo=UTC)}
+        item._async_save_state()
+        assert item._store.written is not None
+        assert item._store.written["empty_since"] == {"slaapkamer": "2026-08-18T12:00:00+00:00"}
 
     async def test_rubbish_in_the_file_does_not_stop_the_load(self) -> None:
         item = self._coordinator({"handed_back": {"slaapkamer": "not a date"}})

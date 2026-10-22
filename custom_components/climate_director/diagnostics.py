@@ -9,6 +9,18 @@ tot de installatie waar hij vandaan komt.
 Holds the configuration, the last snapshot read and the last plan. With those
 three, any decision is exactly reproducible in a unit test, without access to
 the installation it came from.
+
+Het leeg-moment van een kamer (`empty_since`) staat niet als los veld in de
+diagnose: het verschijnt alleen als `presence.changed_at`, en dat valt onder
+dezelfde weglakking als de rest van de aanwezigheid. Het is kamerdata en geen
+persoonsgegeven, maar het zegt wanneer een kamer leeg raakte en daarmee indirect
+of daar iemand was; dezelfde afweging geldt.
+
+A room's empty moment (`empty_since`) is not a separate field in the
+diagnostics: it only appears as `presence.changed_at`, and that falls under the
+same redaction as the rest of the presence data. It is room data rather than a
+personal fact, but it says when a room became empty and therefore indirectly
+whether somebody was there; the same trade-off applies.
 """
 
 from __future__ import annotations
@@ -76,7 +88,8 @@ async def async_get_config_entry_diagnostics(
     # daarmee net zo goed een bewonersgegeven als `home` zelf - het zegt wanneer
     # iemand thuiskwam; `asleep_since` zegt op dezelfde manier wanneer het huis ging
     # slapen. `occupied` staat er apart bij voor het geval
-    # kameraanwezigheid ooit buiten `presence` om wordt weggeschreven.
+    # kameraanwezigheid ooit buiten `presence` om wordt weggeschreven. Het
+    # leeg-moment (`empty_since`) valt onder `presence`; zie de moduledocstring.
     #
     # `home`/`asleep`/`home_since` sit in the world snapshot, `presence` (with
     # `occupied` and its timestamp) too, and `presence_entity`/`sleep_entity`/
@@ -86,7 +99,8 @@ async def async_get_config_entry_diagnostics(
     # resident fact as `home` itself - it says when somebody came home;
     # `asleep_since` says in the same way when the house went to sleep.
     # `occupied` is listed separately in case room presence is ever written
-    # outside `presence`.
+    # outside `presence`. The empty moment (`empty_since`) falls under
+    # `presence`; see the module docstring.
     return async_redact_data(
         found,
         [

@@ -458,7 +458,7 @@ FUNCTION_LIMIT = 80
 # `state_store.py` (493). What grows is mostly explanation.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2272,
-    "coordinator.py": 2220,
+    "coordinator.py": 2305,
     "engine/decide.py": 1811,
     "config_flow.py": 1492,
     "schemas.py": 893,
@@ -467,7 +467,7 @@ MODULE_EXCEPTIONS: dict[str, int] = {
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_build_commands"): 211,
     ("engine/decide.py", "_generator_commands"): 192,
-    ("coordinator.py", "__init__"): 269,
+    ("coordinator.py", "__init__"): 285,
     ("engine/models.py", "_rule_zones"): 164,
     ("engine/constraints.py", "resolve"): 128,
     ("engine/decide.py", "_collect_wishes"): 137,
@@ -475,11 +475,12 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("coordinator.py", "_notice_hand"): 137,
     ("engine/decide.py", "_build_zone_decisions"): 135,
     ("engine/decide.py", "_manual_conflict"): 103,
-    ("state_store.py", "_async_restore_state"): 116,
+    ("state_store.py", "_async_restore_state"): 153,
     ("engine/hysteresis.py", "_candidate"): 97,
     ("config_flow.py", "async_step_resident"): 97,
     ("engine/decide.py", "_resolve_with_fallbacks"): 92,
     ("preconditions.py", "async_precondition"): 89,
+    ("diagnostics.py", "async_get_config_entry_diagnostics"): 82,
 }
 
 # Anker 13 (het thuiskomstmoment): `coordinator.py` 1852 → 1957 en zijn `__init__`
@@ -499,6 +500,28 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # resident who is home - with the rest's forgiveness included. All three are linear
 # explanations, not deeply branched functions; the limit is a readability limit and
 # this explanation belongs with the code.
+#
+# De nalooptijd begint alleen bij een echte overgang naar leeg (N8):
+# `coordinator.py` 2220 → 2305 en zijn `__init__` 269 → 285 door het lid
+# `_empty_since` (protocolregel, beginwaarde en de uitleg wat het is) en
+# `_notice_room_empty` met de uitleg waarom `unavailable` en `unknown` geen
+# vertrek zijn; `state_store.py::_async_restore_state` 116 → 153 doordat het
+# leeg-moment terugkomt, met de vergevingsgezindheid van de rest en de regel dat
+# een nu bezette kamer geen oud moment erft; en
+# `diagnostics.py::async_get_config_entry_diagnostics` 80 → 82 met de verwijzing
+# naar de moduledocstring, waar de keuze staat: het moment valt onder `presence`
+# en is daar weggelakt. Wat groeit is vooral uitleg.
+#
+# The grace period starts only at a real transition to empty (N8):
+# `coordinator.py` 2220 → 2305 and its `__init__` 269 → 285 through the
+# `_empty_since` member (protocol line, starting value and the explanation of
+# what it is) and `_notice_room_empty` with the explanation of why `unavailable`
+# and `unknown` are no departure; `state_store.py::_async_restore_state`
+# 116 → 153 because the empty moment comes back, with the rest's forgiveness and
+# the rule that a room that is occupied now inherits no old moment; and
+# `diagnostics.py::async_get_config_entry_diagnostics` 80 → 82 with the pointer
+# to the module docstring, where the choice stands: the moment falls under
+# `presence` and is redacted there. What grows is mostly explanation.
 
 
 def _python_files(root: Path) -> list[Path]:

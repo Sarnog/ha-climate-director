@@ -298,7 +298,9 @@ class _WorldBuilderMixin(_CoordinatorBase):
                 if opening.entity_id
             },
             presence={
-                zone.zone_id: self._presence(zone.presence_entity, zone.presence_state)
+                zone.zone_id: self._presence(
+                    zone.zone_id, zone.presence_entity, zone.presence_state
+                )
                 for zone in self.config.zones
                 if zone.presence_entity
             },
@@ -557,14 +559,35 @@ class _WorldBuilderMixin(_CoordinatorBase):
             changed_at=changed_at,
         )
 
-    def _presence(self, entity_id: str, occupied_state: str) -> PresenceState:
-        """Return whether a room is occupied, and since when."""
+    def _presence(self, zone_id: str, entity_id: str, occupied_state: str) -> PresenceState:
+        """Return whether a room is occupied, and since when it is empty.
+
+        This is a reader and writes nothing. Het moment waarop de kamer leeg werd
+        staat in `_empty_since`: gevuld door `_notice_room_empty` bij de echte
+        overgang van bezet naar niet-bezet, en bij het opstarten uit de opslag.
+        `last_changed` van de entiteit doet hier bewust niet mee: na een herstart
+        of een verbroken verbinding draagt die een vers tijdstip dat niets over
+        het vertrek zegt, en dan zou een kamer die al uren leeg is opnieuw een
+        hele nalooptijd als bezet tellen. Zonder bewaard moment is het moment
+        onbekend, en dan telt de kamer als leeg - de regel in `_room_occupied`.
+
+        This is a reader and writes nothing. The moment the room became empty
+        stands in `_empty_since`: filled by `_notice_room_empty` at the real
+        transition from occupied to not occupied, and at startup from the store.
+        The entity's `last_changed` deliberately plays no part here: after a
+        restart or a broken connection it carries a fresh timestamp that says
+        nothing about the departure, and then a room that has been empty for hours
+        would count as occupied for a whole grace period again. Without a stored
+        moment the moment is unknown, and then the room counts as empty - the rule
+        in `_room_occupied`.
+        """
         state = self.hass.states.get(entity_id)
         if state is None:
             return PresenceState()
+        occupied = state.state == occupied_state
         return PresenceState(
-            occupied=state.state == occupied_state,
-            changed_at=dt_util.as_local(state.last_changed),
+            occupied=occupied,
+            changed_at=None if occupied else self._empty_since.get(zone_id),
         )
 
     def _season(self) -> Season:

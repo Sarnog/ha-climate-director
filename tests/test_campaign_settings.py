@@ -500,6 +500,16 @@ class TestTheDelays:
         try:
             assert home.state(ATTIC) == "heat"
             home.set("binary_sensor.zolder_aanwezig", "off")
+            # Het vertrek wordt genoteerd in de toestandswijziging van de sensor;
+            # deze toets slaat de debouncer over en moet die wijziging dus eerst
+            # laten aankomen. Zonder dat leest de ronde een kamer zonder moment,
+            # en dat telt als leeg - de onschadelijke kant.
+            #
+            # The departure is noted in the sensor's own state change; this test
+            # skips the debouncer and must therefore let that change arrive first.
+            # Without it the round reads a room without a moment, and that counts
+            # as empty - the harmless side.
+            await home.settle()
             await home.evaluate()
             assert home.state(ATTIC) == "heat", "de nalooptijd van een kwartier loopt nog"
 

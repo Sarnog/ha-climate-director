@@ -31,6 +31,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from types import SimpleNamespace
 
 import pytest
 from conftest import at
@@ -212,6 +213,7 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
             self._home_since: dict[str, datetime] = {}
             self._asleep_since: datetime | None = None
             self._handed_back: dict = {}
+            self._empty_since: dict[str, datetime] = {}
             self._waiting: dict = {}
             self._refused: set[str] = set()
             self.data = None
@@ -240,6 +242,7 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
         _season = ClimateDirectorCoordinator._season
         _precipitation = ClimateDirectorCoordinator._precipitation
         _notice_precipitation = ClimateDirectorCoordinator._notice_precipitation
+        _notice_room_empty = ClimateDirectorCoordinator._notice_room_empty
         _calendar_says_holiday = ClimateDirectorCoordinator._calendar_says_holiday
         _zones_handed_back = ClimateDirectorCoordinator._zones_handed_back
         _live_preconditions = ClimateDirectorCoordinator._live_preconditions
@@ -531,6 +534,57 @@ def _healthy_states() -> dict[str, FakeState]:
         if entity in states:
             states[entity] = FakeState("19.0")
     return states
+
+
+class TestTheRoomGraceStartsAtARealDeparture:
+    """Alleen een echte overgang van bezet naar niet-bezet begint de nalooptijd.
+
+    Een sensor die na een herstart of een verbroken verbinding opnieuw `off`
+    meldt, draagt een vers tijdstip dat niets over het vertrek zegt. De
+    coordinator noteert daarom alleen het moment van een echte overgang, en een
+    kamer die weer bezet wordt verliest het moment.
+
+    Only a real transition from occupied to not occupied starts the grace period.
+    A sensor reporting `off` again after a restart or a broken connection carries
+    a fresh timestamp that says nothing about the departure. The coordinator
+    therefore notes only the moment of a real transition, and a room that becomes
+    occupied again loses the moment.
+    """
+
+    @staticmethod
+    def _event(old: str, new: str, *, at: datetime = NOW) -> SimpleNamespace:
+        return SimpleNamespace(
+            data={
+                "entity_id": "binary_sensor.zolder",
+                "old_state": FakeState(old),
+                "new_state": FakeState(new, last_changed=at),
+            }
+        )
+
+    def test_a_real_departure_starts_the_grace(self) -> None:
+        item = coordinator()
+        item._notice_room_empty(self._event("on", "off", at=NOW))
+        assert item._empty_since == {"zolder": NOW}
+
+    def test_an_unavailable_reading_does_not_start_the_grace(self) -> None:
+        """Wegvallen en terugkomen is geen vertrek, in geen van beide richtingen."""
+        item = coordinator()
+        item._notice_room_empty(self._event("on", "unavailable", at=NOW))
+        item._notice_room_empty(self._event("unavailable", "off", at=NOW))
+        assert item._empty_since == {}
+
+    def test_a_sensor_that_repeats_off_does_not_move_the_moment(self) -> None:
+        """Een sensor die `off` opnieuw meldt is geen nieuwe overgang."""
+        item = coordinator()
+        item._notice_room_empty(self._event("on", "off", at=NOW))
+        item._notice_room_empty(self._event("off", "off", at=NOW + timedelta(minutes=5)))
+        assert item._empty_since == {"zolder": NOW}
+
+    def test_becoming_occupied_again_drops_the_moment(self) -> None:
+        item = coordinator()
+        item._notice_room_empty(self._event("on", "off", at=NOW))
+        item._notice_room_empty(self._event("off", "on", at=NOW + timedelta(minutes=5)))
+        assert item._empty_since == {}
 
 
 class TestComingHomeIsNotSleeping:
