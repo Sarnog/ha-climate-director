@@ -230,7 +230,7 @@ class ZoneOverrideSwitch(_DirectorSwitch):
         dus niet mee. Zet de gebruiker hem aan, dan vervalt de hand van de zone bij
         dit begin (anker 11), zodat de zone na het uitzetten weer meedoet.
 
-        Set the switch and note that the user did this himself. When it falls
+        Set the switch and note that the user did this. When it falls
         before the restore, this action wins over the stored duration:
         `state_store` then skips that zone. The restore of the switch position
         itself (`async_added_to_hass`) does not come past here and therefore does
