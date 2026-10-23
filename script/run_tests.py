@@ -139,7 +139,7 @@ def compare_and_keep(recorded: Recorded, full: bool) -> int:
     if os.environ.get("CI"):
         artifact = os.environ.get("CD_IMPACT_ARTIFACT")
         if artifact:
-            Path(artifact).write_text(text, encoding="utf-8")
+            Path(artifact).write_text(text, encoding="utf-8", newline="\n")
         if not sel.MAP.is_file():
             # Zonder kaart draait altijd alles; er valt dan niets te vergelijken.
             # Without a map everything always runs; there is nothing to compare then.
@@ -156,7 +156,7 @@ def compare_and_keep(recorded: Recorded, full: bool) -> int:
         return 0
     old = sel.MAP.read_text(encoding="utf-8") if sel.MAP.is_file() else ""
     if text != old:
-        sel.MAP.write_text(text, encoding="utf-8")
+        sel.MAP.write_text(text, encoding="utf-8", newline="\n")
         print("tests/impact_map.json bijgewerkt / updated: commit het mee / commit it along.")
     return 0
 

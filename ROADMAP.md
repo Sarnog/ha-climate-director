@@ -139,11 +139,13 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   geleende methodes aanraken, maar het neerzetten blijft handwerk: elk nieuw lid kost een
   aanpassing in elke stand-in die het raakt. Ze zouden hun attributen kunnen afleiden uit
   `CoordinatorSurface`.
-- **De open takken van de dekkingsmeting** — `branch = true` meldt op zo'n twintig
-  plekken één kant van een lus of een kortsluiting die nooit langskomt; het precieze
-  aantal schommelt tussen twee runs. Ze zijn nu met een pragma noch
-  een test gedicht; per stuk is de vraag of de tweede kant te bereiken is (dan een test)
-  of niet (dan een herschrijving die de tak laat verdwijnen).
+- **Een doorschuiving in de laatste ronde wordt nog opgelost** — weigert een circuit een
+  zone, dan schuift die door naar haar volgende bron, en dat herhaalt zich hoogstens zo
+  vaak als de grootste zone bronnen heeft. Valt de laatste doorschuiving precies in die
+  laatste ronde (een keten van verdringingen over twee circuits met elk één plek), dan
+  wordt de nieuwe bron niet meer aan de circuits voorgelegd: de zone houdt de weigering
+  van haar vorige bron en blijft koud, ook als haar nieuwe bron vrij is. Een extra ronde
+  zonder doorschuiving na de laatste, of doorgaan tot er niets meer verschuift, lost dat op.
 - **De opruimbeurt van verweesde entiteiten mist dezelfde volledigheidstoets** —
   `_async_remove_stale_entities` verwijdert een entiteit als zijn `config_entry_id` de onze is
   én zijn `unique_id` met onze prefix begint, maar kijkt niet naar het platform of het domein;
@@ -398,11 +400,13 @@ The worked-out design proposals for everything below live in
   that every stand-in carries each protocol member its borrowed methods touch, but setting
   them stays handwork: every new member costs an edit in each stand-in it reaches. They
   could derive their attributes from `CoordinatorSurface`.
-- **The open branches of the coverage measurement** — `branch = true` reports, in some
-  twenty places, one side of a loop or a short-circuit that never comes past; the exact
-  number wobbles between two runs. Neither a pragma nor a
-  test covers them now; per one the question is whether the second side is reachable (then a
-  test) or not (then a rewrite that removes the branch).
+- **A move in the last round still gets resolved** — when a circuit refuses a zone, the
+  zone moves on to its next source, and that repeats at most as often as the largest zone
+  has sources. When the last move falls exactly in that last round (a chain of
+  displacements across two circuits with one place each), the new source is never put to
+  the circuits again: the zone keeps its previous source's refusal and stays cold, even
+  when its new source is free. One more round without a move after the last one, or going
+  on until nothing moves any more, solves that.
 - **The sweep of orphaned entities misses the same completeness check** —
   `_async_remove_stale_entities` removes an entity when its `config_entry_id` is ours and its
   `unique_id` starts with our prefix, but it does not look at the platform or the domain; the

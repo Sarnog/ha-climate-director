@@ -8,7 +8,8 @@ dan is de override het jongste oordeel: de hand vervalt bij dat begin, en na
 `clear_override` doet de zone weer mee in plaats van het apparaat dat de
 override aanzette ongeregeld te laten draaien tot het huis slaapt, leeg is of de
 volgende dag begint. Deze toetsen meten dat in een echte Home Assistant, via de
-actie en via de schakelaar.
+actie en via de schakelaar, en met de tegenproef: een override op een andere zone
+laat de hand staan.
 
 A hand at an appliance and an override are both interventions by the user. When
 somebody turns the override switch or `set_override` on after a hand, the
@@ -16,7 +17,8 @@ override is the newer verdict: the hand lapses at that beginning, and after
 `clear_override` the zone rejoins instead of leaving the appliance the override
 switched on running unregulated until the house sleeps, empties or the next day
 begins. These tests measure that inside a real Home Assistant, through the action
-and through the switch.
+and through the switch, and with the counter-test: an override on another zone leaves
+the hand standing.
 """
 
 from __future__ import annotations
@@ -147,5 +149,34 @@ async def test_the_override_switch_lifts_the_hand_and_the_zone_rejoins() -> None
         await settle(home)
         assert reason_of(home) != "manual_override", "de zolder doet na de schakelaar niet mee"
         assert home.state(AIRCO) == "off", "de airco hoort weer geregeld te worden"
+    finally:
+        await stop_house(home)
+
+
+async def test_an_override_on_another_zone_leaves_the_hand_standing() -> None:
+    """Alleen de zone van de override verliest haar hand (anker 11, de andere kant)."""
+    home = await start_house(
+        installation(), config_dir=new_config_dir(), states=world("22.5", "18.5")
+    )
+    try:
+        await hand_at_the_air_conditioner(home)
+        assert set(home.coordinator._handed_back) == {"zolder"}
+
+        await home.call(
+            "climate_director",
+            "set_override",
+            {"zone_id": "woonkamer", "hvac_mode": "heat", "temperature": 22},
+        )
+        await settle(home)
+        assert set(home.coordinator._handed_back) == {"zolder"}, (
+            "een override op de woonkamer hief de hand aan de zolder op"
+        )
+
+        await home.call("climate_director", "clear_override", {"zone_id": "woonkamer"})
+        await settle(home)
+        await home.evaluate()
+        await settle(home)
+        assert reason_of(home) == "manual_override"
+        assert home.state(AIRCO) == "off", "de zolder-airco hoort uit te blijven"
     finally:
         await stop_house(home)

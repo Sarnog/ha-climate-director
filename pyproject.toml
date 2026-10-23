@@ -50,50 +50,43 @@ precision = 2
 
 # Twee bewakingen op dezelfde meting, met een verschillende taak.
 #
-# 1. `script/coverage_gate.py` (CI-stap "Coverage gate") eist dat geen enkele
-#    regel gemist is. Dat is de scherpe, deterministische eis: of een regel is
-#    uitgevoerd hangt niet van de run af. De meting van ronde 31: 5007 van 5007
-#    regels geraakt, 0 gemist.
-# 2. `fail_under` hieronder is de ratel op het totaal. Die moet de wiebel in de
-#    partiële takken verdragen: ronde 31 mat op identieke code 20 én 21 partiële
-#    takken (dezelfde suite, twee runs). Eén gemiste regel geeft 99,69 of 99,67
-#    procent, dus een drempel die één gemiste regel betrapt zou de ene run goed-
-#    en de andere afkeuren. Daarom staat hij op 99.68: hij valt bij twee gemiste
-#    regels, en de poort hierboven vangt de enkele.
+# 1. `script/coverage_gate.py` houdt de regels die coverage buiten de meting
+#    laat bij naam (`NAMED_EXCLUSIONS`) en eist dat geen enkele regel gemist is.
+# 2. `fail_under` hieronder staat op 100: geen gemiste regel en geen halve tak.
+#    Van elke `if`, elke lus en elke kortsluiting (`a or b`) is ook de andere
+#    kant gemeten; `tests/test_every_branch.py` dekt de kanten die de rest van de
+#    suite niet nam, zo nodig met verzonnen invoer. Een tak die tussen twee runs
+#    wisselt, is een toets die niet vastligt: maak die toets vast in plaats van
+#    de drempel te verlagen.
 #
-# De open takken zelf zijn één kant van een lus of een kortsluiting (`a or b`)
-# die nooit langskomt; die zijn met een test noch een pragma gedicht en staan als
-# idee in ROADMAP.md. Zakt de dekking, dan hoort de vraag "welke test is hier
-# vergeten" gesteld te worden, niet de drempel verlaagd. Een regel die er echt
-# niet komt krijgt een test met verzonnen invoer: het pakket draagt sinds ronde 32
-# (R32-1) **geen enkele** `pragma: no cover` meer. Zo'n pragma haalt een regel uit
-# deze meting, en dan zegt "nul gemiste regels" niets meer over die regel;
+# `script/run_tests.py` leest deze drempel bij een volledige run; bij een
+# selectie meet hij alleen de gewijzigde pakketbestanden, ook op 100. Een regel
+# die er echt niet komt krijgt een toets met verzonnen invoer: het pakket draagt
+# **geen enkele** `pragma: no cover`. Zo'n pragma haalt een regel uit deze
+# meting, en dan zegt "nul gemist" niets meer over die regel;
 # `tests/test_reachable_branches_deep.py::test_nothing_is_hidden_from_the_measurement`
 # houdt dat vast.
 #
 # Two guards on the same measurement, with a different task.
 #
-# 1. `script/coverage_gate.py` (CI step "Coverage gate") demands that not a
-#    single line is missed. That is the sharp, deterministic demand: whether a
-#    line ran does not depend on the run. Round 31's measurement: 5007 of 5007
-#    lines touched, 0 missed.
-# 2. `fail_under` below is the ratchet on the total. It has to absorb the wobble
-#    in the partial branches: round 31 measured 20 and 21 partial branches on
-#    identical code (same suite, two runs). One missed line yields 99.69 or
-#    99.67 percent, so a threshold that catches one missed line would pass the
-#    one run and fail the other. Hence it sits at 99.68: it drops at two missed
-#    lines, and the gate above catches the single one.
+# 1. `script/coverage_gate.py` keeps the lines coverage leaves outside the
+#    measurement by name (`NAMED_EXCLUSIONS`) and demands that not a single line
+#    is missed.
+# 2. `fail_under` below stands at 100: no missed line and no half branch. Of
+#    every `if`, every loop and every short circuit (`a or b`) the other side is
+#    measured too; `tests/test_every_branch.py` covers the sides the rest of the
+#    suite did not take, with invented input where needed. A branch that changes
+#    between two runs is a test that is not pinned down: pin that test down
+#    instead of lowering the threshold.
 #
-# The open branches themselves are one side of a loop or a short-circuit
-# (`a or b`) that never comes past; neither a test nor a pragma closes them, and
-# they stand as an idea in ROADMAP.md. If coverage drops, the question to ask is
-# "which test was forgotten here", not to lower the threshold. A line that truly
-# cannot be reached gets a test with invented input: the package has carried
-# **no** `pragma: no cover` at all since round 32 (R32-1). Such a pragma takes a
-# line out of this measurement, and then "zero missed lines" says nothing about
-# that line; `tests/test_reachable_branches_deep.py::test_nothing_is_hidden_from_the_measurement`
+# `script/run_tests.py` reads this threshold on a full run; on a selection it
+# measures only the changed package files, at 100 as well. A line that truly
+# cannot be reached gets a test with invented input: the package carries **no**
+# `pragma: no cover`. Such a pragma takes a line out of this measurement, and
+# then "zero missed" says nothing about that line;
+# `tests/test_reachable_branches_deep.py::test_nothing_is_hidden_from_the_measurement`
 # holds that down.
-fail_under = 99.68
+fail_under = 100
 
 [tool.ruff]
 target-version = "py313"
