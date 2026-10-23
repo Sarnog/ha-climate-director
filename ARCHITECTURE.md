@@ -1492,6 +1492,30 @@ gedraaide mutatie in deze repo bereikbaar is zónder een plugin te installeren
 die niet in `requirements_test.txt` staat. Randen in de testset zonder
 bereikbaar scenario gaan naar `ROADMAP.md`, niet naar een nieuwe restlijst.
 
+### Welke toetsen draaien — alleen die van de wijziging
+
+Een toets draait alleen als er iets veranderd is in het deel dat hij toetst, en niets
+draait twee keer. `script/select_tests.py` kiest de toetsbestanden uit
+`tests/impact_map.json`: per toetsbestand de bestanden die het **bij het draaien**
+uitvoerde (de pakketcode, gemeten met coverage, met per toetsbestand een eigen
+context) en opende (een gids, een vertaling, een script, en de mappen die het
+doorliep), plus de pakketmodules die het bij naam importeert. De kaart komt dus uit
+de runtime en niet uit de spelling van een toets. Alles draait als de kaart ontbreekt,
+als de basis onbekend is, als een toetsbestand verdwijnt, of als er iets verandert
+dat elke toets raakt (de afhankelijkheden, `pyproject.toml`, `tests/conftest.py` en
+de andere hulpbestanden in `tests/`, de selectie zelf en de testworkflow).
+
+`script/run_tests.py` draait de selectie en meet de dekking: bij een volledige run
+het hele pakket tegen de drempel en de poort, bij een selectie de gewijzigde
+pakketbestanden op 100 % — de selectie bevat elke toets die zo'n bestand uitvoert,
+dus die meting is volledig. Daarna vergelijkt hij wat de gedraaide toetsen echt
+uitvoerden en openden met de kaart. In de CI valt de baan als de kaart iets mist;
+lokaal (`script/test`) werkt hij de kaart bij, en die wijziging gaat mee in de commit.
+De CI is de enige volledige meting: elke baan draait alleen als haar deel veranderde
+(mypy alleen bij pakketcode, hassfest en de HACS-validatie alleen bij de integratie),
+één keer per week draait alles als vangnet, en een release vraagt geen eigen
+toetsronde — de tag volgt op de groene CI van de versiecommit.
+
 ## EN
 
 Technical design document for anyone working on the code (not a user manual —
@@ -2956,3 +2980,27 @@ as a finding when it touches behaviour a user notices, or when it can be
 reached with a mutation run in this repo without installing a plugin that is
 not in `requirements_test.txt`. Test-suite edges without a reachable scenario
 go to `ROADMAP.md`, not to a new rest list.
+
+### Which tests run — only those of the change
+
+A test only runs when something changed in the part it tests, and nothing runs twice.
+`script/select_tests.py` picks the test files from `tests/impact_map.json`: per test
+file the files it **executed while running** (the package code, measured with
+coverage, with a context of its own per test file) and opened (a guide, a
+translation, a script, and the directories it walked), plus the package modules it
+imports by name. The map therefore comes from the runtime and not from the spelling
+of a test. Everything runs when the map is missing, when the base is unknown, when a
+test file disappears, or when something changes that touches every test (the
+dependencies, `pyproject.toml`, `tests/conftest.py` and the other helper files in
+`tests/`, the selection itself and the test workflow).
+
+`script/run_tests.py` runs the selection and measures the coverage: on a full run the
+whole package against the threshold and the gate, on a selection the changed package
+files at 100 % — the selection holds every test that executes such a file, so that
+measurement is complete. Afterwards it compares what the tests that ran really
+executed and opened with the map. In CI the job drops when the map misses something;
+locally (`script/test`) it updates the map, and that change goes into the commit. CI
+is the only full measurement: every job only runs when its part changed (mypy only
+for package code, hassfest and the HACS validation only for the integration), once a
+week everything runs as a safety net, and a release asks for no test round of its
+own — the tag follows the green CI of the version commit.

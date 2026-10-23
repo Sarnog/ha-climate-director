@@ -3,7 +3,13 @@ name: Validate with hassfest
 on:
   push:
     branches: [main]
+    paths:
+      - "custom_components/**"
+      - ".github/workflows/hassfest.yaml"
   pull_request:
+    paths:
+      - "custom_components/**"
+      - ".github/workflows/hassfest.yaml"
   schedule:
     - cron: "0 0 * * *"
 

@@ -5,14 +5,52 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  # Eén keer per week alles, als vangnet onder de selectie hieronder.
+  # Once a week everything, as a safety net under the selection below.
+  schedule:
+    - cron: "0 5 * * 1"
 
 permissions: {}
 
+# Een baan draait alleen als het deel dat hij toetst veranderde
+# (`script/select_tests.py`): de commit vóór de push, of de basis van de pull
+# request, is `CD_BASE`. Een geplande of met de hand gestarte run kent geen basis
+# en draait dus alles.
+#
+# A job only runs when the part it tests changed (`script/select_tests.py`): the
+# commit before the push, or the base of the pull request, is `CD_BASE`. A
+# scheduled or manually started run knows no base and therefore runs everything.
+env:
+  CD_BASE: ${{ github.event_name == 'push' && github.event.before || github.event.pull_request.base.sha || '' }}
+
 jobs:
+  changes:
+    name: Changes
+    runs-on: ubuntu-latest
+    outputs:
+      tests: ${{ steps.select.outputs.tests }}
+      mypy: ${{ steps.select.outputs.mypy }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Select
+        id: select
+        run: python script/select_tests.py changes
+
   tests:
+    needs: changes
+    if: needs.changes.outputs.tests == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -30,28 +68,29 @@ jobs:
       - name: Ruff format
         run: python -m ruff format --check .
 
+      # De selectie, de dekking en de kaart in één stap: zie script/run_tests.py.
+      # Draait alles, dan meet hij het hele pakket tegen de drempel in
+      # pyproject.toml en houdt script/coverage_gate.py de regels buiten de meting
+      # bij naam; draait een selectie, dan moeten de gewijzigde pakketbestanden
+      # volledig gedekt zijn.
+      #
+      # The selection, the coverage and the map in one step: see
+      # script/run_tests.py. When everything runs it measures the whole package
+      # against the threshold in pyproject.toml and script/coverage_gate.py keeps
+      # the lines outside the measurement by name; when a selection runs, the
+      # changed package files must be covered completely.
       - name: Pytest
-        run: python -m coverage run -m pytest -q
+        env:
+          CD_IMPACT_ARTIFACT: ${{ runner.temp }}/impact_map.json
+        run: python script/run_tests.py
 
-      # De drempel staat in pyproject.toml; deze stap laat de baan vallen zodra
-      # de dekking eronder zakt. Let op: die drempel vergelijkt met twee
-      # decimalen (`precision` in pyproject) en verdraagt de wiebel in de
-      # partiële takken, dus hij valt pas bij twee gemiste regels.
-      #
-      # The threshold sits in pyproject.toml; this step drops the job the moment
-      # coverage falls below it. Note: that threshold compares with two decimals
-      # (`precision` in pyproject) and absorbs the wobble in the partial
-      # branches, so it only drops at two missed lines.
-      - name: Coverage
-        run: python -m coverage report
-
-      # En deze stap is de scherpe kant: geen enkele gemiste regel. Zie
-      # script/coverage_gate.py en de uitleg in pyproject.toml.
-      #
-      # And this step is the sharp side: not a single missed line. See
-      # script/coverage_gate.py and the explanation in pyproject.toml.
-      - name: Coverage gate
-        run: python script/coverage_gate.py
+      - name: Impact map
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: impact-map
+          path: ${{ runner.temp }}/impact_map.json
+          if-no-files-found: ignore
 
   # `strict-typing` staat sinds ronde 30 op nul fouten (zie quality_scale.yaml).
   # De baan blokkeert dus gewoon: een nieuwe fout laat de pull request rood
@@ -62,6 +101,8 @@ jobs:
   # turns the pull request red instead of quietly standing beside it.
   mypy:
     name: Mypy (strict)
+    needs: changes
+    if: needs.changes.outputs.mypy == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -90,9 +131,13 @@ jobs:
   # does not look at the Home Assistant version.
   oldest-supported:
     name: Tests on the oldest supported Home Assistant
+    needs: changes
+    if: needs.changes.outputs.tests == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -106,4 +151,4 @@ jobs:
           python -m pip install "homeassistant==2025.3.*"
 
       - name: Pytest
-        run: python -m pytest -q
+        run: python script/run_tests.py --no-coverage

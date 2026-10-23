@@ -3,7 +3,17 @@ name: Validate
 on:
   push:
     branches: [main]
+    paths:
+      - "custom_components/**"
+      - "hacs.json"
+      - "README.md"
+      - ".github/workflows/hacs.yaml"
   pull_request:
+    paths:
+      - "custom_components/**"
+      - "hacs.json"
+      - "README.md"
+      - ".github/workflows/hacs.yaml"
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch:

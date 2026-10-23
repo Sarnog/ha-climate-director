@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Precies wat de CI aan tests draait, lokaal.
-# Exactly what CI runs for tests, locally.
+# Precies wat de CI aan tests draait, lokaal, voor dezelfde selectie.
+# Exactly what CI runs for tests, locally, for the same selection.
 set -e
 cd "$(dirname "$0")/.."
 
@@ -10,6 +10,11 @@ else
   PYTHON=".venv/bin/python"
 fi
 
-"$PYTHON" -m coverage run -m pytest -q
-"$PYTHON" -m coverage report
-"$PYTHON" script/coverage_gate.py
+# Alleen de toetsen van deze wijziging (alles wat nog niet gepusht is, plus de
+# werkboom), met hun dekking en hun kaart; zie script/run_tests.py. Werkt de run
+# tests/impact_map.json bij, commit die dan mee. CD_BASE= (leeg) draait alles.
+# Only the tests of this change (everything not pushed yet, plus the working
+# tree), with their coverage and their map; see script/run_tests.py. When the run
+# updates tests/impact_map.json, commit it along. CD_BASE= (empty) runs everything.
+"$PYTHON" script/select_tests.py changes
+"$PYTHON" script/run_tests.py

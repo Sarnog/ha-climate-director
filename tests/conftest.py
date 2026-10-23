@@ -12,10 +12,12 @@ every scenario is a plain data object.
 from __future__ import annotations
 
 import ast
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 from pathlib import Path
 
+import impact_recorder
 import pytest
 
 from custom_components.climate_director.engine import (
@@ -1029,3 +1031,39 @@ def assert_plan_holds(config, world, plan, where: str = "") -> None:
             f"{mark}director zet {sorted(put_to_work)} aan terwijl {sorted(left_running)} al "
             f"draait op een circuit voor {circuit.max_concurrent_units}"
         )
+
+
+# De kaart van welke toets wat raakt (`tests/impact_map.json`, `script/run_tests.py`):
+# alleen actief als `CD_IMPACT_LOG` gezet is. Zie `tests/impact_recorder.py`.
+#
+# The map of which test touches what (`tests/impact_map.json`,
+# `script/run_tests.py`): only active when `CD_IMPACT_LOG` is set. See
+# `tests/impact_recorder.py`.
+
+
+def pytest_configure() -> None:
+    """Switch the recording on when `script/run_tests.py` asks for it."""
+    if impact_recorder.active():
+        impact_recorder.start()
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_make_collect_report(collector: pytest.Collector) -> Iterator[None]:
+    """Give the import of a test module to that module."""
+    if impact_recorder.active() and isinstance(collector, pytest.Module):
+        impact_recorder.switch(impact_recorder.owner(collector.path))
+    yield
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_protocol(item: pytest.Item) -> Iterator[None]:
+    """Give everything a test does, setup and teardown included, to its file."""
+    if impact_recorder.active():
+        impact_recorder.switch(impact_recorder.owner(item.path))
+    yield
+
+
+def pytest_sessionfinish() -> None:
+    """Write what each test file executed and opened."""
+    if impact_recorder.active():
+        impact_recorder.finish()
