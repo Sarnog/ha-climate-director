@@ -217,6 +217,24 @@ class TestTheMapCheck:
             "tests/test_guide.py": ["docs/install/de.md", "docs/install/nl.md"]
         }
 
+    def test_a_file_in_a_walked_directory_needs_no_line_of_its_own(self) -> None:
+        """Een bewaking die de hele map doorloopt, kiest een nieuw bestand daar al."""
+        recorded = runner.Recorded()
+        recorded.add("tests/test_timeless.py", "tests/", required=True)
+        recorded.add("tests/test_timeless.py", "tests/test_new.py", required=False)
+        recorded.add("tests/test_timeless.py", "docs/install/nl.md", required=True)
+        recorded.collapse()
+        assert recorded.inputs["tests/test_timeless.py"] == {"tests/", "docs/install/nl.md"}
+        assert recorded.required["tests/test_timeless.py"] == {"tests/", "docs/install/nl.md"}
+
+    def test_a_python_file_opened_as_text_is_no_demand(self, tmp_path: Path) -> None:
+        """`linecache` opent een `.py` alleen voor de eerste die erom vraagt."""
+        reads = tmp_path / "reads.json"
+        reads.write_text(json.dumps({"tests/test_x.py": ["tests/test_y.py", "README.md"]}))
+        recorded = runner.recorded_inputs(None, reads)
+        assert recorded.inputs["tests/test_x.py"] == {"tests/test_y.py", "README.md"}
+        assert recorded.required["tests/test_x.py"] == {"README.md"}
+
     @staticmethod
     def _judge(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, recorded, full: bool) -> int:
         monkeypatch.setenv("CI", "true")
@@ -240,6 +258,7 @@ class TestTheRecorder:
         ("target", "expected"),
         [
             (ROOT / "docs" / "install" / "nl.md", "docs/install/nl.md"),
+            (ROOT / "ARCHITECTURE.md", "ARCHITECTURE.md"),
             (ROOT / ".venv" / "Lib" / "x.py", None),
             (ROOT / ".git" / "HEAD", None),
             (ROOT / "tests" / "__pycache__" / "x.pyc", None),
@@ -249,6 +268,20 @@ class TestTheRecorder:
     )
     def test_a_path_is_kept_only_inside_the_repository(self, target, expected) -> None:
         assert impact_recorder._relative(target) == expected
+
+    @pytest.mark.parametrize(
+        ("mode", "noted"),
+        [("r", True), ("rb", True), ("w", False), ("a", False), ("x", False), ("r+", False)],
+    )
+    def test_only_reading_is_an_input(
+        self, monkeypatch: pytest.MonkeyPatch, mode: str, noted: bool
+    ) -> None:
+        """Schrijven (de eigen cache van pytest bijvoorbeeld) is geen invoer."""
+        monkeypatch.setattr(impact_recorder, "_current", "tests/test_x.py")
+        monkeypatch.setattr(impact_recorder, "_reads", {})
+        opened = impact_recorder._wrap_open(lambda _file, _mode: None)
+        opened(ROOT / "README.md", mode)
+        assert bool(impact_recorder._reads) is noted
 
 
 def _recorded(inputs: dict[str, set[str]]):

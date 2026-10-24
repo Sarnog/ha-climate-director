@@ -78,17 +78,23 @@ def executed_by_test_file(coverage_file: Path) -> dict[str, set[str]]:
 class Recorded:
     """What one run saw per test file: everything, and the part a map must carry.
 
-    Een pakketbestand dat alleen als tekst geopend werd, telt voor de selectie maar
-    niet voor de eis aan de kaart: `linecache` opent zo'n bestand voor een
-    waarschuwing of een traceback alleen bij de eerste toets die erom vraagt, dus dat
-    hangt af van de volgorde. Wat een toets van het pakket uitvoert komt uit coverage
-    en is wel een eis, net als elke map, tekst en elk script dat hij opent.
+    Twee regels houden de kaart vast en klein. Een `.py`-bestand dat alleen als
+    tekst geopend werd, telt voor de selectie maar is geen eis: `linecache` opent
+    zo'n bestand voor een waarschuwing of een traceback alleen bij de eerste toets
+    die erom vraagt, dus dat hangt af van de volgorde. Wat een toets van het pakket
+    uitvoert komt uit coverage en is wel een eis, net als elke map, tekst en elk
+    script dat hij opent. En een bestand in een map die de toets ook doorliep, staat
+    er niet apart: de selectie kijkt naar de map van een gewijzigd bestand, dus een
+    nieuw bestand in die map kiest de toets al.
 
-    A package file that was only opened as text counts for the selection but not for
-    the demand on the map: `linecache` opens such a file for a warning or a traceback
-    only for the first test that asks, so that depends on the order. What a test
-    executes of the package comes from coverage and is a demand, just like every
-    directory, text and script it opens.
+    Two rules keep the map fixed and small. A `.py` file that was only opened as
+    text counts for the selection but is no demand: `linecache` opens such a file
+    for a warning or a traceback only for the first test that asks, so that depends
+    on the order. What a test executes of the package comes from coverage and is a
+    demand, just like every directory, text and script it opens. And a file in a
+    directory the test walked as well does not stand on its own: the selection
+    looks at the directory of a changed file, so a new file in that directory picks
+    the test already.
     """
 
     def __init__(self) -> None:
@@ -103,6 +109,24 @@ class Recorded:
         if required:
             self.required[test_file].add(path)
 
+    def collapse(self) -> None:
+        """Drop every file whose directory the same test walked."""
+        for test_file, paths in self.inputs.items():
+            kept = collapsed(paths)
+            self.inputs[test_file] = kept
+            self.required[test_file] &= kept
+
+
+def collapsed(paths: set[str]) -> set[str]:
+    """`paths` without the files whose own directory is in it too."""
+    walked = {path for path in paths if path.endswith("/")}
+    return {
+        path
+        for path in paths
+        if path.endswith("/")
+        or (path.rsplit("/", 1)[0] + "/" if "/" in path else "./") not in walked
+    }
+
 
 def recorded_inputs(coverage_file: Path | None, reads_file: Path) -> Recorded:
     """Per test file everything it executed and opened in this run."""
@@ -113,12 +137,12 @@ def recorded_inputs(coverage_file: Path | None, reads_file: Path) -> Recorded:
         reads = {}
     for test_file, paths in reads.items():
         for path in paths:
-            package_source = path.startswith(sel.PACKAGE) and path.endswith(".py")
-            found.add(test_file, path, required=not package_source)
+            found.add(test_file, path, required=not path.endswith(".py"))
     if coverage_file is not None and coverage_file.is_file():
         for test_file, paths in executed_by_test_file(coverage_file).items():
             for path in paths:
                 found.add(test_file, path, required=True)
+    found.collapse()
     return found
 
 
@@ -127,7 +151,7 @@ def compare_and_keep(recorded: Recorded, full: bool) -> int:
     impact = sel.load_map() or {}
     merged = {} if full else {key: set(value) for key, value in impact.items()}
     for test_file, paths in recorded.inputs.items():
-        merged[test_file] = merged.get(test_file, set()) | paths
+        merged[test_file] = collapsed(merged.get(test_file, set()) | paths)
     missing = {
         test_file: sorted(paths - set(impact.get(test_file, [])))
         for test_file, paths in recorded.required.items()

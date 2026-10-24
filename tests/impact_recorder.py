@@ -69,8 +69,12 @@ def _relative(target: Any) -> str | None:
         return None
     if isinstance(text, bytes):
         text = os.fsdecode(text)
-    full = os.path.normcase(os.path.abspath(text))
-    if not full.startswith(_ROOT_TEXT):
+    # Vergelijk genormaliseerd (Windows kent geen hoofdletters in paden), maar bewaar
+    # het pad zoals het is: de kaart noemt `ARCHITECTURE.md`, niet `architecture.md`.
+    # Compare normalised (Windows ignores case in paths), but keep the path as it
+    # is: the map names `ARCHITECTURE.md`, not `architecture.md`.
+    full = os.path.abspath(text)
+    if not os.path.normcase(full).startswith(_ROOT_TEXT):
         return None
     relative = full[len(_ROOT_TEXT) :].replace(os.sep, "/")
     if "__pycache__" in relative or relative.startswith(_SKIP):
@@ -89,9 +93,12 @@ def _note(target: Any, directory: bool = False) -> None:
 
 
 def _wrap_open(original: Any) -> Any:
-    def wrapper(file: Any, *args: Any, **kwargs: Any) -> Any:
-        _note(file)
-        return original(file, *args, **kwargs)
+    """Note a file opened for reading; writing (pytest's own cache, say) is no input."""
+
+    def wrapper(file: Any, mode: str = "r", *args: Any, **kwargs: Any) -> Any:
+        if not any(flag in str(mode) for flag in "wax+"):
+            _note(file)
+        return original(file, mode, *args, **kwargs)
 
     return wrapper
 
