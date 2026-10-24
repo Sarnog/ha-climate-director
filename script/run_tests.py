@@ -146,8 +146,19 @@ def recorded_inputs(coverage_file: Path | None, reads_file: Path) -> Recorded:
     return found
 
 
-def compare_and_keep(recorded: Recorded, full: bool) -> int:
-    """Compare this run's inputs with the map; write the map locally, judge it in CI."""
+def compare_and_keep(recorded: Recorded, full: bool, machinery: bool = False) -> int:
+    """Compare this run's inputs with the map; write the map locally, judge it in CI.
+
+    `machinery` zegt dat de opname zelf veranderde (`sel.RECORDING`). Dan meet deze
+    run anders dan de run die de kaart maakte, en is een verschil geen fout maar een
+    nieuwe kaart: de CI meldt het en levert de kaart als artefact, en die gaat mee
+    in de volgende commit. Zo hoeft niemand lokaal alles opnieuw te draaien.
+
+    `machinery` says the recording itself changed (`sel.RECORDING`). This run then
+    measures differently from the run that made the map, and a difference is no
+    error but a new map: CI reports it and delivers the map as an artifact, which
+    goes into the next commit. That way nobody has to run everything again locally.
+    """
     impact = sel.load_map() or {}
     merged = {} if full else {key: set(value) for key, value in impact.items()}
     for test_file, paths in recorded.inputs.items():
@@ -175,6 +186,13 @@ def compare_and_keep(recorded: Recorded, full: bool) -> int:
                 print(f"  {test_file} mist / misses: {', '.join(paths[:8])}")
             for test_file in surplus:
                 print(f"  {test_file} staat op de kaart maar draaide niet / mapped, did not run")
+            if machinery:
+                print(
+                    "De opname zelf veranderde: zet de kaart uit het artefact `impact-map` "
+                    "in de volgende commit / the recording changed: commit the map from "
+                    "the `impact-map` artifact next."
+                )
+                return 0
             print("Draai `script/test` lokaal en commit tests/impact_map.json.")
             return 1
         return 0
@@ -224,7 +242,9 @@ def main(argv: list[str]) -> int:
                     or status
                 )
         if status == 0:
-            status = compare_and_keep(recorded_inputs(coverage_file, reads_file), full)
+            machinery = any(path in sel.RECORDING for path in changed or {})
+            recorded = recorded_inputs(coverage_file, reads_file)
+            status = compare_and_keep(recorded, full, machinery)
     return status
 
 

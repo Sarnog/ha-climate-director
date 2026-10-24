@@ -74,6 +74,19 @@ ALL_TRIGGERS = frozenset(
     }
 )
 
+#: De opname zelf: verandert een van deze, dan meet een run anders dan de run die de
+#: kaart maakte (`script/run_tests.py`, `compare_and_keep`).
+#: The recording itself: when one of these changes, a run measures differently from
+#: the run that made the map (`script/run_tests.py`, `compare_and_keep`).
+RECORDING = frozenset(
+    {
+        "tests/impact_recorder.py",
+        "tests/conftest.py",
+        "script/run_tests.py",
+        "script/select_tests.py",
+    }
+)
+
 #: Pakketbestanden waarvoor mypy draait, naast de pakketcode zelf.
 #: Files that make mypy run, beside the package code itself.
 MYPY_TRIGGERS = frozenset(

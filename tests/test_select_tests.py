@@ -217,6 +217,23 @@ class TestTheMapCheck:
             "tests/test_guide.py": ["docs/install/de.md", "docs/install/nl.md"]
         }
 
+    def test_a_changed_recording_reports_instead_of_failing(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Verandert de opname zelf, dan is een verschil een nieuwe kaart, geen fout."""
+        monkeypatch.setenv("CI", "true")
+        target = tmp_path / "impact_map.json"
+        target.write_text(json.dumps({"tests/test_guide.py": ["docs/install/nl.md"]}))
+        monkeypatch.setattr(runner.sel, "MAP", target)
+        monkeypatch.setenv("CD_IMPACT_ARTIFACT", str(tmp_path / "artifact.json"))
+        recorded = _recorded({"tests/test_guide.py": {"docs/install/", "docs/install/nl.md"}})
+        assert runner.compare_and_keep(recorded, full=True, machinery=True) == 0
+        assert runner.compare_and_keep(recorded, full=True, machinery=False) == 1
+        assert json.loads((tmp_path / "artifact.json").read_text()) == {
+            "tests/test_guide.py": ["docs/install/"]
+        }
+        assert "tests/impact_recorder.py" in sel.RECORDING
+
     def test_a_file_in_a_walked_directory_needs_no_line_of_its_own(self) -> None:
         """Een bewaking die de hele map doorloopt, kiest een nieuw bestand daar al."""
         recorded = runner.Recorded()
@@ -268,6 +285,21 @@ class TestTheRecorder:
     )
     def test_a_path_is_kept_only_inside_the_repository(self, target, expected) -> None:
         assert impact_recorder._relative(target) == expected
+
+    def test_a_directory_walked_by_rglob_is_noted(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """`Path.rglob` loopt via een eigen `scandir`; ook die map telt."""
+        monkeypatch.setattr(impact_recorder, "_current", "tests/test_x.py")
+        monkeypatch.setattr(impact_recorder, "_reads", {})
+        monkeypatch.setattr(impact_recorder, "_originals", {})
+        # Binnen een opnamerun mag deze toets de coverage-context niet verzetten.
+        # Inside a recording run this test must not move the coverage context.
+        monkeypatch.setattr(impact_recorder, "switch", lambda _test_file: None)
+        impact_recorder.start()
+        try:
+            list((ROOT / "brand").rglob("*.png"))
+        finally:
+            impact_recorder.stop()
+        assert "brand/" in impact_recorder._reads["tests/test_x.py"]
 
     @pytest.mark.parametrize(
         ("mode", "noted"),

@@ -39,6 +39,7 @@ At the end of the session the collection goes to `CD_IMPACT_LOG` as JSON.
 from __future__ import annotations
 
 import builtins
+import glob
 import io
 import json
 import os
@@ -134,6 +135,16 @@ def start() -> None:
     io.open_code = _wrap_code(_originals["open_code"])
     os.listdir = _wrap_listing(_originals["listdir"])
     os.scandir = _wrap_listing(_originals["scandir"])
+    # `Path.glob` en `Path.rglob` lopen via `glob._StringGlobber`, dat bij het
+    # importeren een eigen verwijzing naar `os.scandir` vastlegt; zonder deze regel
+    # zag de kaart niet dat `test_timeless` de map `tests/` doorloopt.
+    # `Path.glob` and `Path.rglob` run through `glob._StringGlobber`, which captures
+    # its own reference to `os.scandir` at import; without this line the map did
+    # not see that `test_timeless` walks the directory `tests/`.
+    globber = getattr(glob, "_StringGlobber", None)
+    if globber is not None and "scandir" in vars(globber):
+        _originals["globber_scandir"] = vars(globber)["scandir"]
+        globber.scandir = staticmethod(_wrap_listing(_originals["scandir"]))
 
 
 def switch(test_file: str | None) -> None:
@@ -156,8 +167,8 @@ def owner(path: Path) -> str | None:
     return _relative(path)
 
 
-def finish() -> None:
-    """Restore the originals and write the notes to `CD_IMPACT_LOG`."""
+def stop() -> None:
+    """Put the originals back."""
     switch(None)
     if _originals:
         builtins.open = _originals["open"]
@@ -165,6 +176,13 @@ def finish() -> None:
         io.open_code = _originals["open_code"]
         os.listdir = _originals["listdir"]
         os.scandir = _originals["scandir"]
+        if "globber_scandir" in _originals:
+            glob._StringGlobber.scandir = _originals.pop("globber_scandir")
+
+
+def finish() -> None:
+    """Restore the originals and write the notes to `CD_IMPACT_LOG`."""
+    stop()
     target = os.environ["CD_IMPACT_LOG"]
-    with _originals.get("open", builtins.open)(target, "w", encoding="utf-8") as handle:
+    with open(target, "w", encoding="utf-8") as handle:
         json.dump({key: sorted(value) for key, value in sorted(_reads.items())}, handle)
