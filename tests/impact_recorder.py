@@ -78,7 +78,10 @@ def _relative(target: Any) -> str | None:
     if not os.path.normcase(full).startswith(_ROOT_TEXT):
         return None
     relative = full[len(_ROOT_TEXT) :].replace(os.sep, "/")
-    if "__pycache__" in relative or relative.startswith(_SKIP):
+    # Met een `/` erachter valt ook de map zelf eronder (`.venv`, niet alleen `.venv/...`).
+    # With a `/` behind it the directory itself falls under it too (`.venv`, not only
+    # `.venv/...`).
+    if "__pycache__" in relative or (relative + "/").startswith(_SKIP):
         return None
     return relative
 

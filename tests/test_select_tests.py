@@ -277,6 +277,7 @@ class TestTheRecorder:
             (ROOT / "docs" / "install" / "nl.md", "docs/install/nl.md"),
             (ROOT / "ARCHITECTURE.md", "ARCHITECTURE.md"),
             (ROOT / ".venv" / "Lib" / "x.py", None),
+            (ROOT / ".venv", None),
             (ROOT / ".git" / "HEAD", None),
             (ROOT / "tests" / "__pycache__" / "x.pyc", None),
             (ROOT.parent / "elsewhere.txt", None),
