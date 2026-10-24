@@ -46,6 +46,24 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   als de ruimtesensor het uitschakelpunt haalt; regelt het apparaat op zijn eigen sensor net
   daaronder, dan blijft de taak (en het circuit) eindeloos doorlopen. Het scherm kan zeggen
   dat een doel gelijk aan het uitschakelpunt geen marge laat.
+- **Een bezette kamer waarvan de sensor even wegvalt, blijft bezet** — valt de
+  aanwezigheidssensor van een bezette kamer weg (`unavailable`, bijvoorbeeld als hij opnieuw
+  verbinding maakt), dan telt de kamer nu meteen als leeg: het apparaat gaat uit en, zodra
+  de sensor terug is, na de rusttijd weer aan. Hetzelfde na een herstart, zolang de sensor
+  nog niet terug is. Het wegvallen van een bezette kamer hoort als vertrek te tellen op dat
+  moment: de kamer blijft hoogstens de nalooptijd bezet, en de stand van de teruggekeerde
+  sensor beslist daarna.
+- **Een hand die tijdens een override ontstaat, overleeft ook een herstart** — zet iemand
+  tijdens een override het apparaat zelf uit, dan blijft die hand na het einde van de
+  override staan, behalve als Home Assistant er tussendoor herstart: dan valt de hand weg
+  en zet de director het apparaat na de override weer aan.
+- **Een doorschuiving in de laatste ronde wordt nog opgelost** — weigert een circuit een
+  zone, dan schuift die door naar haar volgende bron, en dat herhaalt zich hoogstens zo
+  vaak als de grootste zone bronnen heeft. Valt de laatste doorschuiving precies in die
+  laatste ronde (een keten van verdringingen over twee circuits met elk één plek), dan
+  wordt de nieuwe bron niet meer aan de circuits voorgelegd: de zone houdt de weigering
+  van haar vorige bron en blijft koud, ook als haar nieuwe bron vrij is. Een extra ronde
+  zonder doorschuiving na de laatste, of doorgaan tot er niets meer verschuift, lost dat op.
 - **Met de hand starten terwijl het huis nog wacht** — zet je in het weekend vóór de ander
   wakker is, of doordeweeks vóór je opsta-rem, een apparaat zelf aan, dan zet de director
   het meteen weer uit of start hij na de eerste stop niet meer. Met de hand aanzetten (aan
@@ -139,13 +157,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   geleende methodes aanraken, maar het neerzetten blijft handwerk: elk nieuw lid kost een
   aanpassing in elke stand-in die het raakt. Ze zouden hun attributen kunnen afleiden uit
   `CoordinatorSurface`.
-- **Een doorschuiving in de laatste ronde wordt nog opgelost** — weigert een circuit een
-  zone, dan schuift die door naar haar volgende bron, en dat herhaalt zich hoogstens zo
-  vaak als de grootste zone bronnen heeft. Valt de laatste doorschuiving precies in die
-  laatste ronde (een keten van verdringingen over twee circuits met elk één plek), dan
-  wordt de nieuwe bron niet meer aan de circuits voorgelegd: de zone houdt de weigering
-  van haar vorige bron en blijft koud, ook als haar nieuwe bron vrij is. Een extra ronde
-  zonder doorschuiving na de laatste, of doorgaan tot er niets meer verschuift, lost dat op.
 - **De opruimbeurt van verweesde entiteiten mist dezelfde volledigheidstoets** —
   `_async_remove_stale_entities` verwijdert een entiteit als zijn `config_entry_id` de onze is
   én zijn `unique_id` met onze prefix begint, maar kijkt niet naar het platform of het domein;
@@ -308,6 +319,24 @@ The worked-out design proposals for everything below live in
   the room sensor reaches the switch-off point; if the appliance regulates on its own sensor
   just below it, the duty (and the circuit) keeps running endlessly. The screen could say
   that a target equal to the switch-off point leaves no margin.
+- **An occupied room whose sensor drops out for a moment stays occupied** — when the
+  presence sensor of an occupied room drops out (`unavailable`, for instance while it
+  reconnects), the room now counts as empty at once: the appliance switches off and, once
+  the sensor is back, on again after the rest period. The same after a restart, as long as
+  the sensor is not back yet. An occupied room dropping out should count as a departure at
+  that moment: the room stays occupied for at most the grace period, and the state of the
+  returning sensor decides after that.
+- **A hand that arises during an override survives a restart too** — when somebody
+  switches the appliance off themselves during an override, that hand stays after the
+  override ends, except when Home Assistant restarts in between: then the hand drops away
+  and the director switches the appliance back on after the override.
+- **A move in the last round still gets resolved** — when a circuit refuses a zone, the
+  zone moves on to its next source, and that repeats at most as often as the largest zone
+  has sources. When the last move falls exactly in that last round (a chain of
+  displacements across two circuits with one place each), the new source is never put to
+  the circuits again: the zone keeps its previous source's refusal and stays cold, even
+  when its new source is free. One more round without a move after the last one, or going
+  on until nothing moves any more, solves that.
 - **Starting by hand while the house is still waiting** — when you switch an appliance on
   yourself at the weekend before the other person is awake, or on a weekday before your
   rise brake, the director switches it straight back off or no longer starts after the
@@ -400,13 +429,6 @@ The worked-out design proposals for everything below live in
   that every stand-in carries each protocol member its borrowed methods touch, but setting
   them stays handwork: every new member costs an edit in each stand-in it reaches. They
   could derive their attributes from `CoordinatorSurface`.
-- **A move in the last round still gets resolved** — when a circuit refuses a zone, the
-  zone moves on to its next source, and that repeats at most as often as the largest zone
-  has sources. When the last move falls exactly in that last round (a chain of
-  displacements across two circuits with one place each), the new source is never put to
-  the circuits again: the zone keeps its previous source's refusal and stays cold, even
-  when its new source is free. One more round without a move after the last one, or going
-  on until nothing moves any more, solves that.
 - **The sweep of orphaned entities misses the same completeness check** —
   `_async_remove_stale_entities` removes an entity when its `config_entry_id` is ours and its
   `unique_id` starts with our prefix, but it does not look at the platform or the domain; the
