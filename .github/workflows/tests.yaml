@@ -5,21 +5,18 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
-  # Eén keer per week alles, als vangnet onder de selectie hieronder.
-  # Once a week everything, as a safety net under the selection below.
-  schedule:
-    - cron: "0 5 * * 1"
 
 permissions: {}
 
 # Een baan draait alleen als het deel dat hij toetst veranderde
 # (`script/select_tests.py`): de commit vóór de push, of de basis van de pull
-# request, is `CD_BASE`. Een geplande of met de hand gestarte run kent geen basis
-# en draait dus alles.
+# request, is `CD_BASE`. Een met de hand gestarte run kent geen basis en draait dus
+# alles. Er is geen geplande run: zonder wijziging draait er niets.
 #
 # A job only runs when the part it tests changed (`script/select_tests.py`): the
 # commit before the push, or the base of the pull request, is `CD_BASE`. A
-# scheduled or manually started run knows no base and therefore runs everything.
+# manually started run knows no base and therefore runs everything. There is no
+# scheduled run: without a change nothing runs.
 env:
   CD_BASE: ${{ github.event_name == 'push' && github.event.before || github.event.pull_request.base.sha || '' }}
 
@@ -30,6 +27,7 @@ jobs:
     outputs:
       tests: ${{ steps.select.outputs.tests }}
       mypy: ${{ steps.select.outputs.mypy }}
+      oldest: ${{ steps.select.outputs.oldest }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -132,7 +130,7 @@ jobs:
   oldest-supported:
     name: Tests on the oldest supported Home Assistant
     needs: changes
-    if: needs.changes.outputs.tests == 'true'
+    if: needs.changes.outputs.oldest == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

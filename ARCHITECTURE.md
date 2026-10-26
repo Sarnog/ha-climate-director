@@ -1549,8 +1549,11 @@ dus die meting is volledig. Daarna vergelijkt hij wat de gedraaide toetsen echt
 uitvoerden en openden met de kaart. In de CI valt de baan als de kaart iets mist;
 lokaal (`script/test`) werkt hij de kaart bij, en die wijziging gaat mee in de commit.
 De CI is de enige volledige meting: elke baan draait alleen als haar deel veranderde
-(mypy alleen bij pakketcode, hassfest en de HACS-validatie alleen bij de integratie),
-één keer per week draait alles als vangnet, en een release vraagt geen eigen
+(mypy alleen bij pakketcode, de baan op de oudste Home Assistant alleen bij het pakket
+of de afhankelijkheden, hassfest en de HACS-validatie alleen bij de integratie). Er is
+geen geplande run: zonder wijziging draait er niets. De mutatieprobe draait per
+mutatie alleen de toetsen die het gemuteerde bestand raken, en alleen als dat bestand,
+een van die toetsen of de probe zelf veranderde. Een release vraagt geen eigen
 toetsronde — de tag volgt op de groene CI van de versiecommit.
 
 ## EN
@@ -3074,6 +3077,9 @@ measurement is complete. Afterwards it compares what the tests that ran really
 executed and opened with the map. In CI the job drops when the map misses something;
 locally (`script/test`) it updates the map, and that change goes into the commit. CI
 is the only full measurement: every job only runs when its part changed (mypy only
-for package code, hassfest and the HACS validation only for the integration), once a
-week everything runs as a safety net, and a release asks for no test round of its
-own — the tag follows the green CI of the version commit.
+for package code, the job on the oldest Home Assistant only for the package or the
+dependencies, hassfest and the HACS validation only for the integration). There is no
+scheduled run: without a change nothing runs. The mutation probe runs, per mutation,
+only the tests that touch the mutated file, and only when that file, one of those
+tests or the probe itself changed. A release asks for no test round of its own — the
+tag follows the green CI of the version commit.

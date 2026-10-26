@@ -14,8 +14,6 @@ on:
       - "hacs.json"
       - "README.md"
       - ".github/workflows/hacs.yaml"
-  schedule:
-    - cron: "0 0 * * *"
   workflow_dispatch:
 
 permissions: {}

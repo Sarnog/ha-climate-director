@@ -242,6 +242,20 @@ def needs_mypy(changed: Iterable[str]) -> bool:
     )
 
 
+def needs_oldest(changed: Iterable[str]) -> bool:
+    """Return whether the change can behave differently on the oldest Home Assistant.
+
+    Alleen het pakket zelf (code, manifest, vertalingen) en de afhankelijkheden
+    raken de belofte van de oudste versie; een tekst, een gids of een toets die
+    alleen een tekst leest niet.
+
+    Only the package itself (code, manifest, translations) and the dependencies
+    touch the promise of the oldest version; a text, a guide or a test that only
+    reads a text does not.
+    """
+    return any(path.startswith(PACKAGE) or path in MYPY_TRIGGERS for path in changed)
+
+
 def needs_lint(changed: Iterable[str]) -> bool:
     """Return whether the change touches something ruff reads."""
     return any(path.endswith((".py", ".toml")) for path in changed)
@@ -263,6 +277,7 @@ def main(argv: list[str]) -> int:
         flags = {
             "tests": selection == ALL or bool(selection) or needs_lint(files),
             "mypy": changed is None or needs_mypy(files),
+            "oldest": changed is None or needs_oldest(files),
         }
         lines = [f"{key}={'true' if value else 'false'}" for key, value in flags.items()]
         output = os.environ.get("GITHUB_OUTPUT")

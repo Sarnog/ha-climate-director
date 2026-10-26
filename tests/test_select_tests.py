@@ -55,6 +55,7 @@ def _load(name: str):
 
 sel = _load("select_tests")
 runner = _load("run_tests")
+probe = _load("mutation_probe")
 
 IMPACT = {
     "tests/test_guide.py": ["docs/install/", "docs/install/nl.md"],
@@ -153,6 +154,12 @@ class TestTheSelection:
         assert not sel.needs_mypy(["tests/test_x.py", "ROADMAP.md"])
         assert sel.needs_lint(["tests/test_x.py"])
         assert not sel.needs_lint(["ROADMAP.md"])
+
+    def test_the_oldest_home_assistant_follows_the_package_only(self) -> None:
+        """Een tekst of een toets die een tekst leest, raakt de oudste versie niet."""
+        assert sel.needs_oldest(["custom_components/climate_director/translations/de.json"])
+        assert sel.needs_oldest(["requirements_test.txt"])
+        assert not sel.needs_oldest(["ROADMAP.md", "docs/install/nl.md", "tests/test_x.py"])
 
     def test_the_diff_reads_as_one_letter_per_path(self) -> None:
         output = "M\tREADME.md\nD\ttests/test_old.py\nA\ttests/test_new.py\n"
@@ -315,6 +322,41 @@ class TestTheRecorder:
         opened = impact_recorder._wrap_open(lambda _file, _mode: None)
         opened(ROOT / "README.md", mode)
         assert bool(impact_recorder._reads) is noted
+
+
+class TestTheMutationProbe:
+    """Een mutatie draait alleen haar eigen toetsen, en alleen als haar deel veranderde.
+
+    A mutation runs only its own tests, and only when its part changed.
+    """
+
+    MUTATION = {"name": "m", "file": "custom_components/climate_director/engine/gates.py"}
+
+    def test_a_mutation_runs_only_the_tests_that_touch_its_file(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setattr(sel, "ROOT", _fake_root(tmp_path, IMPACT))
+        assert probe.tests_for(self.MUTATION, IMPACT) == ["tests/test_engine.py"]
+
+    def test_without_a_map_a_mutation_runs_the_full_suite(self) -> None:
+        assert probe.tests_for(self.MUTATION, None) == []
+
+    @pytest.mark.parametrize(
+        ("changed", "runs"),
+        [
+            (None, True),
+            ({"custom_components/climate_director/engine/gates.py": "M"}, True),
+            ({"tests/test_engine.py": "M"}, True),
+            ({"script/mutation_probe.py": "M"}, True),
+            ({"tests/conftest.py": "M"}, True),
+            ({"ROADMAP.md": "M", "tests/test_guide.py": "M"}, False),
+        ],
+    )
+    def test_a_mutation_runs_only_when_its_part_changed(self, changed, runs: bool) -> None:
+        assert probe.relevant(self.MUTATION, ["tests/test_engine.py"], changed) is runs
+
+    def test_a_mutation_on_the_full_suite_always_runs(self) -> None:
+        assert probe.relevant(self.MUTATION, [], {"ROADMAP.md": "M"}) is True
 
 
 def _recorded(inputs: dict[str, set[str]]):

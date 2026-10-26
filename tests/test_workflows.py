@@ -4,13 +4,15 @@ One commit, one run: no `push` trigger can fire on a tag ref.
 
 Zonder branchfilter start `git push --tags` naast de gewone push nog een
 keer élke baan op dezelfde commit - twee runs per release, en de tweede voegt
-niets toe. De drie workflowbestanden dragen daarom `push: branches: [main]`;
-`pull_request`, `schedule` en `workflow_dispatch` blijven gewoon staan.
+niets toe. De workflowbestanden dragen daarom `push: branches: [main]`;
+`pull_request` en `workflow_dispatch` blijven gewoon staan. Een geplande run
+(`schedule`) is er niet: een toets draait alleen als zijn deel veranderde.
 
 Without a branch filter `git push --tags` starts every job a second time
 on the same commit - two runs per release, and the second one adds nothing. The
-three workflow files therefore carry `push: branches: [main]`; `pull_request`,
-`schedule` and `workflow_dispatch` simply stay.
+workflow files therefore carry `push: branches: [main]`; `pull_request` and
+`workflow_dispatch` simply stay. There is no scheduled run (`schedule`): a test
+only runs when its part changed.
 
 De eigenschap die deze test vastpint is breder dan de schrijfwijze `branches ==
 ["main"]` en breder dan een handlijst van bestanden: **géén bestand onder
@@ -132,8 +134,9 @@ DISCOVERED_TODAY = ("tests.yaml", "hacs.yaml", "hassfest.yaml", "mutation.yaml")
 # have a `push`.
 REMAINING = {
     "tests.yaml": ("pull_request", "workflow_dispatch"),
-    "hacs.yaml": ("pull_request", "schedule", "workflow_dispatch"),
-    "hassfest.yaml": ("pull_request", "schedule"),
+    "hacs.yaml": ("pull_request", "workflow_dispatch"),
+    "hassfest.yaml": ("pull_request", "workflow_dispatch"),
+    "mutation.yaml": ("pull_request", "workflow_dispatch"),
 }
 
 # Events die op een **tag-ref** of een release afgaan in plaats van op een
@@ -197,6 +200,17 @@ def test_no_other_trigger_can_fire_on_a_tag(name: str) -> None:
             f"`git push --tags` of de release start deze baan opnieuw - de dubbele "
             f"run die R29-2 weghaalde"
         )
+
+
+@pytest.mark.parametrize("name", WORKFLOW_NAMES)
+def test_no_workflow_runs_on_a_schedule(name: str) -> None:
+    """Een baan draait alleen als zijn deel veranderde, nooit op de klok.
+
+    A job only runs when its part changed, never on the clock.
+    """
+    assert "schedule" not in triggers(name), (
+        f"{name}: een geplande run draait toetsen zonder dat er iets veranderde"
+    )
 
 
 @pytest.mark.parametrize("name", WORKFLOW_NAMES)

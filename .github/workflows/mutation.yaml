@@ -1,8 +1,23 @@
 name: Mutation probe
 
+# Alleen als het pakket, de toetsen of de probe zelf veranderden; de probe kiest
+# daarna per mutatie alleen de toetsen die het gemuteerde bestand raken.
+# Only when the package, the tests or the probe itself changed; the probe then
+# picks per mutation only the tests that touch the mutated file.
 on:
-  schedule:
-    - cron: "0 4 * * 1"
+  push:
+    branches: [main]
+    paths:
+      - "custom_components/**"
+      - "tests/**"
+      - "script/mutation_probe.py"
+      - ".github/workflows/mutation.yaml"
+  pull_request:
+    paths:
+      - "custom_components/**"
+      - "tests/**"
+      - "script/mutation_probe.py"
+      - ".github/workflows/mutation.yaml"
   workflow_dispatch:
 
 permissions: {}
@@ -14,6 +29,8 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -26,4 +43,6 @@ jobs:
           python -m pip install -r requirements_test.txt
 
       - name: Run mutations
+        env:
+          CD_BASE: ${{ github.event_name == 'push' && github.event.before || github.event.pull_request.base.sha || '' }}
         run: python script/mutation_probe.py
