@@ -15,12 +15,14 @@ from __future__ import annotations
 
 import inspect
 import json
+from dataclasses import replace
 from datetime import datetime
+from types import SimpleNamespace
 
 import pytest
-from conftest import gate_verdict, house
+from conftest import LIVING, gate_verdict, house
 
-from custom_components.climate_director import texts
+from custom_components.climate_director import schemas, texts
 from custom_components.climate_director.applier import _is_stop
 from custom_components.climate_director.config_flow import (
     ClimateDirectorOptionsFlow,
@@ -1376,3 +1378,61 @@ class TestTheReadablePieces:
         assert (
             sentence == "Woonkamer: gaat verwarmen with Cv-ketel at 23.0 °C — de kamer vraagt erom."
         )
+
+
+class TestSavingTheOptions:
+    """Het bewaarscherm en wat het opruimt. / The save screen and what it tidies."""
+
+    async def test_saving_without_a_visit_to_the_menu_keeps_the_stored_shadow_mode(
+        self,
+    ) -> None:
+        """Zonder bezoek aan het menu staat er geen schaduwstand; de opslag houdt de zijne."""
+        flow = ClimateDirectorOptionsFlow()
+        flow.hass = SimpleNamespace(
+            config_entries=SimpleNamespace(
+                async_get_known_entry=lambda _entry_id: SimpleNamespace(
+                    options={"shadow_mode": True}
+                )
+            )
+        )
+        flow.handler = "abc"
+        flow._installation = {}
+        result = await flow.async_step_save({})
+        assert result["type"] == "create_entry"
+        assert result["data"] == {"shadow_mode": True, "installation": {}}
+
+    def test_dropping_an_item_without_a_zone_id_leaves_the_openings_alone(self) -> None:
+        """Een item zonder zone-id raakt de openingen en generatoren niet aan."""
+        flow = ClimateDirectorOptionsFlow()
+        flow._installation = {
+            "openings": [{"zone_ids": ["woonkamer"]}],
+            "generators": [{"zone_ids": ["woonkamer"]}],
+        }
+        flow._drop_zone_references({})
+        assert flow._installation["openings"] == [{"zone_ids": ["woonkamer"]}]
+        assert flow._installation["generators"] == [{"zone_ids": ["woonkamer"]}]
+
+    def test_a_source_or_generator_without_an_entity_steers_nothing(self) -> None:
+        installation = {
+            "zones": [{"sources": [{}, {"entity_id": "climate.a"}]}],
+            "generators": [{}, {"entity_id": "climate.b"}],
+        }
+        assert schemas._managed_entities(installation) == ["climate.a", "climate.b"]
+
+
+def test_a_registry_entry_without_a_name_falls_back_to_the_source_name() -> None:
+    """Een registerinvoer zonder naam laat de naam uit de configuratie staan."""
+    config = replace(
+        house(),
+        zones=(
+            replace(
+                house().zones[0],
+                sources=(replace(house().zones[0].sources[0], name="Airco beneden"),),
+            ),
+        ),
+    )
+    registry = SimpleNamespace(
+        async_get=lambda _entity_id: SimpleNamespace(name=None, original_name=None)
+    )
+    hass = SimpleNamespace(data={texts.DATA_REGISTRY: registry})
+    assert texts._source_display_name(hass, config, LIVING) == "Airco beneden"

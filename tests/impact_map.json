@@ -219,30 +219,6 @@
  "tests/test_entity_uniqueness.py": [
   "custom_components/climate_director/engine/models.py"
  ],
- "tests/test_every_branch.py": [
-  "custom_components/climate_director/config_flow.py",
-  "custom_components/climate_director/coordinator.py",
-  "custom_components/climate_director/engine/constraints.py",
-  "custom_components/climate_director/engine/decide.py",
-  "custom_components/climate_director/engine/families.py",
-  "custom_components/climate_director/engine/gates.py",
-  "custom_components/climate_director/engine/hysteresis.py",
-  "custom_components/climate_director/engine/models.py",
-  "custom_components/climate_director/engine/night.py",
-  "custom_components/climate_director/engine/plan.py",
-  "custom_components/climate_director/engine/serialise.py",
-  "custom_components/climate_director/engine/sources.py",
-  "custom_components/climate_director/engine/storage_helpers.py",
-  "custom_components/climate_director/engine/table_storage.py",
-  "custom_components/climate_director/engine/takeover.py",
-  "custom_components/climate_director/engine/world.py",
-  "custom_components/climate_director/schema_fields.py",
-  "custom_components/climate_director/schemas.py",
-  "custom_components/climate_director/texts.py",
-  "custom_components/climate_director/units.py",
-  "custom_components/climate_director/world_builder.py",
-  "tests/test_ha_layer.py"
- ],
  "tests/test_exclusive_appliances.py": [
   "custom_components/climate_director/engine/constraints.py",
   "custom_components/climate_director/engine/decide.py",
@@ -281,6 +257,7 @@
   "custom_components/climate_director/engine/gates.py",
   "custom_components/climate_director/engine/hysteresis.py",
   "custom_components/climate_director/engine/models.py",
+  "custom_components/climate_director/engine/night.py",
   "custom_components/climate_director/engine/plan.py",
   "custom_components/climate_director/engine/sources.py",
   "custom_components/climate_director/engine/takeover.py",
@@ -299,7 +276,9 @@
  "tests/test_field_tables.py": [
   "custom_components/climate_director/engine/fields.py",
   "custom_components/climate_director/engine/serialise.py",
-  "custom_components/climate_director/engine/table_storage.py"
+  "custom_components/climate_director/engine/table_storage.py",
+  "custom_components/climate_director/schema_fields.py",
+  "custom_components/climate_director/units.py"
  ],
  "tests/test_fuzz_decide.py": [
   "custom_components/climate_director/engine/constraints.py",
@@ -470,6 +449,7 @@
   "custom_components/climate_director/number.py",
   "custom_components/climate_director/problems.py",
   "custom_components/climate_director/schemas.py",
+  "custom_components/climate_director/strings.json",
   "custom_components/climate_director/texts.py",
   "custom_components/climate_director/units.py",
   "custom_components/climate_director/world_builder.py"

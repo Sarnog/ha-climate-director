@@ -42,14 +42,17 @@ from __future__ import annotations
 import dataclasses
 import enum
 from datetime import time, timedelta
-from typing import Any, Union, get_args, get_origin, get_type_hints
+from types import SimpleNamespace
+from typing import Any, get_origin, get_type_hints
 
 import pytest
 
+from custom_components.climate_director import schema_fields
 from custom_components.climate_director.engine import fields as engine_fields
 from custom_components.climate_director.engine import models as engine_models
 from custom_components.climate_director.engine import serialise as engine_serialise
 from custom_components.climate_director.engine.fields import FieldSpec
+from custom_components.climate_director.engine.table_storage import _unwrap
 
 _SKIP = object()
 
@@ -67,15 +70,6 @@ def field_tables() -> list[tuple[str, tuple[FieldSpec, ...]]]:
 
 TABLES = field_tables()
 TABLE_IDS = [name for name, _ in TABLES]
-
-
-def _unwrap(annotation: Any) -> Any:
-    """Return `X` for `X | None`, and the annotation itself otherwise."""
-    if get_origin(annotation) is Union or type(annotation).__name__ == "UnionType":
-        parts = [part for part in get_args(annotation) if part is not type(None)]
-        if len(parts) == 1:
-            return parts[0]
-    return annotation
 
 
 def _placeholder(annotation: Any) -> Any:
@@ -199,3 +193,26 @@ class TestEveryTargetPointsSomewhere:
 def test_the_sweep_finds_the_tables_at_all() -> None:
     """Guards the reader: an empty sweep would pass everything above."""
     assert sorted(engine_fields.TABLE_ROOTS) == TABLE_IDS
+
+
+class TestTheScreensFromTheTable:
+    """Van tabelrij naar schermveld. / From table row to screen field."""
+
+    def test_a_choice_without_a_translation_key_shows_its_values(self) -> None:
+        chosen = schema_fields._choices(["a", "b"])
+        assert "translation_key" not in chosen.config
+
+    def test_a_number_with_a_measure_the_table_does_not_know_is_refused(self) -> None:
+        unknown = FieldSpec(key="x", kind="number", unit="onbekend")
+        with pytest.raises(AssertionError, match="onbekend veldtype"):
+            schema_fields._selector_for(unknown, SimpleNamespace(hass=None))
+
+    def test_a_screen_without_a_footer_carries_only_its_table(self) -> None:
+        field = FieldSpec(key="naam", kind="text")
+        schema = schema_fields._table_schema((field,), SimpleNamespace(hass=None), values={})
+        assert [str(key) for key in schema.schema] == ["naam"]
+
+
+def test_a_union_of_two_real_types_stays_as_it_is() -> None:
+    """Alleen `X | None` wordt uitgepakt. / Only `X | None` is unwrapped."""
+    assert _unwrap(int | str) == int | str

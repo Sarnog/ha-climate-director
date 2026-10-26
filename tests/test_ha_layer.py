@@ -32,11 +32,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
-from conftest import at
+from conftest import at, make_world
 
 from custom_components.climate_director import applier as applier_module
+from custom_components.climate_director import texts
 from custom_components.climate_director.applier import apply
 from custom_components.climate_director.binary_sensor import (
     StuckSensor,
@@ -1458,3 +1460,70 @@ def test_an_unreachable_generator_reads_unreachable_not_left_alone() -> None:
     sensor = _bind(CommandSensor, item, _target=boiler)
     assert sensor.native_value == "unreachable"
     assert sensor.extra_state_attributes["reason"] == "source_unreachable"
+
+
+class TestTheQuietSideOfEachListener:
+    """De kant van elke lezer en listener waar niets gebeurt.
+
+    The side of every reader and listener where nothing happens.
+    """
+
+    @staticmethod
+    def _event(entity_id: str, old: str, new: str) -> SimpleNamespace:
+        return SimpleNamespace(
+            data={
+                "entity_id": entity_id,
+                "old_state": FakeState(old),
+                "new_state": FakeState(new, last_changed=NOW + timedelta(minutes=5)),
+            }
+        )
+
+    def test_an_opening_or_resident_without_an_entity_is_not_tracked(self) -> None:
+        config = DirectorConfig(
+            zones=house().zones,
+            openings=(Opening(entity_id=""),),
+            residents=(Resident(resident_id="gast", name="Gast"),),
+        )
+        assert "" not in coordinator(config=config).tracked_entities()
+
+    def test_a_home_resident_whose_state_repeats_keeps_the_moment(self) -> None:
+        """Thuis blijft thuis (bijvoorbeeld een nieuwe gps-positie): geen nieuw moment."""
+        item = coordinator()
+        item._home_since = {"danny": NOW}
+        ClimateDirectorCoordinator._notice_home(item, self._event("person.danny", "home", "home"))
+        assert item._home_since == {"danny": NOW}
+
+    def test_an_away_resident_without_a_moment_stays_without_one(self) -> None:
+        item = coordinator()
+        ClimateDirectorCoordinator._notice_home(
+            item, self._event("person.danny", "not_home", "not_home")
+        )
+        assert item._home_since == {}
+
+    def test_an_occupied_room_that_stays_occupied_has_no_moment(self) -> None:
+        item = coordinator()
+        item._notice_room_empty(self._event("binary_sensor.zolder", "on", "on"))
+        assert item._empty_since == {}
+
+    def test_without_a_world_no_opening_is_reported_as_bypassed(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        reported: list[Any] = []
+        monkeypatch.setattr(
+            "custom_components.climate_director.problems.async_report_bypassed_openings",
+            lambda *args: reported.append(args[-1]),
+        )
+        ClimateDirectorCoordinator._report_bypassed_openings(coordinator())
+        assert reported == [{}]
+
+    def test_a_refusal_for_an_unknown_zone_names_no_target(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Een zone die niet (meer) bestaat heeft geen doeltemperatuur in de zin."""
+        monkeypatch.setattr(texts, "lookup", lambda _hass, _code: None)
+        item = coordinator()
+        item.world = make_world()
+        item._precondition = {"onbekend": NOW}
+        data = item._refusal_data("onbekend", None)
+        assert data["zone"] == "onbekend"
+        assert data["target_temperature"] is None

@@ -21,7 +21,7 @@ from dataclasses import replace
 from datetime import datetime, timedelta
 
 import pytest
-from conftest import climate, make_world
+from conftest import awake, climate, house, make_world
 
 from custom_components.climate_director.engine import (
     MODE_HEAT,
@@ -821,3 +821,64 @@ class TestAHandedOverApplianceIsNoStandIn:
         assert decision.source_id == "z_klep"
         assert decision.passed_over == (), "een overdracht gaat voor een storing"
         assert decision.on_fallback is False
+
+
+def _unit_zone(zone_id: str, priority: int, *entities: str) -> Zone:
+    return replace(
+        house().zones[1],
+        zone_id=zone_id,
+        name=zone_id,
+        indoor_sensor=f"sensor.{zone_id}",
+        priority=priority,
+        sources=tuple(
+            Source(source_id=f"{zone_id}_{index}", entity_id=entity, role=SourceRole.HEAT_COOL)
+            for index, entity in enumerate(entities)
+        ),
+    )
+
+
+def test_every_fallback_round_can_move_a_zone_on() -> None:
+    """Elke ronde schuift een zone door; de lus houdt op bij het maximum aantal rondes.
+
+    A neemt de enige plek op circuit 1, dus B schuift door naar circuit 2. Daar
+    verdringt B met meer voorrang C, en C schuift in de tweede - en laatste - ronde
+    door naar zijn eigen losse unit.
+    """
+    a = _unit_zone("a", 0, "climate.x")
+    b = _unit_zone("b", 1, "climate.y", "climate.w2")
+    c = _unit_zone("c", 2, "climate.w1", "climate.v")
+    config = replace(
+        house(),
+        zones=(a, b, c),
+        circuits=(
+            Circuit(
+                circuit_id="een",
+                name="Een",
+                units=("climate.x", "climate.y"),
+                max_concurrent_units=1,
+            ),
+            Circuit(
+                circuit_id="twee",
+                name="Twee",
+                units=("climate.w1", "climate.w2"),
+                max_concurrent_units=1,
+            ),
+        ),
+        openings=(),
+    )
+    units = ("climate.x", "climate.y", "climate.w1", "climate.w2", "climate.v")
+    world = make_world(
+        outdoor=10.0,
+        indoor=dict.fromkeys(("a", "b", "c"), 15.0),
+        residents={"danny": awake(), "nancy": awake()},
+        climates=dict.fromkeys(units, "off"),
+    )
+    plan = decide(config, world)
+    chosen = {zone: plan.decision_for(zone).source_id for zone in ("a", "b", "c")}
+    assert chosen == {"a": "a_0", "b": "b_1", "c": "c_1"}
+    # Dat C na zijn laatste doorschuiving ook echt zijn losse unit krijgt, staat als
+    # idee in ROADMAP.md ("Een doorschuiving in de laatste ronde wordt nog
+    # opgelost"); deze toets houdt alleen de lus zelf vast.
+    # That C really gets its loose unit after its last move on stands as an idea in
+    # ROADMAP.md ("A move in the last round still gets resolved"); this test only
+    # holds the loop itself.

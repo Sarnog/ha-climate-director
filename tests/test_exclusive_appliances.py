@@ -42,6 +42,7 @@ from custom_components.climate_director.engine import (
     decide,
     validate,
 )
+from custom_components.climate_director.engine.decide import _group_holder
 from custom_components.climate_director.engine.families import family_of
 
 NOON = datetime(2026, 3, 9, 12, 0)
@@ -262,3 +263,25 @@ class TestTheOverlapWarningIsGone:
             outdoor_sensor=config.outdoor_sensor,
         )
         assert any("unknown source" in str(item) for item in validate(broken))
+
+
+def test_the_weaker_hand_operated_holder_does_not_take_the_group() -> None:
+    """Twee handbediende units draaien in de groep; de sterkste zone houdt hem."""
+    strong = Zone(
+        zone_id="sterk",
+        name="Sterk",
+        indoor_sensor="sensor.sterk",
+        priority=0,
+        sources=(Source(source_id="s", entity_id="climate.s", autostart=False),),
+    )
+    weak = Zone(
+        zone_id="zwak",
+        name="Zwak",
+        indoor_sensor="sensor.zwak",
+        priority=1,
+        sources=(Source(source_id="z", entity_id="climate.z", autostart=False),),
+    )
+    config = DirectorConfig(zones=(strong, weak))
+    world = make_world(climates={"climate.s": "heat", "climate.z": "heat"})
+    holder = _group_holder(config, world, frozenset({"climate.s", "climate.z"}))
+    assert holder == ("climate.s", (0, "sterk"))

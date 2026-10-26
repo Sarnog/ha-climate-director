@@ -151,6 +151,16 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   `script/_gen_guides_test.py` (`LINE_LENGTH`). Verandert de eerste, dan schrijft de
   generator een uitzonderingenlijst die `ruff format --check` opnieuw wil opmaken; hij
   hoort die breedte uit `pyproject.toml` te lezen.
+- **De grote modules per onderwerp opsplitsen** — `coordinator.py`, `engine/models.py`,
+  `engine/decide.py`, `config_flow.py` en `schemas.py` zijn elk ruim boven de 500 regels
+  en dragen meerdere onderwerpen. Nieuwe code komt al bij zijn onderwerp; de bestaande
+  delen kunnen dezelfde weg gaan (de koppelingslaag in mixins per onderwerp, de engine in
+  modules per onderwerp), zonder gedrag te veranderen.
+- **De toetsen per onderwerp in plaats van per ronde** — `test_reachable_branches.py`,
+  `test_reachable_branches_deep.py` en `test_wens2_live.py` zijn naar een ronde of wens
+  genoemd, en zes toetsbestanden importeren hulpjes uit een ander toetsbestand. Die toetsen
+  horen bij het bestand van hun onderwerp, en de gedeelde hulpjes in `tests/conftest.py` of
+  een hulpbestand.
 - **De proefopstellingen in de tests dragen de interface met de hand** — de stand-ins
   kopiëren de leesmethodes van de coördinator en zetten de bijbehorende attributen stuk
   voor stuk neer. Een toets eist dat elke stand-in elk protocollid draagt dat zijn
@@ -424,6 +434,16 @@ The worked-out design proposals for everything below live in
   `script/_gen_guides_test.py` (`LINE_LENGTH`). Change the first and the generator writes
   an exception list that `ruff format --check` wants to redo; it should read that width
   from `pyproject.toml`.
+- **Splitting the large modules per subject** — `coordinator.py`, `engine/models.py`,
+  `engine/decide.py`, `config_flow.py` and `schemas.py` are each well over 500 lines and
+  carry several subjects. New code already goes to its subject; the existing parts can go
+  the same way (the binding layer in mixins per subject, the engine in modules per
+  subject), without changing behaviour.
+- **The tests per subject instead of per round** — `test_reachable_branches.py`,
+  `test_reachable_branches_deep.py` and `test_wens2_live.py` are named after a round or a
+  wish, and six test files import helpers from another test file. Those tests belong in
+  the file of their subject, and the shared helpers in `tests/conftest.py` or a helper
+  file.
 - **The test stand-ins carry the interface by hand** — the stand-ins copy the
   coordinator's reading methods and set the matching attributes one by one. A test demands
   that every stand-in carries each protocol member its borrowed methods touch, but setting

@@ -54,8 +54,8 @@ precision = 2
 #    laat bij naam (`NAMED_EXCLUSIONS`) en eist dat geen enkele regel gemist is.
 # 2. `fail_under` hieronder staat op 100: geen gemiste regel en geen halve tak.
 #    Van elke `if`, elke lus en elke kortsluiting (`a or b`) is ook de andere
-#    kant gemeten; `tests/test_every_branch.py` dekt de kanten die de rest van de
-#    suite niet nam, zo nodig met verzonnen invoer. Een tak die tussen twee runs
+#    kant gemeten. Een toets voor zo'n kant staat in het toetsbestand van zijn
+#    onderwerp, zo nodig met verzonnen invoer. Een tak die tussen twee runs
 #    wisselt, is een toets die niet vastligt: maak die toets vast in plaats van
 #    de drempel te verlagen.
 #
@@ -74,8 +74,8 @@ precision = 2
 #    is missed.
 # 2. `fail_under` below stands at 100: no missed line and no half branch. Of
 #    every `if`, every loop and every short circuit (`a or b`) the other side is
-#    measured too; `tests/test_every_branch.py` covers the sides the rest of the
-#    suite did not take, with invented input where needed. A branch that changes
+#    measured too. A test for such a side stands in the test file of its
+#    subject, with invented input where needed. A branch that changes
 #    between two runs is a test that is not pinned down: pin that test down
 #    instead of lowering the threshold.
 #

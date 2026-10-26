@@ -15,6 +15,7 @@ rather than a symptom.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import time, timedelta
 
 import pytest
@@ -43,6 +44,7 @@ from custom_components.climate_director.engine.models import (
     SeasonSettings,
     SeasonSource,
     SourceRole,
+    _rule_source_covered_zones,
 )
 
 
@@ -962,3 +964,20 @@ def test_the_other_branch_of_every_exclusion_is_literal(deadband: float, codes: 
     """
     found = [item.code for item in validate(_broken_house_for_the_other_branches(deadband))]
     assert found == codes
+
+
+def test_a_covered_zone_that_exists_is_no_complaint() -> None:
+    """Een bestaande zone in `covers_zones` is geen klacht (anker 12)."""
+    config = replace(
+        house(),
+        zones=(
+            replace(
+                house().zones[0],
+                sources=(
+                    replace(house().zones[0].sources[1], covers_zones=("woonkamer", "zolder")),
+                ),
+            ),
+            *house().zones[1:],
+        ),
+    )
+    assert list(_rule_source_covered_zones(config)) == []

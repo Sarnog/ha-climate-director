@@ -1262,7 +1262,7 @@ legt een nieuwe bron pas in de volgende ronde aan de circuits voor, en het aanta
 is het grootste aantal bronnen van een zone.
 - Engine: na de laatste ronde volgt nog één oplossing als die ronde iets verschoof, of de
   lus loopt door tot er niets meer verschuift (begrensd door het totaal aantal bronnen).
-- Bewaakt: `tests/test_every_branch.py::test_every_fallback_round_can_move_a_zone_on`
+- Bewaakt: `tests/test_fallback.py::test_every_fallback_round_can_move_a_zone_on`
   eist dat de derde zone haar losse unit ook echt krijgt.
 
 **Met de hand starten terwijl het huis nog wacht.** Wie een apparaat zelf aanzet terwijl
@@ -2795,7 +2795,7 @@ number of sources of a zone.
 - Engine: after the last round one more resolution follows when that round moved
   something, or the loop goes on until nothing moves any more (bounded by the total
   number of sources).
-- Guarded: `tests/test_every_branch.py::test_every_fallback_round_can_move_a_zone_on`
+- Guarded: `tests/test_fallback.py::test_every_fallback_round_can_move_a_zone_on`
   demands that the third zone really gets its loose unit.
 
 **Starting by hand while the house is still waiting.** Whoever switches an appliance on
