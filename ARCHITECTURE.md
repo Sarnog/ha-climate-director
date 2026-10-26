@@ -221,7 +221,13 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     de override aanzette ongeregeld draaien tot het huis sliep, leeg was of de
     volgende dag begon. De andere kant blijft staan: de hand vervalt bij het
     **begin**, niet bij het einde, dus een hand die tijdens de override ontstaat
-    (iemand zet het apparaat zelf uit) blijft staan en overleeft `clear_override`.
+    (iemand zet het apparaat zelf uit) blijft staan en overleeft `clear_override`
+    **en een herstart**. Die overleving is **breder** dan de regel dat alleen dezelfde
+    hand een hand opheft: ook een herstart laat de hand staan. De uitzondering erop is
+    **smaller**: alleen een override die de gebruiker tijdens het opstarten zelf zette,
+    heft de opgeslagen hand van die zone op, want die hand was op dat moment nog niet in
+    het geheugen. Een override die uit de opslag terugkomt, laat de hand dus staan: die
+    hand is tijdens die override ontstaan en is jonger dan het begin van de override.
     En alleen de zone van de override verliest haar hand; een gedeeld apparaat dat
     ook een andere zone bedient, laat de hand van die andere zone staan.
 
@@ -600,14 +606,21 @@ blijven verwarmen.
 
 De kamerpoort kent een nalooptijd: een kamer die net leeg werd, telt nog
 `presence_timeout` seconden als bezet, zodat iemand die de deur uitloopt niet meteen
-de verwarming voelt afslaan. Die tijd begint alleen bij een **echte overgang van
-bezet naar niet-bezet**. Een aanwezigheidssensor die na een herstart of na een
-verbroken verbinding opnieuw `off` meldt, draagt een vers tijdstip dat niets over het
-vertrek zegt; een overgang van of naar `unavailable` of `unknown` telt daarom niet.
-De coordinator noteert het moment van de laatste echte overgang per zone en bewaart
-het in de opslag, en `world_builder._presence` geeft dat moment door in plaats van
-`last_changed`. Zonder bewaard moment is het moment onbekend, en dan telt de kamer
-als leeg: een lege kamer met rust laten is de onschadelijke kant om fout in te zitten.
+de verwarming voelt afslaan. Die tijd begint bij een **vertrek**: de overgang van
+bezet naar niet-bezet, en ook de overgang van bezet naar `unavailable` of `unknown`.
+Wegvallen is geen bewijs van leegte, maar een kamer die bezet was en onleesbaar wordt,
+kan net leeg zijn geraakt; de teruggekeerde sensor beslist daarna. Dat is **breder** dan
+de regel dat alleen een leesbare overgang naar niet-bezet telt: een bezette kamer waarvan
+de sensor wegvalt, loopt nu hoogstens de nalooptijd door in plaats van meteen leeg te
+tellen. De andere kant is **smaller**: een kamer die al onleesbaar was en daarna
+niet-bezet wordt, krijgt geen verse nalooptijd, en een onleesbare sensor zonder bezet
+moment ervoor telt als leeg. De coordinator bewaart in de opslag per zone het
+vertrekmoment en welke kamers bezet waren, en `world_builder._presence` geeft dat
+moment door in plaats van `last_changed`. Is een kamer bij het herstel nog onleesbaar terwijl zij
+bezet was, dan begint haar nalooptijd op het herstelmoment. Zonder bewaard moment is het
+moment onbekend, en dan telt de kamer als leeg: een lege kamer met rust laten is de
+onschadelijke kant om fout in te zitten. Een kamer zonder nalooptijd telt bij het
+wegvallen meteen als leeg.
 
 De slaappoort kent twee standen. Is er niemand op, dan is dat `EVERYONE_ASLEEP`. Staat er
 wél iemand op terwijl een ander thuis nog slaapt, dan geldt de uiterste opsta-tijd van die
@@ -1768,9 +1781,14 @@ them without changing them here first.
     slept, emptied or the next day began. The other side stays as it was: the hand
     lapses at the **beginning**, not at the ending, so a hand that arises during the
     override (somebody switches the appliance off at the appliance itself) stays and
-    survives `clear_override`. And only the override's own zone loses its hand; a
-    shared appliance that also serves another zone leaves that other zone's hand
-    standing.
+    survives `clear_override` **and a restart**. That survival is **broader** than the
+    rule that only the same hand lifts a hand: a restart lets the hand stand too. The
+    exception to it is **smaller**: only an override the user set during the startup
+    itself lifts that zone's stored hand, since that hand was not in memory yet at that
+    moment. An override that comes back from the store therefore leaves the
+    hand standing: that hand arose during that override and is younger than the
+    override's beginning. And only the override's own zone loses its hand; a shared
+    appliance that also serves another zone leaves that other zone's hand standing.
 
     **An override hands over every appliance of that zone, house-wide.** With a
     zone under override — the switch or the `set_override` action — every
@@ -2144,14 +2162,22 @@ refusing to act on an unknown age would keep heating an open room.
 
 The room gate has a grace period: a room that has just become empty still counts as
 occupied for `presence_timeout` seconds, so somebody walking out of the door does not
-feel the heating switch off at once. That period starts only at a **real transition
-from occupied to not occupied**. A presence sensor that reports `off` again after a
-restart or after losing its connection carries a fresh timestamp that says nothing
-about the departure; a transition from or to `unavailable` or `unknown` therefore does
-not count. The coordinator notes the moment of the last real transition per zone and
-keeps it in the store, and `world_builder._presence` passes that moment on instead of
-`last_changed`. Without a stored moment the moment is unknown, and then the room
-counts as empty: leaving an empty room alone is the harmless side to be wrong on.
+feel the heating switch off at once. That period starts at a **departure**: the
+transition from occupied to not occupied, and also the transition from occupied to
+`unavailable` or `unknown`. Dropping out is no proof of emptiness, but a room that was
+occupied and turns unreadable may just have become empty; the returning sensor decides
+after that. That is **broader** than the rule that only a readable transition to not
+occupied counts: a sensor dropping out while the room is occupied now lets the room run
+through the grace period at most, instead of declaring it empty at once. The other side
+is **smaller**: a room that was already unreadable and then turns not occupied gets no
+fresh grace period, and an unreadable sensor with no occupied moment before it counts as
+empty. The coordinator keeps each zone's departure moment and which rooms were occupied
+in the store, and `world_builder._presence` passes that moment on instead of
+`last_changed`. If a room is still unreadable at the restore while it was occupied, its
+grace period starts at the restore moment. Without a stored moment the moment is
+unknown, and then the room counts as empty: leaving an empty room alone is the harmless
+side to be wrong on. A room without a grace period counts as empty the moment its sensor
+drops out.
 
 The sleep gate has two states. With nobody up, that is `EVERYONE_ASLEEP`. With somebody up
 while another is still asleep at home, that sleeper's wake deadline
