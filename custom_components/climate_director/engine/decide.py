@@ -516,7 +516,7 @@ def _resolve_with_fallbacks(
     zolang tot een bron hem krijgt of er geen kandidaat meer is. De huisbrede
     stop blijft op de zone liggen: die is al in `_collect_wishes` afgehandeld;
     hier geldt hij alleen nog als kandidaat-filter. De lus gaat door tot een ronde
-    niets meer verschuift; het totaal aantal bronnen (minstens 1) is de bovengrens (C1).
+    niets meer verschuift; elke verschuiving voegt een bron aan de weigeringen toe, dus hij eindigt.
 
     Anchor 7: a circuit refusal refuses the appliance on that circuit, not the
     zone. When a request falls through with `SHORT_CYCLE_PROTECTION`,
@@ -524,8 +524,8 @@ def _resolve_with_fallbacks(
     again with the next source able to deliver the same duty, until a source
     gets it or no candidate remains. The house-wide stop stays on the zone: it
     was already handled in `_collect_wishes`; here it only filters candidates.
-    The loop runs on until nothing moves; the total number of sources, at least one,
-    is the upper bound (C1).
+    The loop runs on until nothing moves; every move adds a source to the refusals, so
+    it ends.
     """
     grants: dict[str, constraints.Grant] = {}
     circuit_decisions: tuple[CircuitDecision, ...] = ()
