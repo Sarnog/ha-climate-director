@@ -507,6 +507,8 @@ Home Assistant (entiteitstoestanden, klokgebeurtenissen)
   coordinator          verzamelt toestanden, ontdubbelt, serialiseert
     state_store.py     opslag, herstel en quarantaine van wat een mens zei
     preconditions.py   vooruit-verzoeken en hun timers
+    overrides.py       override met looptijd en het opheffen van een hand
+    room_presence.py   de kamerpoort: bezette kamers en de nalooptijd
     world_builder.py   de momentopname (build_world)
       │
       ▼
@@ -906,11 +908,14 @@ Doet precies drie dingen: entiteiten uitlezen tot één `WorldState`, `decide()`
 zelf geen besliskunde; staat er ooit een `if` over temperaturen in dat bestand, dan hoort
 die in `engine/`.
 
-De klasse is in vieren geknipt; drie delen staan op zichzelf. `state_store.py`
+De klasse is in vijven geknipt; vier delen staan op zichzelf. `state_store.py`
 bewaart, herstelt en quarantaineert wat een mens met de hand heeft gezegd — een
 vooruit-verzoek en een apparaat dat iemand zelf uitzette — en draagt het
 thuiskomstmoment (`home_since`), dat vervalt voor wie weg is, `preconditions.py`
-beheert de vooruit-verzoeken en hun timers, en `world_builder.py` bouwt de
+beheert de vooruit-verzoeken en hun timers, `overrides.py` beheert de override met
+zijn looptijd en heft bij zijn begin de hand van zijn zone op, `room_presence.py`
+houdt bij welke kamers bezet zijn en wanneer een kamer leeg werd of wegviel (de
+nalooptijd van de kamerpoort, ook over een herstart heen), en `world_builder.py` bouwt de
 momentopname met zijn lezers, waarin `reads_as_home` de enige plek is die een
 aanwezigheidsentiteit als thuis leest; de coordinator zelf luistert, beslist, voert
 uit en publiceert.
@@ -2027,6 +2032,8 @@ Home Assistant (entity states, clock events)
   coordinator          gathers states, debounces, serialises
     state_store.py     stores, restores and quarantines what a person said
     preconditions.py   pre-conditioning requests and their timers
+    overrides.py       override with a duration and the lifting of a hand
+    room_presence.py   the room gate: occupied rooms and the grace period
     world_builder.py   the snapshot (build_world)
       │
       ▼
@@ -2422,11 +2429,14 @@ into a `Plan`, and make sure a fresh decision happens whenever that is worthwhil
 decision logic itself; if an `if` about temperatures ever appears in that file, it belongs
 in `engine/`.
 
-The class is cut into four; three parts stand on their own. `state_store.py` stores,
+The class is cut into five; four parts stand on their own. `state_store.py` stores,
 restores and quarantines what a person said by hand — a pre-conditioning request and an
 appliance somebody switched off — and carries the homecoming moment (`home_since`), which
 lapses for whoever is away, `preconditions.py` manages the pre-conditioning requests and
-their timers, and `world_builder.py` builds the snapshot with its readers, in which
+their timers, `overrides.py` manages the override with its duration and lifts the hand of
+its zone at its beginning, `room_presence.py` keeps track of which rooms are occupied and
+when a room became empty or dropped out (the grace period of the room gate, across a
+restart too), and `world_builder.py` builds the snapshot with its readers, in which
 `reads_as_home` is the only place reading a presence entity as home; the coordinator itself
 listens, decides, executes and publishes.
 

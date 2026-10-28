@@ -55,6 +55,20 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 
 ## Could have
 
+- **Een aanwezigheidsentiteit die helemaal uit de toestandsmachine verdwijnt, krijgt geen
+  nalooptijd** — de kamerpoort noteert wel een vertrekmoment als de entiteit van een
+  bezette kamer verdwijnt (of bij een herstart ontbreekt), maar `world_builder._presence`
+  geeft zonder toestand geen moment door, dus de kamer telt meteen als leeg. Een sensor
+  die `unavailable` meldt krijgt de nalooptijd wel. Een geregistreerde entiteit staat bij
+  het opstarten als `unavailable` in de toestandsmachine, dus in de praktijk komt dit
+  zelden voor; het is een verschil tussen wat de poort bewaart en wat de lezer doorgeeft.
+- **Een override die tijdens het opstarten aan en weer uit gaat, laat de opgeslagen hand
+  terugkomen** — draaiend heft een override de hand bij zijn begin op, ook als hij daarna
+  weer uitgaat. Tijdens het opstarten telt alleen een override die er na het herstel nog
+  staat; wordt hij binnen die tijd ook weer uitgezet, dan komt de opgeslagen hand terug.
+- **De voorwaarde `zone in _occupied_rooms` in `_notice_room_empty` heeft geen toets** —
+  haal hem weg zonder dat een toets rood wordt. Ofwel is hij overbodig (dan kan hij weg),
+  ofwel mist er een toets voor het geval waarin hij iets doet.
 - **De veldenkaart van de formulierbewaking valt stil terug op de `Call`-knoop** —
   `conftest.form_field_nodes()` geeft 0 velden terug wanneer de genoemde
   `schemas.<naam>` niet bestaat, in plaats van een harde fout
@@ -321,6 +335,21 @@ The worked-out design proposals for everything below live in
 
 ## Could have
 
+- **A presence entity that disappears from the state machine altogether gets no grace
+  period** — the room gate does note a departure moment when the entity of an occupied
+  room disappears (or is missing at a restart), but `world_builder._presence` passes no
+  moment on without a state, so the room counts as empty at once. A sensor that reports
+  `unavailable` does get the grace period. A registered entity stands in the state
+  machine as `unavailable` at startup, so in practice this is rare; it is a difference
+  between what the gate keeps and what the reader passes on.
+- **An override that goes on and off again during the startup lets the stored hand come
+  back** — while running, an override lifts the hand at its beginning, also when it goes
+  off again afterwards. During the startup only an override still standing after the
+  restore counts; when it is switched off again within that time, the stored hand comes
+  back.
+- **The condition `zone in _occupied_rooms` in `_notice_room_empty` has no test** —
+  remove it and no test turns red. Either it is redundant (then it can go), or a test is
+  missing for the case in which it does something.
 - **The form guard's field map silently falls back to the `Call` node** —
   `conftest.form_field_nodes()` returns 0 fields when the named `schemas.<name>`
   does not exist, instead of a hard error ("`schemas.<name>` does not exist").
