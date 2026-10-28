@@ -46,13 +46,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   als de ruimtesensor het uitschakelpunt haalt; regelt het apparaat op zijn eigen sensor net
   daaronder, dan blijft de taak (en het circuit) eindeloos doorlopen. Het scherm kan zeggen
   dat een doel gelijk aan het uitschakelpunt geen marge laat.
-- **Een doorschuiving in de laatste ronde wordt nog opgelost** — weigert een circuit een
-  zone, dan schuift die door naar haar volgende bron, en dat herhaalt zich hoogstens zo
-  vaak als de grootste zone bronnen heeft. Valt de laatste doorschuiving precies in die
-  laatste ronde (een keten van verdringingen over twee circuits met elk één plek), dan
-  wordt de nieuwe bron niet meer aan de circuits voorgelegd: de zone houdt de weigering
-  van haar vorige bron en blijft koud, ook als haar nieuwe bron vrij is. Een extra ronde
-  zonder doorschuiving na de laatste, of doorgaan tot er niets meer verschuift, lost dat op.
 - **Met de hand starten terwijl het huis nog wacht** — zet je in het weekend vóór de ander
   wakker is, of doordeweeks vóór je opsta-rem, een apparaat zelf aan, dan zet de director
   het meteen weer uit of start hij na de eerste stop niet meer. Met de hand aanzetten (aan
@@ -318,13 +311,6 @@ The worked-out design proposals for everything below live in
   the room sensor reaches the switch-off point; if the appliance regulates on its own sensor
   just below it, the duty (and the circuit) keeps running endlessly. The screen could say
   that a target equal to the switch-off point leaves no margin.
-- **A move in the last round still gets resolved** — when a circuit refuses a zone, the
-  zone moves on to its next source, and that repeats at most as often as the largest zone
-  has sources. When the last move falls exactly in that last round (a chain of
-  displacements across two circuits with one place each), the new source is never put to
-  the circuits again: the zone keeps its previous source's refusal and stays cold, even
-  when its new source is free. One more round without a move after the last one, or going
-  on until nothing moves any more, solves that.
 - **Starting by hand while the house is still waiting** — when you switch an appliance on
   yourself at the weekend before the other person is awake, or on a weekday before your
   rise brake, the director switches it straight back off or no longer starts after the

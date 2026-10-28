@@ -448,6 +448,7 @@
   "custom_components/climate_director/engine/world.py",
   "custom_components/climate_director/number.py",
   "custom_components/climate_director/problems.py",
+  "custom_components/climate_director/schema_fields.py",
   "custom_components/climate_director/schemas.py",
   "custom_components/climate_director/strings.json",
   "custom_components/climate_director/texts.py",

@@ -515,8 +515,8 @@ def _resolve_with_fallbacks(
     verzoek opnieuw in bij de volgende bron die dezelfde taak kan leveren, net
     zolang tot een bron hem krijgt of er geen kandidaat meer is. De huisbrede
     stop blijft op de zone liggen: die is al in `_collect_wishes` afgehandeld;
-    hier geldt hij alleen nog als kandidaat-filter. De ondergrens van 1 op
-    `attempts` zorgt dat een half ingerichte installatie haar circuits houdt (C1).
+    hier geldt hij alleen nog als kandidaat-filter. De lus gaat door tot een ronde
+    niets meer verschuift; het totaal aantal bronnen (minstens 1) is de bovengrens (C1).
 
     Anchor 7: a circuit refusal refuses the appliance on that circuit, not the
     zone. When a request falls through with `SHORT_CYCLE_PROTECTION`,
@@ -524,8 +524,8 @@ def _resolve_with_fallbacks(
     again with the next source able to deliver the same duty, until a source
     gets it or no candidate remains. The house-wide stop stays on the zone: it
     was already handled in `_collect_wishes`; here it only filters candidates.
-    The lower bound of 1 on `attempts` keeps the circuits of a half-configured
-    installation intact (C1).
+    The loop runs on until nothing moves; the total number of sources, at least one,
+    is the upper bound (C1).
     """
     grants: dict[str, constraints.Grant] = {}
     circuit_decisions: tuple[CircuitDecision, ...] = ()
@@ -540,8 +540,7 @@ def _resolve_with_fallbacks(
     # A handed-over appliance drops out as a candidate here too: the zone does
     # not slide on to an appliance the administrator already has (anchor 11).
     handed_over = _handed_over(config, world)
-    attempts = max(1, max((len(zone.sources) for zone in config.zones), default=0))
-    for _ in range(attempts):
+    while True:
         wishes, dropped_now = _apply_exclusive_groups(config, world, wishes)
         dropped.update(dropped_now)
         grants, circuit_decisions, deferrals = _resolve_circuits(config, world, wishes, standing)

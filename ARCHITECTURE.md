@@ -1241,14 +1241,6 @@ als de ruimtesensor het uitschakelpunt haalt.
 - Risico: een gangbare instelling valt hier zelf onder; de melding legt uit en weigert
   niets.
 
-**Een doorschuiving in de laatste ronde wordt nog opgelost.** `_resolve_with_fallbacks`
-legt een nieuwe bron pas in de volgende ronde aan de circuits voor, en het aantal rondes
-is het grootste aantal bronnen van een zone.
-- Engine: na de laatste ronde volgt nog één oplossing als die ronde iets verschoof, of de
-  lus loopt door tot er niets meer verschuift (begrensd door het totaal aantal bronnen).
-- Bewaakt: `tests/test_fallback.py::test_every_fallback_round_can_move_a_zone_on`
-  eist dat de derde zone haar losse unit ook echt krijgt.
-
 **Met de hand starten terwijl het huis nog wacht.** Wie een apparaat zelf aanzet terwijl
 zijn zone wacht op een slaper, op de opsta-rem of op het stiltevenster, laat de
 director die zone overnemen: hij regelt hem daarna op binnen- en buitentemperatuur,
@@ -2758,15 +2750,6 @@ once the room sensor reaches the switch-off point.
   the room sensor.
 - Risk: a common setting falls under this itself; the notice explains and refuses
   nothing.
-
-**A move in the last round still gets resolved.** `_resolve_with_fallbacks` only puts a
-new source to the circuits in the next round, and the number of rounds is the largest
-number of sources of a zone.
-- Engine: after the last round one more resolution follows when that round moved
-  something, or the loop goes on until nothing moves any more (bounded by the total
-  number of sources).
-- Guarded: `tests/test_fallback.py::test_every_fallback_round_can_move_a_zone_on`
-  demands that the third zone really gets its loose unit.
 
 **Starting by hand while the house is still waiting.** Whoever switches an appliance on
 themselves while its zone waits for a sleeper, for the rise brake or for the quiet window,

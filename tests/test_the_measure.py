@@ -459,7 +459,7 @@ FUNCTION_LIMIT = 80
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2272,
     "coordinator.py": 2250,
-    "engine/decide.py": 1811,
+    "engine/decide.py": 1810,
     "config_flow.py": 1492,
     "schemas.py": 893,
 }
@@ -479,7 +479,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("state_store.py", "_restore_overrides"): 81,
     ("engine/hysteresis.py", "_candidate"): 97,
     ("config_flow.py", "async_step_resident"): 97,
-    ("engine/decide.py", "_resolve_with_fallbacks"): 92,
+    ("engine/decide.py", "_resolve_with_fallbacks"): 91,
     ("preconditions.py", "async_precondition"): 89,
     ("diagnostics.py", "async_get_config_entry_diagnostics"): 82,
 }
@@ -573,6 +573,14 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # moved there. N10 brought that function to 138: the fresh-override check fits
 # in the existing line. The new module stays below the measure. The ratchet
 # comes down with it.
+#
+# N11: `engine/decide.py` 1811 → 1810 en `_resolve_with_fallbacks` 92 → 91
+# doordat de begrensde for-lus een while-lus werd die bij een ronde zonder
+# verschuiving stopt; de functie groeit niet en de ratel zakt mee.
+#
+# N11: `engine/decide.py` 1811 → 1810 and `_resolve_with_fallbacks` 92 → 91
+# because the bounded for loop became a while loop that stops at a round without
+# a move; the function does not grow and the ratchet comes down with it.
 
 
 def _python_files(root: Path) -> list[Path]:

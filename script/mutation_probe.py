@@ -49,16 +49,41 @@ MUTATIONS = [
         "new": "Sie ",
     },
     {
-        "name": "circuitlus-zonder-ondergrens",
+        "name": "circuitlus-draait-niet",
         "file": "custom_components/climate_director/engine/decide.py",
-        "old": "attempts = max(1, max((len(zone.sources) for zone in config.zones), default=0))",
-        "new": "attempts = 0",
+        "old": "    while True:",
+        "new": "    while False:",
+    },
+    {
+        "name": "laatste-doorschuiving-blijft-liggen",
+        "file": "custom_components/climate_director/engine/decide.py",
+        "old": "        if not changed:\n            break",
+        "new": "        if True:\n            break",
     },
     {
         "name": "bron-rusttijd-genegeerd",
         "file": "custom_components/climate_director/engine/decide.py",
         "old": 'circuit = _SOLO if not rest else Circuit("", "", (), True, min_cycle_time=rest)',
         "new": "circuit = _SOLO",
+    },
+    {
+        "name": "weggevallen-kamer-niet-hersteld",
+        "file": "custom_components/climate_director/room_presence.py",
+        "old": (
+            "            if (current is None or _unreadable(current.state)) "
+            "and zone_id in occupied:\n"
+            "                self._empty_since[zone_id] = now"
+        ),
+        "new": "            if False:\n                self._empty_since[zone_id] = now",
+    },
+    {
+        "name": "opgeslagen-hand-toch-weg",
+        "file": "custom_components/climate_director/state_store.py",
+        "old": (
+            "                if zone in self._override_before_restore "
+            "and self.zone_overrides.get(zone, False)"
+        ),
+        "new": "                if self.zone_overrides.get(zone, False)",
     },
 ]
 

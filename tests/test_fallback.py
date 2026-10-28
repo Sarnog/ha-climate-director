@@ -838,11 +838,17 @@ def _unit_zone(zone_id: str, priority: int, *entities: str) -> Zone:
 
 
 def test_every_fallback_round_can_move_a_zone_on() -> None:
-    """Elke ronde schuift een zone door; de lus houdt op bij het maximum aantal rondes.
+    """Elke ronde schuift een zone door, tot er niets meer verschuift.
 
     A neemt de enige plek op circuit 1, dus B schuift door naar circuit 2. Daar
-    verdringt B met meer voorrang C, en C schuift in de tweede - en laatste - ronde
-    door naar zijn eigen losse unit.
+    verdringt B met meer voorrang C, en C krijgt na zijn laatste doorschuiving
+    zijn eigen losse unit in een volgende ronde. Die ronde moet er zijn, anders
+    blijft C op de weigering van zijn vorige bron staan.
+
+    Each round moves a zone on, until nothing moves any more. A takes the only
+    place on circuit 1, so B moves to circuit 2. There B displaces C by priority,
+    and C gets its own loose unit in a following round after its last move. That
+    round has to exist, otherwise C keeps its previous source's refusal.
     """
     a = _unit_zone("a", 0, "climate.x")
     b = _unit_zone("b", 1, "climate.y", "climate.w2")
@@ -876,9 +882,9 @@ def test_every_fallback_round_can_move_a_zone_on() -> None:
     plan = decide(config, world)
     chosen = {zone: plan.decision_for(zone).source_id for zone in ("a", "b", "c")}
     assert chosen == {"a": "a_0", "b": "b_1", "c": "c_1"}
-    # Dat C na zijn laatste doorschuiving ook echt zijn losse unit krijgt, staat als
-    # idee in ROADMAP.md ("Een doorschuiving in de laatste ronde wordt nog
-    # opgelost"); deze toets houdt alleen de lus zelf vast.
-    # That C really gets its loose unit after its last move on stands as an idea in
-    # ROADMAP.md ("A move in the last round still gets resolved"); this test only
-    # holds the loop itself.
+    c_decision = plan.decision_for("c")
+    assert c_decision is not None
+    assert c_decision.granted is ModeFamily.HEAT
+    assert c_decision.reason is Reason.REGULATING
+    commands = {command.entity_id: command.hvac_mode for command in plan.commands}
+    assert commands["climate.v"] == MODE_HEAT
