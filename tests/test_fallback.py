@@ -888,3 +888,63 @@ def test_every_fallback_round_can_move_a_zone_on() -> None:
     assert c_decision.reason is Reason.REGULATING
     commands = {command.entity_id: command.hvac_mode for command in plan.commands}
     assert commands["climate.v"] == MODE_HEAT
+
+
+def test_a_chain_of_displacements_over_three_circuits_is_followed_to_its_end() -> None:
+    """Een keten van verdringingen over drie circuits wordt tot het einde gevolgd.
+
+    A neemt de enige plek op circuit 1, dus B schuift door naar circuit 2. Daar
+    verdringt B met meer voorrang C, dat naar circuit 3 schuift, en daar verdringt C
+    weer D, dat pas op zijn losse unit terechtkomt. Elke zone schuift in een eigen
+    ronde door, dus de lus mag niet stoppen na een vast aantal rondes: een vierde zone
+    in de keten heeft een vierde ronde nodig.
+
+    A takes the only place on circuit 1, so B moves to circuit 2. There B displaces C
+    by priority, which moves to circuit 3, and there C displaces D in turn, which only
+    ends up on its loose unit. Every zone moves in a round of its own, so the loop may
+    not stop after a fixed number of rounds: a fourth zone in the chain needs a fourth
+    round.
+    """
+    a = _unit_zone("a", 0, "climate.x1")
+    b = _unit_zone("b", 1, "climate.x2", "climate.y1")
+    c = _unit_zone("c", 2, "climate.y2", "climate.z1")
+    d = _unit_zone("d", 3, "climate.z2", "climate.v")
+    config = replace(
+        house(),
+        zones=(a, b, c, d),
+        circuits=(
+            Circuit(
+                circuit_id="een",
+                name="Een",
+                units=("climate.x1", "climate.x2"),
+                max_concurrent_units=1,
+            ),
+            Circuit(
+                circuit_id="twee",
+                name="Twee",
+                units=("climate.y1", "climate.y2"),
+                max_concurrent_units=1,
+            ),
+            Circuit(
+                circuit_id="drie",
+                name="Drie",
+                units=("climate.z1", "climate.z2"),
+                max_concurrent_units=1,
+            ),
+        ),
+        openings=(),
+    )
+    units = ("climate.x1", "climate.x2", "climate.y1", "climate.y2", "climate.z1", "climate.z2")
+    world = make_world(
+        outdoor=10.0,
+        indoor=dict.fromkeys(("a", "b", "c", "d"), 15.0),
+        residents={"danny": awake(), "nancy": awake()},
+        climates=dict.fromkeys((*units, "climate.v"), "off"),
+    )
+    plan = decide(config, world)
+    chosen = {zone: plan.decision_for(zone).source_id for zone in ("a", "b", "c", "d")}
+    assert chosen == {"a": "a_0", "b": "b_1", "c": "c_1", "d": "d_1"}
+    d_decision = plan.decision_for("d")
+    assert d_decision is not None
+    assert d_decision.granted is ModeFamily.HEAT
+    assert d_decision.reason is Reason.REGULATING

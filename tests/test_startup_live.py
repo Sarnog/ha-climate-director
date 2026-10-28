@@ -598,6 +598,50 @@ class TestAStoredOverrideLeavesTheStoredHand:
         finally:
             await stop_house(home)
 
+    async def test_the_stored_hand_stays_when_the_override_is_cleared_during_the_startup(
+        self,
+    ) -> None:
+        """Een override opheffen tijdens het opstarten haalt de hand niet weg.
+
+        De gebruiker geeft de zone terug aan de director; de hand die tijdens die
+        override ontstond overleeft `clear_override`, ook na een herstart.
+
+        Clearing an override during the startup does not remove the hand. The user
+        hands the zone back to the director; the hand that arose during that
+        override survives `clear_override`, after a restart too.
+        """
+        config_dir = new_config_dir()
+        today = dt_util.now().date().isoformat()
+        until = dt_util.now() + timedelta(hours=2)
+        write_store(
+            config_dir,
+            {
+                "handed_back": {"woonkamer": today},
+                "override_until": {"woonkamer": until.isoformat()},
+                "override_started": {"woonkamer": dt_util.now().isoformat()},
+                "override_when_done": {"woonkamer": WHEN_DONE_LEAVE},
+                "override_entity": {"woonkamer": LIVING},
+            },
+        )
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(),
+        )
+        try:
+            await home.call("climate_director", "clear_override", {"zone_id": "woonkamer"})
+            await settle_the_debouncer(home)
+            await start_up(home)
+
+            assert not home.coordinator.zone_overrides.get("woonkamer")
+            assert "woonkamer" in home.coordinator._handed_back, (
+                "de hand viel weg doordat de override tijdens het opstarten werd opgeheven"
+            )
+            assert reason_of(home) == "manual_override"
+        finally:
+            await stop_house(home)
+
 
 class TestAFreshOverrideDuringTheStartupRemovesTheStoredHand:
     """Een override die de gebruiker tijdens het opstarten zelf zet, heft de hand op.
