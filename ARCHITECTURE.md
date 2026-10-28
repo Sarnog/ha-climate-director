@@ -449,7 +449,10 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     slapen en wacht 's ochtends op niemand. Zo'n bewoner is altijd wakker, dus de
     opsta-rem van een ander remt daar niet, tenzij de bewoner zonder slaapsensor zelf
     ook geremd wordt (anker 16). In de diagnose wordt het moment gelakt, net als
-    `home_since`.
+    `home_since`. Een **handstart** maakt dit wachten smaller: een zone die
+    iemand zelf start passeert `WAITING_FOR_SLEEPER` tot het wachten voorbij is.
+    De andere kant blijft: zonder handstart verandert er niets, en een handstart
+    passeert `EVERYONE_ASLEEP` nooit - de hele nacht is geen ochtendwacht.
 16. ***Opstaan zet het huis pas aan vanaf* remt het opstaan van één bewoner, en
     alleen het beginnen.** Vóór die tijd, op de dagen van de rem (`RiseBrake`), telt
     die bewoner niet als "op" voor de wakker-poort; telt daardoor niemand als op, dan
@@ -464,7 +467,22 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     een rem op beginnen: een zone die al draait, regelt door. Gastenmodus binnen het
     gastenvenster heft de rem op, een vooruit-verzoek gaat er altijd voor, en het
     stiltevenster en de roosters zijn niet geraakt. *Wacht op deze slaper tot* blijft
-    ernaast gewoon gelden.
+    ernaast gewoon gelden. Een **handstart** maakt de opsta-rem smaller: de zone
+    passeert `EARLY_RISER` tot de rem voorbij is. De andere kant blijft: zonder
+    handstart verandert er niets, en de handstart passeert de hoofdschakelaar,
+    openingen, buitengrenzen, het seizoen, de kortcyclus en de circuits nooit.
+
+    **Met de hand starten.** Zet iemand zelf een apparaat aan - aan het apparaat,
+    of met de knop *Met de hand starten* per zone - terwijl zijn zone op
+    `WAITING_FOR_SLEEPER`, `EARLY_RISER` of `QUIET_HOURS` wacht, dan noteert de
+    coordinator een handstart voor die zone. Een actieve stand die van de director
+    zelf komt telt niet, en een bron met *Dit apparaat automatisch aanzetten* uit
+    ook niet: daar regelt de director het aanzetten nooit, dus valt er geen
+    wachttijd te overbruggen. Een gedeeld apparaat start elke zone die het
+    bedient. De zone passeert die drie remmen en verder niets. De handstart vervalt
+    in de eerste ronde waarin die drie de zone ook zonder hem doorlaten, en verder
+    bij slapen, een leeg huis of de volgende dag. Hij overleeft een herstart tot
+    dan. In een zone zonder wachtreden doet hij niets.
 
 ### De belangrijkste scheidslijn
 
@@ -684,6 +702,10 @@ gastenmodus binnen het gastenvenster (`_guests_carry_the_house`), een bewoner di
 thuis was vóór het begin van dit venster (`home_since < started_at`), en het bestaande
 open roostervenster van een bewoner die thuis is. Wie in een leeg huis ná het begin
 thuiskomt, blijft stil tot het venster afloopt; dat is de andere kant van anker 13.
+Een **handstart** maakt ook dit venster smaller: de zone die iemand zelf start
+passeert `QUIET_HOURS` tot het venster voorbij is. De andere kant blijft: zonder
+handstart verandert er niets, en de handstart passeert de hoofdschakelaar, een
+opening of de kamerpoort nooit.
 
 ### night.py — de nacht van het huis
 
@@ -1974,7 +1996,11 @@ them without changing them here first.
     such a house never goes to sleep and waits for nobody in the morning. Such a
     resident is always awake, so another resident's rise brake does not brake
     there, unless the resident without a sleep sensor is braked too (anchor 16). The
-    moment is redacted in the diagnostics, just like `home_since`.
+    moment is redacted in the diagnostics, just like `home_since`. A **hand start**
+    makes this waiting narrower: a zone somebody starts themselves passes
+    `WAITING_FOR_SLEEPER` until the waiting is over. The other side stays: without a
+    hand start nothing changes, and a hand start never passes `EVERYONE_ASLEEP` -
+    the whole night is no morning wait.
 16. ***Getting up only starts the house from* brakes one resident's getting up, and
     only the starting.** Before that time, on the brake's days (`RiseBrake`), that
     resident does not count as "up" for the wake gate; when nobody counts as up
@@ -1991,6 +2017,22 @@ them without changing them here first.
     regulating. Guest mode inside the guest window lifts the brake, a
     pre-conditioning request always goes first, and the quiet window and the
     schedules are untouched. *Wait for this sleeper until* keeps applying beside it.
+    A **hand start** makes the rise brake narrower: the zone passes `EARLY_RISER`
+    until the brake is over. The other side stays: without a hand start nothing
+    changes, and the hand start never passes the master switch, openings, outdoor
+    bounds, the season, short-cycle protection or the circuits.
+
+    **Starting by hand.** When somebody switches an appliance on themselves - at
+    the appliance, or with the *Start by hand* button per zone - while its zone
+    waits on `WAITING_FOR_SLEEPER`, `EARLY_RISER` or `QUIET_HOURS`, the
+    coordinator notes a hand start for that zone. An active mode coming from the
+    director does not count, and neither does a source with *Start this appliance
+    automatically* off: the director never switches that on, so there is no
+    waiting to bridge. A shared appliance starts every zone it serves. The zone
+    passes those three brakes and nothing else. The hand start lapses in the first
+    round in which those three let the zone through without it, and further when
+    everybody sleeps, when the house is empty or on the next day. It survives a
+    restart until then. In a zone without a waiting reason it does nothing.
 
 ### The most important dividing line
 
@@ -2209,6 +2251,10 @@ mode inside the guest window (`_guests_carry_the_house`), a resident who was alr
 home before this window began (`home_since < started_at`), and the existing open
 schedule window of a resident who is home. Whoever comes home to an empty house after
 the beginning stays quiet until the window lapses; that is the other side of anchor 13.
+A **hand start** makes this window narrower too: the zone somebody starts themselves
+passes `QUIET_HOURS` until the window is over. The other side stays: without a hand
+start nothing changes, and the hand start never passes the master switch, an opening
+or the room gate.
 
 ### night.py — the house's night
 
