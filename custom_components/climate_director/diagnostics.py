@@ -21,6 +21,16 @@ diagnostics: it only appears as `presence.changed_at`, and that falls under the
 same redaction as the rest of the presence data. It is room data rather than a
 personal fact, but it says when a room became empty and therefore indirectly
 whether somebody was there; the same trade-off applies.
+
+De opgeslagen verzameling bezette kamers (`occupied_rooms`) verschijnt evenmin
+als los veld: zij is alleen invoer voor de kamerpoort en gaat niet mee in de
+diagnose. Zou zij dat later wel doen, dan valt zij onder dezelfde weglakking als
+`occupied`.
+
+The stored set of occupied rooms (`occupied_rooms`) does not appear as a
+separate field either: it is input for the room gate only and does not travel
+with the diagnostics. If it ever does, it falls under the same redaction as
+`occupied`.
 """
 
 from __future__ import annotations

@@ -471,7 +471,9 @@
   "custom_components/climate_director/engine/takeover.py",
   "custom_components/climate_director/engine/world.py",
   "custom_components/climate_director/preconditions.py",
+  "custom_components/climate_director/room_presence.py",
   "custom_components/climate_director/sensor.py",
+  "custom_components/climate_director/state_store.py",
   "custom_components/climate_director/texts.py",
   "custom_components/climate_director/units.py",
   "custom_components/climate_director/world_builder.py"
@@ -526,6 +528,7 @@
   "custom_components/climate_director/engine/takeover.py",
   "custom_components/climate_director/engine/world.py",
   "custom_components/climate_director/preconditions.py",
+  "custom_components/climate_director/room_presence.py",
   "custom_components/climate_director/state_store.py",
   "custom_components/climate_director/world_builder.py"
  ],

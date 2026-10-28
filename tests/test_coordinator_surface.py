@@ -1,7 +1,8 @@
 """Het protocol van de coördinator noemt precies wat de mixins gebruiken.
 
-`CoordinatorSurface` bestaat alleen voor mypy: de vier mixins (`overrides.py`,
-`preconditions.py`, `state_store.py`, `world_builder.py`) erven er onder
+`CoordinatorSurface` bestaat alleen voor mypy: de vijf mixins (`overrides.py`,
+`preconditions.py`, `room_presence.py`, `state_store.py`, `world_builder.py`)
+erven er onder
 `TYPE_CHECKING` van, zodat hun `self` elk lid van de coördinator kent. Buiten de
 typecontrole bestaat het protocol niet, en dus controleerde niets of de
 coördinator die leden ook werkelijk draagt, of een lid er nog toe doet, of dat een
@@ -25,8 +26,9 @@ leden buiten het protocol die een geleende methode aanraakt.
 
 The coordinator's protocol names exactly what the mixins use.
 
-`CoordinatorSurface` exists only for mypy: the four mixins (`overrides.py`,
-`preconditions.py`, `state_store.py`, `world_builder.py`) inherit from it under
+`CoordinatorSurface` exists only for mypy: the five mixins (`overrides.py`,
+`preconditions.py`, `room_presence.py`, `state_store.py`, `world_builder.py`)
+inherit from it under
 `TYPE_CHECKING`, so their `self` knows every member of the coordinator. Outside
 the type check the protocol does not exist, so nothing checked whether the
 coordinator really carries those members, whether a member still matters, or
@@ -67,10 +69,16 @@ from custom_components.climate_director.coordinator import (
 PACKAGE = Path(coordinator_module.__file__).parent
 TESTS = Path(__file__).parent
 
-#: De vier mixins die van het protocol erven; de coördinator erft van hen.
+#: De vijf mixins die van het protocol erven; de coördinator erft van hen.
 #:
-#: The four mixins inheriting from the protocol; the coordinator inherits from them.
-MIXIN_FILES = ("overrides.py", "preconditions.py", "state_store.py", "world_builder.py")
+#: The five mixins inheriting from the protocol; the coordinator inherits from them.
+MIXIN_FILES = (
+    "overrides.py",
+    "preconditions.py",
+    "room_presence.py",
+    "state_store.py",
+    "world_builder.py",
+)
 
 
 def protocol_members() -> set[str]:

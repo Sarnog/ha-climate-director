@@ -129,10 +129,10 @@ EXCLUSION_HINT = (
 #: de meting niet op verborgen standaardpatronen leunt, maar een patroon verbergt
 #: nog steeds stil: elke regel die eronder valt verdwijnt uit "nul gemiste regels"
 #: zonder dat iemand hem noemt. Daarom staat hieronder elke statementregel met
-#: zijn eigen inhoud — negen in `coordinator.py` (het `CoordinatorSurface`-
-#: protocol, dat alleen voor de typecontrole bestaat: een `...`-stub wordt nooit
-#: aangeroepen) en drie in elk van de vier mixins die dat protocol onder
-#: `TYPE_CHECKING` importeren (die tak is bij het draaien nooit waar). De poort
+#: zijn eigen inhoud — de `...`-stubs van `coordinator.py` (het
+#: `CoordinatorSurface`-protocol, dat alleen voor de typecontrole bestaat) en
+#: drie in elk van de vijf mixins die dat protocol onder `TYPE_CHECKING`
+#: importeren (die tak is bij het draaien nooit waar). De poort
 #: eist dat de lijst precies klopt: een regel die buiten de meting valt zonder
 #: hier te staan laat hem vallen, en een naam die niets meer verbergt ook.
 #:
@@ -146,9 +146,9 @@ EXCLUSION_HINT = (
 #: are written out in `pyproject.toml`, so the measurement
 #: does not lean on hidden defaults, but a pattern still hides silently: every
 #: line it hits disappears from "zero missed lines" without anyone naming it.
-#: Hence every statement line stands below with its own content — nine in
-#: `coordinator.py` (the `CoordinatorSurface` protocol, which exists for the type
-#: check only: a `...` stub is never called) and three in each of the four mixins
+#: Hence every statement line stands below with its own content — the
+#: `...` stubs of `coordinator.py` (the `CoordinatorSurface` protocol, which
+#: exists for the type check only) and three in each of the five mixins
 #: that import that protocol under `TYPE_CHECKING` (that branch is never true at
 #: run time). The gate demands the list to be exact: a line that falls outside the
 #: measurement without standing here drops it, and so does a name that hides
@@ -161,6 +161,8 @@ NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {
         "def _note_by_hand_before_restore(",
         ") -> None: ...",
         "def _lift_hand(self, zone_id: str) -> None: ...",
+        "def _room_presence_payload(self) -> dict[str, Any]: ...",
+        "def _restore_room_presence(self, stored: Mapping[str, Any], now: datetime) -> None: ...",
         "def _live_preconditions(self) -> dict[str, datetime]: ...",
         "def _wake_at_the_first_expiry(self) -> None: ...",
         "def _override_wake_at_first_expiry(self) -> None: ...",
@@ -174,6 +176,11 @@ NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {
         "_CoordinatorBase = CoordinatorSurface",
     ),
     "preconditions.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import CoordinatorSurface",
+        "_CoordinatorBase = CoordinatorSurface",
+    ),
+    "room_presence.py": (
         "if TYPE_CHECKING:",
         "from .coordinator import CoordinatorSurface",
         "_CoordinatorBase = CoordinatorSurface",

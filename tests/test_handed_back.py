@@ -1056,14 +1056,15 @@ class TestItSurvivesARestart:
                 # residents no moment comes back.
                 self._home_since: dict[str, datetime] = {}
                 self._asleep_since: datetime | None = None
-                # Het leeg-moment van een kamer: deze stand-in leest geen
-                # `empty_since`, maar het herstel raakt de boekhouding aan.
-                # Zonder sleutel in het bestand blijft hij leeg.
+                # Het leeg-moment van een kamer en welke kamers bezet waren:
+                # deze stand-in leest geen `empty_since`, maar het herstel raakt
+                # de boekhouding aan. Zonder sleutel in het bestand blijft hij leeg.
                 #
-                # The room's empty moment: this stand-in reads no `empty_since`,
-                # but the restore touches the bookkeeping. Without the key in
-                # the file it stays empty.
+                # The room's empty moment and which rooms were occupied: this
+                # stand-in reads no `empty_since`, but the restore touches the
+                # bookkeeping. Without the key in the file it stays empty.
                 self._empty_since: dict[str, datetime] = {}
+                self._occupied_rooms: set[str] = set()
                 # Geen handeling van de gebruiker vóór het herstel in deze
                 # stand-in; het herstel leest de notitie dus leeg.
                 #
@@ -1081,6 +1082,8 @@ class TestItSurvivesARestart:
             _live_preconditions = ClimateDirectorCoordinator._live_preconditions
             _wake_at_the_first_expiry = ClimateDirectorCoordinator._wake_at_the_first_expiry
             _store_payload = ClimateDirectorCoordinator._store_payload
+            _room_presence_payload = ClimateDirectorCoordinator._room_presence_payload
+            _restore_room_presence = ClimateDirectorCoordinator._restore_room_presence
             _async_save_state = ClimateDirectorCoordinator._async_save_state
             _async_restore_state = ClimateDirectorCoordinator._async_restore_state
 
@@ -1141,6 +1144,14 @@ class TestItSurvivesARestart:
         assert item._store.written is not None
         assert item._store.written["empty_since"] == {"slaapkamer": "2026-08-18T12:00:00+00:00"}
 
+    def test_the_occupied_rooms_are_written_away(self) -> None:
+        """Welke kamers bezet waren hoort in het bestand, voor de herstart."""
+        item = self._coordinator()
+        item._occupied_rooms = {"slaapkamer"}
+        item._async_save_state()
+        assert item._store.written is not None
+        assert item._store.written["occupied_rooms"] == ["slaapkamer"]
+
     async def test_only_a_known_empty_room_gets_its_moment_back(self) -> None:
         """Onbekend, onleesbaar of nu bezet: geen moment; een lege kamer wel."""
 
@@ -1179,6 +1190,65 @@ class TestItSurvivesARestart:
         )
         await item._async_restore_state()
         assert item._empty_since == {"zolder": datetime(2026, 8, 18, 12, 0, tzinfo=UTC)}
+        assert item._occupied_rooms == {"keuken"}
+
+    async def test_an_occupied_room_that_is_unreadable_at_the_restore_starts_the_grace(
+        self,
+    ) -> None:
+        """Een bezette kamer die bij het herstel nog onleesbaar is, start de nalooptijd."""
+
+        def room(zone_id: str, presence: str) -> Zone:
+            return Zone(
+                zone_id=zone_id,
+                name=zone_id,
+                indoor_sensor=f"sensor.{zone_id}",
+                sources=(Source(f"{zone_id}_bron", f"climate.{zone_id}"),),
+                presence_entity=presence,
+                presence_timeout=timedelta(minutes=15),
+            )
+
+        item = self._coordinator(
+            {"occupied_rooms": ["zolder"]},
+            director_config=DirectorConfig(
+                zones=(room("zolder", "binary_sensor.zolder"),),
+            ),
+        )
+        item.hass = SimpleNamespace(
+            states={"binary_sensor.zolder": _State("unavailable")},
+        )
+        before = dt_util.now()
+        await item._async_restore_state()
+        after = dt_util.now()
+        moment = item._empty_since.get("zolder")
+        assert moment is not None, "de nalooptijd begon niet op het herstelmoment"
+        assert before <= moment <= after
+        assert item._occupied_rooms == set()
+
+    async def test_a_missing_occupied_rooms_key_reads_as_empty(self) -> None:
+        """Een ouder bestand zonder de sleutel laat een onleesbare kamer leeg."""
+
+        def room(zone_id: str, presence: str) -> Zone:
+            return Zone(
+                zone_id=zone_id,
+                name=zone_id,
+                indoor_sensor=f"sensor.{zone_id}",
+                sources=(Source(f"{zone_id}_bron", f"climate.{zone_id}"),),
+                presence_entity=presence,
+                presence_timeout=timedelta(minutes=15),
+            )
+
+        item = self._coordinator(
+            {"until": {}},
+            director_config=DirectorConfig(
+                zones=(room("zolder", "binary_sensor.zolder"),),
+            ),
+        )
+        item.hass = SimpleNamespace(
+            states={"binary_sensor.zolder": _State("unavailable")},
+        )
+        await item._async_restore_state()
+        assert item._empty_since == {}
+        assert item._occupied_rooms == set()
 
     async def test_rubbish_in_the_file_does_not_stop_the_load(self) -> None:
         item = self._coordinator({"handed_back": {"slaapkamer": "not a date"}})

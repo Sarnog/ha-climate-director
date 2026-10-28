@@ -46,13 +46,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   als de ruimtesensor het uitschakelpunt haalt; regelt het apparaat op zijn eigen sensor net
   daaronder, dan blijft de taak (en het circuit) eindeloos doorlopen. Het scherm kan zeggen
   dat een doel gelijk aan het uitschakelpunt geen marge laat.
-- **Een bezette kamer waarvan de sensor even wegvalt, blijft bezet** — valt de
-  aanwezigheidssensor van een bezette kamer weg (`unavailable`, bijvoorbeeld als hij opnieuw
-  verbinding maakt), dan telt de kamer nu meteen als leeg: het apparaat gaat uit en, zodra
-  de sensor terug is, na de rusttijd weer aan. Hetzelfde na een herstart, zolang de sensor
-  nog niet terug is. Het wegvallen van een bezette kamer hoort als vertrek te tellen op dat
-  moment: de kamer blijft hoogstens de nalooptijd bezet, en de stand van de teruggekeerde
-  sensor beslist daarna.
 - **Een hand die tijdens een override ontstaat, overleeft ook een herstart** — zet iemand
   tijdens een override het apparaat zelf uit, dan blijft die hand na het einde van de
   override staan, behalve als Home Assistant er tussendoor herstart: dan valt de hand weg
@@ -329,13 +322,6 @@ The worked-out design proposals for everything below live in
   the room sensor reaches the switch-off point; if the appliance regulates on its own sensor
   just below it, the duty (and the circuit) keeps running endlessly. The screen could say
   that a target equal to the switch-off point leaves no margin.
-- **An occupied room whose sensor drops out for a moment stays occupied** — when the
-  presence sensor of an occupied room drops out (`unavailable`, for instance while it
-  reconnects), the room now counts as empty at once: the appliance switches off and, once
-  the sensor is back, on again after the rest period. The same after a restart, as long as
-  the sensor is not back yet. An occupied room dropping out should count as a departure at
-  that moment: the room stays occupied for at most the grace period, and the state of the
-  returning sensor decides after that.
 - **A hand that arises during an override survives a restart too** — when somebody
   switches the appliance off themselves during an override, that hand stays after the
   override ends, except when Home Assistant restarts in between: then the hand drops away

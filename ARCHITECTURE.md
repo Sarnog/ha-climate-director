@@ -1241,23 +1241,6 @@ als de ruimtesensor het uitschakelpunt haalt.
 - Risico: een gangbare instelling valt hier zelf onder; de melding legt uit en weigert
   niets.
 
-**Een bezette kamer die even onleesbaar wordt, begint haar nalooptijd.** Wegvallen is
-geen bewijs van leegte, maar een kamer die bezet was en onleesbaar wordt, kan wel net
-leeg zijn geraakt: tel het wegvallen daarom als vertrek op dat moment, en laat de
-teruggekeerde sensor daarna beslissen.
-- HA-laag: `_notice_room_empty` noteert bij een overgang van bezet naar `unavailable` of
-  `unknown` het moment van het wegvallen in `_empty_since`; een overgang van onleesbaar
-  naar niet-bezet laat dat moment staan (dus geen verse nalooptijd, zoals nu), en naar
-  bezet haalt het weg. De opslag onthoudt welke kamers bezet waren; is zo'n kamer bij het
-  herstel nog onleesbaar, dan begint haar nalooptijd op het moment van het herstel.
-- Keuze: hoogstens de nalooptijd, ook als de sensor langer wegblijft; een kamer zonder
-  nalooptijd telt bij het wegvallen dus meteen als leeg.
-- Bewaakt: livetoetsen met een bezette kamer waarvan de sensor vijf seconden wegvalt (het
-  apparaat krijgt geen commando), een herstart terwijl de kamer bezet is en de sensor nog
-  `unavailable` meldt (geen uit), en de tegenproeven: een sensor die langer dan de
-  nalooptijd wegblijft (daarna leeg) en `unavailable` -> `off` zonder bezet ervoor (leeg,
-  zoals nu).
-
 **Een hand die tijdens een override ontstaat, overleeft een herstart.** Na het herstel
 haalt `state_store` de opgeslagen hand weg van elke zone met een override. Dat hoort
 alleen voor een override die de gebruiker tijdens het opstarten zette: een opgeslagen
@@ -2787,23 +2770,6 @@ once the room sensor reaches the switch-off point.
   the room sensor.
 - Risk: a common setting falls under this itself; the notice explains and refuses
   nothing.
-
-**An occupied room that turns unreadable for a moment starts its grace period.**
-Dropping out is no proof of emptiness, but a room that was occupied and turns unreadable
-may just have become empty: count the drop-out as a departure at that moment, and let the
-returning sensor decide after that.
-- HA layer: `_notice_room_empty` notes, at a transition from occupied to `unavailable` or
-  `unknown`, the moment of the drop-out in `_empty_since`; a transition from unreadable to
-  not occupied leaves that moment standing (so no fresh grace period, as now), and to
-  occupied removes it. The store remembers which rooms were occupied; when such a room is
-  still unreadable at the restore, its grace period starts at the moment of the restore.
-- Choice: at most the grace period, even when the sensor stays away longer; a room without
-  a grace period therefore counts as empty at once when its sensor drops out.
-- Guarded: live tests with an occupied room whose sensor drops out for five seconds (the
-  appliance gets no command), a restart while the room is occupied and the sensor still
-  reports `unavailable` (no off), and the counter-tests: a sensor staying away longer than
-  the grace period (empty afterwards) and `unavailable` -> `off` without occupied before it
-  (empty, as now).
 
 **A hand that arises during an override survives a restart.** After the restore,
 `state_store` removes the stored hand of every zone with an override. That belongs only to

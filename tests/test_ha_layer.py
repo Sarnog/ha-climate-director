@@ -216,6 +216,7 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
             self._asleep_since: datetime | None = None
             self._handed_back: dict = {}
             self._empty_since: dict[str, datetime] = {}
+            self._occupied_rooms: set[str] = set()
             self._waiting: dict = {}
             self._refused: set[str] = set()
             self.data = None
@@ -245,6 +246,9 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
         _precipitation = ClimateDirectorCoordinator._precipitation
         _notice_precipitation = ClimateDirectorCoordinator._notice_precipitation
         _notice_room_empty = ClimateDirectorCoordinator._notice_room_empty
+        _room_presence_payload = ClimateDirectorCoordinator._room_presence_payload
+        _restore_room_presence = ClimateDirectorCoordinator._restore_room_presence
+        _note_room_presence_now = ClimateDirectorCoordinator._note_room_presence_now
         _calendar_says_holiday = ClimateDirectorCoordinator._calendar_says_holiday
         _zones_handed_back = ClimateDirectorCoordinator._zones_handed_back
         _live_preconditions = ClimateDirectorCoordinator._live_preconditions
@@ -539,18 +543,20 @@ def _healthy_states() -> dict[str, FakeState]:
 
 
 class TestTheRoomGraceStartsAtARealDeparture:
-    """Alleen een echte overgang van bezet naar niet-bezet begint de nalooptijd.
+    """Een vertrek of het wegvallen van een bezette kamer begint de nalooptijd.
 
-    Een sensor die na een herstart of een verbroken verbinding opnieuw `off`
-    meldt, draagt een vers tijdstip dat niets over het vertrek zegt. De
-    coordinator noteert daarom alleen het moment van een echte overgang, en een
-    kamer die weer bezet wordt verliest het moment.
+    Een overgang van bezet naar niet-bezet telt, en net zo goed een overgang van
+    bezet naar `unavailable` of `unknown`: een bezette kamer die onleesbaar wordt
+    kan net leeg zijn geraakt. Een sensor die al onleesbaar was en daarna `off`
+    meldt, laat het bewaarde moment staan en krijgt dus geen verse nalooptijd.
+    Een kamer die weer bezet wordt verliest het moment.
 
-    Only a real transition from occupied to not occupied starts the grace period.
-    A sensor reporting `off` again after a restart or a broken connection carries
-    a fresh timestamp that says nothing about the departure. The coordinator
-    therefore notes only the moment of a real transition, and a room that becomes
-    occupied again loses the moment.
+    A departure or the drop-out of an occupied room starts the grace period. A
+    transition from occupied to not occupied counts, and so does a transition
+    from occupied to `unavailable` or `unknown`: an occupied room that turns
+    unreadable may just have become empty. A sensor that was already unreadable
+    and then reports `off` leaves the stored moment standing and therefore gets
+    no fresh grace period. A room that becomes occupied again loses the moment.
     """
 
     @staticmethod
@@ -567,13 +573,27 @@ class TestTheRoomGraceStartsAtARealDeparture:
         item = coordinator()
         item._notice_room_empty(self._event("on", "off", at=NOW))
         assert item._empty_since == {"zolder": NOW}
+        assert item._occupied_rooms == set()
 
-    def test_an_unavailable_reading_does_not_start_the_grace(self) -> None:
-        """Wegvallen en terugkomen is geen vertrek, in geen van beide richtingen."""
+    def test_a_dropout_of_an_occupied_room_starts_the_grace(self) -> None:
         item = coordinator()
         item._notice_room_empty(self._event("on", "unavailable", at=NOW))
-        item._notice_room_empty(self._event("unavailable", "off", at=NOW))
+        assert item._empty_since == {"zolder": NOW}
+        assert item._occupied_rooms == set()
+
+    def test_an_unreadable_room_that_was_not_occupied_gets_no_grace(self) -> None:
+        item = coordinator()
+        item._notice_room_empty(self._event("off", "unknown", at=NOW))
         assert item._empty_since == {}
+        assert item._occupied_rooms == set()
+
+    def test_an_unreadable_to_off_keeps_the_dropout_moment(self) -> None:
+        """`unavailable` -> `off` is geen nieuw vertrek en verschuift het moment niet."""
+        item = coordinator()
+        item._notice_room_empty(self._event("on", "unavailable", at=NOW))
+        item._notice_room_empty(self._event("unavailable", "off", at=NOW + timedelta(minutes=5)))
+        assert item._empty_since == {"zolder": NOW}
+        assert item._occupied_rooms == set()
 
     def test_a_sensor_that_repeats_off_does_not_move_the_moment(self) -> None:
         """Een sensor die `off` opnieuw meldt is geen nieuwe overgang."""
@@ -587,6 +607,70 @@ class TestTheRoomGraceStartsAtARealDeparture:
         item._notice_room_empty(self._event("on", "off", at=NOW))
         item._notice_room_empty(self._event("off", "on", at=NOW + timedelta(minutes=5)))
         assert item._empty_since == {}
+        assert item._occupied_rooms == {"zolder"}
+
+    def test_an_event_without_states_writes_nothing(self) -> None:
+        item = coordinator()
+        item._notice_room_empty(
+            SimpleNamespace(
+                data={
+                    "entity_id": "binary_sensor.zolder",
+                    "old_state": None,
+                    "new_state": None,
+                }
+            )
+        )
+        assert item._empty_since == {}
+        assert item._occupied_rooms == set()
+
+    def test_a_repeated_occupied_reading_keeps_the_room_occupied(self) -> None:
+        item = coordinator()
+        item._occupied_rooms = {"zolder"}
+        item._notice_room_empty(self._event("on", "on", at=NOW))
+        assert item._occupied_rooms == {"zolder"}
+        assert item._empty_since == {}
+
+    def test_an_equally_old_moment_is_not_written_again(self) -> None:
+        item = coordinator()
+        item._occupied_rooms = {"zolder"}
+        item._empty_since = {"zolder": NOW}
+        item._notice_room_empty(self._event("unavailable", "off", at=NOW))
+        assert item._empty_since == {"zolder": NOW}
+        assert item._occupied_rooms == set()
+
+
+class TestRestoringTheRoomPresence:
+    """Het herstel van het leeg-moment en de bezette kamers.
+
+    The restore of the empty moment and the occupied rooms.
+    """
+
+    def test_a_live_empty_moment_survives_the_restore(self) -> None:
+        """Een moment van tijdens het opstarten wint van het bestand."""
+        item = coordinator({"binary_sensor.zolder": FakeState("unavailable")})
+        item._empty_since = {"zolder": NOW}
+        item._restore_room_presence(
+            {"empty_since": {"zolder": "2026-08-18T12:00:00+00:00"}},
+            NOW + timedelta(minutes=1),
+        )
+        assert item._empty_since == {"zolder": NOW}
+        assert item._occupied_rooms == set()
+
+    def test_a_stale_empty_moment_of_an_unknown_room_is_dropped(self) -> None:
+        item = coordinator()
+        item._empty_since = {"bestaat_niet": NOW}
+        item._restore_room_presence({}, NOW)
+        assert item._empty_since == {}
+
+    def test_the_occupied_rooms_are_seeded_from_the_startup(self) -> None:
+        """Een kamer die de hele tijd bezet bleef komt in de verzameling."""
+        item = coordinator({"binary_sensor.zolder": FakeState("on")})
+        item._empty_since = {"zolder": NOW}
+        item._note_room_presence_now()
+        assert item._occupied_rooms == {"zolder"}
+        assert item._empty_since == {}
+        item._note_room_presence_now()
+        assert item._occupied_rooms == {"zolder"}
 
 
 class TestComingHomeIsNotSleeping:

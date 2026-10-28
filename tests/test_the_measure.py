@@ -458,7 +458,7 @@ FUNCTION_LIMIT = 80
 # `state_store.py` (493). What grows is mostly explanation.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2272,
-    "coordinator.py": 2318,
+    "coordinator.py": 2250,
     "engine/decide.py": 1811,
     "config_flow.py": 1492,
     "schemas.py": 893,
@@ -467,7 +467,7 @@ MODULE_EXCEPTIONS: dict[str, int] = {
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_build_commands"): 211,
     ("engine/decide.py", "_generator_commands"): 192,
-    ("coordinator.py", "__init__"): 293,
+    ("coordinator.py", "__init__"): 285,
     ("engine/models.py", "_rule_zones"): 164,
     ("engine/constraints.py", "resolve"): 128,
     ("engine/decide.py", "_collect_wishes"): 137,
@@ -475,7 +475,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("coordinator.py", "_notice_hand"): 137,
     ("engine/decide.py", "_build_zone_decisions"): 135,
     ("engine/decide.py", "_manual_conflict"): 103,
-    ("state_store.py", "_async_restore_state"): 166,
+    ("state_store.py", "_async_restore_state"): 139,
     ("state_store.py", "_restore_overrides"): 81,
     ("engine/hysteresis.py", "_candidate"): 97,
     ("config_flow.py", "async_step_resident"): 97,
@@ -559,6 +559,17 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # override note, with the explanation beside it. `_async_restore_state` stays
 # the same: the restore of `until` reads the request note in the same place.
 # What grows is mostly explanation.
+#
+# De kamerpoort woont in `room_presence.py` (N9): `coordinator.py` 2318 → 2250
+# en zijn `__init__` 293 → 285 doordat het leeg-moment en de bezette kamers daar
+# wonen; `state_store.py::_async_restore_state` 166 → 139 doordat het herstel
+# daarheen verhuist. De nieuwe module blijft onder de maat. De ratel zakt mee.
+#
+# The room gate lives in `room_presence.py` (N9): `coordinator.py` 2318 → 2250
+# and its `__init__` 293 → 285 because the empty moment and occupied rooms live
+# there; `state_store.py::_async_restore_state` 166 → 139 because its restore
+# moved there. The new module stays below the measure. The ratchet comes down
+# with it.
 
 
 def _python_files(root: Path) -> list[Path]:

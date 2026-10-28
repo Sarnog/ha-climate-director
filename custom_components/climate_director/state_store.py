@@ -114,25 +114,24 @@ class _StateStoreMixin(_CoordinatorBase):
         Het thuiskomstmoment staat er ook in: dat is wat een herstart van een
         thuiskomst onderscheidt. Alleen voor wie op dit moment
         thuis is - wie weg is heeft geen moment (besluit 3), en dat blijkt hier
-        vanzelf, want de listener en het herstel halen het er dan al uit. Het
-        moment waarop een kamer leeg werd staat er ook in: daarmee loopt de
-        nalooptijd over een herstart heen door in plaats van opnieuw te beginnen.
+        vanzelf, want de listener en het herstel halen het er dan al uit. De
+        kamerpoort draagt haar eigen deel bij: het vertrekmoment en welke kamers
+        bezet waren, zodat de nalooptijd over een herstart heen doorloopt. Zie
+        `room_presence.py` voor de keuze daarachter.
 
         The homecoming moment is in here too: that is what separates a restart
         from a homecoming. Only for whoever is home right
         now - somebody away has no moment (decision 3), and that shows here by
         itself, since the listener and the restore have already taken it out. The
-        moment a room became empty is in here as well: it lets the grace period run
-        on across a restart instead of starting over.
+        room gate contributes its own part: the departure moment and which rooms
+        were occupied, so the grace period runs on across a restart. See
+        `room_presence.py` for the choice behind it.
         """
         return {
             "until": {zone_id: until.isoformat() for zone_id, until in self._precondition.items()},
             "bypass": sorted(self._precondition_bypass),
             "handed_back": {zone_id: day.isoformat() for zone_id, day in self._handed_back.items()},
-            "empty_since": {
-                zone_id: moment.isoformat()
-                for zone_id, moment in getattr(self, "_empty_since", {}).items()
-            },
+            **self._room_presence_payload(),
             "home_since": {
                 resident_id: since.isoformat()
                 for resident_id, since in getattr(self, "_home_since", {}).items()
@@ -289,12 +288,9 @@ class _StateStoreMixin(_CoordinatorBase):
         niets, dus de opslagversie hoeft er niet voor omhoog: er valt niets te
         migreren aan een sleutel die er niet was.
 
-        Hetzelfde geldt voor `empty_since`, het moment waarop een kamer leeg
-        werd. Een ouder bestand zonder die sleutel levert geen moment, en dan
-        telt de kamer als leeg - precies de onschadelijke kant. Alleen een moment
-        van een kamer die nu niet bezet is komt terug: een kamer die nu bezet is
-        heeft het niet nodig, en een oud moment zou bij een volgende
-        `unavailable` ten onrechte als nalooptijd gelezen worden.
+        De kamerpoort herstelt haar eigen vertrekmoment en bezette kamers;
+        `room_presence.py` legt uit waarom een ontbrekende sleutel als leeg
+        leest en dus de onschadelijke kant is.
 
         Het thuiskomstmoment (anker 13) komt alleen terug voor een bewoner die op
         dit moment thuis **is**: wie weg is heeft geen moment, en er een bewaren
@@ -327,12 +323,9 @@ class _StateStoreMixin(_CoordinatorBase):
         nothing, so the storage version need not go up for it: there is nothing
         to migrate about a key that was never there.
 
-        The same holds for `empty_since`, the moment a room became empty. An
-        older file without that key yields no moment, and then the room counts as
-        empty - exactly the harmless side. Only a moment of a room that is not
-        occupied now comes back: a room that is occupied now does not need it, and
-        an old moment would wrongly read as a grace period at a later
-        `unavailable`.
+        The room gate restores its own departure moment and occupied rooms;
+        `room_presence.py` explains why a missing key reads as empty and is
+        therefore the harmless side.
 
         Every field is read as forgivingly as `serialise.py`: a value of a
         different shape than expected counts as absent, not as a reason to
@@ -389,28 +382,7 @@ class _StateStoreMixin(_CoordinatorBase):
                 if day == today:
                     self._handed_back[zone_id] = day
 
-        empty_raw = stored.get("empty_since")
-        if isinstance(empty_raw, Mapping):
-            for zone_id, raw in empty_raw.items():
-                zone = self.config.zone(zone_id)
-                if zone is None or not zone.presence_entity:
-                    continue
-                moment = _stored_time(raw)
-                if moment is None:
-                    continue
-                # Een kamer die nu bezet is heeft geen leeg-moment nodig; een
-                # oud moment zou bij een volgende `unavailable` ten onrechte als
-                # nalooptijd gelezen worden. Alleen een bewaar-moment van een
-                # kamer die nu niet bezet is komt terug.
-                #
-                # A room that is occupied now needs no empty moment; an old
-                # moment would wrongly read as a grace period at a later
-                # `unavailable`. Only a stored moment of a room that is not
-                # occupied now comes back.
-                current = self.hass.states.get(zone.presence_entity)
-                if current is not None and current.state == zone.presence_state:
-                    continue
-                self._empty_since[zone_id] = moment
+        self._restore_room_presence(stored, now)
 
         home_raw = stored.get("home_since")
         if isinstance(home_raw, Mapping):

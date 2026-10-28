@@ -107,6 +107,9 @@ class StandIn:
     def _note_home_now(self) -> None:
         """Deze stand-in houdt geen bewoners bij; de stap hoort wel op het pad."""
 
+    def _note_room_presence_now(self) -> None:
+        """Deze stand-in leest geen aanwezigheid; de stap hoort wel op het pad."""
+
     async def _async_evaluate(self) -> None:
         self.evaluated += 1
 

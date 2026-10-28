@@ -723,30 +723,36 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
 
 #: Het aantal benoemde uitsluitingen van de poort. De whitelist mag alleen korter
 #: worden: elke regel die erbij komt is een regel die de meting niet meer dekt, en
-#: zonder deze ratel groeit dat stil door. Het getal is gemeten:
-#: elf statements in `coordinator.py` en drie in elk van de
-#: vier mixins die het protocol onder `TYPE_CHECKING` importeren. 21 → 22: de
+#: zonder deze ratel groeit dat stil door. Het getal is gemeten: de `...`-stubs in
+#: `coordinator.py` en drie in elk van de vijf mixins die het protocol onder
+#: `TYPE_CHECKING` importeren. 21 → 22: de
 #: protocolregel `_note_by_hand_before_restore` in `CoordinatorSurface` (N5) is één
 #: statement erbij, en die regel hoort daar - de mixins roepen hem aan en mypy heeft
 #: hem nodig. 22 → 23: de protocolregel `_lift_hand` (N6) is één statement erbij, en
 #: die regel hoort daar - de overrides en de schakelaar roepen hem aan en mypy heeft
 #: hem nodig. 23 → 24: de protocolregel `_note_by_hand_before_restore` (N7) is
 #: meerregelig geworden; de `def`-regel en de `) -> None: ...`-regel vragen elk een
-#: naam, waar er eerst één was.
+#: naam, waar er eerst één was. 24 → 29: de kamerpoort (N9) vraagt twee
+#: protocolregels (`_room_presence_payload` en `_restore_room_presence`, voor de
+#: opslag) en is zelf een vijfde mixin met dezelfde drie TYPE_CHECKING-regels; die
+#: vijf regels bestaan alleen voor de typecontrole en zijn niet te meten.
 #:
 #: The number of named exclusions of the gate. The whitelist may only get shorter:
 #: every line added to it is a line the measurement no longer covers, and without
-#: this ratchet that grows silently. The number is measured:
-#: eleven statements in `coordinator.py` and three in each of the four
-#: mixins that import the protocol under `TYPE_CHECKING`. 21 → 22: the protocol line
+#: this ratchet that grows silently. The number is measured: the `...` stubs in
+#: `coordinator.py` and three in each of the five mixins that import the protocol
+#: under `TYPE_CHECKING`. 21 → 22: the protocol line
 #: `_note_by_hand_before_restore` in `CoordinatorSurface` (N5) is one statement more,
 #: and that line belongs there - the mixins call it and mypy needs it. 22 → 23: the
 #: protocol line `_lift_hand` (N6) is one statement more, and that line belongs
 #: there - the overrides and the switch call it and mypy needs it. 23 → 24: the
 #: protocol line `_note_by_hand_before_restore` (N7) became multi-line; the `def`
 #: line and the `) -> None: ...` line each ask for a name, where there was one
-#: before.
-NAMED_EXCLUSIONS_BUDGET = 24
+#: before. 24 → 29: the room gate (N9) asks for two protocol lines
+#: (`_room_presence_payload` and `_restore_room_presence`, for the store) and is a
+#: fifth mixin itself with the same three TYPE_CHECKING lines; those five lines
+#: exist for the type check only and cannot be measured.
+NAMED_EXCLUSIONS_BUDGET = 29
 
 
 def test_the_named_exclusions_are_a_ratchet() -> None:

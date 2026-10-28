@@ -562,20 +562,21 @@ class _WorldBuilderMixin(_CoordinatorBase):
     def _presence(self, zone_id: str, entity_id: str, occupied_state: str) -> PresenceState:
         """Return whether a room is occupied, and since when it is empty.
 
-        This is a reader and writes nothing. Het moment waarop de kamer leeg werd
-        staat in `_empty_since`: gevuld door `_notice_room_empty` bij de echte
-        overgang van bezet naar niet-bezet, en bij het opstarten uit de opslag.
-        `last_changed` van de entiteit doet hier bewust niet mee: na een herstart
-        of een verbroken verbinding draagt die een vers tijdstip dat niets over
-        het vertrek zegt, en dan zou een kamer die al uren leeg is opnieuw een
-        hele nalooptijd als bezet tellen. Zonder bewaard moment is het moment
-        onbekend, en dan telt de kamer als leeg - de regel in `_room_occupied`.
+        This is a reader and writes nothing. Het moment waarop de kamer leeg
+        werd of wegviel staat in `_empty_since`: gevuld door
+        `_notice_room_empty` bij een vertrek, een wegvalling van een bezette
+        kamer, en bij het opstarten uit de opslag. `last_changed` van de entiteit
+        doet hier bewust niet mee: na een herstart of een verbroken verbinding
+        draagt die een vers tijdstip dat niets over het vertrek zegt, en dan zou
+        een kamer die al uren leeg is opnieuw een hele nalooptijd als bezet
+        tellen. Zonder bewaard moment is het moment onbekend, en dan telt de kamer
+        als leeg - de regel in `_room_occupied`.
 
-        This is a reader and writes nothing. The moment the room became empty
-        stands in `_empty_since`: filled by `_notice_room_empty` at the real
-        transition from occupied to not occupied, and at startup from the store.
-        The entity's `last_changed` deliberately plays no part here: after a
-        restart or a broken connection it carries a fresh timestamp that says
+        This is a reader and writes nothing. The moment the room became empty or
+        dropped out stands in `_empty_since`: filled by `_notice_room_empty` at a
+        departure, at a drop-out of an occupied room, and at startup from the
+        store. The entity's `last_changed` deliberately plays no part here: after
+        a restart or a broken connection it carries a fresh timestamp that says
         nothing about the departure, and then a room that has been empty for hours
         would count as occupied for a whole grace period again. Without a stored
         moment the moment is unknown, and then the room counts as empty - the rule
