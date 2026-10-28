@@ -183,7 +183,7 @@ class _OverridesMixin(_CoordinatorBase):
         draaien tot het huis sliep, leeg was of de volgende dag begon. Alleen de
         zone van de override verliest haar hand; een gedeeld apparaat laat de hand
         van een andere zone staan. Een hand die tijdens de override ontstaat,
-        blijft staan en overleeft `clear_override`.
+        blijft staan en overleeft `clear_override` en een herstart.
 
         An override and a hand are both interventions by the user. When somebody
         turns the override switch or `set_override` on after a hand, the override
@@ -194,7 +194,7 @@ class _OverridesMixin(_CoordinatorBase):
         running unregulated until the house slept, emptied or the next day
         began. Only the override's own zone loses its hand; a shared appliance
         leaves another zone's hand standing. A hand that arises during the
-        override stays and survives `clear_override`.
+        override stays and survives `clear_override` and a restart.
         """
         if self._handed_back.pop(zone_id, None) is not None:
             self._async_save_state()

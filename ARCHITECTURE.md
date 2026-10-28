@@ -1241,18 +1241,6 @@ als de ruimtesensor het uitschakelpunt haalt.
 - Risico: een gangbare instelling valt hier zelf onder; de melding legt uit en weigert
   niets.
 
-**Een hand die tijdens een override ontstaat, overleeft een herstart.** Na het herstel
-haalt `state_store` de opgeslagen hand weg van elke zone met een override. Dat hoort
-alleen voor een override die de gebruiker tijdens het opstarten zette: een opgeslagen
-hand naast een opgeslagen override is tijdens die override ontstaan, want de override
-hief bij zijn begin de hand al op.
-- HA-laag: de verwijdering na `_restore_overrides` beperkt zich tot de zones in de
-  overridenotitie van het opstarten (`_override_before_restore`) die nu een override
-  hebben.
-- Bewaakt: een livetoets met een hand tijdens een override, een herstart en daarna
-  `clear_override` (de zone blijft overgedragen, het apparaat blijft uit), en de
-  tegenproef dat een override van tijdens het opstarten een opgeslagen hand wel weghaalt.
-
 **Een doorschuiving in de laatste ronde wordt nog opgelost.** `_resolve_with_fallbacks`
 legt een nieuwe bron pas in de volgende ronde aan de circuits voor, en het aantal rondes
 is het grootste aantal bronnen van een zone.
@@ -2770,16 +2758,6 @@ once the room sensor reaches the switch-off point.
   the room sensor.
 - Risk: a common setting falls under this itself; the notice explains and refuses
   nothing.
-
-**A hand that arises during an override survives a restart.** After the restore,
-`state_store` removes the stored hand of every zone with an override. That belongs only to
-an override the user set during the startup: a stored hand beside a stored override arose
-during that override, since the override already lifted the hand at its beginning.
-- HA layer: the removal after `_restore_overrides` limits itself to the zones in the
-  startup's override note (`_override_before_restore`) that have an override now.
-- Guarded: a live test with a hand during an override, a restart and then
-  `clear_override` (the zone stays handed over, the appliance stays off), and the
-  counter-test that an override from during the startup does remove a stored hand.
 
 **A move in the last round still gets resolved.** `_resolve_with_fallbacks` only puts a
 new source to the circuits in the next round, and the number of rounds is the largest

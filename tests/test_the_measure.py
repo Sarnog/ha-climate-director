@@ -475,7 +475,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("coordinator.py", "_notice_hand"): 137,
     ("engine/decide.py", "_build_zone_decisions"): 135,
     ("engine/decide.py", "_manual_conflict"): 103,
-    ("state_store.py", "_async_restore_state"): 139,
+    ("state_store.py", "_async_restore_state"): 138,
     ("state_store.py", "_restore_overrides"): 81,
     ("engine/hysteresis.py", "_candidate"): 97,
     ("config_flow.py", "async_step_resident"): 97,
@@ -563,13 +563,16 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # De kamerpoort woont in `room_presence.py` (N9): `coordinator.py` 2318 → 2250
 # en zijn `__init__` 293 → 285 doordat het leeg-moment en de bezette kamers daar
 # wonen; `state_store.py::_async_restore_state` 166 → 139 doordat het herstel
-# daarheen verhuist. De nieuwe module blijft onder de maat. De ratel zakt mee.
+# daarheen verhuist. N10 bracht die functie op 138: de verse-overridecontrole
+# past in de bestaande regel. De nieuwe module blijft onder de maat. De ratel
+# zakt mee.
 #
 # The room gate lives in `room_presence.py` (N9): `coordinator.py` 2318 → 2250
 # and its `__init__` 293 → 285 because the empty moment and occupied rooms live
 # there; `state_store.py::_async_restore_state` 166 → 139 because its restore
-# moved there. The new module stays below the measure. The ratchet comes down
-# with it.
+# moved there. N10 brought that function to 138: the fresh-override check fits
+# in the existing line. The new module stays below the measure. The ratchet
+# comes down with it.
 
 
 def _python_files(root: Path) -> list[Path]:

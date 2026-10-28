@@ -555,13 +555,18 @@ class TestTheStartupNoteCountsPerKind:
             await stop_house(home)
 
 
-class TestAStoredOverrideRemovesTheStoredHand:
-    """Een opgeslagen override laat de opgeslagen hand van die zone niet terugkomen.
+class TestAStoredOverrideLeavesTheStoredHand:
+    """Een opgeslagen override laat de opgeslagen hand van die zone staan.
 
-    A stored override does not let that zone's stored hand come back.
+    De hand is tijdens die override ontstaan en is jonger dan haar begin; alleen
+    een override die de gebruiker tijdens het opstarten zelf zet, heft haar op.
+
+    A stored override leaves that zone's stored hand standing. The hand arose
+    during that override and is younger than its beginning; only an override the
+    user sets during the startup itself lifts it.
     """
 
-    async def test_the_stored_hand_does_not_come_back(self) -> None:
+    async def test_the_stored_hand_stays(self) -> None:
         config_dir = new_config_dir()
         today = dt_util.now().date().isoformat()
         until = dt_util.now() + timedelta(hours=2)
@@ -585,8 +590,53 @@ class TestAStoredOverrideRemovesTheStoredHand:
             await settle_the_debouncer(home)
             await start_up(home)
 
+            assert "woonkamer" in home.coordinator._handed_back, (
+                "de opgeslagen hand viel weg naast een opgeslagen override"
+            )
+            assert home.coordinator.zone_overrides.get("woonkamer") is True
+            assert reason_of(home) == "manual_override"
+        finally:
+            await stop_house(home)
+
+
+class TestAFreshOverrideDuringTheStartupRemovesTheStoredHand:
+    """Een override die de gebruiker tijdens het opstarten zelf zet, heft de hand op.
+
+    Alleen die verse override telt: de hand was op dat moment nog niet in het
+    geheugen, dus `_lift_hand` had niets te wissen; het herstel haalt haar weg.
+
+    An override the user sets during the startup itself lifts the hand. Only that
+    fresh override counts: the hand was not in memory yet at that moment, so
+    `_lift_hand` had nothing to drop; the restore removes it.
+    """
+
+    async def test_the_stored_hand_goes(self) -> None:
+        config_dir = new_config_dir()
+        today = dt_util.now().date().isoformat()
+        write_store(config_dir, {"handed_back": {"woonkamer": today}})
+
+        home = await start_house(
+            two_rooms(),
+            config_dir=config_dir,
+            core_state=CoreState.starting,
+            states=two_room_world(),
+        )
+        try:
+            await home.call(
+                "climate_director",
+                "set_override",
+                {
+                    "zone_id": "woonkamer",
+                    "hvac_mode": "heat",
+                    "temperature": 22,
+                    "minutes": 60,
+                },
+            )
+            await settle_the_debouncer(home)
+            await start_up(home)
+
             assert "woonkamer" not in home.coordinator._handed_back, (
-                "de opgeslagen hand kwam terug naast de override"
+                "de verse override haalde de opgeslagen hand niet weg"
             )
             assert home.coordinator.zone_overrides.get("woonkamer") is True
             assert reason_of(home) == "manual_override"

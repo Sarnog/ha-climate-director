@@ -46,10 +46,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   als de ruimtesensor het uitschakelpunt haalt; regelt het apparaat op zijn eigen sensor net
   daaronder, dan blijft de taak (en het circuit) eindeloos doorlopen. Het scherm kan zeggen
   dat een doel gelijk aan het uitschakelpunt geen marge laat.
-- **Een hand die tijdens een override ontstaat, overleeft ook een herstart** — zet iemand
-  tijdens een override het apparaat zelf uit, dan blijft die hand na het einde van de
-  override staan, behalve als Home Assistant er tussendoor herstart: dan valt de hand weg
-  en zet de director het apparaat na de override weer aan.
 - **Een doorschuiving in de laatste ronde wordt nog opgelost** — weigert een circuit een
   zone, dan schuift die door naar haar volgende bron, en dat herhaalt zich hoogstens zo
   vaak als de grootste zone bronnen heeft. Valt de laatste doorschuiving precies in die
@@ -322,10 +318,6 @@ The worked-out design proposals for everything below live in
   the room sensor reaches the switch-off point; if the appliance regulates on its own sensor
   just below it, the duty (and the circuit) keeps running endlessly. The screen could say
   that a target equal to the switch-off point leaves no margin.
-- **A hand that arises during an override survives a restart too** — when somebody
-  switches the appliance off themselves during an override, that hand stays after the
-  override ends, except when Home Assistant restarts in between: then the hand drops away
-  and the director switches the appliance back on after the override.
 - **A move in the last round still gets resolved** — when a circuit refuses a zone, the
   zone moves on to its next source, and that repeats at most as often as the largest zone
   has sources. When the last move falls exactly in that last round (a chain of

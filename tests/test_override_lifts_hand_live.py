@@ -180,3 +180,60 @@ async def test_an_override_on_another_zone_leaves_the_hand_standing() -> None:
         assert home.state(AIRCO) == "off", "de zolder-airco hoort uit te blijven"
     finally:
         await stop_house(home)
+
+
+async def test_a_hand_from_during_an_override_survives_a_restart() -> None:
+    """Een hand die tijdens een override ontstaat, overleeft clear_override en een herstart.
+
+    De override zette de airco aan; iemand zet hem daarna zelf uit. Na een
+    herstart staat de override er nog, maar de hand ook. `clear_override` laat
+    de airco dus uit: de hand is jonger dan het begin van de override.
+
+    A hand that arises during an override survives clear_override and a restart.
+    The override switched the air conditioner on; somebody then switches it off
+    themselves. After a restart the override still stands, but so does the hand.
+    `clear_override` therefore leaves the air conditioner off: the hand is
+    younger than the override's beginning.
+    """
+    config_dir = new_config_dir()
+    home = await start_house(installation(), config_dir=config_dir, states=world("22.5", "18.5"))
+    try:
+        await home.evaluate()
+        await settle(home)
+        await home.call(
+            "climate_director",
+            "set_override",
+            {"zone_id": "zolder", "hvac_mode": "heat", "temperature": 22, "minutes": 60},
+        )
+        await settle(home)
+        home.hass.states.async_set(AIRCO, "off", dict(MODES))
+        await settle(home)
+        await home.evaluate()
+        await settle(home)
+
+        assert home.coordinator.zone_overrides.get("zolder") is True
+        assert "zolder" in home.coordinator._handed_back, "de hand tijdens de override staat niet"
+        await asyncio.sleep(1.2)
+    finally:
+        await stop_house(home)
+
+    home = await start_house(installation(), config_dir=config_dir, states=world("22.5", "18.5"))
+    try:
+        await settle(home)
+        await home.evaluate()
+        await settle(home)
+
+        assert home.coordinator.zone_overrides.get("zolder") is True
+        assert "zolder" in home.coordinator._handed_back, (
+            "de hand uit de override viel weg bij de herstart"
+        )
+
+        await home.call("climate_director", "clear_override", {"zone_id": "zolder"})
+        await settle(home)
+        await home.evaluate()
+        await settle(home)
+
+        assert reason_of(home) == "manual_override"
+        assert home.state(AIRCO) == "off", "de hand hoorde de airco uit te houden"
+    finally:
+        await stop_house(home)
