@@ -14,18 +14,18 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import datetime
 
+from . import hand_start
 from .families import ModeFamily
 from .hysteresis import source_counts_for
 from .models import (
     HOLIDAY_WEEKDAY,
     DirectorConfig,
     Opening,
-    Resident,
     TimeWindow,
     Zone,
     ZoneGate,
 )
-from .night import asleep, rise_braked, slept_tonight
+from .night import asleep
 from .plan import OPENING_MIN_REST, Plan, Reason  # noqa: F401  # OPENING_MIN_REST is a re-export
 from .world import WorldState
 
@@ -100,7 +100,7 @@ def _closed(
     # included. Switch something on yourself and it runs along as though it had
     # been going all the while. That keeps the brake a brake rather than a second
     # schedule.
-    if _quiet_hours(config, world) and not _zone_running(config, world, zone, previous):
+    if hand_start.quiet_holds(config, world, zone, previous):
         yield Reason.QUIET_HOURS
 
     # Een zone die op de kamer draait laat het huishouden erbuiten. Wie er zit,
@@ -124,7 +124,9 @@ def _closed(
     # are skipped there, since they could never pass. The room gate below still
     # applies: that one is about the room, not about who is in the house.
     if config.residents:
-        yield from _household(config, world, _zone_running(config, world, zone, previous))
+        yield from _household(
+            config, world, zone.zone_id, _zone_running(config, world, zone, previous)
+        )
 
     # Het smalst van allemaal, en daarom als laatste: iemand thuis zegt niets
     # over of er iemand op zolder zit.
@@ -135,7 +137,9 @@ def _closed(
         yield Reason.ZONE_UNOCCUPIED
 
 
-def _household(config: DirectorConfig, world: WorldState, running: bool) -> Iterator[Reason]:
+def _household(
+    config: DirectorConfig, world: WorldState, zone_id: str, running: bool
+) -> Iterator[Reason]:
     """Yield the gates about the people in the house, the shut ones only.
 
     Gastenmodus neemt de poorten over die over afwezigheid gaan. Er logeert
@@ -165,7 +169,7 @@ def _household(config: DirectorConfig, world: WorldState, running: bool) -> Iter
                 world.resident(resident.resident_id).present_and_awake for resident in at_home
             ):
                 yield Reason.EVERYONE_ASLEEP
-            elif any(_still_in_bed(resident, world) for resident in at_home):
+            elif hand_start.waits_for_sleeper(world, zone_id, at_home):
                 yield Reason.WAITING_FOR_SLEEPER
         return
 
@@ -200,12 +204,12 @@ def _household(config: DirectorConfig, world: WorldState, running: bool) -> Iter
     # quiet window, so a zone already running carries on regulating. Inside the guest
     # window the brake does not apply: the branch above does not know it.
     if gates.require_awake:
-        up = [resident for resident in config.residents if _up_and_about(resident, world)]
+        up = [resident for resident in config.residents if hand_start.up_and_about(resident, world)]
         if not up:
             yield Reason.EVERYONE_ASLEEP
-        elif not running and all(rise_braked(resident, world) for resident in up):
+        elif hand_start.early_riser_holds(world, zone_id, running, up):
             yield Reason.EARLY_RISER
-        elif any(_still_in_bed(resident, world) for resident in config.residents):
+        elif hand_start.waits_for_sleeper(world, zone_id, config.residents):
             yield Reason.WAITING_FOR_SLEEPER
 
     if gates.require_schedule and not _schedule_open(config, world):
@@ -224,51 +228,6 @@ def _preconditioning(world: WorldState, zone: Zone) -> bool:
     second definition here could only drift apart.
     """
     return world.preconditioning(zone.zone_id)
-
-
-def _up_and_about(resident: Resident, world: WorldState) -> bool:
-    """Return whether this resident is home and not asleep."""
-    return world.resident(resident.resident_id).home and not asleep(resident, world)
-
-
-def _still_in_bed(resident: Resident, world: WorldState) -> bool:
-    """Return whether this sleeper still holds the house back.
-
-    Drie dingen moeten tegelijk waar zijn: thuis, slapend, en vóór de uiterste
-    tijd van vandaag. Wie geen uiterste tijd heeft ingevuld houdt nooit iemand
-    tegen - dat is de stand van vóór deze instelling, en die blijft voor elke
-    installatie die er niets mee doet precies zo.
-
-    Wie weg is telt niet mee: slapen bij iemand anders is geen reden om dit
-    huis koud te laten. Dat is dezelfde regel als bij de hand aan het apparaat.
-
-    Three things must hold at once: home, asleep, and before today's deadline.
-    Whoever filled in no deadline never holds anybody back - that is the state
-    from before this setting, and it stays exactly that for every installation
-    not using it.
-
-    Somebody away does not count: sleeping at somebody else's place is no
-    reason to leave this house cold. That is the same rule as for the hand at
-    the appliance.
-
-    En het huis moet deze nacht geslapen hebben: iedereen die thuis is, is naar
-    bed geweest (`night.slept_tonight`). Gaat de één naar bed terwijl de ander nog
-    op is, dan is het na middernacht al "vandaag, vóór de uiterste tijd", maar wie
-    op is houdt het huis gewoon aan de gang. Is het moment onbekend - na een
-    herstart terwijl iemand op was - dan wordt er niet gewacht.
-
-    And the house must have slept this night: everybody at home has been to bed
-    (`night.slept_tonight`). When one resident turns in while the other is still
-    up, it is already "today, before the deadline" after midnight, but whoever is
-    up simply keeps the house going. When the moment is unknown - after a restart
-    while somebody was up - nobody is waited for.
-    """
-    if not world.resident(resident.resident_id).home or not asleep(resident, world):
-        return False
-    if not slept_tonight(resident, world):
-        return False
-    until = resident.waits_until(world.now.weekday(), holiday=world.holiday_mode)
-    return until is not None and world.now.time() < until
 
 
 def _guests_carry_the_house(config: DirectorConfig, world: WorldState) -> bool:

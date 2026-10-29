@@ -210,6 +210,26 @@ class WorldState:
     zone_overrides: dict[str, bool] = field(default_factory=dict)
     """Manual override per `zone_id`; a missing zone counts as no override."""
 
+    zone_hand_starts: frozenset[str] = frozenset()
+    """Zones die iemand zelf start terwijl zij op een van de drie remmen wacht.
+
+    Een handstart laat alleen `WAITING_FOR_SLEEPER`, `EARLY_RISER` en
+    `QUIET_HOURS` passeren; de hoofdschakelaar, openingen, buitengrenzen, het
+    seizoen, de kortcyclus en de circuits blijven gelden. De koppelingslaag
+    bewaart hem over een herstart en laat hem vallen bij slapen, een leeg huis,
+    de volgende dag of zodra geen van de drie remmen de zone nog tegenhoudt.
+    Een ontbrekende zone betekent geen handstart: dan wacht de director zoals
+    altijd.
+
+    Zones somebody starts themselves while they wait on one of the three brakes.
+    A hand start lets only `WAITING_FOR_SLEEPER`, `EARLY_RISER` and
+    `QUIET_HOURS` pass; the master switch, openings, outdoor bounds, the season,
+    short-cycle protection and the circuits keep applying. The binding layer
+    keeps it across a restart and drops it when everybody sleeps, the house is
+    empty, the next day begins, or none of the three brakes still holds the zone.
+    A missing zone means no hand start: the director then waits as always.
+    """
+
     zone_hands: frozenset[str] = frozenset()
     """De zones die alleen door een hand stilstaan, niet door een overdracht.
 
