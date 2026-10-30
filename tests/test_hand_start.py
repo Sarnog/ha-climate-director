@@ -19,7 +19,18 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import time
 
-from conftest import BACK_DOOR, asleep, at, awake, everyone_up, house, make_world
+from conftest import (
+    BACK_DOOR,
+    asleep,
+    at,
+    awake,
+    everyone_up,
+    house,
+    make_world,
+)
+from conftest import (
+    LIVING as LIVING_SOURCE,
+)
 
 from custom_components.climate_director.engine import (
     DirectorConfig,
@@ -140,7 +151,7 @@ class TestQuietHours:
         """
         config = self.quiet_house()
         world = with_hand_start(
-            make_world(now=at(12, 0), residents=everyone_up(), climates={LIVING: "heat"}),
+            make_world(now=at(12, 0), residents=everyone_up(), climates={LIVING_SOURCE: "heat"}),
             LIVING,
         )
         assert gate(config, world) == ()
