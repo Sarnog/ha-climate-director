@@ -608,6 +608,23 @@ sommeil, le capteur de sommeil compte jour et nuit, et le frein s'applique alors
 s'applique pas non plus, et une demande de préparation fait toujours démarrer la
 maison.
 
+### Démarrer manuellement
+
+Si vous allumez vous-même un appareil alors que sa zone attend encore le dernier
+dormeur, le frein de lever ou la plage de silence, le directeur prend cette pièce
+en main : il la régule selon la température intérieure et extérieure, en
+éteignant et rallumant, jusqu'à la fin naturelle de l'attente. Cela fonctionne
+sur l'appareil lui-même et avec le bouton *Démarrer {zone} manuellement*.
+
+Seuls ces trois freins s'effacent. L'interrupteur principal, une ouverture, les
+bornes extérieures, la saison, la protection contre les cycles courts et les
+circuits continuent de s'appliquer. Une chaudière partagée démarre chaque zone
+qu'elle dessert ; un appareil dont *Démarrer cet appareil automatiquement* est
+désactivé ne compte pas, car le directeur n'y règle jamais l'allumage. Dans une
+zone qui n'attend rien, le bouton ne fait rien. Le démarrage manuel expire aussi
+au coucher, dans une maison vide ou le jour suivant. La décision nomme la zone
+dans l'attribut `hand_starts`.
+
 ### Plannings
 
 Après avoir enregistré un occupant, vous réglez ses plannings :
@@ -725,6 +742,7 @@ Un appareil par installation, avec en dessous :
 | `number.*_priorite_<zone>` | la préséance de cette zone ; réglable aussi depuis une automatisation |
 | `number.*_duree_de_la_preparation` | combien de temps dure un appui sur un bouton de préparation |
 | `button.*_preparer_<zone>` | prépare ou pré-refroidit cette zone |
+| `button.*_demarrer_<zone>_manuellement` | démarre cette zone à la main à travers l'attente d'un dormeur, le frein de lever ou la plage de silence |
 | `select.*_saison` | règle la saison à la main sur Automatique, Été ou Hiver ; le choix survit à un redémarrage |
 
 Les noms de ces entités sont traduits, et Home Assistant déduit l'identifiant
@@ -770,6 +788,9 @@ il intervient malgré tout dès qu'une limite de temps expire.
   directeur le signale sous *Réparations*.
 - **Bouton de préparation** (`button.*_preparer_<zone>`) et **durée**
   (`number.*_duree_de_la_preparation`) : voir ci-dessous.
+- **Démarrer manuellement** (`button.*_demarrer_<zone>_manuellement`) : démarre
+  cette zone vous-même pendant que la maison attend encore ; voir
+  *Démarrer manuellement* à l'étape 10.
 
 ## Actions
 

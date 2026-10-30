@@ -590,6 +590,22 @@ naar bed is geweest. Zonder slaapvenster telt de slaapsensor de klok rond, en da
 de rem op de remdagen ook wie na middernacht nog op is. Binnen het gastenvenster
 geldt de rem ook niet, en een vooruit-verzoek laat het huis altijd starten.
 
+### Met de hand starten
+
+Zet je zelf een apparaat aan terwijl je zone nog wacht op de laatste slaper, op
+de opsta-rem of op het stiltevenster, dan neemt de director die kamer over: hij
+regelt hem op binnen- en buitentemperatuur, met uit en weer aan, tot het wachten
+vanzelf voorbij is. Dat werkt aan het apparaat zelf en met de knop
+*Met de hand starten* per zone.
+
+Alleen die drie remmen wijken. De hoofdschakelaar, een open raam, de
+buitengrenzen, het seizoen, de kortcyclus en de circuits blijven gelden. Een
+gedeelde ketel start elke zone die erop zit; een apparaat met *Dit apparaat
+automatisch aanzetten* uit telt niet, want daar regelt de director het aanzetten
+nooit. In een zone die nergens op wacht doet de knop niets. De handstart vervalt
+ook bij slapen, een leeg huis of de volgende dag. De beslissing noemt de zone in
+het attribuut `hand_starts`.
+
 ### Roosters
 
 Na het opslaan van een bewoner stel je zijn roosters in:
@@ -704,6 +720,7 @@ Eén device per installatie, met daaronder:
 | `number.*_prioriteit_<zone>` | de voorrang van deze zone; ook vanuit een automatisering te wijzigen |
 | `number.*_vooruitduur` | hoe lang één druk op een vooruit-knop duurt |
 | `button.*_<zone>_vooruit` | laat deze zone vooruit verwarmen of koelen |
+| `button.*_<zone>_met_de_hand_starten` | start deze zone met de hand door het wachten op slaper, opsta-rem of stiltevenster heen |
 | `select.*_seizoen` | zet het seizoen met de hand op Automatisch, Zomer of Winter; de keuze overleeft een herstart |
 
 De namen van deze entiteiten worden vertaald, en Home Assistant leidt de
@@ -748,6 +765,8 @@ grijpt hij toch in zodra een tijdsgrens verstrijkt.
   onder *Reparaties*.
 - **Vooruit-knop** (`button.*_<zone>_vooruit`) en **vooruitduur**
   (`number.*_vooruitduur`): zie hieronder.
+- **Met de hand starten** (`button.*_<zone>_met_de_hand_starten`): start deze
+  zone zelf terwijl het huis nog wacht; zie *Met de hand starten* bij Stap 10.
 
 ## Acties
 

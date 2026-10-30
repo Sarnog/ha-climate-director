@@ -599,6 +599,23 @@ entonces el freno también frena a quien siga levantado tras la
 medianoche. Dentro de la franja de invitados el freno tampoco se
 aplica, y una petición de preacondicionamiento siempre hace arrancar la casa.
 
+### Iniciar manualmente
+
+Si enciendes tú mismo un aparato mientras su zona aún espera al último que
+duerme, al freno de madrugar o a la franja de silencio, el director toma esa
+habitación: la regula según la temperatura interior y exterior, apagando y
+volviendo a encender, hasta que la espera termine sola. Funciona en el aparato
+mismo y con el botón *Iniciar {zone} manualmente*.
+
+Solo esos tres frenos se apartan. El interruptor principal, una abertura, los
+límites exteriores, la estación, la protección contra ciclos cortos y los
+circuitos siguen aplicándose. Una caldera compartida arranca cada zona que
+atiende; un aparato con *Encender este aparato automáticamente* desactivado no
+cuenta, porque el director nunca regula allí el encendido. En una zona que no
+espera nada, el botón no hace nada. El inicio manual también caduca al dormir,
+con la casa vacía o al día siguiente. La decisión nombra la zona en el atributo
+`hand_starts`.
+
 ### Horarios
 
 Tras guardar un residente, configuras sus horarios:
@@ -713,6 +730,7 @@ Un dispositivo por instalación, con debajo:
 | `number.*_prioridad_<zone>` | la precedencia de esta zona; también configurable desde una automatización |
 | `number.*_duracion_del_preacondicionamiento` | cuánto dura una pulsación de un botón de preacondicionamiento |
 | `button.*_preacondicionar_<zone>` | preacondiciona esta zona |
+| `button.*_iniciar_<zone>_manualmente` | inicia esta zona a mano a través de la espera de quien duerme, el freno de madrugar o la franja de silencio |
 | `select.*_estacion` | pone la estación a mano en Automático, Verano o Invierno; la elección sobrevive a un reinicio |
 
 Los nombres de estas entidades están traducidos, y Home Assistant deduce el id
@@ -756,6 +774,9 @@ interviene en cuanto vence un límite de tiempo.
   la abertura realmente abierta, el director lo informa en *Reparaciones*.
 - **Botón de preacondicionamiento** (`button.*_preacondicionar_<zone>`) y
   **duración** (`number.*_duracion_del_preacondicionamiento`): ver abajo.
+- **Iniciar manualmente** (`button.*_iniciar_<zone>_manualmente`): inicia esta
+  zona tú mismo mientras la casa aún espera; ver *Iniciar manualmente* en el
+  paso 10.
 
 ## Acciones
 

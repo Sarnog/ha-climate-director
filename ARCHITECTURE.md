@@ -527,6 +527,7 @@ Home Assistant (entiteitstoestanden, klokgebeurtenissen)
     preconditions.py   vooruit-verzoeken en hun timers
     overrides.py       override met looptijd en het opheffen van een hand
     room_presence.py   de kamerpoort: bezette kamers en de nalooptijd
+    hand_start.py      de handstart: herkenning, opslag en verval
     world_builder.py   de momentopname (build_world)
       │
       ▼
@@ -535,6 +536,7 @@ Home Assistant (entiteitstoestanden, klokgebeurtenissen)
       ▼
 ┌─ engine/ ────────────────────────────────────────────────────────┐
 │                                                                  │
+│  hand_start.py  de drie wachtrema's en de hertoets               │
 │  gates.py       mag er geregeld worden (omstandigheden)          │
 │      │                                                           │
 │      ▼                                                           │
@@ -930,17 +932,18 @@ Doet precies drie dingen: entiteiten uitlezen tot één `WorldState`, `decide()`
 zelf geen besliskunde; staat er ooit een `if` over temperaturen in dat bestand, dan hoort
 die in `engine/`.
 
-De klasse is in vijven geknipt; vier delen staan op zichzelf. `state_store.py`
+De klasse is in zessen geknipt; vijf delen staan op zichzelf. `state_store.py`
 bewaart, herstelt en quarantaineert wat een mens met de hand heeft gezegd — een
 vooruit-verzoek en een apparaat dat iemand zelf uitzette — en draagt het
 thuiskomstmoment (`home_since`), dat vervalt voor wie weg is, `preconditions.py`
 beheert de vooruit-verzoeken en hun timers, `overrides.py` beheert de override met
 zijn looptijd en heft bij zijn begin de hand van zijn zone op, `room_presence.py`
 houdt bij welke kamers bezet zijn en wanneer een kamer leeg werd of wegviel (de
-nalooptijd van de kamerpoort, ook over een herstart heen), en `world_builder.py` bouwt de
-momentopname met zijn lezers, waarin `reads_as_home` de enige plek is die een
-aanwezigheidsentiteit als thuis leest; de coordinator zelf luistert, beslist, voert
-uit en publiceert.
+nalooptijd van de kamerpoort, ook over een herstart heen), `hand_start.py` herkent
+de handstart aan het apparaat of aan de knop, bewaart hem over een herstart en laat
+hem vervallen, en `world_builder.py` bouwt de momentopname met zijn lezers, waarin
+`reads_as_home` de enige plek is die een aanwezigheidsentiteit als thuis leest; de
+coordinator zelf luistert, beslist, voert uit en publiceert.
 
 Zes dingen zijn er subtiel aan:
 
@@ -1267,23 +1270,6 @@ als de ruimtesensor het uitschakelpunt haalt.
   apparaat zelf verder regelt dan de ruimtesensor.
 - Risico: een gangbare instelling valt hier zelf onder; de melding legt uit en weigert
   niets.
-
-**Met de hand starten terwijl het huis nog wacht.** Wie een apparaat zelf aanzet terwijl
-zijn zone wacht op een slaper, op de opsta-rem of op het stiltevenster, laat de
-director die zone overnemen: hij regelt hem daarna op binnen- en buitentemperatuur,
-met uit en weer aan, tot het wachten vanzelf voorbij is.
-- HA-laag: `_notice_hand` herkent een actieve stand die niet van ons komt op een
-  apparaat met *Dit apparaat automatisch aanzetten* aan, terwijl de zone wacht; een
-  nieuwe knop per zone doet hetzelfde. De coordinator noteert per zone een handstart,
-  en `WorldState` draagt die; een gedeeld apparaat start elke zone die erop zit.
-- Engine: een zone met een handstart passeert `WAITING_FOR_SLEEPER`, `EARLY_RISER` en
-  `QUIET_HOURS`, en verder niets: de hoofdschakelaar, openingen, buitengrenzen en het
-  seizoen blijven gelden. De handstart vervalt in de eerste ronde waarin die drie de
-  zone ook zonder hem doorlaten, en verder bij slapen, een leeg huis of de volgende dag.
-- Bewaakt: livetoetsen met de productie-instellingen - za 08:30 met een slapende
-  bewoner, di 07:00 met de opsta-rem, en de cv met de hand aan - waarin de zone na de
-  eerste stop ook weer start; en de tegenproef dat de zone na het wachten gewoon
-  doorloopt zonder handstart.
 
 #### Could have
 
@@ -2076,6 +2062,7 @@ Home Assistant (entity states, clock events)
     preconditions.py   pre-conditioning requests and their timers
     overrides.py       override with a duration and the lifting of a hand
     room_presence.py   the room gate: occupied rooms and the grace period
+    hand_start.py      the hand start: recognition, storage and expiry
     world_builder.py   the snapshot (build_world)
       │
       ▼
@@ -2084,6 +2071,7 @@ Home Assistant (entity states, clock events)
       ▼
 ┌─ engine/ ────────────────────────────────────────────────────────┐
 │                                                                  │
+│  hand_start.py  the three waiting brakes and the re-check        │
 │  gates.py       is regulating allowed (circumstances)            │
 │      │                                                           │
 │      ▼                                                           │
@@ -2475,16 +2463,17 @@ into a `Plan`, and make sure a fresh decision happens whenever that is worthwhil
 decision logic itself; if an `if` about temperatures ever appears in that file, it belongs
 in `engine/`.
 
-The class is cut into five; four parts stand on their own. `state_store.py` stores,
+The class is cut into six; five parts stand on their own. `state_store.py` stores,
 restores and quarantines what a person said by hand — a pre-conditioning request and an
 appliance somebody switched off — and carries the homecoming moment (`home_since`), which
 lapses for whoever is away, `preconditions.py` manages the pre-conditioning requests and
 their timers, `overrides.py` manages the override with its duration and lifts the hand of
 its zone at its beginning, `room_presence.py` keeps track of which rooms are occupied and
 when a room became empty or dropped out (the grace period of the room gate, across a
-restart too), and `world_builder.py` builds the snapshot with its readers, in which
-`reads_as_home` is the only place reading a presence entity as home; the coordinator itself
-listens, decides, executes and publishes.
+restart too), `hand_start.py` recognises the hand start at the appliance or at the button,
+keeps it across a restart and lets it lapse, and `world_builder.py` builds the snapshot
+with its readers, in which `reads_as_home` is the only place reading a presence entity as
+home; the coordinator itself listens, decides, executes and publishes.
 
 Six things about it are subtle:
 
@@ -2806,24 +2795,6 @@ once the room sensor reaches the switch-off point.
   the room sensor.
 - Risk: a common setting falls under this itself; the notice explains and refuses
   nothing.
-
-**Starting by hand while the house is still waiting.** Whoever switches an appliance on
-themselves while its zone waits for a sleeper, for the rise brake or for the quiet window,
-lets the director take that zone over: it then regulates it on indoor and outdoor
-temperature, off and on again, until the waiting is over by itself.
-- HA layer: `_notice_hand` recognises an active mode that does not come from us on an
-  appliance with *Start this appliance automatically* on, while the zone waits; a new
-  button per zone does the same. The coordinator notes a hand start per zone, and
-  `WorldState` carries it; a shared appliance starts every zone hanging off it.
-- Engine: a zone with a hand start passes `WAITING_FOR_SLEEPER`, `EARLY_RISER` and
-  `QUIET_HOURS`, and nothing else: the master switch, openings, outdoor bounds and the
-  season keep applying. The hand start lapses in the first round in which those three
-  let the zone through without it, and further on sleeping, an empty house or the next
-  day.
-- Guarded: live tests with the production settings - Saturday 08:30 with a sleeping
-  resident, Tuesday 07:00 with the rise brake, and the boiler switched on by hand - in
-  which the zone also starts again after its first stop; and the counter-test that the
-  zone simply carries on after the waiting without a hand start.
 
 #### Could have
 

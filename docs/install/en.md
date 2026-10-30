@@ -588,6 +588,22 @@ Inside the guest window
 the brake does not apply either, and a pre-conditioning request always lets the
 house start.
 
+### Starting by hand
+
+When you switch an appliance on yourself while its zone still waits for the last
+sleeper, on the rise brake or on the quiet window, the director takes that room
+over: it regulates it on indoor and outdoor temperature, switching off and on
+again, until the waiting is over by itself. That works at the appliance itself
+and with the *Start by hand* button per zone.
+
+Only those three brakes step aside. The master switch, an open window, the
+outdoor bounds, the season, short-cycle protection and the circuits keep
+applying. A shared boiler starts every zone it serves; an appliance with *Start
+this appliance automatically* off does not count, since the director never
+switches that on. In a zone that waits on nothing the button does nothing. The
+hand start also lapses on sleep, an empty house or the next day. The decision
+names the zone in the `hand_starts` attribute.
+
 ### Schedules
 
 Once you have saved a resident, you set their schedules:
@@ -701,6 +717,7 @@ One device per installation, holding:
 | `number.*_<zone>_priority` | this zone's precedence; settable from an automation too |
 | `number.*_pre_conditioning_duration` | how long one press of a pre-conditioning button lasts |
 | `button.*_<zone>_pre_condition` | pre-conditions this zone |
+| `button.*_start_<zone>_by_hand` | starts this zone by hand through the waiting for a sleeper, the rise brake or the quiet window |
 | `select.*_season` | sets the season by hand to Automatic, Summer or Winter; the choice survives a restart |
 
 The names of these entities are translated, and Home Assistant derives the
@@ -745,6 +762,8 @@ limit expires.
   *Repairs*.
 - **Pre-conditioning button** (`button.*_<zone>_pre_condition`) and **duration**
   (`number.*_pre_conditioning_duration`): see below.
+- **Start by hand** (`button.*_start_<zone>_by_hand`): starts this zone yourself
+  while the house still waits; see *Starting by hand* in Step 10.
 
 ## Actions
 

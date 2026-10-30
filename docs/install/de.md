@@ -598,6 +598,22 @@ rund um die Uhr, und dann wird an ihren Tagen auch gebremst, wer nach Mitternach
 auf ist. In den Stunden des Gästemodus gilt die Bremse ebenfalls nicht, und eine
 Vorbereitungs-Anforderung lässt das Haus immer starten.
 
+### Von Hand starten
+
+Schaltest du selbst ein Gerät ein, während seine Zone noch auf den letzten
+Schläfer, auf die Aufsteh-Bremse oder auf das Ruhefenster wartet, übernimmt der
+Director diesen Raum: Er regelt ihn nach Innen- und Außentemperatur, mit Aus und
+wieder An, bis das Warten von selbst vorbei ist. Das geht am Gerät selbst und mit
+der Taste *Von Hand starten* pro Zone.
+
+Nur diese drei Bremsen treten zur Seite. Hauptschalter, offene Fenster,
+Außengrenzen, Jahreszeit, Kurzzyklusschutz und Kreise gelten weiter. Ein
+gemeinsamer Kessel startet jede Zone, die er bedient; ein Gerät mit *Dieses Gerät
+automatisch einschalten* aus zählt nicht, weil der Director das Einschalten dort
+nie regelt. In einer Zone, die auf nichts wartet, tut die Taste nichts. Der
+Handstart erlischt auch beim Schlafen, bei leerem Haus oder am nächsten Tag. Die
+Entscheidung nennt die Zone im Attribut `hand_starts`.
+
 ### Zeitpläne
 
 Nachdem du einen Bewohner gespeichert hast, legst du seine Zeitpläne an:
@@ -712,6 +728,7 @@ Ein Gerät pro Installation, darunter:
 | `number.*_prioritat_<zone>` | der Vorrang dieser Zone; auch aus einer Automatisierung setzbar |
 | `number.*_vorbereitungsdauer` | wie lange eine Vorbereitung nach einem Tastendruck dauert |
 | `button.*_<zone>_vorbereiten` | heizt oder kühlt diese Zone vor |
+| `button.*_<zone>_von_hand_starten` | startet diese Zone von Hand durch das Warten auf einen Schläfer, die Aufsteh-Bremse oder das Ruhefenster |
 | `select.*_jahreszeit` | stellt die Jahreszeit von Hand auf Automatisch, Sommer oder Winter; die Wahl überlebt einen Neustart |
 
 Die Namen dieser Entitäten werden übersetzt, und Home Assistant leitet die
@@ -756,6 +773,8 @@ einer Ruhezeit oder einer Anforderung). So bleibt eine Zone, in der sich nichts
   Director das unter *Reparaturen*.
 - **Taste „Vorbereiten“** (`button.*_<zone>_vorbereiten`) und **Dauer**
   (`number.*_vorbereitungsdauer`): siehe unten.
+- **Von Hand starten** (`button.*_<zone>_von_hand_starten`): startet diese Zone
+  selbst, während das Haus noch wartet; siehe *Von Hand starten* in Schritt 10.
 
 ## Aktionen
 
