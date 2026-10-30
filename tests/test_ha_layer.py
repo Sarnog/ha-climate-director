@@ -214,6 +214,7 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
             self._precipitation_seen_at: datetime | None = None
             self._home_since: dict[str, datetime] = {}
             self._asleep_since: datetime | None = None
+            self._hand_starts: dict[str, datetime] = {}
             self._handed_back: dict = {}
             self._empty_since: dict[str, datetime] = {}
             self._occupied_rooms: set[str] = set()

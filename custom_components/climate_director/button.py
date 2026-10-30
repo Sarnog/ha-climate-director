@@ -1,6 +1,6 @@
-"""De knop die een kamer vooruit laat verwarmen of koelen.
+"""De knoppen die een kamer vooruit laten werken of met de hand laten starten.
 
-The button that warms or cools one room ahead of time.
+The buttons that pre-condition one room or start it by hand.
 
 Vooruit verwarmen bestond al als actie, en dat is precies het probleem: een
 actie vind je alleen als je weet dat hij bestaat. Er was nergens iets om op te
@@ -41,16 +41,22 @@ async def async_setup_entry(
     entry: ClimateDirectorEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up one pre-conditioning button per zone."""
+    """Set up one pre-conditioning and one hand-start button per zone."""
     coordinator = entry.runtime_data
     async_add_entities(
         ZonePreconditionButton(coordinator, zone.zone_id) for zone in coordinator.config.zones
+    )
+    async_add_entities(
+        ZoneHandStartButton(coordinator, zone.zone_id) for zone in coordinator.config.zones
     )
 
 
 def wanted_entity_keys(config: DirectorConfig) -> set[str]:
     """Return every unique-id key this platform will create for `config`."""
-    return {f"zone_{zone.zone_id}_precondition" for zone in config.zones}
+    return {
+        *(f"zone_{zone.zone_id}_precondition" for zone in config.zones),
+        *(f"zone_{zone.zone_id}_hand_start" for zone in config.zones),
+    }
 
 
 class ZonePreconditionButton(ClimateDirectorEntity, ButtonEntity):
@@ -86,6 +92,37 @@ class ZonePreconditionButton(ClimateDirectorEntity, ButtonEntity):
         wrong.
         """
         self.coordinator.async_precondition([self._zone_id], self.coordinator.precondition_minutes)
+
+    def _handle_coordinator_update(self) -> None:
+        """Ignore coordinator updates: this button is an input, not an output."""
+
+
+class ZoneHandStartButton(ClimateDirectorEntity, ButtonEntity):
+    """Starts one zone by hand while the house is still waiting."""
+
+    _attr_translation_key = "zone_hand_start"
+    _attr_entity_category = None
+    _attr_icon = "mdi:gesture-tap-button"
+
+    def __init__(self, coordinator: ClimateDirectorCoordinator, zone_id: str) -> None:
+        """Set up the hand-start button for one zone."""
+        super().__init__(coordinator, f"zone_{zone_id}_hand_start")
+        self._zone_id = zone_id
+        zone = coordinator.config.zone(zone_id)
+        self._attr_translation_placeholders = {"zone": zone.name if zone else zone_id}
+
+    async def async_press(self) -> None:
+        """Hand this zone to the director through the three waiting brakes.
+
+        In een zone die nergens op wacht doet de knop niets en geeft hij geen
+        fout: er valt niets te overbruggen. De coordinator leest daarvoor de
+        verse wereld, niet de vorige beslissing.
+
+        In a zone that waits on nothing the button does nothing and raises no
+        error: there is nothing to bridge. The coordinator reads the fresh world
+        for that, not the previous decision.
+        """
+        self.coordinator.async_hand_start(self._zone_id)
 
     def _handle_coordinator_update(self) -> None:
         """Ignore coordinator updates: this button is an input, not an output."""

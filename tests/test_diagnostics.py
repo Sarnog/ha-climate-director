@@ -238,6 +238,7 @@ class TestThePrivacyRedaction:
             "holiday_mode",
             "zone_overrides",
             "zone_hands",
+            "zone_hand_starts",
         }
         from homeassistant.components.diagnostics.util import REDACTED
 

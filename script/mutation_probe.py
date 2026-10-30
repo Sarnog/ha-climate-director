@@ -85,6 +85,56 @@ MUTATIONS = [
         ),
         "new": "                if self.zone_overrides.get(zone, False)",
     },
+    {
+        "name": "handstart-poort-dicht",
+        "file": "custom_components/climate_director/engine/hand_start.py",
+        "old": "    return zone_id in world.zone_hand_starts and reason in HAND_START_BRAKES",
+        "new": "    return False",
+    },
+    {
+        "name": "handstart-vervalt-nooit",
+        "file": "custom_components/climate_director/hand_start.py",
+        "old": (
+            "                    or not hand_start.brakes_remaining("
+            "self.config, world, zone, previous)"
+        ),
+        "new": "                    or False",
+    },
+    {
+        "name": "handstart-knop-zonder-rem",
+        "file": "custom_components/climate_director/hand_start.py",
+        "old": (
+            "        if not hand_start.brakes_remaining(\n"
+            "            self.config, self.build_world(), zone, self._published_plan()\n"
+            "        ):\n"
+            "            return"
+        ),
+        "new": "        if False:\n            return",
+    },
+    {
+        "name": "handstart-bron-zonder-autostart",
+        "file": "custom_components/climate_director/hand_start.py",
+        "old": "                if source.entity_id != entity_id or not source.autostart:",
+        "new": "                if source.entity_id != entity_id:",
+    },
+    {
+        "name": "handstart-deelt-niet",
+        "file": "custom_components/climate_director/hand_start.py",
+        "old": "                for zone_id in (zone.zone_id, *source.covers_zones):",
+        "new": "                for zone_id in (zone.zone_id,):",
+    },
+    {
+        "name": "handstart-eigen-aanzet-telt",
+        "file": "custom_components/climate_director/hand_start.py",
+        "old": ("        if self._we_wanted_it_on(entity_id, duty):\n            return"),
+        "new": "        if False:\n            return",
+    },
+    {
+        "name": "handstart-niet-bewaard",
+        "file": "custom_components/climate_director/state_store.py",
+        "old": '            "hand_starts": getattr(self, "_hand_starts_payload", dict)(),',
+        "new": '            "hand_starts": {},',
+    },
 ]
 
 

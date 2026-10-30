@@ -25,6 +25,9 @@
     "button": {
       "zone_precondition": {
         "default": "mdi:timer-play-outline"
+      },
+      "zone_hand_start": {
+        "default": "mdi:gesture-tap-button"
       }
     },
     "number": {

@@ -687,6 +687,17 @@ class TestAGeneratorCountsForItsZones:
         item = coordinator(running_plan("climate.ketel"), cfg=cfg)
         assert item._zones_of("climate.ketel") == ("woonkamer",)
 
+    def test_an_unrelated_appliance_gets_no_generator_zones(self) -> None:
+        """Een apparaat dat geen bron en geen generator is, levert geen zones op."""
+        from custom_components.climate_director.engine import Generator
+
+        cfg = DirectorConfig(
+            zones=config().zones,
+            generators=(Generator("ketel", "Ketel", "climate.ketel"),),
+        )
+        item = coordinator(running_plan(), cfg=cfg)
+        assert item._zones_of("climate.onbekend") == ()
+
     def test_a_generator_serving_every_zone_reports_every_zone(self) -> None:
         from custom_components.climate_director.engine import Generator
 
@@ -1032,6 +1043,7 @@ class TestItSurvivesARestart:
             def __init__(self) -> None:
                 self._precondition: dict = {}
                 self._precondition_bypass: set[str] = set()
+                self._hand_starts: dict[str, datetime] = {}
                 self._handed_back: dict[str, date] = {}
                 # Een override in deze stand-in is er niet; het herstel leest de
                 # lege stand en laat een hand dus staan.
@@ -1084,6 +1096,7 @@ class TestItSurvivesARestart:
             _store_payload = ClimateDirectorCoordinator._store_payload
             _room_presence_payload = ClimateDirectorCoordinator._room_presence_payload
             _restore_room_presence = ClimateDirectorCoordinator._restore_room_presence
+            _restore_hand_starts = ClimateDirectorCoordinator._restore_hand_starts
             _async_save_state = ClimateDirectorCoordinator._async_save_state
             _async_restore_state = ClimateDirectorCoordinator._async_restore_state
 

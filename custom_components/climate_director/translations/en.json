@@ -721,6 +721,9 @@
     "button": {
       "zone_precondition": {
         "name": "{zone} pre-condition"
+      },
+      "zone_hand_start": {
+        "name": "Start {zone} by hand"
       }
     },
     "switch": {

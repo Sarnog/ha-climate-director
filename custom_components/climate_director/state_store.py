@@ -132,6 +132,7 @@ class _StateStoreMixin(_CoordinatorBase):
             "bypass": sorted(self._precondition_bypass),
             "handed_back": {zone_id: day.isoformat() for zone_id, day in self._handed_back.items()},
             **self._room_presence_payload(),
+            "hand_starts": getattr(self, "_hand_starts_payload", dict)(),
             "home_since": {
                 resident_id: since.isoformat()
                 for resident_id, since in getattr(self, "_home_since", {}).items()
@@ -383,7 +384,7 @@ class _StateStoreMixin(_CoordinatorBase):
                     self._handed_back[zone_id] = day
 
         self._restore_room_presence(stored, now)
-
+        getattr(self, "_restore_hand_starts", lambda *_: None)(stored, now)
         home_raw = stored.get("home_since")
         if isinstance(home_raw, Mapping):
             presence = {
@@ -396,7 +397,6 @@ class _StateStoreMixin(_CoordinatorBase):
                 if since is None or not reads_as_home(self.hass.states.get(presence[resident_id])):
                     continue
                 self._home_since[resident_id] = since
-
         self._asleep_since = _stored_time(stored.get("asleep_since"))
         if hasattr(self, "_restore_overrides"):
             self._restore_overrides(stored, now)

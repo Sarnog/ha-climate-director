@@ -456,9 +456,19 @@ FUNCTION_LIMIT = 80
 # `preconditions.py` (setting and cancelling), `overrides.py` (setting and ending) and
 # `switch.py` (the override switch) - all three below their measure, like
 # `state_store.py` (493). What grows is mostly explanation.
+#
+# De handstart verhuist de hand- en kamerpoorthulpjes naar `hand_start.py`:
+# `coordinator.py` 2250 → 2138 en zijn `__init__` blijft 285 (één beginwaarde
+# erbij, één lege regel eruit). De nieuwe mixin en engine-module blijven onder
+# de maat; de functies in `engine/gates.py` blijven onder de tachtig.
+#
+# The hand start moves the hand and room-gate helpers to `hand_start.py`:
+# `coordinator.py` 2250 → 2138 and its `__init__` stays 285 (one starting value
+# more, one blank line less). The new mixin and engine module stay under the
+# measure; the functions in `engine/gates.py` stay under eighty.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2272,
-    "coordinator.py": 2250,
+    "coordinator.py": 2138,
     "engine/decide.py": 1810,
     "config_flow.py": 1492,
     "schemas.py": 893,
@@ -475,7 +485,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("coordinator.py", "_notice_hand"): 137,
     ("engine/decide.py", "_build_zone_decisions"): 135,
     ("engine/decide.py", "_manual_conflict"): 103,
-    ("state_store.py", "_async_restore_state"): 138,
+    ("state_store.py", "_async_restore_state"): 137,
     ("state_store.py", "_restore_overrides"): 81,
     ("engine/hysteresis.py", "_candidate"): 97,
     ("config_flow.py", "async_step_resident"): 97,

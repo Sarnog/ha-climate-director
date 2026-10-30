@@ -148,7 +148,7 @@ EXCLUSION_HINT = (
 #: line it hits disappears from "zero missed lines" without anyone naming it.
 #: Hence every statement line stands below with its own content — the
 #: `...` stubs of `coordinator.py` (the `CoordinatorSurface` protocol, which
-#: exists for the type check only) and three in each of the five mixins
+#: exists for the type check only) and three in each of the six mixins
 #: that import that protocol under `TYPE_CHECKING` (that branch is never true at
 #: run time). The gate demands the list to be exact: a line that falls outside the
 #: measurement without standing here drops it, and so does a name that hides
@@ -158,6 +158,10 @@ NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {
         "def entry(self) -> ClimateDirectorEntry: ...",
         "def async_request_evaluation(self) -> None: ...",
         "def _async_save_state(self) -> None: ...",
+        "def build_world(self) -> WorldState: ...",
+        "def _we_wanted_it_on(self, entity_id: str, family: ModeFamily) -> bool: ...",
+        "def _hand_starts_payload(self) -> dict[str, Any]: ...",
+        "def _restore_hand_starts(self, stored: Mapping[str, Any], now: datetime) -> None: ...",
         "def _note_by_hand_before_restore(",
         ") -> None: ...",
         "def _lift_hand(self, zone_id: str) -> None: ...",
@@ -169,6 +173,11 @@ NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {
         "def _calendar_says_holiday(self) -> bool: ...",
         "def _zones_handed_back(",
         ") -> set[str]: ...",
+    ),
+    "hand_start.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import CoordinatorSurface",
+        "_CoordinatorBase = CoordinatorSurface",
     ),
     "overrides.py": (
         "if TYPE_CHECKING:",

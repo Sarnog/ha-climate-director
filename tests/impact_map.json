@@ -67,10 +67,10 @@
   "custom_components/climate_director/engine/sources.py",
   "custom_components/climate_director/engine/takeover.py",
   "custom_components/climate_director/engine/world.py",
+  "custom_components/climate_director/hand_start.py",
   "custom_components/climate_director/preconditions.py",
   "custom_components/climate_director/state_store.py",
-  "custom_components/climate_director/world_builder.py",
-  "tests/test_campaign_year.py"
+  "custom_components/climate_director/world_builder.py"
  ],
  "tests/test_campaign_year.py": [
   "custom_components/climate_director/coordinator.py",
@@ -87,6 +87,7 @@
   "custom_components/climate_director/engine/sources.py",
   "custom_components/climate_director/engine/takeover.py",
   "custom_components/climate_director/engine/world.py",
+  "custom_components/climate_director/hand_start.py",
   "custom_components/climate_director/preconditions.py",
   "custom_components/climate_director/state_store.py",
   "custom_components/climate_director/world_builder.py"
@@ -351,8 +352,7 @@
   "docs/install/en.md",
   "docs/install/es.md",
   "docs/install/fr.md",
-  "docs/install/nl.md",
-  "tests/test_guide_inventory.py"
+  "docs/install/nl.md"
  ],
  "tests/test_guide_dashboard.py": [
   "custom_components/climate_director/translations/ar.json",
@@ -462,9 +462,7 @@
   "custom_components/climate_director/engine/world.py",
   "custom_components/climate_director/number.py",
   "custom_components/climate_director/problems.py",
-  "custom_components/climate_director/schema_fields.py",
   "custom_components/climate_director/schemas.py",
-  "custom_components/climate_director/strings.json",
   "custom_components/climate_director/texts.py",
   "custom_components/climate_director/units.py",
   "custom_components/climate_director/world_builder.py"
@@ -486,6 +484,7 @@
   "custom_components/climate_director/engine/sources.py",
   "custom_components/climate_director/engine/takeover.py",
   "custom_components/climate_director/engine/world.py",
+  "custom_components/climate_director/hand_start.py",
   "custom_components/climate_director/preconditions.py",
   "custom_components/climate_director/room_presence.py",
   "custom_components/climate_director/sensor.py",
@@ -509,6 +508,7 @@
   "custom_components/climate_director/engine/sources.py",
   "custom_components/climate_director/engine/takeover.py",
   "custom_components/climate_director/engine/world.py",
+  "custom_components/climate_director/hand_start.py",
   "custom_components/climate_director/preconditions.py",
   "custom_components/climate_director/state_store.py",
   "custom_components/climate_director/world_builder.py"
@@ -542,6 +542,13 @@
   "custom_components/climate_director/engine/night.py",
   "custom_components/climate_director/engine/world.py"
  ],
+ "tests/test_hand_start_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
  "tests/test_handed_back.py": [
   "custom_components/climate_director/coordinator.py",
   "custom_components/climate_director/engine/decide.py",
@@ -555,6 +562,7 @@
   "custom_components/climate_director/engine/plan.py",
   "custom_components/climate_director/engine/takeover.py",
   "custom_components/climate_director/engine/world.py",
+  "custom_components/climate_director/hand_start.py",
   "custom_components/climate_director/preconditions.py",
   "custom_components/climate_director/room_presence.py",
   "custom_components/climate_director/state_store.py",
@@ -624,6 +632,7 @@
   "custom_components/climate_director/engine/sources.py",
   "custom_components/climate_director/engine/takeover.py",
   "custom_components/climate_director/engine/world.py",
+  "custom_components/climate_director/hand_start.py",
   "custom_components/climate_director/preconditions.py"
  ],
  "tests/test_imperial_units.py": [
@@ -705,6 +714,7 @@
   "custom_components/climate_director/engine/sources.py",
   "custom_components/climate_director/engine/takeover.py",
   "custom_components/climate_director/engine/world.py",
+  "custom_components/climate_director/hand_start.py",
   "custom_components/climate_director/preconditions.py",
   "custom_components/climate_director/state_store.py",
   "custom_components/climate_director/world_builder.py"
@@ -867,8 +877,6 @@
   "custom_components/climate_director/engine/takeover.py",
   "custom_components/climate_director/engine/world.py",
   "custom_components/climate_director/preconditions.py",
-  "custom_components/climate_director/schema_fields.py",
-  "custom_components/climate_director/schemas.py",
   "custom_components/climate_director/state_store.py",
   "custom_components/climate_director/units.py",
   "custom_components/climate_director/world_builder.py"
@@ -952,6 +960,7 @@
   "custom_components/climate_director/engine/sources.py",
   "custom_components/climate_director/engine/takeover.py",
   "custom_components/climate_director/engine/world.py",
+  "custom_components/climate_director/hand_start.py",
   "custom_components/climate_director/preconditions.py",
   "custom_components/climate_director/state_store.py",
   "custom_components/climate_director/world_builder.py"

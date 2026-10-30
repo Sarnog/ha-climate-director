@@ -32,6 +32,7 @@ EXPECTED: dict[str, dict[str, EntityCategory | None]] = {
     },
     "button": {
         "zone_precondition": None,
+        "zone_hand_start": None,
     },
     "number": {
         "zone_priority": EntityCategory.CONFIG,

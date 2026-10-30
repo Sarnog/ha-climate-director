@@ -154,8 +154,10 @@ class DecisionSensor(ClimateDirectorEntity, SensorEntity):
         plan = self.coordinator.data
         if plan is None:
             return {}
+        world = self.coordinator.world
         return {
             "shadow_mode": self.coordinator.shadow,
+            "hand_starts": sorted(world.zone_hand_starts) if world is not None else [],
             "commands": [
                 {
                     "entity_id": command.entity_id,

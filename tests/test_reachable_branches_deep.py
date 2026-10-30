@@ -735,7 +735,11 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
 #: naam, waar er eerst één was. 24 → 29: de kamerpoort (N9) vraagt twee
 #: protocolregels (`_room_presence_payload` en `_restore_room_presence`, voor de
 #: opslag) en is zelf een vijfde mixin met dezelfde drie TYPE_CHECKING-regels; die
-#: vijf regels bestaan alleen voor de typecontrole en zijn niet te meten.
+#: vijf regels bestaan alleen voor de typecontrole en zijn niet te meten. 29 → 36:
+#: de handstartmixin is de zesde mixin met dezelfde drie TYPE_CHECKING-regels, en
+#: de coordinator leent haar vier protocolleden (`build_world`,
+#: `_we_wanted_it_on`, `_hand_starts_payload` en `_restore_hand_starts`); die
+#: zeven regels bestaan alleen voor de typecontrole en zijn niet te meten.
 #:
 #: The number of named exclusions of the gate. The whitelist may only get shorter:
 #: every line added to it is a line the measurement no longer covers, and without
@@ -751,8 +755,12 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
 #: before. 24 → 29: the room gate (N9) asks for two protocol lines
 #: (`_room_presence_payload` and `_restore_room_presence`, for the store) and is a
 #: fifth mixin itself with the same three TYPE_CHECKING lines; those five lines
-#: exist for the type check only and cannot be measured.
-NAMED_EXCLUSIONS_BUDGET = 29
+#: exist for the type check only and cannot be measured. 29 → 36: the hand-start
+#: mixin is the sixth mixin with the same three TYPE_CHECKING lines, and the
+#: coordinator lends it four protocol members (`build_world`,
+#: `_we_wanted_it_on`, `_hand_starts_payload` and `_restore_hand_starts`); those
+#: seven lines exist for the type check only and cannot be measured.
+NAMED_EXCLUSIONS_BUDGET = 36
 
 
 def test_the_named_exclusions_are_a_ratchet() -> None:
