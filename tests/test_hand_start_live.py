@@ -375,6 +375,63 @@ class TestHandStartAtTheAppliance:
         finally:
             await stop_house(home)
 
+    async def test_a_new_reading_of_a_running_appliance_notes_no_hand_start(self) -> None:
+        """Een apparaat dat al aan staat en een nieuwe meting meldt, is geen aanzet.
+
+        Een klimaatapparaat meldt zijn gemeten temperatuur elke paar minuten als
+        nieuwe toestand terwijl de stand `heat` blijft. Zonder de familiecontrole
+        zou elke zo'n melding in een wachtende zone een handstart worden.
+
+        A climate appliance reports its measured temperature as a new state every
+        few minutes while the mode stays `heat`. Without the family check every
+        such report would become a hand start in a waiting zone.
+        """
+        home = await start_house(
+            installation(deadline=False), states=world(danny_asleep=False, nancy_asleep=False)
+        )
+        try:
+            coordinator = home.coordinator
+            coordinator._we_wanted_it_on = lambda *_: False
+            coordinator._waiting_on_a_brake = lambda *_: True
+            coordinator._notice_hand_start(  # type: ignore[arg-type]
+                SimpleNamespace(
+                    data={
+                        "entity_id": LIVING,
+                        "old_state": SimpleNamespace(state="heat"),
+                        "new_state": SimpleNamespace(state="heat"),
+                    }
+                )
+            )
+            assert coordinator._hand_starts == {}
+        finally:
+            await stop_house(home)
+
+    async def test_an_appliance_in_a_zone_that_waits_on_nothing_notes_no_hand_start(self) -> None:
+        """Wie een apparaat aanzet in een zone zonder wachtreden, start niets.
+
+        De herkenning leest de laatste beslissing: noemt die geen van de drie
+        remmen, dan wordt er niets genoteerd - niet pas bij de volgende ronde
+        weggehaald.
+
+        Whoever switches an appliance on in a zone without a waiting reason
+        starts nothing. Recognition reads the last decision: when it names none of
+        the three brakes, nothing is noted - not first removed in the next round.
+        """
+        home = await start_house(
+            installation(deadline=False), states=world(danny_asleep=False, nancy_asleep=False)
+        )
+        try:
+            home.set(LIVING_SENSOR, "24.0")
+            await decide(home)
+            assert reason(home) != "waiting_for_sleeper"
+            noted: list[tuple[str, ...]] = []
+            home.coordinator._remember_hand_starts = noted.append  # type: ignore[method-assign]
+            home.climate(LIVING, "heat", current=24.0)
+            await home.settle()
+            assert noted == []
+        finally:
+            await stop_house(home)
+
 
 class TestHandStartAtTheButton:
     async def test_the_button_starts_a_waiting_zone(self, clock) -> None:
@@ -401,6 +458,33 @@ class TestHandStartAtTheButton:
             home.coordinator.async_hand_start("onbekend")
             home.coordinator._remember_hand_starts(("woonkamer", "onbekend"))
             assert home.coordinator._hand_starts == fresh
+        finally:
+            await stop_house(home)
+
+    async def test_the_button_asks_for_a_decision_by_itself(self, clock) -> None:
+        """Na een druk op de knop beslist de director zelf opnieuw, zonder andere aanleiding.
+
+        De andere toetsen roepen `evaluate` zelf aan; hier alleen de debouncer, zoals
+        in een draaiend huis. Zonder eigen verzoek wacht de zone op de klok van een
+        minuut.
+
+        After a press of the button the director decides again by itself, with no
+        other trigger. The other tests call `evaluate` themselves; here only the
+        debouncer, as in a running house. Without its own request the zone waits for
+        the one-minute clock.
+        """
+        home = await start_house(installation(), states=world(danny_asleep=True, nancy_asleep=True))
+        try:
+            await a_slept_night(home, clock)
+            assert reason(home) == "waiting_for_sleeper"
+            await home.call(
+                "button",
+                "press",
+                {"entity_id": home.by_key("zone_woonkamer_hand_start")},
+            )
+            await asyncio.sleep(1.5)
+            await home.settle()
+            assert reason(home) == "regulating"
         finally:
             await stop_house(home)
 
