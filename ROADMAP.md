@@ -18,6 +18,14 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 
 ## Should have
 
+- **Een handstart overleeft een slaap- of aanwezigheidssensor die even wegvalt niet** —
+  `_settle_hand_starts` laat de handstart vallen in de eerste ronde waarin de drie remmen
+  de zone niet meer tegenhouden, en leest de slaapsensor en de aanwezigheidsentiteit
+  daarvoor rauw. Eén ronde `unavailable` (of een telefoon die even van de lader gaat) maakt
+  de slaper "wakker", de handstart is weg, en zodra de sensor terugkomt wacht de zone weer
+  en zet de director de met de hand aangezette airco uit — precies wat de handstart moest
+  voorkomen. Laat een handstart alleen vervallen na een leesbare ronde, of geef hem een
+  korte nalooptijd zoals de kamerpoort die kent.
 - **Virtuele `climate` per zone** — één bedieningsentiteit per ruimte, waarmee de gewenste
   temperatuur en stand rechtstreeks op een gewone thermostaatkaart te bedienen zijn. De
   director kiest daar dan de bron bij.
@@ -48,6 +56,23 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   dat een doel gelijk aan het uitschakelpunt geen marge laat.
 ## Could have
 
+- **De hand en de handstart staan door elkaar in `hand_start.py`** — `_zones_of`,
+  `_zones_handed_back`, `_everyone_asleep` en `_house_is_empty` horen bij de hand (anker 11)
+  en verhuisden uit de coordinator naar de handstartmodule, terwijl een handstart geen hand
+  is. Naar de overridemodule of een eigen module in de opruimronde van de code-indeling;
+  ARCHITECTURE noemt de module nu alleen "herkenning, opslag en verval" van de handstart.
+- **De mutatieprobe draait na een versiecommit alle mutaties** — alleen `manifest.json` en
+  `pyproject.toml` veranderen, maar `pyproject.toml` geldt als gedeeld hulpbestand en laat
+  alle veertien mutaties draaien (ruim anderhalf uur). Een padvoorwaarde die een
+  wijziging van alleen de versieregel negeert, bespaart die run.
+- **De gidsen citeren de handstartknop op twee manieren** — fr, es en ar noemen het
+  schermwoord met `{zone}` (*Démarrer {zone} manuellement*), nl, en en de zonder (*Met de
+  hand starten*, *Start by hand*, *Von Hand starten*). Eén vorm, met een toets erop.
+- **De knop *Met de hand starten* bewaart ook in schaduwmodus een handstart** — de
+  herkenning aan het apparaat slaat schaduwmodus over, de knop niet; bij het verlaten van
+  schaduwmodus later die dag start de zone dan alsnog. De vooruit-knop en de
+  overrideschakelaar kijken evenmin naar schaduwmodus, dus het is een keuze: alle
+  invoer negeren of alle invoer bewaken.
 - **Een aanwezigheidsentiteit die helemaal uit de toestandsmachine verdwijnt, krijgt geen
   nalooptijd** — de kamerpoort noteert wel een vertrekmoment als de entiteit van een
   bezette kamer verdwijnt (of bij een herstart ontbreekt), maar `world_builder._presence`
@@ -291,6 +316,14 @@ The worked-out design proposals for everything below live in
 
 ## Should have
 
+- **A hand start does not survive a sleep or presence sensor that drops out briefly** —
+  `_settle_hand_starts` lets the hand start lapse in the first round in which the three
+  brakes no longer hold the zone, and reads the sleep sensor and the presence entity raw
+  for that. One round of `unavailable` (or a phone briefly leaving its charger) makes the
+  sleeper "wake", the hand start is gone, and once the sensor returns the zone waits again
+  and the director switches the hand-started air conditioner off — exactly what the hand
+  start was meant to prevent. Let a hand start lapse only after a readable round, or give
+  it a short grace period like the room gate has.
 - **A virtual `climate` per zone** — one control entity per room, so the target temperature
   and mode can be set straight from an ordinary thermostat card. The director then picks the
   source to match.
@@ -321,6 +354,23 @@ The worked-out design proposals for everything below live in
 
 ## Could have
 
+- **The hand and the hand start are mixed in `hand_start.py`** — `_zones_of`,
+  `_zones_handed_back`, `_everyone_asleep` and `_house_is_empty` belong to the hand
+  (anchor 11) and moved out of the coordinator into the hand-start module, although a hand
+  start is not a hand. Move them to the override module or a module of their own in the
+  clean-up round of the code layout; ARCHITECTURE now describes the module only as the
+  hand start's "recognition, storage and expiry".
+- **The mutation probe runs every mutation after a version commit** — only `manifest.json`
+  and `pyproject.toml` change, but `pyproject.toml` counts as a shared helper file and
+  makes all fourteen mutations run (well over an hour and a half). A path condition that
+  ignores a change to the version line alone would save that run.
+- **The guides cite the hand-start button in two ways** — fr, es and ar give the screen
+  word with `{zone}` (*Démarrer {zone} manuellement*), nl, en and de without (*Met de hand
+  starten*, *Start by hand*, *Von Hand starten*). One form, with a test on it.
+- **The *Start by hand* button also keeps a hand start in shadow mode** — recognition at
+  the appliance skips shadow mode, the button does not; when shadow mode is left later that
+  day the zone starts after all. The pre-conditioning button and the override switch do not
+  look at shadow mode either, so it is a choice: ignore all input or guard all input.
 - **A presence entity that disappears from the state machine altogether gets no grace
   period** — the room gate does note a departure moment when the entity of an occupied
   room disappears (or is missing at a restart), but `world_builder._presence` passes no
