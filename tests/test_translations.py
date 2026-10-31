@@ -754,6 +754,12 @@ TERMINOLOGY: dict[str, tuple[tuple[str, str, str], ...]] = {
             "het scherm noemt de installatie *المنشأة*; *التركيب* is een eigen woord voor "
             "hetzelfde ding, terwijl de vorm *التركيبة* buiten deze naald blijft",
         ),
+        (
+            "الكوابع",
+            "الكوابح",
+            "het meervoud van *كابح* (rem) is *كوابح*; *كوابع* bestaat niet en stond in de "
+            "gids van de handstart, waar het de drie wachtrema's noemde",
+        ),
     ),
 }
 
