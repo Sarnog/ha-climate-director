@@ -1232,8 +1232,21 @@ aanroep — hetzelfde patroon als `ConfirmRepairFlow` uit core.
 ### Nog te bouwen — ontwerpvoorstellen
 
 De ideeënbus staat in [`ROADMAP.md`](ROADMAP.md); hier staat per idee het ontwerp, zodat
-duidelijk is wat het inhoudt vóór eraan begonnen wordt. De prioriteiten (should/could/would)
+duidelijk is wat het inhoudt vóór eraan begonnen wordt. De prioriteiten (must/should/could/would)
 volgen de ROADMAP.
+
+#### Must have
+
+**Temperatuurschema per zone.** `Zone.schedule`: vensters met een eigen streeftemperatuur;
+`hysteresis.py` kiest het geldende setpoint op de klok. De config-flow-editor voor zo'n
+schema is het meeste werk.
+- Gebruik: de woonkamer overdag op 21 °C en 's avonds op 23 °C, de zolder het hele etmaal op
+  21 °C. Een zone zonder schema gedraagt zich exact als nu (`serialise.py` valt terug op het
+  vaste doel).
+- Per venster horen ook `start_at` en de uitschakelmarge mee te bewegen, anders start de zone
+  pas bij een waarde boven het doel van dat venster.
+- Open keuze: wat er gebeurt buiten alle vensters (het vaste doel van de zone is de
+  voor de hand liggende terugval), en of vensters over middernacht heen mogen lopen.
 
 #### Should have
 
@@ -1317,10 +1330,6 @@ als de ruimtesensor het uitschakelpunt haalt.
 **Huisbreed vermogensplafond.** `Source.wattage` + `DirectorConfig.watt_limit`; na de
 circuitresolutie snoeit een nieuwe installatiebrede stap in `constraints.py` de winnaars op
 watt, op zone-prioriteit, en houdt alleen starts tegen (nooit stops).
-
-**Temperatuurschema per zone.** `Zone.schedule`: vensters met een eigen streeftemperatuur;
-`hysteresis.py` kiest het geldende setpoint op de klok. De config-flow-editor voor zo'n
-schema is het meeste werk.
 
 **Suggestie voor circuitgroepering.** Alleen config-flow: groepeer gekozen
 climate-entiteiten op gedeeld `device` / `via_device` / fabrikant en bied het als
@@ -2798,8 +2807,21 @@ same pattern as core's `ConfirmRepairFlow`.
 ### Still to build — design proposals
 
 The ideas box lives in [`ROADMAP.md`](ROADMAP.md); here stands the design per idea, so it
-is clear what it entails before any work starts. The priorities (should/could/would) follow
+is clear what it entails before any work starts. The priorities (must/should/could/would) follow
 the ROADMAP.
+
+#### Must have
+
+**A temperature schedule per zone.** `Zone.schedule`: windows with their own target
+temperature; `hysteresis.py` picks the setpoint that applies by the clock. The config-flow
+editor for such a schedule is the bulk of the work.
+- Use: the living room at 21 °C during the day and 23 °C in the evening, the attic at 21 °C
+  around the clock. A zone without a schedule behaves exactly as now (`serialise.py` falls
+  back to the fixed target).
+- Each window should also move `start_at` and the switch-off margin along, otherwise the
+  zone only starts at a value above that window's target.
+- Open choice: what happens outside all windows (the zone's fixed target is the obvious
+  fallback), and whether windows may run across midnight.
 
 #### Should have
 
@@ -2883,10 +2905,6 @@ once the room sensor reaches the switch-off point.
 **A house-wide power ceiling.** `Source.wattage` + `DirectorConfig.watt_limit`; after the
 circuit resolution a new installation-wide step in `constraints.py` trims the winners by
 watts, on zone priority, and only ever holds back starts (never stops).
-
-**A temperature schedule per zone.** `Zone.schedule`: windows with their own target
-temperature; `hysteresis.py` picks the setpoint that applies by the clock. The config-flow
-editor for such a schedule is the bulk of the work.
 
 **Suggested circuit grouping.** Config flow only: group chosen climate entities on shared
 `device` / `via_device` / manufacturer and offer it as a suggestion button. No engine

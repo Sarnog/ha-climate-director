@@ -5,7 +5,7 @@
 # Routekaart
 
 Dit bestand is de ideeënbus van deze integratie: toekomstige aanpassingen, verbeteringen
-en uitbreidingen die nog **niet** gebouwd zijn, geordend als *should have* (waarschijnlijk
+en uitbreidingen die nog **niet** gebouwd zijn, geordend als *must have* (hoort er zeker bij), *should have* (waarschijnlijk
 waardevol), *could have* (leuk, situationeel) en *would have* (later, apart traject). Nog
 niet alles is besproken of goedgekeurd — het is een verzamelplek om uit te kiezen, te
 prioriteren of af te wijzen.
@@ -15,6 +15,17 @@ De geschiedenis van wat er al gebouwd en gewijzigd is, staat **niet** hier maar 
 
 De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 [`ARCHITECTURE.md`](ARCHITECTURE.md) onder "Nog te bouwen".
+
+## Must have
+
+- **Temperatuurschema per zone** — een streeftemperatuur die met de klok meebeweegt, in
+  plaats van één waarde per zone die alleen door de poorten aan- en uitgezet wordt.
+  Voorbeeld: de woonkamer overdag op 21 °C en 's avonds op 23 °C, terwijl de zolder het
+  hele etmaal op 21 °C blijft. Een vast dagritme hoort in de config te staan: een
+  override is bedoeld om tijdelijk met de hand in te grijpen (met een maximale duur) en
+  is daarvoor niet de bedoelde route, ook niet vanuit een automatisering. Per venster
+  hoort ook het aanpunt mee te bewegen, anders start de zone pas bij een waarde die hoger
+  ligt dan het doel van dat venster.
 
 ## Should have
 
@@ -123,9 +134,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   boven die intensiteit de buitengrens opzij zet. De drempel hoort per zone instelbaar te
   zijn: een achterdeur mag bij een lichte bui best open blijven, terwijl een schuin dakraam
   bij de minste neerslag al dicht moet.
-- **Temperatuurschema per zone** — een streeftemperatuur die met de klok meebeweegt
-  (nacht koeler, ochtend warmer), in plaats van één waarde per zone die alleen door de
-  poorten aan- en uitgezet wordt.
 - **Suggestie voor circuitgroepering** — voorstellen welke binnenunits een buitenunit delen
   op basis van gedeeld `device` / `via_device` / fabrikant, uitdrukkelijk als voorstel en
   niet als feit, omdat de meeste klimaatintegraties die relatie niet blootgeven.
@@ -304,7 +312,7 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 # Roadmap
 
 This file is this integration's ideas box: future changes, improvements and additions not
-yet built, ordered as *should have* (probably valuable), *could have* (nice, situational)
+yet built, ordered as *must have* (certainly belongs), *should have* (probably valuable), *could have* (nice, situational)
 and *would have* (later, a separate effort). Not everything here has been discussed or
 approved — it is a place to pick from, prioritise or reject.
 
@@ -313,6 +321,16 @@ The history of what has already been built and changed is **not** here but in th
 
 The worked-out design proposals for everything below live in
 [`ARCHITECTURE.md`](ARCHITECTURE.md) under "Still to build".
+
+## Must have
+
+- **A temperature schedule per zone** — a target that moves with the clock, instead of one
+  value per zone that the gates merely switch on and off. Example: the living room at
+  21 °C during the day and 23 °C in the evening, while the attic stays at 21 °C around the
+  clock. A fixed daily rhythm belongs in the config: an override is meant for stepping in
+  by hand for a while (with a maximum duration) and is not the intended route for this,
+  not even from an automation. Each window should also move the switch-on point along,
+  otherwise the zone only starts at a value above that window's target.
 
 ## Should have
 
@@ -423,9 +441,6 @@ The worked-out design proposals for everything below live in
   drizzle`), so only precipitation above that intensity sets the outdoor bound aside. The
   threshold should be settable per zone: a back door may well stay open during a light
   shower, while a slanted skylight must close at the first drop.
-- **A temperature schedule per zone** — a target that moves with the clock (cooler at
-  night, warmer in the morning), instead of one value per zone that the gates merely switch
-  on and off.
 - **Suggested circuit grouping** — propose which indoor units share an outdoor unit based on
   shared `device` / `via_device` / manufacturer, explicitly as a proposal rather than a
   fact, since most climate integrations do not expose that relationship.
