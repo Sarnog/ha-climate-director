@@ -1097,7 +1097,6 @@ class TestItSurvivesARestart:
             _room_presence_payload = ClimateDirectorCoordinator._room_presence_payload
             _restore_room_presence = ClimateDirectorCoordinator._restore_room_presence
             _restore_hand_starts = ClimateDirectorCoordinator._restore_hand_starts
-            _restore_home_since = ClimateDirectorCoordinator._restore_home_since
             _async_save_state = ClimateDirectorCoordinator._async_save_state
             _async_restore_state = ClimateDirectorCoordinator._async_restore_state
 

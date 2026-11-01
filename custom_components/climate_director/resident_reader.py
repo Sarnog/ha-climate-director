@@ -4,17 +4,21 @@ Following one resident: home, asleep, homecoming and readability.
 
 `_resident` en `_notice_home` stonden in `world_builder.py` en `coordinator.py`,
 maar die modules zijn boven de vijfhonderd regels en dit onderwerp hoort op
-zichzelf. De leesbaarheid van de aanwezigheids- en slaapsensor gaat mee: de
+zichzelf. Het herstel van het thuiskomstmoment na een herstart (`restore_home_since`)
+hoort er ook bij. De leesbaarheid van de aanwezigheids- en slaapsensor gaat mee: de
 engine beslist wat een onleesbare invoer voor de drie wachtrema's betekent.
 
 `_resident` and `_notice_home` lived in `world_builder.py` and `coordinator.py`,
 but those modules are over five hundred lines and this subject belongs on its
-own. The readability of the presence and sleep sensor travels with it: the
+own. Restoring the homecoming moment after a restart (`restore_home_since`) belongs
+here too. The readability of the presence and sleep sensor travels with it: the
 engine decides what an unreadable input means for the three waiting brakes.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from homeassistant.core import Event, EventStateChangedData, callback
@@ -36,6 +40,41 @@ if TYPE_CHECKING:
     _CoordinatorBase = CoordinatorSurface
 else:
     _CoordinatorBase = object
+
+
+def restore_home_since(
+    host: CoordinatorSurface, stored: object, parse: Callable[[object], datetime | None]
+) -> dict[str, datetime]:
+    """Return the homecoming moments to restore, keeping one that is unreadable right now.
+
+    Een opgeslagen moment komt terug als de bewoner thuis is, maar ook als zijn
+    aanwezigheidsentiteit ontbreekt of `unavailable`/`unknown` meldt: een
+    ontbrekende lezing is geen vertrek. Alleen een leesbare stand die niet thuis
+    betekent laat het moment vallen. De opslag geeft zijn eigen lezer van een
+    opgeslagen moment mee (`parse`), zodat het bestandsformaat zijn zaak blijft. Het
+    staat hier en niet in `state_store.py`: het gaat over het thuiskomstmoment van een
+    bewoner, en die module is al boven de vijfhonderd regels.
+
+    A stored moment comes back when the resident is home, but also when their
+    presence entity is missing or reports `unavailable`/`unknown`: a missing
+    reading is no departure. Only a readable state that does not mean home lets
+    the moment lapse. It lives here and not in `state_store.py`: it is about a
+    resident's homecoming moment, and that module is already over five hundred
+    lines. The store hands over its own reader of a stored moment (`parse`), so the
+    format of the file stays the store's business.
+    """
+    restored: dict[str, datetime] = {}
+    if not isinstance(stored, Mapping):
+        return restored
+    for resident in host.config.residents:
+        since = parse(stored.get(resident.resident_id))
+        if since is None:
+            continue
+        state = host.hass.states.get(resident.presence_entity)
+        if state is not None and not reads_as_home(state) and not _unreadable(state.state):
+            continue
+        restored[resident.resident_id] = since
+    return restored
 
 
 class _ResidentReaderMixin(_CoordinatorBase):
