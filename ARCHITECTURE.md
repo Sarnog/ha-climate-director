@@ -480,9 +480,50 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
     ook niet: daar regelt de director het aanzetten nooit, dus valt er geen
     wachttijd te overbruggen. Een gedeeld apparaat start elke zone die het
     bedient. De zone passeert die drie remmen en verder niets. De handstart vervalt
-    in de eerste ronde waarin die drie de zone ook zonder hem doorlaten, en verder
-    bij slapen, een leeg huis of de volgende dag. Hij overleeft een herstart tot
-    dan. In een zone zonder wachtreden doet hij niets.
+    in de eerste leesbare ronde waarin die drie de zone ook zonder hem doorlaten,
+    en verder bij slapen, een leeg huis of de volgende dag. Een ronde met een
+    onleesbare aanwezigheids- of slaapsensor laat hem staan (zie hieronder). Hij
+    overleeft een herstart tot dan. In een zone zonder wachtreden doet hij niets.
+
+### Een onleesbare invoer laat een handstart staan
+
+De drie wachtrema's lezen twee soorten invoer: de aanwezigheidsentiteit van een
+bewoner en zijn slaapsensor. De rest is klok en ingesteldheid — vensters, de
+uiterste tijd, roosters — en kan niet wegvallen. Zonder lezing is er geen
+antwoord op "is hij thuis" of "slaapt hij", en wat de engine dan leest is een
+gekleurde gok: een onbekende aanwezigheid leest als weg, een onbekende
+slaapsensor als wakker.
+
+| invoer | voedt | zonder lezing |
+|---|---|---|
+| aanwezigheidsentiteit per bewoner | `QUIET_HOURS` (thuis en `home_since`), `WAITING_FOR_SLEEPER` en `EARLY_RISER` (thuis) | leest als weg; `WAITING_FOR_SLEEPER` en `EARLY_RISER` kunnen daardoor verdwijnen en het huis kan als leeg gelden; `QUIET_HOURS` blijft dan juist staan |
+| slaapsensor per bewoner | `WAITING_FOR_SLEEPER` en `EARLY_RISER` (slapend/op), en via `asleep_since` de nacht | leest als wakker; de wacht op de laatste slaper kan verdwijnen; de opsta-rem kan verschuiven omdat iemand als op telt |
+| klok, vensters, uiterste tijd en roosters | alle drie | geen sensor; altijd leesbaar |
+
+Een handstart vervalt daarom niet in een ronde waarin een van deze invoeren geen
+lezing heeft. Onleesbaar betekent hier: de entiteit ontbreekt, of haar stand is
+`unavailable` of `unknown`; iedere andere stand is een lezing, ook `none` of
+`not_home`. Zodra alle invoeren weer leesbaar zijn, geldt de gewone regel in die
+eerste leesbare ronde: houden de drie remmen de zone nog, dan blijft de
+handstart; laten ze de zone door, dan vervalt hij. De drie uitwegen die niets met
+de remmen te maken hebben blijven: slapen (iedereen die thuis is naar bed), een
+leeg huis en de volgende dag. Ook de eerste twee worden alleen uit een leesbare
+wereld afgeleid; de volgende dag is de harde grens voor een sensor die nooit
+terugkomt. De opslag blijft versie 1 en een bestand zonder `hand_starts` leest
+nog steeds als geen handstart.
+
+De koppelingslaag levert de leesbaarheid als twee gewone gegevens per bewoner
+(aanwezigheid leesbaar, slaap leesbaar) in `WorldState`; de engine beslist wat
+dat voor de remmen betekent. Zo blijft `engine/` vrij van Home Assistant en van
+I/O. Een korte nalooptijd is niet gekozen: die verschuift hetzelfde probleem naar
+een willekeurig moment, laat een handstart alsnog vallen wanneer de sensor na de
+nalooptijd terugkomt, en vraagt een tweede grens naast de volgende dag.
+Leesbaarheid is geen termijn maar de afwezigheid van een meting, en de volgende
+dag begrenst al wat nooit terugkomt.
+
+In de diagnose en de beslissensor verandert niets: zij noemen nog steeds alleen
+de zone-ids onder `hand_starts`. Er is geen nieuwe `Problem`-code en geen nieuwe
+entiteit.
 
 ### De belangrijkste scheidslijn
 
@@ -536,7 +577,7 @@ Home Assistant (entiteitstoestanden, klokgebeurtenissen)
       ▼
 ┌─ engine/ ────────────────────────────────────────────────────────┐
 │                                                                  │
-│  hand_start.py  de drie wachtrema's en de hertoets               │
+│  hand_start.py  wachtrema's, leesbaarheid en hertoets            │
 │  gates.py       mag er geregeld worden (omstandigheden)          │
 │      │                                                           │
 │      ▼                                                           │
@@ -2016,9 +2057,50 @@ them without changing them here first.
     automatically* off: the director never switches that on, so there is no
     waiting to bridge. A shared appliance starts every zone it serves. The zone
     passes those three brakes and nothing else. The hand start lapses in the first
-    round in which those three let the zone through without it, and further when
-    everybody sleeps, when the house is empty or on the next day. It survives a
-    restart until then. In a zone without a waiting reason it does nothing.
+    readable round in which those three let the zone through without it, and
+    further when everybody sleeps, when the house is empty or on the next day. A
+    round with an unreadable presence or sleep sensor leaves it standing (see
+    below). It survives a restart until then. In a zone without a waiting reason
+    it does nothing.
+
+### An unreadable input leaves a hand start standing
+
+The three waiting brakes read two kinds of input: a resident's presence entity
+and their sleep sensor. The rest is clock and configuration — windows, the
+deadline, schedules — and cannot drop out. Without a reading there is no answer
+to "is he home" or "is he asleep", and what the engine reads then is a coloured
+guess: an unknown presence reads as away, an unknown sleep sensor as awake.
+
+| input | feeds | without a reading |
+|---|---|---|
+| presence entity per resident | `QUIET_HOURS` (home and `home_since`), `WAITING_FOR_SLEEPER` and `EARLY_RISER` (home) | reads as away; `WAITING_FOR_SLEEPER` and `EARLY_RISER` can therefore disappear and the house can count as empty; `QUIET_HOURS` then keeps standing instead |
+| sleep sensor per resident | `WAITING_FOR_SLEEPER` and `EARLY_RISER` (asleep/up), and the night through `asleep_since` | reads as awake; the wait for the last sleeper can disappear; the rise brake can shift because somebody counts as up |
+| clock, windows, deadline and schedules | all three | no sensor; always readable |
+
+A hand start therefore does not lapse in a round in which one of these inputs
+has no reading. Unreadable here means: the entity is missing, or its state is
+`unavailable` or `unknown`; every other state is a reading, `none` and
+`not_home` included. Once every input is readable again, the ordinary rule
+applies in that first readable round: if the three brakes still hold the zone,
+the hand start stays; if they let the zone through, it lapses. The three exits
+that have nothing to do with the brakes remain: sleep (everybody at home has
+turned in), an empty house and the next day. The first two are also derived only
+from a readable world; the next day is the hard bound for a sensor that never
+returns. The store stays version 1 and a file without `hand_starts` still reads
+as no hand start.
+
+The binding layer supplies readability as two ordinary pieces of data per
+resident (presence readable, sleep readable) in `WorldState`; the engine decides
+what that means for the brakes. That keeps `engine/` free of Home Assistant and
+of I/O. A short grace period was not chosen: it moves the same problem to an
+arbitrary moment, still lets a hand start fall when the sensor returns after the
+grace period, and asks for a second bound beside the next day. Readability is
+not a term but the absence of a measurement, and the next day already bounds
+whatever never comes back.
+
+Nothing changes in the diagnostics and the decision sensor: they still name only
+the zone ids under `hand_starts`. There is no new `Problem` code and no new
+entity.
 
 ### The most important dividing line
 
@@ -2071,7 +2153,7 @@ Home Assistant (entity states, clock events)
       ▼
 ┌─ engine/ ────────────────────────────────────────────────────────┐
 │                                                                  │
-│  hand_start.py  the three waiting brakes and the re-check        │
+│  hand_start.py  the three brakes, readability, the re-check      │
 │  gates.py       is regulating allowed (circumstances)            │
 │      │                                                           │
 │      ▼                                                           │
