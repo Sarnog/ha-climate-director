@@ -474,6 +474,31 @@ MODULE_EXCEPTIONS: dict[str, int] = {
     "schemas.py": 893,
 }
 
+# De stand van de modules tussen de 500 regels en de maat van 700: de projectafspraak
+# "een module boven de 500 regels groeit niet verder" hangt aan deze lijst. Een module
+# die hier staat mag niet groter worden; wordt hij kleiner, dan komt het nieuwe getal
+# erin (of hij gaat van de lijst als hij onder de 500 komt). Een module die voor het
+# eerst boven de 500 uitkomt hoort niet op de lijst: splits het nieuwe onderwerp af in
+# een eigen module.
+#
+# The state of the modules between 500 lines and the measure of 700: the project
+# agreement "a module over 500 lines grows no further" hangs on this list. A module
+# standing here may not get larger; when it shrinks, the new number goes in (or it
+# leaves the list once it is under 500). A module that crosses 500 for the first time
+# does not belong on the list: split the new subject off into a module of its own.
+GROWTH_FREEZE_LIMIT = 500
+
+FROZEN_MODULES: dict[str, int] = {
+    "__init__.py": 611,
+    "engine/constraints.py": 618,
+    "engine/gates.py": 623,
+    "engine/serialise.py": 637,
+    "problems.py": 640,
+    "state_store.py": 520,
+    "texts.py": 622,
+    "world_builder.py": 573,
+}
+
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_build_commands"): 211,
     ("engine/decide.py", "_generator_commands"): 192,
@@ -729,3 +754,39 @@ def test_the_measure_is_a_ratchet() -> None:
             )
 
     assert not problems, "de maat is bewogen:\n" + "\n".join(problems)
+
+
+def test_modules_over_five_hundred_lines_do_not_grow() -> None:
+    """Een module boven de 500 regels groeit niet verder.
+
+    Wie zo'n module raakt, zet het geraakte onderwerp in een eigen module. De lijst
+    `FROZEN_MODULES` is de stand; boven de maat van 700 houdt `MODULE_EXCEPTIONS` hem vast.
+
+    A module over 500 lines grows no further. Whoever touches such a module puts the
+    touched subject in a module of its own. `FROZEN_MODULES` is the state; above the
+    measure of 700, `MODULE_EXCEPTIONS` holds it.
+    """
+    problems: list[str] = []
+    for name, actual in sorted(module_sizes().items()):
+        if name in MODULE_EXCEPTIONS:
+            continue
+        noted = FROZEN_MODULES.get(name)
+        if noted is None:
+            if actual > GROWTH_FREEZE_LIMIT:
+                problems.append(
+                    f"module {name}: {actual} regels, boven de {GROWTH_FREEZE_LIMIT} en niet "
+                    "genoteerd — zet het nieuwe onderwerp in een eigen module"
+                )
+        elif actual > noted:
+            problems.append(
+                f"module {name}: {actual} regels, genoteerd {noted} — gegroeid; "
+                "een module boven de 500 regels groeit niet verder"
+            )
+        elif actual != noted:
+            problems.append(
+                f"module {name}: {actual} regels, genoteerd {noted} — kleiner geworden; "
+                "zet het nieuwe getal erin of haal hem van de lijst"
+            )
+    for name in sorted(set(FROZEN_MODULES) - set(module_sizes())):
+        problems.append(f"module {name}: genoteerd, maar het bestand bestaat niet meer")
+    assert not problems, "een module boven de 500 regels is bewogen:\n" + "\n".join(problems)

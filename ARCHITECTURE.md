@@ -1432,7 +1432,9 @@ genoteerd is mag niet, kleiner betekent "haal hem van de lijst" — met de defin
 (`len(text.splitlines())`), een functie als `end_lineno - lineno + 1`, van de eerste
 regel die `ast` aan de `def` toekent tot en met de laatste regel van het blok, en er
 wordt met `ast.walk` over élk bestand onder `custom_components/climate_director/`
-gelopen, dus een geneste functie telt mee.
+gelopen, dus een geneste functie telt mee. Boven de 500 regels groeit een module niet meer
+(`test_modules_over_five_hundred_lines_do_not_grow`): wie zo'n module raakt, zet het
+geraakte onderwerp in een eigen module.
 
 De maatbewaking heeft één bewust smalle kant, en die hoort hier te staan zodat niemand
 haar voor breder aanziet: `function_sizes()` klapt twee gelijknamige functies in één
@@ -3005,7 +3007,9 @@ included: a module counts as the number of physical lines of the file
 (`len(text.splitlines())`), a function as `end_lineno - lineno + 1`, from the first line
 `ast` assigns to the `def` through the last line of the block, and every file under
 `custom_components/climate_director/` is walked with `ast.walk`, so a nested function
-counts too.
+counts too. Over 500 lines a module grows no further
+(`test_modules_over_five_hundred_lines_do_not_grow`): whoever touches such a module puts
+the touched subject in a module of its own.
 
 The measure guard has one deliberately narrow side, and it belongs here so that nobody
 mistakes it for a wider one: `function_sizes()` collapses two same-named functions in one
