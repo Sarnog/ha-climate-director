@@ -489,7 +489,8 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
 
 De drie wachtrema's lezen twee soorten invoer: de aanwezigheidsentiteit van een
 bewoner en zijn slaapsensor. De rest is klok en ingesteldheid — vensters, de
-uiterste tijd, roosters — en kan niet wegvallen. Zonder lezing is er geen
+uiterste tijd, roosters — en kan niet wegvallen; de vakantieagenda is de uitzondering
+(zie *Nog te bouwen*, N13). Zonder lezing is er geen
 antwoord op "is hij thuis" of "slaapt hij", en wat de engine dan leest is een
 gekleurde gok: een onbekende aanwezigheid leest als weg, een onbekende
 slaapsensor als wakker.
@@ -1244,6 +1245,28 @@ duidelijk is wat het inhoudt vóór eraan begonnen wordt. De prioriteiten (shoul
 volgen de ROADMAP.
 
 #### Should have
+
+**Een feestdagenagenda die wegvalt laat een handstart niet vallen (N13).** De vakantieagenda
+is een derde invoer van de drie wachtrema's: `holiday_mode` kiest de uiterste tijd, het
+stiltevenster en de opsta-rem van de dag.
+- Koppelingslaag: `world_builder` levert één gegeven in `WorldState`, `holiday_readable`:
+  onwaar zodra een geconfigureerde agenda ontbreekt, `unavailable` of `unknown` is.
+- Engine: `brakes_readable` kijkt er ook naar; verder verandert er niets aan het verval.
+- Opslag en diagnose: ongewijzigd, versie 1.
+- Bewaakt: de agenda-uitval in een echte Home Assistant (maandag, agenda *Vakantie*), rood op
+  de huidige boom, plus de mutatie "agenda telt als leesbaar".
+
+**Een onleesbare aanwezigheid of slaapsensor houdt de laatst leesbare stand even vast (N14,
+N15).** Nu leest een weggevallen aanwezigheid als *weg* en een weggevallen slaapsensor als
+*wakker*, met als gevolg dat een handstart-zone uitgaat (`EVERYONE_ASLEEP`, `NOBODY_HOME`) en
+dat alle wachtende zones tijdens de uitval starten.
+- Optie (a), alleen de handstart: de twee redenen gaan er ook langs, zolang de oorzaak een
+  onleesbare aanwezigheid is. Smal, maar de wachtende zones zonder handstart blijven starten.
+- Optie (b), alle zones: de koppelingslaag houdt de laatste leesbare stand van een bewoner
+  vast voor een korte tijd (`unreadable_hold`, in `WorldState` als gewone waarde); daarna
+  leest de uitval weer als nu. Eén plek lost N14 en N15 op, maar verandert het gedrag voor
+  elke installatie en vraagt dus een ankerbesluit eerst.
+- De gebruiker beslist tussen (a) en (b) voordat er gebouwd wordt.
 
 **Virtuele `climate` per zone.** Eén bedieningsentiteit per ruimte: een
 `climate.climate_director_<zone>` die op een gewone thermostaatkaart past.
@@ -2077,7 +2100,8 @@ them without changing them here first.
 
 The three waiting brakes read two kinds of input: a resident's presence entity
 and their sleep sensor. The rest is clock and configuration — windows, the
-deadline, schedules — and cannot drop out. Without a reading there is no answer
+deadline, schedules — and cannot drop out; the holiday calendar is the exception
+(see *Still to build*, N13). Without a reading there is no answer
 to "is he home" or "is he asleep", and what the engine reads then is a coloured
 guess: an unknown presence reads as away, an unknown sleep sensor as awake.
 
@@ -2821,6 +2845,28 @@ is clear what it entails before any work starts. The priorities (should/could/wo
 the ROADMAP.
 
 #### Should have
+
+**A holiday calendar that drops out does not let a hand start lapse (N13).** The holiday
+calendar is a third input of the three waiting brakes: holiday mode picks the day's deadline,
+quiet window and rise brake.
+- Binding layer: `world_builder` supplies one value in `WorldState`, `holiday_readable`:
+  false as soon as a configured calendar is missing, `unavailable` or `unknown`.
+- Engine: `brakes_readable` looks at it too; nothing else changes in the lapse.
+- Store and diagnostics: unchanged, version 1.
+- Guarded: the calendar outage in a real Home Assistant (Monday, calendar *Vakantie*), red on
+  the current tree, plus the mutation "calendar counts as readable".
+
+**An unreadable presence or sleep sensor holds the last readable state for a moment (N14,
+N15).** Today a dropped presence reads as *away* and a dropped sleep sensor as *awake*, so a
+hand-started zone goes off (`EVERYONE_ASLEEP`, `NOBODY_HOME`) and every waiting zone starts
+during the outage.
+- Option (a), hand start only: the two reasons pass it too, as long as the cause is an
+  unreadable presence. Narrow, but the waiting zones without a hand start keep starting.
+- Option (b), every zone: the binding layer holds a resident's last readable state for a
+  short time (`unreadable_hold`, an ordinary value in `WorldState`); afterwards the outage
+  reads as it does now. One place solves N14 and N15, but it changes the behaviour of every
+  installation and therefore needs an anchor decision first.
+- The user decides between (a) and (b) before anything is built.
 
 **A virtual `climate` per zone.** One control entity per room: a
 `climate.climate_director_<zone>` that fits an ordinary thermostat card.

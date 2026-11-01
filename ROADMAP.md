@@ -18,6 +18,30 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 
 ## Should have
 
+- **Een feestdagenagenda die wegvalt laat een handstart vallen (N13)** — een handstart
+  overleeft een wegvallende slaap- of aanwezigheidssensor, maar de vakantieagenda voedt
+  dezelfde drie remmen via de vakantiestand (de uiterste tijd, het stiltevenster en de
+  opsta-rem verschillen op een vakantiedag). Meldt de agenda `unavailable`, dan leest de
+  dag als werkdag, verdwijnt de wacht en vervalt de handstart; komt de agenda terug, dan zet
+  de director de met de hand aangezette airco uit. Gemeten in een controle
+  (maandag 10 augustus, agenda *Vakantie*): `hand_starts=[]`, daarna `waiting_for_sleeper`
+  en `cmds=[None, 'off']`. Een derde leesbaarheidsvlag voor de agenda's, in dezelfde
+  `brakes_readable`.
+- **Een onleesbare aanwezigheid van wie op is zet een handstart-zone alsnog uit (N14)** —
+  de handstart blijft staan, maar `EVERYONE_ASLEEP` en `NOBODY_HOME` zijn geen remmen die
+  hij passeert: valt de aanwezigheidsentiteit van de enige bewoner die op is weg, dan leest
+  het huis als slapend of leeg en gaat de airco uit tot de entiteit terug is (gemeten:
+  `cmds=[None, 'off', 'heat']`, drie ronden `everyone_asleep`). De releasenotes van de
+  handstart-update zeggen dat de zone "gewoon blijft regelen". Keuze voor de gebruiker: (a) een handstart
+  laat ook deze twee redenen passeren zolang de oorzaak een onleesbare aanwezigheid is, of
+  (b) een onleesbare aanwezigheid houdt de laatst bekende lezing een korte tijd vast, voor
+  alle zones (zie ook N15).
+- **Een onleesbare slaapsensor laat alle wachtende zones starten (N15)** — zonder handstart
+  leest een weggevallen slaapsensor als *wakker*: de wacht verdwijnt, de wachtende zones
+  starten en bij terugkeer zet de director ze weer uit (gemeten in een controle,
+  gedeelde ketel: alle drie de zones `regulating` tijdens de uitval, daarna twee keer
+  `waiting_for_sleeper`). Hetzelfde ontwerp als N14 (b): een korte vasthoudtijd van de
+  laatste leesbare stand.
 - **Virtuele `climate` per zone** — één bedieningsentiteit per ruimte, waarmee de gewenste
   temperatuur en stand rechtstreeks op een gewone thermostaatkaart te bedienen zijn. De
   director kiest daar dan de bron bij.
@@ -48,6 +72,31 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   dat een doel gelijk aan het uitschakelpunt geen marge laat.
 ## Could have
 
+- **De impactkaart hangt aan de selectie van de run** — code op moduleniveau draait één keer,
+  bij het toetsbestand dat de module als eerste importeert. Een kleinere selectie in de CI dan
+  lokaal (de commit tegen zijn voorganger, tegen alles wat nog niet gepusht is) legt die code
+  bij een ander toetsbestand, en de kaartcontrole valt dan op een rij die lokaal klopte
+  (`test_random_installations.py` kreeg zo `schemas.py`). De kaart zou de moduleniveaucode van
+  het bestand dat hem importeert niet als eis moeten tellen, of lokaal de selectie van de CI
+  moeten nabootsen (`CD_BASE` op de voorganger).
+- **Een nieuwe pakketmodule valt buiten de selectie van de toetsen die hem indirect
+  uitvoeren** — `script/select_tests.py` kiest bij een nieuw bestand alleen de toetsen die
+  het rechtstreeks importeren of al in de kaart staan. een nieuwe bewonersmodule kwam zo
+  pas volledig in de kaart na twee rode CI-runs: zes brede campagne- en
+  simulatietoetsen voeren hem uit via de coordinator. Een nieuw pakketbestand zou de
+  toetsen moeten kiezen die de coordinator importeren, of ALL, zodat de kaart bij de eerste
+  run klopt.
+- **Een sensor die de hele dag dood blijft houdt de handstart tot middernacht** — de
+  handstart vervalt pas in een ronde waarin elke slaap- en aanwezigheidssensor van elke
+  bewoner leest, ook die van iemand die op reis is of wiens telefoon uit staat. Gemeten in
+  een controle: met de slaapsensor van de bewoner die op is op `unavailable`
+  blijft de handstart staan nadat de andere bewoner wakker werd, terwijl hij zonder dode
+  sensor in die ronde vervalt. De volgende dag begrenst het; wat ontbreekt is een grens
+  per sensor (alleen de sensoren van wie thuis is, of een maximum aan onleesbare rondes).
+- **Privé hulpjes gaan over modulegrenzen** — `_unreadable` (uit `world_builder.py`) wordt
+  in `coordinator.py`, `hand_start.py`, `state_store.py` en `resident_reader.py` geïmporteerd,
+  en `_stored_time` zou dat ook worden. Een leidende onderstrepingsteken zegt "alleen hier";
+  een gedeeld hulpje krijgt een publieke naam in een eigen kleine module.
 - **De hand en de handstart staan door elkaar in `hand_start.py`** — `_zones_of`,
   `_zones_handed_back`, `_everyone_asleep` en `_house_is_empty` horen bij de hand (anker 11)
   en verhuisden uit de coordinator naar de handstartmodule, terwijl een handstart geen hand
@@ -308,6 +357,27 @@ The worked-out design proposals for everything below live in
 
 ## Should have
 
+- **A holiday calendar that drops out lets a hand start lapse (N13)** — a hand start
+  survives a sleep or presence sensor dropping out, but the holiday calendar feeds the same
+  three brakes through holiday mode (the deadline, the quiet window and the rise brake differ
+  on a holiday). If the calendar reports `unavailable`, the day reads as a working day, the
+  wait disappears and the hand start lapses; when the calendar returns, the director switches
+  the hand-started air conditioner off. Measured in a review (Monday 10 August,
+  calendar *Vakantie*): `hand_starts=[]`, then `waiting_for_sleeper` and `cmds=[None,
+  'off']`. A third readability flag for the calendars, inside the same `brakes_readable`.
+- **An unreadable presence of whoever is up still switches a hand-started zone off (N14)** —
+  the hand start stays, but `EVERYONE_ASLEEP` and `NOBODY_HOME` are not brakes it passes: if
+  the presence entity of the only resident who is up drops out, the house reads as asleep or
+  empty and the air conditioner goes off until the entity returns (measured: `cmds=[None,
+  'off', 'heat']`, three rounds of `everyone_asleep`). The release notes of the hand-start update say the zone
+  "simply keeps regulating". A choice for the user: (a) a hand start also passes these two
+  reasons while the cause is an unreadable presence, or (b) an unreadable presence keeps the
+  last known reading for a short time, for every zone (see also N15).
+- **An unreadable sleep sensor lets every waiting zone start (N15)** — without a hand start a
+  dropped sleep sensor reads as *awake*: the wait disappears, the waiting zones start and on
+  its return the director switches them off again (measured in a review, shared
+  boiler: all three zones `regulating` during the outage, then two back to
+  `waiting_for_sleeper`). Same design as N14 (b): a short hold on the last readable state.
 - **A virtual `climate` per zone** — one control entity per room, so the target temperature
   and mode can be set straight from an ordinary thermostat card. The director then picks the
   source to match.
@@ -338,6 +408,30 @@ The worked-out design proposals for everything below live in
 
 ## Could have
 
+- **The impact map depends on the selection of the run** — module-level code runs once, for
+  the test file that imports the module first. A smaller selection in CI than locally (the
+  commit against its predecessor, against everything not pushed yet) moves that code to
+  another test file, and the map check then fails on a row that was right locally
+  (`test_random_installations.py` got `schemas.py` that way). The map should not count the
+  module-level code of the importing file as a requirement, or the local run should mimic
+  the CI selection (`CD_BASE` on the predecessor).
+- **A new package module falls outside the selection of the tests that execute it
+  indirectly** — `script/select_tests.py` picks, for a new file, only the tests that import
+  it directly or already stand in the map. a new resident module only reached the map
+  completely after two red CI runs: six broad campaign and simulation tests
+  execute it through the coordinator. A new package file should pick the tests that import
+  the coordinator, or ALL, so that the map is right on the first run.
+- **A sensor that stays dead all day keeps the hand start until midnight** — the hand
+  start lapses only in a round in which every sleep and presence sensor of every resident
+  reads, including that of somebody who is travelling or whose phone is off. Measured in
+  a review: with the sleep sensor of the resident who is up on `unavailable`, the
+  hand start stays after the other resident woke up, whereas without a dead sensor it lapses
+  in that round. The next day bounds it; what is missing is a bound per sensor (only the
+  sensors of whoever is home, or a maximum of unreadable rounds).
+- **Private helpers cross module boundaries** — `_unreadable` (from `world_builder.py`) is
+  imported in `coordinator.py`, `hand_start.py`, `state_store.py` and `resident_reader.py`,
+  and `_stored_time` would be too. A leading underscore says "only here"; a shared helper
+  gets a public name in a small module of its own.
 - **The hand and the hand start are mixed in `hand_start.py`** — `_zones_of`,
   `_zones_handed_back`, `_everyone_asleep` and `_house_is_empty` belong to the hand
   (anchor 11) and moved out of the coordinator into the hand-start module, although a hand
