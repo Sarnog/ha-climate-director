@@ -340,6 +340,21 @@ class TestUnreadableInputs:
         world = after_a_slept_night(make_world(now=at(10, 0, day=15), residents=residents))
         assert hand_start.brakes_readable(config, world) is False
 
+    @pytest.mark.parametrize("unused", ["sleep_entity", "presence_entity"])
+    def test_a_missing_resident_blocks_with_either_sensor_alone(self, unused: str) -> None:
+        """Een bewoner die mist telt als onleesbaar, ook als maar één sensor meedoet.
+
+        A resident who is missing counts as unreadable, even when only one sensor
+        takes part.
+        """
+        base = weekend_house()
+        config = replace(
+            base,
+            residents=tuple(replace(resident, **{unused: ""}) for resident in base.residents),
+        )
+        world = after_a_slept_night(make_world(now=at(10, 0, day=15), residents={"danny": awake()}))
+        assert hand_start.brakes_readable(config, world) is False
+
     def test_a_missing_resident_with_a_sensor_blocks_the_recheck(self) -> None:
         """Een bewoner die helemaal uit de wereld mist telt als onleesbaar."""
         config = weekend_house()
