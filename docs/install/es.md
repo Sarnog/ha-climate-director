@@ -614,7 +614,7 @@ atiende; un aparato con *Encender este aparato automáticamente* desactivado no
 cuenta, porque el director nunca regula allí el encendido. En una zona que no
 espera nada, el botón no hace nada. El inicio manual también caduca al dormir,
 con la casa vacía o al día siguiente. Si el sensor de sueño o de presencia
-desaparece un momento, se mantiene hasta que vuelva una lectura; la primera
+desaparece un momento, el inicio manual se mantiene hasta que vuelva una lectura; la primera
 pasada legible vuelve a aplicar la regla habitual. La decisión nombra la zona en
 el atributo `hand_starts`.
 

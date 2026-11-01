@@ -518,7 +518,7 @@ dat voor de remmen betekent. Zo blijft `engine/` vrij van Home Assistant en van
 I/O. Een korte nalooptijd is niet gekozen: die verschuift hetzelfde probleem naar
 een willekeurig moment, laat een handstart alsnog vallen wanneer de sensor na de
 nalooptijd terugkomt, en vraagt een tweede grens naast de volgende dag.
-Leesbaarheid is geen termijn maar de afwezigheid van een meting, en de volgende
+Onleesbaarheid is geen termijn maar het ontbreken van een meting, en de volgende
 dag begrenst al wat nooit terugkomt.
 
 Een onleesbare aanwezigheid is ook geen vertrek: het thuiskomstmoment blijft
@@ -2104,7 +2104,7 @@ resident (presence readable, sleep readable) in `WorldState`; the engine decides
 what that means for the brakes. That keeps `engine/` free of Home Assistant and
 of I/O. A short grace period was not chosen: it moves the same problem to an
 arbitrary moment, still lets a hand start fall when the sensor returns after the
-grace period, and asks for a second bound beside the next day. Readability is
+grace period, and asks for a second bound beside the next day. Unreadability is
 not a term but the absence of a measurement, and the next day already bounds
 whatever never comes back.
 

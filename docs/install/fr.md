@@ -623,7 +623,7 @@ qu'elle dessert ; un appareil dont *Démarrer cet appareil automatiquement* est
 désactivé ne compte pas, car le directeur n'y règle jamais l'allumage. Dans une
 zone qui n'attend rien, le bouton ne fait rien. Le démarrage manuel expire aussi
 au coucher, dans une maison vide ou le jour suivant. Si le capteur de sommeil ou
-de présence disparaît un instant, il reste en place jusqu'à une nouvelle
+de présence disparaît un instant, le démarrage manuel reste en place jusqu'à une nouvelle
 lecture ; la première passe lisible applique à nouveau la règle habituelle. La
 décision nomme la zone dans l'attribut `hand_starts`.
 
