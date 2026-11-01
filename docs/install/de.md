@@ -611,8 +611,10 @@ Außengrenzen, Jahreszeit, Kurzzyklusschutz und Kreise gelten weiter. Ein
 gemeinsamer Kessel startet jede Zone, die er bedient; ein Gerät mit *Dieses Gerät
 automatisch einschalten* aus zählt nicht, weil der Director das Einschalten dort
 nie regelt. In einer Zone, die auf nichts wartet, tut die Taste nichts. Der
-Handstart erlischt auch beim Schlafen, bei leerem Haus oder am nächsten Tag. Die
-Entscheidung nennt die Zone im Attribut `hand_starts`.
+Handstart erlischt auch beim Schlafen, bei leerem Haus oder am nächsten Tag.
+Fällt der Schlaf- oder Anwesenheitssensor kurz aus, bleibt er stehen, bis wieder
+eine Messung vorliegt; in der ersten lesbaren Runde gilt wieder die gewöhnliche
+Regel. Die Entscheidung nennt die Zone im Attribut `hand_starts`.
 
 ### Zeitpläne
 

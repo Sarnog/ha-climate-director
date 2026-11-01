@@ -601,7 +601,9 @@ outdoor bounds, the season, short-cycle protection and the circuits keep
 applying. A shared boiler starts every zone it serves; an appliance with *Start
 this appliance automatically* off does not count, since the director never
 switches that on. In a zone that waits on nothing the button does nothing. The
-hand start also lapses on sleep, an empty house or the next day. The decision
+hand start also lapses on sleep, an empty house or the next day. If the sleep or
+presence sensor drops out for a moment, it stays put until there is a reading
+again; the first readable round applies the ordinary rule again. The decision
 names the zone in the `hand_starts` attribute.
 
 ### Schedules

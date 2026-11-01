@@ -521,6 +521,11 @@ nalooptijd terugkomt, en vraagt een tweede grens naast de volgende dag.
 Leesbaarheid is geen termijn maar de afwezigheid van een meting, en de volgende
 dag begrenst al wat nooit terugkomt.
 
+Een onleesbare aanwezigheid is ook geen vertrek: het thuiskomstmoment blijft
+staan zolang er geen lezing is. Anders zou de slaapsensor na terugkeer als
+verouderd gelden en zou de wacht alsnog verdwijnen, waarmee de onleesbare ronde
+alsnog de handstart zou vellen.
+
 In de diagnose en de beslissensor verandert niets: zij noemen nog steeds alleen
 de zone-ids onder `hand_starts`. Er is geen nieuwe `Problem`-code en geen nieuwe
 entiteit.
@@ -568,6 +573,7 @@ Home Assistant (entiteitstoestanden, klokgebeurtenissen)
     preconditions.py   vooruit-verzoeken en hun timers
     overrides.py       override met looptijd en het opheffen van een hand
     room_presence.py   de kamerpoort: bezette kamers en de nalooptijd
+    resident_reader.py de lezer van één bewoner: thuis, slaap, thuiskomst
     hand_start.py      de handstart: herkenning, opslag en verval
     world_builder.py   de momentopname (build_world)
       │
@@ -973,18 +979,20 @@ Doet precies drie dingen: entiteiten uitlezen tot één `WorldState`, `decide()`
 zelf geen besliskunde; staat er ooit een `if` over temperaturen in dat bestand, dan hoort
 die in `engine/`.
 
-De klasse is in zessen geknipt; vijf delen staan op zichzelf. `state_store.py`
-bewaart, herstelt en quarantaineert wat een mens met de hand heeft gezegd — een
-vooruit-verzoek en een apparaat dat iemand zelf uitzette — en draagt het
-thuiskomstmoment (`home_since`), dat vervalt voor wie weg is, `preconditions.py`
-beheert de vooruit-verzoeken en hun timers, `overrides.py` beheert de override met
-zijn looptijd en heft bij zijn begin de hand van zijn zone op, `room_presence.py`
-houdt bij welke kamers bezet zijn en wanneer een kamer leeg werd of wegviel (de
-nalooptijd van de kamerpoort, ook over een herstart heen), `hand_start.py` herkent
-de handstart aan het apparaat of aan de knop, bewaart hem over een herstart en laat
-hem vervallen, en `world_builder.py` bouwt de momentopname met zijn lezers, waarin
-`reads_as_home` de enige plek is die een aanwezigheidsentiteit als thuis leest; de
-coordinator zelf luistert, beslist, voert uit en publiceert.
+De klasse bestaat uit de coördinator en een reeks mixins die elk één onderwerp
+dragen. `state_store.py` bewaart, herstelt en quarantaineert wat een mens met de
+hand heeft gezegd — een vooruit-verzoek en een apparaat dat iemand zelf uitzette —
+en herstelt het thuiskomstmoment (`home_since`), `resident_reader.py` leest één
+bewoner (thuis, slapend, leesbaarheid) en houdt zijn thuiskomstmoment bij,
+`preconditions.py` beheert de vooruit-verzoeken en hun timers, `overrides.py`
+beheert de override met zijn looptijd en heft bij zijn begin de hand van zijn zone
+op, `room_presence.py` houdt bij welke kamers bezet zijn en wanneer een kamer leeg
+werd of wegviel (de nalooptijd van de kamerpoort, ook over een herstart heen),
+`hand_start.py` herkent de handstart aan het apparaat of aan de knop, bewaart hem
+over een herstart en laat hem vervallen, en `world_builder.py` bouwt de
+momentopname met zijn lezers, waarin `reads_as_home` de enige plek is die een
+aanwezigheidsentiteit als thuis leest; de coördinator zelf luistert, beslist,
+voert uit en publiceert.
 
 Zes dingen zijn er subtiel aan:
 
@@ -2098,6 +2106,11 @@ grace period, and asks for a second bound beside the next day. Readability is
 not a term but the absence of a measurement, and the next day already bounds
 whatever never comes back.
 
+An unreadable presence is no departure either: the homecoming moment stays put
+as long as there is no reading. Otherwise the sleep sensor would count as stale
+after the return and the waiting would disappear anyway, letting the unreadable
+round topple the hand start after all.
+
 Nothing changes in the diagnostics and the decision sensor: they still name only
 the zone ids under `hand_starts`. There is no new `Problem` code and no new
 entity.
@@ -2144,6 +2157,7 @@ Home Assistant (entity states, clock events)
     preconditions.py   pre-conditioning requests and their timers
     overrides.py       override with a duration and the lifting of a hand
     room_presence.py   the room gate: occupied rooms and the grace period
+    resident_reader.py one resident's reader: home, sleep, homecoming
     hand_start.py      the hand start: recognition, storage and expiry
     world_builder.py   the snapshot (build_world)
       │
@@ -2545,17 +2559,20 @@ into a `Plan`, and make sure a fresh decision happens whenever that is worthwhil
 decision logic itself; if an `if` about temperatures ever appears in that file, it belongs
 in `engine/`.
 
-The class is cut into six; five parts stand on their own. `state_store.py` stores,
-restores and quarantines what a person said by hand — a pre-conditioning request and an
-appliance somebody switched off — and carries the homecoming moment (`home_since`), which
-lapses for whoever is away, `preconditions.py` manages the pre-conditioning requests and
-their timers, `overrides.py` manages the override with its duration and lifts the hand of
-its zone at its beginning, `room_presence.py` keeps track of which rooms are occupied and
-when a room became empty or dropped out (the grace period of the room gate, across a
-restart too), `hand_start.py` recognises the hand start at the appliance or at the button,
-keeps it across a restart and lets it lapse, and `world_builder.py` builds the snapshot
-with its readers, in which `reads_as_home` is the only place reading a presence entity as
-home; the coordinator itself listens, decides, executes and publishes.
+The class consists of the coordinator and a series of mixins, each carrying one
+subject. `state_store.py` stores, restores and quarantines what a person said by
+hand — a pre-conditioning request and an appliance somebody switched off — and
+restores the homecoming moment (`home_since`), `resident_reader.py` reads one
+resident (home, asleep, readability) and keeps their homecoming moment,
+`preconditions.py` manages the pre-conditioning requests and their timers,
+`overrides.py` manages the override with its duration and lifts the hand of its
+zone at its beginning, `room_presence.py` keeps track of which rooms are occupied
+and when a room became empty or dropped out (the grace period of the room gate,
+across a restart too), `hand_start.py` recognises the hand start at the appliance
+or at the button, keeps it across a restart and lets it lapse, and
+`world_builder.py` builds the snapshot with its readers, in which `reads_as_home`
+is the only place reading a presence entity as home; the coordinator itself
+listens, decides, executes and publishes.
 
 Six things about it are subtle:
 

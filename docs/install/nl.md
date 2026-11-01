@@ -603,8 +603,10 @@ buitengrenzen, het seizoen, de kortcyclus en de circuits blijven gelden. Een
 gedeelde ketel start elke zone die erop zit; een apparaat met *Dit apparaat
 automatisch aanzetten* uit telt niet, want daar regelt de director het aanzetten
 nooit. In een zone die nergens op wacht doet de knop niets. De handstart vervalt
-ook bij slapen, een leeg huis of de volgende dag. De beslissing noemt de zone in
-het attribuut `hand_starts`.
+ook bij slapen, een leeg huis of de volgende dag. Valt de slaap- of
+aanwezigheidssensor even weg, dan blijft hij staan tot er weer een lezing is; in
+de eerste leesbare ronde geldt de gewone regel weer. De beslissing noemt de zone
+in het attribuut `hand_starts`.
 
 ### Roosters
 

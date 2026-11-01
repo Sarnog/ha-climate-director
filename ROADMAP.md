@@ -18,14 +18,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 
 ## Should have
 
-- **Een handstart overleeft een slaap- of aanwezigheidssensor die even wegvalt niet** —
-  `_settle_hand_starts` laat de handstart vallen in de eerste ronde waarin de drie remmen
-  de zone niet meer tegenhouden, en leest de slaapsensor en de aanwezigheidsentiteit
-  daarvoor rauw. Eén ronde `unavailable` (of een telefoon die even van de lader gaat) maakt
-  de slaper "wakker", de handstart is weg, en zodra de sensor terugkomt wacht de zone weer
-  en zet de director de met de hand aangezette airco uit — precies wat de handstart moest
-  voorkomen. Laat een handstart alleen vervallen na een leesbare ronde, of geef hem een
-  korte nalooptijd zoals de kamerpoort die kent.
 - **Virtuele `climate` per zone** — één bedieningsentiteit per ruimte, waarmee de gewenste
   temperatuur en stand rechtstreeks op een gewone thermostaatkaart te bedienen zijn. De
   director kiest daar dan de bron bij.
@@ -316,14 +308,6 @@ The worked-out design proposals for everything below live in
 
 ## Should have
 
-- **A hand start does not survive a sleep or presence sensor that drops out briefly** —
-  `_settle_hand_starts` lets the hand start lapse in the first round in which the three
-  brakes no longer hold the zone, and reads the sleep sensor and the presence entity raw
-  for that. One round of `unavailable` (or a phone briefly leaving its charger) makes the
-  sleeper "wake", the hand start is gone, and once the sensor returns the zone waits again
-  and the director switches the hand-started air conditioner off — exactly what the hand
-  start was meant to prevent. Let a hand start lapse only after a readable round, or give
-  it a short grace period like the room gate has.
 - **A virtual `climate` per zone** — one control entity per room, so the target temperature
   and mode can be set straight from an ordinary thermostat card. The director then picks the
   source to match.
