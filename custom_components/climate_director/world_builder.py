@@ -21,7 +21,6 @@ from dataclasses import replace
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, TypeGuard
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import State
 from homeassistant.util import dt as dt_util
 
@@ -35,6 +34,7 @@ from .engine import (
 )
 from .engine.models import SeasonSource
 from .engine.night import house_asleep_since
+from .readability import unreadable
 from .units import to_celsius, unit_of_coordinator
 
 if TYPE_CHECKING:
@@ -181,20 +181,6 @@ def season_from_state(raw: str | None) -> Season:
     if not raw:
         return Season.UNKNOWN
     return _SEASON_NAMES.get(raw.strip().lower(), Season.UNKNOWN)
-
-
-def _unreadable(state: str) -> bool:
-    """Return whether an entity state carries no reading at all.
-
-    Eén plek waar de koppelingslaag bepaalt wat "hier valt niets uit op te
-    maken" betekent, zodat het uitlezen van een apparaat en het opmerken van
-    een hand aan datzelfde apparaat het nooit oneens kunnen zijn.
-
-    One place where the binding layer settles what "nothing can be made of
-    this" means, so reading an appliance and noticing a hand at that same
-    appliance can never disagree.
-    """
-    return state in (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
 
 def _as_float(raw: Any) -> float | None:
@@ -400,7 +386,7 @@ class _WorldBuilderMixin(_CoordinatorBase):
 
     def _climate(self, entity_id: str) -> ClimateState:
         state = self.hass.states.get(entity_id)
-        if state is None or _unreadable(state.state):
+        if state is None or unreadable(state.state):
             return ClimateState(available=False)
         return ClimateState(
             hvac_mode=state.state,

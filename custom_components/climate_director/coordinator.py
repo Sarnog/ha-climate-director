@@ -76,6 +76,7 @@ from .engine.serialise import config_from_dict
 from .hand_start import _HandStartMixin
 from .overrides import _OverridesMixin
 from .preconditions import _PreconditionsMixin, _still_running
+from .readability import unreadable
 from .resident_reader import _ResidentReaderMixin
 from .room_presence import _RoomPresenceMixin
 from .state_store import _StateStoreMixin
@@ -89,7 +90,6 @@ from .units import (
 from .world_builder import (
     _as_float,
     _as_modes,
-    _unreadable,
     _WorldBuilderMixin,
     reads_as_home,
     season_from_state,
@@ -835,7 +835,7 @@ class ClimateDirectorCoordinator(
         # just switched it off, and that zone fell silent for the rest of the
         # day. The other way round just as much: an appliance dropping out would
         # lift a hand-back as though somebody had switched it on again.
-        if _unreadable(old_state.state) or _unreadable(new_state.state):
+        if unreadable(old_state.state) or unreadable(new_state.state):
             return
 
         was = family_of(old_state.state)
@@ -947,7 +947,7 @@ class ClimateDirectorCoordinator(
             reported = self.hass.states.get(change.entity_id)
             if (
                 reported is not None
-                and not _unreadable(reported.state)
+                and not unreadable(reported.state)
                 and family_of(reported.state) is ModeFamily.NEUTRAL
             ):
                 # Het apparaat meldt ons uit-commando al: er is geen late
@@ -996,7 +996,7 @@ class ClimateDirectorCoordinator(
             reported = self.hass.states.get(change.entity_id)
             if (
                 reported is not None
-                and not _unreadable(reported.state)
+                and not unreadable(reported.state)
                 and family_of(reported.state) is family
             ):
                 # Het apparaat meldt onze aanzet al: er is geen late melding meer
@@ -1298,7 +1298,7 @@ class ClimateDirectorCoordinator(
             state = self.hass.states.get(entity_id)
             if state is None:
                 found[entity_id] = "missing"
-            elif _unreadable(state.state):
+            elif unreadable(state.state):
                 found[entity_id] = state.state
 
         # Een leesbare seizoensentiteit met een onherkenbare staat is net zo
@@ -1317,7 +1317,7 @@ class ClimateDirectorCoordinator(
             state = self.hass.states.get(entity_id)
             if (
                 state is not None
-                and not _unreadable(state.state)
+                and not unreadable(state.state)
                 and season_from_state(state.state) is Season.UNKNOWN
             ):
                 found[entity_id] = f"unrecognized season: {state.state}"
@@ -1342,7 +1342,7 @@ class ClimateDirectorCoordinator(
             if entity_id in found:
                 continue
             state = self.hass.states.get(entity_id)
-            if state is None or _unreadable(state.state):
+            if state is None or unreadable(state.state):
                 continue
             attributes = getattr(state, "attributes", {})
             if (
@@ -1423,7 +1423,7 @@ class ClimateDirectorCoordinator(
         found: dict[str, set[str]] = {}
         for zone, source in self.config.sources():
             state = self.hass.states.get(source.entity_id)
-            if state is None or _unreadable(state.state):
+            if state is None or unreadable(state.state):
                 continue
             complaints: set[str] = set()
             # De rol hangt aan de bron, niet aan het apparaat. Hetzelfde apparaat

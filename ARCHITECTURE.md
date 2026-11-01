@@ -576,6 +576,7 @@ Home Assistant (entiteitstoestanden, klokgebeurtenissen)
     room_presence.py   de kamerpoort: bezette kamers en de nalooptijd
     resident_reader.py de lezer van één bewoner: thuis, slaap, thuiskomst
     hand_start.py      de handstart: herkenning, opslag en verval
+    readability.py     de ene lezing van onleesbaarheid
     world_builder.py   de momentopname (build_world)
       │
       ▼
@@ -2185,6 +2186,7 @@ Home Assistant (entity states, clock events)
     room_presence.py   the room gate: occupied rooms and the grace period
     resident_reader.py one resident's reader: home, sleep, homecoming
     hand_start.py      the hand start: recognition, storage and expiry
+    readability.py     the one reading of unreadability
     world_builder.py   the snapshot (build_world)
       │
       ▼

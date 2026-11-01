@@ -26,8 +26,8 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.core import Event, EventStateChangedData, callback
 from homeassistant.util import dt as dt_util
 
+from .readability import unreadable
 from .state_store import _stored_time
-from .world_builder import _unreadable
 
 if TYPE_CHECKING:
     from .coordinator import CoordinatorSurface
@@ -207,7 +207,7 @@ class _RoomPresenceMixin(_CoordinatorBase):
                 continue
             if zone_id in live_empty:
                 continue
-            if (current is None or _unreadable(current.state)) and zone_id in occupied:
+            if (current is None or unreadable(current.state)) and zone_id in occupied:
                 self._empty_since[zone_id] = now
             elif zone_id in empty:
                 self._empty_since[zone_id] = empty[zone_id]

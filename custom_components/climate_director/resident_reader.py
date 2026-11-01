@@ -24,7 +24,8 @@ from typing import TYPE_CHECKING
 from homeassistant.core import Event, EventStateChangedData, callback
 
 from .engine import ResidentState
-from .world_builder import _unreadable, reads_as_home
+from .readability import unreadable
+from .world_builder import reads_as_home
 
 if TYPE_CHECKING:
     from .coordinator import CoordinatorSurface
@@ -71,7 +72,7 @@ def restore_home_since(
         if since is None:
             continue
         state = host.hass.states.get(resident.presence_entity)
-        if state is not None and not reads_as_home(state) and not _unreadable(state.state):
+        if state is not None and not reads_as_home(state) and not unreadable(state.state):
             continue
         restored[resident.resident_id] = since
     return restored
@@ -159,8 +160,8 @@ class _ResidentReaderMixin(_CoordinatorBase):
             home=home,
             asleep=asleep,
             home_since=home_since,
-            presence_readable=not presence or (state is not None and not _unreadable(state.state)),
-            sleep_readable=not sleep or (sleeper is not None and not _unreadable(sleeper.state)),
+            presence_readable=not presence or (state is not None and not unreadable(state.state)),
+            sleep_readable=not sleep or (sleeper is not None and not unreadable(sleeper.state)),
         )
 
     @callback
@@ -224,7 +225,7 @@ class _ResidentReaderMixin(_CoordinatorBase):
                     changed = True
             elif (
                 new_state is not None
-                and not _unreadable(new_state.state)
+                and not unreadable(new_state.state)
                 and self._home_since.pop(resident.resident_id, None) is not None
             ):
                 changed = True

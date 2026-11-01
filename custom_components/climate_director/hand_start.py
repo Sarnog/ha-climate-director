@@ -33,8 +33,8 @@ from homeassistant.util import dt as dt_util
 
 from .engine import ModeFamily, Plan, ResidentState, WorldState, family_of, hand_start
 from .engine.night import asleep_at
+from .readability import unreadable
 from .state_store import _stored_time
-from .world_builder import _unreadable
 
 if TYPE_CHECKING:
     from .coordinator import CoordinatorSurface
@@ -99,7 +99,7 @@ class _HandStartMixin(_CoordinatorBase):
         old_state = event.data["old_state"]
         if new_state is None or old_state is None:
             return
-        if _unreadable(old_state.state) or _unreadable(new_state.state):
+        if unreadable(old_state.state) or unreadable(new_state.state):
             return
 
         duty = family_of(new_state.state)

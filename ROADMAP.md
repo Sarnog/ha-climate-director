@@ -93,10 +93,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   blijft de handstart staan nadat de andere bewoner wakker werd, terwijl hij zonder dode
   sensor in die ronde vervalt. De volgende dag begrenst het; wat ontbreekt is een grens
   per sensor (alleen de sensoren van wie thuis is, of een maximum aan onleesbare rondes).
-- **Privé hulpjes gaan over modulegrenzen** — `_unreadable` (uit `world_builder.py`) wordt
-  in `coordinator.py`, `hand_start.py`, `state_store.py` en `resident_reader.py` geïmporteerd,
-  en `_stored_time` zou dat ook worden. Een leidende onderstrepingsteken zegt "alleen hier";
-  een gedeeld hulpje krijgt een publieke naam in een eigen kleine module.
 - **De hand en de handstart staan door elkaar in `hand_start.py`** — `_zones_of`,
   `_zones_handed_back`, `_everyone_asleep` en `_house_is_empty` horen bij de hand (anker 11)
   en verhuisden uit de coordinator naar de handstartmodule, terwijl een handstart geen hand
@@ -428,10 +424,6 @@ The worked-out design proposals for everything below live in
   hand start stays after the other resident woke up, whereas without a dead sensor it lapses
   in that round. The next day bounds it; what is missing is a bound per sensor (only the
   sensors of whoever is home, or a maximum of unreadable rounds).
-- **Private helpers cross module boundaries** — `_unreadable` (from `world_builder.py`) is
-  imported in `coordinator.py`, `hand_start.py`, `state_store.py` and `resident_reader.py`,
-  and `_stored_time` would be too. A leading underscore says "only here"; a shared helper
-  gets a public name in a small module of its own.
 - **The hand and the hand start are mixed in `hand_start.py`** — `_zones_of`,
   `_zones_handed_back`, `_everyone_asleep` and `_house_is_empty` belong to the hand
   (anchor 11) and moved out of the coordinator into the hand-start module, although a hand

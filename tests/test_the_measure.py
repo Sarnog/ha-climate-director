@@ -496,7 +496,7 @@ FROZEN_MODULES: dict[str, int] = {
     "problems.py": 640,
     "state_store.py": 520,
     "texts.py": 622,
-    "world_builder.py": 573,
+    "world_builder.py": 559,
 }
 
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {

@@ -384,7 +384,7 @@ class _StateStoreMixin(_CoordinatorBase):
                     self._handed_back[zone_id] = day
 
         self._restore_room_presence(stored, now)
-        getattr(self, "_restore_hand_starts", lambda *_: None)(stored, now)
+        self._restore_hand_starts(stored, now)
         self._home_since.update(restore_home_since(self, stored.get("home_since"), _stored_time))
         self._asleep_since = _stored_time(stored.get("asleep_since"))
         if hasattr(self, "_restore_overrides"):
