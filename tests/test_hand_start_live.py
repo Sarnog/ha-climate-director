@@ -754,6 +754,25 @@ class TestAnUnreadableBrakeInput:
         finally:
             await stop_house(home)
 
+    @pytest.mark.parametrize("entity", [DANNY[0], DANNY[1]])
+    async def test_the_sensors_of_the_resident_who_is_up_keep_the_hand_start(
+        self, clock, entity
+    ) -> None:
+        """Ook de sensoren van wie al op is laten de handstart staan.
+
+        The sensors of whoever is already up keep the hand start standing too.
+        """
+        home = await start_house(installation(), states=world(danny_asleep=True, nancy_asleep=True))
+        try:
+            await a_hand_started_living_room(home, clock)
+
+            home.set(entity, "unavailable")
+            await decide(home)
+
+            assert "woonkamer" in home.coordinator._hand_starts
+        finally:
+            await stop_house(home)
+
     async def test_the_hand_start_waits_for_the_presence_entity_to_return(self, clock) -> None:
         """Komt de aanwezigheid terug en wacht de zone nog, dan blijft de handstart."""
         home = await start_house(installation(), states=world(danny_asleep=True, nancy_asleep=True))

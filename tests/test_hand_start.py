@@ -19,6 +19,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import time
 
+import pytest
 from conftest import (
     BACK_DOOR,
     asleep,
@@ -325,6 +326,19 @@ class TestUnreadableInputs:
             )
         )
         assert hand_start.brakes_readable(config, world) is True
+
+    @pytest.mark.parametrize("who", ["danny", "nancy"])
+    @pytest.mark.parametrize("field", ["presence_readable", "sleep_readable"])
+    def test_every_resident_and_every_sensor_blocks_the_recheck(self, who: str, field: str) -> None:
+        """Elke bewoner en elke sensor telt mee, niet alleen de tweede bewoner.
+
+        Every resident and every sensor counts, not only the second resident.
+        """
+        config = weekend_house()
+        residents = {"danny": awake(), "nancy": asleep()}
+        residents[who] = replace(residents[who], **{field: False})
+        world = after_a_slept_night(make_world(now=at(10, 0, day=15), residents=residents))
+        assert hand_start.brakes_readable(config, world) is False
 
     def test_a_missing_resident_with_a_sensor_blocks_the_recheck(self) -> None:
         """Een bewoner die helemaal uit de wereld mist telt als onleesbaar."""
