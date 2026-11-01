@@ -95,8 +95,11 @@ MUTATIONS = [
         "name": "handstart-vervalt-nooit",
         "file": "custom_components/climate_director/hand_start.py",
         "old": (
-            "                    or not hand_start.brakes_remaining("
-            "self.config, world, zone, previous)"
+            "                    or (\n"
+            "                        readable\n"
+            "                        and not hand_start.brakes_remaining("
+            "self.config, world, zone, previous)\n"
+            "                    )"
         ),
         "new": "                    or False",
     },

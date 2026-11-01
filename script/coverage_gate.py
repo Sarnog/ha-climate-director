@@ -131,7 +131,7 @@ EXCLUSION_HINT = (
 #: zonder dat iemand hem noemt. Daarom staat hieronder elke statementregel met
 #: zijn eigen inhoud — de `...`-stubs van `coordinator.py` (het
 #: `CoordinatorSurface`-protocol, dat alleen voor de typecontrole bestaat) en
-#: drie in elk van de vijf mixins die dat protocol onder `TYPE_CHECKING`
+#: drie in elk van de zeven mixins die dat protocol onder `TYPE_CHECKING`
 #: importeren (die tak is bij het draaien nooit waar). De poort
 #: eist dat de lijst precies klopt: een regel die buiten de meting valt zonder
 #: hier te staan laat hem vallen, en een naam die niets meer verbergt ook.
@@ -148,7 +148,7 @@ EXCLUSION_HINT = (
 #: line it hits disappears from "zero missed lines" without anyone naming it.
 #: Hence every statement line stands below with its own content — the
 #: `...` stubs of `coordinator.py` (the `CoordinatorSurface` protocol, which
-#: exists for the type check only) and three in each of the six mixins
+#: exists for the type check only) and three in each of the seven mixins
 #: that import that protocol under `TYPE_CHECKING` (that branch is never true at
 #: run time). The gate demands the list to be exact: a line that falls outside the
 #: measurement without standing here drops it, and so does a name that hides
@@ -171,6 +171,8 @@ NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {
         "def _wake_at_the_first_expiry(self) -> None: ...",
         "def _override_wake_at_first_expiry(self) -> None: ...",
         "def _calendar_says_holiday(self) -> bool: ...",
+        "def _resident(",
+        ") -> ResidentState: ...",
         "def _zones_handed_back(",
         ") -> set[str]: ...",
     ),
@@ -185,6 +187,11 @@ NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {
         "_CoordinatorBase = CoordinatorSurface",
     ),
     "preconditions.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import CoordinatorSurface",
+        "_CoordinatorBase = CoordinatorSurface",
+    ),
+    "resident_reader.py": (
         "if TYPE_CHECKING:",
         "from .coordinator import CoordinatorSurface",
         "_CoordinatorBase = CoordinatorSurface",

@@ -512,6 +512,33 @@ class TestReadingTheWorld:
         states = self._states(**{"sensor.danny_lader": FakeState("wireless")})
         assert coordinator(states).build_world().resident("danny").asleep is True
 
+    def test_a_missing_sensor_has_no_reading(self) -> None:
+        """Een ontbrekende entiteit is geen lezing."""
+        states = self._states()
+        states.pop("person.danny")
+        states.pop("sensor.danny_lader")
+        resident = coordinator(states).build_world().resident("danny")
+        assert resident.presence_readable is False
+        assert resident.sleep_readable is False
+
+    @pytest.mark.parametrize("value", ["unavailable", "unknown"])
+    def test_an_unreadable_state_is_no_reading(self, value: str) -> None:
+        """`unavailable` en `unknown` zijn geen lezing."""
+        states = self._states(
+            **{
+                "person.danny": FakeState(value),
+                "sensor.danny_lader": FakeState(value),
+            }
+        )
+        resident = coordinator(states).build_world().resident("danny")
+        assert resident.presence_readable is False
+        assert resident.sleep_readable is False
+
+    def test_a_normal_sleep_state_is_still_a_reading(self) -> None:
+        """Een gewone wakker-stand is een lezing, ook al betekent hij niet slapen."""
+        states = self._states(**{"sensor.danny_lader": FakeState("none")})
+        assert coordinator(states).build_world().resident("danny").sleep_readable is True
+
     @pytest.mark.parametrize("value", ["home", "HOME", "on", "true"])
     def test_being_home_is_read_broadly(self, value: str) -> None:
         states = self._states(**{"person.danny": FakeState(value)})
@@ -1584,6 +1611,24 @@ class TestTheQuietSideOfEachListener:
             item, self._event("person.danny", "not_home", "not_home")
         )
         assert item._home_since == {}
+
+    def test_an_unreadable_state_keeps_the_moment(self) -> None:
+        """Een onleesbare aanwezigheid is geen vertrek."""
+        item = coordinator()
+        item._home_since = {"danny": NOW}
+        ClimateDirectorCoordinator._notice_home(
+            item, self._event("person.danny", "home", "unavailable")
+        )
+        assert item._home_since == {"danny": NOW}
+
+    def test_an_unreadable_state_does_not_count_as_a_new_homecoming(self) -> None:
+        """Na een onleesbare stand is thuiskomen geen nieuwe thuiskomst."""
+        item = coordinator()
+        item._home_since = {"danny": NOW}
+        ClimateDirectorCoordinator._notice_home(
+            item, self._event("person.danny", "unknown", "home")
+        )
+        assert item._home_since == {"danny": NOW}
 
     def test_an_occupied_room_that_stays_occupied_has_no_moment(self) -> None:
         item = coordinator()

@@ -234,6 +234,105 @@ class TestWhenTheHandStartStopsDoingSomething:
         assert hand_start.brakes_remaining(config, world, living(config), None) == frozenset()
 
 
+class TestUnreadableInputs:
+    def test_a_reading_on_every_sensor_allows_the_recheck(self) -> None:
+        """Met een lezing op elke sensor mogen de remmen gewoon hertoetst worden."""
+        config = weekend_house()
+        world = with_hand_start(
+            after_a_slept_night(
+                make_world(
+                    now=at(10, 0, day=15),
+                    residents={"danny": awake(), "nancy": asleep()},
+                )
+            ),
+            LIVING,
+        )
+        assert hand_start.brakes_readable(config, world) is True
+        assert hand_start.brakes_remaining(config, world, living(config), None) == frozenset(
+            {Reason.WAITING_FOR_SLEEPER}
+        )
+
+    def test_an_unreadable_sleep_sensor_blocks_the_recheck(self) -> None:
+        """Een onleesbare slaapsensor laat de rem verdwijnen maar blokkeert het verval."""
+        config = weekend_house()
+        world = with_hand_start(
+            after_a_slept_night(
+                make_world(
+                    now=at(10, 0, day=15),
+                    residents={
+                        "danny": awake(),
+                        "nancy": replace(asleep(), asleep=False, sleep_readable=False),
+                    },
+                )
+            ),
+            LIVING,
+        )
+        assert gate(config, world) == ()
+        assert hand_start.brakes_remaining(config, world, living(config), None) == frozenset()
+        assert hand_start.brakes_readable(config, world) is False
+
+    def test_an_unreadable_presence_entity_blocks_the_recheck(self) -> None:
+        """Een onleesbare aanwezigheid laat de rem verdwijnen maar blokkeert het verval."""
+        config = weekend_house()
+        world = with_hand_start(
+            after_a_slept_night(
+                make_world(
+                    now=at(10, 0, day=15),
+                    residents={
+                        "danny": awake(),
+                        "nancy": replace(asleep(), home=False, presence_readable=False),
+                    },
+                )
+            ),
+            LIVING,
+        )
+        assert gate(config, world) == ()
+        assert hand_start.brakes_remaining(config, world, living(config), None) == frozenset()
+        assert hand_start.brakes_readable(config, world) is False
+
+    def test_a_sensor_the_installation_does_not_use_does_not_block(self) -> None:
+        """Een sensor die deze installatie niet gebruikt is geen ontbrekende lezing."""
+        base = weekend_house()
+        config = replace(
+            base,
+            residents=tuple(replace(resident, sleep_entity="") for resident in base.residents),
+        )
+        world = after_a_slept_night(
+            make_world(
+                now=at(10, 0, day=15),
+                residents={
+                    "danny": awake(),
+                    "nancy": replace(asleep(), sleep_readable=False),
+                },
+            )
+        )
+        assert hand_start.brakes_readable(config, world) is True
+
+    def test_a_presence_sensor_the_installation_does_not_use_does_not_block(self) -> None:
+        """Een aanwezigheidssensor die niet meedoet is geen ontbrekende lezing."""
+        base = weekend_house()
+        config = replace(
+            base,
+            residents=tuple(replace(resident, presence_entity="") for resident in base.residents),
+        )
+        world = after_a_slept_night(
+            make_world(
+                now=at(10, 0, day=15),
+                residents={
+                    "danny": awake(),
+                    "nancy": replace(asleep(), presence_readable=False),
+                },
+            )
+        )
+        assert hand_start.brakes_readable(config, world) is True
+
+    def test_a_missing_resident_with_a_sensor_blocks_the_recheck(self) -> None:
+        """Een bewoner die helemaal uit de wereld mist telt als onleesbaar."""
+        config = weekend_house()
+        world = after_a_slept_night(make_world(now=at(10, 0, day=15), residents={"danny": awake()}))
+        assert hand_start.brakes_readable(config, world) is False
+
+
 def gate(config: DirectorConfig, world: WorldState) -> tuple[Reason, ...]:
     """Return every gate still shut for the living room."""
     return gates.closed(config, world, living(config))

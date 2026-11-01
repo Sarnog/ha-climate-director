@@ -76,6 +76,7 @@ from .engine.serialise import config_from_dict
 from .hand_start import _HandStartMixin
 from .overrides import _OverridesMixin
 from .preconditions import _PreconditionsMixin, _still_running
+from .resident_reader import _ResidentReaderMixin
 from .room_presence import _RoomPresenceMixin
 from .state_store import _StateStoreMixin
 from .units import (
@@ -147,26 +148,28 @@ def storage_key(entry_id: str) -> str:
 
 
 class CoordinatorSurface(Protocol):
-    """Het oppervlak van de coördinator dat de vijf mixins gebruiken.
+    """Het oppervlak van de coördinator dat de mixins gebruiken.
 
-    The coordinator surface the five mixins use.
+    The coordinator surface the mixins use.
 
-    De mixins (`_StateStoreMixin`, `_PreconditionsMixin`, `_OverridesMixin`,
-    `_RoomPresenceMixin`, `_WorldBuilderMixin`) liggen op de coördinator maar
-    erven er niet van: de coördinator erft van hén. Zonder deze declaratie ziet
-    mypy hun `self` als de mixin zelf en klaagt hij op elk coordinator-attribuut.
-    Elke mixin erft onder `TYPE_CHECKING` van dit protocol, zodat `self.config`
-    en de rest kloppen; buiten de typecontrole bestaat het niet, en de
-    coördinator erft het zo binnen - de waarden zelf staan in zijn `__init__`.
+    De mixins (`_HandStartMixin`, `_StateStoreMixin`, `_PreconditionsMixin`,
+    `_OverridesMixin`, `_ResidentReaderMixin`, `_RoomPresenceMixin`,
+    `_WorldBuilderMixin`) liggen op de coördinator maar erven er niet van: de
+    coördinator erft van hén. Zonder deze declaratie ziet mypy hun `self` als de
+    mixin zelf en klaagt hij op elk coordinator-attribuut. Elke mixin erft onder
+    `TYPE_CHECKING` van dit protocol, zodat `self.config` en de rest kloppen;
+    buiten de typecontrole bestaat het niet, en de coördinator erft het zo
+    binnen - de waarden zelf staan in zijn `__init__`.
 
-    The mixins (`_StateStoreMixin`, `_PreconditionsMixin`, `_OverridesMixin`,
-    `_RoomPresenceMixin`, `_WorldBuilderMixin`) sit on the coordinator but do
-    not inherit from it: the coordinator inherits from them. Without this
-    declaration mypy sees their `self` as the mixin itself and complains about
-    every coordinator attribute. Under `TYPE_CHECKING` each mixin inherits from
-    this protocol, so `self.config` and the rest resolve; outside the type check
-    it does not exist, and the coordinator inherits it like any other base - the
-    values themselves stand in its `__init__`.
+    The mixins (`_HandStartMixin`, `_StateStoreMixin`, `_PreconditionsMixin`,
+    `_OverridesMixin`, `_ResidentReaderMixin`, `_RoomPresenceMixin`,
+    `_WorldBuilderMixin`) sit on the coordinator but do not inherit from it: the
+    coordinator inherits from them. Without this declaration mypy sees their
+    `self` as the mixin itself and complains about every coordinator attribute.
+    Under `TYPE_CHECKING` each mixin inherits from this protocol, so `self.config`
+    and the rest resolve; outside the type check it does not exist, and the
+    coordinator inherits it like any other base - the values themselves stand in
+    its `__init__`.
     """
 
     config: DirectorConfig
@@ -230,6 +233,9 @@ class CoordinatorSurface(Protocol):
     def _wake_at_the_first_expiry(self) -> None: ...
     def _override_wake_at_first_expiry(self) -> None: ...
     def _calendar_says_holiday(self) -> bool: ...
+    def _resident(
+        self, resident_id: str, presence: str, sleep: str, asleep_state: str
+    ) -> ResidentState: ...
     def _zones_handed_back(
         self, now: datetime, residents: dict[str, ResidentState]
     ) -> set[str]: ...
@@ -241,6 +247,7 @@ class ClimateDirectorCoordinator(
     _StateStoreMixin,
     _PreconditionsMixin,
     _OverridesMixin,
+    _ResidentReaderMixin,
     _WorldBuilderMixin,
     DataUpdateCoordinator[Plan],
 ):
@@ -742,67 +749,6 @@ class ClimateDirectorCoordinator(
         self._notice_hand_start(event)
         self._notice_hand(event)
         self._debouncer.async_schedule_call()
-
-    @callback
-    def _notice_home(self, event: Event[EventStateChangedData]) -> None:
-        """Record when a resident comes home, and forget it when they leave.
-
-        Anker 13: het moment waarop iemand thuiskwam is wat het stiltevenster
-        onderscheidt van "er is iemand thuis", en het hoort hier - in de
-        toestandswijziging van de aanwezigheidsentiteit zelf, niet in een lezer
-        die alleen een antwoord teruggeeft. Alleen een **overgang** telt: iemand
-        die thuis is en wiens entiteit opnieuw gemeld wordt (een GPS-sprietje,
-        een herstelde stand) is geen thuiskomer, en zou met een vers moment het
-        huis de hele nacht laten doorstoken. Wie weggaat verliest zijn moment.
-
-        Het moment is `last_changed` van de entiteit zelf, niet `dt_util.now()`:
-        dat is precies het moment van de overgang, en het is hetzelfde moment dat
-        de slaap-vs-thuiskomst-vergelijking al las. Eén tijdbasis voor beide
-        lezers.
-
-        Anchor 13: the moment somebody came home is what separates the quiet
-        window from "somebody is home", and it belongs here - in the presence
-        entity's own state change, not in a reader that only hands back an answer.
-        Only a **transition** counts: somebody who is home and whose entity is
-        reported again (GPS jitter, a restored state) is not a homecomer, and a
-        fresh moment would let the house keep heating all night. Whoever leaves
-        loses their moment.
-
-        The moment is the entity's own `last_changed`, not `dt_util.now()`: that is
-        exactly the moment of the transition, and it is the same moment the
-        sleep-versus-homecoming comparison already read. One time base for both
-        readers.
-        """
-        entity_id = event.data["entity_id"]
-        old_state = event.data["old_state"]
-        new_state = event.data["new_state"]
-        changed = False
-        # Geen `return` bij de eerste treffer: twee bewoners mogen dezelfde
-        # aanwezigheidsentiteit delen (een "is er iemand thuis"-sensor), en dan
-        # hoort elk van hen het moment te krijgen. Eén schrijfactie na de lus.
-        #
-        # No `return` on the first hit: two residents may share one presence entity
-        # (an "is anybody home" sensor), and then each of them should get the
-        # moment. One write after the loop.
-        for resident in self.config.residents:
-            if resident.presence_entity != entity_id:
-                continue
-            # De toets staat met opzet in de `if` en niet in een variabele: `mypy`
-            # versmalt een `TypeGuard` alleen daar, en in een variabele blijft het
-            # `State | None` - dat is op de bouwserver gemeten (één `union-attr`).
-            #
-            # The check deliberately sits in the `if` and not in a variable: `mypy`
-            # only narrows a `TypeGuard` there, and in a variable it stays
-            # `State | None` - measured on the build server (one `union-attr`).
-            if reads_as_home(new_state):
-                moment = new_state.last_changed
-                if not reads_as_home(old_state):
-                    self._home_since[resident.resident_id] = moment
-                    changed = True
-            elif self._home_since.pop(resident.resident_id, None) is not None:
-                changed = True
-        if changed:
-            self._async_save_state()
 
     @callback
     def _notice_precipitation(self, event: Event[EventStateChangedData]) -> None:

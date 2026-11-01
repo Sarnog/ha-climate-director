@@ -468,7 +468,7 @@ FUNCTION_LIMIT = 80
 # measure; the functions in `engine/gates.py` stay under eighty.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2272,
-    "coordinator.py": 2138,
+    "coordinator.py": 2084,
     "engine/decide.py": 1810,
     "config_flow.py": 1492,
     "schemas.py": 893,
@@ -485,7 +485,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("coordinator.py", "_notice_hand"): 137,
     ("engine/decide.py", "_build_zone_decisions"): 135,
     ("engine/decide.py", "_manual_conflict"): 103,
-    ("state_store.py", "_async_restore_state"): 137,
+    ("state_store.py", "_async_restore_state"): 126,
     ("state_store.py", "_restore_overrides"): 81,
     ("engine/hysteresis.py", "_candidate"): 97,
     ("config_flow.py", "async_step_resident"): 97,
@@ -591,6 +591,16 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # N11: `engine/decide.py` 1811 → 1810 and `_resolve_with_fallbacks` 92 → 91
 # because the bounded for loop became a while loop that stops at a round without
 # a move; the function does not grow and the ratchet comes down with it.
+#
+# N12: `coordinator.py` 2138 → 2084 en `state_store.py::_async_restore_state`
+# 137 → 126 doordat `_notice_home` en `_resident` naar `resident_reader.py`
+# verhuisden; de nieuwe module en zijn functies blijven onder de maat. De ratel
+# zakt mee.
+#
+# N12: `coordinator.py` 2138 → 2084 and `state_store.py::_async_restore_state`
+# 137 → 126 because `_notice_home` and `_resident` moved to `resident_reader.py`;
+# the new module and its functions stay below the measure. The ratchet comes
+# down with it.
 
 
 def _python_files(root: Path) -> list[Path]:

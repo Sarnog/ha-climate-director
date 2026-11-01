@@ -26,7 +26,7 @@ from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
 from . import problems
-from .world_builder import reads_as_home
+from .world_builder import _unreadable, reads_as_home
 
 if TYPE_CHECKING:
     from .coordinator import CoordinatorSurface
@@ -385,18 +385,7 @@ class _StateStoreMixin(_CoordinatorBase):
 
         self._restore_room_presence(stored, now)
         getattr(self, "_restore_hand_starts", lambda *_: None)(stored, now)
-        home_raw = stored.get("home_since")
-        if isinstance(home_raw, Mapping):
-            presence = {
-                resident.resident_id: resident.presence_entity for resident in self.config.residents
-            }
-            for resident_id, raw in home_raw.items():
-                if resident_id not in presence:
-                    continue
-                since = _stored_time(raw)
-                if since is None or not reads_as_home(self.hass.states.get(presence[resident_id])):
-                    continue
-                self._home_since[resident_id] = since
+        self._restore_home_since(stored)
         self._asleep_since = _stored_time(stored.get("asleep_since"))
         if hasattr(self, "_restore_overrides"):
             self._restore_overrides(stored, now)
@@ -414,6 +403,36 @@ class _StateStoreMixin(_CoordinatorBase):
                 self._handed_back.pop(zone_id)
 
         self._wake_at_the_first_expiry()
+
+    def _restore_home_since(self, stored: Mapping[str, Any]) -> None:
+        """Restore homecoming moments, keeping one that is unreadable right now.
+
+        Een opgeslagen moment komt terug als de bewoner thuis is, maar ook als
+        zijn aanwezigheidsentiteit ontbreekt of `unavailable`/`unknown` meldt:
+        een ontbrekende lezing is geen vertrek. Alleen een leesbare stand die
+        niet thuis betekent laat het moment vallen.
+
+        A stored moment comes back when the resident is home, but also when
+        their presence entity is missing or reports `unavailable`/`unknown`: a
+        missing reading is no departure. Only a readable state that does not
+        mean home lets the moment lapse.
+        """
+        home_raw = stored.get("home_since")
+        if not isinstance(home_raw, Mapping):
+            return
+        presence = {
+            resident.resident_id: resident.presence_entity for resident in self.config.residents
+        }
+        for resident_id, raw in home_raw.items():
+            if resident_id not in presence:
+                continue
+            since = _stored_time(raw)
+            state = self.hass.states.get(presence[resident_id])
+            if since is None or (
+                state is not None and not reads_as_home(state) and not _unreadable(state.state)
+            ):
+                continue
+            self._home_since[resident_id] = since
 
     def _restore_overrides(self, stored: Mapping[str, Any], now: datetime) -> None:
         """Restore timed overrides; expired ones lapse without a command.

@@ -232,6 +232,18 @@ async def prepare_sleeping_house(
     return await start_house(installation_data, states=states)
 
 
+async def a_hand_started_living_room(home: LiveHome, clock: Any) -> None:
+    """Let the night pass, then start the living room by hand."""
+    await a_slept_night(home, clock)
+    assert reason(home) == "waiting_for_sleeper"
+    home.clear_calls()
+    home.climate(LIVING, "heat", current=18.5)
+    await decide(home)
+    assert "woonkamer" in home.coordinator._hand_starts
+    assert reason(home) == "regulating"
+    assert home.state(LIVING) == "heat"
+
+
 class TestHandStartAtTheAppliance:
     async def test_waiting_for_the_sleeper_yields_to_a_hand_start(self, clock) -> None:
         """W1: de handstart laat de airco regelen en daarna uit en weer aan gaan."""
@@ -660,6 +672,235 @@ class TestTheHandStartLapses:
             assert "woonkamer" in home.coordinator._hand_starts
         finally:
             await stop_house(home)
+
+
+class TestAnUnreadableBrakeInput:
+    """N12: een onleesbare invoer laat de handstart staan tot een leesbare ronde."""
+
+    async def test_a_sleep_sensor_that_drops_out_keeps_the_hand_start(self, clock) -> None:
+        """Eén ronde zonder slaaplezing laat de handstart en de airco staan."""
+        home = await start_house(installation(), states=world(danny_asleep=True, nancy_asleep=True))
+        try:
+            await a_hand_started_living_room(home, clock)
+
+            home.set(NANCY[1], "unavailable")
+            await decide(home)
+
+            assert "woonkamer" in home.coordinator._hand_starts
+            assert home.state(LIVING) == "heat"
+            assert "off" not in [call[1].get("hvac_mode") for call in home.climate_calls()]
+        finally:
+            await stop_house(home)
+
+    async def test_the_hand_start_waits_for_the_sleep_sensor_to_return(self, clock) -> None:
+        """Komt de slaapsensor terug en wacht de zone nog, dan blijft de handstart."""
+        home = await start_house(installation(), states=world(danny_asleep=True, nancy_asleep=True))
+        try:
+            await a_hand_started_living_room(home, clock)
+
+            home.set(NANCY[1], "unavailable")
+            await decide(home)
+            assert "woonkamer" in home.coordinator._hand_starts
+
+            home.set(NANCY[1], "wireless")
+            await decide(home)
+
+            assert "woonkamer" in home.coordinator._hand_starts
+            assert reason(home) == "regulating"
+            assert home.state(LIVING) == "heat"
+        finally:
+            await stop_house(home)
+
+    async def test_the_hand_start_lapses_in_the_first_readable_round_without_a_brake(
+        self, clock
+    ) -> None:
+        """Na een leesbare ronde zonder rem vervalt de handstart alsnog."""
+        home = await start_house(installation(), states=world(danny_asleep=True, nancy_asleep=True))
+        try:
+            await a_hand_started_living_room(home, clock)
+
+            home.set(NANCY[1], "unavailable")
+            await decide(home)
+            assert "woonkamer" in home.coordinator._hand_starts
+
+            clock.at(8, 11, 0)
+            await decide(home)
+            assert "woonkamer" in home.coordinator._hand_starts
+
+            home.set(NANCY[1], "wireless")
+            await decide(home)
+
+            assert home.coordinator._hand_starts == {}
+            assert reason(home) == "regulating"
+            assert home.state(LIVING) == "heat"
+        finally:
+            await stop_house(home)
+
+    async def test_a_presence_entity_that_drops_out_keeps_the_hand_start(self, clock) -> None:
+        """Een onleesbare aanwezigheid is geen vertrek en laat de handstart staan."""
+        home = await start_house(installation(), states=world(danny_asleep=True, nancy_asleep=True))
+        try:
+            await a_hand_started_living_room(home, clock)
+            before = home.coordinator._home_since.get("nancy")
+            assert before is not None
+
+            home.set(NANCY[0], "unknown")
+            await decide(home)
+
+            assert home.coordinator._home_since.get("nancy") == before
+            assert "woonkamer" in home.coordinator._hand_starts
+            assert home.state(LIVING) == "heat"
+            assert "off" not in [call[1].get("hvac_mode") for call in home.climate_calls()]
+        finally:
+            await stop_house(home)
+
+    async def test_the_hand_start_waits_for_the_presence_entity_to_return(self, clock) -> None:
+        """Komt de aanwezigheid terug en wacht de zone nog, dan blijft de handstart."""
+        home = await start_house(installation(), states=world(danny_asleep=True, nancy_asleep=True))
+        try:
+            await a_hand_started_living_room(home, clock)
+
+            home.set(NANCY[0], "unknown")
+            await decide(home)
+            assert "woonkamer" in home.coordinator._hand_starts
+
+            home.set(NANCY[0], "home")
+            await decide(home)
+
+            assert "woonkamer" in home.coordinator._hand_starts
+            assert reason(home) == "regulating"
+            assert home.state(LIVING) == "heat"
+        finally:
+            await stop_house(home)
+
+    async def test_the_presence_entity_can_return_without_a_brake(self, clock) -> None:
+        """Na een leesbare aanwezigheid zonder rem vervalt de handstart alsnog."""
+        home = await start_house(installation(), states=world(danny_asleep=True, nancy_asleep=True))
+        try:
+            await a_hand_started_living_room(home, clock)
+
+            home.set(NANCY[0], "unknown")
+            await decide(home)
+            assert "woonkamer" in home.coordinator._hand_starts
+
+            clock.at(8, 11, 0)
+            await decide(home)
+            assert "woonkamer" in home.coordinator._hand_starts
+
+            home.set(NANCY[0], "home")
+            await decide(home)
+
+            assert home.coordinator._hand_starts == {}
+            assert reason(home) == "regulating"
+        finally:
+            await stop_house(home)
+
+    async def test_an_unreadable_presence_does_not_lapse_as_an_empty_house(self, clock) -> None:
+        """Twee onleesbare aanwezigheden mogen de handstart niet als leeg huis laten vallen."""
+        home = await start_house(installation(), states=world(danny_asleep=True, nancy_asleep=True))
+        try:
+            await a_hand_started_living_room(home, clock)
+
+            home.set(DANNY[0], "unknown")
+            home.set(NANCY[0], "unknown")
+            await decide(home)
+
+            assert "woonkamer" in home.coordinator._hand_starts
+        finally:
+            await stop_house(home)
+
+    async def test_an_input_that_never_returns_still_lapses_on_the_next_day(self, clock) -> None:
+        """Een sensor die nooit terugkomt houdt de handstart niet over de dag heen."""
+        home = await start_house(installation(), states=world(danny_asleep=True, nancy_asleep=True))
+        try:
+            await a_hand_started_living_room(home, clock)
+
+            home.set(NANCY[1], "unavailable")
+            await decide(home)
+            assert "woonkamer" in home.coordinator._hand_starts
+
+            clock.at(8, 23, 59)
+            await decide(home)
+            assert "woonkamer" in home.coordinator._hand_starts
+
+            clock.at(9, 0, 0)
+            await decide(home)
+
+            assert home.coordinator._hand_starts == {}
+        finally:
+            await stop_house(home)
+
+    async def test_the_hand_start_returns_after_a_restart_with_an_unreadable_sleep_sensor(
+        self, clock
+    ) -> None:
+        """Een herstart met een onleesbare slaapsensor brengt de handstart terug."""
+        config_dir = new_config_dir()
+        home = await start_house(
+            installation(),
+            states=world(danny_asleep=True, nancy_asleep=True),
+            config_dir=config_dir,
+        )
+        try:
+            await a_hand_started_living_room(home, clock)
+            home.set(NANCY[1], "unavailable")
+            await decide(home)
+            assert "woonkamer" in home.coordinator._hand_starts
+            await asyncio.sleep(1.2)
+        finally:
+            await stop_house(home)
+
+        again = await start_house(
+            installation(),
+            states={
+                **world(danny_asleep=False, nancy_asleep=True, ac="off"),
+                NANCY[1]: ("unavailable", {}),
+            },
+            config_dir=config_dir,
+        )
+        try:
+            await decide(again)
+            assert "woonkamer" in again.coordinator._hand_starts
+        finally:
+            await stop_house(again)
+
+    async def test_the_hand_start_returns_after_a_restart_with_an_unreadable_presence(
+        self, clock
+    ) -> None:
+        """Een herstart met een onleesbare aanwezigheid brengt de handstart terug."""
+        config_dir = new_config_dir()
+        home = await start_house(
+            installation(),
+            states=world(danny_asleep=True, nancy_asleep=True),
+            config_dir=config_dir,
+        )
+        try:
+            await a_hand_started_living_room(home, clock)
+            home.set(NANCY[0], "unknown")
+            await decide(home)
+            assert "woonkamer" in home.coordinator._hand_starts
+            await asyncio.sleep(1.2)
+        finally:
+            await stop_house(home)
+
+        again = await start_house(
+            installation(),
+            states={
+                **world(danny_asleep=False, nancy_asleep=True, ac="off"),
+                NANCY[0]: ("unknown", {}),
+            },
+            config_dir=config_dir,
+        )
+        try:
+            await decide(again)
+            assert "woonkamer" in again.coordinator._hand_starts
+
+            again.set(NANCY[0], "home")
+            await decide(again)
+
+            assert "woonkamer" in again.coordinator._hand_starts
+            assert reason(again) == "regulating"
+        finally:
+            await stop_house(again)
 
 
 class TestTheEndOfTheWaiting:

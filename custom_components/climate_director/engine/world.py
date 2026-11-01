@@ -94,6 +94,31 @@ class ResidentState:
     against `world.now` and never asks Home Assistant itself.
     """
 
+    presence_readable: bool = True
+    """Of de aanwezigheidsentiteit een lezing gaf.
+
+    Een ontbrekende entiteit, `unavailable` en `unknown` zijn geen lezing. De
+    koppelingslaag vult dit; de engine gebruikt het om een handstart niet op een
+    gok te laten vervallen. Zonder geconfigureerde entiteit valt er niets te
+    lezen en blijft dit waar.
+
+    Whether the presence entity gave a reading. A missing entity, `unavailable`
+    and `unknown` are no reading. The binding layer fills this; the engine uses
+    it to keep a hand start from lapsing on a guess. Without a configured entity
+    there is nothing to read and this stays true.
+    """
+
+    sleep_readable: bool = True
+    """Of de slaapsensor een lezing gaf.
+
+    Dezelfde regel als bij de aanwezigheid: ontbrekend, `unavailable` en
+    `unknown` zijn geen lezing. De engine gebruikt dit alleen voor het verval van
+    een handstart.
+
+    The same rule as for presence: missing, `unavailable` and `unknown` are no
+    reading. The engine uses this only for the expiry of a hand start.
+    """
+
     @property
     def present_and_awake(self) -> bool:
         """Return whether this resident is home and out of bed."""

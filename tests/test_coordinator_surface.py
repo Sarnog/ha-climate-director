@@ -1,8 +1,8 @@
 """Het protocol van de coördinator noemt precies wat de mixins gebruiken.
 
-`CoordinatorSurface` bestaat alleen voor mypy: de zes mixins (`overrides.py`,
-`preconditions.py`, `hand_start.py`, `room_presence.py`, `state_store.py`,
-`world_builder.py`) erven er onder
+`CoordinatorSurface` bestaat alleen voor mypy: de zeven mixins (`overrides.py`,
+`preconditions.py`, `hand_start.py`, `resident_reader.py`, `room_presence.py`,
+`state_store.py`, `world_builder.py`) erven er onder
 `TYPE_CHECKING` van, zodat hun `self` elk lid van de coördinator kent. Buiten de
 typecontrole bestaat het protocol niet, en dus controleerde niets of de
 coördinator die leden ook werkelijk draagt, of een lid er nog toe doet, of dat een
@@ -26,9 +26,9 @@ leden buiten het protocol die een geleende methode aanraakt.
 
 The coordinator's protocol names exactly what the mixins use.
 
-`CoordinatorSurface` exists only for mypy: the six mixins (`overrides.py`,
-`preconditions.py`, `hand_start.py`, `room_presence.py`, `state_store.py`,
-`world_builder.py`) inherit from it under
+`CoordinatorSurface` exists only for mypy: the seven mixins (`overrides.py`,
+`preconditions.py`, `hand_start.py`, `resident_reader.py`, `room_presence.py`,
+`state_store.py`, `world_builder.py`) inherit from it under
 `TYPE_CHECKING`, so their `self` knows every member of the coordinator. Outside
 the type check the protocol does not exist, so nothing checked whether the
 coordinator really carries those members, whether a member still matters, or
@@ -69,13 +69,14 @@ from custom_components.climate_director.coordinator import (
 PACKAGE = Path(coordinator_module.__file__).parent
 TESTS = Path(__file__).parent
 
-#: De vijf mixins die van het protocol erven; de coördinator erft van hen.
+#: De mixins die van het protocol erven; de coördinator erft van hen.
 #:
-#: The five mixins inheriting from the protocol; the coordinator inherits from them.
+#: The mixins inheriting from the protocol; the coordinator inherits from them.
 MIXIN_FILES = (
     "overrides.py",
     "preconditions.py",
     "hand_start.py",
+    "resident_reader.py",
     "room_presence.py",
     "state_store.py",
     "world_builder.py",

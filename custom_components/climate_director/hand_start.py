@@ -7,16 +7,18 @@ dezelfde hand, het slapen, een leeg huis of de volgende dag; een handstart zet
 een zone aan en laat alleen `WAITING_FOR_SLEEPER`, `EARLY_RISER` en
 `QUIET_HOURS` passeren. De knop per zone en een actieve stand die niet van de
 director komt zetten dezelfde notitie. De coordinator bewaart haar over een
-herstart en laat haar vallen zodra geen van die drie remmen de zone nog
-tegenhoudt, of bij slapen, een leeg huis of de volgende dag.
+herstart en laat haar vallen in de eerste leesbare ronde waarin geen van die
+drie remmen de zone nog tegenhoudt, of bij slapen, een leeg huis of de volgende
+dag. Een ronde met een onleesbare aanwezigheids- of slaapsensor laat haar staan.
 
 A hand start is not a hand. A hand switches an appliance off and stays silent
 until the same hand, sleep, an empty house or the next day; a hand start switches
 a zone on and lets only `WAITING_FOR_SLEEPER`, `EARLY_RISER` and `QUIET_HOURS`
 pass. The per-zone button and an active mode that does not come from the
 director make the same note. The coordinator keeps it across a restart and drops
-it as soon as none of those three brakes still holds the zone, or on sleep, an
-empty house or the next day.
+it in the first readable round in which none of those three brakes still holds
+the zone, or on sleep, an empty house or the next day. A round with an
+unreadable presence or sleep sensor leaves it standing.
 """
 
 from __future__ import annotations
@@ -228,20 +230,28 @@ class _HandStartMixin(_CoordinatorBase):
 
         Slapen, een leeg huis en de volgende dag zijn de drie uitwegen die niets
         met een poort te maken hebben. Daarnaast vervalt een handstart in de
-        eerste ronde waarin geen van de drie remmen de zone nog tegenhoudt - ook
-        wanneer een andere poort, zoals een open raam, de zone nog wel stilhoudt.
-        De rest van de wereld verandert niet.
+        eerste leesbare ronde waarin geen van de drie remmen de zone nog
+        tegenhoudt - ook wanneer een andere poort, zoals een open raam, de zone
+        nog wel stilhoudt. Een ronde waarin een van de invoeren van die remmen
+        geen lezing heeft, laat hem staan; de engine toetst dat met
+        `brakes_readable`. De volgende dag en een onbekende zone vervallen
+        altijd. De rest van de wereld verandert niet.
 
         Sleep, an empty house and the next day are the three exits that have
         nothing to do with a gate. Beside those, a hand start lapses in the first
-        round in which none of the three brakes still holds the zone - even when
-        another gate, such as an open window, still silences it. The rest of the
-        world does not change.
+        readable round in which none of the three brakes still holds the zone -
+        even when another gate, such as an open window, still silences it. A
+        round in which one of the brake inputs has no reading leaves it
+        standing; the engine checks that with `brakes_readable`. The next day and
+        an unknown zone always lapse. The rest of the world does not change.
         """
         residents = world.residents
         previous = self._published_plan()
         expired: list[str] = []
-        if self._everyone_asleep(world.now, residents) or self._house_is_empty(residents):
+        readable = hand_start.brakes_readable(self.config, world)
+        if readable and (
+            self._everyone_asleep(world.now, residents) or self._house_is_empty(residents)
+        ):
             expired = list(self._hand_starts)
         else:
             for zone_id, started in self._hand_starts.items():
@@ -249,7 +259,10 @@ class _HandStartMixin(_CoordinatorBase):
                 if (
                     zone is None
                     or started.date() != world.now.date()
-                    or not hand_start.brakes_remaining(self.config, world, zone, previous)
+                    or (
+                        readable
+                        and not hand_start.brakes_remaining(self.config, world, zone, previous)
+                    )
                 ):
                     expired.append(zone_id)
         if expired:

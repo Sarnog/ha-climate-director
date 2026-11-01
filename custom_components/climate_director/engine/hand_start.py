@@ -36,6 +36,31 @@ HAND_START_BRAKES = frozenset(
 )
 
 
+def brakes_readable(config: DirectorConfig, world: WorldState) -> bool:
+    """Return whether every sensor feeding the three brakes gave a reading.
+
+    Een handstart vervalt niet op grond van een ronde waarin een van de drie
+    remmen zijn invoer niet kan lezen. De koppelingslaag levert per bewoner of
+    de aanwezigheids- en slaapsensor een lezing gaven; hier wordt alleen
+    gekeken naar de sensoren die deze installatie werkelijk gebruikt. Een
+    ontbrekende bewoner in de wereld telt als onleesbaar zodra een van zijn
+    twee sensoren de remmen voedt.
+
+    A hand start does not lapse on the strength of a round in which one of the
+    three brakes cannot read its input. The binding layer supplies per resident
+    whether the presence and sleep sensors gave a reading; only the sensors this
+    installation actually uses are checked. A resident missing from the world
+    counts as unreadable as soon as either of their sensors feeds the brakes.
+    """
+    for resident in config.residents:
+        state = world.residents.get(resident.resident_id)
+        if resident.presence_entity and (state is None or not state.presence_readable):
+            return False
+        if resident.sleep_entity and (state is None or not state.sleep_readable):
+            return False
+    return True
+
+
 def passes(world: WorldState, zone_id: str, reason: Reason) -> bool:
     """Return whether this zone's hand start lets `reason` through.
 
