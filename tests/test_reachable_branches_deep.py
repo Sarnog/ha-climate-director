@@ -739,7 +739,11 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
 #: de handstartmixin is de zesde mixin met dezelfde drie TYPE_CHECKING-regels, en
 #: de coordinator leent haar vier protocolleden (`build_world`,
 #: `_we_wanted_it_on`, `_hand_starts_payload` en `_restore_hand_starts`); die
-#: zeven regels bestaan alleen voor de typecontrole en zijn niet te meten.
+#: zeven regels bestaan alleen voor de typecontrole en zijn niet te meten. 36 → 41:
+#: de bewonerslezer (N12) is de zevende mixin met dezelfde drie
+#: TYPE_CHECKING-regels, en de coordinator leent haar twee protocollijnen
+#: (`_resident` is meerregelig); die vijf regels bestaan alleen voor de
+#: typecontrole en zijn niet te meten.
 #:
 #: The number of named exclusions of the gate. The whitelist may only get shorter:
 #: every line added to it is a line the measurement no longer covers, and without
@@ -759,8 +763,12 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
 #: mixin is the sixth mixin with the same three TYPE_CHECKING lines, and the
 #: coordinator lends it four protocol members (`build_world`,
 #: `_we_wanted_it_on`, `_hand_starts_payload` and `_restore_hand_starts`); those
-#: seven lines exist for the type check only and cannot be measured.
-NAMED_EXCLUSIONS_BUDGET = 36
+#: seven lines exist for the type check only and cannot be measured. 36 → 41: the
+#: resident reader (N12) is the seventh mixin with the same three TYPE_CHECKING
+#: lines, and the coordinator lends it two protocol lines (`_resident` is
+#: multi-line); those five lines exist for the type check only and cannot be
+#: measured.
+NAMED_EXCLUSIONS_BUDGET = 41
 
 
 def test_the_named_exclusions_are_a_ratchet() -> None:
