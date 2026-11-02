@@ -206,7 +206,12 @@ class TestThePrivacyRedaction:
                 return {}
 
             def tracked_entities(self) -> set[str]:
-                return {"sensor.woonkamer", "person.danny"}
+                return {
+                    "sensor.woonkamer",
+                    "person.danny",
+                    "sensor.danny_lader",
+                    "binary_sensor.woonkamer_bezet",
+                }
 
         class Entry:
             runtime_data = Coordinator()
