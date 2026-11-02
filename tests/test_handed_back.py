@@ -1270,7 +1270,7 @@ class TestItSurvivesARestart:
         assert item._handed_back == {}
 
     def test_our_own_switch_off_is_written_away(self) -> None:
-        """Een eigen  moet een herstart overleven om een late melding te verklaren."""
+        """Een eigen `off` moet een herstart overleven om een late melding te verklaren."""
         item = self._coordinator()
         now = dt_util.now()
         item._commanded_off = {"slaapkamer": now}
@@ -1279,11 +1279,18 @@ class TestItSurvivesARestart:
         assert item._store.written["commanded_off"] == {"slaapkamer": now.isoformat()}
 
     async def test_a_recent_own_switch_off_comes_back(self) -> None:
-        """Binnen het venster blijft ons eigen  de verklaring."""
+        """Binnen het venster blijft ons eigen `off` de verklaring."""
         now = dt_util.now()
         item = self._coordinator({"commanded_off": {"slaapkamer": now.isoformat()}})
         await item._async_restore_state()
         assert item._commanded_off == {"slaapkamer": now}
+
+    async def test_an_own_switch_off_at_the_edge_of_the_window_still_comes_back(self) -> None:
+        """Veertien minuten geleden telt nog, zodat een trage poll gedekt blijft."""
+        edge = dt_util.now() - timedelta(minutes=14)
+        item = self._coordinator({"commanded_off": {"slaapkamer": edge.isoformat()}})
+        await item._async_restore_state()
+        assert item._commanded_off == {"slaapkamer": edge}
 
     async def test_an_old_own_switch_off_does_not_come_back(self) -> None:
         """Na het venster is een oude uitzetting geen verklaring meer."""
