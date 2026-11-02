@@ -434,6 +434,12 @@ class TestTheReadabilityModel:
         world = self.with_reading(kind, subject)
         assert hand_start.brakes_readable(config, world) is False
 
+    def test_a_keyword_without_a_calendar_does_not_count(self) -> None:
+        """Een trefwoord zonder agenda voedt de remmen niet."""
+        config = replace(weekend_house(), holiday_calendars=(), holiday_keyword="vakantie")
+        world = self.with_reading("holiday")
+        assert hand_start.brakes_readable(config, world) is True
+
     def test_a_calendar_without_a_keyword_does_not_count(self) -> None:
         """Zonder trefwoord voedt de agenda de remmen niet."""
         config = replace(
@@ -444,19 +450,68 @@ class TestTheReadabilityModel:
         world = self.with_reading("holiday")
         assert hand_start.brakes_readable(config, world) is True
 
+    #: Velden die de drie wachtrema's lezen via een entiteit die kan wegvallen, met de
+    #: soorten invoer (`ReadableInput`) die ze dragen. Een nieuw veld dat een rem
+    #: voedt hoort hier, met zijn soort.
+    #:
+    #: Fields the three waiting brakes read through an entity that can drop out, with
+    #: the kinds of input (`ReadableInput`) they carry. A new field feeding a brake
+    #: belongs here, with its kind.
+    BRAKE_INPUT_FIELDS = {
+        "residents": {"presence", "sleep"},
+        "holiday_mode": {"holiday"},
+    }
+
+    #: Overige velden uit een entiteit, een schakelaar of een dienst die de remmen niet
+    #: via een onleesbare entiteit voeden.
+    #:
+    #: Other fields from an entity, a switch or a service that do not feed the brakes
+    #: through an unreadable entity.
+    EXTERNAL_WORLD_FIELDS = {
+        "outdoor_temperature",
+        "season",
+        "indoor_temperatures",
+        "climates",
+        "unreadable",
+        "openings",
+        "presence",
+        "circuit_family_since",
+        "master_enabled",
+        "precondition_bypass",
+        "precondition_until",
+        "guest_mode",
+        "precipitation",
+        "zone_overrides",
+        "zone_hand_starts",
+        "zone_hands",
+        "zone_priorities",
+        "opening_bypasses",
+    }
+
+    #: Velden die de engine zelf uit de klok of uit de andere velden afleidt.
+    #:
+    #: Fields the engine derives from the clock or from the other fields.
+    INTERNAL_WORLD_FIELDS = {"now", "asleep_since"}
+
     def test_every_world_field_is_classified(self) -> None:
-        """Een nieuw veld in de wereld moet in het leesbaarheidsmodel worden ingedeeld."""
+        """Een nieuw veld in de wereld staat in precies één van de drie klassen."""
         from dataclasses import fields
 
-        from custom_components.climate_director.engine.world import (
-            EXTERNAL_WORLD_FIELDS,
-            INTERNAL_WORLD_FIELDS,
-            WorldState,
-        )
-
+        classes = [
+            set(self.BRAKE_INPUT_FIELDS),
+            self.EXTERNAL_WORLD_FIELDS,
+            self.INTERNAL_WORLD_FIELDS,
+        ]
         found = {field.name for field in fields(WorldState)}
-        assert found == EXTERNAL_WORLD_FIELDS | INTERNAL_WORLD_FIELDS
-        assert not EXTERNAL_WORLD_FIELDS & INTERNAL_WORLD_FIELDS
+        assert found == classes[0] | classes[1] | classes[2]
+        assert sum(len(item) for item in classes) == len(found)
+
+    def test_every_readable_input_belongs_to_a_field(self) -> None:
+        """Elke soort onleesbare invoer hoort bij een veld dat de remmen voedt."""
+        from custom_components.climate_director.engine.world import ReadableInput
+
+        carried = [kind for kinds in self.BRAKE_INPUT_FIELDS.values() for kind in kinds]
+        assert sorted(carried) == sorted(str(kind) for kind in ReadableInput)
 
 
 def gate(config: DirectorConfig, world: WorldState) -> tuple[Reason, ...]:
