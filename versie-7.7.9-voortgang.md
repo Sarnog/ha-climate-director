@@ -43,8 +43,8 @@ een ankerbesluit. Zonder keuze wordt geen van beide gebouwd.
 | C. hygiëne `_unreadable` en `_restore_hand_starts` | gebouwd | `readability.py`; 322 gerichte toetsen groen (`/tmp/779/C-focused.log`); ruff en mypy groen (`/tmp/779/C-lint.log`) |
 | A. N13 en het leesbaarheidsmodel | gebouwd | model in `WorldState.unreadable`; 185 handstarttoetsen groen; probe n7 oud `hand_starts=[]`/`cmds=[None,'off']`, nieuw `hand_starts=['woonkamer']`/`cmds=[None]` (`/tmp/779/A-probe-n7-old.log`, `/tmp/779/A-probe-n7-new.log`) |
 | D. L1-L12 en P2 | gebouwd | 15 toetsen rood op `cbe2270`, 19 groen op deze boom (`/tmp/779/D-red.log`, `/tmp/779/D-green.log`); 24-uurgrens apart rood (`/tmp/779/D-red-24h.log`) |
-| E. beschrijving | deels | gidsen en ARCHITECTURE bijgewerkt; release notes volgen |
-| release 7.7.9 | nog niet begonnen | - |
+| E. beschrijving | klaar | gidsen, ARCHITECTURE en release notes bijgewerkt |
+| release 7.7.9 | uitgebracht | tag `v7.7.9` op `a69bf76`, release 431457629; groene Tests-run met selectie ALL (3852 passed, 100 % dekking) |
 
 C: `unreadable()` staat nu publiek in `readability.py`; `world_builder.py` groeide
 niet en daalde van 573 naar 559 regels. `state_store.py` roept
@@ -119,8 +119,8 @@ neither is built.
 | C. hygiene `_unreadable` and `_restore_hand_starts` | built | `readability.py`; 322 focused tests green (`/tmp/779/C-focused.log`); ruff and mypy green (`/tmp/779/C-lint.log`) |
 | A. N13 and the readability model | built | model in `WorldState.unreadable`; 185 hand-start tests green; probe n7 old `hand_starts=[]`/`cmds=[None,'off']`, new `hand_starts=['woonkamer']`/`cmds=[None]` (`/tmp/779/A-probe-n7-old.log`, `/tmp/779/A-probe-n7-new.log`) |
 | D. L1-L12 and P2 | built | 15 tests red on `cbe2270`, 19 green on this tree (`/tmp/779/D-red.log`, `/tmp/779/D-green.log`); the 24-hour bound separately red (`/tmp/779/D-red-24h.log`) |
-| E. description | partly | guides and ARCHITECTURE updated; release notes follow |
-| release 7.7.9 | not started | - |
+| E. description | done | guides, ARCHITECTURE and release notes updated |
+| release 7.7.9 | released | tag `v7.7.9` on `a69bf76`, release 431457629; green Tests run with selection ALL (3852 passed, 100 % coverage) |
 
 C: `unreadable()` now lives publicly in `readability.py`; `world_builder.py` did
 not grow and fell from 573 to 559 lines. `state_store.py` calls
