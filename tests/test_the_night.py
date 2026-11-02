@@ -389,6 +389,29 @@ def test_a_resident_who_came_home_after_the_house_slept_did_not_sleep_tonight() 
     assert not night.slept_tonight(config.residents[0], world)
 
 
+def test_a_homecoming_moment_in_the_future_counts_as_unknown() -> None:
+    """Een thuiskomstmoment na `nu` is een klokfout en geen late thuiskomst.
+
+    Een toekomstig moment mag de bewoner niet als late thuiskomer uit de nacht
+    halen; het telt als onbekend, en dan blijft de oude uitkomst staan.
+
+    A homecoming moment after `now` is a clock error and no late arrival. A future
+    moment must not take the resident out of the night as a late arrival; it counts
+    as unknown, and then the old outcome stands.
+    """
+    config = live_house()
+    world = make_world(
+        now=at(7, 0, day=SAT),
+        residents={
+            "danny": asleep(home_since=at(9, 0, day=SAT)),
+            "nancy": asleep(home_since=HOME),
+        },
+        asleep_since=at(1, 30, day=SAT),
+    )
+
+    assert night.slept_tonight(config.residents[0], world)
+
+
 def test_a_sleep_moment_older_than_a_day_does_not_count() -> None:
     """Een moment van meer dan vierentwintig uur geleden is geen nacht meer.
 
