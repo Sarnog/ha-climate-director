@@ -33,6 +33,18 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   gedeelde ketel: alle drie de zones `regulating` tijdens de uitval, daarna twee keer
   `waiting_for_sleeper`). Hetzelfde ontwerp als N14 (b): een korte vasthoudtijd van de
   laatste leesbare stand.
+- **Meldingen over dode instellingen noemen de instelling in het Engels (N16)** — de
+  meldingen over een slaapinstelling zonder slaapsensor, een venster zonder lengte en een
+  vastlooptijd onder de rust vullen `{settings}`, `{window}` en `{label}` met Engelse
+  woorden uit de engine ("sleep window, wait for this sleeper until", "quiet window",
+  "minimum cycle time"), ook in het Nederlands, Duits, Frans, Spaans en Arabisch. Gemeten:
+  de Nederlandse melding eindigt op "...kunnen nooit werken: sleep window, wait for this
+  sleeper until." De melding hoort het schermwoord van de taal van de gebruiker te noemen.
+- **De bewaking van de remmen-invoer kan niet weten of een extern veld de remmen voedt** —
+  `test_every_world_field_is_classified` dwingt een bewuste indeling af, maar een nieuw
+  veld in `EXTERNAL_WORLD_FIELDS` dat de remmen toch voedt blijft groen. Een
+  verstoringstoets zou dat meten: verander elk extern veld buiten de remmen-invoer en eis
+  dat de remmen hetzelfde antwoord geven.
 - **Virtuele `climate` per zone** — één bedieningsentiteit per ruimte, waarmee de gewenste
   temperatuur en stand rechtstreeks op een gewone thermostaatkaart te bedienen zijn. De
   director kiest daar dan de bron bij.
@@ -82,7 +94,9 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   bewoner leest, ook die van iemand die op reis is of wiens telefoon uit staat. Gemeten in
   een controle: met de slaapsensor van de bewoner die op is op `unavailable`
   blijft de handstart staan nadat de andere bewoner wakker werd, terwijl hij zonder dode
-  sensor in die ronde vervalt. De volgende dag begrenst het; wat ontbreekt is een grens
+  sensor in die ronde vervalt. Hetzelfde geldt voor een feestdagenagenda die de hele dag
+  dood blijft: slapen en een leeg huis laten de handstart dan ook niet vervallen (gemeten).
+  De volgende dag begrenst het; wat ontbreekt is een grens
   per sensor (alleen de sensoren van wie thuis is, of een maximum aan onleesbare rondes).
 - **De hand en de handstart staan door elkaar in `hand_start.py`** — `_zones_of`,
   `_zones_handed_back`, `_everyone_asleep` en `_house_is_empty` horen bij de hand (anker 11)
@@ -355,6 +369,18 @@ The worked-out design proposals for everything below live in
   its return the director switches them off again (measured in a review, shared
   boiler: all three zones `regulating` during the outage, then two back to
   `waiting_for_sleeper`). Same design as N14 (b): a short hold on the last readable state.
+- **Notices about dead settings name the setting in English (N16)** — the notices about a
+  sleep setting without a sleep sensor, a window without length and a stuck time below the
+  rest fill `{settings}`, `{window}` and `{label}` with English words from the engine
+  ("sleep window, wait for this sleeper until", "quiet window", "minimum cycle time"), in
+  Dutch, German, French, Spanish and Arabic as well. Measured: the Dutch notice ends on
+  "...kunnen nooit werken: sleep window, wait for this sleeper until." The notice should
+  name the screen word of the user's language.
+- **The guard on the brake inputs cannot know whether an external field feeds the brakes**
+  — `test_every_world_field_is_classified` forces a deliberate classification, but a new
+  field in `EXTERNAL_WORLD_FIELDS` that feeds the brakes after all stays green. A
+  perturbation test would measure it: change every external field outside the brake inputs
+  and demand that the brakes give the same answer.
 - **A virtual `climate` per zone** — one control entity per room, so the target temperature
   and mode can be set straight from an ordinary thermostat card. The director then picks the
   source to match.
@@ -403,7 +429,9 @@ The worked-out design proposals for everything below live in
   reads, including that of somebody who is travelling or whose phone is off. Measured in
   a review: with the sleep sensor of the resident who is up on `unavailable`, the
   hand start stays after the other resident woke up, whereas without a dead sensor it lapses
-  in that round. The next day bounds it; what is missing is a bound per sensor (only the
+  in that round. The same holds for a holiday calendar that stays dead all day: sleeping
+  and an empty house then do not let the hand start lapse either (measured). The next day
+  bounds it; what is missing is a bound per sensor (only the
   sensors of whoever is home, or a maximum of unreadable rounds).
 - **The hand and the hand start are mixed in `hand_start.py`** — `_zones_of`,
   `_zones_handed_back`, `_everyone_asleep` and `_house_is_empty` belong to the hand

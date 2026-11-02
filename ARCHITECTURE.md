@@ -510,10 +510,16 @@ Het model is één verzameling `UnreadableInput(kind, subject)` in
 met de bewoner als `subject`, en `HOLIDAY` zonder subject omdat de agenda aan het
 huis hangt. De koppelingslaag vult de verzameling in `readability.py`; de engine
 leest haar in `hand_start.brakes_readable`. Er is geen derde los vlaggetje: een
-nieuwe externe invoer is een nieuwe `ReadableInput` plus een regel in de vulling,
-en `test_every_world_field_is_classified` valt om zodra een veld van `WorldState`
-in geen van beide klassen (`EXTERNAL_WORLD_FIELDS`, `INTERNAL_WORLD_FIELDS`)
-staat. Zo kan een nieuw veld niet stil buiten het model blijven.
+nieuwe externe invoer is een nieuwe `ReadableInput` plus een regel in de vulling.
+Elk veld van `WorldState` staat in precies één van drie klassen
+(`BRAKE_INPUT_FIELDS` met zijn soorten, `EXTERNAL_WORLD_FIELDS`,
+`INTERNAL_WORLD_FIELDS`, alle drie in `tests/test_hand_start.py`), en
+`test_every_world_field_is_classified` valt om zodra een veld in geen van de drie
+staat; `test_every_readable_input_belongs_to_a_field` valt om bij een soort zonder
+veld. Een nieuw veld kan dus niet ongemerkt
+verschijnen, maar de bewaking kan niet weten of een veld in `EXTERNAL_WORLD_FIELDS`
+de remmen toch voedt: dat blijft een bewuste keuze van wie het veld toevoegt, met
+de invoerentabel hierboven als maat.
 
 Een handstart vervalt daarom niet in een ronde waarin een van deze invoeren geen
 lezing heeft. Onleesbaar betekent hier: de entiteit ontbreekt, of haar stand is
@@ -1295,6 +1301,22 @@ dat alle wachtende zones tijdens de uitval starten.
   leest de uitval weer als nu. Eén plek lost N14 en N15 op, maar verandert het gedrag voor
   elke installatie en vraagt dus een ankerbesluit eerst.
 - De gebruiker beslist tussen (a) en (b) voordat er gebouwd wordt.
+
+**Meldingen noemen de instelling in de taal van de gebruiker (N16).** De regels in
+`engine/validation_extra.py` vullen `settings`, `window` en `label` met Engelse woorden
+("sleep window", "quiet window", "minimum cycle time"); `problems.readable` zet ze
+ongewijzigd in de vertaalde zin. Ontwerp: de engine levert vaste sleutels in plaats van
+woorden (`wake_by`, `sleep_in_until`, `quiet_window`, ...), en de koppelingslaag zoekt per
+sleutel het schermwoord op in de taal van de gebruiker, met de Engelse sleutel als terugval.
+- De woorden komen uit dezelfde vertaalbestanden als de schermen, zodat de melding het
+  schermwoord noemt en geen eigen woord.
+- Bewaakt door een toets die elke melding in elke taal rendert en eist dat er geen Engels
+  sleutelwoord in staat.
+
+**De bewaking van de remmen-invoer meet het gedrag.** De indeling in drie klassen dwingt een
+bewuste keuze af. Een verstoringstoets haalt per extern veld buiten de remmen-invoer een
+andere waarde door een vaste proefwereld en eist dat de remmen hetzelfde antwoord geven; zo
+blijkt een veld dat de remmen toch voedt zonder dat iemand het opschrijft.
 
 **Live prioriteiten gelijk trekken op één circuit.** Twee zones met dezelfde prioriteit op
 hetzelfde circuit kunnen elkaars taak niet krijgen; de tie-break is nu de bron- en
@@ -2158,10 +2180,15 @@ with the resident as `subject`, and `HOLIDAY` without a subject because the
 calendar hangs on the house. The binding layer fills the collection in
 `readability.py`; the engine reads it in `hand_start.brakes_readable`. There is
 no third loose flag: a new external input is a new `ReadableInput` plus one line
-in the fill, and `test_every_world_field_is_classified` fails as soon as a
-`WorldState` field stands in neither class (`EXTERNAL_WORLD_FIELDS`,
-`INTERNAL_WORLD_FIELDS`). A new field therefore cannot quietly stay outside the
-model.
+in the fill. Every `WorldState` field stands in exactly one of three classes
+(`BRAKE_INPUT_FIELDS` with its kinds, `EXTERNAL_WORLD_FIELDS`,
+`INTERNAL_WORLD_FIELDS`, all three in `tests/test_hand_start.py`), and
+`test_every_world_field_is_classified` fails as soon as a field stands in none of
+the three; `test_every_readable_input_belongs_to_a_field` fails for a kind without
+a field. A new field therefore cannot appear unnoticed,
+but the guard cannot know whether a field in `EXTERNAL_WORLD_FIELDS` feeds the
+brakes after all: that stays a deliberate choice of whoever adds the field, with
+the input table above as the yardstick.
 
 A hand start therefore does not lapse in a round in which one of these inputs
 has no reading. Unreadable here means: the entity is missing, or its state is
@@ -2933,6 +2960,22 @@ during the outage.
   reads as it does now. One place solves N14 and N15, but it changes the behaviour of every
   installation and therefore needs an anchor decision first.
 - The user decides between (a) and (b) before anything is built.
+
+**Notices name the setting in the user's language (N16).** The rules in
+`engine/validation_extra.py` fill `settings`, `window` and `label` with English words
+("sleep window", "quiet window", "minimum cycle time"); `problems.readable` puts them
+unchanged into the translated sentence. Design: the engine supplies fixed keys instead of
+words (`wake_by`, `sleep_in_until`, `quiet_window`, ...), and the binding layer looks up the
+screen word per key in the user's language, with the English key as the fallback.
+- The words come from the same translation files as the screens, so the notice names the
+  screen word and no word of its own.
+- Guarded by a test that renders every notice in every language and demands that no English
+  key word stands in it.
+
+**The guard on the brake inputs measures behaviour.** The three-class classification forces
+a deliberate choice. A perturbation test takes, per external field outside the brake inputs,
+another value through a fixed test world and demands that the brakes give the same answer;
+a field that feeds the brakes after all then shows up without anybody writing it down.
 
 **Levelling live priorities on one circuit.** Two zones with the same priority on the same
 circuit cannot both get their duty; the tie-break is now source and zone order. The idea is
