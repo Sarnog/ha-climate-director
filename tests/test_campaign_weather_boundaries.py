@@ -170,6 +170,7 @@ def two_room_house(*, attic_unbounded: bool) -> DirectorConfig:
             guest_window=TimeWindow(time(8, 0), time(23, 0)),
         ),
         outdoor_sensor="sensor.buiten",
+        stuck_after=timedelta(minutes=45),
     )
 
 
@@ -216,6 +217,7 @@ def one_room_house() -> DirectorConfig:
             guest_window=TimeWindow(time(8, 0), time(23, 0)),
         ),
         outdoor_sensor="sensor.buiten",
+        stuck_after=timedelta(minutes=45),
     )
 
 

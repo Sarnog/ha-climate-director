@@ -1695,13 +1695,9 @@ class ClimateDirectorCoordinator(
         was toen dit proces begon heeft er geen gehad. Zonder deze stap zouden al
         die bewoners een onbekend moment hebben, en dan remt het stiltevenster
         voor hen - terwijl zij er juist al zaten. De terugval is `last_changed`
-        van de aanwezigheidsentiteit: bij een eerste start is dat "net thuis", en
-        dan blijft het stil tot het venster afloopt. Hooguit één keer, want zodra
-        de bewoner beweegt neemt de listener het over.
-
-        Er wordt niets overschreven: een moment uit de opslag blijft staan, ook
-        als het ouder is dan `last_changed` - dat is precies het verschil dat
-        besluit 3 wil. En er wordt niets gevuld voor wie niet thuis is.
+        van de aanwezigheidsentiteit, begrensd door het slaapmoment: bij een
+        eerste start is dat "net thuis", en dan blijft het stil tot het venster
+        afloopt.
 
         Anchor 13, decision 4: the listener only sees transitions, and whoever was
         already home when this process started had none. Without this step all
@@ -1721,7 +1717,10 @@ class ClimateDirectorCoordinator(
             presence = resident.presence_entity
             state = self.hass.states.get(presence) if presence else None
             if reads_as_home(state):
-                self._home_since[resident.resident_id] = state.last_changed
+                since = state.last_changed
+                if self._asleep_since is not None and since > self._asleep_since:
+                    since = self._asleep_since
+                self._home_since[resident.resident_id] = since
 
     # -- circuitgeschiedenis / circuit history -------------------------------
 

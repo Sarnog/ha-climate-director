@@ -131,7 +131,12 @@ def slept_tonight(resident: Resident, world: WorldState) -> bool:
     if since is None or world.now - since > timedelta(hours=24):
         return False
     state = world.residents.get(resident.resident_id)
-    if state is not None and state.home_since is not None and state.home_since >= since:
+    if (
+        state is not None
+        and state.home_since is not None
+        and state.home_since <= world.now
+        and state.home_since > since
+    ):
         return False
     began = night_began(resident, world.now)
     return began is None or since >= began

@@ -468,7 +468,7 @@ FUNCTION_LIMIT = 80
 # measure; the functions in `engine/gates.py` stay under eighty.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 2269,
-    "coordinator.py": 2070,
+    "coordinator.py": 2069,
     "engine/decide.py": 1800,
     "config_flow.py": 1492,
     "schemas.py": 893,

@@ -300,6 +300,7 @@ class TestBuildingAnInstallationInTheWizard:
                 {
                     "name": "Nancy",
                     "presence_entity": "person.nancy",
+                    "sleep_entity": "sensor.nancy_lader",
                     "sleep_state": "on",
                     "sleep_from": "22:00:00",
                     "sleep_until": "08:00:00",
@@ -1281,7 +1282,15 @@ class TestAStartupWithBrokenStorage:
         """
         config_dir = new_config_dir()
         readable = (dt_util.now() - timedelta(hours=1)).isoformat()
-        _write_store(config_dir, "nacht", {"asleep_since": readable})
+        home_since = (dt_util.now() - timedelta(hours=2)).isoformat()
+        _write_store(
+            config_dir,
+            "nacht",
+            {
+                "asleep_since": readable,
+                "home_since": {"danny": home_since, "nancy": home_since},
+            },
+        )
         home = await start_house(
             _house_with_two_residents(),
             states=_two_residents(danny="bed"),

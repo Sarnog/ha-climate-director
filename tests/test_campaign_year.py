@@ -265,7 +265,7 @@ def villa(policy: ConflictPolicy) -> DirectorConfig:
         ),
         seasons=SeasonSettings(),
         outdoor_sensor="sensor.buiten",
-        stuck_after=timedelta(minutes=45),
+        stuck_after=timedelta(minutes=75),
         holiday_calendars=("calendar.vakantie",),
         holiday_keyword="vakantie",
     )

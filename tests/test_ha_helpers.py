@@ -739,18 +739,22 @@ class TestTheEnglishTemplatesLiveInTheCache:
 
         from custom_components.climate_director import texts
         from custom_components.climate_director.engine import models as engine_models
+        from custom_components.climate_director.engine import validation_extra
 
-        tree = ast.parse(Path(engine_models.__file__).read_text(encoding="utf-8"))
-        codes = [
-            node.args[0].value
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "Problem"
-            and node.args
-            and isinstance(node.args[0], ast.Constant)
-        ]
-        assert len(codes) == 49
+        codes: list[str] = []
+        for module in (engine_models, validation_extra):
+            tree = ast.parse(Path(module.__file__).read_text(encoding="utf-8"))
+            codes.extend(
+                node.args[0].value
+                for node in ast.walk(tree)
+                if isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == "Problem"
+                and node.args
+                and isinstance(node.args[0], ast.Constant)
+            )
+        codes = sorted(set(codes))
+        assert len(codes) == 54
         templates = texts.english_templates()
         assert templates is not None
         missing = [code for code in codes if code not in templates]

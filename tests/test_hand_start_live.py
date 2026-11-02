@@ -219,6 +219,10 @@ async def a_slept_night(home: LiveHome, clock: Any, *, monday: bool = False) -> 
     """Start at 23:30, let the house sleep, and wake Danny in the morning."""
     day = 10 if monday else 7
     clock.at(day, 23, 30)
+    since = dt_util.now() - timedelta(hours=1)
+    home.coordinator._home_since.update(
+        {resident.resident_id: since for resident in home.coordinator.config.residents}
+    )
     await decide(home)
     assert home.coordinator._asleep_since is not None, "het huis ging niet slapen"
     clock.at(day + 1, 7 if monday else 8, 0 if monday else 30)

@@ -365,18 +365,20 @@ def _installation(rng: random.Random) -> dict:
             }
         )
 
-    residents = [
-        {
-            "resident_id": f"bewoner{index}",
-            "name": f"Bewoner {index}",
-            "presence_entity": f"person.bewoner{index}",
-            "sleep_entity": rng.choice(["", f"sensor.bewoner{index}"]),
-            "sleep_state": "wireless",
-            "sleep_window": rng.choice([None, _window(rng)]),
-            "windows": [_window(rng) for _ in range(rng.randrange(0, 3))],
-        }
-        for index in range(rng.randrange(0, 3))
-    ]
+    residents = []
+    for index in range(rng.randrange(0, 3)):
+        sleep_entity = rng.choice(["", f"sensor.bewoner{index}"])
+        residents.append(
+            {
+                "resident_id": f"bewoner{index}",
+                "name": f"Bewoner {index}",
+                "presence_entity": f"person.bewoner{index}",
+                "sleep_entity": sleep_entity,
+                "sleep_state": "wireless",
+                "sleep_window": rng.choice([None, _window(rng)]) if sleep_entity else None,
+                "windows": [_window(rng) for _ in range(rng.randrange(0, 3))],
+            }
+        )
 
     openings = [
         {
@@ -412,7 +414,11 @@ def _installation(rng: random.Random) -> dict:
     # a configuration mistake - `validate()` says so too. The sensible shape is
     # the one from a real house: an air conditioner from 3.1 degrees upward
     # against a gas request up to 3.1.
-    scheduled = any(resident["windows"] for resident in residents)
+    scheduled = any(
+        not window.get("holiday") and window.get("weekdays") is None
+        for resident in residents
+        for window in resident["windows"]
+    )
     truly_shared = (
         shared is not None
         and sum(
@@ -522,7 +528,7 @@ def _installation(rng: random.Random) -> dict:
             if rng.random() < 0.4
             else {"holiday_calendars": [], "holiday_keyword": rng.choice(["", "vakantie"])}
         ),
-        "stuck_after": rng.choice([0, 900, 3600]),
+        "stuck_after": rng.choice([0, 1800, 3600]),
     }
 
 

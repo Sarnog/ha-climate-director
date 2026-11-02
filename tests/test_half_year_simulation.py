@@ -171,7 +171,7 @@ def house() -> DirectorConfig:
         ),
         seasons=SeasonSettings(),
         outdoor_sensor="sensor.buiten",
-        stuck_after=timedelta(minutes=30),
+        stuck_after=timedelta(minutes=75),
     )
 
 
