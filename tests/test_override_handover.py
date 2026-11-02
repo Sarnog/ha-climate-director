@@ -357,3 +357,19 @@ def test_a_house_wide_handover_names_the_zone_with_the_override() -> None:
     assert [(item.entity_id, item.zone_id, item.reason) for item in plan.untouched] == [
         (SHARED, "attic", Reason.MANUAL_OVERRIDE)
     ]
+
+
+def test_a_house_wide_handover_keeps_the_overridden_zone_when_it_comes_first() -> None:
+    """Ook als de overgedragen zone vooraan staat noemt de melding haar, niet de laatste drager.
+
+    The notice names the handed-over zone even when it comes first in the list,
+    and not the last zone to carry the appliance.
+    """
+    plan = shared_plan(
+        {"living_room": True},
+        {SHARED: climate(MODE_HEAT)},
+        living_room=18.0,
+        attic=23.0,
+    )
+
+    assert [(item.entity_id, item.zone_id) for item in plan.untouched] == [(SHARED, "living_room")]
