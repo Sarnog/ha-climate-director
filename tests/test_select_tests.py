@@ -16,15 +16,17 @@ apart from the real one: everything when in doubt (no map, a shared file, a
 vanished test), otherwise only whoever touches the changed file, its directory or
 its package module; and a map that misses an executed or opened input drops the CI.
 
-Dekking: deze toetsen lezen geen gids of vertaling; de paden onder `docs/install/`
-en `translations/` zijn namen op een verzonnen kaart. Wel gedekt: de regels van de
+Dekking: deze toetsen lezen geen gids; de paden onder `docs/install/` en
+`translations/` zijn namen op een verzonnen kaart. Alleen de mutatielijst leest de
+echte bronbestanden die ze noemt, waaronder een vertaling. Wel gedekt: de regels van de
 selectie, het ontleden van `git diff --name-status`, de eis aan de kaart in de CI
 en het bijwerken ervan lokaal, en welke paden de recorder bewaart. Niet gedekt: de
 echte kaart zelf, behalve dat hij alleen bestaande toetsbestanden noemt - die
 vergelijkt elke run met wat hij meet.
 
-Coverage: these tests read no guide and no translation; the paths under
-`docs/install/` and `translations/` are names on a made-up map. Covered: the rules
+Coverage: these tests read no guide; the paths under `docs/install/` and
+`translations/` are names on a made-up map. Only the mutation list reads the real
+source files it names, a translation among them. Covered: the rules
 of the selection, the parsing of `git diff --name-status`, the demand on the map in
 CI and its update locally, and which paths the recorder keeps. Not covered: the
 real map itself, except that it names only existing test files - every run
@@ -357,6 +359,26 @@ class TestTheMutationProbe:
 
     def test_a_mutation_on_the_full_suite_always_runs(self) -> None:
         assert probe.relevant(self.MUTATION, [], {"ROADMAP.md": "M"}) is True
+
+
+class TestTheMutationsStillApply:
+    """Elke mutatie van de probe vindt haar patroon nog in de broncode.
+
+    Every mutation of the probe still finds its pattern in the source.
+
+    Een hernoemde functie of verplaatste regel laat een patroon verdwijnen, en de
+    probe stopt dan bij die mutatie: alle mutaties erna draaien niet meer, terwijl
+    de baan als geslaagd telt. Deze toets laat de CI vallen voordat dat gebeurt.
+
+    A renamed function or a moved line makes a pattern vanish, and the probe then
+    stops at that mutation: every mutation after it no longer runs, while the job
+    counts as passed. This test drops the CI before that happens.
+    """
+
+    @pytest.mark.parametrize("mutation", probe.MUTATIONS, ids=lambda item: item["name"])
+    def test_the_pattern_stands_in_its_file(self, mutation: dict) -> None:
+        text = (ROOT / mutation["file"]).read_text(encoding="utf-8")
+        assert mutation["old"] in text, f"{mutation['name']}: patroon niet gevonden"
 
 
 def _recorded(inputs: dict[str, set[str]]):

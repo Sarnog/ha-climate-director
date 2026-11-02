@@ -1029,6 +1029,13 @@
   "custom_components/climate_director/world_builder.py"
  ],
  "tests/test_select_tests.py": [
+  "custom_components/climate_director/engine/decide.py",
+  "custom_components/climate_director/engine/hand_start.py",
+  "custom_components/climate_director/engine/sources.py",
+  "custom_components/climate_director/hand_start.py",
+  "custom_components/climate_director/room_presence.py",
+  "custom_components/climate_director/state_store.py",
+  "custom_components/climate_director/translations/de.json",
   "tests/impact_map.json"
  ],
  "tests/test_serialise.py": [
