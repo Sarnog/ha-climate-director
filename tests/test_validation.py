@@ -1116,3 +1116,151 @@ def test_a_holiday_only_schedule_does_not_count_on_an_ordinary_day() -> None:
         gates=GateSettings(require_schedule=True),
     )
     assert problem(config, "on some weekdays nobody has an ordinary schedule")
+
+
+def _complaint(config: DirectorConfig, code: str) -> list:
+    """Return every complaint with this code."""
+    return [item for item in validate(config) if getattr(item, "code", "") == code]
+
+
+@pytest.mark.parametrize(
+    ("changes", "named"),
+    [
+        ({"sleep_window": TimeWindow(time(21, 0), time(8, 0))}, "sleep window"),
+        ({"sleep_in": SleepIn(time(13, 0))}, "sleep in until"),
+        ({"wake_deadline": WakeDeadline(time(11, 0))}, "wait for this sleeper until"),
+        (
+            {
+                "sleep_window": TimeWindow(time(21, 0), time(8, 0)),
+                "rise_brake": RiseBrake(time(9, 0)),
+            },
+            "rise from",
+        ),
+    ],
+)
+def test_each_dead_sleep_setting_is_named(changes: dict, named: str) -> None:
+    """De melding noemt elke instelling die zonder slaapsensor nooit werkt."""
+    resident = Resident("danny", "Danny", presence_entity="person.danny", **changes)
+    config = DirectorConfig(zones=(zone("a"),), residents=(resident,))
+
+    found = _complaint(config, "resident_settings_without_sleep_sensor")
+
+    assert len(found) == 1
+    assert named in found[0].params["settings"].split(", ")
+
+
+@pytest.mark.parametrize("kind", ["quiet window", "guest window", "schedule of", "sleep window of"])
+def test_each_kind_of_window_without_length_is_named(kind: str) -> None:
+    """Een venster zonder lengte wordt gemeld, welk soort venster het ook is."""
+    equal = TimeWindow(time(9, 0), time(9, 0))
+    resident = Resident(
+        "danny",
+        "Danny",
+        presence_entity="person.danny",
+        sleep_entity="sensor.danny",
+        windows=(equal,) if kind == "schedule of" else (),
+        sleep_window=equal if kind == "sleep window of" else None,
+    )
+    gates = GateSettings(
+        quiet_windows=(equal,) if kind == "quiet window" else (),
+        guest_window=equal if kind == "guest window" else None,
+    )
+    config = DirectorConfig(zones=(zone("a"),), residents=(resident,), gates=gates)
+
+    found = _complaint(config, "window_without_length")
+
+    assert [item.params["window"] for item in found] == [
+        f"{kind} Danny" if kind.endswith(" of") else kind
+    ]
+
+
+@pytest.mark.parametrize(
+    ("changes", "label"),
+    [
+        ({"min_cycle_time": timedelta(minutes=20)}, "minimum cycle time"),
+        ({"min_family_switch_interval": timedelta(minutes=20)}, "minimum switch interval"),
+    ],
+)
+def test_each_circuit_rest_above_the_stuck_time_is_named(changes: dict, label: str) -> None:
+    """Zowel de kortcyclustijd als het wisselinterval van een circuit telt."""
+    config = DirectorConfig(
+        zones=(zone("a"),),
+        circuits=(Circuit("c", "C", units=("climate.a",), **changes),),
+        stuck_after=timedelta(minutes=15),
+    )
+
+    found = _complaint(config, "stuck_after_below_configured_rest")
+
+    assert [item.params["label"] for item in found] == [label]
+
+
+@pytest.mark.parametrize(
+    ("guest", "reported"),
+    [
+        ({"start": "18:00"}, True),
+        ({"end": "23:00"}, True),
+        ({"start": "18:00", "end": "23:00"}, False),
+        ({}, False),
+    ],
+)
+def test_a_half_filled_guest_window_in_the_store_is_reported(guest: dict, reported: bool) -> None:
+    """Het gastenvenster uit de opslag draagt zijn halfheid mee tot de melding."""
+    from custom_components.climate_director.engine.serialise import config_from_dict, config_to_dict
+
+    raw = config_to_dict(house())
+    raw["gates"]["guest_window"] = guest
+
+    config = config_from_dict(raw)
+
+    assert config.gates.guest_window_incomplete is reported
+    assert bool(_complaint(config, "guest_window_half_filled")) is reported
+
+
+@pytest.mark.parametrize(
+    "days", [frozenset(range(5)), frozenset(range(2, 7)), frozenset({0, 1, 2, 3, 5})]
+)
+def test_a_schedule_gap_on_any_weekday_is_reported(days: frozenset[int]) -> None:
+    """Een gat op een weekeinde, in het midden of op een enkele dag wordt gemeld."""
+    resident = Resident(
+        "danny",
+        "Danny",
+        presence_entity="person.danny",
+        windows=(TimeWindow(time(8, 0), time(18, 0), days),),
+    )
+    config = DirectorConfig(
+        zones=(zone("a"),),
+        residents=(resident,),
+        gates=GateSettings(require_schedule=True),
+    )
+
+    found = _complaint(config, "schedule_gate_without_schedules")
+
+    assert [item.params["days"] for item in found] == [str(7 - len(days))]
+
+
+def test_a_schedule_on_every_weekday_is_not_reported() -> None:
+    """Met een gewoon rooster op elke dag is de roosterpoort in orde."""
+    resident = Resident(
+        "danny",
+        "Danny",
+        presence_entity="person.danny",
+        windows=(TimeWindow(time(8, 0), time(18, 0)),),
+    )
+    config = DirectorConfig(
+        zones=(zone("a"),),
+        residents=(resident,),
+        gates=GateSettings(require_schedule=True),
+    )
+
+    assert not _complaint(config, "schedule_gate_without_schedules")
+
+
+@pytest.mark.parametrize("state", ["on", "closed", "opened", "off", ""])
+def test_a_cover_with_any_other_open_state_is_reported(state: str) -> None:
+    """Elke andere openingsstand dan `open` laat een cover nooit als open tellen."""
+    config = DirectorConfig(
+        zones=(zone("a"),),
+        openings=(Opening("cover.dakraam", open_state=state),),
+    )
+
+    assert _complaint(config, "cover_opening_without_open_state")

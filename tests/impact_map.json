@@ -1283,7 +1283,12 @@
   "custom_components/climate_director/translations/"
  ],
  "tests/test_validation.py": [
+  "custom_components/climate_director/engine/fields.py",
   "custom_components/climate_director/engine/models.py",
+  "custom_components/climate_director/engine/resident_storage.py",
+  "custom_components/climate_director/engine/serialise.py",
+  "custom_components/climate_director/engine/storage_helpers.py",
+  "custom_components/climate_director/engine/table_storage.py",
   "custom_components/climate_director/engine/validation_extra.py"
  ],
  "tests/test_watchdog.py": [
