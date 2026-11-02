@@ -236,3 +236,26 @@ class TestOpeningBypassSwitch:
         switch._handle_coordinator_update()
 
         assert written == []
+
+    def test_a_renamed_opening_publishes_the_new_name_once(self) -> None:
+        """Een naamwijziging zonder standwijziging moet de schakelaar wel bijwerken."""
+        coordinator = self._coordinator()
+        switch = OpeningBypassSwitch(coordinator, "achterdeur")
+        written: list[bool] = []
+        switch.async_write_ha_state = lambda: written.append(switch.is_on)
+
+        coordinator.config = DirectorConfig(
+            zones=coordinator.config.zones,
+            openings=(
+                Opening(
+                    entity_id="binary_sensor.achterdeur",
+                    opening_id="achterdeur",
+                    name="Tuindeur",
+                ),
+            ),
+        )
+        switch._handle_coordinator_update()
+        switch._handle_coordinator_update()
+
+        assert switch._attr_translation_placeholders == {"opening": "Tuindeur"}
+        assert written == [False]
