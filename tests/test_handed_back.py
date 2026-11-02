@@ -1345,3 +1345,41 @@ class TestItIsWrittenAwayWhenItChanges:
         item._zones_handed_back()
         item._zones_handed_back()
         assert item.saved == 0
+
+
+def test_a_fresh_presence_at_startup_is_bounded_by_the_sleep_moment() -> None:
+    """Een vers aanwezigheidstijdstempel bij het opstarten maakt de nacht niet stuk.
+
+    De listener kan tijdens het opstarten al een thuiskomstmoment van nu
+    vastleggen, terwijl het huis volgens de opslag al uren slaapt. Dat moment
+    hoort begrensd te worden door het bewaarde slaapmoment; anders telt de
+    bewoner na een herstart niet meer als iemand die die nacht sliep.
+
+    A fresh presence timestamp at startup must not break the night. The listener
+    can already record a homecoming moment of now during startup while the store
+    says the house has slept for hours. That moment is bounded by the stored
+    sleep moment; otherwise the resident no longer counts as somebody who slept
+    that night after a restart.
+    """
+    earlier = dt_util.now() - timedelta(hours=2)
+    later = dt_util.now()
+
+    class State:
+        state = "home"
+        last_changed = later
+
+    class States:
+        def get(self, entity_id):
+            return State() if entity_id == "person.danny" else None
+
+    class Hass:
+        states = States()
+
+    item = coordinator(running_plan(), cfg=shared_config(with_residents=True))
+    item.hass = Hass()
+    item._asleep_since = earlier
+    item._home_since = {}
+
+    ClimateDirectorCoordinator._note_home_now(item)
+
+    assert item._home_since == {"danny": earlier}

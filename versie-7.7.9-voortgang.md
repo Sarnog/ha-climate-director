@@ -71,6 +71,11 @@ moment- en uitzetlogica in `state_extra.py` en de gedeelde-bronkeuze in
 en P2; L12 was op de oude boom al groen omdat de volgorde daar al klopte. De
 mutatieronde per bewaker volgt.
 
+De CI van D was rood: de nieuwe regels flagsden bestaande proefhuizen en de
+nachtgrens verloor een bewaard slaapmoment bij een herstart. Dat is hersteld in
+`fec1060`; 420 toetsen in de getroffen bestanden zijn groen
+(`/tmp/779/D-repair.log`, 2026-11-02 12:12:47).
+
 ## EN
 
 ### State
@@ -141,3 +146,8 @@ and switch-off logic in `state_extra.py`, and the shared-source choice in
 `engine/untouched.py`. The 15 red tests on `cbe2270` cover L1, L3-L6, L8-L11 and
 P2; L12 was already green on the old tree because the order there was already
 right. The mutation round per guard follows.
+
+D's CI was red: the new rules flagged existing test houses and the night bound
+lost a stored sleep moment on a restart. That is repaired in `fec1060`; 420
+tests in the affected files are green (`/tmp/779/D-repair.log`, 2026-11-02
+12:12:47).
