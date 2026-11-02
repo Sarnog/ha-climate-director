@@ -957,6 +957,9 @@
   "setup.cfg",
   "tox.ini"
  ],
+ "tests/test_readability.py": [
+  "custom_components/climate_director/readability.py"
+ ],
  "tests/test_refusal_message.py": [
   "custom_components/climate_director/coordinator.py",
   "custom_components/climate_director/engine/families.py",

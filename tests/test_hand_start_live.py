@@ -51,6 +51,7 @@ BEDROOM_SENSOR = "sensor.slaapkamer"
 OUTDOOR = "sensor.buiten"
 OCCUPANCY = "binary_sensor.zolder_bezet"
 HOLIDAY_CALENDAR = "calendar.feestdagen"
+SCHOOL_CALENDAR = "calendar.school"
 
 DANNY = ("person.danny", "sensor.danny_lader")
 NANCY = ("person.nancy", "sensor.nancy_lader")
@@ -1149,6 +1150,32 @@ class TestTheHolidayCalendar:
             assert reason(home) == "satisfied"
             assert home.state(LIVING) == "off"
             assert off_calls(home) == ["off"]
+        finally:
+            await stop_house(home)
+
+    @pytest.mark.parametrize("dropped", [HOLIDAY_CALENDAR, SCHOOL_CALENDAR])
+    async def test_any_one_of_two_dropped_calendars_keeps_the_hand_start(
+        self, clock, dropped: str
+    ) -> None:
+        """Met twee agenda's telt de uitval van elk van beide, niet alleen de eerste."""
+        data = holiday_installation()
+        data["holiday_calendars"] = [HOLIDAY_CALENDAR, SCHOOL_CALENDAR]
+        states = holiday_world() | {SCHOOL_CALENDAR: ("off", {})}
+        home = await start_house(data, states=states)
+        try:
+            await a_holiday_monday_morning(home, clock)
+            home.clear_calls()
+            home.climate(LIVING, "heat", current=18.5)
+            await decide(home)
+            assert "woonkamer" in home.coordinator._hand_starts
+
+            home.set(dropped, "unavailable")
+            await decide(home)
+
+            assert "woonkamer" in home.coordinator._hand_starts
+            assert reason(home) == "regulating"
+            assert home.state(LIVING) == "heat"
+            assert off_calls(home) == []
         finally:
             await stop_house(home)
 
