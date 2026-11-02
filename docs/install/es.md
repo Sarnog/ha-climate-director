@@ -1097,6 +1097,19 @@ reposo. Si dejas ese campo vacío, recibes todas las acciones.
   el director empieza con un estado vacío: esas peticiones y apagados se
   pierden, el resto de tu instalación no. Para recuperarlos, restaura el archivo
   desde una copia de seguridad y recarga la integración.
+- **Ajustes de sueño sin sensor de sueño** — una franja de sueño, un despertar tardío o una hora límite sin
+  sensor de sueño nunca pueden funcionar; el aviso nombra los ajustes muertos. Añade un sensor de sueño o quita
+  esos ajustes.
+- **Una franja que nunca se abre** — el inicio y el final coinciden; el aviso nombra la franja. Elige otra hora
+  de inicio o de fin.
+- **Una franja de invitados a medias** — solo un extremo está rellenado, así que el modo invitados se aplica
+  todo el día. Rellena ambos extremos o deja la franja vacía.
+- **Un cover con el estado de abertura equivocado** — un cover informa `open`; con cualquier otro estado nunca
+  cuenta como abierto. Pon el estado de abertura en `open`.
+- **Un tiempo de detección de bloqueo por debajo del descanso configurado** — el aviso de bloqueo llega mientras
+  un circuito o una fuente toma su descanso. Sube el tiempo de bloqueo o baja el descanso.
+- **El bloqueo de horario sin horario en un día de la semana** — ese día no puede empezar nada; el aviso nombra
+  los días. Añade un horario normal o desactiva el bloqueo de horario.
 - **El diagnóstico** (descargable en la integración) contiene la configuración,
   la última instantánea leída y el último plan. Con esos tres, cualquier
   decisión es exactamente reproducible.

@@ -1115,6 +1115,19 @@ pour recevoir toutes les actions.
   directeur repart d'un état vide : ces demandes et extinctions sont perdues, le
   reste de votre installation non. Pour les récupérer, restaurez le fichier
   depuis une sauvegarde et rechargez l'intégration.
+- **Réglages de sommeil sans capteur de sommeil** — une plage de sommeil, un réveil tardif ou une échéance sans
+  capteur de sommeil ne peut jamais agir ; la notice nomme les réglages morts. Ajoutez un capteur de sommeil ou
+  retirez ces réglages.
+- **Une plage qui ne s'ouvre jamais** — le début et la fin coïncident ; la notice nomme la plage. Choisissez une
+  autre heure de début ou de fin.
+- **Une plage d'invités à moitié remplie** — une seule extrémité est remplie, donc le mode invité s'applique
+  toute la journée. Remplissez les deux extrémités ou laissez la plage vide.
+- **Un cover avec le mauvais état ouvert** — un cover signale `open` ; avec un autre état, il ne compte jamais
+  comme ouvert. Mettez l'état d'ouverture sur `open`.
+- **Un temps de détection de blocage sous le repos configuré** — la notice de blocage arrive pendant qu'un
+  circuit ou une source prend son repos. Augmentez le temps de blocage ou diminuez le repos.
+- **Le verrou de planning sans planning un jour de semaine** — rien ne peut démarrer ce jour-là ; la notice
+  nomme les jours. Ajoutez un planning ordinaire ou désactivez le verrou de planning.
 - **Le diagnostic** (téléchargeable sur l'intégration) contient la
   configuration, le dernier instantané lu et le dernier plan. Avec ces trois
   éléments, toute décision est exactement reproductible.

@@ -1085,6 +1085,18 @@ blijft. Laat je dat veld leeg, dan krijg je elke actie.
   wordt het hernoemd en begint de director met een lege toestand: die
   verzoeken en uitzettingen zijn weg, de rest van je installatie niet. Wil je
   ze terug, zet het bestand dan uit een back-up terug en herlaad de integratie.
+- **Slaapinstellingen zonder slaapsensor** — een slaapvenster, uitslapen of uiterste tijd zonder slaapsensor kan
+  nooit werken; de melding noemt welke instellingen dood zijn. Zet een slaapsensor of haal die instellingen weg.
+- **Een venster dat nooit opengaat** — begin en eind vallen samen; de melding noemt het venster. Kies een ander
+  begin- of eindtijdstip.
+- **Een half gastenvenster** — er is maar één uiteinde ingevuld, dus de gastenmodus geldt de hele dag. Vul beide
+  uiteinden in of laat het venster leeg.
+- **Een cover met de verkeerde openingsstand** — een cover meldt `open`; staat de stand op iets anders, dan telt
+  hij nooit als open. Zet de openingsstand op `open`.
+- **Een vastlooptijd onder de ingestelde rust** — de vastloopmelder gaat af terwijl een circuit of bron zijn
+  rust neemt. Zet de vastlooptijd hoger dan de rust of verlaag de rust.
+- **De roosterpoort zonder rooster op een weekdag** — op die dag kan niets starten; de melding noemt de
+  weekdagen. Vul een gewoon rooster in of zet de roosterpoort uit.
 - **De diagnose** (downloaden bij de integratie) bevat de configuratie, de
   laatst gelezen momentopname en het laatste plan. Met die drie is elke
   beslissing exact na te spelen.

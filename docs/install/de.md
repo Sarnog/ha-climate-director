@@ -1098,6 +1098,19 @@ Lässt du das Feld leer, bekommst du jede Aktion.
   diese Anforderungen und Abschaltungen sind weg, der Rest deiner Anlage nicht.
   Willst du sie zurück, stelle die Datei aus einem Backup wieder her und lade
   die Integration neu.
+- **Schlafeinstellungen ohne Schlafsensor** — ein Schlafensfenster, Ausschlafen oder eine Frist ohne
+  Schlafsensor kann nie wirken; die Meldung nennt die toten Einstellungen. Füge einen Schlafsensor hinzu oder
+  entferne diese Einstellungen.
+- **Ein Fenster, das nie aufgeht** — Beginn und Ende fallen zusammen; die Meldung nennt das Fenster. Wähle eine
+  andere Beginn- oder Endzeit.
+- **Ein halb ausgefülltes Gästefenster** — nur ein Ende ist ausgefüllt, daher gilt der Gästemodus den ganzen
+  Tag. Fülle beide Enden aus oder lasse das Fenster leer.
+- **Ein Cover mit dem falschen Offen-Zustand** — ein Cover meldet `open`; bei jedem anderen Zustand zählt es nie
+  als offen. Setze den Offen-Zustand auf `open`.
+- **Eine Festschlagzeit unter der eingestellten Ruhe** — die Festschlagmeldung kommt, während ein Kreis oder
+  eine Quelle ihre Ruhe nimmt. Setze die Festschlagzeit über die Ruhe oder senke die Ruhe.
+- **Die Zeitplan-Sperre ohne Zeitplan an einem Wochentag** — an diesem Tag kann nichts starten; die Meldung
+  nennt die Wochentage. Füge einen gewöhnlichen Zeitplan hinzu oder schalte die Zeitplan-Sperre aus.
 - **Die Diagnose** (bei der Integration herunterladbar) enthält die
   Konfiguration, den zuletzt gelesenen Schnappschuss und den letzten Plan. Mit
   diesen dreien ist jede Entscheidung exakt nachvollziehbar.

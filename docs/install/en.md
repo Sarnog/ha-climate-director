@@ -1076,6 +1076,18 @@ and you get every action.
   director starts with an empty state: those requests and switch-offs are gone,
   the rest of your installation is not. To get them back, restore the file from
   a backup and reload the integration.
+- **Sleep settings without a sleep sensor** — a sleep window, sleeping in or a deadline without a sleep sensor
+  can never work; the notice names the dead settings. Add a sleep sensor or remove those settings.
+- **A window that never opens** — start and end coincide; the notice names the window. Choose a different start
+  or end time.
+- **A half-filled guest window** — only one end is filled in, so guest mode applies all day. Fill in both ends
+  or leave the window empty.
+- **A cover with the wrong open state** — a cover reports `open`; with any other state it never counts as open.
+  Set the opening state to `open`.
+- **A stuck time below the configured rest** — the stuck notice fires while a circuit or source takes its rest.
+  Raise the stuck time above the rest or lower the rest.
+- **The schedule gate without a schedule on a weekday** — nothing can start that day; the notice names the
+  weekdays. Add an ordinary schedule or turn the schedule gate off.
 - **The diagnostics** (downloadable at the integration) hold the configuration,
   the last snapshot read and the last plan. With those three, any decision is
   exactly reproducible.

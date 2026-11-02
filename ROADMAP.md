@@ -180,6 +180,10 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 - **Energieprijs als bronvoorkeur** — een dynamisch tarief of een
   zonnepanelenoverschot laten meewegen in `Source.priority`, zodat de goedkoopste bron
   wint zolang die het aankan.
+- **Live prioriteiten gelijk trekken op één circuit** — twee zones met dezelfde prioriteit
+  op hetzelfde circuit laten nu de bron- en zonevolgorde beslissen. Een zone die lang
+  wacht zou tijdelijk één stap voorrang kunnen krijgen, met terugval naar de ingestelde
+  prioriteit. Het ontwerp staat in `ARCHITECTURE.md` onder "Nog te bouwen".
 - **Weersvoorspelling in het buitentemperatuurvenster** — schakelen op de verwachte
   temperatuur over enkele uren in plaats van alleen de huidige.
 - **Meer conflictbeleiden** — bijvoorbeeld beurtelings (round-robin) of een vast schema
@@ -312,13 +316,7 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   *Wacht op deze slaper tot* en de gidsalinea zeggen dat het wachten pas begint als
   iedereen die thuis is naar bed is geweest. Schrapt iemand die zin in één taal, dan blijft
   alles groen; alleen de proeflezing ziet het.
-- **Een bewoner zonder slaapsensor laat het huis nooit slapen** — het huis gaat pas slapen
-  als iedereen die thuis is slaapt, en wie geen slaapsensor heeft, slaapt nooit. Heeft een
-  ander *Wacht op deze slaper tot* of *Opstaan zet het huis pas aan vanaf* ingevuld, dan
-  doet die instelling dus niets zolang die bewoner thuis is. Andersom remt een eigen
-  *Opstaan zet het huis pas aan vanaf* bij zo'n bewoner zonder slaapvenster elke remdag
-  van middernacht tot de remtijd: er valt geen opstaan te zien. Een melding in het scherm
-  *Bewoner* zou beide zichtbaar maken.
+
 
 ## Would have
 
@@ -503,6 +501,10 @@ The worked-out design proposals for everything below live in
   out by itself); this idea is only about the automatic part.
 - **Energy price as source preference** — let a dynamic tariff or a solar surplus weigh
   into `Source.priority`, so the cheapest source wins as long as it can cope.
+- **Levelling live priorities on one circuit** — two zones with the same priority on the
+  same circuit now let source and zone order decide. A zone that waits long could get one
+  temporary step of precedence, falling back to the configured priority. The design stands
+  in `ARCHITECTURE.md` under "Still to build".
 - **Weather forecast in the outdoor window** — switch on the temperature expected in a few
   hours rather than only the current one.
 - **More conflict policies** — round-robin, for instance, or a fixed schedule per part of
@@ -632,13 +634,7 @@ The worked-out design proposals for everything below live in
   *Wait for this sleeper until* and the guide paragraph say the waiting only begins once
   everybody at home has been to bed. Whoever drops that sentence in one language keeps
   everything green; only proofreading sees it.
-- **A resident without a sleep sensor never lets the house sleep** — the house only goes
-  to sleep once everybody at home is asleep, and whoever has no sleep sensor never sleeps.
-  When somebody else filled in *Wait for this sleeper until* or *Getting up only starts
-  the house from*, that setting therefore does nothing while that resident is home. The
-  other way round, such a resident's own *Getting up only starts the house from* without
-  a sleep window brakes every brake day from midnight until the brake time: there is no
-  getting up to see. A notice on the *Resident* screen would make both visible.
+
 
 ## Would have
 

@@ -546,6 +546,18 @@ In de diagnose en de beslissensor verandert niets: zij noemen nog steeds alleen
 de zone-ids onder `hand_starts`. Er is geen nieuwe `Problem`-code en geen nieuwe
 entiteit.
 
+### Wat de koppelingslaag rechtzet
+
+De diagnose lakt ook `sleep_in` weg en laat aanwezigheids- en slaapentiteiten uit
+`tracked_entities`, zodat een download geen bewonersprofiel via de entiteitenlijst
+alsnog prijsgeeft. `state_extra.py` draagt de publieke `stored_time` en
+`restore_commanded_off`; `state_store.py` bewaart `commanded_off` en herstelt het
+alleen binnen `COMMANDED_WINDOW`, zodat een oude uitzetting geen late melding meer
+verklaart. De overbruggingsschakelaar schrijft alleen bij een echte stand- of
+naamwijziging. `set_override` keurt eerst alle doelen en past er daarna pas een
+toe. Bij een gedeeld apparaat noemt `engine/untouched.py` de zone met de override,
+niet de eerste zone die het apparaat toevallig ook draagt.
+
 ### De belangrijkste scheidslijn
 
 Het project bestaat uit twee helften met een harde grens ertussen:
@@ -586,6 +598,7 @@ Home Assistant (entiteitstoestanden, klokgebeurtenissen)
       ▼
   coordinator          verzamelt toestanden, ontdubbelt, serialiseert
     state_store.py     opslag, herstel en quarantaine van wat een mens zei
+    state_extra.py     bewaarde momenten en de eigen uitzetting
     preconditions.py   vooruit-verzoeken en hun timers
     overrides.py       override met looptijd en het opheffen van een hand
     room_presence.py   de kamerpoort: bezette kamers en de nalooptijd
@@ -624,6 +637,8 @@ Home Assistant (entiteitstoestanden, klokgebeurtenissen)
 │  diff.py        Plan vs werkelijkheid → wat er echt moet         │
 │  serialise.py   dict ↔ dataclasses                               │
 │    resident_storage.py  de ochtendinstellingen van een bewoner   │
+│  validation_extra.py  validatieregels buiten het model           │
+│  untouched.py   welke zone een gedeeld apparaat met rust laat    │
 │  night.py       de nacht: wie slaapt, sinds wanneer, wie opstaat │
 └──────────────────────────────────────────────────────────────────┘
       │
@@ -782,6 +797,13 @@ start van zijn slaapvenster), of het huis in die nacht geslapen heeft (`slept_to
 het bijhouden van dat moment ronde na ronde (`house_asleep_since`, anker 15) en de
 opstaan-rem (`rise_braked`, anker 16). `gates.py` leest het; de koppelingslaag bewaart het
 moment en geeft het de engine terug in `WorldState.asleep_since`.
+
+`slept_tonight` kijkt ook naar de bewoner zelf. Een moment dat meer dan vierentwintig uur
+oud is telt niet, en een bewoner die pas thuiskwam nadat het huis ging slapen heeft die
+nacht niet meegeslapen. Het thuiskomstmoment (`ResidentState.home_since`) komt uit de
+koppelingslaag; is het onbekend, dan blijft de oude uitkomst staan. Zo kan een late
+thuiskomer het huis 's ochtends niet tegenhouden en telt een achtergebleven moment van
+gisteren niet als nacht.
 
 ### hysteresis.py — moet het
 
@@ -1273,6 +1295,14 @@ dat alle wachtende zones tijdens de uitval starten.
   leest de uitval weer als nu. Eén plek lost N14 en N15 op, maar verandert het gedrag voor
   elke installatie en vraagt dus een ankerbesluit eerst.
 - De gebruiker beslist tussen (a) en (b) voordat er gebouwd wordt.
+
+**Live prioriteiten gelijk trekken op één circuit.** Twee zones met dezelfde prioriteit op
+hetzelfde circuit kunnen elkaars taak niet krijgen; de tie-break is nu de bron- en
+zonevolgorde. Het idee is een zone die lang wacht tijdelijk één stap voorrang te geven,
+met een vaste maximumverschuiving en terugval naar de ingestelde prioriteit zodra de
+wachttijd voorbij is. Dat is een **verbreding** van de bronkeuze; de andere kant blijft dat
+de ingestelde prioriteit het plafond is, en zonder wachttijd moet het plan exact hetzelfde
+blijven. Niet gebouwd.
 
 **Virtuele `climate` per zone.** Eén bedieningsentiteit per ruimte: een
 `climate.climate_director_<zone>` die op een gewone thermostaatkaart past.
@@ -2164,6 +2194,18 @@ Nothing changes in the diagnostics and the decision sensor: they still name only
 the zone ids under `hand_starts`. There is no new `Problem` code and no new
 entity.
 
+### What the binding layer gets right
+
+The diagnostics also redact `sleep_in` and leave presence and sleep entities out
+of `tracked_entities`, so a download cannot reveal a resident profile through the
+entity list. `state_extra.py` carries the public `stored_time` and
+`restore_commanded_off`; `state_store.py` stores `commanded_off` and restores it
+only within `COMMANDED_WINDOW`, so an old switch-off no longer explains a late
+report. The bypass switch writes only on a real state or name change.
+`set_override` checks every target first and only then applies one. For a shared
+appliance `engine/untouched.py` names the zone with the override, not the first
+zone that happens to carry the appliance too.
+
 ### The most important dividing line
 
 The project consists of two halves with a hard border between them:
@@ -2203,6 +2245,7 @@ Home Assistant (entity states, clock events)
       ▼
   coordinator          gathers states, debounces, serialises
     state_store.py     stores, restores and quarantines what a person said
+    state_extra.py     stored moments and our own switch-off
     preconditions.py   pre-conditioning requests and their timers
     overrides.py       override with a duration and the lifting of a hand
     room_presence.py   the room gate: occupied rooms and the grace period
@@ -2241,6 +2284,8 @@ Home Assistant (entity states, clock events)
 │  diff.py        Plan vs reality → what actually has to happen    │
 │  serialise.py   dict ↔ dataclasses                               │
 │    resident_storage.py  a resident's morning settings            │
+│  validation_extra.py  validation rules outside the model         │
+│  untouched.py   which zone leaves a shared appliance alone       │
 │  night.py       the night: who sleeps, since when, who gets up   │
 └──────────────────────────────────────────────────────────────────┘
       │
@@ -2399,6 +2444,13 @@ sleep window), whether the house slept during that night (`slept_tonight`), keep
 moment round after round (`house_asleep_since`, anchor 15) and the rise brake
 (`rise_braked`, anchor 16). `gates.py` reads it; the binding layer stores the moment and
 hands it back to the engine in `WorldState.asleep_since`.
+
+`slept_tonight` also looks at the resident. A moment older than twenty-four hours does not
+count, and a resident who only came home after the house went to sleep did not sleep
+through that night. The homecoming moment (`ResidentState.home_since`) comes from the
+binding layer; when it is unknown the old outcome stands. That keeps a late arrival from
+holding the house back in the morning and a stale moment from yesterday from counting as
+a night.
 
 ### hysteresis.py — is it needed
 
@@ -2881,6 +2933,13 @@ during the outage.
   reads as it does now. One place solves N14 and N15, but it changes the behaviour of every
   installation and therefore needs an anchor decision first.
 - The user decides between (a) and (b) before anything is built.
+
+**Levelling live priorities on one circuit.** Two zones with the same priority on the same
+circuit cannot both get their duty; the tie-break is now source and zone order. The idea is
+to give a zone that waits long one temporary step of precedence, with a fixed maximum shift
+and a fallback to the configured priority once the wait is over. That is a **broadening**
+of source selection; the other side remains that the configured priority is the ceiling,
+and without a wait the plan must stay exactly the same. Not built.
 
 **A virtual `climate` per zone.** One control entity per room: a
 `climate.climate_director_<zone>` that fits an ordinary thermostat card.
