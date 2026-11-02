@@ -32,9 +32,12 @@ from custom_components.climate_director.engine import (
     OutdoorWindow,
     Problem,
     Resident,
+    RiseBrake,
     Season,
+    SleepIn,
     Source,
     TimeWindow,
+    WakeDeadline,
     Zone,
     ZoneGate,
     manual_only_problems,
@@ -981,3 +984,135 @@ def test_a_covered_zone_that_exists_is_no_complaint() -> None:
         ),
     )
     assert list(_rule_source_covered_zones(config)) == []
+
+
+def test_sleep_settings_without_a_sleep_sensor_are_reported() -> None:
+    """Een slaapvenster zonder slaapsensor kan nooit iets doen."""
+    resident = Resident(
+        "danny",
+        "Danny",
+        presence_entity="person.danny",
+        sleep_window=TimeWindow(time(21, 0), time(8, 0)),
+        sleep_in=SleepIn(time(13, 0)),
+        wake_deadline=WakeDeadline(time(11, 0)),
+        rise_brake=RiseBrake(time(9, 0)),
+    )
+    config = DirectorConfig(zones=(zone("a"),), residents=(resident,))
+    assert problem(config, "no sleep sensor")
+
+
+def test_a_rise_brake_without_a_sleep_window_still_works_without_a_sensor() -> None:
+    """Zonder slaapvenster telt de slaapsensor de klok rond en remt de opsta-rem wel."""
+    resident = Resident(
+        "danny",
+        "Danny",
+        presence_entity="person.danny",
+        rise_brake=RiseBrake(time(9, 0)),
+    )
+    config = DirectorConfig(zones=(zone("a"),), residents=(resident,))
+    assert not problem(config, "no sleep sensor")
+
+
+def test_a_window_with_equal_start_and_end_is_reported() -> None:
+    """Een venster met begin gelijk aan eind is nooit open."""
+    config = DirectorConfig(
+        zones=(zone("a"),),
+        gates=GateSettings(quiet_windows=(TimeWindow(time(9, 0), time(9, 0)),)),
+    )
+    assert problem(config, "never open")
+
+
+def test_a_half_filled_guest_window_is_reported() -> None:
+    """Een half gastenvenster leest stil als de hele dag."""
+    config = DirectorConfig(
+        zones=(zone("a"),),
+        gates=GateSettings(guest_window_incomplete=True),
+    )
+    assert problem(config, "guest window has only one end")
+
+
+def test_a_cover_opening_with_the_wrong_open_state_is_reported() -> None:
+    """Een cover meldt `open`, geen `on`."""
+    config = DirectorConfig(
+        zones=(zone("a"),),
+        openings=(Opening("cover.dakraam", open_state="on"),),
+    )
+    assert problem(config, "never counts as open")
+
+
+def test_a_cover_opening_with_open_state_is_fine() -> None:
+    """Met de juiste openingsstand is er niets te melden."""
+    config = DirectorConfig(
+        zones=(zone("a"),),
+        openings=(Opening("cover.dakraam", open_state="open"),),
+    )
+    assert not problem(config, "never counts as open")
+
+
+def test_a_stuck_time_below_a_circuit_rest_is_reported() -> None:
+    """Een vastlooptijd korter dan de circuitrust meldt vals."""
+    config = DirectorConfig(
+        zones=(zone("a"),),
+        circuits=(
+            Circuit(
+                "c",
+                "C",
+                units=("climate.a",),
+                min_cycle_time=timedelta(minutes=20),
+            ),
+        ),
+        stuck_after=timedelta(minutes=15),
+    )
+    assert problem(config, "below the circuit's minimum cycle time")
+
+
+def test_a_stuck_time_below_a_source_rest_is_reported() -> None:
+    """Een vastlooptijd korter dan de bronrust meldt vals."""
+    config = DirectorConfig(
+        zones=(
+            zone(
+                "a",
+                sources=(
+                    Source(
+                        "a_s",
+                        "climate.a",
+                        min_cycle_time=timedelta(minutes=20),
+                    ),
+                ),
+            ),
+        ),
+        stuck_after=timedelta(minutes=15),
+    )
+    assert problem(config, "below the source's minimum cycle time")
+
+
+def test_the_schedule_gate_is_checked_per_weekday() -> None:
+    """Een rooster op één dag laat de andere dagen nog steeds niets starten."""
+    resident = Resident(
+        "danny",
+        "Danny",
+        presence_entity="person.danny",
+        windows=(TimeWindow(time(8, 0), time(18, 0), frozenset({0})),),
+    )
+    config = DirectorConfig(
+        zones=(zone("a"),),
+        residents=(resident,),
+        gates=GateSettings(require_schedule=True),
+    )
+    assert problem(config, "on some weekdays nobody has an ordinary schedule")
+
+
+def test_a_holiday_only_schedule_does_not_count_on_an_ordinary_day() -> None:
+    """Een alleen-vakantievenster is op een gewone dag geen rooster."""
+    resident = Resident(
+        "danny",
+        "Danny",
+        presence_entity="person.danny",
+        windows=(TimeWindow(time(8, 0), time(18, 0), holiday=True),),
+    )
+    config = DirectorConfig(
+        zones=(zone("a"),),
+        residents=(resident,),
+        gates=GateSettings(require_schedule=True),
+    )
+    assert problem(config, "on some weekdays nobody has an ordinary schedule")

@@ -27,6 +27,7 @@ from homeassistant.util import dt as dt_util
 
 from . import problems
 from .resident_reader import restore_home_since
+from .state_extra import restore_commanded_off, stored_time
 
 if TYPE_CHECKING:
     from .coordinator import CoordinatorSurface
@@ -55,44 +56,15 @@ def _isoformat(moment: datetime | None) -> str | None:
     return moment.isoformat() if moment else None
 
 
-def _stored_time(raw: object) -> datetime | None:
-    """Return the moment in a stored value, or `None` when there is none to read.
-
-    `dt_util.parse_datetime` geeft `None` terug voor iets dat het niet herkent, maar gooit
-    een `ValueError` voor iets dat er wel op lijkt en het niet is:
-    `"2026-13-45T10:00:00+00:00"` heeft geen maand 13. Zo'n waarde hoort net zo goed als
-    afwezig te tellen. Een tijdstip zonder tijdzone leest wel, maar het laat zich niet met
-    de klok van de integratie vergelijken - dat geeft een `TypeError` zodra er iets beslist
-    wordt - dus telt ook dat als afwezig. Elk opgeslagen tijdstip leest daarom langs deze
-    functie: `until`, `home_since`, `asleep_since` en de looptijd en starttijd van een
-    override.
-
-    `dt_util.parse_datetime` returns `None` for something it does not recognise, but raises
-    a `ValueError` for something that does look like a date and is not one:
-    `"2026-13-45T10:00:00+00:00"` has no month 13. Such a value should count as absent just
-    the same. A moment without a time zone does read, but it cannot be compared with the
-    integration's clock - that raises a `TypeError` the moment anything is decided - so
-    that counts as absent too. Every stored moment therefore reads through this function:
-    `until`, `home_since`, `asleep_since` and an override's duration and start time.
-    """
-    try:
-        moment = dt_util.parse_datetime(str(raw))
-    except ValueError:
-        return None
-    if moment is None or moment.tzinfo is None:
-        return None
-    return moment
-
-
 def _stored_date(raw: object) -> date | None:
     """Return the day in a stored value, or `None` when there is none to read.
 
-    De datumvariant van `_stored_time`, voor `handed_back`: één plek waar een opgeslagen
+    De datumvariant van `stored_time`, voor `handed_back`: één plek waar een opgeslagen
     dag gelezen wordt, met dezelfde vergevingsgezindheid. Anders dan `parse_datetime` gooit
     `dt_util.parse_date` zelf niets: hij kent alleen `JJJJ-MM-DD` en geeft voor al het
     andere `None` terug, dus hier hoort geen opvang omheen.
 
-    The date variant of `_stored_time`, for `handed_back`: one place where a stored day is
+    The date variant of `stored_time`, for `handed_back`: one place where a stored day is
     read, with the same forgiveness. Unlike `parse_datetime`, `dt_util.parse_date` raises
     nothing itself: it knows only `JJJJ-MM-DD` and returns `None` for everything else, so
     no catch belongs around it.
@@ -111,21 +83,10 @@ class _StateStoreMixin(_CoordinatorBase):
     def _store_payload(self) -> dict[str, Any]:
         """Return the hand-given state worth keeping across a restart.
 
-        Het thuiskomstmoment staat er ook in: dat is wat een herstart van een
-        thuiskomst onderscheidt. Alleen voor wie op dit moment
-        thuis is - wie weg is heeft geen moment (besluit 3), en dat blijkt hier
-        vanzelf, want de listener en het herstel halen het er dan al uit. De
-        kamerpoort draagt haar eigen deel bij: het vertrekmoment en welke kamers
-        bezet waren, zodat de nalooptijd over een herstart heen doorloopt. Zie
-        `room_presence.py` voor de keuze daarachter.
-
-        The homecoming moment is in here too: that is what separates a restart
-        from a homecoming. Only for whoever is home right
-        now - somebody away has no moment (decision 3), and that shows here by
-        itself, since the listener and the restore have already taken it out. The
-        room gate contributes its own part: the departure moment and which rooms
-        were occupied, so the grace period runs on across a restart. See
-        `room_presence.py` for the choice behind it.
+        Het thuiskomstmoment, de kamerbezetting, de handstarts en een eigen
+        uitzetting staan er ook in; wie weg is heeft geen moment (besluit 3).
+        The homecoming moment, room presence, hand starts and our own switch-off
+        are in here too; somebody away has no moment (decision 3).
         """
         return {
             "until": {zone_id: until.isoformat() for zone_id, until in self._precondition.items()},
@@ -138,6 +99,10 @@ class _StateStoreMixin(_CoordinatorBase):
                 for resident_id, since in getattr(self, "_home_since", {}).items()
             },
             "asleep_since": _isoformat(getattr(self, "_asleep_since", None)),
+            "commanded_off": {
+                entity_id: when.isoformat()
+                for entity_id, when in getattr(self, "_commanded_off", {}).items()
+            },
             "override_until": {
                 zone_id: until.isoformat()
                 for zone_id, until in getattr(self, "zone_override_until", {}).items()
@@ -303,7 +268,6 @@ class _StateStoreMixin(_CoordinatorBase):
         zelf of het in de lopende nacht valt; onleesbaar telt als onbekend.
         The moment the house went to sleep comes back unchecked: the engine sees for
         itself whether it falls in the current night; unreadable counts as unknown.
-
         The homecoming moment (anchor 13) only comes back for a resident who **is**
         home right now: somebody away has no moment, and keeping one for them would
         let an empty house pretend somebody was sitting there. An unknown resident,
@@ -360,7 +324,7 @@ class _StateStoreMixin(_CoordinatorBase):
                 # younger verdict wins over the store.
                 if zone_id in self._request_before_restore:
                     continue
-                until = _stored_time(raw)
+                until = stored_time(raw)
                 if until is not None and now < until:
                     self._precondition[zone_id] = until
 
@@ -385,8 +349,9 @@ class _StateStoreMixin(_CoordinatorBase):
 
         self._restore_room_presence(stored, now)
         self._restore_hand_starts(stored, now)
-        self._home_since.update(restore_home_since(self, stored.get("home_since"), _stored_time))
-        self._asleep_since = _stored_time(stored.get("asleep_since"))
+        self._home_since.update(restore_home_since(self, stored.get("home_since"), stored_time))
+        self._asleep_since = stored_time(stored.get("asleep_since"))
+        self._commanded_off.update(restore_commanded_off(stored.get("commanded_off"), now))
         if hasattr(self, "_restore_overrides"):
             self._restore_overrides(stored, now)
             # Alleen een override die de gebruiker tijdens het opstarten zelf zette
@@ -462,7 +427,7 @@ class _StateStoreMixin(_CoordinatorBase):
                     # Een verse overdracht van tijdens het opstarten niet wissen.
                     # Do not wipe a fresh handover from during the startup.
                     continue
-                until = _stored_time(raw)
+                until = stored_time(raw)
                 if until is None or not now < until:
                     self.zone_overrides.pop(zone_id, None)
                     continue
@@ -473,7 +438,7 @@ class _StateStoreMixin(_CoordinatorBase):
             for zone_id, raw in started_raw.items():
                 if zone_id not in restored:
                     continue
-                started = _stored_time(raw)
+                started = stored_time(raw)
                 if started is not None:
                     self.zone_override_started[zone_id] = started
         if isinstance(when_raw, Mapping):

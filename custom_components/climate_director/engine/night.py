@@ -117,14 +117,21 @@ def slept_tonight(resident: Resident, world: WorldState) -> bool:
 
     Zonder bekend moment is het antwoord nee. Zonder slaapvenster telt elk bekend
     moment: de koppelingslaag vergeet het zodra er niemand thuis meer slaapt, en dat
-    is dan de grens tussen twee nachten.
+    is dan de grens tussen twee nachten. Een moment dat te oud is telt niet, en een
+    bewoner die pas thuiskwam nadat het huis ging slapen heeft die nacht niet
+    meegeslapen.
 
     Without a known moment the answer is no. Without a sleep window any known moment
     counts: the binding layer forgets it as soon as nobody at home sleeps any more,
-    and that is then the border between two nights.
+    and that is then the border between two nights. A moment that is too old does
+    not count, and a resident who only came home after the house went to sleep did
+    not sleep through that night.
     """
     since = world.asleep_since
-    if since is None:
+    if since is None or world.now - since > timedelta(hours=24):
+        return False
+    state = world.residents.get(resident.resident_id)
+    if state is not None and state.home_since is not None and state.home_since >= since:
         return False
     began = night_began(resident, world.now)
     return began is None or since >= began

@@ -953,7 +953,7 @@
       "message": "Opening {opening} has a negative delay."
     },
     "schedule_gate_without_schedules": {
-      "message": "The schedule gate is on but nobody has a schedule, so nothing can ever run."
+      "message": "The schedule gate is on, but on {days} weekday(s) ({weekdays}) nobody has an ordinary schedule, so nothing can run on those days."
     },
     "negative_stuck_time": {
       "message": "The stuck-detection time is negative."
@@ -999,6 +999,21 @@
     },
     "season_entity_missing": {
       "message": "The season source is set to an entity, but no season entity is chosen; the season therefore stays unknown and every duty with a season restriction does nothing."
+    },
+    "resident_settings_without_sleep_sensor": {
+      "message": "Resident {resident} has sleep settings but no sleep sensor, so they can never take effect: {settings}."
+    },
+    "window_without_length": {
+      "message": "Window {window} starts and ends at the same time, so it is never open."
+    },
+    "guest_window_half_filled": {
+      "message": "The guest window has only one end filled in, so guest mode applies all day."
+    },
+    "cover_opening_without_open_state": {
+      "message": "Opening {opening} is a cover, but its open state is {open_state}, so it never counts as open."
+    },
+    "stuck_after_below_configured_rest": {
+      "message": "The stuck-detection time ({stuck_after} s) is shorter than the configured {label} ({rest} s) of {subject}."
     }
   },
   "services": {

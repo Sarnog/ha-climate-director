@@ -953,7 +953,7 @@
       "message": "La abertura {opening} tiene un retardo negativo."
     },
     "schedule_gate_without_schedules": {
-      "message": "La barrera de horario está activada pero nadie tiene horario, así que nada puede arrancar nunca."
+      "message": "El bloqueo de horario está activo, pero en {days} día(s) de la semana ({weekdays}) nadie tiene un horario normal, así que esos días no puede empezar nada."
     },
     "negative_stuck_time": {
       "message": "El tiempo de detección de bloqueo es negativo."
@@ -999,6 +999,21 @@
     },
     "season_entity_missing": {
       "message": "El origen de la estación está en una entidad, pero no hay ninguna entidad de estación elegida; la estación queda por tanto desconocida y cada tarea con una restricción de estación no hace nada."
+    },
+    "resident_settings_without_sleep_sensor": {
+      "message": "El residente {resident} tiene ajustes de sueño pero ningún sensor de sueño, así que nunca pueden surtir efecto: {settings}."
+    },
+    "window_without_length": {
+      "message": "La franja {window} empieza y termina a la misma hora, así que nunca está abierta."
+    },
+    "guest_window_half_filled": {
+      "message": "Solo un extremo de la franja de invitados está rellenado, así que el modo invitados se aplica todo el día."
+    },
+    "cover_opening_without_open_state": {
+      "message": "La abertura {opening} es un cover, pero su estado abierto es {open_state}; por eso nunca cuenta como abierta."
+    },
+    "stuck_after_below_configured_rest": {
+      "message": "El tiempo de detección de bloqueo ({stuck_after} s) es más corto que el {label} configurado ({rest} s) de {subject}."
     }
   },
   "services": {

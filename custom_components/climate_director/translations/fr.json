@@ -953,7 +953,7 @@
       "message": "L'ouverture {opening} a un retard négatif."
     },
     "schedule_gate_without_schedules": {
-      "message": "La barrière de planning est activée mais personne n'a de planning, donc rien ne peut jamais démarrer."
+      "message": "Le verrou de planning est actif, mais pendant {days} jour(s) de la semaine ({weekdays}) personne n'a de planning ordinaire ; rien ne peut donc démarrer ces jours-là."
     },
     "negative_stuck_time": {
       "message": "Le temps de détection de blocage est négatif."
@@ -999,6 +999,21 @@
     },
     "season_entity_missing": {
       "message": "L'origine de la saison est réglée sur une entité, mais aucune entité de saison n'est choisie ; la saison reste donc inconnue et chaque tâche avec une restriction de saison ne fait rien."
+    },
+    "resident_settings_without_sleep_sensor": {
+      "message": "L'occupant {resident} a des réglages de sommeil mais aucun capteur de sommeil ; ils ne peuvent donc jamais agir : {settings}."
+    },
+    "window_without_length": {
+      "message": "La plage {window} commence et se termine à la même heure ; elle n'est donc jamais ouverte."
+    },
+    "guest_window_half_filled": {
+      "message": "Une seule extrémité de la plage d'invités est remplie ; le mode invité s'applique donc toute la journée."
+    },
+    "cover_opening_without_open_state": {
+      "message": "L'ouverture {opening} est un cover, mais son état ouvert est {open_state} ; elle ne compte donc jamais comme ouverte."
+    },
+    "stuck_after_below_configured_rest": {
+      "message": "Le temps de détection de blocage ({stuck_after} s) est plus court que le {label} configuré ({rest} s) de {subject}."
     }
   },
   "services": {

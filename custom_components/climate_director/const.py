@@ -5,6 +5,8 @@ Constants for Climate Director.
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from homeassistant.const import Platform
 
 DOMAIN = "climate_director"
@@ -177,3 +179,22 @@ CLOCK_REEVAL_SECONDS = 60.0
 # notice blinking on and off teaches you to ignore it. The safety-net clock above
 # keeps the timer running even when nothing else happens.
 UNUSABLE_GRACE_SECONDS = 300.0
+
+#: Hoe lang een eigen commando geldt als verklaring voor een laat gemelde stand.
+#: Sommige integraties (melcloud) melden de staat pas een poll later; meldt het
+#: apparaat dan alsnog `off`, dan is dat ons eigen commando en geen hand aan het
+#: apparaat - en meldt het de actieve stand die wij net vroegen, dan is dat onze
+#: eigen aanzet en evenmin een hand. Een kwartier dekt een trage poll ruimschoots,
+#: en is kort genoeg dat een échte hand erna niet de hele dag onzichtbaar blijft.
+#: Dezelfde tijd begrenst het herstel na een herstart: een oude uitzetting telt
+#: daar niet meer mee.
+#:
+#: How long our own command counts as the explanation for a late-reported mode.
+#: Some integrations (melcloud) report the state only a poll later; when the
+#: appliance then reports `off`, that is our own command and not a hand at the
+#: appliance - and when it reports the active mode we just asked for, that is our
+#: own switch-on and no hand either. A quarter of an hour covers a slow poll
+#: amply, and is short enough that a real hand afterwards does not stay invisible
+#: all day. The same span bounds the restore after a restart: an old switch-off
+#: no longer counts there.
+COMMANDED_WINDOW = timedelta(minutes=15)

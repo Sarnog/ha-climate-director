@@ -334,14 +334,16 @@ def _gates(raw: Any) -> GateSettings:
         target_key(field): parse_leaf(field, raw.get(target_key(field)))
         for field in GATES_FLAT_FIELDS
     }
-    guest = raw.get("guest_window")
+    guest_raw = raw.get("guest_window")
+    guest: dict[str, Any] = guest_raw if isinstance(guest_raw, dict) else {}
     return GateSettings(
         quiet_windows=tuple(
             _time_window(item)
             for item in _sequence(raw.get("quiet_windows"))
             if isinstance(item, dict)
         ),
-        guest_window=_guest_window(guest if isinstance(guest, dict) else {}),
+        guest_window=_guest_window(guest),
+        guest_window_incomplete=bool(guest.get("start")) != bool(guest.get("end")),
         **flat,
     )
 
@@ -353,12 +355,10 @@ def _guest_window(raw: dict[str, Any]) -> TimeWindow | None:
     Half a window is no window: guest mode then applies all day.
 
     De bladeren (start, eind en dagen) komen uit de veldtabel, zodat een nieuw
-    gastenvensterveld één rij is in `engine/fields.py` in plaats van een
-    wijziging hier én in het formulier.
+    gastenvensterveld één rij is in `engine/fields.py`, niet een wijziging hier.
 
     The leaves (start, end and days) come from the field table, so a new guest
-    window field is one row in `engine/fields.py` instead of a change here and
-    one in the form.
+    window field is one row in `engine/fields.py`, not a change here and in the form.
     """
     if not isinstance(raw, Mapping):
         return None

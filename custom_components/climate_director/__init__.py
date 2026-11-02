@@ -575,15 +575,14 @@ def _async_register_services(hass: HomeAssistant) -> None:
         minutes = call.data.get(ATTR_MINUTES)
         when_done = call.data.get(ATTR_WHEN_DONE, WHEN_DONE_TURN_OFF)
         for entry, zone_id in targets:
-            runtime = entry.runtime_data
-            source = runtime.override_source(zone_id, hvac_mode)
-            if source is None:
+            if entry.runtime_data.override_source(zone_id, hvac_mode) is None:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="zone_no_source_for_mode",
                     translation_placeholders={"zone": zone_id, "mode": hvac_mode},
                 )
-            runtime.async_set_override(
+        for entry, zone_id in targets:
+            entry.runtime_data.async_set_override(
                 zone_id,
                 hvac_mode,
                 _override_setpoint(temperature, unit),

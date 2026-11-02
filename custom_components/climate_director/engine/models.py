@@ -921,6 +921,18 @@ class GateSettings:
     gates take over again.
     """
 
+    guest_window_incomplete: bool = False
+    """Whether only one end of the guest window was filled in.
+
+    Niet bewaard en niet gebruikt door de poorten: `serialise.py` zet dit uit
+    de ruwe opslag, en `validate()` meldt het. Zonder deze vlag zou een half
+    venster stil als "de hele dag" lezen en was er niets te melden.
+
+    Not stored and not used by the gates: `serialise.py` sets it from the raw
+    store, and `validate()` reports it. Without this flag a half window would
+    quietly read as "all day" and there would be nothing to report.
+    """
+
 
 class HeatingLayout(StrEnum):
     """How the heating is laid out through the house.
@@ -1244,8 +1256,10 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
     screen and in the `invalid_config` repair notice, and is held by
     `tests/test_validation.py` against literal lists.
     """
+    from .validation_extra import EXTRA_RULES
+
     problems: list[str] = []
-    for rule in _RULES:
+    for rule in (*_RULES, *EXTRA_RULES):
         problems.extend(rule(config))
     return tuple(problems)
 
@@ -1800,15 +1814,29 @@ def _rule_schedule_gate(config: DirectorConfig) -> Iterator[Problem]:
     """Yield a complaint when the schedule gate stands on nobody's schedule.
 
     De roosterpoort aan zonder één rooster laat niets ooit starten, en dat is
-    van buiten niet te onderscheiden van een integratie die stuk is.
+    van buiten niet te onderscheiden van een integratie die stuk is. De controle
+    gaat per weekdag: één gewoon rooster op maandag laat dinsdag nog niets
+    starten, en een alleen-vakantievenster telt op een gewone dag niet mee.
 
     The schedule gate on without a single schedule lets nothing ever start,
-    which is indistinguishable from a broken integration from the outside.
+    which is indistinguishable from a broken integration from the outside. The
+    check goes per weekday: one ordinary schedule on Monday still lets nothing
+    start on Tuesday, and a holiday-only window does not count on an ordinary day.
     """
-    if config.gates.require_schedule and not any(resident.windows for resident in config.residents):
+    if not config.gates.require_schedule:
+        return
+    missing = [
+        day
+        for day in range(7)
+        if not any(resident.takes_part(holiday=False, weekday=day) for resident in config.residents)
+    ]
+    if missing:
         yield Problem(
             "schedule_gate_without_schedules",
-            "the schedule gate is on but nobody has a schedule, so nothing can ever run",
+            "the schedule gate is on but on some weekdays nobody has an ordinary schedule, "
+            "so nothing can run on those days",
+            days=str(len(missing)),
+            weekdays=", ".join(str(day + 1) for day in missing),
         )
 
 
@@ -1965,24 +1993,6 @@ def _rule_holiday_calendars(config: DirectorConfig) -> Iterator[Problem]:
         )
 
 
-def _rule_resident_without_presence(config: DirectorConfig) -> Iterator[Problem]:
-    """Yield a complaint for every resident who can never be home.
-
-    Een bewoner zonder aanwezigheidsentiteit telt nooit als thuis; elke poort
-    die op die bewoner wacht, wacht voor niets.
-
-    A resident without a presence entity never counts as home; every gate
-    waiting on that resident waits for nothing.
-    """
-    for resident in config.residents:
-        if not resident.presence_entity:
-            yield Problem(
-                "resident_without_presence",
-                f"resident {resident.resident_id} has no presence entity, so can never be home",
-                resident=resident.resident_id,
-            )
-
-
 def _rule_exclusive_groups(config: DirectorConfig) -> Iterator[Problem]:
     """Yield a complaint for every exclusive group naming an unknown source.
 
@@ -2091,36 +2101,6 @@ def _free_minutes(windows: list[TimeWindow], weekday: int) -> int:
     return covered.count(False)
 
 
-def _timing_problems(config: DirectorConfig) -> list[Problem]:
-    """Return a complaint about switch timings on a circuit that never switches.
-
-    Een buitenunit die verwarmen en koelen tegelijk aankan wisselt nooit van
-    taak, dus een omschakelpauze en een minimale looptijd voor die wissel doen
-    daar niets. Ze staan er dan wel, en dan ga je ervan uit dat ze werken.
-
-    De kortcyclustijd en de capaciteitsgrens blijven wél gelden; die gaan over
-    losse units en niet over de taak van het circuit.
-
-    An outdoor unit that can heat and cool at once never switches duty, so a
-    switch pause and a minimum run before that switch do nothing there. They
-    still sit in the settings, and then you assume they work.
-
-    The short-cycle time and the capacity limit do still apply; those are about
-    individual units rather than about the circuit's duty.
-    """
-    return [
-        Problem(
-            "switch_timings_without_a_switch",
-            f"circuit {circuit.circuit_id} can run both duties at once, so its switch pause "
-            "and minimum run before switching never apply",
-            circuit=circuit.name or circuit.circuit_id,
-        )
-        for circuit in config.circuits
-        if circuit.simultaneous_heat_cool
-        and (circuit.family_switch_delay or circuit.min_family_switch_interval)
-    ]
-
-
 def _rule_seasons(config: DirectorConfig) -> Iterator[Problem]:
     """Yield a complaint when the season can never be read.
 
@@ -2225,6 +2205,24 @@ def _layout_problems(config: DirectorConfig) -> list[str]:
     return []
 
 
+def _rule_resident_without_presence(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint for every resident who can never be home.
+
+    Een bewoner zonder aanwezigheidsentiteit telt nooit als thuis; elke poort
+    die op die bewoner wacht, wacht voor niets.
+
+    A resident without a presence entity never counts as home; every gate
+    waiting on that resident waits for nothing.
+    """
+    for resident in config.residents:
+        if not resident.presence_entity:
+            yield Problem(
+                "resident_without_presence",
+                f"resident {resident.resident_id} has no presence entity, so can never be home",
+                resident=resident.resident_id,
+            )
+
+
 def _duplicates(values: list[str]) -> list[str]:
     """Return the values occurring more than once, in first-seen order."""
     seen: set[str] = set()
@@ -2268,5 +2266,4 @@ _RULES = (
     _rule_seasons,
     _layout_problems,
     _quiet_problems,
-    _timing_problems,
 )

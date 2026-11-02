@@ -27,7 +27,7 @@ from homeassistant.core import Event, EventStateChangedData, callback
 from homeassistant.util import dt as dt_util
 
 from .readability import unreadable
-from .state_store import _stored_time
+from .state_extra import stored_time
 
 if TYPE_CHECKING:
     from .coordinator import CoordinatorSurface
@@ -192,7 +192,7 @@ class _RoomPresenceMixin(_CoordinatorBase):
             for zone_id, raw in empty_raw.items():
                 if zone_id not in rooms:
                     continue
-                moment = _stored_time(raw)
+                moment = stored_time(raw)
                 if moment is not None:
                     empty[zone_id] = moment
 

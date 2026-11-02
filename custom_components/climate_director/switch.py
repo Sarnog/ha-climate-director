@@ -381,11 +381,13 @@ class OpeningBypassSwitch(_DirectorSwitch):
         coordinator hands out an update every decision round, and a state change
         of the sensor asks for one itself.
         """
+        previous = self._is_on
         self._is_on = self.coordinator.opening_bypasses.get(self._opening_id, False)
-        self._refresh_label()
-        self.async_write_ha_state()
+        label_changed = self._refresh_label()
+        if self._is_on != previous or label_changed:
+            self.async_write_ha_state()
 
-    def _refresh_label(self) -> None:
+    def _refresh_label(self) -> bool:
         """Follow the sensor's friendly name without a reload.
 
         Gemeten op deze Home Assistant-versie: `translation_placeholders` staat
@@ -410,9 +412,10 @@ class OpeningBypassSwitch(_DirectorSwitch):
         """
         label = _opening_label(self.coordinator, self._opening_id)
         if self._attr_translation_placeholders.get("opening") == label:
-            return
+            return False
         self._attr_translation_placeholders = {"opening": label}
         self.__dict__.pop("name", None)
+        return True
 
     @property
     def is_on(self) -> bool:

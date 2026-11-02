@@ -953,7 +953,7 @@
       "message": "Opening {opening} heeft een negatieve vertraging."
     },
     "schedule_gate_without_schedules": {
-      "message": "De roosterpoort staat aan, maar niemand heeft een rooster, dus er kan nooit iets starten."
+      "message": "De roosterpoort staat aan, maar op {days} weekdag(en) ({weekdays}) heeft niemand een gewoon rooster, dus op die dagen kan er niets starten."
     },
     "negative_stuck_time": {
       "message": "De vastloopdetectietijd is negatief."
@@ -999,6 +999,21 @@
     },
     "season_entity_missing": {
       "message": "De herkomst van het seizoen staat op een entiteit, maar er is geen seizoensentiteit gekozen; het seizoen blijft daardoor onbekend en elke taak met een seizoensbeperking doet niets."
+    },
+    "resident_settings_without_sleep_sensor": {
+      "message": "Bewoner {resident} heeft slaapinstellingen maar geen slaapsensor, dus die kunnen nooit werken: {settings}."
+    },
+    "window_without_length": {
+      "message": "Venster {window} begint en eindigt op hetzelfde tijdstip, dus het is nooit open."
+    },
+    "guest_window_half_filled": {
+      "message": "Het gastenvenster heeft maar één uiteinde ingevuld, dus de gastenmodus geldt de hele dag."
+    },
+    "cover_opening_without_open_state": {
+      "message": "Opening {opening} is een cover, maar de openingsstand staat op {open_state}; daardoor telt die nooit als open."
+    },
+    "stuck_after_below_configured_rest": {
+      "message": "De vastloopdetectietijd ({stuck_after} s) is korter dan de ingestelde {label} ({rest} s) van {subject}."
     }
   },
   "services": {

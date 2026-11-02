@@ -332,3 +332,28 @@ class TestASharedSourceIsHandedOverToo:
         commands = {command.entity_id: command.hvac_mode for command in plan.commands}
         assert commands.get("climate.andere") == MODE_OFF, "de zolderunit mag niet gaan draaien"
         assert SHARED not in commands, "de overgedragen ketel krijgt niets"
+
+
+def test_a_house_wide_handover_names_the_zone_with_the_override() -> None:
+    """De melding noemt de zone die de override heeft, niet de eerste drager.
+
+    Dezelfde ketel hangt als bron onder de woonkamer en de zolder. Alleen de
+    zolder is overgedragen. De melding hoorde de zolder te noemen, want daar
+    komt de override vandaan; de eerste lus noemde de woonkamer, die niets met
+    de override te maken had.
+
+    The same boiler hangs as a source under the living room and the attic. Only
+    the attic is handed over. The notice should name the attic, because that is
+    where the override comes from; the first loop named the living room, which
+    had nothing to do with the override.
+    """
+    plan = shared_plan(
+        {"attic": True},
+        {SHARED: climate(MODE_HEAT)},
+        living_room=23.0,
+        attic=18.0,
+    )
+
+    assert [(item.entity_id, item.zone_id, item.reason) for item in plan.untouched] == [
+        (SHARED, "attic", Reason.MANUAL_OVERRIDE)
+    ]

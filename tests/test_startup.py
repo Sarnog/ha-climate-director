@@ -227,3 +227,31 @@ async def test_an_exception_from_the_first_decision_still_arms_the_clock() -> No
     await item._async_on_hass_started(item.hass)  # type: ignore[arg-type]
 
     assert item.clock_armed == 1, "de vangnetklok hoort ondanks de fout te lopen"
+
+
+async def test_the_gate_stays_shut_while_the_restore_runs() -> None:
+    """De poort gaat pas open nadat het herstel klaar is, niet tijdens.
+
+    Stond `_restored` al vóór of tijdens `_async_restore_state`, dan kon een
+    beslissing die tijdens het herstel binnenkwam de bewaarde toestand missen.
+    Deze toets kijkt op het moment zelf, niet pas achteraf.
+
+    The gate opens only after the restore is done, not during it. If `_restored`
+    already stood before or during `_async_restore_state`, a decision arriving
+    during the restore could miss the stored state. This test looks at the
+    moment itself, not only afterwards.
+    """
+    item = StandIn()
+    seen: list[bool] = []
+    original = item._async_restore_state
+
+    async def observed_restore() -> None:
+        seen.append(item._restored)
+        await original()
+
+    item._async_restore_state = observed_restore  # type: ignore[method-assign]
+
+    await item._async_on_hass_started(item.hass)  # type: ignore[arg-type]
+
+    assert seen == [False]
+    assert item._restored is True

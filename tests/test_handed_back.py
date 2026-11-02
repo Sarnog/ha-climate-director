@@ -1077,6 +1077,7 @@ class TestItSurvivesARestart:
                 # bookkeeping. Without the key in the file it stays empty.
                 self._empty_since: dict[str, datetime] = {}
                 self._occupied_rooms: set[str] = set()
+                self._commanded_off: dict[str, datetime] = {}
                 # Geen handeling van de gebruiker vóór het herstel in deze
                 # stand-in; het herstel leest de notitie dus leeg.
                 #
@@ -1267,6 +1268,29 @@ class TestItSurvivesARestart:
         item = self._coordinator({"handed_back": {"slaapkamer": "not a date"}})
         await item._async_restore_state()
         assert item._handed_back == {}
+
+    def test_our_own_switch_off_is_written_away(self) -> None:
+        """Een eigen  moet een herstart overleven om een late melding te verklaren."""
+        item = self._coordinator()
+        now = dt_util.now()
+        item._commanded_off = {"slaapkamer": now}
+        item._async_save_state()
+        assert item._store.written is not None
+        assert item._store.written["commanded_off"] == {"slaapkamer": now.isoformat()}
+
+    async def test_a_recent_own_switch_off_comes_back(self) -> None:
+        """Binnen het venster blijft ons eigen  de verklaring."""
+        now = dt_util.now()
+        item = self._coordinator({"commanded_off": {"slaapkamer": now.isoformat()}})
+        await item._async_restore_state()
+        assert item._commanded_off == {"slaapkamer": now}
+
+    async def test_an_old_own_switch_off_does_not_come_back(self) -> None:
+        """Na het venster is een oude uitzetting geen verklaring meer."""
+        stale = dt_util.now() - timedelta(minutes=16)
+        item = self._coordinator({"commanded_off": {"slaapkamer": stale.isoformat()}})
+        await item._async_restore_state()
+        assert item._commanded_off == {}
 
 
 class TestItIsWrittenAwayWhenItChanges:

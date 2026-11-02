@@ -953,7 +953,7 @@
       "message": "الفتحة {opening} لديها تأخير سالب."
     },
     "schedule_gate_without_schedules": {
-      "message": "بوابة الجدول مفعّلة لكن لا أحد لديه جدول، فلا يمكن لشيء أن يبدأ أبدًا."
+      "message": "قفل الجدول مفعّل، لكن في {days} يوم/أيام من الأسبوع ({weekdays}) لا يوجد لدى أحد جدول عادي، لذا لا يمكن أن يبدأ شيء في تلك الأيام."
     },
     "negative_stuck_time": {
       "message": "زمن اكتشاف التعطل سالب."
@@ -999,6 +999,21 @@
     },
     "season_entity_missing": {
       "message": "مصدر الفصل مضبوط على كيان، لكن لم يُختَر كيان الفصل؛ لذا يبقى الفصل غير معروف ولا تفعل أي مهمة لها قيد فصلي شيئًا."
+    },
+    "resident_settings_without_sleep_sensor": {
+      "message": "لدى الساكن {resident} إعدادات نوم ولكن لا يوجد مستشعر نوم، لذا لا يمكن أن تعمل أبدًا: {settings}."
+    },
+    "window_without_length": {
+      "message": "تبدأ النافذة {window} وتنتهي في الوقت نفسه، لذا لا تكون مفتوحة أبدًا."
+    },
+    "guest_window_half_filled": {
+      "message": "تم ملء طرف واحد فقط من نافذة الضيوف، لذا ينطبق وضع الضيوف طوال اليوم."
+    },
+    "cover_opening_without_open_state": {
+      "message": "الفتحة {opening} هي غطاء، لكن حالة الفتح فيها {open_state}؛ لذلك لا تُحتسب مفتوحة أبدًا."
+    },
+    "stuck_after_below_configured_rest": {
+      "message": "زمن اكتشاف التوقف ({stuck_after} ث) أقصر من {label} المضبوط ({rest} ث) لـ {subject}."
     }
   },
   "services": {

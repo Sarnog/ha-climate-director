@@ -467,9 +467,9 @@ FUNCTION_LIMIT = 80
 # more, one blank line less). The new mixin and engine module stay under the
 # measure; the functions in `engine/gates.py` stay under eighty.
 MODULE_EXCEPTIONS: dict[str, int] = {
-    "engine/models.py": 2272,
-    "coordinator.py": 2084,
-    "engine/decide.py": 1810,
+    "engine/models.py": 2269,
+    "coordinator.py": 2070,
+    "engine/decide.py": 1800,
     "config_flow.py": 1492,
     "schemas.py": 893,
 }
@@ -489,18 +489,18 @@ MODULE_EXCEPTIONS: dict[str, int] = {
 GROWTH_FREEZE_LIMIT = 500
 
 FROZEN_MODULES: dict[str, int] = {
-    "__init__.py": 611,
+    "__init__.py": 610,
     "engine/constraints.py": 618,
     "engine/gates.py": 623,
     "engine/serialise.py": 637,
     "problems.py": 640,
-    "state_store.py": 520,
+    "state_store.py": 485,
     "texts.py": 622,
     "world_builder.py": 553,
 }
 
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
-    ("engine/decide.py", "_build_commands"): 211,
+    ("engine/decide.py", "_build_commands"): 208,
     ("engine/decide.py", "_generator_commands"): 192,
     ("coordinator.py", "__init__"): 285,
     ("engine/models.py", "_rule_zones"): 164,

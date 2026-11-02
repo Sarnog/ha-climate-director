@@ -37,6 +37,7 @@ from . import problems, texts
 from .applier import apply
 from .const import (
     CLOCK_REEVAL_SECONDS,
+    COMMANDED_WINDOW,
     CONF_INSTALLATION,
     CONF_SHADOW_MODE,
     DEBOUNCE_SECONDS,
@@ -115,22 +116,6 @@ type ClimateDirectorEntry = ConfigEntry[ClimateDirectorCoordinator]
 #: two notices.
 _COMMAND_NOT_TAKING_ROUNDS = 10
 
-#: Hoe lang een eigen commando geldt als verklaring voor een laat gemelde stand.
-#: Sommige integraties (melcloud) melden de staat pas een poll later; meldt het
-#: apparaat dan alsnog `off`, dan is dat ons eigen commando en geen hand aan het
-#: apparaat - en meldt het de actieve stand die wij net vroegen, dan is dat onze
-#: eigen aanzet en evenmin een hand. Een kwartier dekt een trage poll ruimschoots,
-#: en is kort genoeg dat een échte hand erna niet de hele dag onzichtbaar blijft.
-#:
-#: How long our own command counts as the explanation for a late-reported mode.
-#: Some integrations (melcloud) report the state only a poll later; when the
-#: appliance then reports `off`, that is our own command and not a hand at the
-#: appliance - and when it reports the active mode we just asked for, that is our
-#: own switch-on and no hand either. A quarter of an hour covers a slow poll
-#: amply, and is short enough that a real hand afterwards does not stay invisible
-#: all day.
-_COMMANDED_WINDOW = timedelta(minutes=15)
-
 
 def storage_key(entry_id: str) -> str:
     """Return the key one installation keeps its by-hand state under.
@@ -196,6 +181,7 @@ class CoordinatorSurface(Protocol):
     _empty_since: dict[str, datetime]
     _occupied_rooms: set[str]
     _home_since: dict[str, datetime]
+    _commanded_off: dict[str, datetime]
     _asleep_since: datetime | None
     _save_pending: bool
     _override_before_restore: set[str]
@@ -1031,7 +1017,7 @@ class ClimateDirectorCoordinator(
         previous round's.
         """
         when = self._commanded_off.get(entity_id)
-        if when is not None and dt_util.now() - when <= _COMMANDED_WINDOW:
+        if when is not None and dt_util.now() - when <= COMMANDED_WINDOW:
             return True
 
         plan = self._issued or self.data
@@ -1087,7 +1073,7 @@ class ClimateDirectorCoordinator(
         noted = self._commanded_on.get(entity_id)
         if noted is not None:
             when, duty = noted
-            if duty is family and dt_util.now() - when <= _COMMANDED_WINDOW:
+            if duty is family and dt_util.now() - when <= COMMANDED_WINDOW:
                 return True
         return any(
             change.entity_id == entity_id and family_of(change.command.hvac_mode) is family

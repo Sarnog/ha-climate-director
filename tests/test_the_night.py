@@ -359,7 +359,47 @@ class TestTheMoment:
         world = make_world(
             now=at(10, 0, day=SAT),
             residents={"danny": awake(), "nancy": asleep()},
-            asleep_since=at(1, 0, day=WED),
+            asleep_since=at(1, 0, day=SAT),
         )
         resident = config.residents[1]
         assert night.slept_tonight(resident, world)
+
+
+def test_a_resident_who_came_home_after_the_house_slept_did_not_sleep_tonight() -> None:
+    """Wie pas thuiskwam nadat het huis ging slapen, heeft die nacht niet meegeslapen.
+
+    Het moment van het huis zegt wanneer het huis ging slapen, niet wanneer deze
+    bewoner ging slapen. Zonder het thuiskomstmoment zou een late thuiskomer als
+    slaper tellen en het huis 's ochtends ten onrechte tegenhouden.
+
+    The house's moment says when the house went to sleep, not when this resident
+    went to sleep. Without the homecoming moment a late arrival would count as a
+    sleeper and hold the house back in the morning for no reason.
+    """
+    config = live_house()
+    world = make_world(
+        now=at(7, 0, day=SAT),
+        residents={
+            "danny": asleep(home_since=at(2, 0, day=SAT)),
+            "nancy": asleep(home_since=HOME),
+        },
+        asleep_since=at(1, 30, day=SAT),
+    )
+
+    assert not night.slept_tonight(config.residents[0], world)
+
+
+def test_a_sleep_moment_older_than_a_day_does_not_count() -> None:
+    """Een moment van meer dan vierentwintig uur geleden is geen nacht meer.
+
+    Zonder slaapvenster telt elk bekend moment, dus juist daar moet de
+    vierentwintig-uurgrens het oude moment tegenhouden.
+    """
+    config = house()
+    world = make_world(
+        now=at(23, 0, day=SUN),
+        residents={"danny": asleep(home_since=HOME), "nancy": asleep(home_since=HOME)},
+        asleep_since=at(1, 30, day=SAT),
+    )
+
+    assert not night.slept_tonight(config.residents[0], world)

@@ -225,3 +225,14 @@ class TestOpeningBypassSwitch:
 
         assert switch.is_on is False
         assert written == [True, False]
+
+    def test_an_unchanged_bypass_switch_does_not_publish_again(self) -> None:
+        """Een ronde zonder wijziging hoeft de schakelaar niet opnieuw te publiceren."""
+        coordinator = self._coordinator()
+        switch = OpeningBypassSwitch(coordinator, "achterdeur")
+        written: list[bool] = []
+        switch.async_write_ha_state = lambda: written.append(switch.is_on)
+
+        switch._handle_coordinator_update()
+
+        assert written == []

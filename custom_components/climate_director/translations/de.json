@@ -953,7 +953,7 @@
       "message": "Öffnung {opening} hat eine negative Verzögerung."
     },
     "schedule_gate_without_schedules": {
-      "message": "Das Zeitplan-Tor ist an, aber niemand hat einen Zeitplan, also kann nie etwas starten."
+      "message": "Die Zeitplan-Sperre ist aktiv, aber an {days} Wochentag(en) ({weekdays}) hat niemand einen gewöhnlichen Zeitplan; an diesen Tagen kann daher nichts starten."
     },
     "negative_stuck_time": {
       "message": "Die Blockade-Erkennungszeit ist negativ."
@@ -999,6 +999,21 @@
     },
     "season_entity_missing": {
       "message": "Die Herkunft der Jahreszeit steht auf einer Entität, aber es ist keine Jahreszeit-Entität gewählt; die Jahreszeit bleibt dadurch unbekannt und jede Aufgabe mit einer Jahreszeitenbeschränkung tut nichts."
+    },
+    "resident_settings_without_sleep_sensor": {
+      "message": "Bewohner {resident} hat Schlafeinstellungen, aber keinen Schlafsensor; sie können daher nie wirken: {settings}."
+    },
+    "window_without_length": {
+      "message": "Das Fenster {window} beginnt und endet zur selben Zeit und ist daher nie offen."
+    },
+    "guest_window_half_filled": {
+      "message": "Beim Gästefenster ist nur ein Ende ausgefüllt, daher gilt der Gästemodus den ganzen Tag."
+    },
+    "cover_opening_without_open_state": {
+      "message": "Öffnung {opening} ist ein Cover, aber ihr Offen-Zustand ist {open_state}; sie zählt daher nie als offen."
+    },
+    "stuck_after_below_configured_rest": {
+      "message": "Die Festschlag-Erkennungszeit ({stuck_after} s) ist kürzer als die eingestellte {label} ({rest} s) von {subject}."
     }
   },
   "services": {

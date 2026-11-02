@@ -835,3 +835,45 @@ async def test_an_entity_that_only_looks_like_an_override_is_refused(
 
     with pytest.raises(ServiceValidationError, match="not an override|geen override"):
         await call_with_target(home, "clear_override", {}, target)
+
+
+async def test_a_failed_target_leaves_every_override_untouched() -> None:
+    """Eén onmogelijk doel mag de andere zones niet al hebben overgedragen.
+
+    De lus keek per doel of de stand kon en zette daarna meteen de override. Bij
+    twee doelen waarin het tweede niet kan koelen, stond de eerste zone dus al
+    overgedragen terwijl de aanroep met een fout eindigde. Nu keurt hij eerst
+    alle doelen en past hij er daarna pas een toe.
+
+    One impossible target must not have handed over the other zones already. The
+    loop checked each target and applied the override straight away. With two
+    targets where the second cannot cool, the first zone stood handed over while
+    the call ended in an error. Now every target is checked first and only then
+    applied.
+    """
+    from homeassistant.exceptions import ServiceValidationError
+
+    config = installation()
+    config["zones"][1]["sources"][0]["role"] = "heat_only"
+    live = await start_house(config, states=cold_world())
+    try:
+        targets = [
+            live.by_key("zone_woonkamer_override"),
+            live.by_key("zone_zolder_override"),
+        ]
+        with pytest.raises(ServiceValidationError, match="geen bron|no source"):
+            await live.call(
+                DOMAIN,
+                "set_override",
+                {
+                    "entity_id": targets,
+                    "hvac_mode": "cool",
+                    "temperature": 18.5,
+                    "minutes": 60,
+                },
+            )
+
+        assert not any(live.coordinator.zone_overrides.values())
+        assert live.state(live.by_key("zone_woonkamer_override")) == "off"
+    finally:
+        await stop_house(live)

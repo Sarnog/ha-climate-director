@@ -34,7 +34,7 @@ from homeassistant.util import dt as dt_util
 from .engine import ModeFamily, Plan, ResidentState, WorldState, family_of, hand_start
 from .engine.night import asleep_at
 from .readability import unreadable
-from .state_store import _stored_time
+from .state_extra import stored_time
 
 if TYPE_CHECKING:
     from .coordinator import CoordinatorSurface
@@ -221,7 +221,7 @@ class _HandStartMixin(_CoordinatorBase):
         for zone_id, value in raw.items():
             if zone_id not in known or zone_id in self._hand_starts:
                 continue
-            moment = _stored_time(value)
+            moment = stored_time(value)
             if moment is not None and moment.date() == today:
                 self._hand_starts[zone_id] = moment
 

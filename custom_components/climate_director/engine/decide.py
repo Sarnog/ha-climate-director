@@ -37,6 +37,7 @@ from .plan import (
     UntouchedSource,
     ZoneDecision,
 )
+from .untouched import first_per_entity
 from .world import ClimateState, WorldState
 
 #: Solo circuit standing in for a source with an outdoor unit to itself.
@@ -1184,10 +1185,7 @@ def _build_commands(
     # A shared appliance sits under several zones. If one of them commands it
     # after all, it is not being left alone - what the other zones thought of
     # it no longer matters.
-    commanded = {command.entity_id for command in commands}
-    left_alone = tuple(
-        item for item in _first_per_entity(untouched) if item.entity_id not in commanded
-    )
+    left_alone = tuple(first_per_entity(config, world, untouched, commands))
 
     # Stops before starts. On a circuit that has to swap duty, starting the new
     # one before the old has let go would put two duties on one compressor for
@@ -1319,14 +1317,6 @@ def _ignores_openings(
         for zone in config.zones
         if generator.serves(zone.zone_id)
     )
-
-
-def _first_per_entity(untouched: list[UntouchedSource]) -> list[UntouchedSource]:
-    """Return one entry per appliance, keeping the first zone that reported it."""
-    seen: dict[str, UntouchedSource] = {}
-    for item in untouched:
-        seen.setdefault(item.entity_id, item)
-    return list(seen.values())
 
 
 def _collapse_shared(

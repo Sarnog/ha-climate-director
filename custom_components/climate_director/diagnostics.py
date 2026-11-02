@@ -41,7 +41,7 @@ from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE
-from .coordinator import ClimateDirectorEntry
+from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry
 from .engine import Plan, WorldState, validate
 from .engine.serialise import config_to_dict
 
@@ -84,7 +84,7 @@ async def async_get_config_entry_diagnostics(
                 for zone_id, until in coordinator.live_preconditions().items()
             },
         },
-        "tracked_entities": sorted(coordinator.tracked_entities()),
+        "tracked_entities": _visible_tracked_entities(coordinator),
         "world": _world(coordinator.world),
         "plan": _plan(coordinator.data),
         "would_change": [change.entity_id for change in coordinator.last_changes],
@@ -100,7 +100,6 @@ async def async_get_config_entry_diagnostics(
     # slapen. `occupied` staat er apart bij voor het geval
     # kameraanwezigheid ooit buiten `presence` om wordt weggeschreven. Het
     # leeg-moment (`empty_since`) valt onder `presence`; zie de moduledocstring.
-    #
     # `home`/`asleep`/`home_since` sit in the world snapshot, `presence` (with
     # `occupied` and its timestamp) too, and `presence_entity`/`sleep_entity`/
     # `windows`/`sleep_window`/`wake_deadline`/`rise_brake` in the installation: exactly the
@@ -125,9 +124,22 @@ async def async_get_config_entry_diagnostics(
             "windows",
             "sleep_window",
             "wake_deadline",
+            "sleep_in",
             "rise_brake",
         ],
     )
+
+
+def _visible_tracked_entities(coordinator: ClimateDirectorCoordinator) -> list[str]:
+    """Return the tracked entities without the redacted presence and sleep ones."""
+    hidden = {
+        entity
+        for resident in coordinator.config.residents
+        for entity in (resident.presence_entity, resident.sleep_entity)
+        if entity
+    }
+    hidden.update(zone.presence_entity for zone in coordinator.config.zones if zone.presence_entity)
+    return sorted(entity for entity in coordinator.tracked_entities() if entity not in hidden)
 
 
 def _world(world: WorldState | None) -> dict[str, Any] | None:
