@@ -626,7 +626,7 @@ au coucher, dans une maison vide ou le jour suivant. Si le capteur de sommeil ou
 de présence disparaît un instant, le démarrage manuel reste en place jusqu'à une nouvelle
 lecture ; la première passe lisible applique à nouveau la règle habituelle. Si le
 calendrier de vacances disparaît, le démarrage manuel reste également en place
-jusqu'à une nouvelle lecture ; le calendrier ne compte qu'avec un mot-clé. La
+jusqu'à une nouvelle lecture ; le calendrier ne compte que si *Mot qui signale des vacances* est rempli. La
 décision nomme la zone dans l'attribut `hand_starts`.
 
 ### Plannings

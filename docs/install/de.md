@@ -615,7 +615,7 @@ Handstart erlischt auch beim Schlafen, bei leerem Haus oder am nächsten Tag.
 Fällt der Schlaf- oder Anwesenheitssensor kurz aus, bleibt der Handstart bestehen, bis wieder
 eine Messung vorliegt; in der ersten lesbaren Runde gilt wieder die gewöhnliche
 Regel. Fällt der Urlaubskalender aus, bleibt der Handstart ebenfalls bestehen, bis
-wieder eine Messung vorliegt; der Kalender zählt nur mit einem Stichwort. Die
+wieder eine Messung vorliegt; der Kalender zählt nur, wenn *Wort, das Urlaub kennzeichnet* ausgefüllt ist. Die
 Entscheidung nennt die Zone im Attribut `hand_starts`.
 
 ### Zeitpläne

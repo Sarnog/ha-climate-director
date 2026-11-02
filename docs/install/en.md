@@ -605,7 +605,7 @@ hand start also lapses on sleep, an empty house or the next day. If the sleep or
 presence sensor drops out for a moment, the hand start stays put until there is a reading
 again; the first readable round applies the ordinary rule again. If the holiday
 calendar drops out, the hand start stays put too until there is a reading again; the
-calendar counts only when a keyword is configured. The decision names the zone in
+calendar counts only when *Word that marks a holiday* is filled in. The decision names the zone in
 the `hand_starts` attribute.
 
 ### Schedules
