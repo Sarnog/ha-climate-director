@@ -70,7 +70,7 @@ MUTATIONS = [
         "name": "weggevallen-kamer-niet-hersteld",
         "file": "custom_components/climate_director/room_presence.py",
         "old": (
-            "            if (current is None or _unreadable(current.state)) "
+            "            if (current is None or unreadable(current.state)) "
             "and zone_id in occupied:\n"
             "                self._empty_since[zone_id] = now"
         ),
