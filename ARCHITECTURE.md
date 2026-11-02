@@ -487,40 +487,55 @@ Wijk er niet van af zonder ze hier eerst te wijzigen.
 
 ### Een onleesbare invoer laat een handstart staan
 
-De drie wachtrema's lezen twee soorten invoer: de aanwezigheidsentiteit van een
-bewoner en zijn slaapsensor. De rest is klok en ingesteldheid — vensters, de
-uiterste tijd, roosters — en kan niet wegvallen; de vakantieagenda is de uitzondering
-(zie *Nog te bouwen*, N13). Zonder lezing is er geen
-antwoord op "is hij thuis" of "slaapt hij", en wat de engine dan leest is een
-gekleurde gok: een onbekende aanwezigheid leest als weg, een onbekende
-slaapsensor als wakker.
+De drie wachtrema's lezen vier soorten invoer. Twee zijn een sensor per bewoner,
+één is de feestdagenagenda, en de rest is klok en ingesteldheid. Zonder lezing is
+er geen antwoord op "is hij thuis" of "slaapt hij", en wat de engine dan leest is
+een gekleurde gok: een onbekende aanwezigheid leest als weg, een onbekende
+slaapsensor als wakker, en een onbekende agenda laat de dag als werkdag lezen.
 
-| invoer | voedt | zonder lezing |
-|---|---|---|
-| aanwezigheidsentiteit per bewoner | `QUIET_HOURS` (thuis en `home_since`), `WAITING_FOR_SLEEPER` en `EARLY_RISER` (thuis) | leest als weg; `WAITING_FOR_SLEEPER` en `EARLY_RISER` kunnen daardoor verdwijnen en het huis kan als leeg gelden; `QUIET_HOURS` blijft dan juist staan |
-| slaapsensor per bewoner | `WAITING_FOR_SLEEPER` en `EARLY_RISER` (slapend/op), en via `asleep_since` de nacht | leest als wakker; de wacht op de laatste slaper kan verdwijnen; de opsta-rem kan verschuiven omdat iemand als op telt |
-| klok, vensters, uiterste tijd en roosters | alle drie | geen sensor; altijd leesbaar |
+| invoer | extern? | voedt | zonder lezing | telt mee |
+|---|---|---|---|---|
+| aanwezigheidsentiteit per bewoner | ja, entiteit | `QUIET_HOURS` (thuis en `home_since`), `WAITING_FOR_SLEEPER` en `EARLY_RISER` (thuis), en de leeg-huis-poort | leest als weg; de wacht en de opsta-rem kunnen verdwijnen en het huis kan als leeg gelden; `QUIET_HOURS` blijft dan juist staan | ja, als de bewoner een aanwezigheidsentiteit heeft |
+| slaapsensor per bewoner | ja, entiteit | `WAITING_FOR_SLEEPER` en `EARLY_RISER` (slapend/op), en via `asleep_since` de nacht | leest als wakker; de wacht op de laatste slaper kan verdwijnen; de opsta-rem kan verschuiven omdat iemand als op telt | ja, als de bewoner een slaapsensor heeft |
+| feestdagenagenda's (`holiday_calendars` met `holiday_keyword`) | ja, entiteit | `holiday_mode`, en daarmee de uiterste tijd, het stiltevenster, de opsta-rem en de roosters | `holiday_mode` valt terug op de schakelaar; op een vakantiedag leest de dag als werkdag | ja, als er een trefwoord én minstens één agenda is |
+| gastenmodus-schakelaar | nee, eigen staat | `QUIET_HOURS` (de gastenmodus heft de stilte op) | niet van toepassing | nee, nooit onleesbaar |
+| vakantiemodus-schakelaar | nee, eigen staat | `holiday_mode` | niet van toepassing | nee, nooit onleesbaar |
+| klok | nee | alle drie | niet van toepassing | nee, altijd leesbaar |
+| roosters, slaapvenster, uiterste tijd, opsta-rem, stiltevensters en gastenvenster | nee, ingesteldheid | alle drie | niet van toepassing | nee, altijd leesbaar |
+| `asleep_since` | afgeleid van de slaapsensoren | `WAITING_FOR_SLEEPER` en `EARLY_RISER` | onbekend; er wordt niet gewacht | via de slaapsensoren |
+| `home_since` | afgeleid van de aanwezigheid | `QUIET_HOURS` (anker 13) | blijft staan; een onleesbare stand is geen vertrek | via de aanwezigheidsentiteit |
+
+Het model is één verzameling `UnreadableInput(kind, subject)` in
+`WorldState.unreadable`. `ReadableInput` kent drie soorten: `PRESENCE` en `SLEEP`
+met de bewoner als `subject`, en `HOLIDAY` zonder subject omdat de agenda aan het
+huis hangt. De koppelingslaag vult de verzameling in `readability.py`; de engine
+leest haar in `hand_start.brakes_readable`. Er is geen derde los vlaggetje: een
+nieuwe externe invoer is een nieuwe `ReadableInput` plus een regel in de vulling,
+en `test_every_world_field_is_classified` valt om zodra een veld van `WorldState`
+in geen van beide klassen (`EXTERNAL_WORLD_FIELDS`, `INTERNAL_WORLD_FIELDS`)
+staat. Zo kan een nieuw veld niet stil buiten het model blijven.
 
 Een handstart vervalt daarom niet in een ronde waarin een van deze invoeren geen
 lezing heeft. Onleesbaar betekent hier: de entiteit ontbreekt, of haar stand is
-`unavailable` of `unknown`; iedere andere stand is een lezing, ook `none` of
-`not_home`. Zodra alle invoeren weer leesbaar zijn, geldt de gewone regel in die
-eerste leesbare ronde: houden de drie remmen de zone nog, dan blijft de
-handstart; laten ze de zone door, dan vervalt hij. De drie uitwegen die niets met
-de remmen te maken hebben blijven: slapen (iedereen die thuis is naar bed), een
-leeg huis en de volgende dag. Ook de eerste twee worden alleen uit een leesbare
-wereld afgeleid; de volgende dag is de harde grens voor een sensor die nooit
-terugkomt. De opslag blijft versie 1 en een bestand zonder `hand_starts` leest
-nog steeds als geen handstart.
+`unavailable` of `unknown`; iedere andere stand is een lezing, ook `none`,
+`not_home` of `off`. Alleen invoeren die deze installatie werkelijk gebruikt
+tellen: een bewoner zonder sensor levert geen invoer, en de agenda's tellen
+alleen met een trefwoord. Zodra alle invoeren weer leesbaar zijn, geldt de gewone
+regel in die eerste leesbare ronde: houden de drie remmen de zone nog, dan blijft
+de handstart; laten ze de zone door, dan vervalt hij. De drie uitwegen die niets
+met de remmen te maken hebben blijven: slapen (iedereen die thuis is naar bed),
+een leeg huis en de volgende dag. Ook de eerste twee worden alleen uit een
+leesbare wereld afgeleid; de volgende dag is de harde grens voor een sensor die
+nooit terugkomt. De opslag blijft versie 1 en een bestand zonder `hand_starts`
+leest nog steeds als geen handstart.
 
-De koppelingslaag levert de leesbaarheid als twee gewone gegevens per bewoner
-(aanwezigheid leesbaar, slaap leesbaar) in `WorldState`; de engine beslist wat
-dat voor de remmen betekent. Zo blijft `engine/` vrij van Home Assistant en van
-I/O. Een korte nalooptijd is niet gekozen: die verschuift hetzelfde probleem naar
-een willekeurig moment, laat een handstart alsnog vallen wanneer de sensor na de
-nalooptijd terugkomt, en vraagt een tweede grens naast de volgende dag.
-Onleesbaarheid is geen termijn maar het ontbreken van een meting, en de volgende
-dag begrenst al wat nooit terugkomt.
+De koppelingslaag levert de leesbaarheid als gewone data in `WorldState`; de
+engine beslist wat dat voor de remmen betekent. Zo blijft `engine/` vrij van Home
+Assistant en van I/O. Een korte nalooptijd is niet gekozen: die verschuift
+hetzelfde probleem naar een willekeurig moment, laat een handstart alsnog vallen
+wanneer de sensor na de nalooptijd terugkomt, en vraagt een tweede grens naast de
+volgende dag. Onleesbaarheid is geen termijn maar het ontbreken van een meting,
+en de volgende dag begrenst al wat nooit terugkomt.
 
 Een onleesbare aanwezigheid is ook geen vertrek: het thuiskomstmoment blijft
 staan zolang er geen lezing is. Anders zou de slaapsensor na terugkeer als
@@ -1246,16 +1261,6 @@ duidelijk is wat het inhoudt vóór eraan begonnen wordt. De prioriteiten (shoul
 volgen de ROADMAP.
 
 #### Should have
-
-**Een feestdagenagenda die wegvalt laat een handstart niet vallen (N13).** De vakantieagenda
-is een derde invoer van de drie wachtrema's: `holiday_mode` kiest de uiterste tijd, het
-stiltevenster en de opsta-rem van de dag.
-- Koppelingslaag: `world_builder` levert één gegeven in `WorldState`, `holiday_readable`:
-  onwaar zodra een geconfigureerde agenda ontbreekt, `unavailable` of `unknown` is.
-- Engine: `brakes_readable` kijkt er ook naar; verder verandert er niets aan het verval.
-- Opslag en diagnose: ongewijzigd, versie 1.
-- Bewaakt: de agenda-uitval in een echte Home Assistant (maandag, agenda *Vakantie*), rood op
-  de huidige boom, plus de mutatie "agenda telt als leesbaar".
 
 **Een onleesbare aanwezigheid of slaapsensor houdt de laatst leesbare stand even vast (N14,
 N15).** Nu leest een weggevallen aanwezigheid als *weg* en een weggevallen slaapsensor als
@@ -2099,39 +2104,56 @@ them without changing them here first.
 
 ### An unreadable input leaves a hand start standing
 
-The three waiting brakes read two kinds of input: a resident's presence entity
-and their sleep sensor. The rest is clock and configuration — windows, the
-deadline, schedules — and cannot drop out; the holiday calendar is the exception
-(see *Still to build*, N13). Without a reading there is no answer
-to "is he home" or "is he asleep", and what the engine reads then is a coloured
-guess: an unknown presence reads as away, an unknown sleep sensor as awake.
+The three waiting brakes read four kinds of input. Two are a sensor per resident,
+one is the holiday calendar, and the rest is clock and configuration. Without a
+reading there is no answer to "is he home" or "is he asleep", and what the engine
+reads then is a coloured guess: an unknown presence reads as away, an unknown
+sleep sensor as awake, and an unknown calendar lets the day read as a working day.
 
-| input | feeds | without a reading |
-|---|---|---|
-| presence entity per resident | `QUIET_HOURS` (home and `home_since`), `WAITING_FOR_SLEEPER` and `EARLY_RISER` (home) | reads as away; `WAITING_FOR_SLEEPER` and `EARLY_RISER` can therefore disappear and the house can count as empty; `QUIET_HOURS` then keeps standing instead |
-| sleep sensor per resident | `WAITING_FOR_SLEEPER` and `EARLY_RISER` (asleep/up), and the night through `asleep_since` | reads as awake; the wait for the last sleeper can disappear; the rise brake can shift because somebody counts as up |
-| clock, windows, deadline and schedules | all three | no sensor; always readable |
+| input | external? | feeds | without a reading | counts |
+|---|---|---|---|---|
+| presence entity per resident | yes, entity | `QUIET_HOURS` (home and `home_since`), `WAITING_FOR_SLEEPER` and `EARLY_RISER` (home), and the empty-house gate | reads as away; the wait and the rise brake can disappear and the house can count as empty; `QUIET_HOURS` then keeps standing instead | yes, when the resident has a presence entity |
+| sleep sensor per resident | yes, entity | `WAITING_FOR_SLEEPER` and `EARLY_RISER` (asleep/up), and the night through `asleep_since` | reads as awake; the wait for the last sleeper can disappear; the rise brake can shift because somebody counts as up | yes, when the resident has a sleep sensor |
+| holiday calendars (`holiday_calendars` with `holiday_keyword`) | yes, entity | `holiday_mode`, and through it the deadline, the quiet window, the rise brake and the schedules | `holiday_mode` falls back on the switch; on a holiday the day reads as a working day | yes, with a keyword and at least one calendar |
+| guest mode switch | no, own state | `QUIET_HOURS` (guest mode lifts the quiet) | not applicable | no, never unreadable |
+| holiday mode switch | no, own state | `holiday_mode` | not applicable | no, never unreadable |
+| clock | no | all three | not applicable | no, always readable |
+| schedules, sleep window, deadline, rise brake, quiet windows and guest window | no, configuration | all three | not applicable | no, always readable |
+| `asleep_since` | derived from the sleep sensors | `WAITING_FOR_SLEEPER` and `EARLY_RISER` | unknown; nobody is waited for | through the sleep sensors |
+| `home_since` | derived from the presence | `QUIET_HOURS` (anchor 13) | stays put; an unreadable state is no departure | through the presence entity |
+
+The model is one collection of `UnreadableInput(kind, subject)` in
+`WorldState.unreadable`. `ReadableInput` has three kinds: `PRESENCE` and `SLEEP`
+with the resident as `subject`, and `HOLIDAY` without a subject because the
+calendar hangs on the house. The binding layer fills the collection in
+`readability.py`; the engine reads it in `hand_start.brakes_readable`. There is
+no third loose flag: a new external input is a new `ReadableInput` plus one line
+in the fill, and `test_every_world_field_is_classified` fails as soon as a
+`WorldState` field stands in neither class (`EXTERNAL_WORLD_FIELDS`,
+`INTERNAL_WORLD_FIELDS`). A new field therefore cannot quietly stay outside the
+model.
 
 A hand start therefore does not lapse in a round in which one of these inputs
 has no reading. Unreadable here means: the entity is missing, or its state is
-`unavailable` or `unknown`; every other state is a reading, `none` and
-`not_home` included. Once every input is readable again, the ordinary rule
-applies in that first readable round: if the three brakes still hold the zone,
-the hand start stays; if they let the zone through, it lapses. The three exits
-that have nothing to do with the brakes remain: sleep (everybody at home has
-turned in), an empty house and the next day. The first two are also derived only
-from a readable world; the next day is the hard bound for a sensor that never
-returns. The store stays version 1 and a file without `hand_starts` still reads
-as no hand start.
+`unavailable` or `unknown`; every other state is a reading, including `none`,
+`not_home` or `off`. Only inputs this installation actually uses count: a
+resident without a sensor supplies no input, and the calendars count only with a
+keyword. Once every input is readable again, the ordinary rule applies in that
+first readable round: if the three brakes still hold the zone, the hand start
+stays; if they let the zone through, it lapses. The three exits that have
+nothing to do with the brakes remain: sleep (everybody at home has turned in),
+an empty house and the next day. The first two are also derived only from a
+readable world; the next day is the hard bound for a sensor that never returns.
+The store stays version 1 and a file without `hand_starts` still reads as no
+hand start.
 
-The binding layer supplies readability as two ordinary pieces of data per
-resident (presence readable, sleep readable) in `WorldState`; the engine decides
-what that means for the brakes. That keeps `engine/` free of Home Assistant and
-of I/O. A short grace period was not chosen: it moves the same problem to an
-arbitrary moment, still lets a hand start fall when the sensor returns after the
-grace period, and asks for a second bound beside the next day. Unreadability is
-not a term but the absence of a measurement, and the next day already bounds
-whatever never comes back.
+The binding layer supplies readability as ordinary data in `WorldState`; the
+engine decides what that means for the brakes. That keeps `engine/` free of Home
+Assistant and of I/O. A short grace period was not chosen: it moves the same
+problem to an arbitrary moment, still lets a hand start fall when the sensor
+returns after the grace period, and asks for a second bound beside the next day.
+Unreadability is not a term but the absence of a measurement, and the next day
+already bounds whatever never comes back.
 
 An unreadable presence is no departure either: the homecoming moment stays put
 as long as there is no reading. Otherwise the sleep sensor would count as stale
@@ -2847,16 +2869,6 @@ is clear what it entails before any work starts. The priorities (should/could/wo
 the ROADMAP.
 
 #### Should have
-
-**A holiday calendar that drops out does not let a hand start lapse (N13).** The holiday
-calendar is a third input of the three waiting brakes: holiday mode picks the day's deadline,
-quiet window and rise brake.
-- Binding layer: `world_builder` supplies one value in `WorldState`, `holiday_readable`:
-  false as soon as a configured calendar is missing, `unavailable` or `unknown`.
-- Engine: `brakes_readable` looks at it too; nothing else changes in the lapse.
-- Store and diagnostics: unchanged, version 1.
-- Guarded: the calendar outage in a real Home Assistant (Monday, calendar *Vakantie*), red on
-  the current tree, plus the mutation "calendar counts as readable".
 
 **An unreadable presence or sleep sensor holds the last readable state for a moment (N14,
 N15).** Today a dropped presence reads as *away* and a dropped sleep sensor as *awake*, so a

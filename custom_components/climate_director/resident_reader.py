@@ -79,9 +79,14 @@ def restore_home_since(
 
 
 class _ResidentReaderMixin(_CoordinatorBase):
-    """De lezer van één bewoner, met de leesbaarheid van zijn twee sensoren.
+    """De lezer van één bewoner: thuis, slapend en het thuiskomstmoment.
 
-    One resident's reader, with the readability of their two sensors.
+    De leesbaarheid van de sensoren woont in `readability.py`, bij de wereld:
+    zij geldt voor meer invoeren dan alleen die van deze bewoner.
+
+    One resident's reader: home, asleep and the homecoming moment. The sensors'
+    readability lives in `readability.py`, beside the world: it covers more
+    inputs than this resident's alone.
     """
 
     def _resident(
@@ -115,9 +120,6 @@ class _ResidentReaderMixin(_CoordinatorBase):
         moment is `sleeper.last_changed` (het herstartmoment) nieuwer dan dat
         moment, dus de slaapmelding telt gewoon.
 
-        De leesbaarheidsvlaggen gaan mee: ontbrekend, `unavailable` en `unknown`
-        zijn geen lezing, iedere andere stand wel; zonder entiteit blijven ze waar.
-
         Getting up and coming home are two different things, and the sleep
         sensor knows only the first. "Phone on the wireless charger" says
         something about somebody who was home all along; whoever walks in with
@@ -143,9 +145,6 @@ class _ResidentReaderMixin(_CoordinatorBase):
         More important for the quiet window: after a restart with a stored
         moment `sleeper.last_changed` (the restart moment) is newer than that
         moment, so the sleep reading simply counts.
-
-        The readability flags travel along: missing, `unavailable` and `unknown`
-        are no reading, every other state is; without an entity they stay true.
         """
         state = self.hass.states.get(presence) if presence else None
         home = reads_as_home(state)
@@ -156,13 +155,7 @@ class _ResidentReaderMixin(_CoordinatorBase):
         if sleeper is not None and sleeper.state == asleep_state:
             asleep = home_since is None or sleeper.last_changed >= home_since
 
-        return ResidentState(
-            home=home,
-            asleep=asleep,
-            home_since=home_since,
-            presence_readable=not presence or (state is not None and not unreadable(state.state)),
-            sleep_readable=not sleep or (sleeper is not None and not unreadable(sleeper.state)),
-        )
+        return ResidentState(home=home, asleep=asleep, home_since=home_since)
 
     @callback
     def _notice_home(self, event: Event[EventStateChangedData]) -> None:

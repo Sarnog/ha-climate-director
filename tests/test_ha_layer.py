@@ -514,30 +514,46 @@ class TestReadingTheWorld:
 
     def test_a_missing_sensor_has_no_reading(self) -> None:
         """Een ontbrekende entiteit is geen lezing."""
+        from custom_components.climate_director.engine.world import (
+            ReadableInput,
+            UnreadableInput,
+        )
+
         states = self._states()
         states.pop("person.danny")
         states.pop("sensor.danny_lader")
-        resident = coordinator(states).build_world().resident("danny")
-        assert resident.presence_readable is False
-        assert resident.sleep_readable is False
+        world = coordinator(states).build_world()
+        assert UnreadableInput(ReadableInput.PRESENCE, "danny") in world.unreadable
+        assert UnreadableInput(ReadableInput.SLEEP, "danny") in world.unreadable
 
     @pytest.mark.parametrize("value", ["unavailable", "unknown"])
     def test_an_unreadable_state_is_no_reading(self, value: str) -> None:
         """`unavailable` en `unknown` zijn geen lezing."""
+        from custom_components.climate_director.engine.world import (
+            ReadableInput,
+            UnreadableInput,
+        )
+
         states = self._states(
             **{
                 "person.danny": FakeState(value),
                 "sensor.danny_lader": FakeState(value),
             }
         )
-        resident = coordinator(states).build_world().resident("danny")
-        assert resident.presence_readable is False
-        assert resident.sleep_readable is False
+        world = coordinator(states).build_world()
+        assert UnreadableInput(ReadableInput.PRESENCE, "danny") in world.unreadable
+        assert UnreadableInput(ReadableInput.SLEEP, "danny") in world.unreadable
 
     def test_a_normal_sleep_state_is_still_a_reading(self) -> None:
         """Een gewone wakker-stand is een lezing, ook al betekent hij niet slapen."""
+        from custom_components.climate_director.engine.world import (
+            ReadableInput,
+            UnreadableInput,
+        )
+
         states = self._states(**{"sensor.danny_lader": FakeState("none")})
-        assert coordinator(states).build_world().resident("danny").sleep_readable is True
+        world = coordinator(states).build_world()
+        assert UnreadableInput(ReadableInput.SLEEP, "danny") not in world.unreadable
 
     @pytest.mark.parametrize("value", ["home", "HOME", "on", "true"])
     def test_being_home_is_read_broadly(self, value: str) -> None:

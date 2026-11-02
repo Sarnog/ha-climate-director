@@ -50,6 +50,7 @@ ATTIC_SENSOR = "sensor.zolder"
 BEDROOM_SENSOR = "sensor.slaapkamer"
 OUTDOOR = "sensor.buiten"
 OCCUPANCY = "binary_sensor.zolder_bezet"
+HOLIDAY_CALENDAR = "calendar.feestdagen"
 
 DANNY = ("person.danny", "sensor.danny_lader")
 NANCY = ("person.nancy", "sensor.nancy_lader")
@@ -1041,3 +1042,150 @@ class TestVisibility:
             assert home.values("last_decision")["hand_starts"] == ["woonkamer"]
         finally:
             await stop_house(home)
+
+
+def holiday_installation() -> dict[str, Any]:
+    """Return the living room with a holiday calendar on a holiday Monday."""
+    data = installation()
+    data["holiday_calendars"] = [HOLIDAY_CALENDAR]
+    data["holiday_keyword"] = "vakantie"
+    return data
+
+
+def holiday_world(*, ac: str = "off") -> dict[str, Any]:
+    """Return a house that sleeps into a holiday Monday."""
+    return world(danny_asleep=True, nancy_asleep=True, ac=ac) | {
+        HOLIDAY_CALENDAR: ("on", {"message": "Vakantie"})
+    }
+
+
+async def a_holiday_monday_morning(home: LiveHome, clock) -> None:
+    """Let the house sleep on Sunday night, then wake Danny on holiday Monday."""
+    clock.at(9, 23, 30)
+    await decide(home)
+    assert home.coordinator._asleep_since is not None, "het huis ging niet slapen"
+    clock.at(10, 7, 0)
+    home.set(DANNY[1], "none")
+    await decide(home)
+
+
+def blip_calendar(home: LiveHome, form: str) -> None:
+    """Make the holiday calendar unreadable in the requested form."""
+    if form == "missing":
+        home.hass.states.async_remove(HOLIDAY_CALENDAR)
+    else:
+        home.set(HOLIDAY_CALENDAR, form)
+
+
+def off_calls(home: LiveHome) -> list[str]:
+    """Return every off command sent to the air conditioner."""
+    return [
+        call[1]["hvac_mode"] for call in home.climate_calls() if call[1].get("hvac_mode") == "off"
+    ]
+
+
+class TestTheHolidayCalendar:
+    """De agenda is de derde invoer van de drie remmen.
+
+    The calendar is the third input of the three brakes.
+    """
+
+    @pytest.mark.parametrize("form", ["unavailable", "unknown", "missing"])
+    async def test_a_dropped_calendar_keeps_the_hand_start_and_the_air_conditioner(
+        self, clock, form: str
+    ) -> None:
+        """De agenda valt weg tijdens een handstart: geen `off`, wel warmte."""
+        home = await start_house(holiday_installation(), states=holiday_world())
+        try:
+            await a_holiday_monday_morning(home, clock)
+            assert reason(home) == "waiting_for_sleeper"
+            home.clear_calls()
+            home.climate(LIVING, "heat", current=18.5)
+            await decide(home)
+            assert "woonkamer" in home.coordinator._hand_starts
+
+            for _ in range(3):
+                blip_calendar(home, form)
+                await decide(home)
+                assert "woonkamer" in home.coordinator._hand_starts
+                assert reason(home) == "regulating"
+                assert home.state(LIVING) == "heat"
+                assert off_calls(home) == []
+
+            home.set(HOLIDAY_CALENDAR, "on", message="Vakantie")
+            await decide(home)
+            assert "woonkamer" in home.coordinator._hand_starts
+            assert reason(home) == "regulating"
+            assert home.state(LIVING) == "heat"
+            assert off_calls(home) == []
+        finally:
+            await stop_house(home)
+
+    @pytest.mark.parametrize("form", ["unavailable", "unknown", "missing"])
+    async def test_the_calendar_can_return_after_the_brake_is_gone(self, clock, form: str) -> None:
+        """Na de uiterste tijd vervalt de handstart alsnog zodra de agenda leest."""
+        home = await start_house(holiday_installation(), states=holiday_world())
+        try:
+            await a_holiday_monday_morning(home, clock)
+            home.clear_calls()
+            home.climate(LIVING, "heat", current=18.5)
+            await decide(home)
+            assert "woonkamer" in home.coordinator._hand_starts
+
+            blip_calendar(home, form)
+            await decide(home)
+            assert "woonkamer" in home.coordinator._hand_starts
+
+            clock.at(10, 11, 5)
+            home.set(LIVING_SENSOR, "23.5")
+            home.set(HOLIDAY_CALENDAR, "on", message="Vakantie")
+            await decide(home)
+
+            assert home.coordinator._hand_starts == {}
+            assert reason(home) == "satisfied"
+            assert home.state(LIVING) == "off"
+            assert off_calls(home) == ["off"]
+        finally:
+            await stop_house(home)
+
+    async def test_a_restart_keeps_the_hand_start_during_a_dropped_calendar(self, clock) -> None:
+        """Een herstart met een onleesbare agenda brengt de handstart terug."""
+        config_dir = new_config_dir()
+        home = await start_house(
+            holiday_installation(),
+            states=holiday_world(),
+            config_dir=config_dir,
+        )
+        try:
+            await a_holiday_monday_morning(home, clock)
+            home.clear_calls()
+            home.climate(LIVING, "heat", current=18.5)
+            await decide(home)
+            assert "woonkamer" in home.coordinator._hand_starts
+            blip_calendar(home, "unavailable")
+            await decide(home)
+            assert "woonkamer" in home.coordinator._hand_starts
+            await asyncio.sleep(1.2)
+        finally:
+            await stop_house(home)
+
+        clock.at(10, 8, 0)
+        again = await start_house(
+            holiday_installation(),
+            states=world(danny_asleep=False, nancy_asleep=True, ac="off")
+            | {HOLIDAY_CALENDAR: ("unavailable", {})},
+            config_dir=config_dir,
+        )
+        try:
+            await decide(again)
+            assert "woonkamer" in again.coordinator._hand_starts
+            assert again.state(LIVING) == "heat"
+            assert off_calls(again) == []
+
+            again.set(HOLIDAY_CALENDAR, "on", message="Vakantie")
+            await decide(again)
+            assert "woonkamer" in again.coordinator._hand_starts
+            assert again.state(LIVING) == "heat"
+            assert off_calls(again) == []
+        finally:
+            await stop_house(again)

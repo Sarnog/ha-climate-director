@@ -22,7 +22,7 @@ from .families import MODE_OFF
 from .models import DirectorConfig, Resident, Zone
 from .night import asleep, slept_tonight
 from .plan import Plan, Reason
-from .world import WorldState
+from .world import ReadableInput, UnreadableInput, WorldState
 
 #: De enige drie poorten die een handstart opzij zet.
 #:
@@ -37,27 +37,34 @@ HAND_START_BRAKES = frozenset(
 
 
 def brakes_readable(config: DirectorConfig, world: WorldState) -> bool:
-    """Return whether every sensor feeding the three brakes gave a reading.
+    """Return whether every input feeding the three brakes gave a reading.
 
     Een handstart vervalt niet op grond van een ronde waarin een van de drie
-    remmen zijn invoer niet kan lezen. De koppelingslaag levert per bewoner of
-    de aanwezigheids- en slaapsensor een lezing gaven; hier wordt alleen
-    gekeken naar de sensoren die deze installatie werkelijk gebruikt. Een
-    ontbrekende bewoner in de wereld telt als onleesbaar zodra een van zijn
-    twee sensoren de remmen voedt.
+    remmen zijn invoer niet kan lezen. De koppelingslaag levert één verzameling
+    onleesbare invoeren; hier wordt alleen gekeken naar de invoeren die deze
+    installatie werkelijk gebruikt. Een ontbrekende bewoner in de wereld telt
+    als onleesbaar zodra een van zijn twee sensoren de remmen voedt. De
+    feestdagenagenda telt alleen mee als er een trefwoord en minstens één
+    agenda is ingesteld; zonder die twee voedt zij de remmen niet.
 
     A hand start does not lapse on the strength of a round in which one of the
-    three brakes cannot read its input. The binding layer supplies per resident
-    whether the presence and sleep sensors gave a reading; only the sensors this
-    installation actually uses are checked. A resident missing from the world
-    counts as unreadable as soon as either of their sensors feeds the brakes.
+    three brakes cannot read its input. The binding layer supplies one
+    collection of unreadable inputs; only the inputs this installation actually
+    uses are checked. A resident missing from the world counts as unreadable as
+    soon as either of their sensors feeds the brakes. The holiday calendars
+    count only when a keyword and at least one calendar are configured; without
+    those two they do not feed the brakes.
     """
     for resident in config.residents:
         state = world.residents.get(resident.resident_id)
-        if resident.presence_entity and (state is None or not state.presence_readable):
+        presence_missing = UnreadableInput(ReadableInput.PRESENCE, resident.resident_id)
+        if resident.presence_entity and (state is None or presence_missing in world.unreadable):
             return False
-        if resident.sleep_entity and (state is None or not state.sleep_readable):
+        sleep_missing = UnreadableInput(ReadableInput.SLEEP, resident.resident_id)
+        if resident.sleep_entity and (state is None or sleep_missing in world.unreadable):
             return False
+    if config.holiday_keyword.strip() and any(config.holiday_calendars):
+        return UnreadableInput(ReadableInput.HOLIDAY) not in world.unreadable
     return True
 
 

@@ -24,17 +24,10 @@ from typing import TYPE_CHECKING, Any, TypeGuard
 from homeassistant.core import State
 from homeassistant.util import dt as dt_util
 
-from .engine import (
-    ClimateState,
-    OpeningState,
-    PresenceState,
-    ResidentState,
-    Season,
-    WorldState,
-)
+from .engine import ClimateState, OpeningState, PresenceState, ResidentState, Season, WorldState
 from .engine.models import SeasonSource
 from .engine.night import house_asleep_since
-from .readability import unreadable
+from .readability import unreadable, unreadable_inputs
 from .units import to_celsius, unit_of_coordinator
 
 if TYPE_CHECKING:
@@ -277,6 +270,7 @@ class _WorldBuilderMixin(_CoordinatorBase):
             },
             climates={entity_id: self._climate(entity_id) for entity_id in self._climate_ids()},
             residents=residents,
+            unreadable=unreadable_inputs(self.hass, self.config),
             asleep_since=self._asleep_since,
             openings={
                 opening.entity_id: self._opening(opening.entity_id, opening.open_state)

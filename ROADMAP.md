@@ -18,15 +18,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 
 ## Should have
 
-- **Een feestdagenagenda die wegvalt laat een handstart vallen (N13)** — een handstart
-  overleeft een wegvallende slaap- of aanwezigheidssensor, maar de vakantieagenda voedt
-  dezelfde drie remmen via de vakantiestand (de uiterste tijd, het stiltevenster en de
-  opsta-rem verschillen op een vakantiedag). Meldt de agenda `unavailable`, dan leest de
-  dag als werkdag, verdwijnt de wacht en vervalt de handstart; komt de agenda terug, dan zet
-  de director de met de hand aangezette airco uit. Gemeten in een controle
-  (maandag 10 augustus, agenda *Vakantie*): `hand_starts=[]`, daarna `waiting_for_sleeper`
-  en `cmds=[None, 'off']`. Een derde leesbaarheidsvlag voor de agenda's, in dezelfde
-  `brakes_readable`.
 - **Een onleesbare aanwezigheid van wie op is zet een handstart-zone alsnog uit (N14)** —
   de handstart blijft staan, maar `EVERYONE_ASLEEP` en `NOBODY_HOME` zijn geen remmen die
   hij passeert: valt de aanwezigheidsentiteit van de enige bewoner die op is weg, dan leest
@@ -353,14 +344,6 @@ The worked-out design proposals for everything below live in
 
 ## Should have
 
-- **A holiday calendar that drops out lets a hand start lapse (N13)** — a hand start
-  survives a sleep or presence sensor dropping out, but the holiday calendar feeds the same
-  three brakes through holiday mode (the deadline, the quiet window and the rise brake differ
-  on a holiday). If the calendar reports `unavailable`, the day reads as a working day, the
-  wait disappears and the hand start lapses; when the calendar returns, the director switches
-  the hand-started air conditioner off. Measured in a review (Monday 10 August,
-  calendar *Vakantie*): `hand_starts=[]`, then `waiting_for_sleeper` and `cmds=[None,
-  'off']`. A third readability flag for the calendars, inside the same `brakes_readable`.
 - **An unreadable presence of whoever is up still switches a hand-started zone off (N14)** —
   the hand start stays, but `EVERYONE_ASLEEP` and `NOBODY_HOME` are not brakes it passes: if
   the presence entity of the only resident who is up drops out, the house reads as asleep or

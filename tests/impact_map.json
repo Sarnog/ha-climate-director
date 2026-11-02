@@ -69,9 +69,11 @@
   "custom_components/climate_director/engine/world.py",
   "custom_components/climate_director/hand_start.py",
   "custom_components/climate_director/preconditions.py",
+  "custom_components/climate_director/readability.py",
   "custom_components/climate_director/resident_reader.py",
   "custom_components/climate_director/state_store.py",
-  "custom_components/climate_director/world_builder.py"
+  "custom_components/climate_director/world_builder.py",
+  "tests/test_campaign_year.py"
  ],
  "tests/test_campaign_year.py": [
   "custom_components/climate_director/coordinator.py",
@@ -90,6 +92,7 @@
   "custom_components/climate_director/engine/world.py",
   "custom_components/climate_director/hand_start.py",
   "custom_components/climate_director/preconditions.py",
+  "custom_components/climate_director/readability.py",
   "custom_components/climate_director/resident_reader.py",
   "custom_components/climate_director/state_store.py",
   "custom_components/climate_director/world_builder.py"
@@ -464,6 +467,7 @@
   "custom_components/climate_director/engine/world.py",
   "custom_components/climate_director/number.py",
   "custom_components/climate_director/problems.py",
+  "custom_components/climate_director/schema_fields.py",
   "custom_components/climate_director/schemas.py",
   "custom_components/climate_director/texts.py",
   "custom_components/climate_director/units.py",
@@ -488,6 +492,7 @@
   "custom_components/climate_director/engine/world.py",
   "custom_components/climate_director/hand_start.py",
   "custom_components/climate_director/preconditions.py",
+  "custom_components/climate_director/readability.py",
   "custom_components/climate_director/resident_reader.py",
   "custom_components/climate_director/room_presence.py",
   "custom_components/climate_director/sensor.py",
@@ -513,6 +518,7 @@
   "custom_components/climate_director/engine/world.py",
   "custom_components/climate_director/hand_start.py",
   "custom_components/climate_director/preconditions.py",
+  "custom_components/climate_director/readability.py",
   "custom_components/climate_director/resident_reader.py",
   "custom_components/climate_director/state_store.py",
   "custom_components/climate_director/world_builder.py"
@@ -568,6 +574,7 @@
   "custom_components/climate_director/engine/world.py",
   "custom_components/climate_director/hand_start.py",
   "custom_components/climate_director/preconditions.py",
+  "custom_components/climate_director/readability.py",
   "custom_components/climate_director/resident_reader.py",
   "custom_components/climate_director/room_presence.py",
   "custom_components/climate_director/state_store.py",
@@ -721,6 +728,7 @@
   "custom_components/climate_director/engine/world.py",
   "custom_components/climate_director/hand_start.py",
   "custom_components/climate_director/preconditions.py",
+  "custom_components/climate_director/readability.py",
   "custom_components/climate_director/resident_reader.py",
   "custom_components/climate_director/state_store.py",
   "custom_components/climate_director/world_builder.py"
@@ -970,6 +978,7 @@
   "custom_components/climate_director/engine/world.py",
   "custom_components/climate_director/hand_start.py",
   "custom_components/climate_director/preconditions.py",
+  "custom_components/climate_director/readability.py",
   "custom_components/climate_director/resident_reader.py",
   "custom_components/climate_director/state_store.py",
   "custom_components/climate_director/world_builder.py"
@@ -1052,6 +1061,7 @@
   "custom_components/climate_director/engine/serialise.py",
   "custom_components/climate_director/engine/storage_helpers.py",
   "custom_components/climate_director/engine/table_storage.py",
+  "custom_components/climate_director/readability.py",
   "custom_components/climate_director/units.py",
   "custom_components/climate_director/world_builder.py"
  ],

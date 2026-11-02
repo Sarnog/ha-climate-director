@@ -41,7 +41,7 @@ een ankerbesluit. Zonder keuze wordt geen van beide gebouwd.
 | punt | stand | bewijs |
 |---|---|---|
 | C. hygiëne `_unreadable` en `_restore_hand_starts` | gebouwd | `readability.py`; 322 gerichte toetsen groen (`/tmp/779/C-focused.log`); ruff en mypy groen (`/tmp/779/C-lint.log`) |
-| A. N13 en het leesbaarheidsmodel | nog niet begonnen | - |
+| A. N13 en het leesbaarheidsmodel | gebouwd | model in `WorldState.unreadable`; 185 handstarttoetsen groen; probe n7 oud `hand_starts=[]`/`cmds=[None,'off']`, nieuw `hand_starts=['woonkamer']`/`cmds=[None]` (`/tmp/779/A-probe-n7-old.log`, `/tmp/779/A-probe-n7-new.log`) |
 | D. L1-L12 en P2 | nog niet begonnen | - |
 | E. beschrijving | nog niet begonnen | - |
 | release 7.7.9 | nog niet begonnen | - |
@@ -51,6 +51,14 @@ niet en daalde van 573 naar 559 regels. `state_store.py` roept
 `_restore_hand_starts` gewoon aan. Het ROADMAP-idee over privé hulpjes is weg.
 De volledige `script/test`-selectie van 59 bestanden is lokaal niet uitgelopen
 (bij 29% gestopt wegens de looptijd); de CI meet die selectie.
+
+A: de drie remmen lezen nu één verzameling onleesbare invoeren
+(`ReadableInput.PRESENCE`, `SLEEP`, `HOLIDAY`) in `WorldState.unreadable`. De
+koppelingslaag vult die in `readability.py`; `brakes_readable` leest haar. De
+invoerentabel staat in ARCHITECTURE (NL + EN). `world_builder.py` daalde verder
+naar 553 regels. Rode proef: n7 op de oude boom viel terug op `hand_starts=[]`
+en `cmds=[None, 'off']`; op de nieuwe boom bleef de handstart staan en kwam er
+geen `off`. De mutatie "agenda telt als leesbaar" volgt in de mutatieronde.
 
 ## EN
 
@@ -93,7 +101,7 @@ neither is built.
 | point | state | evidence |
 |---|---|---|
 | C. hygiene `_unreadable` and `_restore_hand_starts` | built | `readability.py`; 322 focused tests green (`/tmp/779/C-focused.log`); ruff and mypy green (`/tmp/779/C-lint.log`) |
-| A. N13 and the readability model | not started | - |
+| A. N13 and the readability model | built | model in `WorldState.unreadable`; 185 hand-start tests green; probe n7 old `hand_starts=[]`/`cmds=[None,'off']`, new `hand_starts=['woonkamer']`/`cmds=[None]` (`/tmp/779/A-probe-n7-old.log`, `/tmp/779/A-probe-n7-new.log`) |
 | D. L1-L12 and P2 | not started | - |
 | E. description | not started | - |
 | release 7.7.9 | not started | - |
@@ -103,3 +111,11 @@ not grow and fell from 573 to 559 lines. `state_store.py` calls
 `_restore_hand_starts` directly. The ROADMAP idea about private helpers is gone.
 The full `script/test` selection of 59 files did not finish locally (stopped at
 29% because of the running time); CI measures that selection.
+
+A: the three brakes now read one collection of unreadable inputs
+(`ReadableInput.PRESENCE`, `SLEEP`, `HOLIDAY`) in `WorldState.unreadable`. The
+binding layer fills it in `readability.py`; `brakes_readable` reads it. The input
+table stands in ARCHITECTURE (NL + EN). `world_builder.py` fell further to 553
+lines. Red proof: n7 on the old tree fell back to `hand_starts=[]` and
+`cmds=[None, 'off']`; on the new tree the hand start stayed and no `off` came.
+The mutation "calendar counts as readable" follows in the mutation round.

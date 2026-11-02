@@ -605,8 +605,10 @@ automatisch aanzetten* uit telt niet, want daar regelt de director het aanzetten
 nooit. In een zone die nergens op wacht doet de knop niets. De handstart vervalt
 ook bij slapen, een leeg huis of de volgende dag. Valt de slaap- of
 aanwezigheidssensor even weg, dan blijft de handstart staan tot er weer een lezing is; in
-de eerste leesbare ronde geldt de gewone regel weer. De beslissing noemt de zone
-in het attribuut `hand_starts`.
+de eerste leesbare ronde geldt de gewone regel weer. Valt de feestdagenagenda weg,
+dan blijft de handstart ook staan tot er weer een lezing is; de agenda telt alleen
+mee als er een trefwoord is ingesteld. De beslissing noemt de zone in het attribuut
+`hand_starts`.
 
 ### Roosters
 

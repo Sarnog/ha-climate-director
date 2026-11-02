@@ -62,6 +62,17 @@ def with_hand_start(world: WorldState, *zone_ids: str) -> WorldState:
     return replace(world, zone_hand_starts=frozenset(zone_ids))
 
 
+def no_reading(world: WorldState, kind: str, subject: str = "") -> WorldState:
+    """Return the same world with one brake input marked unreadable."""
+    from custom_components.climate_director.engine.world import (
+        ReadableInput,
+        UnreadableInput,
+    )
+
+    missing = UnreadableInput(ReadableInput(kind), subject)
+    return replace(world, unreadable=world.unreadable | {missing})
+
+
 def weekend_house() -> DirectorConfig:
     """Return the house with a weekend wake deadline for both residents."""
     base = house()
@@ -257,14 +268,18 @@ class TestUnreadableInputs:
         """Een onleesbare slaapsensor laat de rem verdwijnen maar blokkeert het verval."""
         config = weekend_house()
         world = with_hand_start(
-            after_a_slept_night(
-                make_world(
-                    now=at(10, 0, day=15),
-                    residents={
-                        "danny": awake(),
-                        "nancy": replace(asleep(), asleep=False, sleep_readable=False),
-                    },
-                )
+            no_reading(
+                after_a_slept_night(
+                    make_world(
+                        now=at(10, 0, day=15),
+                        residents={
+                            "danny": awake(),
+                            "nancy": replace(asleep(), asleep=False),
+                        },
+                    )
+                ),
+                "sleep",
+                "nancy",
             ),
             LIVING,
         )
@@ -276,14 +291,18 @@ class TestUnreadableInputs:
         """Een onleesbare aanwezigheid laat de rem verdwijnen maar blokkeert het verval."""
         config = weekend_house()
         world = with_hand_start(
-            after_a_slept_night(
-                make_world(
-                    now=at(10, 0, day=15),
-                    residents={
-                        "danny": awake(),
-                        "nancy": replace(asleep(), home=False, presence_readable=False),
-                    },
-                )
+            no_reading(
+                after_a_slept_night(
+                    make_world(
+                        now=at(10, 0, day=15),
+                        residents={
+                            "danny": awake(),
+                            "nancy": replace(asleep(), home=False),
+                        },
+                    )
+                ),
+                "presence",
+                "nancy",
             ),
             LIVING,
         )
@@ -298,14 +317,18 @@ class TestUnreadableInputs:
             base,
             residents=tuple(replace(resident, sleep_entity="") for resident in base.residents),
         )
-        world = after_a_slept_night(
-            make_world(
-                now=at(10, 0, day=15),
-                residents={
-                    "danny": awake(),
-                    "nancy": replace(asleep(), sleep_readable=False),
-                },
-            )
+        world = no_reading(
+            after_a_slept_night(
+                make_world(
+                    now=at(10, 0, day=15),
+                    residents={
+                        "danny": awake(),
+                        "nancy": replace(asleep(), asleep=False),
+                    },
+                )
+            ),
+            "sleep",
+            "nancy",
         )
         assert hand_start.brakes_readable(config, world) is True
 
@@ -316,29 +339,32 @@ class TestUnreadableInputs:
             base,
             residents=tuple(replace(resident, presence_entity="") for resident in base.residents),
         )
-        world = after_a_slept_night(
-            make_world(
-                now=at(10, 0, day=15),
-                residents={
-                    "danny": awake(),
-                    "nancy": replace(asleep(), presence_readable=False),
-                },
-            )
+        world = no_reading(
+            after_a_slept_night(
+                make_world(
+                    now=at(10, 0, day=15),
+                    residents={
+                        "danny": awake(),
+                        "nancy": replace(asleep(), home=False),
+                    },
+                )
+            ),
+            "presence",
+            "nancy",
         )
         assert hand_start.brakes_readable(config, world) is True
 
     @pytest.mark.parametrize("who", ["danny", "nancy"])
-    @pytest.mark.parametrize("field", ["presence_readable", "sleep_readable"])
-    def test_every_resident_and_every_sensor_blocks_the_recheck(self, who: str, field: str) -> None:
+    @pytest.mark.parametrize("kind", ["presence", "sleep"])
+    def test_every_resident_and_every_sensor_blocks_the_recheck(self, who: str, kind: str) -> None:
         """Elke bewoner en elke sensor telt mee, niet alleen de tweede bewoner.
 
         Every resident and every sensor counts, not only the second resident.
         """
         config = weekend_house()
         residents = {"danny": awake(), "nancy": asleep()}
-        residents[who] = replace(residents[who], **{field: False})
         world = after_a_slept_night(make_world(now=at(10, 0, day=15), residents=residents))
-        assert hand_start.brakes_readable(config, world) is False
+        assert hand_start.brakes_readable(config, no_reading(world, kind, who)) is False
 
     @pytest.mark.parametrize("unused", ["sleep_entity", "presence_entity"])
     def test_a_missing_resident_blocks_with_either_sensor_alone(self, unused: str) -> None:
@@ -360,6 +386,77 @@ class TestUnreadableInputs:
         config = weekend_house()
         world = after_a_slept_night(make_world(now=at(10, 0, day=15), residents={"danny": awake()}))
         assert hand_start.brakes_readable(config, world) is False
+
+
+class TestTheReadabilityModel:
+    """Alle invoeren van de drie remmen staan in één model.
+
+    Every input of the three brakes sits in one model.
+    """
+
+    @staticmethod
+    def with_reading(kind: str, subject: str = "") -> WorldState:
+        """Return a slept-night world whose named input gave no reading."""
+        from custom_components.climate_director.engine.world import (
+            ReadableInput,
+            UnreadableInput,
+        )
+
+        world = after_a_slept_night(
+            make_world(
+                now=at(10, 0, day=15),
+                residents={"danny": awake(), "nancy": asleep()},
+            )
+        )
+        return replace(
+            world,
+            unreadable=frozenset({UnreadableInput(ReadableInput(kind), subject)}),
+        )
+
+    @pytest.mark.parametrize(
+        ("kind", "subject"),
+        [
+            ("presence", "danny"),
+            ("presence", "nancy"),
+            ("sleep", "danny"),
+            ("sleep", "nancy"),
+            ("holiday", ""),
+        ],
+    )
+    def test_every_input_of_the_brakes_counts(self, kind: str, subject: str) -> None:
+        """Aanwezigheid, slaap en de feestdagenagenda tellen alle drie mee."""
+        base = weekend_house()
+        config = replace(
+            base,
+            holiday_calendars=("calendar.feestdagen",),
+            holiday_keyword="vakantie",
+        )
+        world = self.with_reading(kind, subject)
+        assert hand_start.brakes_readable(config, world) is False
+
+    def test_a_calendar_without_a_keyword_does_not_count(self) -> None:
+        """Zonder trefwoord voedt de agenda de remmen niet."""
+        config = replace(
+            weekend_house(),
+            holiday_calendars=("calendar.feestdagen",),
+            holiday_keyword="",
+        )
+        world = self.with_reading("holiday")
+        assert hand_start.brakes_readable(config, world) is True
+
+    def test_every_world_field_is_classified(self) -> None:
+        """Een nieuw veld in de wereld moet in het leesbaarheidsmodel worden ingedeeld."""
+        from dataclasses import fields
+
+        from custom_components.climate_director.engine.world import (
+            EXTERNAL_WORLD_FIELDS,
+            INTERNAL_WORLD_FIELDS,
+            WorldState,
+        )
+
+        found = {field.name for field in fields(WorldState)}
+        assert found == EXTERNAL_WORLD_FIELDS | INTERNAL_WORLD_FIELDS
+        assert not EXTERNAL_WORLD_FIELDS & INTERNAL_WORLD_FIELDS
 
 
 def gate(config: DirectorConfig, world: WorldState) -> tuple[Reason, ...]:

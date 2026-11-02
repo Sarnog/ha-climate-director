@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import StrEnum
 
 from .families import MODE_OFF, ModeFamily, claims_compressor, family_of
 from .models import Season
@@ -94,31 +95,6 @@ class ResidentState:
     against `world.now` and never asks Home Assistant itself.
     """
 
-    presence_readable: bool = True
-    """Of de aanwezigheidsentiteit een lezing gaf.
-
-    Een ontbrekende entiteit, `unavailable` en `unknown` zijn geen lezing. De
-    koppelingslaag vult dit; de engine gebruikt het om een handstart niet op een
-    gok te laten vervallen. Zonder geconfigureerde entiteit valt er niets te
-    lezen en blijft dit waar.
-
-    Whether the presence entity gave a reading. A missing entity, `unavailable`
-    and `unknown` are no reading. The binding layer fills this; the engine uses
-    it to keep a hand start from lapsing on a guess. Without a configured entity
-    there is nothing to read and this stays true.
-    """
-
-    sleep_readable: bool = True
-    """Of de slaapsensor een lezing gaf.
-
-    Dezelfde regel als bij de aanwezigheid: ontbrekend, `unavailable` en
-    `unknown` zijn geen lezing. De engine gebruikt dit alleen voor het verval van
-    een handstart.
-
-    The same rule as for presence: missing, `unavailable` and `unknown` are no
-    reading. The engine uses this only for the expiry of a hand start.
-    """
-
     @property
     def present_and_awake(self) -> bool:
         """Return whether this resident is home and out of bed."""
@@ -145,6 +121,33 @@ class PresenceState:
     changed_at: datetime | None = None
 
 
+class ReadableInput(StrEnum):
+    """Een externe invoer die de drie wachtrema's voedt.
+
+    An external input feeding the three waiting brakes.
+    """
+
+    PRESENCE = "presence"
+    SLEEP = "sleep"
+    HOLIDAY = "holiday"
+
+
+@dataclass(frozen=True, slots=True)
+class UnreadableInput:
+    """Eén invoer die in deze ronde geen lezing gaf.
+
+    `subject` is de bewoner voor aanwezigheid en slaap, en leeg voor de
+    feestdagenagenda: die hangt aan het huis, niet aan een persoon.
+
+    One input that gave no reading this round. `subject` is the resident for
+    presence and sleep, and empty for the holiday calendars: they hang on the
+    house, not on a person.
+    """
+
+    kind: ReadableInput
+    subject: str = ""
+
+
 @dataclass(frozen=True, slots=True)
 class WorldState:
     """Everything the engine needs to know at one moment in time."""
@@ -161,6 +164,21 @@ class WorldState:
 
     residents: dict[str, ResidentState] = field(default_factory=dict)
     """Keyed by `resident_id`."""
+
+    unreadable: frozenset[UnreadableInput] = frozenset()
+    """Welke externe invoeren in deze ronde geen lezing gaven.
+
+    Eén verzameling voor alle invoeren van de drie wachtrema's: aanwezigheid en
+    slaap per bewoner, en de feestdagenagenda. De koppelingslaag vult haar; de
+    engine leest haar via `hand_start.brakes_readable`. Een ontbrekende entiteit,
+    `unavailable` en `unknown` zijn geen lezing; al het andere wel.
+
+    Which external inputs gave no reading this round. One collection for every
+    input of the three waiting brakes: presence and sleep per resident, and the
+    holiday calendars. The binding layer fills it; the engine reads it through
+    `hand_start.brakes_readable`. A missing entity, `unavailable` and `unknown`
+    are no reading; anything else is.
+    """
 
     asleep_since: datetime | None = None
     """Wanneer iedereen die thuis is ging slapen, of `None` als dat onbekend is.
@@ -338,3 +356,41 @@ class WorldState:
     def overridden(self, zone_id: str) -> bool:
         """Return whether a manual override holds this zone."""
         return self.zone_overrides.get(zone_id, False)
+
+
+#: Velden die uit een entiteit, een schakelaar of een dienst komen. Een nieuw
+#: veld hier of hieronder is een bewuste keuze; `test_every_world_field_is_classified`
+#: valt om zodra een veld in geen van beide lijsten staat.
+#:
+#: Fields coming from an entity, a switch or a service. A new field here or
+#: below is a deliberate choice; `test_every_world_field_is_classified` fails as
+#: soon as a field stands in neither list.
+EXTERNAL_WORLD_FIELDS = frozenset(
+    {
+        "outdoor_temperature",
+        "season",
+        "indoor_temperatures",
+        "climates",
+        "residents",
+        "unreadable",
+        "openings",
+        "presence",
+        "circuit_family_since",
+        "master_enabled",
+        "holiday_mode",
+        "precondition_bypass",
+        "precondition_until",
+        "guest_mode",
+        "precipitation",
+        "zone_overrides",
+        "zone_hand_starts",
+        "zone_hands",
+        "zone_priorities",
+        "opening_bypasses",
+    }
+)
+
+#: Velden die de engine zelf uit de klok of uit de andere velden afleidt.
+#:
+#: Fields the engine derives from the clock or from the other fields.
+INTERNAL_WORLD_FIELDS = frozenset({"now", "asleep_since"})

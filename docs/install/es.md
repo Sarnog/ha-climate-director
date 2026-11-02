@@ -615,8 +615,10 @@ cuenta, porque el director nunca regula allí el encendido. En una zona que no
 espera nada, el botón no hace nada. El inicio manual también caduca al dormir,
 con la casa vacía o al día siguiente. Si el sensor de sueño o de presencia
 desaparece un momento, el inicio manual se mantiene hasta que vuelva una lectura; la primera
-pasada legible vuelve a aplicar la regla habitual. La decisión nombra la zona en
-el atributo `hand_starts`.
+pasada legible vuelve a aplicar la regla habitual. Si el calendario de vacaciones
+desaparece, el inicio manual también se mantiene hasta que vuelva una lectura; el
+calendario solo cuenta con una palabra clave. La decisión nombra la zona en el
+atributo `hand_starts`.
 
 ### Horarios
 
