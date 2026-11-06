@@ -155,8 +155,8 @@ class TestZoneOverrideSwitch:
         asyncio.run(switch._set(True))
         assert coordinator.zone_overrides == {"woonkamer": True}
 
-        # Wat `_zones_handed_back` doet zodra iedereen slaapt of het huis leeg is.
-        # What `_zones_handed_back` does once everybody sleeps or the house is empty.
+        # Wat `zones_handed_back` doet zodra iedereen slaapt of het huis leeg is.
+        # What `zones_handed_back` does once everybody sleeps or the house is empty.
         coordinator.zone_overrides.clear()
         switch._handle_coordinator_update()
 

@@ -12,21 +12,20 @@ allowed", not "is this needed" - the latter belongs to `hysteresis.py`.
 from __future__ import annotations
 
 from collections.abc import Iterator
+from dataclasses import replace
 from datetime import datetime
 
 from . import hand_start
-from .families import ModeFamily
-from .hysteresis import source_counts_for
+from .families import MODE_OFF
 from .models import (
-    HOLIDAY_WEEKDAY,
     DirectorConfig,
     Opening,
-    TimeWindow,
     Zone,
     ZoneGate,
 )
-from .night import asleep
 from .plan import OPENING_MIN_REST, Plan, Reason  # noqa: F401  # OPENING_MIN_REST is a re-export
+from .quiet import guests_carry_the_house, zone_running
+from .schedule import schedule_open
 from .world import WorldState
 
 
@@ -154,7 +153,7 @@ def _household(
     """
     gates = config.gates
 
-    if _guests_carry_the_house(config, world):
+    if guests_carry_the_house(config, world):
         # Afwezigheid en rooster zeggen niets meer, slaap wel: zodra iemand
         # thuis is en naar bed gaat, is het huis weer van de bewoners.
         #
@@ -212,7 +211,7 @@ def _household(
         elif hand_start.waits_for_sleeper(world, zone_id, config.residents):
             yield Reason.WAITING_FOR_SLEEPER
 
-    if gates.require_schedule and not _schedule_open(config, world):
+    if gates.require_schedule and not schedule_open(config, world):
         yield Reason.OUTSIDE_SCHEDULE
 
 
@@ -228,182 +227,6 @@ def _preconditioning(world: WorldState, zone: Zone) -> bool:
     second definition here could only drift apart.
     """
     return world.preconditioning(zone.zone_id)
-
-
-def _guests_carry_the_house(config: DirectorConfig, world: WorldState) -> bool:
-    """Return whether guest mode is standing in for the residents right now.
-
-    Alleen overdag, of preciezer: binnen het ingestelde gastenvenster. Buiten
-    dat venster nemen de gewone poorten het weer over, zodat een schakelaar die
-    iemand vergeet uit te zetten het huis niet de hele nacht laat doordraaien.
-
-    Only during the day, or more precisely: inside the configured guest window.
-    Outside it the ordinary gates take over again, so a switch somebody forgets
-    to turn off does not keep the house running all night.
-    """
-    if not world.guest_mode:
-        return False
-    window = config.gates.guest_window
-    if window is None:
-        return True
-    return window.contains(world.now.time(), world.now.weekday())
-
-
-def quiet_hours(config: DirectorConfig, world: WorldState) -> bool:
-    """Return whether this moment falls inside a quiet window that still brakes.
-
-    Drie uitzonderingen, in deze volgorde, en alle drie op hetzelfde venster:
-    gastenmodus binnen het gastenvenster heft de stilte op (er logeert iemand, dus
-    "het huis is leeg" zegt niets); een bewoner die al thuis was vóórdat dit
-    venster begon regelt gewoon door (anker 13 - de rem is voor thuiskomers); en
-    een open roostervenster van iemand die thuis is wint.
-
-    Die laatste is de oudste: de stilte is bedoeld voor thuiskomen op een uur
-    waarop je zo naar bed gaat, niet voor opstaan - en wie om vijf uur 's ochtends
-    begint, heeft dat in zijn rooster gezet juist omdat het vroeg is. Zonder die
-    uitzondering zou de stilte het ochtendritme afknijpen dat het rooster net
-    beschrijft. Alleen het venster van wie thuis is telt: het rooster van iemand
-    die weg is hoeft het huis niet te laten beginnen.
-
-    Anker 13 maakt dit smaller: een venster remt alleen wie er ná zijn begin
-    thuiskwam, dus wie er al zat houdt het huis aan de gang. Staat er geen
-    thuiskomstmoment bekend, dan remt het venster wél - stilte is de veilige kant.
-    Bij meerdere vensters tegelijk moet **elk** open venster zo iemand aanwijzen;
-    dat is de strengste lezing van de vraag "was hij vóór het begin van elk open
-    venster thuis", en voor de gewone, niet-overlappende vensters maakt het geen
-    verschil.
-
-    Een vakantievenster geldt alleen op vakantiedagen, en dan elke dag van de
-    week. Zijn er vakantievensters, dan nemen die het op een vakantie over van de
-    gewone; zijn die er niet, dan telt een vakantie als zaterdag - precies zoals de
-    bewonersroosters dat doen.
-
-    Three exceptions, in this order, and all three about the same window: guest
-    mode inside the guest window lifts the quiet (somebody untracked is staying, so
-    "the house is empty" says nothing); a resident who was already home before this
-    window began simply carries on regulating (anchor 13 - the brake is for
-    homecomers); and an open schedule window of somebody who is home wins.
-
-    The last is the oldest: the quiet is meant for coming home at an hour when you
-    are about to turn in, not for getting up - and whoever starts at five in the
-    morning put that in their schedule precisely because it is early. Without that
-    exception the quiet would pinch off the very morning rhythm the schedule
-    describes. Only the window of somebody who is home counts: the schedule of
-    somebody who is out need not set the house going.
-
-    Anchor 13 makes this narrower: a window brakes only whoever came home after it
-    began, so whoever was already sitting there keeps the house going. With no
-    known homecoming moment the window does brake - quiet is the safe side. With
-    several windows open at once **every** open window has to point at such a
-    resident; that is the strictest reading of the question "was he home before the
-    beginning of every open window", and for the ordinary, non-overlapping windows
-    it makes no difference.
-
-    A holiday window applies only on holidays, and then on any weekday. With
-    holiday windows set they take over from the ordinary ones on a holiday; without
-    them a holiday counts as a Saturday - exactly like the residents' schedules do.
-    """
-    open_windows = _open_quiet_windows(config, world)
-    if not open_windows:
-        return False
-
-    if _guests_carry_the_house(config, world):
-        return False
-
-    if all(_was_home_before(config, world, started) for _window, started in open_windows):
-        return False
-
-    moment = world.now.time()
-    weekday = world.now.weekday()
-    holiday = world.holiday_mode
-    effective = HOLIDAY_WEEKDAY if holiday else weekday
-    return not any(
-        world.resident(resident.resident_id).home
-        and resident.takes_part(holiday=holiday, weekday=effective)
-        and resident.wants_climate_at(moment, weekday, holiday=holiday)
-        for resident in config.residents
-    )
-
-
-def _open_quiet_windows(
-    config: DirectorConfig, world: WorldState
-) -> tuple[tuple[TimeWindow, datetime], ...]:
-    """Return the quiet windows standing open right now, with their beginning.
-
-    Precies dezelfde keuze als buiten een vakantie: op een vakantie met eigen
-    vakantievensters tellen alleen die, en dan op elke dag; anders de gewone
-    vensters met de vakantiedag als zaterdag. Eén functie, omdat de lezer hierboven
-    en de uitzondering van anker 13 hetzelfde venster moeten zien - en de begintijd
-    komt uit datzelfde venster, zodat "staat open" en "begon om" niet uit elkaar
-    kunnen lopen.
-
-    Exactly the same choice as outside a holiday: on a holiday with holiday windows
-    of its own only those count, and then on any day; otherwise the ordinary
-    windows with the holiday counted as a Saturday. One function, because the
-    reader above and anchor 13's exception must see the same window - and the
-    beginning comes from that same window, so "stands open" and "began at" cannot
-    drift apart.
-    """
-    weekday = world.now.weekday()
-    holiday_windows = tuple(window for window in config.gates.quiet_windows if window.holiday)
-    if world.holiday_mode and holiday_windows:
-        candidates = ((window, weekday, True) for window in holiday_windows)
-    else:
-        effective = HOLIDAY_WEEKDAY if world.holiday_mode else weekday
-        candidates = (
-            (window, effective, False)
-            for window in config.gates.quiet_windows
-            if not window.holiday
-        )
-    return tuple(
-        (window, started)
-        for window, day, any_day in candidates
-        if (started := window.started_at(world.now, weekday=day, any_day=any_day)) is not None
-    )
-
-
-def _was_home_before(config: DirectorConfig, world: WorldState, window_start: datetime) -> bool:
-    """Return whether somebody who is home was already home before this window began.
-
-    Anker 13: wie al thuis was toen het venster inging, zit er wakker bij en houdt
-    het huis aan de gang. Alleen een bewoner die thuis **is** telt mee: wie weg is
-    is geen thuiskomer en ook geen aanwezige, en zijn moment is bij het vertrek al
-    vervallen. Zonder bekend thuiskomstmoment is het antwoord `nee` - dan remt het
-    venster, want stilte is de veilige kant om fout te zitten.
-
-    Anchor 13: whoever was already home when the window began is sitting there
-    awake and keeps the house going. Only a resident who **is** home counts:
-    somebody away is neither a homecomer nor present, and their moment already
-    lapsed on leaving. Without a known homecoming moment the answer is `no` - then
-    the window brakes, since quiet is the safe side to be wrong on.
-    """
-    return any(
-        state.home and state.home_since is not None and state.home_since < window_start
-        for state in (world.resident(resident.resident_id) for resident in config.residents)
-    )
-
-
-def zone_running(
-    config: DirectorConfig, world: WorldState, zone: Zone, previous: Plan | None
-) -> bool:
-    """Return whether any appliance that counts for this zone is doing something.
-
-    Een gedeeld apparaat telt alleen voor de zone die het vorige plan een
-    draaicommando gaf, zodat een ketel die voor een andere kamer brandt dit
-    stiltevenster niet opheft. Kreeg niemand zo'n commando - na een herstart,
-    of omdat iemand hem met de hand aanzette - dan draait hij voor het hele huis
-    en heft hij het stiltevenster wél op.
-
-    A shared appliance counts only for the zone that got a running command in
-    the previous plan, so a boiler burning for another room does not lift this
-    quiet window. With no such command - after a restart, or because somebody
-    switched it on by hand - it runs for the whole house and does lift it.
-    """
-    return any(
-        source_counts_for(config, zone, source, previous)
-        and world.climate(source.entity_id).family is not ModeFamily.NEUTRAL
-        for source in zone.sources
-    )
 
 
 def _room_occupied(world: WorldState, zone: Zone) -> bool:
@@ -566,58 +389,44 @@ def opening_rest_until(
     return deadline if world.now < deadline else None
 
 
-def _schedule_open(config: DirectorConfig, world: WorldState) -> bool:
-    """Return whether the household's schedules allow regulating right now.
+def brakes_remaining(
+    config: DirectorConfig, world: WorldState, zone: Zone, previous: Plan | None
+) -> frozenset[Reason]:
+    """Return the three brakes that still hold this zone without its hand start.
 
-    Only residents who actually have a schedule take part. Someone without one
-    neither opens the gate nor holds it shut: they have said nothing about when
-    they want the house to join in, and silence is not a vote either way.
+    De wereld wordt voor deze ene zone van haar handstart ontdaan en opnieuw
+    door de poorten gehaald. Haar eigen apparaten tellen daarbij als uit: een
+    zone die al draait passeert het stiltevenster en de opsta-rem, maar dat is
+    juist de zone die na de eerste stop weer moet kunnen starten. Wat daarvan
+    overblijft is precies de vraag of de handstart nog iets doet: is de
+    verzameling leeg, dan vervalt hij in deze ronde. De andere poorten tellen
+    hier bewust niet mee - een open raam houdt de zone tegen, maar maakt de
+    handstart niet overbodig.
 
-    A participant does two things. Awake, with their window open, they open the
-    gate. At home and asleep, with their window not yet open, they hold it shut
-    - which is what makes the house wait for the last sleeper on a weekend
-    morning instead of starting the moment the first person is up. Once their
-    own window opens, their sleeping stops counting: the schedule said they
-    meant to be up by then.
+    The world is stripped of this one zone's hand start and put through the
+    gates again. Its own appliances count as off there: a zone already running
+    passes the quiet window and the rise brake, but that is exactly the zone
+    that must be able to start again after the first stop. What remains is
+    exactly the question whether the hand start still does anything: when the
+    set is empty it lapses this round. The other gates deliberately do not count
+    here - an open window holds the zone back, but does not make the hand start
+    superfluous.
     """
-    moment = world.now.time()
-    weekday = world.now.weekday()
-    holiday = world.holiday_mode
+    # Lazy, want `gates` importeert deze module voor `passes` en de twee
+    # slaaphulpen. Een import bovenaan zou een kring maken.
+    #
+    # Lazy, since `gates` imports this module for `passes` and the two sleep
+    # helpers. An import at the top would make a cycle.
+    from .gates import closed
 
-    effective = HOLIDAY_WEEKDAY if holiday else weekday
-    participants = [
-        resident
-        for resident in config.residents
-        if resident.takes_part(holiday=holiday, weekday=effective)
-    ]
-    if not participants:
-        return False
-
-    for resident in participants:
-        state = world.resident(resident.resident_id)
-        if (
-            state.home
-            and asleep(resident, world)
-            and not resident.wants_climate_at(moment, weekday, holiday=holiday)
-        ):
-            return False
-
-    return any(
-        resident.wants_climate_at(moment, weekday, holiday=holiday)
-        for resident in participants
-        if _counts_towards_schedule(config, world, resident.resident_id)
+    climates = dict(world.climates)
+    for source in zone.sources:
+        state = climates.get(source.entity_id)
+        if state is not None:
+            climates[source.entity_id] = replace(state, hvac_mode=MODE_OFF)
+    without = replace(
+        world,
+        climates=climates,
+        zone_hand_starts=world.zone_hand_starts - {zone.zone_id},
     )
-
-
-def _counts_towards_schedule(config: DirectorConfig, world: WorldState, resident_id: str) -> bool:
-    """Return whether a resident's own schedule may open the schedule gate.
-
-    Being home is required outright: a schedule says when somebody wants the
-    house warm, not that it should be warm without them. Sleep mirrors the
-    sleep gate instead of being hard-coded, so with `require_awake` off a
-    schedule still counts while its owner sleeps.
-    """
-    resident = next((item for item in config.residents if item.resident_id == resident_id), None)
-    if resident is None or not world.resident(resident_id).home:
-        return False
-    return not (config.gates.require_awake and asleep(resident, world))
+    return frozenset(closed(config, without, zone, previous)) & hand_start.HAND_START_BRAKES

@@ -192,7 +192,7 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
     assert named_exclusion_problems() == []
 
 
-NAMED_EXCLUSIONS_BUDGET = 41
+NAMED_EXCLUSIONS_BUDGET = 45
 
 
 def test_the_named_exclusions_are_a_ratchet() -> None:

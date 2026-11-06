@@ -1489,7 +1489,7 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `engine/zone_decisions.py` | wat een zone uiteindelijk te horen krijgt | `build_zone_decisions`, `lost_to_another_zone`, `command_order`, `clamped_target` |
 | `engine/circuit_policy.py` | de taakkeuze op een circuit | `forced_families`, `choose_family`, `any_managed_running`, `finish` |
 | `engine/capacity.py` | capaciteit en kortcyclus | `standing_claims`, `keeps_claiming`, `apply_capacity`, `apply_short_cycle` |
-| `engine/quiet.py` | het stiltevenster en de draaiende zone | `quiet_hours`, `open_quiet_windows`, `was_home_before`, `zone_running`; dit sluit de kring met `hand_start` |
+| `engine/quiet.py` | het stiltevenster en de draaiende zone | `guests_carry_the_house`, `quiet_hours`, `open_quiet_windows`, `was_home_before`, `zone_running`; dit sluit de kring met `hand_start` |
 | `engine/schedule.py` | het rooster als poort | `schedule_open`, `counts_towards_schedule` |
 | `engine/gates.py` | de poort als geheel | `closed`, de huishoudpoort, de openingen, `house_wide_blocked`, `opening_rest_until`, en `brakes_remaining` (de poort leest de handstart, niet andersom) |
 | `engine/hand_start.py` | de handstartregel | `HAND_START_BRAKES`, `brakes_readable`, `passes`, `quiet_holds`, `early_riser_holds`, `waits_for_sleeper`, `up_and_about`, `still_in_bed`; geen luie import meer |
@@ -3321,7 +3321,7 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `engine/zone_decisions.py` | what a zone finally hears | `build_zone_decisions`, `lost_to_another_zone`, `command_order`, `clamped_target` |
 | `engine/circuit_policy.py` | choosing the duty on a circuit | `forced_families`, `choose_family`, `any_managed_running`, `finish` |
 | `engine/capacity.py` | capacity and short cycle | `standing_claims`, `keeps_claiming`, `apply_capacity`, `apply_short_cycle` |
-| `engine/quiet.py` | the quiet window and the running zone | `quiet_hours`, `open_quiet_windows`, `was_home_before`, `zone_running`; this closes the cycle with `hand_start` |
+| `engine/quiet.py` | the quiet window and the running zone | `guests_carry_the_house`, `quiet_hours`, `open_quiet_windows`, `was_home_before`, `zone_running`; this closes the cycle with `hand_start` |
 | `engine/schedule.py` | the schedule as a gate | `schedule_open`, `counts_towards_schedule` |
 | `engine/gates.py` | the gate as a whole | `closed`, the household gate, the openings, `house_wide_blocked`, `opening_rest_until`, and `brakes_remaining` (the gate reads the hand start, never the other way round) |
 | `engine/hand_start.py` | the hand-start rule | `HAND_START_BRAKES`, `brakes_readable`, `passes`, `quiet_holds`, `early_riser_holds`, `waits_for_sleeper`, `up_and_about`, `still_in_bed`; no lazy import left |

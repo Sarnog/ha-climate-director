@@ -5,16 +5,16 @@ pas gepusht als de voorganger groen is, en houdt zijn eigen bewijs bij.
 
 ## Stand
 
-- **Basis:** `main` op `79424dd` (ontwerp, publieke namen, toetssplitsing en
-validatie), schone boom, `main == origin/main`.
+- **Basis:** `main` op `bb84325` (ontwerp, publieke namen, toetssplitsing,
+validatie en opslag), schone boom, `main == origin/main`.
 - **Gebruikersbesluiten:** N14/N15 blijven **later**; N16 wordt **geen**
   7.7.10. Beide blijven in `ROADMAP.md` en `ARCHITECTURE.md` staan; 8.0.0
   verandert geen gedrag en geen tekst.
 - **Productie:** draait 7.7.7. Alleen gelezen; niets geïnstalleerd, herstart of
   gewijzigd.
-- **Nu:** stap 4 staat in de werkboom: `serialise.py` is de ingang, de
-  vertaling woont in `installation_storage.py`, `equipment_storage.py`,
-  `resident_storage.py` en `storage_values.py`. Nog niet gecommit.
+- **Nu:** stap 5 staat in de werkboom: `hand.py` draagt de vier publieke
+  handmethodes, `engine/quiet.py` en `engine/schedule.py` zijn afgesplitst en
+  `brakes_remaining` woont bij `gates.py`. Nog niet gecommit.
 
 ## Stappen
 
@@ -23,9 +23,9 @@ validatie), schone boom, `main == origin/main`.
 | Ontwerp | `6df44e2` | klaar: `ARCHITECTURE.md` “Code-indeling” NL + EN |
 | 1. Publieke namen | `74f7c01` | klaar: mixins, helpers, schemaconstanten en opslaglezers zijn publiek |
 | 2. Toetsen per onderwerp + impactkaart | `4c9f1cf` | klaar: 50 toetsbestanden verdeeld, hulpjes verhuisd, kaart bijgewerkt |
-| 3. Validatie en `stored_state.py` | deze commit | klaar: `engine/validation.py` (1328 regels), `models.py` 2269 → 1154, `state_extra.py` → `stored_state.py` |
-| 4. Opslag en serialisatie | deze commit | klaar: `serialise.py` 152 regels, drie opslagmodules en `storage_values.py` |
-| 5. Hand en handstart | nog te maken | wacht |
+| 3. Validatie en `stored_state.py` | `79424dd` | klaar: `engine/validation.py` (1328 regels), `models.py` 2269 → 1154, `state_extra.py` → `stored_state.py` |
+| 4. Opslag en serialisatie | `bb84325` (kaartherstel `fd26bce`) | klaar: `serialise.py` 152 regels, drie opslagmodules en `storage_values.py` |
+| 5. Hand en handstart | deze commit | klaar: `hand.py`, `engine/quiet.py`, `engine/schedule.py`, `brakes_remaining` bij `gates.py` |
 | 6. Configuratiestroom en formulieren | nog te maken | wacht |
 | 7. `engine/decide.py` | nog te maken | wacht |
 | 8. `engine/models.py` | nog te maken | wacht |
@@ -85,6 +85,20 @@ in `serialise.py`; die zoekt nu in de opslagmodules en de gerichte herhaling gaf
 De engine-probe (42), v1-probe (64) en E-probe (107) zijn byte-gelijk. De
 mutatielijst was vóór deze stap 66 van 66; de ronde erna volgt vóór de push.
 
+Stap 5 is gemeten. `hand.py` (149 regels) draagt de vier publieke methodes,
+`engine/quiet.py` (190) en `engine/schedule.py` (67) zijn afgesplitst,
+`engine/gates.py` ging van 623 naar 432 regels en `brakes_remaining` woont
+daar; `engine/hand_start.py` is 167 regels en heeft geen luie import meer, de
+binding `hand_start.py` is 267. De volledige suite gaf 3982 passed in 26m51s
+(log `%TEMP%/800/step5-full3.log`), de dekking is 100 % regels en takken
+(5961/2092), de poort meldt 45 benoemde uitsluitingen en de kaart is
+bijgewerkt. De engine-probe (42), v1-probe (64) en E-probe (107) zijn
+byte-gelijk. De mutatielijst was vóór deze stap 66 van 66 (logmap
+`%TEMP%/800/mutlogs-step4`); de ronde erna volgt vóór de push. De eerste
+volledige ronde van deze stap gaf 3979 passed en drie rood: zes regels zonder
+naam in de dekkingspoort en twee verouderde mutatiepatronen; die zijn hersteld
+en de tweede ronde is groen.
+
 Per verhuiscommit worden hier vastgelegd:
 
 - de twee engine-probes en de drie handstartprobes, met logpad en tijd;
@@ -103,16 +117,16 @@ only after its predecessor is green, and keeps its own proof.
 
 ## State
 
-- **Base:** `main` at `79424dd` (design, public names, test split and
-validation), clean tree, `main == origin/main`.
+- **Base:** `main` at `bb84325` (design, public names, test split, validation
+and storage), clean tree, `main == origin/main`.
 - **User decisions:** N14/N15 stay **later**; N16 becomes **no** 7.7.10.
   Both stay in `ROADMAP.md` and `ARCHITECTURE.md`; 8.0.0 changes no behaviour
   and no text.
 - **Production:** runs 7.7.7. Read only; nothing installed, restarted or
   changed.
-- **Now:** step 4 stands in the working tree: `serialise.py` is the entrance, the
-  translation lives in `installation_storage.py`, `equipment_storage.py`,
-  `resident_storage.py` and `storage_values.py`. Not committed yet.
+- **Now:** step 5 stands in the working tree: `hand.py` carries the four public
+  hand methods, `engine/quiet.py` and `engine/schedule.py` are split off and
+  `brakes_remaining` lives with `gates.py`. Not committed yet.
 
 ## Steps
 
@@ -121,9 +135,9 @@ validation), clean tree, `main == origin/main`.
 | Design | `6df44e2` | done: `ARCHITECTURE.md` “Code layout” NL + EN |
 | 1. Public names | `74f7c01` | done: mixins, helpers, schema constants and storage readers are public |
 | 2. Tests per subject + impact map | `4c9f1cf` | done: 50 test files split, helpers moved, map updated |
-| 3. Validation and `stored_state.py` | this commit | done: `engine/validation.py` (1328 lines), `models.py` 2269 → 1154, `state_extra.py` → `stored_state.py` |
-| 4. Storage and serialisation | this commit | done: `serialise.py` 152 lines, three storage modules and `storage_values.py` |
-| 5. Hand and hand start | to be made | waits |
+| 3. Validation and `stored_state.py` | `79424dd` | done: `engine/validation.py` (1328 lines), `models.py` 2269 → 1154, `state_extra.py` → `stored_state.py` |
+| 4. Storage and serialisation | `bb84325` (map fix `fd26bce`) | done: `serialise.py` 152 lines, three storage modules and `storage_values.py` |
+| 5. Hand and hand start | this commit | done: `hand.py`, `engine/quiet.py`, `engine/schedule.py`, `brakes_remaining` at `gates.py` |
 | 6. Configuration flow and forms | to be made | waits |
 | 7. `engine/decide.py` | to be made | waits |
 | 8. `engine/models.py` | to be made | waits |
@@ -183,6 +197,19 @@ and branches (5942/2092), the gate reports 41 named exclusions and the map is
 updated. The engine probe (42), v1 probe (64) and E probe (107) are
 byte-identical. The mutation list was 66 of 66 before this step; the round after
 it follows before the push.
+
+Step 5 is measured. `hand.py` (149 lines) carries the four public methods,
+`engine/quiet.py` (190) and `engine/schedule.py` (67) are split off,
+`engine/gates.py` went from 623 to 432 lines and `brakes_remaining` lives
+there; `engine/hand_start.py` is 167 lines with no lazy import left, the
+binding `hand_start.py` is 267. The full suite gave 3982 passed in 26m51s (log
+`%TEMP%/800/step5-full3.log`), coverage is 100% lines and branches (5961/2092),
+the gate reports 45 named exclusions and the map is updated. The engine probe
+(42), v1 probe (64) and E probe (107) are byte-identical. The mutation list was
+66 of 66 before this step (log directory `%TEMP%/800/mutlogs-step4`); the round
+after it follows before the push. The first full round of this step gave 3979
+passed and three red: six lines without a name in the coverage gate and two
+stale mutation patterns; they were fixed and the second round is green.
 
 Per move commit the following is recorded here:
 

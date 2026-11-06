@@ -177,11 +177,11 @@ def handed_back(home) -> set[str]:
     """Return the zones handed back, through the coordinator's own reader.
 
     De coordinator leest bewoners één keer in `build_world` en geeft
-    ze door aan `_zones_handed_back`. Deze helper doet hier hetzelfde, zodat de
+    ze door aan `zones_handed_back`. Deze helper doet hier hetzelfde, zodat de
     tests de methode niet met losse, onderling afwijkende argumenten aanroepen.
 
     The coordinator reads residents once in `build_world` and
-    passes them to `_zones_handed_back`. This helper does the same here, so the
+    passes them to `zones_handed_back`. This helper does the same here, so the
     tests do not call the method with loose, mutually inconsistent arguments.
     """
     coordinator = home.coordinator
@@ -195,7 +195,7 @@ def handed_back(home) -> set[str]:
         )
         for resident in coordinator.config.residents
     }
-    return coordinator._zones_handed_back(now, residents)
+    return coordinator.zones_handed_back(now, residents)
 
 
 def summer_house(seasons: dict[str, Any]) -> dict[str, Any]:

@@ -76,6 +76,7 @@ TESTS = Path(__file__).parent
 MIXIN_FILES = (
     "overrides.py",
     "preconditions.py",
+    "hand.py",
     "hand_start.py",
     "resident_reader.py",
     "room_presence.py",

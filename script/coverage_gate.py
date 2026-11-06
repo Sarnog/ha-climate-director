@@ -131,7 +131,7 @@ EXCLUSION_HINT = (
 #: zonder dat iemand hem noemt. Daarom staat hieronder elke statementregel met
 #: zijn eigen inhoud — de `...`-stubs van `coordinator.py` (het
 #: `CoordinatorSurface`-protocol, dat alleen voor de typecontrole bestaat) en
-#: drie in elk van de zeven mixins die dat protocol onder `TYPE_CHECKING`
+#: drie in elk van de acht mixins die dat protocol onder `TYPE_CHECKING`
 #: importeren (die tak is bij het draaien nooit waar). De poort
 #: eist dat de lijst precies klopt: een regel die buiten de meting valt zonder
 #: hier te staan laat hem vallen, en een naam die niets meer verbergt ook.
@@ -173,8 +173,16 @@ NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {
         "def _calendar_says_holiday(self) -> bool: ...",
         "def _resident(",
         ") -> ResidentState: ...",
-        "def _zones_handed_back(",
-        ") -> set[str]: ...",
+        "def zones_handed_back(self, now: datetime, residents: dict[str, ResidentState]) "
+        "-> set[str]: ...",
+        "def everyone_asleep(self, now: datetime, residents: dict[str, ResidentState]) "
+        "-> bool: ...",
+        "def house_is_empty(self, residents: dict[str, ResidentState]) -> bool: ...",
+    ),
+    "hand.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import CoordinatorSurface",
+        "_CoordinatorBase = CoordinatorSurface",
     ),
     "hand_start.py": (
         "if TYPE_CHECKING:",

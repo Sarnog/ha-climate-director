@@ -340,7 +340,7 @@ class WorldBuilderMixin(_CoordinatorBase):
         and is off by default: so "switching off yourself" worked nowhere. A
         hand at a shared appliance counts for every zone it serves.
         """
-        handed_back = self._zones_handed_back(now, residents)
+        handed_back = self.zones_handed_back(now, residents)
         overridden, _hands = _override_split(handed_back, self.zone_overrides)
         return overridden
 
@@ -361,7 +361,7 @@ class WorldBuilderMixin(_CoordinatorBase):
         `_override_split` draws the two from the same two sources, so they cannot
         drift apart.
         """
-        handed_back = self._zones_handed_back(now, residents)
+        handed_back = self.zones_handed_back(now, residents)
         _overridden, hands = _override_split(handed_back, self.zone_overrides)
         return hands
 

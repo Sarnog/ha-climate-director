@@ -297,11 +297,11 @@ SCENARIO = Scenario(
 def month():
     """Return one finished month of simulation, run once for the whole module.
 
-    De klok van de coordinator loopt mee met de simulatie: `_zones_handed_back`
+    De klok van de coordinator loopt mee met de simulatie: `zones_handed_back`
     kijkt naar de dag van vandaag, en zonder dat mee te laten lopen vervalt een
     handmatige uitzetting nooit en test de maand op dat punt niets.
 
-    The coordinator's clock moves with the simulation: `_zones_handed_back`
+    The coordinator's clock moves with the simulation: `zones_handed_back`
     looks at today's date, and without moving that along a hand-back never
     lapses and the month tests nothing on that point.
     """

@@ -222,9 +222,9 @@ class CoordinatorSurface(Protocol):
     def _resident(
         self, resident_id: str, presence: str, sleep: str, asleep_state: str
     ) -> ResidentState: ...
-    def _zones_handed_back(
-        self, now: datetime, residents: dict[str, ResidentState]
-    ) -> set[str]: ...
+    def zones_handed_back(self, now: datetime, residents: dict[str, ResidentState]) -> set[str]: ...
+    def everyone_asleep(self, now: datetime, residents: dict[str, ResidentState]) -> bool: ...
+    def house_is_empty(self, residents: dict[str, ResidentState]) -> bool: ...
 
 
 class ClimateDirectorCoordinator(
@@ -797,7 +797,7 @@ class ClimateDirectorCoordinator(
             return
 
         entity_id = event.data["entity_id"]
-        zones = self._zones_of(entity_id)
+        zones = self.zones_of(entity_id)
         if not zones:
             return
 

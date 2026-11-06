@@ -95,11 +95,8 @@ MUTATIONS = [
         "name": "handstart-vervalt-nooit",
         "file": "custom_components/climate_director/hand_start.py",
         "old": (
-            "                    or (\n"
-            "                        readable\n"
-            "                        and not hand_start.brakes_remaining("
-            "self.config, world, zone, previous)\n"
-            "                    )"
+            "                    or (readable and not brakes_remaining(self.config, world, zone, "
+            "previous))"
         ),
         "new": "                    or False",
     },
@@ -107,9 +104,8 @@ MUTATIONS = [
         "name": "handstart-knop-zonder-rem",
         "file": "custom_components/climate_director/hand_start.py",
         "old": (
-            "        if not hand_start.brakes_remaining(\n"
-            "            self.config, self.build_world(), zone, self._published_plan()\n"
-            "        ):\n"
+            "        if not brakes_remaining(self.config, self.build_world(), zone, "
+            "self._published_plan()):\n"
             "            return"
         ),
         "new": "        if False:\n            return",
