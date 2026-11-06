@@ -34,10 +34,6 @@ from datetime import datetime, timedelta
 import pytest
 from conftest import assert_plan_holds
 
-from custom_components.climate_director.coordinator import (
-    season_from_state,
-    temperature_from_state,
-)
 from custom_components.climate_director.engine import (
     ClimateState,
     ConflictPolicy,
@@ -54,6 +50,10 @@ from custom_components.climate_director.engine import (
 )
 from custom_components.climate_director.engine.serialise import config_from_dict, config_to_dict
 from custom_components.climate_director.flow_validation import zone_errors, zone_from_form
+from custom_components.climate_director.world_builder import (
+    season_from_state,
+    temperature_from_state,
+)
 
 NOW = datetime(2026, 3, 15, 14, 30)
 

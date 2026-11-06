@@ -12,7 +12,7 @@ from .engine import ResidentState
 from .engine.night import asleep_at
 
 if TYPE_CHECKING:
-    from .coordinator import CoordinatorSurface
+    from .coordinator_surface import CoordinatorSurface
 
     _CoordinatorBase = CoordinatorSurface
 else:

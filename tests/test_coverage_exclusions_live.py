@@ -19,7 +19,7 @@ from live_helpers import (
     two_zone_installation,
 )
 
-from custom_components.climate_director import coordinator as coordinator_module
+from custom_components.climate_director import coordinator_lifecycle as coordinator_module
 
 pytest_plugins = ["live_fixtures"]
 pytestmark = pytest.mark.usefixtures("appliance")

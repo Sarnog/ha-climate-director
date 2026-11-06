@@ -49,7 +49,7 @@ class TestTheLastSixExcludedLines:
         """coordinator.py: een ronde waarin `apply` gooit wordt gemeld en gaat door."""
         from harness_live import start_house, stop_house
 
-        from custom_components.climate_director import coordinator as coordinator_module
+        from custom_components.climate_director import coordinator_round as coordinator_module
 
         logged: list[str] = []
         monkeypatch.setattr(
@@ -192,7 +192,7 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
     assert named_exclusion_problems() == []
 
 
-NAMED_EXCLUSIONS_BUDGET = 63
+NAMED_EXCLUSIONS_BUDGET = 75
 
 
 def test_the_named_exclusions_are_a_ratchet() -> None:

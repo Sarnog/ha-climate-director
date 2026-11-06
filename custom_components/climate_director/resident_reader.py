@@ -28,7 +28,7 @@ from .readability import unreadable
 from .world_builder import reads_as_home
 
 if TYPE_CHECKING:
-    from .coordinator import CoordinatorSurface
+    from .coordinator_surface import CoordinatorSurface
 
     # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
     # van hém. Voor mypy is dit de gastheer, zodat `self.hass` en de rest

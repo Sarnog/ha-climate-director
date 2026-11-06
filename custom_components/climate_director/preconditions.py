@@ -25,7 +25,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
-    from .coordinator import CoordinatorSurface
+    from .coordinator_surface import CoordinatorSurface
 
     # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
     # van hém. Voor mypy is dit de gastheer, zodat `self.config` en de rest

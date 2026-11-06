@@ -5,7 +5,7 @@ pas gepusht als de voorganger groen is, en houdt zijn eigen bewijs bij.
 
 ## Stand
 
-- **Basis:** `main` op `3aa9f3f` (ontwerp, publieke namen, toetssplitsing,
+- **Basis:** `main` op `6cd53be` (ontwerp, publieke namen, toetssplitsing,
 validatie, opslag, hand, handstart, configuratiestroom, formulieren, beslissing
 en modelbouwstenen), schone boom, `main == origin/main`.
 - **Gebruikersbesluiten:** N14/N15 blijven **later**; N16 wordt **geen**
@@ -13,10 +13,10 @@ en modelbouwstenen), schone boom, `main == origin/main`.
   verandert geen gedrag en geen tekst.
 - **Productie:** draait 7.7.7. Alleen gelezen; niets geïnstalleerd, herstart of
   gewijzigd.
-- **Nu:** stap 8 staat in de werkboom: `models.py` is 186 regels en de
-  bouwstenen wonen in `seasons.py`, `windows.py`, `residents.py`,
-  `equipment.py` en `rooms.py`; `manual_sources.py` draagt de eenmalige
-  melding. Nog niet gecommit.
+- **Nu:** stap 9 staat in de werkboom: `coordinator.py` is 611 regels en de
+  onderdelen wonen in `coordinator_surface.py`, `coordinator_lifecycle.py`,
+  `coordinator_tracking.py`, `coordinator_round.py`,
+  `coordinator_reporting.py` en `coordinator_events.py`. Nog niet gecommit.
 
 ## Stappen
 
@@ -30,8 +30,8 @@ en modelbouwstenen), schone boom, `main == origin/main`.
 | 5. Hand en handstart | `d27c3b6` | klaar: `hand.py`, `engine/quiet.py`, `engine/schedule.py`, `brakes_remaining` bij `gates.py` |
 | 6. Configuratiestroom en formulieren | `05d59c5` | klaar: `config_flow.py` 456, `flow_validation.py` 380, `flow_*` en `form_*` |
 | 7. `engine/decide.py` | `cdfc453` | klaar: `decide.py` 82 regels en zes onderwerpsmodules |
-| 8. `engine/models.py` | deze commit | klaar: `models.py` 186 regels en vijf modelbouwstenen, plus `manual_sources.py` |
-| 9. `coordinator.py` | nog te maken | wacht |
+| 8. `engine/models.py` | `6cd53be` | klaar: `models.py` 186 regels en vijf modelbouwstenen, plus `manual_sources.py` |
+| 9. `coordinator.py` | deze commit | klaar: `coordinator.py` 611 regels en zes onderdelen |
 | 10. `problems.py`, `texts.py`, `__init__.py` | nog te maken | wacht |
 | Release 8.0.0 | nog te maken | wacht |
 
@@ -143,6 +143,19 @@ en E-probe (107) zijn byte-gelijk. De mutatielijst was vóór deze stap 66 van
 toets over de probleemcodes omdat hij alleen `validation.py` las en de
 melding nu in `manual_sources.py` woont. Beide zijn hersteld.
 
+Stap 9 is gemeten. `coordinator.py` ging van 2069 naar 611 regels; het protocol
+staat in `coordinator_surface.py` (116), de levensduur in
+`coordinator_lifecycle.py` (238), de tracking in `coordinator_tracking.py`
+(434), de ronde in `coordinator_round.py` (231), de rapportage in
+`coordinator_reporting.py` (470) en de events in `coordinator_events.py` (331).
+De volledige suite gaf 4015 passed in 28m12s (log
+`%TEMP%/800/step9-full4.log`), de dekking is 100 % regels en takken
+(6372/2092), de poort meldt 75 benoemde uitsluitingen en de kaart is
+bijgewerkt. De engine-probe (42) en v1-probe (64) zijn byte-gelijk; de
+E-probe is tijdsafhankelijk gebleken (de klok in E8 verschoof tussen twee
+parallelle runs) en wordt vóór de push opnieuw naast elkaar gelegd. De
+mutatielijst was vóór deze stap 66 van 66; de ronde erna volgt vóór de push.
+
 Per verhuiscommit worden hier vastgelegd:
 
 - de twee engine-probes en de drie handstartprobes, met logpad en tijd;
@@ -161,7 +174,7 @@ only after its predecessor is green, and keeps its own proof.
 
 ## State
 
-- **Base:** `main` at `3aa9f3f` (design, public names, test split, validation,
+- **Base:** `main` at `6cd53be` (design, public names, test split, validation,
 storage, hand, hand start, configuration flow, forms, decision and model
 building blocks), clean tree, `main == origin/main`.
 - **User decisions:** N14/N15 stay **later**; N16 becomes **no** 7.7.10.
@@ -169,10 +182,10 @@ building blocks), clean tree, `main == origin/main`.
   and no text.
 - **Production:** runs 7.7.7. Read only; nothing installed, restarted or
   changed.
-- **Now:** step 8 stands in the working tree: `models.py` is 186 lines and the
-  building blocks live in `seasons.py`, `windows.py`, `residents.py`,
-  `equipment.py` and `rooms.py`; `manual_sources.py` carries the one-time
-  notice. Not committed yet.
+- **Now:** step 9 stands in the working tree: `coordinator.py` is 611 lines and
+  the parts live in `coordinator_surface.py`, `coordinator_lifecycle.py`,
+  `coordinator_tracking.py`, `coordinator_round.py`,
+  `coordinator_reporting.py` and `coordinator_events.py`. Not committed yet.
 
 ## Steps
 
@@ -186,8 +199,8 @@ building blocks), clean tree, `main == origin/main`.
 | 5. Hand and hand start | `d27c3b6` | done: `hand.py`, `engine/quiet.py`, `engine/schedule.py`, `brakes_remaining` at `gates.py` |
 | 6. Configuration flow and forms | `05d59c5` | done: `config_flow.py` 456, `flow_validation.py` 380, `flow_*` and `form_*` |
 | 7. `engine/decide.py` | `cdfc453` | done: `decide.py` 82 lines and six subject modules |
-| 8. `engine/models.py` | this commit | done: `models.py` 186 lines and five model building blocks, plus `manual_sources.py` |
-| 9. `coordinator.py` | to be made | waits |
+| 8. `engine/models.py` | `6cd53be` | done: `models.py` 186 lines and five model building blocks, plus `manual_sources.py` |
+| 9. `coordinator.py` | this commit | done: `coordinator.py` 611 lines and six parts |
 | 10. `problems.py`, `texts.py`, `__init__.py` | to be made | waits |
 | Release 8.0.0 | to be made | waits |
 
@@ -298,6 +311,19 @@ after it follows before the push. The first full round stopped on `ModeFamily`,
 which had to remain available through `models.py`; after that one test of the
 problem codes failed because it read only `validation.py` while the notice now
 lives in `manual_sources.py`. Both were fixed.
+
+Step 9 is measured. `coordinator.py` went from 2069 to 611 lines; the protocol
+lives in `coordinator_surface.py` (116), the lifetime in
+`coordinator_lifecycle.py` (238), tracking in `coordinator_tracking.py` (434),
+the round in `coordinator_round.py` (231), reporting in
+`coordinator_reporting.py` (470) and the events in `coordinator_events.py`
+(331). The full suite gave 4015 passed in 28m12s (log
+`%TEMP%/800/step9-full4.log`), coverage is 100% lines and branches
+(6372/2092), the gate reports 75 named exclusions and the map is updated. The
+engine probe (42) and v1 probe (64) are byte-identical; the E probe proved
+time-dependent (the clock in E8 moved between two parallel runs) and is laid
+side by side again before the push. The mutation list was 66 of 66 before this
+step; the round after it follows before the push.
 
 Per move commit the following is recorded here:
 

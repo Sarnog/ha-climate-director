@@ -62,10 +62,8 @@ from types import SimpleNamespace
 from harness_live import settings, source, start_house, stop_house, zone
 
 from custom_components.climate_director import coordinator as coordinator_module
-from custom_components.climate_director.coordinator import (
-    ClimateDirectorCoordinator,
-    CoordinatorSurface,
-)
+from custom_components.climate_director.coordinator import ClimateDirectorCoordinator
+from custom_components.climate_director.coordinator_surface import CoordinatorSurface
 
 PACKAGE = Path(coordinator_module.__file__).parent
 TESTS = Path(__file__).parent

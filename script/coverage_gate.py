@@ -154,7 +154,25 @@ EXCLUSION_HINT = (
 #: measurement without standing here drops it, and so does a name that hides
 #: nothing anymore.
 NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {
-    "coordinator.py": (
+    "coordinator_events.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import ClimateDirectorCoordinator",
+    ),
+    "coordinator_lifecycle.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import ClimateDirectorCoordinator",
+    ),
+    "coordinator_reporting.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import ClimateDirectorCoordinator",
+    ),
+    "coordinator_round.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import ClimateDirectorCoordinator",
+    ),
+    "coordinator_surface.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import ClimateDirectorEntry",
         "def entry(self) -> ClimateDirectorEntry: ...",
         "def async_request_evaluation(self) -> None: ...",
         "def _async_save_state(self) -> None: ...",
@@ -178,6 +196,10 @@ NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {
         "def everyone_asleep(self, now: datetime, residents: dict[str, ResidentState]) "
         "-> bool: ...",
         "def house_is_empty(self, residents: dict[str, ResidentState]) -> bool: ...",
+    ),
+    "coordinator_tracking.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import ClimateDirectorCoordinator",
     ),
     "flow_circuits.py": (
         "if TYPE_CHECKING:",
@@ -217,42 +239,42 @@ NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {
     ),
     "hand.py": (
         "if TYPE_CHECKING:",
-        "from .coordinator import CoordinatorSurface",
+        "from .coordinator_surface import CoordinatorSurface",
         "_CoordinatorBase = CoordinatorSurface",
     ),
     "hand_start.py": (
         "if TYPE_CHECKING:",
-        "from .coordinator import CoordinatorSurface",
+        "from .coordinator_surface import CoordinatorSurface",
         "_CoordinatorBase = CoordinatorSurface",
     ),
     "overrides.py": (
         "if TYPE_CHECKING:",
-        "from .coordinator import CoordinatorSurface",
+        "from .coordinator_surface import CoordinatorSurface",
         "_CoordinatorBase = CoordinatorSurface",
     ),
     "preconditions.py": (
         "if TYPE_CHECKING:",
-        "from .coordinator import CoordinatorSurface",
+        "from .coordinator_surface import CoordinatorSurface",
         "_CoordinatorBase = CoordinatorSurface",
     ),
     "resident_reader.py": (
         "if TYPE_CHECKING:",
-        "from .coordinator import CoordinatorSurface",
+        "from .coordinator_surface import CoordinatorSurface",
         "_CoordinatorBase = CoordinatorSurface",
     ),
     "room_presence.py": (
         "if TYPE_CHECKING:",
-        "from .coordinator import CoordinatorSurface",
+        "from .coordinator_surface import CoordinatorSurface",
         "_CoordinatorBase = CoordinatorSurface",
     ),
     "state_store.py": (
         "if TYPE_CHECKING:",
-        "from .coordinator import CoordinatorSurface",
+        "from .coordinator_surface import CoordinatorSurface",
         "_CoordinatorBase = CoordinatorSurface",
     ),
     "world_builder.py": (
         "if TYPE_CHECKING:",
-        "from .coordinator import CoordinatorSurface",
+        "from .coordinator_surface import CoordinatorSurface",
         "_CoordinatorBase = CoordinatorSurface",
     ),
 }

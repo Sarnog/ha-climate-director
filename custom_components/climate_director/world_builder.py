@@ -31,7 +31,7 @@ from .readability import unreadable, unreadable_inputs
 from .units import to_celsius, unit_of_coordinator
 
 if TYPE_CHECKING:
-    from .coordinator import CoordinatorSurface
+    from .coordinator_surface import CoordinatorSurface
 
     # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
     # van hém. Voor mypy is dit de gastheer, zodat `self.config` en de rest
