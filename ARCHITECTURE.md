@@ -1494,7 +1494,7 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `engine/installation_storage.py` | algemene installatievelden | poorten, gastenvenster, seizoenen, neerslag, ligging en het slaapvenster |
 | `engine/equipment_storage.py` | apparaten en gebieden | bron, modus, buitengrens, circuit, generator, opening en zone lezen en schrijven |
 | `engine/resident_storage.py` | de bewoner in de opslag | de bewoner plus zijn drie ochtendinstellingen |
-| `engine/storage_values.py` | opgeslagen waarden veilig lezen | de naam van `storage_helpers.py`; alle lezers krijgen een publieke naam (`stored_dict`, `stored_weekdays`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `enum_or`) |
+| `engine/storage_values.py` | opgeslagen waarden veilig lezen | de naam van `storage_helpers.py`; alle lezers krijgen een publieke naam (`as_dict`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
 | `coordinator_surface.py` | het oppervlak van de koppeling | `CoordinatorSurface`; alle mixins lezen hier hun gastheer |
 | `coordinator.py` | de coordinator zelf | `__init__`, de eigenschappen, `async_request_evaluation`, de klok en de levensduur; hij erft de publieke mixins |
 | `coordinator_lifecycle.py` | opstarten en stoppen | `async_start`, `_async_on_hass_started`, `tracked_entities`, `_calendar_says_holiday`, `async_shutdown` |
@@ -3322,7 +3322,7 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `engine/installation_storage.py` | general installation fields | gates, guest window, seasons, precipitation, layout and the sleep window |
 | `engine/equipment_storage.py` | appliances and areas | reading and writing source, mode, outdoor bound, circuit, generator, opening and zone |
 | `engine/resident_storage.py` | the resident in storage | the resident plus its three morning settings |
-| `engine/storage_values.py` | reading stored values safely | the new name of `storage_helpers.py`; every reader gets a public name (`stored_dict`, `stored_weekdays`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `enum_or`) |
+| `engine/storage_values.py` | reading stored values safely | the new name of `storage_helpers.py`; every reader gets a public name (`as_dict`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
 | `coordinator_surface.py` | the binding layer's surface | `CoordinatorSurface`; every mixin reads its host here |
 | `coordinator.py` | the coordinator itself | `__init__`, the properties, `async_request_evaluation`, the clock and the lifetime; it inherits the public mixins |
 | `coordinator_lifecycle.py` | starting and stopping | `async_start`, `_async_on_hass_started`, `tracked_entities`, `_calendar_says_holiday`, `async_shutdown` |

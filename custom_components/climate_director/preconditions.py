@@ -46,7 +46,7 @@ else:
 _LOGGER = logging.getLogger(f"{__package__}.coordinator")
 
 
-def _still_running(requests: Mapping[str, datetime], now: datetime) -> dict[str, datetime]:
+def still_running(requests: Mapping[str, datetime], now: datetime) -> dict[str, datetime]:
     """Return the pre-conditioning requests that have not run out at `now`.
 
     Een gewone functie in plaats van een methode: hij wordt zowel gelezen als
@@ -59,7 +59,7 @@ def _still_running(requests: Mapping[str, datetime], now: datetime) -> dict[str,
     return {zone_id: until for zone_id, until in requests.items() if now < until}
 
 
-class _PreconditionsMixin(_CoordinatorBase):
+class PreconditionsMixin(_CoordinatorBase):
     """De vooruit-verzoeken en hun timers.
 
     The pre-conditioning requests and their timers.
@@ -76,7 +76,7 @@ class _PreconditionsMixin(_CoordinatorBase):
         For anyone who only wants to know where things stand: the diagnostics.
         Those should alter nothing about the house whose fault they capture.
         """
-        return _still_running(self._precondition, dt_util.now())
+        return still_running(self._precondition, dt_util.now())
 
     @callback
     def async_precondition(

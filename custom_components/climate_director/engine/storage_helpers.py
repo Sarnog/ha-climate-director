@@ -20,7 +20,7 @@ from datetime import time, timedelta
 from typing import Any
 
 
-def _as_dict(value: object) -> dict[str, Any]:
+def as_dict(value: object) -> dict[str, Any]:
     """Geef `value` als woordenboek terug, of een leeg als het er geen is.
 
     De opslag is vergevingsgezind: een blok dat geen woordenboek is telt als
@@ -33,7 +33,7 @@ def _as_dict(value: object) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
-def _weekdays(raw: Any) -> frozenset[int] | None:
+def weekdays(raw: Any) -> frozenset[int] | None:
     """Return the days a window is limited to, or `None` for every day.
 
     Een dagnummer buiten 0-6 is onzin en vervalt. Hem terugvouwen op een
@@ -49,12 +49,12 @@ def _weekdays(raw: Any) -> frozenset[int] | None:
     if raw is None:
         return None
     return (
-        frozenset(_int(day, 0) for day in _sequence(raw) if _is_number(day) and 0 <= day <= 6)
+        frozenset(int_or(day, 0) for day in sequence(raw) if is_number(day) and 0 <= day <= 6)
         or None
     )
 
 
-def _sequence(raw: Any) -> list[Any]:
+def sequence(raw: Any) -> list[Any]:
     """Return the entries of a stored list, or nothing at all.
 
     Een opgeslagen lijst die geen lijst blijkt - een getal, een tekst, een dict -
@@ -72,17 +72,17 @@ def _sequence(raw: Any) -> list[Any]:
     return list(raw) if isinstance(raw, list | tuple) else []
 
 
-def _strings(raw: Any) -> list[str]:
+def strings(raw: Any) -> list[str]:
     if isinstance(raw, str) or not isinstance(raw, Iterable):
         return []
     return [item for item in raw if isinstance(item, str)]
 
 
-def _text(raw: Any) -> str:
+def text(raw: Any) -> str:
     return raw if isinstance(raw, str) else ""
 
 
-def _is_number(raw: Any) -> bool:
+def is_number(raw: Any) -> bool:
     """Return whether this value can stand in for a number here.
 
     Booleans zijn in Python getallen, maar `True` als temperatuur is een
@@ -101,32 +101,32 @@ def _is_number(raw: Any) -> bool:
     return math.isfinite(raw)
 
 
-def _float(raw: Any, default: float) -> float:
-    return float(raw) if _is_number(raw) else default
+def float_or(raw: Any, default: float) -> float:
+    return float(raw) if is_number(raw) else default
 
 
-def _optional_float(raw: Any) -> float | None:
-    return float(raw) if _is_number(raw) else None
+def optional_float(raw: Any) -> float | None:
+    return float(raw) if is_number(raw) else None
 
 
-def _int(raw: Any, default: int) -> int:
-    return int(raw) if _is_number(raw) else default
+def int_or(raw: Any, default: int) -> int:
+    return int(raw) if is_number(raw) else default
 
 
-def _optional_int(raw: Any) -> int | None:
-    return int(raw) if _is_number(raw) else None
+def optional_int(raw: Any) -> int | None:
+    return int(raw) if is_number(raw) else None
 
 
-def _bool(raw: Any, default: bool) -> bool:
+def bool_or(raw: Any, default: bool) -> bool:
     return raw if isinstance(raw, bool) else default
 
 
-def _seconds(raw: Any, default: float = 0.0) -> timedelta:
+def seconds_or(raw: Any, default: float = 0.0) -> timedelta:
     """Return a duration; stored as plain seconds so the entry stays JSON."""
-    return timedelta(seconds=_float(raw, default))
+    return timedelta(seconds=float_or(raw, default))
 
 
-def _time(raw: Any, default: time) -> time:
+def time_or(raw: Any, default: time) -> time:
     """Return a time from `HH:MM` or `HH:MM:SS`, falling back on `default`.
 
     A single-digit hour is padded first: the options flow always writes a padded
@@ -144,7 +144,7 @@ def _time(raw: Any, default: time) -> time:
         return default
 
 
-def _enum[T: str](enum_type: type[T], raw: Any, default: T) -> T:
+def choice[T: str](enum_type: type[T], raw: Any, default: T) -> T:
     """Return the enum member named by `raw`, or `default` when unrecognised."""
     if not isinstance(raw, str):
         return default

@@ -21,7 +21,7 @@ from datetime import time
 from typing import Any
 
 from .models import RiseBrake, SleepIn, WakeDeadline
-from .storage_helpers import _bool, _time, _weekdays
+from .storage_helpers import bool_or, time_or, weekdays
 
 
 def sleep_in_from(raw: dict[str, Any]) -> SleepIn | None:
@@ -30,9 +30,9 @@ def sleep_in_from(raw: dict[str, Any]) -> SleepIn | None:
     if not until:
         return None
     return SleepIn(
-        until=_time(until, time(0, 0)),
-        weekdays=_weekdays(raw.get("weekdays")),
-        holiday=_bool(raw.get("holiday"), False),
+        until=time_or(until, time(0, 0)),
+        weekdays=weekdays(raw.get("weekdays")),
+        holiday=bool_or(raw.get("holiday"), False),
     )
 
 
@@ -49,9 +49,9 @@ def wake_deadline_from(raw: dict[str, Any]) -> WakeDeadline | None:
     if not at:
         return None
     return WakeDeadline(
-        at=_time(at, time(0, 0)),
-        weekdays=_weekdays(raw.get("weekdays")),
-        holiday=_bool(raw.get("holiday"), False),
+        at=time_or(at, time(0, 0)),
+        weekdays=weekdays(raw.get("weekdays")),
+        holiday=bool_or(raw.get("holiday"), False),
     )
 
 
@@ -67,7 +67,7 @@ def rise_brake_from(raw: dict[str, Any]) -> RiseBrake | None:
     at = raw.get("at")
     if not at:
         return None
-    return RiseBrake(at=_time(at, time(0, 0)), weekdays=_weekdays(raw.get("weekdays")))
+    return RiseBrake(at=time_or(at, time(0, 0)), weekdays=weekdays(raw.get("weekdays")))
 
 
 def _days(weekdays: frozenset[int] | None) -> list[int] | None:

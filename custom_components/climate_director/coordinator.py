@@ -74,13 +74,13 @@ from .engine.gates import (
 )
 from .engine.models import SeasonSource
 from .engine.serialise import config_from_dict
-from .hand_start import _HandStartMixin
-from .overrides import _OverridesMixin
-from .preconditions import _PreconditionsMixin, _still_running
+from .hand_start import HandStartMixin
+from .overrides import OverridesMixin
+from .preconditions import PreconditionsMixin, still_running
 from .readability import unreadable
-from .resident_reader import _ResidentReaderMixin
-from .room_presence import _RoomPresenceMixin
-from .state_store import _StateStoreMixin
+from .resident_reader import ResidentReaderMixin
+from .room_presence import RoomPresenceMixin
+from .state_store import StateStoreMixin
 from .units import (
     display_temperature,
     from_celsius,
@@ -89,9 +89,9 @@ from .units import (
     unit_of_coordinator,
 )
 from .world_builder import (
-    _as_float,
-    _as_modes,
-    _WorldBuilderMixin,
+    WorldBuilderMixin,
+    as_float,
+    as_modes,
     reads_as_home,
     season_from_state,
     temperature_from_state,
@@ -137,18 +137,18 @@ class CoordinatorSurface(Protocol):
 
     The coordinator surface the mixins use.
 
-    De mixins (`_HandStartMixin`, `_StateStoreMixin`, `_PreconditionsMixin`,
-    `_OverridesMixin`, `_ResidentReaderMixin`, `_RoomPresenceMixin`,
-    `_WorldBuilderMixin`) liggen op de coördinator maar erven er niet van: de
+    De mixins (`HandStartMixin`, `StateStoreMixin`, `PreconditionsMixin`,
+    `OverridesMixin`, `ResidentReaderMixin`, `RoomPresenceMixin`,
+    `WorldBuilderMixin`) liggen op de coördinator maar erven er niet van: de
     coördinator erft van hén. Zonder deze declaratie ziet mypy hun `self` als de
     mixin zelf en klaagt hij op elk coordinator-attribuut. Elke mixin erft onder
     `TYPE_CHECKING` van dit protocol, zodat `self.config` en de rest kloppen;
     buiten de typecontrole bestaat het niet, en de coördinator erft het zo
     binnen - de waarden zelf staan in zijn `__init__`.
 
-    The mixins (`_HandStartMixin`, `_StateStoreMixin`, `_PreconditionsMixin`,
-    `_OverridesMixin`, `_ResidentReaderMixin`, `_RoomPresenceMixin`,
-    `_WorldBuilderMixin`) sit on the coordinator but do not inherit from it: the
+    The mixins (`HandStartMixin`, `StateStoreMixin`, `PreconditionsMixin`,
+    `OverridesMixin`, `ResidentReaderMixin`, `RoomPresenceMixin`,
+    `WorldBuilderMixin`) sit on the coordinator but do not inherit from it: the
     coordinator inherits from them. Without this declaration mypy sees their
     `self` as the mixin itself and complains about every coordinator attribute.
     Under `TYPE_CHECKING` each mixin inherits from this protocol, so `self.config`
@@ -228,13 +228,13 @@ class CoordinatorSurface(Protocol):
 
 
 class ClimateDirectorCoordinator(
-    _RoomPresenceMixin,
-    _HandStartMixin,
-    _StateStoreMixin,
-    _PreconditionsMixin,
-    _OverridesMixin,
-    _ResidentReaderMixin,
-    _WorldBuilderMixin,
+    RoomPresenceMixin,
+    HandStartMixin,
+    StateStoreMixin,
+    PreconditionsMixin,
+    OverridesMixin,
+    ResidentReaderMixin,
+    WorldBuilderMixin,
     DataUpdateCoordinator[Plan],
 ):
     """Reads the world, runs the engine, applies the outcome."""
@@ -1258,7 +1258,7 @@ class ClimateDirectorCoordinator(
         Pruned on reading rather than on a timer: an expired request is over
         whether or not anything got round to noticing.
         """
-        self._precondition = _still_running(self._precondition, dt_util.now())
+        self._precondition = still_running(self._precondition, dt_util.now())
         self._precondition_bypass &= set(self._precondition)
         return dict(self._precondition)
 
@@ -1421,7 +1421,7 @@ class ClimateDirectorCoordinator(
             # appliance can be HEAT_ONLY in room A and HEAT_COOL in room B; a
             # guard on the appliance then skipped room B's cool role. The set
             # below deduplicates anyway.
-            modes = _as_modes(state.attributes.get("hvac_modes"))
+            modes = as_modes(state.attributes.get("hvac_modes"))
             if modes is not None:
                 complaints.update(
                     preferred_mode(family)
@@ -1440,10 +1440,10 @@ class ClimateDirectorCoordinator(
                 if MODE_OFF not in modes:
                     complaints.add(MODE_OFF)
             minimum = to_celsius(
-                _as_float(state.attributes.get("min_temp")), unit_of_coordinator(self)
+                as_float(state.attributes.get("min_temp")), unit_of_coordinator(self)
             )
             maximum = to_celsius(
-                _as_float(state.attributes.get("max_temp")), unit_of_coordinator(self)
+                as_float(state.attributes.get("max_temp")), unit_of_coordinator(self)
             )
             unit = unit_of_coordinator(self)
             for family in (ModeFamily.HEAT, ModeFamily.COOL):

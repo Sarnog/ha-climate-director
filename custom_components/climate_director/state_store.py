@@ -72,7 +72,7 @@ def _stored_date(raw: object) -> date | None:
     return dt_util.parse_date(str(raw))
 
 
-class _StateStoreMixin(_CoordinatorBase):
+class StateStoreMixin(_CoordinatorBase):
     """Opslag, herstel en quarantaine van wat een mens met de hand heeft gezegd.
 
     Storage, restore and quarantine of what a person said by hand.

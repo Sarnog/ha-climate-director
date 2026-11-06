@@ -52,7 +52,7 @@ else:
     _CoordinatorBase = object
 
 
-class _HandStartMixin(_CoordinatorBase):
+class HandStartMixin(_CoordinatorBase):
     """Herkenning, opslag en verval van een handstart.
 
     Recognition, storage and expiry of a hand start.

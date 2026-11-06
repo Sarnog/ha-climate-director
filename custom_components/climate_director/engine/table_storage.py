@@ -36,16 +36,16 @@ from typing import Any, Union, get_args, get_origin, get_type_hints
 
 from .fields import FieldSpec
 from .storage_helpers import (
-    _bool,
-    _enum,
-    _float,
-    _int,
-    _optional_float,
-    _seconds,
-    _strings,
-    _text,
-    _time,
-    _weekdays,
+    bool_or,
+    choice,
+    float_or,
+    int_or,
+    optional_float,
+    seconds_or,
+    strings,
+    text,
+    time_or,
+    weekdays,
 )
 
 
@@ -72,33 +72,33 @@ def parse_leaf(field: FieldSpec, stored: Any, annotation: Any = None) -> Any:
     to sit in the table.
     """
     if field.kind == "bool":
-        return _bool(stored, field.default)
+        return bool_or(stored, field.default)
     if field.kind in ("text", "entity"):
-        return tuple(_strings(stored)) if field.multiple else _text(stored)
+        return tuple(strings(stored)) if field.multiple else text(stored)
     if field.kind == "zones":
         # Een lijst zone-id's. Leeg is hier een echte waarde: "alleen de eigen
         # zone". / A list of zone ids. Empty is a real value here: "this zone
         # only".
-        return tuple(_strings(stored))
+        return tuple(strings(stored))
     if field.kind == "choice":
         enum_type = _unwrap(annotation)
-        return _enum(enum_type, stored, enum_type(field.default))
+        return choice(enum_type, stored, enum_type(field.default))
     if field.kind == "time":
-        return _time(stored, time(0, 0))
+        return time_or(stored, time(0, 0))
     if field.kind == "weekdays":
-        return _weekdays(stored)
+        return weekdays(stored)
     if field.kind == "number":
         if field.unit in ("minutes", "minutes_or_off"):
-            return _seconds(stored, field.default)
+            return seconds_or(stored, field.default)
         if field.unit == "temperature":
-            return _optional_float(stored)
+            return optional_float(stored)
         if field.unit == "rank":
-            return _int(stored, field.default)
+            return int_or(stored, field.default)
         if field.unit == "seconds":
             # Leeg betekent "geen eigen rem", en dat is iets anders dan nul.
             # Empty means "no brake of its own", which is not the same as zero.
-            return None if stored in (None, "") else _seconds(stored)
-        return _float(stored, field.default)
+            return None if stored in (None, "") else seconds_or(stored)
+        return float_or(stored, field.default)
     raise AssertionError(f"onbekend veldtype {field.kind!r} voor {field.key}")
 
 

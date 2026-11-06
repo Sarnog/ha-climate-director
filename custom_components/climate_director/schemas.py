@@ -27,16 +27,16 @@ from .engine.models import (
     ZoneGate,
 )
 from .schema_fields import (
-    _CLIMATE,
-    _CLIMATE_MULTI,
-    _RANK,
-    _SECONDS,
-    _TEXT,
-    _TIME,
-    _band,
-    _choices,
-    _table_schema,
-    _temperature,
+    CLIMATE,
+    CLIMATE_MULTI,
+    RANK,
+    SECONDS,
+    TEXT,
+    TIME,
+    band,
+    choices,
+    table_schema,
+    temperature,
 )
 from .units import (
     rounded_delta_from_celsius,
@@ -46,11 +46,11 @@ from .units import (
 
 CONF_NAME = "name"
 
-_ADD = "add_new"
-_BACK = "back_to_menu"
-_EXIT = "when_done"
-_EXIT_KEEP = "keep"
-_EXIT_DROP = "discard"
+ADD = "add_new"
+BACK = "back_to_menu"
+EXIT = "when_done"
+EXIT_KEEP = "keep"
+EXIT_DROP = "discard"
 
 _ADD_FALLBACK = {
     "zone": "+ Add zone",
@@ -87,7 +87,7 @@ def _back_option() -> selector.SelectOptionDict:
     this one needs no key: the fallback reads the same in every list, and the
     translation hangs off the `back_to_menu` value.
     """
-    return selector.SelectOptionDict(value=_BACK, label="< Back to the main menu")
+    return selector.SelectOptionDict(value=BACK, label="< Back to the main menu")
 
 
 def _exit_row() -> selector.SelectSelector:
@@ -106,8 +106,8 @@ def _exit_row() -> selector.SelectSelector:
     return selector.SelectSelector(
         selector.SelectSelectorConfig(
             options=[
-                selector.SelectOptionDict(value=_EXIT_KEEP, label="Keep these changes and go back"),
-                selector.SelectOptionDict(value=_EXIT_DROP, label="< Discard and go back"),
+                selector.SelectOptionDict(value=EXIT_KEEP, label="Keep these changes and go back"),
+                selector.SelectOptionDict(value=EXIT_DROP, label="< Discard and go back"),
             ],
             mode=selector.SelectSelectorMode.LIST,
             translation_key="when_done",
@@ -155,7 +155,7 @@ def _add_option(key: str) -> selector.SelectOptionDict:
     up. A fallback should never itself be the reason nothing shows - which is
     exactly what went wrong when a key was missing here.
     """
-    return selector.SelectOptionDict(value=_ADD, label=_ADD_FALLBACK.get(key, "+ Add"))
+    return selector.SelectOptionDict(value=ADD, label=_ADD_FALLBACK.get(key, "+ Add"))
 
 
 def _window_label(window: dict[str, Any], selector_texts: dict[str, str]) -> str:
@@ -178,7 +178,7 @@ def _window_label(window: dict[str, Any], selector_texts: dict[str, str]) -> str
     return f"{start} - {end}, {', '.join(names[day] for day in sorted(weekdays))}"
 
 
-def _managed_entities(installation: dict[str, Any]) -> list[str]:
+def managed_entities(installation: dict[str, Any]) -> list[str]:
     """Return every climate entity this installation steers, sources first."""
     found: list[str] = []
     for zone in installation.get("zones") or []:
@@ -195,7 +195,7 @@ def user() -> vol.Schema:
     """Return the wizard schema: name and shadow mode."""
     return vol.Schema(
         {
-            vol.Required(CONF_NAME, default="Climate Director"): _TEXT,
+            vol.Required(CONF_NAME, default="Climate Director"): TEXT,
             vol.Required(CONF_SHADOW_MODE, default=DEFAULT_SHADOW_MODE): bool,
         }
     )
@@ -203,7 +203,7 @@ def user() -> vol.Schema:
 
 def save() -> vol.Schema:
     """Return the save-screen schema: keep or discard and go back."""
-    return vol.Schema({vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row()})
+    return vol.Schema({vol.Required(EXIT, default=EXIT_KEEP): _exit_row()})
 
 
 def settings(flow: Any) -> vol.Schema:
@@ -217,11 +217,11 @@ def settings(flow: Any) -> vol.Schema:
     now only the translation into `vol.Schema`, plus the exit row every screen
     carries.
     """
-    return _table_schema(
+    return table_schema(
         SETTINGS_FIELDS,
         flow,
         values=flow._installation,
-        footer={vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row()},
+        footer={vol.Required(EXIT, default=EXIT_KEEP): _exit_row()},
     )
 
 
@@ -236,7 +236,7 @@ def exclusives(flow: Any) -> vol.Schema:
     options.append(_back_option())
     return vol.Schema(
         {
-            vol.Required("group", default=_ADD): selector.SelectSelector(
+            vol.Required("group", default=ADD): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=options,
                     mode=selector.SelectSelectorMode.LIST,
@@ -261,7 +261,7 @@ def exclusive(flow: Any, current: list[str]) -> vol.Schema:
                 )
             ),
             vol.Required("delete", default=False): bool,
-            vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
+            vol.Required(EXIT, default=EXIT_KEEP): _exit_row(),
         }
     )
 
@@ -277,7 +277,7 @@ def quiets(flow: Any, selector_texts: dict[str, str]) -> vol.Schema:
     options.append(_back_option())
     return vol.Schema(
         {
-            vol.Required("quiet", default=_BACK if windows else _ADD): (
+            vol.Required("quiet", default=BACK if windows else ADD): (
                 selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=options,
@@ -296,8 +296,8 @@ def quiet(current: dict[str, Any]) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required("holiday", default=current.get("holiday", False)): bool,
-            vol.Required("start", default=current.get("start", "21:00:00")): _TIME,
-            vol.Required("end", default=current.get("end", "09:00:00")): _TIME,
+            vol.Required("start", default=current.get("start", "21:00:00")): TIME,
+            vol.Required("end", default=current.get("end", "09:00:00")): TIME,
             vol.Optional(
                 "weekdays",
                 description={
@@ -317,7 +317,7 @@ def quiet(current: dict[str, Any]) -> vol.Schema:
                 )
             ),
             vol.Required("delete", default=False): bool,
-            vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
+            vol.Required(EXIT, default=EXIT_KEEP): _exit_row(),
         }
     )
 
@@ -333,7 +333,7 @@ def zones(flow: Any) -> vol.Schema:
     options.append(_back_option())
     return vol.Schema(
         {
-            vol.Required("zone", default=_ADD): selector.SelectSelector(
+            vol.Required("zone", default=ADD): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=options,
                     mode=selector.SelectSelectorMode.LIST,
@@ -351,13 +351,13 @@ def zone(flow: Any, current: dict[str, Any], priority: int) -> vol.Schema:
     unit = temperature_unit_of(flow.hass)
     return vol.Schema(
         {
-            vol.Required(CONF_NAME, default=current.get("name", "")): _TEXT,
+            vol.Required(CONF_NAME, default=current.get("name", "")): TEXT,
             vol.Optional(
                 "indoor_sensor",
                 description={"suggested_value": current.get("indoor_sensor") or None},
             ): selector.EntitySelector(selector.EntitySelectorConfig(domain=["sensor", "climate"])),
-            vol.Required("priority", default=priority): _RANK,
-            vol.Required("gate", default=current.get("gate", ZoneGate.HOUSEHOLD.value)): _choices(
+            vol.Required("priority", default=priority): RANK,
+            vol.Required("gate", default=current.get("gate", ZoneGate.HOUSEHOLD.value)): choices(
                 [item.value for item in ZoneGate], "zone_gate"
             ),
             vol.Optional(
@@ -366,11 +366,11 @@ def zone(flow: Any, current: dict[str, Any], priority: int) -> vol.Schema:
             ): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain=["binary_sensor", "sensor", "input_boolean"])
             ),
-            vol.Required("presence_state", default=current.get("presence_state", "on")): _TEXT,
+            vol.Required("presence_state", default=current.get("presence_state", "on")): TEXT,
             vol.Optional(
                 "presence_timeout",
                 description={"suggested_value": current.get("presence_timeout") or None},
-            ): _SECONDS,
+            ): SECONDS,
             vol.Required(
                 "ignore_precipitation",
                 default=current.get("ignore_precipitation", False),
@@ -378,15 +378,15 @@ def zone(flow: Any, current: dict[str, Any], priority: int) -> vol.Schema:
             vol.Required("enable_heat", default=bool(heat)): bool,
             vol.Required(
                 "heat_target", default=rounded_from_celsius(heat.get("target", 21.0), unit)
-            ): _temperature(unit),
+            ): temperature(unit),
             vol.Required(
                 "heat_start_at",
                 default=rounded_from_celsius(heat.get("start_at", 20.0), unit),
-            ): _temperature(unit),
+            ): temperature(unit),
             vol.Required(
                 "heat_hysteresis",
                 default=rounded_delta_from_celsius(heat.get("hysteresis", 1.0), unit),
-            ): _band(unit),
+            ): band(unit),
             vol.Optional(
                 "heat_outdoor_max",
                 description={
@@ -394,19 +394,19 @@ def zone(flow: Any, current: dict[str, Any], priority: int) -> vol.Schema:
                         (heat.get("outdoor") or {}).get("maximum"), unit
                     )
                 },
-            ): _temperature(unit),
+            ): temperature(unit),
             vol.Required("enable_cool", default=bool(cool)): bool,
             vol.Required(
                 "cool_target", default=rounded_from_celsius(cool.get("target", 23.0), unit)
-            ): _temperature(unit),
+            ): temperature(unit),
             vol.Required(
                 "cool_start_at",
                 default=rounded_from_celsius(cool.get("start_at", 24.0), unit),
-            ): _temperature(unit),
+            ): temperature(unit),
             vol.Required(
                 "cool_hysteresis",
                 default=rounded_delta_from_celsius(cool.get("hysteresis", 1.0), unit),
-            ): _band(unit),
+            ): band(unit),
             vol.Optional(
                 "cool_outdoor_min",
                 description={
@@ -414,13 +414,13 @@ def zone(flow: Any, current: dict[str, Any], priority: int) -> vol.Schema:
                         (cool.get("outdoor") or {}).get("minimum"), unit
                     )
                 },
-            ): _temperature(unit),
+            ): temperature(unit),
             vol.Required(
                 "cool_summer_only",
                 default=Season.SUMMER.value in (cool.get("seasons") or []),
             ): bool,
             vol.Required("delete", default=False): bool,
-            vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
+            vol.Required(EXIT, default=EXIT_KEEP): _exit_row(),
         }
     )
 
@@ -437,7 +437,7 @@ def sources(flow: Any) -> vol.Schema:
     options.append(_back_option())
     return vol.Schema(
         {
-            vol.Required("source", default=_ADD): selector.SelectSelector(
+            vol.Required("source", default=ADD): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=options,
                     mode=selector.SelectSelectorMode.LIST,
@@ -461,13 +461,13 @@ def source(flow: Any, current: dict[str, Any]) -> vol.Schema:
     of a list-item screen rather than to the fields, so they come along as a
     footer.
     """
-    return _table_schema(
+    return table_schema(
         SOURCE_FIELDS,
         flow,
         values=current,
         footer={
             vol.Required("delete", default=False): bool,
-            vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
+            vol.Required(EXIT, default=EXIT_KEEP): _exit_row(),
         },
     )
 
@@ -485,7 +485,7 @@ def circuits(flow: Any) -> vol.Schema:
     options.append(_back_option())
     return vol.Schema(
         {
-            vol.Required("circuit", default=_ADD): selector.SelectSelector(
+            vol.Required("circuit", default=ADD): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=options,
                     mode=selector.SelectSelectorMode.LIST,
@@ -500,10 +500,10 @@ def circuit(current: dict[str, Any]) -> vol.Schema:
     """Return the single circuit schema."""
     return vol.Schema(
         {
-            vol.Required(CONF_NAME, default=current.get("name", "")): _TEXT,
+            vol.Required(CONF_NAME, default=current.get("name", "")): TEXT,
             vol.Optional(
                 "units", description={"suggested_value": current.get("units") or []}
-            ): _CLIMATE_MULTI,
+            ): CLIMATE_MULTI,
             vol.Required(
                 "simultaneous_heat_cool",
                 default=current.get("simultaneous_heat_cool", False),
@@ -511,25 +511,25 @@ def circuit(current: dict[str, Any]) -> vol.Schema:
             vol.Required(
                 "conflict_policy",
                 default=current.get("conflict_policy", ConflictPolicy.PRIORITY.value),
-            ): _choices([item.value for item in ConflictPolicy], "conflict_policy"),
+            ): choices([item.value for item in ConflictPolicy], "conflict_policy"),
             vol.Required(
                 "allow_fan_only_during_conflict",
                 default=current.get("allow_fan_only_during_conflict", False),
             ): bool,
             vol.Required(
                 "family_switch_delay", default=current.get("family_switch_delay", 0)
-            ): _SECONDS,
+            ): SECONDS,
             vol.Required(
                 "min_family_switch_interval",
                 default=current.get("min_family_switch_interval", 0),
-            ): _SECONDS,
-            vol.Required("min_cycle_time", default=current.get("min_cycle_time", 180)): _SECONDS,
+            ): SECONDS,
+            vol.Required("min_cycle_time", default=current.get("min_cycle_time", 180)): SECONDS,
             vol.Optional(
                 "max_concurrent_units",
                 description={"suggested_value": current.get("max_concurrent_units")},
-            ): _RANK,
+            ): RANK,
             vol.Required("delete", default=False): bool,
-            vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
+            vol.Required(EXIT, default=EXIT_KEEP): _exit_row(),
         }
     )
 
@@ -548,7 +548,7 @@ def circuit_priorities(flow: Any) -> vol.Schema:
     options.append(_back_option())
     return vol.Schema(
         {
-            vol.Required("zone", default=_BACK): selector.SelectSelector(
+            vol.Required("zone", default=BACK): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=options,
                     mode=selector.SelectSelectorMode.LIST,
@@ -563,8 +563,8 @@ def circuit_priority(zone: dict[str, Any]) -> vol.Schema:
     """Return the single circuit-priority schema."""
     return vol.Schema(
         {
-            vol.Required("priority", default=zone.get("priority", 0)): _RANK,
-            vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
+            vol.Required("priority", default=zone.get("priority", 0)): RANK,
+            vol.Required(EXIT, default=EXIT_KEEP): _exit_row(),
         }
     )
 
@@ -580,7 +580,7 @@ def generators(flow: Any) -> vol.Schema:
     options.append(_back_option())
     return vol.Schema(
         {
-            vol.Required("generator", default=_ADD): selector.SelectSelector(
+            vol.Required("generator", default=ADD): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=options,
                     mode=selector.SelectSelectorMode.LIST,
@@ -600,11 +600,11 @@ def generator(flow: Any, current: dict[str, Any]) -> vol.Schema:
     ]
     return vol.Schema(
         {
-            vol.Required(CONF_NAME, default=current.get("name", "")): _TEXT,
+            vol.Required(CONF_NAME, default=current.get("name", "")): TEXT,
             vol.Optional(
                 "entity_id",
                 description={"suggested_value": current.get("entity_id") or None},
-            ): _CLIMATE,
+            ): CLIMATE,
             vol.Optional(
                 "zone_ids",
                 description={"suggested_value": current.get("zone_ids") or []},
@@ -616,9 +616,9 @@ def generator(flow: Any, current: dict[str, Any]) -> vol.Schema:
                 description={
                     "suggested_value": rounded_from_celsius(current.get("setpoint"), unit)
                 },
-            ): _temperature(unit),
+            ): temperature(unit),
             vol.Required("delete", default=False): bool,
-            vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
+            vol.Required(EXIT, default=EXIT_KEEP): _exit_row(),
         }
     )
 
@@ -636,7 +636,7 @@ def residents(flow: Any) -> vol.Schema:
     options.append(_back_option())
     return vol.Schema(
         {
-            vol.Required("resident", default=_ADD): selector.SelectSelector(
+            vol.Required("resident", default=ADD): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=options,
                     mode=selector.SelectSelectorMode.LIST,
@@ -681,7 +681,7 @@ def resident(current: dict[str, Any]) -> vol.Schema:
     wake = current.get("wake_deadline") or {}
     return vol.Schema(
         {
-            vol.Required(CONF_NAME, default=current.get("name", "")): _TEXT,
+            vol.Required(CONF_NAME, default=current.get("name", "")): TEXT,
             vol.Optional(
                 "presence_entity",
                 description={"suggested_value": current.get("presence_entity") or None},
@@ -696,15 +696,15 @@ def resident(current: dict[str, Any]) -> vol.Schema:
             ): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain=["binary_sensor", "sensor", "input_boolean"])
             ),
-            vol.Required("sleep_state", default=current.get("sleep_state", "on")): _TEXT,
+            vol.Required("sleep_state", default=current.get("sleep_state", "on")): TEXT,
             vol.Optional(
                 "sleep_from",
                 description={"suggested_value": (current.get("sleep_window") or {}).get("start")},
-            ): _TIME,
+            ): TIME,
             vol.Optional(
                 "sleep_until",
                 description={"suggested_value": (current.get("sleep_window") or {}).get("end")},
-            ): _TIME,
+            ): TIME,
             vol.Optional(
                 "sleep_days",
                 description={"suggested_value": _stored_days(current.get("sleep_window"))},
@@ -712,7 +712,7 @@ def resident(current: dict[str, Any]) -> vol.Schema:
             vol.Optional(
                 "sleep_in_until",
                 description={"suggested_value": (current.get("sleep_in") or {}).get("until")},
-            ): _TIME,
+            ): TIME,
             vol.Required(
                 "sleep_in_holiday",
                 default=(current.get("sleep_in") or {}).get("holiday", False),
@@ -721,7 +721,7 @@ def resident(current: dict[str, Any]) -> vol.Schema:
                 "sleep_in_days",
                 description={"suggested_value": _stored_days(current.get("sleep_in"))},
             ): _weekday_picker(),
-            vol.Optional("wake_by", description={"suggested_value": wake.get("at")}): _TIME,
+            vol.Optional("wake_by", description={"suggested_value": wake.get("at")}): TIME,
             vol.Required("wake_holiday", default=wake.get("holiday", False)): bool,
             vol.Optional(
                 "wake_days", description={"suggested_value": _stored_days(wake)}
@@ -729,13 +729,13 @@ def resident(current: dict[str, Any]) -> vol.Schema:
             vol.Optional(
                 "rise_from",
                 description={"suggested_value": (current.get("rise_brake") or {}).get("at")},
-            ): _TIME,
+            ): TIME,
             vol.Optional(
                 "rise_days",
                 description={"suggested_value": _stored_days(current.get("rise_brake"))},
             ): _weekday_picker(),
             vol.Required("delete", default=False): bool,
-            vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
+            vol.Required(EXIT, default=EXIT_KEEP): _exit_row(),
         }
     )
 
@@ -752,7 +752,7 @@ def windows(flow: Any, selector_texts: dict[str, str]) -> vol.Schema:
     options.append(_back_option())
     return vol.Schema(
         {
-            vol.Required("window", default=_BACK if windows else _ADD): (
+            vol.Required("window", default=BACK if windows else ADD): (
                 selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=options,
@@ -771,8 +771,8 @@ def window(current: dict[str, Any]) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required("holiday", default=current.get("holiday", False)): bool,
-            vol.Required("start", default=current.get("start", "08:00:00")): _TIME,
-            vol.Required("end", default=current.get("end", "23:00:00")): _TIME,
+            vol.Required("start", default=current.get("start", "08:00:00")): TIME,
+            vol.Required("end", default=current.get("end", "23:00:00")): TIME,
             vol.Optional(
                 "weekdays",
                 description={
@@ -792,7 +792,7 @@ def window(current: dict[str, Any]) -> vol.Schema:
                 )
             ),
             vol.Required("delete", default=False): bool,
-            vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
+            vol.Required(EXIT, default=EXIT_KEEP): _exit_row(),
         }
     )
 
@@ -809,7 +809,7 @@ def openings(flow: Any) -> vol.Schema:
     ]
     options.append(_add_option("opening"))
     options.append(_back_option())
-    managed = _managed_entities(flow._installation)
+    managed = managed_entities(flow._installation)
     # De huisbrede lijst wordt hier alleen voor het scherm gefilterd en niet
     # weggeschreven: het veld zou anders een waarde tonen die zijn eigen
     # schema (`include_entities`) afkeurt, en dan weigert élke inzending,
@@ -830,7 +830,7 @@ def openings(flow: Any) -> vol.Schema:
     ]
     return vol.Schema(
         {
-            vol.Required("opening", default=_ADD): selector.SelectSelector(
+            vol.Required("opening", default=ADD): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=options,
                     mode=selector.SelectSelectorMode.LIST,
@@ -867,7 +867,7 @@ def opening(flow: Any, current: dict[str, Any]) -> vol.Schema:
     ]
     return vol.Schema(
         {
-            vol.Required(CONF_NAME, default=current.get("name", "")): _TEXT,
+            vol.Required(CONF_NAME, default=current.get("name", "")): TEXT,
             vol.Optional(
                 "entity_id",
                 description={"suggested_value": current.get("entity_id") or None},
@@ -877,7 +877,7 @@ def opening(flow: Any, current: dict[str, Any]) -> vol.Schema:
             vol.Optional(
                 "open_state",
                 description={"suggested_value": current.get("open_state") or "on"},
-            ): _TEXT,
+            ): TEXT,
             vol.Optional(
                 "zone_ids",
                 description={"suggested_value": current.get("zone_ids") or []},
@@ -886,8 +886,8 @@ def opening(flow: Any, current: dict[str, Any]) -> vol.Schema:
             ),
             vol.Optional(
                 "delay", description={"suggested_value": current.get("delay") or None}
-            ): _SECONDS,
+            ): SECONDS,
             vol.Required("delete", default=False): bool,
-            vol.Required(_EXIT, default=_EXIT_KEEP): _exit_row(),
+            vol.Required(EXIT, default=EXIT_KEEP): _exit_row(),
         }
     )

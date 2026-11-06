@@ -249,7 +249,7 @@ RETRACTED: tuple[Claim, ...] = (
             "gast binnen het gastenvenster net zo"
         ),
         anchor=(
-            "anker 13 in `ARCHITECTURE.md` en de drie uitzonderingen in `_quiet_hours` "
+            "anker 13 in `ARCHITECTURE.md` en de drie uitzonderingen in `quiet_hours` "
             "(`engine/gates.py`)"
         ),
         needles={

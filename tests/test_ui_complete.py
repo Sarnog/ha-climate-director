@@ -43,7 +43,7 @@ COMPONENT = pathlib.Path(__file__).resolve().parents[1] / "custom_components" / 
 
 #: Velden waarvan de naam uit een constante komt in plaats van uit een letterlijke.
 #: Fields whose name comes from a constant rather than from a literal.
-CONSTANTS = {"CONF_NAME": "name", "CONF_SHADOW_MODE": "shadow_mode", "_EXIT": "when_done"}
+CONSTANTS = {"CONF_NAME": "name", "CONF_SHADOW_MODE": "shadow_mode", "EXIT": "when_done"}
 
 
 def translation_files() -> list[pathlib.Path]:
@@ -233,10 +233,10 @@ class TestEveryDropdown:
         + "\n"
         + (COMPONENT / "schemas.py").read_text(encoding="utf-8")
     )
-    #: Twee vormen: rechtstreeks op de selector, en via `_choices`.
-    #: Two shapes: straight on the selector, and by way of `_choices`.
+    #: Twee vormen: rechtstreeks op de selector, en via `choices`.
+    #: Two shapes: straight on the selector, and by way of `choices`.
     keys = set(re.findall(r'translation_key="(\w+)"', _flow)) | set(
-        re.findall(r'_choices\([^"]*"(\w+)"\)', _flow)
+        re.findall(r'choices\([^"]*"(\w+)"\)', _flow)
     )
 
     def test_the_flow_uses_translation_keys(self) -> None:
@@ -369,7 +369,7 @@ class TestEveryScreenCanBeLeft:
     def _steps(self) -> dict[str, str]:
         """Return the source of each step's own method plus its schema function.
 
-        De terugweg (`_back_option()` / `_EXIT`) staat sinds S5 in de
+        De terugweg (`_back_option()` / `EXIT`) staat sinds S5 in de
         schemafuncties in `schemas.py`, niet meer in de stapmethode zelf. Deze
         lezer lost `data_schema=schemas.<naam>(...)` daarom op naar de functie
         in dat bestand en plakt de bron erbij, zodat de bewaking meeverhuist in
@@ -380,7 +380,7 @@ class TestEveryScreenCanBeLeft:
         samengevoegde bron, en dan kon een terugweg in het ene schema het
         ontbreken ervan in het andere maskeren.
 
-        Since S5 the way back (`_back_option()` / `_EXIT`) lives in the schema
+        Since S5 the way back (`_back_option()` / `EXIT`) lives in the schema
         functions in `schemas.py`, no longer in the step method itself. This
         reader therefore resolves `data_schema=schemas.<name>(...)` to the
         function in that file and appends its source, so the guard moves along
@@ -439,7 +439,7 @@ class TestEveryScreenCanBeLeft:
         trapped = [
             step
             for step, body in self._steps().items()
-            if step not in self.exempt and "_back_option" not in body and "_EXIT" not in body
+            if step not in self.exempt and "_back_option" not in body and "EXIT" not in body
         ]
         assert not trapped, trapped
 
@@ -568,7 +568,7 @@ class TestTheSaveScreenWarns:
         rest = schema_source[match.end() :]
         end = re.search(r"^def ", rest, re.M)
         body += schema_source[match.start() : match.end() + (end.start() if end else len(rest))]
-        assert "_EXIT_DROP" in body, "geen weg terug vanaf het opslaanscherm"
+        assert "EXIT_DROP" in body, "geen weg terug vanaf het opslaanscherm"
         assert "_exit_row()" in body, "geen keuze tussen opslaan en teruggaan"
 
     @pytest.mark.parametrize("path", FILES, ids=IDS)

@@ -31,12 +31,12 @@ from .engine.models import Season, SeasonSource, ZoneGate
 from .engine.serialise import config_from_dict, opening_ids
 from .schema_fields import write_table
 from .schemas import (
-    _ADD,
-    _BACK,
-    _EXIT,
-    _EXIT_DROP,
+    ADD,
+    BACK,
     CONF_NAME,
-    _managed_entities,
+    EXIT,
+    EXIT_DROP,
+    managed_entities,
 )
 from .units import delta_to_celsius, temperature_unit_of, to_celsius
 
@@ -210,7 +210,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         able to report it via `validate()` rather than let it drop without a
         word.
         """
-        steered = _managed_entities(self._installation)
+        steered = managed_entities(self._installation)
         if self._installation.get("house_wide_openings"):
             self._installation["house_wide_openings"] = [
                 entity_id
@@ -230,7 +230,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 },
             )
 
-        if user_input is not None and user_input.get(_EXIT) == _EXIT_DROP:
+        if user_input is not None and user_input.get(EXIT) == EXIT_DROP:
             return await self.async_step_init()
 
         options = dict(self.config_entry.options)
@@ -246,7 +246,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Edit the outdoor sensor, the season source, the gates and shadow mode."""
         if user_input is not None:
-            if user_input.get(_EXIT) == _EXIT_DROP:
+            if user_input.get(EXIT) == EXIT_DROP:
                 return await self.async_step_init()
             errors = _settings_errors(user_input)
             if errors:
@@ -305,9 +305,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         """Pick an exclusive group to edit, or add one."""
         if user_input is not None:
             choice = user_input["group"]
-            if choice == _BACK:
+            if choice == BACK:
                 return await self.async_step_init()
-            self._index = None if choice == _ADD else int(choice)
+            self._index = None if choice == ADD else int(choice)
             return await self.async_step_exclusive()
 
         return self.async_show_form(
@@ -325,7 +325,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if user_input.get(_EXIT) == _EXIT_DROP:
+            if user_input.get(EXIT) == EXIT_DROP:
                 return await self.async_step_exclusives()
             if user_input.get("delete") and self._index is not None:
                 groups.pop(self._index)
@@ -361,9 +361,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         """Pick a quiet window to edit, add one, or go back."""
         if user_input is not None:
             choice = user_input["quiet"]
-            if choice == _BACK:
+            if choice == BACK:
                 return await self.async_step_init()
-            self._index = None if choice == _ADD else int(choice)
+            self._index = None if choice == ADD else int(choice)
             return await self.async_step_quiet()
 
         selector_texts = await texts.async_selector_texts(self.hass)
@@ -378,7 +378,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         current = windows[self._index] if self._index is not None else {}
 
         if user_input is not None:
-            if user_input.get(_EXIT) == _EXIT_DROP:
+            if user_input.get(EXIT) == EXIT_DROP:
                 return await self.async_step_quiets()
             if user_input.get("delete") and self._index is not None:
                 windows.pop(self._index)
@@ -407,9 +407,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         """Pick a zone to edit, or add one."""
         if user_input is not None:
             choice = user_input["zone"]
-            if choice == _BACK:
+            if choice == BACK:
                 return await self.async_step_init()
-            self._zone_index = None if choice == _ADD else int(choice)
+            self._zone_index = None if choice == ADD else int(choice)
             return await self.async_step_zone()
 
         return self.async_show_form(
@@ -426,7 +426,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if user_input.get(_EXIT) == _EXIT_DROP:
+            if user_input.get(EXIT) == EXIT_DROP:
                 return await self.async_step_zones()
             if not user_input.get("delete"):
                 errors = _missing(user_input, "indoor_sensor")
@@ -504,9 +504,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             return await self.async_step_init()
         if user_input is not None:
             choice = user_input["source"]
-            if choice == _BACK:
+            if choice == BACK:
                 return await self.async_step_init()
-            self._source_index = None if choice == _ADD else int(choice)
+            self._source_index = None if choice == ADD else int(choice)
             return await self.async_step_source()
 
         return self.async_show_form(
@@ -526,7 +526,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if user_input.get(_EXIT) == _EXIT_DROP:
+            if user_input.get(EXIT) == EXIT_DROP:
                 return await self.async_step_sources()
             if not user_input.get("delete"):
                 errors = _missing(user_input, "entity_id")
@@ -594,9 +594,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         """Pick a refrigerant circuit to edit, or add one."""
         if user_input is not None:
             choice = user_input["circuit"]
-            if choice == _BACK:
+            if choice == BACK:
                 return await self.async_step_init()
-            self._circuit_index = None if choice == _ADD else int(choice)
+            self._circuit_index = None if choice == ADD else int(choice)
             return await self.async_step_circuit()
 
         return self.async_show_form(
@@ -614,7 +614,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if user_input.get(_EXIT) == _EXIT_DROP:
+            if user_input.get(EXIT) == EXIT_DROP:
                 return await self.async_step_circuits()
             if not user_input.get("delete"):
                 errors = _missing(user_input, "units")
@@ -672,7 +672,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             return await self.async_step_init()
         if user_input is not None:
             choice = user_input["zone"]
-            if choice == _BACK:
+            if choice == BACK:
                 return await self.async_step_init()
             self._priority_zone_id = choice
             return await self.async_step_circuit_priority()
@@ -698,7 +698,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if user_input.get(_EXIT) == _EXIT_DROP:
+            if user_input.get(EXIT) == EXIT_DROP:
                 return await self.async_step_circuit_priorities()
             wanted = int(user_input["priority"])
             if self._priority_clash(zone["zone_id"], wanted):
@@ -723,9 +723,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         """Pick a shared heat source to edit, or add one."""
         if user_input is not None:
             choice = user_input["generator"]
-            if choice == _BACK:
+            if choice == BACK:
                 return await self.async_step_init()
-            self._index = None if choice == _ADD else int(choice)
+            self._index = None if choice == ADD else int(choice)
             return await self.async_step_generator()
 
         return self.async_show_form(
@@ -743,7 +743,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if user_input.get(_EXIT) == _EXIT_DROP:
+            if user_input.get(EXIT) == EXIT_DROP:
                 return await self.async_step_generators()
             if not user_input.get("delete"):
                 errors = _missing(user_input, "entity_id")
@@ -787,9 +787,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         """Pick a resident to edit, or add one."""
         if user_input is not None:
             choice = user_input["resident"]
-            if choice == _BACK:
+            if choice == BACK:
                 return await self.async_step_init()
-            self._resident_index = None if choice == _ADD else int(choice)
+            self._resident_index = None if choice == ADD else int(choice)
             return await self.async_step_resident()
 
         return self.async_show_form(
@@ -807,7 +807,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if user_input.get(_EXIT) == _EXIT_DROP:
+            if user_input.get(EXIT) == EXIT_DROP:
                 return await self.async_step_residents()
             if not user_input.get("delete"):
                 errors = _missing(user_input, "presence_entity")
@@ -906,9 +906,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
             return await self.async_step_init()
         if user_input is not None:
             choice = user_input["window"]
-            if choice == _BACK:
+            if choice == BACK:
                 return await self.async_step_init()
-            self._window_index = None if choice == _ADD else int(choice)
+            self._window_index = None if choice == ADD else int(choice)
             return await self.async_step_window()
 
         selector_texts = await texts.async_selector_texts(self.hass)
@@ -927,7 +927,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         current = windows[self._window_index] if self._window_index is not None else {}
 
         if user_input is not None:
-            if user_input.get(_EXIT) == _EXIT_DROP:
+            if user_input.get(EXIT) == EXIT_DROP:
                 return await self.async_step_windows()
             if user_input.get("delete") and self._window_index is not None:
                 windows.pop(self._window_index)
@@ -977,9 +977,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 user_input.get("house_wide_openings") or ()
             )
             choice = user_input["opening"]
-            if choice == _BACK:
+            if choice == BACK:
                 return await self.async_step_init()
-            self._index = None if choice == _ADD else int(choice)
+            self._index = None if choice == ADD else int(choice)
             return await self.async_step_opening()
 
         return self.async_show_form(
@@ -997,7 +997,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if user_input.get(_EXIT) == _EXIT_DROP:
+            if user_input.get(EXIT) == EXIT_DROP:
                 return await self.async_step_openings()
             if not user_input.get("delete"):
                 errors = _missing(user_input, "entity_id", CONF_NAME)

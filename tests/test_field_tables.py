@@ -199,7 +199,7 @@ class TestTheScreensFromTheTable:
     """Van tabelrij naar schermveld. / From table row to screen field."""
 
     def test_a_choice_without_a_translation_key_shows_its_values(self) -> None:
-        chosen = schema_fields._choices(["a", "b"])
+        chosen = schema_fields.choices(["a", "b"])
         assert "translation_key" not in chosen.config
 
     def test_a_number_with_a_measure_the_table_does_not_know_is_refused(self) -> None:
@@ -209,7 +209,7 @@ class TestTheScreensFromTheTable:
 
     def test_a_screen_without_a_footer_carries_only_its_table(self) -> None:
         field = FieldSpec(key="naam", kind="text")
-        schema = schema_fields._table_schema((field,), SimpleNamespace(hass=None), values={})
+        schema = schema_fields.table_schema((field,), SimpleNamespace(hass=None), values={})
         assert [str(key) for key in schema.schema] == ["naam"]
 
 

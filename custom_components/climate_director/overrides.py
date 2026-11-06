@@ -55,7 +55,7 @@ from .engine.world import WorldState
 _LOGGER = logging.getLogger(f"{__package__}.coordinator")
 
 
-class _OverridesMixin(_CoordinatorBase):
+class OverridesMixin(_CoordinatorBase):
     """De looptijd-override: zetten, aflopen en stil vervallen.
 
     The timed override: setting it, letting it run out and letting it lapse

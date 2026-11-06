@@ -37,8 +37,8 @@ from custom_components.climate_director.config_flow import (
     _zone_from_form,
 )
 from custom_components.climate_director.coordinator import (
-    _as_float,
     _event_data,
+    as_float,
     season_from_state,
     temperature_from_state,
 )
@@ -213,11 +213,11 @@ class TestTemperatureFromState:
 class TestAsFloat:
     @pytest.mark.parametrize(("raw", "expected"), [("21.5", 21.5), (3, 3.0), (2.5, 2.5)])
     def test_numbers(self, raw: object, expected: float) -> None:
-        assert _as_float(raw) == expected
+        assert as_float(raw) == expected
 
     @pytest.mark.parametrize("raw", [None, "unavailable", "unknown", "", "heat"])
     def test_non_numbers(self, raw: object) -> None:
-        assert _as_float(raw) is None
+        assert as_float(raw) is None
 
 
 class TestEventData:
@@ -1421,7 +1421,7 @@ class TestSavingTheOptions:
             "zones": [{"sources": [{}, {"entity_id": "climate.a"}]}],
             "generators": [{}, {"entity_id": "climate.b"}],
         }
-        assert schemas._managed_entities(installation) == ["climate.a", "climate.b"]
+        assert schemas.managed_entities(installation) == ["climate.a", "climate.b"]
 
 
 def test_a_registry_entry_without_a_name_falls_back_to_the_source_name() -> None:

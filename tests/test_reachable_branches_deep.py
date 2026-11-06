@@ -44,13 +44,13 @@ from custom_components.climate_director.engine import diff, models, serialise, t
 from custom_components.climate_director.engine.decide import _group_holder, clamped_target
 from custom_components.climate_director.engine.fields import FieldSpec
 from custom_components.climate_director.engine.models import ModeFamily
-from custom_components.climate_director.overrides import _OverridesMixin
-from custom_components.climate_director.preconditions import _PreconditionsMixin
+from custom_components.climate_director.overrides import OverridesMixin
+from custom_components.climate_director.preconditions import PreconditionsMixin
 from custom_components.climate_director.schema_fields import _summer_months
 from custom_components.climate_director.sensor import ZoneSourceSensor
-from custom_components.climate_director.state_store import _StateStoreMixin
+from custom_components.climate_director.state_store import StateStoreMixin
 from custom_components.climate_director.switch import _DirectorSwitch, _opening_label
-from custom_components.climate_director.world_builder import _WorldBuilderMixin
+from custom_components.climate_director.world_builder import WorldBuilderMixin
 
 PACKAGE = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
 
@@ -159,7 +159,7 @@ def test_a_label_for_an_unknown_opening_falls_back_on_its_id() -> None:
 
 def test_a_presence_entity_that_is_missing_counts_as_nobody_home() -> None:
     """Zonder aanwezigheidsentiteit is er niemand thuis, en dat is geen fout."""
-    builder = _WorldBuilderMixin.__new__(_WorldBuilderMixin)
+    builder = WorldBuilderMixin.__new__(WorldBuilderMixin)
     builder.hass = SimpleNamespace(states=SimpleNamespace(get=lambda _entity_id: None))
     builder._empty_since = {}
     assert builder._presence("zolder", "person.bestaat_niet", "on").occupied is False
@@ -168,7 +168,7 @@ def test_a_presence_entity_that_is_missing_counts_as_nobody_home() -> None:
 # -- overrides ----------------------------------------------------------------
 
 
-class OverrideHost(_OverridesMixin):
+class OverrideHost(OverridesMixin):
     """A stand-in for the coordinator with just the override state on it.
 
     A stand-in for the coordinator with just the override state on it.
@@ -215,7 +215,7 @@ def test_the_override_expiry_wakes_the_evaluation() -> None:
 # -- the storage of the override state ----------------------------------------
 
 
-class StoreHost(_StateStoreMixin):
+class StoreHost(StateStoreMixin):
     """A stand-in for the coordinator on the storage side.
 
     A stand-in for the coordinator on the storage side.
@@ -393,7 +393,7 @@ def test_preconditioning_that_is_switched_off_reports_nothing() -> None:
     """Met een maximum van nul doet een vooruit-verzoek niets, met een logregel."""
     gates = dataclasses.replace(house().gates, max_precondition=timedelta(0))
     config = dataclasses.replace(house(), gates=gates)
-    host = _PreconditionsMixin.__new__(_PreconditionsMixin)
+    host = PreconditionsMixin.__new__(PreconditionsMixin)
     host.config = config
     assert host.async_precondition(["woonkamer"], 30) == {}
 

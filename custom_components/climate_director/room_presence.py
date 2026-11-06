@@ -45,7 +45,7 @@ else:
     _CoordinatorBase = object
 
 
-class _RoomPresenceMixin(_CoordinatorBase):
+class RoomPresenceMixin(_CoordinatorBase):
     """De bezetting van een kamer en de nalooptijd die eraan hangt.
 
     The occupancy of a room and the grace period hanging off it.

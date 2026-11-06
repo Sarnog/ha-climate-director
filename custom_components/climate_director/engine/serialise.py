@@ -59,20 +59,20 @@ from .resident_storage import (
     wake_deadline_to_dict,
 )
 from .storage_helpers import (
-    _as_dict,
-    _bool,
-    _enum,
-    _float,
-    _int,
-    _is_number,
-    _optional_float,
-    _optional_int,
-    _seconds,
-    _sequence,
-    _strings,
-    _text,
-    _time,
-    _weekdays,
+    as_dict,
+    bool_or,
+    choice,
+    float_or,
+    int_or,
+    is_number,
+    optional_float,
+    optional_int,
+    seconds_or,
+    sequence,
+    strings,
+    text,
+    time_or,
+    weekdays,
 )
 from .table_storage import dict_from, parse_leaf, values_from, write_leaf
 
@@ -89,20 +89,20 @@ def config_from_dict(raw: Mapping[str, Any]) -> DirectorConfig:
         circuits=tuple(_circuit(item) for item in _items(raw, "circuits")),
         residents=tuple(_resident(item) for item in _items(raw, "residents")),
         openings=tuple(openings),
-        house_wide_openings=tuple(_strings(raw.get("house_wide_openings"))),
+        house_wide_openings=tuple(strings(raw.get("house_wide_openings"))),
         generators=tuple(_generator(item) for item in _items(raw, "generators")),
         exclusive_groups=tuple(
-            frozenset(_strings(group)) for group in _sequence(raw.get("exclusive_groups"))
+            frozenset(strings(group)) for group in sequence(raw.get("exclusive_groups"))
         ),
         gates=_gates(raw.get("gates")),
         seasons=_seasons(raw.get("seasons")),
         precipitation=_precipitation(raw.get("precipitation")),
         heating_layout=_layout(raw),
-        outdoor_sensor=_text(raw.get("outdoor_sensor")),
-        outdoor_hysteresis=_float(raw.get("outdoor_hysteresis"), 0.5),
-        stuck_after=_seconds(raw.get("stuck_after"), 900.0),
-        holiday_calendars=tuple(_strings(raw.get("holiday_calendars"))),
-        holiday_keyword=_text(raw.get("holiday_keyword")),
+        outdoor_sensor=text(raw.get("outdoor_sensor")),
+        outdoor_hysteresis=float_or(raw.get("outdoor_hysteresis"), 0.5),
+        stuck_after=seconds_or(raw.get("stuck_after"), 900.0),
+        holiday_calendars=tuple(strings(raw.get("holiday_calendars"))),
+        holiday_keyword=text(raw.get("holiday_keyword")),
     )
 
 
@@ -167,18 +167,18 @@ def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
 
 def _zone(raw: Mapping[str, Any]) -> Zone:
     return Zone(
-        zone_id=_text(raw.get("zone_id")),
-        name=_text(raw.get("name")),
-        indoor_sensor=_text(raw.get("indoor_sensor")),
+        zone_id=text(raw.get("zone_id")),
+        name=text(raw.get("name")),
+        indoor_sensor=text(raw.get("indoor_sensor")),
         sources=tuple(_source(item) for item in _items(raw, "sources")),
-        priority=_int(raw.get("priority"), 0),
+        priority=int_or(raw.get("priority"), 0),
         heat=_mode(raw.get("heat")),
         cool=_mode(raw.get("cool")),
-        gate=_enum(ZoneGate, raw.get("gate"), ZoneGate.HOUSEHOLD),
-        presence_entity=_text(raw.get("presence_entity")),
-        presence_state=_text(raw.get("presence_state")) or "on",
-        presence_timeout=_seconds(raw.get("presence_timeout")),
-        ignore_precipitation=_bool(raw.get("ignore_precipitation"), False),
+        gate=choice(ZoneGate, raw.get("gate"), ZoneGate.HOUSEHOLD),
+        presence_entity=text(raw.get("presence_entity")),
+        presence_state=text(raw.get("presence_state")) or "on",
+        presence_timeout=seconds_or(raw.get("presence_timeout")),
+        ignore_precipitation=bool_or(raw.get("ignore_precipitation"), False),
     )
 
 
@@ -189,7 +189,7 @@ def _source(raw: Mapping[str, Any]) -> Source:
     scherm. / Only `source_id` is not in it: that is identity, not a field of
     the screen.
     """
-    return Source(source_id=_text(raw.get("source_id")), **values_from(SOURCE_FIELDS, raw, Source))
+    return Source(source_id=text(raw.get("source_id")), **values_from(SOURCE_FIELDS, raw, Source))
 
 
 def _mode(raw: Any) -> ModeSettings | None:
@@ -198,14 +198,14 @@ def _mode(raw: Any) -> ModeSettings | None:
         return None
     seasons = raw.get("seasons")
     return ModeSettings(
-        target=_float(raw.get("target"), 21.0),
-        start_at=_float(raw.get("start_at"), 21.0),
-        hysteresis=_float(raw.get("hysteresis"), 1.0),
+        target=float_or(raw.get("target"), 21.0),
+        start_at=float_or(raw.get("start_at"), 21.0),
+        hysteresis=float_or(raw.get("hysteresis"), 1.0),
         outdoor=_window(raw.get("outdoor")),
         seasons=(
             None
             if seasons is None
-            else frozenset(_enum(Season, item, Season.UNKNOWN) for item in _strings(seasons))
+            else frozenset(choice(Season, item, Season.UNKNOWN) for item in strings(seasons))
         ),
     )
 
@@ -214,47 +214,47 @@ def _window(raw: Any) -> OutdoorWindow:
     if not isinstance(raw, Mapping):
         return OutdoorWindow()
     return OutdoorWindow(
-        minimum=_optional_float(raw.get("minimum")),
-        maximum=_optional_float(raw.get("maximum")),
+        minimum=optional_float(raw.get("minimum")),
+        maximum=optional_float(raw.get("maximum")),
     )
 
 
 def _circuit(raw: Mapping[str, Any]) -> Circuit:
     return Circuit(
-        circuit_id=_text(raw.get("circuit_id")),
-        name=_text(raw.get("name")),
-        units=tuple(_strings(raw.get("units"))),
-        simultaneous_heat_cool=_bool(raw.get("simultaneous_heat_cool"), False),
-        conflict_policy=_enum(ConflictPolicy, raw.get("conflict_policy"), ConflictPolicy.PRIORITY),
-        allow_fan_only_during_conflict=_bool(raw.get("allow_fan_only_during_conflict"), False),
-        family_switch_delay=_seconds(raw.get("family_switch_delay")),
-        min_family_switch_interval=_seconds(raw.get("min_family_switch_interval")),
-        min_cycle_time=_seconds(raw.get("min_cycle_time")),
-        max_concurrent_units=_optional_int(raw.get("max_concurrent_units")),
+        circuit_id=text(raw.get("circuit_id")),
+        name=text(raw.get("name")),
+        units=tuple(strings(raw.get("units"))),
+        simultaneous_heat_cool=bool_or(raw.get("simultaneous_heat_cool"), False),
+        conflict_policy=choice(ConflictPolicy, raw.get("conflict_policy"), ConflictPolicy.PRIORITY),
+        allow_fan_only_during_conflict=bool_or(raw.get("allow_fan_only_during_conflict"), False),
+        family_switch_delay=seconds_or(raw.get("family_switch_delay")),
+        min_family_switch_interval=seconds_or(raw.get("min_family_switch_interval")),
+        min_cycle_time=seconds_or(raw.get("min_cycle_time")),
+        max_concurrent_units=optional_int(raw.get("max_concurrent_units")),
     )
 
 
 def _resident(raw: Mapping[str, Any]) -> Resident:
     return Resident(
-        resident_id=_text(raw.get("resident_id")),
-        name=_text(raw.get("name")),
+        resident_id=text(raw.get("resident_id")),
+        name=text(raw.get("name")),
         windows=tuple(_time_window(item) for item in _items(raw, "windows")),
-        presence_entity=_text(raw.get("presence_entity")),
-        sleep_entity=_text(raw.get("sleep_entity")),
-        sleep_state=_text(raw.get("sleep_state")) or "on",
-        sleep_window=_sleep_window(_as_dict(raw.get("sleep_window"))),
-        sleep_in=sleep_in_from(_as_dict(raw.get("sleep_in"))),
-        wake_deadline=wake_deadline_from(_as_dict(raw.get("wake_deadline"))),
-        rise_brake=rise_brake_from(_as_dict(raw.get("rise_brake"))),
+        presence_entity=text(raw.get("presence_entity")),
+        sleep_entity=text(raw.get("sleep_entity")),
+        sleep_state=text(raw.get("sleep_state")) or "on",
+        sleep_window=_sleep_window(as_dict(raw.get("sleep_window"))),
+        sleep_in=sleep_in_from(as_dict(raw.get("sleep_in"))),
+        wake_deadline=wake_deadline_from(as_dict(raw.get("wake_deadline"))),
+        rise_brake=rise_brake_from(as_dict(raw.get("rise_brake"))),
     )
 
 
 def _time_window(raw: Mapping[str, Any]) -> TimeWindow:
     return TimeWindow(
-        holiday=_bool(raw.get("holiday"), False),
-        start=_time(raw.get("start"), time(0, 0)),
-        end=_time(raw.get("end"), time(0, 0)),
-        weekdays=_weekdays(raw.get("weekdays")),
+        holiday=bool_or(raw.get("holiday"), False),
+        start=time_or(raw.get("start"), time(0, 0)),
+        end=time_or(raw.get("end"), time(0, 0)),
+        weekdays=weekdays(raw.get("weekdays")),
     )
 
 
@@ -284,9 +284,9 @@ def opening_ids(items: Iterable[Mapping[str, Any]]) -> list[str]:
     ids: list[str] = []
     taken: set[str] = set()
     for item in items:
-        opening_id = _text(item.get("opening_id"))
+        opening_id = text(item.get("opening_id"))
         if not opening_id:
-            base = _text(item.get("entity_id")) or "opening"
+            base = text(item.get("entity_id")) or "opening"
             opening_id, index = base, 1
             while opening_id in taken:
                 index += 1
@@ -298,24 +298,24 @@ def opening_ids(items: Iterable[Mapping[str, Any]]) -> list[str]:
 
 def _opening(raw: Mapping[str, Any], opening_id: str) -> Opening:
     """Return one opening, with the id handed in by `opening_ids`."""
-    entity_id = _text(raw.get("entity_id"))
+    entity_id = text(raw.get("entity_id"))
     return Opening(
         entity_id=entity_id,
-        zone_ids=tuple(_strings(raw.get("zone_ids"))),
-        open_state=_text(raw.get("open_state")) or "on",
-        delay=_seconds(raw.get("delay")),
+        zone_ids=tuple(strings(raw.get("zone_ids"))),
+        open_state=text(raw.get("open_state")) or "on",
+        delay=seconds_or(raw.get("delay")),
         opening_id=opening_id,
-        name=_text(raw.get("name")) or entity_id,
+        name=text(raw.get("name")) or entity_id,
     )
 
 
 def _generator(raw: Mapping[str, Any]) -> Generator:
     return Generator(
-        generator_id=_text(raw.get("generator_id")),
-        name=_text(raw.get("name")),
-        entity_id=_text(raw.get("entity_id")),
-        zone_ids=tuple(_strings(raw.get("zone_ids"))),
-        setpoint=_optional_float(raw.get("setpoint")),
+        generator_id=text(raw.get("generator_id")),
+        name=text(raw.get("name")),
+        entity_id=text(raw.get("entity_id")),
+        zone_ids=tuple(strings(raw.get("zone_ids"))),
+        setpoint=optional_float(raw.get("setpoint")),
     )
 
 
@@ -339,7 +339,7 @@ def _gates(raw: Any) -> GateSettings:
     return GateSettings(
         quiet_windows=tuple(
             _time_window(item)
-            for item in _sequence(raw.get("quiet_windows"))
+            for item in sequence(raw.get("quiet_windows"))
             if isinstance(item, dict)
         ),
         guest_window=_guest_window(guest),
@@ -409,7 +409,7 @@ def _sleep_window(raw: dict[str, Any]) -> TimeWindow | None:
     window = _guest_window(raw)
     if window is None:
         return None
-    return TimeWindow(start=window.start, end=window.end, weekdays=_weekdays(raw.get("weekdays")))
+    return TimeWindow(start=window.start, end=window.end, weekdays=weekdays(raw.get("weekdays")))
 
 
 def _seasons(raw: Any) -> SeasonSettings:
@@ -417,21 +417,21 @@ def _seasons(raw: Any) -> SeasonSettings:
         return SeasonSettings()
     months = raw.get("summer_months")
     return SeasonSettings(
-        source=_enum(SeasonSource, raw.get("source"), SeasonSource.AUTO),
-        entity_id=_text(raw.get("entity_id")),
+        source=choice(SeasonSource, raw.get("source"), SeasonSource.AUTO),
+        entity_id=text(raw.get("entity_id")),
         summer_months=(
             SeasonSettings().summer_months
             if months is None
-            # Via `_sequence`, want een opgeslagen waarde die geen lijst blijkt
+            # Via `sequence`, want een opgeslagen waarde die geen lijst blijkt
             # - een getal, een tekst - werd hier gewoon doorlopen. Bij een tekst
             # levert dat losse letters op en bij een getal een `TypeError` die
             # de hele installatie niet meer laat laden.
             #
-            # Through `_sequence`, since a stored value that turns out not to be
+            # Through `sequence`, since a stored value that turns out not to be
             # a list - a number, a string - used to be iterated all the same. On
             # a string that yields loose letters and on a number a `TypeError`
             # that stops the whole installation from loading.
-            else frozenset(_int(month, 0) for month in _sequence(months) if _is_number(month))
+            else frozenset(int_or(month, 0) for month in sequence(months) if is_number(month))
         ),
     )
 
@@ -444,7 +444,7 @@ def _precipitation(raw: Any) -> PrecipitationSettings:
     if states is None:
         chosen = PrecipitationSettings().states
     else:
-        chosen = frozenset(item for item in _strings(states) if item.strip())
+        chosen = frozenset(item for item in strings(states) if item.strip())
         # Het instellingenscherm schrijft een leeg tekstveld als `[]`. Dat is
         # iets anders dan een opzet die neerslag nooit telt: wie het veld
         # leeghaalt bedoelt "doe maar gewoon", niet "zet de regenuitzondering
@@ -457,9 +457,9 @@ def _precipitation(raw: Any) -> PrecipitationSettings:
         if not chosen:
             chosen = PrecipitationSettings().states
     return PrecipitationSettings(
-        source=_text(raw.get("source")),
+        source=text(raw.get("source")),
         states=chosen,
-        grace=_seconds(raw.get("grace"), 900.0),
+        grace=seconds_or(raw.get("grace"), 900.0),
     )
 
 
@@ -588,7 +588,7 @@ def _opening_to_dict(opening: Opening) -> dict[str, Any]:
 
 def _items(raw: Mapping[str, Any], key: str) -> list[Mapping[str, Any]]:
     """Return the mappings stored under `key`, skipping anything else."""
-    return [item for item in _sequence(raw.get(key)) if isinstance(item, Mapping)]
+    return [item for item in sequence(raw.get(key)) if isinstance(item, Mapping)]
 
 
 def _layout(raw: Mapping[str, Any]) -> HeatingLayout:
@@ -610,7 +610,7 @@ def _layout(raw: Mapping[str, Any]) -> HeatingLayout:
         return HeatingLayout(stored)
 
     seen: dict[str, int] = {}
-    for zone in _sequence(raw.get("zones")):
+    for zone in sequence(raw.get("zones")):
         if not isinstance(zone, dict):
             continue
         # Alleen bronnen die kunnen verwarmen tellen mee: het gaat hier om de
@@ -624,8 +624,8 @@ def _layout(raw: Mapping[str, Any]) -> HeatingLayout:
         # it quietly turned such a setup into "central heating", which the check
         # then complained about.
         entities = {
-            _text(source.get("entity_id"))
-            for source in _sequence(zone.get("sources"))
+            text(source.get("entity_id"))
+            for source in sequence(zone.get("sources"))
             if isinstance(source, dict) and source.get("role") != SourceRole.COOL_ONLY.value
         }
         for entity_id in entities - {""}:

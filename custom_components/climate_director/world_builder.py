@@ -156,12 +156,12 @@ def temperature_from_state(
     reported = str(
         attributes.get("unit_of_measurement") or attributes.get("temperature_unit") or unit or ""
     )
-    value = _as_float(state)
+    value = as_float(state)
     if value is not None:
         return to_celsius(value, reported)
     if entity_id.startswith("weather."):
-        return to_celsius(_as_float(attributes.get("temperature")), reported)
-    return to_celsius(_as_float(attributes.get("current_temperature")), reported)
+        return to_celsius(as_float(attributes.get("temperature")), reported)
+    return to_celsius(as_float(attributes.get("current_temperature")), reported)
 
 
 def season_from_state(raw: str | None) -> Season:
@@ -176,7 +176,7 @@ def season_from_state(raw: str | None) -> Season:
     return _SEASON_NAMES.get(raw.strip().lower(), Season.UNKNOWN)
 
 
-def _as_float(raw: Any) -> float | None:
+def as_float(raw: Any) -> float | None:
     """Return `raw` as a float, or `None` when it is not a usable number.
 
     `nan` and `inf` count as no reading too. Every comparison with them is
@@ -193,7 +193,7 @@ def _as_float(raw: Any) -> float | None:
     return value if math.isfinite(value) else None
 
 
-def _as_modes(raw: Any) -> frozenset[str] | None:
+def as_modes(raw: Any) -> frozenset[str] | None:
     """Return the hvac modes an entity reports, or `None` when it reports none.
 
     None means unknown, and unknown gets the benefit of the doubt: the engine
@@ -228,7 +228,7 @@ def _override_split(
     return dict.fromkeys(handed_back | thrown, True), frozenset(handed_back - thrown)
 
 
-class _WorldBuilderMixin(_CoordinatorBase):
+class WorldBuilderMixin(_CoordinatorBase):
     """De momentopname en de lezers die hem vullen.
 
     The snapshot and the readers that fill it.
@@ -385,19 +385,19 @@ class _WorldBuilderMixin(_CoordinatorBase):
         return ClimateState(
             hvac_mode=state.state,
             current_temperature=to_celsius(
-                _as_float(state.attributes.get("current_temperature")),
+                as_float(state.attributes.get("current_temperature")),
                 unit_of_coordinator(self),
             ),
             target_temperature=to_celsius(
-                _as_float(state.attributes.get("temperature")),
+                as_float(state.attributes.get("temperature")),
                 unit_of_coordinator(self),
             ),
-            hvac_modes=_as_modes(state.attributes.get("hvac_modes")),
+            hvac_modes=as_modes(state.attributes.get("hvac_modes")),
             min_temp=to_celsius(
-                _as_float(state.attributes.get("min_temp")), unit_of_coordinator(self)
+                as_float(state.attributes.get("min_temp")), unit_of_coordinator(self)
             ),
             max_temp=to_celsius(
-                _as_float(state.attributes.get("max_temp")), unit_of_coordinator(self)
+                as_float(state.attributes.get("max_temp")), unit_of_coordinator(self)
             ),
             available=True,
             changed_at=dt_util.as_local(state.last_changed),

@@ -139,12 +139,12 @@ def quiet_holds(
     The private readers come lazily from `gates`, since that module imports this
     one.
     """
-    from .gates import _quiet_hours, _zone_running
+    from .gates import quiet_hours, zone_running
 
     return (
         not passes(world, zone.zone_id, Reason.QUIET_HOURS)
-        and _quiet_hours(config, world)
-        and not _zone_running(config, world, zone, previous)
+        and quiet_hours(config, world)
+        and not zone_running(config, world, zone, previous)
     )
 
 

@@ -63,7 +63,7 @@ def _hemisphere(months: Any) -> str:
         return "north"
 
 
-def _temperature(unit: str) -> selector.NumberSelector:
+def temperature(unit: str) -> selector.NumberSelector:
     """Return a temperature selector in the user's unit.
 
     De engine bewaart alles in graden Celsius; het formulier toont de eenheid
@@ -95,7 +95,7 @@ def _temperature(unit: str) -> selector.NumberSelector:
     )
 
 
-def _band(unit: str) -> selector.NumberSelector:
+def band(unit: str) -> selector.NumberSelector:
     """Return a temperature-band selector in the user's unit.
 
     Een band is een verschil, dus in Fahrenheit telt alleen de schaalfactor:
@@ -137,21 +137,21 @@ _MINUTES = selector.NumberSelector(
     )
 )
 
-_SECONDS = selector.NumberSelector(
+SECONDS = selector.NumberSelector(
     selector.NumberSelectorConfig(min=0, max=3600, step=1, mode=selector.NumberSelectorMode.BOX)
 )
-_RANK = selector.NumberSelector(
+RANK = selector.NumberSelector(
     selector.NumberSelectorConfig(min=0, max=99, step=1, mode=selector.NumberSelectorMode.BOX)
 )
-_CLIMATE = selector.EntitySelector(selector.EntitySelectorConfig(domain="climate"))
-_CLIMATE_MULTI = selector.EntitySelector(
+CLIMATE = selector.EntitySelector(selector.EntitySelectorConfig(domain="climate"))
+CLIMATE_MULTI = selector.EntitySelector(
     selector.EntitySelectorConfig(domain="climate", multiple=True)
 )
-_TEXT = selector.TextSelector()
-_TIME = selector.TimeSelector()
+TEXT = selector.TextSelector()
+TIME = selector.TimeSelector()
 
 
-def _choices(values: list[str], key: str = "") -> selector.SelectSelector:
+def choices(values: list[str], key: str = "") -> selector.SelectSelector:
     """Return a dropdown over plain string values.
 
     Met een vertaalsleutel toont Home Assistant de vertaalde namen in plaats van
@@ -235,11 +235,11 @@ def _selector_for(field: FieldSpec, flow: Any) -> Any:
     """Return the selector a table field describes, without `vol` around it."""
     unit = temperature_unit_of(flow.hass)
     if field.kind == "text" or field.kind == "states_text":
-        return _TEXT
+        return TEXT
     if field.kind == "bool":
         return bool
     if field.kind == "time":
-        return _TIME
+        return TIME
     if field.kind == "entity":
         return selector.EntitySelector(
             selector.EntitySelectorConfig(
@@ -248,24 +248,24 @@ def _selector_for(field: FieldSpec, flow: Any) -> Any:
             )
         )
     if field.kind == "choice" or field.kind == "hemisphere":
-        return _choices(list(field.options), field.translation_key or "")
+        return choices(list(field.options), field.translation_key or "")
     if field.kind == "weekdays":
         return _weekday_selector()
     if field.kind == "zones":
         return _zone_selector(flow)
     if field.kind == "number":
         if field.unit == "temperature":
-            return _temperature(unit)
+            return temperature(unit)
         if field.unit == "delta_celsius":
-            return _band(unit)
+            return band(unit)
         if field.unit == "minutes":
             return _MINUTES
         if field.unit == "minutes_or_off":
             return _MINUTES_OR_OFF
         if field.unit == "seconds":
-            return _SECONDS
+            return SECONDS
         if field.unit == "rank":
-            return _RANK
+            return RANK
     raise AssertionError(f"onbekend veldtype {field.kind!r} voor {field.key}")
 
 
@@ -319,7 +319,7 @@ def _settings_value(flow: Any, field: FieldSpec, values: Mapping[str, Any]) -> A
     return field.default
 
 
-def _table_schema(
+def table_schema(
     fields: tuple[FieldSpec, ...],
     flow: Any,
     *,
@@ -460,13 +460,13 @@ def write_table(
 ) -> None:
     """Write every row of a field table back to its place in `destination`.
 
-    De tegenhanger van `_table_schema`: die leest een scherm uit een waardebron,
+    De tegenhanger van `table_schema`: die leest een scherm uit een waardebron,
     deze schrijft het ingezonden formulier terug. Elke rij gaat naar haar
     `target`-pad, genest en met de eenheidsomrekening die haar maat voorschrijft.
     Een rij met een `hook` wijkt daar bewust van af, en een rij zonder `target`
     hoort in de bedieningstoestand in plaats van in de installatie.
 
-    The counterpart of `_table_schema`: that one reads a screen from a value
+    The counterpart of `table_schema`: that one reads a screen from a value
     source, this one writes the submitted form back. Every row goes to its
     `target` path, nested and with the unit conversion its measure prescribes. A
     row with a `hook` deliberately differs, and a row without a `target` belongs

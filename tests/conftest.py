@@ -476,7 +476,7 @@ def form_field_nodes(
     Bestaat `schemas.<naam>` niet, dan is dat een duidelijke fout en geen stille
     lege kaart: anders valt de dekking van precies dat scherm weg zonder dat
     iemand het merkt. En een schema kan uit een veldtabel komen:
-    roept de schemafunctie `_table_schema(<tabel>, ...)` aan, dan telt elke rij
+    roept de schemafunctie `table_schema(<tabel>, ...)` aan, dan telt elke rij
     van die tabel als een veld van het scherm. De tabel komt uit
     `engine/fields.py` — dezelfde module die de productiecode leest — zodat de
     bewaking de nieuwe plek werkelijk meeneemt in plaats van op de oude vorm te
@@ -497,7 +497,7 @@ def form_field_nodes(
     When `schemas.<name>` does not exist that is a clear error, not a silently
     empty map: otherwise the coverage of exactly that screen drops away without
     anybody noticing. And a schema can come from a field table:
-    when the schema function calls `_table_schema(<table>, ...)`, every row of
+    when the schema function calls `table_schema(<table>, ...)`, every row of
     that table counts as a field of the screen. The table comes from
     `engine/fields.py` — the same module the production code reads — so the
     guard genuinely moves to the new place instead of hanging on to the old
@@ -548,13 +548,13 @@ def _table_schema_argument(node: ast.AST) -> str | None:
     """Return the table name a schema function reads, or `None`.
 
     Geeft `SETTINGS_FIELDS` terug voor een functie die
-    `_table_schema(SETTINGS_FIELDS, ...)` aanroept, en `None` voor elke andere
+    `table_schema(SETTINGS_FIELDS, ...)` aanroept, en `None` voor elke andere
     vorm. De naam wordt niet geëvalueerd — de tabel zelf wordt door
     `_table_schema_node` uit `engine.fields` gehaald, zodat de bewaking dezelfde
     module leest als de productiecode.
 
     Returns `SETTINGS_FIELDS` for a function calling
-    `_table_schema(SETTINGS_FIELDS, ...)`, and `None` for every other shape. The
+    `table_schema(SETTINGS_FIELDS, ...)`, and `None` for every other shape. The
     name is not evaluated — the table itself is fetched from `engine.fields` by
     `_table_schema_node`, so the guard reads the same module the production code
     reads.
@@ -564,7 +564,7 @@ def _table_schema_argument(node: ast.AST) -> str | None:
     for call in ast.walk(node):
         if not (isinstance(call, ast.Call) and isinstance(call.func, ast.Name)):
             continue
-        if call.func.id != "_table_schema":
+        if call.func.id != "table_schema":
             continue
         if call.args and isinstance(call.args[0], ast.Name):
             return call.args[0].id

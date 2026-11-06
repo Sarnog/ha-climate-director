@@ -125,7 +125,7 @@ def _closed(
     # applies: that one is about the room, not about who is in the house.
     if config.residents:
         yield from _household(
-            config, world, zone.zone_id, _zone_running(config, world, zone, previous)
+            config, world, zone.zone_id, zone_running(config, world, zone, previous)
         )
 
     # Het smalst van allemaal, en daarom als laatste: iemand thuis zegt niets
@@ -249,7 +249,7 @@ def _guests_carry_the_house(config: DirectorConfig, world: WorldState) -> bool:
     return window.contains(world.now.time(), world.now.weekday())
 
 
-def _quiet_hours(config: DirectorConfig, world: WorldState) -> bool:
+def quiet_hours(config: DirectorConfig, world: WorldState) -> bool:
     """Return whether this moment falls inside a quiet window that still brakes.
 
     Drie uitzonderingen, in deze volgorde, en alle drie op hetzelfde venster:
@@ -383,7 +383,7 @@ def _was_home_before(config: DirectorConfig, world: WorldState, window_start: da
     )
 
 
-def _zone_running(
+def zone_running(
     config: DirectorConfig, world: WorldState, zone: Zone, previous: Plan | None
 ) -> bool:
     """Return whether any appliance that counts for this zone is doing something.

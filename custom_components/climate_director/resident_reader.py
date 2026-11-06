@@ -78,7 +78,7 @@ def restore_home_since(
     return restored
 
 
-class _ResidentReaderMixin(_CoordinatorBase):
+class ResidentReaderMixin(_CoordinatorBase):
     """De lezer van één bewoner: thuis, slapend en het thuiskomstmoment.
 
     De leesbaarheid van de sensoren woont in `readability.py`, bij de wereld:

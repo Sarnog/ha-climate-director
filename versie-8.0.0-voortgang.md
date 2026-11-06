@@ -12,15 +12,16 @@ pas gepusht als de voorganger groen is, en houdt zijn eigen bewijs bij.
   verandert geen gedrag en geen tekst.
 - **Productie:** draait 7.7.7. Alleen gelezen; niets geïnstalleerd, herstart of
   gewijzigd.
-- **Nu:** het ontwerp staat in `ARCHITECTURE.md` (NL + EN). Er is nog geen
-  code verplaatst.
+- **Nu:** het ontwerp is gecommit; de publieke namen zijn in de werkboom
+  hernoemd en wachten op hun eigen commit en push. Er is nog geen bestand
+  verplaatst.
 
 ## Stappen
 
 | Stap | Commit | Stand |
 |---|---|---|
-| Ontwerp | nog te maken | klaar in de werkboom: `ARCHITECTURE.md` “Code-indeling 8.0.0” NL + EN |
-| 1. Publieke namen | nog te maken | wacht op het ontwerp |
+| Ontwerp | `6df44e2` | klaar: `ARCHITECTURE.md` “Code-indeling” NL + EN |
+| 1. Publieke namen | nog te maken | klaar in de werkboom: de mixins, de helpers, de schemaconstanten en de opslaglezers zijn publiek; nog niet gecommit |
 | 2. Toetsen per onderwerp + impactkaart | nog te maken | wacht |
 | 3. Validatie en `stored_state.py` | nog te maken | wacht |
 | 4. Opslag en serialisatie | nog te maken | wacht |
@@ -34,7 +35,14 @@ pas gepusht als de voorganger groen is, en houdt zijn eigen bewijs bij.
 
 ## Bewijs
 
-Nog geen meting uitgevoerd. Per verhuiscommit worden hier vastgelegd:
+Stap 1 is gemeten. De engine-probe (42 regels, 22:05:58) en de v1-probe
+(64 regels, 22:06:13) zijn byte-gelijk op de basis en de werkboom. De E-probe
+(107 regels, 08:07:52, parallel gedraaid), de N-probe (124 regels, 10m08s) en
+de Q-probe (139 regels, 8m07s) zijn alle drie identiek. `--collect-only`
+geeft 3936 toetsen aan beide kanten en een leeg verschil. De volledige suite
+was 3935 passed en één rood op de maatratel doordat langere publieke namen
+twee regels inspringen; de namen zijn korter gemaakt en de ratel is weer
+groen. Per verhuiscommit worden hier vastgelegd:
 
 - de twee engine-probes en de drie handstartprobes, met logpad en tijd;
 - `pytest --collect-only -q`, oud → nieuw;
@@ -59,15 +67,16 @@ only after its predecessor is green, and keeps its own proof.
   and no text.
 - **Production:** runs 7.7.7. Read only; nothing installed, restarted or
   changed.
-- **Now:** the design stands in `ARCHITECTURE.md` (NL + EN). No code has been
-  moved yet.
+- **Now:** the design is committed; the public names are renamed in the
+  working tree and wait for their own commit and push. No file has been moved
+  yet.
 
 ## Steps
 
 | Step | Commit | State |
 |---|---|---|
-| Design | to be made | done in the working tree: `ARCHITECTURE.md` “Code layout 8.0.0” NL + EN |
-| 1. Public names | to be made | waits for the design |
+| Design | `6df44e2` | done: `ARCHITECTURE.md` “Code layout” NL + EN |
+| 1. Public names | to be made | done in the working tree: the mixins, helpers, schema constants and storage readers are public; not committed yet |
 | 2. Tests per subject + impact map | to be made | waits |
 | 3. Validation and `stored_state.py` | to be made | waits |
 | 4. Storage and serialisation | to be made | waits |
@@ -81,8 +90,14 @@ only after its predecessor is green, and keeps its own proof.
 
 ## Proof
 
-No measurement has been taken yet. Per move commit the following is recorded
-here:
+Step 1 is measured. The engine probe (42 lines, 22:05:58) and the v1 probe
+(64 lines, 22:06:13) are byte-identical on the base and the working tree. The
+E probe (107 lines, 08:07:52, run in parallel), the N probe (124 lines,
+10m08s) and the Q probe (139 lines, 8m07s) are all three identical.
+`--collect-only` gives 3936 tests on both sides and an empty difference. The
+full suite was 3935 passed and one red on the measure ratchet because longer
+public names wrapped two lines; the names were shortened and the ratchet is
+green again. Per move commit the following is recorded here:
 
 - the two engine probes and the three hand-start probes, with log path and
   time;
