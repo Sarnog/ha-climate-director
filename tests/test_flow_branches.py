@@ -1,37 +1,27 @@
-"""De bereikbare takken die de rest van de suite niet aanraakt.
+"""De takken van de configuratiestroom die geen eigen scherm hebben.
 
-The reachable branches the rest of the suite does not touch.
-
-Een dekkingsmeting wees 107 gemiste statements aan. Deze module
-dekt de takken die **bereikbaar** zijn: de terugkeer naar het hoofdmenu, het
-verwijderen en bewerken van een item, de foutherhalingen van de formulieren, en
-de kleine engine- en opslagtakken. Die meting telde ook regels die met
-`# pragma: no cover` waren afgevangen; ook die worden gemeten, en het pakket
-draagt **geen enkele** pragma (`tests/test_reachable_branches_deep.py` houdt dat vast).
-
-A coverage run pointed at 107 missed statements. This module
-covers the branches that are **reachable**: returning to the main menu, deleting
-and editing an item, the forms' error repeats, and the small engine and storage
-branches. That measurement also counted lines caught with `# pragma: no cover`;
-those are measured too, and the package carries
-**no** pragma (`tests/test_reachable_branches_deep.py` holds that
-down).
-"""
+The configuration-flow branches that have no screen of their own."""
 
 from __future__ import annotations
 
-from types import SimpleNamespace
 from typing import Any
 
 import pytest
+from flow_helpers import (
+    ATTIC,
+    LIVING,
+    cold,
+    menu,
+    open_screen,
+    save,
+    two_rooms,
+)
 from harness_live import LiveHome, start_house, stop_house
-from test_campaign_editing import ATTIC, LIVING, cold, menu, save, two_rooms
 
 from custom_components.climate_director.config_flow import (
     ClimateDirectorOptionsFlow,
     _name_errors,
 )
-from custom_components.climate_director.coordinator import CoordinatorSurface
 
 CIRCUIT_FIELDS: dict[str, Any] = {
     "name": "Buitenunit",
@@ -44,10 +34,6 @@ CIRCUIT_FIELDS: dict[str, Any] = {
     "min_cycle_time": 180,
     "when_done": "keep",
 }
-
-
-# -- de options flow, zonder Home Assistant -----------------------------------
-# -- the options flow, without Home Assistant ---------------------------------
 
 
 def bare_flow(installation: dict[str, Any] | None = None) -> ClimateDirectorOptionsFlow:
@@ -134,10 +120,6 @@ async def test_the_window_screens_return_to_the_menu_without_a_resident() -> Non
     assert form["step_id"] == "init"
 
 
-# -- de options flow, met Home Assistant --------------------------------------
-# -- the options flow, with Home Assistant ------------------------------------
-
-
 @pytest.fixture
 async def home() -> LiveHome:
     """A two-room house that can be edited.
@@ -170,8 +152,6 @@ async def test_the_back_row_of_every_list_returns_to_the_menu(
     home: LiveHome, screen: str, field: str
 ) -> None:
     """De terugkeerregel van elk lijstscherm landt op het hoofdmenu."""
-    from test_campaign_editing import open_screen
-
     flow_id, _result, _parent = await open_screen(home, screen)
     flow = home.hass.config_entries.options
     result = await flow.async_configure(flow_id, {field: "back_to_menu"})
@@ -430,32 +410,3 @@ async def test_a_resident_form_comes_back_with_what_you_typed(home: LiveHome) ->
     result = await flow.async_configure(flow_id, {"name": "Danny"})
     assert result["type"] == "form"
     assert result["step_id"] == "resident"
-
-
-def test_the_protocol_stub_of_the_listener_update_returns_nothing() -> None:
-    """coordinator.py: de stub in het protocol doet niets.
-
-    `CoordinatorSurface` draagt `async_update_listeners` zodat mypy hem in de
-    mixins kent. Die regel staat er voor de typecontrole, niet voor het draaien:
-    bij het draaien komt de methode van `DataUpdateCoordinator`, en dit protocol
-    staat niet in de klassenhiërarchie van de coordinator. Voor mypy maakt een
-    kale `...` de concrete klasse abstract ("implicitly abstract because it has an
-    empty function body"), dus de stub heeft een expliciete `return`. Die regel
-    komt nooit langs tenzij iemand hem aanroept, en dat is precies wat hier
-    gebeurt: met een verzonnen `self`, want van een protocol bestaan geen
-    instanties. Zonder deze test is het een gemiste regel in de dekkingsmeting, en
-    dat was hij ook: de poort viel erop toen de methode werd
-    toegevoegd.
-
-    coordinator.py: the protocol's stub does nothing.
-    `CoordinatorSurface` carries `async_update_listeners` so that mypy knows it in
-    the mixins. That line exists for the type check, not for run time: at run time
-    the method comes from `DataUpdateCoordinator`, and this protocol is not in the
-    coordinator's class hierarchy. To mypy a bare `...` makes the concrete class
-    abstract ("implicitly abstract because it has an empty function body"), hence
-    the explicit `return`. That line never comes past unless someone calls it, and
-    that is exactly what happens here: with an invented `self`, since a protocol
-    has no instances. Without this test it is a missed line in the measurement,
-    and it was: the gate caught it when the method was added.
-    """
-    assert CoordinatorSurface.async_update_listeners(SimpleNamespace()) is None

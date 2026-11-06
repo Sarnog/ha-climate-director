@@ -371,7 +371,7 @@ def every_drawn_form_must_serialize(monkeypatch: pytest.MonkeyPatch) -> None:
     bewaakt dus de getekende schermen, foutherhalingen en tussenschermen die een
     expliciete doorloop mist. Dat élk scherm uit de bron ook een doorloop heeft,
     bewaakt `TestEveryFormInTheSourceIsWalkedTo` in
-    `tests/test_campaign_editing.py` — samen bewaken ze twee verschillende
+    `tests/test_commissioning.py` — samen bewaken ze twee verschillende
     dingen, niet dezelfde invariant twee keer.
 
     Push every form the suite draws through the frontend converter.
@@ -389,7 +389,7 @@ def every_drawn_form_must_serialize(monkeypatch: pytest.MonkeyPatch) -> None:
     guards the drawn screens, error re-displays and intermediate screens an
     explicit walk misses. That every screen from the source also has a walk is
     guarded by `TestEveryFormInTheSourceIsWalkedTo` in
-    `tests/test_campaign_editing.py` — together they guard two different
+    `tests/test_commissioning.py` — together they guard two different
     things, not the same invariant twice.
     """
     import voluptuous_serialize

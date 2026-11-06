@@ -17,90 +17,6 @@
   "script/",
   "tests/"
  ],
- "tests/test_campaign_editing.py": [
-  "custom_components/",
-  "custom_components/climate_director/",
-  "custom_components/climate_director/brand/",
-  "custom_components/climate_director/engine/",
-  "custom_components/climate_director/translations/"
- ],
- "tests/test_campaign_live_flows.py": [
-  "custom_components/",
-  "custom_components/climate_director/",
-  "custom_components/climate_director/brand/",
-  "custom_components/climate_director/engine/",
-  "custom_components/climate_director/translations/"
- ],
- "tests/test_campaign_live_ha.py": [
-  "custom_components/",
-  "custom_components/climate_director/",
-  "custom_components/climate_director/brand/",
-  "custom_components/climate_director/engine/",
-  "custom_components/climate_director/translations/"
- ],
- "tests/test_campaign_outages.py": [
-  "custom_components/",
-  "custom_components/climate_director/",
-  "custom_components/climate_director/brand/",
-  "custom_components/climate_director/engine/",
-  "custom_components/climate_director/translations/"
- ],
- "tests/test_campaign_settings.py": [
-  "custom_components/",
-  "custom_components/climate_director/",
-  "custom_components/climate_director/brand/",
-  "custom_components/climate_director/engine/",
-  "custom_components/climate_director/translations/"
- ],
- "tests/test_campaign_weather_boundaries.py": [
-  "custom_components/climate_director/coordinator.py",
-  "custom_components/climate_director/engine/constraints.py",
-  "custom_components/climate_director/engine/decide.py",
-  "custom_components/climate_director/engine/diff.py",
-  "custom_components/climate_director/engine/families.py",
-  "custom_components/climate_director/engine/gates.py",
-  "custom_components/climate_director/engine/hand_start.py",
-  "custom_components/climate_director/engine/hysteresis.py",
-  "custom_components/climate_director/engine/models.py",
-  "custom_components/climate_director/engine/night.py",
-  "custom_components/climate_director/engine/plan.py",
-  "custom_components/climate_director/engine/sources.py",
-  "custom_components/climate_director/engine/takeover.py",
-  "custom_components/climate_director/engine/untouched.py",
-  "custom_components/climate_director/engine/validation_extra.py",
-  "custom_components/climate_director/engine/world.py",
-  "custom_components/climate_director/hand_start.py",
-  "custom_components/climate_director/preconditions.py",
-  "custom_components/climate_director/readability.py",
-  "custom_components/climate_director/resident_reader.py",
-  "custom_components/climate_director/state_store.py",
-  "custom_components/climate_director/world_builder.py",
-  "tests/test_campaign_year.py"
- ],
- "tests/test_campaign_year.py": [
-  "custom_components/climate_director/coordinator.py",
-  "custom_components/climate_director/engine/constraints.py",
-  "custom_components/climate_director/engine/decide.py",
-  "custom_components/climate_director/engine/diff.py",
-  "custom_components/climate_director/engine/families.py",
-  "custom_components/climate_director/engine/gates.py",
-  "custom_components/climate_director/engine/hand_start.py",
-  "custom_components/climate_director/engine/hysteresis.py",
-  "custom_components/climate_director/engine/models.py",
-  "custom_components/climate_director/engine/night.py",
-  "custom_components/climate_director/engine/plan.py",
-  "custom_components/climate_director/engine/sources.py",
-  "custom_components/climate_director/engine/takeover.py",
-  "custom_components/climate_director/engine/untouched.py",
-  "custom_components/climate_director/engine/validation_extra.py",
-  "custom_components/climate_director/engine/world.py",
-  "custom_components/climate_director/hand_start.py",
-  "custom_components/climate_director/preconditions.py",
-  "custom_components/climate_director/readability.py",
-  "custom_components/climate_director/resident_reader.py",
-  "custom_components/climate_director/state_store.py",
-  "custom_components/climate_director/world_builder.py"
- ],
  "tests/test_ci_scripts_agree.py": [
   ".github/workflows/tests.yaml",
   "script/lint",
@@ -119,6 +35,14 @@
   "custom_components/climate_director/engine/takeover.py",
   "custom_components/climate_director/engine/untouched.py",
   "custom_components/climate_director/engine/world.py"
+ ],
+ "tests/test_circuits_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/",
+  "script/"
  ],
  "tests/test_clock_reeval.py": [
   "custom_components/climate_director/coordinator.py",
@@ -147,6 +71,20 @@
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
  ],
+ "tests/test_commissioning.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
+ "tests/test_controls_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
  "tests/test_coordinator_surface.py": [
   "custom_components/",
   "custom_components/climate_director/",
@@ -154,6 +92,23 @@
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/",
   "tests/"
+ ],
+ "tests/test_coverage_exclusions.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/",
+  "pyproject.toml",
+  "setup.cfg",
+  "tox.ini"
+ ],
+ "tests/test_coverage_exclusions_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
  ],
  "tests/test_crossings.py": [
   "custom_components/",
@@ -177,6 +132,12 @@
   "custom_components/climate_director/engine/untouched.py",
   "custom_components/climate_director/engine/world.py"
  ],
+ "tests/test_decide_branches.py": [
+  "custom_components/climate_director/engine/decide.py",
+  "custom_components/climate_director/engine/diff.py",
+  "custom_components/climate_director/engine/models.py",
+  "custom_components/climate_director/engine/sources.py"
+ ],
  "tests/test_decision_message.py": [
   "blueprints/automation/climate_director/decisions.yaml",
   "custom_components/",
@@ -191,6 +152,13 @@
   "docs/install/fr.md",
   "docs/install/nl.md"
  ],
+ "tests/test_delays_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
  "tests/test_diagnostics.py": [
   "custom_components/climate_director/diagnostics.py",
   "custom_components/climate_director/engine/fields.py",
@@ -200,6 +168,13 @@
   "custom_components/climate_director/engine/storage_helpers.py",
   "custom_components/climate_director/engine/table_storage.py",
   "custom_components/climate_director/engine/validation_extra.py"
+ ],
+ "tests/test_diagnostics_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
  ],
  "tests/test_diff.py": [
   "custom_components/climate_director/engine/constraints.py",
@@ -237,6 +212,20 @@
   "custom_components/climate_director/select.py",
   "custom_components/climate_director/sensor.py",
   "custom_components/climate_director/switch.py"
+ ],
+ "tests/test_entity_reading_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
+ "tests/test_entity_texts.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
  ],
  "tests/test_entity_uniqueness.py": [
   "custom_components/climate_director/engine/models.py"
@@ -309,6 +298,13 @@
   "custom_components/climate_director/engine/table_storage.py",
   "custom_components/climate_director/schema_fields.py",
   "custom_components/climate_director/units.py"
+ ],
+ "tests/test_flow_branches.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
  ],
  "tests/test_fuzz_decide.py": [
   "custom_components/climate_director/engine/constraints.py",
@@ -568,6 +564,20 @@
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
  ],
+ "tests/test_hand_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
+ "tests/test_hand_on_appliance_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
  "tests/test_hand_start.py": [
   "custom_components/climate_director/engine/families.py",
   "custom_components/climate_director/engine/gates.py",
@@ -634,6 +644,13 @@
   "custom_components/climate_director/engine/validation_extra.py",
   "custom_components/climate_director/engine/world.py"
  ],
+ "tests/test_holiday_calendar_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
  "tests/test_house_wide_openings.py": [
   "custom_components/climate_director/engine/constraints.py",
   "custom_components/climate_director/engine/decide.py",
@@ -652,6 +669,20 @@
   "custom_components/climate_director/engine/untouched.py",
   "custom_components/climate_director/engine/validation_extra.py",
   "custom_components/climate_director/engine/world.py"
+ ],
+ "tests/test_house_wide_openings_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
+ "tests/test_household_gates_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
  ],
  "tests/test_hysteresis.py": [
   "custom_components/climate_director/engine/hysteresis.py",
@@ -715,6 +746,13 @@
   "custom_components/climate_director/engine/untouched.py",
   "custom_components/climate_director/engine/world.py"
  ],
+ "tests/test_lifecycle_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
  "tests/test_manual_sources.py": [
   "custom_components/climate_director/engine/constraints.py",
   "custom_components/climate_director/engine/decide.py",
@@ -771,6 +809,13 @@
   "custom_components/climate_director/state_store.py",
   "custom_components/climate_director/world_builder.py"
  ],
+ "tests/test_multiple_installations.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
  "tests/test_opening_bypass.py": [
   "custom_components/climate_director/engine/families.py",
   "custom_components/climate_director/engine/fields.py",
@@ -785,6 +830,35 @@
   "custom_components/climate_director/engine/world.py"
  ],
  "tests/test_opening_ids_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
+ "tests/test_options_flow_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
+ "tests/test_outages.py": [
+  "custom_components/climate_director/engine/constraints.py",
+  "custom_components/climate_director/engine/decide.py",
+  "custom_components/climate_director/engine/families.py",
+  "custom_components/climate_director/engine/gates.py",
+  "custom_components/climate_director/engine/hand_start.py",
+  "custom_components/climate_director/engine/hysteresis.py",
+  "custom_components/climate_director/engine/models.py",
+  "custom_components/climate_director/engine/night.py",
+  "custom_components/climate_director/engine/plan.py",
+  "custom_components/climate_director/engine/sources.py",
+  "custom_components/climate_director/engine/takeover.py",
+  "custom_components/climate_director/engine/untouched.py",
+  "custom_components/climate_director/engine/world.py"
+ ],
+ "tests/test_outages_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
   "custom_components/climate_director/brand/",
@@ -811,6 +885,13 @@
   "custom_components/climate_director/engine/untouched.py",
   "custom_components/climate_director/engine/validation_extra.py",
   "custom_components/climate_director/engine/world.py"
+ ],
+ "tests/test_override_branches.py": [
+  "custom_components/climate_director/engine/families.py",
+  "custom_components/climate_director/engine/models.py",
+  "custom_components/climate_director/overrides.py",
+  "custom_components/climate_director/state_extra.py",
+  "custom_components/climate_director/state_store.py"
  ],
  "tests/test_override_duration.py": [
   "custom_components/",
@@ -941,23 +1022,6 @@
   "custom_components/climate_director/units.py",
   "custom_components/climate_director/world_builder.py"
  ],
- "tests/test_reachable_branches.py": [
-  "custom_components/",
-  "custom_components/climate_director/",
-  "custom_components/climate_director/brand/",
-  "custom_components/climate_director/engine/",
-  "custom_components/climate_director/translations/"
- ],
- "tests/test_reachable_branches_deep.py": [
-  "custom_components/",
-  "custom_components/climate_director/",
-  "custom_components/climate_director/brand/",
-  "custom_components/climate_director/engine/",
-  "custom_components/climate_director/translations/",
-  "pyproject.toml",
-  "setup.cfg",
-  "tox.ini"
- ],
  "tests/test_readability.py": [
   "custom_components/climate_director/readability.py"
  ],
@@ -970,6 +1034,13 @@
   "custom_components/climate_director/engine/world.py",
   "custom_components/climate_director/texts.py",
   "custom_components/climate_director/units.py"
+ ],
+ "tests/test_repair_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
  ],
  "tests/test_repair_notices.py": [
   "custom_components/climate_director/",
@@ -986,6 +1057,27 @@
  ],
  "tests/test_repairs_flow.py": [
   "custom_components/climate_director/repairs.py"
+ ],
+ "tests/test_reporting_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
+ "tests/test_restart_flow_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
+ "tests/test_restart_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
  ],
  "tests/test_room_grace_live.py": [
   "custom_components/",
@@ -1007,6 +1099,20 @@
   "custom_components/climate_director/engine/storage_helpers.py",
   "custom_components/climate_director/engine/table_storage.py",
   "custom_components/climate_director/engine/world.py"
+ ],
+ "tests/test_screen_state.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
+ "tests/test_season_settings.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
  ],
  "tests/test_seasons_simulation.py": [
   "custom_components/climate_director/coordinator.py",
@@ -1050,6 +1156,27 @@
   "custom_components/climate_director/engine/storage_helpers.py",
   "custom_components/climate_director/engine/table_storage.py",
   "custom_components/climate_director/engine/validation_extra.py"
+ ],
+ "tests/test_services_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
+ "tests/test_setup_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
+ "tests/test_shared_boiler_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
  ],
  "tests/test_shared_source_takeover.py": [
   "custom_components/climate_director/engine/constraints.py",
@@ -1107,7 +1234,35 @@
  "tests/test_startup.py": [
   "custom_components/climate_director/coordinator.py"
  ],
+ "tests/test_startup_half_loaded.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
  "tests/test_startup_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
+ "tests/test_steering_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
+ "tests/test_storage_branches.py": [
+  "custom_components/climate_director/engine/fields.py",
+  "custom_components/climate_director/engine/serialise.py",
+  "custom_components/climate_director/engine/storage_helpers.py",
+  "custom_components/climate_director/engine/table_storage.py",
+  "custom_components/climate_director/schema_fields.py"
+ ],
+ "tests/test_storage_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
   "custom_components/climate_director/brand/",
@@ -1132,6 +1287,14 @@
   "custom_components/climate_director/entity.py",
   "custom_components/climate_director/state_store.py",
   "custom_components/climate_director/switch.py"
+ ],
+ "tests/test_takeover_branches.py": [
+  "custom_components/climate_director/engine/models.py",
+  "custom_components/climate_director/engine/serialise.py",
+  "custom_components/climate_director/engine/storage_helpers.py",
+  "custom_components/climate_director/engine/table_storage.py",
+  "custom_components/climate_director/engine/takeover.py",
+  "custom_components/climate_director/engine/world.py"
  ],
  "tests/test_text_claims.py": [
   "custom_components/climate_director/strings.json",
@@ -1240,6 +1403,15 @@
   "docs/install/fr.md",
   "docs/install/nl.md"
  ],
+ "tests/test_translations_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/",
+  "script/",
+  "tests/"
+ ],
  "tests/test_ui_complete.py": [
   "custom_components/climate_director/",
   "custom_components/climate_director/brand/",
@@ -1299,6 +1471,30 @@
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
  ],
+ "tests/test_weather_boundaries.py": [
+  "custom_components/climate_director/coordinator.py",
+  "custom_components/climate_director/engine/constraints.py",
+  "custom_components/climate_director/engine/decide.py",
+  "custom_components/climate_director/engine/diff.py",
+  "custom_components/climate_director/engine/families.py",
+  "custom_components/climate_director/engine/gates.py",
+  "custom_components/climate_director/engine/hand_start.py",
+  "custom_components/climate_director/engine/hysteresis.py",
+  "custom_components/climate_director/engine/models.py",
+  "custom_components/climate_director/engine/night.py",
+  "custom_components/climate_director/engine/plan.py",
+  "custom_components/climate_director/engine/sources.py",
+  "custom_components/climate_director/engine/takeover.py",
+  "custom_components/climate_director/engine/untouched.py",
+  "custom_components/climate_director/engine/validation_extra.py",
+  "custom_components/climate_director/engine/world.py",
+  "custom_components/climate_director/hand_start.py",
+  "custom_components/climate_director/preconditions.py",
+  "custom_components/climate_director/readability.py",
+  "custom_components/climate_director/resident_reader.py",
+  "custom_components/climate_director/state_store.py",
+  "custom_components/climate_director/world_builder.py"
+ ],
  "tests/test_wens2_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
@@ -1308,6 +1504,30 @@
  ],
  "tests/test_workflows.py": [
   ".github/workflows/"
+ ],
+ "tests/test_year_simulation.py": [
+  "custom_components/climate_director/coordinator.py",
+  "custom_components/climate_director/engine/constraints.py",
+  "custom_components/climate_director/engine/decide.py",
+  "custom_components/climate_director/engine/diff.py",
+  "custom_components/climate_director/engine/families.py",
+  "custom_components/climate_director/engine/gates.py",
+  "custom_components/climate_director/engine/hand_start.py",
+  "custom_components/climate_director/engine/hysteresis.py",
+  "custom_components/climate_director/engine/models.py",
+  "custom_components/climate_director/engine/night.py",
+  "custom_components/climate_director/engine/plan.py",
+  "custom_components/climate_director/engine/sources.py",
+  "custom_components/climate_director/engine/takeover.py",
+  "custom_components/climate_director/engine/untouched.py",
+  "custom_components/climate_director/engine/validation_extra.py",
+  "custom_components/climate_director/engine/world.py",
+  "custom_components/climate_director/hand_start.py",
+  "custom_components/climate_director/preconditions.py",
+  "custom_components/climate_director/readability.py",
+  "custom_components/climate_director/resident_reader.py",
+  "custom_components/climate_director/state_store.py",
+  "custom_components/climate_director/world_builder.py"
  ],
  "tests/test_zone_gates.py": [
   "custom_components/climate_director/engine/families.py",

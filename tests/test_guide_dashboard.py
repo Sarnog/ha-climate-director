@@ -54,7 +54,7 @@ from pathlib import Path
 
 import pytest
 import yaml
-from test_guide_inventory import _slug_pattern
+from guide_helpers import slug_pattern
 
 ROOT = Path(__file__).resolve().parents[1]
 INSTALL = ROOT / "docs" / "install"
@@ -170,7 +170,7 @@ def expected_entity_slug(language: str) -> str:
     `slugify` on the translated name - only `{zone}` is the example's zone here,
     because the dashboard shows one concrete card rather than a pattern.
     """
-    return _slug_pattern(language, "sensor", "zone_override_ends").replace("<zone>", ZONE)
+    return slug_pattern(language, "sensor", "zone_override_ends").replace("<zone>", ZONE)
 
 
 def findings(language: str) -> list[str]:

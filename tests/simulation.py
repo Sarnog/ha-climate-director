@@ -844,3 +844,21 @@ def run_month(scenario: Scenario, *, seed: int) -> Simulation:
             holder["now"] = simulation.now + scenario.step
             simulation.step()
     return simulation
+
+
+#: De drukke doorsnee: veel gebeurtenissen per dag, voor de lange doorlopen.
+#: The busy average: many events per day, for the long runs.
+BUSY = Profile(
+    drops_out=0.005,
+    comes_back=0.04,
+    by_hand=0.02,
+    requests=0.006,
+    cancels=0.002,
+    override=0.005,
+    override_back=0.05,
+    priority=0.006,
+    guest=0.004,
+    holiday=0.003,
+    window_opens=0.015,
+    presence_flips=0.05,
+)

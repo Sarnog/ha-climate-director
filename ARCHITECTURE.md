@@ -1615,19 +1615,20 @@ alleen door het bestandspad verschuift.
 | Oud | Nieuw |
 |---|---|
 | `tests/test_campaign_editing.py` | `test_commissioning.py` (formulieren lopen, toevoegen, weigeren, bewaren, verwijderen), `test_screen_state.py` (scherm naast scherm, afronding, weggooien, lege velden, weekdagen), `test_flow_branches.py` (de schermtakken) |
-| `tests/test_campaign_live_flows.py` | `test_options_flow_live.py`, `test_setup_live.py`, `test_restart_flow_live.py`, `test_storage_live.py`, `test_entity_reading_live.py`, `test_repair_live.py`; de huisbrede lijst naar `test_house_wide_openings.py` |
-| `tests/test_campaign_live_ha.py` | `test_setup_live.py`, `test_services_live.py`, `test_lifecycle_live.py`, `test_startup_live.py`, `test_steering_live.py`, `test_controls_live.py`, `test_reporting_live.py`, `test_restart_live.py`, `test_translations_live.py`, `test_hand_live.py`, `test_storage_live.py` |
+| `tests/test_campaign_live_flows.py` | `test_options_flow_live.py`, `test_setup_live.py`, `test_restart_flow_live.py`, `test_storage_live.py`, `test_entity_reading_live.py`, `test_repair_live.py`; de huisbrede lijst naar `test_house_wide_openings_live.py` |
+| `tests/test_campaign_live_ha.py` | `test_setup_live.py`, `test_services_live.py`, `test_lifecycle_live.py`, `test_startup_half_loaded.py`, `test_steering_live.py`, `test_controls_live.py`, `test_reporting_live.py`, `test_restart_live.py`, `test_translations_live.py`, `test_hand_live.py`, `test_storage_live.py`, `test_coverage_exclusions_live.py` |
 | `tests/test_campaign_outages.py` | `test_outages.py` (de engine) en `test_outages_live.py` (de koppeling) |
-| `tests/test_campaign_settings.py` | `test_season_settings.py`, `test_household_gates_live.py`, `test_holiday_calendar_live.py`, `test_delays_live.py`, `test_circuits_live.py`, `test_shared_boiler_live.py`, `test_hand_live.py`, `test_diagnostics_live.py`, `test_multiple_installations.py` |
+| `tests/test_campaign_settings.py` | `test_season_settings.py`, `test_household_gates_live.py`, `test_holiday_calendar_live.py`, `test_delays_live.py`, `test_circuits_live.py`, `test_shared_boiler_live.py`, `test_hand_on_appliance_live.py`, `test_diagnostics_live.py`, `test_multiple_installations.py` |
 | `tests/test_campaign_weather_boundaries.py` | `test_weather_boundaries.py` |
 | `tests/test_campaign_year.py` | `test_year_simulation.py`; `BUSY` verhuist naar `tests/simulation.py` |
 | `tests/test_reachable_branches.py` | `test_flow_branches.py`, `test_options_flow_live.py`, `test_coordinator_surface.py` |
-| `tests/test_reachable_branches_deep.py` | `test_decide_branches.py`, `test_storage_branches.py`, `test_override_branches.py`, `test_entity_texts.py`, `test_shared_source_takeover.py`, `test_coverage_exclusions.py` |
+| `tests/test_reachable_branches_deep.py` | `test_decide_branches.py`, `test_storage_branches.py`, `test_override_branches.py`, `test_entity_texts.py`, `test_takeover_branches.py`, `test_coverage_exclusions.py` |
 
 De gedeelde hulpjes wonen in `tests/conftest.py` of in een van de
 hulpbestanden `tests/flow_helpers.py`, `tests/live_helpers.py`,
-`tests/guide_helpers.py`, `tests/repair_helpers.py`, `tests/guard_helpers.py`
-en `tests/coverage_helpers.py`. Geen enkel `test_*.py` importeert nog uit een
+`tests/live_fixtures.py`, `tests/guide_helpers.py`, `tests/repair_helpers.py`,
+`tests/guard_helpers.py`, `tests/override_helpers.py` en
+`tests/coverage_helpers.py`. Geen enkel `test_*.py` importeert nog uit een
 ander `test_*.py`.
 
 ### Uitbreidbaarheid — de vorm die dat mogelijk maakt
@@ -3444,19 +3445,19 @@ path.
 | Old | New |
 |---|---|
 | `tests/test_campaign_editing.py` | `test_commissioning.py` (walking forms, adding, refusing, saving, deleting), `test_screen_state.py` (screen beside screen, rounding, discarding, empty fields, weekdays), `test_flow_branches.py` (the screen branches) |
-| `tests/test_campaign_live_flows.py` | `test_options_flow_live.py`, `test_setup_live.py`, `test_restart_flow_live.py`, `test_storage_live.py`, `test_entity_reading_live.py`, `test_repair_live.py`; the house-wide list to `test_house_wide_openings.py` |
-| `tests/test_campaign_live_ha.py` | `test_setup_live.py`, `test_services_live.py`, `test_lifecycle_live.py`, `test_startup_live.py`, `test_steering_live.py`, `test_controls_live.py`, `test_reporting_live.py`, `test_restart_live.py`, `test_translations_live.py`, `test_hand_live.py`, `test_storage_live.py` |
+| `tests/test_campaign_live_flows.py` | `test_options_flow_live.py`, `test_setup_live.py`, `test_restart_flow_live.py`, `test_storage_live.py`, `test_entity_reading_live.py`, `test_repair_live.py`; the house-wide list to `test_house_wide_openings_live.py` |
+| `tests/test_campaign_live_ha.py` | `test_setup_live.py`, `test_services_live.py`, `test_lifecycle_live.py`, `test_startup_half_loaded.py`, `test_steering_live.py`, `test_controls_live.py`, `test_reporting_live.py`, `test_restart_live.py`, `test_translations_live.py`, `test_hand_live.py`, `test_storage_live.py`, `test_coverage_exclusions_live.py` |
 | `tests/test_campaign_outages.py` | `test_outages.py` (the engine) and `test_outages_live.py` (the binding) |
-| `tests/test_campaign_settings.py` | `test_season_settings.py`, `test_household_gates_live.py`, `test_holiday_calendar_live.py`, `test_delays_live.py`, `test_circuits_live.py`, `test_shared_boiler_live.py`, `test_hand_live.py`, `test_diagnostics_live.py`, `test_multiple_installations.py` |
+| `tests/test_campaign_settings.py` | `test_season_settings.py`, `test_household_gates_live.py`, `test_holiday_calendar_live.py`, `test_delays_live.py`, `test_circuits_live.py`, `test_shared_boiler_live.py`, `test_hand_on_appliance_live.py`, `test_diagnostics_live.py`, `test_multiple_installations.py` |
 | `tests/test_campaign_weather_boundaries.py` | `test_weather_boundaries.py` |
 | `tests/test_campaign_year.py` | `test_year_simulation.py`; `BUSY` moves to `tests/simulation.py` |
 | `tests/test_reachable_branches.py` | `test_flow_branches.py`, `test_options_flow_live.py`, `test_coordinator_surface.py` |
-| `tests/test_reachable_branches_deep.py` | `test_decide_branches.py`, `test_storage_branches.py`, `test_override_branches.py`, `test_entity_texts.py`, `test_shared_source_takeover.py`, `test_coverage_exclusions.py` |
+| `tests/test_reachable_branches_deep.py` | `test_decide_branches.py`, `test_storage_branches.py`, `test_override_branches.py`, `test_entity_texts.py`, `test_takeover_branches.py`, `test_coverage_exclusions.py` |
 
 The shared helpers live in `tests/conftest.py` or in one of the helper files
-`tests/flow_helpers.py`, `tests/live_helpers.py`, `tests/guide_helpers.py`,
-`tests/repair_helpers.py`, `tests/guard_helpers.py` and
-`tests/coverage_helpers.py`. No `test_*.py` imports from another `test_*.py`
+`tests/flow_helpers.py`, `tests/live_helpers.py`, `tests/live_fixtures.py`,
+`tests/guide_helpers.py`, `tests/repair_helpers.py`, `tests/guard_helpers.py`,
+`tests/override_helpers.py` and `tests/coverage_helpers.py`. No `test_*.py` imports from another `test_*.py`
 any more.
 
 ### Extensibility — the shape that makes it possible

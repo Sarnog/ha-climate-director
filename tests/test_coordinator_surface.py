@@ -57,6 +57,7 @@ import ast
 import inspect
 import textwrap
 from pathlib import Path
+from types import SimpleNamespace
 
 from harness_live import settings, source, start_house, stop_house, zone
 
@@ -240,3 +241,32 @@ def test_every_stand_in_carries_what_its_borrowed_methods_touch() -> None:
                 problems.append(f"{where}: {', '.join(missing)}")
     assert stand_ins, "geen enkele stand-in gevonden; leest de toets nog de goede vorm?"
     assert not problems, "een stand-in mist een protocollid:\n" + "\n".join(problems)
+
+
+def test_the_protocol_stub_of_the_listener_update_returns_nothing() -> None:
+    """coordinator.py: de stub in het protocol doet niets.
+
+    `CoordinatorSurface` draagt `async_update_listeners` zodat mypy hem in de
+    mixins kent. Die regel staat er voor de typecontrole, niet voor het draaien:
+    bij het draaien komt de methode van `DataUpdateCoordinator`, en dit protocol
+    staat niet in de klassenhiërarchie van de coordinator. Voor mypy maakt een
+    kale `...` de concrete klasse abstract ("implicitly abstract because it has an
+    empty function body"), dus de stub heeft een expliciete `return`. Die regel
+    komt nooit langs tenzij iemand hem aanroept, en dat is precies wat hier
+    gebeurt: met een verzonnen `self`, want van een protocol bestaan geen
+    instanties. Zonder deze test is het een gemiste regel in de dekkingsmeting, en
+    dat was hij ook: de poort viel erop toen de methode werd
+    toegevoegd.
+
+    coordinator.py: the protocol's stub does nothing.
+    `CoordinatorSurface` carries `async_update_listeners` so that mypy knows it in
+    the mixins. That line exists for the type check, not for run time: at run time
+    the method comes from `DataUpdateCoordinator`, and this protocol is not in the
+    coordinator's class hierarchy. To mypy a bare `...` makes the concrete class
+    abstract ("implicitly abstract because it has an empty function body"), hence
+    the explicit `return`. That line never comes past unless someone calls it, and
+    that is exactly what happens here: with an invented `self`, since a protocol
+    has no instances. Without this test it is a missed line in the measurement,
+    and it was: the gate caught it when the method was added.
+    """
+    assert CoordinatorSurface.async_update_listeners(SimpleNamespace()) is None

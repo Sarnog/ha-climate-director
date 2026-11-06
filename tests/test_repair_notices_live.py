@@ -273,7 +273,7 @@ class TestEveryNoticeIsRaisedLiveAndClearedAtUnload:
     async def test_every_notice_is_raised_live_and_cleared_at_unload(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from test_repair_notices import created_issue_ids
+        from repair_helpers import created_issue_ids
 
         created, cleared = _wrap(monkeypatch)
 

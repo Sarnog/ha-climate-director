@@ -220,8 +220,18 @@ def select(changed: dict[str, str], impact: dict[str, list[str]] | None) -> str 
     for path, status in changed.items():
         if touches_everything(path):
             return ALL
+        if path.startswith(PACKAGE) and status == "A":
+            # Een nieuw pakketbestand staat nog in geen enkele kaart; niemand weet
+            # welke toetsen het raken. Alleen een volledige run is dan eerlijk.
+            # A new package file is in no map yet; nobody knows which tests touch
+            # it. Only a full run is honest then.
+            return ALL
         if is_test_file(path):
-            if status == "D":
+            if status in {"A", "D"}:
+                # Een nieuwe of verdwenen toets raakt de kaart zelf; dan is er
+                # geen betrouwbare selectie en draait alles.
+                # A new or vanished test touches the map itself; then there is no
+                # reliable selection and everything runs.
                 return ALL
             # De toets zelf, en verderop wie hem leest (de bewakingen op de toetsen).
             # The test itself, and further down whoever reads it (the test guards).

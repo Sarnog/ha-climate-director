@@ -14,7 +14,9 @@ import pytest
 from harness_live import LiveHome, new_config_dir, start_house, stop_house
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-from test_campaign_live_ha import LIVING, cold_world, installation
+from live_helpers import LIVING
+from live_helpers import cold_two_rooms as cold_world
+from live_helpers import two_zone_installation as installation
 
 from custom_components.climate_director.const import DOMAIN
 from custom_components.climate_director.coordinator import ClimateDirectorCoordinator

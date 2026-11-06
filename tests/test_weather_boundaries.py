@@ -40,8 +40,7 @@ from __future__ import annotations
 import random
 from datetime import datetime, time, timedelta
 
-from simulation import Scenario, run_month
-from test_campaign_year import BUSY
+from simulation import BUSY, Scenario, run_month
 
 from custom_components.climate_director.engine import (
     Circuit,

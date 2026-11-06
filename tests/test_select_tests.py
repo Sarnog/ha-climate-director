@@ -95,6 +95,16 @@ class TestTheSelection:
     def test_a_changed_test_runs_itself(self) -> None:
         assert sel.select({"tests/test_select_tests.py": "M"}, {}) == ["tests/test_select_tests.py"]
 
+    def test_a_new_test_runs_everything(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setattr(sel, "ROOT", _fake_root(tmp_path, {"tests/test_new.py": []}))
+        assert sel.select({"tests/test_new.py": "A"}, {}) == sel.ALL
+
+    def test_a_new_package_file_runs_everything(self) -> None:
+        changed = {"custom_components/climate_director/engine/new.py": "A"}
+        assert sel.select(changed, IMPACT) == sel.ALL
+
     def test_a_changed_test_also_runs_whoever_reads_the_tests(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
@@ -212,6 +222,24 @@ class TestTheMapCheck:
     ) -> None:
         recorded = _recorded({"tests/test_guide.py": {"docs/install/nl.md"}})
         assert self._judge(monkeypatch, tmp_path, recorded, full=True) == 1
+
+    def test_a_new_test_enters_the_map_without_a_missing_input(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setenv("CI", "true")
+        target = tmp_path / "impact_map.json"
+        target.write_text(json.dumps(IMPACT))
+        monkeypatch.setattr(runner.sel, "MAP", target)
+        artifact = tmp_path / "artifact.json"
+        monkeypatch.setenv("CD_IMPACT_ARTIFACT", str(artifact))
+        recorded = _recorded({"tests/test_new.py": {"README.md"}})
+        assert (
+            runner.compare_and_keep(
+                recorded, full=False, new_tests=frozenset({"tests/test_new.py"})
+            )
+            == 0
+        )
+        assert json.loads(artifact.read_text())["tests/test_new.py"] == ["README.md"]
 
     def test_locally_the_map_is_brought_up_to_date(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path

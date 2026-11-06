@@ -146,7 +146,12 @@ def recorded_inputs(coverage_file: Path | None, reads_file: Path) -> Recorded:
     return found
 
 
-def compare_and_keep(recorded: Recorded, full: bool, machinery: bool = False) -> int:
+def compare_and_keep(
+    recorded: Recorded,
+    full: bool,
+    machinery: bool = False,
+    new_tests: frozenset[str] = frozenset(),
+) -> int:
     """Compare this run's inputs with the map; write the map locally, judge it in CI.
 
     `machinery` zegt dat de opname zelf veranderde (`sel.RECORDING`). Dan meet deze
@@ -166,7 +171,7 @@ def compare_and_keep(recorded: Recorded, full: bool, machinery: bool = False) ->
     missing = {
         test_file: sorted(paths - set(impact.get(test_file, [])))
         for test_file, paths in recorded.required.items()
-        if paths - set(impact.get(test_file, []))
+        if test_file not in new_tests and paths - set(impact.get(test_file, []))
     }
     surplus = sorted(set(impact) - set(recorded.inputs)) if full else []
     body = {key: sorted(value) for key, value in sorted(merged.items())}
@@ -244,7 +249,12 @@ def main(argv: list[str]) -> int:
         if status == 0:
             machinery = any(path in sel.RECORDING for path in changed or {})
             recorded = recorded_inputs(coverage_file, reads_file)
-            status = compare_and_keep(recorded, full, machinery)
+            new_tests = frozenset(
+                path
+                for path, state in (changed or {}).items()
+                if sel.is_test_file(path) and state == "A"
+            )
+            status = compare_and_keep(recorded, full, machinery, new_tests)
     return status
 
 

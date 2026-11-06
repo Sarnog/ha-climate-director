@@ -5,24 +5,25 @@ pas gepusht als de voorganger groen is, en houdt zijn eigen bewijs bij.
 
 ## Stand
 
-- **Basis:** `main` op `a5957a5` (tag `v7.7.9` op `a69bf76` plus de
-  controlecommits van 2026-11-02), schone boom, `main == origin/main`.
+- **Basis:** `main` op `74f7c01` (ontwerp `6df44e2` plus de publieke namen),
+  schone boom, `main == origin/main`.
 - **Gebruikersbesluiten:** N14/N15 blijven **later**; N16 wordt **geen**
   7.7.10. Beide blijven in `ROADMAP.md` en `ARCHITECTURE.md` staan; 8.0.0
   verandert geen gedrag en geen tekst.
 - **Productie:** draait 7.7.7. Alleen gelezen; niets geïnstalleerd, herstart of
   gewijzigd.
-- **Nu:** het ontwerp is gecommit; de publieke namen zijn in de werkboom
-  hernoemd en wachten op hun eigen commit en push. Er is nog geen bestand
-  verplaatst.
+- **Nu:** stap 2 staat in de werkboom: de toetsen zijn per onderwerp verdeeld,
+  de hulpjes zijn uit de toetsbestanden gehaald, de impactkaart is bijgewerkt en
+  de selectie laat een nieuw pakket- of toetsbestand de hele suite draaien. Nog
+  niet gecommit.
 
 ## Stappen
 
 | Stap | Commit | Stand |
 |---|---|---|
 | Ontwerp | `6df44e2` | klaar: `ARCHITECTURE.md` “Code-indeling” NL + EN |
-| 1. Publieke namen | nog te maken | klaar in de werkboom: de mixins, de helpers, de schemaconstanten en de opslaglezers zijn publiek; nog niet gecommit |
-| 2. Toetsen per onderwerp + impactkaart | nog te maken | wacht |
+| 1. Publieke namen | `74f7c01` | klaar: mixins, helpers, schemaconstanten en opslaglezers zijn publiek |
+| 2. Toetsen per onderwerp + impactkaart | nog te maken | klaar in de werkboom: 50 toetsbestanden verdeeld, hulpjes verhuisd, kaart bijgewerkt; nog niet gecommit |
 | 3. Validatie en `stored_state.py` | nog te maken | wacht |
 | 4. Opslag en serialisatie | nog te maken | wacht |
 | 5. Hand en handstart | nog te maken | wacht |
@@ -42,7 +43,22 @@ de Q-probe (139 regels, 8m07s) zijn alle drie identiek. `--collect-only`
 geeft 3936 toetsen aan beide kanten en een leeg verschil. De volledige suite
 was 3935 passed en één rood op de maatratel doordat langere publieke namen
 twee regels inspringen; de namen zijn korter gemaakt en de ratel is weer
-groen. Per verhuiscommit worden hier vastgelegd:
+groen.
+
+Stap 2 is gemeten. De 3936 bestaande toetsnamen zijn identiek gebleven; de
+collectie groeide naar 3977 door 38 nieuwe `test_timeless`-parameters voor de
+nieuwe bestanden en 3 nieuwe selectietoetsen. De gerichte ronde over alle
+gewijzigde toetsbestanden gaf 985 passed in 21m22s (log
+`%TEMP%/800/step2-maprun.log`); de schermbewakingen gaven 259 passed in 18,52s
+(log `%TEMP%/800/step2-final-guards.log`) en de selectietoetsen 73 passed in
+1,76s (log `%TEMP%/800/select-final.log`). De volledige suite gaf 3975 passed
+en twee rood in 32m05s (log `%TEMP%/800/step2-full.log`): de verouderde
+impactkaart en een ontbrekende `Dekking`/`Coverage`-alinea in
+`test_reporting_live.py`; beide zijn gedicht en daarna groen. Dekking 100 %
+regels en takken (5927 regels, 2092 takken), de poort meldt 41 benoemde
+uitsluitingen, en de kaart is bijgewerkt met de 50 gedraaide toetsbestanden.
+
+Per verhuiscommit worden hier vastgelegd:
 
 - de twee engine-probes en de drie handstartprobes, met logpad en tijd;
 - `pytest --collect-only -q`, oud → nieuw;
@@ -60,15 +76,16 @@ only after its predecessor is green, and keeps its own proof.
 
 ## State
 
-- **Base:** `main` at `a5957a5` (tag `v7.7.9` at `a69bf76` plus the control
-  commits of 2026-11-02), clean tree, `main == origin/main`.
+- **Base:** `main` at `74f7c01` (design `6df44e2` plus the public names),
+  clean tree, `main == origin/main`.
 - **User decisions:** N14/N15 stay **later**; N16 becomes **no** 7.7.10.
   Both stay in `ROADMAP.md` and `ARCHITECTURE.md`; 8.0.0 changes no behaviour
   and no text.
 - **Production:** runs 7.7.7. Read only; nothing installed, restarted or
   changed.
-- **Now:** the design is committed; the public names are renamed in the
-  working tree and wait for their own commit and push. No file has been moved
+- **Now:** step 2 stands in the working tree: the tests are split per subject,
+  the helpers have left the test files, the impact map is updated and the
+  selection runs the whole suite for a new package or test file. Not committed
   yet.
 
 ## Steps
@@ -76,8 +93,8 @@ only after its predecessor is green, and keeps its own proof.
 | Step | Commit | State |
 |---|---|---|
 | Design | `6df44e2` | done: `ARCHITECTURE.md` “Code layout” NL + EN |
-| 1. Public names | to be made | done in the working tree: the mixins, helpers, schema constants and storage readers are public; not committed yet |
-| 2. Tests per subject + impact map | to be made | waits |
+| 1. Public names | `74f7c01` | done: mixins, helpers, schema constants and storage readers are public |
+| 2. Tests per subject + impact map | to be made | done in the working tree: 50 test files split, helpers moved, map updated; not committed yet |
 | 3. Validation and `stored_state.py` | to be made | waits |
 | 4. Storage and serialisation | to be made | waits |
 | 5. Hand and hand start | to be made | waits |
@@ -97,7 +114,22 @@ E probe (107 lines, 08:07:52, run in parallel), the N probe (124 lines,
 `--collect-only` gives 3936 tests on both sides and an empty difference. The
 full suite was 3935 passed and one red on the measure ratchet because longer
 public names wrapped two lines; the names were shortened and the ratchet is
-green again. Per move commit the following is recorded here:
+green again.
+
+Step 2 is measured. The 3936 existing test names stayed identical; the
+collection grew to 3977 through 38 new `test_timeless` parameters for the new
+files and 3 new selection tests. The targeted round over every changed test
+file gave 985 passed in 21m22s (log `%TEMP%/800/step2-maprun.log`); the source
+guards gave 259 passed in 18.52s (log `%TEMP%/800/step2-final-guards.log`) and
+the selection tests 73 passed in 1.76s (log `%TEMP%/800/select-final.log`). The
+full suite gave 3975 passed and two red in 32m05s (log
+`%TEMP%/800/step2-full.log`): the stale impact map and a missing
+`Dekking`/`Coverage` paragraph in `test_reporting_live.py`; both were fixed and
+then green. Coverage is 100% lines and branches (5927 lines, 2092 branches), the
+gate reports 41 named exclusions, and the map is updated with the 50 test files
+that ran.
+
+Per move commit the following is recorded here:
 
 - the two engine probes and the three hand-start probes, with log path and
   time;

@@ -43,7 +43,7 @@ import random
 from datetime import datetime, time, timedelta
 
 import pytest
-from simulation import Profile, Scenario, run_month
+from simulation import BUSY, Scenario, run_month
 
 from custom_components.climate_director.engine import (
     Circuit,
@@ -390,21 +390,6 @@ SECOND_START = datetime(2026, 11, 1, 0, 0)
 YEAR_START = datetime(2026, 1, 1, 0, 0)
 DAYS = 182
 YEAR_DAYS = 365
-
-BUSY = Profile(
-    drops_out=0.005,
-    comes_back=0.04,
-    by_hand=0.02,
-    requests=0.006,
-    cancels=0.002,
-    override=0.005,
-    override_back=0.05,
-    priority=0.006,
-    guest=0.004,
-    holiday=0.003,
-    window_opens=0.015,
-    presence_flips=0.05,
-)
 
 
 def _scenario(
