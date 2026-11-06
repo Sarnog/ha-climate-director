@@ -101,6 +101,28 @@
   "custom_components/climate_director/state_store.py",
   "custom_components/climate_director/world_builder.py"
  ],
+ "tests/test_central_cover_clash.py": [
+  "custom_components/climate_director/engine/constraints.py",
+  "custom_components/climate_director/engine/decide.py",
+  "custom_components/climate_director/engine/diff.py",
+  "custom_components/climate_director/engine/families.py",
+  "custom_components/climate_director/engine/fields.py",
+  "custom_components/climate_director/engine/gates.py",
+  "custom_components/climate_director/engine/hand_start.py",
+  "custom_components/climate_director/engine/hysteresis.py",
+  "custom_components/climate_director/engine/models.py",
+  "custom_components/climate_director/engine/night.py",
+  "custom_components/climate_director/engine/plan.py",
+  "custom_components/climate_director/engine/resident_storage.py",
+  "custom_components/climate_director/engine/serialise.py",
+  "custom_components/climate_director/engine/sources.py",
+  "custom_components/climate_director/engine/storage_helpers.py",
+  "custom_components/climate_director/engine/table_storage.py",
+  "custom_components/climate_director/engine/takeover.py",
+  "custom_components/climate_director/engine/untouched.py",
+  "custom_components/climate_director/engine/validation_extra.py",
+  "custom_components/climate_director/engine/world.py"
+ ],
  "tests/test_ci_scripts_agree.py": [
   ".github/workflows/tests.yaml",
   "script/lint",
