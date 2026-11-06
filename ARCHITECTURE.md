@@ -1476,9 +1476,9 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 |---|---|---|
 | `engine/models.py` | de installatie als geheel | `DirectorConfig`; de kleine bouwstenen staan in de modules hieronder |
 | `engine/seasons.py` | seizoen en neerslag | `Season`, `SeasonSource`, `SeasonSettings`, `PrecipitationSettings` |
-| `engine/windows.py` | tijds- en temperatuurvensters | `OutdoorWindow`, `TimeWindow`, `SleepIn`, `WakeDeadline`, `RiseBrake` |
-| `engine/residents.py` | de bewoner | `Resident` en zijn vensterlezers |
-| `engine/equipment.py` | apparaten en hun samenhang | `SourceRole`, `Source`, `Circuit`, `Generator`, `Opening`, `HeatingLayout` |
+| `engine/windows.py` | het tijdvenster | `TimeWindow` |
+| `engine/residents.py` | de bewoner | `Resident`, `SleepIn`, `WakeDeadline` en `RiseBrake` |
+| `engine/equipment.py` | apparaten en hun samenhang | `SourceRole`, `OutdoorWindow`, `ModeSettings`, `Source`, `Circuit`, `ConflictPolicy`, `Generator`, `Opening`, `HeatingLayout` |
 | `engine/rooms.py` | de ruimte en haar poortkeuze | `ZoneGate`, `Zone`, `GateSettings` |
 | `engine/validation.py` | alle configuratiecontroles | `Problem`, `validate()` en één `RULES`-lijst in de bestaande volgorde. Dit is de enige benoemde module-uitzondering boven de maat: één onderwerp, één ingang, één volgorde. |
 | `engine/manual_sources.py` | de eenmalige melding over handbediende bronnen | `manual_only_problems` |
@@ -3308,9 +3308,9 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 |---|---|---|
 | `engine/models.py` | the installation as a whole | `DirectorConfig`; the small building blocks stand in the modules below |
 | `engine/seasons.py` | season and precipitation | `Season`, `SeasonSource`, `SeasonSettings`, `PrecipitationSettings` |
-| `engine/windows.py` | time and temperature windows | `OutdoorWindow`, `TimeWindow`, `SleepIn`, `WakeDeadline`, `RiseBrake` |
-| `engine/residents.py` | the resident | `Resident` and its window readers |
-| `engine/equipment.py` | appliances and how they hang together | `SourceRole`, `Source`, `Circuit`, `Generator`, `Opening`, `HeatingLayout` |
+| `engine/windows.py` | the time window | `TimeWindow` |
+| `engine/residents.py` | the resident | `Resident`, `SleepIn`, `WakeDeadline` and `RiseBrake` |
+| `engine/equipment.py` | appliances and how they hang together | `SourceRole`, `OutdoorWindow`, `ModeSettings`, `Source`, `Circuit`, `ConflictPolicy`, `Generator`, `Opening`, `HeatingLayout` |
 | `engine/rooms.py` | the room and its gate choice | `ZoneGate`, `Zone`, `GateSettings` |
 | `engine/validation.py` | every configuration check | `Problem`, `validate()` and one `RULES` list in the existing order. This is the only named module exception above the measure: one subject, one entrance, one order. |
 | `engine/manual_sources.py` | the one-time notice about hand-operated sources | `manual_only_problems` |

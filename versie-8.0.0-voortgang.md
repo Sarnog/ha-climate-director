@@ -5,18 +5,18 @@ pas gepusht als de voorganger groen is, en houdt zijn eigen bewijs bij.
 
 ## Stand
 
-- **Basis:** `main` op `05d59c5` (ontwerp, publieke namen, toetssplitsing,
-validatie, opslag, hand, handstart, configuratiestroom en formulieren), schone
-boom, `main == origin/main`.
+- **Basis:** `main` op `3aa9f3f` (ontwerp, publieke namen, toetssplitsing,
+validatie, opslag, hand, handstart, configuratiestroom, formulieren, beslissing
+en modelbouwstenen), schone boom, `main == origin/main`.
 - **Gebruikersbesluiten:** N14/N15 blijven **later**; N16 wordt **geen**
   7.7.10. Beide blijven in `ROADMAP.md` en `ARCHITECTURE.md` staan; 8.0.0
   verandert geen gedrag en geen tekst.
 - **Productie:** draait 7.7.7. Alleen gelezen; niets geïnstalleerd, herstart of
   gewijzigd.
-- **Nu:** stap 7 staat in de werkboom: `decide.py` is de ingang van 82 regels,
-  de stappen wonen in `candidates.py`, `grants.py`, `commands.py`,
-  `command_stops.py`, `command_reasons.py` en `zone_decisions.py`. Nog niet
-  gecommit.
+- **Nu:** stap 8 staat in de werkboom: `models.py` is 186 regels en de
+  bouwstenen wonen in `seasons.py`, `windows.py`, `residents.py`,
+  `equipment.py` en `rooms.py`; `manual_sources.py` draagt de eenmalige
+  melding. Nog niet gecommit.
 
 ## Stappen
 
@@ -29,8 +29,8 @@ boom, `main == origin/main`.
 | 4. Opslag en serialisatie | `bb84325` (kaartherstel `fd26bce`) | klaar: `serialise.py` 152 regels, drie opslagmodules en `storage_values.py` |
 | 5. Hand en handstart | `d27c3b6` | klaar: `hand.py`, `engine/quiet.py`, `engine/schedule.py`, `brakes_remaining` bij `gates.py` |
 | 6. Configuratiestroom en formulieren | `05d59c5` | klaar: `config_flow.py` 456, `flow_validation.py` 380, `flow_*` en `form_*` |
-| 7. `engine/decide.py` | deze commit | klaar: `decide.py` 82 regels en zes onderwerpsmodules |
-| 8. `engine/models.py` | nog te maken | wacht |
+| 7. `engine/decide.py` | `cdfc453` | klaar: `decide.py` 82 regels en zes onderwerpsmodules |
+| 8. `engine/models.py` | deze commit | klaar: `models.py` 186 regels en vijf modelbouwstenen, plus `manual_sources.py` |
 | 9. `coordinator.py` | nog te maken | wacht |
 | 10. `problems.py`, `texts.py`, `__init__.py` | nog te maken | wacht |
 | Release 8.0.0 | nog te maken | wacht |
@@ -130,6 +130,19 @@ vóór de push. De eerste volledige ronde gaf 4000 passed en drie rood: drie
 mutatiepatronen wezen nog naar `decide.py`; ze wijzen nu naar `grants.py` en
 de tweede ronde is groen.
 
+Stap 8 is gemeten. `engine/models.py` ging van 1154 naar 186 regels; de
+bouwstenen wonen in `seasons.py` (90), `windows.py` (97), `equipment.py`
+(381), `residents.py` (308) en `rooms.py` (150), en `manual_sources.py` (50)
+draagt de eenmalige melding. `validation.py` ging naar 1288. De volledige
+suite gaf 4009 passed in 29m25s (log `%TEMP%/800/step8-full3.log`), de dekking
+is 100 % regels en takken (6218/2092), de poort meldt 63 benoemde
+uitsluitingen en de kaart is bijgewerkt. De engine-probe (42), v1-probe (64)
+en E-probe (107) zijn byte-gelijk. De mutatielijst was vóór deze stap 66 van
+66; de ronde erna volgt vóór de push. De eerste volledige ronde stopte op
+`ModeFamily`, dat via `models.py` beschikbaar moest blijven; daarna viel één
+toets over de probleemcodes omdat hij alleen `validation.py` las en de
+melding nu in `manual_sources.py` woont. Beide zijn hersteld.
+
 Per verhuiscommit worden hier vastgelegd:
 
 - de twee engine-probes en de drie handstartprobes, met logpad en tijd;
@@ -148,18 +161,18 @@ only after its predecessor is green, and keeps its own proof.
 
 ## State
 
-- **Base:** `main` at `05d59c5` (design, public names, test split, validation,
-storage, hand, hand start, configuration flow and forms), clean tree,
-`main == origin/main`.
+- **Base:** `main` at `3aa9f3f` (design, public names, test split, validation,
+storage, hand, hand start, configuration flow, forms, decision and model
+building blocks), clean tree, `main == origin/main`.
 - **User decisions:** N14/N15 stay **later**; N16 becomes **no** 7.7.10.
   Both stay in `ROADMAP.md` and `ARCHITECTURE.md`; 8.0.0 changes no behaviour
   and no text.
 - **Production:** runs 7.7.7. Read only; nothing installed, restarted or
   changed.
-- **Now:** step 7 stands in the working tree: `decide.py` is the entrance of
-  82 lines, the steps live in `candidates.py`, `grants.py`, `commands.py`,
-  `command_stops.py`, `command_reasons.py` and `zone_decisions.py`. Not
-  committed yet.
+- **Now:** step 8 stands in the working tree: `models.py` is 186 lines and the
+  building blocks live in `seasons.py`, `windows.py`, `residents.py`,
+  `equipment.py` and `rooms.py`; `manual_sources.py` carries the one-time
+  notice. Not committed yet.
 
 ## Steps
 
@@ -172,8 +185,8 @@ storage, hand, hand start, configuration flow and forms), clean tree,
 | 4. Storage and serialisation | `bb84325` (map fix `fd26bce`) | done: `serialise.py` 152 lines, three storage modules and `storage_values.py` |
 | 5. Hand and hand start | `d27c3b6` | done: `hand.py`, `engine/quiet.py`, `engine/schedule.py`, `brakes_remaining` at `gates.py` |
 | 6. Configuration flow and forms | `05d59c5` | done: `config_flow.py` 456, `flow_validation.py` 380, `flow_*` and `form_*` |
-| 7. `engine/decide.py` | this commit | done: `decide.py` 82 lines and six subject modules |
-| 8. `engine/models.py` | to be made | waits |
+| 7. `engine/decide.py` | `cdfc453` | done: `decide.py` 82 lines and six subject modules |
+| 8. `engine/models.py` | this commit | done: `models.py` 186 lines and five model building blocks, plus `manual_sources.py` |
 | 9. `coordinator.py` | to be made | waits |
 | 10. `problems.py`, `texts.py`, `__init__.py` | to be made | waits |
 | Release 8.0.0 | to be made | waits |
@@ -272,6 +285,19 @@ mutation list was 66 of 66 before this step; the round after it follows before
 the push. The first full round gave 4000 passed and three red: three mutation
 patterns still pointed at `decide.py`; they now point at `grants.py` and the
 second round is green.
+
+Step 8 is measured. `engine/models.py` went from 1154 to 186 lines; the building
+blocks live in `seasons.py` (90), `windows.py` (97), `equipment.py` (381),
+`residents.py` (308) and `rooms.py` (150), and `manual_sources.py` (50) carries
+the one-time notice. `validation.py` came down to 1288. The full suite gave
+4009 passed in 29m25s (log `%TEMP%/800/step8-full3.log`), coverage is 100%
+lines and branches (6218/2092), the gate reports 63 named exclusions and the
+map is updated. The engine probe (42), v1 probe (64) and E probe (107) are
+byte-identical. The mutation list was 66 of 66 before this step; the round
+after it follows before the push. The first full round stopped on `ModeFamily`,
+which had to remain available through `models.py`; after that one test of the
+problem codes failed because it read only `validation.py` while the notice now
+lives in `manual_sources.py`. Both were fixed.
 
 Per move commit the following is recorded here:
 

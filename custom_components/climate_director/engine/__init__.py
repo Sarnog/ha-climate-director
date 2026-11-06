@@ -29,6 +29,7 @@ from .families import (
     is_compatible,
 )
 from .hysteresis import running_family, wanted_target
+from .manual_sources import manual_only_problems
 from .models import (
     Circuit,
     ConflictPolicy,
@@ -62,7 +63,7 @@ from .plan import (
     UntouchedSource,
     ZoneDecision,
 )
-from .validation import Problem, manual_only_problems, validate
+from .validation import Problem, validate
 from .world import ClimateState, OpeningState, PresenceState, ResidentState, WorldState
 from .zone_decisions import clamped_target
 

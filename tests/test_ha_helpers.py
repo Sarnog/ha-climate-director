@@ -738,10 +738,15 @@ class TestTheEnglishTemplatesLiveInTheCache:
         from pathlib import Path
 
         from custom_components.climate_director import texts
-        from custom_components.climate_director.engine import validation as engine_validation
+        from custom_components.climate_director.engine import (
+            manual_sources,
+        )
+        from custom_components.climate_director.engine import (
+            validation as engine_validation,
+        )
 
         codes: list[str] = []
-        for module in (engine_validation,):
+        for module in (engine_validation, manual_sources):
             tree = ast.parse(Path(module.__file__).read_text(encoding="utf-8"))
             codes.extend(
                 node.args[0].value
