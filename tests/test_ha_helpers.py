@@ -57,8 +57,8 @@ from custom_components.climate_director.engine import (
     decide,
 )
 from custom_components.climate_director.engine.diff import Change
-from custom_components.climate_director.engine.models import Problem
 from custom_components.climate_director.engine.serialise import config_from_dict, config_to_dict
+from custom_components.climate_director.engine.validation import Problem
 from custom_components.climate_director.number import resolve_initial
 from custom_components.climate_director.problems import MAX_LISTED, readable, summarise
 from custom_components.climate_director.schemas import _window_label
@@ -738,11 +738,10 @@ class TestTheEnglishTemplatesLiveInTheCache:
         from pathlib import Path
 
         from custom_components.climate_director import texts
-        from custom_components.climate_director.engine import models as engine_models
-        from custom_components.climate_director.engine import validation_extra
+        from custom_components.climate_director.engine import validation as engine_validation
 
         codes: list[str] = []
-        for module in (engine_models, validation_extra):
+        for module in (engine_validation,):
             tree = ast.parse(Path(module.__file__).read_text(encoding="utf-8"))
             codes.extend(
                 node.args[0].value

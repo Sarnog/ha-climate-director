@@ -47,8 +47,8 @@ from custom_components.climate_director.engine.models import (
     SeasonSettings,
     SeasonSource,
     SourceRole,
-    _rule_source_covered_zones,
 )
+from custom_components.climate_director.engine.validation import _rule_source_covered_zones
 
 
 def problem(config: DirectorConfig, fragment: str) -> bool:

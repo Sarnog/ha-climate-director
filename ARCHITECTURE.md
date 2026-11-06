@@ -556,7 +556,7 @@ entiteit.
 
 De diagnose lakt ook `sleep_in` weg en laat aanwezigheids- en slaapentiteiten uit
 `tracked_entities`, zodat een download geen bewonersprofiel via de entiteitenlijst
-alsnog prijsgeeft. `state_extra.py` draagt de publieke `stored_time` en
+alsnog prijsgeeft. `stored_state.py` draagt de publieke `stored_time` en
 `restore_commanded_off`; `state_store.py` bewaart `commanded_off` en herstelt het
 alleen binnen `COMMANDED_WINDOW`, zodat een oude uitzetting geen late melding meer
 verklaart. De overbruggingsschakelaar schrijft alleen bij een echte stand- of
@@ -604,7 +604,7 @@ Home Assistant (entiteitstoestanden, klokgebeurtenissen)
       ▼
   coordinator          verzamelt toestanden, ontdubbelt, serialiseert
     state_store.py     opslag, herstel en quarantaine van wat een mens zei
-    state_extra.py     bewaarde momenten en de eigen uitzetting
+    stored_state.py     bewaarde momenten en de eigen uitzetting
     preconditions.py   vooruit-verzoeken en hun timers
     overrides.py       override met looptijd en het opheffen van een hand
     room_presence.py   de kamerpoort: bezette kamers en de nalooptijd
@@ -643,7 +643,7 @@ Home Assistant (entiteitstoestanden, klokgebeurtenissen)
 │  diff.py        Plan vs werkelijkheid → wat er echt moet         │
 │  serialise.py   dict ↔ dataclasses                               │
 │    resident_storage.py  de ochtendinstellingen van een bewoner   │
-│  validation_extra.py  validatieregels buiten het model           │
+│  validation.py  validatieregels buiten het model                │
 │  untouched.py   welke zone een gedeeld apparaat met rust laat    │
 │  night.py       de nacht: wie slaapt, sinds wanneer, wie opstaat │
 └──────────────────────────────────────────────────────────────────┘
@@ -1303,7 +1303,7 @@ dat alle wachtende zones tijdens de uitval starten.
 - De gebruiker beslist tussen (a) en (b) voordat er gebouwd wordt.
 
 **Meldingen noemen de instelling in de taal van de gebruiker (N16).** De regels in
-`engine/validation_extra.py` vullen `settings`, `window` en `label` met Engelse woorden
+`engine/validation.py` vullen `settings`, `window` en `label` met Engelse woorden
 ("sleep window", "quiet window", "minimum cycle time"); `problems.readable` zet ze
 ongewijzigd in de vertaalde zin. Ontwerp: de engine levert vaste sleutels in plaats van
 woorden (`wake_by`, `sleep_in_until`, `quiet_window`, ...), en de koppelingslaag zoekt per
@@ -1477,7 +1477,7 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `engine/residents.py` | de bewoner | `Resident` en zijn vensterlezers |
 | `engine/equipment.py` | apparaten en hun samenhang | `SourceRole`, `Source`, `Circuit`, `Generator`, `Opening`, `HeatingLayout` |
 | `engine/rooms.py` | de ruimte en haar poortkeuze | `ZoneGate`, `Zone`, `GateSettings` |
-| `engine/validation.py` | alle configuratiecontroles | `Problem`, `validate()`, élke regel uit `models._RULES` en `validation_extra.EXTRA_RULES`, en één `RULES`-lijst in de bestaande volgorde. Dit is de enige benoemde module-uitzondering boven de maat: één onderwerp, één ingang, één volgorde. |
+| `engine/validation.py` | alle configuratiecontroles | `Problem`, `validate()` en één `RULES`-lijst in de bestaande volgorde. Dit is de enige benoemde module-uitzondering boven de maat: één onderwerp, één ingang, één volgorde. |
 | `engine/manual_sources.py` | de eenmalige melding over handbediende bronnen | `manual_only_problems` |
 | `engine/candidates.py` | wie mag meedoen | `handed_over`, `collect_wishes`, `serving`, de exclusieve groepen, `standing_firm` |
 | `engine/grants.py` | wie krijgt de taak | `resolve_with_fallbacks`, `resolve_circuits`, `zone_reasons`, `manual_conflict`, `exclusive_rival`, `stand_down` |
@@ -1511,7 +1511,7 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `state_store.py` | de opslag van de koppeling | `StateStoreMixin`; `_hand_starts_payload` wordt gewoon aangeroepen |
 | `world_builder.py` | de momentopname bouwen | `WorldBuilderMixin`; de losse lezers gaan naar `entity_reading.py` |
 | `entity_reading.py` | één entiteit lezen | `reads_as_home`, `temperature_from_state`, `season_from_state`, `as_float`, `as_modes` |
-| `stored_state.py` | bewaarde momenten en eigen uitzetting | de nieuwe naam van `state_extra.py`: `stored_time`, `restore_commanded_off` |
+| `stored_state.py` | bewaarde momenten en eigen uitzetting | `stored_time`, `restore_commanded_off` |
 | `form_selectors.py` | de vorm van een formulierveld | de selectors uit `schema_fields.py`, met publieke namen (`CLIMATE`, `CLIMATE_MULTI`, `RANK`, `SECONDS`, `TEXT`, `TIME`, `band`, `choices`, `temperature`) |
 | `form_table.py` | een veldtabel naar een formulier en terug | `table_schema`, `write_table` en de lezers eromheen |
 | `form_common.py` | de vaste rijen van elk scherm | `user`, `save`, `ADD`, `BACK`, `EXIT`, `EXIT_KEEP`, `EXIT_DROP`, de keuzeregels en `source_options`, `group_label`, `window_label`, `add_option`, `back_option`, `exit_row`, `managed_entities` |
@@ -2398,7 +2398,7 @@ entity.
 
 The diagnostics also redact `sleep_in` and leave presence and sleep entities out
 of `tracked_entities`, so a download cannot reveal a resident profile through the
-entity list. `state_extra.py` carries the public `stored_time` and
+entity list. `stored_state.py` carries the public `stored_time` and
 `restore_commanded_off`; `state_store.py` stores `commanded_off` and restores it
 only within `COMMANDED_WINDOW`, so an old switch-off no longer explains a late
 report. The bypass switch writes only on a real state or name change.
@@ -2445,7 +2445,7 @@ Home Assistant (entity states, clock events)
       ▼
   coordinator          gathers states, debounces, serialises
     state_store.py     stores, restores and quarantines what a person said
-    state_extra.py     stored moments and our own switch-off
+    stored_state.py     stored moments and our own switch-off
     preconditions.py   pre-conditioning requests and their timers
     overrides.py       override with a duration and the lifting of a hand
     room_presence.py   the room gate: occupied rooms and the grace period
@@ -2484,7 +2484,7 @@ Home Assistant (entity states, clock events)
 │  diff.py        Plan vs reality → what actually has to happen    │
 │  serialise.py   dict ↔ dataclasses                               │
 │    resident_storage.py  a resident's morning settings            │
-│  validation_extra.py  validation rules outside the model         │
+│  validation.py  validation rules outside the model              │
 │  untouched.py   which zone leaves a shared appliance alone       │
 │  night.py       the night: who sleeps, since when, who gets up   │
 └──────────────────────────────────────────────────────────────────┘
@@ -3135,7 +3135,7 @@ during the outage.
 - The user decides between (a) and (b) before anything is built.
 
 **Notices name the setting in the user's language (N16).** The rules in
-`engine/validation_extra.py` fill `settings`, `window` and `label` with English words
+`engine/validation.py` fill `settings`, `window` and `label` with English words
 ("sleep window", "quiet window", "minimum cycle time"); `problems.readable` puts them
 unchanged into the translated sentence. Design: the engine supplies fixed keys instead of
 words (`wake_by`, `sleep_in_until`, `quiet_window`, ...), and the binding layer looks up the
@@ -3306,7 +3306,7 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `engine/residents.py` | the resident | `Resident` and its window readers |
 | `engine/equipment.py` | appliances and how they hang together | `SourceRole`, `Source`, `Circuit`, `Generator`, `Opening`, `HeatingLayout` |
 | `engine/rooms.py` | the room and its gate choice | `ZoneGate`, `Zone`, `GateSettings` |
-| `engine/validation.py` | every configuration check | `Problem`, `validate()`, every rule from `models._RULES` and `validation_extra.EXTRA_RULES`, and one `RULES` list in the existing order. This is the only named module exception above the measure: one subject, one entrance, one order. |
+| `engine/validation.py` | every configuration check | `Problem`, `validate()` and one `RULES` list in the existing order. This is the only named module exception above the measure: one subject, one entrance, one order. |
 | `engine/manual_sources.py` | the one-time notice about hand-operated sources | `manual_only_problems` |
 | `engine/candidates.py` | who may take part | `handed_over`, `collect_wishes`, `serving`, the exclusive groups, `standing_firm` |
 | `engine/grants.py` | who gets the duty | `resolve_with_fallbacks`, `resolve_circuits`, `zone_reasons`, `manual_conflict`, `exclusive_rival`, `stand_down` |
@@ -3340,7 +3340,7 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `state_store.py` | the binding layer's storage | `StateStoreMixin`; `_hand_starts_payload` is called directly |
 | `world_builder.py` | building the snapshot | `WorldBuilderMixin`; the separate readers move to `entity_reading.py` |
 | `entity_reading.py` | reading one entity | `reads_as_home`, `temperature_from_state`, `season_from_state`, `as_float`, `as_modes` |
-| `stored_state.py` | stored moments and our own switch-off | the new name of `state_extra.py`: `stored_time`, `restore_commanded_off` |
+| `stored_state.py` | stored moments and our own switch-off | `stored_time`, `restore_commanded_off` |
 | `form_selectors.py` | the shape of a form field | the selectors from `schema_fields.py`, with public names (`CLIMATE`, `CLIMATE_MULTI`, `RANK`, `SECONDS`, `TEXT`, `TIME`, `band`, `choices`, `temperature`) |
 | `form_table.py` | a field table to a form and back | `table_schema`, `write_table` and the readers around them |
 | `form_common.py` | the fixed rows of every screen | `user`, `save`, `ADD`, `BACK`, `EXIT`, `EXIT_KEEP`, `EXIT_DROP`, the choice rows and `source_options`, `group_label`, `window_label`, `add_option`, `back_option`, `exit_row`, `managed_entities` |

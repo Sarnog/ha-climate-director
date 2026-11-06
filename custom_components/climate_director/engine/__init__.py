@@ -40,7 +40,6 @@ from .models import (
     Opening,
     OutdoorWindow,
     PrecipitationSettings,
-    Problem,
     Resident,
     RiseBrake,
     Season,
@@ -51,8 +50,6 @@ from .models import (
     WakeDeadline,
     Zone,
     ZoneGate,
-    manual_only_problems,
-    validate,
 )
 from .plan import (
     HOLDING_GATES,
@@ -65,6 +62,7 @@ from .plan import (
     UntouchedSource,
     ZoneDecision,
 )
+from .validation import Problem, manual_only_problems, validate
 from .world import ClimateState, OpeningState, PresenceState, ResidentState, WorldState
 
 __all__ = [

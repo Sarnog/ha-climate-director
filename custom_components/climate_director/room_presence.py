@@ -27,7 +27,7 @@ from homeassistant.core import Event, EventStateChangedData, callback
 from homeassistant.util import dt as dt_util
 
 from .readability import unreadable
-from .state_extra import stored_time
+from .stored_state import stored_time
 
 if TYPE_CHECKING:
     from .coordinator import CoordinatorSurface

@@ -467,7 +467,8 @@ FUNCTION_LIMIT = 80
 # more, one blank line less). The new mixin and engine module stay under the
 # measure; the functions in `engine/gates.py` stay under eighty.
 MODULE_EXCEPTIONS: dict[str, int] = {
-    "engine/models.py": 2269,
+    "engine/models.py": 1154,
+    "engine/validation.py": 1328,
     "coordinator.py": 2069,
     "engine/decide.py": 1800,
     "config_flow.py": 1492,
@@ -503,7 +504,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/decide.py", "_build_commands"): 208,
     ("engine/decide.py", "_generator_commands"): 192,
     ("coordinator.py", "__init__"): 285,
-    ("engine/models.py", "_rule_zones"): 164,
+    ("engine/validation.py", "_rule_zones"): 164,
     ("engine/constraints.py", "resolve"): 128,
     ("engine/decide.py", "_collect_wishes"): 137,
     ("coordinator.py", "_refusal_data"): 119,

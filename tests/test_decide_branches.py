@@ -9,7 +9,7 @@ import dataclasses
 from conftest import climate, house, make_world
 
 import custom_components.climate_director.engine.sources as source_picker
-from custom_components.climate_director.engine import diff, models
+from custom_components.climate_director.engine import diff, validation
 from custom_components.climate_director.engine.decide import _group_holder, clamped_target
 from custom_components.climate_director.engine.models import ModeFamily
 
@@ -67,5 +67,5 @@ def test_a_source_covering_an_unknown_zone_is_reported() -> None:
     zone = dataclasses.replace(zone, sources=(source, *zone.sources[1:]))
     config = dataclasses.replace(base, zones=(zone, *base.zones[1:]))
 
-    found = [problem.code for problem in models._rule_source_covered_zones(config)]
+    found = [problem.code for problem in validation._rule_source_covered_zones(config)]
     assert found == ["source_unknown_covered_zone"]

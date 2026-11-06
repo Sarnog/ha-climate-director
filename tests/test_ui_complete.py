@@ -645,7 +645,7 @@ class TestProblemsAreTranslatable:
     """
 
     def _codes(self) -> set[str]:
-        source = (COMPONENT / "engine" / "models.py").read_text(encoding="utf-8")
+        source = (COMPONENT / "engine" / "validation.py").read_text(encoding="utf-8")
         return set(re.findall(r'Problem\(\s*\n?\s*"(\w+)"', source))
 
     def test_the_engine_emits_codes(self) -> None:
@@ -680,7 +680,7 @@ class TestProblemsAreTranslatable:
 
     def test_a_problem_still_reads_as_its_english_text(self) -> None:
         """Everything already treating these as plain strings must keep working."""
-        from custom_components.climate_director.engine.models import Problem
+        from custom_components.climate_director.engine.validation import Problem
 
         item = Problem("zone_without_sources", "zone z has no sources", zone="z")
         assert item == "zone z has no sources"

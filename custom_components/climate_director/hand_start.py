@@ -34,7 +34,7 @@ from homeassistant.util import dt as dt_util
 from .engine import ModeFamily, Plan, ResidentState, WorldState, family_of, hand_start
 from .engine.night import asleep_at
 from .readability import unreadable
-from .state_extra import stored_time
+from .stored_state import stored_time
 
 if TYPE_CHECKING:
     from .coordinator import CoordinatorSurface
