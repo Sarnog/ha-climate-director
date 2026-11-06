@@ -470,7 +470,6 @@ MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/models.py": 1154,
     "engine/validation.py": 1328,
     "coordinator.py": 2069,
-    "engine/decide.py": 1800,
 }
 
 # De stand van de modules tussen de 500 regels en de maat van 700: de projectafspraak
@@ -497,21 +496,21 @@ FROZEN_MODULES: dict[str, int] = {
 }
 
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
-    ("engine/decide.py", "_build_commands"): 208,
-    ("engine/decide.py", "_generator_commands"): 192,
+    ("engine/commands.py", "build_commands"): 208,
+    ("engine/commands.py", "generator_commands"): 192,
     ("coordinator.py", "__init__"): 285,
     ("engine/validation.py", "_rule_zones"): 164,
     ("engine/constraints.py", "resolve"): 128,
-    ("engine/decide.py", "_collect_wishes"): 137,
+    ("engine/candidates.py", "collect_wishes"): 137,
     ("coordinator.py", "_refusal_data"): 119,
     ("coordinator.py", "_notice_hand"): 137,
-    ("engine/decide.py", "_build_zone_decisions"): 135,
+    ("engine/zone_decisions.py", "build_zone_decisions"): 135,
     ("flow_residents.py", "resident"): 95,
-    ("engine/decide.py", "_manual_conflict"): 103,
+    ("engine/grants.py", "manual_conflict"): 103,
     ("state_store.py", "_async_restore_state"): 126,
     ("state_store.py", "_restore_overrides"): 81,
     ("engine/hysteresis.py", "_candidate"): 97,
-    ("engine/decide.py", "_resolve_with_fallbacks"): 91,
+    ("engine/grants.py", "resolve_with_fallbacks"): 91,
     ("preconditions.py", "async_precondition"): 89,
     ("diagnostics.py", "async_get_config_entry_diagnostics"): 82,
 }

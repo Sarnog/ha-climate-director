@@ -15,7 +15,7 @@ in milliseconds, without a running Home Assistant.
 
 from __future__ import annotations
 
-from .decide import clamped_target, decide
+from .decide import decide
 from .families import (
     ACTIVE_FAMILIES,
     MODE_COOL,
@@ -64,6 +64,7 @@ from .plan import (
 )
 from .validation import Problem, manual_only_problems, validate
 from .world import ClimateState, OpeningState, PresenceState, ResidentState, WorldState
+from .zone_decisions import clamped_target
 
 __all__ = [
     "HeatingLayout",

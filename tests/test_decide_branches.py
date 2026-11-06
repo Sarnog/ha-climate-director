@@ -10,8 +10,9 @@ from conftest import climate, house, make_world
 
 import custom_components.climate_director.engine.sources as source_picker
 from custom_components.climate_director.engine import diff, validation
-from custom_components.climate_director.engine.decide import _group_holder, clamped_target
+from custom_components.climate_director.engine.candidates import group_holder
 from custom_components.climate_director.engine.models import ModeFamily
+from custom_components.climate_director.engine.zone_decisions import clamped_target
 
 
 def test_a_command_without_a_setpoint_is_never_measured_against_one() -> None:
@@ -27,7 +28,7 @@ def test_clamping_a_command_without_a_setpoint_gives_nothing() -> None:
 
 def test_a_group_holder_ignores_a_member_that_is_no_source() -> None:
     """Een apparaat dat in geen enkele bron voorkomt bezet de groep niet."""
-    assert _group_holder(house(), make_world(), frozenset({"climate.geen_bron"})) is None
+    assert group_holder(house(), make_world(), frozenset({"climate.geen_bron"})) is None
 
 
 def test_a_dead_band_without_a_serving_source_holds_nothing() -> None:

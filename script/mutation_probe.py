@@ -50,19 +50,19 @@ MUTATIONS = [
     },
     {
         "name": "circuitlus-draait-niet",
-        "file": "custom_components/climate_director/engine/decide.py",
+        "file": "custom_components/climate_director/engine/grants.py",
         "old": "    while True:",
         "new": "    while False:",
     },
     {
         "name": "laatste-doorschuiving-blijft-liggen",
-        "file": "custom_components/climate_director/engine/decide.py",
+        "file": "custom_components/climate_director/engine/grants.py",
         "old": "        if not changed:\n            break",
         "new": "        if True:\n            break",
     },
     {
         "name": "bron-rusttijd-genegeerd",
-        "file": "custom_components/climate_director/engine/decide.py",
+        "file": "custom_components/climate_director/engine/grants.py",
         "old": 'circuit = _SOLO if not rest else Circuit("", "", (), True, min_cycle_time=rest)',
         "new": "circuit = _SOLO",
     },

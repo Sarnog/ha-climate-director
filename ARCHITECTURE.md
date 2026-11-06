@@ -1484,7 +1484,8 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `engine/manual_sources.py` | de eenmalige melding over handbediende bronnen | `manual_only_problems` |
 | `engine/candidates.py` | wie mag meedoen | `handed_over`, `collect_wishes`, `serving`, de exclusieve groepen, `standing_firm` |
 | `engine/grants.py` | wie krijgt de taak | `resolve_with_fallbacks`, `resolve_circuits`, `zone_reasons`, `manual_conflict`, `exclusive_rival`, `stand_down` |
-| `engine/commands.py` | het commando bouwen | `build_commands`, `generator_commands`, de stopboekhouding, `collapse_shared`, `claim` |
+| `engine/commands.py` | het commando bouwen | `build_commands`, `generator_commands` |
+| `engine/command_stops.py` | de stopboekhouding en het samenvouwen | `opening_rest_bookkeeping`, `stop_blocked`, `ignores_openings`, `collapse_shared`, `claim` |
 | `engine/command_reasons.py` | waarom een apparaat niets krijgt | `was_running`, `received_heat`, `unreadable_reason`, `untouched_reason`, `opening_stop_reason`, `opening_rest_hold`, `idle_mode` |
 | `engine/zone_decisions.py` | wat een zone uiteindelijk te horen krijgt | `build_zone_decisions`, `lost_to_another_zone`, `command_order`, `clamped_target` |
 | `engine/circuit_policy.py` | de taakkeuze op een circuit | `forced_families`, `choose_family`, `any_managed_running`, `finish` |
@@ -3315,7 +3316,8 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `engine/manual_sources.py` | the one-time notice about hand-operated sources | `manual_only_problems` |
 | `engine/candidates.py` | who may take part | `handed_over`, `collect_wishes`, `serving`, the exclusive groups, `standing_firm` |
 | `engine/grants.py` | who gets the duty | `resolve_with_fallbacks`, `resolve_circuits`, `zone_reasons`, `manual_conflict`, `exclusive_rival`, `stand_down` |
-| `engine/commands.py` | building the command | `build_commands`, `generator_commands`, the stop bookkeeping, `collapse_shared`, `claim` |
+| `engine/commands.py` | building the command | `build_commands`, `generator_commands` |
+| `engine/command_stops.py` | the stop bookkeeping and collapsing | `opening_rest_bookkeeping`, `stop_blocked`, `ignores_openings`, `collapse_shared`, `claim` |
 | `engine/command_reasons.py` | why an appliance gets nothing | `was_running`, `received_heat`, `unreadable_reason`, `untouched_reason`, `opening_stop_reason`, `opening_rest_hold`, `idle_mode` |
 | `engine/zone_decisions.py` | what a zone finally hears | `build_zone_decisions`, `lost_to_another_zone`, `command_order`, `clamped_target` |
 | `engine/circuit_policy.py` | choosing the duty on a circuit | `forced_families`, `choose_family`, `any_managed_running`, `finish` |
