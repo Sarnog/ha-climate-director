@@ -472,6 +472,7 @@
  "tests/test_guide_blueprints.py": [
   "blueprints/automation/climate_director/",
   "custom_components/climate_director/problems.py",
+  "custom_components/climate_director/repair_notices.py",
   "custom_components/climate_director/translations/ar.json",
   "custom_components/climate_director/translations/de.json",
   "custom_components/climate_director/translations/en.json",
@@ -502,6 +503,7 @@
  "tests/test_guide_inventory.py": [
   "custom_components/climate_director/icons.json",
   "custom_components/climate_director/problems.py",
+  "custom_components/climate_director/repair_notices.py",
   "custom_components/climate_director/services.yaml",
   "custom_components/climate_director/translations/ar.json",
   "custom_components/climate_director/translations/de.json",
@@ -608,6 +610,7 @@
   "custom_components/climate_director/engine/windows.py",
   "custom_components/climate_director/engine/world.py",
   "custom_components/climate_director/engine/zone_decisions.py",
+  "custom_components/climate_director/entity_texts.py",
   "custom_components/climate_director/flow_validation.py",
   "custom_components/climate_director/form_common.py",
   "custom_components/climate_director/number.py",
@@ -649,6 +652,7 @@
   "custom_components/climate_director/engine/untouched.py",
   "custom_components/climate_director/engine/world.py",
   "custom_components/climate_director/engine/zone_decisions.py",
+  "custom_components/climate_director/entity_texts.py",
   "custom_components/climate_director/hand.py",
   "custom_components/climate_director/preconditions.py",
   "custom_components/climate_director/readability.py",

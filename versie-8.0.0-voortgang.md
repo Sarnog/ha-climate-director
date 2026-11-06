@@ -5,18 +5,17 @@ pas gepusht als de voorganger groen is, en houdt zijn eigen bewijs bij.
 
 ## Stand
 
-- **Basis:** `main` op `6cd53be` (ontwerp, publieke namen, toetssplitsing,
-validatie, opslag, hand, handstart, configuratiestroom, formulieren, beslissing
-en modelbouwstenen), schone boom, `main == origin/main`.
+- **Basis:** `main` op `d332505` (ontwerp, publieke namen, toetssplitsing,
+validatie, opslag, hand, handstart, configuratiestroom, formulieren, beslissing,
+modelbouwstenen en coordinator), schone boom, `main == origin/main`.
 - **Gebruikersbesluiten:** N14/N15 blijven **later**; N16 wordt **geen**
   7.7.10. Beide blijven in `ROADMAP.md` en `ARCHITECTURE.md` staan; 8.0.0
   verandert geen gedrag en geen tekst.
 - **Productie:** draait 7.7.7. Alleen gelezen; niets geïnstalleerd, herstart of
   gewijzigd.
-- **Nu:** stap 9 staat in de werkboom: `coordinator.py` is 611 regels en de
-  onderdelen wonen in `coordinator_surface.py`, `coordinator_lifecycle.py`,
-  `coordinator_tracking.py`, `coordinator_round.py`,
-  `coordinator_reporting.py` en `coordinator_events.py`. Nog niet gecommit.
+- **Nu:** stap 10 staat in de werkboom: `repair_notices.py`, `entity_texts.py`
+  en `services.py` dragen de bijzondere reparatiemeldingen, de leesbare
+  beslissing en de service-API. Nog niet gecommit.
 
 ## Stappen
 
@@ -31,8 +30,8 @@ en modelbouwstenen), schone boom, `main == origin/main`.
 | 6. Configuratiestroom en formulieren | `05d59c5` | klaar: `config_flow.py` 456, `flow_validation.py` 380, `flow_*` en `form_*` |
 | 7. `engine/decide.py` | `cdfc453` | klaar: `decide.py` 82 regels en zes onderwerpsmodules |
 | 8. `engine/models.py` | `6cd53be` | klaar: `models.py` 186 regels en vijf modelbouwstenen, plus `manual_sources.py` |
-| 9. `coordinator.py` | deze commit | klaar: `coordinator.py` 611 regels en zes onderdelen |
-| 10. `problems.py`, `texts.py`, `__init__.py` | nog te maken | wacht |
+| 9. `coordinator.py` | `d332505` | klaar: `coordinator.py` 611 regels en zes onderdelen |
+| 10. `problems.py`, `texts.py`, `__init__.py` | deze commit | klaar: `repair_notices.py`, `entity_texts.py`, `services.py` |
 | Release 8.0.0 | nog te maken | wacht |
 
 ## Bewijs
@@ -156,6 +155,17 @@ E-probe is tijdsafhankelijk gebleken (de klok in E8 verschoof tussen twee
 parallelle runs) en wordt vóór de push opnieuw naast elkaar gelegd. De
 mutatielijst was vóór deze stap 66 van 66; de ronde erna volgt vóór de push.
 
+Stap 10 is gemeten. `__init__.py` ging naar 324 regels, `problems.py` naar 334
+en `texts.py` naar 311; `repair_notices.py` (344), `entity_texts.py` (345) en
+`services.py` (329) dragen de afgesplitste onderwerpen. De volledige suite gaf
+4018 passed in 28m06s (log `%TEMP%/800/step10-full2.log`), de dekking is 100 %
+regels en takken (6395/2092), de poort meldt 75 benoemde uitsluitingen en de
+kaart is bijgewerkt. De engine-probe (42), v1-probe (64) en E-probe (107) zijn
+byte-gelijk. De mutatielijst was vóór deze stap 66 van 66; de ronde erna volgt
+vóór de push. De eerste ronde van stap 9 vond één verouderd mutatiepatroon
+(L12) en de eerste ronde van stap 10 één gids die alleen `problems.py` las;
+beide zijn hersteld.
+
 Per verhuiscommit worden hier vastgelegd:
 
 - de twee engine-probes en de drie handstartprobes, met logpad en tijd;
@@ -174,18 +184,17 @@ only after its predecessor is green, and keeps its own proof.
 
 ## State
 
-- **Base:** `main` at `6cd53be` (design, public names, test split, validation,
-storage, hand, hand start, configuration flow, forms, decision and model
-building blocks), clean tree, `main == origin/main`.
+- **Base:** `main` at `d332505` (design, public names, test split, validation,
+storage, hand, hand start, configuration flow, forms, decision, model building
+blocks and coordinator), clean tree, `main == origin/main`.
 - **User decisions:** N14/N15 stay **later**; N16 becomes **no** 7.7.10.
   Both stay in `ROADMAP.md` and `ARCHITECTURE.md`; 8.0.0 changes no behaviour
   and no text.
 - **Production:** runs 7.7.7. Read only; nothing installed, restarted or
   changed.
-- **Now:** step 9 stands in the working tree: `coordinator.py` is 611 lines and
-  the parts live in `coordinator_surface.py`, `coordinator_lifecycle.py`,
-  `coordinator_tracking.py`, `coordinator_round.py`,
-  `coordinator_reporting.py` and `coordinator_events.py`. Not committed yet.
+- **Now:** step 10 stands in the working tree: `repair_notices.py`,
+  `entity_texts.py` and `services.py` carry the specialised repair notices, the
+  readable decision and the service API. Not committed yet.
 
 ## Steps
 
@@ -200,8 +209,8 @@ building blocks), clean tree, `main == origin/main`.
 | 6. Configuration flow and forms | `05d59c5` | done: `config_flow.py` 456, `flow_validation.py` 380, `flow_*` and `form_*` |
 | 7. `engine/decide.py` | `cdfc453` | done: `decide.py` 82 lines and six subject modules |
 | 8. `engine/models.py` | `6cd53be` | done: `models.py` 186 lines and five model building blocks, plus `manual_sources.py` |
-| 9. `coordinator.py` | this commit | done: `coordinator.py` 611 lines and six parts |
-| 10. `problems.py`, `texts.py`, `__init__.py` | to be made | waits |
+| 9. `coordinator.py` | `d332505` | done: `coordinator.py` 611 lines and six parts |
+| 10. `problems.py`, `texts.py`, `__init__.py` | this commit | done: `repair_notices.py`, `entity_texts.py`, `services.py` |
 | Release 8.0.0 | to be made | waits |
 
 ## Proof
@@ -324,6 +333,17 @@ engine probe (42) and v1 probe (64) are byte-identical; the E probe proved
 time-dependent (the clock in E8 moved between two parallel runs) and is laid
 side by side again before the push. The mutation list was 66 of 66 before this
 step; the round after it follows before the push.
+
+Step 10 is measured. `__init__.py` went to 324 lines, `problems.py` to 334 and
+`texts.py` to 311; `repair_notices.py` (344), `entity_texts.py` (345) and
+`services.py` (329) carry the split-off subjects. The full suite gave 4018
+passed in 28m06s (log `%TEMP%/800/step10-full2.log`), coverage is 100% lines and
+branches (6395/2092), the gate reports 75 named exclusions and the map is
+updated. The engine probe (42), v1 probe (64) and E probe (107) are
+byte-identical. The mutation list was 66 of 66 before this step; the round
+after it follows before the push. The first step 9 round found one stale
+mutation pattern (L12) and the first step 10 round one guide that read only
+`problems.py`; both were fixed.
 
 Per move commit the following is recorded here:
 

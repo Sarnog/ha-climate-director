@@ -72,9 +72,13 @@ def notice_keys() -> list[str]:
     The key sometimes stands literally in the call and sometimes in a constant
     above it; both are looked up, so a new notice counts in either form.
     """
-    tree = ast.parse((PACKAGE / "problems.py").read_text(encoding="utf-8"))
+    trees = [
+        ast.parse((PACKAGE / name).read_text(encoding="utf-8"))
+        for name in ("problems.py", "repair_notices.py")
+    ]
     constants = {
         node.targets[0].id: node.value.value
+        for tree in trees
         for node in tree.body
         if isinstance(node, ast.Assign)
         and isinstance(node.targets[0], ast.Name)
@@ -82,14 +86,15 @@ def notice_keys() -> list[str]:
         and isinstance(node.value.value, str)
     }
     keys: set[str] = set()
-    for node in issue_calls(tree, "async_create_issue"):
-        for keyword in node.keywords:
-            if keyword.arg != "translation_key":
-                continue
-            if isinstance(keyword.value, ast.Constant) and isinstance(keyword.value.value, str):
-                keys.add(keyword.value.value)
-            elif isinstance(keyword.value, ast.Name):
-                keys.add(constants[keyword.value.id])
+    for tree in trees:
+        for node in issue_calls(tree, "async_create_issue"):
+            for keyword in node.keywords:
+                if keyword.arg != "translation_key":
+                    continue
+                if isinstance(keyword.value, ast.Constant) and isinstance(keyword.value.value, str):
+                    keys.add(keyword.value.value)
+                elif isinstance(keyword.value, ast.Name):
+                    keys.add(constants[keyword.value.id])
     assert keys, "geen enkele reparatiemelding gevonden in problems.py"
     return sorted(keys)
 

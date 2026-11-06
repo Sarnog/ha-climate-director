@@ -38,7 +38,7 @@ import pytest
 from _ast_helpers import issue_calls
 from conftest import fix_flow_steps, fixable_issue_keys
 
-from custom_components.climate_director import problems
+from custom_components.climate_director import problems, repair_notices
 from custom_components.climate_director.const import (
     CONF_MANUAL_SOURCES_SEEN,
     DOMAIN,
@@ -89,6 +89,7 @@ def hass_with(listeners: int):
 def registry(monkeypatch: pytest.MonkeyPatch) -> Registry:
     fake = Registry()
     monkeypatch.setattr(problems, "ir", fake)
+    monkeypatch.setattr(repair_notices, "ir", fake)
     return fake
 
 
