@@ -306,7 +306,10 @@ def _serving(previous: Plan | None, zone_id: str) -> str | None:
 
 
 def _apply_exclusive_groups(
-    config: DirectorConfig, world: WorldState, wishes: dict[str, constraints.Request]
+    config: DirectorConfig,
+    world: WorldState,
+    wishes: dict[str, constraints.Request],
+    takeovers: tuple[takeover.Takeover, ...] = (),
 ) -> tuple[dict[str, constraints.Request], dict[str, constraints.Request]]:
     """Split the requests into those that keep a shared appliance and those that lose it.
 
@@ -331,11 +334,8 @@ def _apply_exclusive_groups(
     member yields and that request goes through. A member in a handed-over zone
     is unbeatable, since the director sends that zone nothing, an off included.
     """
-    if not config.exclusive_groups:
-        return wishes, {}
-
-    kept = dict(wishes)
-    dropped: dict[str, constraints.Request] = {}
+    # Een apparaat met een gebied (`covers_zones`) sluit ook uit / also rules out.
+    kept, dropped = takeover.area_clash(config, wishes, takeovers)
     for group in config.exclusive_groups:
         members = _group_entities(config, group)
         contenders = sorted(
@@ -350,55 +350,6 @@ def _apply_exclusive_groups(
         else:
             winner = contenders[0].source.entity_id
         for loser in (item for item in contenders if item.source.entity_id != winner):
-            dropped[loser.zone.zone_id] = kept.pop(loser.zone.zone_id)
-    return kept, dropped
-
-
-def _apply_covered_areas(
-    config: DirectorConfig, wishes: dict[str, constraints.Request]
-) -> tuple[dict[str, constraints.Request], dict[str, constraints.Request]]:
-    """Keep one side of a clash between an area-wide appliance and the rest.
-
-    Een apparaat met `covers_zones` (de gasketel van een centrale cv) verwarmt
-    zijn hele gebied, ook de kamers die er zelf niet om vroegen. Vraagt één zone
-    de ketel terwijl een andere zone in dat gebied een ánder apparaat draait -
-    bijvoorbeeld een airco die de dode band nog vasthoudt - dan draaien gas en
-    airco tegelijk. Dat is de combinatie die niet mag bestaan, en een
-    uitsluitende groep dekt hem alleen als de gebruiker elk paar apart aanvinkt.
-
-    Het verzoek met de meeste voorrang wint. Wint de ketel, dan vervallen de
-    verzoeken van andere apparaten in het gebied; wint een ander apparaat, dan
-    vervalt elk verzoek om de ketel. Verliezers worden teruggegeven in plaats
-    van weggegooid, net als bij `_apply_exclusive_groups`.
-
-    An appliance with `covers_zones` (the boiler of a central heating system)
-    heats its whole area, rooms that did not ask for it included. If one zone
-    asks for the boiler while another zone in that area runs a different
-    appliance - an air conditioner the dead band still holds, say - boiler and
-    air conditioner run together. That is the combination that must not exist,
-    and an exclusive group only covers it when the user ticks every pair.
-
-    The request with the most claim wins. If the boiler wins, the requests of
-    other appliances in the area lapse; if another appliance wins, every request
-    for the boiler lapses. Losers are returned rather than discarded, as with
-    `_apply_exclusive_groups`.
-    """
-    areas = takeover.areas(config)
-    kept = dict(wishes)
-    dropped: dict[str, constraints.Request] = {}
-    for entity_id, area in sorted(areas.items()):
-        if len(area) < 2:
-            continue
-        owners = [r for r in kept.values() if r.source.entity_id == entity_id]
-        rivals = [
-            r for r in kept.values() if r.source.entity_id != entity_id and r.zone.zone_id in area
-        ]
-        if not owners or not rivals:
-            continue
-        best_owner = min(owners, key=lambda request: request.rank)
-        best_rival = min(rivals, key=lambda request: request.rank)
-        losers = rivals if best_owner.rank <= best_rival.rank else owners
-        for loser in losers:
             dropped[loser.zone.zone_id] = kept.pop(loser.zone.zone_id)
     return kept, dropped
 
@@ -591,13 +542,7 @@ def _resolve_with_fallbacks(
     # not slide on to an appliance the administrator already has (anchor 11).
     handed_over = _handed_over(config, world)
     while True:
-        wishes, dropped_now = _apply_exclusive_groups(config, world, wishes)
-        dropped.update(dropped_now)
-        # Een apparaat met een gebied (`covers_zones`) verwarmt dat hele gebied
-        # mee: geen ander apparaat mag er dan naast draaien. / An appliance with
-        # an area (`covers_zones`) heats that whole area along: no other
-        # appliance may run beside it then.
-        wishes, dropped_now = _apply_covered_areas(config, wishes)
+        wishes, dropped_now = _apply_exclusive_groups(config, world, wishes, takeovers)
         dropped.update(dropped_now)
         grants, circuit_decisions, deferrals = _resolve_circuits(config, world, wishes, standing)
         all_deferrals += [deferral for deferral in deferrals if deferral not in all_deferrals]
