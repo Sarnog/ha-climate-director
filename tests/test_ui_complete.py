@@ -40,6 +40,15 @@ import pytest
 import yaml
 
 COMPONENT = pathlib.Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
+FORM_SOURCE = "\n".join(
+    path.read_text(encoding="utf-8") for path in sorted(COMPONENT.glob("form_*.py"))
+)
+FLOW_SOURCE = "\n".join(
+    [
+        (COMPONENT / "config_flow.py").read_text(encoding="utf-8"),
+        *[path.read_text(encoding="utf-8") for path in sorted(COMPONENT.glob("flow_*.py"))],
+    ]
+)
 
 #: Velden waarvan de naam uit een constante komt in plaats van uit een letterlijke.
 #: Fields whose name comes from a constant rather than from a literal.
@@ -82,7 +91,9 @@ def fields_per_step() -> dict[str, set[str]]:
     found: dict[str, set[str]] = {}
 
     for module, step, node in form_field_nodes():
-        if module != "custom_components.climate_director.config_flow":
+        if module != "custom_components.climate_director.config_flow" and not module.startswith(
+            "custom_components.climate_director.flow_"
+        ):
             continue
 
         keys: set[str] = set()
@@ -228,11 +239,7 @@ class TestEveryFormField:
 class TestEveryDropdown:
     """A select without translated options shows its stored values instead."""
 
-    _flow = (
-        (COMPONENT / "config_flow.py").read_text(encoding="utf-8")
-        + "\n"
-        + (COMPONENT / "schemas.py").read_text(encoding="utf-8")
-    )
+    _flow = (COMPONENT / "config_flow.py").read_text(encoding="utf-8") + "\n" + FORM_SOURCE
     #: Twee vormen: rechtstreeks op de selector, en via `choices`.
     #: Two shapes: straight on the selector, and by way of `choices`.
     keys = set(re.findall(r'translation_key="(\w+)"', _flow)) | set(
@@ -369,7 +376,7 @@ class TestEveryScreenCanBeLeft:
     def _steps(self) -> dict[str, str]:
         """Return the source of each step's own method plus its schema function.
 
-        De terugweg (`_back_option()` / `EXIT`) staat sinds S5 in de
+        De terugweg (`back_option()` / `EXIT`) staat sinds S5 in de
         schemafuncties in `schemas.py`, niet meer in de stapmethode zelf. Deze
         lezer lost `data_schema=schemas.<naam>(...)` daarom op naar de functie
         in dat bestand en plakt de bron erbij, zodat de bewaking meeverhuist in
@@ -380,7 +387,7 @@ class TestEveryScreenCanBeLeft:
         samengevoegde bron, en dan kon een terugweg in het ene schema het
         ontbreken ervan in het andere maskeren.
 
-        Since S5 the way back (`_back_option()` / `EXIT`) lives in the schema
+        Since S5 the way back (`back_option()` / `EXIT`) lives in the schema
         functions in `schemas.py`, no longer in the step method itself. This
         reader therefore resolves `data_schema=schemas.<name>(...)` to the
         function in that file and appends its source, so the guard moves along
@@ -391,8 +398,8 @@ class TestEveryScreenCanBeLeft:
         `step_id`s, and then a way back in one schema could mask its absence in
         the other.
         """
-        source = (COMPONENT / "config_flow.py").read_text(encoding="utf-8")
-        schema_source = (COMPONENT / "schemas.py").read_text(encoding="utf-8")
+        source = FLOW_SOURCE
+        schema_source = FORM_SOURCE
         tree = ast.parse(source)
         schema_tree = ast.parse(schema_source)
         schema_functions = {
@@ -439,7 +446,7 @@ class TestEveryScreenCanBeLeft:
         trapped = [
             step
             for step, body in self._steps().items()
-            if step not in self.exempt and "_back_option" not in body and "EXIT" not in body
+            if step not in self.exempt and "back_option" not in body and "EXIT" not in body
         ]
         assert not trapped, trapped
 
@@ -488,6 +495,7 @@ class TestNoScreenCanRefuseToBeLeft:
             step: node
             for module, step, node in form_field_nodes()
             if module == "custom_components.climate_director.config_flow"
+            or module.startswith("custom_components.climate_director.flow_")
         }
 
     def test_the_reader_finds_the_forms(self) -> None:
@@ -517,17 +525,15 @@ class TestNoScreenCanRefuseToBeLeft:
 
     def test_deleting_needs_no_filled_in_fields(self) -> None:
         """Throwing something away should not demand you complete it first."""
-        source = (COMPONENT / "config_flow.py").read_text(encoding="utf-8")
-        checks = source.count("errors = _missing(user_input,")
-        guarded = source.count(
-            'if not user_input.get("delete"):\n                errors = _missing('
-        )
+        source = FLOW_SOURCE
+        checks = source.count("errors = missing(user_input,")
+        guarded = source.count('if not user_input.get("delete"):\n            errors = missing(')
         # De aanmaakwizard valt hierbuiten: daar valt niets te verwijderen, en
         # de uitweg is de knop van de flow zelf.
         #
         # The creation wizard falls outside this: there is nothing to delete
         # there, and the way out is the flow's own button.
-        creating = source.count("errors = _missing(user_input, CONF_NAME)")
+        creating = source.count("errors = missing(user_input, CONF_NAME)")
         assert checks >= 6
         assert creating == 1
         assert guarded == checks - creating, (
@@ -562,14 +568,14 @@ class TestTheSaveScreenWarns:
         source = (COMPONENT / "config_flow.py").read_text(encoding="utf-8")
         start = source.index("async def async_step_save(")
         body = source[start : source.index("\n    async def ", start + 1)]
-        schema_source = (COMPONENT / "schemas.py").read_text(encoding="utf-8")
+        schema_source = FORM_SOURCE
         match = re.search(r"^def save\(", schema_source, re.M)
         assert match, "schemas.save() bestaat niet"
         rest = schema_source[match.end() :]
         end = re.search(r"^def ", rest, re.M)
         body += schema_source[match.start() : match.end() + (end.start() if end else len(rest))]
         assert "EXIT_DROP" in body, "geen weg terug vanaf het opslaanscherm"
-        assert "_exit_row()" in body, "geen keuze tussen opslaan en teruggaan"
+        assert "exit_row()" in body, "geen keuze tussen opslaan en teruggaan"
 
     @pytest.mark.parametrize("path", FILES, ids=IDS)
     def test_the_warning_screen_is_translated(self, path: pathlib.Path) -> None:
@@ -595,14 +601,10 @@ class TestEveryPickerCanBeBuilt:
     is all the user gets to see.
     """
 
-    _flow = (
-        (COMPONENT / "config_flow.py").read_text(encoding="utf-8")
-        + "\n"
-        + (COMPONENT / "schemas.py").read_text(encoding="utf-8")
-    )
+    _flow = (COMPONENT / "config_flow.py").read_text(encoding="utf-8") + "\n" + FORM_SOURCE
 
     def test_every_add_row_has_a_fallback(self) -> None:
-        used = set(re.findall(r'_add_option\("(\w+)"\)', self._flow))
+        used = set(re.findall(r'add_option\("(\w+)"\)', self._flow))
         table = set(re.findall(r'^    "(\w+)": "\+ ', self._flow, re.M))
         assert used, "geen enkele toevoegregel gevonden"
         assert not (used - table), sorted(used - table)

@@ -529,13 +529,18 @@ def form_field_nodes(
         if isinstance(schema, ast.Call) and isinstance(schema.func, ast.Attribute):
             value = schema.func.value
             if isinstance(value, ast.Name) and value.id == "schemas":
-                schemas_module = _module_of(root, root / "schemas.py")
-                function = functions.get((schemas_module, schema.func.attr))
-                if function is None:
+                candidates = [
+                    node
+                    for (module_name, function_name), node in functions.items()
+                    if function_name == schema.func.attr
+                    and module_name.startswith("custom_components.climate_director.form_")
+                ]
+                if len(candidates) != 1:
                     raise AssertionError(
                         f"{module}: data_schema verwijst naar schemas.{schema.func.attr}, "
-                        "maar die functie bestaat niet in schemas.py"
+                        "maar die functie staat niet in precies een form_module"
                     )
+                function = candidates[0]
                 target = function
                 table_name = _table_schema_argument(function)
                 if table_name is not None:

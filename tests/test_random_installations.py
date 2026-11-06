@@ -34,7 +34,6 @@ from datetime import datetime, timedelta
 import pytest
 from conftest import assert_plan_holds
 
-from custom_components.climate_director.config_flow import _zone_errors, _zone_from_form
 from custom_components.climate_director.coordinator import (
     season_from_state,
     temperature_from_state,
@@ -54,6 +53,7 @@ from custom_components.climate_director.engine import (
     validate,
 )
 from custom_components.climate_director.engine.serialise import config_from_dict, config_to_dict
+from custom_components.climate_director.flow_validation import zone_errors, zone_from_form
 
 NOW = datetime(2026, 3, 15, 14, 30)
 
@@ -818,8 +818,8 @@ class TestTheFormBuildsSoundZones:
         rng = random.Random(99)
         refused = 0
         for _ in range(1_000):
-            zone = _zone_from_form(self._form(rng), {})
-            if _zone_errors(zone):
+            zone = zone_from_form(self._form(rng), {})
+            if zone_errors(zone):
                 refused += 1
                 continue
 
@@ -848,8 +848,8 @@ class TestTheFormBuildsSoundZones:
         rng = random.Random(7)
         seen = {True: 0, False: 0}
         for _ in range(2_000):
-            zone = _zone_from_form(self._form(rng), {})
-            accepted = not _zone_errors(zone)
+            zone = zone_from_form(self._form(rng), {})
+            accepted = not zone_errors(zone)
             sound = not validate(config_from_dict(self._single_zone(zone)))
             assert accepted == sound, (zone, validate(config_from_dict(self._single_zone(zone))))
             seen[accepted] += 1

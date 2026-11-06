@@ -471,8 +471,6 @@ MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/validation.py": 1328,
     "coordinator.py": 2069,
     "engine/decide.py": 1800,
-    "config_flow.py": 1492,
-    "schemas.py": 893,
 }
 
 # De stand van de modules tussen de 500 regels en de maat van 700: de projectafspraak
@@ -508,11 +506,11 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("coordinator.py", "_refusal_data"): 119,
     ("coordinator.py", "_notice_hand"): 137,
     ("engine/decide.py", "_build_zone_decisions"): 135,
+    ("flow_residents.py", "resident"): 95,
     ("engine/decide.py", "_manual_conflict"): 103,
     ("state_store.py", "_async_restore_state"): 126,
     ("state_store.py", "_restore_overrides"): 81,
     ("engine/hysteresis.py", "_candidate"): 97,
-    ("config_flow.py", "async_step_resident"): 97,
     ("engine/decide.py", "_resolve_with_fallbacks"): 91,
     ("preconditions.py", "async_precondition"): 89,
     ("diagnostics.py", "async_get_config_entry_diagnostics"): 82,

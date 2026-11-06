@@ -510,9 +510,10 @@
   "custom_components/climate_director/engine/untouched.py",
   "custom_components/climate_director/engine/validation.py",
   "custom_components/climate_director/engine/world.py",
+  "custom_components/climate_director/flow_validation.py",
+  "custom_components/climate_director/form_common.py",
   "custom_components/climate_director/number.py",
   "custom_components/climate_director/problems.py",
-  "custom_components/climate_director/schemas.py",
   "custom_components/climate_director/texts.py",
   "custom_components/climate_director/units.py",
   "custom_components/climate_director/world_builder.py"
@@ -1056,7 +1057,6 @@
   "custom_components/climate_director/translations/"
  ],
  "tests/test_random_installations.py": [
-  "custom_components/climate_director/config_flow.py",
   "custom_components/climate_director/coordinator.py",
   "custom_components/climate_director/engine/constraints.py",
   "custom_components/climate_director/engine/decide.py",
@@ -1081,6 +1081,7 @@
   "custom_components/climate_director/engine/untouched.py",
   "custom_components/climate_director/engine/validation.py",
   "custom_components/climate_director/engine/world.py",
+  "custom_components/climate_director/flow_validation.py",
   "custom_components/climate_director/preconditions.py",
   "custom_components/climate_director/state_store.py",
   "custom_components/climate_director/units.py",

@@ -948,7 +948,7 @@ class TestEveryDayFieldSpeaksTheUsersLanguage:
             await stop_house(home)
 
     def test_the_list_line_uses_the_translated_days(self) -> None:
-        from custom_components.climate_director.schemas import _window_label
+        from custom_components.climate_director.form_common import window_label
 
         dutch = {
             "component.climate_director.selector.weekday_short.options.5": "za",
@@ -956,11 +956,11 @@ class TestEveryDayFieldSpeaksTheUsersLanguage:
             "component.climate_director.selector.weekday_summary.options.every_day": "elke dag",
         }
         window = {"start": "08:00:00", "end": "15:00:00", "weekdays": [5, 6]}
-        assert _window_label(window, dutch) == "08:00 - 15:00, za, zo"
-        assert _window_label({**window, "weekdays": None}, dutch) == "08:00 - 15:00, elke dag"
+        assert window_label(window, dutch) == "08:00 - 15:00, za, zo"
+        assert window_label({**window, "weekdays": None}, dutch) == "08:00 - 15:00, elke dag"
 
     def test_it_falls_back_on_english_without_a_translation(self) -> None:
-        from custom_components.climate_director.schemas import _window_label
+        from custom_components.climate_director.form_common import window_label
 
         window = {"start": "08:00:00", "end": "15:00:00", "weekdays": [5, 6]}
-        assert _window_label(window, {}) == "08:00 - 15:00, Sat, Sun"
+        assert window_label(window, {}) == "08:00 - 15:00, Sat, Sun"

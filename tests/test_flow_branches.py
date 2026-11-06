@@ -18,10 +18,8 @@ from flow_helpers import (
 )
 from harness_live import LiveHome, start_house, stop_house
 
-from custom_components.climate_director.config_flow import (
-    ClimateDirectorOptionsFlow,
-    _name_errors,
-)
+from custom_components.climate_director.config_flow import ClimateDirectorOptionsFlow
+from custom_components.climate_director.flow_validation import name_errors
 
 CIRCUIT_FIELDS: dict[str, Any] = {
     "name": "Buitenunit",
@@ -82,8 +80,8 @@ def test_a_stale_resident_cursor_yields_no_resident() -> None:
 
 def test_a_zone_without_a_name_is_refused() -> None:
     """Een naam die niets om te sluggen oplevert wordt geweigerd."""
-    assert _name_errors({"name": ""}) == {"name": "required"}
-    assert _name_errors({"name": "Woonkamer"}) == {}
+    assert name_errors({"name": ""}) == {"name": "required"}
+    assert name_errors({"name": "Woonkamer"}) == {}
 
 
 async def test_the_source_screen_returns_to_the_menu_without_a_zone() -> None:

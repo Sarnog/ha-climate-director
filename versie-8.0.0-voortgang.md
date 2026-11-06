@@ -5,16 +5,16 @@ pas gepusht als de voorganger groen is, en houdt zijn eigen bewijs bij.
 
 ## Stand
 
-- **Basis:** `main` op `bb84325` (ontwerp, publieke namen, toetssplitsing,
-validatie en opslag), schone boom, `main == origin/main`.
+- **Basis:** `main` op `d27c3b6` (ontwerp, publieke namen, toetssplitsing,
+validatie, opslag, hand en handstart), schone boom, `main == origin/main`.
 - **Gebruikersbesluiten:** N14/N15 blijven **later**; N16 wordt **geen**
   7.7.10. Beide blijven in `ROADMAP.md` en `ARCHITECTURE.md` staan; 8.0.0
   verandert geen gedrag en geen tekst.
 - **Productie:** draait 7.7.7. Alleen gelezen; niets geïnstalleerd, herstart of
   gewijzigd.
-- **Nu:** stap 5 staat in de werkboom: `hand.py` draagt de vier publieke
-  handmethodes, `engine/quiet.py` en `engine/schedule.py` zijn afgesplitst en
-  `brakes_remaining` woont bij `gates.py`. Nog niet gecommit.
+- **Nu:** stap 6 staat in de werkboom: `config_flow.py` is de ingang met
+  dunne stapwrappers, de stappen wonen in `flow_*` en de schermen in `form_*`;
+  `schemas.py` is een dunne façade. Nog niet gecommit.
 
 ## Stappen
 
@@ -25,8 +25,8 @@ validatie en opslag), schone boom, `main == origin/main`.
 | 2. Toetsen per onderwerp + impactkaart | `4c9f1cf` | klaar: 50 toetsbestanden verdeeld, hulpjes verhuisd, kaart bijgewerkt |
 | 3. Validatie en `stored_state.py` | `79424dd` | klaar: `engine/validation.py` (1328 regels), `models.py` 2269 → 1154, `state_extra.py` → `stored_state.py` |
 | 4. Opslag en serialisatie | `bb84325` (kaartherstel `fd26bce`) | klaar: `serialise.py` 152 regels, drie opslagmodules en `storage_values.py` |
-| 5. Hand en handstart | deze commit | klaar: `hand.py`, `engine/quiet.py`, `engine/schedule.py`, `brakes_remaining` bij `gates.py` |
-| 6. Configuratiestroom en formulieren | nog te maken | wacht |
+| 5. Hand en handstart | `d27c3b6` | klaar: `hand.py`, `engine/quiet.py`, `engine/schedule.py`, `brakes_remaining` bij `gates.py` |
+| 6. Configuratiestroom en formulieren | deze commit | klaar: `config_flow.py` 456, `flow_validation.py` 380, `flow_*` en `form_*` |
 | 7. `engine/decide.py` | nog te maken | wacht |
 | 8. `engine/models.py` | nog te maken | wacht |
 | 9. `coordinator.py` | nog te maken | wacht |
@@ -99,6 +99,23 @@ volledige ronde van deze stap gaf 3979 passed en drie rood: zes regels zonder
 naam in de dekkingspoort en twee verouderde mutatiepatronen; die zijn hersteld
 en de tweede ronde is groen.
 
+Stap 6 is gemeten. `config_flow.py` ging van 1492 naar 456 regels; de stappen
+wonen in `flow_installation.py`, `flow_zones.py`, `flow_sources.py`,
+`flow_circuits.py`, `flow_generators.py`, `flow_residents.py`,
+`flow_windows.py` en `flow_openings.py`, de schermen in `form_common.py`,
+`form_installation.py`, `form_zones.py`, `form_circuits.py`,
+`form_residents.py` en `form_openings.py`, en `flow_validation.py` (380) draagt
+de schermcontroles. `schemas.py` is een façade van 142 regels. De volledige
+suite gaf 3997 passed in 26m57s (log `%TEMP%/800/step6-full2.log`), de dekking
+is 100 % regels en takken (6133/2092), de poort meldt 63 benoemde
+uitsluitingen en de kaart is bijgewerkt. De engine-probe (42), v1-probe (64)
+en E-probe (107) zijn byte-gelijk. De mutatielijst was vóór deze stap 66 van
+66; de ronde erna volgt vóór de push. De eerste volledige ronde stopte bij
+de verzameling omdat een oud testbestand de private flowhelpers nog uit
+`config_flow.py` haalde; die import is naar `flow_validation.py` verhuisd. De
+typecontroleblokken in de nieuwe modules vroegen achttien benoemde
+uitsluitingen; daarom staat de poort op 63 in plaats van 45.
+
 Per verhuiscommit worden hier vastgelegd:
 
 - de twee engine-probes en de drie handstartprobes, met logpad en tijd;
@@ -117,16 +134,16 @@ only after its predecessor is green, and keeps its own proof.
 
 ## State
 
-- **Base:** `main` at `bb84325` (design, public names, test split, validation
-and storage), clean tree, `main == origin/main`.
+- **Base:** `main` at `d27c3b6` (design, public names, test split, validation,
+storage, hand and hand start), clean tree, `main == origin/main`.
 - **User decisions:** N14/N15 stay **later**; N16 becomes **no** 7.7.10.
   Both stay in `ROADMAP.md` and `ARCHITECTURE.md`; 8.0.0 changes no behaviour
   and no text.
 - **Production:** runs 7.7.7. Read only; nothing installed, restarted or
   changed.
-- **Now:** step 5 stands in the working tree: `hand.py` carries the four public
-  hand methods, `engine/quiet.py` and `engine/schedule.py` are split off and
-  `brakes_remaining` lives with `gates.py`. Not committed yet.
+- **Now:** step 6 stands in the working tree: `config_flow.py` is the entrance
+  with thin step wrappers, the steps live in `flow_*` and the screens in
+  `form_*`; `schemas.py` is a thin facade. Not committed yet.
 
 ## Steps
 
@@ -137,8 +154,8 @@ and storage), clean tree, `main == origin/main`.
 | 2. Tests per subject + impact map | `4c9f1cf` | done: 50 test files split, helpers moved, map updated |
 | 3. Validation and `stored_state.py` | `79424dd` | done: `engine/validation.py` (1328 lines), `models.py` 2269 → 1154, `state_extra.py` → `stored_state.py` |
 | 4. Storage and serialisation | `bb84325` (map fix `fd26bce`) | done: `serialise.py` 152 lines, three storage modules and `storage_values.py` |
-| 5. Hand and hand start | this commit | done: `hand.py`, `engine/quiet.py`, `engine/schedule.py`, `brakes_remaining` at `gates.py` |
-| 6. Configuration flow and forms | to be made | waits |
+| 5. Hand and hand start | `d27c3b6` | done: `hand.py`, `engine/quiet.py`, `engine/schedule.py`, `brakes_remaining` at `gates.py` |
+| 6. Configuration flow and forms | this commit | done: `config_flow.py` 456, `flow_validation.py` 380, `flow_*` and `form_*` |
 | 7. `engine/decide.py` | to be made | waits |
 | 8. `engine/models.py` | to be made | waits |
 | 9. `coordinator.py` | to be made | waits |
@@ -210,6 +227,23 @@ the gate reports 45 named exclusions and the map is updated. The engine probe
 after it follows before the push. The first full round of this step gave 3979
 passed and three red: six lines without a name in the coverage gate and two
 stale mutation patterns; they were fixed and the second round is green.
+
+Step 6 is measured. `config_flow.py` went from 1492 to 456 lines; the steps
+live in `flow_installation.py`, `flow_zones.py`, `flow_sources.py`,
+`flow_circuits.py`, `flow_generators.py`, `flow_residents.py`,
+`flow_windows.py` and `flow_openings.py`, the screens in `form_common.py`,
+`form_installation.py`, `form_zones.py`, `form_circuits.py`,
+`form_residents.py` and `form_openings.py`, and `flow_validation.py` (380)
+carries the screen checks. `schemas.py` is a 142-line facade. The full suite
+gave 3997 passed in 26m57s (log `%TEMP%/800/step6-full2.log`), coverage is
+100% lines and branches (6133/2092), the gate reports 63 named exclusions and
+the map is updated. The engine probe (42), v1 probe (64) and E probe (107) are
+byte-identical. The mutation list was 66 of 66 before this step; the round
+after it follows before the push. The first full round stopped at collection
+because an old test file still took the private flow helpers from
+`config_flow.py`; that import moved to `flow_validation.py`. The type-check
+blocks in the new modules asked for eighteen named exclusions, hence the gate
+stands at 63 instead of 45.
 
 Per move commit the following is recorded here:
 

@@ -179,6 +179,42 @@ NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {
         "-> bool: ...",
         "def house_is_empty(self, residents: dict[str, ResidentState]) -> bool: ...",
     ),
+    "flow_circuits.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
+    "flow_generators.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
+    "flow_installation.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
+    "flow_openings.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
+    "flow_residents.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
+    "flow_sources.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
+    "flow_windows.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
+    "flow_zones.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
+    "form_installation.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
     "hand.py": (
         "if TYPE_CHECKING:",
         "from .coordinator import CoordinatorSurface",

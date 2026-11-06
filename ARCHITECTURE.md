@@ -1515,8 +1515,7 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `world_builder.py` | de momentopname bouwen | `WorldBuilderMixin`; de losse lezers gaan naar `entity_reading.py` |
 | `entity_reading.py` | één entiteit lezen | `reads_as_home`, `temperature_from_state`, `season_from_state`, `as_float`, `as_modes` |
 | `stored_state.py` | bewaarde momenten en eigen uitzetting | `stored_time`, `restore_commanded_off` |
-| `form_selectors.py` | de vorm van een formulierveld | de selectors uit `schema_fields.py`, met publieke namen (`CLIMATE`, `CLIMATE_MULTI`, `RANK`, `SECONDS`, `TEXT`, `TIME`, `band`, `choices`, `temperature`) |
-| `form_table.py` | een veldtabel naar een formulier en terug | `table_schema`, `write_table` en de lezers eromheen |
+| `schema_fields.py` | de vorm van een formulierveld en de veldtabel | de selectors (`CLIMATE`, `CLIMATE_MULTI`, `RANK`, `SECONDS`, `TEXT`, `TIME`, `band`, `choices`, `temperature`), `table_schema` en `write_table` |
 | `form_common.py` | de vaste rijen van elk scherm | `user`, `save`, `ADD`, `BACK`, `EXIT`, `EXIT_KEEP`, `EXIT_DROP`, de keuzeregels en `source_options`, `group_label`, `window_label`, `add_option`, `back_option`, `exit_row`, `managed_entities` |
 | `form_installation.py` | de installatieschermen | `settings`, `exclusives`, `exclusive`, `quiets`, `quiet` |
 | `form_zones.py` | de zoneschermen | `zones`, `zone`, `sources`, `source` |
@@ -3347,8 +3346,7 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `world_builder.py` | building the snapshot | `WorldBuilderMixin`; the separate readers move to `entity_reading.py` |
 | `entity_reading.py` | reading one entity | `reads_as_home`, `temperature_from_state`, `season_from_state`, `as_float`, `as_modes` |
 | `stored_state.py` | stored moments and our own switch-off | `stored_time`, `restore_commanded_off` |
-| `form_selectors.py` | the shape of a form field | the selectors from `schema_fields.py`, with public names (`CLIMATE`, `CLIMATE_MULTI`, `RANK`, `SECONDS`, `TEXT`, `TIME`, `band`, `choices`, `temperature`) |
-| `form_table.py` | a field table to a form and back | `table_schema`, `write_table` and the readers around them |
+| `schema_fields.py` | the shape of a form field and the field table | the selectors (`CLIMATE`, `CLIMATE_MULTI`, `RANK`, `SECONDS`, `TEXT`, `TIME`, `band`, `choices`, `temperature`), `table_schema` and `write_table` |
 | `form_common.py` | the fixed rows of every screen | `user`, `save`, `ADD`, `BACK`, `EXIT`, `EXIT_KEEP`, `EXIT_DROP`, the choice rows and `source_options`, `group_label`, `window_label`, `add_option`, `back_option`, `exit_row`, `managed_entities` |
 | `form_installation.py` | the installation screens | `settings`, `exclusives`, `exclusive`, `quiets`, `quiet` |
 | `form_zones.py` | the zone screens | `zones`, `zone`, `sources`, `source` |
