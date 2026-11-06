@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.climate_director.engine import serialise, table_storage
+from custom_components.climate_director.engine import installation_storage, table_storage
 from custom_components.climate_director.engine.fields import FieldSpec
 from custom_components.climate_director.schema_fields import _summer_months
 
@@ -39,5 +39,5 @@ def test_a_broken_stored_month_list_falls_back_on_the_default() -> None:
 
 def test_a_guest_window_without_a_start_is_dropped() -> None:
     """Een gastenvenster zonder begin- of eindtijd bestaat niet."""
-    assert serialise._guest_window({}) is None
-    assert serialise._guest_window({"start": "09:00:00"}) is None
+    assert installation_storage.guest_window({}) is None
+    assert installation_storage.guest_window({"start": "09:00:00"}) is None

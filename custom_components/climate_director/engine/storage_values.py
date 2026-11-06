@@ -15,7 +15,7 @@ within the measure, and they are pure Python: no Home Assistant, no selectors.
 from __future__ import annotations
 
 import math
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import time, timedelta
 from typing import Any
 
@@ -152,3 +152,8 @@ def choice[T: str](enum_type: type[T], raw: Any, default: T) -> T:
         return enum_type(raw)
     except ValueError:
         return default
+
+
+def items(raw: Mapping[str, Any], key: str) -> list[Mapping[str, Any]]:
+    """Return the mappings stored under `key`, skipping anything else."""
+    return [item for item in sequence(raw.get(key)) if isinstance(item, Mapping)]

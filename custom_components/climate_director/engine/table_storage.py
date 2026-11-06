@@ -17,12 +17,12 @@ this walk every table row would still cost a line of its own in
 `engine/serialise.py`, and then the chain has not become shorter.
 
 Het lezen is net zo vergevingsgezind als de rest van `serialise.py`: de helpers
-uit `storage_helpers.py` doen dat werk, en deze module kiest alleen wélke helper
+uit `storage_values.py` doen dat werk, en deze module kiest alleen wélke helper
 bij welk veldtype hoort. Home Assistant komt hier niet voor — de tabel bevat
 geen selectors en deze module geen enkele import erbuiten.
 
 Reading is as forgiving as the rest of `serialise.py`: the helpers in
-`storage_helpers.py` do that work, and this module only chooses which helper
+`storage_values.py` do that work, and this module only chooses which helper
 belongs to which field kind. Home Assistant does not appear here — the table
 holds no selectors and this module no import outside the engine.
 """
@@ -35,7 +35,7 @@ from datetime import time
 from typing import Any, Union, get_args, get_origin, get_type_hints
 
 from .fields import FieldSpec
-from .storage_helpers import (
+from .storage_values import (
     bool_or,
     choice,
     float_or,

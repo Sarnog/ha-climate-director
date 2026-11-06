@@ -19,7 +19,7 @@ from override_helpers import OverrideHost
 
 import script.coverage_gate as coverage_gate
 from custom_components.climate_director.coordinator import ClimateDirectorCoordinator
-from custom_components.climate_director.engine import serialise
+from custom_components.climate_director.engine import installation_storage
 from custom_components.climate_director.switch import _DirectorSwitch
 
 PACKAGE = Path(__file__).resolve().parents[1] / "custom_components" / "climate_director"
@@ -86,7 +86,7 @@ class TestTheLastSixExcludedLines:
 
     def test_a_guest_window_that_is_no_mapping_is_dropped(self) -> None:
         """serialise.py: een gastenvenster dat geen mapping is bestaat niet."""
-        assert serialise._guest_window("x") is None
+        assert installation_storage.guest_window("x") is None
 
     def test_an_override_without_a_source_is_refused(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """overrides.py: zonder bron weigert de override en meldt dat."""

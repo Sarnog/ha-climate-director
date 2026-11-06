@@ -999,7 +999,10 @@ wordt, en terug. Lezen is bewust vergevingsgezind: onbekende sleutels worden gen
 ontbrekende sleutels vallen terug op hun standaard, en rommel in een lijst wordt
 overgeslagen. Een entry overleeft zo een versie waarin een veld bijkomt of verdwijnt, in
 plaats van bij het opstarten om te vallen. Wat structureel niet klopt komt uit
-`validate()`, niet uit een exception hier.
+`validate()`, niet uit een exception hier. De vertaling zelf is verdeeld over
+`installation_storage.py` (algemene velden), `equipment_storage.py` (apparaten en
+gebieden), `resident_storage.py` (de bewoner en zijn ochtend) en
+`storage_values.py` (veilig lezen); `serialise.py` is de ingang.
 
 Booleans worden expliciet níét als getal gelezen: `True` is in Python een `int`, en een
 prioriteit van `True` zou stilletjes 1 worden.
@@ -1490,11 +1493,11 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `engine/schedule.py` | het rooster als poort | `schedule_open`, `counts_towards_schedule` |
 | `engine/gates.py` | de poort als geheel | `closed`, de huishoudpoort, de openingen, `house_wide_blocked`, `opening_rest_until`, en `brakes_remaining` (de poort leest de handstart, niet andersom) |
 | `engine/hand_start.py` | de handstartregel | `HAND_START_BRAKES`, `brakes_readable`, `passes`, `quiet_holds`, `early_riser_holds`, `waits_for_sleeper`, `up_and_about`, `still_in_bed`; geen luie import meer |
-| `engine/serialise.py` | de ingang van de opslag | `config_from_dict`, `config_to_dict`, `opening_ids`, de lijstlezer |
+| `engine/serialise.py` | de ingang van de opslag | `config_from_dict`, `config_to_dict`, `opening_ids` |
 | `engine/installation_storage.py` | algemene installatievelden | poorten, gastenvenster, seizoenen, neerslag, ligging en het slaapvenster |
 | `engine/equipment_storage.py` | apparaten en gebieden | bron, modus, buitengrens, circuit, generator, opening en zone lezen en schrijven |
 | `engine/resident_storage.py` | de bewoner in de opslag | de bewoner plus zijn drie ochtendinstellingen |
-| `engine/storage_values.py` | opgeslagen waarden veilig lezen | de naam van `storage_helpers.py`; alle lezers krijgen een publieke naam (`as_dict`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
+| `engine/storage_values.py` | opgeslagen waarden veilig lezen | de naam van `storage_helpers.py`; alle lezers krijgen een publieke naam (`as_dict`, `items`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
 | `coordinator_surface.py` | het oppervlak van de koppeling | `CoordinatorSurface`; alle mixins lezen hier hun gastheer |
 | `coordinator.py` | de coordinator zelf | `__init__`, de eigenschappen, `async_request_evaluation`, de klok en de levensduur; hij erft de publieke mixins |
 | `coordinator_lifecycle.py` | opstarten en stoppen | `async_start`, `_async_on_hass_started`, `tracked_entities`, `_calendar_says_holiday`, `async_shutdown` |
@@ -2837,7 +2840,10 @@ The only place the JSON-like format of a config entry is translated into datacla
 back. Reading is deliberately forgiving: unknown keys are ignored, missing keys fall back on
 their default, and junk in a list is skipped. An entry therefore survives a version that
 adds or drops a field, instead of falling over at startup. What is structurally wrong comes
-out of `validate()`, not out of an exception here.
+out of `validate()`, not out of an exception here. The translation itself is split
+over `installation_storage.py` (general fields), `equipment_storage.py` (appliances
+and areas), `resident_storage.py` (the resident and their morning) and
+`storage_values.py` (safe reading); `serialise.py` is the entrance.
 
 Booleans are explicitly *not* read as numbers: `True` is an `int` in Python, and a priority
 of `True` would silently become 1.
@@ -3319,11 +3325,11 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `engine/schedule.py` | the schedule as a gate | `schedule_open`, `counts_towards_schedule` |
 | `engine/gates.py` | the gate as a whole | `closed`, the household gate, the openings, `house_wide_blocked`, `opening_rest_until`, and `brakes_remaining` (the gate reads the hand start, never the other way round) |
 | `engine/hand_start.py` | the hand-start rule | `HAND_START_BRAKES`, `brakes_readable`, `passes`, `quiet_holds`, `early_riser_holds`, `waits_for_sleeper`, `up_and_about`, `still_in_bed`; no lazy import left |
-| `engine/serialise.py` | the entrance of storage | `config_from_dict`, `config_to_dict`, `opening_ids`, the list reader |
+| `engine/serialise.py` | the entrance of storage | `config_from_dict`, `config_to_dict`, `opening_ids` |
 | `engine/installation_storage.py` | general installation fields | gates, guest window, seasons, precipitation, layout and the sleep window |
 | `engine/equipment_storage.py` | appliances and areas | reading and writing source, mode, outdoor bound, circuit, generator, opening and zone |
 | `engine/resident_storage.py` | the resident in storage | the resident plus its three morning settings |
-| `engine/storage_values.py` | reading stored values safely | the new name of `storage_helpers.py`; every reader gets a public name (`as_dict`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
+| `engine/storage_values.py` | reading stored values safely | the new name of `storage_helpers.py`; every reader gets a public name (`as_dict`, `items`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
 | `coordinator_surface.py` | the binding layer's surface | `CoordinatorSurface`; every mixin reads its host here |
 | `coordinator.py` | the coordinator itself | `__init__`, the properties, `async_request_evaluation`, the clock and the lifetime; it inherits the public mixins |
 | `coordinator_lifecycle.py` | starting and stopping | `async_start`, `_async_on_hass_started`, `tracked_entities`, `_calendar_says_holiday`, `async_shutdown` |

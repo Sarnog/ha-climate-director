@@ -5,16 +5,16 @@ pas gepusht als de voorganger groen is, en houdt zijn eigen bewijs bij.
 
 ## Stand
 
-- **Basis:** `main` op `4c9f1cf` (ontwerp `6df44e2`, de publieke namen en de
-toetssplitsing), schone boom, `main == origin/main`.
+- **Basis:** `main` op `79424dd` (ontwerp, publieke namen, toetssplitsing en
+validatie), schone boom, `main == origin/main`.
 - **Gebruikersbesluiten:** N14/N15 blijven **later**; N16 wordt **geen**
   7.7.10. Beide blijven in `ROADMAP.md` en `ARCHITECTURE.md` staan; 8.0.0
   verandert geen gedrag en geen tekst.
 - **Productie:** draait 7.7.7. Alleen gelezen; niets geïnstalleerd, herstart of
   gewijzigd.
-- **Nu:** stap 3 staat in de werkboom: alle configuratiecontroles wonen in
-  `engine/validation.py`, `models.py` is van 2269 naar 1154 regels gegaan en
-  `state_extra.py` heet nu `stored_state.py`. Nog niet gecommit.
+- **Nu:** stap 4 staat in de werkboom: `serialise.py` is de ingang, de
+  vertaling woont in `installation_storage.py`, `equipment_storage.py`,
+  `resident_storage.py` en `storage_values.py`. Nog niet gecommit.
 
 ## Stappen
 
@@ -24,7 +24,7 @@ toetssplitsing), schone boom, `main == origin/main`.
 | 1. Publieke namen | `74f7c01` | klaar: mixins, helpers, schemaconstanten en opslaglezers zijn publiek |
 | 2. Toetsen per onderwerp + impactkaart | `4c9f1cf` | klaar: 50 toetsbestanden verdeeld, hulpjes verhuisd, kaart bijgewerkt |
 | 3. Validatie en `stored_state.py` | deze commit | klaar: `engine/validation.py` (1328 regels), `models.py` 2269 → 1154, `state_extra.py` → `stored_state.py` |
-| 4. Opslag en serialisatie | nog te maken | wacht |
+| 4. Opslag en serialisatie | deze commit | klaar: `serialise.py` 152 regels, drie opslagmodules en `storage_values.py` |
 | 5. Hand en handstart | nog te maken | wacht |
 | 6. Configuratiestroom en formulieren | nog te maken | wacht |
 | 7. `engine/decide.py` | nog te maken | wacht |
@@ -73,6 +73,18 @@ daarom is de lijst lokaal gedraaid. `manual_only_problems` woont voorlopig in
 `validation.py` en verhuist in stap 8 naar `engine/manual_sources.py`, zoals de
 tabel zegt.
 
+Stap 4 is gemeten. `serialise.py` ging van 637 naar 152 regels; de vertaling
+woont in `installation_storage.py` (233), `equipment_storage.py` (206) en
+`resident_storage.py` (155), en `storage_helpers.py` heet nu
+`storage_values.py` (159). De opslagronde gaf 434 passed in 27,91s (log
+`%TEMP%/800/step4-tests.log`); de volledige suite gaf 3978 passed en één rood
+in 34m34s (log `%TEMP%/800/step4-full.log`): de veldtabel zocht de schrijver nog
+in `serialise.py`; die zoekt nu in de opslagmodules en de gerichte herhaling gaf
+20 passed (log `%TEMP%/800/step4-field.log`). Dekking 100 % regels en takken
+(5942/2092), de poort meldt 41 benoemde uitsluitingen en de kaart is bijgewerkt.
+De engine-probe (42), v1-probe (64) en E-probe (107) zijn byte-gelijk. De
+mutatielijst was vóór deze stap 66 van 66; de ronde erna volgt vóór de push.
+
 Per verhuiscommit worden hier vastgelegd:
 
 - de twee engine-probes en de drie handstartprobes, met logpad en tijd;
@@ -91,16 +103,16 @@ only after its predecessor is green, and keeps its own proof.
 
 ## State
 
-- **Base:** `main` at `4c9f1cf` (design `6df44e2`, the public names and the
-test split), clean tree, `main == origin/main`.
+- **Base:** `main` at `79424dd` (design, public names, test split and
+validation), clean tree, `main == origin/main`.
 - **User decisions:** N14/N15 stay **later**; N16 becomes **no** 7.7.10.
   Both stay in `ROADMAP.md` and `ARCHITECTURE.md`; 8.0.0 changes no behaviour
   and no text.
 - **Production:** runs 7.7.7. Read only; nothing installed, restarted or
   changed.
-- **Now:** step 3 stands in the working tree: every configuration check lives in
-  `engine/validation.py`, `models.py` went from 2269 to 1154 lines and
-  `state_extra.py` is now `stored_state.py`. Not committed yet.
+- **Now:** step 4 stands in the working tree: `serialise.py` is the entrance, the
+  translation lives in `installation_storage.py`, `equipment_storage.py`,
+  `resident_storage.py` and `storage_values.py`. Not committed yet.
 
 ## Steps
 
@@ -110,7 +122,7 @@ test split), clean tree, `main == origin/main`.
 | 1. Public names | `74f7c01` | done: mixins, helpers, schema constants and storage readers are public |
 | 2. Tests per subject + impact map | `4c9f1cf` | done: 50 test files split, helpers moved, map updated |
 | 3. Validation and `stored_state.py` | this commit | done: `engine/validation.py` (1328 lines), `models.py` 2269 → 1154, `state_extra.py` → `stored_state.py` |
-| 4. Storage and serialisation | to be made | waits |
+| 4. Storage and serialisation | this commit | done: `serialise.py` 152 lines, three storage modules and `storage_values.py` |
 | 5. Hand and hand start | to be made | waits |
 | 6. Configuration flow and forms | to be made | waits |
 | 7. `engine/decide.py` | to be made | waits |
@@ -158,6 +170,19 @@ for 2h22m in `Run mutations` without a single line of output and was cancelled;
 that is why the list was run locally. `manual_only_problems` temporarily lives
 in `validation.py` and moves to `engine/manual_sources.py` in step 8, as the
 table says.
+
+Step 4 is measured. `serialise.py` went from 637 to 152 lines; the translation
+lives in `installation_storage.py` (233), `equipment_storage.py` (206) and
+`resident_storage.py` (155), and `storage_helpers.py` is now
+`storage_values.py` (159). The storage round gave 434 passed in 27.91s (log
+`%TEMP%/800/step4-tests.log`); the full suite gave 3978 passed and one red in
+34m34s (log `%TEMP%/800/step4-full.log`): the field table still looked for the
+writer in `serialise.py`; it now searches the storage modules and the targeted
+rerun gave 20 passed (log `%TEMP%/800/step4-field.log`). Coverage is 100% lines
+and branches (5942/2092), the gate reports 41 named exclusions and the map is
+updated. The engine probe (42), v1 probe (64) and E probe (107) are
+byte-identical. The mutation list was 66 of 66 before this step; the round after
+it follows before the push.
 
 Per move commit the following is recorded here:
 

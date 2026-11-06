@@ -287,7 +287,7 @@ TABLE_ROOTS: dict[str, tuple[str, str]] = {
     "GATES_FIELDS": ("DirectorConfig", "config_to_dict"),
     "GATES_FLAT_FIELDS": ("DirectorConfig", "config_to_dict"),
     "GUEST_WINDOW_FIELDS": ("DirectorConfig", "config_to_dict"),
-    "SOURCE_FIELDS": ("Source", "_source_to_dict"),
+    "SOURCE_FIELDS": ("Source", "source_to_dict"),
 }
 
 
