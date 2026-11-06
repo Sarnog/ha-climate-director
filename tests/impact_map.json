@@ -82,7 +82,8 @@
   "custom_components/climate_director/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
-  "custom_components/climate_director/translations/"
+  "custom_components/climate_director/translations/",
+  "script/"
  ],
  "tests/test_coordinator_surface.py": [
   "custom_components/",
