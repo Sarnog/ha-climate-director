@@ -868,7 +868,7 @@ class TestZoneFromForm:
         assert zone.cool.seasons is None
 
 
-def testall_source_ids_walks_every_zone() -> None:
+def test_all_source_ids_walks_every_zone() -> None:
     assert set(all_source_ids(config_to_dict(house()))) == {
         "woonkamer_airco",
         "gasketel",

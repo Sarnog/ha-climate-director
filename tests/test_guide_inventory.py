@@ -163,7 +163,7 @@ def _mention_problem(domain: str, rest: str, slugs: dict[str, list[re.Pattern[st
 
 
 @pytest.mark.parametrize("language", LANGUAGES)
-def test_every_entity_id_a_guide_names_comes_from_itstranslation(language: str) -> None:
+def test_every_entity_id_a_guide_names_comes_from_its_translation(language: str) -> None:
     """Elke entiteit-id in de gids komt uit de vertaling van die taal.
 
     Home Assistant leidt de entiteit-id af uit de vertaalde naam, dus een gids die
