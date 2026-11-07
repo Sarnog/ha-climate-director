@@ -609,12 +609,12 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # because the bounded for loop became a while loop that stops at a round without
 # a move; the function does not grow and the ratchet comes down with it.
 #
-# N12: `coordinator.py` 2138 → 2084 en `state_store.py::_async_restore_state`
+# De bewonerlezer: `coordinator.py` 2138 → 2084 en `state_store.py::_async_restore_state`
 # 137 → 126 doordat `_notice_home` en `_resident` naar `resident_reader.py`
 # verhuisden; de nieuwe module en zijn functies blijven onder de maat. De ratel
 # zakt mee.
 #
-# N12: `coordinator.py` 2138 → 2084 and `state_store.py::_async_restore_state`
+# The resident reader: `coordinator.py` 2138 → 2084 and `state_store.py::_async_restore_state`
 # 137 → 126 because `_notice_home` and `_resident` moved to `resident_reader.py`;
 # the new module and its functions stay below the measure. The ratchet comes
 # down with it.
