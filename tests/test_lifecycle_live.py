@@ -118,6 +118,26 @@ class TestUnloadingDuringARunningRound:
         finally:
             await stop_house(live)
 
+    async def test_shutdown_cancels_the_pending_override_wake(self) -> None:
+        """Afsluiten annuleert de wekker van een override die nog loopt.
+
+        Bleef die wekker staan, dan wekte hij na het uitladen een coordinator die
+        er niet meer is.
+
+        Shutdown cancels the timer of an override that is still running. Left in
+        place, it would wake a coordinator after the unload that no longer exists.
+        """
+
+        live = await start_house(two_zone_installation(), states=self._warm_house())
+        cancelled: list[str] = []
+        try:
+            live.coordinator._cancel_override_wake = lambda: cancelled.append("cancelled")
+            await live.coordinator.async_shutdown()
+            assert cancelled == ["cancelled"]
+            assert live.coordinator._cancel_override_wake is None
+        finally:
+            await stop_house(live)
+
     async def test_shutdown_does_not_reach_into_the_stores_private_cleanup(
         self, monkeypatch
     ) -> None:
