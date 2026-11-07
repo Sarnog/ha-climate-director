@@ -849,6 +849,20 @@ werkelijk een taak kreeg: pas dan kan dezelfde ruimte tegelijk verwarmd en
 gekoeld worden, en pas dan stookt een airco mee in een kamer die de ketel al warm
 maakt. Wat daardoor stilvalt draagt `SHARED_SOURCE_TOOK_OVER`.
 
+Een tweede functie, `area_clash()`, hoort bij hetzelfde gebied maar gaat over een ander
+moment: de keuze tussen de ketel en een ander apparaat dat in zijn gebied wil draaien,
+terwijl er niets is weggevallen. Een bron met `covers_zones` verwarmt zijn hele gebied, ook
+de kamers die er zelf niet om vroegen. Houdt de ene kamer een airco vast op de dode band en
+kiest een andere kamer in datzelfde gebied de ketel, dan draaien ketel en airco naast
+elkaar. `area_clash()` laat daarom per gebied één kant over: het verzoek met de meeste
+voorrang (bij gelijke rang de ketel). Wint de ketel, dan vervallen de verzoeken van andere
+apparaten in het gebied; wint een ander apparaat, dan vervalt elk verzoek om de ketel. De
+verliezers worden teruggegeven in plaats van weggegooid, zodat het plan kan melden wat ze
+wilden (`EXCLUSIVE_GROUP_LOST`). De functie draait binnen `apply_exclusive_groups()`, vóór
+de groepen, en slaat een apparaat over dat het gebied al overneemt: dat regelt
+`stop_others()`. Dit is een bewuste keuze voor een koude kamer boven twee systemen
+tegelijk. Wat er niet onder valt staat onder "Nog te bouwen".
+
 ### sources.py — waarmee
 
 Kiest per zone en taak het apparaat: geschiktheid (rol), dan beschikbaarheid, dan
@@ -1403,6 +1417,34 @@ als de ruimtesensor het uitschakelpunt haalt.
   apparaat zelf verder regelt dan de ruimtesensor.
 - Risico: een gangbare instelling valt hier zelf onder; de melding legt uit en weigert
   niets.
+
+**Een geweigerde winnaar van een gebied geeft de verliezer een tweede kans.** `area_clash()`
+haalt het verliezende verzoek uit de wensen vóórdat de circuits oordelen. Weigert het circuit
+daarna de winnaar (`CIRCUIT_AT_CAPACITY`, `SHORT_CYCLE_PROTECTION` of `CIRCUIT_CONFLICT_LOST`),
+dan draait de winnaar niet en blijft de verliezende zone die ronde onbediend: de
+terugvallus in `resolve_with_fallbacks()` probeert alleen verzoeken die nog in de wensen
+staan. De uitkomst valt aan de veilige kant (kort koud, nooit twee systemen tegelijk).
+- Optie (a), laten zoals het is: de weigering van een circuit is tijdelijk en de volgende
+  ronde beslist opnieuw.
+- Optie (b), het verliezende verzoek terugzetten zodra de winnaar geweigerd is. De kamer
+  wordt dan sneller bediend, maar de twee apparaten kunnen elkaar afwisselen als het circuit
+  en het gebied elkaar steeds tegenspreken, en dat vraagt een eindigheidsbewijs zoals de lus
+  van anker 7 dat heeft.
+- De gebruiker beslist tussen (a) en (b) voordat er gebouwd wordt.
+
+**Een bron die niet automatisch start, maar in het gebied van een ketel staat, hoort in een
+groep met die ketel.** `area_clash()` kijkt naar verzoeken van de director. Een bron met
+`autostart` uit vraagt nooit iets: hij wordt alleen door een exclusieve groep of door
+`manual_conflict()` in bedwang gehouden. Staat zo'n bron in het gebied van een ketel en in
+geen enkele groep, dan kan hij naast de ketel draaien zonder dat de director ingrijpt
+(gemeten met een airco die met de hand draait en een ketel die voor een andere zone wordt
+gevraagd: de ketel krijgt `heat`, de airco blijft als `MANUAL_SOURCE` ongemoeid).
+- Optie (a), impliciet: elke bron zonder `autostart` in een gebied telt als groepslid met
+  de ketel van dat gebied. Geen invulwerk, maar het verandert het gedrag voor elke
+  installatie die zulke bronnen heeft.
+- Optie (b), waarschuwen: `validate()` meldt een bron zonder `autostart` in een gebied
+  zonder groep met de ketel, en de gebruiker vult de groep zelf in. Smal en zichtbaar.
+- De gebruiker beslist tussen (a) en (b) voordat er gebouwd wordt.
 
 #### Could have
 
@@ -2694,6 +2736,20 @@ taker-over really got a duty: only then can the same room be heated and cooled a
 once, and only then does an air conditioner add to a room the boiler is already
 warming. Whatever stands down carries `SHARED_SOURCE_TOOK_OVER`.
 
+A second function, `area_clash()`, belongs to the same area but concerns a different
+moment: the choice between the boiler and another appliance that wants to run in its area,
+while nothing has dropped out. A source with `covers_zones` heats its whole area, rooms that
+did not ask for it included. If one room holds an air conditioner on the dead band and
+another room in that same area picks the boiler, boiler and air conditioner run side by
+side. `area_clash()` therefore leaves one side per area: the request with the most claim
+(the boiler on a tie). If the boiler wins, the requests of other appliances in the area
+lapse; if another appliance wins, every request for the boiler lapses. The losers are
+returned rather than discarded, so the plan can still report what they wanted
+(`EXCLUSIVE_GROUP_LOST`). The function runs inside `apply_exclusive_groups()`, before the
+groups, and skips an appliance that already takes the area over: `stop_others()` handles
+that. This is a deliberate choice for a cold room over two systems at once. What it does not
+cover is listed under "Still to build".
+
 ### sources.py — with what
 
 Picks the appliance per zone and duty: suitability (role), then availability, then
@@ -3237,6 +3293,32 @@ once the room sensor reaches the switch-off point.
   the room sensor.
 - Risk: a common setting falls under this itself; the notice explains and refuses
   nothing.
+
+**A refused area winner gives the loser a second chance.** `area_clash()` takes the losing
+request out of the wishes before the circuits judge. If the circuit then refuses the winner
+(`CIRCUIT_AT_CAPACITY`, `SHORT_CYCLE_PROTECTION` or `CIRCUIT_CONFLICT_LOST`), the winner does
+not run and the losing zone is left unserved for that round: the fallback loop in
+`resolve_with_fallbacks()` only retries requests that are still in the wishes. The outcome is
+on the safe side (briefly cold, never two systems at once).
+- Option (a), leave it: a circuit refusal is temporary and the next round decides again.
+- Option (b), put the losing request back as soon as the winner is refused. The room is
+  served sooner, but the two appliances can alternate if the circuit and the area keep
+  contradicting each other, and that needs a termination argument like the anchor 7 loop has.
+- The user decides between (a) and (b) before anything is built.
+
+**A source that does not start by itself but sits in a boiler's area belongs in a group with
+that boiler.** `area_clash()` looks at requests from the director. A source with `autostart`
+off never asks for anything: it is only held in check by an exclusive group or by
+`manual_conflict()`. If such a source sits in a boiler's area and in no group, it can run
+beside the boiler without the director stepping in (measured with an air conditioner running
+by hand and a boiler asked for by another zone: the boiler gets `heat`, the air conditioner
+is left alone as `MANUAL_SOURCE`).
+- Option (a), implicit: every source without `autostart` in an area counts as a group member
+  with that area's boiler. No filling in, but it changes the behaviour of every installation
+  that has such sources.
+- Option (b), warn: `validate()` reports a source without `autostart` in an area without a
+  group with the boiler, and the user fills in the group. Narrow and visible.
+- The user decides between (a) and (b) before anything is built.
 
 #### Could have
 

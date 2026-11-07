@@ -73,6 +73,22 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   als de ruimtesensor het uitschakelpunt haalt; regelt het apparaat op zijn eigen sensor net
   daaronder, dan blijft de taak (en het circuit) eindeloos doorlopen. Het scherm kan zeggen
   dat een doel gelijk aan het uitschakelpunt geen marge laat.
+- **Een geweigerde winnaar van een gebied geeft de verliezer geen tweede kans** —
+  `area_clash()` laat per gebied (`covers_zones`) één kant over en haalt het verliezende
+  verzoek uit de wensen vóór de circuits oordelen. Weigert het circuit daarna de winnaar,
+  dan draait die niet en blijft de verliezende zone die ronde onbediend. De uitkomst valt aan
+  de veilige kant (kort koud, nooit twee systemen tegelijk). Keuze voor de gebruiker: (a)
+  laten zoals het is, of (b) het verliezende verzoek terugzetten zodra de winnaar geweigerd
+  is, tegen het risico dat de twee apparaten elkaar afwisselen (ontwerp in `ARCHITECTURE.md`
+  onder "Nog te bouwen").
+- **Een bron zonder automatische start in het gebied van een ketel kan naast de ketel
+  draaien** — `area_clash()` kijkt naar verzoeken van de director, en een bron met
+  `autostart` uit vraagt nooit iets. Staat zo'n bron in het gebied van een ketel en in geen
+  enkele exclusieve groep, dan grijpt de director niet in (gemeten: de ketel krijgt `heat`,
+  de airco blijft als `MANUAL_SOURCE` ongemoeid). Keuze voor de gebruiker: (a) zulke bronnen
+  gelden impliciet als groepslid met de ketel, of (b) `validate()` waarschuwt zolang de groep
+  ontbreekt (ontwerp in `ARCHITECTURE.md` onder "Nog te bouwen").
+
 ## Could have
 
 - **De impactkaart hangt aan de selectie van de run** — code op moduleniveau draait één keer,
@@ -408,6 +424,21 @@ The worked-out design proposals for everything below live in
   the room sensor reaches the switch-off point; if the appliance regulates on its own sensor
   just below it, the duty (and the circuit) keeps running endlessly. The screen could say
   that a target equal to the switch-off point leaves no margin.
+
+- **A refused area winner gives the loser no second chance** — `area_clash()` leaves one
+  side per area (`covers_zones`) and takes the losing request out of the wishes before the
+  circuits judge. If the circuit then refuses the winner, it does not run and the losing zone
+  is left unserved for that round. The outcome is on the safe side (briefly cold, never two
+  systems at once). A choice for the user: (a) leave it, or (b) put the losing request back as
+  soon as the winner is refused, at the risk of the two appliances alternating (design in
+  `ARCHITECTURE.md` under "Still to build").
+- **A source without automatic start in a boiler's area can run beside the boiler** —
+  `area_clash()` looks at requests from the director, and a source with `autostart` off never
+  asks for anything. If such a source sits in a boiler's area and in no exclusive group, the
+  director does not step in (measured: the boiler gets `heat`, the air conditioner is left
+  alone as `MANUAL_SOURCE`). A choice for the user: (a) such sources count implicitly as a
+  group member with the boiler, or (b) `validate()` warns while the group is missing (design
+  in `ARCHITECTURE.md` under "Still to build").
 
 ## Could have
 

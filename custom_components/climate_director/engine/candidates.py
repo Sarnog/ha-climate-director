@@ -212,7 +212,10 @@ def serving(previous: Plan | None, zone_id: str) -> str | None:
 
 
 def apply_exclusive_groups(
-    config: DirectorConfig, world: WorldState, wishes: dict[str, constraints.Request]
+    config: DirectorConfig,
+    world: WorldState,
+    wishes: dict[str, constraints.Request],
+    takeovers: tuple[takeover.Takeover, ...] = (),
 ) -> tuple[dict[str, constraints.Request], dict[str, constraints.Request]]:
     """Split the requests into those that keep a shared appliance and those that lose it.
 
@@ -237,11 +240,8 @@ def apply_exclusive_groups(
     member yields and that request goes through. A member in a handed-over zone
     is unbeatable, since the director sends that zone nothing, an off included.
     """
-    if not config.exclusive_groups:
-        return wishes, {}
-
-    kept = dict(wishes)
-    dropped: dict[str, constraints.Request] = {}
+    # Een apparaat met een gebied (`covers_zones`) sluit ook uit / also rules out.
+    kept, dropped = takeover.area_clash(config, wishes, takeovers)
     for group in config.exclusive_groups:
         members = group_entities(config, group)
         contenders = sorted(

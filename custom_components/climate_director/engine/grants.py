@@ -71,7 +71,7 @@ def resolve_with_fallbacks(
     # not slide on to an appliance the administrator already has (anchor 11).
     handed_over_ids = handed_over(config, world)
     while True:
-        wishes, dropped_now = apply_exclusive_groups(config, world, wishes)
+        wishes, dropped_now = apply_exclusive_groups(config, world, wishes, takeovers)
         dropped.update(dropped_now)
         grants, circuit_decisions, deferrals = resolve_circuits(config, world, wishes, standing)
         all_deferrals += [deferral for deferral in deferrals if deferral not in all_deferrals]
