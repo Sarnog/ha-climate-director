@@ -22,11 +22,25 @@ on:
 
 permissions: {}
 
+# Een nieuwe push op dezelfde pull request maakt de lopende run overbodig: die
+# stopt. Op `main` krijgt elke run een eigen groep en loopt hij af, want de
+# volgende push vergelijkt alleen met zijn eigen voorganger en zou de wijziging van
+# een gestopte (of verdrongen) run overslaan.
+# A new push to the same pull request makes the running run pointless: it stops.
+# On `main` every run gets a group of its own and finishes, since the next push
+# only compares with its own predecessor and would skip the change of a stopped
+# (or displaced) run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   mutation-probe:
     name: Mutation probe
     runs-on: ubuntu-latest
     continue-on-error: true
+    env:
+      CD_BASE: ${{ github.event_name == 'push' && github.event.before || github.event.pull_request.base.sha || '' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,12 +51,22 @@ jobs:
           python-version: "3.13"
           cache: pip
 
+      # Eerst kijken of er een mutatie draait; dat kan zonder afhankelijkheden. Zo
+      # kost een wijziging die geen mutatie raakt (een versiecommit, een tekst)
+      # geen installatie van Home Assistant.
+      # First see whether a mutation runs; that needs no dependencies. A change that
+      # touches no mutation (a version commit, a text) then costs no install of
+      # Home Assistant.
+      - name: Plan
+        id: plan
+        run: python script/mutation_probe.py --plan
+
       - name: Install dependencies
+        if: steps.plan.outputs.run == 'true'
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements_test.txt
 
       - name: Run mutations
-        env:
-          CD_BASE: ${{ github.event_name == 'push' && github.event.before || github.event.pull_request.base.sha || '' }}
+        if: steps.plan.outputs.run == 'true'
         run: python script/mutation_probe.py
