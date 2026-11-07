@@ -1095,6 +1095,8 @@ class TestItSurvivesARestart:
             _live_preconditions = ClimateDirectorCoordinator._live_preconditions
             _wake_at_the_first_expiry = ClimateDirectorCoordinator._wake_at_the_first_expiry
             _store_payload = ClimateDirectorCoordinator._store_payload
+            _hand_starts_payload = ClimateDirectorCoordinator._hand_starts_payload
+            _hand_starts: dict[str, datetime] = {}
             _room_presence_payload = ClimateDirectorCoordinator._room_presence_payload
             _restore_room_presence = ClimateDirectorCoordinator._restore_room_presence
             _restore_hand_starts = ClimateDirectorCoordinator._restore_hand_starts

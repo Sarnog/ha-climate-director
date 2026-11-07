@@ -93,7 +93,7 @@ class StateStoreMixin(_CoordinatorBase):
             "bypass": sorted(self._precondition_bypass),
             "handed_back": {zone_id: day.isoformat() for zone_id, day in self._handed_back.items()},
             **self._room_presence_payload(),
-            "hand_starts": getattr(self, "_hand_starts_payload", dict)(),
+            "hand_starts": self._hand_starts_payload(),
             "home_since": {
                 resident_id: since.isoformat()
                 for resident_id, since in getattr(self, "_home_since", {}).items()

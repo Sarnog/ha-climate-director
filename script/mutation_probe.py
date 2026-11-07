@@ -131,7 +131,7 @@ MUTATIONS = [
     {
         "name": "handstart-niet-bewaard",
         "file": "custom_components/climate_director/state_store.py",
-        "old": '            "hand_starts": getattr(self, "_hand_starts_payload", dict)(),',
+        "old": '            "hand_starts": self._hand_starts_payload(),',
         "new": '            "hand_starts": {},',
     },
 ]
