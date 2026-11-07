@@ -138,7 +138,7 @@ def test_the_guard_reads_the_real_source() -> None:
     #
     # Today's notices, in both forms: a per-installation helper and the single
     # whole-integration constant.
-    assert "_bypassed_opening_issue_id" in created
+    assert "bypassed_opening_issue_id" in created
     assert "UNWATCHED_ISSUE" in created
 
     # Elk gevonden hulpje wordt op het uitlaadpad ook werkelijk gewist.

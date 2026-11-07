@@ -1228,7 +1228,7 @@ class TestTheReadablePieces:
         assert sentence.startswith("Woonkamer: gaat uit"), sentence
 
     def test_an_appliance_without_an_entity_id_has_no_name(self) -> None:
-        assert texts._source_display_name(_no_hass(), house(), None) is None
+        assert texts.source_display_name(_no_hass(), house(), None) is None
 
     def test_the_registry_name_wins(self) -> None:
         from homeassistant.helpers.entity_registry import DATA_REGISTRY
@@ -1243,34 +1243,34 @@ class TestTheReadablePieces:
 
         hass = _no_hass()
         hass.data[DATA_REGISTRY] = Registry()
-        assert texts._source_display_name(hass, house(), "climate.woonkamer") == "Woonkamer-airco"
+        assert texts.source_display_name(hass, house(), "climate.woonkamer") == "Woonkamer-airco"
 
     def test_a_nameless_appliance_falls_back_on_the_source_name(self) -> None:
         config = house()
         named = config.zones[0].sources[0]
-        assert texts._source_display_name(_no_hass(), config, named.entity_id) is None
+        assert texts.source_display_name(_no_hass(), config, named.entity_id) is None
 
     def test_nothing_runs_without_a_world_or_an_appliance(self) -> None:
-        assert texts._was_running(None, "climate.woonkamer") is False
-        assert texts._was_running(None, None) is False
+        assert texts.was_running(None, "climate.woonkamer") is False
+        assert texts.was_running(None, None) is False
 
     def test_a_granted_heating_zone_without_a_command_says_heat(self) -> None:
         decision = self._decision(granted=ModeFamily.HEAT)
-        assert texts._action_key(None, None, False, decision) == "heat"
+        assert texts.action_key(None, None, False, decision) == "heat"
 
     def test_a_granted_cooling_zone_without_a_command_says_cool(self) -> None:
         decision = self._decision(granted=ModeFamily.COOL)
-        assert texts._action_key(None, None, False, decision) == "cool"
+        assert texts.action_key(None, None, False, decision) == "cool"
 
     def test_a_zone_the_director_leaves_alone_is_left_alone(self) -> None:
-        assert texts._action_key(None, None, True, self._decision()) == "left_alone"
-        assert texts._action_key(None, None, False, self._decision()) == "left_alone"
+        assert texts.action_key(None, None, True, self._decision()) == "left_alone"
+        assert texts.action_key(None, None, False, self._decision()) == "left_alone"
 
     def test_a_heating_command_says_heat(self) -> None:
-        assert texts._action_key(None, self._command("heat"), False, self._decision()) == "heat"
+        assert texts.action_key(None, self._command("heat"), False, self._decision()) == "heat"
 
     def test_a_cooling_command_says_cool(self) -> None:
-        assert texts._action_key(None, self._command("cool"), False, self._decision()) == "cool"
+        assert texts.action_key(None, self._command("cool"), False, self._decision()) == "cool"
 
     def test_a_stand_down_on_an_appliance_that_runs_says_off(self) -> None:
         class Climate:
@@ -1280,29 +1280,29 @@ class TestTheReadablePieces:
             def climate(self, _entity_id: str) -> Climate:
                 return Climate()
 
-        assert texts._action_key(World(), self._command("off"), False, self._decision()) == "off"
+        assert texts.action_key(World(), self._command("off"), False, self._decision()) == "off"
 
     def test_a_stand_down_on_a_standing_appliance_stays_off(self) -> None:
-        assert texts._action_key(None, self._command("off"), False, self._decision()) == "stays_off"
+        assert texts.action_key(None, self._command("off"), False, self._decision()) == "stays_off"
 
     def test_a_zone_without_any_command_has_no_appliance(self) -> None:
-        assert texts._command_for(Plan(), self._decision()) is None
+        assert texts.command_for(Plan(), self._decision()) is None
 
     def test_the_command_of_the_requested_source_wins(self) -> None:
         plan = Plan(commands=(self._command("off"),))
         decision = self._decision(source_id="woonkamer_ketel")
-        assert texts._command_for(plan, decision) is not None
+        assert texts.command_for(plan, decision) is not None
 
     def test_without_a_match_the_running_command_wins(self) -> None:
         plan = Plan(commands=(self._command("off"), self._command("heat")))
         decision = self._decision(source_id="iets_anders")
-        found = texts._command_for(plan, decision)
+        found = texts.command_for(plan, decision)
         assert found is not None and found.hvac_mode == "heat"
 
     def test_without_a_running_command_the_first_one_stands(self) -> None:
         plan = Plan(commands=(self._command("off"),))
         decision = self._decision(source_id="iets_anders")
-        found = texts._command_for(plan, decision)
+        found = texts.command_for(plan, decision)
         assert found is not None and found.hvac_mode == "off"
 
     def test_a_malformed_reason_block_yields_no_sentences(self, monkeypatch) -> None:
@@ -1443,4 +1443,4 @@ def test_a_registry_entry_without_a_name_falls_back_to_the_source_name() -> None
         async_get=lambda _entity_id: SimpleNamespace(name=None, original_name=None)
     )
     hass = SimpleNamespace(data={texts.DATA_REGISTRY: registry})
-    assert texts._source_display_name(hass, config, LIVING) == "Airco beneden"
+    assert texts.source_display_name(hass, config, LIVING) == "Airco beneden"

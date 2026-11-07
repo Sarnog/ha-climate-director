@@ -283,7 +283,7 @@ ACTION_KEY = f"component.{DOMAIN}.entity.sensor.would_command.state_attributes.a
 MESSAGE_KEY = f"component.{DOMAIN}.entity.sensor.zone_source.state_attributes.message.state."
 
 
-def _entity_cache(hass: HomeAssistant) -> dict[str, str]:
+def entity_cache(hass: HomeAssistant) -> dict[str, str]:
     """Return this integration's entity translations in the user's language.
 
     Alleen-lezen, net als `lookup`: `async_get_cached_translations` leest de
@@ -301,11 +301,11 @@ def _entity_cache(hass: HomeAssistant) -> dict[str, str]:
 from .entity_texts import (  # noqa: E402, I001
     reason_sentence as reason_sentence,
     action_sentence as action_sentence,
-    _connector as _connector,
+    connector as connector,
     decision_message as decision_message,
-    _command_for as _command_for,
-    _source_display_name as _source_display_name,
-    _was_running as _was_running,
-    _action_key as _action_key,
+    command_for as command_for,
+    source_display_name as source_display_name,
+    was_running as was_running,
+    action_key as action_key,
     decision_fields as decision_fields,
 )

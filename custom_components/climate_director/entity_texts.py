@@ -18,8 +18,8 @@ from .texts import (
     ATTRIBUTE_KEY,
     MESSAGE_KEY,
     REASON_KEY,
-    _entity_cache,
     english_readable,
+    entity_cache,
 )
 from .units import display_temperature, from_celsius, rounded_from_celsius
 
@@ -50,7 +50,7 @@ def reason_sentence(hass: HomeAssistant, reason: str, duty: str | None = None) -
     guard demands all thirty reasons in all seven files.
     """
     english = english_readable() or {}
-    cache = _entity_cache(hass)
+    cache = entity_cache(hass)
     if duty is not None:
         for_duty = cache.get(f"{ATTRIBUTE_KEY}{reason}.state.{duty}") or english.get(
             f"{reason}.{duty}"
@@ -71,11 +71,11 @@ def action_sentence(hass: HomeAssistant, action: str) -> str:
     `stays_off`; what comes back is "is going to heat", "is left alone".
     """
     english = english_readable() or {}
-    translated_phrase = _entity_cache(hass).get(f"{ACTION_KEY}{action}")
+    translated_phrase = entity_cache(hass).get(f"{ACTION_KEY}{action}")
     return translated_phrase or english.get(f"action.{action}") or action
 
 
-def _connector(hass: HomeAssistant, english: dict[str, str], which: str, fallback: str) -> str:
+def connector(hass: HomeAssistant, english: dict[str, str], which: str, fallback: str) -> str:
     """Return the little word that glues a piece onto the sentence.
 
     `met`/`op` (en `with`/`at`) staan als losse vertaalwaarden in de
@@ -93,7 +93,7 @@ def _connector(hass: HomeAssistant, english: dict[str, str], which: str, fallbac
     should retype.
     """
     return (
-        _entity_cache(hass).get(f"{MESSAGE_KEY}{which}")
+        entity_cache(hass).get(f"{MESSAGE_KEY}{which}")
         or english.get(f"message.{which}")
         or fallback
     )
@@ -127,15 +127,15 @@ def decision_message(
     the same in these seven languages.
     """
     english = english_readable() or {}
-    parts = [f"{zone}{_connector(hass, english, 'after_zone', ':')} {action}"]
+    parts = [f"{zone}{connector(hass, english, 'after_zone', ':')} {action}"]
     if source:
-        parts.append(f"{_connector(hass, english, 'before_appliance', 'with')} {source}")
+        parts.append(f"{connector(hass, english, 'before_appliance', 'with')} {source}")
     if target:
-        parts.append(f"{_connector(hass, english, 'before_target', 'at')} {target}")
+        parts.append(f"{connector(hass, english, 'before_target', 'at')} {target}")
     return f"{' '.join(parts)} — {reason}."
 
 
-def _command_for(plan: Plan, decision: ZoneDecision) -> UnitCommand | None:
+def command_for(plan: Plan, decision: ZoneDecision) -> UnitCommand | None:
     """Return the command that decides this zone's outcome, if there is one.
 
     De zonebeslissing draagt de bron-id van de aangevraagde bron, en die is leeg
@@ -171,7 +171,7 @@ def _command_for(plan: Plan, decision: ZoneDecision) -> UnitCommand | None:
     )
 
 
-def _source_display_name(
+def source_display_name(
     hass: HomeAssistant, config: DirectorConfig, entity_id: str | None
 ) -> str | None:
     """Return the name a user knows an appliance by, never its id.
@@ -201,7 +201,7 @@ def _source_display_name(
     return None
 
 
-def _was_running(world: WorldState | None, entity_id: str | None) -> bool:
+def was_running(world: WorldState | None, entity_id: str | None) -> bool:
     """Return whether an appliance was running when the plan was made.
 
     "Gaat uit" en "blijft uit" zijn niet hetzelfde voor een lezer: het eerste
@@ -231,7 +231,7 @@ def _was_running(world: WorldState | None, entity_id: str | None) -> bool:
     return world.climate(entity_id).running
 
 
-def _action_key(
+def action_key(
     world: WorldState | None, command: UnitCommand | None, untouched: bool, decision: ZoneDecision
 ) -> str:
     """Return which of the five action words fits this decision.
@@ -258,7 +258,7 @@ def _action_key(
             return "heat"
         if family is ModeFamily.COOL:
             return "cool"
-        return "off" if _was_running(world, command.entity_id) else "stays_off"
+        return "off" if was_running(world, command.entity_id) else "stays_off"
     if untouched:
         return "left_alone"
     if decision.granted is ModeFamily.HEAT:
@@ -311,12 +311,12 @@ def decision_fields(
     since there is nothing to drive there. The identifiers stay the contract;
     what comes out here is presentation.
     """
-    command = _command_for(plan, decision)
+    command = command_for(plan, decision)
     untouched = any(item.zone_id == decision.zone_id for item in plan.untouched)
-    action = _action_key(world, command, untouched, decision)
+    action = action_key(world, command, untouched, decision)
     active = action in ("heat", "cool")
     entity_id = command.entity_id if command else None
-    source_name = _source_display_name(hass, config, entity_id) if active and entity_id else None
+    source_name = source_display_name(hass, config, entity_id) if active and entity_id else None
     duty = decision.duty.value if decision.duty is not ModeFamily.NEUTRAL else None
     reason_text = reason_sentence(hass, decision.reason.value, duty)
     action_text = action_sentence(hass, action)

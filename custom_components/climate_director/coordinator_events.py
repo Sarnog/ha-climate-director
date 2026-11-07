@@ -308,7 +308,7 @@ def _event_data(
     }
 
 
-def _wanted(change: Change, unit: str) -> str:
+def wanted(change: Change, unit: str) -> str:
     """Return what a change asks for, short enough to read in a notice.
 
     De stand is er altijd; het setpoint alleen als het meegestuurd wordt. Een

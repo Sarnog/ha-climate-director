@@ -12,7 +12,7 @@ from . import problems
 from .const import (
     UNUSABLE_GRACE_SECONDS,
 )
-from .coordinator_events import _wanted
+from .coordinator_events import wanted
 from .engine import (
     WAITING_REASONS,
     ModeFamily,
@@ -316,7 +316,7 @@ def _note_unapplied(coordinator: ClimateDirectorCoordinator) -> dict[str, str]:
             count, since = 1, now
         coordinator._unapplied[change.entity_id] = (fingerprint, count, since)
         if count >= _COMMAND_NOT_TAKING_ROUNDS and now - since >= grace:
-            found[change.entity_id] = _wanted(change, unit_of_coordinator(coordinator))
+            found[change.entity_id] = wanted(change, unit_of_coordinator(coordinator))
     return found
 
 

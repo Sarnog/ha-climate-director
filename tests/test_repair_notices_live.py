@@ -286,12 +286,12 @@ class TestEveryNoticeIsRaisedLiveAndClearedAtUnload:
             problems._issue_id("fouten"),
             problems._manual_issue_id("fouten"),
             problems.UNWATCHED_ISSUE,
-            problems._unreadable_issue_id("onleesbaar"),
-            problems._unsupported_modes_issue_id("onleesbaar"),
-            problems._season_excludes_mode_issue_id("onleesbaar"),
-            problems._bypassed_opening_issue_id("onleesbaar"),
-            problems._command_not_taking_issue_id("doof"),
-            problems._corrupt_storage_issue_id("opslag"),
+            problems.unreadable_issue_id("onleesbaar"),
+            problems.unsupported_modes_issue_id("onleesbaar"),
+            problems.season_excludes_mode_issue_id("onleesbaar"),
+            problems.bypassed_opening_issue_id("onleesbaar"),
+            problems.command_not_taking_issue_id("doof"),
+            problems.corrupt_storage_issue_id("opslag"),
         }
 
         known = created_issue_ids()

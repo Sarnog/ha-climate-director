@@ -85,13 +85,69 @@ def test_the_getattr_guard_sees_a_fallback_on_an_own_method(tmp_path: Path, monk
     """
     package = tmp_path / "package"
     package.mkdir()
+    (package / "a_first.py").write_text("VALUE = 1\n", encoding="utf-8")
     (package / "host.py").write_text(
         "class Host:\n"
         "    def payload(self):\n"
         "        return {}\n"
         "    def build(self):\n"
-        "        return getattr(self, 'payload', dict)(), getattr(self, 'plain', None)\n",
+        "        first = getattr(self, 'payload', dict)()\n"
+        "        second = getattr(self, 'plain', None)\n"
+        "        third = getattr(other, 'payload', dict)()\n"
+        "        return first, second, third\n",
         encoding="utf-8",
     )
     monkeypatch.setattr(f"{__name__}.PACKAGE", package)
     assert getattr_fallbacks_on_own_methods() == ["host.py:5"]
+
+
+def private_imports_across_modules() -> list[str]:
+    """Imports of a name with a leading underscore from another module of the package."""
+    found: list[str] = []
+    for path in package_files():
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            inside_package = node.level > 0 or (node.module or "").startswith(
+                "custom_components.climate_director"
+            )
+            if not inside_package:
+                continue
+            for alias in node.names:
+                if alias.name.startswith("_") and not alias.name.startswith("__"):
+                    found.append(
+                        f"{path.relative_to(PACKAGE).as_posix()}:{node.lineno}: {alias.name}"
+                    )
+    return found
+
+
+def test_no_name_with_a_leading_underscore_crosses_a_module_border() -> None:
+    """Over een modulegrens staat geen naam met een leidende onderstreping.
+
+    Een naam die een andere module nodig heeft is niet privé: hij krijgt een
+    publieke naam in het bestand waar hij woont.
+
+    No name with a leading underscore crosses a module border. A name another
+    module needs is not private: it gets a public name in the file where it lives.
+    """
+    found = private_imports_across_modules()
+    assert not found, (
+        "privé naam over een modulegrens / private name across a module border: " + ", ".join(found)
+    )
+
+
+def test_the_private_import_guard_sees_a_private_name_and_leaves_a_public_one(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """De bewaking merkt een verzonnen privé import en laat een publieke staan.
+
+    The guard notices an invented private import and leaves a public one alone.
+    """
+    package = tmp_path / "package"
+    package.mkdir()
+    (package / "a_first.py").write_text("VALUE = 1\n", encoding="utf-8")
+    (package / "user.py").write_text(
+        "from .owner import shown, _hidden\nfrom os import _exit\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(f"{__name__}.PACKAGE", package)
+    assert private_imports_across_modules() == ["user.py:1: _hidden"]
