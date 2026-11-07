@@ -1071,6 +1071,12 @@
   "custom_components/climate_director/engine/validation.py",
   "custom_components/climate_director/engine/windows.py"
  ],
+ "tests/test_module_boundaries.py": [
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
  "tests/test_month_simulation.py": [
   "custom_components/climate_director/coordinator.py",
   "custom_components/climate_director/coordinator_round.py",
