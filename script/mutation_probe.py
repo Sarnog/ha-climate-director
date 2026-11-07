@@ -9,6 +9,11 @@ een gat: geen enkele test bewaakt die eigenschap. De uitvoer is een lijst van di
 gaten; de baan is niet-blokkerend, zodat een gat de rest van de CI niet tegenhoudt,
 maar zichtbaar is.
 
+Twee dingen houden de probe kort. Pytest stopt bij de eerste toets die valt (`-x`):
+één rode toets is genoeg om een mutatie gevangen te noemen, de rest van de suite
+zegt daar niets meer over. En de mutaties draaien naast elkaar, één per processor
+(`CD_MUTATION_WORKERS` zet het aantal); elke mutatie heeft toch al haar eigen kopie.
+
 Each mutation runs in a throwaway copy of the repo, and only against the tests that
 touch the mutated file (`tests/impact_map.json`, through `script/select_tests.py`);
 without a map the full suite. A mutation only runs when its part changed (the
@@ -16,15 +21,22 @@ mutated file, one of its tests, or the probe itself) against `CD_BASE`; without 
 known base they all run. A mutation that stays green is a hole: no test guards that
 property. The output is the list of those holes; the job is non-blocking, so a hole
 does not hold up the rest of CI but stays visible.
+
+Two things keep the probe short. Pytest stops at the first test that fails (`-x`):
+one red test is enough to call a mutation caught, the rest of the suite says nothing
+more about it. And the mutations run side by side, one per processor
+(`CD_MUTATION_WORKERS` sets the number); every mutation has its own copy anyway.
 """
 
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
 import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -155,19 +167,54 @@ def relevant(mutation: dict, tests: list[str], changed: dict[str, str] | None) -
     if changed is None or not tests:
         return True
     own = {mutation["file"], "script/mutation_probe.py", *tests}
-    return any(path in own or sel.touches_everything(path) for path in changed)
+    return any(
+        path in own or sel.touches_everything(path, status) for path, status in changed.items()
+    )
+
+
+def caught(mutation: dict, tests: list[str]) -> bool:
+    """Run the tests against a mutated copy; `True` when at least one test fails."""
+    with tempfile.TemporaryDirectory() as tmp:
+        target = Path(tmp) / "repo"
+        shutil.copytree(
+            REPO,
+            target,
+            ignore=shutil.ignore_patterns(".git", ".venv", "__pycache__", ".pytest_cache"),
+        )
+        _apply(target, mutation)
+        result = subprocess.run(
+            [sys.executable, "-m", "pytest", "-q", "-x", "-p", "no:cacheprovider", *tests],
+            cwd=target,
+            capture_output=True,
+            text=True,
+        )
+        return result.returncode != 0
+
+
+def workers() -> int:
+    """How many mutations run side by side: `CD_MUTATION_WORKERS`, else the processors."""
+    try:
+        wanted = int(os.environ.get("CD_MUTATION_WORKERS", ""))
+    except ValueError:
+        wanted = os.cpu_count() or 1
+    return max(1, wanted)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--only", help="alleen deze mutaties, komma-gescheiden")
+    parser.add_argument(
+        "--plan",
+        action="store_true",
+        help="alleen tonen of er iets draait (CI: `run=` naar $GITHUB_OUTPUT), zonder pytest",
+    )
     args = parser.parse_args()
     only = set(args.only.split(",")) if args.only else None
 
     impact = sel.load_map()
     base = sel.base_ref()
     changed = sel.changed_files(base) if base is not None else None
-    uncaught: list[str] = []
+    planned: list[tuple[dict, list[str]]] = []
     for mutation in MUTATIONS:
         if only and mutation["name"] not in only:
             continue
@@ -175,25 +222,32 @@ def main() -> int:
         if not only and not relevant(mutation, tests, changed):
             print(f"{mutation['name']}: overgeslagen, niets veranderd / skipped, nothing changed")
             continue
-        with tempfile.TemporaryDirectory() as tmp:
-            target = Path(tmp) / "repo"
-            shutil.copytree(
-                REPO,
-                target,
-                ignore=shutil.ignore_patterns(".git", ".venv", "__pycache__", ".pytest_cache"),
-            )
-            _apply(target, mutation)
-            result = subprocess.run(
-                [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", *tests],
-                cwd=target,
-                capture_output=True,
-                text=True,
-            )
-            if result.returncode == 0:
-                uncaught.append(mutation["name"])
-                print(f"{mutation['name']}: NIET gevangen")
+        planned.append((mutation, tests))
+
+    if args.plan:
+        # Zonder afhankelijkheden: de CI installeert pytest en Home Assistant alleen
+        # als er echt een mutatie draait.
+        # Without dependencies: CI installs pytest and Home Assistant only when a
+        # mutation really runs.
+        line = f"run={'true' if planned else 'false'}"
+        output = os.environ.get("GITHUB_OUTPUT")
+        if output:
+            with open(output, "a", encoding="utf-8") as handle:
+                handle.write(line + "\n")
+        print(line)
+        return 0
+
+    uncaught: list[str] = []
+    with ThreadPoolExecutor(max_workers=workers()) as pool:
+        # De uitslagen komen in de volgorde van de lijst, hoe snel elke mutatie ook is.
+        # The outcomes come in the order of the list, however fast each mutation is.
+        outcomes = pool.map(lambda item: caught(*item), planned)
+        for (mutation, _tests), was_caught in zip(planned, outcomes, strict=True):
+            if was_caught:
+                print(f"{mutation['name']}: gevangen", flush=True)
             else:
-                print(f"{mutation['name']}: gevangen")
+                uncaught.append(mutation["name"])
+                print(f"{mutation['name']}: NIET gevangen", flush=True)
 
     if uncaught:
         print("ongedekt: " + ", ".join(uncaught))

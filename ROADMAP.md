@@ -103,10 +103,11 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   en verhuisden uit de coordinator naar de handstartmodule, terwijl een handstart geen hand
   is. Naar de overridemodule of een eigen module in de opruimronde van de code-indeling;
   ARCHITECTURE noemt de module nu alleen "herkenning, opslag en verval" van de handstart.
-- **De mutatieprobe draait na een versiecommit alle mutaties** — alleen `manifest.json` en
-  `pyproject.toml` veranderen, maar `pyproject.toml` geldt als gedeeld hulpbestand en laat
-  alle veertien mutaties draaien (ruim anderhalf uur). Een padvoorwaarde die een
-  wijziging van alleen de versieregel negeert, bespaart die run.
+- **De volledige suite naast elkaar draaien** — de live-toetsen wachten vooral op de klok
+  (een volledige run rekent ruim een minuut en duurt tien), dus verdelen over een paar
+  processen zou de baan van ruim twintig minuten flink inkorten. De dekking per
+  toetsbestand en de leeslog van `tests/conftest.py` gaan nu uit van één proces; die
+  moeten eerst per proces opgeslagen en samengevoegd worden.
 - **De gidsen citeren de handstartknop op twee manieren** — fr, es en ar noemen het
   schermwoord met `{zone}` (*Démarrer {zone} manuellement*), nl, en en de zonder (*Met de
   hand starten*, *Start by hand*, *Von Hand starten*). Eén vorm, met een toets erop.

@@ -50,6 +50,7 @@ from __future__ import annotations
 import ast
 import json
 import os
+import re
 import subprocess
 import sys
 from collections.abc import Iterable
@@ -94,6 +95,25 @@ MYPY_TRIGGERS = frozenset(
 )
 
 ALL = "ALL"
+
+#: De statusletter van een wijziging waarin alleen de versieregel veranderde.
+#: The status letter of a change in which only the version line changed.
+VERSION = "V"
+
+#: De versieregel per bestand. Verandert in zo'n bestand niets anders dan deze ene
+#: regel (een versiecommit), dan raakt dat geen gedrag: het bestand telt dan niet als
+#: gedeeld hulpbestand, en alleen de toetsen die het bestand bij naam lezen draaien.
+#: Alleen een gewone versie (drie getallen) telt; een andere vorm kan Home Assistant laten
+#: weigeren en laat dus gewoon de toetsen van het hele bestand draaien.
+#: The version line per file. When nothing but this one line changes in such a file
+#: (a version commit), no behaviour is touched: the file then does not count as a
+#: shared helper, and only the tests that read the file by name run. Only a plain
+#: version (three numbers) counts; another form can make Home Assistant refuse and so runs
+#: the tests of the whole file as usual.
+VERSION_LINES = {
+    "pyproject.toml": re.compile(r'version = "\d+\.\d+\.\d+"'),
+    f"{PACKAGE}manifest.json": re.compile(r'\s*"version": "\d+\.\d+\.\d+",?'),
+}
 
 
 def git(*args: str) -> str:
@@ -144,18 +164,38 @@ def parse_name_status(output: str) -> dict[str, str]:
     return found
 
 
+def only_the_version(diff: str, pattern: re.Pattern[str]) -> bool:
+    """Return whether every changed line of a `git diff -U0` is the version line."""
+    lines = [
+        line[1:]
+        for line in diff.splitlines()
+        if line[:1] in {"+", "-"} and not line.startswith(("+++", "---"))
+    ]
+    return bool(lines) and all(pattern.fullmatch(line) for line in lines)
+
+
 def changed_files(base: str) -> dict[str, str]:
-    """Map each changed path to its status letter (`A`, `M`, `D`, ...).
+    """Map each changed path to its status letter (`A`, `M`, `D`, `V`, ...).
 
-    Buiten de CI tellen de werkboom en de nog niet gevolgde bestanden mee.
+    Buiten de CI tellen de werkboom en de nog niet gevolgde bestanden mee. Een
+    bestand uit `VERSION_LINES` waarin alleen de versieregel veranderde, krijgt `V`.
 
-    Outside CI the working tree and the untracked files count too.
+    Outside CI the working tree and the untracked files count too. A file from
+    `VERSION_LINES` in which only the version line changed gets `V`.
     """
+    in_ci = bool(os.environ.get("CI"))
     found = parse_name_status(git("diff", "--name-status", "--no-renames", base, "HEAD"))
-    if not os.environ.get("CI"):
+    if not in_ci:
         found.update(parse_name_status(git("diff", "--name-status", "--no-renames", "HEAD")))
         for path in git("ls-files", "--others", "--exclude-standard").splitlines():
             found[path] = "A"
+    for path, pattern in VERSION_LINES.items():
+        if found.get(path) == "M":
+            # In de CI de commits, lokaal ook de werkboom: dezelfde reeks als hierboven.
+            # In CI the commits, locally the working tree too: the same range as above.
+            span = (base, "HEAD") if in_ci else (base,)
+            if only_the_version(git("diff", "-U0", *span, "--", path), pattern):
+                found[path] = VERSION
     return found
 
 
@@ -175,8 +215,10 @@ def is_test_file(path: str) -> bool:
     )
 
 
-def touches_everything(path: str) -> bool:
+def touches_everything(path: str, status: str = "M") -> bool:
     """Return whether a change to `path` makes every test run."""
+    if status == VERSION:
+        return False
     if path in ALL_TRIGGERS:
         return True
     return (
@@ -212,12 +254,32 @@ def direct_imports(test_file: str, root: Path | None = None) -> set[str]:
     return found
 
 
+def _source(test_file: str) -> str:
+    """The text of a test file, or an empty string when it cannot be read."""
+    try:
+        return (ROOT / test_file).read_text(encoding="utf-8")
+    except (OSError, ValueError):
+        return ""
+
+
 def select(changed: dict[str, str], impact: dict[str, list[str]] | None) -> str | list[str]:
     """Return `ALL`, or the sorted test files that belong to `changed`."""
     if impact is None:
         return ALL
     chosen: set[str] = set()
     for path, status in changed.items():
+        if status == VERSION:
+            # Alleen wie het bestand bij naam leest: de kaart noemt het pad zelf, of
+            # de toets spelt de bestandsnaam uit.
+            # Only whoever reads the file by name: the map names the path itself, or
+            # the test spells out the file name.
+            name = Path(path).name
+            chosen.update(
+                test_file
+                for test_file, inputs in impact.items()
+                if path in inputs or name in _source(test_file)
+            )
+            continue
         if touches_everything(path):
             return ALL
         if path.startswith(PACKAGE) and status == "A":
@@ -280,15 +342,22 @@ def current_selection() -> tuple[str | list[str], dict[str, str] | None]:
     return select(changed, load_map()), changed
 
 
+def job_flags(selection: str | list[str], changed: dict[str, str] | None) -> dict[str, bool]:
+    """Which jobs of `tests.yaml` run for this selection and these changes."""
+    # Een versieregel raakt mypy, ruff en de oudste versie niet.
+    # A version line touches neither mypy, ruff nor the oldest version.
+    files = [path for path, status in (changed or {}).items() if status != VERSION]
+    return {
+        "tests": selection == ALL or bool(selection) or needs_lint(files),
+        "mypy": changed is None or needs_mypy(files),
+        "oldest": changed is None or needs_oldest(files),
+    }
+
+
 def main(argv: list[str]) -> int:
     selection, changed = current_selection()
     if argv[:1] == ["changes"]:
-        files = list(changed or {})
-        flags = {
-            "tests": selection == ALL or bool(selection) or needs_lint(files),
-            "mypy": changed is None or needs_mypy(files),
-            "oldest": changed is None or needs_oldest(files),
-        }
+        flags = job_flags(selection, changed)
         lines = [f"{key}={'true' if value else 'false'}" for key, value in flags.items()]
         output = os.environ.get("GITHUB_OUTPUT")
         if output:
