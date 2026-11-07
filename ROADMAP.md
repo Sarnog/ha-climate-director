@@ -91,6 +91,24 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
 
 ## Could have
 
+- **De opruimronde liet zes punten open**: (1) `engine/validation.py`
+  heeft 1288 regels, het grootste bestand van het pakket; splits de controles per onderwerp
+  (zones, bronnen, circuits, bewoners, vensters) achter dezelfde ene `RULES`-lijst. (2)
+  `engine/constraints.py` (618) houdt de taakkeuze, de capaciteit en de kortcyclus die het
+  ontwerp in `circuit_policy.py` en `capacity.py` wilde zetten. (3) De `coordinator_*`-modules
+  werken met ruim tachtig privé attributen van de coordinator (`coordinator._restored`): geef
+  elk onderdeel zijn eigen kleine staat. (4) De uitsluitingenpoort staat op 75 in plaats van 41:
+  de `TYPE_CHECKING`-terugimports van `flow_*` en `coordinator_*` (kringen die alleen het type
+  raken) kunnen met een protocol per laag weg. (5) `texts.py` en `entity_texts.py` importeren
+  elkaar (de her-export onderaan `texts.py` met `# noqa: E402`); laat de aanroepers rechtstreeks
+  uit `entity_texts.py` importeren en haal de her-export weg. (6) Dertien regels
+  `getattr(self, "<attribuut>", standaard)` in `state_store.py`, `world_builder.py` en
+  `hand_start.py` bestaan alleen voor stand-ins in de toetsen; geef de stand-ins de attributen.
+- **De impactkaart hangt van de omgeving af** — een lokale volledige run op Windows laat de map
+  `script/` voor `tests/test_controls_live.py` vallen, de CI neemt hem wel op; dat kostte drie
+  rode CI-runs en drie handmatige kaartherstellen tijdens de opruimronde. Laat een volledige run de bestaande
+  regels samenvoegen met wat hij ziet in plaats van ze te vervangen, of neem de kaart altijd uit
+  het CI-artefact.
 - **De impactkaart hangt aan de selectie van de run** — code op moduleniveau draait één keer,
   bij het toetsbestand dat de module als eerste importeert. Een kleinere selectie in de CI dan
   lokaal (de commit tegen zijn voorganger, tegen alles wat nog niet gepusht is) legt die code
@@ -114,11 +132,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   dood blijft: slapen en een leeg huis laten de handstart dan ook niet vervallen (gemeten).
   De volgende dag begrenst het; wat ontbreekt is een grens
   per sensor (alleen de sensoren van wie thuis is, of een maximum aan onleesbare rondes).
-- **De hand en de handstart staan door elkaar in `hand_start.py`** — `_zones_of`,
-  `_zones_handed_back`, `_everyone_asleep` en `_house_is_empty` horen bij de hand (anker 11)
-  en verhuisden uit de coordinator naar de handstartmodule, terwijl een handstart geen hand
-  is. Naar de overridemodule of een eigen module in de opruimronde van de code-indeling;
-  ARCHITECTURE noemt de module nu alleen "herkenning, opslag en verval" van de handstart.
 - **De mutatieprobe draait na een versiecommit alle mutaties** — alleen `manifest.json` en
   `pyproject.toml` veranderen, maar `pyproject.toml` geldt als gedeeld hulpbestand en laat
   alle veertien mutaties draaien (ruim anderhalf uur). Een padvoorwaarde die een
@@ -442,6 +455,23 @@ The worked-out design proposals for everything below live in
 
 ## Could have
 
+- **The clean-up round left six points open**: (1) `engine/validation.py`
+  has 1288 lines, the largest file of the package; split the checks per subject (zones,
+  sources, circuits, residents, windows) behind the same single `RULES` list. (2)
+  `engine/constraints.py` (618) keeps the duty choice, the capacity and the short cycle that the
+  design wanted in `circuit_policy.py` and `capacity.py`. (3) The `coordinator_*` modules work
+  with well over eighty private attributes of the coordinator (`coordinator._restored`): give each
+  part a small state of its own. (4) The exclusions gate stands at 75 instead of 41: the
+  `TYPE_CHECKING` back-imports of `flow_*` and `coordinator_*` (cycles that only touch the type)
+  can go with a protocol per layer. (5) `texts.py` and `entity_texts.py` import each other (the
+  re-export at the bottom of `texts.py` with `# noqa: E402`); let the callers import straight
+  from `entity_texts.py` and drop the re-export. (6) Thirteen lines
+  `getattr(self, "<attribute>", default)` in `state_store.py`, `world_builder.py` and
+  `hand_start.py` exist only for stand-ins in the tests; give the stand-ins the attributes.
+- **The impact map depends on the environment** — a local full run on Windows drops the
+  directory `script/` for `tests/test_controls_live.py`, the CI records it; that cost three red
+  CI runs and three manual map repairs during the clean-up round. Let a full run merge the existing lines
+  with what it sees instead of replacing them, or always take the map from the CI artifact.
 - **The impact map depends on the selection of the run** — module-level code runs once, for
   the test file that imports the module first. A smaller selection in CI than locally (the
   commit against its predecessor, against everything not pushed yet) moves that code to
@@ -464,12 +494,6 @@ The worked-out design proposals for everything below live in
   and an empty house then do not let the hand start lapse either (measured). The next day
   bounds it; what is missing is a bound per sensor (only the
   sensors of whoever is home, or a maximum of unreadable rounds).
-- **The hand and the hand start are mixed in `hand_start.py`** — `_zones_of`,
-  `_zones_handed_back`, `_everyone_asleep` and `_house_is_empty` belong to the hand
-  (anchor 11) and moved out of the coordinator into the hand-start module, although a hand
-  start is not a hand. Move them to the override module or a module of their own in the
-  clean-up round of the code layout; ARCHITECTURE now describes the module only as the
-  hand start's "recognition, storage and expiry".
 - **The mutation probe runs every mutation after a version commit** — only `manifest.json`
   and `pyproject.toml` change, but `pyproject.toml` counts as a shared helper file and
   makes all fourteen mutations run (well over an hour and a half). A path condition that

@@ -1448,6 +1448,21 @@ gevraagd: de ketel krijgt `heat`, de airco blijft als `MANUAL_SOURCE` ongemoeid)
 
 #### Could have
 
+**De open punten van de opruimronde.** Zes punten, in volgorde van belang: (1)
+`engine/validation.py` (1288 regels) splitst per onderwerp (zones, bronnen, circuits,
+bewoners, vensters), elk met zijn eigen regels, achter dezelfde ene `RULES`-lijst in de
+bestaande volgorde. (2) `engine/constraints.py` (618) geeft de taakkeuze en de
+capaciteit/kortcyclus aan `circuit_policy.py` en `capacity.py`. (3) Elk `coordinator_*`-onderdeel
+krijgt een eigen kleine staatsklasse in plaats van privé attributen van de coordinator te
+lezen en te zetten (nu ruim tachtig plekken). (4) De `TYPE_CHECKING`-terugimports van `flow_*`
+en `coordinator_*` verdwijnen met een protocol per laag, waarmee de uitsluitingenpoort van 75
+terug naar 41 of lager kan. (5) `texts.py` houdt geen her-export van `entity_texts.py` meer
+(en `problems.py` geen onderaan-import van `repair_notices.py`); aanroepers importeren
+rechtstreeks. (6) De stand-ins in de toetsen krijgen de attributen waarvoor dertien
+`getattr(self, "<attribuut>", standaard)`-regels een terugval zijn. De impactkaart heeft een
+eigen punt: een volledige run voegt bestaande regels samen met wat hij ziet, zodat een lokale
+run op Windows de map `script/` niet meer laat vallen.
+
 **Huisbreed vermogensplafond.** `Source.wattage` + `DirectorConfig.watt_limit`; na de
 circuitresolutie snoeit een nieuwe installatiebrede stap in `constraints.py` de winnaars op
 watt, op zone-prioriteit, en houdt alleen starts tegen (nooit stops).
@@ -1530,8 +1545,6 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `engine/command_stops.py` | de stopboekhouding en het samenvouwen | `opening_rest_bookkeeping`, `stop_blocked`, `ignores_openings`, `collapse_shared`, `claim` |
 | `engine/command_reasons.py` | waarom een apparaat niets krijgt | `was_running`, `received_heat`, `unreadable_reason`, `untouched_reason`, `opening_stop_reason`, `opening_rest_hold`, `idle_mode` |
 | `engine/zone_decisions.py` | wat een zone uiteindelijk te horen krijgt | `build_zone_decisions`, `lost_to_another_zone`, `command_order`, `clamped_target` |
-| `engine/circuit_policy.py` | de taakkeuze op een circuit | `forced_families`, `choose_family`, `any_managed_running`, `finish` |
-| `engine/capacity.py` | capaciteit en kortcyclus | `standing_claims`, `keeps_claiming`, `apply_capacity`, `apply_short_cycle` |
 | `engine/quiet.py` | het stiltevenster en de draaiende zone | `guests_carry_the_house`, `quiet_hours`, `open_quiet_windows`, `was_home_before`, `zone_running`; dit sluit de kring met `hand_start` |
 | `engine/schedule.py` | het rooster als poort | `schedule_open`, `counts_towards_schedule` |
 | `engine/gates.py` | de poort als geheel | `closed`, de huishoudpoort, de openingen, `house_wide_blocked`, `opening_rest_until`, en `brakes_remaining` (de poort leest de handstart, niet andersom) |
@@ -1542,7 +1555,7 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `engine/resident_storage.py` | de bewoner in de opslag | de bewoner plus zijn drie ochtendinstellingen |
 | `engine/storage_values.py` | opgeslagen waarden veilig lezen | de naam van `storage_helpers.py`; alle lezers krijgen een publieke naam (`as_dict`, `items`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
 | `coordinator_surface.py` | het oppervlak van de koppeling | `CoordinatorSurface`; alle mixins lezen hier hun gastheer |
-| `coordinator.py` | de coordinator zelf | `__init__`, de eigenschappen, `async_request_evaluation`, de klok en de levensduur; hij erft de publieke mixins |
+| `coordinator.py` | de coordinator zelf | `__init__`, de eigenschappen, `async_request_evaluation`, de klok en de levensduur; hij erft de publieke mixins en houdt per onderdeel een dunne methode die de functie in de `coordinator_*`-module aanroept |
 | `coordinator_lifecycle.py` | opstarten en stoppen | `async_start`, `_async_on_hass_started`, `tracked_entities`, `_calendar_says_holiday`, `async_shutdown` |
 | `coordinator_tracking.py` | wat een apparaat zelf doet | `_handle_change`, `_notice_precipitation`, `_notice_hand`, `_note_commanded_off`, `_note_commanded_on`, `_we_wanted_it_off`, `_we_wanted_it_on` |
 | `coordinator_round.py` | één beslisronde en haar klok | `_async_evaluate`, `_remember_families`, `_with_family_history`, `_schedule_deferral`, `_cancel_pending_deferral`, de klokherhaling |
@@ -1578,11 +1591,16 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `entity_texts.py` | de leesbare beslissing | `reason_sentence`, `action_sentence`, `decision_message`, `decision_fields` en de sleutels daaromheen |
 | `services.py` | de service-API | de schema's, doelkeuze en registratie van `evaluate`, `precondition`, `cancel_precondition`, `set_override` en `clear_override` |
 
+De taakkeuze op een circuit, de capaciteit en de kortcyclus blijven in
+`engine/constraints.py` (618 regels, een benoemde uitzondering); de splitsing staat in
+de ROADMAP. `engine/validation.py` (1288 regels) is de grootste benoemde uitzondering.
+
 `engine/decide.py` blijft de enige ingang van de beslissing; het bevat alleen nog
 `decide()` en de volgorde van de stappen. `config_flow.py` blijft het enige
 bestand dat Home Assistant als configuratiestroom laadt; het bevat de basisklasse,
-de menu-navigatie, het opslaan en de gedeelde lezers. De stappen zelf staan in de
-`flow_*`-mengsels. `problems.py` en `texts.py` blijven de algemene ingangen;
+de menu-navigatie, het opslaan en de gedeelde lezers. De stappen zelf staan als
+functies in de `flow_*`-modules; `config_flow.py` houdt per stap een dunne methode
+die ze aanroept. `problems.py` en `texts.py` blijven de algemene ingangen;
 `repair_notices.py` en `entity_texts.py` dragen de bijzondere onderwerpen.
 `__init__.py` blijft de levensduur van de entry; `services.py` draagt de
 service-API.
@@ -1600,6 +1618,9 @@ service-API.
 - Over een modulegrens staat geen naam met een leidende onderstreping. De
   mixins, hun helpers en de schemabouwers krijgen een publieke naam in het
   bestand waar ze wonen.
+- `tests/test_module_boundaries.py` bewaakt drie van deze grenzen met `ast`: geen
+  privé naam over een modulegrens, geen `getattr(self, "<eigen methode>", ...)` en
+  geen import binnen een functie.
 - Een tegel van de veldtabel blijft in `engine/fields.py`; de selectors en de
   vertaling naar `vol.Schema` blijven in de Home Assistant-helft.
 - Een nieuw bestand is een onderwerp, geen restbak: geen `utils`, `helpers`,
@@ -1619,7 +1640,7 @@ commit, elke commit is groen en wordt pas gepusht als de voorganger groen is.
    `engine/schedule.py` en `engine/gates.py`;
 6. de configuratiestroom en de formulieren;
 7. `engine/decide.py` met `candidates`, `grants`, `commands`,
-   `command_reasons`, `zone_decisions`, `circuit_policy` en `capacity`;
+   `command_reasons` en `zone_decisions`;
 8. `engine/models.py` met `seasons`, `windows`, `residents`, `equipment` en
    `rooms`;
 9. `coordinator.py` met `coordinator_surface`, `coordinator_lifecycle`,
@@ -1647,9 +1668,12 @@ voortgangsbestand in de repo-root:
 De impactkaart hangt aan de selectie: `script/select_tests.py` laat een
 toegevoegd pakketbestand of toetsbestand de hele suite draaien. Een rename is in
 `git diff --no-renames` een verwijdering plus een toevoeging en valt dus onder
-dezelfde regel. `script/test` werkt de kaart bij; de volledige run levert de
-kaart die bij de nieuwe bestanden hoort, zonder dat iemand een CI-artifact met de
-hand overneemt. Een gewijzigd bestaand bestand houdt de gewone selectie.
+dezelfde regel. `script/test` werkt de kaart bij en de CI levert hem als artefact `impact-map`.
+De kaart volgt de invoer die de run zelf zag: een lokale volledige run op Windows
+ziet voor `tests/test_controls_live.py` de map `script/` niet, de CI wel. Wie de
+kaart uit een lokale run commit, zet die regel dus terug of neemt de kaart uit het
+artefact over (zie de ROADMAP). Een gewijzigd bestaand bestand houdt de gewone
+selectie.
 
 #### Toetsen per onderwerp
 
@@ -3322,6 +3346,21 @@ is left alone as `MANUAL_SOURCE`).
 
 #### Could have
 
+**The open points of the clean-up round.** Six points, in order of weight: (1)
+`engine/validation.py` (1288 lines) splits per subject (zones, sources, circuits,
+residents, windows), each with its own rules, behind the same single `RULES` list in the
+existing order. (2) `engine/constraints.py` (618) hands the duty choice and the
+capacity/short cycle to `circuit_policy.py` and `capacity.py`. (3) Each `coordinator_*` part
+gets a small state class of its own instead of reading and setting private attributes of
+the coordinator (well over eighty places now). (4) The `TYPE_CHECKING` back-imports of `flow_*`
+and `coordinator_*` disappear with a protocol per layer, which lets the exclusions gate go
+from 75 back to 41 or lower. (5) `texts.py` keeps no re-export of `entity_texts.py` any more
+(and `problems.py` no bottom import of `repair_notices.py`); callers import directly. (6) The
+stand-ins in the tests get the attributes for which thirteen
+`getattr(self, "<attribute>", default)` lines are a fallback. The impact map has a point of
+its own: a full run merges existing lines with what it sees, so a local run on Windows no
+longer drops the directory `script/`.
+
 **A house-wide power ceiling.** `Source.wattage` + `DirectorConfig.watt_limit`; after the
 circuit resolution a new installation-wide step in `constraints.py` trims the winners by
 watts, on zone priority, and only ever holds back starts (never stops).
@@ -3402,8 +3441,6 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `engine/command_stops.py` | the stop bookkeeping and collapsing | `opening_rest_bookkeeping`, `stop_blocked`, `ignores_openings`, `collapse_shared`, `claim` |
 | `engine/command_reasons.py` | why an appliance gets nothing | `was_running`, `received_heat`, `unreadable_reason`, `untouched_reason`, `opening_stop_reason`, `opening_rest_hold`, `idle_mode` |
 | `engine/zone_decisions.py` | what a zone finally hears | `build_zone_decisions`, `lost_to_another_zone`, `command_order`, `clamped_target` |
-| `engine/circuit_policy.py` | choosing the duty on a circuit | `forced_families`, `choose_family`, `any_managed_running`, `finish` |
-| `engine/capacity.py` | capacity and short cycle | `standing_claims`, `keeps_claiming`, `apply_capacity`, `apply_short_cycle` |
 | `engine/quiet.py` | the quiet window and the running zone | `guests_carry_the_house`, `quiet_hours`, `open_quiet_windows`, `was_home_before`, `zone_running`; this closes the cycle with `hand_start` |
 | `engine/schedule.py` | the schedule as a gate | `schedule_open`, `counts_towards_schedule` |
 | `engine/gates.py` | the gate as a whole | `closed`, the household gate, the openings, `house_wide_blocked`, `opening_rest_until`, and `brakes_remaining` (the gate reads the hand start, never the other way round) |
@@ -3414,7 +3451,7 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `engine/resident_storage.py` | the resident in storage | the resident plus its three morning settings |
 | `engine/storage_values.py` | reading stored values safely | the new name of `storage_helpers.py`; every reader gets a public name (`as_dict`, `items`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
 | `coordinator_surface.py` | the binding layer's surface | `CoordinatorSurface`; every mixin reads its host here |
-| `coordinator.py` | the coordinator itself | `__init__`, the properties, `async_request_evaluation`, the clock and the lifetime; it inherits the public mixins |
+| `coordinator.py` | the coordinator itself | `__init__`, the properties, `async_request_evaluation`, the clock and the lifetime; it inherits the public mixins and keeps a thin method per part that calls the function in the `coordinator_*` module |
 | `coordinator_lifecycle.py` | starting and stopping | `async_start`, `_async_on_hass_started`, `tracked_entities`, `_calendar_says_holiday`, `async_shutdown` |
 | `coordinator_tracking.py` | what an appliance does by itself | `_handle_change`, `_notice_precipitation`, `_notice_hand`, `_note_commanded_off`, `_note_commanded_on`, `_we_wanted_it_off`, `_we_wanted_it_on` |
 | `coordinator_round.py` | one decision round and its clock | `_async_evaluate`, `_remember_families`, `_with_family_history`, `_schedule_deferral`, `_cancel_pending_deferral`, the clock repetition |
@@ -3450,11 +3487,16 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `entity_texts.py` | the readable decision | `reason_sentence`, `action_sentence`, `decision_message`, `decision_fields` and the keys around them |
 | `services.py` | the service API | the schemas, target choice and registration of `evaluate`, `precondition`, `cancel_precondition`, `set_override` and `clear_override` |
 
+The duty choice on a circuit, the capacity and the short cycle stay in
+`engine/constraints.py` (618 lines, a named exception); the split stands in the
+ROADMAP. `engine/validation.py` (1288 lines) is the largest named exception.
+
 `engine/decide.py` stays the only entrance of the decision; it holds only
 `decide()` and the order of the steps. `config_flow.py` stays the only file Home
 Assistant loads as the configuration flow; it holds the base class, the menu
-navigation, the save and the shared readers. The steps themselves stand in the
-`flow_*` mixins. `problems.py` and `texts.py` stay the general entrances;
+navigation, the save and the shared readers. The steps themselves stand as
+functions in the `flow_*` modules; `config_flow.py` keeps a thin method per step
+that calls them. `problems.py` and `texts.py` stay the general entrances;
 `repair_notices.py` and `entity_texts.py` carry the specialised subjects.
 `__init__.py` stays the lifetime of the entry; `services.py` carries the service
 API.
@@ -3472,6 +3514,9 @@ API.
 - Across a module boundary no name carries a leading underscore. The mixins,
   their helpers and the schema builders get a public name in the file where they
   live.
+- `tests/test_module_boundaries.py` guards three of these borders with `ast`: no
+  private name across a module border, no `getattr(self, "<own method>", ...)` and
+  no import inside a function.
 - A field-table cell stays in `engine/fields.py`; the selectors and the
   translation to `vol.Schema` stay in the Home Assistant half.
 - A new file is a subject, not a catch-all: no `utils`, `helpers`, `extra` or
@@ -3492,7 +3537,7 @@ is green.
    `engine/schedule.py` and `engine/gates.py`;
 6. the configuration flow and the forms;
 7. `engine/decide.py` with `candidates`, `grants`, `commands`,
-   `command_reasons`, `zone_decisions`, `circuit_policy` and `capacity`;
+   `command_reasons` and `zone_decisions`;
 8. `engine/models.py` with `seasons`, `windows`, `residents`, `equipment` and
    `rooms`;
 9. `coordinator.py` with `coordinator_surface`, `coordinator_lifecycle`,
@@ -3520,9 +3565,12 @@ in the repository root:
 The impact map hangs off the selection: `script/select_tests.py` lets an added
 package file or test file run the whole suite. A rename is a deletion plus an
 addition in `git diff --no-renames` and therefore falls under the same rule.
-`script/test` updates the map; the full run delivers the map that belongs with
-the new files, without anyone copying a CI artifact by hand. A changed existing
-file keeps the ordinary selection.
+`script/test` updates the map and the CI delivers it as the artifact `impact-map`.
+The map follows the input the run itself saw: a local full run on Windows does not
+see the directory `script/` for `tests/test_controls_live.py`, the CI does. Whoever
+commits the map from a local run therefore puts that line back or takes the map
+from the artifact (see the ROADMAP). A changed existing file keeps the ordinary
+selection.
 
 #### Tests per subject
 
