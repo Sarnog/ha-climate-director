@@ -371,7 +371,7 @@ def every_drawn_form_must_serialize(monkeypatch: pytest.MonkeyPatch) -> None:
     bewaakt dus de getekende schermen, foutherhalingen en tussenschermen die een
     expliciete doorloop mist. Dat élk scherm uit de bron ook een doorloop heeft,
     bewaakt `TestEveryFormInTheSourceIsWalkedTo` in
-    `tests/test_campaign_editing.py` — samen bewaken ze twee verschillende
+    `tests/test_commissioning.py` — samen bewaken ze twee verschillende
     dingen, niet dezelfde invariant twee keer.
 
     Push every form the suite draws through the frontend converter.
@@ -389,7 +389,7 @@ def every_drawn_form_must_serialize(monkeypatch: pytest.MonkeyPatch) -> None:
     guards the drawn screens, error re-displays and intermediate screens an
     explicit walk misses. That every screen from the source also has a walk is
     guarded by `TestEveryFormInTheSourceIsWalkedTo` in
-    `tests/test_campaign_editing.py` — together they guard two different
+    `tests/test_commissioning.py` — together they guard two different
     things, not the same invariant twice.
     """
     import voluptuous_serialize
@@ -529,13 +529,18 @@ def form_field_nodes(
         if isinstance(schema, ast.Call) and isinstance(schema.func, ast.Attribute):
             value = schema.func.value
             if isinstance(value, ast.Name) and value.id == "schemas":
-                schemas_module = _module_of(root, root / "schemas.py")
-                function = functions.get((schemas_module, schema.func.attr))
-                if function is None:
+                candidates = [
+                    node
+                    for (module_name, function_name), node in functions.items()
+                    if function_name == schema.func.attr
+                    and module_name.startswith("custom_components.climate_director.form_")
+                ]
+                if len(candidates) != 1:
                     raise AssertionError(
                         f"{module}: data_schema verwijst naar schemas.{schema.func.attr}, "
-                        "maar die functie bestaat niet in schemas.py"
+                        "maar die functie staat niet in precies een form_module"
                     )
+                function = candidates[0]
                 target = function
                 table_name = _table_schema_argument(function)
                 if table_name is not None:

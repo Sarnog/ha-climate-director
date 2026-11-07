@@ -158,9 +158,9 @@ class TestTheyMatchTheIntegration:
         return (FOLDER / name).read_text(encoding="utf-8")
 
     def _refusal_keys(self) -> set[str]:
-        source = (self.COMPONENT / "coordinator.py").read_text(encoding="utf-8")
+        source = (self.COMPONENT / "coordinator_events.py").read_text(encoding="utf-8")
         block = source[source.index("def _refusal_data") : source.index("def _friendly")]
-        return set(re.findall(r'^\s{12}"(\w+)":', block, re.MULTILINE))
+        return set(re.findall(r'^\s+"(\w+)":', block, re.MULTILINE))
 
     def test_the_refusal_blueprint_reads_only_fields_that_exist(self) -> None:
         text = self._text("precondition_refused.yaml")
@@ -169,7 +169,7 @@ class TestTheyMatchTheIntegration:
         assert used <= self._refusal_keys(), sorted(used - self._refusal_keys())
 
     def test_the_decision_blueprint_reads_only_fields_that_exist(self) -> None:
-        source = (self.COMPONENT / "coordinator.py").read_text(encoding="utf-8")
+        source = (self.COMPONENT / "coordinator_events.py").read_text(encoding="utf-8")
         block = source[source.index("def _event_data") :]
         known = set(re.findall(r'^\s{8}"(\w+)":', block, re.MULTILINE))
         used = set(re.findall(r"trigger\.event\.data\.(\w+)", self._text("decisions.yaml")))
@@ -214,7 +214,7 @@ class TestTheyMatchTheIntegration:
         default = data["blueprint"]["input"]["message"]["default"]
         assert "trigger.event.data.message" in default
         assert "default(" in default, default
-        source = (self.COMPONENT / "coordinator.py").read_text(encoding="utf-8")
+        source = (self.COMPONENT / "coordinator_events.py").read_text(encoding="utf-8")
         block = source[source.index("def _event_data") :]
         known = set(re.findall(r'^\s{8}"(\w+)":', block, re.MULTILINE))
         used = set(re.findall(r"trigger\.event\.data\.(\w+)", default))

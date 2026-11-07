@@ -26,7 +26,8 @@ from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 from custom_components.climate_director import texts
 from custom_components.climate_director.const import DOMAIN
-from custom_components.climate_director.coordinator import ClimateDirectorCoordinator, _wanted
+from custom_components.climate_director.coordinator import ClimateDirectorCoordinator
+from custom_components.climate_director.coordinator_events import _wanted
 from custom_components.climate_director.engine import (
     DirectorConfig,
     GateSettings,

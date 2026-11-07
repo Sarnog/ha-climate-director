@@ -17,7 +17,7 @@ appliance that should simply be running. Hence the first evaluation hangs off
 
 from __future__ import annotations
 
-from custom_components.climate_director import coordinator as module
+from custom_components.climate_director import coordinator_lifecycle as module
 from custom_components.climate_director.coordinator import ClimateDirectorCoordinator
 
 

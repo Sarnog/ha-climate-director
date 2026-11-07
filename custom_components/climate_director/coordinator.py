@@ -19,82 +19,53 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Mapping
-from dataclasses import replace
-from datetime import date, datetime, timedelta
-from typing import Any, Literal, Protocol, cast
+from datetime import date, datetime
+from typing import Any, cast
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.event import async_call_later, async_track_state_change_event
-from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from . import problems, texts
-from .applier import apply
+from . import (
+    coordinator_events,
+    coordinator_lifecycle,
+    coordinator_reporting,
+    coordinator_round,
+    coordinator_tracking,
+)
 from .const import (
-    CLOCK_REEVAL_SECONDS,
-    COMMANDED_WINDOW,
     CONF_INSTALLATION,
     CONF_SHADOW_MODE,
     DEBOUNCE_SECONDS,
     DEFAULT_PRECONDITION_MINUTES,
     DEFAULT_SHADOW_MODE,
     DOMAIN,
-    EVENT_DECISION,
-    EVENT_PRECONDITION_REFUSED,
-    MIN_DEFERRAL_SECONDS,
     STORAGE_VERSION,
-    UNUSABLE_GRACE_SECONDS,
 )
 from .engine import (
-    MODE_OFF,
-    WAITING_REASONS,
     DirectorConfig,
     ModeFamily,
     Plan,
     Reason,
-    ResidentState,
     Season,
     WorldState,
-    ZoneDecision,
-    decide,
-    wanted_target,
 )
-from .engine.constraints import active_family
-from .engine.diff import Change, changes
-from .engine.families import family_of, preferred_mode
-from .engine.gates import (
-    house_wide_blocked,
-    opening_bypassed_and_open,
-    opening_standing,
-)
-from .engine.models import SeasonSource
+from .engine.diff import Change
 from .engine.serialise import config_from_dict
 from .hand_start import HandStartMixin
 from .overrides import OverridesMixin
-from .preconditions import PreconditionsMixin, still_running
-from .readability import unreadable
+from .preconditions import PreconditionsMixin
 from .resident_reader import ResidentReaderMixin
 from .room_presence import RoomPresenceMixin
 from .state_store import StateStoreMixin
 from .units import (
-    display_temperature,
-    from_celsius,
     temperature_unit_of,
-    to_celsius,
-    unit_of_coordinator,
 )
 from .world_builder import (
     WorldBuilderMixin,
-    as_float,
-    as_modes,
-    reads_as_home,
-    season_from_state,
-    temperature_from_state,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -130,101 +101,6 @@ def storage_key(entry_id: str) -> str:
     quietly makes the cleanup miss.
     """
     return f"{DOMAIN}.{entry_id}.precondition"
-
-
-class CoordinatorSurface(Protocol):
-    """Het oppervlak van de coördinator dat de mixins gebruiken.
-
-    The coordinator surface the mixins use.
-
-    De mixins (`HandStartMixin`, `StateStoreMixin`, `PreconditionsMixin`,
-    `OverridesMixin`, `ResidentReaderMixin`, `RoomPresenceMixin`,
-    `WorldBuilderMixin`) liggen op de coördinator maar erven er niet van: de
-    coördinator erft van hén. Zonder deze declaratie ziet mypy hun `self` als de
-    mixin zelf en klaagt hij op elk coordinator-attribuut. Elke mixin erft onder
-    `TYPE_CHECKING` van dit protocol, zodat `self.config` en de rest kloppen;
-    buiten de typecontrole bestaat het niet, en de coördinator erft het zo
-    binnen - de waarden zelf staan in zijn `__init__`.
-
-    The mixins (`HandStartMixin`, `StateStoreMixin`, `PreconditionsMixin`,
-    `OverridesMixin`, `ResidentReaderMixin`, `RoomPresenceMixin`,
-    `WorldBuilderMixin`) sit on the coordinator but do not inherit from it: the
-    coordinator inherits from them. Without this declaration mypy sees their
-    `self` as the mixin itself and complains about every coordinator attribute.
-    Under `TYPE_CHECKING` each mixin inherits from this protocol, so `self.config`
-    and the rest resolve; outside the type check it does not exist, and the
-    coordinator inherits it like any other base - the values themselves stand in
-    its `__init__`.
-    """
-
-    config: DirectorConfig
-    hass: HomeAssistant
-    name: str
-    shadow: bool
-    master_enabled: bool
-    holiday_mode: bool
-    guest_mode: bool
-    season_override: Season | None
-    _hand_starts: dict[str, datetime]
-    zone_overrides: dict[str, bool]
-    zone_priorities: dict[str, int]
-    zone_override_until: dict[str, datetime]
-    zone_override_started: dict[str, datetime]
-    zone_override_when_done: dict[str, str]
-    zone_override_entity: dict[str, str]
-    opening_bypasses: dict[str, bool]
-    _precondition: dict[str, datetime]
-    _precondition_bypass: set[str]
-    _pending_override: dict[str, Change]
-    _store: Store[dict[str, Any]]
-    _handed_back: dict[str, date]
-    _empty_since: dict[str, datetime]
-    _occupied_rooms: set[str]
-    _home_since: dict[str, datetime]
-    _commanded_off: dict[str, datetime]
-    _asleep_since: datetime | None
-    _save_pending: bool
-    _override_before_restore: set[str]
-    _request_before_restore: set[str]
-    _precipitation_seen_at: datetime | None
-    _cancel_precondition_wake: CALLBACK_TYPE | None
-    _cancel_override_wake: CALLBACK_TYPE | None
-
-    @property
-    def entry(self) -> ClimateDirectorEntry: ...
-
-    def async_request_evaluation(self) -> None: ...
-    # Komt van `DataUpdateCoordinator` en wordt hier nergens overschreven. Voor
-    # mypy maakt een kale `...` de klasse abstract ("implicitly abstract because
-    # it has an empty function body"); bij het draaien komt hij van die klasse.
-    #
-    # Comes from `DataUpdateCoordinator` and is overridden nowhere here. To mypy
-    # a bare `...` makes the class abstract ("implicitly abstract because it has
-    # an empty function body"); at run time the method comes from that class.
-    def async_update_listeners(self) -> None:
-        return None
-
-    def _async_save_state(self) -> None: ...
-    def build_world(self) -> WorldState: ...
-    def _we_wanted_it_on(self, entity_id: str, family: ModeFamily) -> bool: ...
-    def _hand_starts_payload(self) -> dict[str, Any]: ...
-    def _restore_hand_starts(self, stored: Mapping[str, Any], now: datetime) -> None: ...
-    def _note_by_hand_before_restore(
-        self, zone_id: str, kind: Literal["override", "request"]
-    ) -> None: ...
-    def _lift_hand(self, zone_id: str) -> None: ...
-    def _room_presence_payload(self) -> dict[str, Any]: ...
-    def _restore_room_presence(self, stored: Mapping[str, Any], now: datetime) -> None: ...
-    def _live_preconditions(self) -> dict[str, datetime]: ...
-    def _wake_at_the_first_expiry(self) -> None: ...
-    def _override_wake_at_first_expiry(self) -> None: ...
-    def _calendar_says_holiday(self) -> bool: ...
-    def _resident(
-        self, resident_id: str, presence: str, sleep: str, asleep_state: str
-    ) -> ResidentState: ...
-    def _zones_handed_back(
-        self, now: datetime, residents: dict[str, ResidentState]
-    ) -> set[str]: ...
 
 
 class ClimateDirectorCoordinator(
@@ -534,6 +410,40 @@ class ClimateDirectorCoordinator(
         )
 
     @property
+    def temperature_unit(self) -> str:
+        """De eenheid waarin Home Assistant nu temperaturen aanlevert en verwacht.
+
+        Elke keer opnieuw gelezen, net als in `applier.py` en `config_flow.py`:
+        wisselt de gebruiker het stelsel, dan volgt de coordinator meteen in
+        plaats van pas na een herstart.
+
+        Read afresh every time, like `applier.py` and `config_flow.py` do: when
+        the user switches systems the coordinator follows at once instead of only
+        after a restart.
+        """
+        return temperature_unit_of(self.hass)
+
+    # -- opzetten / setting up ----------------------------------------------
+
+    # -- aanleidingen / triggers --------------------------------------------
+
+    # -- beslissen / deciding ------------------------------------------------
+
+    # -- onbruikbare entiteiten / unusable entities --------------------------
+
+    # -- ongeschikte standen / unsupported modes ------------------------------
+
+    # -- commando's die niet aankomen / commands not taking --------------------
+
+    # -- seizoensselect / season select ---------------------------------------
+
+    # -- vastgelopen zones / stuck zones -------------------------------------
+
+    # -- circuitgeschiedenis / circuit history -------------------------------
+
+    # -- naar buiten / outward ----------------------------------------------
+
+    @property
     def entry(self) -> ClimateDirectorEntry:
         """Geef de config entry terug, die Home Assistant vóór de opzet zet.
 
@@ -550,1520 +460,152 @@ class ClimateDirectorCoordinator(
         """
         return cast("ClimateDirectorEntry", self.config_entry)
 
-    @property
-    def temperature_unit(self) -> str:
-        """De eenheid waarin Home Assistant nu temperaturen aanlevert en verwacht.
-
-        Elke keer opnieuw gelezen, net als in `applier.py` en `config_flow.py`:
-        wisselt de gebruiker het stelsel, dan volgt de coordinator meteen in
-        plaats van pas na een herstart.
-
-        Read afresh every time, like `applier.py` and `config_flow.py` do: when
-        the user switches systems the coordinator follows at once instead of only
-        after a restart.
-        """
-        return temperature_unit_of(self.hass)
-
-    # -- opzetten / setting up ----------------------------------------------
-
-    async def async_start(self) -> None:
-        """Begin tracking entities; the first decision waits for Home Assistant.
-
-        De eerste beslissing hoort niet thuis in het opzetten van de entry. Op
-        dat moment is Home Assistant nog aan het opstarten: herstelde standen,
-        automatiseringen en andere integraties komen pas daarna. Wie dan al
-        beslist, ziet een half geladen wereld en kan een apparaat uitzetten dat
-        er gewoon hoort te draaien.
-
-        The first decision does not belong in the entry setup. At that point
-        Home Assistant is still starting: restored states, automations and other
-        integrations come only later. Whoever decides then sees a half-loaded
-        world and can switch off an appliance that should simply be running.
-        """
-        entities = self.tracked_entities()
-        if entities:
-            self.entry.async_on_unload(
-                async_track_state_change_event(self.hass, sorted(entities), self._handle_change)
-            )
-        self.entry.async_on_unload(self._cancel_pending_deferral)
-        self.entry.async_on_unload(self._cancel_clock_reeval)
-        self.entry.async_on_unload(async_at_started(self.hass, self._async_on_hass_started))
-
-    async def _async_on_hass_started(self, _hass: HomeAssistant) -> None:
-        """Restore what a restart left behind, decide once, and arm the clock.
-
-        Herstellen, neerslag noteren en beslissen zijn drie stappen op één pad.
-        Slaat er één om, dan is de schade het grootst als daardoor ook de
-        vangnetklok nooit loopt: dan wacht elke tijdregel op een toevallige
-        wijziging die nooit komt. De klok wordt daarom hoe dan ook gezet, en de
-        uitzondering wordt gelogd in plaats van de integratie stil te leggen.
-
-        Restoring, noting precipitation and deciding are three steps on one
-        path. When one falls over the damage is greatest if the safety-net clock
-        never starts either: every time rule then waits for a chance change that
-        never comes. The clock is therefore armed no matter what, and the
-        exception is logged rather than silencing the integration.
-
-        De vlag `_restored` gaat hier omhoog en niet eerder: pas als de opslag
-        gelezen is, mag `_async_evaluate` iets doen. Wat de listeners intussen
-        genoteerd hebben blijft staan - het herstel voegt samen en vervangt niet.
-
-        The `_restored` flag goes up here and not earlier: only once the store
-        has been read may `_async_evaluate` do anything. What the listeners noted
-        in the meantime stays put - the restore merges rather than replaces. It
-        goes up in the `finally` as well: after one broken reading the director
-        must not fall silent for good, which is worse than a world without the
-        stored hand.
-
-        Hier gaat ook één keer naar buiten wat tijdens het opstarten bleef liggen:
-        `_async_save_state` schreef niet, want HA's `Store.async_load` leest een
-        wachtende schrijfactie in plaats van het bestand. Dat schrijven staat
-        daarom ná het herstel, en ook in de `finally`.
-
-        One write also goes out here for what stayed behind during the startup:
-        `_async_save_state` did not write, since HA's `Store.async_load` reads a
-        pending write instead of the file. That write therefore stands after the
-        restore, and in the `finally` as well.
-        """
-        try:
-            await self._async_restore_state()
-            self._note_precipitation_now()
-            self._note_home_now()
-            self._restored = True
-            self._note_room_presence_now()
-            self._async_save_pending_state()
-            await self._async_evaluate()
-        except Exception:
-            _LOGGER.exception("The first decision of %s failed", self.name)
-        finally:
-            # Ook als het herstel omviel gaat de poort open: anders zou de
-            # director na één kapotte lezing nooit meer beslissen, en dat is
-            # erger dan een wereld zonder de bewaarde hand.
-            #
-            # Even when the restore fell over the gate opens: otherwise the
-            # director would never decide again after one broken reading, and
-            # that is worse than a world without the stored hand.
-            self._restored = True
-            # Wat de gebruiker vóór het herstel zelf deed is nu verwerkt: de
-            # notities gaan weg, zodat een handeling daarna gewoon een handeling is.
-            #
-            # What the user did before the restore has been handled now:
-            # the notes go, so an action afterwards is simply an action.
-            self._override_before_restore.clear()
-            self._request_before_restore.clear()
-            self._async_save_pending_state()
-            self._schedule_clock_reeval()
-
-    def tracked_entities(self) -> set[str]:
-        """Return every entity whose change could alter a decision.
-
-        Circuit units are included even when the director does not manage them:
-        an indoor unit somebody switches on by remote still claims the
-        compressor, and the plan has to be recomputed when it does.
-        """
-        entities: set[str] = set()
-
-        if self.config.outdoor_sensor:
-            entities.add(self.config.outdoor_sensor)
-        if self.config.seasons.source is SeasonSource.ENTITY and self.config.seasons.entity_id:
-            entities.add(self.config.seasons.entity_id)
-        if self.config.precipitation.enabled:
-            entities.add(self.config.precipitation.source)
-
-        for zone in self.config.zones:
-            if zone.indoor_sensor:
-                entities.add(zone.indoor_sensor)
-            if zone.presence_entity:
-                entities.add(zone.presence_entity)
-            entities.update(source.entity_id for source in zone.sources if source.entity_id)
-
-        for circuit in self.config.circuits:
-            entities.update(unit for unit in circuit.units if unit)
-
-        entities.update(item.entity_id for item in self.config.generators if item.entity_id)
-
-        for opening in self.config.openings:
-            if opening.entity_id:
-                entities.add(opening.entity_id)
-
-        entities.update(item for item in self.config.holiday_calendars if item)
-
-        for resident in self.config.residents:
-            if resident.presence_entity:
-                entities.add(resident.presence_entity)
-            if resident.sleep_entity:
-                entities.add(resident.sleep_entity)
-
-        return entities
-
-    def _calendar_says_holiday(self) -> bool:
-        """Return whether a configured calendar has a holiday running right now.
-
-        Een agenda-item telt zodra het loopt en het trefwoord erin voorkomt.
-        Zonder trefwoord blijven de agenda's buiten beschouwing: raden welk item
-        vakantie bedoelde is niet aan de integratie.
-
-        An event counts once it is running and carries the keyword. Without a
-        keyword the calendars are left alone: guessing which event meant a
-        holiday is not the integration's call to make.
-        """
-        keyword = self.config.holiday_keyword.strip().casefold()
-        if not keyword:
-            return False
-
-        for entity_id in self.config.holiday_calendars:
-            state = self.hass.states.get(entity_id)
-            if state is None or state.state != "on":
-                continue
-            haystack = " ".join(
-                str(state.attributes.get(field) or "")
-                for field in ("message", "summary", "description", "location")
-            ).casefold()
-            if keyword in haystack:
-                return True
-
-        return False
-
-    # -- aanleidingen / triggers --------------------------------------------
-
-    @callback
-    def _handle_change(self, event: Event[EventStateChangedData]) -> None:
-        """Queue a fresh decision after a tracked entity changed."""
-        self._notice_precipitation(event)
-        self._notice_home(event)
-        self._notice_room_empty(event)
-        self._notice_hand_start(event)
-        self._notice_hand(event)
-        self._debouncer.async_schedule_call()
-
-    @callback
-    def _notice_precipitation(self, event: Event[EventStateChangedData]) -> None:
-        """Remember the moment the precipitation source reports precipitation.
-
-        Het moment hoort hier thuis, in de toestandswijziging van de bron zelf -
-        niet in `_precipitation()`, dat alleen een antwoord teruggeeft. Elke
-        nieuwe stand die neerslag is telt - dus ook een overgang tussen twee
-        neerslagstanden (regen -> plensbui), want dan duurt de neerslag voort
-        en hoort de nalooptijd mee te schuiven. Een overgang tussen twee droge
-        standen (bewolkt -> zonnig) mag de nalooptijd niet verlengen.
-
-        The moment belongs here, in the source's own state change - not in
-        `_precipitation()`, which only returns an answer. Every new state that
-        is precipitation counts - so also a transition between two
-        precipitation states (rain -> pouring), since the precipitation then
-        continues and the grace should move along. A transition between two dry
-        states (cloudy -> sunny) must not extend the grace.
-        """
-        settings = self.config.precipitation
-        if not settings.enabled or event.data["entity_id"] != settings.source:
-            return
-        new_state = event.data["new_state"]
-        if new_state is None or new_state.state not in settings.states:
-            return
-        self._precipitation_seen_at = dt_util.now()
-
-    @callback
-    def _notice_hand(self, event: Event[EventStateChangedData]) -> None:
-        """Record an appliance somebody switched off, or switched back on.
-
-        Iemand die bij het apparaat zelf op uit drukt zegt daarmee iets, en dat
-        overstemmen door het meteen weer aan te zetten is het ergste wat deze
-        integratie kan doen. Dus: die zone valt stil tot dezelfde hand hem weer
-        aanzet, of tot de volgende dag - want een besluit van gisteravond hoort
-        vanochtend niet meer te gelden. Onze eigen aanzet van dat apparaat is
-        diezelfde hand niet (anker 11); zie `_we_wanted_it_on`.
-
-        Somebody pressing off on the appliance itself is saying something, and
-        overriding that by switching it straight back on is the worst thing this
-        integration can do. So: that zone falls silent until the same hand turns
-        it back on, or until the next day - since last night's decision should
-        not still hold this morning. Our own switch-on of that appliance is not
-        that same hand (anchor 11); see `_we_wanted_it_on`.
-        """
-        # In schaduwmodus stuurt de director niets, dus valt er ook niemand te
-        # overstemmen - en daarmee vervalt de reden waarom dit bestaat. Wat er
-        # wél gebeurt is dat de bestaande automatiseringen de hele dag apparaten
-        # aan- en uitzetten. Elk van die uitzettingen las als een hand, waarna
-        # de zone werd overgedragen en er niets meer te vergelijken viel. Juist
-        # dat vergelijken is het enige product van deze modus.
-        #
-        # In shadow mode the director steers nothing, so there is nobody to
-        # overrule - and with that the reason this exists falls away. What does
-        # happen is that the existing automations switch appliances on and off
-        # all day. Every one of those switch-offs read as a hand, after which
-        # the zone was handed over and there was nothing left to compare. That
-        # comparing is this mode's only product.
-        if self.shadow:
-            return
-
-        entity_id = event.data["entity_id"]
-        zones = self._zones_of(entity_id)
-        if not zones:
-            return
-
-        new_state = event.data["new_state"]
-        old_state = event.data["old_state"]
-        if new_state is None or old_state is None:
-            return
-
-        # Wegvallen en terugkomen is geen hand aan het apparaat. `unavailable`
-        # en `unknown` zijn geen standen maar het ontbreken van een stand, en
-        # `family_of()` leest ze - terecht - als "geen idee wat dit ding doet".
-        # Daardoor las een apparaat dat terugkwam op `off` als iemand die het
-        # net had uitgezet, en viel die zone de rest van de dag stil. Andersom
-        # net zo: een apparaat dat wegvalt zou een handmatige uitzetting
-        # opheffen alsof iemand hem weer had aangezet.
-        #
-        # Dropping out and coming back is not a hand at the appliance.
-        # `unavailable` and `unknown` are not modes but the absence of one, and
-        # `family_of()` reads them - rightly - as "no telling what this thing is
-        # doing". So an appliance coming back on `off` read as somebody having
-        # just switched it off, and that zone fell silent for the rest of the
-        # day. The other way round just as much: an appliance dropping out would
-        # lift a hand-back as though somebody had switched it on again.
-        if unreadable(old_state.state) or unreadable(new_state.state):
-            return
-
-        was = family_of(old_state.state)
-        now = family_of(new_state.state)
-        if was is now:
-            return
-
-        if now is not ModeFamily.NEUTRAL:
-            # Weer aangezet, met de hand of door ons: hoe dan ook meedoen.
-            # Zodra het apparaat op eigen kracht weer een actieve stand meldt,
-            # is de verklaring "ons uit-commando" per definitie verbruikt - hoe
-            # het `off` ertussenin ook gemeld is, ook via `unavailable`.
-            #
-            # Switched on again, by hand or by us: taking part either way. Once
-            # the appliance reports an active mode on its own again, the "our
-            # off command" explanation is spent by definition - however the
-            # `off` in between was reported, `unavailable` included.
-            self._commanded_off.pop(entity_id, None)
-
-            # Onze eigen aanzet is geen hand aan het apparaat (anker 11); anders
-            # hief de ene kamer met een gedeelde ketel de hand aan de andere kamer
-            # op. Zie `_we_wanted_it_on`.
-            #
-            # Our own switch-on is no hand at the appliance (anchor 11); see
-            # `_we_wanted_it_on`.
-            if self._we_wanted_it_on(entity_id, now):
-                self._commanded_on.pop(entity_id, None)
-                return
-
-            cleared = False
-            for zone in zones:
-                cleared = self._handed_back.pop(zone, None) is not None or cleared
-            if cleared:
-                self._async_save_state()
-            return
-
-        # Ook een hand die het apparaat uitzet verbruikt het setpoint: bij de
-        # volgende start hoort het opnieuw mee te gaan, want niemand weet wat
-        # het apparaat in de tussentijd met zijn eigen setpoint deed.
-        #
-        # A hand switching the appliance off spends the setpoint too: the next
-        # start must carry it again, since nobody knows what the appliance did
-        # with its own setpoint in the meantime.
-        self._sent_setpoints.pop(entity_id, None)
-
-        # Het apparaat staat nu uit: de verklaring "ons aan-commando" is daarmee
-        # verbruikt, hoe dat `off` ook gemeld is.
-        #
-        # The appliance stands off now: that spends the "our on command"
-        # explanation with it, however that `off` was reported.
-        self._commanded_on.pop(entity_id, None)
-
-        # Alleen als wíj hem niet net hebben uitgezet. Ons eigen commando is
-        # geen handmatige ingreep, en zou de zone anders permanent stilleggen.
-        #
-        # Only when we did not just switch it off ourselves. Our own command is
-        # not a hand at the appliance, and would otherwise silence the zone for
-        # good.
-        if self._we_wanted_it_off(entity_id):
-            # Ons uit-commando is nu aangekomen: de notitie die de late melding
-            # moest verklaren is verbruikt. Een volgende `off` - nadat wij hem
-            # zelf weer hebben aangezet - is dus weer gewoon een hand aan het
-            # apparaat. Het venster blijft alleen nog als vangnet voor een
-            # melding die nóóit aankomt.
-            #
-            # Our off command has now arrived: the note that had to explain the
-            # late report is spent. A next `off` - after we switched it back on
-            # ourselves - is therefore an ordinary hand at the appliance again.
-            # The window remains only as a safety net for a report that never
-            # arrives.
-            self._commanded_off.pop(entity_id, None)
-            return
-
-        today = dt_util.now().date()
-        if any(self._handed_back.get(zone) != today for zone in zones):
-            for zone in zones:
-                self._handed_back[zone] = today
-            self._async_save_state()
-
-    def _note_commanded_off(self, applied: tuple[Change, ...]) -> None:
-        """Remember when we last told each appliance to stand down.
-
-        `_we_wanted_it_off` kijkt hierin in plaats van alleen naar het plan dat
-        nú op tafel ligt: een apparaat dat zijn stand pas een poll later meldt,
-        rapporteert ons eigen `off` soms pas nadat het plan alweer is
-        omgeslagen. Het plan zegt dan \"we wilden hem aan\", en zonder deze
-        boekhouding las dat late bericht als een hand aan het apparaat.
-
-        `_we_wanted_it_off` looks here rather than only at the plan on the
-        table right now: an appliance reporting its state one poll late
-        sometimes reports our own `off` only after the plan has flipped back.
-        The plan then says \"we wanted it on\", and without this bookkeeping
-        that late report read as a hand at the appliance.
-        """
-        now = dt_util.now()
-        for change in applied:
-            if family_of(change.command.hvac_mode) is not ModeFamily.NEUTRAL:
-                continue
-            # Het apparaat gaat uit: een setpoint dat bij het uitzetten vergeten
-            # wordt (of met de hand verzet) hoort bij de volgende start gewoon
-            # opnieuw te gaan. Anders bleef "al verstuurd" eeuwig staan en kwam
-            # het setpoint nooit meer mee.
-            #
-            # The appliance is going off: a setpoint forgotten on the way out
-            # (or moved by hand) must simply be sent again at the next start.
-            # Otherwise "already sent" stood forever and the setpoint never
-            # came along again.
-            self._sent_setpoints.pop(change.entity_id, None)
-            reported = self.hass.states.get(change.entity_id)
-            if (
-                reported is not None
-                and not unreadable(reported.state)
-                and family_of(reported.state) is ModeFamily.NEUTRAL
-            ):
-                # Het apparaat meldt ons uit-commando al: er is geen late
-                # melding meer te verklaren, en een oude notitie is daarmee ook
-                # verbruikt. `_notice_hand` kan deze notitie niet zelf opruimen
-                # op dit moment, want die liep al tijdens `apply` - vóórdat
-                # deze boekhouding geschreven werd.
-                #
-                # The appliance already reports our off command: there is no
-                # late report left to explain, and any old note is spent with
-                # it. `_notice_hand` cannot clear it here itself, because it
-                # already ran during `apply` - before this bookkeeping was
-                # written.
-                self._commanded_off.pop(change.entity_id, None)
-            else:
-                self._commanded_off[change.entity_id] = now
-
-    def _note_commanded_on(self, applied: tuple[Change, ...]) -> None:
-        """Remember when we last told each appliance to run, and doing what.
-
-        Het spiegelbeeld van `_note_commanded_off`, en om dezelfde reden: een
-        apparaat dat zijn stand pas een poll later meldt, meldt onze eigen aanzet
-        soms pas nadat het plan alweer is omgeslagen. Zonder deze boekhouding zou
-        `_we_wanted_it_on` die late melding voor een hand aan het apparaat
-        aanzien, en verviel de hand van elke zone eraan.
-
-        De taakfamilie gaat mee: een apparaat dat wij `heat` vroegen en dat
-        vervolgens `cool` meldt, meldt iets wat wij niet vroegen - dat is een hand
-        en geen eigen aanzet.
-
-        The mirror image of `_note_commanded_off`, and for the same reason: an
-        appliance reporting its mode one poll late sometimes reports our own
-        switch-on only after the plan has flipped back. Without this bookkeeping
-        `_we_wanted_it_on` would take that late report for a hand at the
-        appliance, and the hand of every zone hanging off it would lapse.
-
-        The duty family comes along: an appliance we asked for `heat` and that
-        then reports `cool` reports something we did not ask for - that is a hand,
-        not our own switch-on.
-        """
-        now = dt_util.now()
-        for change in applied:
-            family = family_of(change.command.hvac_mode)
-            if family is ModeFamily.NEUTRAL:
-                continue
-            reported = self.hass.states.get(change.entity_id)
-            if (
-                reported is not None
-                and not unreadable(reported.state)
-                and family_of(reported.state) is family
-            ):
-                # Het apparaat meldt onze aanzet al: er is geen late melding meer
-                # te verklaren, en een oude notitie is daarmee ook verbruikt.
-                # `_notice_hand` kan deze notitie niet zelf opruimen op dit
-                # moment, want die liep al tijdens `apply` - vóórdat deze
-                # boekhouding geschreven werd.
-                #
-                # The appliance already reports our switch-on: there is no late
-                # report left to explain, and any old note is spent with it.
-                # `_notice_hand` cannot clear it here itself, because it already
-                # ran during `apply` - before this bookkeeping was written.
-                self._commanded_on.pop(change.entity_id, None)
-            else:
-                self._commanded_on[change.entity_id] = (now, family)
-
-    def _we_wanted_it_off(self, entity_id: str) -> bool:
-        """Return whether we told this appliance to stand down, or meant to.
-
-        Eerst de boekhouding van wat er écht is uitgezonden: die dekt ook het
-        apparaat dat zijn stand pas een poll later meldt, wanneer het plan
-        alweer is omgeslagen. Daarna het plan dat op tafel ligt, niet het plan
-        dat af is - een apparaat meldt zijn nieuwe stand terwijl de service
-        call nog loopt, en op dat moment staat het gepubliceerde besluit nog op
-        de vorige ronde.
-
-        First the bookkeeping of what was really sent: that also covers the
-        appliance reporting its state one poll late, when the plan has already
-        flipped back. Then the plan on the table, not the plan that is
-        finished - an appliance reports its new state while the service call is
-        still running, and at that moment the published decision is still the
-        previous round's.
-        """
-        when = self._commanded_off.get(entity_id)
-        if when is not None and dt_util.now() - when <= COMMANDED_WINDOW:
-            return True
-
-        plan = self._issued or self.data
-        if plan is None:
-            return False
-        for command in plan.commands:
-            if command.entity_id == entity_id:
-                return family_of(command.hvac_mode) is ModeFamily.NEUTRAL
-        return False
-
-    def _we_wanted_it_on(self, entity_id: str, family: ModeFamily) -> bool:
-        """Return whether the active mode this appliance reports is our own doing.
-
-        `_notice_hand` gebruikt dit om onze eigen aanzet niet voor een hand aan
-        het apparaat aan te zien (anker 11): alleen dezelfde hand, slapen, een
-        leeg huis en de volgende dag heffen een hand op, niet het feit dat de
-        director een gedeeld apparaat voor een andere kamer aanzet.
-
-        Twee sporen, en allebei nodig. De boekhouding van wat er écht is
-        uitgezonden (`_commanded_on`) dekt het apparaat dat zijn stand pas een
-        poll later meldt, wanneer het plan alweer is omgeslagen; de familie moet
-        daar kloppen - vroegen wij `heat` en meldt het apparaat `cool`, dan is dat
-        niet onze aanzet maar een hand. De wijzigingen van deze ronde
-        (`last_changes`, gezet vóór `apply`) dekken de melding die tijdens de
-        service call zelf binnenkomt - op dat moment is de boekhouding nog niet
-        geschreven.
-
-        Het plan dat op tafel ligt doet hier bewust **niet** mee, anders dan bij
-        `_we_wanted_it_off`: zodra de hand er staat laat de director de zone met
-        rust, dus een plan dat dit apparaat vraagt is het plan van vóór de hand -
-        en dan zou dezelfde hand die het apparaat weer aanzet zijn eigen hand niet
-        meer opheffen. `last_changes` zegt precies wat wij net stuurden.
-
-        `_notice_hand` uses this so it does not take our own switch-on for a hand
-        at the appliance (anchor 11): only the same hand, sleeping, an empty house
-        and the next day lift a hand, not the director switching a shared
-        appliance on for another room.
-
-        Two traces, and both are needed. The bookkeeping of what was really sent
-        (`_commanded_on`) covers the appliance reporting its mode one poll late,
-        when the plan has already flipped back; the family has to match there - we
-        asked for `heat` and the appliance reports `cool`, and that is not our
-        switch-on but a hand. The changes of this round (`last_changes`, set
-        before `apply`) cover the report arriving during the service call itself -
-        at that moment the bookkeeping has not been written yet.
-
-        The plan on the table deliberately plays no part here, unlike in
-        `_we_wanted_it_off`: the moment the hand stands, the director leaves the
-        zone alone, so a plan asking for this appliance is the plan from before
-        the hand - and the same hand switching the appliance back on would then no
-        longer lift its own hand. `last_changes` says exactly what we just sent.
-        """
-        noted = self._commanded_on.get(entity_id)
-        if noted is not None:
-            when, duty = noted
-            if duty is family and dt_util.now() - when <= COMMANDED_WINDOW:
-                return True
-        return any(
-            change.entity_id == entity_id and family_of(change.command.hvac_mode) is family
-            for change in self.last_changes
-        )
-
     @callback
     def async_request_evaluation(self) -> None:
         """Ask for a fresh decision, from a switch or a service call."""
         self._debouncer.async_schedule_call()
 
-    @callback
-    def _cancel_clock_reeval(self) -> None:
-        """Drop the scheduled safety-net tick, if there is one."""
-        if self._clock_reeval_unsub is not None:
-            self._clock_reeval_unsub()
-            self._clock_reeval_unsub = None
+    def _calendar_says_holiday(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_lifecycle._calendar_says_holiday(self, *args, **kwargs)
+
+    def _live_preconditions(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_round._live_preconditions(self, *args, **kwargs)
+
+    def _we_wanted_it_on(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_tracking._we_wanted_it_on(self, *args, **kwargs)
+
+    async def async_start(self, *args: Any, **kwargs: Any) -> Any:
+        return await coordinator_lifecycle.async_start(self, *args, **kwargs)
+
+    async def _async_on_hass_started(self, *args: Any, **kwargs: Any) -> Any:
+        return await coordinator_lifecycle._async_on_hass_started(self, *args, **kwargs)
+
+    def tracked_entities(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_lifecycle.tracked_entities(self, *args, **kwargs)
+
+    async def async_shutdown(self, *args: Any, **kwargs: Any) -> Any:
+        return await coordinator_lifecycle.async_shutdown(self, *args, **kwargs)
 
     @callback
-    def _schedule_clock_reeval(self) -> None:
-        """Arm the periodic safety-net evaluation, replacing any earlier one.
-
-        Het vangnet voor tijdregels die vanzelf verlopen: een raamvertraging,
-        een aanwezigheids-nalooptijd, de neerslag-grace, de eerstvolgende
-        vensterrand en middernacht. Zonder deze klok hangt zo'n omslagpunt op
-        toeval - er moet toevallig iets anders veranderen voordat er opnieuw
-        besloten wordt. Een ronde zonder verschil kost geen service call, dus
-        elke minuut is goedkoop.
-
-        The safety net for time rules that lapse by themselves: a window delay,
-        a presence grace period, the precipitation grace, the next window edge
-        and midnight. Without this clock such a turning point depends on chance
-        - something else must happen to change before another decision is made.
-        A round without a difference costs no service call, so every minute is
-        cheap.
-        """
-        self._cancel_clock_reeval()
-        self._clock_reeval_unsub = async_call_later(
-            self.hass, CLOCK_REEVAL_SECONDS, self._on_clock_reeval
-        )
+    def _handle_change(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_tracking._handle_change(self, *args, **kwargs)
 
     @callback
-    def _on_clock_reeval(self, _now: datetime) -> None:
-        """Re-evaluate on the clock, and arm the next tick."""
-        self._clock_reeval_unsub = None
-        self.async_request_evaluation()
-        self._schedule_clock_reeval()
-
-    async def async_shutdown(self) -> None:
-        """Stop deciding and drop every pending timer.
-
-        Eerst de lopende ronde laten uitlopen: die kan service calls hebben
-        uitstaan en schrijft daarna nog naar buiten (meldingen, timers). Wie
-        hier meteen doorging, zag na de unload nog een melding herleven of een
-        timer ontstaan die nooit meer wordt opgeruimd. Een ronde die langer dan
-        vijf seconden blijft hangen, wordt niet langer tegengehouden - dan is
-        het gedrag hetzelfde als vóór deze wacht, en dat is de veilige kant.
-
-        First let the running round finish: it may have service calls out and
-        writes outwards afterwards (notices, timers). Going on immediately let a
-        notice revive or a timer come into being after the unload, never to be
-        cleaned up again. A round hanging around for more than five seconds is
-        no longer held up - behaviour is then the same as before this wait, and
-        that is the safe side.
-        """
-        self._closing = True
-        try:
-            # Vijf seconden is genoeg voor een lopende ronde; langer wachten
-            # bevriest de configuratiepagina tijdens een herlaadbeurt.
-            #
-            # Five seconds is enough for a running round; waiting longer freezes
-            # the configuration page during a reload.
-            async with asyncio.timeout(5):
-                async with self._lock:
-                    pass
-        except TimeoutError:
-            _LOGGER.warning("Een beslisronde liep nog bij het afsluiten van %s", self.name)
-        self._cancel_pending_deferral()
-        self._cancel_clock_reeval()
-        self._cancel_pending_precondition_wake()
-        self._cancel_pending_override_wake()
-        self._debouncer.async_shutdown()
-        # Een uitgestelde opslag kan nog uitstaan: de store schrijft één seconde
-        # na de laatste wijziging. Bij een herlaadbeurt is dat geen bezwaar, maar
-        # bij een verwijdering zou die schrijfactie het bestand terugschrijven ná
-        # `async_remove_entry`. Daarom hier zelf wegschrijven; `async_save` ruimt
-        # de uitgestelde schrijfactie zelf al op.
-        #
-        # A delayed store write may still be pending: the store writes one second
-        # after the last change. On a reload that is fine, but on a removal that
-        # write would resurrect the file after `async_remove_entry`. So write it
-        # away here; `async_save` clears the delayed write itself.
-        await self._store.async_save(self._store_payload())
-        await super().async_shutdown()
-
-    # -- beslissen / deciding ------------------------------------------------
-
-    async def _async_evaluate(self) -> None:
-        """Read the world, decide, apply, and report."""
-        # `_restored` is de opstartpoort en `_closing` de afbraakpoort; zie `__init__`.
-        if self._closing or not self._restored:
-            return
-        async with self._lock:
-            self._drop_lapsed_override_timers()
-            world = self._note_house_asleep(self.build_world())
-            self._remember_families(world)
-            world = self._with_family_history(world)
-            world = self._settle_hand_starts(world)
-
-            plan = decide(self.config, world, self.data)
-            self.world = world
-            self._issued = plan
-
-            # De verschillenlijst wordt hier bewaard, niet wat de applier
-            # ervan uitgevoerd kreeg. In schaduwmodus is dit precies "wat de
-            # director gedaan zou hebben terwijl iets anders het huis stuurt" -
-            # het getal waar de hele meeloopfase om draait.
-            #
-            # The difference list is kept here, not what the applier managed to
-            # execute. In shadow mode this is exactly "what the director would
-            # have done while something else steers the house" - the number the
-            # whole shadow phase is about.
-            #
-            # De afloopkeuze (anker 11) komt vóór de gewone verschillen: het
-            # plan is nog met de override berekend, dus het geeft die zone geen
-            # commando, en de afloopkeuze is zo precies het enige commando op
-            # dat moment. Daarna beslist de director gewoon weer.
-            #
-            # The expiry choice (anchor 11) comes before the ordinary
-            # differences: the plan was still computed with the override, so it
-            # commands that zone nothing, and the expiry choice is thus exactly
-            # the one command at that moment. After that the director simply
-            # decides again.
-            expiry_changes = self._consume_expired_overrides(world.now)
-            pending_changes = self._consume_pending_override_changes(world)
-            self.last_changes = (
-                changes(plan, world, self._sent_setpoints) + expiry_changes + pending_changes
-            )
-            self.last_applied = ()
-
-            try:
-                self.last_applied = await apply(self.hass, self.last_changes, shadow=self.shadow)
-            except Exception:  # noqa: BLE001
-                _LOGGER.exception("Applying the climate plan failed")
-            self._note_commanded_off(self.last_applied)
-            self._note_commanded_on(self.last_applied)
-            for change in self.last_applied:
-                if change.set_temperature and change.command.temperature is not None:
-                    self._sent_setpoints[change.entity_id] = (
-                        change.command.hvac_mode,
-                        change.command.temperature,
-                    )
-
-            if self._closing:
-                return
-            # Het publiceren van het plan hoort altijd te gebeuren, ook als een
-            # van de meldingen eromheen een uitzondering gooit. Gebeurde dat
-            # niet, dan bleef elke entiteit ronde na ronde op het vorige plan
-            # staan terwijl de lus gewoon doordraaide - de stilste manier om
-            # een huis te bevriezen.
-            #
-            # Publishing the plan must always happen, even when one of the
-            # notices around it raises. Otherwise every entity stayed on the
-            # previous plan round after round while the loop kept running - the
-            # quietest way to freeze a house.
-            try:
-                self._fire_events(plan)
-                self._fire_refusals(plan)
-                self._note_waiting(plan)
-                self._report_unreadable()
-                self._report_unsupported_modes()
-                self._report_command_not_taking()
-                self._report_season_override()
-                self._report_bypassed_openings()
-                self._schedule_deferral(plan)
-            finally:
-                self.async_set_updated_data(plan)
-
-    def _live_preconditions(self) -> dict[str, datetime]:
-        """Return the requests that have not run out, dropping the rest.
-
-        Pruned on reading rather than on a timer: an expired request is over
-        whether or not anything got round to noticing.
-        """
-        self._precondition = still_running(self._precondition, dt_util.now())
-        self._precondition_bypass &= set(self._precondition)
-        return dict(self._precondition)
-
-    # -- onbruikbare entiteiten / unusable entities --------------------------
-
-    def unusable_entities(self) -> dict[str, str]:
-        """Return the configured entities that cannot be read right now.
-
-        Een verkeerd getikte entiteit bestaat gewoon niet, en een sensor die
-        wegvalt leest als niets. In beide gevallen valt er niets om: de poort
-        die erop leunt gaat dicht, de zone doet niets, en dat is van buiten niet
-        te onderscheiden van een zone die niets hoeft te doen. Daarom staat het
-        hier apart, in plaats van dat je het uit een stille zone moet afleiden.
-
-        A mistyped entity simply does not exist, and a sensor that drops out
-        reads as nothing. Neither breaks anything: the gate leaning on it closes,
-        the zone does nothing, and from the outside that is indistinguishable
-        from a zone with nothing to do. Hence this, rather than leaving you to
-        infer it from a silent zone.
-        """
-        found: dict[str, str] = {}
-        for entity_id in sorted(self.tracked_entities()):
-            state = self.hass.states.get(entity_id)
-            if state is None:
-                found[entity_id] = "missing"
-            elif unreadable(state.state):
-                found[entity_id] = state.state
-
-        # Een leesbare seizoensentiteit met een onherkenbare staat is net zo
-        # stil kapot als een onleesbare: het seizoen wordt UNKNOWN en alles wat
-        # eraan hangt - zomerkoeling bijvoorbeeld - valt weg zonder dat er iets
-        # van te zien is. De entiteit bestaat en is leesbaar, dus de gewone
-        # controle hierboven pakt hem niet.
-        #
-        # A readable season entity with an unrecognised state is just as
-        # silently broken as an unreadable one: the season becomes UNKNOWN and
-        # everything hanging off it - summer cooling, say - falls away with
-        # nothing to show for it. The entity exists and reads fine, so the
-        # ordinary check above does not catch it.
-        if self.config.seasons.source is SeasonSource.ENTITY and self.config.seasons.entity_id:
-            entity_id = self.config.seasons.entity_id
-            state = self.hass.states.get(entity_id)
-            if (
-                state is not None
-                and not unreadable(state.state)
-                and season_from_state(state.state) is Season.UNKNOWN
-            ):
-                found[entity_id] = f"unrecognized season: {state.state}"
-
-        # Een leesbare temperatuursensor die geen getal oplevert is net zo stil
-        # kapot als een onleesbare: de zone leest NO_INDOOR_TEMPERATURE en doet
-        # niets, zonder dat er iets van te zien is. De entiteit bestaat en is
-        # leesbaar, dus de gewone controle hierboven pakt hem niet.
-        #
-        # A readable temperature sensor that yields no number is just as
-        # silently broken as an unreadable one: the zone reads
-        # NO_INDOOR_TEMPERATURE and does nothing, with nothing to show for it.
-        # The entity exists and reads fine, so the ordinary check above does
-        # not catch it.
-        sensors: set[str] = set()
-        if self.config.outdoor_sensor:
-            sensors.add(self.config.outdoor_sensor)
-        for zone in self.config.zones:
-            if zone.indoor_sensor:
-                sensors.add(zone.indoor_sensor)
-        for entity_id in sorted(sensors):
-            if entity_id in found:
-                continue
-            state = self.hass.states.get(entity_id)
-            if state is None or unreadable(state.state):
-                continue
-            attributes = getattr(state, "attributes", {})
-            if (
-                temperature_from_state(
-                    entity_id, state.state, attributes, unit=unit_of_coordinator(self)
-                )
-                is None
-            ):
-                found[entity_id] = "no number"
-
-        return found
+    def _notice_precipitation(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_tracking._notice_precipitation(self, *args, **kwargs)
 
     @callback
-    def _report_unreadable(self) -> None:
-        """Put the entities that stay unreadable under Repairs, or take them away."""
-        problems.async_report_unreadable(
-            self.hass,
-            self.entry.entry_id,
-            self.entry.title,
-            self._note_unusable(),
-        )
+    def _notice_hand(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_tracking._notice_hand(self, *args, **kwargs)
+
+    def _note_commanded_off(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_tracking._note_commanded_off(self, *args, **kwargs)
+
+    def _note_commanded_on(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_tracking._note_commanded_on(self, *args, **kwargs)
+
+    def _we_wanted_it_off(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_tracking._we_wanted_it_off(self, *args, **kwargs)
+
+    async def _async_evaluate(self, *args: Any, **kwargs: Any) -> Any:
+        return await coordinator_round._async_evaluate(self, *args, **kwargs)
+
+    def _remember_families(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_round._remember_families(self, *args, **kwargs)
+
+    def _with_family_history(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_round._with_family_history(self, *args, **kwargs)
+
+    def _schedule_deferral(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_round._schedule_deferral(self, *args, **kwargs)
 
     @callback
-    def _note_unusable(self) -> dict[str, str]:
-        """Record since when each entity has been unreadable, and return the lasting ones.
-
-        Geschreven op het beslispad en niet in de lezer: `unusable_entities()`
-        geeft alleen een antwoord, en een lezer met een bijwerking is precies
-        de fout die de neerslagnalooptijd ooit onzichtbaar maakte.
-
-        De teller begint opnieuw zodra een entiteit terugkomt. Wie een minuut
-        wegvalt bij een herstart is geen storing; wie een kwartier weg is wel.
-
-        Written on the decision path rather than in the reader:
-        `unusable_entities()` only gives an answer, and a reader with a side
-        effect is exactly the mistake that once made the precipitation grace
-        invisible.
-
-        The clock restarts the moment an entity returns. Dropping out for a
-        minute during a restart is no fault; being gone for a quarter of an hour
-        is.
-        """
-        now = dt_util.now()
-        found = self.unusable_entities()
-        self._unusable_latest = found
-        self._unusable_since = {
-            entity_id: self._unusable_since.get(entity_id, now) for entity_id in found
-        }
-        grace = timedelta(seconds=UNUSABLE_GRACE_SECONDS)
-        return {
-            entity_id: state
-            for entity_id, state in found.items()
-            if now - self._unusable_since[entity_id] >= grace
-        }
-
-    # -- ongeschikte standen / unsupported modes ------------------------------
-
-    def unsupported_modes(self) -> dict[str, str]:
-        """Return the sources whose role asks what the appliance cannot deliver.
-
-        De rol zegt wat de installatie wil, het apparaat wat het kan. Een bron
-        met rol HEAT_COOL op een apparaat dat alleen `heat` en `off` meldt,
-        wordt door de engine voor koelen overgeslagen - en dat is van buiten
-        niet te onderscheiden van een zone die niets hoeft. Hetzelfde geldt voor
-        een setpoint buiten `min_temp`/`max_temp`: de engine klemt het dan naar
-        de dichtstbijzijnde grens, maar de gevraagde temperatuur wordt nooit
-        gehaald. Onleesbare apparaten blijven hier buiten: die hebben hun eigen
-        melding.
-
-        The role says what the installation wants, the appliance what it can. A
-        source with role HEAT_COOL on an appliance reporting only `heat` and
-        `off` is skipped for cooling by the engine - and from the outside that
-        is indistinguishable from a zone with nothing to do. The same holds for
-        a setpoint outside `min_temp`/`max_temp`: the engine clamps it to the
-        nearest bound, but the asked temperature is never reached. Unreadable
-        appliances are left out here: they have a notice of their own.
-        """
-        found: dict[str, set[str]] = {}
-        for zone, source in self.config.sources():
-            state = self.hass.states.get(source.entity_id)
-            if state is None or unreadable(state.state):
-                continue
-            complaints: set[str] = set()
-            # De rol hangt aan de bron, niet aan het apparaat. Hetzelfde apparaat
-            # kan in kamer A HEAT_ONLY zijn en in kamer B HEAT_COOL; een wacht
-            # op het apparaat sloeg de koelrol van kamer B dan over. De set
-            # hieronder ontdubbelt toch al.
-            #
-            # The role hangs on the source, not on the appliance. The same
-            # appliance can be HEAT_ONLY in room A and HEAT_COOL in room B; a
-            # guard on the appliance then skipped room B's cool role. The set
-            # below deduplicates anyway.
-            modes = as_modes(state.attributes.get("hvac_modes"))
-            if modes is not None:
-                complaints.update(
-                    preferred_mode(family)
-                    for family in (ModeFamily.HEAT, ModeFamily.COOL)
-                    if source.supports(family) and preferred_mode(family) not in modes
-                )
-                # De director wil een apparaat ook kunnen uitzetten; meldt het
-                # `off` niet, dan valt die aanroep elke ronde om. Het verschil
-                # zelf wordt niet meer gestuurd (`engine.diff.changes`), maar
-                # stilzwijgen zou de instelfout verbergen.
-                #
-                # The director also wants to be able to switch an appliance off;
-                # if it does not report `off`, that call falls over every round.
-                # The mode itself is no longer sent (`engine.diff.changes`), but
-                # staying silent would hide the configuration mistake.
-                if MODE_OFF not in modes:
-                    complaints.add(MODE_OFF)
-            minimum = to_celsius(
-                as_float(state.attributes.get("min_temp")), unit_of_coordinator(self)
-            )
-            maximum = to_celsius(
-                as_float(state.attributes.get("max_temp")), unit_of_coordinator(self)
-            )
-            unit = unit_of_coordinator(self)
-            for family in (ModeFamily.HEAT, ModeFamily.COOL):
-                if not source.supports(family):
-                    continue
-                settings = zone.settings_for(family)
-                if settings is None:
-                    continue
-                target = from_celsius(settings.target, unit)
-                if minimum is not None and settings.target < minimum:
-                    complaints.add(
-                        f"{preferred_mode(family)} {display_temperature(target, unit)}"
-                        f" < {display_temperature(from_celsius(minimum, unit), unit)}"
-                    )
-                if maximum is not None and settings.target > maximum:
-                    complaints.add(
-                        f"{preferred_mode(family)} {display_temperature(target, unit)}"
-                        f" > {display_temperature(from_celsius(maximum, unit), unit)}"
-                    )
-            if complaints:
-                found.setdefault(source.entity_id, set()).update(complaints)
-        return {entity_id: ", ".join(sorted(parts)) for entity_id, parts in found.items()}
+    def _cancel_pending_deferral(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_round._cancel_pending_deferral(self, *args, **kwargs)
 
     @callback
-    def _note_unsupported(self) -> dict[str, str]:
-        """Record since when each source has asked an unsupported mode, with grace."""
-        now = dt_util.now()
-        found = self.unsupported_modes()
-        self._unsupported_since = {
-            entity_id: self._unsupported_since.get(entity_id, now) for entity_id in found
-        }
-        grace = timedelta(seconds=UNUSABLE_GRACE_SECONDS)
-        return {
-            entity_id: modes
-            for entity_id, modes in found.items()
-            if now - self._unsupported_since[entity_id] >= grace
-        }
+    def _cancel_clock_reeval(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_round._cancel_clock_reeval(self, *args, **kwargs)
 
     @callback
-    def _report_unsupported_modes(self) -> None:
-        """Put the roles asking impossible modes under Repairs, or take them away."""
-        problems.async_report_unsupported_modes(
-            self.hass,
-            self.entry.entry_id,
-            self.entry.title,
-            self._note_unsupported(),
-        )
-
-    # -- commando's die niet aankomen / commands not taking --------------------
+    def _schedule_clock_reeval(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_round._schedule_clock_reeval(self, *args, **kwargs)
 
     @callback
-    def _note_unapplied(self) -> dict[str, str]:
-        """Count how often each difference was offered without taking effect.
+    def _on_clock_reeval(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_round._on_clock_reeval(self, *args, **kwargs)
 
-        Een apparaat dat de aanroep aanneemt maar niet uitvoert, of zichzelf
-        terugzet, levert elke ronde hetzelfde verschil op. Na een aantal rondes
-        is dat geen toeval meer en hoort er een melding te komen. In
-        schaduwmodus wordt er niets uitgevoerd, dus daar telt dit nooit - de
-        verschillenlijst is dan per definitie permanent gevuld.
-
-        An appliance that accepts the call but does not carry it out, or resets
-        itself, yields the same difference every round. After a number of rounds
-        that is no longer chance and a notice should appear. In shadow mode
-        nothing is executed, so this never counts there - the difference list is
-        by definition permanently filled then.
-        """
-        if self.shadow:
-            self._unapplied = {}
-            return {}
-
-        now = dt_util.now()
-        offered = {change.entity_id for change in self.last_changes}
-        for entity_id in list(self._unapplied):
-            if entity_id not in offered:
-                del self._unapplied[entity_id]
-
-        grace = timedelta(seconds=UNUSABLE_GRACE_SECONDS)
-        found: dict[str, str] = {}
-        for change in self.last_changes:
-            fingerprint = (
-                change.command.hvac_mode,
-                change.command.temperature,
-                change.set_mode,
-                change.set_temperature,
-            )
-            previous, count, since = self._unapplied.get(change.entity_id, (None, 0, now))
-            if previous == fingerprint:
-                count += 1
-            else:
-                count, since = 1, now
-            self._unapplied[change.entity_id] = (fingerprint, count, since)
-            if count >= _COMMAND_NOT_TAKING_ROUNDS and now - since >= grace:
-                found[change.entity_id] = _wanted(change, unit_of_coordinator(self))
-        return found
+    def unusable_entities(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_reporting.unusable_entities(self, *args, **kwargs)
 
     @callback
-    def _report_command_not_taking(self) -> None:
-        """Put appliances that never take their command under Repairs, or take them away."""
-        problems.async_report_command_not_taking(
-            self.hass,
-            self.entry.entry_id,
-            self.entry.title,
-            self._note_unapplied(),
-        )
+    def _report_unreadable(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_reporting._report_unreadable(self, *args, **kwargs)
 
     @callback
-    def _report_bypassed_openings(self) -> None:
-        """Put openings bypassed while really open under Repairs, or take them away."""
-        found: dict[str, str] = {}
-        if self.world is not None:
-            for opening in self.config.openings:
-                if opening_bypassed_and_open(opening, self.world):
-                    found[opening.entity_id] = opening.name or opening.entity_id
-        problems.async_report_bypassed_openings(
-            self.hass,
-            self.entry.entry_id,
-            self.entry.title,
-            found,
-        )
+    def _note_unusable(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_reporting._note_unusable(self, *args, **kwargs)
 
-    # -- seizoensselect / season select ---------------------------------------
-
-    def _season_override_problems(self) -> dict[str, str]:
-        """Return the duties the season select locks out, keyed by zone and duty.
-
-        De engine meldt de vaste seizoensbron in `validate()`; de select is
-        bedieningstoestand en leeft hier. Zet iemand de select op een seizoen
-        waarin een ingestelde taak nooit mag draaien, dan kan die taak nooit
-        draaien - hetzelfde stille niets, dus dezelfde melding als bij de vaste
-        instelling.
-
-        The engine reports the fixed season source in `validate()`; the select
-        is control state and lives here. Put the select on a season an
-        installed duty is never allowed in, and that duty can never run - the
-        same silent nothing, so the same notice as for the fixed setting.
-        """
-        override = getattr(self, "season_override", None)
-        if override is None:
-            return {}
-        found: dict[str, str] = {}
-        for zone in self.config.zones:
-            for family in (ModeFamily.HEAT, ModeFamily.COOL):
-                settings = zone.settings_for(family)
-                if settings is not None and not settings.allowed_in(override):
-                    found[f"{zone.zone_id}:{family.value}"] = (
-                        f"{zone.name or zone.zone_id} ({family.value})"
-                    )
-        return found
+    def unsupported_modes(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_reporting.unsupported_modes(self, *args, **kwargs)
 
     @callback
-    def _report_season_override(self) -> None:
-        """Put a season select that locks a duty out under Repairs, or take it away."""
-        problems.async_report_season_override(
-            self.hass,
-            self.entry.entry_id,
-            self.entry.title,
-            self._season_override_problems(),
-        )
-
-    # -- vastgelopen zones / stuck zones -------------------------------------
+    def _note_unsupported(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_reporting._note_unsupported(self, *args, **kwargs)
 
     @callback
-    def _note_waiting(self, plan: Plan) -> None:
-        """Remember since when each zone has been on its current waiting reason.
-
-        De tijdstempel verspringt zodra de reden verandert, want dan is er wel
-        iets gebeurd. Blijft dezelfde reden staan, dan loopt de teller door.
-
-        The timestamp moves the moment the reason changes, since something did
-        happen then. While the reason stays the same, the clock keeps running.
-        """
-        now = dt_util.now()
-        fresh: dict[str, tuple[Reason, datetime]] = {}
-        for decision in plan.zones:
-            if decision.reason not in WAITING_REASONS:
-                continue
-            since = self._waiting.get(decision.zone_id)
-            fresh[decision.zone_id] = (
-                since if since and since[0] is decision.reason else (decision.reason, now)
-            )
-        self._waiting = fresh
-
-    def waiting_seconds(self) -> dict[str, float]:
-        """Return how long each waiting zone has been on its reason."""
-        now = dt_util.now()
-        return {
-            zone_id: (now - since).total_seconds()
-            for zone_id, (_reason, since) in self._waiting.items()
-        }
-
-    def unusable_latest(self) -> dict[str, str]:
-        """Return the unreadable entities of the latest decision round.
-
-        De entiteitenlaag hoort niet aan `_unusable_latest` te zitten: dat is
-        een privéveld van de coordinator en de grens van wat hij naar buiten
-        brengt verandert mee met hem. Dit is de publieke lezer.
-
-        The entity layer should not touch `_unusable_latest`: that is a private
-        coordinator field, and the boundary of what it exposes moves with it.
-        This is the public reader.
-        """
-        return self._unusable_latest
-
-    def stuck_zones(self) -> dict[str, Reason]:
-        """Return the zones that have waited longer than the installation allows.
-
-        Een pauze bij het wisselen van taak hoort seconden te duren. Staat een
-        zone er een kwartier op, dan wacht hij niet meer maar zit hij vast - en
-        dat is van buiten niet te onderscheiden van niets doen.
-
-        A pause when switching duty should last seconds. A zone sitting on one
-        for a quarter of an hour is no longer waiting but stuck - and from the
-        outside that is indistinguishable from doing nothing at all.
-        """
-        limit = self.config.stuck_after.total_seconds()
-        if limit <= 0:
-            return {}
-        now = dt_util.now()
-        return {
-            zone_id: reason
-            for zone_id, (reason, since) in self._waiting.items()
-            if (now - since).total_seconds() >= limit
-        }
-
-    def _note_precipitation_now(self) -> None:
-        """Remember rain that was already falling before this process started.
-
-        De listener ziet alleen overgangen. Wie herstart terwijl het regent,
-        heeft geen overgang gezien, en zonder deze stap zou de nalooptijd voor
-        die bui verloren zijn - terwijl de lezer zelf nooit mag schrijven. Dit
-        is naast de listener de enige plek die het moment vastlegt.
-
-        The listener only sees transitions. Restarting while it rains means no
-        transition was seen, and without this step the grace for that shower
-        would be lost - while the reader itself must never write. Besides the
-        listener this is the only place that records the moment.
-        """
-        settings = self.config.precipitation
-        if not settings.enabled:
-            return
-        state = self.hass.states.get(settings.source)
-        if state is not None and state.state in settings.states:
-            self._precipitation_seen_at = dt_util.now()
-
-    def _note_home_now(self) -> None:
-        """Fill in the homecoming moments this process has not seen yet.
-
-        Anker 13, besluit 4: de listener ziet alleen overgangen, en wie al thuis
-        was toen dit proces begon heeft er geen gehad. Zonder deze stap zouden al
-        die bewoners een onbekend moment hebben, en dan remt het stiltevenster
-        voor hen - terwijl zij er juist al zaten. De terugval is `last_changed`
-        van de aanwezigheidsentiteit, begrensd door het slaapmoment: bij een
-        eerste start is dat "net thuis", en dan blijft het stil tot het venster
-        afloopt.
-
-        Anchor 13, decision 4: the listener only sees transitions, and whoever was
-        already home when this process started had none. Without this step all
-        those residents would have an unknown moment, and then the quiet window
-        brakes for them - while they were the ones already sitting there. The
-        fallback is the presence entity's `last_changed`: on a first start that is
-        "just home", and then it stays quiet until the window has passed. At most
-        once, since the listener takes over as soon as the resident moves.
-
-        Nothing is overwritten: a moment from storage stays, even when it is older
-        than `last_changed` - that is exactly the difference decision 3 wants. And
-        nothing is filled in for whoever is not home.
-        """
-        for resident in self.config.residents:
-            if resident.resident_id in self._home_since:
-                continue
-            presence = resident.presence_entity
-            state = self.hass.states.get(presence) if presence else None
-            if reads_as_home(state):
-                since = state.last_changed
-                if self._asleep_since is not None and since > self._asleep_since:
-                    since = self._asleep_since
-                self._home_since[resident.resident_id] = since
-
-    # -- circuitgeschiedenis / circuit history -------------------------------
-
-    def _remember_families(self, world: WorldState) -> None:
-        """Record when each circuit last took on the duty it is running.
-
-        Read from the observed states rather than from the previous plan: a
-        unit switched by remote changes a circuit's duty just as effectively as
-        the director does, and the minimum-run timer has to respect that.
-        """
-        for circuit in self.config.circuits:
-            current = active_family(world, circuit)
-            if self._family_seen.get(circuit.circuit_id) != current:
-                self._family_seen[circuit.circuit_id] = current
-                self._family_since[circuit.circuit_id] = (
-                    world.now if current in (ModeFamily.HEAT, ModeFamily.COOL) else None
-                )
-
-    def _with_family_history(self, world: WorldState) -> WorldState:
-        """Return the snapshot with the recorded duty-change times filled in.
-
-        Eén veld vervangen, de rest overnemen zoals hij is. Dat gebeurde ooit
-        door de momentopname met de hand opnieuw op te bouwen, en toen viel er
-        stilletjes een veld uit: `precondition_bypass` bleef leeg, waardoor
-        "toch doen" bij een openstaand raam nooit werkte in een draaiende Home
-        Assistant - terwijl elke engine-test hem wél doorgaf. Een veld dat er
-        later bij komt kan zo niet meer vergeten worden.
-
-        Replace one field and carry the rest across as it stands. This once
-        rebuilt the snapshot by hand, and a field quietly fell out of it:
-        `precondition_bypass` stayed empty, so "do it anyway" on an open window
-        never worked inside a running Home Assistant - while every engine test
-        did pass it along. A field added later can no longer be forgotten this
-        way.
-        """
-        return replace(world, circuit_family_since=dict(self._family_since))
-
-    # -- naar buiten / outward ----------------------------------------------
-
-    def _fire_events(self, plan: Plan) -> None:
-        """Fire one event per zone whose outcome changed.
-
-        Only on change: a decision is recomputed on every state change of every
-        tracked entity, and firing each time would drown any automation
-        listening for it.
-        """
-        previous = {zone.zone_id: zone for zone in (self.data.zones if self.data else ())}
-
-        for decision in plan.zones:
-            if previous.get(decision.zone_id) == decision:
-                continue
-            self.hass.bus.async_fire(
-                EVENT_DECISION,
-                _event_data(
-                    self.hass, self.config, self.world, plan, decision, unit_of_coordinator(self)
-                ),
-            )
-
-    def _fire_refusals(self, plan: Plan) -> None:
-        """Say so when a pre-conditioning request strands on an open window.
-
-        Zonder dit verdwijnt het verzoek in stilte: de zone meldt `opening_open`,
-        maar dat ziet er van buiten hetzelfde uit als een raam dat gewoon
-        openstaat terwijl niemand iets vroeg. Wie op een knop drukte hoort te
-        horen waarom er niets gebeurt, en welk raam het is.
-
-        Alleen bij een wisseling, niet bij elke beoordeling - anders verzuipt
-        elke automatisering die meeluistert.
-
-        Without this the request vanishes silently: the zone reports
-        `opening_open`, but from the outside that looks the same as a window
-        simply standing open while nobody asked for anything. Whoever pressed a
-        button deserves to hear why nothing happens, and which window it is.
-
-        Only on a change, not on every evaluation - otherwise any automation
-        listening drowns.
-        """
-        refused: set[str] = set()
-        for decision in plan.zones:
-            if decision.reason not in (Reason.OPENING_OPEN, Reason.OPENING_OPEN_ELSEWHERE):
-                continue
-            if not self._precondition.get(decision.zone_id):
-                continue
-            refused.add(decision.zone_id)
-
-            if decision.zone_id in self._refused:
-                continue
-            self.hass.bus.async_fire(
-                EVENT_PRECONDITION_REFUSED, self._refusal_data(decision.zone_id, plan)
-            )
-
-        self._refused = refused
-
-    def _refusal_data(self, zone_id: str, plan: Plan | None) -> dict[str, Any]:
-        """Return the payload of one refusal, the sentences included.
-
-        De zinnen worden hier al gemaakt, in de taal van de interface. Een
-        blueprint kan niet vertalen en een gebruiker die zijn huis in het
-        Nederlands bedient wil geen Engelse melding op zijn telefoon. Waar de
-        melding heen gaat blijft aan de gebruiker; alleen de tekst komt hier
-        vandaan.
-
-        Er zitten twee zinnen in: de weigering, en wat er te melden valt zodra
-        iemand op "toch doen" drukt. Die tweede staat er nu al in omdat hij
-        precies dan nodig is, en dan is de gebeurtenis allang geweest.
-
-        The sentences are made here, in the language of the interface. A
-        blueprint cannot translate, and somebody running their house in Dutch
-        does not want an English notice on their phone. Where the notice goes
-        stays the user's business; only the text comes from here.
-
-        Two sentences go in: the refusal, and what there is to report the
-        moment somebody presses "do it anyway". The second is in here already
-        because that is exactly when it is needed, and by then the event is
-        long past.
-        """
-        zone = self.config.zone(zone_id)
-        name = zone.name if zone else zone_id
-        decision = plan.decision_for(zone_id) if plan is not None else None
-        held_elsewhere = decision is not None and (
-            decision.reason is Reason.OPENING_OPEN_ELSEWHERE
-            or Reason.OPENING_OPEN_ELSEWHERE in decision.closed_gates
-        )
-        house_wide = held_elsewhere or (
-            zone is not None
-            and any(source.entity_id in self.config.house_wide_openings for source in zone.sources)
-            and self.world is not None
-            and bool(house_wide_blocked(self.config, self.world))
-        )
-        openings = self._open_openings(zone_id, house_wide=house_wide)
-        listed = ", ".join(self._friendly(entity_id) for entity_id in openings) or "-"
-        minutes = round(self.config.gates.max_precondition.total_seconds() / 60)
-
-        indoor = self.world.indoor(zone_id) if self.world is not None else None
-        target: float | None = None
-        settled = False
-        if zone is not None and self.world is not None:
-            demand, target = wanted_target(self.config, zone, self.world, plan)
-            settled = demand.reason in (Reason.SATISFIED, Reason.WITHIN_DEADBAND)
-
-        # De engine-wereld rekent in Celsius; de zin op de telefoon hoort de
-        # eenheid van de gebruiker te noemen, afgerond — geen kale engine-float.
-        #
-        # The engine world counts in Celsius; the sentence on the phone should
-        # name the user's unit, rounded — not the bare engine float.
-        unit = unit_of_coordinator(self)
-        if indoor is None:
-            code = "precondition_confirmed_unknown"
-            fallback = (
-                "{zone} is going ahead, ignoring {openings}. The room temperature cannot be "
-                "read, so nothing will happen until it can."
-            )
-        elif target is not None:
-            code = "precondition_confirmed"
-            fallback = (
-                "{zone} is going ahead, ignoring {openings}. Now {indoor}, aiming for {target}."
-            )
-        elif settled:
-            code = "precondition_confirmed_satisfied"
-            fallback = (
-                "{zone} is going ahead, ignoring {openings}. Now {indoor} - the room is "
-                "already right, so nothing happens for the moment."
-            )
-        else:
-            # Geen streeftemperatuur en niet tevreden: het seizoen of de
-            # configuratie laat hier niets toe. "De kamer ligt al goed" zou dan
-            # een leugen zijn tegen iemand die op vijftien graden zit.
-            #
-            # No target and not satisfied: the season or the configuration
-            # allows nothing here. "The room is already right" would then be a
-            # lie to somebody sitting at fifteen degrees.
-            code = "precondition_confirmed_idle"
-            fallback = (
-                "{zone} is going ahead, ignoring {openings}. Now {indoor} - there is "
-                "nothing this room may do at the moment, so nothing happens."
-            )
-
-        filling = {
-            "zone": name,
-            "openings": listed,
-            "indoor": display_temperature(from_celsius(indoor, unit), unit),
-            "target": display_temperature(from_celsius(target, unit), unit),
-            "minutes": minutes,
-        }
-        return {
-            "entry_id": self.entry.entry_id,
-            "zone_id": zone_id,
-            "zone": name,
-            "openings": openings,
-            "opening_names": [self._friendly(entity_id) for entity_id in openings],
-            "until": self._precondition[zone_id].isoformat(),
-            "indoor_temperature": indoor,
-            "target_temperature": target,
-            "override_minutes": minutes,
-            "title": texts.translated(
-                self.hass, "precondition_refused_title", "Pre-conditioning refused", **filling
-            ),
-            "message": texts.translated(
-                self.hass,
-                "precondition_refused",
-                "{zone} could not start pre-conditioning. Still open: {openings}. Close what is "
-                "open, or let the request run anyway for {minutes} minutes.",
-                **filling,
-            ),
-            "confirmed_title": texts.translated(
-                self.hass, "precondition_confirmed_title", "Pre-conditioning is running", **filling
-            ),
-            "confirmed_message": texts.translated(self.hass, code, fallback, **filling),
-            "confirm_label": texts.translated(
-                self.hass, "precondition_confirm_label", "Do it anyway", **filling
-            ),
-        }
-
-    def _friendly(self, entity_id: str) -> str:
-        """Return the name somebody would recognise, or the entity id."""
-        state = self.hass.states.get(entity_id)
-        return state.name if state is not None else entity_id
-
-    def _open_openings(self, zone_id: str, *, house_wide: bool = False) -> list[str]:
-        """Return the entity ids standing open, so the notice can name them.
-
-        Met `house_wide` telt élke openstaande opening mee in plaats van alleen
-        die van de zone. De deur die een huisbreed stilgezet apparaat stopt hoort
-        per definitie bij een andere kamer, dus de gewone zonefilter zou een
-        gerepareerd event alsnog `openings: "-"` laten melden.
-
-        With `house_wide` every opening standing open counts rather than only the
-        zone's own. The door stopping a house-wide stopped appliance belongs to
-        another room by definition, so the ordinary zone filter would still have a
-        repaired event report `openings: "-"`.
-        """
-        if self.world is None:
-            return []
-        if house_wide:
-            return sorted(
-                opening.entity_id
-                for opening in self.config.openings
-                if opening_standing(opening, self.world)
-            )
-        return sorted(
-            opening.entity_id
-            for opening in self.config.openings
-            if (not opening.zone_ids or zone_id in opening.zone_ids)
-            and opening_standing(opening, self.world)
-        )
-
-    def _schedule_deferral(self, plan: Plan) -> None:
-        """Re-evaluate when a timer in the plan expires.
-
-        Without this, a plan held back by short-cycle protection would wait for
-        an unrelated state change to resume - which on a quiet night may never
-        come.
-        """
-        self._cancel_pending_deferral()
-
-        deferral = plan.next_deferral
-        if deferral is None:
-            return
-
-        delay = max((deferral.until - dt_util.now()).total_seconds(), MIN_DEFERRAL_SECONDS)
-
-        @callback
-        def _resume(_now: datetime) -> None:
-            self._cancel_deferral = None
-            self.async_request_evaluation()
-
-        self._cancel_deferral = async_call_later(self.hass, delay, _resume)
+    def _report_unsupported_modes(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_reporting._report_unsupported_modes(self, *args, **kwargs)
 
     @callback
-    def _cancel_pending_deferral(self) -> None:
-        """Drop the scheduled re-evaluation, if there is one."""
-        if self._cancel_deferral is not None:
-            self._cancel_deferral()
-            self._cancel_deferral = None
+    def _note_unapplied(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_reporting._note_unapplied(self, *args, **kwargs)
 
+    @callback
+    def _report_command_not_taking(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_reporting._report_command_not_taking(self, *args, **kwargs)
 
-def _event_data(
-    hass: HomeAssistant,
-    config: DirectorConfig,
-    world: WorldState | None,
-    plan: Plan,
-    decision: ZoneDecision,
-    unit: str,
-) -> dict[str, Any]:
-    """Return the payload of one `climate_director_decision` event.
+    @callback
+    def _report_bypassed_openings(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_reporting._report_bypassed_openings(self, *args, **kwargs)
 
-    `temperature` wordt gepubliceerd in de eenheid van de gebruiker, afgerond op
-    één decimaal, met `temperature_unit` ernaast, zodat een automatisering die
-    op het getal templatet weet waarin ze rekent.
+    def _season_override_problems(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_reporting._season_override_problems(self, *args, **kwargs)
 
-    De vier leesbare velden - `reason_text`, `action_text`, `source_name` en `message` - komen
-    uit `texts.decision_fields`; de identifiers, `action` erbij, blijven staan en blijven het
-    contract. Wie op `reason` of `action` filtert, merkt niets van die vier.
+    @callback
+    def _report_season_override(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_reporting._report_season_override(self, *args, **kwargs)
 
-    `temperature` is published in the user's unit, rounded to one decimal, with
-    `temperature_unit` alongside it, so an automation templating on the number
-    knows what it is counting in.
+    @callback
+    def _note_waiting(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_reporting._note_waiting(self, *args, **kwargs)
 
-    The four readable fields - `reason_text`, `action_text`, `source_name` and `message` - come
-    from `texts.decision_fields`; the identifiers, `action` among them, stay and remain the
-    contract. Whoever filters on `reason` or `action` notices nothing of those four.
-    """
-    zone = config.zone(decision.zone_id)
-    reading = texts.decision_fields(
-        hass, config=config, world=world, plan=plan, decision=decision, unit=unit
-    )
-    return {
-        "zone_id": decision.zone_id,
-        "zone_name": zone.name if zone else decision.zone_id,
-        "wanted": decision.wanted.value,
-        "granted": decision.granted.value,
-        "source_id": decision.source_id,
-        "entity_id": reading["entity_id"],
-        "hvac_mode": reading["hvac_mode"],
-        "temperature": reading["temperature"],
-        "temperature_unit": unit,
-        "reason": decision.reason.value,
-        "reason_text": reading["reason_text"],
-        "action": reading["action"],
-        "action_text": reading["action_text"],
-        "source_name": reading["source_name"],
-        "message": reading["message"],
-    }
+    def waiting_seconds(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_reporting.waiting_seconds(self, *args, **kwargs)
 
+    def unusable_latest(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_reporting.unusable_latest(self, *args, **kwargs)
 
-def _wanted(change: Change, unit: str) -> str:
-    """Return what a change asks for, short enough to read in a notice.
+    def stuck_zones(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_reporting.stuck_zones(self, *args, **kwargs)
 
-    De stand is er altijd; het setpoint alleen als het meegestuurd wordt. Een
-    apparaat dat uitgezet moet worden krijgt geen temperatuur mee, en die dan
-    toch noemen zou een lezer op het verkeerde been zetten. Het setpoint wordt
-    in de eenheid van de gebruiker getoond, afgerond - geen kale `°C` en geen
-    onafgeronde engine-float.
+    def _note_precipitation_now(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_reporting._note_precipitation_now(self, *args, **kwargs)
 
-    The mode is always there; the setpoint only when it is sent along. An
-    appliance that has to be switched off gets no temperature with it, and
-    naming one anyway would put a reader on the wrong foot. The setpoint is
-    shown in the user's unit, rounded - no bare `°C` and no unrounded engine
-    float.
-    """
-    if change.set_temperature and change.command.temperature is not None:
-        return (
-            f"{change.command.hvac_mode}, "
-            f"{display_temperature(from_celsius(change.command.temperature, unit), unit)}"
-        )
-    return change.command.hvac_mode
+    def _note_home_now(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_tracking._note_home_now(self, *args, **kwargs)
+
+    def _fire_events(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_events._fire_events(self, *args, **kwargs)
+
+    def _fire_refusals(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_events._fire_refusals(self, *args, **kwargs)
+
+    def _refusal_data(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_events._refusal_data(self, *args, **kwargs)
+
+    def _friendly(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_events._friendly(self, *args, **kwargs)
+
+    def _open_openings(self, *args: Any, **kwargs: Any) -> Any:
+        return coordinator_events._open_openings(self, *args, **kwargs)

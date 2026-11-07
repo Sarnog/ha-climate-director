@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 import pytest
 from homeassistant.util import dt as dt_util
 
-from custom_components.climate_director import coordinator as module
+from custom_components.climate_director import coordinator_round as module
 from custom_components.climate_director import preconditions as preconditions_module
 from custom_components.climate_director.coordinator import ClimateDirectorCoordinator
 from custom_components.climate_director.engine import Reason

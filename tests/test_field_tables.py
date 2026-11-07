@@ -48,6 +48,11 @@ from typing import Any, get_origin, get_type_hints
 import pytest
 
 from custom_components.climate_director import schema_fields
+from custom_components.climate_director.engine import (
+    equipment_storage,
+    installation_storage,
+    resident_storage,
+)
 from custom_components.climate_director.engine import fields as engine_fields
 from custom_components.climate_director.engine import models as engine_models
 from custom_components.climate_director.engine import serialise as engine_serialise
@@ -180,7 +185,16 @@ class TestEveryTargetPointsSomewhere:
     ) -> None:
         model_name, writer_name = engine_fields.TABLE_ROOTS[name]
         model = getattr(engine_models, model_name)
-        writer = getattr(engine_serialise, writer_name)
+        writer = next(
+            getattr(module, writer_name)
+            for module in (
+                engine_serialise,
+                equipment_storage,
+                installation_storage,
+                resident_storage,
+            )
+            if hasattr(module, writer_name)
+        )
         stored = writer(build_sample(model))
         missing = [
             f"{field.key} -> {field.target}"

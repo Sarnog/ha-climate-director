@@ -33,13 +33,15 @@ from conftest import (
 )
 from coverage import Coverage
 from coverage.data import CoverageData
-from test_repair_notices import (
+from coverage_helpers import named_exclusion_problems
+from flow_helpers import open_screen
+from guard_helpers import border_offenders
+from repair_helpers import (
     created_issue_ids,
     deleted_ids_by_function,
     issue_registry_form_problems,
     unfollowable_issue_ids,
 )
-from test_the_border import border_offenders
 
 import script.coverage_gate as coverage_gate
 
@@ -495,8 +497,6 @@ class TestTheWalkGuard:
     """`TestEveryFormInTheSourceIsWalkedTo` faalt hard op een onbekende stap."""
 
     async def test_an_unknown_step_really_raises_unknown_screen(self) -> None:
-        from test_campaign_editing import open_screen
-
         with pytest.raises(AssertionError, match="unknown screen verzonnen_scherm"):
             await open_screen(_DummyHome(), "verzonnen_scherm")
 
@@ -520,7 +520,7 @@ class TestTheWalkGuard:
         form went red as soon as anyone wrote the same assertion
         differently.
         """
-        import test_campaign_editing as walk
+        import flow_helpers as walk
 
         async def lying_open_screen(_home: object, _screen: str):
             return "flow", {"type": "form", "step_id": "een_ander_scherm"}, None
@@ -528,7 +528,7 @@ class TestTheWalkGuard:
         monkeypatch.setattr(walk, "open_screen", lying_open_screen)
 
         with pytest.raises(AssertionError, match="open_screen liep naar"):
-            await walk.TestEveryFormInTheSourceIsWalkedTo().test_every_step_id_in_the_source_opens()
+            await walk.walk_screens(_DummyHome(), {"verzonnen_scherm"})
 
 
 class TestTheBorderGuard:
@@ -865,7 +865,7 @@ class TestTheCoverageGate:
 class TestTheMeasurementNextToATestStaysUntouched:
     """Een test raakt de dekkingsmeting naast zich niet aan.
 
-    `test_reachable_branches_deep.py::test_every_line_outside_the_measurement_has_a_name`
+    `test_coverage_exclusions.py::test_every_line_outside_the_measurement_has_a_name`
     bouwde een `Coverage()` zonder `data_file`, en dat wijst naar het
     standaardbestand `.coverage`. `hidden_lines()` roept `analysis2()` aan, en
     gemeten liet dat het bestaande `.coverage` leeg achter: 39 → 0 gemeten
@@ -881,7 +881,7 @@ class TestTheMeasurementNextToATestStaysUntouched:
     naast staat hoort hij niet aan te raken.
 
     A test does not touch the coverage measurement next to it.
-    `test_reachable_branches_deep.py::test_every_line_outside_the_measurement_has_a_name`
+    `test_coverage_exclusions.py::test_every_line_outside_the_measurement_has_a_name`
     built a `Coverage()` without `data_file`, which points at the default
     `.coverage`. `hidden_lines()` calls `analysis2()`, and measured, that left the
     existing `.coverage` empty: 39 → 0 measured files, after which
@@ -940,11 +940,7 @@ class TestTheMeasurementNextToATestStaysUntouched:
             "de functie onder bewaking raakt de meting naast zich aan"
         )
 
-        from test_reachable_branches_deep import (
-            test_every_line_outside_the_measurement_has_a_name,
-        )
-
-        test_every_line_outside_the_measurement_has_a_name()
+        named_exclusion_problems()
         assert self._fingerprint(data_path) == before, (
             "de bewaringstest zelf raakt de meting naast zich aan"
         )

@@ -24,24 +24,8 @@ from conftest import LIVING, gate_verdict, house
 
 from custom_components.climate_director import schemas, texts
 from custom_components.climate_director.applier import _is_stop
-from custom_components.climate_director.config_flow import (
-    ClimateDirectorOptionsFlow,
-    _all_source_ids,
-    _band_errors,
-    _blank_to_none,
-    _deep_copy,
-    _next_priority,
-    _settings_errors,
-    _unique_id,
-    _zone_errors,
-    _zone_from_form,
-)
-from custom_components.climate_director.coordinator import (
-    _event_data,
-    as_float,
-    season_from_state,
-    temperature_from_state,
-)
+from custom_components.climate_director.config_flow import ClimateDirectorOptionsFlow
+from custom_components.climate_director.coordinator_events import _event_data
 from custom_components.climate_director.engine import (
     MODE_COOL,
     MODE_FAN_ONLY,
@@ -57,11 +41,27 @@ from custom_components.climate_director.engine import (
     decide,
 )
 from custom_components.climate_director.engine.diff import Change
-from custom_components.climate_director.engine.models import Problem
 from custom_components.climate_director.engine.serialise import config_from_dict, config_to_dict
+from custom_components.climate_director.engine.validation import Problem
+from custom_components.climate_director.flow_validation import (
+    all_source_ids,
+    band_errors,
+    blank_to_none,
+    deep_copy,
+    next_priority,
+    settings_errors,
+    unique_id,
+    zone_errors,
+    zone_from_form,
+)
+from custom_components.climate_director.form_common import window_label
 from custom_components.climate_director.number import resolve_initial
 from custom_components.climate_director.problems import MAX_LISTED, readable, summarise
-from custom_components.climate_director.schemas import _window_label
+from custom_components.climate_director.world_builder import (
+    as_float,
+    season_from_state,
+    temperature_from_state,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -293,20 +293,20 @@ def _warm_world():
 
 class TestUniqueId:
     def test_a_free_slug_is_used_as_is(self) -> None:
-        assert _unique_id("Woonkamer", []) == "woonkamer"
+        assert unique_id("Woonkamer", []) == "woonkamer"
 
     def test_a_taken_slug_gets_a_suffix(self) -> None:
-        assert _unique_id("Woonkamer", ["woonkamer"]) == "woonkamer_2"
+        assert unique_id("Woonkamer", ["woonkamer"]) == "woonkamer_2"
 
     def test_it_keeps_counting(self) -> None:
-        assert _unique_id("Woonkamer", ["woonkamer", "woonkamer_2"]) == "woonkamer_3"
+        assert unique_id("Woonkamer", ["woonkamer", "woonkamer_2"]) == "woonkamer_3"
 
     def test_punctuation_only_gets_home_assistants_own_fallback(self) -> None:
-        assert _unique_id("!!!", []) == "unknown"
+        assert unique_id("!!!", []) == "unknown"
 
     def test_an_empty_name_still_gets_an_id(self) -> None:
         """`slugify("")` really does return an empty string, unlike `slugify("!!!")`."""
-        assert _unique_id("", []) == "item"
+        assert unique_id("", []) == "item"
 
 
 class TestWindowLabel:
@@ -321,21 +321,21 @@ class TestWindowLabel:
     """
 
     def test_a_window_without_days_reads_as_every_day(self) -> None:
-        label = _window_label({"start": "08:00:00", "end": "18:00:00"}, {})
+        label = window_label({"start": "08:00:00", "end": "18:00:00"}, {})
         assert label == "08:00 - 18:00, every day"
 
     def test_an_empty_day_list_also_reads_as_every_day(self) -> None:
         """No days ticked means every day, not never."""
-        label = _window_label({"start": "08:00:00", "end": "18:00:00", "weekdays": []}, {})
+        label = window_label({"start": "08:00:00", "end": "18:00:00", "weekdays": []}, {})
         assert label == "08:00 - 18:00, every day"
 
     def test_days_are_named_and_sorted(self) -> None:
         window = {"start": "06:30:00", "end": "12:00:00", "weekdays": [4, 2]}
-        assert _window_label(window, {}) == "06:30 - 12:00, Wed, Fri"
+        assert window_label(window, {}) == "06:30 - 12:00, Wed, Fri"
 
     def test_nonsense_days_do_not_produce_a_dangling_comma(self) -> None:
         window = {"start": "08:00", "end": "18:00", "weekdays": [99, "maandag"]}
-        assert _window_label(window, {}) == "08:00 - 18:00, every day"
+        assert window_label(window, {}) == "08:00 - 18:00, every day"
 
 
 class TestScheduleWindowsReachTheEngine:
@@ -461,22 +461,22 @@ class TestNextPriority:
     """A new zone counts up rather than joining everyone else on zero."""
 
     def test_the_first_zone_starts_at_zero(self) -> None:
-        assert _next_priority([]) == 0
+        assert next_priority([]) == 0
 
     def test_each_new_zone_takes_the_next_number(self) -> None:
         zones = [{"priority": 0}]
-        assert _next_priority(zones) == 1
-        assert _next_priority([*zones, {"priority": 1}]) == 2
+        assert next_priority(zones) == 1
+        assert next_priority([*zones, {"priority": 1}]) == 2
 
     def test_it_never_collides_after_a_deletion(self) -> None:
         """Counting the list would reuse a number a surviving zone still holds."""
-        assert _next_priority([{"priority": 0}, {"priority": 5}]) == 6
+        assert next_priority([{"priority": 0}, {"priority": 5}]) == 6
 
     def test_zones_without_a_priority_are_ignored(self) -> None:
-        assert _next_priority([{"name": "no priority yet"}]) == 0
+        assert next_priority([{"name": "no priority yet"}]) == 0
 
     def test_a_boolean_is_not_read_as_a_number(self) -> None:
-        assert _next_priority([{"priority": True}]) == 0
+        assert next_priority([{"priority": True}]) == 0
 
 
 class TestPriorityAfterRestart:
@@ -738,11 +738,15 @@ class TestTheEnglishTemplatesLiveInTheCache:
         from pathlib import Path
 
         from custom_components.climate_director import texts
-        from custom_components.climate_director.engine import models as engine_models
-        from custom_components.climate_director.engine import validation_extra
+        from custom_components.climate_director.engine import (
+            manual_sources,
+        )
+        from custom_components.climate_director.engine import (
+            validation as engine_validation,
+        )
 
         codes: list[str] = []
-        for module in (engine_models, validation_extra):
+        for module in (engine_validation, manual_sources):
             tree = ast.parse(Path(module.__file__).read_text(encoding="utf-8"))
             codes.extend(
                 node.args[0].value
@@ -764,12 +768,12 @@ class TestTheEnglishTemplatesLiveInTheCache:
 class TestDeepCopy:
     def test_nested_structures_are_detached(self) -> None:
         original = {"zones": [{"sources": [{"entity_id": "climate.x"}]}]}
-        copy = _deep_copy(original)
+        copy = deep_copy(original)
         copy["zones"][0]["sources"][0]["entity_id"] = "climate.y"
         assert original["zones"][0]["sources"][0]["entity_id"] == "climate.x"
 
     def test_scalars_pass_through(self) -> None:
-        assert _deep_copy(("a", 1, None)) == ("a", 1, None)
+        assert deep_copy(("a", 1, None)) == ("a", 1, None)
 
 
 class TestZoneFromForm:
@@ -791,7 +795,7 @@ class TestZoneFromForm:
     }
 
     def test_the_result_is_readable_by_the_engine(self) -> None:
-        stored = {"zones": [_zone_from_form(self.form, {})]}
+        stored = {"zones": [zone_from_form(self.form, {})]}
         zone = config_from_dict(stored).zone("woonkamer")
         assert zone is not None
         assert zone.heat is not None
@@ -802,7 +806,7 @@ class TestZoneFromForm:
 
     def test_editing_keeps_the_id_and_the_sources(self) -> None:
         current = {"zone_id": "living", "sources": [{"source_id": "s", "entity_id": "climate.x"}]}
-        zone = _zone_from_form(self.form, current, stored_id=current.get("zone_id"))
+        zone = zone_from_form(self.form, current, stored_id=current.get("zone_id"))
         assert zone["zone_id"] == "living"
         assert zone["sources"] == current["sources"]
 
@@ -829,7 +833,7 @@ class TestZoneFromForm:
                 "seasons": ["summer"],
             },
         }
-        zone = _zone_from_form(self.form, current, stored_id=current.get("zone_id"))
+        zone = zone_from_form(self.form, current, stored_id=current.get("zone_id"))
         assert zone["heat"]["outdoor"]["minimum"] == 5.0
         assert zone["heat"]["outdoor"]["maximum"] == 19.0
         assert zone["heat"]["seasons"] == ["winter", "summer"]
@@ -845,27 +849,27 @@ class TestZoneFromForm:
             "zone_id": "living",
             "sources": [{"source_id": "s", "entity_id": "climate.x"}],
         }
-        zone = _zone_from_form(self.form, current, stored_id=current.get("zone_id"))
+        zone = zone_from_form(self.form, current, stored_id=current.get("zone_id"))
         assert zone["heat"]["outdoor"]["minimum"] is None
         assert zone["heat"]["seasons"] is None
         assert zone["cool"]["outdoor"]["maximum"] is None
 
     def test_a_disabled_duty_becomes_none(self) -> None:
         form = dict(self.form, enable_cool=False)
-        zone = config_from_dict({"zones": [_zone_from_form(form, {})]}).zone("woonkamer")
+        zone = config_from_dict({"zones": [zone_from_form(form, {})]}).zone("woonkamer")
         assert zone is not None
         assert zone.cool is None
 
     def test_cooling_without_the_summer_restriction(self) -> None:
         form = dict(self.form, cool_summer_only=False)
-        zone = config_from_dict({"zones": [_zone_from_form(form, {})]}).zone("woonkamer")
+        zone = config_from_dict({"zones": [zone_from_form(form, {})]}).zone("woonkamer")
         assert zone is not None
         assert zone.cool is not None
         assert zone.cool.seasons is None
 
 
-def test_all_source_ids_walks_every_zone() -> None:
-    assert set(_all_source_ids(config_to_dict(house()))) == {
+def testall_source_ids_walks_every_zone() -> None:
+    assert set(all_source_ids(config_to_dict(house()))) == {
         "woonkamer_airco",
         "gasketel",
         "zolder_airco",
@@ -874,30 +878,30 @@ def test_all_source_ids_walks_every_zone() -> None:
 
 
 class TestBlankToNone:
-    """J4: `_blank_to_none` is het contract dat leeg nooit als `""` opslaat.
+    """J4: `blank_to_none` is het contract dat leeg nooit als `""` opslaat.
 
     Sinds K1 kan de interface een leeggemaakt veld alleen nog als ontbrekende
     sleutel aanleveren, en de schemavalidatie weigert `""` voor de getalvelden
-    die `_blank_to_none` bewaakt. Het contract van de helper zelf blijft het
+    die `blank_to_none` bewaakt. Het contract van de helper zelf blijft het
     vangnet voor elke route die er ooit wél een `""` heen stuurt, en wordt
     daarom hier als eigenschap vastgepind.
 
-    J4: `_blank_to_none` is the contract that never stores empty as `""`.
+    J4: `blank_to_none` is the contract that never stores empty as `""`.
 
     Since K1 the frontend can only deliver a cleared field as a missing key, and
-    schema validation refuses `""` for the numeric fields `_blank_to_none`
+    schema validation refuses `""` for the numeric fields `blank_to_none`
     guards. The helper's own contract remains the safety net for any route that
     ever does send a `""` there, and is therefore pinned as a property here.
     """
 
     def test_none_and_an_empty_string_become_none(self) -> None:
-        assert _blank_to_none(None) is None
-        assert _blank_to_none("") is None
+        assert blank_to_none(None) is None
+        assert blank_to_none("") is None
 
     def test_real_values_stay(self) -> None:
-        assert _blank_to_none(0) == 0
-        assert _blank_to_none([]) == []
-        assert _blank_to_none("open") == "open"
+        assert blank_to_none(0) == 0
+        assert blank_to_none([]) == []
+        assert blank_to_none("open") == "open"
 
 
 class TestOptionsFlowCursors:
@@ -964,15 +968,15 @@ class TestTheBandIsRefusedAtTheScreen:
             heat={"target": 21.0, "start_at": 20.0},
             cool={"target": 23.0, "start_at": 24.0},
         )
-        assert _band_errors(zone) == {}
+        assert band_errors(zone) == {}
 
     def test_heating_that_aims_below_where_it_starts_is_refused(self) -> None:
         zone = self._zone(heat={"target": 19.0, "start_at": 20.0})
-        assert _band_errors(zone) == {"heat_target": "target_outside_band"}
+        assert band_errors(zone) == {"heat_target": "target_outside_band"}
 
     def test_cooling_that_aims_above_where_it_starts_is_refused(self) -> None:
         zone = self._zone(cool={"target": 25.0, "start_at": 24.0})
-        assert _band_errors(zone) == {"cool_target": "target_outside_band"}
+        assert band_errors(zone) == {"cool_target": "target_outside_band"}
 
     def test_both_are_named_at_once(self) -> None:
         """Fixing one and finding the other on the next screen is a round too many."""
@@ -980,7 +984,7 @@ class TestTheBandIsRefusedAtTheScreen:
             heat={"target": 19.0, "start_at": 20.0},
             cool={"target": 25.0, "start_at": 24.0},
         )
-        assert _band_errors(zone) == {
+        assert band_errors(zone) == {
             "heat_target": "target_outside_band",
             "cool_target": "target_outside_band",
         }
@@ -991,11 +995,11 @@ class TestTheBandIsRefusedAtTheScreen:
             heat={"target": 20.0, "start_at": 20.0},
             cool={"target": 24.0, "start_at": 24.0},
         )
-        assert _band_errors(zone) == {}
+        assert band_errors(zone) == {}
 
     def test_a_mode_that_is_off_says_nothing(self) -> None:
         """A zone that may not cool has no cooling band to be wrong about."""
-        assert _band_errors(self._zone()) == {}
+        assert band_errors(self._zone()) == {}
 
     def test_the_complaint_matches_the_one_validate_makes(self) -> None:
         """Two places may not disagree about what a sound band is."""
@@ -1015,7 +1019,7 @@ class TestTheBandIsRefusedAtTheScreen:
         )
         codes = [getattr(item, "code", "") for item in validate(config)]
         assert "target_outside_band" in codes
-        assert _band_errors({"heat": {"target": 19.0, "start_at": 20.0}, "cool": None}) != {}
+        assert band_errors({"heat": {"target": 19.0, "start_at": 20.0}, "cool": None}) != {}
 
 
 class TestTheSettingsScreenRefusesAMissingSeasonEntity:
@@ -1030,21 +1034,21 @@ class TestTheSettingsScreenRefusesAMissingSeasonEntity:
     """
 
     def test_an_entity_source_without_an_entity_is_refused(self) -> None:
-        assert _settings_errors({"season_source": "entity", "season_entity": ""}) == {
+        assert settings_errors({"season_source": "entity", "season_entity": ""}) == {
             "season_entity": "season_entity_missing"
         }
 
     def test_an_entity_source_with_a_blank_entity_is_refused(self) -> None:
-        assert _settings_errors({"season_source": "entity", "season_entity": "   "}) == {
+        assert settings_errors({"season_source": "entity", "season_entity": "   "}) == {
             "season_entity": "season_entity_missing"
         }
 
     def test_an_entity_source_with_an_entity_passes(self) -> None:
         settings = {"season_source": "entity", "season_entity": "sensor.seizoen"}
-        assert _settings_errors(settings) == {}
+        assert settings_errors(settings) == {}
 
     def test_the_month_source_needs_no_entity(self) -> None:
-        assert _settings_errors({"season_source": "auto", "season_entity": ""}) == {}
+        assert settings_errors({"season_source": "auto", "season_entity": ""}) == {}
 
 
 class TestTheScreenRefusesWhatCanNeverWork:
@@ -1077,34 +1081,34 @@ class TestTheScreenRefusesWhatCanNeverWork:
         return {**zone, **changes}
 
     def test_a_sound_zone_passes(self) -> None:
-        assert _zone_errors(self._zone()) == {}
+        assert zone_errors(self._zone()) == {}
 
     def test_the_room_gate_needs_a_room_sensor(self) -> None:
         """Without one the room counts as empty for good."""
-        assert _zone_errors(self._zone(gate="presence")) == {
+        assert zone_errors(self._zone(gate="presence")) == {
             "presence_entity": "presence_gate_without_sensor"
         }
 
     def test_the_room_gate_with_a_sensor_is_fine(self) -> None:
         zone = self._zone(gate="presence", presence_entity="binary_sensor.zolder")
-        assert _zone_errors(zone) == {}
+        assert zone_errors(zone) == {}
 
     def test_a_zone_that_may_do_nothing_is_refused(self) -> None:
-        assert _zone_errors(self._zone(heat=None, cool=None)) == {
+        assert zone_errors(self._zone(heat=None, cool=None)) == {
             "enable_heat": "zone_without_modes"
         }
 
     def test_cooling_may_not_start_below_heating(self) -> None:
         """Both would then ask for the same room at once."""
         zone = self._zone(cool={"target": 18.0, "start_at": 19.0})
-        assert _zone_errors(zone)["cool_start_at"] == "bands_overlap"
+        assert zone_errors(zone)["cool_start_at"] == "bands_overlap"
 
     def test_cooling_may_not_start_exactly_where_heating_does(self) -> None:
         zone = self._zone(cool={"target": 19.0, "start_at": 20.0})
-        assert _zone_errors(zone)["cool_start_at"] == "bands_overlap"
+        assert zone_errors(zone)["cool_start_at"] == "bands_overlap"
 
     def test_a_zone_that_only_cools_never_overlaps(self) -> None:
-        assert _zone_errors(self._zone(heat=None)) == {}
+        assert zone_errors(self._zone(heat=None)) == {}
 
     def test_bands_that_only_touch_are_refused(self) -> None:
         """Verwarmen houdt pas op bij `start_at + hysteresis` (V4)."""
@@ -1112,7 +1116,7 @@ class TestTheScreenRefusesWhatCanNeverWork:
             heat={"target": 21.0, "start_at": 20.0, "hysteresis": 2.0},
             cool={"target": 23.0, "start_at": 22.0, "hysteresis": 1.0},
         )
-        assert _zone_errors(zone)["cool_start_at"] == "bands_overlap"
+        assert zone_errors(zone)["cool_start_at"] == "bands_overlap"
 
     def test_bands_that_overlap_at_the_cooling_end_are_refused(self) -> None:
         """Koelen houdt op bij `start_at - hysteresis`, en dat mag niet onder
@@ -1121,7 +1125,7 @@ class TestTheScreenRefusesWhatCanNeverWork:
             heat={"target": 21.0, "start_at": 20.0, "hysteresis": 0.5},
             cool={"target": 23.0, "start_at": 21.0, "hysteresis": 2.0},
         )
-        assert _zone_errors(zone)["cool_start_at"] == "bands_overlap"
+        assert zone_errors(zone)["cool_start_at"] == "bands_overlap"
 
     def test_it_gathers_every_complaint_at_once(self) -> None:
         """Fixing one and meeting the next on the following screen is a round too many."""
@@ -1130,7 +1134,7 @@ class TestTheScreenRefusesWhatCanNeverWork:
             heat={"target": 19.0, "start_at": 20.0},
             cool={"target": 25.0, "start_at": 19.0},
         )
-        assert set(_zone_errors(zone)) == {
+        assert set(zone_errors(zone)) == {
             "presence_entity",
             "heat_target",
             "cool_target",
@@ -1138,9 +1142,9 @@ class TestTheScreenRefusesWhatCanNeverWork:
         }
 
     def test_the_band_check_still_stands_on_its_own(self) -> None:
-        """`_zone_errors` gathers; the parts keep working separately."""
+        """`zone_errors` gathers; the parts keep working separately."""
         zone = self._zone(heat={"target": 19.0, "start_at": 20.0})
-        assert _band_errors(zone) == {"heat_target": "target_outside_band"}
+        assert band_errors(zone) == {"heat_target": "target_outside_band"}
 
 
 class TestTheReadablePieces:

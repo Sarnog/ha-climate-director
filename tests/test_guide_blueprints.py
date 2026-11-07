@@ -54,7 +54,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from test_guide_inventory import _notice_title, notice_keys, paragraphs
+from guide_helpers import notice_keys, notice_title, paragraphs
 
 from custom_components.climate_director.const import DOMAIN, EVENT_PRECONDITION_REFUSED
 
@@ -124,7 +124,7 @@ def test_the_refusal_bullet_points_at_the_refusal_blueprint() -> None:
     """
     problems: list[str] = []
     for language in LANGUAGES:
-        title = _notice_title(language, "precondition_unwatched")
+        title = notice_title(language, "precondition_unwatched")
         bullets = [block for block in paragraphs(guide_text(language)) if title in block]
         assert bullets, f"{language}.md: de melding {title!r} staat er niet in"
         for bullet in bullets:

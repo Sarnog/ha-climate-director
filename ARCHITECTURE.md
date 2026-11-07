@@ -556,7 +556,7 @@ entiteit.
 
 De diagnose lakt ook `sleep_in` weg en laat aanwezigheids- en slaapentiteiten uit
 `tracked_entities`, zodat een download geen bewonersprofiel via de entiteitenlijst
-alsnog prijsgeeft. `state_extra.py` draagt de publieke `stored_time` en
+alsnog prijsgeeft. `stored_state.py` draagt de publieke `stored_time` en
 `restore_commanded_off`; `state_store.py` bewaart `commanded_off` en herstelt het
 alleen binnen `COMMANDED_WINDOW`, zodat een oude uitzetting geen late melding meer
 verklaart. De overbruggingsschakelaar schrijft alleen bij een echte stand- of
@@ -604,7 +604,7 @@ Home Assistant (entiteitstoestanden, klokgebeurtenissen)
       ▼
   coordinator          verzamelt toestanden, ontdubbelt, serialiseert
     state_store.py     opslag, herstel en quarantaine van wat een mens zei
-    state_extra.py     bewaarde momenten en de eigen uitzetting
+    stored_state.py     bewaarde momenten en de eigen uitzetting
     preconditions.py   vooruit-verzoeken en hun timers
     overrides.py       override met looptijd en het opheffen van een hand
     room_presence.py   de kamerpoort: bezette kamers en de nalooptijd
@@ -643,7 +643,7 @@ Home Assistant (entiteitstoestanden, klokgebeurtenissen)
 │  diff.py        Plan vs werkelijkheid → wat er echt moet         │
 │  serialise.py   dict ↔ dataclasses                               │
 │    resident_storage.py  de ochtendinstellingen van een bewoner   │
-│  validation_extra.py  validatieregels buiten het model           │
+│  validation.py  validatieregels buiten het model                │
 │  untouched.py   welke zone een gedeeld apparaat met rust laat    │
 │  night.py       de nacht: wie slaapt, sinds wanneer, wie opstaat │
 └──────────────────────────────────────────────────────────────────┘
@@ -999,7 +999,10 @@ wordt, en terug. Lezen is bewust vergevingsgezind: onbekende sleutels worden gen
 ontbrekende sleutels vallen terug op hun standaard, en rommel in een lijst wordt
 overgeslagen. Een entry overleeft zo een versie waarin een veld bijkomt of verdwijnt, in
 plaats van bij het opstarten om te vallen. Wat structureel niet klopt komt uit
-`validate()`, niet uit een exception hier.
+`validate()`, niet uit een exception hier. De vertaling zelf is verdeeld over
+`installation_storage.py` (algemene velden), `equipment_storage.py` (apparaten en
+gebieden), `resident_storage.py` (de bewoner en zijn ochtend) en
+`storage_values.py` (veilig lezen); `serialise.py` is de ingang.
 
 Booleans worden expliciet níét als getal gelezen: `True` is in Python een `int`, en een
 prioriteit van `True` zou stilletjes 1 worden.
@@ -1303,7 +1306,7 @@ dat alle wachtende zones tijdens de uitval starten.
 - De gebruiker beslist tussen (a) en (b) voordat er gebouwd wordt.
 
 **Meldingen noemen de instelling in de taal van de gebruiker (N16).** De regels in
-`engine/validation_extra.py` vullen `settings`, `window` en `label` met Engelse woorden
+`engine/validation.py` vullen `settings`, `window` en `label` met Engelse woorden
 ("sleep window", "quiet window", "minimum cycle time"); `problems.readable` zet ze
 ongewijzigd in de vertaalde zin. Ontwerp: de engine levert vaste sleutels in plaats van
 woorden (`wake_by`, `sleep_in_until`, `quiet_window`, ...), en de koppelingslaag zoekt per
@@ -1473,28 +1476,29 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 |---|---|---|
 | `engine/models.py` | de installatie als geheel | `DirectorConfig`; de kleine bouwstenen staan in de modules hieronder |
 | `engine/seasons.py` | seizoen en neerslag | `Season`, `SeasonSource`, `SeasonSettings`, `PrecipitationSettings` |
-| `engine/windows.py` | tijds- en temperatuurvensters | `OutdoorWindow`, `TimeWindow`, `SleepIn`, `WakeDeadline`, `RiseBrake` |
-| `engine/residents.py` | de bewoner | `Resident` en zijn vensterlezers |
-| `engine/equipment.py` | apparaten en hun samenhang | `SourceRole`, `Source`, `Circuit`, `Generator`, `Opening`, `HeatingLayout` |
+| `engine/windows.py` | het tijdvenster | `TimeWindow` |
+| `engine/residents.py` | de bewoner | `Resident`, `SleepIn`, `WakeDeadline` en `RiseBrake` |
+| `engine/equipment.py` | apparaten en hun samenhang | `SourceRole`, `OutdoorWindow`, `ModeSettings`, `Source`, `Circuit`, `ConflictPolicy`, `Generator`, `Opening`, `HeatingLayout` |
 | `engine/rooms.py` | de ruimte en haar poortkeuze | `ZoneGate`, `Zone`, `GateSettings` |
-| `engine/validation.py` | alle configuratiecontroles | `Problem`, `validate()`, élke regel uit `models._RULES` en `validation_extra.EXTRA_RULES`, en één `RULES`-lijst in de bestaande volgorde. Dit is de enige benoemde module-uitzondering boven de maat: één onderwerp, één ingang, één volgorde. |
+| `engine/validation.py` | alle configuratiecontroles | `Problem`, `validate()` en één `RULES`-lijst in de bestaande volgorde. Dit is de enige benoemde module-uitzondering boven de maat: één onderwerp, één ingang, één volgorde. |
 | `engine/manual_sources.py` | de eenmalige melding over handbediende bronnen | `manual_only_problems` |
 | `engine/candidates.py` | wie mag meedoen | `handed_over`, `collect_wishes`, `serving`, de exclusieve groepen, `standing_firm` |
 | `engine/grants.py` | wie krijgt de taak | `resolve_with_fallbacks`, `resolve_circuits`, `zone_reasons`, `manual_conflict`, `exclusive_rival`, `stand_down` |
-| `engine/commands.py` | het commando bouwen | `build_commands`, `generator_commands`, de stopboekhouding, `collapse_shared`, `claim` |
+| `engine/commands.py` | het commando bouwen | `build_commands`, `generator_commands` |
+| `engine/command_stops.py` | de stopboekhouding en het samenvouwen | `opening_rest_bookkeeping`, `stop_blocked`, `ignores_openings`, `collapse_shared`, `claim` |
 | `engine/command_reasons.py` | waarom een apparaat niets krijgt | `was_running`, `received_heat`, `unreadable_reason`, `untouched_reason`, `opening_stop_reason`, `opening_rest_hold`, `idle_mode` |
 | `engine/zone_decisions.py` | wat een zone uiteindelijk te horen krijgt | `build_zone_decisions`, `lost_to_another_zone`, `command_order`, `clamped_target` |
 | `engine/circuit_policy.py` | de taakkeuze op een circuit | `forced_families`, `choose_family`, `any_managed_running`, `finish` |
 | `engine/capacity.py` | capaciteit en kortcyclus | `standing_claims`, `keeps_claiming`, `apply_capacity`, `apply_short_cycle` |
-| `engine/quiet.py` | het stiltevenster en de draaiende zone | `quiet_hours`, `open_quiet_windows`, `was_home_before`, `zone_running`; dit sluit de kring met `hand_start` |
+| `engine/quiet.py` | het stiltevenster en de draaiende zone | `guests_carry_the_house`, `quiet_hours`, `open_quiet_windows`, `was_home_before`, `zone_running`; dit sluit de kring met `hand_start` |
 | `engine/schedule.py` | het rooster als poort | `schedule_open`, `counts_towards_schedule` |
 | `engine/gates.py` | de poort als geheel | `closed`, de huishoudpoort, de openingen, `house_wide_blocked`, `opening_rest_until`, en `brakes_remaining` (de poort leest de handstart, niet andersom) |
 | `engine/hand_start.py` | de handstartregel | `HAND_START_BRAKES`, `brakes_readable`, `passes`, `quiet_holds`, `early_riser_holds`, `waits_for_sleeper`, `up_and_about`, `still_in_bed`; geen luie import meer |
-| `engine/serialise.py` | de ingang van de opslag | `config_from_dict`, `config_to_dict`, `opening_ids`, de lijstlezer |
+| `engine/serialise.py` | de ingang van de opslag | `config_from_dict`, `config_to_dict`, `opening_ids` |
 | `engine/installation_storage.py` | algemene installatievelden | poorten, gastenvenster, seizoenen, neerslag, ligging en het slaapvenster |
 | `engine/equipment_storage.py` | apparaten en gebieden | bron, modus, buitengrens, circuit, generator, opening en zone lezen en schrijven |
 | `engine/resident_storage.py` | de bewoner in de opslag | de bewoner plus zijn drie ochtendinstellingen |
-| `engine/storage_values.py` | opgeslagen waarden veilig lezen | de naam van `storage_helpers.py`; alle lezers krijgen een publieke naam (`as_dict`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
+| `engine/storage_values.py` | opgeslagen waarden veilig lezen | de naam van `storage_helpers.py`; alle lezers krijgen een publieke naam (`as_dict`, `items`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
 | `coordinator_surface.py` | het oppervlak van de koppeling | `CoordinatorSurface`; alle mixins lezen hier hun gastheer |
 | `coordinator.py` | de coordinator zelf | `__init__`, de eigenschappen, `async_request_evaluation`, de klok en de levensduur; hij erft de publieke mixins |
 | `coordinator_lifecycle.py` | opstarten en stoppen | `async_start`, `_async_on_hass_started`, `tracked_entities`, `_calendar_says_holiday`, `async_shutdown` |
@@ -1511,9 +1515,8 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `state_store.py` | de opslag van de koppeling | `StateStoreMixin`; `_hand_starts_payload` wordt gewoon aangeroepen |
 | `world_builder.py` | de momentopname bouwen | `WorldBuilderMixin`; de losse lezers gaan naar `entity_reading.py` |
 | `entity_reading.py` | één entiteit lezen | `reads_as_home`, `temperature_from_state`, `season_from_state`, `as_float`, `as_modes` |
-| `stored_state.py` | bewaarde momenten en eigen uitzetting | de nieuwe naam van `state_extra.py`: `stored_time`, `restore_commanded_off` |
-| `form_selectors.py` | de vorm van een formulierveld | de selectors uit `schema_fields.py`, met publieke namen (`CLIMATE`, `CLIMATE_MULTI`, `RANK`, `SECONDS`, `TEXT`, `TIME`, `band`, `choices`, `temperature`) |
-| `form_table.py` | een veldtabel naar een formulier en terug | `table_schema`, `write_table` en de lezers eromheen |
+| `stored_state.py` | bewaarde momenten en eigen uitzetting | `stored_time`, `restore_commanded_off` |
+| `schema_fields.py` | de vorm van een formulierveld en de veldtabel | de selectors (`CLIMATE`, `CLIMATE_MULTI`, `RANK`, `SECONDS`, `TEXT`, `TIME`, `band`, `choices`, `temperature`), `table_schema` en `write_table` |
 | `form_common.py` | de vaste rijen van elk scherm | `user`, `save`, `ADD`, `BACK`, `EXIT`, `EXIT_KEEP`, `EXIT_DROP`, de keuzeregels en `source_options`, `group_label`, `window_label`, `add_option`, `back_option`, `exit_row`, `managed_entities` |
 | `form_installation.py` | de installatieschermen | `settings`, `exclusives`, `exclusive`, `quiets`, `quiet` |
 | `form_zones.py` | de zoneschermen | `zones`, `zone`, `sources`, `source` |
@@ -1615,19 +1618,20 @@ alleen door het bestandspad verschuift.
 | Oud | Nieuw |
 |---|---|
 | `tests/test_campaign_editing.py` | `test_commissioning.py` (formulieren lopen, toevoegen, weigeren, bewaren, verwijderen), `test_screen_state.py` (scherm naast scherm, afronding, weggooien, lege velden, weekdagen), `test_flow_branches.py` (de schermtakken) |
-| `tests/test_campaign_live_flows.py` | `test_options_flow_live.py`, `test_setup_live.py`, `test_restart_flow_live.py`, `test_storage_live.py`, `test_entity_reading_live.py`, `test_repair_live.py`; de huisbrede lijst naar `test_house_wide_openings.py` |
-| `tests/test_campaign_live_ha.py` | `test_setup_live.py`, `test_services_live.py`, `test_lifecycle_live.py`, `test_startup_live.py`, `test_steering_live.py`, `test_controls_live.py`, `test_reporting_live.py`, `test_restart_live.py`, `test_translations_live.py`, `test_hand_live.py`, `test_storage_live.py` |
+| `tests/test_campaign_live_flows.py` | `test_options_flow_live.py`, `test_setup_live.py`, `test_restart_flow_live.py`, `test_storage_live.py`, `test_entity_reading_live.py`, `test_repair_live.py`; de huisbrede lijst naar `test_house_wide_openings_live.py` |
+| `tests/test_campaign_live_ha.py` | `test_setup_live.py`, `test_services_live.py`, `test_lifecycle_live.py`, `test_startup_half_loaded.py`, `test_steering_live.py`, `test_controls_live.py`, `test_reporting_live.py`, `test_restart_live.py`, `test_translations_live.py`, `test_hand_live.py`, `test_storage_live.py`, `test_coverage_exclusions_live.py` |
 | `tests/test_campaign_outages.py` | `test_outages.py` (de engine) en `test_outages_live.py` (de koppeling) |
-| `tests/test_campaign_settings.py` | `test_season_settings.py`, `test_household_gates_live.py`, `test_holiday_calendar_live.py`, `test_delays_live.py`, `test_circuits_live.py`, `test_shared_boiler_live.py`, `test_hand_live.py`, `test_diagnostics_live.py`, `test_multiple_installations.py` |
+| `tests/test_campaign_settings.py` | `test_season_settings.py`, `test_household_gates_live.py`, `test_holiday_calendar_live.py`, `test_delays_live.py`, `test_circuits_live.py`, `test_shared_boiler_live.py`, `test_hand_on_appliance_live.py`, `test_diagnostics_live.py`, `test_multiple_installations.py` |
 | `tests/test_campaign_weather_boundaries.py` | `test_weather_boundaries.py` |
 | `tests/test_campaign_year.py` | `test_year_simulation.py`; `BUSY` verhuist naar `tests/simulation.py` |
 | `tests/test_reachable_branches.py` | `test_flow_branches.py`, `test_options_flow_live.py`, `test_coordinator_surface.py` |
-| `tests/test_reachable_branches_deep.py` | `test_decide_branches.py`, `test_storage_branches.py`, `test_override_branches.py`, `test_entity_texts.py`, `test_shared_source_takeover.py`, `test_coverage_exclusions.py` |
+| `tests/test_reachable_branches_deep.py` | `test_decide_branches.py`, `test_storage_branches.py`, `test_override_branches.py`, `test_entity_texts.py`, `test_takeover_branches.py`, `test_coverage_exclusions.py` |
 
 De gedeelde hulpjes wonen in `tests/conftest.py` of in een van de
 hulpbestanden `tests/flow_helpers.py`, `tests/live_helpers.py`,
-`tests/guide_helpers.py`, `tests/repair_helpers.py`, `tests/guard_helpers.py`
-en `tests/coverage_helpers.py`. Geen enkel `test_*.py` importeert nog uit een
+`tests/live_fixtures.py`, `tests/guide_helpers.py`, `tests/repair_helpers.py`,
+`tests/guard_helpers.py`, `tests/override_helpers.py` en
+`tests/coverage_helpers.py`. Geen enkel `test_*.py` importeert nog uit een
 ander `test_*.py`.
 
 ### Uitbreidbaarheid — de vorm die dat mogelijk maakt
@@ -2397,7 +2401,7 @@ entity.
 
 The diagnostics also redact `sleep_in` and leave presence and sleep entities out
 of `tracked_entities`, so a download cannot reveal a resident profile through the
-entity list. `state_extra.py` carries the public `stored_time` and
+entity list. `stored_state.py` carries the public `stored_time` and
 `restore_commanded_off`; `state_store.py` stores `commanded_off` and restores it
 only within `COMMANDED_WINDOW`, so an old switch-off no longer explains a late
 report. The bypass switch writes only on a real state or name change.
@@ -2444,7 +2448,7 @@ Home Assistant (entity states, clock events)
       ▼
   coordinator          gathers states, debounces, serialises
     state_store.py     stores, restores and quarantines what a person said
-    state_extra.py     stored moments and our own switch-off
+    stored_state.py     stored moments and our own switch-off
     preconditions.py   pre-conditioning requests and their timers
     overrides.py       override with a duration and the lifting of a hand
     room_presence.py   the room gate: occupied rooms and the grace period
@@ -2483,7 +2487,7 @@ Home Assistant (entity states, clock events)
 │  diff.py        Plan vs reality → what actually has to happen    │
 │  serialise.py   dict ↔ dataclasses                               │
 │    resident_storage.py  a resident's morning settings            │
-│  validation_extra.py  validation rules outside the model         │
+│  validation.py  validation rules outside the model              │
 │  untouched.py   which zone leaves a shared appliance alone       │
 │  night.py       the night: who sleeps, since when, who gets up   │
 └──────────────────────────────────────────────────────────────────┘
@@ -2836,7 +2840,10 @@ The only place the JSON-like format of a config entry is translated into datacla
 back. Reading is deliberately forgiving: unknown keys are ignored, missing keys fall back on
 their default, and junk in a list is skipped. An entry therefore survives a version that
 adds or drops a field, instead of falling over at startup. What is structurally wrong comes
-out of `validate()`, not out of an exception here.
+out of `validate()`, not out of an exception here. The translation itself is split
+over `installation_storage.py` (general fields), `equipment_storage.py` (appliances
+and areas), `resident_storage.py` (the resident and their morning) and
+`storage_values.py` (safe reading); `serialise.py` is the entrance.
 
 Booleans are explicitly *not* read as numbers: `True` is an `int` in Python, and a priority
 of `True` would silently become 1.
@@ -3134,7 +3141,7 @@ during the outage.
 - The user decides between (a) and (b) before anything is built.
 
 **Notices name the setting in the user's language (N16).** The rules in
-`engine/validation_extra.py` fill `settings`, `window` and `label` with English words
+`engine/validation.py` fill `settings`, `window` and `label` with English words
 ("sleep window", "quiet window", "minimum cycle time"); `problems.readable` puts them
 unchanged into the translated sentence. Design: the engine supplies fixed keys instead of
 words (`wake_by`, `sleep_in_until`, `quiet_window`, ...), and the binding layer looks up the
@@ -3301,28 +3308,29 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 |---|---|---|
 | `engine/models.py` | the installation as a whole | `DirectorConfig`; the small building blocks stand in the modules below |
 | `engine/seasons.py` | season and precipitation | `Season`, `SeasonSource`, `SeasonSettings`, `PrecipitationSettings` |
-| `engine/windows.py` | time and temperature windows | `OutdoorWindow`, `TimeWindow`, `SleepIn`, `WakeDeadline`, `RiseBrake` |
-| `engine/residents.py` | the resident | `Resident` and its window readers |
-| `engine/equipment.py` | appliances and how they hang together | `SourceRole`, `Source`, `Circuit`, `Generator`, `Opening`, `HeatingLayout` |
+| `engine/windows.py` | the time window | `TimeWindow` |
+| `engine/residents.py` | the resident | `Resident`, `SleepIn`, `WakeDeadline` and `RiseBrake` |
+| `engine/equipment.py` | appliances and how they hang together | `SourceRole`, `OutdoorWindow`, `ModeSettings`, `Source`, `Circuit`, `ConflictPolicy`, `Generator`, `Opening`, `HeatingLayout` |
 | `engine/rooms.py` | the room and its gate choice | `ZoneGate`, `Zone`, `GateSettings` |
-| `engine/validation.py` | every configuration check | `Problem`, `validate()`, every rule from `models._RULES` and `validation_extra.EXTRA_RULES`, and one `RULES` list in the existing order. This is the only named module exception above the measure: one subject, one entrance, one order. |
+| `engine/validation.py` | every configuration check | `Problem`, `validate()` and one `RULES` list in the existing order. This is the only named module exception above the measure: one subject, one entrance, one order. |
 | `engine/manual_sources.py` | the one-time notice about hand-operated sources | `manual_only_problems` |
 | `engine/candidates.py` | who may take part | `handed_over`, `collect_wishes`, `serving`, the exclusive groups, `standing_firm` |
 | `engine/grants.py` | who gets the duty | `resolve_with_fallbacks`, `resolve_circuits`, `zone_reasons`, `manual_conflict`, `exclusive_rival`, `stand_down` |
-| `engine/commands.py` | building the command | `build_commands`, `generator_commands`, the stop bookkeeping, `collapse_shared`, `claim` |
+| `engine/commands.py` | building the command | `build_commands`, `generator_commands` |
+| `engine/command_stops.py` | the stop bookkeeping and collapsing | `opening_rest_bookkeeping`, `stop_blocked`, `ignores_openings`, `collapse_shared`, `claim` |
 | `engine/command_reasons.py` | why an appliance gets nothing | `was_running`, `received_heat`, `unreadable_reason`, `untouched_reason`, `opening_stop_reason`, `opening_rest_hold`, `idle_mode` |
 | `engine/zone_decisions.py` | what a zone finally hears | `build_zone_decisions`, `lost_to_another_zone`, `command_order`, `clamped_target` |
 | `engine/circuit_policy.py` | choosing the duty on a circuit | `forced_families`, `choose_family`, `any_managed_running`, `finish` |
 | `engine/capacity.py` | capacity and short cycle | `standing_claims`, `keeps_claiming`, `apply_capacity`, `apply_short_cycle` |
-| `engine/quiet.py` | the quiet window and the running zone | `quiet_hours`, `open_quiet_windows`, `was_home_before`, `zone_running`; this closes the cycle with `hand_start` |
+| `engine/quiet.py` | the quiet window and the running zone | `guests_carry_the_house`, `quiet_hours`, `open_quiet_windows`, `was_home_before`, `zone_running`; this closes the cycle with `hand_start` |
 | `engine/schedule.py` | the schedule as a gate | `schedule_open`, `counts_towards_schedule` |
 | `engine/gates.py` | the gate as a whole | `closed`, the household gate, the openings, `house_wide_blocked`, `opening_rest_until`, and `brakes_remaining` (the gate reads the hand start, never the other way round) |
 | `engine/hand_start.py` | the hand-start rule | `HAND_START_BRAKES`, `brakes_readable`, `passes`, `quiet_holds`, `early_riser_holds`, `waits_for_sleeper`, `up_and_about`, `still_in_bed`; no lazy import left |
-| `engine/serialise.py` | the entrance of storage | `config_from_dict`, `config_to_dict`, `opening_ids`, the list reader |
+| `engine/serialise.py` | the entrance of storage | `config_from_dict`, `config_to_dict`, `opening_ids` |
 | `engine/installation_storage.py` | general installation fields | gates, guest window, seasons, precipitation, layout and the sleep window |
 | `engine/equipment_storage.py` | appliances and areas | reading and writing source, mode, outdoor bound, circuit, generator, opening and zone |
 | `engine/resident_storage.py` | the resident in storage | the resident plus its three morning settings |
-| `engine/storage_values.py` | reading stored values safely | the new name of `storage_helpers.py`; every reader gets a public name (`as_dict`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
+| `engine/storage_values.py` | reading stored values safely | the new name of `storage_helpers.py`; every reader gets a public name (`as_dict`, `items`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
 | `coordinator_surface.py` | the binding layer's surface | `CoordinatorSurface`; every mixin reads its host here |
 | `coordinator.py` | the coordinator itself | `__init__`, the properties, `async_request_evaluation`, the clock and the lifetime; it inherits the public mixins |
 | `coordinator_lifecycle.py` | starting and stopping | `async_start`, `_async_on_hass_started`, `tracked_entities`, `_calendar_says_holiday`, `async_shutdown` |
@@ -3339,9 +3347,8 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `state_store.py` | the binding layer's storage | `StateStoreMixin`; `_hand_starts_payload` is called directly |
 | `world_builder.py` | building the snapshot | `WorldBuilderMixin`; the separate readers move to `entity_reading.py` |
 | `entity_reading.py` | reading one entity | `reads_as_home`, `temperature_from_state`, `season_from_state`, `as_float`, `as_modes` |
-| `stored_state.py` | stored moments and our own switch-off | the new name of `state_extra.py`: `stored_time`, `restore_commanded_off` |
-| `form_selectors.py` | the shape of a form field | the selectors from `schema_fields.py`, with public names (`CLIMATE`, `CLIMATE_MULTI`, `RANK`, `SECONDS`, `TEXT`, `TIME`, `band`, `choices`, `temperature`) |
-| `form_table.py` | a field table to a form and back | `table_schema`, `write_table` and the readers around them |
+| `stored_state.py` | stored moments and our own switch-off | `stored_time`, `restore_commanded_off` |
+| `schema_fields.py` | the shape of a form field and the field table | the selectors (`CLIMATE`, `CLIMATE_MULTI`, `RANK`, `SECONDS`, `TEXT`, `TIME`, `band`, `choices`, `temperature`), `table_schema` and `write_table` |
 | `form_common.py` | the fixed rows of every screen | `user`, `save`, `ADD`, `BACK`, `EXIT`, `EXIT_KEEP`, `EXIT_DROP`, the choice rows and `source_options`, `group_label`, `window_label`, `add_option`, `back_option`, `exit_row`, `managed_entities` |
 | `form_installation.py` | the installation screens | `settings`, `exclusives`, `exclusive`, `quiets`, `quiet` |
 | `form_zones.py` | the zone screens | `zones`, `zone`, `sources`, `source` |
@@ -3444,19 +3451,19 @@ path.
 | Old | New |
 |---|---|
 | `tests/test_campaign_editing.py` | `test_commissioning.py` (walking forms, adding, refusing, saving, deleting), `test_screen_state.py` (screen beside screen, rounding, discarding, empty fields, weekdays), `test_flow_branches.py` (the screen branches) |
-| `tests/test_campaign_live_flows.py` | `test_options_flow_live.py`, `test_setup_live.py`, `test_restart_flow_live.py`, `test_storage_live.py`, `test_entity_reading_live.py`, `test_repair_live.py`; the house-wide list to `test_house_wide_openings.py` |
-| `tests/test_campaign_live_ha.py` | `test_setup_live.py`, `test_services_live.py`, `test_lifecycle_live.py`, `test_startup_live.py`, `test_steering_live.py`, `test_controls_live.py`, `test_reporting_live.py`, `test_restart_live.py`, `test_translations_live.py`, `test_hand_live.py`, `test_storage_live.py` |
+| `tests/test_campaign_live_flows.py` | `test_options_flow_live.py`, `test_setup_live.py`, `test_restart_flow_live.py`, `test_storage_live.py`, `test_entity_reading_live.py`, `test_repair_live.py`; the house-wide list to `test_house_wide_openings_live.py` |
+| `tests/test_campaign_live_ha.py` | `test_setup_live.py`, `test_services_live.py`, `test_lifecycle_live.py`, `test_startup_half_loaded.py`, `test_steering_live.py`, `test_controls_live.py`, `test_reporting_live.py`, `test_restart_live.py`, `test_translations_live.py`, `test_hand_live.py`, `test_storage_live.py`, `test_coverage_exclusions_live.py` |
 | `tests/test_campaign_outages.py` | `test_outages.py` (the engine) and `test_outages_live.py` (the binding) |
-| `tests/test_campaign_settings.py` | `test_season_settings.py`, `test_household_gates_live.py`, `test_holiday_calendar_live.py`, `test_delays_live.py`, `test_circuits_live.py`, `test_shared_boiler_live.py`, `test_hand_live.py`, `test_diagnostics_live.py`, `test_multiple_installations.py` |
+| `tests/test_campaign_settings.py` | `test_season_settings.py`, `test_household_gates_live.py`, `test_holiday_calendar_live.py`, `test_delays_live.py`, `test_circuits_live.py`, `test_shared_boiler_live.py`, `test_hand_on_appliance_live.py`, `test_diagnostics_live.py`, `test_multiple_installations.py` |
 | `tests/test_campaign_weather_boundaries.py` | `test_weather_boundaries.py` |
 | `tests/test_campaign_year.py` | `test_year_simulation.py`; `BUSY` moves to `tests/simulation.py` |
 | `tests/test_reachable_branches.py` | `test_flow_branches.py`, `test_options_flow_live.py`, `test_coordinator_surface.py` |
-| `tests/test_reachable_branches_deep.py` | `test_decide_branches.py`, `test_storage_branches.py`, `test_override_branches.py`, `test_entity_texts.py`, `test_shared_source_takeover.py`, `test_coverage_exclusions.py` |
+| `tests/test_reachable_branches_deep.py` | `test_decide_branches.py`, `test_storage_branches.py`, `test_override_branches.py`, `test_entity_texts.py`, `test_takeover_branches.py`, `test_coverage_exclusions.py` |
 
 The shared helpers live in `tests/conftest.py` or in one of the helper files
-`tests/flow_helpers.py`, `tests/live_helpers.py`, `tests/guide_helpers.py`,
-`tests/repair_helpers.py`, `tests/guard_helpers.py` and
-`tests/coverage_helpers.py`. No `test_*.py` imports from another `test_*.py`
+`tests/flow_helpers.py`, `tests/live_helpers.py`, `tests/live_fixtures.py`,
+`tests/guide_helpers.py`, `tests/repair_helpers.py`, `tests/guard_helpers.py`,
+`tests/override_helpers.py` and `tests/coverage_helpers.py`. No `test_*.py` imports from another `test_*.py`
 any more.
 
 ### Extensibility — the shape that makes it possible

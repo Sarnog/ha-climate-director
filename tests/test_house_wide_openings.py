@@ -366,7 +366,7 @@ def test_the_house_wide_stop_keeps_fan_only_and_off() -> None:
 
     R8: only active modes are stopped; `off` and `fan_only` stay as they are.
     """
-    from custom_components.climate_director.engine.decide import _stop_blocked
+    from custom_components.climate_director.engine.command_stops import stop_blocked
     from custom_components.climate_director.engine.plan import UnitCommand
 
     config = shared_boiler(house_wide_openings=(GAS, LIVING_AIRCO))
@@ -399,7 +399,7 @@ def test_the_house_wide_stop_keeps_fan_only_and_off() -> None:
     ]
     blocked = frozenset({GAS, LIVING_AIRCO, "climate.reserve"})
 
-    result = _stop_blocked(config, world, {}, blocked, commands)
+    result = stop_blocked(config, world, {}, blocked, commands)
     by_entity = {command.entity_id: command for command in result}
 
     assert by_entity[GAS].hvac_mode == "fan_only"

@@ -431,7 +431,7 @@ FUNCTION_LIMIT = 80
 # repair live in `tests/simulation.py` and `tests/test_handed_back.py`, which have no
 # measure. The anchor (NL + EN) names the new yardstick, since the statement hangs on it.
 #
-# Wat de gebruiker tijdens het opstarten zelf doet, wint van het herstel (N5):
+# Wat de gebruiker tijdens het opstarten zelf doet, wint van het herstel:
 # `coordinator.py` 2201 → 2220 en zijn `__init__` 258 → 269 door het lid
 # `_by_hand_before_restore` (protocolregel, beginwaarde en de uitleg wat het is),
 # `state_store.py::_async_restore_state` 104 → 116 doordat het herstel van `until` en
@@ -444,7 +444,7 @@ FUNCTION_LIMIT = 80
 # `switch.py` (de overrideschakelaar) - alle drie onder hun maat, net als
 # `state_store.py` (493). Wat groeit is vooral uitleg.
 #
-# What the user does during the startup wins over the restore (N5):
+# What the user does during the startup wins over the restore:
 # `coordinator.py` 2201 → 2220 and its `__init__` 258 → 269 through the
 # `_by_hand_before_restore` member (protocol line, starting value and the
 # explanation of what it is), `state_store.py::_async_restore_state` 104 → 116
@@ -467,11 +467,8 @@ FUNCTION_LIMIT = 80
 # more, one blank line less). The new mixin and engine module stay under the
 # measure; the functions in `engine/gates.py` stay under eighty.
 MODULE_EXCEPTIONS: dict[str, int] = {
-    "engine/models.py": 2269,
-    "coordinator.py": 2069,
-    "engine/decide.py": 1800,
-    "config_flow.py": 1492,
-    "schemas.py": 893,
+    "engine/validation.py": 1288,
+    "coordinator.py": 611,
 }
 
 # De stand van de modules tussen de 500 regels en de maat van 700: de projectafspraak
@@ -489,32 +486,28 @@ MODULE_EXCEPTIONS: dict[str, int] = {
 GROWTH_FREEZE_LIMIT = 500
 
 FROZEN_MODULES: dict[str, int] = {
-    "__init__.py": 610,
     "engine/constraints.py": 618,
-    "engine/gates.py": 623,
-    "engine/serialise.py": 637,
-    "problems.py": 640,
     "state_store.py": 485,
-    "texts.py": 622,
     "world_builder.py": 553,
 }
 
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
-    ("engine/decide.py", "_build_commands"): 208,
-    ("engine/decide.py", "_generator_commands"): 192,
+    ("engine/commands.py", "build_commands"): 208,
+    ("engine/commands.py", "generator_commands"): 192,
     ("coordinator.py", "__init__"): 285,
-    ("engine/models.py", "_rule_zones"): 164,
+    ("engine/validation.py", "_rule_zones"): 164,
     ("engine/constraints.py", "resolve"): 128,
-    ("engine/decide.py", "_collect_wishes"): 137,
-    ("coordinator.py", "_refusal_data"): 119,
-    ("coordinator.py", "_notice_hand"): 137,
-    ("engine/decide.py", "_build_zone_decisions"): 135,
-    ("engine/decide.py", "_manual_conflict"): 103,
+    ("engine/candidates.py", "collect_wishes"): 137,
+    ("coordinator_events.py", "_refusal_data"): 124,
+    ("coordinator_round.py", "_async_evaluate"): 82,
+    ("coordinator_tracking.py", "_notice_hand"): 139,
+    ("engine/zone_decisions.py", "build_zone_decisions"): 135,
+    ("flow_residents.py", "resident"): 95,
+    ("engine/grants.py", "manual_conflict"): 103,
     ("state_store.py", "_async_restore_state"): 126,
     ("state_store.py", "_restore_overrides"): 81,
     ("engine/hysteresis.py", "_candidate"): 97,
-    ("config_flow.py", "async_step_resident"): 97,
-    ("engine/decide.py", "_resolve_with_fallbacks"): 91,
+    ("engine/grants.py", "resolve_with_fallbacks"): 91,
     ("preconditions.py", "async_precondition"): 89,
     ("diagnostics.py", "async_get_config_entry_diagnostics"): 82,
 }
@@ -537,7 +530,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # explanations, not deeply branched functions; the limit is a readability limit and
 # this explanation belongs with the code.
 #
-# De nalooptijd begint alleen bij een echte overgang naar leeg (N8):
+# De nalooptijd begint alleen bij een echte overgang naar leeg:
 # `coordinator.py` 2220 → 2305 en zijn `__init__` 269 → 285 door het lid
 # `_empty_since` (protocolregel, beginwaarde en de uitleg wat het is) en
 # `_notice_room_empty` met de uitleg waarom `unavailable` en `unknown` geen
@@ -548,7 +541,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # naar de moduledocstring, waar de keuze staat: het moment valt onder `presence`
 # en is daar weggelakt. Wat groeit is vooral uitleg.
 #
-# The grace period starts only at a real transition to empty (N8):
+# The grace period starts only at a real transition to empty:
 # `coordinator.py` 2220 → 2305 and its `__init__` 269 → 285 through the
 # `_empty_since` member (protocol line, starting value and the explanation of
 # what it is) and `_notice_room_empty` with the explanation of why `unavailable`
@@ -559,7 +552,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # to the module docstring, where the choice stands: the moment falls under
 # `presence` and is redacted there. What grows is mostly explanation.
 #
-# Een override heft de hand van zijn zone bij het begin op (N6):
+# Een override heft de hand van zijn zone bij het begin op:
 # `coordinator.py` 2305 → 2306 door de protocolregel `_lift_hand`;
 # `state_store.py::_async_restore_state` 153 → 166 doordat een opgeslagen hand
 # van een zone met een override na het herstel niet terugkomt - ook niet als de
@@ -569,7 +562,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # de aanroep de lege regel vervangt, en `switch.py` blijft onder zijn maat. Wat
 # groeit is vooral uitleg.
 #
-# An override lifts its zone's hand at the beginning (N6):
+# An override lifts its zone's hand at the beginning:
 # `coordinator.py` 2305 → 2306 through the protocol line `_lift_hand`;
 # `state_store.py::_async_restore_state` 153 → 166 because a stored hand of a
 # zone with an override does not come back after the restore - also not when the
@@ -579,7 +572,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # because the call replaces the blank line, and `switch.py` stays below its
 # measure. What grows is mostly explanation.
 #
-# Wat er tijdens het opstarten gebeurt, telt per soort (N7): `coordinator.py`
+# Wat er tijdens het opstarten gebeurt, telt per soort: `coordinator.py`
 # 2306 → 2318 en zijn `__init__` 285 → 293 door twee notities in plaats van één
 # (twee protocolregels, twee beginwaarden en de uitleg per soort);
 # `state_store.py::_restore_overrides` 80 → 81 doordat het alleen de
@@ -587,7 +580,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # gelijk: het herstel van `until` leest de verzoeknotitie op dezelfde plek. Wat
 # groeit is vooral uitleg.
 #
-# What happens during the startup counts per kind (N7): `coordinator.py`
+# What happens during the startup counts per kind: `coordinator.py`
 # 2306 → 2318 and its `__init__` 285 → 293 through two notes instead of one (two
 # protocol lines, two starting values and the explanation per kind);
 # `state_store.py::_restore_overrides` 80 → 81 because it reads only the
@@ -595,25 +588,25 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # the same: the restore of `until` reads the request note in the same place.
 # What grows is mostly explanation.
 #
-# De kamerpoort woont in `room_presence.py` (N9): `coordinator.py` 2318 → 2250
+# De kamerpoort woont in `room_presence.py`: `coordinator.py` 2318 → 2250
 # en zijn `__init__` 293 → 285 doordat het leeg-moment en de bezette kamers daar
 # wonen; `state_store.py::_async_restore_state` 166 → 139 doordat het herstel
-# daarheen verhuist. N10 bracht die functie op 138: de verse-overridecontrole
+# daarheen verhuist. Daarna bracht een latere split die functie op 138: de verse-overridecontrole
 # past in de bestaande regel. De nieuwe module blijft onder de maat. De ratel
 # zakt mee.
 #
-# The room gate lives in `room_presence.py` (N9): `coordinator.py` 2318 → 2250
+# The room gate lives in `room_presence.py`: `coordinator.py` 2318 → 2250
 # and its `__init__` 293 → 285 because the empty moment and occupied rooms live
 # there; `state_store.py::_async_restore_state` 166 → 139 because its restore
-# moved there. N10 brought that function to 138: the fresh-override check fits
+# moved there. A later split brought that function to 138: the fresh-override check fits
 # in the existing line. The new module stays below the measure. The ratchet
 # comes down with it.
 #
-# N11: `engine/decide.py` 1811 → 1810 en `_resolve_with_fallbacks` 92 → 91
+# `engine/decide.py` 1811 → 1810 en `_resolve_with_fallbacks` 92 → 91
 # doordat de begrensde for-lus een while-lus werd die bij een ronde zonder
 # verschuiving stopt; de functie groeit niet en de ratel zakt mee.
 #
-# N11: `engine/decide.py` 1811 → 1810 and `_resolve_with_fallbacks` 92 → 91
+# `engine/decide.py` 1811 → 1810 and `_resolve_with_fallbacks` 92 → 91
 # because the bounded for loop became a while loop that stops at a round without
 # a move; the function does not grow and the ratchet comes down with it.
 #

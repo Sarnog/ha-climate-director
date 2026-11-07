@@ -16,12 +16,11 @@ module owns that rule; `gates.py` merely asks it.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import replace
 
-from .families import MODE_OFF
 from .models import DirectorConfig, Resident, Zone
 from .night import asleep, slept_tonight
 from .plan import Plan, Reason
+from .quiet import quiet_hours, zone_running
 from .world import ReadableInput, UnreadableInput, WorldState
 
 #: De enige drie poorten die een handstart opzij zet.
@@ -82,49 +81,6 @@ def passes(world: WorldState, zone_id: str, reason: Reason) -> bool:
     return zone_id in world.zone_hand_starts and reason in HAND_START_BRAKES
 
 
-def brakes_remaining(
-    config: DirectorConfig, world: WorldState, zone: Zone, previous: Plan | None
-) -> frozenset[Reason]:
-    """Return the three brakes that still hold this zone without its hand start.
-
-    De wereld wordt voor deze ene zone van haar handstart ontdaan en opnieuw
-    door de poorten gehaald. Haar eigen apparaten tellen daarbij als uit: een
-    zone die al draait passeert het stiltevenster en de opsta-rem, maar dat is
-    juist de zone die na de eerste stop weer moet kunnen starten. Wat daarvan
-    overblijft is precies de vraag of de handstart nog iets doet: is de
-    verzameling leeg, dan vervalt hij in deze ronde. De andere poorten tellen
-    hier bewust niet mee - een open raam houdt de zone tegen, maar maakt de
-    handstart niet overbodig.
-
-    The world is stripped of this one zone's hand start and put through the
-    gates again. Its own appliances count as off there: a zone already running
-    passes the quiet window and the rise brake, but that is exactly the zone
-    that must be able to start again after the first stop. What remains is
-    exactly the question whether the hand start still does anything: when the
-    set is empty it lapses this round. The other gates deliberately do not count
-    here - an open window holds the zone back, but does not make the hand start
-    superfluous.
-    """
-    # Lazy, want `gates` importeert deze module voor `passes` en de twee
-    # slaaphulpen. Een import bovenaan zou een kring maken.
-    #
-    # Lazy, since `gates` imports this module for `passes` and the two sleep
-    # helpers. An import at the top would make a cycle.
-    from .gates import closed
-
-    climates = dict(world.climates)
-    for source in zone.sources:
-        state = climates.get(source.entity_id)
-        if state is not None:
-            climates[source.entity_id] = replace(state, hvac_mode=MODE_OFF)
-    without = replace(
-        world,
-        climates=climates,
-        zone_hand_starts=world.zone_hand_starts - {zone.zone_id},
-    )
-    return frozenset(closed(config, without, zone, previous)) & HAND_START_BRAKES
-
-
 def quiet_holds(
     config: DirectorConfig, world: WorldState, zone: Zone, previous: Plan | None
 ) -> bool:
@@ -139,8 +95,6 @@ def quiet_holds(
     The private readers come lazily from `gates`, since that module imports this
     one.
     """
-    from .gates import quiet_hours, zone_running
-
     return (
         not passes(world, zone.zone_id, Reason.QUIET_HOURS)
         and quiet_hours(config, world)

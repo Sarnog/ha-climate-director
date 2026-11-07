@@ -17,11 +17,13 @@ half-filled field is not "at midnight".
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import time
 from typing import Any
 
-from .models import RiseBrake, SleepIn, WakeDeadline
-from .storage_helpers import bool_or, time_or, weekdays
+from .installation_storage import sleep_window, time_window
+from .models import Resident, RiseBrake, SleepIn, WakeDeadline
+from .storage_values import as_dict, bool_or, items, text, time_or, weekdays
 
 
 def sleep_in_from(raw: dict[str, Any]) -> SleepIn | None:
@@ -101,3 +103,53 @@ def rise_brake_to_dict(brake: RiseBrake | None) -> dict[str, Any] | None:
     if brake is None:
         return None
     return {"at": brake.at.isoformat(), "weekdays": _days(brake.weekdays)}
+
+
+def resident(raw: Mapping[str, Any]) -> Resident:
+    return Resident(
+        resident_id=text(raw.get("resident_id")),
+        name=text(raw.get("name")),
+        windows=tuple(time_window(item) for item in items(raw, "windows")),
+        presence_entity=text(raw.get("presence_entity")),
+        sleep_entity=text(raw.get("sleep_entity")),
+        sleep_state=text(raw.get("sleep_state")) or "on",
+        sleep_window=sleep_window(as_dict(raw.get("sleep_window"))),
+        sleep_in=sleep_in_from(as_dict(raw.get("sleep_in"))),
+        wake_deadline=wake_deadline_from(as_dict(raw.get("wake_deadline"))),
+        rise_brake=rise_brake_from(as_dict(raw.get("rise_brake"))),
+    )
+
+
+def resident_to_dict(resident: Resident) -> dict[str, Any]:
+    return {
+        "resident_id": resident.resident_id,
+        "name": resident.name,
+        "presence_entity": resident.presence_entity,
+        "sleep_entity": resident.sleep_entity,
+        "sleep_state": resident.sleep_state,
+        "sleep_window": (
+            None
+            if resident.sleep_window is None
+            else {
+                "start": resident.sleep_window.start.isoformat(),
+                "end": resident.sleep_window.end.isoformat(),
+                "weekdays": (
+                    None
+                    if resident.sleep_window.weekdays is None
+                    else sorted(resident.sleep_window.weekdays)
+                ),
+            }
+        ),
+        "sleep_in": sleep_in_to_dict(resident.sleep_in),
+        "wake_deadline": wake_deadline_to_dict(resident.wake_deadline),
+        "rise_brake": rise_brake_to_dict(resident.rise_brake),
+        "windows": [
+            {
+                "start": window.start.strftime("%H:%M:%S"),
+                "end": window.end.strftime("%H:%M:%S"),
+                "weekdays": (None if window.weekdays is None else sorted(window.weekdays)),
+                "holiday": window.holiday,
+            }
+            for window in resident.windows
+        ],
+    }

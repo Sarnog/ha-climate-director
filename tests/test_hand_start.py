@@ -167,7 +167,7 @@ class TestQuietHours:
             LIVING,
         )
         assert gate(config, world) == ()
-        assert hand_start.brakes_remaining(config, world, living(config), None) == frozenset(
+        assert gates.brakes_remaining(config, world, living(config), None) == frozenset(
             {Reason.QUIET_HOURS}
         )
 
@@ -198,7 +198,7 @@ class TestWhenTheHandStartStopsDoingSomething:
             ),
             LIVING,
         )
-        assert hand_start.brakes_remaining(config, world, living(config), None) == frozenset(
+        assert gates.brakes_remaining(config, world, living(config), None) == frozenset(
             {Reason.WAITING_FOR_SLEEPER}
         )
 
@@ -214,7 +214,7 @@ class TestWhenTheHandStartStopsDoingSomething:
             ),
             LIVING,
         )
-        assert hand_start.brakes_remaining(config, world, living(config), None) == frozenset()
+        assert gates.brakes_remaining(config, world, living(config), None) == frozenset()
 
     def test_it_passes_only_the_three_waiting_reasons(self) -> None:
         """Geen enkele andere reden gaat door de handstartpoort."""
@@ -243,7 +243,7 @@ class TestWhenTheHandStartStopsDoingSomething:
         config = house()
         world = with_hand_start(make_world(residents=everyone_up()), LIVING)
         assert gate(config, world) == ()
-        assert hand_start.brakes_remaining(config, world, living(config), None) == frozenset()
+        assert gates.brakes_remaining(config, world, living(config), None) == frozenset()
 
 
 class TestUnreadableInputs:
@@ -260,7 +260,7 @@ class TestUnreadableInputs:
             LIVING,
         )
         assert hand_start.brakes_readable(config, world) is True
-        assert hand_start.brakes_remaining(config, world, living(config), None) == frozenset(
+        assert gates.brakes_remaining(config, world, living(config), None) == frozenset(
             {Reason.WAITING_FOR_SLEEPER}
         )
 
@@ -284,7 +284,7 @@ class TestUnreadableInputs:
             LIVING,
         )
         assert gate(config, world) == ()
-        assert hand_start.brakes_remaining(config, world, living(config), None) == frozenset()
+        assert gates.brakes_remaining(config, world, living(config), None) == frozenset()
         assert hand_start.brakes_readable(config, world) is False
 
     def test_an_unreadable_presence_entity_blocks_the_recheck(self) -> None:
@@ -307,7 +307,7 @@ class TestUnreadableInputs:
             LIVING,
         )
         assert gate(config, world) == ()
-        assert hand_start.brakes_remaining(config, world, living(config), None) == frozenset()
+        assert gates.brakes_remaining(config, world, living(config), None) == frozenset()
         assert hand_start.brakes_readable(config, world) is False
 
     def test_a_sensor_the_installation_does_not_use_does_not_block(self) -> None:

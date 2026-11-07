@@ -733,10 +733,10 @@ class _HandStandIn:
         self._sent_setpoints: dict[str, tuple[str, float]] = {}
         self.saved = 0
         self.hass = _Hass(sim)
-        # De simulatie kent geen vakantieagenda. `_everyone_asleep` vraagt er
+        # De simulatie kent geen vakantieagenda. `everyone_asleep` vraagt er
         # sinds het uitslapen naar, dus de stand-in draagt het antwoord.
         #
-        # The simulation has no holiday calendar. `_everyone_asleep` asks for one
+        # The simulation has no holiday calendar. `everyone_asleep` asks for one
         # since sleeping in arrived, so the stand-in carries the answer.
         self.holiday_mode = False
 
@@ -744,11 +744,11 @@ class _HandStandIn:
         return False
 
     _notice_hand = ClimateDirectorCoordinator._notice_hand
-    _zones_of = ClimateDirectorCoordinator._zones_of
+    zones_of = ClimateDirectorCoordinator.zones_of
     _we_wanted_it_off = ClimateDirectorCoordinator._we_wanted_it_off
     _we_wanted_it_on = ClimateDirectorCoordinator._we_wanted_it_on
-    _everyone_asleep = ClimateDirectorCoordinator._everyone_asleep
-    _house_is_empty = ClimateDirectorCoordinator._house_is_empty
+    everyone_asleep = ClimateDirectorCoordinator.everyone_asleep
+    house_is_empty = ClimateDirectorCoordinator.house_is_empty
 
     def _async_save_state(self) -> None:
         self.saved += 1
@@ -768,7 +768,7 @@ class _HandStandIn:
             )
             for resident in self.config.residents
         }
-        return ClimateDirectorCoordinator._zones_handed_back(self, now, residents)
+        return ClimateDirectorCoordinator.zones_handed_back(self, now, residents)
 
     def notice(self, entity_id: str, was: str, now: str) -> None:
         """Feed one hand-operated change into the real bookkeeping."""
@@ -825,11 +825,11 @@ class _Event:
 def run_month(scenario: Scenario, *, seed: int) -> Simulation:
     """Run one scenario with the coordinator's clock moving along.
 
-    `_zones_handed_back` kijkt naar de dag van vandaag. Zonder die klok mee te
+    `zones_handed_back` kijkt naar de dag van vandaag. Zonder die klok mee te
     laten lopen vervalt een handmatige uitzetting nooit, en dan test een maand
     op dat punt niets.
 
-    `_zones_handed_back` looks at today's date. Without moving that clock along
+    `zones_handed_back` looks at today's date. Without moving that clock along
     a hand-back never lapses, and then a month tests nothing on that point.
     """
     import pytest
@@ -844,3 +844,21 @@ def run_month(scenario: Scenario, *, seed: int) -> Simulation:
             holder["now"] = simulation.now + scenario.step
             simulation.step()
     return simulation
+
+
+#: De drukke doorsnee: veel gebeurtenissen per dag, voor de lange doorlopen.
+#: The busy average: many events per day, for the long runs.
+BUSY = Profile(
+    drops_out=0.005,
+    comes_back=0.04,
+    by_hand=0.02,
+    requests=0.006,
+    cancels=0.002,
+    override=0.005,
+    override_back=0.05,
+    priority=0.006,
+    guest=0.004,
+    holiday=0.003,
+    window_opens=0.015,
+    presence_flips=0.05,
+)

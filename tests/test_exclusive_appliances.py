@@ -42,7 +42,7 @@ from custom_components.climate_director.engine import (
     decide,
     validate,
 )
-from custom_components.climate_director.engine.decide import _group_holder
+from custom_components.climate_director.engine.candidates import group_holder
 from custom_components.climate_director.engine.families import family_of
 
 NOON = datetime(2026, 3, 9, 12, 0)
@@ -283,5 +283,5 @@ def test_the_weaker_hand_operated_holder_does_not_take_the_group() -> None:
     )
     config = DirectorConfig(zones=(strong, weak))
     world = make_world(climates={"climate.s": "heat", "climate.z": "heat"})
-    holder = _group_holder(config, world, frozenset({"climate.s", "climate.z"}))
+    holder = group_holder(config, world, frozenset({"climate.s", "climate.z"}))
     assert holder == ("climate.s", (0, "sterk"))

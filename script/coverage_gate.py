@@ -131,7 +131,7 @@ EXCLUSION_HINT = (
 #: zonder dat iemand hem noemt. Daarom staat hieronder elke statementregel met
 #: zijn eigen inhoud — de `...`-stubs van `coordinator.py` (het
 #: `CoordinatorSurface`-protocol, dat alleen voor de typecontrole bestaat) en
-#: drie in elk van de zeven mixins die dat protocol onder `TYPE_CHECKING`
+#: drie in elk van de acht mixins die dat protocol onder `TYPE_CHECKING`
 #: importeren (die tak is bij het draaien nooit waar). De poort
 #: eist dat de lijst precies klopt: een regel die buiten de meting valt zonder
 #: hier te staan laat hem vallen, en een naam die niets meer verbergt ook.
@@ -154,7 +154,25 @@ EXCLUSION_HINT = (
 #: measurement without standing here drops it, and so does a name that hides
 #: nothing anymore.
 NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {
-    "coordinator.py": (
+    "coordinator_events.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import ClimateDirectorCoordinator",
+    ),
+    "coordinator_lifecycle.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import ClimateDirectorCoordinator",
+    ),
+    "coordinator_reporting.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import ClimateDirectorCoordinator",
+    ),
+    "coordinator_round.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import ClimateDirectorCoordinator",
+    ),
+    "coordinator_surface.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import ClimateDirectorEntry",
         "def entry(self) -> ClimateDirectorEntry: ...",
         "def async_request_evaluation(self) -> None: ...",
         "def _async_save_state(self) -> None: ...",
@@ -173,42 +191,90 @@ NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {
         "def _calendar_says_holiday(self) -> bool: ...",
         "def _resident(",
         ") -> ResidentState: ...",
-        "def _zones_handed_back(",
-        ") -> set[str]: ...",
+        "def zones_handed_back(self, now: datetime, residents: dict[str, ResidentState]) "
+        "-> set[str]: ...",
+        "def everyone_asleep(self, now: datetime, residents: dict[str, ResidentState]) "
+        "-> bool: ...",
+        "def house_is_empty(self, residents: dict[str, ResidentState]) -> bool: ...",
+    ),
+    "coordinator_tracking.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator import ClimateDirectorCoordinator",
+    ),
+    "flow_circuits.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
+    "flow_generators.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
+    "flow_installation.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
+    "flow_openings.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
+    "flow_residents.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
+    "flow_sources.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
+    "flow_windows.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
+    "flow_zones.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
+    "form_installation.py": (
+        "if TYPE_CHECKING:",
+        "from .config_flow import ClimateDirectorOptionsFlow",
+    ),
+    "hand.py": (
+        "if TYPE_CHECKING:",
+        "from .coordinator_surface import CoordinatorSurface",
+        "_CoordinatorBase = CoordinatorSurface",
     ),
     "hand_start.py": (
         "if TYPE_CHECKING:",
-        "from .coordinator import CoordinatorSurface",
+        "from .coordinator_surface import CoordinatorSurface",
         "_CoordinatorBase = CoordinatorSurface",
     ),
     "overrides.py": (
         "if TYPE_CHECKING:",
-        "from .coordinator import CoordinatorSurface",
+        "from .coordinator_surface import CoordinatorSurface",
         "_CoordinatorBase = CoordinatorSurface",
     ),
     "preconditions.py": (
         "if TYPE_CHECKING:",
-        "from .coordinator import CoordinatorSurface",
+        "from .coordinator_surface import CoordinatorSurface",
         "_CoordinatorBase = CoordinatorSurface",
     ),
     "resident_reader.py": (
         "if TYPE_CHECKING:",
-        "from .coordinator import CoordinatorSurface",
+        "from .coordinator_surface import CoordinatorSurface",
         "_CoordinatorBase = CoordinatorSurface",
     ),
     "room_presence.py": (
         "if TYPE_CHECKING:",
-        "from .coordinator import CoordinatorSurface",
+        "from .coordinator_surface import CoordinatorSurface",
         "_CoordinatorBase = CoordinatorSurface",
     ),
     "state_store.py": (
         "if TYPE_CHECKING:",
-        "from .coordinator import CoordinatorSurface",
+        "from .coordinator_surface import CoordinatorSurface",
         "_CoordinatorBase = CoordinatorSurface",
     ),
     "world_builder.py": (
         "if TYPE_CHECKING:",
-        "from .coordinator import CoordinatorSurface",
+        "from .coordinator_surface import CoordinatorSurface",
         "_CoordinatorBase = CoordinatorSurface",
     ),
 }

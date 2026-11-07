@@ -1,261 +1,34 @@
-"""Configuratie omzetten van en naar platte dicts.
+"""De ingang van de opslag: een installatie van en naar een platte dict.
 
-Converting the configuration to and from plain dicts.
-
-Een Home Assistant config entry bewaart JSON-achtige data: dicts, lijsten,
-strings en getallen. Deze module is de enige plek waar dat formaat naar de
-dataclasses van `models.py` vertaald wordt, en terug.
-
-Het lezen is bewust vergevingsgezind: onbekende sleutels worden genegeerd en
-ontbrekende sleutels vallen terug op de standaardwaarde. Een config entry
-overleeft zo een versie waarin een veld bijkomt of verdwijnt, in plaats van bij
-het opstarten om te vallen. Wat structureel niet klopt komt uit `validate()`,
-niet uit een exception hier.
-
-A Home Assistant config entry stores JSON-like data: dicts, lists, strings and
-numbers. This module is the only place that format is translated into the
-dataclasses of `models.py`, and back.
-
-Reading is deliberately forgiving: unknown keys are ignored and missing keys
-fall back to their default. A config entry therefore survives a version that
-adds or drops a field, instead of falling over at startup. What is structurally
-wrong comes out of `validate()`, not out of an exception here.
+The entrance of storage: an installation to and from a plain dict.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from datetime import time
 from typing import Any
 
-from .fields import GATES_FLAT_FIELDS, GUEST_WINDOW_FIELDS, SOURCE_FIELDS, target_key
-from .models import (
-    Circuit,
-    ConflictPolicy,
-    DirectorConfig,
-    GateSettings,
-    Generator,
-    HeatingLayout,
-    ModeSettings,
-    Opening,
-    OutdoorWindow,
-    PrecipitationSettings,
-    Resident,
-    Season,
-    SeasonSettings,
-    SeasonSource,
-    Source,
-    SourceRole,
-    TimeWindow,
-    Zone,
-    ZoneGate,
+from .equipment_storage import (
+    circuit,
+    circuit_to_dict,
+    generator,
+    generator_to_dict,
+    opening,
+    opening_to_dict,
+    zone,
+    zone_to_dict,
 )
-from .resident_storage import (
-    rise_brake_from,
-    rise_brake_to_dict,
-    sleep_in_from,
-    sleep_in_to_dict,
-    wake_deadline_from,
-    wake_deadline_to_dict,
+from .installation_storage import (
+    gates,
+    gates_flat_to_dict,
+    guest_window_to_dict,
+    layout,
+    precipitation,
+    seasons,
 )
-from .storage_helpers import (
-    as_dict,
-    bool_or,
-    choice,
-    float_or,
-    int_or,
-    is_number,
-    optional_float,
-    optional_int,
-    seconds_or,
-    sequence,
-    strings,
-    text,
-    time_or,
-    weekdays,
-)
-from .table_storage import dict_from, parse_leaf, values_from, write_leaf
-
-
-def config_from_dict(raw: Mapping[str, Any]) -> DirectorConfig:
-    """Return the installation described by `raw`."""
-    stored_openings = _items(raw, "openings")
-    openings = [
-        _opening(item, opening_id)
-        for item, opening_id in zip(stored_openings, opening_ids(stored_openings), strict=True)
-    ]
-    return DirectorConfig(
-        zones=tuple(_zone(item) for item in _items(raw, "zones")),
-        circuits=tuple(_circuit(item) for item in _items(raw, "circuits")),
-        residents=tuple(_resident(item) for item in _items(raw, "residents")),
-        openings=tuple(openings),
-        house_wide_openings=tuple(strings(raw.get("house_wide_openings"))),
-        generators=tuple(_generator(item) for item in _items(raw, "generators")),
-        exclusive_groups=tuple(
-            frozenset(strings(group)) for group in sequence(raw.get("exclusive_groups"))
-        ),
-        gates=_gates(raw.get("gates")),
-        seasons=_seasons(raw.get("seasons")),
-        precipitation=_precipitation(raw.get("precipitation")),
-        heating_layout=_layout(raw),
-        outdoor_sensor=text(raw.get("outdoor_sensor")),
-        outdoor_hysteresis=float_or(raw.get("outdoor_hysteresis"), 0.5),
-        stuck_after=seconds_or(raw.get("stuck_after"), 900.0),
-        holiday_calendars=tuple(strings(raw.get("holiday_calendars"))),
-        holiday_keyword=text(raw.get("holiday_keyword")),
-    )
-
-
-def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
-    """Return `config` as data a config entry can store.
-
-    Round-trips through `config_from_dict` unchanged, which is what lets the
-    options flow read the stored configuration, hand a modified copy back and
-    trust that nothing was quietly dropped along the way.
-    """
-    return {
-        "zones": [_zone_to_dict(zone) for zone in config.zones],
-        "circuits": [_circuit_to_dict(circuit) for circuit in config.circuits],
-        "residents": [_resident_to_dict(resident) for resident in config.residents],
-        "openings": [_opening_to_dict(opening) for opening in config.openings],
-        "house_wide_openings": list(config.house_wide_openings),
-        "generators": [_generator_to_dict(item) for item in config.generators],
-        "exclusive_groups": [sorted(group) for group in config.exclusive_groups],
-        "gates": {
-            **_gates_flat_to_dict(config.gates),
-            "quiet_windows": [
-                {
-                    "start": window.start.isoformat(),
-                    "end": window.end.isoformat(),
-                    "weekdays": (None if window.weekdays is None else sorted(window.weekdays)),
-                    # De lezer kent deze vlag al; hem hier vergeten maakte van
-                    # een vakantievenster stilletjes een gewoon venster zodra de
-                    # configuratie werd teruggeschreven.
-                    #
-                    # The reader already knows this flag; forgetting it here
-                    # quietly turned a holiday window into an ordinary one the
-                    # moment the configuration was written back.
-                    "holiday": window.holiday,
-                }
-                for window in config.gates.quiet_windows
-            ],
-            "guest_window": _guest_window_to_dict(config.gates.guest_window),
-        },
-        "seasons": {
-            "source": config.seasons.source.value,
-            "entity_id": config.seasons.entity_id,
-            "summer_months": sorted(config.seasons.summer_months),
-        },
-        "precipitation": {
-            "source": config.precipitation.source,
-            "states": sorted(config.precipitation.states),
-            "grace": int(config.precipitation.grace.total_seconds()),
-        },
-        "heating_layout": config.heating_layout.value,
-        "outdoor_sensor": config.outdoor_sensor,
-        "outdoor_hysteresis": config.outdoor_hysteresis,
-        "stuck_after": int(config.stuck_after.total_seconds()),
-        "holiday_calendars": list(config.holiday_calendars),
-        "holiday_keyword": config.holiday_keyword,
-    }
-
-
-# ---------------------------------------------------------------------------
-# Lezen / reading
-# ---------------------------------------------------------------------------
-
-
-def _zone(raw: Mapping[str, Any]) -> Zone:
-    return Zone(
-        zone_id=text(raw.get("zone_id")),
-        name=text(raw.get("name")),
-        indoor_sensor=text(raw.get("indoor_sensor")),
-        sources=tuple(_source(item) for item in _items(raw, "sources")),
-        priority=int_or(raw.get("priority"), 0),
-        heat=_mode(raw.get("heat")),
-        cool=_mode(raw.get("cool")),
-        gate=choice(ZoneGate, raw.get("gate"), ZoneGate.HOUSEHOLD),
-        presence_entity=text(raw.get("presence_entity")),
-        presence_state=text(raw.get("presence_state")) or "on",
-        presence_timeout=seconds_or(raw.get("presence_timeout")),
-        ignore_precipitation=bool_or(raw.get("ignore_precipitation"), False),
-    )
-
-
-def _source(raw: Mapping[str, Any]) -> Source:
-    """Return one source, its fields read from `SOURCE_FIELDS`.
-
-    Alleen `source_id` staat er niet in: dat is identiteit en geen veld van het
-    scherm. / Only `source_id` is not in it: that is identity, not a field of
-    the screen.
-    """
-    return Source(source_id=text(raw.get("source_id")), **values_from(SOURCE_FIELDS, raw, Source))
-
-
-def _mode(raw: Any) -> ModeSettings | None:
-    """Return mode settings, or `None` when the zone does not offer this duty."""
-    if not isinstance(raw, Mapping):
-        return None
-    seasons = raw.get("seasons")
-    return ModeSettings(
-        target=float_or(raw.get("target"), 21.0),
-        start_at=float_or(raw.get("start_at"), 21.0),
-        hysteresis=float_or(raw.get("hysteresis"), 1.0),
-        outdoor=_window(raw.get("outdoor")),
-        seasons=(
-            None
-            if seasons is None
-            else frozenset(choice(Season, item, Season.UNKNOWN) for item in strings(seasons))
-        ),
-    )
-
-
-def _window(raw: Any) -> OutdoorWindow:
-    if not isinstance(raw, Mapping):
-        return OutdoorWindow()
-    return OutdoorWindow(
-        minimum=optional_float(raw.get("minimum")),
-        maximum=optional_float(raw.get("maximum")),
-    )
-
-
-def _circuit(raw: Mapping[str, Any]) -> Circuit:
-    return Circuit(
-        circuit_id=text(raw.get("circuit_id")),
-        name=text(raw.get("name")),
-        units=tuple(strings(raw.get("units"))),
-        simultaneous_heat_cool=bool_or(raw.get("simultaneous_heat_cool"), False),
-        conflict_policy=choice(ConflictPolicy, raw.get("conflict_policy"), ConflictPolicy.PRIORITY),
-        allow_fan_only_during_conflict=bool_or(raw.get("allow_fan_only_during_conflict"), False),
-        family_switch_delay=seconds_or(raw.get("family_switch_delay")),
-        min_family_switch_interval=seconds_or(raw.get("min_family_switch_interval")),
-        min_cycle_time=seconds_or(raw.get("min_cycle_time")),
-        max_concurrent_units=optional_int(raw.get("max_concurrent_units")),
-    )
-
-
-def _resident(raw: Mapping[str, Any]) -> Resident:
-    return Resident(
-        resident_id=text(raw.get("resident_id")),
-        name=text(raw.get("name")),
-        windows=tuple(_time_window(item) for item in _items(raw, "windows")),
-        presence_entity=text(raw.get("presence_entity")),
-        sleep_entity=text(raw.get("sleep_entity")),
-        sleep_state=text(raw.get("sleep_state")) or "on",
-        sleep_window=_sleep_window(as_dict(raw.get("sleep_window"))),
-        sleep_in=sleep_in_from(as_dict(raw.get("sleep_in"))),
-        wake_deadline=wake_deadline_from(as_dict(raw.get("wake_deadline"))),
-        rise_brake=rise_brake_from(as_dict(raw.get("rise_brake"))),
-    )
-
-
-def _time_window(raw: Mapping[str, Any]) -> TimeWindow:
-    return TimeWindow(
-        holiday=bool_or(raw.get("holiday"), False),
-        start=time_or(raw.get("start"), time(0, 0)),
-        end=time_or(raw.get("end"), time(0, 0)),
-        weekdays=weekdays(raw.get("weekdays")),
-    )
+from .models import DirectorConfig
+from .resident_storage import resident, resident_to_dict
+from .storage_values import float_or, items, seconds_or, sequence, strings, text
 
 
 def opening_ids(items: Iterable[Mapping[str, Any]]) -> list[str]:
@@ -296,342 +69,84 @@ def opening_ids(items: Iterable[Mapping[str, Any]]) -> list[str]:
     return ids
 
 
-def _opening(raw: Mapping[str, Any], opening_id: str) -> Opening:
-    """Return one opening, with the id handed in by `opening_ids`."""
-    entity_id = text(raw.get("entity_id"))
-    return Opening(
-        entity_id=entity_id,
-        zone_ids=tuple(strings(raw.get("zone_ids"))),
-        open_state=text(raw.get("open_state")) or "on",
-        delay=seconds_or(raw.get("delay")),
-        opening_id=opening_id,
-        name=text(raw.get("name")) or entity_id,
-    )
-
-
-def _generator(raw: Mapping[str, Any]) -> Generator:
-    return Generator(
-        generator_id=text(raw.get("generator_id")),
-        name=text(raw.get("name")),
-        entity_id=text(raw.get("entity_id")),
-        zone_ids=tuple(strings(raw.get("zone_ids"))),
-        setpoint=optional_float(raw.get("setpoint")),
-    )
-
-
-def _gates(raw: Any) -> GateSettings:
-    """Return the gate settings, built from the field table.
-
-    De sleutels van `GATES_FLAT_FIELDS` zijn de namen van de dataclass: een
-    nieuwe poort is één tabelrij plus één attribuut op `GateSettings`.
-
-    The keys of `GATES_FLAT_FIELDS` are the dataclass's names: a new gate is one
-    table row plus one attribute on `GateSettings`.
-    """
-    if not isinstance(raw, Mapping):
-        return GateSettings()
-    flat = {
-        target_key(field): parse_leaf(field, raw.get(target_key(field)))
-        for field in GATES_FLAT_FIELDS
-    }
-    guest_raw = raw.get("guest_window")
-    guest: dict[str, Any] = guest_raw if isinstance(guest_raw, dict) else {}
-    return GateSettings(
-        quiet_windows=tuple(
-            _time_window(item)
-            for item in sequence(raw.get("quiet_windows"))
-            if isinstance(item, dict)
+def config_from_dict(raw: Mapping[str, Any]) -> DirectorConfig:
+    """Return the installation described by `raw`."""
+    stored_openings = items(raw, "openings")
+    openings = [
+        opening(item, opening_id)
+        for item, opening_id in zip(stored_openings, opening_ids(stored_openings), strict=True)
+    ]
+    return DirectorConfig(
+        zones=tuple(zone(item) for item in items(raw, "zones")),
+        circuits=tuple(circuit(item) for item in items(raw, "circuits")),
+        residents=tuple(resident(item) for item in items(raw, "residents")),
+        openings=tuple(openings),
+        house_wide_openings=tuple(strings(raw.get("house_wide_openings"))),
+        generators=tuple(generator(item) for item in items(raw, "generators")),
+        exclusive_groups=tuple(
+            frozenset(strings(group)) for group in sequence(raw.get("exclusive_groups"))
         ),
-        guest_window=_guest_window(guest),
-        guest_window_incomplete=bool(guest.get("start")) != bool(guest.get("end")),
-        **flat,
+        gates=gates(raw.get("gates")),
+        seasons=seasons(raw.get("seasons")),
+        precipitation=precipitation(raw.get("precipitation")),
+        heating_layout=layout(raw),
+        outdoor_sensor=text(raw.get("outdoor_sensor")),
+        outdoor_hysteresis=float_or(raw.get("outdoor_hysteresis"), 0.5),
+        stuck_after=seconds_or(raw.get("stuck_after"), 900.0),
+        holiday_calendars=tuple(strings(raw.get("holiday_calendars"))),
+        holiday_keyword=text(raw.get("holiday_keyword")),
     )
 
 
-def _guest_window(raw: dict[str, Any]) -> TimeWindow | None:
-    """Return the guest window, or `None` when it is not both-ends filled in.
+def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
+    """Return `config` as data a config entry can store.
 
-    Half een venster is geen venster: dan geldt de gastenmodus de hele dag.
-    Half a window is no window: guest mode then applies all day.
-
-    De bladeren (start, eind en dagen) komen uit de veldtabel, zodat een nieuw
-    gastenvensterveld één rij is in `engine/fields.py`, niet een wijziging hier.
-
-    The leaves (start, end and days) come from the field table, so a new guest
-    window field is one row in `engine/fields.py`, not a change here and in the form.
+    Round-trips through `config_from_dict` unchanged, which is what lets the
+    options flow read the stored configuration, hand a modified copy back and
+    trust that nothing was quietly dropped along the way.
     """
-    if not isinstance(raw, Mapping):
-        return None
-    leaves = {target_key(field): raw.get(target_key(field)) for field in GUEST_WINDOW_FIELDS}
-    start, end = leaves.get("start"), leaves.get("end")
-    if not start or not end:
-        return None
-    values = {
-        target_key(field): parse_leaf(field, leaves[target_key(field)])
-        for field in GUEST_WINDOW_FIELDS
-    }
-    return TimeWindow(
-        start=values["start"],
-        end=values["end"],
-        weekdays=values.get("weekdays"),
-    )
-
-
-def _guest_window_to_dict(window: TimeWindow | None) -> dict[str, Any] | None:
-    """Return the guest window as stored data, days included."""
-    if window is None:
-        return None
     return {
-        target_key(field): write_leaf(field, getattr(window, target_key(field)))
-        for field in GUEST_WINDOW_FIELDS
+        "zones": [zone_to_dict(zone) for zone in config.zones],
+        "circuits": [circuit_to_dict(circuit) for circuit in config.circuits],
+        "residents": [resident_to_dict(resident) for resident in config.residents],
+        "openings": [opening_to_dict(opening) for opening in config.openings],
+        "house_wide_openings": list(config.house_wide_openings),
+        "generators": [generator_to_dict(item) for item in config.generators],
+        "exclusive_groups": [sorted(group) for group in config.exclusive_groups],
+        "gates": {
+            **gates_flat_to_dict(config.gates),
+            "quiet_windows": [
+                {
+                    "start": window.start.isoformat(),
+                    "end": window.end.isoformat(),
+                    "weekdays": (None if window.weekdays is None else sorted(window.weekdays)),
+                    # De lezer kent deze vlag al; hem hier vergeten maakte van
+                    # een vakantievenster stilletjes een gewoon venster zodra de
+                    # configuratie werd teruggeschreven.
+                    #
+                    # The reader already knows this flag; forgetting it here
+                    # quietly turned a holiday window into an ordinary one the
+                    # moment the configuration was written back.
+                    "holiday": window.holiday,
+                }
+                for window in config.gates.quiet_windows
+            ],
+            "guest_window": guest_window_to_dict(config.gates.guest_window),
+        },
+        "seasons": {
+            "source": config.seasons.source.value,
+            "entity_id": config.seasons.entity_id,
+            "summer_months": sorted(config.seasons.summer_months),
+        },
+        "precipitation": {
+            "source": config.precipitation.source,
+            "states": sorted(config.precipitation.states),
+            "grace": int(config.precipitation.grace.total_seconds()),
+        },
+        "heating_layout": config.heating_layout.value,
+        "outdoor_sensor": config.outdoor_sensor,
+        "outdoor_hysteresis": config.outdoor_hysteresis,
+        "stuck_after": int(config.stuck_after.total_seconds()),
+        "holiday_calendars": list(config.holiday_calendars),
+        "holiday_keyword": config.holiday_keyword,
     }
-
-
-def _gates_flat_to_dict(gates: GateSettings) -> dict[str, Any]:
-    """Return the flat gates fields as stored data, from the field table."""
-    return {
-        target_key(field): write_leaf(field, getattr(gates, target_key(field)))
-        for field in GATES_FLAT_FIELDS
-    }
-
-
-def _sleep_window(raw: dict[str, Any]) -> TimeWindow | None:
-    """Return the sleep window, days and all.
-
-    Het gastenvenster en het vooruit-venster gelden voor het hele huis en
-    kennen geen dagen; een slaapvenster hangt aan één bewoner, en die heeft in
-    het weekend een ander ritme dan doordeweeks.
-
-    The guest window and the pre-conditioning window apply to the whole house
-    and know no days; a sleep window belongs to one resident, and a resident
-    keeps a different rhythm at the weekend than on a working day.
-    """
-    window = _guest_window(raw)
-    if window is None:
-        return None
-    return TimeWindow(start=window.start, end=window.end, weekdays=weekdays(raw.get("weekdays")))
-
-
-def _seasons(raw: Any) -> SeasonSettings:
-    if not isinstance(raw, Mapping):
-        return SeasonSettings()
-    months = raw.get("summer_months")
-    return SeasonSettings(
-        source=choice(SeasonSource, raw.get("source"), SeasonSource.AUTO),
-        entity_id=text(raw.get("entity_id")),
-        summer_months=(
-            SeasonSettings().summer_months
-            if months is None
-            # Via `sequence`, want een opgeslagen waarde die geen lijst blijkt
-            # - een getal, een tekst - werd hier gewoon doorlopen. Bij een tekst
-            # levert dat losse letters op en bij een getal een `TypeError` die
-            # de hele installatie niet meer laat laden.
-            #
-            # Through `sequence`, since a stored value that turns out not to be
-            # a list - a number, a string - used to be iterated all the same. On
-            # a string that yields loose letters and on a number a `TypeError`
-            # that stops the whole installation from loading.
-            else frozenset(int_or(month, 0) for month in sequence(months) if is_number(month))
-        ),
-    )
-
-
-def _precipitation(raw: Any) -> PrecipitationSettings:
-    """Return the precipitation settings, defaulting to the engine's own."""
-    if not isinstance(raw, Mapping):
-        return PrecipitationSettings()
-    states = raw.get("states")
-    if states is None:
-        chosen = PrecipitationSettings().states
-    else:
-        chosen = frozenset(item for item in strings(states) if item.strip())
-        # Het instellingenscherm schrijft een leeg tekstveld als `[]`. Dat is
-        # iets anders dan een opzet die neerslag nooit telt: wie het veld
-        # leeghaalt bedoelt "doe maar gewoon", niet "zet de regenuitzondering
-        # stilletjes uit terwijl de bron nog ingevuld staat".
-        #
-        # The settings screen writes an empty text field as `[]`. That is
-        # different from a setup that should never count precipitation: clearing
-        # the field means "just the usual", not "silently disable the rain
-        # exception while the source still stands filled in".
-        if not chosen:
-            chosen = PrecipitationSettings().states
-    return PrecipitationSettings(
-        source=text(raw.get("source")),
-        states=chosen,
-        grace=seconds_or(raw.get("grace"), 900.0),
-    )
-
-
-# ---------------------------------------------------------------------------
-# Schrijven / writing
-# ---------------------------------------------------------------------------
-
-
-def _zone_to_dict(zone: Zone) -> dict[str, Any]:
-    return {
-        "zone_id": zone.zone_id,
-        "name": zone.name,
-        "indoor_sensor": zone.indoor_sensor,
-        "priority": zone.priority,
-        "sources": [_source_to_dict(source) for source in zone.sources],
-        "heat": _mode_to_dict(zone.heat),
-        "cool": _mode_to_dict(zone.cool),
-        "gate": zone.gate.value,
-        "presence_entity": zone.presence_entity,
-        "presence_state": zone.presence_state,
-        "presence_timeout": zone.presence_timeout.total_seconds(),
-        "ignore_precipitation": zone.ignore_precipitation,
-    }
-
-
-def _source_to_dict(source: Source) -> dict[str, Any]:
-    """Return one source as stored data, its fields from `SOURCE_FIELDS`."""
-    return {"source_id": source.source_id, **dict_from(SOURCE_FIELDS, source)}
-
-
-def _mode_to_dict(settings: ModeSettings | None) -> dict[str, Any] | None:
-    if settings is None:
-        return None
-    return {
-        "target": settings.target,
-        "start_at": settings.start_at,
-        "hysteresis": settings.hysteresis,
-        "outdoor": _window_to_dict(settings.outdoor),
-        "seasons": (
-            None
-            if settings.seasons is None
-            else sorted(season.value for season in settings.seasons)
-        ),
-    }
-
-
-def _window_to_dict(window: OutdoorWindow) -> dict[str, Any]:
-    return {"minimum": window.minimum, "maximum": window.maximum}
-
-
-def _circuit_to_dict(circuit: Circuit) -> dict[str, Any]:
-    return {
-        "circuit_id": circuit.circuit_id,
-        "name": circuit.name,
-        "units": list(circuit.units),
-        "simultaneous_heat_cool": circuit.simultaneous_heat_cool,
-        "conflict_policy": circuit.conflict_policy.value,
-        "allow_fan_only_during_conflict": circuit.allow_fan_only_during_conflict,
-        "family_switch_delay": circuit.family_switch_delay.total_seconds(),
-        "min_family_switch_interval": circuit.min_family_switch_interval.total_seconds(),
-        "min_cycle_time": circuit.min_cycle_time.total_seconds(),
-        "max_concurrent_units": circuit.max_concurrent_units,
-    }
-
-
-def _resident_to_dict(resident: Resident) -> dict[str, Any]:
-    return {
-        "resident_id": resident.resident_id,
-        "name": resident.name,
-        "presence_entity": resident.presence_entity,
-        "sleep_entity": resident.sleep_entity,
-        "sleep_state": resident.sleep_state,
-        "sleep_window": (
-            None
-            if resident.sleep_window is None
-            else {
-                "start": resident.sleep_window.start.isoformat(),
-                "end": resident.sleep_window.end.isoformat(),
-                "weekdays": (
-                    None
-                    if resident.sleep_window.weekdays is None
-                    else sorted(resident.sleep_window.weekdays)
-                ),
-            }
-        ),
-        "sleep_in": sleep_in_to_dict(resident.sleep_in),
-        "wake_deadline": wake_deadline_to_dict(resident.wake_deadline),
-        "rise_brake": rise_brake_to_dict(resident.rise_brake),
-        "windows": [
-            {
-                "start": window.start.strftime("%H:%M:%S"),
-                "end": window.end.strftime("%H:%M:%S"),
-                "weekdays": (None if window.weekdays is None else sorted(window.weekdays)),
-                "holiday": window.holiday,
-            }
-            for window in resident.windows
-        ],
-    }
-
-
-def _generator_to_dict(generator: Generator) -> dict[str, Any]:
-    return {
-        "generator_id": generator.generator_id,
-        "name": generator.name,
-        "entity_id": generator.entity_id,
-        "zone_ids": list(generator.zone_ids),
-        "setpoint": generator.setpoint,
-    }
-
-
-def _opening_to_dict(opening: Opening) -> dict[str, Any]:
-    return {
-        "opening_id": opening.opening_id,
-        "name": opening.name,
-        "entity_id": opening.entity_id,
-        "zone_ids": list(opening.zone_ids),
-        "open_state": opening.open_state,
-        "delay": opening.delay.total_seconds(),
-    }
-
-
-# ---------------------------------------------------------------------------
-# Kleine hulpjes / small helpers
-# ---------------------------------------------------------------------------
-
-
-def _items(raw: Mapping[str, Any], key: str) -> list[Mapping[str, Any]]:
-    """Return the mappings stored under `key`, skipping anything else."""
-    return [item for item in sequence(raw.get(key)) if isinstance(item, Mapping)]
-
-
-def _layout(raw: Mapping[str, Any]) -> HeatingLayout:
-    """Return the heating layout, inferred when it was never chosen.
-
-    De instelling kwam er later bij. Een bestaande installatie zonder deze
-    sleutel mag daar geen waarschuwing voor krijgen, dus leiden we hem af uit
-    wat er al staat: deelt een warmtebron twee of meer zones, dan is het een
-    gesloten systeem. Vanaf de eerste keer opslaan staat de keuze vast en
-    raadt er niets meer.
-
-    The setting arrived later. An existing installation without this key must
-    not be warned about it, so we infer it from what is already there: if a heat
-    source spans two or more zones, it is a closed system. From the first save
-    onwards the choice is recorded and nothing guesses any more.
-    """
-    stored = raw.get("heating_layout")
-    if isinstance(stored, str) and stored in {item.value for item in HeatingLayout}:
-        return HeatingLayout(stored)
-
-    seen: dict[str, int] = {}
-    for zone in sequence(raw.get("zones")):
-        if not isinstance(zone, dict):
-            continue
-        # Alleen bronnen die kunnen verwarmen tellen mee: het gaat hier om de
-        # verwarmingsindeling. Een gedeelde airco die alleen koelt zegt niets
-        # over hoe het huis verwarmd wordt, en meetellen maakte van zo'n
-        # configuratie stilletjes een "centrale verwarming" waar de controle
-        # daarna over klaagde.
-        #
-        # Only sources able to heat count: this is about the heating layout. A
-        # shared cooler says nothing about how the house is heated, and counting
-        # it quietly turned such a setup into "central heating", which the check
-        # then complained about.
-        entities = {
-            text(source.get("entity_id"))
-            for source in sequence(zone.get("sources"))
-            if isinstance(source, dict) and source.get("role") != SourceRole.COOL_ONLY.value
-        }
-        for entity_id in entities - {""}:
-            seen[entity_id] = seen.get(entity_id, 0) + 1
-    return (
-        HeatingLayout.CENTRAL
-        if any(count > 1 for count in seen.values())
-        else HeatingLayout.PER_ZONE
-    )

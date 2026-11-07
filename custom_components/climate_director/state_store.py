@@ -27,10 +27,10 @@ from homeassistant.util import dt as dt_util
 
 from . import problems
 from .resident_reader import restore_home_since
-from .state_extra import restore_commanded_off, stored_time
+from .stored_state import restore_commanded_off, stored_time
 
 if TYPE_CHECKING:
-    from .coordinator import CoordinatorSurface
+    from .coordinator_surface import CoordinatorSurface
 
     # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
     # van hém. Voor mypy is dit de gastheer, zodat `self.config` en de rest
