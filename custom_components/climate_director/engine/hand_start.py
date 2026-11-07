@@ -18,7 +18,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from .models import DirectorConfig, Resident, Zone
-from .night import asleep, slept_tonight
+from .night import asleep, rise_braked, slept_tonight
 from .plan import Plan, Reason
 from .quiet import quiet_hours, zone_running
 from .world import ReadableInput, UnreadableInput, WorldState
@@ -106,8 +106,6 @@ def early_riser_holds(
     world: WorldState, zone_id: str, running: bool, up: Iterable[Resident]
 ) -> bool:
     """Return whether the rise brake holds these residents, hand start aside."""
-    from .night import rise_braked
-
     return (
         not passes(world, zone_id, Reason.EARLY_RISER)
         and not running

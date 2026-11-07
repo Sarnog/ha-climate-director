@@ -185,9 +185,8 @@ async def _async_evaluate(coordinator: ClimateDirectorCoordinator) -> None:
         # decides again.
         expiry_changes = coordinator._consume_expired_overrides(world.now)
         pending_changes = coordinator._consume_pending_override_changes(world)
-        coordinator.last_changes = (
-            changes(plan, world, coordinator._sent_setpoints) + expiry_changes + pending_changes
-        )
+        sent = coordinator._sent_setpoints
+        coordinator.last_changes = changes(plan, world, sent) + expiry_changes + pending_changes
         coordinator.last_applied = ()
 
         try:
@@ -200,10 +199,7 @@ async def _async_evaluate(coordinator: ClimateDirectorCoordinator) -> None:
         coordinator._note_commanded_on(coordinator.last_applied)
         for change in coordinator.last_applied:
             if change.set_temperature and change.command.temperature is not None:
-                coordinator._sent_setpoints[change.entity_id] = (
-                    change.command.hvac_mode,
-                    change.command.temperature,
-                )
+                sent[change.entity_id] = (change.command.hvac_mode, change.command.temperature)
 
         if coordinator._closing:
             return

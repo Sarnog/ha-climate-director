@@ -151,3 +151,48 @@ def test_the_private_import_guard_sees_a_private_name_and_leaves_a_public_one(
     )
     monkeypatch.setattr(f"{__name__}.PACKAGE", package)
     assert private_imports_across_modules() == ["user.py:1: _hidden"]
+
+
+def lazy_imports() -> list[str]:
+    """Imports inside a function body: the usual detour around a cycle."""
+    found: list[str] = []
+    for path in package_files():
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for function in ast.walk(tree):
+            if not isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            for node in ast.walk(function):
+                if isinstance(node, (ast.Import, ast.ImportFrom)):
+                    found.append(f"{path.relative_to(PACKAGE).as_posix()}:{node.lineno}")
+    return found
+
+
+def test_no_import_hides_inside_a_function() -> None:
+    """Een import staat bovenaan het bestand, niet in een functie.
+
+    Een luie import is de omweg rond een kring tussen twee modules; de kring zelf
+    hoort verdwenen te zijn.
+
+    An import stands at the top of the file, not inside a function. A lazy import
+    is the detour around a cycle between two modules; the cycle itself should be
+    gone.
+    """
+    found = lazy_imports()
+    assert not found, "import in een functie / import inside a function: " + ", ".join(found)
+
+
+def test_the_lazy_import_guard_sees_an_import_in_a_function(tmp_path: Path, monkeypatch) -> None:
+    """De bewaking merkt een import in een functie en laat een gewone staan.
+
+    The guard notices an import inside a function and leaves an ordinary one alone.
+    """
+    package = tmp_path / "package"
+    package.mkdir()
+    (package / "a_first.py").write_text("import os\n", encoding="utf-8")
+    (package / "late.py").write_text(
+        "import json\n\n\ndef load():\n    from .other import thing\n    return thing\n\n\n"
+        "async def later():\n    import os\n    return os\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(f"{__name__}.PACKAGE", package)
+    assert lazy_imports() == ["late.py:5", "late.py:10"]

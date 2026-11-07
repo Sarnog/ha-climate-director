@@ -412,13 +412,6 @@ def brakes_remaining(
     here - an open window holds the zone back, but does not make the hand start
     superfluous.
     """
-    # Lazy, want `gates` importeert deze module voor `passes` en de twee
-    # slaaphulpen. Een import bovenaan zou een kring maken.
-    #
-    # Lazy, since `gates` imports this module for `passes` and the two sleep
-    # helpers. An import at the top would make a cycle.
-    from .gates import closed
-
     climates = dict(world.climates)
     for source in zone.sources:
         state = climates.get(source.entity_id)

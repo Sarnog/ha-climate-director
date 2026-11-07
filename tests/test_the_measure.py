@@ -499,7 +499,6 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/constraints.py", "resolve"): 128,
     ("engine/candidates.py", "collect_wishes"): 137,
     ("coordinator_events.py", "_refusal_data"): 124,
-    ("coordinator_round.py", "_async_evaluate"): 82,
     ("coordinator_tracking.py", "_notice_hand"): 139,
     ("engine/zone_decisions.py", "build_zone_decisions"): 135,
     ("flow_residents.py", "resident"): 95,
