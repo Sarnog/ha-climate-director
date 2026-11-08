@@ -5,6 +5,7 @@ Per zone whether it is held back, and whether anything is stuck.
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
@@ -12,10 +13,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 
+from .const import CLOCK_REEVAL_SECONDS
 from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry
+from .coordinator_reporting import round_overdue_seconds
 from .engine import DirectorConfig
 from .entity import ClimateDirectorEntity
 
@@ -215,23 +219,49 @@ class StuckSensor(ClimateDirectorEntity, BinarySensorEntity):
     #
     # The waiting times are for whoever looks right now; the recorder already
     # keeps the on/off state.
-    _unrecorded_attributes = frozenset({"waiting_seconds"})
+    _unrecorded_attributes = frozenset({"waiting_seconds", "seconds_since_last_round"})
 
     def __init__(self, coordinator: ClimateDirectorCoordinator) -> None:
         """Set up the installation-wide stuck sensor."""
         super().__init__(coordinator, "stuck")
 
+    async def async_added_to_hass(self) -> None:
+        """Look again on a clock of its own, not only after a round.
+
+        Gewoonlijk schrijft de coordinator deze melder na elke ronde. Maar juist
+        als de lus stilstaat komt die ronde niet, en dan zou de melder nooit
+        omslaan. Daarom kijkt hij elke minuut zelf.
+
+        Normally the coordinator writes this sensor after every round. But
+        precisely when the loop stands still that round does not come, and the
+        sensor would never turn on. Hence it looks for itself every minute.
+        """
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_track_time_interval(
+                self.hass, self._async_look_again, timedelta(seconds=CLOCK_REEVAL_SECONDS)
+            )
+        )
+
+    @callback
+    def _async_look_again(self, _now: datetime) -> None:
+        """Write the state again, so a stalled loop shows."""
+        self.async_write_ha_state()
+
     @property
     def is_on(self) -> bool | None:
-        """Return whether a zone has been waiting too long."""
+        """Return whether a zone has been waiting too long, or the loop stalled."""
         if self.coordinator.data is None:
             return None
-        return bool(self.coordinator.stuck_zones())
+        return bool(self.coordinator.stuck_zones()) or (
+            round_overdue_seconds(self.coordinator) is not None
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return which zones are stuck, on what, and for how long."""
         stuck = self.coordinator.stuck_zones()
+        overdue = round_overdue_seconds(self.coordinator)
         return {
             "unusable_entities": self.coordinator.unusable_latest(),
             "zones": sorted(stuck),
@@ -240,4 +270,5 @@ class StuckSensor(ClimateDirectorEntity, BinarySensorEntity):
                 zone_id: round(seconds)
                 for zone_id, seconds in sorted(self.coordinator.waiting_seconds().items())
             },
+            "seconds_since_last_round": (None if overdue is None else round(overdue)),
         }

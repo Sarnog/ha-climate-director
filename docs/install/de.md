@@ -722,7 +722,7 @@ Ein Gerät pro Installation, darunter:
 | `sensor.*_quelle_<zone>` | welche Quelle diese Zone bedient, mit dem, was die Zone wollte, bekam und warum |
 | `binary_sensor.*_<zone>_blockiert` | an, wenn eine Zone weniger bekam als verlangt oder laufen wollte, aber ein Umstand sie zurückhielt; die geschlossenen Tore stehen in den Attributen |
 | `binary_sensor.*_<zone>_auf_ersatzgerat` | an, wenn eine Zone auf einem Ersatzgerät läuft, weil die erste Wahl unerreichbar ist |
-| `binary_sensor.*_festgefahren` | an, wenn eine Zone zu lange auf demselben Wartegrund sitzt |
+| `binary_sensor.*_festgefahren` | an, wenn eine Zone zu lange auf demselben Wartegrund sitzt, oder wenn der Director selbst so lange keine neue Runde mehr begonnen hat |
 | `switch.*_director` | der Hauptschalter; aus = es wird nichts geregelt |
 | `switch.*_urlaubsplan` | lässt jeden Tag als Samstag zählen, oder als eigenen Urlaubsplan |
 | `switch.*_gastemodus` | regelt weiter, während die Bewohner weg sind |
@@ -1056,7 +1056,7 @@ Lässt du das Feld leer, bekommst du jede Aktion.
 ## Probleme lösen
 
 - **`binary_sensor.*_festgefahren`** geht an, wenn eine Zone zu lange auf demselben
-  Wartegrund sitzt (Standard 15 Minuten) — und nur dafür. Eine volle
+  Wartegrund sitzt (Standard 15 Minuten). Eine volle
   Außengerät zählt nicht mit: Das wird erst frei, wenn ein anderer Raum
   aufhört zu fragen, und das darf Stunden dauern. Dieser Raum gilt sehr wohl als
   blockiert. Im Attribut `unusable_entities` steht daneben, welche
@@ -1064,6 +1064,11 @@ Lässt du das Feld leer, bekommst du jede Aktion.
   vorübergehend `unavailable`, und ebenso ein Sensor, der lesbar ist, aber keine
   Zahl liefert (`no number`). Das schaltet den Melder nicht ein; dafür kommt
   nach fünf Minuten ein Reparaturhinweis.
+- **`binary_sensor.*_festgefahren`** geht auch an, wenn der Director selbst so
+  lange keine neue Entscheidungsrunde mehr begonnen hat, etwa weil ein Gerät
+  nie geantwortet hat. Das Attribut `seconds_since_last_round` sagt dann, wie
+  lange schon. Ein Befehl an ein Gerät darf 30 Sekunden dauern; danach gilt er
+  als fehlgeschlagen und der Director macht weiter.
 - **`binary_sensor.*_<zone>_auf_ersatzgerat`** geht an, wenn eine Zone auf einer
   Quelle läuft, die nicht die erste Wahl war, weil die erste Wahl unerreichbar
   ist. Der Raum wird einfach warm — und genau deshalb merkst du ohne Melder

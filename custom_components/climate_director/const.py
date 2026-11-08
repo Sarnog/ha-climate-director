@@ -168,6 +168,19 @@ MIN_DEFERRAL_SECONDS = 1.0
 # net is cheap.
 CLOCK_REEVAL_SECONDS = 60.0
 
+# Zo lang mag één opdracht aan een apparaat duren. De applier wacht op het
+# antwoord (`blocking=True`) binnen de beslisronde, en een cloudkoppeling die
+# nooit antwoordt hield zo de hele director stil: geen ronde meer, ook niet die
+# van de vangnetklok. Een opdracht die er langer over doet telt als mislukt,
+# precies zoals een opdracht die een fout gooit.
+#
+# How long one command to an appliance may take. The applier waits for the
+# answer (`blocking=True`) inside the decision round, and a cloud link that
+# never answers held the whole director still that way: no round anymore, not
+# even the safety-net clock's. A command taking longer counts as failed, just
+# like a command that raises.
+COMMAND_TIMEOUT_SECONDS = 30.0
+
 # Zo lang moet een ingestelde entiteit onleesbaar zijn voordat er een
 # reparatiemelding van komt. Een entiteit die bij een herstart even wegvalt is
 # geen storing, en een melding die aan en uit knippert leert je hem te negeren.

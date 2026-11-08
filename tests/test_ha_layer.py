@@ -29,6 +29,7 @@ debouncer and scheduling a re-evaluation.
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from types import SimpleNamespace
@@ -109,9 +110,10 @@ class FakeStates:
 class FakeServices:
     """Records every service call instead of making one."""
 
-    def __init__(self, failing: set[str] | None = None) -> None:
+    def __init__(self, failing: set[str] | None = None, hanging: set[str] | None = None) -> None:
         self.calls: list[tuple[str, str, dict]] = []
         self.failing = failing or set()
+        self.hanging = hanging or set()
 
     # `blocking` staat er omdat de applier de aanroep met `blocking=True` doet;
     # deze stand-in leest hem niet, maar de naam mag daarom niet weg.
@@ -127,6 +129,8 @@ class FakeServices:
         self.calls.append((domain, service, data))
         if data.get("entity_id") in self.failing:
             raise RuntimeError("de service call mislukte")
+        if data.get("entity_id") in self.hanging:
+            await asyncio.Event().wait()
 
 
 class FakeBus:
@@ -1044,6 +1048,29 @@ class TestTheApplier:
         # is in `called`; what counts is what was really carried out.
         assert ATTIC in called, "de tweede stop hoort gewoon de deur uit te gaan"
         assert LIVING not in called, "de start hoort na een mislukte stop te vervallen"
+        assert [change.entity_id for change in applied] == [ATTIC]
+
+    async def test_an_appliance_that_never_answers_counts_as_failed(self, monkeypatch) -> None:
+        """Een aanroep die nooit terugkomt mag de ronde niet vasthouden.
+
+        Zo bevroor de director in een echt huis elf uur lang: een cloudkoppeling
+        zette de airco uit maar meldde nooit terug. Na de tijdslimiet telt de
+        opdracht als mislukt - een mislukte stop, dus de starts vervallen en de
+        andere stop gaat gewoon door.
+
+        A call that never comes back must not hold the round. That is how the
+        director froze for eleven hours in a real house: a cloud link switched
+        the air conditioner off but never reported back. After the time limit
+        the command counts as failed - a failed stop, so the starts lapse and the
+        other stop simply goes through.
+        """
+        monkeypatch.setattr(applier_module, "COMMAND_TIMEOUT_SECONDS", 0.05)
+        hass = FakeHass(hanging={BACKUP})
+        pending = self._changes({LIVING: "heat", BACKUP: "heat", ATTIC: "heat"})
+
+        applied = await asyncio.wait_for(apply(hass, pending, shadow=False), timeout=5)
+
+        assert BACKUP not in [change.entity_id for change in applied]
         assert [change.entity_id for change in applied] == [ATTIC]
 
 

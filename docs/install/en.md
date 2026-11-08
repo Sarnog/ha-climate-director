@@ -711,7 +711,7 @@ One device per installation, holding:
 | `sensor.*_<zone>_source` | which source serves this zone, with what the zone wanted, got and why |
 | `binary_sensor.*_<zone>_blocked` | on when a zone got less than it asked for, or wanted to run but a circumstance held it back; the shut gates are in the attributes |
 | `binary_sensor.*_<zone>_on_stand_in` | on when a zone runs on a stand-in appliance because its first choice is unreachable |
-| `binary_sensor.*_stuck` | on when a zone sits on the same waiting reason too long |
+| `binary_sensor.*_stuck` | on when a zone sits on the same waiting reason too long, or when the director itself has not started a new round for that long |
 | `switch.*_director` | the master switch; off = nothing is regulated |
 | `switch.*_holiday_schedule` | makes every day count as a Saturday, or as its own holiday schedule |
 | `switch.*_guest_mode` | keeps regulating while the residents are away |
@@ -1037,13 +1037,18 @@ and you get every action.
 ## Troubleshooting
 
 - **`binary_sensor.*_stuck`** comes on when a zone sits on the same waiting
-  reason too long (15 minutes by default) — and only for that. A full outdoor
+  reason too long (15 minutes by default). A full outdoor
   unit does not count: it only frees up once another room stops asking, and that
   may take hours. That room is still recorded as blocked. The
   `unusable_entities` attribute additionally lists which configured entities
   cannot be read — mistyped, deleted, or temporarily `unavailable`, and a sensor
   that reads fine but yields no number as well (`no number`). That does not
   raise the sensor; a repair notice follows for it after five minutes.
+- **`binary_sensor.*_stuck`** also comes on when the director itself has not
+  started a new decision round for that long, for instance because an appliance
+  never answered. The `seconds_since_last_round` attribute then says for how
+  long. A command to an appliance may take 30 seconds; after that it counts as
+  failed and the director carries on.
 - **`binary_sensor.*_<zone>_on_stand_in`** comes on when a zone runs on a source
   that was not the first choice, because the first choice is unreachable. The
   room simply gets warm — and that is exactly why, without a sensor, you notice

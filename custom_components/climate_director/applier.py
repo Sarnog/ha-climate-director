@@ -11,6 +11,7 @@ reality (`engine.diff`, pure) and turns the difference into service calls.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from homeassistant.components.climate.const import (
@@ -22,6 +23,7 @@ from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 
+from .const import COMMAND_TIMEOUT_SECONDS
 from .engine import MODE_FAN_ONLY, MODE_OFF
 from .engine.diff import Change
 from .units import from_celsius, temperature_unit_of
@@ -82,7 +84,14 @@ async def apply(
         if abandon_starts and not _is_stop(change):
             continue
         try:
-            await _execute(hass, change)
+            # Een apparaat dat nooit antwoordt mag de ronde niet vasthouden;
+            # zie `COMMAND_TIMEOUT_SECONDS`. De `TimeoutError` valt hieronder
+            # als elke andere mislukte opdracht.
+            # An appliance that never answers must not hold the round; see
+            # `COMMAND_TIMEOUT_SECONDS`. The `TimeoutError` falls below like
+            # any other failed command.
+            async with asyncio.timeout(COMMAND_TIMEOUT_SECONDS):
+                await _execute(hass, change)
         except Exception:
             _LOGGER.exception("Could not steer %s", change.entity_id)
             if _is_stop(change) and not abandon_starts:

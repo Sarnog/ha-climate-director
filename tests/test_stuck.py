@@ -17,10 +17,12 @@ watches the other trail: a reason that should resolve by itself and does not.
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from types import SimpleNamespace
 
 import pytest
 
 from custom_components.climate_director.coordinator import ClimateDirectorCoordinator
+from custom_components.climate_director.coordinator_reporting import round_overdue_seconds
 from custom_components.climate_director.engine import (
     WAITING_REASONS,
     DirectorConfig,
@@ -81,6 +83,7 @@ def coordinator(minutes: int = 15):
         def __init__(self) -> None:
             self.config = config(minutes)
             self._waiting: dict[str, tuple[Reason, datetime]] = {}
+            self.world = None
 
         _note_waiting = ClimateDirectorCoordinator._note_waiting
         waiting_seconds = ClimateDirectorCoordinator.waiting_seconds
@@ -379,3 +382,43 @@ class TestEntitiesThatCannotBeRead:
     def test_several_are_all_named(self) -> None:
         item = self._coordinator({"sensor.woonkamer": "unavailable"})
         assert set(item.unusable_entities()) == {"sensor.woonkamer", "climate.huiskamer"}
+
+
+class TestALoopThatStandsStill:
+    """Geen zone wacht, maar de director zelf doet niets meer.
+
+    No zone is waiting, but the director itself does nothing anymore.
+
+    `stuck_zones` kijkt naar het laatste plan. Hangt een ronde, dan blijft dat
+    plan staan en ziet die het nooit. Daarom telt ook hoe lang de laatste ronde
+    geleden is: de vangnetklok hoort er elke minuut een te laten lopen.
+
+    `stuck_zones` looks at the latest plan. When a round hangs, that plan stays
+    put and it never sees anything. Hence how long ago the latest round was
+    counts too: the safety-net clock should run one every minute.
+    """
+
+    def test_nothing_before_the_first_round(self) -> None:
+        assert round_overdue_seconds(coordinator()) is None
+
+    def test_a_recent_round_is_fine(self) -> None:
+        item = coordinator(minutes=15)
+        item.world = SimpleNamespace(now=datetime.now().astimezone() - timedelta(minutes=1))
+        assert round_overdue_seconds(item) is None
+
+    def test_a_round_long_ago_is_reported_with_its_age(self) -> None:
+        item = coordinator(minutes=15)
+        item.world = SimpleNamespace(now=datetime.now().astimezone() - timedelta(minutes=20))
+        seconds = round_overdue_seconds(item)
+        assert seconds is not None
+        assert 20 * 60 <= seconds < 21 * 60
+
+    def test_exactly_at_the_limit_counts(self) -> None:
+        item = coordinator(minutes=15)
+        item.world = SimpleNamespace(now=datetime.now().astimezone() - timedelta(minutes=15))
+        assert round_overdue_seconds(item) is not None
+
+    def test_zero_switches_it_off(self) -> None:
+        item = coordinator(minutes=0)
+        item.world = SimpleNamespace(now=datetime.now().astimezone() - timedelta(hours=11))
+        assert round_overdue_seconds(item) is None

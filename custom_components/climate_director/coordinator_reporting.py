@@ -449,6 +449,30 @@ def stuck_zones(coordinator: ClimateDirectorCoordinator) -> dict[str, Reason]:
     }
 
 
+def round_overdue_seconds(coordinator: ClimateDirectorCoordinator) -> float | None:
+    """Return how long the latest round is ago, once that is longer than allowed.
+
+    Elke ronde legt bij haar begin de wereld vast, met `now` erin, en de
+    vangnetklok laat er elke minuut een lopen. Is die laatste momentopname
+    langer geleden dan `stuck_after`, dan wacht er geen zone meer: dan staat de
+    lus zelf stil, bijvoorbeeld op een apparaat dat nooit antwoordt. Van buiten
+    is dat precies "de director besluit niets", en `stuck_zones` ziet het niet,
+    want die kijkt naar het laatste plan - en dat blijft dan staan.
+
+    Every round records the world at its start, `now` included, and the
+    safety-net clock runs one every minute. When that latest snapshot is longer
+    ago than `stuck_after`, no zone is waiting anymore: the loop itself stands
+    still, for instance on an appliance that never answers. From the outside
+    that is exactly "the director decides nothing", and `stuck_zones` does not
+    see it, since it looks at the latest plan - which then stays put.
+    """
+    limit = coordinator.config.stuck_after.total_seconds()
+    if limit <= 0 or coordinator.world is None:
+        return None
+    seconds = (dt_util.now() - coordinator.world.now).total_seconds()
+    return seconds if seconds >= limit else None
+
+
 def _note_precipitation_now(coordinator: ClimateDirectorCoordinator) -> None:
     """Remember rain that was already falling before this process started.
 

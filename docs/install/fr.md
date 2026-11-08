@@ -736,7 +736,7 @@ Un appareil par installation, avec en dessous :
 | `sensor.*_source_<zone>` | quelle source dessert cette zone, avec ce que la zone voulait, a obtenu et pourquoi |
 | `binary_sensor.*_<zone>_bloquee` | activé quand une zone a reçu moins que demandé, ou voulait tourner mais qu'une circonstance l'a retenue ; les barrières fermées sont dans les attributs |
 | `binary_sensor.*_<zone>_sur_appareil_de_secours` | activé quand une zone tourne sur un appareil de secours parce que le premier choix est injoignable |
-| `binary_sensor.*_bloque` | activé quand une zone reste trop longtemps sur le même motif d'attente |
+| `binary_sensor.*_bloque` | activé quand une zone reste trop longtemps sur le même motif d'attente, ou quand le directeur n'a plus commencé aucun tour depuis aussi longtemps |
 | `switch.*_director` | l'interrupteur principal ; éteint = rien n'est régulé |
 | `switch.*_planning_de_vacances` | fait compter chaque jour comme un samedi, ou comme son propre programme vacances |
 | `switch.*_mode_invites` | continue de réguler pendant que les occupants sont absents |
@@ -1075,7 +1075,7 @@ pour recevoir toutes les actions.
 ## Résoudre les problèmes
 
 - **`binary_sensor.*_bloque`** s'allume quand une zone reste trop longtemps sur
-  le même motif d'attente (15 minutes par défaut) — et rien que pour cela. Une
+  le même motif d'attente (15 minutes par défaut). Une
   unité extérieure pleine ne compte pas : elle ne se libère que lorsqu'une autre
   pièce cesse de demander, et cela peut durer des heures. Cette pièce est bel et
   bien enregistrée comme bloquée. L'attribut `unusable_entities` indique en
@@ -1083,6 +1083,11 @@ pour recevoir toutes les actions.
   temporairement `unavailable`, ainsi qu'un capteur lisible qui ne donne aucun
   nombre (`no number`). Cela n'allume pas le capteur ; un avis de réparation
   arrive pour cela après cinq minutes.
+- **`binary_sensor.*_bloque`** s'allume aussi quand le directeur n'a plus
+  commencé aucun tour de décision depuis aussi longtemps, par exemple parce
+  qu'un appareil n'a jamais répondu. L'attribut `seconds_since_last_round` dit
+  alors depuis combien de temps. Un ordre à un appareil peut durer 30 secondes ;
+  ensuite il compte comme échoué et le directeur continue.
 - **`binary_sensor.*_<zone>_sur_appareil_de_secours`** s'allume quand une zone tourne sur
   une source qui n'était pas le premier choix, parce que le premier choix est
   injoignable. La pièce devient simplement chaude — et c'est exactement

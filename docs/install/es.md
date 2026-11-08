@@ -724,7 +724,7 @@ Un dispositivo por instalación, con debajo:
 | `sensor.*_fuente_<zone>` | qué fuente sirve esta zona, con lo que la zona quería, obtuvo y por qué |
 | `binary_sensor.*_<zone>_bloqueada` | activado cuando una zona recibió menos de lo pedido, o quería funcionar pero una circunstancia la retuvo; las barreras cerradas están en los atributos |
 | `binary_sensor.*_<zone>_en_equipo_suplente` | activado cuando una zona funciona con un aparato suplente porque la primera opción es inalcanzable |
-| `binary_sensor.*_atascado` | activado cuando una zona lleva demasiado tiempo con el mismo motivo de espera |
+| `binary_sensor.*_atascado` | activado cuando una zona lleva demasiado tiempo con el mismo motivo de espera, o cuando el propio director lleva ese tiempo sin empezar una ronda nueva |
 | `switch.*_director` | el interruptor principal; apagado = no se regula nada |
 | `switch.*_horario_de_vacaciones` | hace que cada día cuente como sábado, o como su propio horario de vacaciones |
 | `switch.*_modo_invitados` | sigue regulando mientras los residentes están fuera |
@@ -1056,7 +1056,7 @@ reposo. Si dejas ese campo vacío, recibes todas las acciones.
 ## Resolver problemas
 
 - **`binary_sensor.*_atascado`** se enciende cuando una zona lleva demasiado tiempo
-  con el mismo motivo de espera (15 minutos por defecto) — y solo por eso. Una
+  con el mismo motivo de espera (15 minutos por defecto). Una
   unidad exterior llena no cuenta: solo se libera cuando otra habitación deja de
   pedir, y eso puede durar horas. Esa habitación sí queda registrada como
   bloqueada. El atributo `unusable_entities` indica además qué entidades
@@ -1064,6 +1064,11 @@ reposo. Si dejas ese campo vacío, recibes todas las acciones.
   `unavailable`, y también un sensor legible que no da ningún número
   (`no number`). Eso no enciende el sensor; para ello llega un aviso de
   reparación al cabo de cinco minutos.
+- **`binary_sensor.*_atascado`** también se enciende cuando el propio director
+  lleva ese tiempo sin empezar una ronda de decisión nueva, por ejemplo porque un
+  aparato nunca respondió. El atributo `seconds_since_last_round` dice entonces
+  desde hace cuánto. Una orden a un aparato puede tardar 30 segundos; después
+  cuenta como fallida y el director sigue.
 - **`binary_sensor.*_<zone>_en_equipo_suplente`** se enciende cuando una zona funciona
   con una fuente que no era la primera opción, porque la primera opción es
   inalcanzable. La habitación simplemente se calienta — y por eso mismo, sin

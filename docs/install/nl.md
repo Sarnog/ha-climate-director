@@ -714,7 +714,7 @@ Eén device per installatie, met daaronder:
 | `sensor.*_bron_<zone>` | welke bron deze zone bedient, met wat de zone wilde, kreeg en waarom |
 | `binary_sensor.*_<zone>_geblokkeerd` | aan als een zone minder kreeg dan hij vroeg, of wilde draaien maar een omstandigheid haar tegenhield; de dichte poorten staan in de attributen |
 | `binary_sensor.*_<zone>_op_reserve` | aan als een zone op een reserve-apparaat draait omdat de eerste keus onbereikbaar is |
-| `binary_sensor.*_vastgelopen` | aan als een zone te lang op dezelfde wachtreden staat |
+| `binary_sensor.*_vastgelopen` | aan als een zone te lang op dezelfde wachtreden staat, of als de director zelf zo lang geen nieuwe ronde meer begon |
 | `switch.*_director` | de hoofdschakelaar; uit = er wordt niets geregeld |
 | `switch.*_vakantieschema` | laat elke dag als zaterdag tellen, of als het eigen vakantierooster |
 | `switch.*_gastenmodus` | blijft regelen terwijl de bewoners weg zijn |
@@ -1044,7 +1044,7 @@ blijft. Laat je dat veld leeg, dan krijg je elke actie.
 ## Problemen oplossen
 
 - **`binary_sensor.*_vastgelopen`** gaat aan als een zone te lang op dezelfde
-  wachtreden staat (standaard na 15 minuten) — en alleen daarvoor. Een volle
+  wachtreden staat (standaard na 15 minuten). Een volle
   buitenunit telt niet mee: die loopt pas leeg als een andere kamer ophoudt met
   vragen, en dat mag uren duren. Die kamer staat wél als geblokkeerd te boek.
   In het attribuut `unusable_entities` staat daarnaast welke ingestelde
@@ -1052,6 +1052,11 @@ blijft. Laat je dat veld leeg, dan krijg je elke actie.
   `unavailable`, en ook een sensor die wel leesbaar is maar geen getal oplevert
   (`no number`). Dat zet de melder niet aan; daar komt na vijf minuten een
   reparatiemelding voor.
+- **`binary_sensor.*_vastgelopen`** gaat ook aan als de director zelf al die
+  tijd geen nieuwe beslisronde meer begon, bijvoorbeeld omdat een apparaat nooit
+  antwoordde. Het attribuut `seconds_since_last_round` zegt dan hoe lang al.
+  Een opdracht aan een apparaat mag 30 seconden duren; daarna telt hij als
+  mislukt en gaat de director door.
 - **`binary_sensor.*_<zone>_op_reserve`** gaat aan als een zone draait op een
   bron die niet de eerste keus was, omdat de eerste keus onbereikbaar is. De
   kamer wordt gewoon warm — en precies daarom merk je zonder melder niets tot
