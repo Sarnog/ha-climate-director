@@ -1700,6 +1700,175 @@ hulpbestanden `tests/flow_helpers.py`, `tests/live_helpers.py`,
 `tests/coverage_helpers.py`. Geen enkel `test_*.py` importeert nog uit een
 ander `test_*.py`.
 
+#### Verdere indeling
+
+Deze indeling maakt af wat de opruimronde openliet: elke module bij één onderwerp,
+geen module boven de 500 regels buiten de benoemde lijsten, en een modulegrens
+die een grens is. Ook hier verhuist alleen code: dezelfde regels, dezelfde
+`Reason`-waarden en `Problem`-codes, dezelfde opslagvorm en dezelfde entiteiten,
+en een verhuizing die een regel inhoudelijk verandert, krijgt een eigen commit
+erna. Alleen de twee gedragsbesluiten aan het eind veranderen wat de integratie
+doet. Wie een van de bestanden hieronder anders wil indelen, wijzigt eerst dit
+hoofdstuk.
+
+De volgorde is van de minst naar de meest verweven stap; elke stap is één commit
+en wordt pas gepusht als de voorganger groen is.
+
+| Stap | Wat | Waarom hier |
+|---|---|---|
+| 1 | de `getattr`-terugvallen op attributen, en de dubbele sleutelwoordcontrole | raakt alleen de stand-ins in de toetsen en één regel |
+| 2 | de kringen tussen `texts.py` en `entity_texts.py`, en tussen `problems.py` en `repair_notices.py` | alleen importregels |
+| 3 | de impactkaart onafhankelijk van de omgeving | raakt alleen `script/` |
+| 4 | de taakkeuze en de capaciteit uit `engine/constraints.py` | één bestand, één aanroeper |
+| 5 | `engine/validation.py` per onderwerp | zuivere verhuizing van regelfuncties |
+| 6 | een protocol per laag | haalt de terugimports onder `TYPE_CHECKING` weg |
+| 7 | de `coordinator_*`-onderdelen zonder privé attributen van de coordinator | raakt de meeste bestanden |
+| 8 | de mutatiebaan met `area_clash` en de lijst in de repo | meet de stappen hierboven |
+| 9 | de twee gedragsbesluiten | pas als de verhuizingen gemeten zijn |
+
+##### Stap 1 — geen terugval op eigen attributen
+
+Een mixin leest een attribuut van de coordinator als `self.<naam>`. De dertien
+regels `getattr(self, "<naam>", standaard)` in `state_store.py`,
+`world_builder.py` en `hand_start.py` bestonden omdat een stand-in in de toetsen
+het attribuut niet droeg; de stand-in krijgt het attribuut, en de mixin leest het
+gewoon. `tests/test_coordinator_surface.py` eist al dat een stand-in elk lid
+draagt dat zijn geleende methodes aanraken; zonder terugval geldt dat voor alle
+leden. De controle op het trefwoord en de agenda's die de remmen voeden (nu
+dubbel in `readability.unreadable_inputs` en `engine/hand_start.brakes_readable`)
+staat op één plek in `engine/hand_start.py` en `readability.py` roept haar aan.
+
+##### Stap 2 — geen kring tussen de algemene en de bijzondere module
+
+| Bestand | Wat verdwijnt | Wat ervoor in de plaats komt |
+|---|---|---|
+| `texts.py` | de her-export van `entity_texts` onderaan, met `# noqa: E402` | de aanroepers importeren uit `entity_texts` |
+| `problems.py` | de her-export van `repair_notices` onderaan, met `# noqa: E402` | de aanroepers importeren uit `repair_notices` |
+
+De bewaking: geen `# noqa: E402` in het pakket.
+
+##### Stap 3 — de impactkaart is niet van de machine
+
+Een volledige run vervangt nu de kaart door wat hij zelf zag, en een lokale run
+op Windows ziet de map `script/` voor `tests/test_controls_live.py` niet, de CI
+wel. De kaart wordt een samenvoeging: een volledige run voegt bestaande regels
+samen met wat hij ziet, en laat een regel alleen vallen als het toetsbestand of
+het invoerbestand niet meer bestaat. Bewaking: een toets die een kaart met een
+extra regel laat staan en een kaart met een ontbrekende regel afkeurt.
+
+##### Stap 4 — de taakkeuze en de capaciteit
+
+| Nieuw bestand | Onderwerp | Wat verhuist |
+|---|---|---|
+| `engine/circuit_requests.py` | wat een zone aan een circuit vraagt en krijgt | `Request`, `Grant`, `Outcome` |
+| `engine/circuit_policy.py` | de taakkeuze op een circuit | `active_family`, `forced_families`, `choose_family`, `any_managed_running` |
+| `engine/capacity.py` | de capaciteit en de kortcyclus | `standing_claims`, `keeps_claiming`, `apply_capacity`, `apply_short_cycle` |
+
+`engine/constraints.py` houdt `resolve` en `finish`. De drie typen staan in een
+eigen bestand omdat zowel `circuit_policy` als `capacity` ze nodig hebben en
+`constraints` beide aanroept; zo blijft de richting naar beneden. De
+aanroepers van `constraints.Request`, `constraints.Grant` en `constraints.Outcome`
+importeren uit `circuit_requests`. `constraints.py` valt daarmee van
+`FROZEN_MODULES`.
+
+##### Stap 5 — de validatie per onderwerp
+
+`engine/validation.py` houdt `validate()` en de ene `RULES`-lijst in de bestaande
+volgorde; de regelfuncties staan per onderwerp, met een publieke naam (zonder
+leidende onderstreping, want `validation.py` importeert ze).
+
+| Nieuw bestand | Onderwerp | Wat verhuist |
+|---|---|---|
+| `engine/problem.py` | de klacht zelf | `Problem` |
+| `engine/validation_shared.py` | gedeelde controles en hulpjes | `pinned_season`, `season_names`, `duplicates`, `windows`, `outdoor_known` en de seizoensregel |
+| `engine/validation_zones.py` | zones | de dubbele zone-id's, een entiteit twee keer in een zone, een eenheid in geen zone, de zoneregels, het rooster, de vastlooptijd, de buitenbanden en het maximum van een vooruit-verzoek |
+| `engine/validation_sources.py` | bronnen en generatoren | de dubbele bron-id's, het buitenvenster en de gebieden van een bron, de families, de generatoren en de exclusieve groepen |
+| `engine/validation_circuits.py` | circuits | de dubbele circuit-id's, een eenheid op twee circuits, de circuitregels, de indeling en de wisseltijden |
+| `engine/validation_residents.py` | bewoners | de bewoner zonder aanwezigheid, de slaapinstellingen en het stiltevenster |
+| `engine/validation_windows.py` | vensters | de vensters zonder lengte, het halve gastenvenster en de feestdagenagenda's |
+| `engine/validation_openings.py` | openingen | de dubbele opening-id's, de openingen, de huisbrede stops, de open stand van een afdekking en de vastzittijd onder de ingestelde rust |
+
+Een regel die twee onderwerpen raakt, staat bij het onderwerp waarvan hij een veld
+controleert. `MODULE_EXCEPTIONS` verliest de ingang `engine/validation.py`. De
+importeurs van `Problem` (`engine/__init__.py`, `engine/manual_sources.py` en de
+toetsen) importeren uit `engine/problem.py`.
+
+##### Stap 6 — een protocol per laag
+
+Een protocol dat alleen leden noemt (attributen en `Callable`-typen, zonder
+methodelichaam) kan gewoon als basis geërfd worden: er ontstaat bij het draaien
+niets dat een echte methode kan overschaduwen. Daarom:
+
+- `coordinator_surface.py` (`CoordinatorSurface`) wordt met die vorm geschreven en
+  door de mixins en de `coordinator_*`-onderdelen gewoon geïmporteerd. De
+  `TYPE_CHECKING`-terugimports van `coordinator_events`, `coordinator_lifecycle`,
+  `coordinator_reporting`, `coordinator_round` en `coordinator_tracking`, het
+  `_CoordinatorBase`-omweg van `hand.py` en de zeven andere mixins, en de
+  stubs `def naam(self) -> X: ...` verdwijnen.
+- `flow_surface.py` (`FlowSurface`) is hetzelfde voor de configuratiestroom:
+  de indexen en lijsten die de `flow_*`- en `form_*`-functies lezen en de stappen
+  die ze aanroepen. `ClimateDirectorOptionsFlow` erft het, en de
+  `TYPE_CHECKING`-terugimport van `config_flow` verdwijnt uit negen bestanden.
+
+`NAMED_EXCLUSIONS_BUDGET` in `tests/test_coverage_exclusions.py` zakt tot het
+getal dat dan overblijft (de bedoeling is 41 of lager); de bewaking blijft een
+ratel die alleen kan dalen.
+
+##### Stap 7 — de onderdelen van de coordinator zonder privé attributen
+
+De zes `coordinator_*`-onderdelen krijgen de coordinator als eerste argument en
+lezen en zetten nu ruim tachtig privé attributen ervan. Dat wordt:
+
+| Onderdeel | Eigen staat (klasse in `coordinator_state.py`) | Wat erin staat |
+|---|---|---|
+| `coordinator_tracking.py` | `TrackingState` (`coordinator.tracking`) | `commanded_off`, `commanded_on`, `precipitation_seen_at` |
+| `coordinator_round.py` | `RoundState` (`coordinator.round`) | `issued`, `sent_setpoints`, `family_since`, `family_seen`, `cancel_deferral`, `clock_reeval_unsub`, `lock`, `debouncer` |
+| `coordinator_reporting.py` | `ReportingState` (`coordinator.reporting`) | `unusable_since`, `unusable_latest`, `unsupported_since`, `unapplied`, `waiting` |
+| `coordinator_events.py` | `EventsState` (`coordinator.events`) | `refused` |
+| `coordinator_lifecycle.py` | `LifecycleState` (`coordinator.lifecycle`) | `restored`, `closing` |
+
+Wat een mixin bezit en een onderdeel moet lezen (de verzoeken en de overbrugging
+van de vooruit-verzoeken, de teruggegeven handen, het thuiskomst- en
+slaapmoment, de opslag) krijgt een publieke naam op de coordinator, zoals
+`zone_override_until` die al heeft; de methodes van een mixin die een onderdeel
+aanroept krijgen ook een publieke naam. Een onderdeel roept een ander onderdeel
+rechtstreeks aan (`coordinator_reporting.note_unusable(coordinator, …)`) en niet
+meer via een dunne methode op de coordinator. De coordinator houdt alleen de
+methodes die Home Assistant, een mixin of een platform aanroept. `coordinator.py`
+blijft onder de 500 regels of staat op `FROZEN_MODULES`.
+
+Bewaking: `tests/test_module_boundaries.py` eist dat geen enkel bestand van het
+pakket behalve `coordinator.py` een attribuut met een leidende onderstreping
+leest of zet op een naam `coordinator`, en dat geen onderdeel een privé functie
+van een ander onderdeel aanroept.
+
+##### Stap 8 — de mutatiebaan
+
+`script/mutation_probe.py` krijgt mutaties op `area_clash`: de aanroep weg, de
+overnemer niet overslaan, verliezers en eigenaars verwisseld, `kept.pop` weg, de
+beste eigenaar vervangen door de slechtste, en een rivaal buiten het gebied. De
+lijst van mutaties waarmee de verhuizingen gemeten worden staat in `script/`, niet
+alleen op de machine van wie meet.
+
+##### Stap 9 — twee gedragsbesluiten en een gemeten vervolg
+
+| Punt | Besluit | Wat er gebeurt |
+|---|---|---|
+| Een geweigerde winnaar van een gebied | laten zoals het is | de verliezer blijft die ronde onbediend en de volgende ronde beslist opnieuw; de uitkomst valt aan de veilige kant (kort koud, nooit twee systemen tegelijk). Het ontwerp onder "Nog te bouwen" noemt het terugzetten van het verzoek als alternatief en blijft staan als idee. |
+| Een bron zonder `autostart` buiten een groep met de ketel | `validate()` waarschuwt | een nieuwe `Problem`-code meldt een bron zonder `autostart` die in het gebied van een ketel staat en in geen enkele exclusieve groep; het gedrag van de engine verandert niet |
+| Een ketel in meer dan één zone zonder `covers_zones` | `validate()` meldt het | een nieuwe `Problem`-code meldt een ketel die in meer dan één zone staat terwijl `covers_zones` ontbreekt, want zonder dat veld is er geen gebied en dus geen bescherming |
+
+Beide meldingen krijgen een vertaling in alle zeven tekstbestanden en een regel
+in de zes gidsen. Wat een probe meet en wat niet, staat in de release notes.
+
+##### Bewijs per stap
+
+Hetzelfde bewijs als bij de eerste indeling: de engine- en v1-probe byte-gelijk,
+de E-, N- en Q-probes identiek, een gebiedsprobe gelijk (behalve voor stap 9),
+`pytest --collect-only` zonder verdwenen toets, een ast-vergelijking van de
+functielichamen, dekking 100 %, de poort op het getal van stap 6, de kaart schoon
+en de mutatielijst volledig gevangen.
+
 ### Uitbreidbaarheid — de vorm die dat mogelijk maakt
 
 Nieuwe poorten, bronrollen, conflictbeleiden en circuitbeperkingen haken elk op één
@@ -3595,6 +3764,171 @@ The shared helpers live in `tests/conftest.py` or in one of the helper files
 `tests/guide_helpers.py`, `tests/repair_helpers.py`, `tests/guard_helpers.py`,
 `tests/override_helpers.py` and `tests/coverage_helpers.py`. No `test_*.py` imports from another `test_*.py`
 any more.
+
+#### Further layout
+
+This layout finishes what the clean-up left open: every module with one subject,
+no module over 500 lines outside the named lists, and a module border that is a
+border. Here too only code moves: the same lines, the same `Reason` values and
+`Problem` codes, the same storage shape and the same entities, and a move that
+changes a line's meaning gets a commit of its own afterwards. Only the two
+behaviour decisions at the end change what the integration does. Whoever wants to
+arrange one of the files below differently changes this chapter first.
+
+The order runs from the least to the most entangled step; every step is one
+commit and is pushed only when its predecessor is green.
+
+| Step | What | Why here |
+|---|---|---|
+| 1 | the `getattr` fallbacks on attributes, and the doubled keyword check | touches only the stand-ins in the tests and one line |
+| 2 | the cycles between `texts.py` and `entity_texts.py`, and between `problems.py` and `repair_notices.py` | import lines only |
+| 3 | the impact map independent of the environment | touches only `script/` |
+| 4 | the duty choice and the capacity out of `engine/constraints.py` | one file, one caller |
+| 5 | `engine/validation.py` per subject | pure move of rule functions |
+| 6 | a protocol per layer | removes the back-imports under `TYPE_CHECKING` |
+| 7 | the `coordinator_*` parts without private attributes of the coordinator | touches the most files |
+| 8 | the mutation lane with `area_clash` and the list in the repository | measures the steps above |
+| 9 | the two behaviour decisions | only once the moves have been measured |
+
+##### Step 1 — no fallback on own attributes
+
+A mixin reads an attribute of the coordinator as `self.<name>`. The thirteen
+`getattr(self, "<name>", default)` lines in `state_store.py`, `world_builder.py`
+and `hand_start.py` existed because a stand-in in the tests did not carry the
+attribute; the stand-in gets the attribute, and the mixin simply reads it.
+`tests/test_coordinator_surface.py` already demands that a stand-in carry every
+member its borrowed methods touch; without the fallback that holds for every
+member. The check on the keyword and the calendars that feed the brakes (now
+doubled in `readability.unreadable_inputs` and `engine/hand_start.brakes_readable`)
+stands in one place in `engine/hand_start.py`, and `readability.py` calls it.
+
+##### Step 2 — no cycle between the general and the specialised module
+
+| File | What goes | What takes its place |
+|---|---|---|
+| `texts.py` | the re-export of `entity_texts` at the bottom, with `# noqa: E402` | the callers import from `entity_texts` |
+| `problems.py` | the re-export of `repair_notices` at the bottom, with `# noqa: E402` | the callers import from `repair_notices` |
+
+The guard: no `# noqa: E402` in the package.
+
+##### Step 3 — the impact map is not the machine's
+
+A full run now replaces the map with what it saw itself, and a local run on
+Windows does not see the directory `script/` for `tests/test_controls_live.py`
+while the CI does. The map becomes a merge: a full run merges existing lines with
+what it sees, and drops a line only when the test file or the input file no
+longer exists. The guard: a test that leaves a map with an extra line standing and
+rejects a map with a missing line.
+
+##### Step 4 — the duty choice and the capacity
+
+| New file | Subject | What moves |
+|---|---|---|
+| `engine/circuit_requests.py` | what a zone asks of a circuit and gets | `Request`, `Grant`, `Outcome` |
+| `engine/circuit_policy.py` | the duty choice on a circuit | `active_family`, `forced_families`, `choose_family`, `any_managed_running` |
+| `engine/capacity.py` | the capacity and the short cycle | `standing_claims`, `keeps_claiming`, `apply_capacity`, `apply_short_cycle` |
+
+`engine/constraints.py` keeps `resolve` and `finish`. The three types stand in a
+file of their own because both `circuit_policy` and `capacity` need them and
+`constraints` calls both; that way the direction stays downward. The callers of
+`constraints.Request`, `constraints.Grant` and `constraints.Outcome` import from
+`circuit_requests`. `constraints.py` thereby leaves `FROZEN_MODULES`.
+
+##### Step 5 — the validation per subject
+
+`engine/validation.py` keeps `validate()` and the one `RULES` list in the existing
+order; the rule functions stand per subject, with a public name (without a
+leading underscore, since `validation.py` imports them).
+
+| New file | Subject | What moves |
+|---|---|---|
+| `engine/problem.py` | the complaint itself | `Problem` |
+| `engine/validation_shared.py` | shared checks and helpers | `pinned_season`, `season_names`, `duplicates`, `windows`, `outdoor_known` and the season rule |
+| `engine/validation_zones.py` | zones | the doubled zone ids, an entity twice in a zone, a unit in no zone, the zone rules, the schedule, the stuck time, the outdoor bands and the maximum of a pre-conditioning request |
+| `engine/validation_sources.py` | sources and generators | the doubled source ids, the outdoor window and the areas of a source, the families, the generators and the exclusive groups |
+| `engine/validation_circuits.py` | circuits | the doubled circuit ids, a unit on two circuits, the circuit rules, the layout and the switch times |
+| `engine/validation_residents.py` | residents | the resident without presence, the sleep settings and the quiet window |
+| `engine/validation_windows.py` | windows | the windows without length, the half-filled guest window and the holiday calendars |
+| `engine/validation_openings.py` | openings | the doubled opening ids, the openings, the house-wide stops, the open state of a cover and the stuck time below the configured rest |
+
+A rule that touches two subjects stands with the subject whose field it checks.
+`MODULE_EXCEPTIONS` loses the entry `engine/validation.py`. The importers of
+`Problem` (`engine/__init__.py`, `engine/manual_sources.py` and the tests) import
+from `engine/problem.py`.
+
+##### Step 6 — a protocol per layer
+
+A protocol that names only members (attributes and `Callable` types, without a
+method body) can simply be inherited as a base: at run time nothing comes about
+that could shadow a real method. Therefore:
+
+- `coordinator_surface.py` (`CoordinatorSurface`) is written in that form and
+  simply imported by the mixins and the `coordinator_*` parts. The `TYPE_CHECKING`
+  back-imports of `coordinator_events`, `coordinator_lifecycle`,
+  `coordinator_reporting`, `coordinator_round` and `coordinator_tracking`, the
+  `_CoordinatorBase` trick of `hand.py` and the seven other mixins, and the stubs
+  `def name(self) -> X: ...` disappear.
+- `flow_surface.py` (`FlowSurface`) is the same for the configuration flow: the
+  indexes and lists the `flow_*` and `form_*` functions read and the steps they
+  call. `ClimateDirectorOptionsFlow` inherits it, and the `TYPE_CHECKING`
+  back-import of `config_flow` disappears from nine files.
+
+`NAMED_EXCLUSIONS_BUDGET` in `tests/test_coverage_exclusions.py` drops to the
+number that remains (the intention is 41 or lower); the guard stays a ratchet
+that can only go down.
+
+##### Step 7 — the coordinator parts without private attributes
+
+The six `coordinator_*` parts receive the coordinator as their first argument and
+now read and set well over eighty private attributes of it. That becomes:
+
+| Part | Own state (class in `coordinator_state.py`) | What it holds |
+|---|---|---|
+| `coordinator_tracking.py` | `TrackingState` (`coordinator.tracking`) | `commanded_off`, `commanded_on`, `precipitation_seen_at` |
+| `coordinator_round.py` | `RoundState` (`coordinator.round`) | `issued`, `sent_setpoints`, `family_since`, `family_seen`, `cancel_deferral`, `clock_reeval_unsub`, `lock`, `debouncer` |
+| `coordinator_reporting.py` | `ReportingState` (`coordinator.reporting`) | `unusable_since`, `unusable_latest`, `unsupported_since`, `unapplied`, `waiting` |
+| `coordinator_events.py` | `EventsState` (`coordinator.events`) | `refused` |
+| `coordinator_lifecycle.py` | `LifecycleState` (`coordinator.lifecycle`) | `restored`, `closing` |
+
+What a mixin owns and a part must read (the pre-conditioning requests and their
+bypass, the handed-back hands, the homecoming and sleep moment, the storage) gets
+a public name on the coordinator, as `zone_override_until` already has; the methods
+of a mixin that a part calls get a public name too. A part calls another part
+directly (`coordinator_reporting.note_unusable(coordinator, …)`) and no longer
+through a thin method on the coordinator. The coordinator keeps only the methods
+that Home Assistant, a mixin or a platform calls. `coordinator.py` stays under 500
+lines or stands on `FROZEN_MODULES`.
+
+The guard: `tests/test_module_boundaries.py` demands that no file of the package
+except `coordinator.py` reads or sets an attribute with a leading underscore on a
+name `coordinator`, and that no part calls a private function of another part.
+
+##### Step 8 — the mutation lane
+
+`script/mutation_probe.py` gains mutations on `area_clash`: the call gone, the
+taker-over not skipped, losers and owners swapped, `kept.pop` gone, the best
+owner replaced by the worst, and a rival outside the area. The list of mutations
+the moves are measured with stands in `script/`, not only on the machine of
+whoever measures.
+
+##### Step 9 — two behaviour decisions and a measured follow-up
+
+| Point | Decision | What happens |
+|---|---|---|
+| A refused winner of an area | leave it as it is | the loser stays unserved that round and the next round decides again; the outcome falls on the safe side (briefly cold, never two systems at once). The design under "Still to build" names putting the request back as an alternative and stays as an idea. |
+| A source without `autostart` outside a group with the boiler | `validate()` warns | a new `Problem` code reports a source without `autostart` that stands in a boiler's area and in no exclusive group; the engine's behaviour does not change |
+| A boiler in more than one zone without `covers_zones` | `validate()` reports it | a new `Problem` code reports a boiler standing in more than one zone while `covers_zones` is missing, because without that field there is no area and so no protection |
+
+Both notices get a translation in all seven text files and a line in the six
+guides. What a probe measures and what not stands in the release notes.
+
+##### Proof per step
+
+The same proof as with the first layout: the engine and v1 probes byte-identical,
+the E, N and Q probes identical, an area probe equal (except for step 9),
+`pytest --collect-only` without a vanished test, an ast comparison of the function
+bodies, coverage 100 %, the gate at the number of step 6, the map clean and the
+mutation list fully caught.
 
 ### Extensibility — the shape that makes it possible
 
