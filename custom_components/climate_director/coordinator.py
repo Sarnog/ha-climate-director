@@ -115,13 +115,14 @@ class ClimateDirectorCoordinator(
 ):
     """Reads the world, runs the engine, applies the outcome."""
 
-    # De gastheer zet deze twee zelf, buiten `__init__` om; hier expliciet
+    # De gastheer zet deze drie zelf, buiten `__init__` om; hier expliciet
     # benoemd zodat het protocol ze niet als oningevuld blijft zien.
     #
-    # The host sets these two itself, outside `__init__`; named explicitly here
+    # The host sets these three itself, outside `__init__`; named explicitly here
     # so the protocol does not keep seeing them as unfilled.
     hass: HomeAssistant
     name: str
+    data: Plan
 
     def __init__(self, hass: HomeAssistant, entry: ClimateDirectorEntry) -> None:
         """Set up the coordinator for one installation."""
@@ -422,8 +423,6 @@ class ClimateDirectorCoordinator(
         after a restart.
         """
         return temperature_unit_of(self.hass)
-
-    # -- opzetten / setting up ----------------------------------------------
 
     # -- aanleidingen / triggers --------------------------------------------
 

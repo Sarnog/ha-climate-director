@@ -35,6 +35,21 @@ HAND_START_BRAKES = frozenset(
 )
 
 
+def holiday_feeds_brakes(config: DirectorConfig) -> bool:
+    """Return whether the holiday calendars feed the three brakes at all.
+
+    De feestdagenagenda voedt de remmen alleen met een trefwoord en minstens één
+    ingestelde agenda; zonder die twee bestaat er geen invoer om te lezen. De
+    koppelingslaag en `brakes_readable` vragen het hier, zodat ze het altijd eens
+    zijn.
+
+    The holiday calendars feed the brakes only with a keyword and at least one
+    configured calendar; without those two there is no input to read. The binding
+    layer and `brakes_readable` ask here, so they always agree.
+    """
+    return bool(config.holiday_keyword.strip() and any(config.holiday_calendars))
+
+
 def brakes_readable(config: DirectorConfig, world: WorldState) -> bool:
     """Return whether every input feeding the three brakes gave a reading.
 
@@ -62,7 +77,7 @@ def brakes_readable(config: DirectorConfig, world: WorldState) -> bool:
         sleep_missing = UnreadableInput(ReadableInput.SLEEP, resident.resident_id)
         if resident.sleep_entity and (state is None or sleep_missing in world.unreadable):
             return False
-    if config.holiday_keyword.strip() and any(config.holiday_calendars):
+    if holiday_feeds_brakes(config):
         return UnreadableInput(ReadableInput.HOLIDAY) not in world.unreadable
     return True
 

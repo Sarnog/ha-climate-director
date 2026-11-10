@@ -673,6 +673,7 @@ class _PreconditionStandIn:
         self._precondition_bypass: set[str] = set()
         self._override_before_restore: set[str] = set()
         self._request_before_restore: set[str] = set()
+        self._restored = True
 
     # De echte methodes, zodat de begrenzing en het opschonen meegetest worden.
     # The real methods, so the capping and the pruning are tested along.

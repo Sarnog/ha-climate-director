@@ -81,14 +81,15 @@ class _Coordinator:
         self.evaluations = 0
         self._listener = None
         # De notitie van wat de gebruiker vóór het herstel zelf deed: de schakelaar
-        # noteert elke echte overgang. Deze stand-in draait geen opstart, dus
-        # `_note_by_hand_before_restore` ziet `_restored` ontbreken en laat de
-        # notitie meteen gaan.
+        # noteert elke echte overgang. Deze stand-in draait geen opstart en staat
+        # dus op `_restored = True`: `_note_by_hand_before_restore` laat de notitie
+        # meteen gaan.
         #
         # The note of what the user did before the restore: the switch
-        # notes every real transition. This stand-in runs no startup, so
-        # `_note_by_hand_before_restore` finds `_restored` missing and lets the
-        # note go at once.
+        # notes every real transition. This stand-in runs no startup and so stands
+        # at `_restored = True`: `_note_by_hand_before_restore` lets the note go at
+        # once.
+        self._restored = True
         self._override_before_restore: set[str] = set()
         self._request_before_restore: set[str] = set()
         self._handed_back: dict = {}

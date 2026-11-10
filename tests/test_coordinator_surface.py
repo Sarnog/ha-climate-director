@@ -18,10 +18,10 @@ mypy via het protocol laat passeren; (3) de echte coördinator, opgestart met
 `start_house`, heeft elk lid; (4) elke stand-in in `tests/` die een methode van
 `ClimateDirectorCoordinator` leent (`naam = ClimateDirectorCoordinator.<methode>`
 in de klassebody) draagt zelf elk protocollid dat die methodes als `self.<lid>`
-aanraken: in de klassebody, of als `self.<lid> = …` in een eigen methode. Niet
-gedekt: een naam die via `getattr(self, …)` met een standaardwaarde gelezen wordt
-telt bij (2) en (4) niet, want die mag ontbreken; een methode die een stand-in op
-een andere manier leent (via een basisklasse, of `item.x = …` van buitenaf), en
+aanraken: in de klassebody, of als `self.<lid> = …` in een eigen methode. Geen
+lid mag ontbreken: `tests/test_module_boundaries.py` laat geen `getattr(self, …)`
+met een terugval toe. Niet gedekt: een methode die een stand-in op een andere
+manier leent (via een basisklasse, of `item.x = …` van buitenaf), en
 leden buiten het protocol die een geleende methode aanraakt.
 
 The coordinator's protocol names exactly what the mixins use.
@@ -45,8 +45,8 @@ has every member; (4) every stand-in in `tests/` that borrows a method of
 `ClimateDirectorCoordinator` (`name = ClimateDirectorCoordinator.<method>` in the
 class body) carries every protocol member those methods touch as
 `self.<member>` itself: in the class body, or as `self.<member> = …` in a method
-of its own. Not covered: a name read through `getattr(self, …)` with a default
-does not count for (2) and (4), since it may be missing; a method a stand-in
+of its own. No member may be missing: `tests/test_module_boundaries.py` allows
+no `getattr(self, …)` with a fallback. Not covered: a method a stand-in
 borrows another way (through a base class, or `item.x = …` from outside), and
 members outside the protocol that a borrowed method touches.
 """

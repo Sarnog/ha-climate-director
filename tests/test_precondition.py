@@ -340,6 +340,7 @@ class TestTheRequestItself:
                 self._precondition_bypass: set[str] = set()
                 self._override_before_restore: set[str] = set()
                 self._request_before_restore: set[str] = set()
+                self._restored = True
                 self.asked = 0
                 self.saved = 0
 

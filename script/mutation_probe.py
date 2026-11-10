@@ -104,8 +104,7 @@ MUTATIONS = [
         "name": "handstart-knop-zonder-rem",
         "file": "custom_components/climate_director/hand_start.py",
         "old": (
-            "        if not brakes_remaining(self.config, self.build_world(), zone, "
-            "self._published_plan()):\n"
+            "        if not brakes_remaining(self.config, self.build_world(), zone, self.data):\n"
             "            return"
         ),
         "new": "        if False:\n            return",

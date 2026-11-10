@@ -41,8 +41,13 @@ def method_names() -> set[str]:
     return names
 
 
-def getattr_fallbacks_on_own_methods() -> list[str]:
-    """`getattr(self, "<own method>", ...)` calls: a fallback on a method of our own."""
+def getattr_fallbacks_on_self() -> list[str]:
+    """`getattr(self, "<name>", ...)` calls: a fallback on a member of our own.
+
+    Two shapes count: a name with a default (an attribute or a method that may be
+    missing) and a name that is a method of a class in the package, with or without
+    a default.
+    """
     methods = method_names()
     found: list[str] = []
     for path in package_files():
@@ -55,33 +60,38 @@ def getattr_fallbacks_on_own_methods() -> list[str]:
                 and isinstance(node.args[0], ast.Name)
                 and node.args[0].id == "self"
                 and isinstance(node.args[1], ast.Constant)
-                and node.args[1].value in methods
+                and (len(node.args) >= 3 or node.args[1].value in methods)
             ):
                 found.append(f"{path.relative_to(PACKAGE).as_posix()}:{node.lineno}")
     return found
 
 
-def test_no_own_method_is_reached_through_a_getattr_fallback() -> None:
-    """Een eigen methode wordt aangeroepen, niet via `getattr(self, naam, terugval)`.
+def test_no_own_member_is_reached_through_a_getattr_fallback() -> None:
+    """Een eigen attribuut of methode wordt gelezen, niet via `getattr(self, naam, terugval)`.
 
-    Een terugval op een methode die de klasse zelf (of een mixin) definieert
-    verbergt dat een stand-in het lid mist: de stand-in hoort het lid te krijgen.
+    Een terugval op een lid dat de klasse zelf (of een mixin of het protocol)
+    draagt verbergt dat een stand-in het lid mist: de stand-in hoort het lid te
+    krijgen.
 
-    An own method is called, not reached through `getattr(self, name, fallback)`.
-    A fallback on a method the class itself (or a mixin) defines hides that a
-    stand-in lacks the member: the stand-in should get the member.
+    An own attribute or method is read, not reached through
+    `getattr(self, name, fallback)`. A fallback on a member the class itself (or a
+    mixin or the protocol) carries hides that a stand-in lacks the member: the
+    stand-in should get the member.
     """
-    found = getattr_fallbacks_on_own_methods()
+    found = getattr_fallbacks_on_self()
     assert not found, (
-        "getattr-terugval op een eigen methode / getattr fallback on an own method: "
-        + ", ".join(found)
+        "getattr-terugval op een eigen lid / getattr fallback on an own member: " + ", ".join(found)
     )
 
 
-def test_the_getattr_guard_sees_a_fallback_on_an_own_method(tmp_path: Path, monkeypatch) -> None:
-    """De bewaking merkt een verzonnen terugval echt op, en een gewoon attribuut niet.
+def test_the_getattr_guard_sees_a_fallback_on_an_own_member(tmp_path: Path, monkeypatch) -> None:
+    """De bewaking merkt een verzonnen terugval echt op, ook in een async def.
 
-    The guard really notices an invented fallback, and not a plain attribute.
+    Een vreemd object, of een naam zonder terugval die geen methode is, blijft
+    ongemoeid.
+
+    The guard really notices an invented fallback, an async def included. A
+    foreign object, or a name without a fallback that is no method, is left alone.
     """
     package = tmp_path / "package"
     package.mkdir()
@@ -94,11 +104,22 @@ def test_the_getattr_guard_sees_a_fallback_on_an_own_method(tmp_path: Path, monk
         "        first = getattr(self, 'payload', dict)()\n"
         "        second = getattr(self, 'plain', None)\n"
         "        third = getattr(other, 'payload', dict)()\n"
-        "        return first, second, third\n",
+        "        fourth = getattr(self, 'payload')\n"
+        "        fifth = getattr(self, 'plain')\n"
+        "        return first, second, third, fourth, fifth\n",
+        encoding="utf-8",
+    )
+    (package / "later.py").write_text(
+        "class Later:\n"
+        "    async def run(self):\n"
+        "        def inner():\n"
+        "            return getattr(self, '_closing', False)\n"
+        "        return inner()\n",
         encoding="utf-8",
     )
     monkeypatch.setattr(f"{__name__}.PACKAGE", package)
-    assert getattr_fallbacks_on_own_methods() == ["host.py:5"]
+    found = sorted(getattr_fallbacks_on_self())
+    assert found == ["host.py:5", "host.py:6", "host.py:8", "later.py:4"]
 
 
 def private_imports_across_modules() -> list[str]:

@@ -31,7 +31,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.core import Event, EventStateChangedData, callback
 from homeassistant.util import dt as dt_util
 
-from .engine import ModeFamily, Plan, WorldState, family_of, hand_start
+from .engine import ModeFamily, WorldState, family_of, hand_start
 from .engine.gates import brakes_remaining
 from .hand import HandMixin
 from .readability import unreadable
@@ -60,19 +60,6 @@ class HandStartMixin(HandMixin):
     """
 
     _handed_back: dict[str, date]
-
-    def _published_plan(self) -> Plan | None:
-        """Return the last published plan, which the protocol does not declare.
-
-        `DataUpdateCoordinator` draagt `data` als eigenschap; het protocol van de
-        mixins hoeft die eigenschap niet te herhalen. Deze ene lezer houdt de
-        uitzondering bij één plek in plaats van in elke methode.
-
-        `DataUpdateCoordinator` carries `data` as a property; the mixins'
-        protocol need not repeat that property. This one reader keeps the
-        exception in one place instead of in every method.
-        """
-        return getattr(self, "data", None)
 
     @callback
     def _notice_hand_start(self, event: Event[EventStateChangedData]) -> None:
@@ -133,7 +120,7 @@ class HandStartMixin(HandMixin):
         zone = self.config.zone(zone_id)
         if zone is None or zone_id in self._hand_starts:
             return
-        if not brakes_remaining(self.config, self.build_world(), zone, self._published_plan()):
+        if not brakes_remaining(self.config, self.build_world(), zone, self.data):
             return
         self._remember_hand_starts((zone_id,))
 
@@ -164,7 +151,7 @@ class HandStartMixin(HandMixin):
         world would already see the hand as 'running' and could make a brake
         disappear; recognition therefore reads the published `closed_gates`.
         """
-        plan = self._published_plan()
+        plan = self.data
         decision = plan.decision_for(zone_id) if plan is not None else None
         return decision is not None and bool(
             hand_start.HAND_START_BRAKES.intersection(decision.closed_gates)
@@ -245,7 +232,7 @@ class HandStartMixin(HandMixin):
         an unknown zone always lapse. The rest of the world does not change.
         """
         residents = world.residents
-        previous = self._published_plan()
+        previous = self.data
         expired: list[str] = []
         readable = hand_start.brakes_readable(self.config, world)
         if readable and (

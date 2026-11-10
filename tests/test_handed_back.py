@@ -1051,6 +1051,12 @@ class TestItSurvivesARestart:
                 # This stand-in has no override; the restore reads the empty
                 # state and therefore leaves a hand standing.
                 self.zone_overrides: dict[str, bool] = {}
+                self.zone_override_until: dict[str, datetime] = {}
+                self.zone_override_started: dict[str, datetime] = {}
+                self.zone_override_when_done: dict[str, str] = {}
+                self.zone_override_entity: dict[str, str] = {}
+                self._closing = False
+                self._restored = True
                 self._store = FakeStore()
                 # Vóór het herstel onthoudt `_async_save_state` alleen dát er iets
                 # te bewaren viel; deze stand-in zet de vlag op zijn beginwaarde.

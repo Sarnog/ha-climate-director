@@ -95,24 +95,21 @@ class StateStoreMixin(_CoordinatorBase):
             **self._room_presence_payload(),
             "hand_starts": self._hand_starts_payload(),
             "home_since": {
-                resident_id: since.isoformat()
-                for resident_id, since in getattr(self, "_home_since", {}).items()
+                resident_id: since.isoformat() for resident_id, since in self._home_since.items()
             },
-            "asleep_since": _isoformat(getattr(self, "_asleep_since", None)),
+            "asleep_since": _isoformat(self._asleep_since),
             "commanded_off": {
-                entity_id: when.isoformat()
-                for entity_id, when in getattr(self, "_commanded_off", {}).items()
+                entity_id: when.isoformat() for entity_id, when in self._commanded_off.items()
             },
             "override_until": {
-                zone_id: until.isoformat()
-                for zone_id, until in getattr(self, "zone_override_until", {}).items()
+                zone_id: until.isoformat() for zone_id, until in self.zone_override_until.items()
             },
             "override_started": {
                 zone_id: started.isoformat()
-                for zone_id, started in getattr(self, "zone_override_started", {}).items()
+                for zone_id, started in self.zone_override_started.items()
             },
-            "override_when_done": dict(getattr(self, "zone_override_when_done", {})),
-            "override_entity": dict(getattr(self, "zone_override_entity", {})),
+            "override_when_done": dict(self.zone_override_when_done),
+            "override_entity": dict(self.zone_override_entity),
         }
 
     @callback
@@ -160,7 +157,7 @@ class StateStoreMixin(_CoordinatorBase):
         # P1: a round still running during shutdown - `apply` waits on cloud
         # integrations - must not schedule a new delayed write after the flush;
         # that would resurrect the file after `async_remove_entry`.
-        if getattr(self, "_closing", False):
+        if self._closing:
             return
         # Vóór het herstel wordt er niets geschreven. HA's `Store.async_load`
         # leest een wachtende schrijfactie in plaats van het bestand, dus een
@@ -175,7 +172,7 @@ class StateStoreMixin(_CoordinatorBase):
         # user's verdict is gone. Only the fact *that* something needed saving is
         # remembered; `_async_save_pending_state` writes it away once after the
         # restore.
-        if not getattr(self, "_restored", True):
+        if not self._restored:
             self._save_pending = True
             return
         self._store.async_delay_save(self._store_payload, 1)
@@ -235,7 +232,7 @@ class StateStoreMixin(_CoordinatorBase):
         itself (the `RestoreEntity` in `async_added_to_hass`) is no action by the
         user, and a call afterwards needs to know nothing.
         """
-        if getattr(self, "_restored", True):
+        if self._restored:
             return
         if kind == "override":
             self._override_before_restore.add(zone_id)

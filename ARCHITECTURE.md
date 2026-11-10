@@ -1619,8 +1619,8 @@ service-API.
   mixins, hun helpers en de schemabouwers krijgen een publieke naam in het
   bestand waar ze wonen.
 - `tests/test_module_boundaries.py` bewaakt drie van deze grenzen met `ast`: geen
-  privé naam over een modulegrens, geen `getattr(self, "<eigen methode>", ...)` en
-  geen import binnen een functie.
+  privé naam over een modulegrens, geen `getattr(self, "<naam>", terugval)` op een
+  eigen lid en geen import binnen een functie.
 - Een tegel van de veldtabel blijft in `engine/fields.py`; de selectors en de
   vertaling naar `vol.Schema` blijven in de Home Assistant-helft.
 - Een nieuw bestand is een onderwerp, geen restbak: geen `utils`, `helpers`,
@@ -3684,8 +3684,8 @@ API.
   their helpers and the schema builders get a public name in the file where they
   live.
 - `tests/test_module_boundaries.py` guards three of these borders with `ast`: no
-  private name across a module border, no `getattr(self, "<own method>", ...)` and
-  no import inside a function.
+  private name across a module border, no `getattr(self, "<name>", fallback)` on an
+  own member and no import inside a function.
 - A field-table cell stays in `engine/fields.py`; the selectors and the
   translation to `vol.Schema` stay in the Home Assistant half.
 - A new file is a subject, not a catch-all: no `utils`, `helpers`, `extra` or

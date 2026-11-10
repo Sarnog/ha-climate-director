@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.storage import Store
 
-from .engine import ResidentState, WorldState
+from .engine import Plan, ResidentState, WorldState
 from .engine.diff import Change
 from .engine.families import ModeFamily
 from .engine.models import DirectorConfig, Season
@@ -50,6 +50,10 @@ class CoordinatorSurface(Protocol):
     hass: HomeAssistant
     name: str
     shadow: bool
+    data: Plan
+    _started_at: datetime | None
+    _closing: bool
+    _restored: bool
     master_enabled: bool
     holiday_mode: bool
     guest_mode: bool

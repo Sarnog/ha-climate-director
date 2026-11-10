@@ -468,7 +468,7 @@ FUNCTION_LIMIT = 80
 # measure; the functions in `engine/gates.py` stay under eighty.
 MODULE_EXCEPTIONS: dict[str, int] = {
     "engine/validation.py": 1288,
-    "coordinator.py": 611,
+    "coordinator.py": 610,
 }
 
 # De stand van de modules tussen de 500 regels en de maat van 700: de projectafspraak
@@ -487,8 +487,8 @@ GROWTH_FREEZE_LIMIT = 500
 
 FROZEN_MODULES: dict[str, int] = {
     "engine/constraints.py": 618,
-    "state_store.py": 485,
-    "world_builder.py": 553,
+    "state_store.py": 482,
+    "world_builder.py": 546,
 }
 
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {

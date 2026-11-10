@@ -464,7 +464,7 @@ class WorldBuilderMixin(_CoordinatorBase):
         # start moment therefore counts as open long enough: the safe side,
         # exactly as `min_cycle_time` measures its rest after a restart on the
         # safe side too.
-        started_at = getattr(self, "_started_at", None)
+        started_at = self._started_at
         if started_at is not None and changed_at is not None and changed_at < started_at:
             changed_at = None
         return OpeningState(
@@ -505,14 +505,7 @@ class WorldBuilderMixin(_CoordinatorBase):
         )
 
     def _season(self) -> Season:
-        # `getattr` en niet `self.season_override`: de proefopstellingen in de
-        # tests dragen alleen de lezers en niet dit veld, precies zoals bij
-        # `_started_at` hierboven.
-        #
-        # `getattr` rather than `self.season_override`: the test stand-ins carry
-        # only the readers and not this field, exactly as with `_started_at`
-        # above.
-        override: Season | None = getattr(self, "season_override", None)
+        override: Season | None = self.season_override
         if override is not None:
             return override
         settings = self.config.seasons

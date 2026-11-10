@@ -952,6 +952,7 @@ class TestTheActionAcceptsAnything:
                 self._precondition_bypass: set[str] = set()
                 self._override_before_restore: set[str] = set()
                 self._request_before_restore: set[str] = set()
+                self._restored = True
 
             def async_request_evaluation(self) -> None:
                 pass
