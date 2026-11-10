@@ -1411,6 +1411,7 @@
   "custom_components/climate_director/world_builder.py"
  ],
  "tests/test_readability.py": [
+  "custom_components/climate_director/engine/hand_start.py",
   "custom_components/climate_director/readability.py"
  ],
  "tests/test_refusal_message.py": [
