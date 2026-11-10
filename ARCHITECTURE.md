@@ -1325,7 +1325,7 @@ dat alle wachtende zones tijdens de uitval starten.
 - De gebruiker beslist tussen (a) en (b) voordat er gebouwd wordt.
 
 **Meldingen noemen de instelling in de taal van de gebruiker (N16).** De regels in
-`engine/validation.py` vullen `settings`, `window` en `label` met Engelse woorden
+`engine/validation_*.py` vullen `settings`, `window` en `label` met Engelse woorden
 ("sleep window", "quiet window", "minimum cycle time"); `problems.readable` zet ze
 ongewijzigd in de vertaalde zin. Ontwerp: de engine levert vaste sleutels in plaats van
 woorden (`wake_by`, `sleep_in_until`, `quiet_window`, ...), en de koppelingslaag zoekt per
@@ -1542,7 +1542,7 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `engine/residents.py` | de bewoner | `Resident`, `SleepIn`, `WakeDeadline` en `RiseBrake` |
 | `engine/equipment.py` | apparaten en hun samenhang | `SourceRole`, `OutdoorWindow`, `ModeSettings`, `Source`, `Circuit`, `ConflictPolicy`, `Generator`, `Opening`, `HeatingLayout` |
 | `engine/rooms.py` | de ruimte en haar poortkeuze | `ZoneGate`, `Zone`, `GateSettings` |
-| `engine/validation.py` | alle configuratiecontroles | `Problem`, `validate()` en één `RULES`-lijst in de bestaande volgorde. Dit is de enige benoemde module-uitzondering boven de maat: één onderwerp, één ingang, één volgorde. |
+| `engine/validation.py` | alle configuratiecontroles | `validate()` en één `RULES`-lijst in de bestaande volgorde: één ingang, één volgorde. De regelfuncties staan per onderwerp in `engine/validation_zones.py`, `validation_sources.py`, `validation_circuits.py`, `validation_openings.py`, `validation_residents.py`, `validation_windows.py` en `validation_shared.py`; `Problem` staat in `engine/problem.py`. |
 | `engine/manual_sources.py` | de eenmalige melding over handbediende bronnen | `manual_only_problems` |
 | `engine/candidates.py` | wie mag meedoen | `handed_over`, `collect_wishes`, `serving`, de exclusieve groepen, `standing_firm` |
 | `engine/grants.py` | wie krijgt de taak | `resolve_with_fallbacks`, `resolve_circuits`, `zone_reasons`, `manual_conflict`, `exclusive_rival`, `stand_down` |
@@ -1599,7 +1599,7 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 De taakkeuze op een circuit staat in `engine/circuit_policy.py`, de capaciteit en de
 kortcyclus in `engine/capacity.py` en het verzoek, de toekenning en de uitkomst in
 `engine/circuit_requests.py`; `engine/constraints.py` houdt het oplossen van één
-circuit. `engine/validation.py` (1288 regels) is de grootste benoemde uitzondering.
+circuit.
 
 `engine/decide.py` blijft de enige ingang van de beslissing; het bevat alleen nog
 `decide()` en de volgorde van de stappen. `config_flow.py` blijft het enige
@@ -1789,7 +1789,7 @@ leidende onderstreping, want `validation.py` importeert ze).
 | Nieuw bestand | Onderwerp | Wat verhuist |
 |---|---|---|
 | `engine/problem.py` | de klacht zelf | `Problem` |
-| `engine/validation_shared.py` | gedeelde controles en hulpjes | `pinned_season`, `season_names`, `duplicates`, `windows`, `outdoor_known` en de seizoensregel |
+| `engine/validation_shared.py` | gedeelde controles en hulpjes | `pinned_season`, `season_names`, `duplicates`, `windows`, `outdoor_is_known` en de seizoensregel |
 | `engine/validation_zones.py` | zones | de dubbele zone-id's, een entiteit twee keer in een zone, een eenheid in geen zone, de zoneregels, het rooster, de vastlooptijd, de buitenbanden en het maximum van een vooruit-verzoek |
 | `engine/validation_sources.py` | bronnen en generatoren | de dubbele bron-id's, het buitenvenster en de gebieden van een bron, de families, de generatoren en de exclusieve groepen |
 | `engine/validation_circuits.py` | circuits | de dubbele circuit-id's, een eenheid op twee circuits, de circuitregels, de indeling en de wisseltijden |
@@ -3404,7 +3404,7 @@ during the outage.
 - The user decides between (a) and (b) before anything is built.
 
 **Notices name the setting in the user's language (N16).** The rules in
-`engine/validation.py` fill `settings`, `window` and `label` with English words
+`engine/validation_*.py` fill `settings`, `window` and `label` with English words
 ("sleep window", "quiet window", "minimum cycle time"); `problems.readable` puts them
 unchanged into the translated sentence. Design: the engine supplies fixed keys instead of
 words (`wake_by`, `sleep_in_until`, `quiet_window`, ...), and the binding layer looks up the
@@ -3616,7 +3616,7 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `engine/residents.py` | the resident | `Resident`, `SleepIn`, `WakeDeadline` and `RiseBrake` |
 | `engine/equipment.py` | appliances and how they hang together | `SourceRole`, `OutdoorWindow`, `ModeSettings`, `Source`, `Circuit`, `ConflictPolicy`, `Generator`, `Opening`, `HeatingLayout` |
 | `engine/rooms.py` | the room and its gate choice | `ZoneGate`, `Zone`, `GateSettings` |
-| `engine/validation.py` | every configuration check | `Problem`, `validate()` and one `RULES` list in the existing order. This is the only named module exception above the measure: one subject, one entrance, one order. |
+| `engine/validation.py` | every configuration check | `validate()` and one `RULES` list in the existing order: one entrance, one order. The rule functions stand per subject in `engine/validation_zones.py`, `validation_sources.py`, `validation_circuits.py`, `validation_openings.py`, `validation_residents.py`, `validation_windows.py` and `validation_shared.py`; `Problem` stands in `engine/problem.py`. |
 | `engine/manual_sources.py` | the one-time notice about hand-operated sources | `manual_only_problems` |
 | `engine/candidates.py` | who may take part | `handed_over`, `collect_wishes`, `serving`, the exclusive groups, `standing_firm` |
 | `engine/grants.py` | who gets the duty | `resolve_with_fallbacks`, `resolve_circuits`, `zone_reasons`, `manual_conflict`, `exclusive_rival`, `stand_down` |
@@ -3673,7 +3673,7 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 The duty choice on a circuit stands in `engine/circuit_policy.py`, the capacity and
 the short cycle in `engine/capacity.py` and the request, the grant and the outcome in
 `engine/circuit_requests.py`; `engine/constraints.py` keeps the resolving of one
-circuit. `engine/validation.py` (1288 lines) is the largest named exception.
+circuit.
 
 `engine/decide.py` stays the only entrance of the decision; it holds only
 `decide()` and the order of the steps. `config_flow.py` stays the only file Home
@@ -3861,7 +3861,7 @@ leading underscore, since `validation.py` imports them).
 | New file | Subject | What moves |
 |---|---|---|
 | `engine/problem.py` | the complaint itself | `Problem` |
-| `engine/validation_shared.py` | shared checks and helpers | `pinned_season`, `season_names`, `duplicates`, `windows`, `outdoor_known` and the season rule |
+| `engine/validation_shared.py` | shared checks and helpers | `pinned_season`, `season_names`, `duplicates`, `windows`, `outdoor_is_known` and the season rule |
 | `engine/validation_zones.py` | zones | the doubled zone ids, an entity twice in a zone, a unit in no zone, the zone rules, the schedule, the stuck time, the outdoor bands and the maximum of a pre-conditioning request |
 | `engine/validation_sources.py` | sources and generators | the doubled source ids, the outdoor window and the areas of a source, the families, the generators and the exclusive groups |
 | `engine/validation_circuits.py` | circuits | the doubled circuit ids, a unit on two circuits, the circuit rules, the layout and the switch times |

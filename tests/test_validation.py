@@ -48,7 +48,9 @@ from custom_components.climate_director.engine.models import (
     SeasonSource,
     SourceRole,
 )
-from custom_components.climate_director.engine.validation import _rule_source_covered_zones
+from custom_components.climate_director.engine.validation_sources import (
+    rule_source_covered_zones,
+)
 
 
 def problem(config: DirectorConfig, fragment: str) -> bool:
@@ -983,7 +985,7 @@ def test_a_covered_zone_that_exists_is_no_complaint() -> None:
             *house().zones[1:],
         ),
     )
-    assert list(_rule_source_covered_zones(config)) == []
+    assert list(rule_source_covered_zones(config)) == []
 
 
 def test_sleep_settings_without_a_sleep_sensor_are_reported() -> None:

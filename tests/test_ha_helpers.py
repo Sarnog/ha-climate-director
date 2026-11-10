@@ -42,8 +42,8 @@ from custom_components.climate_director.engine import (
     decide,
 )
 from custom_components.climate_director.engine.diff import Change
+from custom_components.climate_director.engine.problem import Problem
 from custom_components.climate_director.engine.serialise import config_from_dict, config_to_dict
-from custom_components.climate_director.engine.validation import Problem
 from custom_components.climate_director.flow_validation import (
     all_source_ids,
     band_errors,
@@ -742,13 +742,15 @@ class TestTheEnglishTemplatesLiveInTheCache:
         from custom_components.climate_director.engine import (
             manual_sources,
         )
-        from custom_components.climate_director.engine import (
-            validation as engine_validation,
-        )
 
+        engine_folder = Path(manual_sources.__file__).parent
+        sources = [
+            *sorted(engine_folder.glob("validation*.py")),
+            engine_folder / "manual_sources.py",
+        ]
         codes: list[str] = []
-        for module in (engine_validation, manual_sources):
-            tree = ast.parse(Path(module.__file__).read_text(encoding="utf-8"))
+        for source in sources:
+            tree = ast.parse(source.read_text(encoding="utf-8"))
             codes.extend(
                 node.args[0].value
                 for node in ast.walk(tree)

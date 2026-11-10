@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from .families import ModeFamily
 from .models import DirectorConfig
-from .validation import Problem
+from .problem import Problem
 
 
 def manual_only_problems(config: DirectorConfig) -> tuple[Problem, ...]:
