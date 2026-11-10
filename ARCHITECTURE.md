@@ -892,6 +892,11 @@ gekozen bron staat nog gewoon in die lijst, ook als er een overgedragen apparaat
 
 ### constraints.py — wat mag tegelijk
 
+`constraints.py` lost de verzoeken van één circuit op. De taakkeuze (`active_family`, de
+afgedwongen taken en de keuze tussen twee taken) staat in `circuit_policy.py`, de capaciteit
+en de kortcyclus in `capacity.py`, en het verzoek, de toekenning en de uitkomst in
+`circuit_requests.py`.
+
 De circuitregel:
 
 > Zij **F** de actieve taak van een circuit. Elke binnenunit op dat circuit staat in
@@ -960,7 +965,7 @@ via het bron-ID van een andere kamer. Twee kamers die om hetzelfde apparaat vrag
 daarbij geen tegenstanders — dat is één apparaat dat draait.
 
 Staan een handbediend apparaat én zijn groepstegenstander op hetzelfde circuit, dan
-bezet het handbediende apparaat zelf de plek (`_keeps_claiming` telt hem mee) en krijgt
+bezet het handbediende apparaat zelf de plek (`keeps_claiming` telt hem mee) en krijgt
 de tegenstander blijvend `CIRCUIT_AT_CAPACITY`; dat blijft bewust
 zo. Een exclusieve groep waarvan de leden dezelfde buitenunit delen kan zichzelf dus
 klemzetten — gebruik groepen alleen voor apparaten die geen buitenunit delen.
@@ -1591,9 +1596,10 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `entity_texts.py` | de leesbare beslissing | `reason_sentence`, `action_sentence`, `decision_message`, `decision_fields` en de sleutels daaromheen |
 | `services.py` | de service-API | de schema's, doelkeuze en registratie van `evaluate`, `precondition`, `cancel_precondition`, `set_override` en `clear_override` |
 
-De taakkeuze op een circuit, de capaciteit en de kortcyclus blijven in
-`engine/constraints.py` (618 regels, een benoemde uitzondering); de splitsing staat in
-de ROADMAP. `engine/validation.py` (1288 regels) is de grootste benoemde uitzondering.
+De taakkeuze op een circuit staat in `engine/circuit_policy.py`, de capaciteit en de
+kortcyclus in `engine/capacity.py` en het verzoek, de toekenning en de uitkomst in
+`engine/circuit_requests.py`; `engine/constraints.py` houdt het oplossen van één
+circuit. `engine/validation.py` (1288 regels) is de grootste benoemde uitzondering.
 
 `engine/decide.py` blijft de enige ingang van de beslissing; het bevat alleen nog
 `decide()` en de volgorde van de stappen. `config_flow.py` blijft het enige
@@ -2973,6 +2979,11 @@ even when a handed-over appliance sits in between.
 
 ### constraints.py — what may run together
 
+`constraints.py` resolves the requests of one circuit. The duty choice (`active_family`,
+the forced duties and the choice between two duties) stands in `circuit_policy.py`, the
+capacity and the short cycle in `capacity.py`, and the request, the grant and the outcome
+in `circuit_requests.py`.
+
 The circuit rule:
 
 > Let **F** be a circuit's active duty. Every indoor unit on that circuit sits in
@@ -3040,7 +3051,7 @@ another room's source id. Two rooms asking for the same appliance are no rivals 
 - that is one appliance running.
 
 When a hand-operated appliance and its group rival sit on the same circuit, the
-hand-operated appliance occupies the slot itself (`_keeps_claiming` counts it), the rival
+hand-operated appliance occupies the slot itself (`keeps_claiming` counts it), the rival
 gets `CIRCUIT_AT_CAPACITY` for good, and that deliberately stays so. An
 exclusive group whose members share an outdoor unit can therefore clamp itself shut —
 use groups only for appliances that do not share an outdoor unit.
@@ -3659,9 +3670,10 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `entity_texts.py` | the readable decision | `reason_sentence`, `action_sentence`, `decision_message`, `decision_fields` and the keys around them |
 | `services.py` | the service API | the schemas, target choice and registration of `evaluate`, `precondition`, `cancel_precondition`, `set_override` and `clear_override` |
 
-The duty choice on a circuit, the capacity and the short cycle stay in
-`engine/constraints.py` (618 lines, a named exception); the split stands in the
-ROADMAP. `engine/validation.py` (1288 lines) is the largest named exception.
+The duty choice on a circuit stands in `engine/circuit_policy.py`, the capacity and
+the short cycle in `engine/capacity.py` and the request, the grant and the outcome in
+`engine/circuit_requests.py`; `engine/constraints.py` keeps the resolving of one
+circuit. `engine/validation.py` (1288 lines) is the largest named exception.
 
 `engine/decide.py` stays the only entrance of the decision; it holds only
 `decide()` and the order of the steps. `config_flow.py` stays the only file Home

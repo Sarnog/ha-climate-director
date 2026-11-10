@@ -22,7 +22,7 @@ from .engine import (
     WorldState,
     decide,
 )
-from .engine.constraints import active_family
+from .engine.circuit_policy import active_family
 from .engine.diff import changes
 from .preconditions import still_running
 

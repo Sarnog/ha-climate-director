@@ -287,13 +287,13 @@ class TestASharedSourceIsHandedOverToo:
     def test_a_running_handed_over_appliance_holds_its_capacity_slot(self) -> None:
         """Het overgedragen apparaat bezet zijn plek op het circuit.
 
-        De capaciteit hing aan een eigen controle in `constraints._keeps_claiming`;
+        De capaciteit hing aan een eigen controle in `capacity.keeps_claiming`;
         sinds anker 11 loopt dat via `standing`, en deze toets houdt vast dat die
         weg hetzelfde doet: de ketel draait, niemand stuurt hem, en de zolder mag
         er niet naast gaan draaien.
 
         The handed-over appliance occupies its slot on the circuit. Capacity used
-        to hang on a check of its own in `constraints._keeps_claiming`; since
+        to hang on a check of its own in `capacity.keeps_claiming`; since
         anchor 11 that runs through `standing`, and this test pins down that the
         new route does the same: the boiler runs, nobody steers it, and the attic
         may not start beside it.

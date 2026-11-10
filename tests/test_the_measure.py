@@ -486,7 +486,6 @@ MODULE_EXCEPTIONS: dict[str, int] = {
 GROWTH_FREEZE_LIMIT = 500
 
 FROZEN_MODULES: dict[str, int] = {
-    "engine/constraints.py": 618,
     "state_store.py": 482,
     "world_builder.py": 546,
 }

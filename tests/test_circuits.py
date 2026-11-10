@@ -34,7 +34,7 @@ from custom_components.climate_director.engine import (
     Season,
     Source,
     Zone,
-    constraints,
+    circuit_policy,
     decide,
     family_of,
 )
@@ -987,7 +987,7 @@ def test_active_family_reads_unmanaged_units_too() -> None:
     world = make_world(
         climates={unit("woonkamer"): climate(MODE_OFF), unit("zolder"): climate(MODE_COOL)}
     )
-    assert constraints.active_family(world, circuit) is ModeFamily.COOL
+    assert circuit_policy.active_family(world, circuit) is ModeFamily.COOL
 
 
 @pytest.mark.parametrize("mode", ["auto", "heat_cool"])
@@ -998,7 +998,7 @@ def test_active_family_reports_ambiguous_for_unreadable_duties(mode: str) -> Non
     """
     circuit = multi_split("c", "woonkamer")
     world = make_world(climates={unit("woonkamer"): climate(mode)})
-    assert constraints.active_family(world, circuit) is ModeFamily.AMBIGUOUS
+    assert circuit_policy.active_family(world, circuit) is ModeFamily.AMBIGUOUS
 
 
 def test_a_generator_on_the_circuit_does_not_force_the_duty() -> None:
@@ -1031,7 +1031,7 @@ def test_a_generator_on_the_circuit_does_not_force_the_duty() -> None:
 def test_idle_modes_do_not_claim_a_circuit(mode: str) -> None:
     circuit = multi_split("c", "woonkamer")
     world = make_world(climates={unit("woonkamer"): climate(mode)})
-    assert constraints.active_family(world, circuit) is ModeFamily.NEUTRAL
+    assert circuit_policy.active_family(world, circuit) is ModeFamily.NEUTRAL
 
 
 def test_a_managed_unit_on_auto_does_not_hold_its_own_command_back() -> None:

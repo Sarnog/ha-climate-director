@@ -49,7 +49,7 @@ from custom_components.climate_director.engine import (
     WorldState,
     decide,
 )
-from custom_components.climate_director.engine.constraints import active_family
+from custom_components.climate_director.engine.circuit_policy import active_family
 from custom_components.climate_director.engine.diff import changes
 from custom_components.climate_director.engine.families import MODE_OFF, family_of
 from custom_components.climate_director.engine.plan import OPENING_MIN_REST

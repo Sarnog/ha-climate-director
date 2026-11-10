@@ -40,7 +40,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
-from .constraints import Request
+from .circuit_requests import Request
 from .families import MODE_FAN_ONLY, MODE_OFF, ModeFamily
 from .models import DirectorConfig
 from .plan import Reason, UnitCommand, UntouchedSource
