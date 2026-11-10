@@ -190,7 +190,7 @@ def render(
     source: str | None = None,
     target: str | None = None,
 ) -> str:
-    """Build the sentence exactly as `texts.decision_message` builds it.
+    """Build the sentence exactly as `entity_texts.decision_message` builds it.
 
     Dezelfde opbouw als in de integratie: kamer, actie, dan het apparaat en het
     setpoint met hun verbindingswoord, en de reden achter het streepje. Deze
@@ -474,7 +474,7 @@ def _action_word_tokens(words: str) -> list[str]:
 def test_the_action_word_does_not_bend_with_the_room(language: str) -> None:
     """Het actiewoord is onveranderlijk, want de kamernaam is het onderwerp.
 
-    `texts.decision_message` bouwt `f"{zone}{after_zone} {action}"`, dus de
+    `entity_texts.decision_message` bouwt `f"{zone}{after_zone} {action}"`, dus de
     kamernaam die de gebruiker zelf koos is het onderwerp van de zin. Die naam
     kan van alles zijn en de integratie kent zijn geslacht niet; een actiewoord
     dat daarmee meebuigt, zegt dus in de helft van de gevallen het verkeerde.
@@ -484,7 +484,7 @@ def test_the_action_word_does_not_bend_with_the_room(language: str) -> None:
     ongedekte randen staan bij de lijsten hierboven.
 
     The action word is invariable, because the room name is the subject.
-    `texts.decision_message` builds `f"{zone}{after_zone} {action}"`, so the room
+    `entity_texts.decision_message` builds `f"{zone}{after_zone} {action}"`, so the room
     name the user chose is the subject of the sentence. That name can be
     anything and the integration does not know its gender; an action word that
     bends with it therefore says the wrong thing half the time. So no action

@@ -2,7 +2,7 @@
 
 Every repair notice disappears when the installation unloads.
 
-Een functie als `problems.async_clear_bypassed_openings` kan bestaan zonder dat
+Een functie als `repair_notices.async_clear_bypassed_openings` kan bestaan zonder dat
 iets hem aanroept. Dan wordt die melding bij het uitladen niet opgeruimd - een
 overbruggingsmelding blijft staan nadat de entry weg is - en is de functie
 ernaast dode code die precies dat gat markeert.
@@ -32,7 +32,7 @@ installatie verdwijnt (`async_clear_watchers`, en die is wel vanuit
 `async_unload_entry` bereikbaar). De bewaking eist daarom ook van die melding dat
 er een bereikbare delete is, maar niet dat hij bij élke unload verdwijnt.
 
-A function such as `problems.async_clear_bypassed_openings` can exist while
+A function such as `repair_notices.async_clear_bypassed_openings` can exist while
 nothing calls it. Then that notice is not cleaned up on unload - a bypass
 notice stays behind after the entry is gone - and the function next to it is
 dead code marking exactly that gap.

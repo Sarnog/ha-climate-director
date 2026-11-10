@@ -233,7 +233,7 @@ FUNCTION_LIMIT = 80
 # list.
 # T6 (de leesbare beslismelding): `coordinator.py` 1972 → 1990. Het event draagt
 # er vier leesbare velden bij (`reason_text`, `action_text`, `source_name`,
-# `message`), en wat hier groeit is de aanroep naar `texts.decision_fields` plus
+# `message`), en wat hier groeit is de aanroep naar `entity_texts.decision_fields` plus
 # de vier sleutels in `_event_data`. Het samenstellen zelf - welk apparaat, welke
 # actie, welke zin - woont in `texts.py` (584 regels), want deze module staat al
 # op de lijst en de zin is tekst, geen koppeling. `_event_data` ging van 119 naar
@@ -242,7 +242,7 @@ FUNCTION_LIMIT = 80
 #
 # T6 (the readable decision message): `coordinator.py` 1972 → 1990. The event
 # gains four readable fields (`reason_text`, `action_text`, `source_name`,
-# `message`), and what grows here is the call to `texts.decision_fields` plus the
+# `message`), and what grows here is the call to `entity_texts.decision_fields` plus the
 # four keys in `_event_data`. The assembly itself - which appliance, which
 # action, which sentence - lives in `texts.py` (584 lines), because this module
 # already sits on the list and the sentence is text, not binding. `_event_data`

@@ -16,12 +16,12 @@ refused: half a feature is no feature.
 
 Dekking: de melding `precondition_unwatched` in de zeven tekstbestanden (titel,
 uitweg, en in het Nederlands en Engels de instructie dat de blauwdruk ingesteld
-moet worden) en het anker van `problems.BLUEPRINTS_URL` als kop in `README.md`.
+moet worden) en het anker van `repair_notices.BLUEPRINTS_URL` als kop in `README.md`.
 Niet gedekt: de overige meldingen en de blauwdruktekst zelf.
 
 Coverage: the `precondition_unwatched` notice in the seven text files (title, way
 out, and in Dutch and English the instruction that the blueprint must be set up)
-and the anchor of `problems.BLUEPRINTS_URL` as a heading in `README.md`. Not
+and the anchor of `repair_notices.BLUEPRINTS_URL` as a heading in `README.md`. Not
 covered: the other notices and the blueprint text itself.
 """
 
@@ -95,31 +95,31 @@ def registry(monkeypatch: pytest.MonkeyPatch) -> Registry:
 
 class TestNobodyListening:
     def test_it_raises_the_notice(self, registry: Registry) -> None:
-        assert problems.async_check_watchers(hass_with(0)) is False
-        assert [issue for issue, _ in registry.created] == [problems.UNWATCHED_ISSUE]
+        assert repair_notices.async_check_watchers(hass_with(0)) is False
+        assert [issue for issue, _ in registry.created] == [repair_notices.UNWATCHED_ISSUE]
 
     def test_it_is_a_warning_that_cannot_be_clicked_away(self, registry: Registry) -> None:
         """Nothing to fix from a dialog: the user has to build the automation."""
-        problems.async_check_watchers(hass_with(0))
+        repair_notices.async_check_watchers(hass_with(0))
         _, kwargs = registry.created[0]
         assert kwargs["severity"] is Registry.IssueSeverity.WARNING
         assert kwargs["is_fixable"] is False
 
     def test_it_points_at_the_chapter_that_explains_it(self, registry: Registry) -> None:
-        problems.async_check_watchers(hass_with(0))
+        repair_notices.async_check_watchers(hass_with(0))
         _, kwargs = registry.created[0]
-        assert kwargs["learn_more_url"] == problems.BLUEPRINTS_URL
+        assert kwargs["learn_more_url"] == repair_notices.BLUEPRINTS_URL
 
     def test_it_carries_its_own_translation(self, registry: Registry) -> None:
-        problems.async_check_watchers(hass_with(0))
+        repair_notices.async_check_watchers(hass_with(0))
         _, kwargs = registry.created[0]
-        assert kwargs["translation_key"] == problems.UNWATCHED_ISSUE
+        assert kwargs["translation_key"] == repair_notices.UNWATCHED_ISSUE
 
 
 class TestSomebodyListening:
     def test_the_notice_goes_away(self, registry: Registry) -> None:
-        assert problems.async_check_watchers(hass_with(1)) is True
-        assert registry.deleted == [problems.UNWATCHED_ISSUE]
+        assert repair_notices.async_check_watchers(hass_with(1)) is True
+        assert registry.deleted == [repair_notices.UNWATCHED_ISSUE]
         assert not registry.created
 
     # `registry` is een pytest-fixture; de test leest hem niet, maar de naam
@@ -127,11 +127,11 @@ class TestSomebodyListening:
     # `registry` is a pytest fixture; the test does not read it, but the name
     # must stay because pytest injects it by that name.
     def test_several_listeners_are_just_as_good(self, registry: Registry) -> None:  # noqa: ARG002
-        assert problems.async_check_watchers(hass_with(4)) is True
+        assert repair_notices.async_check_watchers(hass_with(4)) is True
 
     def test_the_last_installation_leaving_clears_it(self, registry: Registry) -> None:
-        problems.async_clear_watchers(hass_with(0))
-        assert registry.deleted == [problems.UNWATCHED_ISSUE]
+        repair_notices.async_clear_watchers(hass_with(0))
+        assert registry.deleted == [repair_notices.UNWATCHED_ISSUE]
 
 
 def manual_house(*, autostart: bool = False) -> DirectorConfig:
@@ -316,7 +316,7 @@ class TestTheNoticeIsUsable:
     ingesteld moet worden, als **heel woord** (`\bstel\b` / `\bset it up\b`, zodat
     *ingesteld* niet voldoet, en zonder op de hoofdletter te letten, zodat ook een
     zin die met *Stel* begint telt); en dat het anker
-    van `problems.BLUEPRINTS_URL` werkelijk als kop in `README.md` staat. Wat hij
+    van `repair_notices.BLUEPRINTS_URL` werkelijk als kop in `README.md` staat. Wat hij
     **niet** dekt: of de rest van de beschrijving leesbaar is, of de andere vier
     talen dezelfde instructie geven (die worden alleen op titel en event
     nagekeken), of de blauwdruk daarna ook echt draait, en de andere meldingen in
@@ -333,7 +333,7 @@ class TestTheNoticeIsUsable:
     the wording saying the blueprint must be set up too, searched as a **whole
     word** (`\bstel\b` / `\bset it up\b`, so *ingesteld* does not pass, and
     regardless of capitals, so a sentence opening with *Stel* counts too); and that
-    the anchor of `problems.BLUEPRINTS_URL` really stands as a heading in
+    the anchor of `repair_notices.BLUEPRINTS_URL` really stands as a heading in
     `README.md`. What it does **not** cover: whether the rest of the description
     reads well, whether the other four languages give the same instruction (they
     are only checked for title and event), whether the blueprint then really runs,
@@ -409,7 +409,7 @@ class TestTheNoticeIsUsable:
 
     def test_the_link_lands_on_a_heading_that_exists(self) -> None:
         """A learn-more link into thin air is worse than no link."""
-        anchor = problems.BLUEPRINTS_URL.split("#", 1)[1]
+        anchor = repair_notices.BLUEPRINTS_URL.split("#", 1)[1]
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         headings = re.findall(r"^#{2,4} (.+)$", readme, re.M)
         slugs = {

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import HomeAssistant
 
-from . import texts
+from . import entity_texts, texts
 from .const import (
     EVENT_DECISION,
     EVENT_PRECONDITION_REFUSED,
@@ -274,7 +274,7 @@ def _event_data(
     op het getal templatet weet waarin ze rekent.
 
     De vier leesbare velden - `reason_text`, `action_text`, `source_name` en `message` - komen
-    uit `texts.decision_fields`; de identifiers, `action` erbij, blijven staan en blijven het
+    uit `entity_texts.decision_fields`; de identifiers, `action` erbij, blijven staan en blijven het
     contract. Wie op `reason` of `action` filtert, merkt niets van die vier.
 
     `temperature` is published in the user's unit, rounded to one decimal, with
@@ -282,11 +282,11 @@ def _event_data(
     knows what it is counting in.
 
     The four readable fields - `reason_text`, `action_text`, `source_name` and `message` - come
-    from `texts.decision_fields`; the identifiers, `action` among them, stay and remain the
+    from `entity_texts.decision_fields`; the identifiers, `action` among them, stay and remain the
     contract. Whoever filters on `reason` or `action` notices nothing of those four.
     """
     zone = config.zone(decision.zone_id)
-    reading = texts.decision_fields(
+    reading = entity_texts.decision_fields(
         hass, config=config, world=world, plan=plan, decision=decision, unit=unit
     )
     return {

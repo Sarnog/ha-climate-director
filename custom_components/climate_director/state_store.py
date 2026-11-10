@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
-from . import problems
+from . import repair_notices
 from .resident_reader import restore_home_since
 from .stored_state import restore_commanded_off, stored_time
 
@@ -474,7 +474,7 @@ class StateStoreMixin(_CoordinatorBase):
             await self.hass.async_add_executor_job(os.rename, path, corrupt)
         except OSError:
             _LOGGER.exception("Moving the unreadable state file %s aside failed", path)
-        problems.async_report_corrupt_storage(
+        repair_notices.async_report_corrupt_storage(
             self.hass,
             self.entry.entry_id,
             self.entry.title,

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.util import dt as dt_util
 
-from . import problems
+from . import repair_notices
 from .const import (
     UNUSABLE_GRACE_SECONDS,
 )
@@ -127,7 +127,7 @@ def unusable_entities(coordinator: ClimateDirectorCoordinator) -> dict[str, str]
 
 def _report_unreadable(coordinator: ClimateDirectorCoordinator) -> None:
     """Put the entities that stay unreadable under Repairs, or take them away."""
-    problems.async_report_unreadable(
+    repair_notices.async_report_unreadable(
         coordinator.hass,
         coordinator.entry.entry_id,
         coordinator.entry.title,
@@ -267,7 +267,7 @@ def _note_unsupported(coordinator: ClimateDirectorCoordinator) -> dict[str, str]
 
 def _report_unsupported_modes(coordinator: ClimateDirectorCoordinator) -> None:
     """Put the roles asking impossible modes under Repairs, or take them away."""
-    problems.async_report_unsupported_modes(
+    repair_notices.async_report_unsupported_modes(
         coordinator.hass,
         coordinator.entry.entry_id,
         coordinator.entry.title,
@@ -322,7 +322,7 @@ def _note_unapplied(coordinator: ClimateDirectorCoordinator) -> dict[str, str]:
 
 def _report_command_not_taking(coordinator: ClimateDirectorCoordinator) -> None:
     """Put appliances that never take their command under Repairs, or take them away."""
-    problems.async_report_command_not_taking(
+    repair_notices.async_report_command_not_taking(
         coordinator.hass,
         coordinator.entry.entry_id,
         coordinator.entry.title,
@@ -337,7 +337,7 @@ def _report_bypassed_openings(coordinator: ClimateDirectorCoordinator) -> None:
         for opening in coordinator.config.openings:
             if opening_bypassed_and_open(opening, coordinator.world):
                 found[opening.entity_id] = opening.name or opening.entity_id
-    problems.async_report_bypassed_openings(
+    repair_notices.async_report_bypassed_openings(
         coordinator.hass,
         coordinator.entry.entry_id,
         coordinator.entry.title,
@@ -375,7 +375,7 @@ def _season_override_problems(coordinator: ClimateDirectorCoordinator) -> dict[s
 
 def _report_season_override(coordinator: ClimateDirectorCoordinator) -> None:
     """Put a season select that locks a duty out under Repairs, or take it away."""
-    problems.async_report_season_override(
+    repair_notices.async_report_season_override(
         coordinator.hass,
         coordinator.entry.entry_id,
         coordinator.entry.title,

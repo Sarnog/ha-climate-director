@@ -32,6 +32,7 @@ from . import (
 )
 from . import (
     problems,
+    repair_notices,
     texts,
 )
 from . import (
@@ -126,7 +127,7 @@ def _async_watch_for_listeners(hass: HomeAssistant, entry: ClimateDirectorEntry)
 
     @callback
     def _recheck(_event: Event | HomeAssistant | None = None) -> None:
-        problems.async_check_watchers(hass)
+        repair_notices.async_check_watchers(hass)
 
     entry.async_on_unload(async_at_started(hass, _recheck))
     entry.async_on_unload(hass.bus.async_listen(EVENT_AUTOMATION_RELOADED, _recheck))
@@ -204,19 +205,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -
     if unloaded:
         problems.async_clear(hass, entry.entry_id)
         problems.async_clear_manual_sources(hass, entry.entry_id)
-        problems.async_clear_unreadable(hass, entry.entry_id)
-        problems.async_clear_unsupported_modes(hass, entry.entry_id)
-        problems.async_clear_command_not_taking(hass, entry.entry_id)
-        problems.async_clear_bypassed_openings(hass, entry.entry_id)
-        problems.async_clear_season_override(hass, entry.entry_id)
-        problems.async_clear_corrupt_storage(hass, entry.entry_id)
+        repair_notices.async_clear_unreadable(hass, entry.entry_id)
+        repair_notices.async_clear_unsupported_modes(hass, entry.entry_id)
+        repair_notices.async_clear_command_not_taking(hass, entry.entry_id)
+        repair_notices.async_clear_bypassed_openings(hass, entry.entry_id)
+        repair_notices.async_clear_season_override(hass, entry.entry_id)
+        repair_notices.async_clear_corrupt_storage(hass, entry.entry_id)
         # De luistermelding is er één voor de hele integratie, dus hij gaat pas
         # weg als de laatste installatie weg is.
         #
         # The listener notice is one for the whole integration, so it only goes
         # when the last installation does.
         if not hass.config_entries.async_loaded_entries(DOMAIN):
-            problems.async_clear_watchers(hass)
+            repair_notices.async_clear_watchers(hass)
     return unloaded
 
 

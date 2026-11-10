@@ -15,6 +15,9 @@ module border turns a test red at once.
 from __future__ import annotations
 
 import ast
+import io
+import re
+import tokenize
 from pathlib import Path
 
 PACKAGE = Path(__file__).resolve().parent.parent / "custom_components" / "climate_director"
@@ -217,3 +220,57 @@ def test_the_lazy_import_guard_sees_an_import_in_a_function(tmp_path: Path, monk
     )
     monkeypatch.setattr(f"{__name__}.PACKAGE", package)
     assert lazy_imports() == ["late.py:5", "late.py:10"]
+
+
+def late_import_exemptions() -> list[str]:
+    """Comments that silence ruff's "import not at the top" (`E402`), read with `tokenize`.
+
+    Every spelling of the rule code in a `# noqa` comment counts, among other
+    codes and in any case; a string that merely contains the text does not.
+    """
+    found: list[str] = []
+    for path in package_files():
+        with io.StringIO(path.read_text(encoding="utf-8")) as source:
+            for token in tokenize.generate_tokens(source.readline):
+                if token.type == tokenize.COMMENT and re.search(
+                    r"noqa\s*:[^#]*\bE402\b", token.string, re.IGNORECASE
+                ):
+                    found.append(f"{path.relative_to(PACKAGE).as_posix()}:{token.start[0]}")
+    return found
+
+
+def test_no_import_is_exempted_from_standing_at_the_top() -> None:
+    """Geen `# noqa: E402` in het pakket: een import staat bovenaan, zonder uitzondering.
+
+    Een import onderaan een bestand is de omweg rond een kring tussen twee modules,
+    en de kring zelf hoort verdwenen te zijn.
+
+    No `# noqa: E402` in the package: an import stands at the top, without
+    exemption. An import at the bottom of a file is the detour around a cycle between
+    two modules, and the cycle itself should be gone.
+    """
+    found = late_import_exemptions()
+    assert found == [], "E402 buiten de regel gezet / E402 exempted: " + ", ".join(found)
+
+
+def test_the_exemption_guard_sees_every_spelling_and_no_string(tmp_path: Path, monkeypatch) -> None:
+    """De bewaking merkt elke schrijfwijze van de uitzondering en slaat een tekst over.
+
+    The guard notices every spelling of the exemption and skips a string.
+    """
+    package = tmp_path / "package"
+    package.mkdir()
+    (package / "a_first.py").write_text("import os  # noqa: E402\nimport sys\n", encoding="utf-8")
+    (package / "second.py").write_text(
+        "import json  #noqa:E402, I001\n"
+        "import re  # NOQA: I001,E402\n"
+        "import abc  # noqa: e402\n"
+        "TEXT = 'import io  # noqa: E402'\n"
+        "import ast  # noqa: I001\n"
+        "import csv  # E402 is the code, but no exemption\n"
+        "import cgi  # noqa: E4020\n"
+        "import zlib  # noqa: I001  # E402 is named after the exemption\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(f"{__name__}.PACKAGE", package)
+    assert late_import_exemptions() == ["a_first.py:1", "second.py:1", "second.py:2", "second.py:3"]

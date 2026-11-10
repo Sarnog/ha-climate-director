@@ -29,7 +29,6 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
-from homeassistant.helpers.entity_registry import DATA_REGISTRY as DATA_REGISTRY
 
 from .const import DOMAIN
 
@@ -293,19 +292,3 @@ def entity_cache(hass: HomeAssistant) -> dict[str, str]:
     `async_prepare` filled and never touches the disk.
     """
     return translation.async_get_cached_translations(hass, hass.config.language, "entity", DOMAIN)
-
-
-# -- de leesbare kant van één beslissing / the readable side of one decision ---
-
-
-from .entity_texts import (  # noqa: E402, I001
-    reason_sentence as reason_sentence,
-    action_sentence as action_sentence,
-    connector as connector,
-    decision_message as decision_message,
-    command_for as command_for,
-    source_display_name as source_display_name,
-    was_running as was_running,
-    action_key as action_key,
-    decision_fields as decision_fields,
-)

@@ -1658,7 +1658,7 @@ class TestTheQuietSideOfEachListener:
     ) -> None:
         reported: list[Any] = []
         monkeypatch.setattr(
-            "custom_components.climate_director.problems.async_report_bypassed_openings",
+            "custom_components.climate_director.repair_notices.async_report_bypassed_openings",
             lambda *args: reported.append(args[-1]),
         )
         ClimateDirectorCoordinator._report_bypassed_openings(coordinator())

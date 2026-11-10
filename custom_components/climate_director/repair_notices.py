@@ -13,6 +13,13 @@ from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN, EVENT_PRECONDITION_REFUSED
 
+#: De melding dat er niemand naar een geweigerd vooruit-verzoek luistert. Eén
+#: melding voor de hele integratie, niet per installatie: de gebeurtenis is
+#: domeinbreed, dus twee identieke meldingen zouden alleen maar herhalen.
+#:
+#: The notice that nobody is listening for a refused pre-conditioning request.
+#: One notice for the whole integration rather than one per installation: the
+#: event is domain-wide, so two identical notices would merely repeat.
 UNWATCHED_ISSUE = "precondition_unwatched"
 BLUEPRINTS_URL = "https://github.com/Sarnog/ha-climate-director#blueprints"
 

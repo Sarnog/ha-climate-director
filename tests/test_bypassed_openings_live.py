@@ -4,7 +4,7 @@ The repair notice for a bypassed open opening runs the whole chain.
 
 `test_opening_bypass.py` dekt de eigenschap van de vlag in de engine, maar geen
 enkele test riep `coordinator._report_bypassed_openings` of
-`problems.async_report_bypassed_openings` aan: de mutatie
+`repair_notices.async_report_bypassed_openings` aan: de mutatie
 `if False and opening_bypassed_and_open(...)` in `_report_bypassed_openings`
 liet de volledige suite groen. Dit bestand pint de keten vast in het live
 harnas, met de échte `issue_registry`: overbrugging aan + opening open geeft de
@@ -13,7 +13,7 @@ na een herstart komt hij terug zolang beide nog aanstaan.
 
 `test_opening_bypass.py` covers the flag's property in the engine, but no test
 called `coordinator._report_bypassed_openings` or
-`problems.async_report_bypassed_openings`: the mutation
+`repair_notices.async_report_bypassed_openings`: the mutation
 `if False and opening_bypassed_and_open(...)` in `_report_bypassed_openings`
 left the full suite green. This file pins the chain down in the live harness,
 against the real `issue_registry`: bypass on + opening open raises the notice
