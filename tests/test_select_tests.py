@@ -245,14 +245,87 @@ class TestTheMapCheck:
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         monkeypatch.delenv("CI", raising=False)
+        root = _fake_root(tmp_path / "repo", {"tests/test_guide.py": []})
+        (root / "docs" / "install").mkdir(parents=True)
+        for name in ("nl", "de"):
+            (root / "docs" / "install" / f"{name}.md").write_text("", encoding="utf-8")
         target = tmp_path / "impact_map.json"
         target.write_text(json.dumps({"tests/test_guide.py": ["docs/install/nl.md"]}))
+        monkeypatch.setattr(runner, "ROOT", root)
         monkeypatch.setattr(runner.sel, "MAP", target)
         recorded = _recorded({"tests/test_guide.py": {"docs/install/de.md"}})
         assert runner.compare_and_keep(recorded, full=False) == 0
         assert json.loads(target.read_text()) == {
             "tests/test_guide.py": ["docs/install/de.md", "docs/install/nl.md"]
         }
+
+    def test_a_full_run_keeps_a_line_it_did_not_see(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Een lokale run ziet `script/` niet en laat de regel toch staan.
+
+        A local run does not see `script/` and still leaves the line standing.
+        """
+        monkeypatch.delenv("CI", raising=False)
+        root = _fake_root(tmp_path / "repo", {"tests/test_controls.py": []})
+        (root / "script").mkdir()
+        (root / "README.md").write_text("", encoding="utf-8")
+        target = tmp_path / "impact_map.json"
+        target.write_text(json.dumps({"tests/test_controls.py": ["script/", "README.md"]}))
+        monkeypatch.setattr(runner, "ROOT", root)
+        monkeypatch.setattr(runner.sel, "MAP", target)
+        recorded = _recorded({"tests/test_controls.py": {"README.md"}})
+        assert runner.compare_and_keep(recorded, full=True) == 0
+        assert json.loads(target.read_text()) == {
+            "tests/test_controls.py": ["README.md", "script/"]
+        }
+
+    def test_a_full_run_drops_only_what_no_longer_exists(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Een bestand, een map en een toetsbestand die weg zijn, vallen van de kaart.
+
+        A file, a directory and a test file that are gone drop off the map.
+        """
+        monkeypatch.delenv("CI", raising=False)
+        root = _fake_root(tmp_path / "repo", {"tests/test_kept.py": []})
+        (root / "README.md").write_text("", encoding="utf-8")
+        (root / "notdir").write_text("", encoding="utf-8")
+        target = tmp_path / "impact_map.json"
+        target.write_text(
+            json.dumps(
+                {
+                    "tests/test_kept.py": ["README.md", "gone.md", "gone/", "notdir/"],
+                    "tests/test_gone.py": ["README.md"],
+                }
+            )
+        )
+        monkeypatch.setattr(runner, "ROOT", root)
+        monkeypatch.setattr(runner.sel, "MAP", target)
+        recorded = _recorded({"tests/test_kept.py": {"README.md"}})
+        assert runner.compare_and_keep(recorded, full=True) == 0
+        assert json.loads(target.read_text()) == {"tests/test_kept.py": ["README.md"]}
+
+    def test_ci_accepts_a_map_with_an_extra_line_and_rejects_a_missing_one(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """De CI keurt een kaart met een ontbrekende regel af, niet een met een extra regel.
+
+        CI rejects a map with a missing line, not one with an extra line.
+        """
+        monkeypatch.setenv("CI", "true")
+        root = _fake_root(tmp_path / "repo", {"tests/test_one.py": []})
+        for name in ("a.md", "b.md", "extra.md"):
+            (root / name).write_text("", encoding="utf-8")
+        target = tmp_path / "impact_map.json"
+        monkeypatch.setattr(runner, "ROOT", root)
+        monkeypatch.setattr(runner.sel, "MAP", target)
+        monkeypatch.setenv("CD_IMPACT_ARTIFACT", str(tmp_path / "artifact.json"))
+        recorded = _recorded({"tests/test_one.py": {"a.md", "b.md"}})
+        target.write_text(json.dumps({"tests/test_one.py": ["a.md", "b.md", "extra.md"]}))
+        assert runner.compare_and_keep(recorded, full=True) == 0
+        target.write_text(json.dumps({"tests/test_one.py": ["a.md", "extra.md"]}))
+        assert runner.compare_and_keep(recorded, full=True) == 1
 
     def test_a_changed_recording_reports_instead_of_failing(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path

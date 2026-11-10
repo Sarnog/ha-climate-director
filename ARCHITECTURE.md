@@ -1670,11 +1670,13 @@ De impactkaart hangt aan de selectie: `script/select_tests.py` laat een
 toegevoegd pakketbestand of toetsbestand de hele suite draaien. Een rename is in
 `git diff --no-renames` een verwijdering plus een toevoeging en valt dus onder
 dezelfde regel. `script/test` werkt de kaart bij en de CI levert hem als artefact `impact-map`.
-De kaart volgt de invoer die de run zelf zag: een lokale volledige run op Windows
-ziet voor `tests/test_controls_live.py` de map `script/` niet, de CI wel. Wie de
-kaart uit een lokale run commit, zet die regel dus terug of neemt de kaart uit het
-artefact over (zie de ROADMAP). Een gewijzigd bestaand bestand houdt de gewone
-selectie.
+De kaart is een samenvoeging: een run voegt toe wat hij zelf zag en laat niets weg
+wat hij niet zag, en alleen een toetsbestand, bestand of map die er niet meer is
+valt eruit. Een lokale volledige run op Windows ziet voor
+`tests/test_controls_live.py` de map `script/` niet, de CI wel; die regel blijft
+dus staan en de kaart uit een lokale run kan gewoon mee in de commit. De CI keurt
+een kaart af waarop een regel ontbreekt die de run zag, niet een kaart met een regel
+extra. Een gewijzigd bestaand bestand houdt de gewone selectie.
 
 #### Toetsen per onderwerp
 
@@ -3737,11 +3739,13 @@ The impact map hangs off the selection: `script/select_tests.py` lets an added
 package file or test file run the whole suite. A rename is a deletion plus an
 addition in `git diff --no-renames` and therefore falls under the same rule.
 `script/test` updates the map and the CI delivers it as the artifact `impact-map`.
-The map follows the input the run itself saw: a local full run on Windows does not
-see the directory `script/` for `tests/test_controls_live.py`, the CI does. Whoever
-commits the map from a local run therefore puts that line back or takes the map
-from the artifact (see the ROADMAP). A changed existing file keeps the ordinary
-selection.
+The map is a merge: a run adds what it saw itself and drops nothing it did not see,
+and only a test file, file or directory that no longer exists drops out. A local
+full run on Windows does not see the directory `script/` for
+`tests/test_controls_live.py`, the CI does; that line therefore stays, and the map
+from a local run can simply go into the commit. The CI rejects a map that lacks a
+line the run saw, not a map with an extra line. A changed existing file keeps the
+ordinary selection.
 
 #### Tests per subject
 
