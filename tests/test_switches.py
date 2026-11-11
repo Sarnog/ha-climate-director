@@ -83,12 +83,12 @@ class _Coordinator:
         self._listener = None
         # De notitie van wat de gebruiker vóór het herstel zelf deed: de schakelaar
         # noteert elke echte overgang. Deze stand-in draait geen opstart en staat
-        # dus op `_restored = True`: `_note_by_hand_before_restore` laat de notitie
+        # dus op `_restored = True`: `note_by_hand_before_restore` laat de notitie
         # meteen gaan.
         #
         # The note of what the user did before the restore: the switch
         # notes every real transition. This stand-in runs no startup and so stands
-        # at `_restored = True`: `_note_by_hand_before_restore` lets the note go at
+        # at `_restored = True`: `note_by_hand_before_restore` lets the note go at
         # once.
         self.lifecycle = LifecycleState()
         self.lifecycle.restored = True
@@ -96,12 +96,12 @@ class _Coordinator:
         self.request_before_restore: set[str] = set()
         self.handed_back: dict = {}
 
-    _note_by_hand_before_restore = ClimateDirectorCoordinator._note_by_hand_before_restore
+    note_by_hand_before_restore = ClimateDirectorCoordinator.note_by_hand_before_restore
 
     def async_save_state(self) -> None:
         pass
 
-    def _lift_hand(self, zone_id: str) -> None:
+    def lift_hand(self, zone_id: str) -> None:
         if self.handed_back.pop(zone_id, None) is not None:
             self.async_save_state()
 

@@ -87,8 +87,8 @@ class OverridesMixin(CoordinatorSurface):
         #
         # This action by the user wins over a stored duration: when it fell before
         # the restore, `state_store` skips that zone.
-        self._note_by_hand_before_restore(zone_id, "override")
-        self._lift_hand(zone_id)
+        self.note_by_hand_before_restore(zone_id, "override")
+        self.lift_hand(zone_id)
         self.zone_overrides[zone_id] = True
         self._pending_override[zone_id] = Change(
             command=UnitCommand(
@@ -146,7 +146,7 @@ class OverridesMixin(CoordinatorSurface):
         #
         # A cancellation by the user wins over a stored duration: when it fell
         # before the restore, `state_store` skips that zone.
-        self._note_by_hand_before_restore(zone_id, "override")
+        self.note_by_hand_before_restore(zone_id, "override")
         self.zone_overrides[zone_id] = False
         self._drop_override_timers(zone_id)
         self._pending_override.pop(zone_id, None)
@@ -156,7 +156,7 @@ class OverridesMixin(CoordinatorSurface):
         self.async_request_evaluation()
 
     @callback
-    def _lift_hand(self, zone_id: str) -> None:
+    def lift_hand(self, zone_id: str) -> None:
         """Lift the zone's hand at the beginning of an override.
 
         Een override en een hand zijn allebei een ingreep van de gebruiker. Zet

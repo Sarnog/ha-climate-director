@@ -439,7 +439,7 @@ FUNCTION_LIMIT = 80
 # vervangen (elk met de uitleg waarom: de handeling van de gebruiker is jonger dan
 # het bestand), en `preconditions.py::async_precondition` 83 → 89 doordat elke
 # toegekende zone genoteerd wordt. De notitie zelf woont in
-# `state_store.py::_note_by_hand_before_restore`, en de vijf aanroepen staan in
+# `state_store.py::note_by_hand_before_restore`, en de vijf aanroepen staan in
 # `preconditions.py` (zetten en annuleren), `overrides.py` (zetten en beëindigen) en
 # `switch.py` (de overrideschakelaar) - alle drie onder hun maat, net als
 # `state_store.py` (493). Wat groeit is vooral uitleg.
@@ -452,7 +452,7 @@ FUNCTION_LIMIT = 80
 # `bypass` instead of replacing it (each with the explanation of why: the user's
 # action is younger than the file), and `preconditions.py::async_precondition`
 # 83 → 89 because every granted zone is noted. The note itself lives in
-# `state_store.py::_note_by_hand_before_restore`, and the five calls stand in
+# `state_store.py::note_by_hand_before_restore`, and the five calls stand in
 # `preconditions.py` (setting and cancelling), `overrides.py` (setting and ending) and
 # `switch.py` (the override switch) - all three below their measure, like
 # `state_store.py` (493). What grows is mostly explanation.
@@ -547,22 +547,22 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # `presence` and is redacted there. What grows is mostly explanation.
 #
 # Een override heft de hand van zijn zone bij het begin op:
-# `coordinator.py` 2305 → 2306 door de protocolregel `_lift_hand`;
+# `coordinator.py` 2305 → 2306 door de protocolregel `lift_hand`;
 # `state_store.py::_async_restore_state` 153 → 166 doordat een opgeslagen hand
 # van een zone met een override na het herstel niet terugkomt - ook niet als de
 # override tijdens het opstarten zelf gezet werd, want dan was de hand nog niet
-# in het geheugen en had `_lift_hand` niets te wissen. `overrides.py` krijgt
-# `_lift_hand` (blijft onder de maat), `async_set_override` blijft op 80 doordat
+# in het geheugen en had `lift_hand` niets te wissen. `overrides.py` krijgt
+# `lift_hand` (blijft onder de maat), `async_set_override` blijft op 80 doordat
 # de aanroep de lege regel vervangt, en `switch.py` blijft onder zijn maat. Wat
 # groeit is vooral uitleg.
 #
 # An override lifts its zone's hand at the beginning:
-# `coordinator.py` 2305 → 2306 through the protocol line `_lift_hand`;
+# `coordinator.py` 2305 → 2306 through the protocol line `lift_hand`;
 # `state_store.py::_async_restore_state` 153 → 166 because a stored hand of a
 # zone with an override does not come back after the restore - also not when the
 # override was set during the startup itself, since then the hand was not in
-# memory yet and `_lift_hand` had nothing to drop. `overrides.py` gains
-# `_lift_hand` (stays below its measure), `async_set_override` stays at 80
+# memory yet and `lift_hand` had nothing to drop. `overrides.py` gains
+# `lift_hand` (stays below its measure), `async_set_override` stays at 80
 # because the call replaces the blank line, and `switch.py` stays below its
 # measure. What grows is mostly explanation.
 #

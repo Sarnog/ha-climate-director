@@ -142,7 +142,7 @@ class PreconditionsMixin(CoordinatorSurface):
             #
             # This action by the user wins over the store: when it fell before the
             # restore, a stored request for this zone does not come back.
-            self._note_by_hand_before_restore(zone_id, "request")
+            self.note_by_hand_before_restore(zone_id, "request")
             self.precondition_until[zone_id] = until
             if ignore_openings:
                 self.precondition_bypass.add(zone_id)
@@ -182,7 +182,7 @@ class PreconditionsMixin(CoordinatorSurface):
         # This cancellation wins over the store: when it fell before the restore,
         # a stored request for these zones does not come back.
         for zone_id in known if zone_ids is None else [item for item in zone_ids if item in known]:
-            self._note_by_hand_before_restore(zone_id, "request")
+            self.note_by_hand_before_restore(zone_id, "request")
         # De wekker gaat mee met de verzoeken die er nog staan. Is er niets
         # meer, dan blijft de staande wekker gewoon aflopen: hij vraagt dan een
         # beslisronde die niets te doen vindt, en een ronde zonder verschil kost

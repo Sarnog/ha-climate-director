@@ -647,11 +647,11 @@ class TestAFreshOverrideDuringTheStartupRemovesTheStoredHand:
     """Een override die de gebruiker tijdens het opstarten zelf zet, heft de hand op.
 
     Alleen die verse override telt: de hand was op dat moment nog niet in het
-    geheugen, dus `_lift_hand` had niets te wissen; het herstel haalt haar weg.
+    geheugen, dus `lift_hand` had niets te wissen; het herstel haalt haar weg.
 
     An override the user sets during the startup itself lifts the hand. Only that
     fresh override counts: the hand was not in memory yet at that moment, so
-    `_lift_hand` had nothing to drop; the restore removes it.
+    `lift_hand` had nothing to drop; the restore removes it.
     """
 
     async def test_the_stored_hand_goes(self) -> None:

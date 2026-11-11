@@ -69,12 +69,12 @@ def validate(config: DirectorConfig) -> tuple[str, ...]:
     since refusing to regulate a whole house over one bad zone is worse than
     regulating the sound zones and reporting the rest.
 
-    De controles staan als losse regelfuncties in `_RULES`, op volgorde; deze
+    De controles staan als losse regelfuncties in `RULES`, op volgorde; deze
     functie is alleen nog de lus erover. Die volgorde is zichtbaar op het
     bewaarscherm en in de reparatiemelding `invalid_config`, en wordt door
     `tests/test_validation.py` tegen letterlijke lijsten gehouden.
 
-    The checks live as separate rule functions in `_RULES`, in order; this
+    The checks live as separate rule functions in `RULES`, in order; this
     function is only the loop over them. That order is visible on the save
     screen and in the `invalid_config` repair notice, and is held by
     `tests/test_validation.py` against literal lists.

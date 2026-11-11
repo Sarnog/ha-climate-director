@@ -20,6 +20,8 @@ import re
 import tokenize
 from pathlib import Path
 
+import pytest
+
 PACKAGE = Path(__file__).resolve().parent.parent / "custom_components" / "climate_director"
 
 
@@ -28,6 +30,16 @@ def package_files() -> list[Path]:
     files = sorted(PACKAGE.rglob("*.py"))
     assert files, "geen enkel pakketbestand gevonden / no package file found"
     return files
+
+
+def test_an_empty_scan_is_an_error(tmp_path: Path, monkeypatch) -> None:
+    """Een bewaking die niets te lezen vindt, slaagt niet stilletjes.
+
+    A guard that finds nothing to read does not pass quietly.
+    """
+    monkeypatch.setattr(f"{__name__}.PACKAGE", tmp_path)
+    with pytest.raises(AssertionError, match="geen enkel pakketbestand"):
+        package_files()
 
 
 def method_names() -> set[str]:
@@ -171,10 +183,13 @@ def test_the_private_import_guard_sees_a_private_name_and_leaves_a_public_one(
     package.mkdir()
     (package / "a_first.py").write_text("VALUE = 1\n", encoding="utf-8")
     (package / "user.py").write_text(
-        "from .owner import shown, _hidden\nfrom os import _exit\n", encoding="utf-8"
+        "from .owner import shown, _hidden\nfrom os import _exit\n"
+        "from custom_components.climate_director.owner import _absolute\n"
+        "from .owner import __version__\n",
+        encoding="utf-8",
     )
     monkeypatch.setattr(f"{__name__}.PACKAGE", package)
-    assert private_imports_across_modules() == ["user.py:1: _hidden"]
+    assert private_imports_across_modules() == ["user.py:1: _hidden", "user.py:3: _absolute"]
 
 
 def lazy_imports() -> list[str]:
@@ -215,11 +230,13 @@ def test_the_lazy_import_guard_sees_an_import_in_a_function(tmp_path: Path, monk
     (package / "a_first.py").write_text("import os\n", encoding="utf-8")
     (package / "late.py").write_text(
         "import json\n\n\ndef load():\n    from .other import thing\n    return thing\n\n\n"
-        "async def later():\n    import os\n    return os\n",
+        "async def later():\n    import os\n    return os\n\n\n"
+        "def guarded():\n    try:\n        import yaml\n    except ImportError:\n"
+        "        yaml = None\n    if yaml:\n        from .other import more\n    return more\n",
         encoding="utf-8",
     )
     monkeypatch.setattr(f"{__name__}.PACKAGE", package)
-    assert lazy_imports() == ["late.py:5", "late.py:10"]
+    assert lazy_imports() == ["late.py:5", "late.py:10", "late.py:16", "late.py:20"]
 
 
 def late_import_exemptions() -> list[str]:
@@ -269,15 +286,33 @@ def test_the_exemption_guard_sees_every_spelling_and_no_string(tmp_path: Path, m
         "import ast  # noqa: I001\n"
         "import csv  # E402 is the code, but no exemption\n"
         "import cgi  # noqa: E4020\n"
-        "import zlib  # noqa: I001  # E402 is named after the exemption\n",
+        "import zlib  # noqa: I001  # E402 is named after the exemption\n"
+        "import ssl  # noqa : E402\n",
         encoding="utf-8",
     )
     monkeypatch.setattr(f"{__name__}.PACKAGE", package)
-    assert late_import_exemptions() == ["a_first.py:1", "second.py:1", "second.py:2", "second.py:3"]
+    assert late_import_exemptions() == [
+        "a_first.py:1",
+        "second.py:1",
+        "second.py:2",
+        "second.py:3",
+        "second.py:9",
+    ]
+
+
+def is_the_coordinator(node: ast.expr) -> bool:
+    """Whether `node` refers to the coordinator: `coordinator` or `<anything>.coordinator`."""
+    return (isinstance(node, ast.Name) and node.id == "coordinator") or (
+        isinstance(node, ast.Attribute) and node.attr == "coordinator"
+    )
 
 
 def private_attributes_of_the_coordinator() -> list[str]:
-    """`coordinator._name` outside `coordinator.py`: a part reaching into the host's privates."""
+    """`coordinator._name` outside `coordinator.py`: a part reaching into the host's privates.
+
+    Both spellings count: the argument a part receives (`coordinator._name`) and the
+    reference an entity keeps (`self.coordinator._name`, `entity.coordinator._name`).
+    """
     found: list[str] = []
     for path in package_files():
         if path.name == "coordinator.py":
@@ -285,8 +320,7 @@ def private_attributes_of_the_coordinator() -> list[str]:
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if (
                 isinstance(node, ast.Attribute)
-                and isinstance(node.value, ast.Name)
-                and node.value.id == "coordinator"
+                and is_the_coordinator(node.value)
                 and node.attr.startswith("_")
                 and not node.attr.startswith("__")
             ):
@@ -388,8 +422,19 @@ def test_the_private_attribute_guards_see_invented_cases(tmp_path: Path, monkeyp
         "    return helper._LOGGER, helper.__name__\n",
         encoding="utf-8",
     )
+    (package / "entity.py").write_text(
+        "class Switch:\n"
+        "    def set(self):\n"
+        "        self.coordinator._saved = 1\n"
+        "        return self.coordinator._read()\n"
+        "    def allowed(self):\n"
+        "        return self.coordinator.public, self.coordinator.__class__, self._coordinator\n",
+        encoding="utf-8",
+    )
     monkeypatch.setattr(f"{__name__}.PACKAGE", package)
     assert sorted(private_attributes_of_the_coordinator()) == [
+        "entity.py:3: _saved",
+        "entity.py:4: _read",
         "part_one.py:4: _hidden",
         "part_two.py:3: _also_hidden",
     ]

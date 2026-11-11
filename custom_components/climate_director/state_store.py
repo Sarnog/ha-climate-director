@@ -188,7 +188,7 @@ class StateStoreMixin(CoordinatorSurface):
         self.async_save_state()
 
     @callback
-    def _note_by_hand_before_restore(
+    def note_by_hand_before_restore(
         self, zone_id: str, kind: Literal["override", "request"]
     ) -> None:
         """Note that the user touched this zone by hand before the restore.
