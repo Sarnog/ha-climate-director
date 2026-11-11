@@ -77,31 +77,13 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   `area_clash()` laat per gebied (`covers_zones`) één kant over en haalt het verliezende
   verzoek uit de wensen vóór de circuits oordelen. Weigert het circuit daarna de winnaar,
   dan draait die niet en blijft de verliezende zone die ronde onbediend. De uitkomst valt aan
-  de veilige kant (kort koud, nooit twee systemen tegelijk). Keuze voor de gebruiker: (a)
-  laten zoals het is, of (b) het verliezende verzoek terugzetten zodra de winnaar geweigerd
-  is, tegen het risico dat de twee apparaten elkaar afwisselen (ontwerp in `ARCHITECTURE.md`
-  onder "Nog te bouwen").
+  de veilige kant (kort koud, nooit twee systemen tegelijk). Gekozen is (a), laten zoals het
+  is; (b), het verliezende verzoek terugzetten zodra de winnaar geweigerd is, blijft een idee
+  voor als een meting laat zien dat de kamer te lang koud blijft, tegen het risico dat de twee
+  apparaten elkaar afwisselen (ontwerp in `ARCHITECTURE.md` onder "Nog te bouwen").
 
 ## Could have
 
-- **De opruimronde liet zes punten open**: (1) `engine/validation.py`
-  heeft 1288 regels, het grootste bestand van het pakket; splits de controles per onderwerp
-  (zones, bronnen, circuits, bewoners, vensters) achter dezelfde ene `RULES`-lijst. (2)
-  `engine/constraints.py` (618) houdt de taakkeuze, de capaciteit en de kortcyclus die het
-  ontwerp in `circuit_policy.py` en `capacity.py` wilde zetten. (3) De `coordinator_*`-modules
-  werken met ruim tachtig privé attributen van de coordinator (`coordinator._restored`): geef
-  elk onderdeel zijn eigen kleine staat. (4) De uitsluitingenpoort staat op 75 in plaats van 41:
-  de `TYPE_CHECKING`-terugimports van `flow_*` en `coordinator_*` (kringen die alleen het type
-  raken) kunnen met een protocol per laag weg. (5) `texts.py` en `entity_texts.py` importeren
-  elkaar (de her-export onderaan `texts.py` met `# noqa: E402`); laat de aanroepers rechtstreeks
-  uit `entity_texts.py` importeren en haal de her-export weg. (6) Dertien regels
-  `getattr(self, "<attribuut>", standaard)` in `state_store.py`, `world_builder.py` en
-  `hand_start.py` bestaan alleen voor stand-ins in de toetsen; geef de stand-ins de attributen.
-- **De impactkaart hangt van de omgeving af** — een lokale volledige run op Windows laat de map
-  `script/` voor `tests/test_controls_live.py` vallen, de CI neemt hem wel op; dat kostte drie
-  rode CI-runs en drie handmatige kaartherstellen tijdens de opruimronde. Laat een volledige run de bestaande
-  regels samenvoegen met wat hij ziet in plaats van ze te vervangen, of neem de kaart altijd uit
-  het CI-artefact.
 - **De impactkaart hangt aan de selectie van de run** — code op moduleniveau draait één keer,
   bij het toetsbestand dat de module als eerste importeert. Een kleinere selectie in de CI dan
   lokaal (de commit tegen zijn voorganger, tegen alles wat nog niet gepusht is) legt die code
@@ -109,6 +91,14 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   (`test_random_installations.py` kreeg zo `schemas.py`). De kaart zou de moduleniveaucode van
   het bestand dat hem importeert niet als eis moeten tellen, of lokaal de selectie van de CI
   moeten nabootsen (`CD_BASE` op de voorganger).
+- **Een nieuwe import in een bestaande module verandert wat andere toetsen uitvoeren, en de
+  selectie ziet dat niet** — een regel die een bestaande module importeert (hier
+  `validation_sources.py` die `takeover.py` ging gebruiken) laat elke toets die `validate()`
+  aanroept dat bestand ook uitvoeren, maar de selectie kiest alleen de toetsen die de kaart al
+  bij het gewijzigde bestand noemt. De vier ontbrekende toetsen kwamen pas aan het licht in de
+  volledige CI-run (rood op alleen de kaart). De selectie zou de toetsen moeten meenemen die het
+  gewijzigde bestand indirect importeren, of de kaart zou ook per import vastleggen wie wie
+  aanroept.
 - **Een nieuwe pakketmodule valt buiten de selectie van de toetsen die hem indirect
   uitvoeren** — `script/select_tests.py` kiest bij een nieuw bestand alleen de toetsen die
   het rechtstreeks importeren of al in de kaart staan. een nieuwe bewonersmodule kwam zo
@@ -435,29 +425,13 @@ The worked-out design proposals for everything below live in
   side per area (`covers_zones`) and takes the losing request out of the wishes before the
   circuits judge. If the circuit then refuses the winner, it does not run and the losing zone
   is left unserved for that round. The outcome is on the safe side (briefly cold, never two
-  systems at once). A choice for the user: (a) leave it, or (b) put the losing request back as
-  soon as the winner is refused, at the risk of the two appliances alternating (design in
-  `ARCHITECTURE.md` under "Still to build").
+  systems at once). (a), leave it, is chosen; (b), putting the losing request back as soon as
+  the winner is refused, stays an idea for when a measurement shows the room stays cold too
+  long, at the risk of the two appliances alternating (design in `ARCHITECTURE.md` under
+  "Still to build").
 
 ## Could have
 
-- **The clean-up round left six points open**: (1) `engine/validation.py`
-  has 1288 lines, the largest file of the package; split the checks per subject (zones,
-  sources, circuits, residents, windows) behind the same single `RULES` list. (2)
-  `engine/constraints.py` (618) keeps the duty choice, the capacity and the short cycle that the
-  design wanted in `circuit_policy.py` and `capacity.py`. (3) The `coordinator_*` modules work
-  with well over eighty private attributes of the coordinator (`coordinator._restored`): give each
-  part a small state of its own. (4) The exclusions gate stands at 75 instead of 41: the
-  `TYPE_CHECKING` back-imports of `flow_*` and `coordinator_*` (cycles that only touch the type)
-  can go with a protocol per layer. (5) `texts.py` and `entity_texts.py` import each other (the
-  re-export at the bottom of `texts.py` with `# noqa: E402`); let the callers import straight
-  from `entity_texts.py` and drop the re-export. (6) Thirteen lines
-  `getattr(self, "<attribute>", default)` in `state_store.py`, `world_builder.py` and
-  `hand_start.py` exist only for stand-ins in the tests; give the stand-ins the attributes.
-- **The impact map depends on the environment** — a local full run on Windows drops the
-  directory `script/` for `tests/test_controls_live.py`, the CI records it; that cost three red
-  CI runs and three manual map repairs during the clean-up round. Let a full run merge the existing lines
-  with what it sees instead of replacing them, or always take the map from the CI artifact.
 - **The impact map depends on the selection of the run** — module-level code runs once, for
   the test file that imports the module first. A smaller selection in CI than locally (the
   commit against its predecessor, against everything not pushed yet) moves that code to
@@ -465,6 +439,13 @@ The worked-out design proposals for everything below live in
   (`test_random_installations.py` got `schemas.py` that way). The map should not count the
   module-level code of the importing file as a requirement, or the local run should mimic
   the CI selection (`CD_BASE` on the predecessor).
+- **A new import in an existing module changes what other tests execute, and the selection
+  does not see it** — a line that imports an existing module (here `validation_sources.py`
+  starting to use `takeover.py`) makes every test that calls `validate()` execute that file as
+  well, but the selection only picks the tests the map already names for the changed file. The
+  four missing tests only came to light in the full CI run (red on the map alone). The
+  selection should include the tests that import the changed file indirectly, or the map
+  should record per import who calls whom.
 - **A new package module falls outside the selection of the tests that execute it
   indirectly** — `script/select_tests.py` picks, for a new file, only the tests that import
   it directly or already stand in the map. a new resident module only reached the map

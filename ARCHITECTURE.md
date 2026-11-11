@@ -1453,24 +1453,10 @@ staan. De uitkomst valt aan de veilige kant (kort koud, nooit twee systemen tege
   wordt dan sneller bediend, maar de twee apparaten kunnen elkaar afwisselen als het circuit
   en het gebied elkaar steeds tegenspreken, en dat vraagt een eindigheidsbewijs zoals de lus
   van anker 7 dat heeft.
-- De gebruiker beslist tussen (a) en (b) voordat er gebouwd wordt.
+- Gekozen is (a): laten zoals het is. Optie (b) blijft een idee dat pas aan de orde komt als
+  een meting laat zien dat de kamer van de verliezer in de praktijk te lang koud blijft.
 
 #### Could have
-
-**De open punten van de opruimronde.** Zes punten, in volgorde van belang: (1)
-`engine/validation.py` (1288 regels) splitst per onderwerp (zones, bronnen, circuits,
-bewoners, vensters), elk met zijn eigen regels, achter dezelfde ene `RULES`-lijst in de
-bestaande volgorde. (2) `engine/constraints.py` (618) geeft de taakkeuze en de
-capaciteit/kortcyclus aan `circuit_policy.py` en `capacity.py`. (3) Elk `coordinator_*`-onderdeel
-krijgt een eigen kleine staatsklasse in plaats van privé attributen van de coordinator te
-lezen en te zetten (nu ruim tachtig plekken). (4) De `TYPE_CHECKING`-terugimports van `flow_*`
-en `coordinator_*` verdwijnen met een protocol per laag, waarmee de uitsluitingenpoort van 75
-terug naar 41 of lager kan. (5) `texts.py` houdt geen her-export van `entity_texts.py` meer
-(en `problems.py` geen onderaan-import van `repair_notices.py`); aanroepers importeren
-rechtstreeks. (6) De stand-ins in de toetsen krijgen de attributen waarvoor dertien
-`getattr(self, "<attribuut>", standaard)`-regels een terugval zijn. De impactkaart heeft een
-eigen punt: een volledige run voegt bestaande regels samen met wat hij ziet, zodat een lokale
-run op Windows de map `script/` niet meer laat vallen.
 
 **Huisbreed vermogensplafond.** `Source.wattage` + `DirectorConfig.watt_limit`; na de
 circuitresolutie snoeit een nieuwe installatiebrede stap in `constraints.py` de winnaars op
@@ -1684,8 +1670,9 @@ toegevoegd pakketbestand of toetsbestand de hele suite draaien. Een rename is in
 `git diff --no-renames` een verwijdering plus een toevoeging en valt dus onder
 dezelfde regel. `script/test` werkt de kaart bij en de CI levert hem als artefact `impact-map`.
 De kaart is een samenvoeging: een run voegt toe wat hij zelf zag en laat niets weg
-wat hij niet zag, en alleen een toetsbestand, bestand of map die er niet meer is
-valt eruit. Een lokale volledige run op Windows ziet voor
+wat hij niet zag. Alleen een toetsbestand dat er niet meer is, of een invoer onder
+`custom_components/`, `tests/`, `script/`, `docs/` of `blueprints/` die er niet meer is,
+valt eruit; een pad op het hoogste niveau (`tox.ini`) blijft staan. Een lokale volledige run op Windows ziet voor
 `tests/test_controls_live.py` de map `script/` niet, de CI wel; die regel blijft
 dus staan en de kaart uit een lokale run kan gewoon mee in de commit. De CI keurt
 een kaart af waarop een regel ontbreekt die de run zag, niet een kaart met een regel
@@ -1798,7 +1785,7 @@ leidende onderstreping, want `validation.py` importeert ze).
 | `engine/problem.py` | de klacht zelf | `Problem` |
 | `engine/validation_shared.py` | gedeelde controles en hulpjes | `pinned_season`, `season_names`, `duplicates`, `windows`, `outdoor_is_known` en de seizoensregel |
 | `engine/validation_zones.py` | zones | de dubbele zone-id's, een entiteit twee keer in een zone, een eenheid in geen zone, de zoneregels, het rooster, de vastlooptijd, de buitenbanden en het maximum van een vooruit-verzoek |
-| `engine/validation_sources.py` | bronnen en generatoren | de dubbele bron-id's, het buitenvenster en de gebieden van een bron, de families, de generatoren en de exclusieve groepen |
+| `engine/validation_sources.py` | bronnen en generatoren | de dubbele bron-id's, het buitenvenster en de gebieden van een bron, de families, de generatoren, de exclusieve groepen, een bron zonder automatische start in het gebied van een ketel en een ketel onder meerdere zones zonder gebied |
 | `engine/validation_circuits.py` | circuits | de dubbele circuit-id's, een eenheid op twee circuits, de circuitregels, de indeling en de wisseltijden |
 | `engine/validation_residents.py` | bewoners | de bewoner zonder aanwezigheid, de slaapinstellingen en het stiltevenster |
 | `engine/validation_windows.py` | vensters | de vensters zonder lengte, het halve gastenvenster en de feestdagenagenda's |
@@ -1900,7 +1887,7 @@ in de zes gidsen. Wat een probe meet en wat niet, staat in de release notes.
 Hetzelfde bewijs als bij de eerste indeling: de engine- en v1-probe byte-gelijk,
 de E-, N- en Q-probes identiek, een gebiedsprobe gelijk (behalve voor stap 9),
 `pytest --collect-only` zonder verdwenen toets, een ast-vergelijking van de
-functielichamen, dekking 100 %, de poort op het getal van stap 6, de kaart schoon
+functielichamen, dekking 100 %, de poort op nul, de kaart schoon
 en de mutatielijst volledig gevangen.
 
 ### Uitbreidbaarheid — de vorm die dat mogelijk maakt
@@ -3554,24 +3541,10 @@ on the safe side (briefly cold, never two systems at once).
 - Option (b), put the losing request back as soon as the winner is refused. The room is
   served sooner, but the two appliances can alternate if the circuit and the area keep
   contradicting each other, and that needs a termination argument like the anchor 7 loop has.
-- The user decides between (a) and (b) before anything is built.
+- (a) is chosen: leave it as it is. Option (b) stays an idea that only comes up when a
+  measurement shows that the loser's room is left cold too long in practice.
 
 #### Could have
-
-**The open points of the clean-up round.** Six points, in order of weight: (1)
-`engine/validation.py` (1288 lines) splits per subject (zones, sources, circuits,
-residents, windows), each with its own rules, behind the same single `RULES` list in the
-existing order. (2) `engine/constraints.py` (618) hands the duty choice and the
-capacity/short cycle to `circuit_policy.py` and `capacity.py`. (3) Each `coordinator_*` part
-gets a small state class of its own instead of reading and setting private attributes of
-the coordinator (well over eighty places now). (4) The `TYPE_CHECKING` back-imports of `flow_*`
-and `coordinator_*` disappear with a protocol per layer, which lets the exclusions gate go
-from 75 back to 41 or lower. (5) `texts.py` keeps no re-export of `entity_texts.py` any more
-(and `problems.py` no bottom import of `repair_notices.py`); callers import directly. (6) The
-stand-ins in the tests get the attributes for which thirteen
-`getattr(self, "<attribute>", default)` lines are a fallback. The impact map has a point of
-its own: a full run merges existing lines with what it sees, so a local run on Windows no
-longer drops the directory `script/`.
 
 **A house-wide power ceiling.** `Source.wattage` + `DirectorConfig.watt_limit`; after the
 circuit resolution a new installation-wide step in `constraints.py` trims the winners by
@@ -3783,8 +3756,10 @@ The impact map hangs off the selection: `script/select_tests.py` lets an added
 package file or test file run the whole suite. A rename is a deletion plus an
 addition in `git diff --no-renames` and therefore falls under the same rule.
 `script/test` updates the map and the CI delivers it as the artifact `impact-map`.
-The map is a merge: a run adds what it saw itself and drops nothing it did not see,
-and only a test file, file or directory that no longer exists drops out. A local
+The map is a merge: a run adds what it saw itself and drops nothing it did not see.
+Only a test file that no longer exists, or an input under
+`custom_components/`, `tests/`, `script/`, `docs/` or `blueprints/` that no longer exists,
+drops out; a top-level path (`tox.ini`) stays. A local
 full run on Windows does not see the directory `script/` for
 `tests/test_controls_live.py`, the CI does; that line therefore stays, and the map
 from a local run can simply go into the commit. The CI rejects a map that lacks a
@@ -3895,7 +3870,7 @@ leading underscore, since `validation.py` imports them).
 | `engine/problem.py` | the complaint itself | `Problem` |
 | `engine/validation_shared.py` | shared checks and helpers | `pinned_season`, `season_names`, `duplicates`, `windows`, `outdoor_is_known` and the season rule |
 | `engine/validation_zones.py` | zones | the doubled zone ids, an entity twice in a zone, a unit in no zone, the zone rules, the schedule, the stuck time, the outdoor bands and the maximum of a pre-conditioning request |
-| `engine/validation_sources.py` | sources and generators | the doubled source ids, the outdoor window and the areas of a source, the families, the generators and the exclusive groups |
+| `engine/validation_sources.py` | sources and generators | the doubled source ids, the outdoor window and the areas of a source, the families, the generators, the exclusive groups, a source without automatic start in a boiler's area and a boiler under several zones without an area |
 | `engine/validation_circuits.py` | circuits | the doubled circuit ids, a unit on two circuits, the circuit rules, the layout and the switch times |
 | `engine/validation_residents.py` | residents | the resident without presence, the sleep settings and the quiet window |
 | `engine/validation_windows.py` | windows | the windows without length, the half-filled guest window and the holiday calendars |
@@ -3995,7 +3970,7 @@ guides. What a probe measures and what not stands in the release notes.
 The same proof as with the first layout: the engine and v1 probes byte-identical,
 the E, N and Q probes identical, an area probe equal (except for step 9),
 `pytest --collect-only` without a vanished test, an ast comparison of the function
-bodies, coverage 100 %, the gate at the number of step 6, the map clean and the
+bodies, coverage 100 %, the gate at zero, the map clean and the
 mutation list fully caught.
 
 ### Extensibility — the shape that makes it possible

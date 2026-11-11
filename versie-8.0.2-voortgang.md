@@ -16,27 +16,30 @@ zijn eigen bewijs bij.
   zonder `covers_zones` krijgt een melding van `validate()`. N14, N15 en N16
   blijven later.
 - **Productie:** draait 7.7.9; alleen gelezen, niets geïnstalleerd, herstart of
-  gewijzigd.
-- **Bewijs op de basis** (probes op een worktree van `9f7198c`, uitvoer in
-  `%TEMP%/claude/…/scratchpad/logs/base`): engine 42 regels, v1 64 regels,
-  gebied 66 regels, E 107 regels; N en Q volgen.
+  gewijzigd. Niets van deze release is in productie gemeten.
+- **Bewijs:** de engine-, v1- en gebiedsprobe zijn op elke stap byte-gelijk met
+  de basis; de E-, N- en Q-probes zijn identiek wanneer basis en werkboom
+  tegelijk draaien (de E-reeks hangt van de klok af en week eenmaal af onder
+  belasting, niet bij een herhaling zonder belasting).
 
 ### Stappen
 
 | Stap | Commit | Stand |
 |---|---|---|
-| Ontwerp | zie `git log` | `ARCHITECTURE.md` “Verdere indeling” NL + EN |
-| 1. Geen `getattr`-terugval | | |
-| 2. Geen kring texts / problems | | |
-| 3. Impactkaart samenvoegen | | |
-| 4. `circuit_requests`, `circuit_policy`, `capacity` | | |
-| 5. Validatie per onderwerp | | |
-| 6. Een protocol per laag | | |
-| 7. Onderdelen zonder privé attributen | | |
-| 8. Mutaties op `area_clash` in `script/` | | |
-| 9. Twee gedragsbesluiten | | |
-| Documenten | | |
-| Release | | |
+| Ontwerp | `f52ab43` | `ARCHITECTURE.md` “Verdere indeling” NL + EN |
+| 1. Geen `getattr`-terugval | `376af1d` (kaartherstel `941048c`) | klaar |
+| 2. Geen kring texts / problems, bewaking E402 | `15ed638` | klaar |
+| 3. Impactkaart samenvoegen | `4b0d3e1` | klaar |
+| 4. `circuit_requests`, `circuit_policy`, `capacity` | `40ba0e8` | klaar |
+| 5. Validatie per onderwerp | `7844dd7` | klaar |
+| 6. Een oppervlak per laag | `41419cd` | klaar, poort van 75 naar 10 |
+| 7a. Publieke namen van wat een mixin bezit | `dc15fd0` | klaar |
+| 7b. Staatsklassen per onderdeel | `b9bb66b` | klaar, poort 0 |
+| 8. Gebiedstoetsen, mutaties op `area_clash`, lijst in `script/` | `73e863e`, `6eb865c` | klaar |
+| 9a. Melding bron zonder automatische start | `e7746d7` (kaartherstel `967cd69`) | klaar |
+| 9b. Melding ketel zonder gebied | `e333769` | klaar |
+| Documenten | zie `git log` | klaar |
+| Release | zie `git log` | zie de release notes |
 
 ## EN
 
@@ -52,20 +55,27 @@ commit, is pushed only when its predecessor is green, and keeps its own proof.
   a `validate()` notice; a boiler in more than one zone without `covers_zones`
   gets a `validate()` notice. N14, N15 and N16 stay later.
 - **Production:** runs 7.7.9; read only, nothing installed, restarted or changed.
+  Nothing of this release has been measured in production.
+- **Proof:** the engine, v1 and area probes are byte-identical with the base at
+  every step; the E, N and Q probes are identical when base and working tree run
+  at the same time (the E series depends on the clock and differed once under
+  load, not on a repeat without load).
 
 ### Steps
 
 | Step | Commit | State |
 |---|---|---|
-| Design | see `git log` | `ARCHITECTURE.md` “Further layout” NL + EN |
-| 1. No `getattr` fallback | | |
-| 2. No texts / problems cycle | | |
-| 3. Impact map merge | | |
-| 4. `circuit_requests`, `circuit_policy`, `capacity` | | |
-| 5. Validation per subject | | |
-| 6. A protocol per layer | | |
-| 7. Parts without private attributes | | |
-| 8. `area_clash` mutations in `script/` | | |
-| 9. Two behaviour decisions | | |
-| Documents | | |
-| Release | | |
+| Design | `f52ab43` | `ARCHITECTURE.md` “Further layout” NL + EN |
+| 1. No `getattr` fallback | `376af1d` (map repair `941048c`) | done |
+| 2. No texts / problems cycle, E402 guard | `15ed638` | done |
+| 3. Impact map merge | `4b0d3e1` | done |
+| 4. `circuit_requests`, `circuit_policy`, `capacity` | `40ba0e8` | done |
+| 5. Validation per subject | `7844dd7` | done |
+| 6. A surface per layer | `41419cd` | done, gate from 75 to 10 |
+| 7a. Public names for what a mixin owns | `dc15fd0` | done |
+| 7b. State classes per part | `b9bb66b` | done, gate 0 |
+| 8. Area tests, mutations on `area_clash`, list in `script/` | `73e863e`, `6eb865c` | done |
+| 9a. Notice for a source without automatic start | `e7746d7` (map repair `967cd69`) | done |
+| 9b. Notice for a boiler without an area | `e333769` | done |
+| Documents | see `git log` | done |
+| Release | see `git log` | see the release notes |
