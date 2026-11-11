@@ -2,13 +2,13 @@
 
 Following one resident: home, asleep, homecoming and readability.
 
-`_resident` en `_notice_home` stonden in `world_builder.py` en `coordinator.py`,
+`_resident` en `notice_home` stonden in `world_builder.py` en `coordinator.py`,
 maar die modules zijn boven de vijfhonderd regels en dit onderwerp hoort op
 zichzelf. Het herstel van het thuiskomstmoment na een herstart (`restore_home_since`)
 hoort er ook bij. De leesbaarheid van de aanwezigheids- en slaapsensor gaat mee: de
 engine beslist wat een onleesbare invoer voor de drie wachtrema's betekent.
 
-`_resident` and `_notice_home` lived in `world_builder.py` and `coordinator.py`,
+`_resident` and `notice_home` lived in `world_builder.py` and `coordinator.py`,
 but those modules are over five hundred lines and this subject belongs on its
 own. Restoring the homecoming moment after a restart (`restore_home_since`) belongs
 here too. The readability of the presence and sleep sensor travels with it: the
@@ -91,7 +91,7 @@ class ResidentReaderMixin(CoordinatorSurface):
         herstart krijgt alles hetzelfde moment - telt de melding wél, want
         opschorten is de onschadelijke kant om fout te zitten.
 
-        Het moment komt uit de boekhouding van de coördinator (`_home_since`),
+        Het moment komt uit de boekhouding van de coördinator (`home_since`),
         die een herstart overleeft en bij een terugval op
         `last_changed` van de aanwezigheidsentiteit begint. Deze lezer schrijft
         daar nooit in: de wereld lezen en de wereld veranderen zijn twee dingen.
@@ -117,7 +117,7 @@ class ResidentReaderMixin(CoordinatorSurface):
         same moment - the reading does count, since suspending is the harmless
         direction to be wrong in.
 
-        The moment comes from the coordinator's bookkeeping (`_home_since`),
+        The moment comes from the coordinator's bookkeeping (`home_since`),
         which survives a restart and starts as a fallback on the presence
         entity's `last_changed`. This reader never writes there: reading the
         world and changing the world are two different things. One
@@ -133,7 +133,7 @@ class ResidentReaderMixin(CoordinatorSurface):
         """
         state = self.hass.states.get(presence) if presence else None
         home = reads_as_home(state)
-        home_since = self._home_since.get(resident_id) if home else None
+        home_since = self.home_since.get(resident_id) if home else None
 
         asleep = False
         sleeper = self.hass.states.get(sleep) if sleep else None
@@ -143,7 +143,7 @@ class ResidentReaderMixin(CoordinatorSurface):
         return ResidentState(home=home, asleep=asleep, home_since=home_since)
 
     @callback
-    def _notice_home(self, event: Event[EventStateChangedData]) -> None:
+    def notice_home(self, event: Event[EventStateChangedData]) -> None:
         """Record when a resident comes home, and forget it when they leave.
 
         Anker 13: het moment waarop iemand thuiskwam is wat het stiltevenster
@@ -198,14 +198,14 @@ class ResidentReaderMixin(CoordinatorSurface):
             # only narrows a `TypeGuard` there, and in a variable it stays
             # `State | None` - measured on the build server (one `union-attr`).
             if reads_as_home(new_state):
-                if resident.resident_id not in self._home_since and not reads_as_home(old_state):
-                    self._home_since[resident.resident_id] = new_state.last_changed
+                if resident.resident_id not in self.home_since and not reads_as_home(old_state):
+                    self.home_since[resident.resident_id] = new_state.last_changed
                     changed = True
             elif (
                 new_state is not None
                 and not unreadable(new_state.state)
-                and self._home_since.pop(resident.resident_id, None) is not None
+                and self.home_since.pop(resident.resident_id, None) is not None
             ):
                 changed = True
         if changed:
-            self._async_save_state()
+            self.async_save_state()

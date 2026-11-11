@@ -257,7 +257,7 @@ class WorldBuilderMixin(CoordinatorSurface):
             climates={entity_id: self._climate(entity_id) for entity_id in self._climate_ids()},
             residents=residents,
             unreadable=unreadable_inputs(self.hass, self.config),
-            asleep_since=self._asleep_since,
+            asleep_since=self.asleep_since,
             openings={
                 opening.entity_id: self._opening(opening.entity_id, opening.open_state)
                 for opening in self.config.openings
@@ -274,7 +274,7 @@ class WorldBuilderMixin(CoordinatorSurface):
             holiday_mode=self.holiday_mode or self._calendar_says_holiday(),
             guest_mode=self.guest_mode,
             precondition_until=self._live_preconditions(),
-            precondition_bypass=frozenset(self._precondition_bypass),
+            precondition_bypass=frozenset(self.precondition_bypass),
             zone_overrides=self._overridden_zones(now, residents),
             zone_hands=self._zone_hands(now, residents),
             zone_hand_starts=frozenset(self._hand_starts),
@@ -285,7 +285,7 @@ class WorldBuilderMixin(CoordinatorSurface):
             precipitation=self._precipitation(),
         )
 
-    def _note_house_asleep(self, world: WorldState) -> WorldState:
+    def note_house_asleep(self, world: WorldState) -> WorldState:
         """Record when everybody at home went to sleep, and hand the world that moment.
 
         De wereld lezen en de wereld veranderen zijn twee dingen, dus dit staat naast
@@ -301,9 +301,9 @@ class WorldBuilderMixin(CoordinatorSurface):
         it. Without that moment the house waits for nobody in the morning.
         """
         moment = house_asleep_since(self.config, world)
-        if moment != self._asleep_since:
-            self._asleep_since: datetime | None = moment
-            self._async_save_state()
+        if moment != self.asleep_since:
+            self.asleep_since: datetime | None = moment
+            self.async_save_state()
         return replace(world, asleep_since=moment)
 
     def _overridden_zones(
@@ -463,7 +463,7 @@ class WorldBuilderMixin(CoordinatorSurface):
 
         This is a reader and writes nothing. Het moment waarop de kamer leeg
         werd of wegviel staat in `_empty_since`: gevuld door
-        `_notice_room_empty` bij een vertrek, een wegvalling van een bezette
+        `notice_room_empty` bij een vertrek, een wegvalling van een bezette
         kamer, en bij het opstarten uit de opslag. `last_changed` van de entiteit
         doet hier bewust niet mee: na een herstart of een verbroken verbinding
         draagt die een vers tijdstip dat niets over het vertrek zegt, en dan zou
@@ -472,7 +472,7 @@ class WorldBuilderMixin(CoordinatorSurface):
         als leeg - de regel in `_room_occupied`.
 
         This is a reader and writes nothing. The moment the room became empty or
-        dropped out stands in `_empty_since`: filled by `_notice_room_empty` at a
+        dropped out stands in `_empty_since`: filled by `notice_room_empty` at a
         departure, at a drop-out of an occupied room, and at startup from the
         store. The entity's `last_changed` deliberately plays no part here: after
         a restart or a broken connection it carries a fresh timestamp that says

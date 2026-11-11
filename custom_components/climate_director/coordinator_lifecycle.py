@@ -125,8 +125,8 @@ async def async_shutdown(coordinator: ClimateDirectorCoordinator) -> None:
         _LOGGER.warning("Een beslisronde liep nog bij het afsluiten van %s", coordinator.name)
     coordinator._cancel_pending_deferral()
     coordinator._cancel_clock_reeval()
-    coordinator._cancel_pending_precondition_wake()
-    coordinator._cancel_pending_override_wake()
+    coordinator.cancel_pending_precondition_wake()
+    coordinator.cancel_pending_override_wake()
     coordinator._debouncer.async_shutdown()
     # Een uitgestelde opslag kan nog uitstaan: de store schrijft één seconde
     # na de laatste wijziging. Bij een herlaadbeurt is dat geen bezwaar, maar
@@ -138,7 +138,7 @@ async def async_shutdown(coordinator: ClimateDirectorCoordinator) -> None:
     # after the last change. On a reload that is fine, but on a removal that
     # write would resurrect the file after `async_remove_entry`. So write it
     # away here; `async_save` clears the delayed write itself.
-    await coordinator._store.async_save(coordinator._store_payload())
+    await coordinator.store.async_save(coordinator.store_payload())
     await DataUpdateCoordinator.async_shutdown(coordinator)
 
 
@@ -199,22 +199,22 @@ async def _async_on_hass_started(
     stored hand.
 
     Hier gaat ook één keer naar buiten wat tijdens het opstarten bleef liggen:
-    `_async_save_state` schreef niet, want HA's `Store.async_load` leest een
+    `async_save_state` schreef niet, want HA's `Store.async_load` leest een
     wachtende schrijfactie in plaats van het bestand. Dat schrijven staat
     daarom ná het herstel, en ook in de `finally`.
 
     One write also goes out here for what stayed behind during the startup:
-    `_async_save_state` did not write, since HA's `Store.async_load` reads a
+    `async_save_state` did not write, since HA's `Store.async_load` reads a
     pending write instead of the file. That write therefore stands after the
     restore, and in the `finally` as well.
     """
     try:
-        await coordinator._async_restore_state()
+        await coordinator.async_restore_state()
         coordinator._note_precipitation_now()
         coordinator._note_home_now()
         coordinator._restored = True
-        coordinator._note_room_presence_now()
-        coordinator._async_save_pending_state()
+        coordinator.note_room_presence_now()
+        coordinator.async_save_pending_state()
         await coordinator._async_evaluate()
     except Exception:
         _LOGGER.exception("The first decision of %s failed", coordinator.name)
@@ -232,7 +232,7 @@ async def _async_on_hass_started(
         #
         # What the user did before the restore has been handled now:
         # the notes go, so an action afterwards is simply an action.
-        coordinator._override_before_restore.clear()
-        coordinator._request_before_restore.clear()
-        coordinator._async_save_pending_state()
+        coordinator.override_before_restore.clear()
+        coordinator.request_before_restore.clear()
+        coordinator.async_save_pending_state()
         coordinator._schedule_clock_reeval()

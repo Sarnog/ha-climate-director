@@ -106,7 +106,9 @@ class TestAStartupWithBrokenStorage:
         )
         try:
             assert home.state(LIVING) == "heat", "de eerste beslissing hoort te draaien"
-            assert home.coordinator._precondition == {}, "het onmogelijke tijdstip telt als afwezig"
+            assert home.coordinator.precondition_until == {}, (
+                "het onmogelijke tijdstip telt als afwezig"
+            )
         finally:
             await stop_house(home)
 
@@ -128,7 +130,7 @@ class TestAStartupWithBrokenStorage:
         )
         try:
             assert home.state(LIVING) == "heat", "de eerste beslissing hoort te draaien"
-            assert "nancy" not in home.coordinator._home_since
+            assert "nancy" not in home.coordinator.home_since
         finally:
             await stop_house(home)
 
@@ -173,7 +175,7 @@ class TestAStartupWithBrokenStorage:
             entry_id="nacht",
         )
         try:
-            assert again.coordinator._asleep_since is None
+            assert again.coordinator.asleep_since is None
             decision = again.coordinator.data.decision_for("woonkamer")
             assert decision is not None
             assert decision.reason.value != "waiting_for_sleeper"
@@ -199,7 +201,7 @@ class TestAStartupWithBrokenStorage:
         )
         try:
             assert home.coordinator.data is not None, "de eerste beslissing hoort te draaien"
-            assert home.coordinator._precondition == {}, "de naïeve tijd telt als afwezig"
+            assert home.coordinator.precondition_until == {}, "de naïeve tijd telt als afwezig"
         finally:
             await stop_house(home)
 
@@ -223,7 +225,7 @@ class TestAStartupWithBrokenStorage:
         try:
             assert home.coordinator.data is not None, "de eerste beslissing hoort te draaien"
             assert all(
-                moment.tzinfo is not None for moment in home.coordinator._home_since.values()
+                moment.tzinfo is not None for moment in home.coordinator.home_since.values()
             ), "een tijd zonder tijdzone hoort hier niet te staan"
         finally:
             await stop_house(home)
@@ -246,7 +248,7 @@ class TestAStartupWithBrokenStorage:
             entry_id="nacht",
         )
         try:
-            assert home.coordinator._asleep_since is None
+            assert home.coordinator.asleep_since is None
             assert home.state(LIVING) == "heat", "de eerste beslissing hoort te draaien"
             await home.evaluate()
             decision = home.coordinator.data.decision_for("woonkamer")
@@ -310,7 +312,7 @@ class TestAStartupWithBrokenStorage:
         )
         try:
             assert home.coordinator.data is not None, "de eerste beslissing hoort te draaien"
-            assert home.coordinator._handed_back == {}
+            assert home.coordinator.handed_back == {}
         finally:
             await stop_house(home)
 
@@ -329,6 +331,6 @@ class TestAStartupWithBrokenStorage:
             simple_installation(), states=cold_one_room(), config_dir=config_dir, entry_id="vandaag"
         )
         try:
-            assert home.coordinator._handed_back.get("woonkamer") == today
+            assert home.coordinator.handed_back.get("woonkamer") == today
         finally:
             await stop_house(home)

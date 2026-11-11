@@ -165,8 +165,8 @@ class ClimateDirectorCoordinator(
         the switches. It lives here rather than on the button so every zone uses
         the same duration and there is only one place to change it.
         """
-        self._precondition: dict[str, datetime] = {}
-        self._precondition_bypass: set[str] = set()
+        self.precondition_until: dict[str, datetime] = {}
+        self.precondition_bypass: set[str] = set()
         self._refused: set[str] = set()
         # De bestandsnaam zegt nog "precondition" omdat hij dat ooit alleen
         # was. Hernoemen zou de lopende verzoeken van elke bestaande
@@ -176,7 +176,7 @@ class ClimateDirectorCoordinator(
         # The file name still says "precondition" because that is all it once
         # held. Renaming it would throw away the running requests of every
         # existing installation, and a file name is not worth that.
-        self._store: Store[dict[str, Any]] = Store(
+        self.store: Store[dict[str, Any]] = Store(
             hass, STORAGE_VERSION, storage_key(entry.entry_id)
         )
         self._waiting: dict[str, tuple[Reason, datetime]] = {}
@@ -219,7 +219,7 @@ class ClimateDirectorCoordinator(
         """
         self.zone_overrides: dict[str, bool] = {}
         self._hand_starts: dict[str, datetime] = {}
-        self._handed_back: dict[str, date] = {}
+        self.handed_back: dict[str, date] = {}
         self._empty_since: dict[str, datetime] = {}
         """Wanneer elke kamer leeg werd of wegviel; zie `room_presence.py`.
         When each room became empty or dropped out; see `room_presence.py`.
@@ -305,28 +305,28 @@ class ClimateDirectorCoordinator(
         De listeners staan meteen aan, zodat een toestandswijziging tijdens het
         opstarten van Home Assistant niet verloren gaat; beslissen op een half
         herstelde wereld mag niet. `_async_on_hass_started` zet deze vlag ná
-        `_async_restore_state` en vóór de eerste beslissing, en `_async_evaluate`
+        `async_restore_state` en vóór de eerste beslissing, en `_async_evaluate`
         wacht erop.
 
         Only after the store has been restored may a decision be taken. The
         listeners are on from the start, so a state change during Home
         Assistant's startup is not lost; deciding on a half-restored world is not
         allowed. `_async_on_hass_started` raises this flag after
-        `_async_restore_state` and before the first decision, and
+        `async_restore_state` and before the first decision, and
         `_async_evaluate` waits for it.
         """
         self._save_pending = False
         """Wat tijdens het opstarten te bewaren viel gaat ná het herstel één keer weg.
 
-        Wat `_async_save_state` vóór het herstel niet mocht schrijven, staat hier;
+        Wat `async_save_state` vóór het herstel niet mocht schrijven, staat hier;
         `state_store._async_save_pending_state` haalt het op.
 
         What needed saving during the startup goes out once after the restore. What
-        `_async_save_state` was not allowed to write before the restore stands here;
+        `async_save_state` was not allowed to write before the restore stands here;
         `state_store._async_save_pending_state` picks it up.
         """
-        self._override_before_restore: set[str] = set()
-        self._request_before_restore: set[str] = set()
+        self.override_before_restore: set[str] = set()
+        self.request_before_restore: set[str] = set()
         """De zones waar de gebruiker vóór het herstel zelf een override of een
         vooruit-verzoek zette of stopte.
 
@@ -346,7 +346,7 @@ class ClimateDirectorCoordinator(
         """
         self._family_since: dict[str, datetime | None] = {}
         self._family_seen: dict[str, ModeFamily] = {}
-        self._home_since: dict[str, datetime] = {}
+        self.home_since: dict[str, datetime] = {}
         """Wanneer elke bewoner thuiskwam, en alleen voor wie er nu is.
 
         Anker 13: het stiltevenster remt alleen wie er ná zijn begin thuiskomt, en
@@ -366,7 +366,7 @@ class ClimateDirectorCoordinator(
         loses their moment: away is away, and a moment for somebody who is not
         there would rest the gate on a lie.
         """
-        self._asleep_since: datetime | None = None
+        self.asleep_since: datetime | None = None
         """Wanneer iedereen thuis ging slapen / when everybody at home went to sleep."""
         self._precipitation_seen_at: datetime | None = None
         """Wanneer de neerslagbron voor het laatst neerslag meldde.

@@ -44,10 +44,10 @@ class HandStartMixin(HandMixin):
     Recognition, storage and expiry of a hand start.
     """
 
-    _handed_back: dict[str, date]
+    handed_back: dict[str, date]
 
     @callback
-    def _notice_hand_start(self, event: Event[EventStateChangedData]) -> None:
+    def notice_hand_start(self, event: Event[EventStateChangedData]) -> None:
         """Record an appliance somebody switched on while a zone was waiting.
 
         Alleen een actieve stand die niet van ons komt telt. `_we_wanted_it_on`
@@ -121,7 +121,7 @@ class HandStartMixin(HandMixin):
             self._hand_starts[zone_id] = now
             changed = True
         if changed:
-            self._async_save_state()
+            self.async_save_state()
             self.async_request_evaluation()
 
     def _waiting_on_a_brake(self, zone_id: str) -> bool:
@@ -196,7 +196,7 @@ class HandStartMixin(HandMixin):
             if moment is not None and moment.date() == today:
                 self._hand_starts[zone_id] = moment
 
-    def _settle_hand_starts(self, world: WorldState) -> WorldState:
+    def settle_hand_starts(self, world: WorldState) -> WorldState:
         """Drop the hand starts that no longer do anything, and hand the world theirs.
 
         Slapen, een leeg huis en de volgende dag zijn de drie uitwegen die niets
@@ -236,5 +236,5 @@ class HandStartMixin(HandMixin):
         if expired:
             for zone_id in expired:
                 self._hand_starts.pop(zone_id, None)
-            self._async_save_state()
+            self.async_save_state()
         return replace(world, zone_hand_starts=frozenset(self._hand_starts))

@@ -336,10 +336,10 @@ class TestTheRequestItself:
         class StandIn:
             def __init__(self) -> None:
                 self.config = config
-                self._precondition: dict[str, datetime] = {}
-                self._precondition_bypass: set[str] = set()
-                self._override_before_restore: set[str] = set()
-                self._request_before_restore: set[str] = set()
+                self.precondition_until: dict[str, datetime] = {}
+                self.precondition_bypass: set[str] = set()
+                self.override_before_restore: set[str] = set()
+                self.request_before_restore: set[str] = set()
                 self._restored = True
                 self.asked = 0
                 self.saved = 0
@@ -347,7 +347,7 @@ class TestTheRequestItself:
             def async_request_evaluation(self) -> None:
                 self.asked += 1
 
-            def _async_save_state(self) -> None:
+            def async_save_state(self) -> None:
                 self.saved += 1
 
             def _preconditions_expire_at(self, until: datetime) -> None:
@@ -453,5 +453,7 @@ class TestTheRequestItself:
 
     def test_expired_requests_are_forgotten_on_reading(self) -> None:
         coordinator = self._coordinator()
-        coordinator._precondition = {"zolder": datetime.now().astimezone() - timedelta(minutes=1)}
+        coordinator.precondition_until = {
+            "zolder": datetime.now().astimezone() - timedelta(minutes=1)
+        }
         assert coordinator._live_preconditions() == {}

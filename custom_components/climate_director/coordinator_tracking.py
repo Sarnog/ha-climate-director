@@ -34,9 +34,9 @@ def _handle_change(
 ) -> None:
     """Queue a fresh decision after a tracked entity changed."""
     coordinator._notice_precipitation(event)
-    coordinator._notice_home(event)
-    coordinator._notice_room_empty(event)
-    coordinator._notice_hand_start(event)
+    coordinator.notice_home(event)
+    coordinator.notice_room_empty(event)
+    coordinator.notice_hand_start(event)
     coordinator._notice_hand(event)
     coordinator._debouncer.async_schedule_call()
 
@@ -161,9 +161,9 @@ def _notice_hand(
 
         cleared = False
         for zone in zones:
-            cleared = coordinator._handed_back.pop(zone, None) is not None or cleared
+            cleared = coordinator.handed_back.pop(zone, None) is not None or cleared
         if cleared:
-            coordinator._async_save_state()
+            coordinator.async_save_state()
         return
 
     # Ook een hand die het apparaat uitzet verbruikt het setpoint: bij de
@@ -204,10 +204,10 @@ def _notice_hand(
         return
 
     today = dt_util.now().date()
-    if any(coordinator._handed_back.get(zone) != today for zone in zones):
+    if any(coordinator.handed_back.get(zone) != today for zone in zones):
         for zone in zones:
-            coordinator._handed_back[zone] = today
-        coordinator._async_save_state()
+            coordinator.handed_back[zone] = today
+        coordinator.async_save_state()
 
 
 def _note_commanded_off(
@@ -423,12 +423,12 @@ def _note_home_now(coordinator: ClimateDirectorCoordinator) -> None:
     nothing is filled in for whoever is not home.
     """
     for resident in coordinator.config.residents:
-        if resident.resident_id in coordinator._home_since:
+        if resident.resident_id in coordinator.home_since:
             continue
         presence = resident.presence_entity
         state = coordinator.hass.states.get(presence) if presence else None
         if reads_as_home(state):
             since = state.last_changed
-            if coordinator._asleep_since is not None and since > coordinator._asleep_since:
-                since = coordinator._asleep_since
-            coordinator._home_since[resident.resident_id] = since
+            if coordinator.asleep_since is not None and since > coordinator.asleep_since:
+                since = coordinator.asleep_since
+            coordinator.home_since[resident.resident_id] = since

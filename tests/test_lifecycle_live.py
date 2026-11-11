@@ -108,7 +108,7 @@ class TestUnloadingDuringARunningRound:
         live = await start_house(two_zone_installation(), states=self._warm_house())
         try:
             store = Store(live.hass, STORAGE_VERSION, storage_key(live.entry.entry_id))
-            live.coordinator._async_save_state()
+            live.coordinator.async_save_state()
             await live.coordinator.async_shutdown()
 
             await store.async_remove()
@@ -155,7 +155,7 @@ class TestUnloadingDuringARunningRound:
         """
         live = await start_house(two_zone_installation(), states=self._warm_house())
         try:
-            store = live.coordinator._store
+            store = live.coordinator.store
             saved: list[object] = []
 
             async def fake_save(payload: object) -> None:
@@ -168,7 +168,7 @@ class TestUnloadingDuringARunningRound:
             monkeypatch.setattr(store, "_async_cleanup_delay_listener", boom)
 
             await live.coordinator.async_shutdown()
-            assert saved == [live.coordinator._store_payload()]
+            assert saved == [live.coordinator.store_payload()]
         finally:
             await stop_house(live)
 

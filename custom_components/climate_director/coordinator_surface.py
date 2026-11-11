@@ -63,19 +63,19 @@ class CoordinatorSurface:
     zone_override_when_done: dict[str, str]
     zone_override_entity: dict[str, str]
     opening_bypasses: dict[str, bool]
-    _precondition: dict[str, datetime]
-    _precondition_bypass: set[str]
+    precondition_until: dict[str, datetime]
+    precondition_bypass: set[str]
     _pending_override: dict[str, Change]
-    _store: Store[dict[str, Any]]
-    _handed_back: dict[str, date]
+    store: Store[dict[str, Any]]
+    handed_back: dict[str, date]
     _empty_since: dict[str, datetime]
     _occupied_rooms: set[str]
-    _home_since: dict[str, datetime]
+    home_since: dict[str, datetime]
     _commanded_off: dict[str, datetime]
-    _asleep_since: datetime | None
+    asleep_since: datetime | None
     _save_pending: bool
-    _override_before_restore: set[str]
-    _request_before_restore: set[str]
+    override_before_restore: set[str]
+    request_before_restore: set[str]
     _precipitation_seen_at: datetime | None
     _cancel_precondition_wake: CALLBACK_TYPE | None
     _cancel_override_wake: CALLBACK_TYPE | None
@@ -83,7 +83,7 @@ class CoordinatorSurface:
     entry: ConfigEntry[Any]
     async_request_evaluation: Callable[[], None]
     async_update_listeners: Callable[[], None]
-    _async_save_state: Callable[[], None]
+    async_save_state: Callable[[], None]
     build_world: Callable[[], WorldState]
     _we_wanted_it_on: Callable[[str, ModeFamily], bool]
     _hand_starts_payload: Callable[[], dict[str, Any]]

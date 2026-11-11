@@ -392,7 +392,7 @@ class TestAHandDuringTheStartupJoinsTheStoredOne:
 
             await start_up(home)
 
-            assert set(home.coordinator._handed_back) == {"woonkamer", "zolder"}, (
+            assert set(home.coordinator.handed_back) == {"woonkamer", "zolder"}, (
                 "het herstel en de hand van tijdens het opstarten zijn niet samengevoegd"
             )
             assert home.climate_calls() == [], (
@@ -435,7 +435,7 @@ class TestAPreconditionDuringTheStartupJoinsTheStoredOne:
 
             await start_up(home)
 
-            assert set(home.coordinator._precondition) == {"woonkamer", "zolder"}, (
+            assert set(home.coordinator.precondition_until) == {"woonkamer", "zolder"}, (
                 "het herstel en het verzoek van tijdens het opstarten zijn niet samengevoegd"
             )
             assert home.state(LIVING) == "heat"
@@ -485,7 +485,7 @@ class TestTheStartupNoteCountsPerKind:
                 "het verse verzoek hield de opgeslagen override tegen"
             )
             assert "woonkamer" in home.coordinator.zone_override_until
-            assert "woonkamer" in home.coordinator._precondition, "het verse verzoek is weg"
+            assert "woonkamer" in home.coordinator.precondition_until, "het verse verzoek is weg"
             assert home.value("zone_woonkamer_override") == "on"
             assert reason_of(home) == "manual_override"
         finally:
@@ -546,7 +546,7 @@ class TestTheStartupNoteCountsPerKind:
             await settle_the_debouncer(home)
             await start_up(home)
 
-            assert "woonkamer" in home.coordinator._precondition, (
+            assert "woonkamer" in home.coordinator.precondition_until, (
                 "de verse override hield het opgeslagen verzoek tegen"
             )
             assert home.coordinator.zone_overrides.get("woonkamer") is True
@@ -590,7 +590,7 @@ class TestAStoredOverrideLeavesTheStoredHand:
             await settle_the_debouncer(home)
             await start_up(home)
 
-            assert "woonkamer" in home.coordinator._handed_back, (
+            assert "woonkamer" in home.coordinator.handed_back, (
                 "de opgeslagen hand viel weg naast een opgeslagen override"
             )
             assert home.coordinator.zone_overrides.get("woonkamer") is True
@@ -635,7 +635,7 @@ class TestAStoredOverrideLeavesTheStoredHand:
             await start_up(home)
 
             assert not home.coordinator.zone_overrides.get("woonkamer")
-            assert "woonkamer" in home.coordinator._handed_back, (
+            assert "woonkamer" in home.coordinator.handed_back, (
                 "de hand viel weg doordat de override tijdens het opstarten werd opgeheven"
             )
             assert reason_of(home) == "manual_override"
@@ -679,7 +679,7 @@ class TestAFreshOverrideDuringTheStartupRemovesTheStoredHand:
             await settle_the_debouncer(home)
             await start_up(home)
 
-            assert "woonkamer" not in home.coordinator._handed_back, (
+            assert "woonkamer" not in home.coordinator.handed_back, (
                 "de verse override haalde de opgeslagen hand niet weg"
             )
             assert home.coordinator.zone_overrides.get("woonkamer") is True
@@ -862,7 +862,7 @@ class TestARequestDuringTheStartupKeepsItsOwnEndTime:
             stored = dt_util.parse_datetime(read_store(config_dir)["until"]["woonkamer"])
             assert stored is not None
             assert stored < until, "de opgeslagen eindtijd wint nog van het verse verzoek"
-            assert home.coordinator._precondition["woonkamer"] < until
+            assert home.coordinator.precondition_until["woonkamer"] < until
         finally:
             await stop_house(home)
 
@@ -904,8 +904,8 @@ class TestARequestDuringTheStartupKeepsItsIgnoreOpenings:
 
             await start_up(home)
 
-            assert set(home.coordinator._precondition) == {"woonkamer", "zolder"}
-            assert home.coordinator._precondition_bypass == {"zolder"}, (
+            assert set(home.coordinator.precondition_until) == {"woonkamer", "zolder"}
+            assert home.coordinator.precondition_bypass == {"zolder"}, (
                 "de verse keuze *toch doen* is door het herstel vervangen"
             )
             stored = read_store(config_dir)
@@ -942,7 +942,7 @@ class TestACancelledRequestDuringTheStartupStaysCancelled:
 
             await start_up(home)
 
-            assert "woonkamer" not in home.coordinator._precondition, (
+            assert "woonkamer" not in home.coordinator.precondition_until, (
                 "het opgeslagen verzoek kwam terug nadat de gebruiker het annuleerde"
             )
             assert "woonkamer" not in read_store(config_dir).get("until", {})
@@ -1055,7 +1055,7 @@ class TestNothingToSaveCostsNoWrite:
         try:
             scheduled: list[object] = []
             monkeypatch.setattr(
-                home.coordinator._store,
+                home.coordinator.store,
                 "async_delay_save",
                 lambda writer, _delay: scheduled.append(writer),
             )
@@ -1111,14 +1111,14 @@ class TestABrokenRestoreStillWritesWhatWasNoted:
 
     Even after a broken reading, what stayed behind during the startup goes out.
 
-    Vóór het herstel schrijft `_async_save_state` niets; het onthoudt alleen dát er
+    Vóór het herstel schrijft `async_save_state` niets; het onthoudt alleen dát er
     iets te bewaren viel. Valt het herstel zelf om, dan komt de schrijfstap in het
     `try`-blok nooit langs, en dan hoort de `finally` het alsnog weg te schrijven - ná
     de poort, anders blijft het weer liggen. Zonder die stap stond een thuiskomst van
     tijdens het opstarten alleen in het geheugen, tot er toevallig weer iets bewaard
     werd.
 
-    Before the restore `_async_save_state` writes nothing; it only remembers *that*
+    Before the restore `async_save_state` writes nothing; it only remembers *that*
     something needed saving. When the restore itself falls over, the write step in the
     `try` block never comes by, and then the `finally` should write it away all the
     same - after the gate, or it stays behind again. Without that step a homecoming
@@ -1139,7 +1139,7 @@ class TestABrokenRestoreStillWritesWhatWasNoted:
             async def broken_restore() -> None:
                 raise RuntimeError("kapotte opslag")
 
-            monkeypatch.setattr(home.coordinator, "_async_restore_state", broken_restore)
+            monkeypatch.setattr(home.coordinator, "async_restore_state", broken_restore)
             home.hass.states.async_set(PERSON, "home", {})
             await settle_the_debouncer(home)
             assert not os.path.exists(store_path(config_dir)), (

@@ -93,8 +93,8 @@ class TestSettingUp:
             await live.settle()
             await live.evaluate()
             assert live.state(BOILER) == "off", "de director zet de ketel meteen weer aan"
-            assert "woonkamer" in live.coordinator._handed_back
-            assert "zolder" in live.coordinator._handed_back
+            assert "woonkamer" in live.coordinator.handed_back
+            assert "zolder" in live.coordinator.handed_back
         finally:
             await stop_house(live)
 

@@ -192,7 +192,7 @@ def moment_of(home: LiveHome) -> datetime:
 
 def moment(home: LiveHome) -> datetime:
     """Return the recorded homecoming moment, which must be there."""
-    found = home.coordinator._home_since.get("danny")
+    found = home.coordinator.home_since.get("danny")
     assert found is not None, "er is geen thuiskomstmoment vastgelegd"
     return found
 
@@ -216,7 +216,7 @@ def home_before(home: LiveHome) -> bool:
 
 def stored(home: LiveHome) -> dict[str, Any]:
     """Return the moments as the store payload carries them."""
-    return home.coordinator._store_payload().get("home_since", {})
+    return home.coordinator.store_payload().get("home_since", {})
 
 
 async def moves(home: LiveHome, state: str = "home") -> None:
@@ -375,7 +375,7 @@ class TestTheMomentSurvivesARestart:
             config_dir=config_dir,
         )
         try:
-            assert again.coordinator._home_since["danny"] == first
+            assert again.coordinator.home_since["danny"] == first
             assert stored(again)["danny"] == first.isoformat()
             assert moment_of(again) != first
             assert again.state(LIVING) == "heat"
@@ -423,7 +423,7 @@ class TestTheMomentSurvivesARestart:
             config_dir=config_dir,
         )
         try:
-            assert again.coordinator._home_since.get("danny") is None
+            assert again.coordinator.home_since.get("danny") is None
             assert "danny" not in stored(again)
 
             await moves(again)
@@ -510,7 +510,7 @@ class TestAStoreThatIsNotToBeTrusted:
             config_dir=config_dir,
         )
         try:
-            path = Path(home.coordinator._store.path)
+            path = Path(home.coordinator.store.path)
         finally:
             await stop_house(home)
 
@@ -571,8 +571,8 @@ class TestTwoResidentsOnOnePresenceEntity:
         try:
             await moves(home)
 
-            assert home.coordinator._home_since["danny"] == moment_of(home)
-            assert home.coordinator._home_since["nancy"] == moment_of(home)
+            assert home.coordinator.home_since["danny"] == moment_of(home)
+            assert home.coordinator.home_since["nancy"] == moment_of(home)
             assert stored(home)["nancy"] == moment_of(home).isoformat()
             assert home.state(LIVING) == "heat"
         finally:
@@ -584,7 +584,7 @@ class TestNoWriteWhileClosing:
 
     Own variant E5: a homecoming during shutdown no longer writes anything away.
 
-    `_async_save_state` weigert te plannen zodra `_closing` waar is, zodat een ronde
+    `async_save_state` weigert te plannen zodra `_closing` waar is, zodat een ronde
     die het afsluiten overleeft het bestand niet ná `async_remove_entry` terugschrijft.
     De listener die het moment vastlegt loopt langs dezelfde deur, en dat is hier te
     meten: met `_closing` waar komt er geen uitgestelde schrijfactie meer bij.
@@ -598,7 +598,7 @@ class TestNoWriteWhileClosing:
         try:
             writes: list[str] = []
             monkeypatch.setattr(
-                home.coordinator._store,
+                home.coordinator.store,
                 "async_delay_save",
                 lambda *_, **__: writes.append("write"),
             )

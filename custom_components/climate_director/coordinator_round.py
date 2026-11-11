@@ -142,9 +142,9 @@ def _live_preconditions(coordinator: ClimateDirectorCoordinator) -> dict[str, da
     Pruned on reading rather than on a timer: an expired request is over
     whether or not anything got round to noticing.
     """
-    coordinator._precondition = still_running(coordinator._precondition, dt_util.now())
-    coordinator._precondition_bypass &= set(coordinator._precondition)
-    return dict(coordinator._precondition)
+    coordinator.precondition_until = still_running(coordinator.precondition_until, dt_util.now())
+    coordinator.precondition_bypass &= set(coordinator.precondition_until)
+    return dict(coordinator.precondition_until)
 
 
 async def _async_evaluate(coordinator: ClimateDirectorCoordinator) -> None:
@@ -153,11 +153,11 @@ async def _async_evaluate(coordinator: ClimateDirectorCoordinator) -> None:
     if coordinator._closing or not coordinator._restored:
         return
     async with coordinator._lock:
-        coordinator._drop_lapsed_override_timers()
-        world = coordinator._note_house_asleep(coordinator.build_world())
+        coordinator.drop_lapsed_override_timers()
+        world = coordinator.note_house_asleep(coordinator.build_world())
         coordinator._remember_families(world)
         world = coordinator._with_family_history(world)
-        world = coordinator._settle_hand_starts(world)
+        world = coordinator.settle_hand_starts(world)
 
         plan = decide(coordinator.config, world, coordinator.data)
         coordinator.world = world
@@ -183,8 +183,8 @@ async def _async_evaluate(coordinator: ClimateDirectorCoordinator) -> None:
         # commands that zone nothing, and the expiry choice is thus exactly
         # the one command at that moment. After that the director simply
         # decides again.
-        expiry_changes = coordinator._consume_expired_overrides(world.now)
-        pending_changes = coordinator._consume_pending_override_changes(world)
+        expiry_changes = coordinator.consume_expired_overrides(world.now)
+        pending_changes = coordinator.consume_pending_override_changes(world)
         sent = coordinator._sent_setpoints
         coordinator.last_changes = changes(plan, world, sent) + expiry_changes + pending_changes
         coordinator.last_applied = ()

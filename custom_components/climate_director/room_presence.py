@@ -38,7 +38,7 @@ class RoomPresenceMixin(CoordinatorSurface):
     """
 
     @callback
-    def _notice_room_empty(self, event: Event[EventStateChangedData]) -> None:
+    def notice_room_empty(self, event: Event[EventStateChangedData]) -> None:
         """Record the moment a room really became empty or dropped out.
 
         De nalooptijd van een kamer begint bij een **vertrek**: een overgang van
@@ -51,7 +51,7 @@ class RoomPresenceMixin(CoordinatorSurface):
         verse nalooptijd.
 
         Het moment is `last_changed` van de entiteit zelf, precies zoals bij
-        `_notice_home`: dat is het moment van de overgang, en het is dezelfde
+        `notice_home`: dat is het moment van de overgang, en het is dezelfde
         tijdbasis die de lezer vroeger las. Verdwijnt de entiteit zelf, dan is er
         geen `last_changed` en neemt de coordinator het moment van de melding.
         Komt de kamer weer bezet, dan gaat het moment weg. De verzameling
@@ -68,7 +68,7 @@ class RoomPresenceMixin(CoordinatorSurface):
         standing and therefore gets no fresh grace period.
 
         The moment is the entity's own `last_changed`, exactly as in
-        `_notice_home`: that is the moment of the transition, and it is the same
+        `notice_home`: that is the moment of the transition, and it is the same
         time base the reader used before. When the entity itself disappears
         there is no `last_changed`, and the coordinator takes the moment of the
         report. When the room becomes occupied again the moment goes. The set of
@@ -112,7 +112,7 @@ class RoomPresenceMixin(CoordinatorSurface):
                 changed = True
 
         if changed:
-            self._async_save_state()
+            self.async_save_state()
 
     def _room_presence_payload(self) -> dict[str, Any]:
         """Return what the store needs to know about the room gate.
@@ -203,9 +203,9 @@ class RoomPresenceMixin(CoordinatorSurface):
             self._empty_since.pop(zone_id, None)
 
         if (self._empty_since, self._occupied_rooms) != before:
-            self._async_save_state()
+            self.async_save_state()
 
-    def _note_room_presence_now(self) -> None:
+    def note_room_presence_now(self) -> None:
         """Seed the occupied rooms from the states read at the startup.
 
         Zonder deze stap kent de coordinator na een eerste start alleen kamers
@@ -232,4 +232,4 @@ class RoomPresenceMixin(CoordinatorSurface):
             self._empty_since.pop(zone_id, None)
             changed = True
         if changed:
-            self._async_save_state()
+            self.async_save_state()

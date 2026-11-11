@@ -58,8 +58,8 @@ class StandIn:
         # The note of what the user did before the restore:
         # `_async_on_hass_started` empties it after the restore, and this stand-in
         # starts empty.
-        self._override_before_restore: set[str] = set()
-        self._request_before_restore: set[str] = set()
+        self.override_before_restore: set[str] = set()
+        self.request_before_restore: set[str] = set()
 
     def tracked_entities(self) -> set[str]:
         """Eén gevolgde entiteit, zodat het opzetten de listener echt aanraakt.
@@ -84,10 +84,10 @@ class StandIn:
     def _cancel_clock_reeval(self) -> None:
         pass
 
-    async def _async_restore_state(self) -> None:
+    async def async_restore_state(self) -> None:
         self.restored += 1
 
-    def _async_save_pending_state(self) -> None:
+    def async_save_pending_state(self) -> None:
         """Deze stand-in bewaart niets; de stap hoort wel op het pad.
 
         `_async_on_hass_started` schrijft ná het herstel één keer weg wat tijdens
@@ -107,7 +107,7 @@ class StandIn:
     def _note_home_now(self) -> None:
         """Deze stand-in houdt geen bewoners bij; de stap hoort wel op het pad."""
 
-    def _note_room_presence_now(self) -> None:
+    def note_room_presence_now(self) -> None:
         """Deze stand-in leest geen aanwezigheid; de stap hoort wel op het pad."""
 
     async def _async_evaluate(self) -> None:
@@ -190,7 +190,7 @@ async def test_a_broken_restore_still_opens_the_gate() -> None:
     async def broken_restore() -> None:
         raise RuntimeError("kapotte opslag")
 
-    item._async_restore_state = broken_restore  # type: ignore[method-assign]
+    item.async_restore_state = broken_restore  # type: ignore[method-assign]
 
     await item._async_on_hass_started(item.hass)  # type: ignore[arg-type]
 
@@ -232,24 +232,24 @@ async def test_an_exception_from_the_first_decision_still_arms_the_clock() -> No
 async def test_the_gate_stays_shut_while_the_restore_runs() -> None:
     """De poort gaat pas open nadat het herstel klaar is, niet tijdens.
 
-    Stond `_restored` al vóór of tijdens `_async_restore_state`, dan kon een
+    Stond `_restored` al vóór of tijdens `async_restore_state`, dan kon een
     beslissing die tijdens het herstel binnenkwam de bewaarde toestand missen.
     Deze toets kijkt op het moment zelf, niet pas achteraf.
 
     The gate opens only after the restore is done, not during it. If `_restored`
-    already stood before or during `_async_restore_state`, a decision arriving
+    already stood before or during `async_restore_state`, a decision arriving
     during the restore could miss the stored state. This test looks at the
     moment itself, not only afterwards.
     """
     item = StandIn()
     seen: list[bool] = []
-    original = item._async_restore_state
+    original = item.async_restore_state
 
     async def observed_restore() -> None:
         seen.append(item._restored)
         await original()
 
-    item._async_restore_state = observed_restore  # type: ignore[method-assign]
+    item.async_restore_state = observed_restore  # type: ignore[method-assign]
 
     await item._async_on_hass_started(item.hass)  # type: ignore[arg-type]
 

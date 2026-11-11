@@ -209,13 +209,13 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
             self.zone_overrides: dict[str, bool] = {}
             self.zone_priorities: dict[str, int] = {}
             self.opening_bypasses: dict[str, bool] = {}
-            self._precondition: dict[str, datetime] = {}
-            self._precondition_bypass: set[str] = set()
+            self.precondition_until: dict[str, datetime] = {}
+            self.precondition_bypass: set[str] = set()
             self._precipitation_seen_at: datetime | None = None
-            self._home_since: dict[str, datetime] = {}
-            self._asleep_since: datetime | None = None
+            self.home_since: dict[str, datetime] = {}
+            self.asleep_since: datetime | None = None
             self._hand_starts: dict[str, datetime] = {}
-            self._handed_back: dict = {}
+            self.handed_back: dict = {}
             self._empty_since: dict[str, datetime] = {}
             self._occupied_rooms: set[str] = set()
             self._waiting: dict = {}
@@ -248,10 +248,10 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
         _season = ClimateDirectorCoordinator._season
         _precipitation = ClimateDirectorCoordinator._precipitation
         _notice_precipitation = ClimateDirectorCoordinator._notice_precipitation
-        _notice_room_empty = ClimateDirectorCoordinator._notice_room_empty
+        notice_room_empty = ClimateDirectorCoordinator.notice_room_empty
         _room_presence_payload = ClimateDirectorCoordinator._room_presence_payload
         _restore_room_presence = ClimateDirectorCoordinator._restore_room_presence
-        _note_room_presence_now = ClimateDirectorCoordinator._note_room_presence_now
+        note_room_presence_now = ClimateDirectorCoordinator.note_room_presence_now
         _calendar_says_holiday = ClimateDirectorCoordinator._calendar_says_holiday
         zones_handed_back = ClimateDirectorCoordinator.zones_handed_back
         _live_preconditions = ClimateDirectorCoordinator._live_preconditions
@@ -263,7 +263,7 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
         _friendly = ClimateDirectorCoordinator._friendly
         _open_openings = ClimateDirectorCoordinator._open_openings
 
-        def _async_save_state(self) -> None:
+        def async_save_state(self) -> None:
             pass
 
     return StandIn()
@@ -617,47 +617,47 @@ class TestTheRoomGraceStartsAtARealDeparture:
 
     def test_a_real_departure_starts_the_grace(self) -> None:
         item = coordinator()
-        item._notice_room_empty(self._event("on", "off", at=NOW))
+        item.notice_room_empty(self._event("on", "off", at=NOW))
         assert item._empty_since == {"zolder": NOW}
         assert item._occupied_rooms == set()
 
     def test_a_dropout_of_an_occupied_room_starts_the_grace(self) -> None:
         item = coordinator()
-        item._notice_room_empty(self._event("on", "unavailable", at=NOW))
+        item.notice_room_empty(self._event("on", "unavailable", at=NOW))
         assert item._empty_since == {"zolder": NOW}
         assert item._occupied_rooms == set()
 
     def test_an_unreadable_room_that_was_not_occupied_gets_no_grace(self) -> None:
         item = coordinator()
-        item._notice_room_empty(self._event("off", "unknown", at=NOW))
+        item.notice_room_empty(self._event("off", "unknown", at=NOW))
         assert item._empty_since == {}
         assert item._occupied_rooms == set()
 
     def test_an_unreadable_to_off_keeps_the_dropout_moment(self) -> None:
         """`unavailable` -> `off` is geen nieuw vertrek en verschuift het moment niet."""
         item = coordinator()
-        item._notice_room_empty(self._event("on", "unavailable", at=NOW))
-        item._notice_room_empty(self._event("unavailable", "off", at=NOW + timedelta(minutes=5)))
+        item.notice_room_empty(self._event("on", "unavailable", at=NOW))
+        item.notice_room_empty(self._event("unavailable", "off", at=NOW + timedelta(minutes=5)))
         assert item._empty_since == {"zolder": NOW}
         assert item._occupied_rooms == set()
 
     def test_a_sensor_that_repeats_off_does_not_move_the_moment(self) -> None:
         """Een sensor die `off` opnieuw meldt is geen nieuwe overgang."""
         item = coordinator()
-        item._notice_room_empty(self._event("on", "off", at=NOW))
-        item._notice_room_empty(self._event("off", "off", at=NOW + timedelta(minutes=5)))
+        item.notice_room_empty(self._event("on", "off", at=NOW))
+        item.notice_room_empty(self._event("off", "off", at=NOW + timedelta(minutes=5)))
         assert item._empty_since == {"zolder": NOW}
 
     def test_becoming_occupied_again_drops_the_moment(self) -> None:
         item = coordinator()
-        item._notice_room_empty(self._event("on", "off", at=NOW))
-        item._notice_room_empty(self._event("off", "on", at=NOW + timedelta(minutes=5)))
+        item.notice_room_empty(self._event("on", "off", at=NOW))
+        item.notice_room_empty(self._event("off", "on", at=NOW + timedelta(minutes=5)))
         assert item._empty_since == {}
         assert item._occupied_rooms == {"zolder"}
 
     def test_an_event_without_states_writes_nothing(self) -> None:
         item = coordinator()
-        item._notice_room_empty(
+        item.notice_room_empty(
             SimpleNamespace(
                 data={
                     "entity_id": "binary_sensor.zolder",
@@ -672,7 +672,7 @@ class TestTheRoomGraceStartsAtARealDeparture:
     def test_a_repeated_occupied_reading_keeps_the_room_occupied(self) -> None:
         item = coordinator()
         item._occupied_rooms = {"zolder"}
-        item._notice_room_empty(self._event("on", "on", at=NOW))
+        item.notice_room_empty(self._event("on", "on", at=NOW))
         assert item._occupied_rooms == {"zolder"}
         assert item._empty_since == {}
 
@@ -680,7 +680,7 @@ class TestTheRoomGraceStartsAtARealDeparture:
         item = coordinator()
         item._occupied_rooms = {"zolder"}
         item._empty_since = {"zolder": NOW}
-        item._notice_room_empty(self._event("unavailable", "off", at=NOW))
+        item.notice_room_empty(self._event("unavailable", "off", at=NOW))
         assert item._empty_since == {"zolder": NOW}
         assert item._occupied_rooms == set()
 
@@ -712,10 +712,10 @@ class TestRestoringTheRoomPresence:
         """Een kamer die de hele tijd bezet bleef komt in de verzameling."""
         item = coordinator({"binary_sensor.zolder": FakeState("on")})
         item._empty_since = {"zolder": NOW}
-        item._note_room_presence_now()
+        item.note_room_presence_now()
         assert item._occupied_rooms == {"zolder"}
         assert item._empty_since == {}
-        item._note_room_presence_now()
+        item.note_room_presence_now()
         assert item._occupied_rooms == {"zolder"}
 
 
@@ -748,15 +748,15 @@ class TestComingHomeIsNotSleeping:
             }
         )
         # Het thuiskomstmoment komt uit de boekhouding van de coördinator
-        # (`_home_since`), en daar legt de listener precies het
+        # (`home_since`), en daar legt de listener precies het
         # tijdstempel van de aanwezigheidsentiteit in. Deze opstelling zet dat moment
         # er dus zelf in; zonder moment zou een lezing altijd tellen.
         #
         # The homecoming moment comes from the coordinator's bookkeeping
-        # (`_home_since`), and that is exactly where the listener puts the
+        # (`home_since`), and that is exactly where the listener puts the
         # presence entity's timestamp. This setup therefore puts that moment in
         # itself; without a moment a reading would always count.
-        item._home_since["danny"] = home_at
+        item.home_since["danny"] = home_at
         return item.build_world()
 
     def test_a_reading_from_before_the_arrival_does_not_count(self) -> None:
@@ -1165,7 +1165,7 @@ class TestTheEvents:
         config, world, plan = self._plan(open_door=True)
         item = coordinator({}, config)
         item.world = world
-        item._precondition = {"woonkamer": NOW + timedelta(hours=1)}
+        item.precondition_until = {"woonkamer": NOW + timedelta(hours=1)}
         item._fire_refusals(plan)
 
         assert item.hass.bus.fired, "een geweigerd verzoek meldde zichzelf niet"
@@ -1178,7 +1178,7 @@ class TestTheEvents:
         config, world, plan = self._plan(open_door=True)
         item = coordinator({}, config)
         item.world = world
-        item._precondition = {"woonkamer": NOW + timedelta(hours=1)}
+        item.precondition_until = {"woonkamer": NOW + timedelta(hours=1)}
         item._fire_refusals(plan)
         item._fire_refusals(plan)
         assert len(item.hass.bus.fired) == 1
@@ -1251,7 +1251,7 @@ class TestTheHouseWideRefusal:
         plan = decide(config, world)
         item = coordinator({}, config)
         item.world = world
-        item._precondition = {"woonkamer": NOW + timedelta(hours=1)}
+        item.precondition_until = {"woonkamer": NOW + timedelta(hours=1)}
         item._fire_refusals(plan)
         return item
 
@@ -1279,7 +1279,7 @@ class TestTheHouseWideRefusal:
         plan = decide(config, world)
         item = coordinator({}, config)
         item.world = world
-        item._precondition = {"woonkamer": NOW + timedelta(hours=1)}
+        item.precondition_until = {"woonkamer": NOW + timedelta(hours=1)}
         item._fire_refusals(plan)
 
         assert item.hass.bus.fired == []
@@ -1287,7 +1287,7 @@ class TestTheHouseWideRefusal:
     def test_a_refusal_that_changes_reason_still_fires_once(self) -> None:
         config = self._config()
         item = coordinator({}, config)
-        item._precondition = {"woonkamer": NOW + timedelta(hours=1)}
+        item.precondition_until = {"woonkamer": NOW + timedelta(hours=1)}
 
         world = self._world(open_living=False, open_front=True)
         item.world = world
@@ -1619,38 +1619,36 @@ class TestTheQuietSideOfEachListener:
     def test_a_home_resident_whose_state_repeats_keeps_the_moment(self) -> None:
         """Thuis blijft thuis (bijvoorbeeld een nieuwe gps-positie): geen nieuw moment."""
         item = coordinator()
-        item._home_since = {"danny": NOW}
-        ClimateDirectorCoordinator._notice_home(item, self._event("person.danny", "home", "home"))
-        assert item._home_since == {"danny": NOW}
+        item.home_since = {"danny": NOW}
+        ClimateDirectorCoordinator.notice_home(item, self._event("person.danny", "home", "home"))
+        assert item.home_since == {"danny": NOW}
 
     def test_an_away_resident_without_a_moment_stays_without_one(self) -> None:
         item = coordinator()
-        ClimateDirectorCoordinator._notice_home(
+        ClimateDirectorCoordinator.notice_home(
             item, self._event("person.danny", "not_home", "not_home")
         )
-        assert item._home_since == {}
+        assert item.home_since == {}
 
     def test_an_unreadable_state_keeps_the_moment(self) -> None:
         """Een onleesbare aanwezigheid is geen vertrek."""
         item = coordinator()
-        item._home_since = {"danny": NOW}
-        ClimateDirectorCoordinator._notice_home(
+        item.home_since = {"danny": NOW}
+        ClimateDirectorCoordinator.notice_home(
             item, self._event("person.danny", "home", "unavailable")
         )
-        assert item._home_since == {"danny": NOW}
+        assert item.home_since == {"danny": NOW}
 
     def test_an_unreadable_state_does_not_count_as_a_new_homecoming(self) -> None:
         """Na een onleesbare stand is thuiskomen geen nieuwe thuiskomst."""
         item = coordinator()
-        item._home_since = {"danny": NOW}
-        ClimateDirectorCoordinator._notice_home(
-            item, self._event("person.danny", "unknown", "home")
-        )
-        assert item._home_since == {"danny": NOW}
+        item.home_since = {"danny": NOW}
+        ClimateDirectorCoordinator.notice_home(item, self._event("person.danny", "unknown", "home"))
+        assert item.home_since == {"danny": NOW}
 
     def test_an_occupied_room_that_stays_occupied_has_no_moment(self) -> None:
         item = coordinator()
-        item._notice_room_empty(self._event("binary_sensor.zolder", "on", "on"))
+        item.notice_room_empty(self._event("binary_sensor.zolder", "on", "on"))
         assert item._empty_since == {}
 
     def test_without_a_world_no_opening_is_reported_as_bypassed(
@@ -1671,7 +1669,7 @@ class TestTheQuietSideOfEachListener:
         monkeypatch.setattr(texts, "lookup", lambda _hass, _code: None)
         item = coordinator()
         item.world = make_world()
-        item._precondition = {"onbekend": NOW}
+        item.precondition_until = {"onbekend": NOW}
         data = item._refusal_data("onbekend", None)
         assert data["zone"] == "onbekend"
         assert data["target_temperature"] is None

@@ -210,7 +210,7 @@ class TestThePhoneSentence:
                 self.entry = self.config_entry
                 self.data = None
                 self.temperature_unit = unit
-                self._precondition = {"zolder": noon + timedelta(hours=1)}
+                self.precondition_until = {"zolder": noon + timedelta(hours=1)}
                 self.world = make_world(
                     now=noon,
                     outdoor=8.0,

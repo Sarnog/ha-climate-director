@@ -80,7 +80,7 @@ MUTATIONS = [
         "name": "opgeslagen-hand-toch-weg",
         "file": "custom_components/climate_director/state_store.py",
         "old": (
-            "                if zone in self._override_before_restore "
+            "                if zone in self.override_before_restore "
             "and self.zone_overrides.get(zone, False)"
         ),
         "new": "                if self.zone_overrides.get(zone, False)",

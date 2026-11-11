@@ -280,7 +280,7 @@ class Simulation:
             precondition_until=self.requests.live(),
             precondition_bypass=frozenset(self.requests.bypass),
             zone_overrides={
-                **dict.fromkeys(self.hand.handed_back(), True),
+                **dict.fromkeys(self.hand.handed_back_today(), True),
                 **self.overrides,
             },
             zone_priorities=dict(self.priorities),
@@ -669,10 +669,10 @@ class _PreconditionStandIn:
 
     def __init__(self, sim: Simulation) -> None:
         self.config = sim.config
-        self._precondition: dict[str, datetime] = {}
-        self._precondition_bypass: set[str] = set()
-        self._override_before_restore: set[str] = set()
-        self._request_before_restore: set[str] = set()
+        self.precondition_until: dict[str, datetime] = {}
+        self.precondition_bypass: set[str] = set()
+        self.override_before_restore: set[str] = set()
+        self.request_before_restore: set[str] = set()
         self._restored = True
 
     # De echte methodes, zodat de begrenzing en het opschonen meegetest worden.
@@ -686,12 +686,12 @@ class _PreconditionStandIn:
 
     @property
     def bypass(self) -> set[str]:
-        return self._precondition_bypass
+        return self.precondition_bypass
 
     def async_request_evaluation(self) -> None:
         pass
 
-    def _async_save_state(self) -> None:
+    def async_save_state(self) -> None:
         pass
 
     def _preconditions_expire_at(self, until: datetime) -> None:
@@ -707,8 +707,8 @@ class _HandStandIn:
         self._issued = None
         self.shadow = False
         self.zone_overrides: dict[str, bool] = {}
-        self._handed_back: dict[str, object] = {}
-        self._home_since: dict[str, datetime] = {}
+        self.handed_back: dict[str, object] = {}
+        self.home_since: dict[str, datetime] = {}
         """Leeg: deze stand-in leest alleen welke zones er zijn overgedragen.
 
         `_resident` leest het thuiskomstmoment uit de boekhouding van de
@@ -751,10 +751,10 @@ class _HandStandIn:
     everyone_asleep = ClimateDirectorCoordinator.everyone_asleep
     house_is_empty = ClimateDirectorCoordinator.house_is_empty
 
-    def _async_save_state(self) -> None:
+    def async_save_state(self) -> None:
         self.saved += 1
 
-    def handed_back(self):
+    def handed_back_today(self):
         """Return the zones handed back today, on the simulation's clock."""
         from custom_components.climate_director import coordinator as coordinator_module
 

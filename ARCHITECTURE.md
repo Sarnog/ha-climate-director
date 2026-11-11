@@ -1089,7 +1089,7 @@ Zes dingen zijn er subtiel aan:
   aanroep, zodat de twee niet uit elkaar lopen. Wie alleen wil horen dat iets uitgaat,
   filtert daarop in plaats van op een vertaalde zin.
 - **Het moment waarop het huis ging slapen komt uit de rondes zelf.** `build_world` leest
-  het alleen; `world_builder._note_house_asleep` vraagt elke ronde
+  het alleen; `world_builder.note_house_asleep` vraagt elke ronde
   `night.house_asleep_since` en schrijft het weg zodra het verandert, zodat een herstart
   midden in de nacht het niet kwijtraakt. In de diagnose gelakt.
 
@@ -1099,8 +1099,8 @@ heeft: `_async_evaluate` doet niets zolang de vlag `_restored` niet staat, en di
 aan in `_async_on_hass_started`, ná het herstel van de opslag en vóór de eerste beslissing.
 Zonder die poort besliste de director op een half huis: de sensoren die tijdens het laden
 binnenkomen wekken de debouncer, en een apparaat dat iemand eerder die dag met de hand uitzette
-stond dan al weer aan voordat `_handed_back` gelezen was — de rest van de dag. Noteren
-(`_notice_home`, `_notice_hand`, de neerslag) mag intussen wel, en het herstel **voegt
+stond dan al weer aan voordat `handed_back` gelezen was — de rest van de dag. Noteren
+(`notice_home`, `_notice_hand`, de neerslag) mag intussen wel, en het herstel **voegt
 samen** in plaats van te vervangen, zodat een hand van tijdens het opstarten niet stil
 verdwijnt onder een ouder opgeslagen oordeel.
 
@@ -1127,7 +1127,7 @@ Er wordt vóór het herstel ook niets weggeschreven. Noteren mag, maar de opslag
 blijft onaangeroerd tot hij gelezen is: `Store.async_load` leest een wachtende schrijfactie
 in plaats van het bestand, dus staat er één klaar, dan komt het herstel uit op de half
 opgebouwde staat van dit moment en is het opgeslagen oordeel van de gebruiker verdwenen.
-`_async_save_state` onthoudt daarom alleen dát er iets te bewaren viel, en
+`async_save_state` onthoudt daarom alleen dát er iets te bewaren viel, en
 `_async_on_hass_started` schrijft één keer direct ná het herstel — ook als het herstel zelf
 omviel. Een installatie die tijdens het opstarten weer weggehaald wordt schrijft niets
 terug: de afbraakpoort (`_closing`) staat daar vóór.
@@ -1840,8 +1840,15 @@ lezen en zetten nu ruim tachtig privé attributen ervan. Dat wordt:
 Wat een mixin bezit en een onderdeel moet lezen (de verzoeken en de overbrugging
 van de vooruit-verzoeken, de teruggegeven handen, het thuiskomst- en
 slaapmoment, de opslag) krijgt een publieke naam op de coordinator, zoals
-`zone_override_until` die al heeft; de methodes van een mixin die een onderdeel
-aanroept krijgen ook een publieke naam. Een onderdeel roept een ander onderdeel
+`zone_override_until` die al heeft: `precondition_until`, `precondition_bypass`,
+`handed_back`, `home_since`, `asleep_since`, `store`, `request_before_restore` en
+`override_before_restore`. De methodes van een mixin die een onderdeel aanroept
+krijgen ook een publieke naam: `notice_hand_start`, `settle_hand_starts`,
+`cancel_pending_override_wake`, `consume_expired_overrides`,
+`consume_pending_override_changes`, `drop_lapsed_override_timers`,
+`cancel_pending_precondition_wake`, `notice_home`, `note_room_presence_now`,
+`notice_room_empty`, `async_restore_state`, `async_save_pending_state`,
+`async_save_state`, `store_payload` en `note_house_asleep`. Een onderdeel roept een ander onderdeel
 rechtstreeks aan (`coordinator_reporting.note_unusable(coordinator, …)`) en niet
 meer via een dunne methode op de coordinator. De coordinator houdt alleen de
 methodes die Home Assistant, een mixin of een platform aanroept. `coordinator.py`
@@ -3173,7 +3180,7 @@ Six things about it are subtle:
   so the two cannot drift apart. Whoever only wants to hear that something goes off filters
   on it instead of on a translated sentence.
 - **The moment the house went to sleep comes from the rounds themselves.** `build_world`
-  only reads it; `world_builder._note_house_asleep` asks `night.house_asleep_since` every
+  only reads it; `world_builder.note_house_asleep` asks `night.house_asleep_since` every
   round and writes it away as soon as it changes, so a restart in the middle of the night
   does not lose it. Redacted in the diagnostics.
 
@@ -3183,7 +3190,7 @@ nothing while the `_restored` flag is unset, and that flag goes up in
 `_async_on_hass_started`, after the restore of the store and before the first decision.
 Without that gate the director decided on half a house: the sensors arriving during loading
 wake the debouncer, and an appliance somebody switched off by hand earlier that day was switched on
-again before `_handed_back` had been read — for the rest of the day. Noting (`_notice_home`,
+again before `handed_back` had been read — for the rest of the day. Noting (`notice_home`,
 `_notice_hand`, the precipitation) is allowed in the meantime, and the restore **merges**
 rather than replaces, so a hand from during the startup does not quietly disappear under an
 older stored verdict.
@@ -3210,7 +3217,7 @@ Nothing is written before the
 restore either. Noting is allowed, but the store stays untouched until it has been read:
 `Store.async_load` reads a pending write instead of the file, so if one is standing ready
 the restore comes out on this moment's half-built state and the user's stored verdict is
-gone. `_async_save_state` therefore only remembers *that* something needed saving, and
+gone. `async_save_state` therefore only remembers *that* something needed saving, and
 `_async_on_hass_started` writes once directly after the restore — also when the restore
 itself fell over. An installation removed again during the startup writes nothing back: the
 teardown gate (`_closing`) stands before that.
@@ -3912,8 +3919,15 @@ now read and set well over eighty private attributes of it. That becomes:
 
 What a mixin owns and a part must read (the pre-conditioning requests and their
 bypass, the handed-back hands, the homecoming and sleep moment, the storage) gets
-a public name on the coordinator, as `zone_override_until` already has; the methods
-of a mixin that a part calls get a public name too. A part calls another part
+a public name on the coordinator, as `zone_override_until` already has:
+`precondition_until`, `precondition_bypass`, `handed_back`, `home_since`,
+`asleep_since`, `store`, `request_before_restore` and `override_before_restore`. The
+methods of a mixin that a part calls get a public name too: `notice_hand_start`,
+`settle_hand_starts`, `cancel_pending_override_wake`, `consume_expired_overrides`,
+`consume_pending_override_changes`, `drop_lapsed_override_timers`,
+`cancel_pending_precondition_wake`, `notice_home`, `note_room_presence_now`,
+`notice_room_empty`, `async_restore_state`, `async_save_pending_state`,
+`async_save_state`, `store_payload` and `note_house_asleep`. A part calls another part
 directly (`coordinator_reporting.note_unusable(coordinator, …)`) and no longer
 through a thin method on the coordinator. The coordinator keeps only the methods
 that Home Assistant, a mixin or a platform calls. `coordinator.py` stays under 500

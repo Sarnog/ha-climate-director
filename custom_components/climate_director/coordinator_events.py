@@ -83,7 +83,7 @@ def _fire_refusals(coordinator: ClimateDirectorCoordinator, plan: Plan) -> None:
     for decision in plan.zones:
         if decision.reason not in (Reason.OPENING_OPEN, Reason.OPENING_OPEN_ELSEWHERE):
             continue
-        if not coordinator._precondition.get(decision.zone_id):
+        if not coordinator.precondition_until.get(decision.zone_id):
             continue
         refused.add(decision.zone_id)
 
@@ -195,7 +195,7 @@ def _refusal_data(
         "zone": name,
         "openings": openings,
         "opening_names": [coordinator._friendly(entity_id) for entity_id in openings],
-        "until": coordinator._precondition[zone_id].isoformat(),
+        "until": coordinator.precondition_until[zone_id].isoformat(),
         "indoor_temperature": indoor,
         "target_temperature": target,
         "override_minutes": minutes,

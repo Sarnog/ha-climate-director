@@ -88,7 +88,7 @@ def coordinator(indoor: float | None = 15.0):
             self.config_entry = Entry()
             self.entry = self.config_entry
             self.data = None
-            self._precondition = {"zolder": NOON + timedelta(hours=1)}
+            self.precondition_until = {"zolder": NOON + timedelta(hours=1)}
             self.world = make_world(
                 now=NOON,
                 outdoor=8.0,

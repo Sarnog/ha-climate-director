@@ -948,16 +948,16 @@ class TestTheActionAcceptsAnything:
         class StandIn:
             def __init__(self) -> None:
                 self.config = config
-                self._precondition: dict[str, datetime] = {}
-                self._precondition_bypass: set[str] = set()
-                self._override_before_restore: set[str] = set()
-                self._request_before_restore: set[str] = set()
+                self.precondition_until: dict[str, datetime] = {}
+                self.precondition_bypass: set[str] = set()
+                self.override_before_restore: set[str] = set()
+                self.request_before_restore: set[str] = set()
                 self._restored = True
 
             def async_request_evaluation(self) -> None:
                 pass
 
-            def _async_save_state(self) -> None:
+            def async_save_state(self) -> None:
                 pass
 
             def _preconditions_expire_at(self, until: datetime) -> None:

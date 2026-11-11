@@ -155,7 +155,7 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   terugkomen** — draaiend heft een override de hand bij zijn begin op, ook als hij daarna
   weer uitgaat. Tijdens het opstarten telt alleen een override die er na het herstel nog
   staat; wordt hij binnen die tijd ook weer uitgezet, dan komt de opgeslagen hand terug.
-- **De voorwaarde `zone in _occupied_rooms` in `_notice_room_empty` heeft geen toets** —
+- **De voorwaarde `zone in _occupied_rooms` in `notice_room_empty` heeft geen toets** —
   haal hem weg zonder dat een toets rood wordt. Ofwel is hij overbodig (dan kan hij weg),
   ofwel mist er een toets voor het geval waarin hij iets doet.
 - **De veldenkaart van de formulierbewaking valt stil terug op de `Call`-knoop** —
@@ -517,7 +517,7 @@ The worked-out design proposals for everything below live in
   off again afterwards. During the startup only an override still standing after the
   restore counts; when it is switched off again within that time, the stored hand comes
   back.
-- **The condition `zone in _occupied_rooms` in `_notice_room_empty` has no test** —
+- **The condition `zone in _occupied_rooms` in `notice_room_empty` has no test** —
   remove it and no test turns red. Either it is redundant (then it can go), or a test is
   missing for the case in which it does something.
 - **The form guard's field map silently falls back to the `Call` node** —

@@ -51,8 +51,8 @@ class StandIn:
         self._clock_reeval_unsub: _Cancel | None = None
         self._cancel_deferral: _Cancel | None = None
         self._cancel_precondition_wake: _Cancel | None = None
-        self._precondition: dict[str, datetime] = {}
-        self._precondition_bypass: set[str] = set()
+        self.precondition_until: dict[str, datetime] = {}
+        self.precondition_bypass: set[str] = set()
         self._debouncer = _Debouncer()
 
     _cancel_clock_reeval = ClimateDirectorCoordinator._cancel_clock_reeval
@@ -64,7 +64,7 @@ class StandIn:
     _wake_at_the_first_expiry = ClimateDirectorCoordinator._wake_at_the_first_expiry
     _preconditions_expire_at = ClimateDirectorCoordinator._preconditions_expire_at
     _on_precondition_expiry = ClimateDirectorCoordinator._on_precondition_expiry
-    _cancel_pending_precondition_wake = ClimateDirectorCoordinator._cancel_pending_precondition_wake
+    cancel_pending_precondition_wake = ClimateDirectorCoordinator.cancel_pending_precondition_wake
     async_request_evaluation = ClimateDirectorCoordinator.async_request_evaluation
 
 
@@ -258,12 +258,12 @@ class TestThePreconditionWakeUp:
         calls, _ = scheduled
         item = StandIn()
         now = dt_util.now()
-        item._precondition = {
+        item.precondition_until = {
             "woonkamer": now - timedelta(minutes=1),
             "zolder": now + timedelta(minutes=20),
         }
         item._preconditions_expire_at(now)
-        item._preconditions_expire_at(min(item._precondition.values()))
+        item._preconditions_expire_at(min(item.precondition_until.values()))
         calls.clear()
 
         item._on_precondition_expiry(now)
@@ -271,7 +271,7 @@ class TestThePreconditionWakeUp:
         assert item._debouncer.scheduled == 1
         # Het verlopen verzoek is opgeruimd, en de zolder krijgt zijn eigen wekker.
         # The expired request is cleared, and the attic gets its own alarm.
-        assert list(item._precondition) == ["zolder"]
+        assert list(item.precondition_until) == ["zolder"]
         assert len(calls) == 1
 
     def test_the_last_request_leaves_no_alarm_behind(self, scheduled) -> None:
@@ -290,12 +290,12 @@ class TestThePreconditionWakeUp:
         _calls, cancels = scheduled
         item = StandIn()
         item._preconditions_expire_at(dt_util.now() + timedelta(minutes=5))
-        item._cancel_pending_precondition_wake()
+        item.cancel_pending_precondition_wake()
 
         assert cancels[0].called == 1
         assert item._cancel_precondition_wake is None
 
         # Nog een keer is onschadelijk.
         # Once more is harmless.
-        item._cancel_pending_precondition_wake()
+        item.cancel_pending_precondition_wake()
         assert cancels[0].called == 1

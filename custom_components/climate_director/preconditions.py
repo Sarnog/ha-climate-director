@@ -62,7 +62,7 @@ class PreconditionsMixin(CoordinatorSurface):
         For anyone who only wants to know where things stand: the diagnostics.
         Those should alter nothing about the house whose fault they capture.
         """
-        return still_running(self._precondition, dt_util.now())
+        return still_running(self.precondition_until, dt_util.now())
 
     @callback
     def async_precondition(
@@ -143,14 +143,14 @@ class PreconditionsMixin(CoordinatorSurface):
             # This action by the user wins over the store: when it fell before the
             # restore, a stored request for this zone does not come back.
             self._note_by_hand_before_restore(zone_id, "request")
-            self._precondition[zone_id] = until
+            self.precondition_until[zone_id] = until
             if ignore_openings:
-                self._precondition_bypass.add(zone_id)
+                self.precondition_bypass.add(zone_id)
             else:
-                self._precondition_bypass.discard(zone_id)
+                self.precondition_bypass.discard(zone_id)
 
         if chosen:
-            self._async_save_state()
+            self.async_save_state()
             self._wake_at_the_first_expiry()
             self.async_request_evaluation()
         return dict.fromkeys(chosen, until)
@@ -164,8 +164,8 @@ class PreconditionsMixin(CoordinatorSurface):
         """
         known = {zone.zone_id for zone in self.config.zones}
         if zone_ids is None:
-            self._precondition.clear()
-            self._precondition_bypass.clear()
+            self.precondition_until.clear()
+            self.precondition_bypass.clear()
         else:
             unknown = sorted(set(zone_ids) - known)
             if unknown:
@@ -174,8 +174,8 @@ class PreconditionsMixin(CoordinatorSurface):
                     ", ".join(unknown),
                 )
             for zone_id in zone_ids:
-                self._precondition.pop(zone_id, None)
-                self._precondition_bypass.discard(zone_id)
+                self.precondition_until.pop(zone_id, None)
+                self.precondition_bypass.discard(zone_id)
         # Deze annulering wint van de opslag: viel dit vóór het herstel, dan komt
         # een opgeslagen verzoek van deze zones niet terug.
         #
@@ -192,7 +192,7 @@ class PreconditionsMixin(CoordinatorSurface):
         # standing alarm simply runs out: it then asks for a round that finds
         # nothing to do, and a round without a difference costs no service call.
         self._wake_at_the_first_expiry()
-        self._async_save_state()
+        self.async_save_state()
         self.async_request_evaluation()
 
     @callback
@@ -234,7 +234,7 @@ class PreconditionsMixin(CoordinatorSurface):
         left an alarm hanging that went off after the installation was torn
         down, on a coordinator that was no longer there.
         """
-        self._cancel_pending_precondition_wake()
+        self.cancel_pending_precondition_wake()
         seconds = (until - dt_util.now()).total_seconds()
         if seconds <= 0:
             return
@@ -250,7 +250,7 @@ class PreconditionsMixin(CoordinatorSurface):
         self._wake_at_the_first_expiry()
 
     @callback
-    def _cancel_pending_precondition_wake(self) -> None:
+    def cancel_pending_precondition_wake(self) -> None:
         """Drop the scheduled wake-up, if there is one."""
         if self._cancel_precondition_wake is not None:
             self._cancel_precondition_wake()
