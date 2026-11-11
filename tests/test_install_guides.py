@@ -378,6 +378,105 @@ def test_every_guide_has_the_same_number_of_headers(language: str) -> None:
     assert counts[language] > 0, f"{language}: geen enkele `## `-kop"
 
 
+#: Wat een volledige opsommingszin mag afsluiten: een punt, een vraag- of uitroepteken, een
+#: dubbele punt, een puntkomma (ook de Arabische), een haakje of een stuk opmaak.
+#:
+#: What may end a whole bullet sentence: a full stop, a question or exclamation mark, a
+#: colon, a semicolon (the Arabic one too), a bracket or a piece of markup.
+BULLET_ENDINGS = ".!?:;)]`*|؛؟۔"
+
+
+def guide_bullets(language: str) -> list[tuple[int, str]]:
+    """Elke opsomming van een gids als (regelnummer, hele tekst), buiten de codeblokken.
+
+    Een opsomming begint met `- ` aan de rand; haar doorlopende regels springen in. Een
+    zin die midden in een opsomming afbreekt, omdat een nieuwe opsomming ertussen kwam,
+    valt zo op aan het ontbrekende einde.
+
+    Every bullet of a guide as (line number, whole text), outside the code blocks. A
+    bullet starts with `- ` at the margin; its continuation lines are indented. A sentence
+    that breaks off in the middle of a bullet, because a new bullet landed in between,
+    shows by its missing ending.
+    """
+    bullets: list[tuple[int, str]] = []
+    current: tuple[int, str] | None = None
+    fenced = False
+    for number, line in enumerate(guide_raw(language).splitlines(), start=1):
+        if line.lstrip().startswith("```"):
+            fenced = not fenced
+        if fenced:
+            continue
+        if line.startswith("- "):
+            if current:
+                bullets.append(current)
+            current = (number, line.strip())
+        elif current and line.startswith("  ") and line.strip():
+            current = (current[0], f"{current[1]} {line.strip()}")
+        elif current:
+            bullets.append(current)
+            current = None
+    if current:
+        bullets.append(current)
+    return bullets
+
+
+@pytest.mark.parametrize("language", LANGUAGES)
+def test_every_guide_bullet_is_a_whole_sentence(language: str) -> None:
+    """Geen opsomming eindigt midden in een zin.
+
+    Een nieuwe opsomming die tussen twee regels van een andere belandt, laat de eerste
+    zonder einde achter en plakt de rest van haar zin aan een andere opsomming.
+
+    No bullet ends in the middle of a sentence. A new bullet landing between two lines
+    of another leaves the first without an ending and glues the rest of its sentence to
+    a different bullet.
+    """
+    cut = [
+        f"regel {number}: ...{text[-60:]}"
+        for number, text in guide_bullets(language)
+        if text[-1] not in BULLET_ENDINGS
+    ]
+    assert not cut, f"{language}: opsomming zonder einde / bullet without an ending: {cut}"
+
+
+def test_every_guide_has_the_same_number_of_bullets() -> None:
+    """Zes bestanden, een gelijk aantal opsommingen: geen taal mist een uitleg.
+
+    Six files, an equal number of bullets: no language lacks an explanation.
+    """
+    counts = {language: len(guide_bullets(language)) for language in LANGUAGES}
+    assert len(set(counts.values())) == 1, f"ongelijk aantal opsommingen: {counts}"
+    assert min(counts.values()) > 0, f"geen enkele opsomming: {counts}"
+
+
+def test_the_bullet_guards_see_a_broken_sentence(tmp_path: Path, monkeypatch) -> None:
+    """De bewaking merkt een afgebroken opsomming, slaat een codeblok over en telt mee.
+
+    The guard notices a broken bullet, skips a code block and counts along.
+    """
+    guide = tmp_path / "en.md"
+    guide.write_text(
+        "- **First** — a whole sentence.\n"
+        "- **Second** — it starts here and\n"
+        "  carries on over two lines. Put them\n"
+        "- **Third** — the interloper.\n"
+        "  in one group.\n"
+        "```\n- not a bullet\n```\n"
+        "- **Last** — ends with a bracket (like this)\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        f"{__name__}.guide_raw", lambda _language: guide.read_text(encoding="utf-8")
+    )
+    bullets = guide_bullets("en")
+    assert [number for number, _ in bullets] == [1, 2, 4, 9]
+    broken = [number for number, text in bullets if text[-1] not in BULLET_ENDINGS]
+    assert broken == [2]
+    guide.write_text("- **First** — starts and\n- **Second** — done.\n", encoding="utf-8")
+    bullets = guide_bullets("en")
+    assert [number for number, text in bullets if text[-1] not in BULLET_ENDINGS] == [1]
+
+
 def glossary_cells(language: str) -> list[list[str]]:
     """Elke rij van de woordenlijst-sectie als lijst cellen, in bestandsorde.
 
