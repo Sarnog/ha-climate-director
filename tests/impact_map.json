@@ -1224,6 +1224,7 @@
   "custom_components/climate_director/engine/models.py",
   "custom_components/climate_director/engine/night.py",
   "custom_components/climate_director/engine/plan.py",
+  "custom_components/climate_director/engine/problem.py",
   "custom_components/climate_director/engine/quiet.py",
   "custom_components/climate_director/engine/residents.py",
   "custom_components/climate_director/engine/rooms.py",
