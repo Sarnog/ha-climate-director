@@ -1495,7 +1495,7 @@ coordinator leest een tarief-/overschotsensor en `sources.py` sorteert daarop.
 temperatuur uit een `weather`-entiteit; `WorldState.outdoor_forecast` laat de vensters op de
 verwachting in plaats van op het nu toetsen.
 
-**Meer conflictbeleiden.** `ConflictPolicy.ROUND_ROBIN` en `DAY_PART` in `constraints.py`,
+**Meer conflictbeleiden.** `ConflictPolicy.ROUND_ROBIN` en `DAY_PART` in `circuit_policy.py`,
 met de circuitgeschiedenis als invoer.
 
 **`number`-entiteiten voor de drempels.** Per zone `number`-entiteiten voor streef-, aanpunt
@@ -1752,9 +1752,9 @@ De bewaking: geen `# noqa: E402` in het pakket.
 
 ##### Stap 3 — de impactkaart is niet van de machine
 
-Een volledige run vervangt nu de kaart door wat hij zelf zag, en een lokale run
+Een volledige run verving de kaart door wat hij zelf zag, en een lokale run
 op Windows ziet de map `script/` voor `tests/test_controls_live.py` niet, de CI
-wel. De kaart wordt een samenvoeging: een volledige run voegt bestaande regels
+wel. De kaart is daarom een samenvoeging: een volledige run voegt bestaande regels
 samen met wat hij ziet, en laat een regel alleen vallen als het toetsbestand of
 het invoerbestand niet meer bestaat. Bewaking: een toets die een kaart met een
 extra regel laat staan en een kaart met een ontbrekende regel afkeurt.
@@ -1818,8 +1818,8 @@ mee en blijft een ratel die alleen kan dalen; na stap 7 is hij nul.
 
 ##### Stap 7 — de onderdelen van de coordinator zonder privé attributen
 
-De zes `coordinator_*`-onderdelen krijgen de coordinator als eerste argument en
-lezen en zetten nu ruim tachtig privé attributen ervan. Dat wordt:
+De zes `coordinator_*`-onderdelen krijgen de coordinator als eerste argument. Ze lazen en
+zetten ruim tachtig privé attributen ervan; elk onderdeel houdt nu zijn eigen staat bij:
 
 | Onderdeel | Eigen staat (klasse in `coordinator_state.py`) | Wat erin staat |
 |---|---|---|
@@ -3582,7 +3582,7 @@ coordinator reads a tariff/surplus sensor and `sources.py` sorts on it.
 from a `weather` entity; `WorldState.outdoor_forecast` lets the windows check the forecast
 rather than the now.
 
-**More conflict policies.** `ConflictPolicy.ROUND_ROBIN` and `DAY_PART` in `constraints.py`,
+**More conflict policies.** `ConflictPolicy.ROUND_ROBIN` and `DAY_PART` in `circuit_policy.py`,
 with the circuit history as input.
 
 **Per-zone `number` entities for the thresholds.** Per-zone `number` entities for the
@@ -3838,9 +3838,9 @@ The guard: no `# noqa: E402` in the package.
 
 ##### Step 3 — the impact map is not the machine's
 
-A full run now replaces the map with what it saw itself, and a local run on
+A full run used to replace the map with what it saw itself, and a local run on
 Windows does not see the directory `script/` for `tests/test_controls_live.py`
-while the CI does. The map becomes a merge: a full run merges existing lines with
+while the CI does. The map is therefore a merge: a full run merges existing lines with
 what it sees, and drops a line only when the test file or the input file no
 longer exists. The guard: a test that leaves a map with an extra line standing and
 rejects a map with a missing line.
@@ -3903,8 +3903,8 @@ and stays a ratchet that can only go down; after step 7 it is zero.
 
 ##### Step 7 — the coordinator parts without private attributes
 
-The six `coordinator_*` parts receive the coordinator as their first argument and
-now read and set well over eighty private attributes of it. That becomes:
+The six `coordinator_*` parts receive the coordinator as their first argument. They used
+to read and set well over eighty private attributes of it; each part now keeps its own state:
 
 | Part | Own state (class in `coordinator_state.py`) | What it holds |
 |---|---|---|

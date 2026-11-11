@@ -99,6 +99,19 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   volledige CI-run (rood op alleen de kaart). De selectie zou de toetsen moeten meenemen die het
   gewijzigde bestand indirect importeren, of de kaart zou ook per import vastleggen wie wie
   aanroept.
+- **De `flow_*`-, `form_*`- en `schema_fields`-functies lezen ruim honderd privé cursors en
+  lijsten van de configuratiestroom** (`flow._index`, `flow._installation`, `flow._list`...),
+  dezelfde vorm als de privé attributen van de coordinator die de onderdelen niet meer lezen.
+  `FlowSurface` noemt ze met een leidende onderstreping en de bewaking `coordinator._naam`
+  ziet ze niet. Geef de stroom publieke namen of een eigen staatsklasse per scherm, en breid de
+  bewaking uit tot `flow._naam` buiten `config_flow.py`.
+- **Twee `hasattr(self, ...)` in `state_store.py` bestaan alleen voor stand-ins in de toetsen**
+  (`_restore_overrides` en `zone_override_until`), dezelfde terugval als de weggehaalde
+  `getattr(self, ...)`. De stand-ins in `test_handed_back.py` en `test_override_branches.py`
+  moeten die leden krijgen; de bewaking op `getattr` kan dan `hasattr` meenemen.
+- **De dunne methodes van `coordinator.py` geven `*args, **kwargs` door** (tweeënveertig
+  stuks), zodat hun handtekening en typen aan de buitenkant verdwijnen. Geef ze de handtekening
+  van het onderdeel dat ze aanroepen.
 - **Een nieuwe pakketmodule valt buiten de selectie van de toetsen die hem indirect
   uitvoeren** — `script/select_tests.py` kiest bij een nieuw bestand alleen de toetsen die
   het rechtstreeks importeren of al in de kaart staan. een nieuwe bewonersmodule kwam zo
@@ -446,6 +459,19 @@ The worked-out design proposals for everything below live in
   four missing tests only came to light in the full CI run (red on the map alone). The
   selection should include the tests that import the changed file indirectly, or the map
   should record per import who calls whom.
+- **The `flow_*`, `form_*` and `schema_fields` functions read well over a hundred private
+  cursors and lists of the configuration flow** (`flow._index`, `flow._installation`,
+  `flow._list`...), the same shape as the private attributes of the coordinator that the parts no
+  longer read. `FlowSurface` names them with a leading underscore and the guard on
+  `coordinator._name` does not see them. Give the flow public names or a state class of its own
+  per screen, and extend the guard to `flow._name` outside `config_flow.py`.
+- **Two `hasattr(self, ...)` in `state_store.py` exist only for stand-ins in the tests**
+  (`_restore_overrides` and `zone_override_until`), the same fallback as the removed
+  `getattr(self, ...)`. The stand-ins in `test_handed_back.py` and `test_override_branches.py`
+  must get those members; the guard on `getattr` can then take `hasattr` along.
+- **The thin methods of `coordinator.py` pass `*args, **kwargs` on** (forty-two of them), so
+  their signature and types disappear on the outside. Give them the signature of the part they
+  call.
 - **A new package module falls outside the selection of the tests that execute it
   indirectly** — `script/select_tests.py` picks, for a new file, only the tests that import
   it directly or already stand in the map. a new resident module only reached the map
