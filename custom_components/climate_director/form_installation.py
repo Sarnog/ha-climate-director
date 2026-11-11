@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from .config_flow import ClimateDirectorOptionsFlow
+from typing import Any
 
 import voluptuous as vol
 from homeassistant.helpers import selector
 
 from .engine.fields import SETTINGS_FIELDS
+from .flow_surface import FlowSurface
 from .form_common import (
     ADD,
     BACK,
@@ -146,7 +144,7 @@ def quiet(current: dict[str, Any]) -> vol.Schema:
     )
 
 
-def quiet_windows(flow: ClimateDirectorOptionsFlow) -> list[dict[str, Any]]:
+def quiet_windows(flow: FlowSurface) -> list[dict[str, Any]]:
     """Return the stored quiet windows, creating the list on first use."""
     gates = flow._installation.setdefault("gates", {})
     windows: list[dict[str, Any]] = gates.setdefault("quiet_windows", [])

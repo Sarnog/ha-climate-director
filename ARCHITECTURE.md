@@ -1560,6 +1560,7 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `engine/resident_storage.py` | de bewoner in de opslag | de bewoner plus zijn drie ochtendinstellingen |
 | `engine/storage_values.py` | opgeslagen waarden veilig lezen | de naam van `storage_helpers.py`; alle lezers krijgen een publieke naam (`as_dict`, `items`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
 | `coordinator_surface.py` | het oppervlak van de koppeling | `CoordinatorSurface`; alle mixins lezen hier hun gastheer |
+| `flow_surface.py` | het oppervlak van de configuratiestroom | `FlowSurface`; de stappen en formulieren lezen hier hun stroom |
 | `coordinator.py` | de coordinator zelf | `__init__`, de eigenschappen, `async_request_evaluation`, de klok en de levensduur; hij erft de publieke mixins en houdt per onderdeel een dunne methode die de functie in de `coordinator_*`-module aanroept |
 | `coordinator_lifecycle.py` | opstarten en stoppen | `async_start`, `_async_on_hass_started`, `tracked_entities`, `_calendar_says_holiday`, `async_shutdown` |
 | `coordinator_tracking.py` | wat een apparaat zelf doet | `_handle_change`, `_notice_precipitation`, `_notice_hand`, `_note_commanded_off`, `_note_commanded_on`, `_we_wanted_it_off`, `_we_wanted_it_on` |
@@ -1730,7 +1731,7 @@ en wordt pas gepusht als de voorganger groen is.
 | 3 | de impactkaart onafhankelijk van de omgeving | raakt alleen `script/` |
 | 4 | de taakkeuze en de capaciteit uit `engine/constraints.py` | één bestand, één aanroeper |
 | 5 | `engine/validation.py` per onderwerp | zuivere verhuizing van regelfuncties |
-| 6 | een protocol per laag | haalt de terugimports onder `TYPE_CHECKING` weg |
+| 6 | een oppervlak per laag voor de mixins en de configuratiestroom | haalt de terugimports onder `TYPE_CHECKING` weg |
 | 7 | de `coordinator_*`-onderdelen zonder privé attributen van de coordinator | raakt de meeste bestanden |
 | 8 | de mutatiebaan met `area_clash` en de lijst in de repo | meet de stappen hierboven |
 | 9 | de twee gedragsbesluiten | pas als de verhuizingen gemeten zijn |
@@ -1802,26 +1803,26 @@ controleert. `MODULE_EXCEPTIONS` verliest de ingang `engine/validation.py`. De
 importeurs van `Problem` (`engine/__init__.py`, `engine/manual_sources.py` en de
 toetsen) importeren uit `engine/problem.py`.
 
-##### Stap 6 — een protocol per laag
+##### Stap 6 — een oppervlak per laag
 
-Een protocol dat alleen leden noemt (attributen en `Callable`-typen, zonder
-methodelichaam) kan gewoon als basis geërfd worden: er ontstaat bij het draaien
-niets dat een echte methode kan overschaduwen. Daarom:
+Een basisklasse die alleen leden noemt (waarden en `Callable`-typen, zonder
+methodelichaam) kan gewoon geërfd worden: er ontstaat bij het draaien niets dat een
+echte methode kan overschaduwen. Het mag geen `Protocol` zijn, want een protocol als
+basis doorbreekt de `__init__`-keten van `DataUpdateCoordinator`. Daarom:
 
-- `coordinator_surface.py` (`CoordinatorSurface`) wordt met die vorm geschreven en
-  door de mixins en de `coordinator_*`-onderdelen gewoon geïmporteerd. De
-  `TYPE_CHECKING`-terugimports van `coordinator_events`, `coordinator_lifecycle`,
-  `coordinator_reporting`, `coordinator_round` en `coordinator_tracking`, het
-  `_CoordinatorBase`-omweg van `hand.py` en de zeven andere mixins, en de
-  stubs `def naam(self) -> X: ...` verdwijnen.
-- `flow_surface.py` (`FlowSurface`) is hetzelfde voor de configuratiestroom:
-  de indexen en lijsten die de `flow_*`- en `form_*`-functies lezen en de stappen
-  die ze aanroepen. `ClimateDirectorOptionsFlow` erft het, en de
+- `coordinator_surface.py` (`CoordinatorSurface`) is zo geschreven en de acht mixins
+  erven het gewoon. De `TYPE_CHECKING`-blokken met `_CoordinatorBase` in die mixins en de
+  stubs `def naam(self) -> X: ...` verdwijnen; `entry` is een attribuut dat de
+  coordinator in `__init__` zet in plaats van een eigenschap.
+- `flow_surface.py` (`FlowSurface`, een `OptionsFlow` met alleen leden) is hetzelfde voor
+  de configuratiestroom: de cursors en lijsten die de `flow_*`- en `form_*`-functies
+  lezen en de stappen die ze aanroepen. `ClimateDirectorOptionsFlow` erft het, en de
   `TYPE_CHECKING`-terugimport van `config_flow` verdwijnt uit negen bestanden.
 
-`NAMED_EXCLUSIONS_BUDGET` in `tests/test_coverage_exclusions.py` zakt tot het
-getal dat dan overblijft (de bedoeling is 41 of lager); de bewaking blijft een
-ratel die alleen kan dalen.
+De `coordinator_*`-onderdelen krijgen hun oppervlak in stap 7, samen met de leden die
+daar verhuizen; tot dan houden ze hun `TYPE_CHECKING`-terugimport.
+`NAMED_EXCLUSIONS_BUDGET` in `tests/test_coverage_exclusions.py` zakt mee en blijft
+een ratel die alleen kan dalen.
 
 ##### Stap 7 — de onderdelen van de coordinator zonder privé attributen
 
@@ -3634,6 +3635,7 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `engine/resident_storage.py` | the resident in storage | the resident plus its three morning settings |
 | `engine/storage_values.py` | reading stored values safely | the new name of `storage_helpers.py`; every reader gets a public name (`as_dict`, `items`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
 | `coordinator_surface.py` | the binding layer's surface | `CoordinatorSurface`; every mixin reads its host here |
+| `flow_surface.py` | the configuration flow's surface | `FlowSurface`; the steps and forms read their flow here |
 | `coordinator.py` | the coordinator itself | `__init__`, the properties, `async_request_evaluation`, the clock and the lifetime; it inherits the public mixins and keeps a thin method per part that calls the function in the `coordinator_*` module |
 | `coordinator_lifecycle.py` | starting and stopping | `async_start`, `_async_on_hass_started`, `tracked_entities`, `_calendar_says_holiday`, `async_shutdown` |
 | `coordinator_tracking.py` | what an appliance does by itself | `_handle_change`, `_notice_precipitation`, `_notice_hand`, `_note_commanded_off`, `_note_commanded_on`, `_we_wanted_it_off`, `_we_wanted_it_on` |
@@ -3803,7 +3805,7 @@ commit and is pushed only when its predecessor is green.
 | 3 | the impact map independent of the environment | touches only `script/` |
 | 4 | the duty choice and the capacity out of `engine/constraints.py` | one file, one caller |
 | 5 | `engine/validation.py` per subject | pure move of rule functions |
-| 6 | a protocol per layer | removes the back-imports under `TYPE_CHECKING` |
+| 6 | a surface per layer for the mixins and the configuration flow | removes the back-imports under `TYPE_CHECKING` |
 | 7 | the `coordinator_*` parts without private attributes of the coordinator | touches the most files |
 | 8 | the mutation lane with `area_clash` and the list in the repository | measures the steps above |
 | 9 | the two behaviour decisions | only once the moves have been measured |
@@ -3874,26 +3876,26 @@ A rule that touches two subjects stands with the subject whose field it checks.
 `Problem` (`engine/__init__.py`, `engine/manual_sources.py` and the tests) import
 from `engine/problem.py`.
 
-##### Step 6 — a protocol per layer
+##### Step 6 — a surface per layer
 
-A protocol that names only members (attributes and `Callable` types, without a
-method body) can simply be inherited as a base: at run time nothing comes about
-that could shadow a real method. Therefore:
+A base class that names only members (values and `Callable` types, without a method
+body) can simply be inherited: at run time nothing comes about that could shadow a real
+method. It may not be a `Protocol`, because a protocol as a base breaks the `__init__`
+chain of `DataUpdateCoordinator`. Therefore:
 
-- `coordinator_surface.py` (`CoordinatorSurface`) is written in that form and
-  simply imported by the mixins and the `coordinator_*` parts. The `TYPE_CHECKING`
-  back-imports of `coordinator_events`, `coordinator_lifecycle`,
-  `coordinator_reporting`, `coordinator_round` and `coordinator_tracking`, the
-  `_CoordinatorBase` trick of `hand.py` and the seven other mixins, and the stubs
-  `def name(self) -> X: ...` disappear.
-- `flow_surface.py` (`FlowSurface`) is the same for the configuration flow: the
-  indexes and lists the `flow_*` and `form_*` functions read and the steps they
-  call. `ClimateDirectorOptionsFlow` inherits it, and the `TYPE_CHECKING`
-  back-import of `config_flow` disappears from nine files.
+- `coordinator_surface.py` (`CoordinatorSurface`) is written that way and the eight
+  mixins simply inherit it. The `TYPE_CHECKING` blocks with `_CoordinatorBase` in those
+  mixins and the stubs `def name(self) -> X: ...` disappear; `entry` is an attribute the
+  coordinator sets in `__init__` instead of a property.
+- `flow_surface.py` (`FlowSurface`, an `OptionsFlow` with members only) is the same for
+  the configuration flow: the cursors and lists the `flow_*` and `form_*` functions read
+  and the steps they call. `ClimateDirectorOptionsFlow` inherits it, and the
+  `TYPE_CHECKING` back-import of `config_flow` disappears from nine files.
 
-`NAMED_EXCLUSIONS_BUDGET` in `tests/test_coverage_exclusions.py` drops to the
-number that remains (the intention is 41 or lower); the guard stays a ratchet
-that can only go down.
+The `coordinator_*` parts get their surface in step 7, together with the members that
+move there; until then they keep their `TYPE_CHECKING` back-import.
+`NAMED_EXCLUSIONS_BUDGET` in `tests/test_coverage_exclusions.py` drops along and stays
+a ratchet that can only go down.
 
 ##### Step 7 — the coordinator parts without private attributes
 

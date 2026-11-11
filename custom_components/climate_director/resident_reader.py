@@ -19,28 +19,13 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from homeassistant.core import Event, EventStateChangedData, callback
 
+from .coordinator_surface import CoordinatorSurface
 from .engine import ResidentState
 from .readability import unreadable
 from .world_builder import reads_as_home
-
-if TYPE_CHECKING:
-    from .coordinator_surface import CoordinatorSurface
-
-    # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
-    # van hém. Voor mypy is dit de gastheer, zodat `self.hass` en de rest
-    # kloppen; buiten de typecontrole is de basis gewoon `object`.
-    #
-    # The mixin sits on the coordinator but does not inherit from it: the
-    # coordinator inherits from the mixin. For mypy this is the host, so
-    # `self.hass` and the rest resolve; outside the type check the base is
-    # simply `object`.
-    _CoordinatorBase = CoordinatorSurface
-else:
-    _CoordinatorBase = object
 
 
 def restore_home_since(
@@ -78,7 +63,7 @@ def restore_home_since(
     return restored
 
 
-class ResidentReaderMixin(_CoordinatorBase):
+class ResidentReaderMixin(CoordinatorSurface):
     """De lezer van één bewoner: thuis, slapend en het thuiskomstmoment.
 
     De leesbaarheid van de sensoren woont in `readability.py`, bij de wereld:

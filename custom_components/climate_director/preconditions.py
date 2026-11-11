@@ -18,26 +18,12 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
 
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
-if TYPE_CHECKING:
-    from .coordinator_surface import CoordinatorSurface
-
-    # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
-    # van hém. Voor mypy is dit de gastheer, zodat `self.config` en de rest
-    # kloppen; buiten de typecontrole is de basis gewoon `object`.
-    #
-    # The mixin sits on the coordinator but does not inherit from it: the
-    # coordinator inherits from the mixin. For mypy this is the host, so
-    # `self.config` and the rest resolve; outside the type check the base is
-    # simply `object`.
-    _CoordinatorBase = CoordinatorSurface
-else:
-    _CoordinatorBase = object
+from .coordinator_surface import CoordinatorSurface
 
 # De logger heet coordinator, zodat het verplaatsen van deze methodes geen
 # enkele logregel verandert.
@@ -59,7 +45,7 @@ def still_running(requests: Mapping[str, datetime], now: datetime) -> dict[str, 
     return {zone_id: until for zone_id, until in requests.items() if now < until}
 
 
-class PreconditionsMixin(_CoordinatorBase):
+class PreconditionsMixin(CoordinatorSurface):
     """De vooruit-verzoeken en hun timers.
 
     The pre-conditioning requests and their timers.

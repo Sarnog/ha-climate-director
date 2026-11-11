@@ -6,20 +6,13 @@ The hand at the appliance: what somebody does themselves, and when it lapses.
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import TYPE_CHECKING
 
+from .coordinator_surface import CoordinatorSurface
 from .engine import ResidentState
 from .engine.night import asleep_at
 
-if TYPE_CHECKING:
-    from .coordinator_surface import CoordinatorSurface
 
-    _CoordinatorBase = CoordinatorSurface
-else:
-    _CoordinatorBase = object
-
-
-class HandMixin(_CoordinatorBase):
+class HandMixin(CoordinatorSurface):
     """Zones van een apparaat, de hand van vandaag, slapen en een leeg huis.
 
     Zones of an appliance, today's hand, sleep and an empty house.

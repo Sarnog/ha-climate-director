@@ -21,31 +21,17 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.core import Event, EventStateChangedData, callback
 from homeassistant.util import dt as dt_util
 
+from .coordinator_surface import CoordinatorSurface
 from .readability import unreadable
 from .stored_state import stored_time
 
-if TYPE_CHECKING:
-    from .coordinator_surface import CoordinatorSurface
 
-    # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
-    # van hém. Voor mypy is dit de gastheer, zodat `self.config` en de rest
-    # kloppen; buiten de typecontrole is de basis gewoon `object`.
-    #
-    # The mixin sits on the coordinator but does not inherit from it: the
-    # coordinator inherits from the mixin. For mypy this is the host, so
-    # `self.config` and the rest resolve; outside the type check the base is
-    # simply `object`.
-    _CoordinatorBase = CoordinatorSurface
-else:
-    _CoordinatorBase = object
-
-
-class RoomPresenceMixin(_CoordinatorBase):
+class RoomPresenceMixin(CoordinatorSurface):
     """De bezetting van een kamer en de nalooptijd die eraan hangt.
 
     The occupancy of a room and the grace period hanging off it.

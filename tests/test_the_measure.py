@@ -466,9 +466,7 @@ FUNCTION_LIMIT = 80
 # `coordinator.py` 2250 → 2138 and its `__init__` stays 285 (one starting value
 # more, one blank line less). The new mixin and engine module stay under the
 # measure; the functions in `engine/gates.py` stay under eighty.
-MODULE_EXCEPTIONS: dict[str, int] = {
-    "coordinator.py": 610,
-}
+MODULE_EXCEPTIONS: dict[str, int] = {}
 
 # De stand van de modules tussen de 500 regels en de maat van 700: de projectafspraak
 # "een module boven de 500 regels groeit niet verder" hangt aan deze lijst. Een module
@@ -485,8 +483,9 @@ MODULE_EXCEPTIONS: dict[str, int] = {
 GROWTH_FREEZE_LIMIT = 500
 
 FROZEN_MODULES: dict[str, int] = {
-    "state_store.py": 482,
-    "world_builder.py": 546,
+    "coordinator.py": 584,
+    "state_store.py": 468,
+    "world_builder.py": 532,
 }
 
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
@@ -499,7 +498,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("coordinator_events.py", "_refusal_data"): 124,
     ("coordinator_tracking.py", "_notice_hand"): 139,
     ("engine/zone_decisions.py", "build_zone_decisions"): 135,
-    ("flow_residents.py", "resident"): 95,
+    ("flow_residents.py", "resident"): 93,
     ("engine/grants.py", "manual_conflict"): 103,
     ("state_store.py", "_async_restore_state"): 126,
     ("state_store.py", "_restore_overrides"): 81,

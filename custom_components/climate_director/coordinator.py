@@ -20,7 +20,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import date, datetime
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -115,15 +115,6 @@ class ClimateDirectorCoordinator(
 ):
     """Reads the world, runs the engine, applies the outcome."""
 
-    # De gastheer zet deze drie zelf, buiten `__init__` om; hier expliciet
-    # benoemd zodat het protocol ze niet als oningevuld blijft zien.
-    #
-    # The host sets these three itself, outside `__init__`; named explicitly here
-    # so the protocol does not keep seeing them as unfilled.
-    hass: HomeAssistant
-    name: str
-    data: Plan
-
     def __init__(self, hass: HomeAssistant, entry: ClimateDirectorEntry) -> None:
         """Set up the coordinator for one installation."""
         super().__init__(
@@ -133,6 +124,7 @@ class ClimateDirectorCoordinator(
             name=entry.title or DOMAIN,
             update_interval=None,
         )
+        self.entry: ClimateDirectorEntry = entry
         self.config: DirectorConfig = config_from_dict(
             entry.options.get(CONF_INSTALLATION) or entry.data.get(CONF_INSTALLATION) or {}
         )
@@ -269,7 +261,6 @@ class ClimateDirectorCoordinator(
         user has just chosen by hand. The select entity restores its state
         after a restart and writes it back here, just like the switches.
         """
-
         self.world: WorldState | None = None
         self._issued: Plan | None = None
         """Het plan dat nu uitgevoerd wordt, nog voordat het gepubliceerd is.
@@ -441,23 +432,6 @@ class ClimateDirectorCoordinator(
     # -- circuitgeschiedenis / circuit history -------------------------------
 
     # -- naar buiten / outward ----------------------------------------------
-
-    @property
-    def entry(self) -> ClimateDirectorEntry:
-        """Geef de config entry terug, die Home Assistant vóór de opzet zet.
-
-        `config_entry` van `DataUpdateCoordinator` is optioneel getypeerd, maar
-        is het hier nooit: Home Assistant zet hem voordat `async_setup` draait.
-        Deze property maakt dat voor de typecontrole expliciet, zodat de rest van
-        dit bestand en de opslagmixin er zonder `None`-controle bij kunnen.
-
-        Return the config entry, which Home Assistant sets before setup. The
-        `config_entry` of `DataUpdateCoordinator` is typed optional, but never is
-        here: Home Assistant sets it before `async_setup` runs. This property
-        makes that explicit for the type check, so the rest of this file and the
-        storage mixin can use it without a `None` check.
-        """
-        return cast("ClimateDirectorEntry", self.config_entry)
 
     @callback
     def async_request_evaluation(self) -> None:

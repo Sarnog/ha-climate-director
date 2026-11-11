@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.config_entries import ConfigFlowResult
 
 from . import schemas
 from .engine.fields import SOURCE_FIELDS
-
-if TYPE_CHECKING:
-    from .config_flow import ClimateDirectorOptionsFlow
-
+from .flow_surface import FlowSurface
 from .flow_validation import (
     all_source_ids,
     missing,
@@ -21,9 +18,7 @@ from .schema_fields import write_table
 from .schemas import ADD, BACK, EXIT, EXIT_DROP
 
 
-async def sources(
-    flow: ClimateDirectorOptionsFlow, user_input: dict[str, Any] | None = None
-) -> ConfigFlowResult:
+async def sources(flow: FlowSurface, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
     """Pick a source of the current zone to edit, add one, or go back."""
     zone = flow._current_zone()
     if zone is None:
@@ -42,9 +37,7 @@ async def sources(
     )
 
 
-async def source(
-    flow: ClimateDirectorOptionsFlow, user_input: dict[str, Any] | None = None
-) -> ConfigFlowResult:
+async def source(flow: FlowSurface, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
     """Edit one source of the current zone."""
     zone = flow._current_zone()
     if zone is None:

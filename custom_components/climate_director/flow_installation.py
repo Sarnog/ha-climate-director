@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.config_entries import ConfigFlowResult
 
 from . import schemas, texts
 from .engine.fields import SETTINGS_FIELDS
-
-if TYPE_CHECKING:
-    from .config_flow import ClimateDirectorOptionsFlow
-
+from .flow_surface import FlowSurface
 from .flow_validation import (
     settings_errors,
 )
@@ -19,9 +16,7 @@ from .schema_fields import write_table
 from .schemas import ADD, BACK, EXIT, EXIT_DROP
 
 
-async def settings(
-    flow: ClimateDirectorOptionsFlow, user_input: dict[str, Any] | None = None
-) -> ConfigFlowResult:
+async def settings(flow: FlowSurface, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
     """Edit the outdoor sensor, the season source, the gates and shadow mode."""
     if user_input is not None:
         if user_input.get(EXIT) == EXIT_DROP:
@@ -77,7 +72,7 @@ async def settings(
 
 
 async def exclusives(
-    flow: ClimateDirectorOptionsFlow, user_input: dict[str, Any] | None = None
+    flow: FlowSurface, user_input: dict[str, Any] | None = None
 ) -> ConfigFlowResult:
     """Pick an exclusive group to edit, or add one."""
     if user_input is not None:
@@ -94,7 +89,7 @@ async def exclusives(
 
 
 async def exclusive(
-    flow: ClimateDirectorOptionsFlow, user_input: dict[str, Any] | None = None
+    flow: FlowSurface, user_input: dict[str, Any] | None = None
 ) -> ConfigFlowResult:
     """Edit one exclusive group: the sources that may never run together."""
     groups = flow._groups()
@@ -128,9 +123,7 @@ async def exclusive(
     )
 
 
-async def quiets(
-    flow: ClimateDirectorOptionsFlow, user_input: dict[str, Any] | None = None
-) -> ConfigFlowResult:
+async def quiets(flow: FlowSurface, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
     """Pick a quiet window to edit, add one, or go back."""
     if user_input is not None:
         choice = user_input["quiet"]
@@ -146,9 +139,7 @@ async def quiets(
     )
 
 
-async def quiet(
-    flow: ClimateDirectorOptionsFlow, user_input: dict[str, Any] | None = None
-) -> ConfigFlowResult:
+async def quiet(flow: FlowSurface, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
     """Edit one quiet window: when the director may not start anything."""
     windows = quiet_windows(flow)
     current = windows[flow._index] if flow._index is not None else {}
@@ -178,7 +169,7 @@ async def quiet(
     )
 
 
-def quiet_windows(flow: ClimateDirectorOptionsFlow) -> list[dict[str, Any]]:
+def quiet_windows(flow: FlowSurface) -> list[dict[str, Any]]:
     """Return the stored quiet windows, creating the list on first use."""
     gates = flow._installation.setdefault("gates", {})
     windows: list[dict[str, Any]] = gates.setdefault("quiet_windows", [])

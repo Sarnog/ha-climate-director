@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.config_entries import ConfigFlowResult
 
 from . import schemas
-
-if TYPE_CHECKING:
-    from .config_flow import ClimateDirectorOptionsFlow
-
+from .flow_surface import FlowSurface
 from .flow_validation import (
     missing,
     unique_id,
@@ -19,7 +16,7 @@ from .schemas import ADD, BACK, CONF_NAME, EXIT, EXIT_DROP
 
 
 async def residents(
-    flow: ClimateDirectorOptionsFlow, user_input: dict[str, Any] | None = None
+    flow: FlowSurface, user_input: dict[str, Any] | None = None
 ) -> ConfigFlowResult:
     """Pick a resident to edit, or add one."""
     if user_input is not None:
@@ -35,9 +32,7 @@ async def residents(
     )
 
 
-async def resident(
-    flow: ClimateDirectorOptionsFlow, user_input: dict[str, Any] | None = None
-) -> ConfigFlowResult:
+async def resident(flow: FlowSurface, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
     """Edit one resident."""
     residents = flow._list("residents")
     current = residents[flow._resident_index] if flow._resident_index is not None else {}

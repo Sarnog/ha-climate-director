@@ -19,31 +19,17 @@ import math
 from collections.abc import Mapping
 from dataclasses import replace
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, TypeGuard
+from typing import Any, TypeGuard
 
 from homeassistant.core import State
 from homeassistant.util import dt as dt_util
 
+from .coordinator_surface import CoordinatorSurface
 from .engine import ClimateState, OpeningState, PresenceState, ResidentState, Season, WorldState
 from .engine.models import SeasonSource
 from .engine.night import house_asleep_since
 from .readability import unreadable, unreadable_inputs
 from .units import to_celsius, unit_of_coordinator
-
-if TYPE_CHECKING:
-    from .coordinator_surface import CoordinatorSurface
-
-    # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
-    # van hém. Voor mypy is dit de gastheer, zodat `self.config` en de rest
-    # kloppen; buiten de typecontrole is de basis gewoon `object`.
-    #
-    # The mixin sits on the coordinator but does not inherit from it: the
-    # coordinator inherits from the mixin. For mypy this is the host, so
-    # `self.config` and the rest resolve; outside the type check the base is
-    # simply `object`.
-    _CoordinatorBase = CoordinatorSurface
-else:
-    _CoordinatorBase = object
 
 #: Toestanden die "thuis" betekenen voor een aanwezigheidsentiteit.
 #: States meaning "home" for a presence entity.
@@ -228,7 +214,7 @@ def _override_split(
     return dict.fromkeys(handed_back | thrown, True), frozenset(handed_back - thrown)
 
 
-class WorldBuilderMixin(_CoordinatorBase):
+class WorldBuilderMixin(CoordinatorSurface):
     """De momentopname en de lezers die hem vullen.
 
     The snapshot and the readers that fill it.

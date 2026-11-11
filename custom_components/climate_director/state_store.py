@@ -20,29 +20,15 @@ import os
 from collections.abc import Mapping
 from datetime import date, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
 from . import repair_notices
+from .coordinator_surface import CoordinatorSurface
 from .resident_reader import restore_home_since
 from .stored_state import restore_commanded_off, stored_time
-
-if TYPE_CHECKING:
-    from .coordinator_surface import CoordinatorSurface
-
-    # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
-    # van hém. Voor mypy is dit de gastheer, zodat `self.config` en de rest
-    # kloppen; buiten de typecontrole is de basis gewoon `object`.
-    #
-    # The mixin sits on the coordinator but does not inherit from it: the
-    # coordinator inherits from the mixin. For mypy this is the host, so
-    # `self.config` and the rest resolve; outside the type check the base is
-    # simply `object`.
-    _CoordinatorBase = CoordinatorSurface
-else:
-    _CoordinatorBase = object
 
 # De logger heet coordinator, zodat het verplaatsen van deze methodes geen
 # enkele logregel verandert.
@@ -72,7 +58,7 @@ def _stored_date(raw: object) -> date | None:
     return dt_util.parse_date(str(raw))
 
 
-class StateStoreMixin(_CoordinatorBase):
+class StateStoreMixin(CoordinatorSurface):
     """Opslag, herstel en quarantaine van wat een mens met de hand heeft gezegd.
 
     Storage, restore and quarantine of what a person said by hand.

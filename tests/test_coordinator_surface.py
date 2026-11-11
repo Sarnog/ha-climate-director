@@ -1,54 +1,52 @@
-"""Het protocol van de coördinator noemt precies wat de mixins gebruiken.
+"""Het oppervlak van de coördinator noemt precies wat de mixins gebruiken.
 
-`CoordinatorSurface` bestaat alleen voor mypy: de zeven mixins (`overrides.py`,
+`CoordinatorSurface` is de basis van de acht mixins (`hand.py`, `overrides.py`,
 `preconditions.py`, `hand_start.py`, `resident_reader.py`, `room_presence.py`,
-`state_store.py`, `world_builder.py`) erven er onder
-`TYPE_CHECKING` van, zodat hun `self` elk lid van de coördinator kent. Buiten de
-typecontrole bestaat het protocol niet, en dus controleerde niets of de
-coördinator die leden ook werkelijk draagt, of een lid er nog toe doet, of dat een
-mixin iets gebruikt wat er niet in staat. Deze toetsen doen dat, zonder handlijst:
+`state_store.py`, `world_builder.py`); de coördinator erft van hén. Het noemt alleen
+leden (waarden en `Callable`-typen), zodat mypy hun `self` kent. Niets controleerde
+of de coördinator die leden ook werkelijk draagt, of een lid er nog toe doet, of dat
+een mixin iets gebruikt wat er niet in staat. Deze toetsen doen dat, zonder handlijst:
 de leden komen uit `CoordinatorSurface.__annotations__` plus de methodes en
 properties in de klasse zelf.
 
 Dekking: (1) elk lid wordt door minstens één mixin gebruikt, als `self.<lid>` of
 als letterlijke naam in `getattr(self, …)` / `hasattr(self, …)`; (2) elke
-`self.<naam>` in een mixinbestand is een lid van het protocol of iets wat die
-mixin zelf definieert (een methode of een klasse-attribuut) - dat is precies wat
-mypy via het protocol laat passeren; (3) de echte coördinator, opgestart met
-`start_house`, heeft elk lid; (4) elke stand-in in `tests/` die een methode van
-`ClimateDirectorCoordinator` leent (`naam = ClimateDirectorCoordinator.<methode>`
-in de klassebody) draagt zelf elk protocollid dat die methodes als `self.<lid>`
-aanraken: in de klassebody, of als `self.<lid> = …` in een eigen methode. Geen
-lid mag ontbreken: `tests/test_module_boundaries.py` laat geen `getattr(self, …)`
-met een terugval toe. Niet gedekt: een methode die een stand-in op een andere
-manier leent (via een basisklasse, of `item.x = …` van buitenaf), en
-leden buiten het protocol die een geleende methode aanraakt.
+`self.<naam>` in een mixinbestand is een lid van het oppervlak of iets wat die
+mixin zelf definieert (een methode of een klasse-attribuut); (3) de echte
+coördinator, opgestart met `start_house`, heeft elk lid; (4) elke stand-in in
+`tests/` die een methode van `ClimateDirectorCoordinator` leent
+(`naam = ClimateDirectorCoordinator.<methode>` in de klassebody) draagt zelf elk
+lid van het oppervlak dat die methodes als `self.<lid>` aanraken: in de klassebody,
+of als `self.<lid> = …` in een eigen methode. Geen lid mag ontbreken:
+`tests/test_module_boundaries.py` laat geen `getattr(self, …)` met een terugval toe.
+Niet gedekt: een methode die een stand-in op een andere manier leent (via een
+basisklasse, of `item.x = …` van buitenaf), en leden buiten het oppervlak die een
+geleende methode aanraakt.
 
-The coordinator's protocol names exactly what the mixins use.
+The coordinator's surface names exactly what the mixins use.
 
-`CoordinatorSurface` exists only for mypy: the seven mixins (`overrides.py`,
+`CoordinatorSurface` is the base of the eight mixins (`hand.py`, `overrides.py`,
 `preconditions.py`, `hand_start.py`, `resident_reader.py`, `room_presence.py`,
-`state_store.py`, `world_builder.py`) inherit from it under
-`TYPE_CHECKING`, so their `self` knows every member of the coordinator. Outside
-the type check the protocol does not exist, so nothing checked whether the
-coordinator really carries those members, whether a member still matters, or
-whether a mixin uses something that is not in it. These tests do, without a
-hand-written list: the members come from `CoordinatorSurface.__annotations__`
-plus the methods and properties in the class itself.
+`state_store.py`, `world_builder.py`); the coordinator inherits from them. It names
+members only (values and `Callable` types), so that mypy knows their `self`. Nothing
+checked whether the coordinator really carries those members, whether a member
+still matters, or whether a mixin uses something that is not in it. These tests do,
+without a hand-written list: the members come from
+`CoordinatorSurface.__annotations__` plus the methods and properties in the class
+itself.
 
-Coverage: (1) every member is used by at least one mixin, as `self.<member>` or
-as a literal name in `getattr(self, …)` / `hasattr(self, …)`; (2) every
-`self.<name>` in a mixin file is a member of the protocol or something that mixin
-defines itself (a method or a class attribute) - exactly what mypy lets through
-by way of the protocol; (3) the real coordinator, started with `start_house`,
+Coverage: (1) every member is used by at least one mixin, as `self.<member>` or as a
+literal name in `getattr(self, …)` / `hasattr(self, …)`; (2) every `self.<name>` in a
+mixin file is a member of the surface or something that mixin defines itself (a
+method or a class attribute); (3) the real coordinator, started with `start_house`,
 has every member; (4) every stand-in in `tests/` that borrows a method of
 `ClimateDirectorCoordinator` (`name = ClimateDirectorCoordinator.<method>` in the
-class body) carries every protocol member those methods touch as
-`self.<member>` itself: in the class body, or as `self.<member> = …` in a method
-of its own. No member may be missing: `tests/test_module_boundaries.py` allows
-no `getattr(self, …)` with a fallback. Not covered: a method a stand-in
-borrows another way (through a base class, or `item.x = …` from outside), and
-members outside the protocol that a borrowed method touches.
+class body) carries every surface member those methods touch as `self.<member>`
+itself: in the class body, or as `self.<member> = …` in a method of its own. No
+member may be missing: `tests/test_module_boundaries.py` allows no
+`getattr(self, …)` with a fallback. Not covered: a method a stand-in borrows
+another way (through a base class, or `item.x = …` from outside), and members
+outside the surface that a borrowed method touches.
 """
 
 from __future__ import annotations
@@ -57,7 +55,6 @@ import ast
 import inspect
 import textwrap
 from pathlib import Path
-from types import SimpleNamespace
 
 from harness_live import settings, source, start_house, stop_house, zone
 
@@ -240,32 +237,3 @@ def test_every_stand_in_carries_what_its_borrowed_methods_touch() -> None:
                 problems.append(f"{where}: {', '.join(missing)}")
     assert stand_ins, "geen enkele stand-in gevonden; leest de toets nog de goede vorm?"
     assert not problems, "een stand-in mist een protocollid:\n" + "\n".join(problems)
-
-
-def test_the_protocol_stub_of_the_listener_update_returns_nothing() -> None:
-    """coordinator.py: de stub in het protocol doet niets.
-
-    `CoordinatorSurface` draagt `async_update_listeners` zodat mypy hem in de
-    mixins kent. Die regel staat er voor de typecontrole, niet voor het draaien:
-    bij het draaien komt de methode van `DataUpdateCoordinator`, en dit protocol
-    staat niet in de klassenhiërarchie van de coordinator. Voor mypy maakt een
-    kale `...` de concrete klasse abstract ("implicitly abstract because it has an
-    empty function body"), dus de stub heeft een expliciete `return`. Die regel
-    komt nooit langs tenzij iemand hem aanroept, en dat is precies wat hier
-    gebeurt: met een verzonnen `self`, want van een protocol bestaan geen
-    instanties. Zonder deze test is het een gemiste regel in de dekkingsmeting, en
-    dat was hij ook: de poort viel erop toen de methode werd
-    toegevoegd.
-
-    coordinator.py: the protocol's stub does nothing.
-    `CoordinatorSurface` carries `async_update_listeners` so that mypy knows it in
-    the mixins. That line exists for the type check, not for run time: at run time
-    the method comes from `DataUpdateCoordinator`, and this protocol is not in the
-    coordinator's class hierarchy. To mypy a bare `...` makes the concrete class
-    abstract ("implicitly abstract because it has an empty function body"), hence
-    the explicit `return`. That line never comes past unless someone calls it, and
-    that is exactly what happens here: with an invented `self`, since a protocol
-    has no instances. Without this test it is a missed line in the measurement,
-    and it was: the gate caught it when the method was added.
-    """
-    assert CoordinatorSurface.async_update_listeners(SimpleNamespace()) is None
