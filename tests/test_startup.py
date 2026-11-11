@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from custom_components.climate_director import coordinator_lifecycle as module
 from custom_components.climate_director.coordinator import ClimateDirectorCoordinator
+from custom_components.climate_director.coordinator_state import LifecycleState
 
 
 class _Entry:
@@ -43,7 +44,8 @@ class StandIn:
         # zodat de toets hem kan volgen.
         # The real coordinator's startup gate; the stand-in carries it too, so the
         # test can follow it.
-        self._restored = False
+        self.lifecycle = LifecycleState()
+        self.lifecycle.restored = False
         self.saved_pending = 0
         # Het opslaggeheugen van de echte coördinator: alleen de vlag en de stap,
         # want deze stand-in heeft geen opslag. De toets volgt of de stap loopt.
@@ -52,11 +54,11 @@ class StandIn:
         # this stand-in has no store. The test follows whether the step runs.
         self._save_pending = False
         # De notitie van wat de gebruiker vóór het herstel zelf deed:
-        # `_async_on_hass_started` maakt hem na het herstel leeg, en deze stand-in
+        # `async_on_hass_started` maakt hem na het herstel leeg, en deze stand-in
         # begint leeg.
         #
         # The note of what the user did before the restore:
-        # `_async_on_hass_started` empties it after the restore, and this stand-in
+        # `async_on_hass_started` empties it after the restore, and this stand-in
         # starts empty.
         self.override_before_restore: set[str] = set()
         self.request_before_restore: set[str] = set()
@@ -75,13 +77,13 @@ class StandIn:
         """
         return {"sensor.room"}
 
-    def _handle_change(self, _event) -> None:
+    def handle_change(self, _event) -> None:
         """Deze stand-in beslist niets; de listener wordt hier niet aangeroepen."""
 
-    def _cancel_pending_deferral(self) -> None:
+    def cancel_pending_deferral(self) -> None:
         pass
 
-    def _cancel_clock_reeval(self) -> None:
+    def cancel_clock_reeval(self) -> None:
         pass
 
     async def async_restore_state(self) -> None:
@@ -90,34 +92,34 @@ class StandIn:
     def async_save_pending_state(self) -> None:
         """Deze stand-in bewaart niets; de stap hoort wel op het pad.
 
-        `_async_on_hass_started` schrijft ná het herstel één keer weg wat tijdens
+        `async_on_hass_started` schrijft ná het herstel één keer weg wat tijdens
         het opstarten bleef liggen. Zonder opslag valt er niets te schrijven, maar
         de toets volgt of die stap werkelijk loopt.
 
         This stand-in stores nothing; the step does belong on the path.
-        `_async_on_hass_started` writes once after the restore for what stayed
+        `async_on_hass_started` writes once after the restore for what stayed
         behind during the startup. Without a store there is nothing to write, but
         the test follows whether that step really runs.
         """
         self.saved_pending += 1
 
-    def _note_precipitation_now(self) -> None:
+    def note_precipitation_now(self) -> None:
         self.precipitation_noted += 1
 
-    def _note_home_now(self) -> None:
+    def note_home_now(self) -> None:
         """Deze stand-in houdt geen bewoners bij; de stap hoort wel op het pad."""
 
     def note_room_presence_now(self) -> None:
         """Deze stand-in leest geen aanwezigheid; de stap hoort wel op het pad."""
 
-    async def _async_evaluate(self) -> None:
+    async def async_evaluate(self) -> None:
         self.evaluated += 1
 
-    def _schedule_clock_reeval(self) -> None:
+    def schedule_clock_reeval(self) -> None:
         self.clock_armed += 1
 
     async_start = ClimateDirectorCoordinator.async_start
-    _async_on_hass_started = ClimateDirectorCoordinator._async_on_hass_started
+    async_on_hass_started = ClimateDirectorCoordinator.async_on_hass_started
 
 
 async def test_the_first_decision_waits_for_hass_to_start(monkeypatch) -> None:
@@ -154,7 +156,7 @@ async def test_the_first_decision_waits_for_hass_to_start(monkeypatch) -> None:
     assert watched == [["sensor.room"]], "de listener hoort er vóór het opstarten te staan"
     assert item.restored == 0
     assert item.evaluated == 0
-    assert item._restored is False, "de opstartpoort hoort nog dicht te staan"
+    assert item.lifecycle.restored is False, "de opstartpoort hoort nog dicht te staan"
     assert "callback" in scheduled
 
     await scheduled["callback"](item.hass)  # type: ignore[misc]
@@ -163,7 +165,7 @@ async def test_the_first_decision_waits_for_hass_to_start(monkeypatch) -> None:
     assert item.precipitation_noted == 1
     assert item.evaluated == 1
     assert item.clock_armed == 1
-    assert item._restored is True, "na het herstel hoort de poort open te staan"
+    assert item.lifecycle.restored is True, "na het herstel hoort de poort open te staan"
     assert item.saved_pending >= 1, (
         "wat tijdens het opstarten bleef liggen, hoort na het herstel weggeschreven te worden"
     )
@@ -192,10 +194,10 @@ async def test_a_broken_restore_still_opens_the_gate() -> None:
 
     item.async_restore_state = broken_restore  # type: ignore[method-assign]
 
-    await item._async_on_hass_started(item.hass)  # type: ignore[arg-type]
+    await item.async_on_hass_started(item.hass)  # type: ignore[arg-type]
 
     assert item.clock_armed == 1, "de vangnetklok hoort ondanks de fout te lopen"
-    assert item._restored is True, "de poort hoort ook na een kapotte lezing open te gaan"
+    assert item.lifecycle.restored is True, "de poort hoort ook na een kapotte lezing open te gaan"
     assert item.saved_pending >= 1, (
         "ook na een kapotte lezing hoort weggeschreven te worden wat bleef liggen"
     )
@@ -222,9 +224,9 @@ async def test_an_exception_from_the_first_decision_still_arms_the_clock() -> No
     async def broken_evaluate() -> None:
         raise RuntimeError("kapotte eerste beslissing")
 
-    item._async_evaluate = broken_evaluate  # type: ignore[method-assign]
+    item.async_evaluate = broken_evaluate  # type: ignore[method-assign]
 
-    await item._async_on_hass_started(item.hass)  # type: ignore[arg-type]
+    await item.async_on_hass_started(item.hass)  # type: ignore[arg-type]
 
     assert item.clock_armed == 1, "de vangnetklok hoort ondanks de fout te lopen"
 
@@ -232,11 +234,11 @@ async def test_an_exception_from_the_first_decision_still_arms_the_clock() -> No
 async def test_the_gate_stays_shut_while_the_restore_runs() -> None:
     """De poort gaat pas open nadat het herstel klaar is, niet tijdens.
 
-    Stond `_restored` al vóór of tijdens `async_restore_state`, dan kon een
+    Stond `restored` al vóór of tijdens `async_restore_state`, dan kon een
     beslissing die tijdens het herstel binnenkwam de bewaarde toestand missen.
     Deze toets kijkt op het moment zelf, niet pas achteraf.
 
-    The gate opens only after the restore is done, not during it. If `_restored`
+    The gate opens only after the restore is done, not during it. If `restored`
     already stood before or during `async_restore_state`, a decision arriving
     during the restore could miss the stored state. This test looks at the
     moment itself, not only afterwards.
@@ -246,12 +248,12 @@ async def test_the_gate_stays_shut_while_the_restore_runs() -> None:
     original = item.async_restore_state
 
     async def observed_restore() -> None:
-        seen.append(item._restored)
+        seen.append(item.lifecycle.restored)
         await original()
 
     item.async_restore_state = observed_restore  # type: ignore[method-assign]
 
-    await item._async_on_hass_started(item.hass)  # type: ignore[arg-type]
+    await item.async_on_hass_started(item.hass)  # type: ignore[arg-type]
 
     assert seen == [False]
-    assert item._restored is True
+    assert item.lifecycle.restored is True

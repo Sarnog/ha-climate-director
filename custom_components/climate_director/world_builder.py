@@ -508,16 +508,16 @@ class WorldBuilderMixin(CoordinatorSurface):
         """Return whether the configured source reports precipitation, with grace.
 
         Dit is een lezer en schrijft dus niets. Het moment waarop de bron voor
-        het laatst neerslag meldde wordt vastgelegd in `_notice_precipitation`
+        het laatst neerslag meldde wordt vastgelegd in `notice_precipitation`
         (de toestandswijziging van de bron zelf) en bij het opstarten in
-        `_note_precipitation_now`; hier wordt het alleen uitgelezen. Eerder
+        `note_precipitation_now`; hier wordt het alleen uitgelezen. Eerder
         gebeurde dat wél hier, en daardoor verliep de nalooptijd alleen tijdens
         een beoordelingsronde - een verborgen bijwerking op een pad dat "lezen"
         heet.
 
         This is a reader and therefore writes nothing. The moment the source
-        last reported precipitation is recorded in `_notice_precipitation` (the
-        source's own state change) and at startup in `_note_precipitation_now`;
+        last reported precipitation is recorded in `notice_precipitation` (the
+        source's own state change) and at startup in `note_precipitation_now`;
         here it is only read. It used to be written here, which made the grace
         lapse only during an evaluation round - a hidden side effect on a path
         that calls itself "read".
@@ -528,5 +528,5 @@ class WorldBuilderMixin(CoordinatorSurface):
         state = self.hass.states.get(settings.source)
         if state is not None and state.state in settings.states:
             return True
-        seen = self._precipitation_seen_at
+        seen = self.tracking.precipitation_seen_at
         return seen is not None and dt_util.now() - seen < settings.grace

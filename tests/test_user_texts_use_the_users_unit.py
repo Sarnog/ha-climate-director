@@ -219,12 +219,12 @@ class TestThePhoneSentence:
                     openings={window: OpeningState(open=True, changed_at=None)},
                 )
 
-            _refusal_data = ClimateDirectorCoordinator._refusal_data
-            _friendly = ClimateDirectorCoordinator._friendly
-            _open_openings = ClimateDirectorCoordinator._open_openings
+            refusal_data = ClimateDirectorCoordinator.refusal_data
+            friendly = ClimateDirectorCoordinator.friendly
+            open_openings = ClimateDirectorCoordinator.open_openings
 
-            def refusal_data(self, zone_id: str):
-                return self._refusal_data(zone_id, self.data)
+            def refusal_for(self, zone_id: str):
+                return self.refusal_data(zone_id, self.data)
 
         return StandIn()
 
@@ -241,12 +241,12 @@ class TestThePhoneSentence:
         ],
     )
     def test_the_sentence_names_the_unit(self, unit: str, expected: str) -> None:
-        data = self._coordinator(unit).refusal_data("zolder")
+        data = self._coordinator(unit).refusal_for("zolder")
         assert expected in data["confirmed_message"]
 
     def test_the_satisfied_sentence_names_the_unit_too(self) -> None:
         """Alleen `{indoor}` komt voorbij; ook die hoort zijn eenheid te noemen."""
-        data = self._coordinator("°F", indoor=21.5).refusal_data("zolder")
+        data = self._coordinator("°F", indoor=21.5).refusal_for("zolder")
         assert "Now 70.7 °F" in data["confirmed_message"]
 
     def test_the_idle_sentence_names_the_unit_too(self) -> None:
@@ -269,5 +269,5 @@ class TestThePhoneSentence:
             openings=(Opening(entity_id=window),),
             gates=GateSettings(max_precondition=timedelta(hours=2)),
         )
-        data = item.refusal_data("zolder")
+        data = item.refusal_for("zolder")
         assert "Now 59.0 °F" in data["confirmed_message"]

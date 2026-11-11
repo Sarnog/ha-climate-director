@@ -72,7 +72,7 @@ class TestUnloadingDuringARunningRound:
             # De woonkamer wordt te warm; de director wil de airco uitzetten.
             # The living room turns too warm; the director wants the unit off.
             live.set("sensor.woonkamer", "23.0")
-            round_task = asyncio.create_task(live.coordinator._async_evaluate())
+            round_task = asyncio.create_task(live.coordinator.async_evaluate())
             await asyncio.wait_for(started.wait(), timeout=5)
 
             unload_task = asyncio.create_task(
@@ -190,7 +190,7 @@ class TestUnloadingDuringARunningRound:
             assert live.climate_calls() == [], "de eerste ronde hoort niets te sturen"
 
             live.set("sensor.woonkamer", "23.0")
-            round_task = asyncio.create_task(live.coordinator._async_evaluate())
+            round_task = asyncio.create_task(live.coordinator.async_evaluate())
             await asyncio.wait_for(started.wait(), timeout=5)
 
             reload_task = asyncio.create_task(

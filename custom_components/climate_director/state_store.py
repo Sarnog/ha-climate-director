@@ -87,7 +87,8 @@ class StateStoreMixin(CoordinatorSurface):
             },
             "asleep_since": _isoformat(self.asleep_since),
             "commanded_off": {
-                entity_id: when.isoformat() for entity_id, when in self._commanded_off.items()
+                entity_id: when.isoformat()
+                for entity_id, when in self.tracking.commanded_off.items()
             },
             "override_until": {
                 zone_id: until.isoformat() for zone_id, until in self.zone_override_until.items()
@@ -145,7 +146,7 @@ class StateStoreMixin(CoordinatorSurface):
         # P1: a round still running during shutdown - `apply` waits on cloud
         # integrations - must not schedule a new delayed write after the flush;
         # that would resurrect the file after `async_remove_entry`.
-        if self._closing:
+        if self.lifecycle.closing:
             return
         # Vóór het herstel wordt er niets geschreven. HA's `Store.async_load`
         # leest een wachtende schrijfactie in plaats van het bestand, dus een
@@ -160,7 +161,7 @@ class StateStoreMixin(CoordinatorSurface):
         # user's verdict is gone. Only the fact *that* something needed saving is
         # remembered; `async_save_pending_state` writes it away once after the
         # restore.
-        if not self._restored:
+        if not self.lifecycle.restored:
             self._save_pending = True
             return
         self.store.async_delay_save(self.store_payload, 1)
@@ -220,7 +221,7 @@ class StateStoreMixin(CoordinatorSurface):
         itself (the `RestoreEntity` in `async_added_to_hass`) is no action by the
         user, and a call afterwards needs to know nothing.
         """
-        if self._restored:
+        if self.lifecycle.restored:
             return
         if kind == "override":
             self.override_before_restore.add(zone_id)
@@ -336,7 +337,7 @@ class StateStoreMixin(CoordinatorSurface):
         self._restore_hand_starts(stored, now)
         self.home_since.update(restore_home_since(self, stored.get("home_since"), stored_time))
         self.asleep_since = stored_time(stored.get("asleep_since"))
-        self._commanded_off.update(restore_commanded_off(stored.get("commanded_off"), now))
+        self.tracking.commanded_off.update(restore_commanded_off(stored.get("commanded_off"), now))
         if hasattr(self, "_restore_overrides"):
             self._restore_overrides(stored, now)
             # Alleen een override die de gebruiker tijdens het opstarten zelf zette

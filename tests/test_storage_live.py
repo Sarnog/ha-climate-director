@@ -56,7 +56,7 @@ class TestAStartupWithBrokenStorage:
         )
         try:
             assert home.state(LIVING) == "heat", "de director hoort gewoon te beslissen"
-            assert home.coordinator._clock_reeval_unsub is not None, "de klok hoort te staan"
+            assert home.coordinator.round.clock_reeval_unsub is not None, "de klok hoort te staan"
             assert path.exists(), "een leesbaar bestand met vreemde velden hoort te blijven staan"
         finally:
             await stop_house(home)
@@ -73,7 +73,7 @@ class TestAStartupWithBrokenStorage:
         )
         try:
             assert home.state(LIVING) == "heat", "de director hoort met een lege staat te beginnen"
-            assert home.coordinator._clock_reeval_unsub is not None, "de klok hoort te staan"
+            assert home.coordinator.round.clock_reeval_unsub is not None, "de klok hoort te staan"
             assert not path.exists(), "het onleesbare bestand hoort opzij gezet te zijn"
             assert list(path.parent.glob(path.name + ".corrupt*")), (
                 "er hoort een .corrupt-bestand te staan"

@@ -584,10 +584,10 @@ class TestNoWriteWhileClosing:
 
     Own variant E5: a homecoming during shutdown no longer writes anything away.
 
-    `async_save_state` weigert te plannen zodra `_closing` waar is, zodat een ronde
+    `async_save_state` weigert te plannen zodra `closing` waar is, zodat een ronde
     die het afsluiten overleeft het bestand niet ná `async_remove_entry` terugschrijft.
     De listener die het moment vastlegt loopt langs dezelfde deur, en dat is hier te
-    meten: met `_closing` waar komt er geen uitgestelde schrijfactie meer bij.
+    meten: met `closing` waar komt er geen uitgestelde schrijfactie meer bij.
     """
 
     async def test_a_homecoming_while_closing_schedules_no_write(self, clock, monkeypatch) -> None:
@@ -607,15 +607,15 @@ class TestNoWriteWhileClosing:
             assert writes == ["write"]
             assert moment(home) == moment_of(home)
 
-            # Met `_closing` waar loopt de opname langs dezelfde deur, maar die
+            # Met `closing` waar loopt de opname langs dezelfde deur, maar die
             # zwaait niet meer open: geen enkele uitgestelde schrijfactie erbij.
             #
-            # With `_closing` true the recording walks through the same door, but it
+            # With `closing` true the recording walks through the same door, but it
             # no longer opens: not a single delayed write is added.
-            home.coordinator._closing = True
+            home.coordinator.lifecycle.closing = True
             await moves(home, "not_home")
             await moves(home)
             assert writes == ["write"]
         finally:
-            home.coordinator._closing = False
+            home.coordinator.lifecycle.closing = False
             await stop_house(home)

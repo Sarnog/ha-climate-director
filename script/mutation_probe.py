@@ -124,7 +124,7 @@ MUTATIONS = [
     {
         "name": "handstart-eigen-aanzet-telt",
         "file": "custom_components/climate_director/hand_start.py",
-        "old": ("        if self._we_wanted_it_on(entity_id, duty):\n            return"),
+        "old": ("        if self.we_wanted_it_on(entity_id, duty):\n            return"),
         "new": "        if False:\n            return",
     },
     {

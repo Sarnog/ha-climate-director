@@ -274,7 +274,7 @@ def test_a_zone_that_carries_on_reports_an_empty_list() -> None:
 class TestItDoesNotSetOffTheDecisionEvent:
     """De koppelingslaag vuurt alleen bij een veránderd besluit.
 
-    `_fire_events` vergelijkt de nieuwe beslissing met de vorige en zwijgt als
+    `fire_events` vergelijkt de nieuwe beslissing met de vorige en zwijgt als
     ze gelijk zijn - anders verzuipt elke automatisering die meeluistert. Gaat
     er een tweede poort dicht terwijl de eerste al dicht stond, dan verandert
     er voor zo'n automatisering niets: de reden is dezelfde, het gevolg ook.
@@ -282,7 +282,7 @@ class TestItDoesNotSetOffTheDecisionEvent:
 
     The binding layer only fires on a changed decision.
 
-    `_fire_events` compares the new decision with the previous one and stays
+    `fire_events` compares the new decision with the previous one and stays
     quiet when they are equal - otherwise every automation listening drowns. A
     second gate shutting while the first already stood shut changes nothing for
     such an automation: same reason, same outcome. Hence the list is left out

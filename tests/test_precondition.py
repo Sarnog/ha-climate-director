@@ -24,6 +24,7 @@ from datetime import datetime, time, timedelta
 import pytest
 from conftest import asleep, awake, away, gate_verdict, make_world
 
+from custom_components.climate_director.coordinator_state import LifecycleState
 from custom_components.climate_director.engine import (
     DirectorConfig,
     GateSettings,
@@ -340,7 +341,9 @@ class TestTheRequestItself:
                 self.precondition_bypass: set[str] = set()
                 self.override_before_restore: set[str] = set()
                 self.request_before_restore: set[str] = set()
-                self._restored = True
+                self.lifecycle = LifecycleState()
+                self.lifecycle = LifecycleState()
+                self.lifecycle.restored = True
                 self.asked = 0
                 self.saved = 0
 

@@ -22,6 +22,7 @@ from __future__ import annotations
 import asyncio
 
 from custom_components.climate_director.coordinator import ClimateDirectorCoordinator
+from custom_components.climate_director.coordinator_state import LifecycleState
 from custom_components.climate_director.engine import (
     DirectorConfig,
     ModeSettings,
@@ -89,7 +90,8 @@ class _Coordinator:
         # notes every real transition. This stand-in runs no startup and so stands
         # at `_restored = True`: `_note_by_hand_before_restore` lets the note go at
         # once.
-        self._restored = True
+        self.lifecycle = LifecycleState()
+        self.lifecycle.restored = True
         self.override_before_restore: set[str] = set()
         self.request_before_restore: set[str] = set()
         self.handed_back: dict = {}

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.core import HomeAssistant
 
@@ -12,6 +12,7 @@ from .const import (
     EVENT_DECISION,
     EVENT_PRECONDITION_REFUSED,
 )
+from .coordinator_surface import CoordinatorSurface
 from .engine import (
     DirectorConfig,
     Plan,
@@ -28,14 +29,11 @@ from .units import (
     unit_of_coordinator,
 )
 
-if TYPE_CHECKING:
-    from .coordinator import ClimateDirectorCoordinator
-
 _LOGGER = logging.getLogger(__name__)
 _COMMAND_NOT_TAKING_ROUNDS = 10
 
 
-def _fire_events(coordinator: ClimateDirectorCoordinator, plan: Plan) -> None:
+def fire_events(coordinator: CoordinatorSurface, plan: Plan) -> None:
     """Fire one event per zone whose outcome changed.
 
     Only on change: a decision is recomputed on every state change of every
@@ -49,7 +47,7 @@ def _fire_events(coordinator: ClimateDirectorCoordinator, plan: Plan) -> None:
             continue
         coordinator.hass.bus.async_fire(
             EVENT_DECISION,
-            _event_data(
+            event_data(
                 coordinator.hass,
                 coordinator.config,
                 coordinator.world,
@@ -60,7 +58,7 @@ def _fire_events(coordinator: ClimateDirectorCoordinator, plan: Plan) -> None:
         )
 
 
-def _fire_refusals(coordinator: ClimateDirectorCoordinator, plan: Plan) -> None:
+def fire_refusals(coordinator: CoordinatorSurface, plan: Plan) -> None:
     """Say so when a pre-conditioning request strands on an open window.
 
     Zonder dit verdwijnt het verzoek in stilte: de zone meldt `opening_open`,
@@ -87,17 +85,17 @@ def _fire_refusals(coordinator: ClimateDirectorCoordinator, plan: Plan) -> None:
             continue
         refused.add(decision.zone_id)
 
-        if decision.zone_id in coordinator._refused:
+        if decision.zone_id in coordinator.events.refused:
             continue
         coordinator.hass.bus.async_fire(
-            EVENT_PRECONDITION_REFUSED, coordinator._refusal_data(decision.zone_id, plan)
+            EVENT_PRECONDITION_REFUSED, coordinator.refusal_data(decision.zone_id, plan)
         )
 
-    coordinator._refused = refused
+    coordinator.events.refused = refused
 
 
-def _refusal_data(
-    coordinator: ClimateDirectorCoordinator, zone_id: str, plan: Plan | None
+def refusal_data(
+    coordinator: CoordinatorSurface, zone_id: str, plan: Plan | None
 ) -> dict[str, Any]:
     """Return the payload of one refusal, the sentences included.
 
@@ -136,8 +134,8 @@ def _refusal_data(
         and coordinator.world is not None
         and bool(house_wide_blocked(coordinator.config, coordinator.world))
     )
-    openings = coordinator._open_openings(zone_id, house_wide=house_wide)
-    listed = ", ".join(coordinator._friendly(entity_id) for entity_id in openings) or "-"
+    openings = coordinator.open_openings(zone_id, house_wide=house_wide)
+    listed = ", ".join(coordinator.friendly(entity_id) for entity_id in openings) or "-"
     minutes = round(coordinator.config.gates.max_precondition.total_seconds() / 60)
 
     indoor = coordinator.world.indoor(zone_id) if coordinator.world is not None else None
@@ -194,7 +192,7 @@ def _refusal_data(
         "zone_id": zone_id,
         "zone": name,
         "openings": openings,
-        "opening_names": [coordinator._friendly(entity_id) for entity_id in openings],
+        "opening_names": [coordinator.friendly(entity_id) for entity_id in openings],
         "until": coordinator.precondition_until[zone_id].isoformat(),
         "indoor_temperature": indoor,
         "target_temperature": target,
@@ -222,14 +220,14 @@ def _refusal_data(
     }
 
 
-def _friendly(coordinator: ClimateDirectorCoordinator, entity_id: str) -> str:
+def friendly(coordinator: CoordinatorSurface, entity_id: str) -> str:
     """Return the name somebody would recognise, or the entity id."""
     state = coordinator.hass.states.get(entity_id)
     return state.name if state is not None else entity_id
 
 
-def _open_openings(
-    coordinator: ClimateDirectorCoordinator, zone_id: str, *, house_wide: bool = False
+def open_openings(
+    coordinator: CoordinatorSurface, zone_id: str, *, house_wide: bool = False
 ) -> list[str]:
     """Return the entity ids standing open, so the notice can name them.
 
@@ -259,7 +257,7 @@ def _open_openings(
     )
 
 
-def _event_data(
+def event_data(
     hass: HomeAssistant,
     config: DirectorConfig,
     world: WorldState | None,

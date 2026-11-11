@@ -6,7 +6,6 @@ What an appliance does itself and what the coordinator records.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
 from homeassistant.core import Event, EventStateChangedData
 from homeassistant.util import dt as dt_util
@@ -14,6 +13,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     COMMANDED_WINDOW,
 )
+from .coordinator_surface import CoordinatorSurface
 from .engine import (
     ModeFamily,
     family_of,
@@ -22,27 +22,22 @@ from .engine.diff import Change
 from .readability import unreadable
 from .world_builder import reads_as_home
 
-if TYPE_CHECKING:
-    from .coordinator import ClimateDirectorCoordinator
-
 _LOGGER = logging.getLogger(__name__)
 _COMMAND_NOT_TAKING_ROUNDS = 10
 
 
-def _handle_change(
-    coordinator: ClimateDirectorCoordinator, event: Event[EventStateChangedData]
-) -> None:
+def handle_change(coordinator: CoordinatorSurface, event: Event[EventStateChangedData]) -> None:
     """Queue a fresh decision after a tracked entity changed."""
-    coordinator._notice_precipitation(event)
+    coordinator.notice_precipitation(event)
     coordinator.notice_home(event)
     coordinator.notice_room_empty(event)
     coordinator.notice_hand_start(event)
-    coordinator._notice_hand(event)
-    coordinator._debouncer.async_schedule_call()
+    coordinator.notice_hand(event)
+    coordinator.round.debouncer.async_schedule_call()
 
 
-def _notice_precipitation(
-    coordinator: ClimateDirectorCoordinator, event: Event[EventStateChangedData]
+def notice_precipitation(
+    coordinator: CoordinatorSurface, event: Event[EventStateChangedData]
 ) -> None:
     """Remember the moment the precipitation source reports precipitation.
 
@@ -66,12 +61,10 @@ def _notice_precipitation(
     new_state = event.data["new_state"]
     if new_state is None or new_state.state not in settings.states:
         return
-    coordinator._precipitation_seen_at = dt_util.now()
+    coordinator.tracking.precipitation_seen_at = dt_util.now()
 
 
-def _notice_hand(
-    coordinator: ClimateDirectorCoordinator, event: Event[EventStateChangedData]
-) -> None:
+def notice_hand(coordinator: CoordinatorSurface, event: Event[EventStateChangedData]) -> None:
     """Record an appliance somebody switched off, or switched back on.
 
     Iemand die bij het apparaat zelf op uit drukt zegt daarmee iets, en dat
@@ -79,14 +72,14 @@ def _notice_hand(
     integratie kan doen. Dus: die zone valt stil tot dezelfde hand hem weer
     aanzet, of tot de volgende dag - want een besluit van gisteravond hoort
     vanochtend niet meer te gelden. Onze eigen aanzet van dat apparaat is
-    diezelfde hand niet (anker 11); zie `_we_wanted_it_on`.
+    diezelfde hand niet (anker 11); zie `we_wanted_it_on`.
 
     Somebody pressing off on the appliance itself is saying something, and
     overriding that by switching it straight back on is the worst thing this
     integration can do. So: that zone falls silent until the same hand turns
     it back on, or until the next day - since last night's decision should
     not still hold this morning. Our own switch-on of that appliance is not
-    that same hand (anchor 11); see `_we_wanted_it_on`.
+    that same hand (anchor 11); see `we_wanted_it_on`.
     """
     # In schaduwmodus stuurt de director niets, dus valt er ook niemand te
     # overstemmen - en daarmee vervalt de reden waarom dit bestaat. Wat er
@@ -147,16 +140,16 @@ def _notice_hand(
         # the appliance reports an active mode on its own again, the "our
         # off command" explanation is spent by definition - however the
         # `off` in between was reported, `unavailable` included.
-        coordinator._commanded_off.pop(entity_id, None)
+        coordinator.tracking.commanded_off.pop(entity_id, None)
 
         # Onze eigen aanzet is geen hand aan het apparaat (anker 11); anders
         # hief de ene kamer met een gedeelde ketel de hand aan de andere kamer
-        # op. Zie `_we_wanted_it_on`.
+        # op. Zie `we_wanted_it_on`.
         #
         # Our own switch-on is no hand at the appliance (anchor 11); see
-        # `_we_wanted_it_on`.
-        if coordinator._we_wanted_it_on(entity_id, now):
-            coordinator._commanded_on.pop(entity_id, None)
+        # `we_wanted_it_on`.
+        if coordinator.we_wanted_it_on(entity_id, now):
+            coordinator.tracking.commanded_on.pop(entity_id, None)
             return
 
         cleared = False
@@ -173,14 +166,14 @@ def _notice_hand(
     # A hand switching the appliance off spends the setpoint too: the next
     # start must carry it again, since nobody knows what the appliance did
     # with its own setpoint in the meantime.
-    coordinator._sent_setpoints.pop(entity_id, None)
+    coordinator.round.sent_setpoints.pop(entity_id, None)
 
     # Het apparaat staat nu uit: de verklaring "ons aan-commando" is daarmee
     # verbruikt, hoe dat `off` ook gemeld is.
     #
     # The appliance stands off now: that spends the "our on command"
     # explanation with it, however that `off` was reported.
-    coordinator._commanded_on.pop(entity_id, None)
+    coordinator.tracking.commanded_on.pop(entity_id, None)
 
     # Alleen als wíj hem niet net hebben uitgezet. Ons eigen commando is
     # geen handmatige ingreep, en zou de zone anders permanent stilleggen.
@@ -188,7 +181,7 @@ def _notice_hand(
     # Only when we did not just switch it off ourselves. Our own command is
     # not a hand at the appliance, and would otherwise silence the zone for
     # good.
-    if coordinator._we_wanted_it_off(entity_id):
+    if coordinator.we_wanted_it_off(entity_id):
         # Ons uit-commando is nu aangekomen: de notitie die de late melding
         # moest verklaren is verbruikt. Een volgende `off` - nadat wij hem
         # zelf weer hebben aangezet - is dus weer gewoon een hand aan het
@@ -200,7 +193,7 @@ def _notice_hand(
         # ourselves - is therefore an ordinary hand at the appliance again.
         # The window remains only as a safety net for a report that never
         # arrives.
-        coordinator._commanded_off.pop(entity_id, None)
+        coordinator.tracking.commanded_off.pop(entity_id, None)
         return
 
     today = dt_util.now().date()
@@ -210,18 +203,16 @@ def _notice_hand(
         coordinator.async_save_state()
 
 
-def _note_commanded_off(
-    coordinator: ClimateDirectorCoordinator, applied: tuple[Change, ...]
-) -> None:
+def note_commanded_off(coordinator: CoordinatorSurface, applied: tuple[Change, ...]) -> None:
     """Remember when we last told each appliance to stand down.
 
-    `_we_wanted_it_off` kijkt hierin in plaats van alleen naar het plan dat
+    `we_wanted_it_off` kijkt hierin in plaats van alleen naar het plan dat
     nú op tafel ligt: een apparaat dat zijn stand pas een poll later meldt,
     rapporteert ons eigen `off` soms pas nadat het plan alweer is
     omgeslagen. Het plan zegt dan \"we wilden hem aan\", en zonder deze
     boekhouding las dat late bericht als een hand aan het apparaat.
 
-    `_we_wanted_it_off` looks here rather than only at the plan on the
+    `we_wanted_it_off` looks here rather than only at the plan on the
     table right now: an appliance reporting its state one poll late
     sometimes reports our own `off` only after the plan has flipped back.
     The plan then says \"we wanted it on\", and without this bookkeeping
@@ -240,7 +231,7 @@ def _note_commanded_off(
         # (or moved by hand) must simply be sent again at the next start.
         # Otherwise "already sent" stood forever and the setpoint never
         # came along again.
-        coordinator._sent_setpoints.pop(change.entity_id, None)
+        coordinator.round.sent_setpoints.pop(change.entity_id, None)
         reported = coordinator.hass.states.get(change.entity_id)
         if (
             reported is not None
@@ -249,39 +240,37 @@ def _note_commanded_off(
         ):
             # Het apparaat meldt ons uit-commando al: er is geen late
             # melding meer te verklaren, en een oude notitie is daarmee ook
-            # verbruikt. `_notice_hand` kan deze notitie niet zelf opruimen
+            # verbruikt. `notice_hand` kan deze notitie niet zelf opruimen
             # op dit moment, want die liep al tijdens `apply` - vóórdat
             # deze boekhouding geschreven werd.
             #
             # The appliance already reports our off command: there is no
             # late report left to explain, and any old note is spent with
-            # it. `_notice_hand` cannot clear it here itself, because it
+            # it. `notice_hand` cannot clear it here itself, because it
             # already ran during `apply` - before this bookkeeping was
             # written.
-            coordinator._commanded_off.pop(change.entity_id, None)
+            coordinator.tracking.commanded_off.pop(change.entity_id, None)
         else:
-            coordinator._commanded_off[change.entity_id] = now
+            coordinator.tracking.commanded_off[change.entity_id] = now
 
 
-def _note_commanded_on(
-    coordinator: ClimateDirectorCoordinator, applied: tuple[Change, ...]
-) -> None:
+def note_commanded_on(coordinator: CoordinatorSurface, applied: tuple[Change, ...]) -> None:
     """Remember when we last told each appliance to run, and doing what.
 
-    Het spiegelbeeld van `_note_commanded_off`, en om dezelfde reden: een
+    Het spiegelbeeld van `note_commanded_off`, en om dezelfde reden: een
     apparaat dat zijn stand pas een poll later meldt, meldt onze eigen aanzet
     soms pas nadat het plan alweer is omgeslagen. Zonder deze boekhouding zou
-    `_we_wanted_it_on` die late melding voor een hand aan het apparaat
+    `we_wanted_it_on` die late melding voor een hand aan het apparaat
     aanzien, en verviel de hand van elke zone eraan.
 
     De taakfamilie gaat mee: een apparaat dat wij `heat` vroegen en dat
     vervolgens `cool` meldt, meldt iets wat wij niet vroegen - dat is een hand
     en geen eigen aanzet.
 
-    The mirror image of `_note_commanded_off`, and for the same reason: an
+    The mirror image of `note_commanded_off`, and for the same reason: an
     appliance reporting its mode one poll late sometimes reports our own
     switch-on only after the plan has flipped back. Without this bookkeeping
-    `_we_wanted_it_on` would take that late report for a hand at the
+    `we_wanted_it_on` would take that late report for a hand at the
     appliance, and the hand of every zone hanging off it would lapse.
 
     The duty family comes along: an appliance we asked for `heat` and that
@@ -301,20 +290,20 @@ def _note_commanded_on(
         ):
             # Het apparaat meldt onze aanzet al: er is geen late melding meer
             # te verklaren, en een oude notitie is daarmee ook verbruikt.
-            # `_notice_hand` kan deze notitie niet zelf opruimen op dit
+            # `notice_hand` kan deze notitie niet zelf opruimen op dit
             # moment, want die liep al tijdens `apply` - vóórdat deze
             # boekhouding geschreven werd.
             #
             # The appliance already reports our switch-on: there is no late
             # report left to explain, and any old note is spent with it.
-            # `_notice_hand` cannot clear it here itself, because it already
+            # `notice_hand` cannot clear it here itself, because it already
             # ran during `apply` - before this bookkeeping was written.
-            coordinator._commanded_on.pop(change.entity_id, None)
+            coordinator.tracking.commanded_on.pop(change.entity_id, None)
         else:
-            coordinator._commanded_on[change.entity_id] = (now, family)
+            coordinator.tracking.commanded_on[change.entity_id] = (now, family)
 
 
-def _we_wanted_it_off(coordinator: ClimateDirectorCoordinator, entity_id: str) -> bool:
+def we_wanted_it_off(coordinator: CoordinatorSurface, entity_id: str) -> bool:
     """Return whether we told this appliance to stand down, or meant to.
 
     Eerst de boekhouding van wat er écht is uitgezonden: die dekt ook het
@@ -331,11 +320,11 @@ def _we_wanted_it_off(coordinator: ClimateDirectorCoordinator, entity_id: str) -
     still running, and at that moment the published decision is still the
     previous round's.
     """
-    when = coordinator._commanded_off.get(entity_id)
+    when = coordinator.tracking.commanded_off.get(entity_id)
     if when is not None and dt_util.now() - when <= COMMANDED_WINDOW:
         return True
 
-    plan = coordinator._issued or coordinator.data
+    plan = coordinator.round.issued or coordinator.data
     if plan is None:
         return False
     for command in plan.commands:
@@ -344,18 +333,16 @@ def _we_wanted_it_off(coordinator: ClimateDirectorCoordinator, entity_id: str) -
     return False
 
 
-def _we_wanted_it_on(
-    coordinator: ClimateDirectorCoordinator, entity_id: str, family: ModeFamily
-) -> bool:
+def we_wanted_it_on(coordinator: CoordinatorSurface, entity_id: str, family: ModeFamily) -> bool:
     """Return whether the active mode this appliance reports is our own doing.
 
-    `_notice_hand` gebruikt dit om onze eigen aanzet niet voor een hand aan
+    `notice_hand` gebruikt dit om onze eigen aanzet niet voor een hand aan
     het apparaat aan te zien (anker 11): alleen dezelfde hand, slapen, een
     leeg huis en de volgende dag heffen een hand op, niet het feit dat de
     director een gedeeld apparaat voor een andere kamer aanzet.
 
     Twee sporen, en allebei nodig. De boekhouding van wat er écht is
-    uitgezonden (`_commanded_on`) dekt het apparaat dat zijn stand pas een
+    uitgezonden (`commanded_on`) dekt het apparaat dat zijn stand pas een
     poll later meldt, wanneer het plan alweer is omgeslagen; de familie moet
     daar kloppen - vroegen wij `heat` en meldt het apparaat `cool`, dan is dat
     niet onze aanzet maar een hand. De wijzigingen van deze ronde
@@ -364,18 +351,18 @@ def _we_wanted_it_on(
     geschreven.
 
     Het plan dat op tafel ligt doet hier bewust **niet** mee, anders dan bij
-    `_we_wanted_it_off`: zodra de hand er staat laat de director de zone met
+    `we_wanted_it_off`: zodra de hand er staat laat de director de zone met
     rust, dus een plan dat dit apparaat vraagt is het plan van vóór de hand -
     en dan zou dezelfde hand die het apparaat weer aanzet zijn eigen hand niet
     meer opheffen. `last_changes` zegt precies wat wij net stuurden.
 
-    `_notice_hand` uses this so it does not take our own switch-on for a hand
+    `notice_hand` uses this so it does not take our own switch-on for a hand
     at the appliance (anchor 11): only the same hand, sleeping, an empty house
     and the next day lift a hand, not the director switching a shared
     appliance on for another room.
 
     Two traces, and both are needed. The bookkeeping of what was really sent
-    (`_commanded_on`) covers the appliance reporting its mode one poll late,
+    (`commanded_on`) covers the appliance reporting its mode one poll late,
     when the plan has already flipped back; the family has to match there - we
     asked for `heat` and the appliance reports `cool`, and that is not our
     switch-on but a hand. The changes of this round (`last_changes`, set
@@ -383,12 +370,12 @@ def _we_wanted_it_on(
     at that moment the bookkeeping has not been written yet.
 
     The plan on the table deliberately plays no part here, unlike in
-    `_we_wanted_it_off`: the moment the hand stands, the director leaves the
+    `we_wanted_it_off`: the moment the hand stands, the director leaves the
     zone alone, so a plan asking for this appliance is the plan from before
     the hand - and the same hand switching the appliance back on would then no
     longer lift its own hand. `last_changes` says exactly what we just sent.
     """
-    noted = coordinator._commanded_on.get(entity_id)
+    noted = coordinator.tracking.commanded_on.get(entity_id)
     if noted is not None:
         when, duty = noted
         if duty is family and dt_util.now() - when <= COMMANDED_WINDOW:
@@ -399,7 +386,7 @@ def _we_wanted_it_on(
     )
 
 
-def _note_home_now(coordinator: ClimateDirectorCoordinator) -> None:
+def note_home_now(coordinator: CoordinatorSurface) -> None:
     """Fill in the homecoming moments this process has not seen yet.
 
     Anker 13, besluit 4: de listener ziet alleen overgangen, en wie al thuis

@@ -9,10 +9,11 @@ een mixin iets gebruikt wat er niet in staat. Deze toetsen doen dat, zonder hand
 de leden komen uit `CoordinatorSurface.__annotations__` plus de methodes en
 properties in de klasse zelf.
 
-Dekking: (1) elk lid wordt door minstens één mixin gebruikt, als `self.<lid>` of
-als letterlijke naam in `getattr(self, …)` / `hasattr(self, …)`; (2) elke
-`self.<naam>` in een mixinbestand is een lid van het oppervlak of iets wat die
-mixin zelf definieert (een methode of een klasse-attribuut); (3) de echte
+Dekking: (1) elk lid wordt door minstens één mixin of onderdeel gebruikt, als
+`self.<lid>`, als `coordinator.<lid>` of als letterlijke naam in
+`getattr(self, …)` / `hasattr(self, …)`; (2) elke `self.<naam>` in een mixinbestand
+is een lid van het oppervlak of iets wat die mixin zelf definieert (een methode of
+een klasse-attribuut), en elke `coordinator.<naam>` in een onderdeel is een lid; (3) de echte
 coördinator, opgestart met `start_house`, heeft elk lid; (4) elke stand-in in
 `tests/` die een methode van `ClimateDirectorCoordinator` leent
 (`naam = ClimateDirectorCoordinator.<methode>` in de klassebody) draagt zelf elk
@@ -35,10 +36,11 @@ without a hand-written list: the members come from
 `CoordinatorSurface.__annotations__` plus the methods and properties in the class
 itself.
 
-Coverage: (1) every member is used by at least one mixin, as `self.<member>` or as a
-literal name in `getattr(self, …)` / `hasattr(self, …)`; (2) every `self.<name>` in a
-mixin file is a member of the surface or something that mixin defines itself (a
-method or a class attribute); (3) the real coordinator, started with `start_house`,
+Coverage: (1) every member is used by at least one mixin or part, as `self.<member>`, as
+`coordinator.<member>` or as a literal name in `getattr(self, …)` / `hasattr(self, …)`;
+(2) every `self.<name>` in a mixin file is a member of the surface or something that
+mixin defines itself (a method or a class attribute), and every `coordinator.<name>`
+in a part is a member; (3) the real coordinator, started with `start_house`,
 has every member; (4) every stand-in in `tests/` that borrows a method of
 `ClimateDirectorCoordinator` (`name = ClimateDirectorCoordinator.<method>` in the
 class body) carries every surface member those methods touch as `self.<member>`
@@ -80,6 +82,18 @@ MIXIN_FILES = (
 )
 
 
+#: De onderdelen die de coördinator als eerste argument krijgen.
+#:
+#: The parts that receive the coordinator as their first argument.
+PART_FILES = (
+    "coordinator_events.py",
+    "coordinator_lifecycle.py",
+    "coordinator_reporting.py",
+    "coordinator_round.py",
+    "coordinator_tracking.py",
+)
+
+
 def protocol_members() -> set[str]:
     """Return every member of `CoordinatorSurface`: its fields, methods and properties."""
     fields = set(CoordinatorSurface.__annotations__)
@@ -101,6 +115,17 @@ def self_attributes(tree: ast.AST) -> set[str]:
         node.attr
         for node in ast.walk(tree)
         if isinstance(node, ast.Attribute) and _is_self(node.value)
+    }
+
+
+def coordinator_attributes(tree: ast.AST) -> set[str]:
+    """Return every name reached as `coordinator.<name>` in this tree."""
+    return {
+        node.attr
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Attribute)
+        and isinstance(node.value, ast.Name)
+        and node.value.id == "coordinator"
     }
 
 
@@ -145,11 +170,19 @@ def test_the_protocol_lists_what_the_mixins_use() -> None:
         reached = self_attributes(tree)
         used |= reached | self_names_by_string(tree)
         unlisted += [f"{name}: self.{attribute}" for attribute in sorted(reached - own - members)]
+    for name in PART_FILES:
+        tree = ast.parse((PACKAGE / name).read_text(encoding="utf-8"))
+        reached = coordinator_attributes(tree)
+        used |= reached
+        unlisted += [f"{name}: coordinator.{attribute}" for attribute in sorted(reached - members)]
     unused = sorted(members - used)
-    assert not unlisted, "een mixin gebruikt wat niet in CoordinatorSurface staat:\n" + "\n".join(
-        unlisted
+    assert not unlisted, (
+        "een mixin of onderdeel gebruikt wat niet in CoordinatorSurface staat:\n"
+        + "\n".join(unlisted)
     )
-    assert not unused, "CoordinatorSurface noemt wat geen mixin gebruikt: " + ", ".join(unused)
+    assert not unused, (
+        "CoordinatorSurface noemt wat geen mixin of onderdeel gebruikt: " + ", ".join(unused)
+    )
 
 
 async def test_the_real_coordinator_carries_every_member_of_its_protocol() -> None:

@@ -50,7 +50,7 @@ class HandStartMixin(HandMixin):
     def notice_hand_start(self, event: Event[EventStateChangedData]) -> None:
         """Record an appliance somebody switched on while a zone was waiting.
 
-        Alleen een actieve stand die niet van ons komt telt. `_we_wanted_it_on`
+        Alleen een actieve stand die niet van ons komt telt. `we_wanted_it_on`
         verklaart onze eigen aanzet, ook wanneer het apparaat die pas een poll
         later meldt; die late melding mag geen handstart worden. Een bron met
         *Dit apparaat automatisch aanzetten* uit telt niet, en een gedeeld
@@ -58,7 +58,7 @@ class HandStartMixin(HandMixin):
         `covers_zones`. Staat er geen enkele zone op een wachtreden, dan doet
         de gebeurtenis niets.
 
-        Only an active mode that does not come from us counts. `_we_wanted_it_on`
+        Only an active mode that does not come from us counts. `we_wanted_it_on`
         explains our own switch-on, also when the appliance reports it one poll
         later; that late report must not become a hand start. A source with
         *Start this appliance automatically* off does not count, and a shared
@@ -80,7 +80,7 @@ class HandStartMixin(HandMixin):
             return
 
         entity_id = event.data["entity_id"]
-        if self._we_wanted_it_on(entity_id, duty):
+        if self.we_wanted_it_on(entity_id, duty):
             return
 
         zones = self._hand_start_zones(entity_id)

@@ -99,7 +99,7 @@ def test_openings_are_empty_before_the_first_world() -> None:
     """Zonder wereld is er geen openstaande opening om te melden."""
     coordinator = ClimateDirectorCoordinator.__new__(ClimateDirectorCoordinator)
     coordinator.world = None
-    assert coordinator._open_openings("woonkamer", house_wide=True) == []
+    assert coordinator.open_openings("woonkamer", house_wide=True) == []
 
 
 def test_preconditioning_that_is_switched_off_reports_nothing() -> None:

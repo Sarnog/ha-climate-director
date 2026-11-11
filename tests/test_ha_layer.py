@@ -46,6 +46,12 @@ from custom_components.climate_director.binary_sensor import (
     ZoneFallbackSensor,
 )
 from custom_components.climate_director.coordinator import ClimateDirectorCoordinator
+from custom_components.climate_director.coordinator_state import (
+    EventsState,
+    ReportingState,
+    RoundState,
+    TrackingState,
+)
 from custom_components.climate_director.engine import (
     DirectorConfig,
     ModeFamily,
@@ -211,24 +217,28 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
             self.opening_bypasses: dict[str, bool] = {}
             self.precondition_until: dict[str, datetime] = {}
             self.precondition_bypass: set[str] = set()
-            self._precipitation_seen_at: datetime | None = None
+            self.tracking = TrackingState()
+            self.tracking.precipitation_seen_at: datetime | None = None
             self.home_since: dict[str, datetime] = {}
             self.asleep_since: datetime | None = None
             self._hand_starts: dict[str, datetime] = {}
             self.handed_back: dict = {}
             self._empty_since: dict[str, datetime] = {}
             self._occupied_rooms: set[str] = set()
-            self._waiting: dict = {}
-            self._refused: set[str] = set()
+            self.reporting = ReportingState()
+            self.reporting.waiting: dict = {}
+            self.events = EventsState()
+            self.events.refused: set[str] = set()
             self._started_at: datetime | None = None
             self.season_override = None
             self.data = None
-            self._issued = None
+            self.round = RoundState(debouncer=None)
+            self.round.issued = None
             self.world = None
             self.shadow = False
             self.last_changes = ()
             self.last_applied = ()
-            self._unusable_latest = self.unusable_entities()
+            self.reporting.unusable_latest = self.unusable_entities()
 
         build_world = ClimateDirectorCoordinator.build_world
         _overridden_zones = ClimateDirectorCoordinator._overridden_zones
@@ -238,7 +248,7 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
         stuck_zones = ClimateDirectorCoordinator.stuck_zones
         waiting_seconds = ClimateDirectorCoordinator.waiting_seconds
         unusable_latest = ClimateDirectorCoordinator.unusable_latest
-        _note_waiting = ClimateDirectorCoordinator._note_waiting
+        note_waiting = ClimateDirectorCoordinator.note_waiting
         _climate_ids = ClimateDirectorCoordinator._climate_ids
         _climate = ClimateDirectorCoordinator._climate
         _temperature = ClimateDirectorCoordinator._temperature
@@ -247,7 +257,7 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
         _presence = ClimateDirectorCoordinator._presence
         _season = ClimateDirectorCoordinator._season
         _precipitation = ClimateDirectorCoordinator._precipitation
-        _notice_precipitation = ClimateDirectorCoordinator._notice_precipitation
+        notice_precipitation = ClimateDirectorCoordinator.notice_precipitation
         notice_room_empty = ClimateDirectorCoordinator.notice_room_empty
         _room_presence_payload = ClimateDirectorCoordinator._room_presence_payload
         _restore_room_presence = ClimateDirectorCoordinator._restore_room_presence
@@ -257,11 +267,11 @@ def coordinator(states: dict[str, FakeState] | None = None, config: DirectorConf
         _live_preconditions = ClimateDirectorCoordinator._live_preconditions
         everyone_asleep = ClimateDirectorCoordinator.everyone_asleep
         house_is_empty = ClimateDirectorCoordinator.house_is_empty
-        _fire_events = ClimateDirectorCoordinator._fire_events
-        _fire_refusals = ClimateDirectorCoordinator._fire_refusals
-        _refusal_data = ClimateDirectorCoordinator._refusal_data
-        _friendly = ClimateDirectorCoordinator._friendly
-        _open_openings = ClimateDirectorCoordinator._open_openings
+        fire_events = ClimateDirectorCoordinator.fire_events
+        fire_refusals = ClimateDirectorCoordinator.fire_refusals
+        refusal_data = ClimateDirectorCoordinator.refusal_data
+        friendly = ClimateDirectorCoordinator.friendly
+        open_openings = ClimateDirectorCoordinator.open_openings
 
         def async_save_state(self) -> None:
             pass
@@ -891,13 +901,13 @@ class TestTheSeasonAndTheCalendar:
         config = self._config(precipitation=PrecipitationSettings(source="weather.buienradar"))
         item = coordinator({"weather.buienradar": FakeState("rainy")}, config)
         assert item._precipitation() is True
-        assert item._precipitation_seen_at is None
+        assert item.tracking.precipitation_seen_at is None
 
     def test_the_listener_records_the_moment_precipitation_is_reported(self) -> None:
         config = self._config(precipitation=PrecipitationSettings(source="weather.buienradar"))
         item = coordinator({"weather.buienradar": FakeState("cloudy")}, config)
-        item._notice_precipitation(self._event("weather.buienradar", "cloudy", "rainy"))
-        assert item._precipitation_seen_at == NOW
+        item.notice_precipitation(self._event("weather.buienradar", "cloudy", "rainy"))
+        assert item.tracking.precipitation_seen_at == NOW
 
     def test_the_listener_stays_out_of_it_without_a_source(self) -> None:
         """Geen neerslagbron ingesteld: geen enkele wijziging noteert iets.
@@ -905,8 +915,8 @@ class TestTheSeasonAndTheCalendar:
         No precipitation source configured: no change records anything.
         """
         item = coordinator({"weather.buienradar": FakeState("cloudy")}, self._config())
-        item._notice_precipitation(self._event("weather.buienradar", "cloudy", "rainy"))
-        assert item._precipitation_seen_at is None
+        item.notice_precipitation(self._event("weather.buienradar", "cloudy", "rainy"))
+        assert item.tracking.precipitation_seen_at is None
 
     def test_the_listener_ignores_a_change_between_two_dry_states(self) -> None:
         """Bewolkt -> zonnig is geen neerslag en hoort de nalooptijd niet te verlengen.
@@ -915,8 +925,8 @@ class TestTheSeasonAndTheCalendar:
         """
         config = self._config(precipitation=PrecipitationSettings(source="weather.buienradar"))
         item = coordinator({"weather.buienradar": FakeState("cloudy")}, config)
-        item._notice_precipitation(self._event("weather.buienradar", "cloudy", "sunny"))
-        assert item._precipitation_seen_at is None
+        item.notice_precipitation(self._event("weather.buienradar", "cloudy", "sunny"))
+        assert item.tracking.precipitation_seen_at is None
 
 
 # ---------------------------------------------------------------------------
@@ -1134,7 +1144,7 @@ class TestTheEvents:
     def test_a_decision_event_carries_the_whole_outcome(self) -> None:
         config, world, plan = self._plan()
         item = coordinator({}, config)
-        item._fire_events(plan)
+        item.fire_events(plan)
 
         assert item.hass.bus.fired, "er ging geen enkel event uit"
         event, data = item.hass.bus.fired[0]
@@ -1155,10 +1165,10 @@ class TestTheEvents:
         """Anders verzuipt elke automatisering die meeluistert."""
         config, world, plan = self._plan()
         item = coordinator({}, config)
-        item._fire_events(plan)
+        item.fire_events(plan)
         first = len(item.hass.bus.fired)
         item.data = plan
-        item._fire_events(plan)
+        item.fire_events(plan)
         assert len(item.hass.bus.fired) == first
 
     def test_a_refusal_fires_with_its_ready_made_sentences(self) -> None:
@@ -1166,7 +1176,7 @@ class TestTheEvents:
         item = coordinator({}, config)
         item.world = world
         item.precondition_until = {"woonkamer": NOW + timedelta(hours=1)}
-        item._fire_refusals(plan)
+        item.fire_refusals(plan)
 
         assert item.hass.bus.fired, "een geweigerd verzoek meldde zichzelf niet"
         event, data = item.hass.bus.fired[0]
@@ -1179,8 +1189,8 @@ class TestTheEvents:
         item = coordinator({}, config)
         item.world = world
         item.precondition_until = {"woonkamer": NOW + timedelta(hours=1)}
-        item._fire_refusals(plan)
-        item._fire_refusals(plan)
+        item.fire_refusals(plan)
+        item.fire_refusals(plan)
         assert len(item.hass.bus.fired) == 1
 
 
@@ -1252,7 +1262,7 @@ class TestTheHouseWideRefusal:
         item = coordinator({}, config)
         item.world = world
         item.precondition_until = {"woonkamer": NOW + timedelta(hours=1)}
-        item._fire_refusals(plan)
+        item.fire_refusals(plan)
         return item
 
     @pytest.mark.parametrize(
@@ -1280,7 +1290,7 @@ class TestTheHouseWideRefusal:
         item = coordinator({}, config)
         item.world = world
         item.precondition_until = {"woonkamer": NOW + timedelta(hours=1)}
-        item._fire_refusals(plan)
+        item.fire_refusals(plan)
 
         assert item.hass.bus.fired == []
 
@@ -1291,11 +1301,11 @@ class TestTheHouseWideRefusal:
 
         world = self._world(open_living=False, open_front=True)
         item.world = world
-        item._fire_refusals(decide(config, world))
+        item.fire_refusals(decide(config, world))
 
         world = self._world(open_living=True, open_front=True)
         item.world = world
-        item._fire_refusals(decide(config, world))
+        item.fire_refusals(decide(config, world))
 
         assert len(item.hass.bus.fired) == 1
 
@@ -1519,18 +1529,18 @@ class TestTheStuckSensorOverTime:
 
     def test_a_waiting_reason_starts_the_clock(self) -> None:
         item = coordinator({})
-        item._note_waiting(self._plan_with(Reason.SHORT_CYCLE_PROTECTION))
+        item.note_waiting(self._plan_with(Reason.SHORT_CYCLE_PROTECTION))
         assert "woonkamer" in item.waiting_seconds()
 
     def test_a_full_outdoor_unit_does_not(self) -> None:
         """Vol is een toestand, geen wacht: die mag uren duren zonder alarm."""
         item = coordinator({})
-        item._note_waiting(self._plan_with(Reason.CIRCUIT_AT_CAPACITY))
+        item.note_waiting(self._plan_with(Reason.CIRCUIT_AT_CAPACITY))
         assert item.waiting_seconds() == {}
 
     def test_an_ordinary_reason_does_not(self) -> None:
         item = coordinator({})
-        item._note_waiting(self._plan_with(Reason.NOBODY_HOME))
+        item.note_waiting(self._plan_with(Reason.NOBODY_HOME))
         assert item.waiting_seconds() == {}
 
     def test_it_reports_stuck_once_the_limit_passes(self, monkeypatch) -> None:
@@ -1538,7 +1548,7 @@ class TestTheStuckSensorOverTime:
 
         config = DirectorConfig(zones=house().zones, stuck_after=timedelta(minutes=15))
         item = coordinator({}, config)
-        item._note_waiting(self._plan_with(Reason.SHORT_CYCLE_PROTECTION))
+        item.note_waiting(self._plan_with(Reason.SHORT_CYCLE_PROTECTION))
         assert item.stuck_zones() == {}
 
         monkeypatch.setattr(module.dt_util, "now", lambda: NOW + timedelta(minutes=16))
@@ -1549,10 +1559,10 @@ class TestTheStuckSensorOverTime:
 
         config = DirectorConfig(zones=house().zones, stuck_after=timedelta(minutes=15))
         item = coordinator({}, config)
-        item._note_waiting(self._plan_with(Reason.SHORT_CYCLE_PROTECTION))
+        item.note_waiting(self._plan_with(Reason.SHORT_CYCLE_PROTECTION))
 
         monkeypatch.setattr(module.dt_util, "now", lambda: NOW + timedelta(minutes=16))
-        item._note_waiting(self._plan_with(Reason.CIRCUIT_AT_CAPACITY))
+        item.note_waiting(self._plan_with(Reason.CIRCUIT_AT_CAPACITY))
         assert item.stuck_zones() == {}
 
 
@@ -1659,7 +1669,7 @@ class TestTheQuietSideOfEachListener:
             "custom_components.climate_director.repair_notices.async_report_bypassed_openings",
             lambda *args: reported.append(args[-1]),
         )
-        ClimateDirectorCoordinator._report_bypassed_openings(coordinator())
+        ClimateDirectorCoordinator.report_bypassed_openings(coordinator())
         assert reported == [{}]
 
     def test_a_refusal_for_an_unknown_zone_names_no_target(
@@ -1670,6 +1680,6 @@ class TestTheQuietSideOfEachListener:
         item = coordinator()
         item.world = make_world()
         item.precondition_until = {"onbekend": NOW}
-        data = item._refusal_data("onbekend", None)
+        data = item.refusal_data("onbekend", None)
         assert data["zone"] == "onbekend"
         assert data["target_temperature"] is None

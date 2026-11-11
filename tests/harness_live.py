@@ -100,11 +100,11 @@ APPLIANCE_TYPES: dict[str, dict[str, Any]] = {
     },
     #: Een apparaat dat zijn stand pas een poll later meldt (melcloud). Het
     #: harnas stelt elke terugmelding één ronde uit - precies het late bericht
-    #: waar `_commanded_off` voor bestaat (H1).
+    #: waar `commanded_off` voor bestaat (H1).
     #
     #: An appliance reporting its state one poll late (melcloud). The harness
     #: delays every report by one round - exactly the late report
-    #: `_commanded_off` exists for (H1).
+    #: `commanded_off` exists for (H1).
     "late_reporter": {
         "honours_hvac_mode_in_set_temperature": True,
         "report_delay_rounds": 1,
@@ -142,13 +142,13 @@ APPLIANCE_TYPES: dict[str, dict[str, Any]] = {
     },
     #: Een apparaat dat bij `off` zijn setpoint vergeet, zoals sommige
     #: thermostaten doen. Bij de volgende start moet de director het setpoint
-    #: opnieuw meesturen - precies het pad dat `_note_commanded_off` met
-    #: `_sent_setpoints` openhoudt.
+    #: opnieuw meesturen - precies het pad dat `note_commanded_off` met
+    #: `sent_setpoints` openhoudt.
     #:
     #: An appliance forgetting its setpoint when switched off, as some
     #: thermostats do. At the next start the director must send the setpoint
-    #: again - exactly the path `_note_commanded_off` keeps open through
-    #: `_sent_setpoints`.
+    #: again - exactly the path `note_commanded_off` keeps open through
+    #: `sent_setpoints`.
     "forgets_setpoint": {
         "honours_hvac_mode_in_set_temperature": True,
         "report_delay_rounds": 0,
@@ -304,7 +304,7 @@ class LiveHome:
     async def evaluate(self) -> None:
         """Decide once, right now, without waiting for the debouncer."""
         _flush_reports(self)
-        await self.coordinator._async_evaluate()
+        await self.coordinator.async_evaluate()
         await self.hass.async_block_till_done()
 
     async def settle(self) -> None:
@@ -655,10 +655,10 @@ def _write(
             and current.state not in ("off", "unavailable", "unknown")
         ):
             # M3: eerst even onleesbaar, dan pas uit - precies de cloud-drop-out
-            # waar `_commanded_off` doorheen moet kijken.
+            # waar `commanded_off` doorheen moet kijken.
             #
             # M3: briefly unreadable first, then off - exactly the cloud
-            # drop-out `_commanded_off` must see through.
+            # drop-out `commanded_off` must see through.
             home.hass.states.async_set(entity_id, "unavailable", {})
             home._pending_reports.setdefault(entity_id, []).append((mode, temperature, 1))
             return

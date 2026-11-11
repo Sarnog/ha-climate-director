@@ -274,3 +274,126 @@ def test_the_exemption_guard_sees_every_spelling_and_no_string(tmp_path: Path, m
     )
     monkeypatch.setattr(f"{__name__}.PACKAGE", package)
     assert late_import_exemptions() == ["a_first.py:1", "second.py:1", "second.py:2", "second.py:3"]
+
+
+def private_attributes_of_the_coordinator() -> list[str]:
+    """`coordinator._name` outside `coordinator.py`: a part reaching into the host's privates."""
+    found: list[str] = []
+    for path in package_files():
+        if path.name == "coordinator.py":
+            continue
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if (
+                isinstance(node, ast.Attribute)
+                and isinstance(node.value, ast.Name)
+                and node.value.id == "coordinator"
+                and node.attr.startswith("_")
+                and not node.attr.startswith("__")
+            ):
+                found.append(f"{path.relative_to(PACKAGE).as_posix()}:{node.lineno}: {node.attr}")
+    return found
+
+
+def test_no_part_reaches_into_the_privates_of_the_coordinator() -> None:
+    """Buiten `coordinator.py` leest of zet niemand `coordinator._naam`.
+
+    Een onderdeel (`coordinator_*.py`) krijgt de coördinator als eerste argument; wat
+    het nodig heeft staat in `CoordinatorSurface` onder een publieke naam, of in zijn
+    eigen staatsklasse in `coordinator_state.py`.
+
+    Outside `coordinator.py` nobody reads or sets `coordinator._name`. A part
+    (`coordinator_*.py`) receives the coordinator as its first argument; whatever it
+    needs stands in `CoordinatorSurface` under a public name, or in its own state
+    class in `coordinator_state.py`.
+    """
+    found = private_attributes_of_the_coordinator()
+    assert not found, (
+        "privé attribuut van de coördinator / private attribute of the coordinator: "
+        + ", ".join(found)
+    )
+
+
+def private_names_of_a_sibling_module() -> list[str]:
+    """`module._name` where `module` came in through `from . import module`."""
+    found: list[str] = []
+    for path in package_files():
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        aliases = {
+            alias.asname or alias.name
+            for node in ast.walk(tree)
+            if isinstance(node, ast.ImportFrom) and node.module is None
+            for alias in node.names
+        }
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Attribute)
+                and isinstance(node.value, ast.Name)
+                and node.value.id in aliases
+                and node.attr.startswith("_")
+                and not node.attr.startswith("__")
+            ):
+                found.append(
+                    f"{path.relative_to(PACKAGE).as_posix()}:{node.lineno}: "
+                    f"{node.value.id}.{node.attr}"
+                )
+    return found
+
+
+def test_no_module_reaches_into_the_privates_of_a_sibling() -> None:
+    """Een privé naam van een zusterbestand wordt ook niet via `module._naam` gelezen.
+
+    De bewaking op `from .x import _naam` ziet alleen de import; een module die als
+    `from . import x` binnenkomt en daarna `x._naam` gebruikt, omzeilt hem.
+
+    A private name of a sibling file is not read through `module._name` either. The
+    guard on `from .x import _name` only sees the import; a module imported as
+    `from . import x` and then used as `x._name` slips past it.
+    """
+    found = private_names_of_a_sibling_module()
+    assert not found, "privé naam van een zusterbestand / private name of a sibling: " + ", ".join(
+        found
+    )
+
+
+def test_the_private_attribute_guards_see_invented_cases(tmp_path: Path, monkeypatch) -> None:
+    """De twee bewakingen merken verzonnen gevallen op, ook in een async def.
+
+    Het toegestane blijft staan.
+
+    The two guards notice invented cases, an async def included, and leave the allowed alone.
+    """
+    package = tmp_path / "package"
+    package.mkdir()
+    (package / "coordinator.py").write_text(
+        "def build(coordinator):\n    return coordinator._allowed_here\n", encoding="utf-8"
+    )
+    (package / "part_one.py").write_text(
+        "from . import helper as aid, other\n"
+        "from .other import Thing\n"
+        "def run(coordinator):\n"
+        "    a = coordinator._hidden\n"
+        "    b = coordinator.shown\n"
+        "    c = coordinator.__class__\n"
+        "    d = aid._secret\n"
+        "    e = other.public\n"
+        "    f = unrelated._thing\n"
+        "    g = Thing._internal\n"
+        "    return a, b, c, d, e, f, g\n",
+        encoding="utf-8",
+    )
+    (package / "part_two.py").write_text(
+        "from . import helper\n"
+        "async def later(coordinator):\n"
+        "    await coordinator._also_hidden()\n"
+        "    return helper._LOGGER, helper.__name__\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(f"{__name__}.PACKAGE", package)
+    assert sorted(private_attributes_of_the_coordinator()) == [
+        "part_one.py:4: _hidden",
+        "part_two.py:3: _also_hidden",
+    ]
+    assert sorted(private_names_of_a_sibling_module()) == [
+        "part_one.py:7: aid._secret",
+        "part_two.py:4: helper._LOGGER",
+    ]

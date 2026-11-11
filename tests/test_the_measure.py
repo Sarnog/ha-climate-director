@@ -234,25 +234,25 @@ FUNCTION_LIMIT = 80
 # T6 (de leesbare beslismelding): `coordinator.py` 1972 → 1990. Het event draagt
 # er vier leesbare velden bij (`reason_text`, `action_text`, `source_name`,
 # `message`), en wat hier groeit is de aanroep naar `entity_texts.decision_fields` plus
-# de vier sleutels in `_event_data`. Het samenstellen zelf - welk apparaat, welke
+# de vier sleutels in `event_data`. Het samenstellen zelf - welk apparaat, welke
 # actie, welke zin - woont in `texts.py` (584 regels), want deze module staat al
-# op de lijst en de zin is tekst, geen koppeling. `_event_data` ging van 119 naar
+# op de lijst en de zin is tekst, geen koppeling. `event_data` ging van 119 naar
 # 47 regels en staat daarmee weer onder de tachtig, dus de functielijst blijft
 # ongewijzigd.
 #
 # T6 (the readable decision message): `coordinator.py` 1972 → 1990. The event
 # gains four readable fields (`reason_text`, `action_text`, `source_name`,
 # `message`), and what grows here is the call to `entity_texts.decision_fields` plus the
-# four keys in `_event_data`. The assembly itself - which appliance, which
+# four keys in `event_data`. The assembly itself - which appliance, which
 # action, which sentence - lives in `texts.py` (584 lines), because this module
-# already sits on the list and the sentence is text, not binding. `_event_data`
+# already sits on the list and the sentence is text, not binding. `event_data`
 # went from 119 to 47 lines and is therefore back under eighty, so the function
 # list stays unchanged.
 #
 # Het moment waarop het huis ging slapen (*Wacht op deze slaper* pas als iedereen
 # thuis heeft geslapen): `coordinator.py` 1990 → 1993 en zijn `__init__` 218 → 220
 # door het lid `asleep_since` in het protocol en in `__init__`, plus de aanroep in
-# `_async_evaluate`. `state_store.py::_async_restore_state` 102 → 104: één regel
+# `async_evaluate`. `state_store.py::_async_restore_state` 102 → 104: één regel
 # herstel en de uitleg ervan; een dubbele Engelse alinea in die docstring maakte er
 # plaats voor. De regel zelf woont in `engine/night.py`, en het vastleggen in
 # `world_builder.py`, beide onder hun maat; `engine/gates.py` ging daardoor van 670
@@ -261,7 +261,7 @@ FUNCTION_LIMIT = 80
 # The moment the house went to sleep (*Wait for this sleeper* only once everybody at
 # home has slept): `coordinator.py` 1990 → 1993 and its `__init__` 218 → 220 through
 # the `asleep_since` member in the protocol and in `__init__`, plus the call in
-# `_async_evaluate`. `state_store.py::_async_restore_state` 102 → 104: one line of
+# `async_evaluate`. `state_store.py::_async_restore_state` 102 → 104: one line of
 # restore and its explanation; a doubled English paragraph in that docstring made
 # room for it. The rule itself lives in `engine/night.py`, and the recording in
 # `world_builder.py`, both below their measure; `engine/gates.py` went from 670 to
@@ -286,15 +286,15 @@ FUNCTION_LIMIT = 80
 # and written in `engine/resident_storage.py`.
 #
 # De opstartpoort (H1): `coordinator.py` 1993 → 2030 en zijn `__init__` 220 → 236 door
-# het lid `_restored` met de uitleg waarom er niet beslist mag worden vóór het herstel.
-# `_async_evaluate` blijft onder de tachtig: de poort staat op de regel die er al stond
+# het lid `restored` met de uitleg waarom er niet beslist mag worden vóór het herstel.
+# `async_evaluate` blijft onder de tachtig: de poort staat op de regel die er al stond
 # (`if self._closing or not self._restored`), met de uitleg hier en in `__init__` in
 # plaats van als nieuw commentaarblok in de functie zelf - een commentaarregel telt
 # fysiek mee en zou de functie over de grens tillen.
 #
 # The startup gate (H1): `coordinator.py` 1993 → 2030 and its `__init__` 220 → 236
-# through the `_restored` member with the explanation of why no decision may be taken
-# before the restore. `_async_evaluate` stays below eighty: the gate sits on the line
+# through the `restored` member with the explanation of why no decision may be taken
+# before the restore. `async_evaluate` stays below eighty: the gate sits on the line
 # that was already there (`if self._closing or not self._restored`), with the
 # explanation here and in `__init__` rather than as a new comment block inside the
 # function itself - a comment line counts physically and would push the function over
@@ -381,7 +381,7 @@ FUNCTION_LIMIT = 80
 #
 # Niets wegschrijven vóór het herstel (N2): `coordinator.py` 2042 → 2065 en zijn
 # `__init__` 236 → 246 door het veld `_save_pending` (protocolregel, beginwaarde en
-# korte uitleg) en de stap `async_save_pending_state` in `_async_on_hass_started`
+# korte uitleg) en de stap `async_save_pending_state` in `async_on_hass_started`
 # met de uitleg erbij waarom er vóór het herstel niets geschreven mag worden. Dat
 # laatste woont in `state_store.py::_async_save_state` en
 # `async_save_pending_state`; die module blijft onder zijn maat.
@@ -389,7 +389,7 @@ FUNCTION_LIMIT = 80
 # No write before the restore (N2): `coordinator.py` 2042 → 2065 and its `__init__`
 # 236 → 246 through the `_save_pending` field (protocol line, starting value and a
 # short explanation) and the `async_save_pending_state` step in
-# `_async_on_hass_started` with the explanation of why nothing may be written before
+# `async_on_hass_started` with the explanation of why nothing may be written before
 # the restore. That last part lives in `state_store.py::_async_save_state` and
 # `async_save_pending_state`; that module stays below its measure.
 #
@@ -406,27 +406,27 @@ FUNCTION_LIMIT = 80
 # and the exclusion in the list) stays below its measure.
 #
 # Een hand vervalt niet door onze eigen aanzet (N4): `coordinator.py` 2065 → 2201, zijn
-# `__init__` 246 → 258 en `_notice_hand` 117 → 137. De reparatie leest een actieve stand
-# alleen nog als hand als die niet van ons komt: het lid `_commanded_on` (beginwaarde en
-# de uitleg dat het het spiegelbeeld van `_commanded_off` is - net als dat lid buiten het
+# `__init__` 246 → 258 en `notice_hand` 117 → 137. De reparatie leest een actieve stand
+# alleen nog als hand als die niet van ons komt: het lid `commanded_on` (beginwaarde en
+# de uitleg dat het het spiegelbeeld van `commanded_off` is - net als dat lid buiten het
 # protocol, want alleen `coordinator.py` leest het),
-# `_note_commanded_on` naast `_note_commanded_off` in `_async_evaluate`, `_we_wanted_it_on`
+# `note_commanded_on` naast `note_commanded_off` in `async_evaluate`, `we_wanted_it_on`
 # met de uitleg waarom het plan op tafel hier *niet* meedoet (`last_changes`, gezet vóór
-# `apply`, plus het venster `_COMMANDED_WINDOW` op de notitie), en in `_notice_hand` de
+# `apply`, plus het venster `_COMMANDED_WINDOW` op de notitie), en in `notice_hand` de
 # `if` met de uitleg waarom een eigen aanzet geen hand is. Wat groeit is vooral uitleg;
 # de functies zelf blijven lineair. De stand-ins van die reparatie wonen in
 # `tests/simulation.py` en `tests/test_handed_back.py`, die geen maat hebben. Het anker
 # (NL + EN) noemt de nieuwe maatstaf, want daar hangt de uitspraak aan.
 #
 # A hand does not lapse through our own switch-on (N4): `coordinator.py` 2065 → 2201, its
-# `__init__` 246 → 258 and `_notice_hand` 117 → 137. The repair reads an active mode as a
-# hand only when it does not come from us: the `_commanded_on` member (starting value and
-# the explanation that it is the mirror image of `_commanded_off` - outside the protocol
+# `__init__` 246 → 258 and `notice_hand` 117 → 137. The repair reads an active mode as a
+# hand only when it does not come from us: the `commanded_on` member (starting value and
+# the explanation that it is the mirror image of `commanded_off` - outside the protocol
 # like that member, since only `coordinator.py` reads it),
-# `_note_commanded_on` beside `_note_commanded_off` in `_async_evaluate`, `_we_wanted_it_on`
+# `note_commanded_on` beside `note_commanded_off` in `async_evaluate`, `we_wanted_it_on`
 # with the explanation of why the plan on the table plays *no* part here (`last_changes`,
 # set before `apply`, plus the `_COMMANDED_WINDOW` window on the note), and inside
-# `_notice_hand` the `if` with the explanation of why our own switch-on is no hand. What
+# `notice_hand` the `if` with the explanation of why our own switch-on is no hand. What
 # grows is mostly explanation; the functions themselves stay linear. The stand-ins of that
 # repair live in `tests/simulation.py` and `tests/test_handed_back.py`, which have no
 # measure. The anchor (NL + EN) names the new yardstick, since the statement hangs on it.
@@ -483,19 +483,18 @@ MODULE_EXCEPTIONS: dict[str, int] = {}
 GROWTH_FREEZE_LIMIT = 500
 
 FROZEN_MODULES: dict[str, int] = {
-    "coordinator.py": 584,
     "world_builder.py": 532,
 }
 
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/commands.py", "build_commands"): 208,
     ("engine/commands.py", "generator_commands"): 192,
-    ("coordinator.py", "__init__"): 285,
+    ("coordinator.py", "__init__"): 184,
     ("engine/validation_zones.py", "rule_zones"): 164,
     ("engine/constraints.py", "resolve"): 128,
     ("engine/candidates.py", "collect_wishes"): 137,
-    ("coordinator_events.py", "_refusal_data"): 124,
-    ("coordinator_tracking.py", "_notice_hand"): 139,
+    ("coordinator_events.py", "refusal_data"): 124,
+    ("coordinator_tracking.py", "notice_hand"): 137,
     ("engine/zone_decisions.py", "build_zone_decisions"): 135,
     ("flow_residents.py", "resident"): 93,
     ("engine/grants.py", "manual_conflict"): 103,

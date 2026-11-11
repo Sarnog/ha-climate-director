@@ -1561,6 +1561,7 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `engine/storage_values.py` | opgeslagen waarden veilig lezen | de naam van `storage_helpers.py`; alle lezers krijgen een publieke naam (`as_dict`, `items`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
 | `coordinator_surface.py` | het oppervlak van de koppeling | `CoordinatorSurface`; alle mixins lezen hier hun gastheer |
 | `flow_surface.py` | het oppervlak van de configuratiestroom | `FlowSurface`; de stappen en formulieren lezen hier hun stroom |
+| `coordinator_state.py` | de eigen staat van de onderdelen | `TrackingState`, `RoundState`, `ReportingState`, `EventsState`, `LifecycleState`; de coordinator houdt één exemplaar van elk |
 | `coordinator.py` | de coordinator zelf | `__init__`, de eigenschappen, `async_request_evaluation`, de klok en de levensduur; hij erft de publieke mixins en houdt per onderdeel een dunne methode die de functie in de `coordinator_*`-module aanroept |
 | `coordinator_lifecycle.py` | opstarten en stoppen | `async_start`, `_async_on_hass_started`, `tracked_entities`, `_calendar_says_holiday`, `async_shutdown` |
 | `coordinator_tracking.py` | wat een apparaat zelf doet | `_handle_change`, `_notice_precipitation`, `_notice_hand`, `_note_commanded_off`, `_note_commanded_on`, `_we_wanted_it_off`, `_we_wanted_it_on` |
@@ -1625,10 +1626,11 @@ service-API.
 - Over een modulegrens staat geen naam met een leidende onderstreping. De
   mixins, hun helpers en de schemabouwers krijgen een publieke naam in het
   bestand waar ze wonen.
-- `tests/test_module_boundaries.py` bewaakt vier van deze grenzen met `ast` en
-  `tokenize`: geen privé naam over een modulegrens, geen `getattr(self, "<naam>",
-  terugval)` op een eigen lid, geen import binnen een functie en geen
-  `# noqa: E402` (een import staat bovenaan, zonder uitzondering).
+- `tests/test_module_boundaries.py` bewaakt zes van deze grenzen met `ast` en
+  `tokenize`: geen privé naam over een modulegrens (ook niet als `module._naam` na
+  `from . import module`), geen `getattr(self, "<naam>", terugval)` op een eigen lid,
+  geen import binnen een functie, geen `# noqa: E402` (een import staat bovenaan,
+  zonder uitzondering) en buiten `coordinator.py` geen `coordinator._naam`.
 - Een tegel van de veldtabel blijft in `engine/fields.py`; de selectors en de
   vertaling naar `vol.Schema` blijven in de Home Assistant-helft.
 - Een nieuw bestand is een onderwerp, geen restbak: geen `utils`, `helpers`,
@@ -1820,9 +1822,8 @@ basis doorbreekt de `__init__`-keten van `DataUpdateCoordinator`. Daarom:
   `TYPE_CHECKING`-terugimport van `config_flow` verdwijnt uit negen bestanden.
 
 De `coordinator_*`-onderdelen krijgen hun oppervlak in stap 7, samen met de leden die
-daar verhuizen; tot dan houden ze hun `TYPE_CHECKING`-terugimport.
-`NAMED_EXCLUSIONS_BUDGET` in `tests/test_coverage_exclusions.py` zakt mee en blijft
-een ratel die alleen kan dalen.
+daar verhuizen. `NAMED_EXCLUSIONS_BUDGET` in `tests/test_coverage_exclusions.py` zakt
+mee en blijft een ratel die alleen kan dalen; na stap 7 is hij nul.
 
 ##### Stap 7 — de onderdelen van de coordinator zonder privé attributen
 
@@ -1832,7 +1833,7 @@ lezen en zetten nu ruim tachtig privé attributen ervan. Dat wordt:
 | Onderdeel | Eigen staat (klasse in `coordinator_state.py`) | Wat erin staat |
 |---|---|---|
 | `coordinator_tracking.py` | `TrackingState` (`coordinator.tracking`) | `commanded_off`, `commanded_on`, `precipitation_seen_at` |
-| `coordinator_round.py` | `RoundState` (`coordinator.round`) | `issued`, `sent_setpoints`, `family_since`, `family_seen`, `cancel_deferral`, `clock_reeval_unsub`, `lock`, `debouncer` |
+| `coordinator_round.py` | `RoundState` (`coordinator.round`) | `debouncer`, `issued`, `sent_setpoints`, `family_since`, `family_seen`, `cancel_deferral`, `clock_reeval_unsub`, `lock` |
 | `coordinator_reporting.py` | `ReportingState` (`coordinator.reporting`) | `unusable_since`, `unusable_latest`, `unsupported_since`, `unapplied`, `waiting` |
 | `coordinator_events.py` | `EventsState` (`coordinator.events`) | `refused` |
 | `coordinator_lifecycle.py` | `LifecycleState` (`coordinator.lifecycle`) | `restored`, `closing` |
@@ -1848,11 +1849,16 @@ krijgen ook een publieke naam: `notice_hand_start`, `settle_hand_starts`,
 `consume_pending_override_changes`, `drop_lapsed_override_timers`,
 `cancel_pending_precondition_wake`, `notice_home`, `note_room_presence_now`,
 `notice_room_empty`, `async_restore_state`, `async_save_pending_state`,
-`async_save_state`, `store_payload` en `note_house_asleep`. Een onderdeel roept een ander onderdeel
-rechtstreeks aan (`coordinator_reporting.note_unusable(coordinator, …)`) en niet
-meer via een dunne methode op de coordinator. De coordinator houdt alleen de
-methodes die Home Assistant, een mixin of een platform aanroept. `coordinator.py`
-blijft onder de 500 regels of staat op `FROZEN_MODULES`.
+`async_save_state`, `store_payload` en `note_house_asleep`.
+
+De bewerkingen van de onderdelen zelf (`handle_change`, `note_waiting`, `fire_events`,
+`schedule_deferral`, `report_unreadable`, ...) staan als publieke dunne methodes op de
+coordinator, en `CoordinatorSurface` noemt ze met hun handtekening. Een onderdeel roept
+een ander onderdeel dus aan via de coordinator (`coordinator.note_unusable()`) en nooit
+via een privé naam; de functies in de onderdelen hebben zelf ook een publieke naam
+(`coordinator_tracking.handle_change`). De onderdelen typen hun coordinator met
+`CoordinatorSurface` en importeren die gewoon, zonder `TYPE_CHECKING`.
+`coordinator.py` is daarmee onder de 500 regels.
 
 Bewaking: `tests/test_module_boundaries.py` eist dat geen enkel bestand van het
 pakket behalve `coordinator.py` een attribuut met een leidende onderstreping
@@ -3643,6 +3649,7 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `engine/storage_values.py` | reading stored values safely | the new name of `storage_helpers.py`; every reader gets a public name (`as_dict`, `items`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
 | `coordinator_surface.py` | the binding layer's surface | `CoordinatorSurface`; every mixin reads its host here |
 | `flow_surface.py` | the configuration flow's surface | `FlowSurface`; the steps and forms read their flow here |
+| `coordinator_state.py` | the parts' own state | `TrackingState`, `RoundState`, `ReportingState`, `EventsState`, `LifecycleState`; the coordinator keeps one instance of each |
 | `coordinator.py` | the coordinator itself | `__init__`, the properties, `async_request_evaluation`, the clock and the lifetime; it inherits the public mixins and keeps a thin method per part that calls the function in the `coordinator_*` module |
 | `coordinator_lifecycle.py` | starting and stopping | `async_start`, `_async_on_hass_started`, `tracked_entities`, `_calendar_says_holiday`, `async_shutdown` |
 | `coordinator_tracking.py` | what an appliance does by itself | `_handle_change`, `_notice_precipitation`, `_notice_hand`, `_note_commanded_off`, `_note_commanded_on`, `_we_wanted_it_off`, `_we_wanted_it_on` |
@@ -3707,10 +3714,11 @@ API.
 - Across a module boundary no name carries a leading underscore. The mixins,
   their helpers and the schema builders get a public name in the file where they
   live.
-- `tests/test_module_boundaries.py` guards four of these borders with `ast` and
-  `tokenize`: no private name across a module border, no `getattr(self, "<name>",
-  fallback)` on an own member, no import inside a function and no `# noqa: E402` (an
-  import stands at the top, without exemption).
+- `tests/test_module_boundaries.py` guards six of these borders with `ast` and
+  `tokenize`: no private name across a module border (not as `module._name` after
+  `from . import module` either), no `getattr(self, "<name>", fallback)` on an own
+  member, no import inside a function, no `# noqa: E402` (an import stands at the top,
+  without exemption) and, outside `coordinator.py`, no `coordinator._name`.
 - A field-table cell stays in `engine/fields.py`; the selectors and the
   translation to `vol.Schema` stay in the Home Assistant half.
 - A new file is a subject, not a catch-all: no `utils`, `helpers`, `extra` or
@@ -3900,9 +3908,8 @@ chain of `DataUpdateCoordinator`. Therefore:
   `TYPE_CHECKING` back-import of `config_flow` disappears from nine files.
 
 The `coordinator_*` parts get their surface in step 7, together with the members that
-move there; until then they keep their `TYPE_CHECKING` back-import.
-`NAMED_EXCLUSIONS_BUDGET` in `tests/test_coverage_exclusions.py` drops along and stays
-a ratchet that can only go down.
+move there. `NAMED_EXCLUSIONS_BUDGET` in `tests/test_coverage_exclusions.py` drops along
+and stays a ratchet that can only go down; after step 7 it is zero.
 
 ##### Step 7 — the coordinator parts without private attributes
 
@@ -3912,7 +3919,7 @@ now read and set well over eighty private attributes of it. That becomes:
 | Part | Own state (class in `coordinator_state.py`) | What it holds |
 |---|---|---|
 | `coordinator_tracking.py` | `TrackingState` (`coordinator.tracking`) | `commanded_off`, `commanded_on`, `precipitation_seen_at` |
-| `coordinator_round.py` | `RoundState` (`coordinator.round`) | `issued`, `sent_setpoints`, `family_since`, `family_seen`, `cancel_deferral`, `clock_reeval_unsub`, `lock`, `debouncer` |
+| `coordinator_round.py` | `RoundState` (`coordinator.round`) | `debouncer`, `issued`, `sent_setpoints`, `family_since`, `family_seen`, `cancel_deferral`, `clock_reeval_unsub`, `lock` |
 | `coordinator_reporting.py` | `ReportingState` (`coordinator.reporting`) | `unusable_since`, `unusable_latest`, `unsupported_since`, `unapplied`, `waiting` |
 | `coordinator_events.py` | `EventsState` (`coordinator.events`) | `refused` |
 | `coordinator_lifecycle.py` | `LifecycleState` (`coordinator.lifecycle`) | `restored`, `closing` |
@@ -3927,11 +3934,16 @@ methods of a mixin that a part calls get a public name too: `notice_hand_start`,
 `consume_pending_override_changes`, `drop_lapsed_override_timers`,
 `cancel_pending_precondition_wake`, `notice_home`, `note_room_presence_now`,
 `notice_room_empty`, `async_restore_state`, `async_save_pending_state`,
-`async_save_state`, `store_payload` and `note_house_asleep`. A part calls another part
-directly (`coordinator_reporting.note_unusable(coordinator, …)`) and no longer
-through a thin method on the coordinator. The coordinator keeps only the methods
-that Home Assistant, a mixin or a platform calls. `coordinator.py` stays under 500
-lines or stands on `FROZEN_MODULES`.
+`async_save_state`, `store_payload` and `note_house_asleep`.
+
+The operations of the parts themselves (`handle_change`, `note_waiting`, `fire_events`,
+`schedule_deferral`, `report_unreadable`, ...) stand as public thin methods on the
+coordinator, and `CoordinatorSurface` names them with their signature. A part therefore
+calls another part through the coordinator (`coordinator.note_unusable()`) and never
+through a private name; the functions in the parts have a public name themselves too
+(`coordinator_tracking.handle_change`). The parts type their coordinator with
+`CoordinatorSurface` and simply import it, without `TYPE_CHECKING`. `coordinator.py` is
+thereby under 500 lines.
 
 The guard: `tests/test_module_boundaries.py` demands that no file of the package
 except `coordinator.py` reads or sets an attribute with a leading underscore on a

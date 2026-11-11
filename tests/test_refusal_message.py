@@ -97,13 +97,13 @@ def coordinator(indoor: float | None = 15.0):
                 openings={WINDOW: OpeningState(open=True, changed_at=None)},
             )
 
-        _refusal_data = ClimateDirectorCoordinator._refusal_data
-        _friendly = ClimateDirectorCoordinator._friendly
-        _open_openings = ClimateDirectorCoordinator._open_openings
+        refusal_data = ClimateDirectorCoordinator.refusal_data
+        friendly = ClimateDirectorCoordinator.friendly
+        open_openings = ClimateDirectorCoordinator.open_openings
 
-        def refusal_data(self, zone_id: str):
+        def refusal_for(self, zone_id: str):
             """Build one refusal the way the coordinator does, with its last plan."""
-            return self._refusal_data(zone_id, self.data)
+            return self.refusal_data(zone_id, self.data)
 
     return StandIn()
 
@@ -120,19 +120,19 @@ def _without_translations(monkeypatch: pytest.MonkeyPatch):
 
 class TestTheFacts:
     def test_the_window_is_named_the_way_a_person_knows_it(self) -> None:
-        data = coordinator().refusal_data("zolder")
+        data = coordinator().refusal_for("zolder")
         assert data["openings"] == [WINDOW]
         assert data["opening_names"] == ["Dakraam"]
 
     def test_the_room_and_its_target_are_carried_along(self) -> None:
-        data = coordinator().refusal_data("zolder")
+        data = coordinator().refusal_for("zolder")
         assert data["zone"] == "Zolder"
         assert data["indoor_temperature"] == 15.0
         assert data["target_temperature"] == 21.0
 
     def test_the_override_duration_is_the_configured_maximum(self) -> None:
         """The blueprint leaves `minutes` empty, which grants exactly this."""
-        assert coordinator().refusal_data("zolder")["override_minutes"] == 120
+        assert coordinator().refusal_for("zolder")["override_minutes"] == 120
 
 
 class TestWhichOpeningsAreNamed:
@@ -158,22 +158,22 @@ class TestWhichOpeningsAreNamed:
     @pytest.mark.parametrize("house_wide", [False, True], ids=["zone", "house_wide"])
     def test_an_opening_inside_its_delay_is_not_named(self, house_wide: bool) -> None:
         item = self._opening(delay=timedelta(minutes=5), changed_at=NOON)
-        assert item._open_openings("zolder", house_wide=house_wide) == []
+        assert item.open_openings("zolder", house_wide=house_wide) == []
 
     @pytest.mark.parametrize("house_wide", [False, True], ids=["zone", "house_wide"])
     def test_an_opening_past_its_delay_is_named(self, house_wide: bool) -> None:
         item = self._opening(delay=timedelta(minutes=5), changed_at=NOON - timedelta(minutes=6))
-        assert item._open_openings("zolder", house_wide=house_wide) == [WINDOW]
+        assert item.open_openings("zolder", house_wide=house_wide) == [WINDOW]
 
     @pytest.mark.parametrize("house_wide", [False, True], ids=["zone", "house_wide"])
     def test_an_opening_with_an_unknown_age_is_named(self, house_wide: bool) -> None:
         item = self._opening(delay=timedelta(minutes=5), changed_at=None)
-        assert item._open_openings("zolder", house_wide=house_wide) == [WINDOW]
+        assert item.open_openings("zolder", house_wide=house_wide) == [WINDOW]
 
 
 class TestTheRefusalSentence:
     def test_it_says_what_could_not_start_and_what_is_open(self) -> None:
-        data = coordinator().refusal_data("zolder")
+        data = coordinator().refusal_for("zolder")
         assert data["title"] == "Pre-conditioning refused"
         assert "Zolder" in data["message"]
         assert "Dakraam" in data["message"]
@@ -184,7 +184,7 @@ class TestTheRefusalSentence:
             return "{zone}: {openings} staat open" if code == "precondition_refused" else None
 
         monkeypatch.setattr(texts, "lookup", dutch)
-        data = coordinator().refusal_data("zolder")
+        data = coordinator().refusal_for("zolder")
         assert data["message"] == "Zolder: Dakraam staat open"
 
     def test_a_broken_translation_falls_back_instead_of_raising(
@@ -192,13 +192,13 @@ class TestTheRefusalSentence:
     ) -> None:
         """A translation that drifted from the code may not take the event down."""
         monkeypatch.setattr(texts, "lookup", lambda _hass, _code: "{does_not_exist}")
-        data = coordinator().refusal_data("zolder")
+        data = coordinator().refusal_for("zolder")
         assert "Zolder" in data["message"]
 
 
 class TestTheSentenceAfterTheButton:
     def test_it_names_the_ignored_sensor_and_both_temperatures(self) -> None:
-        data = coordinator().refusal_data("zolder")
+        data = coordinator().refusal_for("zolder")
         assert data["confirmed_title"] == "Pre-conditioning is running"
         assert "Dakraam" in data["confirmed_message"]
         assert "15.0 °C" in data["confirmed_message"]
@@ -206,12 +206,12 @@ class TestTheSentenceAfterTheButton:
 
     def test_a_room_that_is_already_right_says_so(self) -> None:
         """Nothing will happen, and that is not a shortcoming - so say it."""
-        data = coordinator(indoor=21.5).refusal_data("zolder")
+        data = coordinator(indoor=21.5).refusal_for("zolder")
         assert "already right" in data["confirmed_message"]
         assert data["target_temperature"] is None
 
     def test_an_unreadable_room_says_that_instead_of_printing_nothing(self) -> None:
-        data = coordinator(indoor=None).refusal_data("zolder")
+        data = coordinator(indoor=None).refusal_for("zolder")
         assert "cannot be read" in data["confirmed_message"]
         assert "None" not in data["confirmed_message"]
 
@@ -243,7 +243,7 @@ class TestTheSentenceAfterTheButton:
             openings=(Opening(entity_id=WINDOW),),
             gates=GateSettings(max_precondition=timedelta(hours=2)),
         )
-        data = item.refusal_data("zolder")
+        data = item.refusal_for("zolder")
         assert data["target_temperature"] is None
         assert "already right" not in data["confirmed_message"]
         assert "nothing this room may do" in data["confirmed_message"]

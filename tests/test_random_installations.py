@@ -34,6 +34,7 @@ from datetime import datetime, timedelta
 import pytest
 from conftest import assert_plan_holds
 
+from custom_components.climate_director.coordinator_state import LifecycleState
 from custom_components.climate_director.engine import (
     ClimateState,
     ConflictPolicy,
@@ -952,7 +953,9 @@ class TestTheActionAcceptsAnything:
                 self.precondition_bypass: set[str] = set()
                 self.override_before_restore: set[str] = set()
                 self.request_before_restore: set[str] = set()
-                self._restored = True
+                self.lifecycle = LifecycleState()
+                self.lifecycle = LifecycleState()
+                self.lifecycle.restored = True
 
             def async_request_evaluation(self) -> None:
                 pass

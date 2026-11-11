@@ -60,7 +60,7 @@ class TestBranchesThatWerePragmaUntilNow:
         held = asyncio.Event()
 
         async def hold_the_lock() -> None:
-            async with live.coordinator._lock:
+            async with live.coordinator.round.lock:
                 held.set()
                 await asyncio.sleep(30)
 
@@ -100,7 +100,7 @@ class TestBranchesThatWerePragmaUntilNow:
         )
         try:
             assert home.state(LIVING) == "heat", "de director hoort met een lege staat te beslissen"
-            assert home.coordinator._clock_reeval_unsub is not None, "de klok hoort te staan"
+            assert home.coordinator.round.clock_reeval_unsub is not None, "de klok hoort te staan"
             registry = ir.async_get(home.hass)
             assert ("climate_director", "corrupt_storage_onleesbaar") in registry.issues
         finally:

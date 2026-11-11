@@ -159,7 +159,7 @@ class TestTheyMatchTheIntegration:
 
     def _refusal_keys(self) -> set[str]:
         source = (self.COMPONENT / "coordinator_events.py").read_text(encoding="utf-8")
-        block = source[source.index("def _refusal_data") : source.index("def _friendly")]
+        block = source[source.index("def refusal_data") : source.index("def friendly")]
         return set(re.findall(r'^\s+"(\w+)":', block, re.MULTILINE))
 
     def test_the_refusal_blueprint_reads_only_fields_that_exist(self) -> None:
@@ -170,7 +170,7 @@ class TestTheyMatchTheIntegration:
 
     def test_the_decision_blueprint_reads_only_fields_that_exist(self) -> None:
         source = (self.COMPONENT / "coordinator_events.py").read_text(encoding="utf-8")
-        block = source[source.index("def _event_data") :]
+        block = source[source.index("def event_data") :]
         known = set(re.findall(r'^\s{8}"(\w+)":', block, re.MULTILINE))
         used = set(re.findall(r"trigger\.event\.data\.(\w+)", self._text("decisions.yaml")))
         assert used
@@ -215,7 +215,7 @@ class TestTheyMatchTheIntegration:
         assert "trigger.event.data.message" in default
         assert "default(" in default, default
         source = (self.COMPONENT / "coordinator_events.py").read_text(encoding="utf-8")
-        block = source[source.index("def _event_data") :]
+        block = source[source.index("def event_data") :]
         known = set(re.findall(r'^\s{8}"(\w+)":', block, re.MULTILINE))
         used = set(re.findall(r"trigger\.event\.data\.(\w+)", default))
         assert used <= known, sorted(used - known)

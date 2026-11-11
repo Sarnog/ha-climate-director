@@ -299,7 +299,7 @@ def async_register_services(hass: HomeAssistant) -> None:
     if hass.services.has_service(DOMAIN, SERVICE_EVALUATE):
         return
 
-    async def _async_evaluate(call: ServiceCall) -> None:
+    async def async_evaluate(call: ServiceCall) -> None:
         """Ask one or every installation to decide again right now."""
         wanted = set(call.data.get(ATTR_ENTRY_ID) or ())
         for entry in hass.config_entries.async_loaded_entries(DOMAIN):
@@ -354,7 +354,7 @@ def async_register_services(hass: HomeAssistant) -> None:
         for entry, zone_id in _override_targets(hass, call):
             entry.runtime_data.async_clear_override(zone_id)
 
-    hass.services.async_register(DOMAIN, SERVICE_EVALUATE, _async_evaluate, _EVALUATE_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_EVALUATE, async_evaluate, _EVALUATE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_PRECONDITION, _async_precondition, _PRECONDITION_SCHEMA
     )

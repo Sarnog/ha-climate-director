@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_registry import DATA_REGISTRY
 from custom_components.climate_director import entity_texts, schemas, texts
 from custom_components.climate_director.applier import _is_stop
 from custom_components.climate_director.config_flow import ClimateDirectorOptionsFlow
-from custom_components.climate_director.coordinator_events import _event_data
+from custom_components.climate_director.coordinator_events import event_data
 from custom_components.climate_director.engine import (
     MODE_COOL,
     MODE_FAN_ONLY,
@@ -228,7 +228,7 @@ class TestEventData:
         decision = plan.decision_for("woonkamer")
         assert decision is not None
 
-        data = _event_data(_no_hass(), config, None, plan, decision, "°C")
+        data = event_data(_no_hass(), config, None, plan, decision, "°C")
         assert data["zone_id"] == "woonkamer"
         assert data["zone_name"] == "Woonkamer"
         assert data["reason"] == decision.reason.value
@@ -239,13 +239,13 @@ class TestEventData:
     def test_a_zone_without_a_command_still_produces_an_event(self) -> None:
         config = house()
         decision = ZoneDecision("woonkamer", Season.UNKNOWN, Season.UNKNOWN)  # type: ignore[arg-type]
-        data = _event_data(_no_hass(), config, None, Plan(), decision, "°C")
+        data = event_data(_no_hass(), config, None, Plan(), decision, "°C")
         assert data["entity_id"] is None
         assert data["hvac_mode"] is None
 
     def test_an_unknown_zone_falls_back_on_its_id(self) -> None:
         decision = ZoneDecision("kelder", Season.UNKNOWN, Season.UNKNOWN)  # type: ignore[arg-type]
-        data = _event_data(_no_hass(), house(), None, Plan(), decision, "°C")
+        data = event_data(_no_hass(), house(), None, Plan(), decision, "°C")
         assert data["zone_name"] == "kelder"
 
     def test_the_unit_parameter_has_no_default(self) -> None:
@@ -257,7 +257,7 @@ class TestEventData:
         Celsius numbers labelled `°C` on an imperial installation again, and no
         test would notice.
         """
-        assert inspect.signature(_event_data).parameters["unit"].default is inspect.Parameter.empty
+        assert inspect.signature(event_data).parameters["unit"].default is inspect.Parameter.empty
 
     def test_the_world_parameter_has_no_default(self) -> None:
         """De wereld waarin het plan gemaakt is, is verplicht.
@@ -270,7 +270,7 @@ class TestEventData:
         would lump "goes off" and "stays off" together, and the message would
         stay silent about an appliance that stops - without any test noticing.
         """
-        assert inspect.signature(_event_data).parameters["world"].default is inspect.Parameter.empty
+        assert inspect.signature(event_data).parameters["world"].default is inspect.Parameter.empty
 
 
 def _warm_world():

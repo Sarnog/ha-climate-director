@@ -147,12 +147,12 @@ async def start_up(home: LiveHome) -> None:
 def watch_worlds(home: LiveHome) -> list[Any]:
     """Return a list that every world the director builds is appended to.
 
-    Een beslissing bouwt haar wereld één keer, in `_async_evaluate`; de lijst
+    Een beslissing bouwt haar wereld één keer, in `async_evaluate`; de lijst
     liegt er dus niet over of er beslist is. Dat is precies wat "de eerste
     beslissing ziet het" meetbaar maakt: op het moment van de beslissing zelf, in
     plaats van achteraf uit een stand die later alsnog hersteld wordt.
 
-    A decision builds its world once, in `_async_evaluate`; the list therefore
+    A decision builds its world once, in `async_evaluate`; the list therefore
     does not lie about whether a decision was taken. That is exactly what makes
     "the first decision sees it" measurable: at the moment of the decision
     itself, rather than afterwards from a state that gets restored later on
@@ -1075,7 +1075,7 @@ class TestAnEntryRemovedDuringTheStartupLeavesNoFile:
     An installation removed again during the startup writes nothing back.
 
     De poort staat nog dicht, dus het herstel draait nooit; de afbraakpoort
-    (`_closing`) houdt de schrijfactie tegen, ook de uitgestelde. Zou die er toch
+    (`closing`) houdt de schrijfactie tegen, ook de uitgestelde. Zou die er toch
     komen, dan schrijft hij het bestand terug ná `async_remove_entry`.
     """
 

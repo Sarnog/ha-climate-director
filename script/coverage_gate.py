@@ -146,35 +146,12 @@ EXCLUSION_HINT = (
 #: are written out in `pyproject.toml`, so the measurement
 #: does not lean on hidden defaults, but a pattern still hides silently: every
 #: line it hits disappears from "zero missed lines" without anyone naming it.
-#: Hence every statement line stands below with its own content — the
-#: `...` stubs of `coordinator.py` (the `CoordinatorSurface` protocol, which
-#: exists for the type check only) and three in each of the seven mixins
-#: that import that protocol under `TYPE_CHECKING` (that branch is never true at
-#: run time). The gate demands the list to be exact: a line that falls outside the
-#: measurement without standing here drops it, and so does a name that hides
-#: nothing anymore.
-NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {
-    "coordinator_events.py": (
-        "if TYPE_CHECKING:",
-        "from .coordinator import ClimateDirectorCoordinator",
-    ),
-    "coordinator_lifecycle.py": (
-        "if TYPE_CHECKING:",
-        "from .coordinator import ClimateDirectorCoordinator",
-    ),
-    "coordinator_reporting.py": (
-        "if TYPE_CHECKING:",
-        "from .coordinator import ClimateDirectorCoordinator",
-    ),
-    "coordinator_round.py": (
-        "if TYPE_CHECKING:",
-        "from .coordinator import ClimateDirectorCoordinator",
-    ),
-    "coordinator_tracking.py": (
-        "if TYPE_CHECKING:",
-        "from .coordinator import ClimateDirectorCoordinator",
-    ),
-}
+#: Hence every statement line stands below with its own content, and the gate
+#: demands the list to be exact: a line that falls outside the measurement without
+#: standing here drops it, and so does a name that hides nothing anymore. The
+#: package hides nothing at this moment, so the list is empty and stays empty
+#: unless somebody names a line here with the reason alongside.
+NAMED_EXCLUSIONS: dict[str, tuple[str, ...]] = {}
 
 
 def measured_path(path: str) -> Path:

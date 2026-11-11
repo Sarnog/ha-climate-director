@@ -378,7 +378,7 @@ class TestHandStartAtTheAppliance:
         )
         try:
             coordinator = home.coordinator
-            coordinator._we_wanted_it_on = lambda *_: True
+            coordinator.we_wanted_it_on = lambda *_: True
             coordinator._waiting_on_a_brake = lambda *_: True
             coordinator.notice_hand_start(  # type: ignore[arg-type]
                 SimpleNamespace(
@@ -409,7 +409,7 @@ class TestHandStartAtTheAppliance:
         )
         try:
             coordinator = home.coordinator
-            coordinator._we_wanted_it_on = lambda *_: False
+            coordinator.we_wanted_it_on = lambda *_: False
             coordinator._waiting_on_a_brake = lambda *_: True
             coordinator.notice_hand_start(  # type: ignore[arg-type]
                 SimpleNamespace(
