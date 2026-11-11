@@ -2,17 +2,18 @@
 
 Gas and air conditioner may never run together in a central heating system.
 
-Productie, 6 november 07:07: de woonkamer hield `climate.huiskamer` (airco) vast
-op de dode band van de buitentemperatuur (1,0 graden, venster vanaf 1,1), terwijl
-de slaapkamer - zonder vorige bron - de gasketel koos. De ketel verwarmt het hele
-huis (`covers_zones`), dus draaiden gas en airco naast elkaar tot de
-veiligheidsautomatisering alles uitzette.
+Een ketel met `covers_zones` verwarmt zijn hele gebied. Houdt een kamer een airco
+vast op de dode band van de buitentemperatuur (net onder het venster van de airco)
+terwijl een andere kamer in datzelfde gebied - zonder vorige bron - de ketel kiest,
+dan draaien gas en airco naast elkaar. Deze toets zet die situatie na: buiten zakt
+van 1,5 naar 1,0 graden bij een venster vanaf 1,1 en een dode band van 0,5.
 
-Production, 6 November 07:07: the living room held `climate.huiskamer` (air
-conditioner) on the outdoor dead band (1.0 degrees, window from 1.1), while the
-bedroom - with no previous source - chose the boiler. The boiler heats the whole
-house (`covers_zones`), so gas and air conditioner ran side by side until the
-safety automation switched everything off.
+A boiler with `covers_zones` heats its whole area. If one room holds an air
+conditioner on the outdoor dead band (just below the air conditioner's window)
+while another room in that area - with no previous source - chooses the boiler,
+gas and air conditioner run side by side. This test recreates that situation:
+outdoors drops from 1.5 to 1.0 degrees with a window from 1.1 and a dead band of
+0.5.
 """
 
 from __future__ import annotations

@@ -855,7 +855,8 @@ terwijl er niets is weggevallen. Een bron met `covers_zones` verwarmt zijn hele 
 de kamers die er zelf niet om vroegen. Houdt de ene kamer een airco vast op de dode band en
 kiest een andere kamer in datzelfde gebied de ketel, dan draaien ketel en airco naast
 elkaar. `area_clash()` laat daarom per gebied één kant over: het verzoek met de meeste
-voorrang (bij gelijke rang de ketel). Wint de ketel, dan vervallen de verzoeken van andere
+voorrang (bij een gelijke prioriteit beslist de zone-id, zoals overal in de
+constraints). Wint de ketel, dan vervallen de verzoeken van andere
 apparaten in het gebied; wint een ander apparaat, dan vervalt elk verzoek om de ketel. De
 verliezers worden teruggegeven in plaats van weggegooid, zodat het plan kan melden wat ze
 wilden (`EXCLUSIVE_GROUP_LOST`). De functie draait binnen `apply_exclusive_groups()`, vóór
@@ -2958,7 +2959,8 @@ while nothing has dropped out. A source with `covers_zones` heats its whole area
 did not ask for it included. If one room holds an air conditioner on the dead band and
 another room in that same area picks the boiler, boiler and air conditioner run side by
 side. `area_clash()` therefore leaves one side per area: the request with the most claim
-(the boiler on a tie). If the boiler wins, the requests of other appliances in the area
+(on an equal priority the zone id decides, as everywhere in the
+constraints). If the boiler wins, the requests of other appliances in the area
 lapse; if another appliance wins, every request for the boiler lapses. The losers are
 returned rather than discarded, so the plan can still report what they wanted
 (`EXCLUSIVE_GROUP_LOST`). The function runs inside `apply_exclusive_groups()`, before the
