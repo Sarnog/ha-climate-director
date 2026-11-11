@@ -1088,6 +1088,10 @@ and you get every action.
   Raise the stuck time above the rest or lower the rest.
 - **The schedule gate without a schedule on a weekday** — nothing can start that day; the notice names the
   weekdays. Add an ordinary schedule or turn the schedule gate off.
+- **A source that is not started automatically, in a boiler's area** — if *Start this appliance automatically* is off
+  and the source falls under a boiler's *Zones this appliance also serves* without the two standing in one exclusive
+  group, nothing holds the source back while the boiler runs; the notice names the source and the boiler. Put them
+  in one exclusive group.
 - **The diagnostics** (downloadable at the integration) hold the configuration,
   the last snapshot read and the last plan. With those three, any decision is
   exactly reproducible.

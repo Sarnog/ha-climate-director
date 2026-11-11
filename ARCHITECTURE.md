@@ -864,6 +864,15 @@ de groepen, en slaat een apparaat over dat het gebied al overneemt: dat regelt
 `stop_others()`. Dit is een bewuste keuze voor een koude kamer boven twee systemen
 tegelijk. Wat er niet onder valt staat onder "Nog te bouwen".
 
+Een bron met `autostart` uit vraagt nooit iets, dus `area_clash()` ziet hem niet: hij wordt
+alleen door een exclusieve groep of door `manual_conflict()` in bedwang gehouden. Staat zo'n
+bron in het gebied van een ketel en in geen enkele groep met die ketel, dan kan hij naast de
+ketel blijven draaien (gemeten: de ketel krijgt `heat`, de airco blijft als `MANUAL_SOURCE`
+ongemoeid). Het gedrag van de engine verandert niet; `validate()` meldt zo'n bron met de code
+`area_source_without_group`, zodat de gebruiker de twee in één groep zet. De groep telt per
+apparaat (`group_entities`), dus een ketel onder meer dan één zone is met één bron-id in de
+groep gedekt.
+
 ### sources.py — waarmee
 
 Kiest per zone en taak het apparaat: geschiktheid (rol), dan beschikbaarheid, dan
@@ -1436,20 +1445,6 @@ staan. De uitkomst valt aan de veilige kant (kort koud, nooit twee systemen tege
   wordt dan sneller bediend, maar de twee apparaten kunnen elkaar afwisselen als het circuit
   en het gebied elkaar steeds tegenspreken, en dat vraagt een eindigheidsbewijs zoals de lus
   van anker 7 dat heeft.
-- De gebruiker beslist tussen (a) en (b) voordat er gebouwd wordt.
-
-**Een bron die niet automatisch start, maar in het gebied van een ketel staat, hoort in een
-groep met die ketel.** `area_clash()` kijkt naar verzoeken van de director. Een bron met
-`autostart` uit vraagt nooit iets: hij wordt alleen door een exclusieve groep of door
-`manual_conflict()` in bedwang gehouden. Staat zo'n bron in het gebied van een ketel en in
-geen enkele groep, dan kan hij naast de ketel draaien zonder dat de director ingrijpt
-(gemeten met een airco die met de hand draait en een ketel die voor een andere zone wordt
-gevraagd: de ketel krijgt `heat`, de airco blijft als `MANUAL_SOURCE` ongemoeid).
-- Optie (a), impliciet: elke bron zonder `autostart` in een gebied telt als groepslid met
-  de ketel van dat gebied. Geen invulwerk, maar het verandert het gedrag voor elke
-  installatie die zulke bronnen heeft.
-- Optie (b), waarschuwen: `validate()` meldt een bron zonder `autostart` in een gebied
-  zonder groep met de ketel, en de gebruiker vult de groep zelf in. Smal en zichtbaar.
 - De gebruiker beslist tussen (a) en (b) voordat er gebouwd wordt.
 
 #### Could have
@@ -2975,6 +2970,15 @@ groups, and skips an appliance that already takes the area over: `stop_others()`
 that. This is a deliberate choice for a cold room over two systems at once. What it does not
 cover is listed under "Still to build".
 
+A source with `autostart` off never asks for anything, so `area_clash()` does not see it: it
+is held in check only by an exclusive group or by `manual_conflict()`. If such a source
+stands in a boiler's area and in no group with that boiler, it can keep running beside the
+boiler (measured: the boiler gets `heat`, the air conditioner is left alone as
+`MANUAL_SOURCE`). The engine's behaviour does not change; `validate()` reports such a source
+with the code `area_source_without_group`, so the user puts the two in one group. The group
+counts per appliance (`group_entities`), so a boiler under more than one zone is covered by
+one source id in the group.
+
 ### sources.py — with what
 
 Picks the appliance per zone and duty: suitability (role), then availability, then
@@ -3534,20 +3538,6 @@ on the safe side (briefly cold, never two systems at once).
 - Option (b), put the losing request back as soon as the winner is refused. The room is
   served sooner, but the two appliances can alternate if the circuit and the area keep
   contradicting each other, and that needs a termination argument like the anchor 7 loop has.
-- The user decides between (a) and (b) before anything is built.
-
-**A source that does not start by itself but sits in a boiler's area belongs in a group with
-that boiler.** `area_clash()` looks at requests from the director. A source with `autostart`
-off never asks for anything: it is only held in check by an exclusive group or by
-`manual_conflict()`. If such a source sits in a boiler's area and in no group, it can run
-beside the boiler without the director stepping in (measured with an air conditioner running
-by hand and a boiler asked for by another zone: the boiler gets `heat`, the air conditioner
-is left alone as `MANUAL_SOURCE`).
-- Option (a), implicit: every source without `autostart` in an area counts as a group member
-  with that area's boiler. No filling in, but it changes the behaviour of every installation
-  that has such sources.
-- Option (b), warn: `validate()` reports a source without `autostart` in an area without a
-  group with the boiler, and the user fills in the group. Narrow and visible.
 - The user decides between (a) and (b) before anything is built.
 
 #### Could have

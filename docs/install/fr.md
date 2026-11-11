@@ -1128,6 +1128,10 @@ pour recevoir toutes les actions.
   circuit ou une source prend son repos. Augmentez le temps de blocage ou diminuez le repos.
 - **Le verrou de planning sans planning un jour de semaine** — rien ne peut démarrer ce jour-là ; la notice
   nomme les jours. Ajoutez un planning ordinaire ou désactivez le verrou de planning.
+- **Une source sans démarrage automatique dans le périmètre d'une chaudière** — si *Démarrer cet appareil
+  automatiquement* est désactivé et que la source se trouve dans les *Zones que cet appareil dessert aussi* d'une
+  chaudière, sans que les deux soient dans un même groupe exclusif, rien ne retient la source tant que la
+  chaudière tourne ; la notice nomme la source et la chaudière. Mettez-les dans un même groupe exclusif.
 - **Le diagnostic** (téléchargeable sur l'intégration) contient la
   configuration, le dernier instantané lu et le dernier plan. Avec ces trois
   éléments, toute décision est exactement reproductible.

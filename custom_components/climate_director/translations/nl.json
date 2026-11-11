@@ -970,6 +970,9 @@
     "exclusive_group_unknown_source": {
       "message": "Een exclusieve groep noemt onbekende bron {source}."
     },
+    "area_source_without_group": {
+      "message": "Bron {source} wordt niet automatisch aangezet en staat in het gebied van {boiler}, maar in geen exclusieve groep met {boiler}. Niets houdt deze bron tegen terwijl {boiler} draait, dus de twee kunnen naast elkaar draaien. Zet ze in één exclusieve groep."
+    },
     "unknown_installation": {
       "message": "Onbekende installatie: {installation}"
     },

@@ -970,6 +970,9 @@
     "exclusive_group_unknown_source": {
       "message": "Un groupe exclusif nomme une source inconnue {source}."
     },
+    "area_source_without_group": {
+      "message": "La source {source} n'est pas démarrée automatiquement et se trouve dans le périmètre de {boiler}, mais dans aucun groupe exclusif avec {boiler}. Rien ne retient cette source tant que {boiler} tourne : les deux peuvent donc tourner côte à côte. Mettez-les dans un même groupe exclusif."
+    },
     "unknown_installation": {
       "message": "Installation inconnue : {installation}"
     },

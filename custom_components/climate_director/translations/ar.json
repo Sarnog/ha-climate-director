@@ -970,6 +970,9 @@
     "exclusive_group_unknown_source": {
       "message": "مجموعة حصرية تسمّي مصدرًا مجهولًا {source}."
     },
+    "area_source_without_group": {
+      "message": "المصدر {source} لا يُشغَّل تلقائيًا ويقع في نطاق {boiler}، لكنه ليس في أي مجموعة حصرية مع {boiler}. لا شيء يوقف هذا المصدر ما دام {boiler} يعمل، فقد يعملان جنبًا إلى جنب. ضعهما في مجموعة حصرية واحدة."
+    },
     "unknown_installation": {
       "message": "منشأة غير معروفة: {installation}"
     },

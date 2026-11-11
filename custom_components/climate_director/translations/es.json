@@ -970,6 +970,9 @@
     "exclusive_group_unknown_source": {
       "message": "Un grupo exclusivo nombra una fuente desconocida {source}."
     },
+    "area_source_without_group": {
+      "message": "La fuente {source} no se enciende automáticamente y está en el ámbito de {boiler}, pero en ningún grupo exclusivo con {boiler}. Nada frena esta fuente mientras {boiler} funciona, así que ambos pueden funcionar a la vez. Pon ambos en un mismo grupo exclusivo."
+    },
     "unknown_installation": {
       "message": "Instalación desconocida: {installation}"
     },

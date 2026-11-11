@@ -14,9 +14,11 @@ from __future__ import annotations
 import math
 from collections.abc import Iterator
 
+from .candidates import group_entities
 from .families import ModeFamily
 from .models import DirectorConfig, ModeSettings, Source, Zone
 from .problem import Problem
+from .takeover import areas
 from .validation_shared import duplicates
 
 
@@ -191,4 +193,50 @@ def rule_exclusive_groups(config: DirectorConfig) -> Iterator[Problem]:
                 "exclusive_group_unknown_source",
                 f"exclusive group names unknown source {source_id}",
                 source=source_id,
+            )
+
+
+def rule_area_source_without_group(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint for a hand-operated source in a boiler's area that no group holds.
+
+    `area_clash()` kijkt naar verzoeken van de director, en een bron waarvan
+    `autostart` uit staat vraagt nooit iets: hij wordt alleen door een
+    uitsluitende groep of door een handbediend-conflict in bedwang gehouden. Staat
+    zo'n bron in het gebied van een apparaat (`covers_zones`) en in geen enkele
+    uitsluitende groep met dat apparaat, dan kan hij naast de ketel blijven draaien
+    zonder dat de director ingrijpt. De controle meldt dat, zodat de gebruiker de
+    twee in één groep zet; het gedrag van de engine verandert er niet door.
+
+    `area_clash()` looks at requests of the director, and a source whose
+    `autostart` is off never asks for anything: it is held in check only by an
+    exclusive group or by the hand-operated conflict. If such a source stands in
+    the area of an appliance (`covers_zones`) and in no exclusive group with that
+    appliance, it can keep running beside the boiler without the director stepping
+    in. This check reports that, so the user puts the two in one group; the
+    engine's behaviour does not change because of it.
+    """
+    for boiler, area in sorted(areas(config).items()):
+        if len(area) < 2:
+            continue
+        grouped = frozenset().union(
+            *(
+                members
+                for members in (group_entities(config, group) for group in config.exclusive_groups)
+                if boiler in members
+            )
+        )
+        for zone, source in config.sources():
+            if (
+                source.autostart
+                or source.entity_id == boiler
+                or zone.zone_id not in area
+                or source.entity_id in grouped
+            ):
+                continue
+            yield Problem(
+                "area_source_without_group",
+                f"source {source.source_id} does not start automatically and stands in the "
+                f"area of {boiler}, but in no exclusive group with it",
+                source=source.source_id,
+                boiler=boiler,
             )

@@ -761,7 +761,7 @@ class TestTheEnglishTemplatesLiveInTheCache:
                 and isinstance(node.args[0], ast.Constant)
             )
         codes = sorted(set(codes))
-        assert len(codes) == 54
+        assert len(codes) == 55
         templates = texts.english_templates()
         assert templates is not None
         missing = [code for code in codes if code not in templates]

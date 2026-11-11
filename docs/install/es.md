@@ -1110,6 +1110,10 @@ reposo. Si dejas ese campo vacío, recibes todas las acciones.
   un circuito o una fuente toma su descanso. Sube el tiempo de bloqueo o baja el descanso.
 - **El bloqueo de horario sin horario en un día de la semana** — ese día no puede empezar nada; el aviso nombra
   los días. Añade un horario normal o desactiva el bloqueo de horario.
+- **Una fuente sin encendido automático en el ámbito de una caldera** — si *Encender este aparato automáticamente*
+  está desactivado y la fuente cae en las *Zonas que este aparato también atiende* de una caldera, sin que ambas
+  estén en un mismo grupo exclusivo, nada frena la fuente mientras la caldera funciona; el aviso nombra la fuente y
+  la caldera. Pon ambas en un mismo grupo exclusivo.
 - **El diagnóstico** (descargable en la integración) contiene la configuración,
   la última instantánea leída y el último plan. Con esos tres, cualquier
   decisión es exactamente reproducible.

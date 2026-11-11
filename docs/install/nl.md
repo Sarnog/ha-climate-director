@@ -1097,6 +1097,10 @@ blijft. Laat je dat veld leeg, dan krijg je elke actie.
   rust neemt. Zet de vastlooptijd hoger dan de rust of verlaag de rust.
 - **De roosterpoort zonder rooster op een weekdag** — op die dag kan niets starten; de melding noemt de
   weekdagen. Vul een gewoon rooster in of zet de roosterpoort uit.
+- **Een bron zonder automatisch aanzetten in het gebied van een ketel** — staat *Dit apparaat automatisch aanzetten*
+  uit en valt de bron onder de *Zones die dit apparaat mee bedient* van een ketel, zonder dat de twee in één
+  exclusieve groep staan, dan houdt niets de bron tegen terwijl de ketel draait; de melding noemt de bron en de
+  ketel. Zet ze in één exclusieve groep.
 - **De diagnose** (downloaden bij de integratie) bevat de configuratie, de
   laatst gelezen momentopname en het laatste plan. Met die drie is elke
   beslissing exact na te spelen.

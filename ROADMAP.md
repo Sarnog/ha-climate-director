@@ -81,13 +81,6 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   laten zoals het is, of (b) het verliezende verzoek terugzetten zodra de winnaar geweigerd
   is, tegen het risico dat de twee apparaten elkaar afwisselen (ontwerp in `ARCHITECTURE.md`
   onder "Nog te bouwen").
-- **Een bron zonder automatische start in het gebied van een ketel kan naast de ketel
-  draaien** — `area_clash()` kijkt naar verzoeken van de director, en een bron met
-  `autostart` uit vraagt nooit iets. Staat zo'n bron in het gebied van een ketel en in geen
-  enkele exclusieve groep, dan grijpt de director niet in (gemeten: de ketel krijgt `heat`,
-  de airco blijft als `MANUAL_SOURCE` ongemoeid). Keuze voor de gebruiker: (a) zulke bronnen
-  gelden impliciet als groepslid met de ketel, of (b) `validate()` waarschuwt zolang de groep
-  ontbreekt (ontwerp in `ARCHITECTURE.md` onder "Nog te bouwen").
 
 ## Could have
 
@@ -445,13 +438,6 @@ The worked-out design proposals for everything below live in
   systems at once). A choice for the user: (a) leave it, or (b) put the losing request back as
   soon as the winner is refused, at the risk of the two appliances alternating (design in
   `ARCHITECTURE.md` under "Still to build").
-- **A source without automatic start in a boiler's area can run beside the boiler** —
-  `area_clash()` looks at requests from the director, and a source with `autostart` off never
-  asks for anything. If such a source sits in a boiler's area and in no exclusive group, the
-  director does not step in (measured: the boiler gets `heat`, the air conditioner is left
-  alone as `MANUAL_SOURCE`). A choice for the user: (a) such sources count implicitly as a
-  group member with the boiler, or (b) `validate()` warns while the group is missing (design
-  in `ARCHITECTURE.md` under "Still to build").
 
 ## Could have
 

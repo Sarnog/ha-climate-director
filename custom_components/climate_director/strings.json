@@ -970,6 +970,9 @@
     "exclusive_group_unknown_source": {
       "message": "An exclusive group names unknown source {source}."
     },
+    "area_source_without_group": {
+      "message": "Source {source} does not start automatically and stands in the area of {boiler}, but in no exclusive group with {boiler}. Nothing holds this source back while {boiler} runs, so the two can run side by side. Put them in one exclusive group."
+    },
     "unknown_installation": {
       "message": "Unknown installation: {installation}"
     },

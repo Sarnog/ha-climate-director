@@ -1111,6 +1111,10 @@ Lässt du das Feld leer, bekommst du jede Aktion.
   eine Quelle ihre Ruhe nimmt. Setze die Festschlagzeit über die Ruhe oder senke die Ruhe.
 - **Die Zeitplan-Sperre ohne Zeitplan an einem Wochentag** — an diesem Tag kann nichts starten; die Meldung
   nennt die Wochentage. Füge einen gewöhnlichen Zeitplan hinzu oder schalte die Zeitplan-Sperre aus.
+- **Eine Quelle ohne automatisches Einschalten im Gebiet eines Kessels** — ist *Dieses Gerät automatisch einschalten*
+  aus und liegt die Quelle in den *Zonen, die dieses Gerät mitversorgt* eines Kessels, ohne dass beide in einer
+  exklusiven Gruppe stehen, hält nichts die Quelle zurück, solange der Kessel läuft; die Meldung nennt die Quelle
+  und den Kessel. Nimm beide in eine exklusive Gruppe auf.
 - **Die Diagnose** (bei der Integration herunterladbar) enthält die
   Konfiguration, den zuletzt gelesenen Schnappschuss und den letzten Plan. Mit
   diesen dreien ist jede Entscheidung exakt nachvollziehbar.

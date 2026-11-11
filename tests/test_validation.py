@@ -19,7 +19,7 @@ from dataclasses import replace
 from datetime import time, timedelta
 
 import pytest
-from conftest import house
+from conftest import GAS, house
 
 from custom_components.climate_director.engine import (
     Circuit,
@@ -1266,3 +1266,116 @@ def test_a_cover_with_any_other_open_state_is_reported(state: str) -> None:
     )
 
     assert _complaint(config, "cover_opening_without_open_state")
+
+
+def _boiler_area_house(
+    *,
+    covers: tuple[str, ...] = ("zolder", "slaapkamer"),
+    attic_autostart: bool = False,
+    bedroom_autostart: bool = True,
+    living_airco_autostart: bool = True,
+    boiler_autostart: bool = True,
+    groups: tuple[frozenset[str], ...] = (),
+    boiler_also_under_the_bedroom: bool = False,
+) -> DirectorConfig:
+    """Return the house with a boiler that also heats `covers`, and two other appliances.
+
+    De zolder- en slaapkamerairco zijn de bronnen waar het om gaat; `autostart=False`
+    maakt van een airco een bron die de director nooit zelf start.
+
+    The attic and bedroom air conditioners are the sources at stake; `autostart=False`
+    makes an air conditioner a source the director never starts by itself.
+    """
+    living, attic, bedroom = house().zones
+    boiler = replace(living.sources[1], covers_zones=covers, autostart=boiler_autostart)
+    living_airco = replace(living.sources[0], autostart=living_airco_autostart)
+    attic = replace(attic, sources=(replace(attic.sources[0], autostart=attic_autostart),))
+    bedroom_sources = (replace(bedroom.sources[0], autostart=bedroom_autostart),)
+    if boiler_also_under_the_bedroom:
+        bedroom_sources += (replace(boiler, source_id="slaapkamer_gas", covers_zones=()),)
+    return replace(
+        house(),
+        zones=(
+            replace(living, sources=(living_airco, boiler)),
+            attic,
+            replace(bedroom, sources=bedroom_sources),
+        ),
+        exclusive_groups=groups,
+    )
+
+
+def _sources_without_a_group(config: DirectorConfig) -> list[tuple[str, str]]:
+    """Return (source, boiler) for every `area_source_without_group` complaint."""
+    return [
+        (item.params["source"], item.params["boiler"])
+        for item in validate(config)
+        if getattr(item, "code", "") == "area_source_without_group"
+    ]
+
+
+@pytest.mark.parametrize(
+    ("changes", "expected"),
+    [
+        pytest.param({}, [("zolder_airco", GAS)], id="hand-operated, no group"),
+        pytest.param({"attic_autostart": True}, [], id="starts by itself: area_clash handles it"),
+        pytest.param(
+            {"groups": (frozenset({"zolder_airco", "gasketel"}),)},
+            [],
+            id="in a group with the boiler",
+        ),
+        pytest.param(
+            {
+                "groups": (frozenset({"zolder_airco", "slaapkamer_gas"}),),
+                "boiler_also_under_the_bedroom": True,
+            },
+            [],
+            id="in a group with the same boiler under another room",
+        ),
+        pytest.param(
+            {"groups": (frozenset({"zolder_airco", "slaapkamer_airco"}),)},
+            [("zolder_airco", GAS)],
+            id="in a group, but not with the boiler",
+        ),
+        pytest.param({"covers": ("slaapkamer",)}, [], id="the room is outside the area"),
+        pytest.param({"covers": ()}, [], id="the boiler has no area"),
+        pytest.param(
+            {"covers": ("woonkamer",), "living_airco_autostart": False},
+            [],
+            id="a hand-operated source in the boiler's own zone, an area of one",
+        ),
+        pytest.param(
+            {"attic_autostart": True, "boiler_autostart": False},
+            [],
+            id="the hand-operated one is the boiler itself",
+        ),
+        pytest.param(
+            {"bedroom_autostart": False},
+            [("slaapkamer_airco", GAS), ("zolder_airco", GAS)],
+            id="two hand-operated sources are both named",
+        ),
+    ],
+)
+def test_a_hand_operated_source_in_a_boilers_area_is_reported_unless_a_group_holds_it(
+    changes: dict, expected: list[tuple[str, str]]
+) -> None:
+    """Een bron die niet vanzelf start, in het gebied van een ketel, buiten elke groep.
+
+    Alleen dan kan hij naast de ketel blijven draaien zonder dat de director ingrijpt.
+    Elke dimensie van het gat is een parameter: of de bron vanzelf start, of er een groep
+    is en wie erin zit, of de kamer in het gebied ligt, en of het apparaat de ketel zelf is.
+
+    A source that does not start by itself, in a boiler's area, outside every group. Only
+    then can it keep running beside the boiler without the director stepping in. Every
+    dimension of the gap is a parameter: whether the source starts by itself, whether
+    there is a group and who is in it, whether the room lies in the area, and whether the
+    appliance is the boiler itself.
+    """
+    assert sorted(_sources_without_a_group(_boiler_area_house(**changes))) == expected
+
+
+def test_the_complaint_about_a_source_without_a_group_names_both_appliances() -> None:
+    (found,) = [
+        item for item in validate(_boiler_area_house()) if item.code == "area_source_without_group"
+    ]
+    assert found.params == {"source": "zolder_airco", "boiler": GAS}
+    assert "zolder_airco" in found and GAS in found
