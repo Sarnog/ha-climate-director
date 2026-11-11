@@ -1868,11 +1868,18 @@ van een ander onderdeel aanroept.
 
 ##### Stap 8 — de mutatiebaan
 
-`script/mutation_probe.py` krijgt mutaties op `area_clash`: de aanroep weg, de
-overnemer niet overslaan, verliezers en eigenaars verwisseld, `kept.pop` weg, de
-beste eigenaar vervangen door de slechtste, en een rivaal buiten het gebied. De
-lijst van mutaties waarmee de verhuizingen gemeten worden staat in `script/`, niet
-alleen op de machine van wie meet.
+`script/mutation_probe.py` (de baan die bij elke push draait) krijgt zes mutaties op
+`area_clash`: de aanroep weg, de overnemer niet overslaan, verliezers en eigenaars
+verwisseld, het verliezende verzoek blijft in de wensen (`kept.pop` weg), de beste
+eigenaar vervangen door de slechtste, en een rivaal buiten het gebied. Ze worden gevangen
+door `tests/test_area_clash.py`, die elke grens van `area_clash` in een eigen toets heeft.
+
+De uitgebreide lijst waarmee een controle de eigenschappen na een verhuizing meet staat in
+`script/mutation_review.py`: 79 mutaties met per mutatie het patroon, de vervanging en de
+toetsen die het moeten vangen, plus de twee gelijkwaardige mutaties op `area_clash`, die
+groen horen te blijven (met de reden erbij). `tests/test_select_tests.py` eist dat elk
+patroon precies één keer in zijn bestand staat, dat elke genoemde toets bestaat en dat de
+mutaties van de baan ook in de lijst staan.
 
 ##### Stap 9 — twee gedragsbesluiten en een gemeten vervolg
 
@@ -3953,11 +3960,18 @@ name `coordinator`, and that no part calls a private function of another part.
 
 ##### Step 8 — the mutation lane
 
-`script/mutation_probe.py` gains mutations on `area_clash`: the call gone, the
-taker-over not skipped, losers and owners swapped, `kept.pop` gone, the best
-owner replaced by the worst, and a rival outside the area. The list of mutations
-the moves are measured with stands in `script/`, not only on the machine of
-whoever measures.
+`script/mutation_probe.py` (the lane that runs on every push) gains six mutations on
+`area_clash`: the call gone, the taking-over source not skipped, losers and owners swapped,
+the losing request stays in the wishes (`kept.pop` gone), the best owner replaced by the
+worst, and a rival outside the area. They are caught by `tests/test_area_clash.py`, which
+has every border of `area_clash` in a test of its own.
+
+The extended list with which a review measures the properties after a move stands in
+`script/mutation_review.py`: 79 mutations with, per mutation, the pattern, the replacement
+and the tests that must catch it, which includes the two equivalent mutations on
+`area_clash` that are supposed to stay green (with the reason beside them).
+`tests/test_select_tests.py` demands that every pattern stands exactly once in its file,
+that every test it names exists and that the lane's mutations also stand in the list.
 
 ##### Step 9 — two behaviour decisions and a measured follow-up
 

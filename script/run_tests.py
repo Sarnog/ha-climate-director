@@ -146,20 +146,32 @@ def recorded_inputs(coverage_file: Path | None, reads_file: Path) -> Recorded:
     return found
 
 
+#: De mappen van deze repo. Een invoer onder een van deze mappen die er niet meer is, valt van
+#: de kaart; een pad op het hoogste niveau (`tox.ini`, `setup.cfg`) is een bestand dat een
+#: toets zocht en niet vond, en blijft staan: verschijnt het ooit, dan draait die toets weer.
+#:
+#: The directories of this repository. An input under one of them that no longer exists drops
+#: off the map; a path at the top level (`tox.ini`, `setup.cfg`) is a file a test looked for
+#: and did not find, and stays: should it ever appear, that test runs again.
+OWN_TREES = ("custom_components/", "tests/", "script/", "docs/", "blueprints/")
+
+
 def still_existing(mapped: dict[str, set[str]]) -> dict[str, set[str]]:
-    """`mapped` without the test files and the inputs that no longer exist.
+    """`mapped` without the test files and the inputs of this repository that are gone.
 
     De kaart is een samenvoeging: een run voegt toe wat hij zag en laat niets weg
     wat hij niet zag. Een lokale run op Windows ziet de map `script/` voor
     `tests/test_controls_live.py` niet, en een run op een andere machine ziet een
     ander deel van de invoer; wat één run mist, hoort niet uit de kaart te
-    verdwijnen. Alleen een bestand of map die er niet meer is, valt eruit.
+    verdwijnen. Alleen een toetsbestand dat er niet meer is, of een invoer onder
+    `OWN_TREES` die er niet meer is, valt eruit.
 
     The map is a merge: a run adds what it saw and drops nothing it did not see. A
     local run on Windows does not see the directory `script/` for
     `tests/test_controls_live.py`, and a run on another machine sees another part of
-    the input; what one run misses should not vanish from the map. Only a file or
-    directory that no longer exists drops out.
+    the input; what one run misses should not vanish from the map. Only a test file
+    that no longer exists, or an input under `OWN_TREES` that no longer exists,
+    drops out.
     """
     kept: dict[str, set[str]] = {}
     for test_file, paths in mapped.items():
@@ -168,7 +180,8 @@ def still_existing(mapped: dict[str, set[str]]) -> dict[str, set[str]]:
         kept[test_file] = {
             path
             for path in paths
-            if ((ROOT / path).is_dir() if path.endswith("/") else (ROOT / path).exists())
+            if not path.startswith(OWN_TREES)
+            or ((ROOT / path).is_dir() if path.endswith("/") else (ROOT / path).exists())
         }
     return kept
 

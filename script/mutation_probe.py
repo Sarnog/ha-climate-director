@@ -133,6 +133,44 @@ MUTATIONS = [
         "old": '            "hand_starts": self._hand_starts_payload(),',
         "new": '            "hand_starts": {},',
     },
+    {
+        "name": "gebiedsconflict-aanroep-weg",
+        "file": "custom_components/climate_director/engine/candidates.py",
+        "old": "kept, dropped = takeover.area_clash(config, wishes, takeovers)",
+        "new": "kept, dropped = dict(wishes), {}",
+    },
+    {
+        "name": "gebiedsconflict-overnemer-niet-overgeslagen",
+        "file": "custom_components/climate_director/engine/takeover.py",
+        "old": "if len(area) < 2 or entity_id in taking:",
+        "new": "if len(area) < 2:",
+    },
+    {
+        "name": "gebiedsconflict-verliezers-en-eigenaars-verwisseld",
+        "file": "custom_components/climate_director/engine/takeover.py",
+        "old": "for loser in rivals if best else owners:",
+        "new": "for loser in owners if best else rivals:",
+    },
+    {
+        "name": "gebiedsconflict-verliezer-blijft-in-de-wensen",
+        "file": "custom_components/climate_director/engine/takeover.py",
+        "old": "dropped[loser.zone.zone_id] = kept.pop(loser.zone.zone_id)",
+        "new": "dropped[loser.zone.zone_id] = kept.get(loser.zone.zone_id)",
+    },
+    {
+        "name": "gebiedsconflict-beste-eigenaar-wordt-slechtste",
+        "file": "custom_components/climate_director/engine/takeover.py",
+        "old": "best = min(owners, key=lambda r: r.rank).rank",
+        "new": "best = max(owners, key=lambda r: r.rank).rank",
+    },
+    {
+        "name": "gebiedsconflict-rivaal-buiten-het-gebied",
+        "file": "custom_components/climate_director/engine/takeover.py",
+        "old": (
+            "r for r in kept.values() if r.source.entity_id != entity_id and r.zone.zone_id in area"
+        ),
+        "new": "r for r in kept.values() if r.source.entity_id != entity_id",
+    },
 ]
 
 

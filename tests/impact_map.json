@@ -3,6 +3,11 @@
   "custom_components/climate_director/translations/ar.json",
   "docs/install/ar.md"
  ],
+ "tests/test_area_clash.py": [
+  "custom_components/climate_director/engine/circuit_requests.py",
+  "custom_components/climate_director/engine/models.py",
+  "custom_components/climate_director/engine/takeover.py"
+ ],
  "tests/test_blueprints.py": [
   "blueprints/automation/climate_director/",
   "custom_components/climate_director/coordinator_events.py",
@@ -1719,14 +1724,34 @@
   "custom_components/climate_director/world_builder.py"
  ],
  "tests/test_select_tests.py": [
+  "custom_components/climate_director/coordinator_lifecycle.py",
+  "custom_components/climate_director/diagnostics.py",
+  "custom_components/climate_director/engine/candidates.py",
   "custom_components/climate_director/engine/grants.py",
   "custom_components/climate_director/engine/hand_start.py",
+  "custom_components/climate_director/engine/installation_storage.py",
+  "custom_components/climate_director/engine/night.py",
   "custom_components/climate_director/engine/sources.py",
+  "custom_components/climate_director/engine/takeover.py",
+  "custom_components/climate_director/engine/untouched.py",
+  "custom_components/climate_director/engine/validation_circuits.py",
+  "custom_components/climate_director/engine/validation_openings.py",
+  "custom_components/climate_director/engine/validation_residents.py",
+  "custom_components/climate_director/engine/validation_shared.py",
+  "custom_components/climate_director/engine/validation_windows.py",
+  "custom_components/climate_director/engine/validation_zones.py",
+  "custom_components/climate_director/engine/world.py",
   "custom_components/climate_director/hand_start.py",
+  "custom_components/climate_director/readability.py",
   "custom_components/climate_director/room_presence.py",
+  "custom_components/climate_director/services.py",
   "custom_components/climate_director/state_store.py",
+  "custom_components/climate_director/stored_state.py",
+  "custom_components/climate_director/switch.py",
   "custom_components/climate_director/translations/de.json",
-  "tests/impact_map.json"
+  "custom_components/climate_director/world_builder.py",
+  "tests/impact_map.json",
+  "tests/test_hand_start.py"
  ],
  "tests/test_serialise.py": [
   "custom_components/climate_director/engine/equipment.py",
