@@ -1091,6 +1091,9 @@ and you get every action.
 - **A source that is not started automatically, in a boiler's area** — if *Start this appliance automatically* is off
   and the source falls under a boiler's *Zones this appliance also serves* without the two standing in one exclusive
   group, nothing holds the source back while the boiler runs; the notice names the source and the boiler. Put them
+- **A boiler under more than one zone without an area** — a source with *Heating only* that stands under two or more
+  zones while *Zones this appliance also serves* is filled in nowhere: without an area nothing keeps another appliance
+  from running beside the boiler. The notice names the appliance. Fill in the zones the boiler also serves.
   in one exclusive group.
 - **The diagnostics** (downloadable at the integration) hold the configuration,
   the last snapshot read and the last plan. With those three, any decision is

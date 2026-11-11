@@ -27,7 +27,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from conftest import awake, make_world
+from conftest import awake, make_world, structural_problems
 
 from custom_components.climate_director.engine import (
     DirectorConfig,
@@ -120,7 +120,7 @@ def running(plan) -> dict[str, str]:
 
 class TestTheGroupCoversTheAppliance:
     def test_the_configuration_is_sound(self) -> None:
-        assert not validate(shared_boiler())
+        assert not structural_problems(shared_boiler())
 
     def test_only_one_of_them_runs(self) -> None:
         """Bij 10 graden mag de airco en mag de ketel van de woonkamer niet."""

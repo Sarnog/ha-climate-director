@@ -973,6 +973,9 @@
     "area_source_without_group": {
       "message": "Bron {source} wordt niet automatisch aangezet en staat in het gebied van {boiler}, maar in geen exclusieve groep met {boiler}. Niets houdt deze bron tegen terwijl {boiler} draait, dus de twee kunnen naast elkaar draaien. Zet ze in één exclusieve groep."
     },
+    "boiler_in_several_zones_without_area": {
+      "message": "{boiler} kan alleen verwarmen en staat als bron onder {count} zones, maar geen enkele rij noemt de zones die dit apparaat mee bedient. Zonder dat gebied houdt niets een ander apparaat tegen om naast {boiler} te draaien. Vul de zones in die dit apparaat mee bedient."
+    },
     "unknown_installation": {
       "message": "Onbekende installatie: {installation}"
     },

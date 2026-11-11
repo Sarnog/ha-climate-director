@@ -1115,6 +1115,10 @@ Lässt du das Feld leer, bekommst du jede Aktion.
   aus und liegt die Quelle in den *Zonen, die dieses Gerät mitversorgt* eines Kessels, ohne dass beide in einer
   exklusiven Gruppe stehen, hält nichts die Quelle zurück, solange der Kessel läuft; die Meldung nennt die Quelle
   und den Kessel. Nimm beide in eine exklusive Gruppe auf.
+- **Ein Kessel unter mehr als einer Zone ohne Gebiet** — eine Quelle mit *Nur heizen*, die unter zwei oder mehr
+  Zonen steht, während nirgends *Zonen, die dieses Gerät mitversorgt* ausgefüllt ist: ohne Gebiet hält nichts ein
+  anderes Gerät davon ab, neben dem Kessel zu laufen. Die Meldung nennt das Gerät. Trag die Zonen ein, die der
+  Kessel mitversorgt.
 - **Die Diagnose** (bei der Integration herunterladbar) enthält die
   Konfiguration, den zuletzt gelesenen Schnappschuss und den letzten Plan. Mit
   diesen dreien ist jede Entscheidung exakt nachvollziehbar.

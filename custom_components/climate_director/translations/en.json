@@ -973,6 +973,9 @@
     "area_source_without_group": {
       "message": "Source {source} does not start automatically and stands in the area of {boiler}, but in no exclusive group with {boiler}. Nothing holds this source back while {boiler} runs, so the two can run side by side. Put them in one exclusive group."
     },
+    "boiler_in_several_zones_without_area": {
+      "message": "{boiler} can only heat and stands as a source under {count} zones, but no row names the zones this appliance also serves. Without that area nothing keeps another appliance from running beside {boiler}. Fill in the zones this appliance also serves."
+    },
     "unknown_installation": {
       "message": "Unknown installation: {installation}"
     },

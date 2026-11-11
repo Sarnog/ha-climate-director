@@ -1114,6 +1114,9 @@ reposo. Si dejas ese campo vacío, recibes todas las acciones.
   está desactivado y la fuente cae en las *Zonas que este aparato también atiende* de una caldera, sin que ambas
   estén en un mismo grupo exclusivo, nada frena la fuente mientras la caldera funciona; el aviso nombra la fuente y
   la caldera. Pon ambas en un mismo grupo exclusivo.
+- **Una caldera bajo más de una zona sin ámbito** — una fuente con *Solo calefacción* que figura bajo dos o más zonas
+  mientras *Zonas que este aparato también atiende* no está rellenado en ninguna parte: sin ámbito nada impide que otro
+  aparato funcione junto a la caldera. El aviso nombra el aparato. Rellena las zonas que la caldera también atiende.
 - **El diagnóstico** (descargable en la integración) contiene la configuración,
   la última instantánea leída y el último plan. Con esos tres, cualquier
   decisión es exactamente reproducible.

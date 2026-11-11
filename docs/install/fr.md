@@ -1132,6 +1132,10 @@ pour recevoir toutes les actions.
   automatiquement* est désactivé et que la source se trouve dans les *Zones que cet appareil dessert aussi* d'une
   chaudière, sans que les deux soient dans un même groupe exclusif, rien ne retient la source tant que la
   chaudière tourne ; la notice nomme la source et la chaudière. Mettez-les dans un même groupe exclusif.
+- **Une chaudière sous plus d'une zone sans périmètre** — une source avec *Chauffage seulement* qui figure sous deux
+  zones ou plus alors que *Zones que cet appareil dessert aussi* n'est renseigné nulle part : sans périmètre, rien
+  n'empêche un autre appareil de tourner à côté de la chaudière. La notice nomme l'appareil. Renseignez les zones que la
+  chaudière dessert aussi.
 - **Le diagnostic** (téléchargeable sur l'intégration) contient la
   configuration, le dernier instantané lu et le dernier plan. Avec ces trois
   éléments, toute décision est exactement reproductible.

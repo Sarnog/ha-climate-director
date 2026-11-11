@@ -38,6 +38,7 @@ from .validation_residents import (
 from .validation_shared import rule_seasons
 from .validation_sources import (
     rule_area_source_without_group,
+    rule_boiler_in_several_zones_without_area,
     rule_duplicate_source_ids,
     rule_exclusive_groups,
     rule_generators,
@@ -115,4 +116,5 @@ RULES = (
     rule_cover_open_state,
     rule_stuck_below_configured_rest,
     rule_area_source_without_group,
+    rule_boiler_in_several_zones_without_area,
 )

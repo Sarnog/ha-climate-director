@@ -41,6 +41,7 @@ import random
 from datetime import datetime, time, timedelta
 
 import pytest
+from conftest import structural_problems
 from simulation import Scenario, Simulation, run_month
 
 from custom_components.climate_director.engine import (
@@ -59,7 +60,6 @@ from custom_components.climate_director.engine import (
     SourceRole,
     TimeWindow,
     Zone,
-    validate,
 )
 
 # ---------------------------------------------------------------------------
@@ -305,7 +305,7 @@ def month():
     looks at today's date, and without moving that along a hand-back never
     lapses and the month tests nothing on that point.
     """
-    assert not validate(SCENARIO.config), validate(SCENARIO.config)
+    assert not structural_problems(SCENARIO.config), structural_problems(SCENARIO.config)
     return run_month(SCENARIO, seed=7)
 
 

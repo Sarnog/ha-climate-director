@@ -16,7 +16,7 @@ from collections.abc import Iterator
 
 from .candidates import group_entities
 from .families import ModeFamily
-from .models import DirectorConfig, ModeSettings, Source, Zone
+from .models import DirectorConfig, ModeSettings, Source, SourceRole, Zone
 from .problem import Problem
 from .takeover import areas
 from .validation_shared import duplicates
@@ -239,4 +239,38 @@ def rule_area_source_without_group(config: DirectorConfig) -> Iterator[Problem]:
                 f"area of {boiler}, but in no exclusive group with it",
                 source=source.source_id,
                 boiler=boiler,
+            )
+
+
+def rule_boiler_in_several_zones_without_area(config: DirectorConfig) -> Iterator[Problem]:
+    """Yield a complaint for a heating-only appliance under several zones with no area.
+
+    Zonder `covers_zones` is er geen gebied, en zonder gebied geen bescherming: de
+    director weet dan niet dat de ketel meer dan zijn eigen zone verwarmt, dus niets
+    houdt een ander apparaat tegen om er in een andere kamer naast te draaien. Een
+    apparaat dat alleen verwarmt en onder meer dan één zone staat is bijna zeker
+    zo'n ketel, en geen enkele rij noemt dan de zones die het mee bedient. De rijen
+    van één apparaat tellen samen (`areas()` voegt ze op `entity_id` samen), dus één
+    ingevulde rij is genoeg.
+
+    Without `covers_zones` there is no area, and without an area no protection: the
+    director does not know the boiler heats more than its own zone, so nothing stops
+    another appliance from running beside it in another room. An appliance that only
+    heats and stands under more than one zone is almost certainly such a boiler, and
+    no row then names the zones it also serves. The rows of one appliance count
+    together (`areas()` merges them on `entity_id`), so one filled-in row is enough.
+    """
+    rows: dict[str, list[tuple[Zone, Source]]] = {}
+    for zone, source in config.sources():
+        if source.role is SourceRole.HEAT_ONLY:
+            rows.setdefault(source.entity_id, []).append((zone, source))
+    for boiler, items in sorted(rows.items()):
+        zones = {zone.zone_id for zone, _ in items}
+        if len(zones) > 1 and not any(source.covers_zones for _, source in items):
+            yield Problem(
+                "boiler_in_several_zones_without_area",
+                f"{boiler} can only heat and stands as a source under {len(zones)} zones, "
+                "but no row names the zones it also serves",
+                boiler=boiler,
+                count=len(zones),
             )

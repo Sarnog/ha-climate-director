@@ -32,7 +32,7 @@ from collections import Counter
 from datetime import datetime, timedelta
 
 import pytest
-from conftest import assert_plan_holds
+from conftest import assert_plan_holds, structural_problems
 
 from custom_components.climate_director.coordinator_state import LifecycleState
 from custom_components.climate_director.engine import (
@@ -660,7 +660,7 @@ def sweep():
         #
         # The wizard only writes sound installations, so a complaint here means
         # the generator itself builds something the user could not have entered.
-        found = validate(config)
+        found = structural_problems(config)
         problems += len(found)
         assert not found, found
 
@@ -825,7 +825,7 @@ class TestTheFormBuildsSoundZones:
                 continue
 
             config = config_from_dict(self._single_zone(zone))
-            assert not validate(config), validate(config)
+            assert not structural_problems(config), structural_problems(config)
             assert config_from_dict(config_to_dict(config)) == config
 
         assert refused > 0, "geen enkel formulier werd geweigerd; de controle doet niets"

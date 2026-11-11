@@ -973,6 +973,9 @@
     "area_source_without_group": {
       "message": "La source {source} n'est pas démarrée automatiquement et se trouve dans le périmètre de {boiler}, mais dans aucun groupe exclusif avec {boiler}. Rien ne retient cette source tant que {boiler} tourne : les deux peuvent donc tourner côte à côte. Mettez-les dans un même groupe exclusif."
     },
+    "boiler_in_several_zones_without_area": {
+      "message": "{boiler} sait seulement chauffer et figure comme source sous {count} zones, mais aucune ligne ne nomme les zones que cet appareil dessert aussi. Sans ce périmètre, rien n'empêche un autre appareil de tourner à côté de {boiler}. Renseignez les zones que cet appareil dessert aussi."
+    },
     "unknown_installation": {
       "message": "Installation inconnue : {installation}"
     },

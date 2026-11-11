@@ -1101,6 +1101,9 @@ blijft. Laat je dat veld leeg, dan krijg je elke actie.
   uit en valt de bron onder de *Zones die dit apparaat mee bedient* van een ketel, zonder dat de twee in één
   exclusieve groep staan, dan houdt niets de bron tegen terwijl de ketel draait; de melding noemt de bron en de
   ketel. Zet ze in één exclusieve groep.
+- **Een ketel onder meer dan één zone zonder gebied** — een bron met *Alleen verwarmen* die onder twee of meer zones
+  staat, terwijl nergens *Zones die dit apparaat mee bedient* is ingevuld: zonder gebied houdt niets een ander
+  apparaat tegen om naast de ketel te draaien. De melding noemt het apparaat. Vul de zones in die de ketel mee bedient.
 - **De diagnose** (downloaden bij de integratie) bevat de configuratie, de
   laatst gelezen momentopname en het laatste plan. Met die drie is elke
   beslissing exact na te spelen.

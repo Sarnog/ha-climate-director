@@ -973,6 +973,9 @@
     "area_source_without_group": {
       "message": "Quelle {source} wird nicht automatisch eingeschaltet und liegt im Gebiet von {boiler}, aber in keiner exklusiven Gruppe mit {boiler}. Nichts hält diese Quelle zurück, solange {boiler} läuft; beide können also nebeneinander laufen. Nimm beide in eine exklusive Gruppe auf."
     },
+    "boiler_in_several_zones_without_area": {
+      "message": "{boiler} kann nur heizen und steht als Quelle unter {count} Zonen, aber keine Zeile nennt die Zonen, die dieses Gerät mitversorgt. Ohne dieses Gebiet hält nichts ein anderes Gerät davon ab, neben {boiler} zu laufen. Trag die Zonen ein, die dieses Gerät mitversorgt."
+    },
     "unknown_installation": {
       "message": "Unbekannte Installation: {installation}"
     },

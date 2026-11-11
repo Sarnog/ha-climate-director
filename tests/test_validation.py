@@ -1379,3 +1379,110 @@ def test_the_complaint_about_a_source_without_a_group_names_both_appliances() ->
     ]
     assert found.params == {"source": "zolder_airco", "boiler": GAS}
     assert "zolder_airco" in found and GAS in found
+
+
+def _shared_appliance_house(
+    *,
+    role: SourceRole = SourceRole.HEAT_ONLY,
+    zones_for_the_boiler: tuple[str, ...] = ("woonkamer", "zolder"),
+    covers: dict[str, tuple[str, ...]] | None = None,
+    second_boiler: bool = False,
+    twice_in_one_zone: bool = False,
+) -> DirectorConfig:
+    """Return the house with one appliance that appears as a source under several zones.
+
+    De rijen van het apparaat staan onder `zones_for_the_boiler`; `covers` zet per zone
+    het gebied van de rij daar. `second_boiler` voegt een tweede, aparte ketel toe onder
+    dezelfde zones.
+
+    The appliance's rows stand under `zones_for_the_boiler`; `covers` sets the area of the
+    row in each zone. `second_boiler` adds a second, separate boiler under the same zones.
+    """
+    covers = covers or {}
+    base = house()
+    zones = []
+    for zone_ in base.zones:
+        sources = [source for source in zone_.sources if source.entity_id != GAS]
+        if zone_.zone_id in zones_for_the_boiler:
+            sources.append(
+                Source(
+                    f"gas_{zone_.zone_id}",
+                    GAS,
+                    role=role,
+                    covers_zones=covers.get(zone_.zone_id, ()),
+                )
+            )
+            if twice_in_one_zone:
+                sources.append(Source(f"gas_{zone_.zone_id}_dubbel", GAS, role=role))
+            if second_boiler:
+                sources.append(
+                    Source(f"kachel_{zone_.zone_id}", "climate.kachel", role=SourceRole.HEAT_ONLY)
+                )
+        zones.append(replace(zone_, sources=tuple(sources)))
+    return replace(base, zones=tuple(zones))
+
+
+def _boilers_without_an_area(config: DirectorConfig) -> list[tuple[str, str]]:
+    """Return (boiler, count) for every `boiler_in_several_zones_without_area` complaint."""
+    return [
+        (item.params["boiler"], item.params["count"])
+        for item in validate(config)
+        if getattr(item, "code", "") == "boiler_in_several_zones_without_area"
+    ]
+
+
+@pytest.mark.parametrize(
+    ("changes", "expected"),
+    [
+        pytest.param({}, [(GAS, "2")], id="a boiler under two zones, no area"),
+        pytest.param(
+            {"zones_for_the_boiler": ("woonkamer", "zolder", "slaapkamer")},
+            [(GAS, "3")],
+            id="under three zones: the count is named",
+        ),
+        pytest.param(
+            {"covers": {"woonkamer": ("zolder",)}},
+            [],
+            id="one row names the area: enough for the whole appliance",
+        ),
+        pytest.param(
+            {"covers": {"zolder": ("woonkamer",)}},
+            [],
+            id="the row naming the area may be any of them",
+        ),
+        pytest.param({"zones_for_the_boiler": ("woonkamer",)}, [], id="under one zone only"),
+        pytest.param(
+            {"role": SourceRole.HEAT_COOL},
+            [],
+            id="a shared heat pump is no boiler: it heats and cools",
+        ),
+        pytest.param({"role": SourceRole.COOL_ONLY}, [], id="a shared cooler is no boiler"),
+        pytest.param(
+            {"twice_in_one_zone": True, "zones_for_the_boiler": ("woonkamer",)},
+            [],
+            id="two rows in one zone are still one zone",
+        ),
+        pytest.param(
+            {"second_boiler": True},
+            [("climate.kachel", "2"), (GAS, "2")],
+            id="two boilers are both named, in order",
+        ),
+    ],
+)
+def test_a_heating_only_appliance_under_several_zones_needs_an_area(
+    changes: dict, expected: list[tuple[str, str]]
+) -> None:
+    """Een ketel onder meer dan één zone zonder `covers_zones` meldt zich.
+
+    Zonder gebied is er geen bescherming: niets houdt een ander apparaat tegen om naast de
+    ketel te draaien in een andere kamer. Elke dimensie van het gat is een parameter: de
+    rol van het apparaat, het aantal zones, waar het gebied is ingevuld en of er meer dan
+    één ketel is.
+
+    A boiler under more than one zone without `covers_zones` reports itself. Without an
+    area there is no protection: nothing stops another appliance from running beside the
+    boiler in another room. Every dimension of the gap is a parameter: the appliance's role,
+    the number of zones, where the area is filled in and whether there is more than one
+    boiler.
+    """
+    assert _boilers_without_an_area(_shared_appliance_house(**changes)) == expected

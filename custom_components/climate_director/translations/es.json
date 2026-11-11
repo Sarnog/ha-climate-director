@@ -973,6 +973,9 @@
     "area_source_without_group": {
       "message": "La fuente {source} no se enciende automáticamente y está en el ámbito de {boiler}, pero en ningún grupo exclusivo con {boiler}. Nada frena esta fuente mientras {boiler} funciona, así que ambos pueden funcionar a la vez. Pon ambos en un mismo grupo exclusivo."
     },
+    "boiler_in_several_zones_without_area": {
+      "message": "{boiler} solo puede calentar y figura como fuente en {count} zonas, pero ninguna fila nombra las zonas que este aparato también atiende. Sin ese ámbito nada impide que otro aparato funcione junto a {boiler}. Rellena las zonas que este aparato también atiende."
+    },
     "unknown_installation": {
       "message": "Instalación desconocida: {installation}"
     },

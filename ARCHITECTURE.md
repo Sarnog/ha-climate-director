@@ -873,6 +873,14 @@ ongemoeid). Het gedrag van de engine verandert niet; `validate()` meldt zo'n bro
 apparaat (`group_entities`), dus een ketel onder meer dan één zone is met één bron-id in de
 groep gedekt.
 
+Zonder `covers_zones` is er helemaal geen gebied: `areas()` levert dan niets voor dat
+apparaat, `area_clash()` en de overname hebben niets om op te werken, en niets houdt een
+ander apparaat tegen om in een andere kamer naast de ketel te draaien. Een apparaat dat alleen
+verwarmt (rol *Alleen verwarmen*) en onder meer dan één zone staat is bijna zeker zo'n ketel.
+`validate()` meldt het met de code `boiler_in_several_zones_without_area`; de rijen van één
+apparaat tellen samen (één ingevulde rij is genoeg), een gedeelde warmtepomp die ook koelt
+valt er niet onder, en het gedrag van de engine verandert niet.
+
 ### sources.py — waarmee
 
 Kiest per zone en taak het apparaat: geschiktheid (rol), dan beschikbaarheid, dan
@@ -2978,6 +2986,14 @@ boiler (measured: the boiler gets `heat`, the air conditioner is left alone as
 with the code `area_source_without_group`, so the user puts the two in one group. The group
 counts per appliance (`group_entities`), so a boiler under more than one zone is covered by
 one source id in the group.
+
+Without `covers_zones` there is no area at all: `areas()` then returns nothing for that
+appliance, `area_clash()` and the takeover have nothing to work on, and nothing stops another
+appliance from running beside the boiler in another room. An appliance that only heats (role
+*Heating only*) and stands under more than one zone is almost certainly such a boiler.
+`validate()` reports it with the code `boiler_in_several_zones_without_area`; the rows of one
+appliance count together (one filled-in row is enough), a shared heat pump that also cools is
+not covered, and the engine's behaviour does not change.
 
 ### sources.py — with what
 
