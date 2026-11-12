@@ -126,23 +126,34 @@ def window_average(
     Alleen het deel van de periode dat de lijst dekt telt mee. Dekt de lijst het
     venster niet geheel, dan is het gemiddelde alleen over het gedekte deel
     bekend en geeft de functie `None`: een gat in de prijslijst is een reden om
-    terug te vallen, niet om te gokken.
+    terug te vallen, niet om te gokken. Prijzen die elkaar overlappen tellen
+    dubbel en geven ook `None`.
 
     Only the part of the period the list covers counts. If the list does not
     cover the whole window the average is only known over the covered part, and
     the function returns `None`: a gap in the price list is a reason to fall
-    back, not to guess.
+    back, not to guess. Prices that overlap would count twice and also give
+    `None`.
     """
     end = start + horizon
     if horizon <= timedelta(0):
         return None
+    inside = sorted(
+        (point for point in prices if min(point.end, end) > max(point.start, start)),
+        key=lambda point: point.start,
+    )
     total = 0.0
     covered = timedelta(0)
-    for point in prices:
+    reached: datetime | None = None
+    for point in inside:
+        # Overlappende prijzen tellen dubbel en zijn dus geen betrouwbare lijst.
+        # Overlapping prices would count twice, so the list is not reliable.
+        if reached is not None and point.start < reached:
+            return None
         overlap = min(point.end, end) - max(point.start, start)
-        if overlap > timedelta(0):
-            total += point.value * overlap.total_seconds()
-            covered += overlap
+        total += point.value * overlap.total_seconds()
+        covered += overlap
+        reached = point.end
     if covered < horizon:
         return None
     return total / horizon.total_seconds()
@@ -157,12 +168,14 @@ def cheapest(
 
     `holding` is de bron die nu levert. Die houdt de keus tenzij een andere bron
     minstens `margin` (een fractie, 0,15 is 15%) goedkoper is: zonder die rem
-    wisselt een keus rond het omslagpunt elk uur. Bij gelijke kosten wint de
+    wisselt een keus rond het omslagpunt elk uur. De marge is een fractie van de
+    grootte van de kosten van de huidige bron, ook als die negatief zijn. Bij gelijke kosten wint de
     kleinste id, zodat de uitkomst vastligt.
 
     `holding` is the source that delivers now. It keeps the choice unless
     another source is at least `margin` (a fraction, 0.15 is 15%) cheaper:
-    without that brake a choice around the changeover swaps every hour. At equal
+    without that brake a choice around the changeover swaps every hour. The
+    margin is a fraction of the size of the holder's cost, also when negative. At equal
     cost the smallest id wins, so the outcome is fixed.
     """
     known = {source: cost for source, cost in costs.items() if cost is not None}
@@ -170,7 +183,8 @@ def cheapest(
         return None
     best = min(known, key=lambda source: (known[source], source))
     held = known.get(holding) if holding is not None else None
-    # Een gelijke prijs is geen reden om te wisselen, ook niet zonder marge.
-    if held is not None and (known[best] >= held or known[best] > held * (1 - margin)):
+    # Een gelijke prijs is geen reden om te wisselen, ook niet zonder marge. De marge
+    # rekent met de grootte van de kosten, zodat ze ook bij negatieve kosten remt.
+    if held is not None and (known[best] >= held or known[best] > held - margin * abs(held)):
         return holding
     return best

@@ -151,6 +151,19 @@ class TestWindowAverage:
     def test_empty_list(self) -> None:
         assert window_average([], START, HOUR) is None
 
+    def test_overlapping_prices_give_none(self) -> None:
+        # Twee prijzen voor hetzelfde uur dekken samen het venster niet echt.
+        prices = [*hourly(0.1), *hourly(0.3)]
+        assert window_average(prices, START, 2 * HOUR) is None
+
+    def test_overlap_outside_the_window_is_ignored(self) -> None:
+        prices = [*hourly(9.0, 9.0, 0.2), PricePoint(START, START + 2 * HOUR, 7.0)]
+        assert window_average(prices, START + 2 * HOUR, HOUR) == pytest.approx(0.2)
+
+    def test_unsorted_prices(self) -> None:
+        prices = list(reversed(hourly(0.1, 0.3)))
+        assert window_average(prices, START, 2 * HOUR) == pytest.approx(0.2)
+
     @pytest.mark.parametrize("horizon", [timedelta(0), timedelta(hours=-1)])
     def test_no_window(self, horizon) -> None:
         assert window_average(hourly(0.2), START, horizon) is None
@@ -189,6 +202,11 @@ class TestCheapest:
 
     def test_holding_source_not_in_the_list(self) -> None:
         assert cheapest({"airco": 0.3}, holding="gas", margin=0.5) == "airco"
+
+    def test_the_margin_also_brakes_for_negative_costs(self) -> None:
+        # -0,11 is maar 10% "goedkoper" dan -0,10: binnen een marge van 25%.
+        assert cheapest({"gas": -0.10, "airco": -0.11}, holding="gas", margin=0.25) == "gas"
+        assert cheapest({"gas": -0.10, "airco": -0.20}, holding="gas", margin=0.25) == "airco"
 
     def test_holder_is_also_the_cheapest(self) -> None:
         assert cheapest({"gas": 0.1, "airco": 0.2}, holding="gas", margin=0.15) == "gas"
