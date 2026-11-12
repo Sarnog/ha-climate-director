@@ -1489,7 +1489,11 @@ roostervenster en hergebruikt de bestaande precondition-mechaniek, maar met een 
 trigger in plaats van een handmatige.
 
 **Energieprijs als bronvoorkeur.** `WorldState` krijgt runtime-bronvoorkeuren; de
-coordinator leest een tarief-/overschotsensor en `sources.py` sorteert daarop.
+coordinator leest een tarief-/overschotsensor en `sources.py` sorteert daarop. Stap 1 staat er:
+`engine/cost.py` rekent de kosten van een kWh warmte uit (gas, COP-curve, overschot, venstergemiddelde,
+goedkoopste bron met rem) zonder Home Assistant en zonder toestand. Hij is nog niet aangesloten:
+de bronkeuze kent hem niet en geen enkel besluit hangt ervan af. De schaduwstand en het schakelen
+komen daarna, elk in een eigen release.
 
 **Weersvoorspelling in het buitentemperatuurvenster.** De coordinator leest de verwachte
 temperatuur uit een `weather`-entiteit; `WorldState.outdoor_forecast` laat de vensters op de
@@ -1529,6 +1533,7 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `engine/models.py` | de installatie als geheel | `DirectorConfig`; de kleine bouwstenen staan in de modules hieronder |
 | `engine/seasons.py` | seizoen en neerslag | `Season`, `SeasonSource`, `SeasonSettings`, `PrecipitationSettings` |
 | `engine/windows.py` | het tijdvenster | `TimeWindow` |
+| `engine/cost.py` | wat een kWh warmte kost: gas tegenover een elektrische bron (rekenwerk, nog niet aangesloten op de bronkeuze) | `PricePoint`, `CopCurve`, `gas_cost`, `electric_cost`, `surplus_price`, `window_average`, `cheapest` |
 | `engine/residents.py` | de bewoner | `Resident`, `SleepIn`, `WakeDeadline` en `RiseBrake` |
 | `engine/equipment.py` | apparaten en hun samenhang | `SourceRole`, `OutdoorWindow`, `ModeSettings`, `Source`, `Circuit`, `ConflictPolicy`, `Generator`, `Opening`, `HeatingLayout` |
 | `engine/rooms.py` | de ruimte en haar poortkeuze | `ZoneGate`, `Zone`, `GateSettings` |
@@ -3576,7 +3581,11 @@ schedule window and reuses the existing pre-conditioning machinery, but with an 
 trigger instead of a manual one.
 
 **Energy price as source preference.** `WorldState` gains runtime source preferences; the
-coordinator reads a tariff/surplus sensor and `sources.py` sorts on it.
+coordinator reads a tariff/surplus sensor and `sources.py` sorts on it. Step 1 is in:
+`engine/cost.py` works out the cost of a kWh of heat (gas, COP curve, surplus, window average,
+cheapest source with a brake) without Home Assistant and without state. It is not yet wired:
+the source selection does not know it and no decision depends on it. Shadow mode and switching
+come after that, each in a release of its own.
 
 **Weather forecast in the outdoor window.** The coordinator reads the expected temperature
 from a `weather` entity; `WorldState.outdoor_forecast` lets the windows check the forecast
@@ -3615,6 +3624,7 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `engine/models.py` | the installation as a whole | `DirectorConfig`; the small building blocks stand in the modules below |
 | `engine/seasons.py` | season and precipitation | `Season`, `SeasonSource`, `SeasonSettings`, `PrecipitationSettings` |
 | `engine/windows.py` | the time window | `TimeWindow` |
+| `engine/cost.py` | what a kWh of heat costs: gas against an electric source (arithmetic, not yet wired to the source selection) | `PricePoint`, `CopCurve`, `gas_cost`, `electric_cost`, `surplus_price`, `window_average`, `cheapest` |
 | `engine/residents.py` | the resident | `Resident`, `SleepIn`, `WakeDeadline` and `RiseBrake` |
 | `engine/equipment.py` | appliances and how they hang together | `SourceRole`, `OutdoorWindow`, `ModeSettings`, `Source`, `Circuit`, `ConflictPolicy`, `Generator`, `Opening`, `HeatingLayout` |
 | `engine/rooms.py` | the room and its gate choice | `ZoneGate`, `Zone`, `GateSettings` |

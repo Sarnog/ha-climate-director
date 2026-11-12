@@ -168,6 +168,9 @@
   "custom_components/climate_director/translations/",
   "tests/"
  ],
+ "tests/test_cost.py": [
+  "custom_components/climate_director/engine/cost.py"
+ ],
  "tests/test_coverage_exclusions.py": [
   "custom_components/",
   "custom_components/climate_director/",
