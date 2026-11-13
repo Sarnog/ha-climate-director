@@ -5,10 +5,12 @@ The number pickers for prices and efficiencies.
 
 from __future__ import annotations
 
+from typing import Literal
+
 from homeassistant.helpers import selector
 
 
-def decimal(low: float, high: float, step: float | str) -> selector.NumberSelector:
+def decimal(low: float, high: float, step: float | Literal["any"]) -> selector.NumberSelector:
     """Return a plain decimal number box, for prices and efficiencies."""
     return selector.NumberSelector(
         selector.NumberSelectorConfig(
