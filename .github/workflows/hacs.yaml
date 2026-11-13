@@ -18,6 +18,18 @@ on:
 
 permissions: {}
 
+# Een nieuwe push op dezelfde pull request maakt de lopende run overbodig: die
+# stopt. Op `main` krijgt elke run een eigen groep en loopt hij af, want de
+# volgende push vergelijkt alleen met zijn eigen voorganger en zou de wijziging van
+# een gestopte (of verdrongen) run overslaan.
+# A new push to the same pull request makes the running run pointless: it stops.
+# On `main` every run gets a group of its own and finishes, since the next push
+# only compares with its own predecessor and would skip the change of a stopped
+# (or displaced) run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   validate-hacs:
     runs-on: "ubuntu-latest"

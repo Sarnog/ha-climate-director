@@ -37,6 +37,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -173,6 +175,94 @@ class TestTheSelection:
         assert sel.needs_oldest(["custom_components/climate_director/translations/de.json"])
         assert sel.needs_oldest(["requirements_test.txt"])
         assert not sel.needs_oldest(["ROADMAP.md", "docs/install/nl.md", "tests/test_x.py"])
+
+    def test_a_version_commit_runs_only_who_reads_the_files_by_name(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Een versiecommit (`V`) is geen gedeeld hulpbestand meer.
+
+        A version commit (`V`) is no longer a shared helper.
+        """
+        impact = dict(IMPACT, **{"tests/test_guards.py": ["pyproject.toml"]})
+        root = _fake_root(tmp_path, dict(impact, **{"tests/test_ui.py": []}))
+        (root / "tests" / "test_ui.py").write_text('load("manifest.json")\n', encoding="utf-8")
+        monkeypatch.setattr(sel, "ROOT", root)
+        impact["tests/test_ui.py"] = ["custom_components/climate_director/"]
+        changed = {
+            "pyproject.toml": sel.VERSION,
+            "custom_components/climate_director/manifest.json": sel.VERSION,
+        }
+        assert sel.select(changed, impact) == ["tests/test_guards.py", "tests/test_ui.py"]
+        assert sel.select({"pyproject.toml": "M"}, impact) == sel.ALL
+
+    @pytest.mark.parametrize(
+        ("diff", "path", "only"),
+        [
+            ('-version = "8.0.0"\n+version = "8.0.1"\n', "pyproject.toml", True),
+            ('-  "version": "8.0.0"\n+  "version": "8.0.1"\n', "manifest.json", True),
+            (
+                '--- a/x\n+++ b/x\n@@ -3 +3 @@\n-version = "8.0.0"\n+version = "8.0.1"\n',
+                "pyproject.toml",
+                True,
+            ),
+            (
+                '-version = "8.0.0"\n+version = "8.0.1"\n+line-length = 90\n',
+                "pyproject.toml",
+                False,
+            ),
+            ('-version = "8.0.0"\n+version = "8.0.1b"\n', "pyproject.toml", False),
+            (
+                '-  "version": "8.0.0"\n+  "version": "8.0.1",\n+  "iot_class": "x"\n',
+                "manifest.json",
+                False,
+            ),
+            ("", "pyproject.toml", False),
+        ],
+    )
+    def test_only_a_plain_version_line_counts(self, diff: str, path: str, only: bool) -> None:
+        key = path if path == "pyproject.toml" else f"{sel.PACKAGE}{path}"
+        assert sel.only_the_version(diff, sel.VERSION_LINES[key]) is only
+
+    def test_a_version_commit_leaves_mypy_ruff_and_the_oldest_alone(self) -> None:
+        changed = {
+            "pyproject.toml": sel.VERSION,
+            "custom_components/climate_director/manifest.json": sel.VERSION,
+        }
+        assert sel.job_flags([], changed) == {"tests": False, "mypy": False, "oldest": False}
+        assert sel.job_flags(["tests/test_ui.py"], changed)["tests"] is True
+        assert sel.job_flags(sel.ALL, None) == {"tests": True, "mypy": True, "oldest": True}
+        assert sel.job_flags([], {"pyproject.toml": "M"}) == {
+            "tests": True,
+            "mypy": True,
+            "oldest": True,
+        }
+
+    def test_a_version_commit_is_recognised_in_the_diff(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Een echte git-repo: alleen de versieregel geeft `V`, iets erbij geeft `M`."""
+
+        def git(*args: str) -> None:
+            subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+        git("init", "-q")
+        git("config", "user.email", "t@t")
+        git("config", "user.name", "t")
+        (tmp_path / "pyproject.toml").write_text('[project]\nversion = "1.0.0"\n')
+        (tmp_path / "README.md").write_text("a\n")
+        git("add", ".")
+        git("commit", "-qm", "base")
+        base = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=tmp_path, capture_output=True, text=True
+        ).stdout.strip()
+        (tmp_path / "pyproject.toml").write_text('[project]\nversion = "1.0.1"\n')
+        git("commit", "-qam", "release")
+        monkeypatch.setattr(sel, "ROOT", tmp_path)
+        monkeypatch.setenv("CI", "true")
+        assert sel.changed_files(base) == {"pyproject.toml": sel.VERSION}
+        (tmp_path / "pyproject.toml").write_text('[project]\nversion = "1.0.1"\nx = 1\n')
+        git("commit", "-qam", "more")
+        assert sel.changed_files(base) == {"pyproject.toml": "M"}
 
     def test_the_diff_reads_as_one_letter_per_path(self) -> None:
         output = "M\tREADME.md\nD\ttests/test_old.py\nA\ttests/test_new.py\n"
@@ -464,6 +554,8 @@ class TestTheMutationProbe:
             ({"tests/test_engine.py": "M"}, True),
             ({"script/mutation_probe.py": "M"}, True),
             ({"tests/conftest.py": "M"}, True),
+            ({"pyproject.toml": "M"}, True),
+            ({"pyproject.toml": "V", "ROADMAP.md": "M"}, False),
             ({"ROADMAP.md": "M", "tests/test_guide.py": "M"}, False),
         ],
     )
@@ -472,6 +564,13 @@ class TestTheMutationProbe:
 
     def test_a_mutation_on_the_full_suite_always_runs(self) -> None:
         assert probe.relevant(self.MUTATION, [], {"ROADMAP.md": "M"}) is True
+
+    @pytest.mark.parametrize(("value", "expected"), [("3", 3), ("0", 1), ("", None), ("x", None)])
+    def test_the_mutations_run_side_by_side(
+        self, monkeypatch: pytest.MonkeyPatch, value: str, expected: int | None
+    ) -> None:
+        monkeypatch.setenv("CD_MUTATION_WORKERS", value)
+        assert probe.workers() == (expected or max(1, os.cpu_count() or 1))
 
 
 class TestTheMutationsStillApply:
