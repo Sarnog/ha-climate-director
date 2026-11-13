@@ -807,6 +807,25 @@ class TestZoneFromForm:
         assert zone.cool is not None
         assert zone.cool.seasons == frozenset({Season.SUMMER})
 
+    def test_the_cost_settings_default_to_following_the_house(self) -> None:
+        stored = zone_from_form(self.form, {})
+        assert stored["cost_control"] is True
+        assert stored["cold_limit"] is None
+        zone = config_from_dict({"zones": [stored]}).zone("woonkamer")
+        assert zone is not None
+        assert zone.cost_control is True
+        assert zone.cold_limit is None
+
+    def test_the_cost_settings_are_stored_in_celsius(self) -> None:
+        form = {**self.form, "cost_control": False, "cold_limit": 41.0}
+        stored = zone_from_form(form, {}, unit="°F")
+        assert stored["cost_control"] is False
+        assert stored["cold_limit"] == pytest.approx(5.0)
+        zone = config_from_dict({"zones": [stored]}).zone("woonkamer")
+        assert zone is not None
+        assert zone.cost_control is False
+        assert zone.cold_limit == pytest.approx(5.0)
+
     def test_editing_keeps_the_id_and_the_sources(self) -> None:
         current = {"zone_id": "living", "sources": [{"source_id": "s", "entity_id": "climate.x"}]}
         zone = zone_from_form(self.form, current, stored_id=current.get("zone_id"))

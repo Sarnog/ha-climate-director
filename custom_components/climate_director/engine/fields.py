@@ -253,6 +253,7 @@ ENERGY_FIELDS: tuple[FieldSpec, ...] = (
     ),
     FieldSpec("cop_curve", "text", required=False, target="energy.cop_curve", hook="trim"),
     FieldSpec("cost_control", "bool", default=False, target="energy.cost_control"),
+    FieldSpec("season_lock", "bool", default=False, target="energy.season_lock"),
     FieldSpec(
         "cold_limit",
         "number",

@@ -99,6 +99,12 @@ class EnergySettings:
     Whether the cheapest source really picks which appliance heats; off is watching only.
     """
 
+    season_lock: bool = False
+    """In de zomer kiest hij altijd elektrisch; gas blijft alleen terugval.
+
+    In summer it always picks electric; gas stays only as the fallback.
+    """
+
     cold_limit: float | None = 2.0
     """Onder deze buitentemperatuur verwarmt altijd gas; leeg is geen koudegrens.
 

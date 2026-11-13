@@ -35,10 +35,12 @@ from custom_components.climate_director.engine.heat_pick import (
     COST,
     NO_OUTDOOR,
     OFF,
+    SEASON_LOCK,
     UNKNOWN,
     HeatPick,
     pick_heat_source,
 )
+from custom_components.climate_director.engine.models import Season
 
 SETTINGS = EnergySettings(
     grid_price_sensor="sensor.stroom",
@@ -102,6 +104,31 @@ class TestPickHeatSource:
     def test_a_preference_held_by_the_cold_limit_does_not_hold_on_cost(self) -> None:
         held = HeatPick(GAS, COLD_LIMIT)
         assert pick_heat_source(SETTINGS, costs(0.20, 0.19), 8.0, held).preferred == ELECTRIC
+
+
+class TestSeasonLock:
+    LOCKED = replace(SETTINGS, season_lock=True)
+
+    def test_summer_picks_electric_whatever_the_price_or_the_cold(self) -> None:
+        pick = pick_heat_source(self.LOCKED, costs(0.1, 0.9), 1.0, season=Season.SUMMER)
+        assert pick == HeatPick(ELECTRIC, SEASON_LOCK)
+
+    def test_summer_needs_no_outdoor_temperature(self) -> None:
+        pick = pick_heat_source(self.LOCKED, costs(None, None), None, season=Season.SUMMER)
+        assert pick == HeatPick(ELECTRIC, SEASON_LOCK)
+
+    def test_winter_and_unknown_seasons_decide_on_cost(self) -> None:
+        for season in (Season.WINTER, Season.UNKNOWN):
+            pick = pick_heat_source(self.LOCKED, costs(0.1, 0.9), 8.0, season=season)
+            assert pick == HeatPick(GAS, COST)
+
+    def test_the_lock_off_leaves_summer_alone(self) -> None:
+        pick = pick_heat_source(SETTINGS, costs(0.1, 0.9), 8.0, season=Season.SUMMER)
+        assert pick == HeatPick(GAS, COST)
+
+    def test_cost_control_off_still_means_no_preference(self) -> None:
+        settings = replace(self.LOCKED, cost_control=False)
+        assert pick_heat_source(settings, costs(0.1, 0.9), 8.0, season=Season.SUMMER).reason == OFF
 
 
 class TestBreakEven:

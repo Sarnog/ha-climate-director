@@ -120,7 +120,9 @@
           "presence_timeout": "Nog zo lang als bezet tellen (seconden)",
           "ignore_precipitation": "Neerslag heft de 'zet een raam open'-regel niet op",
           "gate": "Wat bepaalt of deze zone draait",
-          "when_done": "Als je hier klaar bent"
+          "when_done": "Als je hier klaar bent",
+          "cost_control": "Volgt de kostenregeling",
+          "cold_limit": "Eigen koudegrens"
         },
         "data_description": {
           "indoor_sensor": "Een temperatuursensor, of een climate-entiteit die de ruimte al meet.",
@@ -143,7 +145,9 @@
           "cool_outdoor_min": "Onder deze buitentemperatuur blijft koelen uit. Laat leeg voor geen grens.",
           "cool_summer_only": "Koppelt koelen aan het seizoen dat je bij Algemene instellingen hebt gezet.",
           "gate": "'household' volgt het rooster, de slaap en of er iemand thuis is; een aanwezigheidssensor knijpt het daarna verder dicht. 'presence' laat de kamer zelf beslissen, zodat een bezette ruimte het rooster overstemt - wat een kamer die je af en toe gebruikt nodig heeft. Kiezen hiervoor vereist een aanwezigheidssensor.",
-          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
+          "cost_control": "Uit: deze zone doet niets met de kosten; de buitenvensters van haar bronnen beslissen zoals altijd. Aan: de zone volgt Schakel op kosten van de energie-instellingen (alleen als die aanstaat).",
+          "cold_limit": "Onder deze buitentemperatuur verwarmt in deze zone altijd gas. Leeg: de koudegrens van de energie-instellingen geldt."
         }
       },
       "sources": {
@@ -479,12 +483,12 @@
         "title": "Energie en kosten",
         "description": "Vergelijk wat een kWh warmte kost uit gas en uit de airco's. Geef stroom en gas elk een vaste prijs of een sensor en vul de COP-curve in om de vergelijking aan te zetten. Met Schakel op kosten kiest de goedkoopste bron ook echt welk apparaat verwarmt; zonder kijkt de sensor *Goedkoopste warmtebron* alleen mee.",
         "data": {
-          "grid_price_sensor": "Sensor stroomprijs",
+          "grid_price_sensor": "Entiteit stroomprijs",
           "grid_price": "Vaste stroomprijs (per kWh)",
-          "feed_in_sensor": "Sensor terugleverprijs",
+          "feed_in_sensor": "Entiteit terugleverprijs",
           "feed_in_price": "Vaste terugleverprijs (per kWh)",
           "surplus_sensor": "Sensor zonne-overschot",
-          "gas_price_sensor": "Sensor gasprijs",
+          "gas_price_sensor": "Entiteit gasprijs",
           "gas_price": "Vaste gasprijs (per m³)",
           "kwh_per_m3": "Calorische waarde van gas (kWh per m³)",
           "boiler_efficiency": "Rendement van de ketel (0 tot 1,2)",
@@ -492,15 +496,16 @@
           "cost_control": "Schakel op kosten",
           "cold_limit": "Koudegrens",
           "switch_margin": "Marge voor omschakelen (%)",
-          "when_done": "Als je hier klaar bent"
+          "when_done": "Als je hier klaar bent",
+          "season_lock": "Seizoenslot"
         },
         "data_description": {
-          "grid_price_sensor": "De huidige prijs van een kWh stroom, bijvoorbeeld uit een dynamisch contract. Heeft voorrang op de vaste stroomprijs hieronder zolang de sensor een getal geeft.",
+          "grid_price_sensor": "De huidige prijs van een kWh stroom, bijvoorbeeld uit een dynamisch contract. Heeft voorrang op de vaste stroomprijs hieronder zolang de entiteit een getal geeft. Kies een sensor of een input_number-helper.",
           "grid_price": "Een vaste prijs per kWh stroom, voor een vast contract. Staat er ook een sensor boven, dan geldt deze alleen als de sensor niets geeft. Nul betekent niet ingesteld.",
-          "feed_in_sensor": "De huidige prijs die je krijgt voor een teruggeleverde kWh. Telt als stroomprijs zolang er een zonne-overschot is. Laat deze en de vaste terugleverprijs leeg om altijd de stroomprijs te gebruiken.",
+          "feed_in_sensor": "De huidige prijs die je krijgt voor een teruggeleverde kWh. Telt als stroomprijs zolang er een zonne-overschot is. Laat deze en de vaste terugleverprijs leeg om altijd de stroomprijs te gebruiken. Kies een sensor of een input_number-helper.",
           "feed_in_price": "Een vaste vergoeding per teruggeleverde kWh. Telt als stroomprijs zolang er een zonne-overschot is. Nul betekent niet ingesteld.",
           "surplus_sensor": "Het zonne-overschot in kW; een positieve waarde telt als overschot. Laat leeg om nooit een overschot te tellen.",
-          "gas_price_sensor": "De huidige prijs van een m³ gas, bijvoorbeeld uit een dynamisch contract. Heeft voorrang op de vaste gasprijs hieronder zolang de sensor een getal geeft.",
+          "gas_price_sensor": "De huidige prijs van een m³ gas, bijvoorbeeld uit een dynamisch contract. Heeft voorrang op de vaste gasprijs hieronder zolang de entiteit een getal geeft. Kies een sensor of een input_number-helper.",
           "gas_price": "Een vaste prijs per m³ gas, alles inbegrepen, in jouw munteenheid. Staat er ook een sensor boven, dan geldt deze alleen als de sensor niets geeft. Zonder sensor én zonder vaste prijs wordt de kostensensor niet aangemaakt.",
           "kwh_per_m3": "Hoeveel warmte een m³ gas bevat. 9,77 is een gebruikelijke Nederlandse waarde; kijk op je gasrekening.",
           "boiler_efficiency": "Hoeveel van die warmte de radiatoren bereikt. 0,9 is een verstandig begin voor een HR-ketel.",
@@ -508,7 +513,8 @@
           "cost_control": "Aan: de goedkoopste bron kiest of gas of de airco verwarmt, in elke zone met een gas- én een elektrische bron (stel de energiebron per bron in). Het buitenvenster van die bronnen telt dan niet meer. Uit: alleen kijken, de buitenvensters beslissen zoals altijd. Koelen verandert nooit.",
           "cold_limit": "Onder deze buitentemperatuur verwarmt altijd gas, wat de prijs ook is: daar is de COP van de airco niet te vertrouwen. Zet hem op het laagste punt van je COP-curve. Leeg betekent geen koudegrens. Terug naar elektrisch gaat pas één dode band boven deze grens.",
           "switch_margin": "De andere bron moet zoveel procent goedkoper zijn voordat het verwarmen overschakelt, zodat het niet bij elke prijsschommeling heen en weer gaat.",
-          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
+          "season_lock": "Aan: in de zomer kiest de director altijd de airco (elektrisch) om te verwarmen, ook onder de koudegrens; gas blijft alleen terugval. Uit: de kosten en de koudegrens beslissen het hele jaar."
         }
       }
     },
@@ -783,6 +789,9 @@
           },
           "steered_zones": {
             "name": "Zones die op kosten schakelen"
+          },
+          "zone_preferences": {
+            "name": "Voorkeur per zone"
           }
         }
       },

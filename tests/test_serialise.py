@@ -53,6 +53,18 @@ class TestRoundTrip:
         )
         assert config_from_dict(config_to_dict(config)) == config
 
+    def test_the_cost_settings_of_a_zone_round_trip(self) -> None:
+        config = replace(
+            house(),
+            zones=tuple(
+                replace(zone, cost_control=False, cold_limit=4.5)
+                if zone.zone_id == "zolder"
+                else zone
+                for zone in house().zones
+            ),
+        )
+        assert config_from_dict(config_to_dict(config)) == config
+
     def test_a_sleep_window_keeps_its_days(self) -> None:
         """Een weekendritme staat in het slaapvenster, dus het moet blijven staan.
 

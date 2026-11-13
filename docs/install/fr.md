@@ -191,17 +191,18 @@ chère* ne fait qu'observer.
 
 | Réglage | Ce qu'il fait |
 |---|---|
-| **Capteur du prix de l'électricité** | le prix actuel d'un kWh d'électricité, par exemple d'un contrat dynamique ; l'emporte sur le prix fixe tant que le capteur donne un nombre |
+| **Entité du prix de l'électricité** | le prix actuel d'un kWh d'électricité, par exemple d'un contrat dynamique ; l'emporte sur le prix fixe tant que le capteur donne un nombre |
 | **Prix fixe de l'électricité (par kWh)** | prix fixe par kWh d'électricité ; compte sans capteur ou quand le capteur ne donne rien ; 0 = non réglé |
-| **Capteur du prix de rachat** | le prix que vous recevez pour un kWh réinjecté ; compte comme prix de l'électricité en cas de surplus solaire ; avec le prix fixe de rachat vide aussi = toujours le prix de l'électricité |
+| **Entité du prix de rachat** | le prix que vous recevez pour un kWh réinjecté ; compte comme prix de l'électricité en cas de surplus solaire ; avec le prix fixe de rachat vide aussi = toujours le prix de l'électricité |
 | **Prix fixe de rachat (par kWh)** | rémunération fixe par kWh réinjecté ; compte sans capteur ou quand le capteur ne donne rien ; 0 = non réglé |
 | **Capteur du surplus solaire** | surplus solaire en kW (positif = surplus) ; vide = jamais de surplus |
-| **Capteur du prix du gaz** | le prix actuel d'un m³ de gaz, par exemple d'un contrat dynamique ; l'emporte sur le prix fixe du gaz tant que le capteur donne un nombre |
+| **Entité du prix du gaz** | le prix actuel d'un m³ de gaz, par exemple d'un contrat dynamique ; l'emporte sur le prix fixe du gaz tant que le capteur donne un nombre |
 | **Prix fixe du gaz (par m³)** | prix fixe par m³ de gaz, tout compris ; compte sans capteur ou quand le capteur ne donne rien ; sans les deux, le capteur n'est pas créé |
 | **Pouvoir calorifique du gaz (kWh par m³)** | chaleur par m³ de gaz ; 9,77 par défaut |
 | **Rendement de la chaudière (0 à 1,2)** | part de cette chaleur qui atteint les radiateurs ; 0,9 par défaut |
 | **Courbe de COP des climatiseurs** | des points `température extérieure:COP` séparés par des virgules, par exemple `-5:2.8, 7:3.8, 15:4.5` ; vide = le capteur n'est pas créé |
 | **Basculer selon le coût** | activé = la source la moins chère choisit si le gaz ou le climatiseur chauffe, dans chaque zone qui a une source au gaz et une électrique ; désactivé = simple observation |
+| **Verrou de saison** | activé = en été, le directeur choisit toujours le climatiseur pour chauffer, le gaz reste en secours ; désactivé = coût et limite de froid décident toute l'année |
 | **Limite de froid** | sous cette température extérieure, le gaz chauffe toujours ; vide = aucune limite de froid ; 2 °C par défaut |
 | **Marge avant de basculer (%)** | de combien de pourcents l'autre source doit être moins chère avant de basculer ; 10 par défaut |
 
@@ -256,6 +257,8 @@ Une zone est une pièce. Par zone, vous réglez :
 | **État signifiant occupée** | l'état que ce capteur renvoie comme occupé |
 | **Continuer à compter comme occupée pendant (secondes)** | le délai qui absorbe les détecteurs qui clignotent |
 | **Les précipitations ne lèvent pas la règle « ouvrir une fenêtre »** | activé pour une pièce où aucune fenêtre ne s'ouvre ; là, la limite extérieure continue de s'appliquer même lorsqu'il y a des précipitations |
+| **Suit la régulation au coût** | désactivé = cette zone ne fait rien du coût et les plages extérieures de ses sources décident ; activé par défaut |
+| **Limite de froid propre** | sous cette température extérieure, le gaz chauffe toujours dans cette zone ; vide = la limite de froid des réglages d'énergie |
 | **Cette zone peut chauffer** | désactivé = cette pièce n'est jamais chauffée |
 | **Température cible en chauffage** | la consigne donnée à l'appareil quand le chauffage tourne — pas le point de démarrage |
 | **Commencer à chauffer à** | le chauffage commence à cette température intérieure ou en dessous |

@@ -80,6 +80,10 @@ class Zone:
     """
 
     ignore_precipitation: bool = False
+    cost_control: bool = True
+    """Whether this zone follows the cost choice between gas and electric."""
+    cold_limit: float | None = None
+    """An own cold limit for this zone; `None` follows the house's."""
     """Whether this zone keeps its outdoor window even during precipitation.
 
     Een zolder zonder ramen heeft niets aan de "zet een raam open"-regel, dus

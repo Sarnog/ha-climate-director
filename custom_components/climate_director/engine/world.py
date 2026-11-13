@@ -215,6 +215,18 @@ class WorldState:
     fills it from the prices; the engine only reads it (`sources.select`).
     """
 
+    heat_picks: dict[str, str | None] = field(default_factory=dict)
+    """Zones whose cost preference differs from the house's, keyed by `zone_id`.
+
+    Een zone die de kostenregeling niet volgt staat hier met `None`; een zone met
+    een eigen koudegrens met zijn eigen voorkeur. Een zone die er niet staat
+    krijgt `heat_pick`.
+
+    A zone that does not follow the cost control is here with `None`; a zone
+    with a cold limit of its own with its own preference. A zone not listed gets
+    `heat_pick`.
+    """
+
     master_enabled: bool = True
     holiday_mode: bool = False
 

@@ -84,6 +84,10 @@ class HeatCostSensor(ClimateDirectorEntity, SensorEntity):
             "preferred_source": self.coordinator.round.heat_pick.preferred,
             "preferred_reason": self.coordinator.round.heat_pick.reason,
             "steered_zones": self._steered_zones(),
+            "zone_preferences": {
+                zone_id: pick.preferred
+                for zone_id, pick in self.coordinator.round.zone_heat_picks.items()
+            },
         }
 
     def _steered_zones(self) -> list[str]:
@@ -100,7 +104,8 @@ class HeatCostSensor(ClimateDirectorEntity, SensorEntity):
         return [
             zone.zone_id
             for zone in self.coordinator.config.zones
-            if {source.energy for source in zone.sources if source.supports(ModeFamily.HEAT)}
+            if zone.cost_control
+            and {source.energy for source in zone.sources if source.supports(ModeFamily.HEAT)}
             >= {SourceEnergy.GAS, SourceEnergy.ELECTRIC}
         ]
 

@@ -120,7 +120,9 @@
           "presence_timeout": "Seguir contando como ocupada durante (segundos)",
           "ignore_precipitation": "Las precipitaciones no levantan la regla de «abrir una ventana»",
           "gate": "Qué decide si esta zona funciona",
-          "when_done": "Cuando termines aquí"
+          "when_done": "Cuando termines aquí",
+          "cost_control": "Sigue la regulación por coste",
+          "cold_limit": "Límite de frío propio"
         },
         "data_description": {
           "indoor_sensor": "Un sensor de temperatura, o una entidad climate que ya mide la habitación.",
@@ -143,7 +145,9 @@
           "cool_outdoor_min": "Por debajo de esta temperatura exterior la refrigeración sigue apagada. Déjalo vacío para no poner límite.",
           "cool_summer_only": "Ata la refrigeración a la estación definida en Ajustes generales.",
           "gate": "'household' sigue el horario, el sueño y si hay alguien en casa; un sensor de presencia lo estrecha después. 'presence' deja que la habitación decida sola, de modo que una habitación ocupada anula el horario, que es lo que necesita una habitación de uso ocasional. Elegirlo exige un sensor de presencia.",
-          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
+          "cost_control": "Desactivado: esta estancia no hace nada con el coste; las franjas exteriores de sus fuentes deciden como siempre. Activado: la estancia sigue Cambiar según el coste de los ajustes de energía (solo si está activado).",
+          "cold_limit": "Por debajo de esta temperatura exterior, el gas siempre calienta en esta estancia. Vacío: se aplica el límite de frío de los ajustes de energía."
         }
       },
       "sources": {
@@ -479,12 +483,12 @@
         "title": "Energía y costes",
         "description": "Compara lo que cuesta un kWh de calor con gas y con los aires acondicionados. Da a la electricidad y al gas un precio fijo o un sensor, e indica la curva de COP para activar la comparación. Con Cambiar según el coste, la fuente más barata elige de verdad qué aparato calienta; sin ello, el sensor *Fuente de calefacción más barata* solo observa.",
         "data": {
-          "grid_price_sensor": "Sensor del precio de la electricidad",
+          "grid_price_sensor": "Entidad del precio de la electricidad",
           "grid_price": "Precio fijo de la electricidad (por kWh)",
-          "feed_in_sensor": "Sensor del precio de excedentes",
+          "feed_in_sensor": "Entidad del precio de excedentes",
           "feed_in_price": "Precio fijo de excedentes (por kWh)",
           "surplus_sensor": "Sensor del excedente solar",
-          "gas_price_sensor": "Sensor del precio del gas",
+          "gas_price_sensor": "Entidad del precio del gas",
           "gas_price": "Precio fijo del gas (por m³)",
           "kwh_per_m3": "Poder calorífico del gas (kWh por m³)",
           "boiler_efficiency": "Rendimiento de la caldera (0 a 1,2)",
@@ -492,15 +496,16 @@
           "cost_control": "Cambiar según el coste",
           "cold_limit": "Límite de frío",
           "switch_margin": "Margen antes de cambiar (%)",
-          "when_done": "Cuando termines aquí"
+          "when_done": "Cuando termines aquí",
+          "season_lock": "Bloqueo de temporada"
         },
         "data_description": {
-          "grid_price_sensor": "El precio actual de un kWh de electricidad, por ejemplo de un contrato dinámico. Tiene prioridad sobre el precio fijo de la electricidad de abajo mientras el sensor dé un número.",
+          "grid_price_sensor": "El precio actual de un kWh de electricidad, por ejemplo de un contrato dinámico. Tiene prioridad sobre el precio fijo de la electricidad de abajo mientras la entidad dé un número. Elige un sensor o un ayudante input_number.",
           "grid_price": "Un precio fijo por kWh de electricidad, para un contrato fijo. Si arriba también hay un sensor, este precio solo cuenta cuando el sensor no da nada. Cero significa sin configurar.",
-          "feed_in_sensor": "El precio actual que recibes por un kWh vertido a la red. Cuenta como precio de la electricidad mientras haya excedente solar. Deja este campo y el precio fijo de excedentes vacíos para usar siempre el precio de la electricidad.",
+          "feed_in_sensor": "El precio actual que recibes por un kWh vertido a la red. Cuenta como precio de la electricidad mientras haya excedente solar. Deja este campo y el precio fijo de excedentes vacíos para usar siempre el precio de la electricidad. Elige un sensor o un ayudante input_number.",
           "feed_in_price": "Una compensación fija por kWh vertido a la red. Cuenta como precio de la electricidad mientras haya excedente solar. Cero significa sin configurar.",
           "surplus_sensor": "El excedente solar en kW; un valor positivo cuenta como excedente. Déjalo vacío para no contar nunca un excedente.",
-          "gas_price_sensor": "El precio actual de un m³ de gas, por ejemplo de un contrato dinámico. Tiene prioridad sobre el precio fijo del gas de abajo mientras el sensor dé un número.",
+          "gas_price_sensor": "El precio actual de un m³ de gas, por ejemplo de un contrato dinámico. Tiene prioridad sobre el precio fijo del gas de abajo mientras la entidad dé un número. Elige un sensor o un ayudante input_number.",
           "gas_price": "Un precio fijo por m³ de gas, todo incluido, en tu moneda. Si arriba también hay un sensor, este precio solo cuenta cuando el sensor no da nada. Sin sensor y sin precio fijo no se crea el sensor de coste.",
           "kwh_per_m3": "Cuánto calor contiene un m³ de gas. 9,77 es un valor neerlandés habitual; mira tu factura del gas.",
           "boiler_efficiency": "Qué parte de ese calor llega a los radiadores. 0,9 es un buen punto de partida para una caldera de condensación.",
@@ -508,7 +513,8 @@
           "cost_control": "Activado: la fuente más barata elige si calienta el gas o el aire acondicionado, en cada zona con una fuente de gas y una eléctrica (indica la fuente de energía de cada fuente). La franja exterior de esas fuentes deja de contar. Desactivado: solo observar, las franjas exteriores deciden como siempre. Enfriar nunca cambia.",
           "cold_limit": "Por debajo de esta temperatura exterior calienta siempre el gas, sea cual sea el precio: allí no se puede confiar en el COP del aire acondicionado. Ponla en el punto más bajo de tu curva de COP. Vacío significa sin límite de frío. Volver a eléctrico solo ocurre una banda muerta por encima de este límite.",
           "switch_margin": "La otra fuente debe ser este porcentaje más barata antes de que la calefacción cambie, para que no vaya de un lado a otro con cada oscilación del precio.",
-          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
+          "season_lock": "Activado: en verano el director elige siempre el aire acondicionado (eléctrico) para calentar, incluso por debajo del límite de frío; el gas queda solo como respaldo. Desactivado: el coste y el límite de frío deciden todo el año."
         }
       }
     },
@@ -783,6 +789,9 @@
           },
           "steered_zones": {
             "name": "Zonas que cambian según el coste"
+          },
+          "zone_preferences": {
+            "name": "Preferencia por estancia"
           }
         }
       },

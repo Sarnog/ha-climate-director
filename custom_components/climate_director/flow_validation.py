@@ -340,6 +340,8 @@ def zone_from_form(
         "presence_state": user_input.get("presence_state") or "on",
         "presence_timeout": user_input.get("presence_timeout") or 0,
         "ignore_precipitation": bool(user_input.get("ignore_precipitation", False)),
+        "cost_control": bool(user_input.get("cost_control", True)),
+        "cold_limit": to_celsius(blank_to_none(user_input.get("cold_limit")), unit or ""),
     }
 
 

@@ -52,6 +52,17 @@ def zones(flow: Any) -> vol.Schema:
     )
 
 
+def cost_fields(current: dict[str, Any], unit: str) -> dict[Any, Any]:
+    """Return the two fields that tune this zone's share in the cost control."""
+    return {
+        vol.Required("cost_control", default=current.get("cost_control", True)): bool,
+        vol.Optional(
+            "cold_limit",
+            description={"suggested_value": rounded_from_celsius(current.get("cold_limit"), unit)},
+        ): temperature(unit),
+    }
+
+
 def zone(flow: Any, current: dict[str, Any], priority: int) -> vol.Schema:
     """Return the single zone schema."""
     heat = current.get("heat") or {}
@@ -83,6 +94,7 @@ def zone(flow: Any, current: dict[str, Any], priority: int) -> vol.Schema:
                 "ignore_precipitation",
                 default=current.get("ignore_precipitation", False),
             ): bool,
+            **cost_fields(current, unit),
             vol.Required("enable_heat", default=bool(heat)): bool,
             vol.Required(
                 "heat_target", default=rounded_from_celsius(heat.get("target", 21.0), unit)

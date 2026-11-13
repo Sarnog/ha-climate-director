@@ -92,6 +92,7 @@ class RoundState:
     """
 
     heat_pick: HeatPick = field(default_factory=lambda: HeatPick(None, OFF))
+    zone_heat_picks: dict[str, HeatPick] = field(default_factory=dict)
     """De kostenvoorkeur van de laatste ronde; de volgende houdt er rekening mee.
 
     The cost preference of the last round; the next one takes it into account.
