@@ -7,7 +7,7 @@ from typing import Any
 import voluptuous as vol
 from homeassistant.helpers import selector
 
-from .engine.fields import SETTINGS_FIELDS
+from .engine.fields import ENERGY_FIELDS, SETTINGS_FIELDS
 from .flow_surface import FlowSurface
 from .form_common import (
     ADD,
@@ -41,6 +41,23 @@ def settings(flow: Any) -> vol.Schema:
     """
     return table_schema(
         SETTINGS_FIELDS,
+        flow,
+        values=flow._installation,
+        footer={vol.Required(EXIT, default=EXIT_KEEP): exit_row()},
+    )
+
+
+def energy(flow: Any) -> vol.Schema:
+    """Return the energy screen schema from the current installation.
+
+    Zelfde vorm als `settings`: de veldenlijst staat in `engine.fields`, hier
+    alleen de vertaling naar `vol.Schema` plus de afsluitregel.
+
+    Same shape as `settings`: the field list lives in `engine.fields`, here only
+    the translation into `vol.Schema` plus the exit row.
+    """
+    return table_schema(
+        ENERGY_FIELDS,
         flow,
         values=flow._installation,
         footer={vol.Required(EXIT, default=EXIT_KEEP): exit_row()},

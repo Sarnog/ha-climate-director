@@ -180,6 +180,25 @@ hasta que eliges **Guardar y cerrar** en el menú principal.
 | **Cuánto tiempo siguen contando las precipitaciones (minutos)** | margen tras cesar las precipitaciones; 15 minutos por defecto |
 | **Modo sombra** | activado = calcularlo todo, no gobernar nada |
 
+### Energía y costes
+
+Compara lo que cuesta un kWh de calor con gas y con los aires acondicionados. Esto solo alimenta el sensor *Fuente de
+calefacción más barata*; no se controla nada con él. Da a la electricidad y al gas un precio fijo o un sensor, e
+indica la curva de COP para activar la comparación.
+
+| Ajuste | Qué hace |
+|---|---|
+| **Sensor del precio de la electricidad** | el precio actual de un kWh de electricidad, por ejemplo de un contrato dinámico; tiene prioridad sobre el precio fijo mientras el sensor dé un número |
+| **Precio fijo de la electricidad (por kWh)** | precio fijo por kWh de electricidad; cuenta sin sensor o cuando el sensor no da nada; 0 = sin configurar |
+| **Sensor del precio de excedentes** | el precio que recibes por un kWh vertido a la red; cuenta como precio de la electricidad con excedente solar; con el precio fijo de excedentes también vacío = siempre el precio de la electricidad |
+| **Precio fijo de excedentes (por kWh)** | compensación fija por kWh vertido a la red; cuenta sin sensor o cuando el sensor no da nada; 0 = sin configurar |
+| **Sensor del excedente solar** | excedente solar en kW (positivo = excedente); vacío = nunca excedente |
+| **Sensor del precio del gas** | el precio actual de un m³ de gas, por ejemplo de un contrato dinámico; tiene prioridad sobre el precio fijo del gas mientras el sensor dé un número |
+| **Precio fijo del gas (por m³)** | precio fijo por m³ de gas, todo incluido; cuenta sin sensor o cuando el sensor no da nada; sin ninguno de los dos no se crea el sensor |
+| **Poder calorífico del gas (kWh por m³)** | calor por m³ de gas; 9,77 por defecto |
+| **Rendimiento de la caldera (0 a 1,2)** | qué parte de ese calor llega a los radiadores; 0,9 por defecto |
+| **Curva de COP de los aires acondicionados** | puntos `temperatura exterior:COP` separados por comas, por ejemplo `-5:2.8, 7:3.8, 15:4.5`; vacío = no se crea el sensor |
+
 ### Las precipitaciones dejan de lado el límite exterior
 
 El límite exterior por zona es una regla de ahorro con una suposición debajo:
@@ -721,6 +740,7 @@ Un dispositivo por instalación, con debajo:
 | `sensor.*_ultima_decision` | cuántas zonas están siendo servidas, con el plan completo como atributos |
 | `sensor.*_gobernaria_<entity>` | el modo en que el director pondría este aparato — un sensor por aparato |
 | `sensor.*_discrepancias` | cuántos aparatos están ahora en un sitio distinto del que el plan quiere; 0 = director y casa de acuerdo |
+| `sensor.*_fuente_de_calefaccion_mas_barata` | qué fuente entrega un kWh de calor al menor coste ahora (gas o electricidad), con ambos costes como atributos; solo existe si están configurados el precio del gas, el precio de la electricidad y la curva de COP. Solo observación: no se controla nada con él |
 | `sensor.*_fuente_<zone>` | qué fuente sirve esta zona, con lo que la zona quería, obtuvo y por qué |
 | `binary_sensor.*_<zone>_bloqueada` | activado cuando una zona recibió menos de lo pedido, o quería funcionar pero una circunstancia la retuvo; las barreras cerradas están en los atributos |
 | `binary_sensor.*_<zone>_en_equipo_suplente` | activado cuando una zona funciona con un aparato suplente porque la primera opción es inalcanzable |

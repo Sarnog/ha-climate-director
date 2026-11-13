@@ -609,6 +609,13 @@ class TestDiscardArrivesOnEveryScreen:
             "guest_days": ["5", "6"],
             "precipitation_source": "sensor.regen",
         },
+        "energy": {
+            "grid_price_sensor": "sensor.stroomprijs",
+            "feed_in_sensor": "sensor.terugleverprijs",
+            "surplus_sensor": "sensor.overschot",
+            "gas_price_sensor": "sensor.gasprijs",
+            "cop_curve": "-5:2.8, 7:3.8",
+        },
         "openings": {"house_wide_openings": [LIVING]},
     }
 
@@ -749,6 +756,11 @@ class TestAnEditRoundStoresNoEmptyStrings:
         "sleep_entity",
         "holiday_keyword",
         "precipitation_source",
+        "grid_price_sensor",
+        "feed_in_sensor",
+        "surplus_sensor",
+        "gas_price_sensor",
+        "cop_curve",
         "guest_start",
         "guest_end",
         "sleep_from",

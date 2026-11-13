@@ -173,6 +173,7 @@ EXCEPTIONS: dict[str, dict[str, str]] = {
         "options.step.circuit_priorities.data.when_done": ("عند الانتهاء هنا"),
         "options.step.circuit_priority.data.when_done": ("عند الانتهاء هنا"),
         "options.step.circuits.data.when_done": ("عند الانتهاء هنا"),
+        "options.step.energy.data.when_done": ("عند الانتهاء هنا"),
         "options.step.exclusive.data.delete": ("حذف هذه المجموعة"),
         "options.step.exclusive.data.when_done": ("عند الانتهاء هنا"),
         "options.step.exclusives.data.when_done": ("عند الانتهاء هنا"),

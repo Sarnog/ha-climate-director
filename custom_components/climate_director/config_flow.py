@@ -146,6 +146,7 @@ class ClimateDirectorOptionsFlow(FlowSurface):
                 "quiets",
                 "residents",
                 "openings",
+                "energy",
                 "save",
             ],
         )
@@ -367,6 +368,9 @@ class ClimateDirectorOptionsFlow(FlowSurface):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         return await flow_installation.settings(self, user_input)
+
+    async def async_step_energy(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        return await flow_installation.energy(self, user_input)
 
     async def async_step_exclusives(
         self, user_input: dict[str, Any] | None = None

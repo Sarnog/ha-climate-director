@@ -54,6 +54,7 @@ class FlowSurface(OptionsFlow):
     async_step_circuit_priorities: Callable[..., Awaitable[ConfigFlowResult]]
     async_step_circuit_priority: Callable[..., Awaitable[ConfigFlowResult]]
     async_step_circuits: Callable[..., Awaitable[ConfigFlowResult]]
+    async_step_energy: Callable[..., Awaitable[ConfigFlowResult]]
     async_step_exclusive: Callable[..., Awaitable[ConfigFlowResult]]
     async_step_exclusives: Callable[..., Awaitable[ConfigFlowResult]]
     async_step_generator: Callable[..., Awaitable[ConfigFlowResult]]

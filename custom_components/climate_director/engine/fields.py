@@ -204,6 +204,56 @@ SETTINGS_FIELDS: tuple[FieldSpec, ...] = (
     FieldSpec("shadow_mode", "bool", default=None, target=None, hook="control_state"),
 )
 
+#: Het energiescherm, in de volgorde waarin het getoond wordt: eerst de
+#: stroomprijzen, dan het gas, dan de COP-curve. Het stuurt niets; het voedt
+#: alleen de sensor *Goedkoopste warmtebron*.
+#:
+#: The energy screen, in display order: the power prices first, then the gas,
+#: then the COP curve. It steers nothing; it only feeds the *Cheapest heat
+#: source* sensor.
+ENERGY_FIELDS: tuple[FieldSpec, ...] = (
+    FieldSpec(
+        "grid_price_sensor",
+        "entity",
+        required=False,
+        target="energy.grid_price_sensor",
+        domain="sensor",
+    ),
+    FieldSpec("grid_price", "number", default=0.0, target="energy.grid_price", unit="price"),
+    FieldSpec(
+        "feed_in_sensor",
+        "entity",
+        required=False,
+        target="energy.feed_in_sensor",
+        domain="sensor",
+    ),
+    FieldSpec("feed_in_price", "number", default=0.0, target="energy.feed_in_price", unit="price"),
+    FieldSpec(
+        "surplus_sensor",
+        "entity",
+        required=False,
+        target="energy.surplus_sensor",
+        domain="sensor",
+    ),
+    FieldSpec(
+        "gas_price_sensor",
+        "entity",
+        required=False,
+        target="energy.gas_price_sensor",
+        domain="sensor",
+    ),
+    FieldSpec("gas_price", "number", default=0.0, target="energy.gas_price", unit="price"),
+    FieldSpec("kwh_per_m3", "number", default=9.77, target="energy.kwh_per_m3", unit="kwh_per_m3"),
+    FieldSpec(
+        "boiler_efficiency",
+        "number",
+        default=0.9,
+        target="energy.boiler_efficiency",
+        unit="efficiency",
+    ),
+    FieldSpec("cop_curve", "text", required=False, target="energy.cop_curve", hook="trim"),
+)
+
 #: Het bronscherm: één apparaat dat een zone kan bedienen. De afsluitregel
 #: (`when_done`) en de verwijderregel (`delete`) staan niet hier maar in
 #: `schemas.source`: die horen bij de vorm en bij de navigatie, niet bij de
@@ -287,6 +337,7 @@ TABLE_ROOTS: dict[str, tuple[str, str]] = {
     "GATES_FIELDS": ("DirectorConfig", "config_to_dict"),
     "GATES_FLAT_FIELDS": ("DirectorConfig", "config_to_dict"),
     "GUEST_WINDOW_FIELDS": ("DirectorConfig", "config_to_dict"),
+    "ENERGY_FIELDS": ("DirectorConfig", "config_to_dict"),
     "SOURCE_FIELDS": ("Source", "source_to_dict"),
 }
 

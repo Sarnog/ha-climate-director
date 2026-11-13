@@ -69,6 +69,9 @@ from .form_common import (
     window_label as window_label,
 )
 from .form_installation import (
+    energy as energy,
+)
+from .form_installation import (
     exclusive as exclusive,
 )
 from .form_installation import (
@@ -129,6 +132,7 @@ __all__ = [
     "resident",
     "residents",
     "save",
+    "energy",
     "settings",
     "source",
     "source_options",

@@ -182,6 +182,25 @@ le menu principal.
 | **Combien de temps les précipitations continuent de compter (minutes)** | délai de grâce après l'arrêt des précipitations ; 15 minutes par défaut |
 | **Mode ombre** | activé = tout calculer, ne rien piloter |
 
+### Énergie et coûts
+
+Comparez ce que coûte un kWh de chaleur issu du gaz et des climatiseurs. Cela alimente seulement le capteur *Source de
+chauffage la moins chère* ; rien n'est piloté dessus. Donnez à l'électricité et au gaz chacun un prix fixe ou un
+capteur, et renseignez la courbe de COP pour activer la comparaison.
+
+| Réglage | Ce qu'il fait |
+|---|---|
+| **Capteur du prix de l'électricité** | le prix actuel d'un kWh d'électricité, par exemple d'un contrat dynamique ; l'emporte sur le prix fixe tant que le capteur donne un nombre |
+| **Prix fixe de l'électricité (par kWh)** | prix fixe par kWh d'électricité ; compte sans capteur ou quand le capteur ne donne rien ; 0 = non réglé |
+| **Capteur du prix de rachat** | le prix que vous recevez pour un kWh réinjecté ; compte comme prix de l'électricité en cas de surplus solaire ; avec le prix fixe de rachat vide aussi = toujours le prix de l'électricité |
+| **Prix fixe de rachat (par kWh)** | rémunération fixe par kWh réinjecté ; compte sans capteur ou quand le capteur ne donne rien ; 0 = non réglé |
+| **Capteur du surplus solaire** | surplus solaire en kW (positif = surplus) ; vide = jamais de surplus |
+| **Capteur du prix du gaz** | le prix actuel d'un m³ de gaz, par exemple d'un contrat dynamique ; l'emporte sur le prix fixe du gaz tant que le capteur donne un nombre |
+| **Prix fixe du gaz (par m³)** | prix fixe par m³ de gaz, tout compris ; compte sans capteur ou quand le capteur ne donne rien ; sans les deux, le capteur n'est pas créé |
+| **Pouvoir calorifique du gaz (kWh par m³)** | chaleur par m³ de gaz ; 9,77 par défaut |
+| **Rendement de la chaudière (0 à 1,2)** | part de cette chaleur qui atteint les radiateurs ; 0,9 par défaut |
+| **Courbe de COP des climatiseurs** | des points `température extérieure:COP` séparés par des virgules, par exemple `-5:2.8, 7:3.8, 15:4.5` ; vide = le capteur n'est pas créé |
+
 ### Les précipitations mettent la limite extérieure de côté
 
 La limite extérieure par zone est une règle d'économie avec un postulat : s'il
@@ -733,6 +752,7 @@ Un appareil par installation, avec en dessous :
 | `sensor.*_derniere_decision` | combien de zones sont desservies, avec le plan complet en attributs |
 | `sensor.*_commanderait_<entity>` | le mode dans lequel le directeur mettrait cet appareil — un capteur par appareil |
 | `sensor.*_ecarts` | combien d'appareils se trouvent ailleurs que là où le plan les veut ; 0 = directeur et maison d'accord |
+| `sensor.*_source_de_chauffage_la_moins_chere` | quelle source fournit un kWh de chaleur au meilleur prix en ce moment (gaz ou électricité), avec les deux coûts en attributs ; présent seulement si le prix du gaz, le prix de l'électricité et la courbe de COP sont réglés. Simple observation : rien n'est piloté dessus |
 | `sensor.*_source_<zone>` | quelle source dessert cette zone, avec ce que la zone voulait, a obtenu et pourquoi |
 | `binary_sensor.*_<zone>_bloquee` | activé quand une zone a reçu moins que demandé, ou voulait tourner mais qu'une circonstance l'a retenue ; les barrières fermées sont dans les attributs |
 | `binary_sensor.*_<zone>_sur_appareil_de_secours` | activé quand une zone tourne sur un appareil de secours parce que le premier choix est injoignable |

@@ -149,6 +149,7 @@ async def open_screen(home: LiveHome, screen: str) -> tuple[str, dict[str, Any],
 
     if screen in (
         "settings",
+        "energy",
         "openings",
         "zones",
         "circuits",
