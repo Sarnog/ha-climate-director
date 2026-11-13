@@ -184,9 +184,10 @@ le menu principal.
 
 ### Énergie et coûts
 
-Comparez ce que coûte un kWh de chaleur issu du gaz et des climatiseurs. Cela alimente seulement le capteur *Source de
-chauffage la moins chère* ; rien n'est piloté dessus. Donnez à l'électricité et au gaz chacun un prix fixe ou un
-capteur, et renseignez la courbe de COP pour activer la comparaison.
+Comparez ce que coûte un kWh de chaleur issu du gaz et des climatiseurs. Donnez à l'électricité et au gaz chacun un
+prix fixe ou un capteur, et renseignez la courbe de COP pour activer la comparaison. Avec Basculer selon le coût, la
+source la moins chère choisit vraiment quel appareil chauffe ; sans cela, le capteur *Source de chauffage la moins
+chère* ne fait qu'observer.
 
 | Réglage | Ce qu'il fait |
 |---|---|
@@ -200,6 +201,9 @@ capteur, et renseignez la courbe de COP pour activer la comparaison.
 | **Pouvoir calorifique du gaz (kWh par m³)** | chaleur par m³ de gaz ; 9,77 par défaut |
 | **Rendement de la chaudière (0 à 1,2)** | part de cette chaleur qui atteint les radiateurs ; 0,9 par défaut |
 | **Courbe de COP des climatiseurs** | des points `température extérieure:COP` séparés par des virgules, par exemple `-5:2.8, 7:3.8, 15:4.5` ; vide = le capteur n'est pas créé |
+| **Basculer selon le coût** | activé = la source la moins chère choisit si le gaz ou le climatiseur chauffe, dans chaque zone qui a une source au gaz et une électrique ; désactivé = simple observation |
+| **Limite de froid** | sous cette température extérieure, le gaz chauffe toujours ; vide = aucune limite de froid ; 2 °C par défaut |
+| **Marge avant de basculer (%)** | de combien de pourcents l'autre source doit être moins chère avant de basculer ; 10 par défaut |
 
 ### Les précipitations mettent la limite extérieure de côté
 
@@ -318,6 +322,7 @@ une zone, vous choisissez immédiatement ses sources.
 | **Nom** | un nom à vous pour cette source ; vide = le sélecteur nomme l'appareil lui-même |
 | **Entité climate** | l'appareil lui-même |
 | **Ce que cet appareil sait faire** | chauffer seulement, refroidir seulement, ou les deux. Une chaudière est *chauffage seulement* |
+| **Source d'énergie de cet appareil** | gaz ou électrique, pour la comparaison des coûts ; vide = la plage extérieure décide, comme toujours |
 | **Démarrer cet appareil automatiquement** | désactivé le laisse tranquille, voir ci-dessous |
 | **Ordre au sein de cette zone** | quelle source est préférée ; **le plus petit gagne** |
 | **Utiliser à partir de cette température extérieure** | la borne inférieure ; incluse dans la plage |
@@ -753,6 +758,7 @@ Un appareil par installation, avec en dessous :
 | `sensor.*_commanderait_<entity>` | le mode dans lequel le directeur mettrait cet appareil — un capteur par appareil |
 | `sensor.*_ecarts` | combien d'appareils se trouvent ailleurs que là où le plan les veut ; 0 = directeur et maison d'accord |
 | `sensor.*_source_de_chauffage_la_moins_chere` | quelle source fournit un kWh de chaleur au meilleur prix en ce moment (gaz ou électricité), avec les deux coûts en attributs ; présent seulement si le prix du gaz, le prix de l'électricité et la courbe de COP sont réglés. Simple observation : rien n'est piloté dessus |
+| `sensor.*_temperature_de_basculement_gaz_et_climatiseur` | la température extérieure sous laquelle le gaz est moins cher que le climatiseur aux prix d'aujourd'hui (l'attribut `verdict` indique : basculement, électrique partout ou gaz partout) ; présent seulement si le prix du gaz, le prix de l'électricité et la courbe de COP sont réglés. Simple observation |
 | `sensor.*_source_<zone>` | quelle source dessert cette zone, avec ce que la zone voulait, a obtenu et pourquoi |
 | `binary_sensor.*_<zone>_bloquee` | activé quand une zone a reçu moins que demandé, ou voulait tourner mais qu'une circonstance l'a retenue ; les barrières fermées sont dans les attributs |
 | `binary_sensor.*_<zone>_sur_appareil_de_secours` | activé quand une zone tourne sur un appareil de secours parce que le premier choix est injoignable |

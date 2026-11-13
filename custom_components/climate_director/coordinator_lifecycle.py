@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.start import async_at_started
 
+from . import cost_steering
 from .coordinator_surface import CoordinatorSurface
 from .engine.models import SeasonSource
 
@@ -52,6 +53,7 @@ def tracked_entities(coordinator: CoordinatorSurface) -> set[str]:
             entities.add(opening.entity_id)
 
     entities.update(item for item in coordinator.config.holiday_calendars if item)
+    entities.update(cost_steering.tracked_prices(coordinator))
 
     for resident in coordinator.config.residents:
         if resident.presence_entity:

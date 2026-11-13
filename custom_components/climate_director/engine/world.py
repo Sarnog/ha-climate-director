@@ -204,6 +204,17 @@ class WorldState:
     circuit_family_since: dict[str, datetime | None] = field(default_factory=dict)
     """When each circuit last took on its current duty, keyed by `circuit_id`."""
 
+    heat_pick: str | None = None
+    """Welk soort bron nu verwarmt volgens de kosten: `gas`, `electric` of `None`.
+
+    `None` laat het buitenvenster van elke bron beslissen. De koppelingslaag
+    vult dit uit de prijzen; de engine leest het alleen (`sources.select`).
+
+    Which kind of source heats now according to cost: `gas`, `electric` or
+    `None`. `None` lets each source's outdoor window decide. The binding layer
+    fills it from the prices; the engine only reads it (`sources.select`).
+    """
+
     master_enabled: bool = True
     holiday_mode: bool = False
 

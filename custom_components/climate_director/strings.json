@@ -165,6 +165,7 @@
           "name": "Name",
           "entity_id": "Climate entity",
           "role": "What this appliance can do",
+          "energy": "Energy source of this appliance",
           "priority": "Order within this zone",
           "outdoor_min": "Use from this outdoor temperature",
           "outdoor_max": "Use up to this outdoor temperature",
@@ -182,6 +183,7 @@
           "outdoor_max": "The source counts up to this temperature; this value itself is not, so it meets a source starting there exactly.",
           "entity_id": "The climate entity this source steers.",
           "role": "Whether this appliance can heat, cool, or both. A boiler is heating only.",
+          "energy": "Gas or electric, for the cost comparison. Only with Switch on cost on does this appliance's outdoor window stop counting and the cheapest kind get picked. Empty lets the outdoor window decide.",
           "delete": "Removes the source from this zone. The appliance itself is left alone.",
           "autostart": "Off leaves it alone: the director never switches it on, and switches it off only when it runs a duty the shared outdoor unit cannot allow. For an appliance you switch on yourself and want left as you left it.",
           "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
@@ -475,7 +477,7 @@
       },
       "energy": {
         "title": "Energy and costs",
-        "description": "Compare what a kWh of heat costs from gas and from the air conditioners. This only feeds the *Cheapest heat source* sensor; nothing is steered on it. Give power and gas each a fixed price or a sensor, and fill in the COP curve to switch the comparison on.",
+        "description": "Compare what a kWh of heat costs from gas and from the air conditioners. Give power and gas each a fixed price or a sensor, and fill in the COP curve to switch the comparison on. With Switch on cost the cheapest source also really picks which appliance heats; without it the *Cheapest heat source* sensor only watches.",
         "data": {
           "grid_price_sensor": "Power price sensor",
           "grid_price": "Fixed power price (per kWh)",
@@ -487,6 +489,9 @@
           "kwh_per_m3": "Calorific value of gas (kWh per m³)",
           "boiler_efficiency": "Boiler efficiency (0 to 1.2)",
           "cop_curve": "COP curve of the air conditioners",
+          "cost_control": "Switch on cost",
+          "cold_limit": "Cold limit",
+          "switch_margin": "Margin before switching (%)",
           "when_done": "When you are done here"
         },
         "data_description": {
@@ -500,6 +505,9 @@
           "kwh_per_m3": "How much heat a m³ of gas holds. 9.77 is a usual Dutch value; check your gas bill.",
           "boiler_efficiency": "How much of that heat reaches the radiators. 0.9 is a sensible start for a condensing boiler.",
           "cop_curve": "Points of outdoor temperature and COP, separated by commas, for example -5:2.8, 7:3.8, 15:4.5. Between two points the curve runs straight; beyond the first and last it stays flat. Leave empty if you have none, and the cost sensor is then not created.",
+          "cost_control": "On: the cheapest source picks whether gas or the air conditioner heats, in every zone with both a gas and an electric source (set the energy source per source). The outdoor window of those sources then no longer counts. Off: watching only, the outdoor windows decide as ever. Cooling never changes.",
+          "cold_limit": "Below this outdoor temperature gas always heats, whatever the price: the air conditioner's COP cannot be trusted there. Set it at the lowest point of your COP curve. Empty means no cold limit. Going back to electric only happens one dead band above this limit.",
+          "switch_margin": "The other source must be this many percent cheaper before the heating switches, so it does not flip back and forth with every price swing.",
           "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       }
@@ -649,6 +657,13 @@
       "options": {
         "every_day": "every day"
       }
+    },
+    "source_energy": {
+      "options": {
+        "none": "Not in the cost comparison",
+        "gas": "Gas",
+        "electric": "Electric"
+      }
     }
   },
   "entity": {
@@ -756,6 +771,31 @@
           },
           "electricity_price": {
             "name": "Power price used"
+          },
+          "cost_control": {
+            "name": "Switching on cost is on"
+          },
+          "preferred_source": {
+            "name": "Preferred for heating"
+          },
+          "preferred_reason": {
+            "name": "Reason for the preference"
+          },
+          "steered_zones": {
+            "name": "Zones switching on cost"
+          }
+        }
+      },
+      "heat_break_even": {
+        "name": "Gas and air conditioner changeover temperature",
+        "state_attributes": {
+          "verdict": {
+            "name": "Outcome",
+            "state": {
+              "crossover": "Changeover at this temperature",
+              "electric_always": "Electric is cheaper everywhere",
+              "gas_always": "Gas is cheaper everywhere"
+            }
           }
         }
       }

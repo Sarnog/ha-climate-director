@@ -87,6 +87,7 @@ MIXIN_FILES = (
 #: The parts that receive the coordinator as their first argument.
 PART_FILES = (
     "coordinator_events.py",
+    "cost_steering.py",
     "coordinator_lifecycle.py",
     "coordinator_reporting.py",
     "coordinator_round.py",

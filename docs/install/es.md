@@ -182,9 +182,9 @@ hasta que eliges **Guardar y cerrar** en el menú principal.
 
 ### Energía y costes
 
-Compara lo que cuesta un kWh de calor con gas y con los aires acondicionados. Esto solo alimenta el sensor *Fuente de
-calefacción más barata*; no se controla nada con él. Da a la electricidad y al gas un precio fijo o un sensor, e
-indica la curva de COP para activar la comparación.
+Compara lo que cuesta un kWh de calor con gas y con los aires acondicionados. Da a la electricidad y al gas un precio
+fijo o un sensor, e indica la curva de COP para activar la comparación. Con Cambiar según el coste, la fuente más
+barata elige de verdad qué aparato calienta; sin ello, el sensor *Fuente de calefacción más barata* solo observa.
 
 | Ajuste | Qué hace |
 |---|---|
@@ -198,6 +198,9 @@ indica la curva de COP para activar la comparación.
 | **Poder calorífico del gas (kWh por m³)** | calor por m³ de gas; 9,77 por defecto |
 | **Rendimiento de la caldera (0 a 1,2)** | qué parte de ese calor llega a los radiadores; 0,9 por defecto |
 | **Curva de COP de los aires acondicionados** | puntos `temperatura exterior:COP` separados por comas, por ejemplo `-5:2.8, 7:3.8, 15:4.5`; vacío = no se crea el sensor |
+| **Cambiar según el coste** | activado = la fuente más barata elige si calienta el gas o el aire acondicionado, en cada zona con una fuente de gas y una eléctrica; desactivado = solo observar |
+| **Límite de frío** | por debajo de esta temperatura exterior calienta siempre el gas; vacío = sin límite de frío; 2 °C por defecto |
+| **Margen antes de cambiar (%)** | cuántos por ciento más barata debe ser la otra fuente antes de cambiar; 10 por defecto |
 
 ### Las precipitaciones dejan de lado el límite exterior
 
@@ -314,6 +317,7 @@ eliges enseguida sus fuentes.
 | **Nombre** | un nombre propio para esta fuente; vacío = el selector nombra el aparato en sí |
 | **Entidad climate** | el aparato en sí |
 | **Lo que puede hacer este aparato** | solo calentar, solo enfriar, o ambas cosas. Una caldera es *solo calentar* |
+| **Fuente de energía de este aparato** | gas o eléctrico, para la comparación de costes; vacío = decide la franja exterior, como siempre |
 | **Encender este aparato automáticamente** | desactivado lo deja en paz, ver abajo |
 | **Orden dentro de esta zona** | qué fuente se prefiere; **el más bajo gana** |
 | **Usar a partir de esta temperatura exterior** | el límite inferior; incluido en el rango |
@@ -741,6 +745,7 @@ Un dispositivo por instalación, con debajo:
 | `sensor.*_gobernaria_<entity>` | el modo en que el director pondría este aparato — un sensor por aparato |
 | `sensor.*_discrepancias` | cuántos aparatos están ahora en un sitio distinto del que el plan quiere; 0 = director y casa de acuerdo |
 | `sensor.*_fuente_de_calefaccion_mas_barata` | qué fuente entrega un kWh de calor al menor coste ahora (gas o electricidad), con ambos costes como atributos; solo existe si están configurados el precio del gas, el precio de la electricidad y la curva de COP. Solo observación: no se controla nada con él |
+| `sensor.*_temperatura_de_cambio_entre_gas_y_aire_acondicionado` | la temperatura exterior por debajo de la cual el gas es más barato que el aire acondicionado con los precios de hoy (el atributo `verdict` dice: cambio, eléctrico en todas partes o gas en todas partes); solo existe si están definidos el precio del gas, el de la electricidad y la curva de COP. Solo observar |
 | `sensor.*_fuente_<zone>` | qué fuente sirve esta zona, con lo que la zona quería, obtuvo y por qué |
 | `binary_sensor.*_<zone>_bloqueada` | activado cuando una zona recibió menos de lo pedido, o quería funcionar pero una circunstancia la retuvo; las barreras cerradas están en los atributos |
 | `binary_sensor.*_<zone>_en_equipo_suplente` | activado cuando una zona funciona con un aparato suplente porque la primera opción es inalcanzable |

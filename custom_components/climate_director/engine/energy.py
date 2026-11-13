@@ -93,6 +93,24 @@ class EnergySettings:
     boiler_efficiency: float = 0.9
     """Rendement van de ketel, 0 tot 1,2. / The boiler's efficiency, 0 to 1.2."""
 
+    cost_control: bool = False
+    """Of de goedkoopste bron ook echt kiest welk apparaat verwarmt; uit is alleen kijken.
+
+    Whether the cheapest source really picks which appliance heats; off is watching only.
+    """
+
+    cold_limit: float | None = 2.0
+    """Onder deze buitentemperatuur verwarmt altijd gas; leeg is geen koudegrens.
+
+    Below this outdoor temperature gas always heats; empty is no cold limit.
+    """
+
+    switch_margin: float = 10.0
+    """Hoeveel procent goedkoper de andere bron moet zijn om over te schakelen.
+
+    How many percent cheaper the other source must be before the heating switches.
+    """
+
     cop_curve: str = ""
     """De COP-curve als tekst `buitentemperatuur:COP`; zie `parse_cop_curve`.
 
@@ -219,3 +237,57 @@ def heat_costs(
         electricity_price=price,
         cheapest=cheapest({GAS: gas, ELECTRIC: electric}),
     )
+
+
+BREAK_EVEN = "crossover"
+"""Gas en elektrisch wisselen bij een temperatuur. / Gas and electric swap at a temperature."""
+
+ELECTRIC_ALWAYS = "electric_always"
+"""Elektrisch is overal even goedkoop of goedkoper. / Electric is everywhere as cheap or cheaper."""
+
+GAS_ALWAYS = "gas_always"
+"""Gas is over de hele curve goedkoper. / Gas is cheaper across the curve."""
+
+
+@dataclass(frozen=True, slots=True)
+class BreakEven:
+    """Below which outdoor temperature gas beats electricity at these prices."""
+
+    verdict: str | None
+    temperature: float | None
+
+
+def break_even(
+    settings: EnergySettings,
+    electricity_price: float | None,
+    gas_reading: float | None = None,
+) -> BreakEven:
+    """Return the outdoor temperature at which gas and electricity cost the same.
+
+    Het is de omslagtemperatuur voor deze prijzen: eronder is gas goedkoper,
+    erboven de airco. Bij vaste prijzen is dit één getal dat je zo kunt lezen;
+    bij een dynamisch contract beweegt het mee met de prijs. Is een van de twee
+    kosten onbekend, of de curve onleesbaar, dan is er geen antwoord (`None`).
+
+    It is the changeover temperature for these prices: below it gas is cheaper,
+    above it the air conditioner. With fixed prices this is one number you can
+    read at once; with a dynamic contract it moves with the price. If either
+    cost is unknown, or the curve unreadable, there is no answer (`None`).
+    """
+    curve = parse_cop_curve(settings.cop_curve)
+    gas = gas_cost(
+        _entity_or_fixed(gas_reading, settings.gas_price),
+        settings.kwh_per_m3,
+        settings.boiler_efficiency,
+    )
+    if curve is None or gas is None or gas <= 0 or electricity_price is None:
+        return BreakEven(None, None)
+    needed = electricity_price / gas
+    if needed <= 0:
+        return BreakEven(ELECTRIC_ALWAYS, None)
+    cops = [cop for _, cop in curve.points]
+    if min(cops) >= needed:
+        return BreakEven(ELECTRIC_ALWAYS, None)
+    if max(cops) < needed:
+        return BreakEven(GAS_ALWAYS, None)
+    return BreakEven(BREAK_EVEN, curve.first_temperature_with(needed))

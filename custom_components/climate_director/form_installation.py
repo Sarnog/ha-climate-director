@@ -8,6 +8,8 @@ import voluptuous as vol
 from homeassistant.helpers import selector
 
 from .engine.fields import ENERGY_FIELDS, SETTINGS_FIELDS
+from .engine.installation_storage import energy as read_energy
+from .engine.installation_storage import energy_to_dict
 from .flow_surface import FlowSurface
 from .form_common import (
     ADD,
@@ -59,7 +61,10 @@ def energy(flow: Any) -> vol.Schema:
     return table_schema(
         ENERGY_FIELDS,
         flow,
-        values=flow._installation,
+        values={
+            **flow._installation,
+            "energy": energy_to_dict(read_energy(flow._installation.get("energy"))),
+        },
         footer={vol.Required(EXIT, default=EXIT_KEEP): exit_row()},
     )
 

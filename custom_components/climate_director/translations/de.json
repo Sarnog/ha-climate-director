@@ -165,6 +165,7 @@
           "name": "Name",
           "entity_id": "Climate-Entität",
           "role": "Was dieses Gerät kann",
+          "energy": "Energiequelle dieses Geräts",
           "priority": "Reihenfolge innerhalb dieser Zone",
           "outdoor_min": "Verwenden ab dieser Außentemperatur",
           "outdoor_max": "Verwenden bis zu dieser Außentemperatur",
@@ -182,6 +183,7 @@
           "outdoor_max": "Bis zu dieser Temperatur zählt die Quelle mit; dieser Wert selbst nicht mehr, so schließt sie genau an eine Quelle an, die dort beginnt.",
           "entity_id": "Die Climate-Entität, die diese Quelle steuert.",
           "role": "Ob dieses Gerät heizen, kühlen oder beides kann. Ein Heizkessel kann nur heizen.",
+          "energy": "Gas oder elektrisch, für den Kostenvergleich. Nur mit Nach Kosten schalten zählt das Außenfenster dieses Geräts nicht mehr und die günstigste Art wird gewählt. Leer lässt das Außenfenster entscheiden.",
           "delete": "Nimmt die Quelle aus dieser Zone. Das Gerät selbst bleibt unangetastet.",
           "autostart": "Aus lässt es in Ruhe: der Director schaltet es nie ein und nur dann aus, wenn es eine Aufgabe fährt, die das gemeinsame Außengerät nicht zulässt. Für ein Gerät, das du selbst einschaltest und so lassen willst.",
           "when_done": "Wählst du „Verwerfen und zurück“, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst.",
@@ -475,7 +477,7 @@
       },
       "energy": {
         "title": "Energie und Kosten",
-        "description": "Vergleiche, was eine kWh Wärme aus Gas und aus den Klimageräten kostet. Das speist nur den Sensor *Günstigste Wärmequelle*; nichts wird danach gesteuert. Gib Strom und Gas je einen festen Preis oder einen Sensor und trage die COP-Kurve ein, um den Vergleich einzuschalten.",
+        "description": "Vergleiche, was eine kWh Wärme aus Gas und aus den Klimageräten kostet. Gib Strom und Gas je einen festen Preis oder einen Sensor und trage die COP-Kurve ein, um den Vergleich einzuschalten. Mit Nach Kosten schalten wählt die günstigste Quelle auch wirklich, welches Gerät heizt; ohne schaut der Sensor *Günstigste Wärmequelle* nur zu.",
         "data": {
           "grid_price_sensor": "Sensor Strompreis",
           "grid_price": "Fester Strompreis (pro kWh)",
@@ -487,6 +489,9 @@
           "kwh_per_m3": "Brennwert des Gases (kWh pro m³)",
           "boiler_efficiency": "Wirkungsgrad des Kessels (0 bis 1,2)",
           "cop_curve": "COP-Kurve der Klimageräte",
+          "cost_control": "Nach Kosten schalten",
+          "cold_limit": "Kältegrenze",
+          "switch_margin": "Spielraum vor dem Umschalten (%)",
           "when_done": "Wenn du hier fertig bist"
         },
         "data_description": {
@@ -500,6 +505,9 @@
           "kwh_per_m3": "Wie viel Wärme ein m³ Gas enthält. 9,77 ist ein üblicher niederländischer Wert; schau auf deine Gasrechnung.",
           "boiler_efficiency": "Wie viel dieser Wärme die Heizkörper erreicht. 0,9 ist ein vernünftiger Anfang für einen Brennwertkessel.",
           "cop_curve": "Punkte aus Außentemperatur und COP, durch Kommas getrennt, zum Beispiel -5:2.8, 7:3.8, 15:4.5. Zwischen zwei Punkten verläuft die Kurve gerade; vor dem ersten und nach dem letzten bleibt sie flach. Leer lassen, wenn du keine hast; dann wird der Kostensensor nicht angelegt.",
+          "cost_control": "An: die günstigste Quelle wählt, ob Gas oder das Klimagerät heizt, in jeder Zone mit einer Gas- und einer elektrischen Quelle (die Energiequelle je Quelle einstellen). Das Außenfenster dieser Quellen zählt dann nicht mehr. Aus: nur zusehen, die Außenfenster entscheiden wie immer. Kühlen ändert sich nie.",
+          "cold_limit": "Unterhalb dieser Außentemperatur heizt immer Gas, egal zu welchem Preis: dort ist dem COP des Klimageräts nicht zu trauen. Setze sie auf den tiefsten Punkt deiner COP-Kurve. Leer bedeutet keine Kältegrenze. Zurück zu elektrisch geht erst ein Totzone oberhalb dieser Grenze.",
+          "switch_margin": "Die andere Quelle muss so viel Prozent günstiger sein, bevor das Heizen umschaltet, damit es nicht bei jedem Preisschwenk hin- und herspringt.",
           "when_done": "Wählst du „Verwerfen und zurück“, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
         }
       }
@@ -649,6 +657,13 @@
       "options": {
         "every_day": "täglich"
       }
+    },
+    "source_energy": {
+      "options": {
+        "none": "Nicht im Kostenvergleich",
+        "gas": "Gas",
+        "electric": "Elektrisch"
+      }
     }
   },
   "entity": {
@@ -756,6 +771,31 @@
           },
           "electricity_price": {
             "name": "Verwendeter Strompreis"
+          },
+          "cost_control": {
+            "name": "Schalten nach Kosten ist an"
+          },
+          "preferred_source": {
+            "name": "Bevorzugt zum Heizen"
+          },
+          "preferred_reason": {
+            "name": "Grund der Bevorzugung"
+          },
+          "steered_zones": {
+            "name": "Zonen, die nach Kosten schalten"
+          }
+        }
+      },
+      "heat_break_even": {
+        "name": "Umschalttemperatur Gas und Klimagerät",
+        "state_attributes": {
+          "verdict": {
+            "name": "Ergebnis",
+            "state": {
+              "crossover": "Umschalten bei dieser Temperatur",
+              "electric_always": "Elektrisch ist überall günstiger",
+              "gas_always": "Gas ist überall günstiger"
+            }
           }
         }
       }

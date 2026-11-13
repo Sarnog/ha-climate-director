@@ -20,7 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .models import SourceRole
+from .models import SourceEnergy, SourceRole
 
 
 @dataclass(frozen=True, slots=True)
@@ -252,6 +252,22 @@ ENERGY_FIELDS: tuple[FieldSpec, ...] = (
         unit="efficiency",
     ),
     FieldSpec("cop_curve", "text", required=False, target="energy.cop_curve", hook="trim"),
+    FieldSpec("cost_control", "bool", default=False, target="energy.cost_control"),
+    FieldSpec(
+        "cold_limit",
+        "number",
+        required=False,
+        default=2.0,
+        target="energy.cold_limit",
+        unit="temperature",
+    ),
+    FieldSpec(
+        "switch_margin",
+        "number",
+        default=10.0,
+        target="energy.switch_margin",
+        unit="percent",
+    ),
 )
 
 #: Het bronscherm: één apparaat dat een zone kan bedienen. De afsluitregel
@@ -285,6 +301,14 @@ SOURCE_FIELDS: tuple[FieldSpec, ...] = (
         translation_key="source_role",
         target="role",
         options=tuple(item.value for item in SourceRole),
+    ),
+    FieldSpec(
+        "energy",
+        "choice",
+        default=SourceEnergy.NONE.value,
+        translation_key="source_energy",
+        target="energy",
+        options=tuple(item.value for item in SourceEnergy),
     ),
     FieldSpec("autostart", "bool", default=True, target="autostart"),
     FieldSpec("priority", "number", default=0, target="priority", unit="rank"),

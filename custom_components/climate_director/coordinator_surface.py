@@ -131,6 +131,7 @@ class CoordinatorSurface:
     note_precipitation_now: Callable[[], None]
     remember_families: Callable[[WorldState], None]
     with_family_history: Callable[[WorldState], WorldState]
+    with_heat_pick: Callable[[WorldState], WorldState]
     schedule_deferral: Callable[[Plan], None]
     cancel_pending_deferral: Callable[[], None]
     cancel_clock_reeval: Callable[[], None]

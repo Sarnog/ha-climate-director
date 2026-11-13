@@ -2,13 +2,13 @@
 
 What a kWh of heat costs: gas against an electric source.
 
-Alleen rekenwerk, zonder Home Assistant en zonder toestand. Deze module is nog niet
-aangesloten op de bronkeuze: `sources.py` kent hem niet en geen enkel besluit hangt
-ervan af, dus hij verandert niets aan wat de ketel en de airco's doen.
+Alleen rekenwerk, zonder Home Assistant en zonder toestand. De bronkeuze leest
+deze module niet zelf: `energy.py` en `heat_pick.py` maken er een voorkeur van,
+en die komt als `WorldState.heat_pick` bij `sources.py`.
 
-Pure arithmetic, with no Home Assistant and no state. This module is not yet wired
-to the source selection: `sources.py` does not know it and no decision depends on
-it, so it changes nothing about what the boiler and the air conditioners do.
+Pure arithmetic, with no Home Assistant and no state. The source selection does
+not read this module itself: `energy.py` and `heat_pick.py` turn it into a
+preference, which reaches `sources.py` as `WorldState.heat_pick`.
 
 Alles wat onleesbaar of onbruikbaar is geeft `None`, geen uitzondering en geen
 gok: een caller die geen kosten heeft, houdt de huidige bronvolgorde.
@@ -62,6 +62,26 @@ class CopCurve:
                 share = (outdoor - low_t) / (high_t - low_t)
                 return low_cop + share * (high_cop - low_cop)
         return usable[-1][1]
+
+    def first_temperature_with(self, cop: float) -> float | None:
+        """Return the lowest outdoor temperature at which the COP reaches `cop`.
+
+        Loopt de curve al op of boven `cop` bij het koudste punt, of haalt hij
+        het nergens, dan is er geen kruising en geeft dit `None`. Bij een curve
+        die niet stijgt telt de eerste kruising van onder naar boven.
+
+        If the curve already sits at or above `cop` at its coldest point, or
+        never reaches it, there is no crossing and this gives `None`. On a curve
+        that does not rise, the first crossing from below counts.
+        """
+        usable = sorted(point for point in self.points if point[1] > 0)
+        if not usable or usable[0][1] >= cop:
+            return None
+        for (low_t, low_cop), (high_t, high_cop) in zip(usable, usable[1:], strict=False):
+            if high_cop >= cop > low_cop:
+                share = (cop - low_cop) / (high_cop - low_cop)
+                return low_t + share * (high_t - low_t)
+        return None
 
 
 def gas_cost(price_per_m3: float | None, kwh_per_m3: float, efficiency: float) -> float | None:

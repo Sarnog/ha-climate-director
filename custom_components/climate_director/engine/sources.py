@@ -15,6 +15,7 @@ scale with neither a gap nor an overlap.
 
 from __future__ import annotations
 
+from .equipment import SourceEnergy
 from .families import ModeFamily, preferred_mode
 from .models import Source, Zone
 from .world import WorldState
@@ -84,6 +85,8 @@ def select(
     window does not count this round (`unbounded`), because the split on outdoor
     temperature is no reason to leave a house standing cold.
     """
+    pick = world.heat_pick if family is ModeFamily.HEAT else None
+    unbounded = unbounded | _windowless(zone, pick)
     eligible = [
         source
         for source in zone.sources
@@ -96,7 +99,41 @@ def select(
         return held
     if not eligible:
         return None
-    return min(eligible, key=lambda source: (source.priority, source.source_id))
+    return _best(eligible, pick)
+
+
+def _best(eligible: list[Source], pick: str | None) -> Source:
+    """Return the preferred source: the picked kind first, then priority, then id."""
+    return min(
+        eligible, key=lambda source: (_behind(source, pick), source.priority, source.source_id)
+    )
+
+
+def _windowless(zone: Zone, pick: str | None) -> frozenset[str]:
+    """Return the sources whose outdoor window does not count under this cost preference.
+
+    De kostenvoorkeur geldt alleen voor verwarmen, en alleen voor bronnen die een
+    energiesoort hebben: hun buitenvenster telt dan niet, de koudegrens van de
+    voorkeur neemt die scheiding over. De voorkeur plaatst de bron die nu goedkoper is
+    vóór de andere; de andere blijft als terugval beschikbaar (zie `_behind`).
+
+    The cost preference only applies to heating, and only to sources with an energy
+    kind: their outdoor window then does not count, the preference's cold limit
+    takes that split over. The preference ranks the source that is cheaper now
+    ahead of the other; the other stays available as a fallback (see `_behind`).
+    """
+    if pick is None:
+        return frozenset()
+    return frozenset(
+        source.entity_id for source in zone.sources if source.energy is not SourceEnergy.NONE
+    )
+
+
+def _behind(source: Source, pick: str | None) -> int:
+    """Return 1 for a source of the kind the cost preference does not pick, else 0."""
+    if pick is None or source.energy is SourceEnergy.NONE:
+        return 0
+    return 0 if source.energy.value == pick else 1
 
 
 def _held(
@@ -208,11 +245,14 @@ def passed_over(
     )
     if chosen is None:
         return ()
-    rank = (chosen.priority, chosen.source_id)
+    pick = world.heat_pick if family is ModeFamily.HEAT else None
+    rank = (_behind(chosen, pick), chosen.priority, chosen.source_id)
     return tuple(
         source.source_id
-        for source in sorted(zone.sources, key=lambda item: (item.priority, item.source_id))
-        if (source.priority, source.source_id) < rank
+        for source in sorted(
+            zone.sources, key=lambda item: (_behind(item, pick), item.priority, item.source_id)
+        )
+        if (_behind(source, pick), source.priority, source.source_id) < rank
         and source.entity_id not in handed_over
         and _suitable(source, family, world)
         and (
@@ -225,10 +265,17 @@ def passed_over(
 
 def _suitable(source: Source, family: ModeFamily, world: WorldState) -> bool:
     """Return whether a source fits this duty, leaving reachability aside."""
+    # Met een kostenvoorkeur telt het buitenvenster van een bron met een
+    # energiesoort niet; zie `select`. / With a cost preference the outdoor window
+    # of a source with an energy kind does not count; see `select`.
+    if family is ModeFamily.HEAT and world.heat_pick is not None:
+        windowless = source.energy is not SourceEnergy.NONE
+    else:
+        windowless = False
     return (
         source.autostart
         and source.supports(family)
-        and source.outdoor.contains(world.outdoor_temperature)
+        and (windowless or source.outdoor.contains(world.outdoor_temperature))
     )
 
 

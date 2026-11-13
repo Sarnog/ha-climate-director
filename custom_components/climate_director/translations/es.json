@@ -165,6 +165,7 @@
           "name": "Nombre",
           "entity_id": "Entidad climate",
           "role": "Lo que puede hacer este aparato",
+          "energy": "Fuente de energía de este aparato",
           "priority": "Orden dentro de esta zona",
           "outdoor_min": "Usar a partir de esta temperatura exterior",
           "outdoor_max": "Usar hasta esta temperatura exterior",
@@ -182,6 +183,7 @@
           "outdoor_max": "Hasta esta temperatura la fuente cuenta; este valor mismo ya no, de modo que enlaza exactamente con una fuente que empieza ahí.",
           "entity_id": "La entidad climate que gobierna esta fuente.",
           "role": "Si este aparato puede calentar, enfriar, o ambas cosas. Una caldera solo calienta.",
+          "energy": "Gas o eléctrico, para la comparación de costes. Solo con Cambiar según el coste activado deja de contar la franja exterior de este aparato y se elige el tipo más barato. Vacío deja decidir a la franja exterior.",
           "delete": "Saca la fuente de esta zona. El aparato en sí queda intacto.",
           "autostart": "Desactivado lo deja en paz: el director nunca lo enciende, y solo lo apaga si realiza una tarea que la unidad exterior compartida no permite. Para un aparato que enciendes tú y quieres dejar como está.",
           "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
@@ -475,7 +477,7 @@
       },
       "energy": {
         "title": "Energía y costes",
-        "description": "Compara lo que cuesta un kWh de calor con gas y con los aires acondicionados. Esto solo alimenta el sensor *Fuente de calefacción más barata*; no se controla nada con él. Da a la electricidad y al gas un precio fijo o un sensor, e indica la curva de COP para activar la comparación.",
+        "description": "Compara lo que cuesta un kWh de calor con gas y con los aires acondicionados. Da a la electricidad y al gas un precio fijo o un sensor, e indica la curva de COP para activar la comparación. Con Cambiar según el coste, la fuente más barata elige de verdad qué aparato calienta; sin ello, el sensor *Fuente de calefacción más barata* solo observa.",
         "data": {
           "grid_price_sensor": "Sensor del precio de la electricidad",
           "grid_price": "Precio fijo de la electricidad (por kWh)",
@@ -487,6 +489,9 @@
           "kwh_per_m3": "Poder calorífico del gas (kWh por m³)",
           "boiler_efficiency": "Rendimiento de la caldera (0 a 1,2)",
           "cop_curve": "Curva de COP de los aires acondicionados",
+          "cost_control": "Cambiar según el coste",
+          "cold_limit": "Límite de frío",
+          "switch_margin": "Margen antes de cambiar (%)",
           "when_done": "Cuando termines aquí"
         },
         "data_description": {
@@ -500,6 +505,9 @@
           "kwh_per_m3": "Cuánto calor contiene un m³ de gas. 9,77 es un valor neerlandés habitual; mira tu factura del gas.",
           "boiler_efficiency": "Qué parte de ese calor llega a los radiadores. 0,9 es un buen punto de partida para una caldera de condensación.",
           "cop_curve": "Puntos de temperatura exterior y COP, separados por comas, por ejemplo -5:2.8, 7:3.8, 15:4.5. Entre dos puntos la curva es recta; antes del primero y después del último queda plana. Déjalo vacío si no tienes ninguna, y entonces no se crea el sensor de coste.",
+          "cost_control": "Activado: la fuente más barata elige si calienta el gas o el aire acondicionado, en cada zona con una fuente de gas y una eléctrica (indica la fuente de energía de cada fuente). La franja exterior de esas fuentes deja de contar. Desactivado: solo observar, las franjas exteriores deciden como siempre. Enfriar nunca cambia.",
+          "cold_limit": "Por debajo de esta temperatura exterior calienta siempre el gas, sea cual sea el precio: allí no se puede confiar en el COP del aire acondicionado. Ponla en el punto más bajo de tu curva de COP. Vacío significa sin límite de frío. Volver a eléctrico solo ocurre una banda muerta por encima de este límite.",
+          "switch_margin": "La otra fuente debe ser este porcentaje más barata antes de que la calefacción cambie, para que no vaya de un lado a otro con cada oscilación del precio.",
           "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       }
@@ -649,6 +657,13 @@
       "options": {
         "every_day": "todos los días"
       }
+    },
+    "source_energy": {
+      "options": {
+        "none": "Fuera de la comparación de costes",
+        "gas": "Gas",
+        "electric": "Eléctrico"
+      }
     }
   },
   "entity": {
@@ -756,6 +771,31 @@
           },
           "electricity_price": {
             "name": "Precio de electricidad usado"
+          },
+          "cost_control": {
+            "name": "Cambio según el coste activado"
+          },
+          "preferred_source": {
+            "name": "Preferencia para calentar"
+          },
+          "preferred_reason": {
+            "name": "Motivo de la preferencia"
+          },
+          "steered_zones": {
+            "name": "Zonas que cambian según el coste"
+          }
+        }
+      },
+      "heat_break_even": {
+        "name": "Temperatura de cambio entre gas y aire acondicionado",
+        "state_attributes": {
+          "verdict": {
+            "name": "Resultado",
+            "state": {
+              "crossover": "Cambio a esta temperatura",
+              "electric_always": "Lo eléctrico es más barato en todas partes",
+              "gas_always": "El gas es más barato en todas partes"
+            }
           }
         }
       }

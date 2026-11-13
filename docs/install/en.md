@@ -181,9 +181,9 @@ what you typed is then thrown away. And **nothing** is stored until you pick
 
 ### Energy and costs
 
-Compare what a kWh of heat costs from gas and from the air conditioners. This only feeds the *Cheapest heat source*
-sensor; nothing is steered on it. Give power and gas each a fixed price or a sensor, and fill in the COP curve to
-switch the comparison on.
+Compare what a kWh of heat costs from gas and from the air conditioners. Give power and gas each a fixed price or a
+sensor, and fill in the COP curve to switch the comparison on. With Switch on cost the cheapest source also really
+picks which appliance heats; without it the *Cheapest heat source* sensor only watches.
 
 | Setting | What it does |
 |---|---|
@@ -197,6 +197,9 @@ switch the comparison on.
 | **Calorific value of gas (kWh per m³)** | heat per m³ of gas; 9.77 by default |
 | **Boiler efficiency (0 to 1.2)** | how much of that heat reaches the radiators; 0.9 by default |
 | **COP curve of the air conditioners** | points `outdoor temperature:COP` separated by commas, for example `-5:2.8, 7:3.8, 15:4.5`; empty = the sensor is not created |
+| **Switch on cost** | on = the cheapest source picks whether gas or the air conditioner heats, in every zone with both a gas and an electric source; off = watching only |
+| **Cold limit** | below this outdoor temperature gas always heats; empty = no cold limit; 2 °C by default |
+| **Margin before switching (%)** | how many percent cheaper the other source must be before it switches; 10 by default |
 
 ### Precipitation sets the outdoor bound aside
 
@@ -309,6 +312,7 @@ you pick its sources straight away.
 | **Name** | a name of your own for this source; empty = the picker names the appliance itself |
 | **Climate entity** | the appliance itself |
 | **What this appliance can do** | heating only, cooling only, or both. A boiler is *heating only* |
+| **Energy source of this appliance** | gas or electric, for the cost comparison; empty = the outdoor window decides, as ever |
 | **Start this appliance automatically** | off leaves it alone, see below |
 | **Order within this zone** | which source is preferred; **lower wins** |
 | **Use from this outdoor temperature** | the lower bound; included in the range |
@@ -728,6 +732,7 @@ One device per installation, holding:
 | `sensor.*_would_command_<entity>` | the mode the director would put this appliance in — one sensor per appliance |
 | `sensor.*_mismatch` | how many appliances currently sit somewhere other than where the plan wants them; 0 = director and house agree |
 | `sensor.*_cheapest_heat_source` | which source delivers a kWh of heat cheapest right now (gas or electricity), with both costs as attributes; only there when gas price, power price and COP curve are set. Watching only: nothing is steered on it |
+| `sensor.*_gas_and_air_conditioner_changeover_temperature` | the outdoor temperature below which gas is cheaper than the air conditioner at today's prices (the `verdict` attribute says: changeover, electric everywhere or gas everywhere); only there when gas price, power price and COP curve are set. Watching only |
 | `sensor.*_<zone>_source` | which source serves this zone, with what the zone wanted, got and why |
 | `binary_sensor.*_<zone>_blocked` | on when a zone got less than it asked for, or wanted to run but a circumstance held it back; the shut gates are in the attributes |
 | `binary_sensor.*_<zone>_on_stand_in` | on when a zone runs on a stand-in appliance because its first choice is unreachable |

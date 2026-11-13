@@ -615,6 +615,7 @@ class TestDiscardArrivesOnEveryScreen:
             "surplus_sensor": "sensor.overschot",
             "gas_price_sensor": "sensor.gasprijs",
             "cop_curve": "-5:2.8, 7:3.8",
+            "cold_limit": 2.0,
         },
         "openings": {"house_wide_openings": [LIVING]},
     }
