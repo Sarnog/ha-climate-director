@@ -218,8 +218,9 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   actie en een timer die vanzelf afloopt); dit idee gaat alleen over het automatische deel.
 - **Energieprijs als bronvoorkeur** — een dynamisch tarief of een
   zonnepanelenoverschot laten meewegen in `Source.priority`, zodat de goedkoopste bron
-  wint zolang die het aankan. Stap 1, het kostenrekenwerk (`engine/cost.py`), is er; het is nog
-  niet aangesloten op de bronkeuze.
+  wint zolang die het aankan. Stap 1, het kostenrekenwerk (`engine/cost.py`), is er, en stap 2: de
+  energie-instellingen en de sensor *Goedkoopste warmtebron* (alleen kijken). Het schakelen op
+  kosten is er nog niet.
 - **Live prioriteiten gelijk trekken op één circuit** — twee zones met dezelfde prioriteit
   op hetzelfde circuit laten nu de bron- en zonevolgorde beslissen. Een zone die lang
   wacht zou tijdelijk één stap voorrang kunnen krijgen, met terugval naar de ingestelde
@@ -578,7 +579,9 @@ The worked-out design proposals for everything below live in
   out by itself); this idea is only about the automatic part.
 - **Energy price as source preference** — let a dynamic tariff or a solar surplus weigh
   into `Source.priority`, so the cheapest source wins as long as it can cope. Step 1, the cost
-  arithmetic (`engine/cost.py`), is in; it is not yet wired to the source selection.
+  arithmetic (`engine/cost.py`), is in, and step 2: the
+  energy settings and the *Cheapest heat source* sensor (watching only). Switching on cost is
+  not there yet.
 - **Levelling live priorities on one circuit** — two zones with the same priority on the
   same circuit now let source and zone order decide. A zone that waits long could get one
   temporary step of precedence, falling back to the configured priority. The design stands

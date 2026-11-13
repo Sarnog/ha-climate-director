@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import timedelta
 
+from .energy import EnergySettings
 from .equipment import (
     Circuit,
     ConflictPolicy,
@@ -37,6 +38,7 @@ __all__ = [
     "QUIET_ROOM_MINUTES",
     "Circuit",
     "ConflictPolicy",
+    "EnergySettings",
     "GateSettings",
     "Generator",
     "HeatingLayout",
@@ -106,6 +108,11 @@ class DirectorConfig:
     gates: GateSettings = field(default_factory=GateSettings)
     seasons: SeasonSettings = field(default_factory=SeasonSettings)
     precipitation: PrecipitationSettings = field(default_factory=PrecipitationSettings)
+    energy: EnergySettings = field(default_factory=EnergySettings)
+    """Prijzen en rendementen voor de kostenvergelijking; hangt aan geen besluit.
+
+    Prices and efficiencies for the cost comparison; no decision hangs on it.
+    """
 
     heating_layout: HeatingLayout = HeatingLayout.PER_ZONE
     """What kind of heating installation this is; see `HeatingLayout`."""

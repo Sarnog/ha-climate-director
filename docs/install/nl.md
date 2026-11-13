@@ -177,6 +177,13 @@ je in het hoofdmenu **Opslaan en sluiten** kiest.
 | **Neerslagbron** | een `weather.*`- of `sensor.*`-entiteit die zegt of er neerslag valt; leeg = de neerslagregel doet niet mee |
 | **Toestanden die als neerslag tellen** | welke standen van die entiteit neerslag betekenen; standaard regen, sneeuw en hagel |
 | **Hoe lang neerslag blijft tellen (minuten)** | nalooptijd na het stoppen van de neerslag; standaard 15 minuten |
+| **Sensor stroomprijs** | de huidige prijs van een kWh stroom, bijvoorbeeld uit een dynamisch contract; voedt samen met gasprijs en COP-curve de sensor *Goedkoopste warmtebron* |
+| **Sensor terugleverprijs** | de prijs die je krijgt voor een teruggeleverde kWh; telt als stroomprijs bij zonne-overschot; leeg = altijd de stroomprijs |
+| **Sensor zonne-overschot** | zonne-overschot in kW (positief = overschot); leeg = nooit een overschot |
+| **Gasprijs (per m³)** | wat een m³ gas je kost, alles inbegrepen; 0 = niet ingesteld, en dan wordt de sensor niet aangemaakt |
+| **Calorische waarde van gas (kWh per m³)** | warmte per m³ gas; standaard 9,77 |
+| **Rendement van de ketel (0 tot 1,2)** | hoeveel van die warmte de radiatoren bereikt; standaard 0,9 |
+| **COP-curve van de airco's** | punten `buitentemperatuur:COP` met komma's gescheiden, bijvoorbeeld `-5:2.8, 7:3.8, 15:4.5`; leeg = de sensor wordt niet aangemaakt |
 | **Schaduwmodus** | aan = alles doorrekenen, niets aansturen |
 
 ### Neerslag zet de buitengrens opzij
@@ -711,6 +718,7 @@ Eén device per installatie, met daaronder:
 | `sensor.*_laatste_beslissing` | hoeveel zones bediend worden, met het volledige plan als attributen |
 | `sensor.*_zou_<entity>_aansturen` | de stand waarin de director dit apparaat zou zetten — één sensor per apparaat |
 | `sensor.*_afwijkingen` | hoeveel apparaten er nú anders staan dan het plan wil; 0 = director en huis zijn het eens |
+| `sensor.*_goedkoopste_warmtebron` | welke bron een kWh warmte nu het goedkoopst levert (gas of elektriciteit), met beide kosten als attribuut; alleen aanwezig als gasprijs, stroomprijs en COP-curve zijn ingesteld. Alleen kijken: er wordt niets op gestuurd |
 | `sensor.*_bron_<zone>` | welke bron deze zone bedient, met wat de zone wilde, kreeg en waarom |
 | `binary_sensor.*_<zone>_geblokkeerd` | aan als een zone minder kreeg dan hij vroeg, of wilde draaien maar een omstandigheid haar tegenhield; de dichte poorten staan in de attributen |
 | `binary_sensor.*_<zone>_op_reserve` | aan als een zone op een reserve-apparaat draait omdat de eerste keus onbereikbaar is |

@@ -201,6 +201,37 @@ SETTINGS_FIELDS: tuple[FieldSpec, ...] = (
         target="precipitation.grace",
         unit="minutes",
     ),
+    FieldSpec(
+        "grid_price_sensor",
+        "entity",
+        required=False,
+        target="energy.grid_price_sensor",
+        domain="sensor",
+    ),
+    FieldSpec(
+        "feed_in_sensor",
+        "entity",
+        required=False,
+        target="energy.feed_in_sensor",
+        domain="sensor",
+    ),
+    FieldSpec(
+        "surplus_sensor",
+        "entity",
+        required=False,
+        target="energy.surplus_sensor",
+        domain="sensor",
+    ),
+    FieldSpec("gas_price", "number", default=0.0, target="energy.gas_price", unit="price"),
+    FieldSpec("kwh_per_m3", "number", default=9.77, target="energy.kwh_per_m3", unit="kwh_per_m3"),
+    FieldSpec(
+        "boiler_efficiency",
+        "number",
+        default=0.9,
+        target="energy.boiler_efficiency",
+        unit="efficiency",
+    ),
+    FieldSpec("cop_curve", "text", required=False, target="energy.cop_curve", hook="trim"),
     FieldSpec("shadow_mode", "bool", default=None, target=None, hook="control_state"),
 )
 

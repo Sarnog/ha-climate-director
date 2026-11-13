@@ -178,6 +178,13 @@ hasta que eliges **Guardar y cerrar** en el menú principal.
 | **Fuente de precipitaciones** | una entidad `weather.*` o `sensor.*` que dice si hay precipitaciones; vacío = la regla de precipitaciones no participa |
 | **Estados que cuentan como precipitación** | qué estados de esa entidad significan precipitaciones; lluvia, nieve y granizo por defecto |
 | **Cuánto tiempo siguen contando las precipitaciones (minutos)** | margen tras cesar las precipitaciones; 15 minutos por defecto |
+| **Sensor del precio de la electricidad** | el precio actual de un kWh de electricidad, por ejemplo de un contrato dinámico; junto con el precio del gas y la curva de COP alimenta el sensor *Fuente de calefacción más barata* |
+| **Sensor del precio de excedentes** | el precio que recibes por un kWh vertido; cuenta como precio de la electricidad con excedente solar; vacío = siempre el precio de la electricidad |
+| **Sensor del excedente solar** | excedente solar en kW (positivo = excedente); vacío = nunca excedente |
+| **Precio del gas (por m³)** | lo que te cuesta un m³ de gas, todo incluido; 0 = sin configurar, y entonces no se crea el sensor |
+| **Poder calorífico del gas (kWh por m³)** | calor por m³ de gas; 9,77 por defecto |
+| **Rendimiento de la caldera (0 a 1,2)** | qué parte de ese calor llega a los radiadores; 0,9 por defecto |
+| **Curva de COP de los aires acondicionados** | puntos `temperatura exterior:COP` separados por comas, por ejemplo `-5:2.8, 7:3.8, 15:4.5`; vacío = no se crea el sensor |
 | **Modo sombra** | activado = calcularlo todo, no gobernar nada |
 
 ### Las precipitaciones dejan de lado el límite exterior
@@ -721,6 +728,7 @@ Un dispositivo por instalación, con debajo:
 | `sensor.*_ultima_decision` | cuántas zonas están siendo servidas, con el plan completo como atributos |
 | `sensor.*_gobernaria_<entity>` | el modo en que el director pondría este aparato — un sensor por aparato |
 | `sensor.*_discrepancias` | cuántos aparatos están ahora en un sitio distinto del que el plan quiere; 0 = director y casa de acuerdo |
+| `sensor.*_fuente_de_calefaccion_mas_barata` | qué fuente entrega un kWh de calor al menor coste ahora (gas o electricidad), con ambos costes como atributos; solo existe si están configurados el precio del gas, el precio de la electricidad y la curva de COP. Solo observación: no se controla nada con él |
 | `sensor.*_fuente_<zone>` | qué fuente sirve esta zona, con lo que la zona quería, obtuvo y por qué |
 | `binary_sensor.*_<zone>_bloqueada` | activado cuando una zona recibió menos de lo pedido, o quería funcionar pero una circunstancia la retuvo; las barreras cerradas están en los atributos |
 | `binary_sensor.*_<zone>_en_equipo_suplente` | activado cuando una zona funciona con un aparato suplente porque la primera opción es inalcanzable |

@@ -58,7 +58,14 @@
           "precipitation_source": "Neerslagbron",
           "precipitation_states": "Toestanden die als neerslag tellen",
           "precipitation_grace": "Hoe lang neerslag blijft tellen (minuten)",
-          "guest_days": "Dagen van de gastenmodus"
+          "guest_days": "Dagen van de gastenmodus",
+          "grid_price_sensor": "Sensor stroomprijs",
+          "feed_in_sensor": "Sensor terugleverprijs",
+          "surplus_sensor": "Sensor zonne-overschot",
+          "gas_price": "Gasprijs (per m³)",
+          "kwh_per_m3": "Calorische waarde van gas (kWh per m³)",
+          "boiler_efficiency": "Rendement van de ketel (0 tot 1,2)",
+          "cop_curve": "COP-curve van de airco's"
         },
         "data_description": {
           "season_source": "Leid het seizoen af uit de maand, lees het uit een entiteit, of zet het met de hand vast.",
@@ -80,7 +87,14 @@
           "precipitation_source": "Een weather-entiteit of neerslagsensor. Zolang die een van de staten hieronder meldt, wordt de 'zet een raam open'-grens per zone overgeslagen. Laat leeg om de gewone regel altijd te laten gelden.",
           "precipitation_states": "Komma-gescheiden. Voor een weather-entiteit zijn dit zijn condities; voor een sensor zijn het zijn toestanden. De standaard dekt regen, sneeuw en hagel.",
           "precipitation_grace": "Een bui van vijf minuten hoort de regeling niet te laten stuiteren, dus een meting blijft nog zo lang meetellen nadat de neerslag ophoudt.",
-          "guest_days": "Laat leeg voor elke dag; anders draagt de gastenmodus het huis alleen op de gekozen dagen."
+          "guest_days": "Laat leeg voor elke dag; anders draagt de gastenmodus het huis alleen op de gekozen dagen.",
+          "grid_price_sensor": "De huidige prijs van een kWh stroom, bijvoorbeeld uit een dynamisch contract. Samen met de gasprijs en de COP-curve voedt dit de kostensensor, die alleen de goedkoopste bron laat zien en niets beslist.",
+          "feed_in_sensor": "De huidige prijs die je krijgt voor een teruggeleverde kWh. Telt als stroomprijs zolang er een zonne-overschot is. Laat leeg om altijd de stroomprijs te gebruiken.",
+          "surplus_sensor": "Het zonne-overschot in kW; een positieve waarde telt als overschot. Laat leeg om nooit een overschot te tellen.",
+          "gas_price": "Wat een m³ gas je kost, alles inbegrepen, in jouw munteenheid. Nul betekent niet ingesteld, en dan wordt de kostensensor niet aangemaakt.",
+          "kwh_per_m3": "Hoeveel warmte een m³ gas bevat. 9,77 is een gebruikelijke Nederlandse waarde; kijk op je gasrekening.",
+          "boiler_efficiency": "Hoeveel van die warmte de radiatoren bereikt. 0,9 is een verstandig begin voor een HR-ketel.",
+          "cop_curve": "Punten van buitentemperatuur en COP, met komma's gescheiden, bijvoorbeeld -5:2.8, 7:3.8, 15:4.5. Tussen twee punten loopt de curve recht; voorbij het eerste en laatste punt blijft hij vlak. Laat leeg als je er geen hebt, en dan wordt de kostensensor niet aangemaakt."
         }
       },
       "zones": {
@@ -475,6 +489,7 @@
     },
     "error": {
       "bands_overlap": "De banden van verwarmen en koelen raken elkaar of overlappen: het uitschakelpunt van verwarmen ligt op of boven het aanpunt van koelen, of het uitschakelpunt van koelen ligt op of onder het aanpunt van verwarmen. Dan zou de kamer om de beurt verwarmen en koelen. Zet het aanpunt van koelen hoger of maak een dode band smaller, zodat er ruimte tussen de twee banden blijft.",
+      "cop_curve_invalid": "De COP-curve is niet te lezen. Schrijf punten als temperatuur:COP, gescheiden door komma's, bijvoorbeeld -5:2.8, 7:3.8, 15:4.5. Elke COP moet boven nul liggen en een temperatuur mag niet twee keer voorkomen.",
       "duplicate_priority": "Een andere kamer op dezelfde buitenunit heeft deze prioriteit al. Twee kamers met hetzelfde nummer laten de uitkomst van hun naam afhangen, dus kies een vrij nummer.",
       "presence_gate_without_sensor": "Deze zone staat op aanwezigheid in de ruimte, maar er is geen aanwezigheidssensor gekozen. De kamer telt dan voorgoed als leeg en de zone doet nooit meer iets. Kies een sensor, of laat het huishouden beslissen.",
       "required": "Dit veld is nodig om te bewaren. Vul het in, of kies onderaan “Verwerpen en teruggaan” om weg te gaan zonder op te slaan.",
@@ -705,6 +720,27 @@
       },
       "mismatch": {
         "name": "Afwijkingen"
+      },
+      "cheapest_heat": {
+        "name": "Goedkoopste warmtebron",
+        "state": {
+          "gas": "Gas",
+          "electric": "Elektriciteit"
+        },
+        "state_attributes": {
+          "gas_cost": {
+            "name": "Gas, per kWh warmte"
+          },
+          "electric_cost": {
+            "name": "Elektriciteit, per kWh warmte"
+          },
+          "cop": {
+            "name": "COP nu"
+          },
+          "electricity_price": {
+            "name": "Gebruikte stroomprijs"
+          }
+        }
       }
     },
     "binary_sensor": {

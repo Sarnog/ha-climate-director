@@ -329,6 +329,19 @@
   "custom_components/climate_director/engine/windows.py",
   "custom_components/climate_director/engine/world.py"
  ],
+ "tests/test_energy.py": [
+  "custom_components/climate_director/engine/cost.py",
+  "custom_components/climate_director/engine/energy.py",
+  "custom_components/climate_director/engine/fields.py",
+  "custom_components/climate_director/engine/installation_storage.py",
+  "custom_components/climate_director/engine/serialise.py",
+  "custom_components/climate_director/engine/storage_values.py",
+  "custom_components/climate_director/engine/table_storage.py",
+  "custom_components/climate_director/flow_validation.py",
+  "custom_components/climate_director/form_common.py",
+  "custom_components/climate_director/schema_fields.py",
+  "custom_components/climate_director/schema_numbers.py"
+ ],
  "tests/test_entity_categories.py": [
   "custom_components/climate_director/binary_sensor.py",
   "custom_components/climate_director/button.py",
@@ -921,6 +934,13 @@
   "custom_components/climate_director/world_builder.py"
  ],
  "tests/test_harness_appliances.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
+ ],
+ "tests/test_heat_cost_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
   "custom_components/climate_director/brand/",

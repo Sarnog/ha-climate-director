@@ -45,6 +45,7 @@ EXPECTED: dict[str, dict[str, EntityCategory | None]] = {
         "last_decision": EntityCategory.DIAGNOSTIC,
         "would_command": EntityCategory.DIAGNOSTIC,
         "mismatch": EntityCategory.DIAGNOSTIC,
+        "cheapest_heat": EntityCategory.DIAGNOSTIC,
         "zone_source": EntityCategory.DIAGNOSTIC,
         # Een bedieningsentiteit voor het dashboard, net als de
         # overrideschakelaar: bewust zichtbaar en niet achter het
@@ -81,7 +82,7 @@ def _entity_classes(platform: str) -> dict[str, type]:
         cls.__dict__["__attr_translation_key"]: cls
         for cls in vars(module).values()
         if isinstance(cls, type)
-        and cls.__module__ == module.__name__
+        and cls.__module__.startswith(f"{module.__name__}")
         and "__attr_translation_key" in cls.__dict__
     }
 

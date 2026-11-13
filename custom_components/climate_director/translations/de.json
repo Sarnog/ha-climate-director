@@ -58,7 +58,14 @@
           "precipitation_source": "Niederschlagsquelle",
           "precipitation_states": "Zustände, die als Niederschlag zählen",
           "precipitation_grace": "Wie lange Niederschlag weiter zählt (Minuten)",
-          "guest_days": "Tage des Gästemodus"
+          "guest_days": "Tage des Gästemodus",
+          "grid_price_sensor": "Sensor Strompreis",
+          "feed_in_sensor": "Sensor Einspeisepreis",
+          "surplus_sensor": "Sensor Solarüberschuss",
+          "gas_price": "Gaspreis (pro m³)",
+          "kwh_per_m3": "Brennwert des Gases (kWh pro m³)",
+          "boiler_efficiency": "Wirkungsgrad des Kessels (0 bis 1,2)",
+          "cop_curve": "COP-Kurve der Klimageräte"
         },
         "data_description": {
           "season_source": "Leite die Jahreszeit aus dem Monat ab, lies sie aus einer Entität, oder lege sie von Hand fest.",
@@ -80,7 +87,14 @@
           "precipitation_source": "Eine Wetter-Entität oder ein Niederschlagssensor. Solange sie einen der Zustände unten meldet, wird die 'Fenster-öffnen'-Grenze pro Zone übersprungen. Leer lassen, damit die gewöhnliche Regel immer gilt.",
           "precipitation_states": "Kommagetrennt. Bei einer Wetter-Entität sind das ihre Bedingungen, bei einem Sensor seine Zustände. Die Vorgabe deckt Regen, Schnee und Hagel ab.",
           "precipitation_grace": "Ein Fünf-Minuten-Schauer soll die Regelung nicht ins Schwingen bringen, also zählt eine Messung noch so lange weiter, nachdem der Niederschlag aufgehört hat.",
-          "guest_days": "Leer lassen für jeden Tag; sonst trägt der Gästemodus das Haus nur an den gewählten Tagen."
+          "guest_days": "Leer lassen für jeden Tag; sonst trägt der Gästemodus das Haus nur an den gewählten Tagen.",
+          "grid_price_sensor": "Der aktuelle Preis einer kWh Strom, zum Beispiel aus einem dynamischen Tarif. Zusammen mit dem Gaspreis und der COP-Kurve speist er den Kostensensor, der nur die günstigste Quelle anzeigt und nichts entscheidet.",
+          "feed_in_sensor": "Der aktuelle Preis, den du für eine eingespeiste kWh bekommst. Gilt als Strompreis, solange es einen Solarüberschuss gibt. Leer lassen, um immer den Strompreis zu nehmen.",
+          "surplus_sensor": "Der Solarüberschuss in kW; ein positiver Wert zählt als Überschuss. Leer lassen, um nie einen Überschuss zu zählen.",
+          "gas_price": "Was ein m³ Gas dich kostet, alles inklusive, in deiner Währung. Null bedeutet nicht eingestellt; dann wird der Kostensensor nicht angelegt.",
+          "kwh_per_m3": "Wie viel Wärme ein m³ Gas enthält. 9,77 ist ein üblicher niederländischer Wert; schau auf deine Gasrechnung.",
+          "boiler_efficiency": "Wie viel dieser Wärme die Heizkörper erreicht. 0,9 ist ein vernünftiger Anfang für einen Brennwertkessel.",
+          "cop_curve": "Punkte aus Außentemperatur und COP, durch Kommas getrennt, zum Beispiel -5:2.8, 7:3.8, 15:4.5. Zwischen zwei Punkten verläuft die Kurve gerade; vor dem ersten und nach dem letzten bleibt sie flach. Leer lassen, wenn du keine hast; dann wird der Kostensensor nicht angelegt."
         }
       },
       "zones": {
@@ -475,6 +489,7 @@
     },
     "error": {
       "bands_overlap": "Die Bänder von Heizen und Kühlen berühren sich oder überlappen: Der Ausschaltpunkt des Heizens liegt auf oder über dem Einschaltpunkt des Kühlens, oder der Ausschaltpunkt des Kühlens liegt auf oder unter dem Einschaltpunkt des Heizens. Dann würde der Raum abwechselnd heizen und kühlen. Leg den Einschaltpunkt fürs Kühlen höher oder mach eine Totzone schmaler, damit zwischen den beiden Bändern Abstand bleibt.",
+      "cop_curve_invalid": "Die COP-Kurve lässt sich nicht lesen. Schreibe Punkte als Temperatur:COP, durch Kommas getrennt, zum Beispiel -5:2.8, 7:3.8, 15:4.5. Jeder COP muss über null liegen und keine Temperatur darf doppelt vorkommen.",
       "duplicate_priority": "Ein anderer Raum an demselben Außengerät hat diese Priorität bereits. Zwei Räume mit derselben Zahl lassen das Ergebnis von ihrem Namen abhängen, wähle also eine freie.",
       "presence_gate_without_sensor": "Diese Zone läuft nach Anwesenheit im Raum, aber es ist kein Anwesenheitssensor gewählt. Der Raum gilt dann dauerhaft als leer und die Zone läuft nie wieder. Wähl einen Sensor, oder lass den Haushalt entscheiden.",
       "required": "Dieses Feld wird zum Speichern gebraucht. Fülle es aus, oder wähle unten „Verwerfen und zurück“, um ohne Speichern zu gehen.",
@@ -705,6 +720,27 @@
       },
       "mismatch": {
         "name": "Abweichungen"
+      },
+      "cheapest_heat": {
+        "name": "Günstigste Wärmequelle",
+        "state": {
+          "gas": "Gas",
+          "electric": "Strom"
+        },
+        "state_attributes": {
+          "gas_cost": {
+            "name": "Gas, pro kWh Wärme"
+          },
+          "electric_cost": {
+            "name": "Strom, pro kWh Wärme"
+          },
+          "cop": {
+            "name": "COP jetzt"
+          },
+          "electricity_price": {
+            "name": "Verwendeter Strompreis"
+          }
+        }
       }
     },
     "binary_sensor": {

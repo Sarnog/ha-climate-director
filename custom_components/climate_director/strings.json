@@ -58,7 +58,14 @@
           "precipitation_source": "Precipitation source",
           "precipitation_states": "States that count as precipitation",
           "precipitation_grace": "How long precipitation keeps counting (minutes)",
-          "guest_days": "Guest mode days"
+          "guest_days": "Guest mode days",
+          "grid_price_sensor": "Power price sensor",
+          "feed_in_sensor": "Feed-in price sensor",
+          "surplus_sensor": "Solar surplus sensor",
+          "gas_price": "Gas price (per m³)",
+          "kwh_per_m3": "Calorific value of gas (kWh per m³)",
+          "boiler_efficiency": "Boiler efficiency (0 to 1.2)",
+          "cop_curve": "COP curve of the air conditioners"
         },
         "data_description": {
           "season_source": "Derive the season from the month, read it from an entity, or pin it by hand.",
@@ -80,7 +87,14 @@
           "precipitation_source": "A weather entity or precipitation sensor. While it reports one of the states below, the per-zone open-a-window bound is skipped. Leave empty to keep the ordinary rule always.",
           "precipitation_states": "Comma-separated. For a weather entity these are its conditions; for a sensor its states. The default covers rain, snow and hail.",
           "precipitation_grace": "A five-minute shower should not make the regulation bounce, so a reading keeps counting for this long after the precipitation stops.",
-          "guest_days": "Leave empty for every day; otherwise guest mode only carries the house on the selected days."
+          "guest_days": "Leave empty for every day; otherwise guest mode only carries the house on the selected days.",
+          "grid_price_sensor": "The current price of a kWh of power, for example from a dynamic contract. Together with the gas price and the COP curve it feeds the cost sensor, which only shows the cheapest source and decides nothing.",
+          "feed_in_sensor": "The current price you get for a kWh fed back. Used as the price of power while there is a solar surplus. Leave empty to always use the power price.",
+          "surplus_sensor": "The solar surplus in kW; a positive value counts as surplus. Leave empty to never count a surplus.",
+          "gas_price": "What a m³ of gas costs you, all in, in your currency. Zero means not set, and the cost sensor is then not created.",
+          "kwh_per_m3": "How much heat a m³ of gas holds. 9.77 is a usual Dutch value; check your gas bill.",
+          "boiler_efficiency": "How much of that heat reaches the radiators. 0.9 is a sensible start for a condensing boiler.",
+          "cop_curve": "Points of outdoor temperature and COP, separated by commas, for example -5:2.8, 7:3.8, 15:4.5. Between two points the curve runs straight; beyond the first and last it stays flat. Leave empty if you have none, and the cost sensor is then not created."
         }
       },
       "zones": {
@@ -475,6 +489,7 @@
     },
     "error": {
       "bands_overlap": "The heating and cooling bands touch or overlap: the heating switch-off point sits at or above the cooling switch-on point, or the cooling switch-off point sits at or below the heating switch-on point. The room would then heat and cool by turns. Raise the cooling switch-on point or narrow a dead band, so there is room between the two bands.",
+      "cop_curve_invalid": "The COP curve does not read. Write points as temperature:COP separated by commas, for example -5:2.8, 7:3.8, 15:4.5. Every COP must be above zero and no temperature may appear twice.",
       "duplicate_priority": "Another room on the same outdoor unit already has this priority. Two rooms sharing a number leaves the outcome hanging on their name, so pick a free one.",
       "presence_gate_without_sensor": "This zone is set to run on room presence, but no presence sensor is chosen. The room would then count as empty for good and the zone would never run again. Pick a sensor, or let the household decide.",
       "required": "This field is needed to save. Fill it in, or choose “Discard and go back” at the bottom to leave without saving.",
@@ -705,6 +720,27 @@
       },
       "mismatch": {
         "name": "Mismatch"
+      },
+      "cheapest_heat": {
+        "name": "Cheapest heat source",
+        "state": {
+          "gas": "Gas",
+          "electric": "Electricity"
+        },
+        "state_attributes": {
+          "gas_cost": {
+            "name": "Gas, per kWh of heat"
+          },
+          "electric_cost": {
+            "name": "Electricity, per kWh of heat"
+          },
+          "cop": {
+            "name": "COP now"
+          },
+          "electricity_price": {
+            "name": "Power price used"
+          }
+        }
       }
     },
     "binary_sensor": {

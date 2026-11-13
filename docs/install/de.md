@@ -180,6 +180,13 @@ wählst.
 | **Niederschlagsquelle** | eine `weather.*`- oder `sensor.*`-Entität, die sagt, ob Niederschlag fällt; leer = die Niederschlagsregel macht nicht mit |
 | **Zustände, die als Niederschlag zählen** | welche Zustände dieser Entität Niederschlag bedeuten; standardmäßig Regen, Schnee und Hagel |
 | **Wie lange Niederschlag weiter zählt (Minuten)** | Nachlaufzeit nach dem Aufhören des Niederschlags; Standard 15 Minuten |
+| **Sensor Strompreis** | der aktuelle Preis einer kWh Strom, zum Beispiel aus einem dynamischen Tarif; speist zusammen mit Gaspreis und COP-Kurve den Sensor *Günstigste Wärmequelle* |
+| **Sensor Einspeisepreis** | der Preis, den du für eine eingespeiste kWh bekommst; gilt bei Solarüberschuss als Strompreis; leer = immer der Strompreis |
+| **Sensor Solarüberschuss** | Solarüberschuss in kW (positiv = Überschuss); leer = nie ein Überschuss |
+| **Gaspreis (pro m³)** | was ein m³ Gas dich kostet, alles inklusive; 0 = nicht eingestellt, dann wird der Sensor nicht angelegt |
+| **Brennwert des Gases (kWh pro m³)** | Wärme pro m³ Gas; standardmäßig 9,77 |
+| **Wirkungsgrad des Kessels (0 bis 1,2)** | wie viel dieser Wärme die Heizkörper erreicht; standardmäßig 0,9 |
+| **COP-Kurve der Klimageräte** | Punkte `Außentemperatur:COP`, durch Kommas getrennt, zum Beispiel `-5:2.8, 7:3.8, 15:4.5`; leer = der Sensor wird nicht angelegt |
 | **Schattenmodus** | an = alles durchrechnen, nichts steuern |
 
 ### Niederschlag setzt die Außengrenze außer Kraft
@@ -719,6 +726,7 @@ Ein Gerät pro Installation, darunter:
 | `sensor.*_letzte_entscheidung` | wie viele Zonen bedient werden, mit dem vollständigen Plan als Attributen |
 | `sensor.*_wurde_<entity>_ansteuern` | der Modus, in den der Director dieses Gerät setzen würde — ein Sensor pro Gerät |
 | `sensor.*_abweichungen` | wie viele Geräte gerade anders stehen als der Plan will; 0 = Director und Haus sind einig |
+| `sensor.*_gunstigste_warmequelle` | welche Quelle eine kWh Wärme jetzt am günstigsten liefert (Gas oder Strom), mit beiden Kosten als Attribut; nur vorhanden, wenn Gaspreis, Strompreis und COP-Kurve eingestellt sind. Nur beobachten: nichts wird danach gesteuert |
 | `sensor.*_quelle_<zone>` | welche Quelle diese Zone bedient, mit dem, was die Zone wollte, bekam und warum |
 | `binary_sensor.*_<zone>_blockiert` | an, wenn eine Zone weniger bekam als verlangt oder laufen wollte, aber ein Umstand sie zurückhielt; die geschlossenen Tore stehen in den Attributen |
 | `binary_sensor.*_<zone>_auf_ersatzgerat` | an, wenn eine Zone auf einem Ersatzgerät läuft, weil die erste Wahl unerreichbar ist |

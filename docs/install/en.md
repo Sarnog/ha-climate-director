@@ -177,6 +177,13 @@ what you typed is then thrown away. And **nothing** is stored until you pick
 | **Precipitation source** | a `weather.*` or `sensor.*` entity that says whether precipitation falls; empty = the precipitation rule does not take part |
 | **States that count as precipitation** | which states of that entity mean precipitation; rain, snow and hail by default |
 | **How long precipitation keeps counting (minutes)** | grace period after the precipitation stops; 15 minutes by default |
+| **Power price sensor** | the current price of a kWh of power, for example from a dynamic contract; together with gas price and COP curve it feeds the *Cheapest heat source* sensor |
+| **Feed-in price sensor** | the price you get for a kWh fed back; counts as the power price during a solar surplus; empty = always the power price |
+| **Solar surplus sensor** | solar surplus in kW (positive = surplus); empty = never a surplus |
+| **Gas price (per m³)** | what a m³ of gas costs you, all in; 0 = not set, and the sensor is then not created |
+| **Calorific value of gas (kWh per m³)** | heat per m³ of gas; 9.77 by default |
+| **Boiler efficiency (0 to 1.2)** | how much of that heat reaches the radiators; 0.9 by default |
+| **COP curve of the air conditioners** | points `outdoor temperature:COP` separated by commas, for example `-5:2.8, 7:3.8, 15:4.5`; empty = the sensor is not created |
 | **Shadow mode** | on = compute everything, steer nothing |
 
 ### Precipitation sets the outdoor bound aside
@@ -708,6 +715,7 @@ One device per installation, holding:
 | `sensor.*_last_decision` | how many zones are being served, with the full plan as attributes |
 | `sensor.*_would_command_<entity>` | the mode the director would put this appliance in — one sensor per appliance |
 | `sensor.*_mismatch` | how many appliances currently sit somewhere other than where the plan wants them; 0 = director and house agree |
+| `sensor.*_cheapest_heat_source` | which source delivers a kWh of heat cheapest right now (gas or electricity), with both costs as attributes; only there when gas price, power price and COP curve are set. Watching only: nothing is steered on it |
 | `sensor.*_<zone>_source` | which source serves this zone, with what the zone wanted, got and why |
 | `binary_sensor.*_<zone>_blocked` | on when a zone got less than it asked for, or wanted to run but a circumstance held it back; the shut gates are in the attributes |
 | `binary_sensor.*_<zone>_on_stand_in` | on when a zone runs on a stand-in appliance because its first choice is unreachable |

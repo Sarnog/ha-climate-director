@@ -9,6 +9,7 @@ from collections.abc import Mapping
 from datetime import time
 from typing import Any
 
+from .energy import EnergySettings
 from .fields import GATES_FLAT_FIELDS, GUEST_WINDOW_FIELDS, target_key
 from .models import (
     GateSettings,
@@ -22,6 +23,7 @@ from .models import (
 from .storage_values import (
     bool_or,
     choice,
+    float_or,
     int_or,
     is_number,
     seconds_or,
@@ -167,6 +169,42 @@ def precipitation(raw: Any) -> PrecipitationSettings:
         states=chosen,
         grace=seconds_or(raw.get("grace"), 900.0),
     )
+
+
+def energy(raw: Any) -> EnergySettings:
+    """Return the energy settings, defaulting to the engine's own.
+
+    Een gasprijs, calorische waarde of rendement dat niet leest, valt terug op de
+    standaard of op niet-ingesteld; de vergelijking zelf weigert wat onbruikbaar is.
+
+    A gas price, calorific value or efficiency that does not read falls back to
+    the default or to not set; the comparison itself refuses what is unusable.
+    """
+    defaults = EnergySettings()
+    if not isinstance(raw, Mapping):
+        return defaults
+    return EnergySettings(
+        grid_price_sensor=text(raw.get("grid_price_sensor")),
+        feed_in_sensor=text(raw.get("feed_in_sensor")),
+        surplus_sensor=text(raw.get("surplus_sensor")),
+        gas_price=float_or(raw.get("gas_price"), defaults.gas_price),
+        kwh_per_m3=float_or(raw.get("kwh_per_m3"), defaults.kwh_per_m3),
+        boiler_efficiency=float_or(raw.get("boiler_efficiency"), defaults.boiler_efficiency),
+        cop_curve=text(raw.get("cop_curve")),
+    )
+
+
+def energy_to_dict(settings: EnergySettings) -> dict[str, Any]:
+    """Return the energy settings as data a config entry can store."""
+    return {
+        "grid_price_sensor": settings.grid_price_sensor,
+        "feed_in_sensor": settings.feed_in_sensor,
+        "surplus_sensor": settings.surplus_sensor,
+        "gas_price": settings.gas_price,
+        "kwh_per_m3": settings.kwh_per_m3,
+        "boiler_efficiency": settings.boiler_efficiency,
+        "cop_curve": settings.cop_curve,
+    }
 
 
 def layout(raw: Mapping[str, Any]) -> HeatingLayout:

@@ -19,6 +19,8 @@ from .equipment_storage import (
     zone_to_dict,
 )
 from .installation_storage import (
+    energy,
+    energy_to_dict,
     gates,
     gates_flat_to_dict,
     guest_window_to_dict,
@@ -89,6 +91,7 @@ def config_from_dict(raw: Mapping[str, Any]) -> DirectorConfig:
         gates=gates(raw.get("gates")),
         seasons=seasons(raw.get("seasons")),
         precipitation=precipitation(raw.get("precipitation")),
+        energy=energy(raw.get("energy")),
         heating_layout=layout(raw),
         outdoor_sensor=text(raw.get("outdoor_sensor")),
         outdoor_hysteresis=float_or(raw.get("outdoor_hysteresis"), 0.5),
@@ -143,6 +146,7 @@ def config_to_dict(config: DirectorConfig) -> dict[str, Any]:
             "states": sorted(config.precipitation.states),
             "grace": int(config.precipitation.grace.total_seconds()),
         },
+        "energy": energy_to_dict(config.energy),
         "heating_layout": config.heating_layout.value,
         "outdoor_sensor": config.outdoor_sensor,
         "outdoor_hysteresis": config.outdoor_hysteresis,
