@@ -37,22 +37,39 @@ class EnergySettings:
 
     Which prices and efficiencies the cost comparison uses.
 
-    Een lege entiteit of een gasprijs van nul betekent: niet ingesteld. Een
-    installatie zonder gasprijs of zonder netprijs heeft geen vergelijking, en
-    de sensor ervoor wordt dan niet aangemaakt.
+    Een lege entiteit of een prijs van nul betekent: niet ingesteld. Elke prijs is
+    een vast getal of een entiteit; de entiteit wint zolang die een getal geeft,
+    de vaste prijs is wat overblijft als dat niet zo is. Een installatie zonder
+    gasprijs of zonder stroomprijs heeft geen vergelijking, en de sensor ervoor
+    wordt dan niet aangemaakt.
 
-    An empty entity or a gas price of zero means: not set. An installation
-    without a gas price or without a grid price has no comparison, and the
-    sensor for it is then not created.
+    An empty entity or a price of zero means: not set. Every price can be a fixed
+    number or an entity; the entity wins while it reads a number, the fixed price
+    is what is left when it does not. An installation without a gas price or
+    without a power price has no comparison, and the sensor for it is then not
+    created.
     """
 
     grid_price_sensor: str = ""
     """Entiteit met de stroomprijs per kWh nu. / Entity with the power price per kWh now."""
 
+    grid_price: float = 0.0
+    """Vaste stroomprijs per kWh; telt als de sensor leeg is of niets geeft. Nul is niet ingesteld.
+
+    Fixed power price per kWh; counts when the sensor is empty or reads nothing.
+    Zero is not set.
+    """
+
     feed_in_sensor: str = ""
     """Entiteit met de terugleverprijs per kWh nu; leeg gebruikt altijd de netprijs.
 
     Entity with the feed-in price per kWh now; empty always uses the grid price.
+    """
+
+    feed_in_price: float = 0.0
+    """Vaste terugleverprijs per kWh, als er geen sensor is. Nul is niet ingesteld.
+
+    Fixed feed-in price per kWh, for when there is no sensor. Zero is not set.
     """
 
     surplus_sensor: str = ""
@@ -61,8 +78,14 @@ class EnergySettings:
     Entity with the solar surplus in kW (positive is surplus); empty is none.
     """
 
+    gas_price_sensor: str = ""
+    """Entiteit met de gasprijs per m³ nu. / Entity with the gas price per m³ now."""
+
     gas_price: float = 0.0
-    """Gasprijs per m³; nul is niet ingesteld. / Gas price per m³; zero is not set."""
+    """Vaste gasprijs per m³; telt als de sensor leeg is of niets geeft. Nul is niet ingesteld.
+
+    Fixed gas price per m³; counts when the sensor is empty or reads nothing. Zero is not set.
+    """
 
     kwh_per_m3: float = 9.77
     """Calorische waarde in kWh per m³. / Calorific value in kWh per m³."""
@@ -79,13 +102,20 @@ class EnergySettings:
     @property
     def configured(self) -> bool:
         """Return whether there is enough here to compare at all."""
-        return self.gas_price > 0 and bool(self.grid_price_sensor) and bool(self.cop_curve.strip())
+        has_gas = self.gas_price > 0 or bool(self.gas_price_sensor)
+        has_grid = self.grid_price > 0 or bool(self.grid_price_sensor)
+        return has_gas and has_grid and bool(self.cop_curve.strip())
 
     def entities(self) -> tuple[str, ...]:
         """Return the entities this comparison reads, without empty ones."""
         return tuple(
             entity
-            for entity in (self.grid_price_sensor, self.feed_in_sensor, self.surplus_sensor)
+            for entity in (
+                self.grid_price_sensor,
+                self.feed_in_sensor,
+                self.surplus_sensor,
+                self.gas_price_sensor,
+            )
             if entity
         )
 
@@ -124,6 +154,13 @@ def parse_cop_curve(text: str) -> CopCurve | None:
     return CopCurve(points=tuple(sorted(points)))
 
 
+def _entity_or_fixed(reading: float | None, fixed: float) -> float | None:
+    """Return the entity's reading, else the fixed price, else `None` (zero is not set)."""
+    if reading is not None:
+        return reading
+    return fixed if fixed > 0 else None
+
+
 @dataclass(frozen=True, slots=True)
 class HeatCosts:
     """What one kWh of heat costs now, per source, and which is cheapest."""
@@ -141,6 +178,7 @@ def heat_costs(
     feed_in_price: float | None,
     surplus_kw: float | None,
     outdoor: float | None,
+    gas_reading: float | None = None,
 ) -> HeatCosts:
     """Return the cost of a kWh of heat from gas and from electricity now.
 
@@ -159,14 +197,20 @@ def heat_costs(
     # With a feed-in sensor set that gives nothing while there is a surplus, the
     # price of that power is unknown: the grid price is then not what you give up.
     # Only an empty setting always uses the grid price.
+    grid_price = _entity_or_fixed(grid_price, settings.grid_price)
+    feed_in_price = _entity_or_fixed(feed_in_price, settings.feed_in_price)
     surplus = surplus_kw is not None and surplus_kw > 0
-    if surplus and settings.feed_in_sensor and feed_in_price is None:
+    if surplus and (settings.feed_in_sensor or settings.feed_in_price) and feed_in_price is None:
         price = None
     else:
         price = surplus_price(grid_price, feed_in_price, surplus_kw)
     curve = parse_cop_curve(settings.cop_curve)
     cop = curve.cop_at(outdoor) if curve is not None else None
-    gas = gas_cost(settings.gas_price or None, settings.kwh_per_m3, settings.boiler_efficiency)
+    gas = gas_cost(
+        _entity_or_fixed(gas_reading, settings.gas_price),
+        settings.kwh_per_m3,
+        settings.boiler_efficiency,
+    )
     electric = electric_cost(price, cop)
     return HeatCosts(
         gas=gas,

@@ -178,14 +178,26 @@ hasta que eliges **Guardar y cerrar** en el menú principal.
 | **Fuente de precipitaciones** | una entidad `weather.*` o `sensor.*` que dice si hay precipitaciones; vacío = la regla de precipitaciones no participa |
 | **Estados que cuentan como precipitación** | qué estados de esa entidad significan precipitaciones; lluvia, nieve y granizo por defecto |
 | **Cuánto tiempo siguen contando las precipitaciones (minutos)** | margen tras cesar las precipitaciones; 15 minutos por defecto |
-| **Sensor del precio de la electricidad** | el precio actual de un kWh de electricidad, por ejemplo de un contrato dinámico; junto con el precio del gas y la curva de COP alimenta el sensor *Fuente de calefacción más barata* |
-| **Sensor del precio de excedentes** | el precio que recibes por un kWh vertido; cuenta como precio de la electricidad con excedente solar; vacío = siempre el precio de la electricidad |
+| **Modo sombra** | activado = calcularlo todo, no gobernar nada |
+
+### Energía y costes
+
+Compara lo que cuesta un kWh de calor con gas y con los aires acondicionados. Esto solo alimenta el sensor *Fuente de
+calefacción más barata*; no se controla nada con él. Da a la electricidad y al gas un precio fijo o un sensor, e
+indica la curva de COP para activar la comparación.
+
+| Ajuste | Qué hace |
+|---|---|
+| **Sensor del precio de la electricidad** | el precio actual de un kWh de electricidad, por ejemplo de un contrato dinámico; tiene prioridad sobre el precio fijo mientras el sensor dé un número |
+| **Precio fijo de la electricidad (por kWh)** | precio fijo por kWh de electricidad; cuenta sin sensor o cuando el sensor no da nada; 0 = sin configurar |
+| **Sensor del precio de excedentes** | el precio que recibes por un kWh vertido a la red; cuenta como precio de la electricidad con excedente solar; con el precio fijo de excedentes también vacío = siempre el precio de la electricidad |
+| **Precio fijo de excedentes (por kWh)** | compensación fija por kWh vertido a la red; cuenta sin sensor o cuando el sensor no da nada; 0 = sin configurar |
 | **Sensor del excedente solar** | excedente solar en kW (positivo = excedente); vacío = nunca excedente |
-| **Precio del gas (por m³)** | lo que te cuesta un m³ de gas, todo incluido; 0 = sin configurar, y entonces no se crea el sensor |
+| **Sensor del precio del gas** | el precio actual de un m³ de gas, por ejemplo de un contrato dinámico; tiene prioridad sobre el precio fijo del gas mientras el sensor dé un número |
+| **Precio fijo del gas (por m³)** | precio fijo por m³ de gas, todo incluido; cuenta sin sensor o cuando el sensor no da nada; sin ninguno de los dos no se crea el sensor |
 | **Poder calorífico del gas (kWh por m³)** | calor por m³ de gas; 9,77 por defecto |
 | **Rendimiento de la caldera (0 a 1,2)** | qué parte de ese calor llega a los radiadores; 0,9 por defecto |
 | **Curva de COP de los aires acondicionados** | puntos `temperatura exterior:COP` separados por comas, por ejemplo `-5:2.8, 7:3.8, 15:4.5`; vacío = no se crea el sensor |
-| **Modo sombra** | activado = calcularlo todo, no gobernar nada |
 
 ### Las precipitaciones dejan de lado el límite exterior
 

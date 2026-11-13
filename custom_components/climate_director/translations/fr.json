@@ -30,6 +30,7 @@
           "circuits": "Circuits de climatisation",
           "residents": "Occupants",
           "openings": "Portes et fenêtres",
+          "energy": "Énergie et coûts",
           "save": "✅ Enregistrer et fermer",
           "generators": "Sources de chaleur partagées",
           "exclusives": "Groupes exclusifs",
@@ -58,14 +59,7 @@
           "precipitation_source": "Source de précipitations",
           "precipitation_states": "États comptant comme précipitations",
           "precipitation_grace": "Combien de temps les précipitations continuent de compter (minutes)",
-          "guest_days": "Jours du mode invités",
-          "grid_price_sensor": "Capteur du prix de l'électricité",
-          "feed_in_sensor": "Capteur du prix de rachat",
-          "surplus_sensor": "Capteur du surplus solaire",
-          "gas_price": "Prix du gaz (par m³)",
-          "kwh_per_m3": "Pouvoir calorifique du gaz (kWh par m³)",
-          "boiler_efficiency": "Rendement de la chaudière (0 à 1,2)",
-          "cop_curve": "Courbe de COP des climatiseurs"
+          "guest_days": "Jours du mode invités"
         },
         "data_description": {
           "season_source": "Déduisez la saison du mois, lisez-la depuis une entité, ou fixez-la à la main.",
@@ -87,14 +81,7 @@
           "precipitation_source": "Une entité météo ou un capteur de précipitations. Tant qu'elle signale l'un des états ci-dessous, la limite « ouvrir une fenêtre » par zone est ignorée. Laissez vide pour que la règle ordinaire s'applique toujours.",
           "precipitation_states": "Séparés par des virgules. Pour une entité météo, ce sont ses conditions ; pour un capteur, ses états. La valeur par défaut couvre la pluie, la neige et la grêle.",
           "precipitation_grace": "Une averse de cinq minutes ne doit pas faire osciller la régulation, donc une lecture continue de compter encore ce temps après que les précipitations se sont arrêtées.",
-          "guest_days": "Laissez vide pour tous les jours ; sinon le mode invités ne porte la maison que les jours choisis.",
-          "grid_price_sensor": "Le prix actuel d'un kWh d'électricité, par exemple d'un contrat dynamique. Avec le prix du gaz et la courbe de COP, il alimente le capteur de coût, qui montre seulement la source la moins chère et ne décide rien.",
-          "feed_in_sensor": "Le prix actuel que vous recevez pour un kWh réinjecté. Compte comme prix de l'électricité tant qu'il y a un surplus solaire. Laissez vide pour toujours utiliser le prix de l'électricité.",
-          "surplus_sensor": "Le surplus solaire en kW ; une valeur positive compte comme surplus. Laissez vide pour ne jamais compter de surplus.",
-          "gas_price": "Ce que vous coûte un m³ de gaz, tout compris, dans votre devise. Zéro signifie non réglé, et le capteur de coût n'est alors pas créé.",
-          "kwh_per_m3": "La chaleur que contient un m³ de gaz. 9,77 est une valeur néerlandaise courante ; regardez votre facture de gaz.",
-          "boiler_efficiency": "La part de cette chaleur qui atteint les radiateurs. 0,9 est un bon départ pour une chaudière à condensation.",
-          "cop_curve": "Des points de température extérieure et de COP, séparés par des virgules, par exemple -5:2.8, 7:3.8, 15:4.5. Entre deux points la courbe est droite ; avant le premier et après le dernier elle reste plate. Laissez vide si vous n'en avez pas, et le capteur de coût n'est alors pas créé."
+          "guest_days": "Laissez vide pour tous les jours ; sinon le mode invités ne porte la maison que les jours choisis."
         }
       },
       "zones": {
@@ -484,6 +471,36 @@
           "delete": "Supprime cette plage, de sorte que le directeur puisse de nouveau démarrer quelque chose pendant ces heures.",
           "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
           "holiday": "Une plage de vacances ne s'applique que lorsque le planning de vacances est actif, et remplace alors les plages ordinaires. Ses jours de la semaine sont ignorés. Sans elle, un jour de vacances compte comme un samedi."
+        }
+      },
+      "energy": {
+        "title": "Énergie et coûts",
+        "description": "Comparez ce que coûte un kWh de chaleur issu du gaz et des climatiseurs. Cela alimente seulement le capteur *Source de chauffage la moins chère* ; rien n'est piloté dessus. Donnez à l'électricité et au gaz chacun un prix fixe ou un capteur, et renseignez la courbe de COP pour activer la comparaison.",
+        "data": {
+          "grid_price_sensor": "Capteur du prix de l'électricité",
+          "grid_price": "Prix fixe de l'électricité (par kWh)",
+          "feed_in_sensor": "Capteur du prix de rachat",
+          "feed_in_price": "Prix fixe de rachat (par kWh)",
+          "surplus_sensor": "Capteur du surplus solaire",
+          "gas_price_sensor": "Capteur du prix du gaz",
+          "gas_price": "Prix fixe du gaz (par m³)",
+          "kwh_per_m3": "Pouvoir calorifique du gaz (kWh par m³)",
+          "boiler_efficiency": "Rendement de la chaudière (0 à 1,2)",
+          "cop_curve": "Courbe de COP des climatiseurs",
+          "when_done": "Quand vous avez terminé ici"
+        },
+        "data_description": {
+          "grid_price_sensor": "Le prix actuel d'un kWh d'électricité, par exemple d'un contrat dynamique. Il l'emporte sur le prix fixe de l'électricité ci-dessous tant que le capteur donne un nombre.",
+          "grid_price": "Un prix fixe par kWh d'électricité, pour un contrat à prix fixe. Si un capteur est aussi réglé au-dessus, ce prix ne compte que lorsque le capteur ne donne rien. Zéro signifie non réglé.",
+          "feed_in_sensor": "Le prix actuel que vous recevez pour un kWh réinjecté. Compte comme prix de l'électricité tant qu'il y a un surplus solaire. Laissez ce champ et le prix fixe de rachat vides pour toujours utiliser le prix de l'électricité.",
+          "feed_in_price": "Une rémunération fixe par kWh réinjecté. Compte comme prix de l'électricité tant qu'il y a un surplus solaire. Zéro signifie non réglé.",
+          "surplus_sensor": "Le surplus solaire en kW ; une valeur positive compte comme surplus. Laissez vide pour ne jamais compter de surplus.",
+          "gas_price_sensor": "Le prix actuel d'un m³ de gaz, par exemple d'un contrat dynamique. Il l'emporte sur le prix fixe du gaz ci-dessous tant que le capteur donne un nombre.",
+          "gas_price": "Un prix fixe par m³ de gaz, tout compris, dans votre devise. Si un capteur est aussi réglé au-dessus, ce prix ne compte que lorsque le capteur ne donne rien. Sans capteur et sans prix fixe, le capteur de coût n'est pas créé.",
+          "kwh_per_m3": "La chaleur que contient un m³ de gaz. 9,77 est une valeur néerlandaise courante ; regardez votre facture de gaz.",
+          "boiler_efficiency": "La part de cette chaleur qui atteint les radiateurs. 0,9 est un bon départ pour une chaudière à condensation.",
+          "cop_curve": "Des points de température extérieure et de COP, séparés par des virgules, par exemple -5:2.8, 7:3.8, 15:4.5. Entre deux points la courbe est droite ; avant le premier et après le dernier elle reste plate. Laissez vide si vous n'en avez pas, et le capteur de coût n'est alors pas créé.",
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       }
     },

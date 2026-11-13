@@ -1494,7 +1494,8 @@ coordinator leest een tarief-/overschotsensor en `sources.py` sorteert daarop. S
 goedkoopste bron met rem) zonder Home Assistant en zonder toestand. Hij is nog niet aangesloten:
 de bronkeuze kent hem niet en geen enkel besluit hangt ervan af. Stap 2 staat er ook: de installatie
 kent `energy`-instellingen (stroom-, terugleverprijs en overschot als entiteit, gasprijs,
-calorische waarde, rendement en een COP-curve als tekst) op het instellingenscherm, en
+calorische waarde, rendement en een COP-curve als tekst) op een eigen scherm *Energie en kosten* in het
+hoofdmenu, en
 `engine/energy.py` rekent daarmee de kosten van gas en van de airco's uit. De sensor *Goedkoopste
 warmtebron* (`HeatCostSensor`) toont het antwoord, met beide kosten als attribuut; hij bestaat
 alleen als gasprijs, stroomprijs en curve zijn ingesteld en volgt de prijsentiteiten zelf, dus
@@ -3594,7 +3595,8 @@ coordinator reads a tariff/surplus sensor and `sources.py` sorts on it. Step 1 i
 cheapest source with a brake) without Home Assistant and without state. It is not yet wired:
 the source selection does not know it and no decision depends on it. Step 2 is in as well: the
 installation has `energy` settings (power price, feed-in price and surplus as entities, gas price,
-calorific value, efficiency and a COP curve as text) on the settings screen, and
+calorific value, efficiency and a COP curve as text) on a screen of its own, *Energy and costs*, in the
+main menu, and
 `engine/energy.py` works the cost of gas and of the air conditioners out from them. The sensor
 *Cheapest heat source* (`HeatCostSensor`) shows the answer, with both costs as attributes; it
 only exists when gas price, power price and curve are set and follows the price entities

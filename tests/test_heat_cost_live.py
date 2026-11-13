@@ -143,6 +143,35 @@ class TestTheCostSensor:
             await stop_house(home)
 
 
+class TestFixedOrDynamicPrices:
+    async def test_a_dynamic_gas_price_follows_its_sensor(self) -> None:
+        energy = {**ENERGY, "gas_price": 0.0, "gas_price_sensor": "sensor.gasprijs"}
+        home = await start(energy, gasprijs="1.80")
+        try:
+            assert home.values("cheapest_heat")["gas_cost"] == pytest.approx(0.2047, abs=1e-4)
+            home.set("sensor.gasprijs", "3.60")
+            await home.settle()
+            assert home.values("cheapest_heat")["gas_cost"] == pytest.approx(0.4094, abs=1e-4)
+        finally:
+            await stop_house(home)
+
+    async def test_a_fixed_power_price_needs_no_sensor(self) -> None:
+        energy = {**ENERGY, "grid_price_sensor": "", "grid_price": 0.30}
+        home = await start(energy)
+        try:
+            assert home.values("cheapest_heat")["electricity_price"] == pytest.approx(0.30)
+        finally:
+            await stop_house(home)
+
+    async def test_the_fixed_price_is_what_remains_when_the_sensor_is_unreadable(self) -> None:
+        energy = {**ENERGY, "gas_price_sensor": "sensor.gasprijs"}
+        home = await start(energy, gasprijs="unavailable")
+        try:
+            assert home.values("cheapest_heat")["gas_cost"] == pytest.approx(0.2047, abs=1e-4)
+        finally:
+            await stop_house(home)
+
+
 class TestWhetherTheSensorExists:
     @pytest.mark.parametrize(
         "energy",

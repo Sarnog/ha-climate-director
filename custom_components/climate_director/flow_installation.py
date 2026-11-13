@@ -7,9 +7,10 @@ from typing import Any
 from homeassistant.config_entries import ConfigFlowResult
 
 from . import schemas, texts
-from .engine.fields import SETTINGS_FIELDS
+from .engine.fields import ENERGY_FIELDS, SETTINGS_FIELDS
 from .flow_surface import FlowSurface
 from .flow_validation import (
+    energy_errors,
     settings_errors,
 )
 from .schema_fields import write_table
@@ -68,6 +69,27 @@ async def settings(flow: FlowSurface, user_input: dict[str, Any] | None = None) 
     return flow.async_show_form(
         step_id="settings",
         data_schema=schemas.settings(flow),
+    )
+
+
+async def energy(flow: FlowSurface, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    """Edit the prices and efficiencies the cost comparison uses."""
+    if user_input is not None:
+        if user_input.get(EXIT) == EXIT_DROP:
+            return await flow.async_step_init()
+        errors = energy_errors(user_input)
+        if errors:
+            return flow.async_show_form(
+                step_id="energy",
+                data_schema=schemas.energy(flow),
+                errors=errors,
+            )
+        write_table(ENERGY_FIELDS, user_input, flow._installation, flow=flow)
+        return await flow.async_step_init()
+
+    return flow.async_show_form(
+        step_id="energy",
+        data_schema=schemas.energy(flow),
     )
 
 

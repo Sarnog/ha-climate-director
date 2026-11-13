@@ -76,6 +76,7 @@ class HeatCostSensor(ClimateDirectorEntity, SensorEntity):
             self._number(energy.feed_in_sensor),
             self._number(energy.surplus_sensor),
             None if world is None else world.outdoor_temperature,
+            self._number(energy.gas_price_sensor),
         )
 
     @property

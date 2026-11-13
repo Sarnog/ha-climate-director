@@ -177,14 +177,26 @@ je in het hoofdmenu **Opslaan en sluiten** kiest.
 | **Neerslagbron** | een `weather.*`- of `sensor.*`-entiteit die zegt of er neerslag valt; leeg = de neerslagregel doet niet mee |
 | **Toestanden die als neerslag tellen** | welke standen van die entiteit neerslag betekenen; standaard regen, sneeuw en hagel |
 | **Hoe lang neerslag blijft tellen (minuten)** | nalooptijd na het stoppen van de neerslag; standaard 15 minuten |
-| **Sensor stroomprijs** | de huidige prijs van een kWh stroom, bijvoorbeeld uit een dynamisch contract; voedt samen met gasprijs en COP-curve de sensor *Goedkoopste warmtebron* |
-| **Sensor terugleverprijs** | de prijs die je krijgt voor een teruggeleverde kWh; telt als stroomprijs bij zonne-overschot; leeg = altijd de stroomprijs |
+| **Schaduwmodus** | aan = alles doorrekenen, niets aansturen |
+
+### Energie en kosten
+
+Vergelijk wat een kWh warmte kost uit gas en uit de airco's. Dit voedt alleen de sensor *Goedkoopste warmtebron*; er
+wordt niets op gestuurd. Geef stroom en gas elk een vaste prijs of een sensor en vul de COP-curve in om de
+vergelijking aan te zetten.
+
+| Instelling | Wat het doet |
+|---|---|
+| **Sensor stroomprijs** | de huidige prijs van een kWh stroom, bijvoorbeeld uit een dynamisch contract; heeft voorrang op de vaste prijs zolang de sensor een getal geeft |
+| **Vaste stroomprijs (per kWh)** | vaste prijs per kWh stroom; geldt als er geen sensor is of de sensor niets geeft; 0 = niet ingesteld |
+| **Sensor terugleverprijs** | de prijs die je krijgt voor een teruggeleverde kWh; telt als stroomprijs bij zonne-overschot; met de vaste terugleverprijs leeg = altijd de stroomprijs |
+| **Vaste terugleverprijs (per kWh)** | vaste vergoeding per teruggeleverde kWh; geldt als er geen sensor is of de sensor niets geeft; 0 = niet ingesteld |
 | **Sensor zonne-overschot** | zonne-overschot in kW (positief = overschot); leeg = nooit een overschot |
-| **Gasprijs (per m³)** | wat een m³ gas je kost, alles inbegrepen; 0 = niet ingesteld, en dan wordt de sensor niet aangemaakt |
+| **Sensor gasprijs** | de huidige prijs van een m³ gas, bijvoorbeeld uit een dynamisch contract; heeft voorrang op de vaste gasprijs zolang de sensor een getal geeft |
+| **Vaste gasprijs (per m³)** | vaste prijs per m³ gas, alles inbegrepen; geldt als er geen sensor is of de sensor niets geeft; zonder beide wordt de sensor niet aangemaakt |
 | **Calorische waarde van gas (kWh per m³)** | warmte per m³ gas; standaard 9,77 |
 | **Rendement van de ketel (0 tot 1,2)** | hoeveel van die warmte de radiatoren bereikt; standaard 0,9 |
 | **COP-curve van de airco's** | punten `buitentemperatuur:COP` met komma's gescheiden, bijvoorbeeld `-5:2.8, 7:3.8, 15:4.5`; leeg = de sensor wordt niet aangemaakt |
-| **Schaduwmodus** | aan = alles doorrekenen, niets aansturen |
 
 ### Neerslag zet de buitengrens opzij
 

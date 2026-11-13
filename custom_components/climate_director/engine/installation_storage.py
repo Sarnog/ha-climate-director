@@ -185,8 +185,11 @@ def energy(raw: Any) -> EnergySettings:
         return defaults
     return EnergySettings(
         grid_price_sensor=text(raw.get("grid_price_sensor")),
+        grid_price=float_or(raw.get("grid_price"), defaults.grid_price),
         feed_in_sensor=text(raw.get("feed_in_sensor")),
+        feed_in_price=float_or(raw.get("feed_in_price"), defaults.feed_in_price),
         surplus_sensor=text(raw.get("surplus_sensor")),
+        gas_price_sensor=text(raw.get("gas_price_sensor")),
         gas_price=float_or(raw.get("gas_price"), defaults.gas_price),
         kwh_per_m3=float_or(raw.get("kwh_per_m3"), defaults.kwh_per_m3),
         boiler_efficiency=float_or(raw.get("boiler_efficiency"), defaults.boiler_efficiency),
@@ -198,8 +201,11 @@ def energy_to_dict(settings: EnergySettings) -> dict[str, Any]:
     """Return the energy settings as data a config entry can store."""
     return {
         "grid_price_sensor": settings.grid_price_sensor,
+        "grid_price": settings.grid_price,
         "feed_in_sensor": settings.feed_in_sensor,
+        "feed_in_price": settings.feed_in_price,
         "surplus_sensor": settings.surplus_sensor,
+        "gas_price_sensor": settings.gas_price_sensor,
         "gas_price": settings.gas_price,
         "kwh_per_m3": settings.kwh_per_m3,
         "boiler_efficiency": settings.boiler_efficiency,

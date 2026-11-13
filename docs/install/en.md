@@ -177,14 +177,26 @@ what you typed is then thrown away. And **nothing** is stored until you pick
 | **Precipitation source** | a `weather.*` or `sensor.*` entity that says whether precipitation falls; empty = the precipitation rule does not take part |
 | **States that count as precipitation** | which states of that entity mean precipitation; rain, snow and hail by default |
 | **How long precipitation keeps counting (minutes)** | grace period after the precipitation stops; 15 minutes by default |
-| **Power price sensor** | the current price of a kWh of power, for example from a dynamic contract; together with gas price and COP curve it feeds the *Cheapest heat source* sensor |
-| **Feed-in price sensor** | the price you get for a kWh fed back; counts as the power price during a solar surplus; empty = always the power price |
+| **Shadow mode** | on = compute everything, steer nothing |
+
+### Energy and costs
+
+Compare what a kWh of heat costs from gas and from the air conditioners. This only feeds the *Cheapest heat source*
+sensor; nothing is steered on it. Give power and gas each a fixed price or a sensor, and fill in the COP curve to
+switch the comparison on.
+
+| Setting | What it does |
+|---|---|
+| **Power price sensor** | the current price of a kWh of power, for example from a dynamic contract; takes precedence over the fixed price while the sensor reads a number |
+| **Fixed power price (per kWh)** | fixed price per kWh of power; counts when there is no sensor or the sensor reads nothing; 0 = not set |
+| **Feed-in price sensor** | the price you get for a kWh fed back; counts as the power price during a solar surplus; with the fixed feed-in price empty too = always the power price |
+| **Fixed feed-in price (per kWh)** | fixed payment per kWh fed back; counts when there is no sensor or the sensor reads nothing; 0 = not set |
 | **Solar surplus sensor** | solar surplus in kW (positive = surplus); empty = never a surplus |
-| **Gas price (per m³)** | what a m³ of gas costs you, all in; 0 = not set, and the sensor is then not created |
+| **Gas price sensor** | the current price of a m³ of gas, for example from a dynamic contract; takes precedence over the fixed gas price while the sensor reads a number |
+| **Fixed gas price (per m³)** | fixed price per m³ of gas, all in; counts when there is no sensor or the sensor reads nothing; with neither, the sensor is not created |
 | **Calorific value of gas (kWh per m³)** | heat per m³ of gas; 9.77 by default |
 | **Boiler efficiency (0 to 1.2)** | how much of that heat reaches the radiators; 0.9 by default |
 | **COP curve of the air conditioners** | points `outdoor temperature:COP` separated by commas, for example `-5:2.8, 7:3.8, 15:4.5`; empty = the sensor is not created |
-| **Shadow mode** | on = compute everything, steer nothing |
 
 ### Precipitation sets the outdoor bound aside
 

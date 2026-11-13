@@ -17,7 +17,7 @@ from custom_components.climate_director.engine.energy import (
     parse_cop_curve,
 )
 from custom_components.climate_director.engine.serialise import config_from_dict, config_to_dict
-from custom_components.climate_director.flow_validation import settings_errors
+from custom_components.climate_director.flow_validation import energy_errors
 
 FULL = EnergySettings(
     grid_price_sensor="sensor.stroom",
@@ -62,17 +62,28 @@ class TestSettings:
 
     @pytest.mark.parametrize(
         "changes",
-        [{"gas_price": 0.0}, {"grid_price_sensor": ""}, {"cop_curve": "  "}],
+        [
+            {"gas_price": 0.0},
+            {"grid_price_sensor": "", "grid_price": 0.0},
+            {"cop_curve": "  "},
+        ],
     )
     def test_a_missing_piece_is_not_configured(self, changes: dict) -> None:
         assert not replace(FULL, **changes).configured
+
+    def test_a_fixed_price_stands_in_for_a_sensor(self) -> None:
+        fixed = replace(FULL, grid_price_sensor="", grid_price=0.31)
+        assert fixed.configured
+        assert replace(FULL, gas_price=0.0, gas_price_sensor="sensor.gas").configured
 
     def test_the_default_is_not_configured(self) -> None:
         assert not EnergySettings().configured
 
     def test_entities_skip_the_empty_ones(self) -> None:
-        settings = EnergySettings(grid_price_sensor="sensor.a", surplus_sensor="sensor.c")
-        assert settings.entities() == ("sensor.a", "sensor.c")
+        settings = EnergySettings(
+            grid_price_sensor="sensor.a", surplus_sensor="sensor.c", gas_price_sensor="sensor.g"
+        )
+        assert settings.entities() == ("sensor.a", "sensor.c", "sensor.g")
 
 
 class TestHeatCosts:
@@ -103,6 +114,29 @@ class TestHeatCosts:
         settings = replace(FULL, feed_in_sensor="sensor.terug")
         assert heat_costs(settings, 0.30, None, 0.0, 8.0).electricity_price == 0.30
         assert heat_costs(settings, 0.30, None, None, 8.0).electricity_price == 0.30
+
+    def test_a_reading_wins_over_the_fixed_price(self) -> None:
+        settings = replace(FULL, grid_price=0.90, gas_price=5.0)
+        costs = heat_costs(settings, 0.30, None, None, 8.0, gas_reading=1.80)
+        assert costs.electricity_price == 0.30
+        assert costs.gas == pytest.approx(0.2047, abs=1e-4)
+
+    def test_the_fixed_price_is_what_is_left_without_a_reading(self) -> None:
+        settings = replace(FULL, grid_price=0.31, grid_price_sensor="sensor.net")
+        assert heat_costs(settings, None, None, None, 8.0).electricity_price == 0.31
+
+    def test_a_fixed_feed_in_price_counts_during_a_surplus(self) -> None:
+        settings = replace(FULL, feed_in_price=0.07)
+        assert heat_costs(settings, 0.30, None, 2.0, 8.0).electricity_price == 0.07
+        assert heat_costs(settings, 0.30, None, 0.0, 8.0).electricity_price == 0.30
+
+    def test_a_gas_sensor_without_a_reading_and_without_a_fixed_price_leaves_electricity(
+        self,
+    ) -> None:
+        settings = replace(FULL, gas_price=0.0, gas_price_sensor="sensor.gas")
+        costs = heat_costs(settings, 0.3, None, None, 8, gas_reading=None)
+        assert costs.gas is None
+        assert costs.cheapest == ELECTRIC
 
     def test_unknown_outdoor_temperature_leaves_gas_alone(self) -> None:
         costs = heat_costs(FULL, 0.30, None, None, None)
@@ -137,13 +171,13 @@ class TestStorage:
         assert config_from_dict({"energy": {"gas_price": "veel"}}).energy == EnergySettings()
 
 
-class TestSettingsScreen:
+class TestEnergyScreen:
     def test_a_readable_curve_passes(self) -> None:
-        assert settings_errors({"cop_curve": "-5:2.8, 7:3.8"}) == {}
+        assert energy_errors({"cop_curve": "-5:2.8, 7:3.8"}) == {}
 
     def test_an_empty_curve_passes(self) -> None:
-        assert settings_errors({"cop_curve": ""}) == {}
-        assert settings_errors({}) == {}
+        assert energy_errors({"cop_curve": ""}) == {}
+        assert energy_errors({}) == {}
 
     def test_an_unreadable_curve_is_refused(self) -> None:
-        assert settings_errors({"cop_curve": "kapot"}) == {"cop_curve": "cop_curve_invalid"}
+        assert energy_errors({"cop_curve": "kapot"}) == {"cop_curve": "cop_curve_invalid"}

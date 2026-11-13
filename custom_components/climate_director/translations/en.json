@@ -30,6 +30,7 @@
           "circuits": "Air conditioning circuits",
           "residents": "Residents",
           "openings": "Doors and windows",
+          "energy": "Energy and costs",
           "save": "✅ Save and close",
           "generators": "Shared heat sources",
           "exclusives": "Exclusive groups",
@@ -58,14 +59,7 @@
           "precipitation_source": "Precipitation source",
           "precipitation_states": "States that count as precipitation",
           "precipitation_grace": "How long precipitation keeps counting (minutes)",
-          "guest_days": "Guest mode days",
-          "grid_price_sensor": "Power price sensor",
-          "feed_in_sensor": "Feed-in price sensor",
-          "surplus_sensor": "Solar surplus sensor",
-          "gas_price": "Gas price (per m³)",
-          "kwh_per_m3": "Calorific value of gas (kWh per m³)",
-          "boiler_efficiency": "Boiler efficiency (0 to 1.2)",
-          "cop_curve": "COP curve of the air conditioners"
+          "guest_days": "Guest mode days"
         },
         "data_description": {
           "season_source": "Derive the season from the month, read it from an entity, or pin it by hand.",
@@ -87,14 +81,7 @@
           "precipitation_source": "A weather entity or precipitation sensor. While it reports one of the states below, the per-zone open-a-window bound is skipped. Leave empty to keep the ordinary rule always.",
           "precipitation_states": "Comma-separated. For a weather entity these are its conditions; for a sensor its states. The default covers rain, snow and hail.",
           "precipitation_grace": "A five-minute shower should not make the regulation bounce, so a reading keeps counting for this long after the precipitation stops.",
-          "guest_days": "Leave empty for every day; otherwise guest mode only carries the house on the selected days.",
-          "grid_price_sensor": "The current price of a kWh of power, for example from a dynamic contract. Together with the gas price and the COP curve it feeds the cost sensor, which only shows the cheapest source and decides nothing.",
-          "feed_in_sensor": "The current price you get for a kWh fed back. Used as the price of power while there is a solar surplus. Leave empty to always use the power price.",
-          "surplus_sensor": "The solar surplus in kW; a positive value counts as surplus. Leave empty to never count a surplus.",
-          "gas_price": "What a m³ of gas costs you, all in, in your currency. Zero means not set, and the cost sensor is then not created.",
-          "kwh_per_m3": "How much heat a m³ of gas holds. 9.77 is a usual Dutch value; check your gas bill.",
-          "boiler_efficiency": "How much of that heat reaches the radiators. 0.9 is a sensible start for a condensing boiler.",
-          "cop_curve": "Points of outdoor temperature and COP, separated by commas, for example -5:2.8, 7:3.8, 15:4.5. Between two points the curve runs straight; beyond the first and last it stays flat. Leave empty if you have none, and the cost sensor is then not created."
+          "guest_days": "Leave empty for every day; otherwise guest mode only carries the house on the selected days."
         }
       },
       "zones": {
@@ -484,6 +471,36 @@
           "delete": "Removes this window, so the director may start something during those hours again.",
           "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way.",
           "holiday": "A holiday window applies only while the holiday schedule is on, and then replaces the ordinary windows. Its days of the week are ignored. Without one, a holiday counts as a Saturday."
+        }
+      },
+      "energy": {
+        "title": "Energy and costs",
+        "description": "Compare what a kWh of heat costs from gas and from the air conditioners. This only feeds the *Cheapest heat source* sensor; nothing is steered on it. Give power and gas each a fixed price or a sensor, and fill in the COP curve to switch the comparison on.",
+        "data": {
+          "grid_price_sensor": "Power price sensor",
+          "grid_price": "Fixed power price (per kWh)",
+          "feed_in_sensor": "Feed-in price sensor",
+          "feed_in_price": "Fixed feed-in price (per kWh)",
+          "surplus_sensor": "Solar surplus sensor",
+          "gas_price_sensor": "Gas price sensor",
+          "gas_price": "Fixed gas price (per m³)",
+          "kwh_per_m3": "Calorific value of gas (kWh per m³)",
+          "boiler_efficiency": "Boiler efficiency (0 to 1.2)",
+          "cop_curve": "COP curve of the air conditioners",
+          "when_done": "When you are done here"
+        },
+        "data_description": {
+          "grid_price_sensor": "The current price of a kWh of power, for example from a dynamic contract. It takes precedence over the fixed power price below as long as the sensor reads a number.",
+          "grid_price": "A fixed price per kWh of power, for a fixed contract. If a sensor is set above, this only counts when the sensor reads nothing. Zero means not set.",
+          "feed_in_sensor": "The current price you get for a kWh fed back. Used as the price of power while there is a solar surplus. Leave this and the fixed feed-in price empty to always use the power price.",
+          "feed_in_price": "A fixed payment per kWh fed back. Used as the price of power while there is a solar surplus. Zero means not set.",
+          "surplus_sensor": "The solar surplus in kW; a positive value counts as surplus. Leave empty to never count a surplus.",
+          "gas_price_sensor": "The current price of a m³ of gas, for example from a dynamic contract. It takes precedence over the fixed gas price below as long as the sensor reads a number.",
+          "gas_price": "A fixed price per m³ of gas, all in, in your currency. If a sensor is set above, this only counts when the sensor reads nothing. With neither a sensor nor a fixed price the cost sensor is not created.",
+          "kwh_per_m3": "How much heat a m³ of gas holds. 9.77 is a usual Dutch value; check your gas bill.",
+          "boiler_efficiency": "How much of that heat reaches the radiators. 0.9 is a sensible start for a condensing boiler.",
+          "cop_curve": "Points of outdoor temperature and COP, separated by commas, for example -5:2.8, 7:3.8, 15:4.5. Between two points the curve runs straight; beyond the first and last it stays flat. Leave empty if you have none, and the cost sensor is then not created.",
+          "when_done": "Choosing “Discard and go back” leaves this screen and throws away what you typed here, filled in or not. Nothing is written to the installation until you pick Save and close in the main menu either way."
         }
       }
     },

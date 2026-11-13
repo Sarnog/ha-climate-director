@@ -180,14 +180,26 @@ wählst.
 | **Niederschlagsquelle** | eine `weather.*`- oder `sensor.*`-Entität, die sagt, ob Niederschlag fällt; leer = die Niederschlagsregel macht nicht mit |
 | **Zustände, die als Niederschlag zählen** | welche Zustände dieser Entität Niederschlag bedeuten; standardmäßig Regen, Schnee und Hagel |
 | **Wie lange Niederschlag weiter zählt (Minuten)** | Nachlaufzeit nach dem Aufhören des Niederschlags; Standard 15 Minuten |
-| **Sensor Strompreis** | der aktuelle Preis einer kWh Strom, zum Beispiel aus einem dynamischen Tarif; speist zusammen mit Gaspreis und COP-Kurve den Sensor *Günstigste Wärmequelle* |
-| **Sensor Einspeisepreis** | der Preis, den du für eine eingespeiste kWh bekommst; gilt bei Solarüberschuss als Strompreis; leer = immer der Strompreis |
+| **Schattenmodus** | an = alles durchrechnen, nichts steuern |
+
+### Energie und Kosten
+
+Vergleiche, was eine kWh Wärme aus Gas und aus den Klimageräten kostet. Das speist nur den Sensor *Günstigste
+Wärmequelle*; nichts wird danach gesteuert. Gib Strom und Gas je einen festen Preis oder einen Sensor und trage die
+COP-Kurve ein, um den Vergleich einzuschalten.
+
+| Einstellung | Was sie tut |
+|---|---|
+| **Sensor Strompreis** | der aktuelle Preis einer kWh Strom, zum Beispiel aus einem dynamischen Tarif; hat Vorrang vor dem festen Preis, solange der Sensor eine Zahl liefert |
+| **Fester Strompreis (pro kWh)** | fester Preis pro kWh Strom; gilt, wenn es keinen Sensor gibt oder er nichts liefert; 0 = nicht eingestellt |
+| **Sensor Einspeisepreis** | der Preis, den du für eine eingespeiste kWh bekommst; gilt bei Solarüberschuss als Strompreis; mit auch leerem festem Einspeisepreis = immer der Strompreis |
+| **Fester Einspeisepreis (pro kWh)** | feste Vergütung pro eingespeister kWh; gilt, wenn es keinen Sensor gibt oder er nichts liefert; 0 = nicht eingestellt |
 | **Sensor Solarüberschuss** | Solarüberschuss in kW (positiv = Überschuss); leer = nie ein Überschuss |
-| **Gaspreis (pro m³)** | was ein m³ Gas dich kostet, alles inklusive; 0 = nicht eingestellt, dann wird der Sensor nicht angelegt |
+| **Sensor Gaspreis** | der aktuelle Preis eines m³ Gas, zum Beispiel aus einem dynamischen Tarif; hat Vorrang vor dem festen Gaspreis, solange der Sensor eine Zahl liefert |
+| **Fester Gaspreis (pro m³)** | fester Preis pro m³ Gas, alles inklusive; gilt, wenn es keinen Sensor gibt oder er nichts liefert; ohne beides wird der Sensor nicht angelegt |
 | **Brennwert des Gases (kWh pro m³)** | Wärme pro m³ Gas; standardmäßig 9,77 |
 | **Wirkungsgrad des Kessels (0 bis 1,2)** | wie viel dieser Wärme die Heizkörper erreicht; standardmäßig 0,9 |
 | **COP-Kurve der Klimageräte** | Punkte `Außentemperatur:COP`, durch Kommas getrennt, zum Beispiel `-5:2.8, 7:3.8, 15:4.5`; leer = der Sensor wird nicht angelegt |
-| **Schattenmodus** | an = alles durchrechnen, nichts steuern |
 
 ### Niederschlag setzt die Außengrenze außer Kraft
 

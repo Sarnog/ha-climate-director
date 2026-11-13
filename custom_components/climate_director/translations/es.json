@@ -30,6 +30,7 @@
           "circuits": "Circuitos de climatización",
           "residents": "Residentes",
           "openings": "Puertas y ventanas",
+          "energy": "Energía y costes",
           "save": "✅ Guardar y cerrar",
           "generators": "Fuentes de calor compartidas",
           "exclusives": "Grupos exclusivos",
@@ -58,14 +59,7 @@
           "precipitation_source": "Fuente de precipitaciones",
           "precipitation_states": "Estados que cuentan como precipitación",
           "precipitation_grace": "Cuánto tiempo siguen contando las precipitaciones (minutos)",
-          "guest_days": "Días del modo invitados",
-          "grid_price_sensor": "Sensor del precio de la electricidad",
-          "feed_in_sensor": "Sensor del precio de excedentes",
-          "surplus_sensor": "Sensor del excedente solar",
-          "gas_price": "Precio del gas (por m³)",
-          "kwh_per_m3": "Poder calorífico del gas (kWh por m³)",
-          "boiler_efficiency": "Rendimiento de la caldera (0 a 1,2)",
-          "cop_curve": "Curva de COP de los aires acondicionados"
+          "guest_days": "Días del modo invitados"
         },
         "data_description": {
           "season_source": "Deduce la estación del mes, léela de una entidad, o fíjala a mano.",
@@ -87,14 +81,7 @@
           "precipitation_source": "Una entidad meteorológica o un sensor de precipitaciones. Mientras informe de uno de los estados de abajo, el límite de «abrir una ventana» por zona se omite. Déjalo vacío para que la regla ordinaria se aplique siempre.",
           "precipitation_states": "Separados por comas. Para una entidad meteorológica son sus condiciones; para un sensor, sus estados. El valor por defecto cubre lluvia, nieve y granizo.",
           "precipitation_grace": "Un chaparrón de cinco minutos no debe hacer oscilar la regulación, así que una lectura sigue contando este tiempo después de que cesen las precipitaciones.",
-          "guest_days": "Déjalo vacío para todos los días; si no, el modo invitados solo mantiene la casa los días elegidos.",
-          "grid_price_sensor": "El precio actual de un kWh de electricidad, por ejemplo de un contrato dinámico. Junto con el precio del gas y la curva de COP alimenta el sensor de coste, que solo muestra la fuente más barata y no decide nada.",
-          "feed_in_sensor": "El precio actual que recibes por un kWh vertido a la red. Cuenta como precio de la electricidad mientras haya excedente solar. Déjalo vacío para usar siempre el precio de la electricidad.",
-          "surplus_sensor": "El excedente solar en kW; un valor positivo cuenta como excedente. Déjalo vacío para no contar nunca un excedente.",
-          "gas_price": "Lo que te cuesta un m³ de gas, todo incluido, en tu moneda. Cero significa sin configurar, y entonces no se crea el sensor de coste.",
-          "kwh_per_m3": "Cuánto calor contiene un m³ de gas. 9,77 es un valor neerlandés habitual; mira tu factura del gas.",
-          "boiler_efficiency": "Qué parte de ese calor llega a los radiadores. 0,9 es un buen punto de partida para una caldera de condensación.",
-          "cop_curve": "Puntos de temperatura exterior y COP, separados por comas, por ejemplo -5:2.8, 7:3.8, 15:4.5. Entre dos puntos la curva es recta; antes del primero y después del último queda plana. Déjalo vacío si no tienes ninguna, y entonces no se crea el sensor de coste."
+          "guest_days": "Déjalo vacío para todos los días; si no, el modo invitados solo mantiene la casa los días elegidos."
         }
       },
       "zones": {
@@ -484,6 +471,36 @@
           "delete": "Elimina esta franja, de modo que el director pueda volver a empezar algo durante esas horas.",
           "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal.",
           "holiday": "Una franja de vacaciones solo se aplica con el horario de vacaciones activo, y entonces sustituye a las franjas ordinarias. Sus días de la semana no cuentan. Sin ella, un día de vacaciones cuenta como un sábado."
+        }
+      },
+      "energy": {
+        "title": "Energía y costes",
+        "description": "Compara lo que cuesta un kWh de calor con gas y con los aires acondicionados. Esto solo alimenta el sensor *Fuente de calefacción más barata*; no se controla nada con él. Da a la electricidad y al gas un precio fijo o un sensor, e indica la curva de COP para activar la comparación.",
+        "data": {
+          "grid_price_sensor": "Sensor del precio de la electricidad",
+          "grid_price": "Precio fijo de la electricidad (por kWh)",
+          "feed_in_sensor": "Sensor del precio de excedentes",
+          "feed_in_price": "Precio fijo de excedentes (por kWh)",
+          "surplus_sensor": "Sensor del excedente solar",
+          "gas_price_sensor": "Sensor del precio del gas",
+          "gas_price": "Precio fijo del gas (por m³)",
+          "kwh_per_m3": "Poder calorífico del gas (kWh por m³)",
+          "boiler_efficiency": "Rendimiento de la caldera (0 a 1,2)",
+          "cop_curve": "Curva de COP de los aires acondicionados",
+          "when_done": "Cuando termines aquí"
+        },
+        "data_description": {
+          "grid_price_sensor": "El precio actual de un kWh de electricidad, por ejemplo de un contrato dinámico. Tiene prioridad sobre el precio fijo de la electricidad de abajo mientras el sensor dé un número.",
+          "grid_price": "Un precio fijo por kWh de electricidad, para un contrato fijo. Si arriba también hay un sensor, este precio solo cuenta cuando el sensor no da nada. Cero significa sin configurar.",
+          "feed_in_sensor": "El precio actual que recibes por un kWh vertido a la red. Cuenta como precio de la electricidad mientras haya excedente solar. Deja este campo y el precio fijo de excedentes vacíos para usar siempre el precio de la electricidad.",
+          "feed_in_price": "Una compensación fija por kWh vertido a la red. Cuenta como precio de la electricidad mientras haya excedente solar. Cero significa sin configurar.",
+          "surplus_sensor": "El excedente solar en kW; un valor positivo cuenta como excedente. Déjalo vacío para no contar nunca un excedente.",
+          "gas_price_sensor": "El precio actual de un m³ de gas, por ejemplo de un contrato dinámico. Tiene prioridad sobre el precio fijo del gas de abajo mientras el sensor dé un número.",
+          "gas_price": "Un precio fijo por m³ de gas, todo incluido, en tu moneda. Si arriba también hay un sensor, este precio solo cuenta cuando el sensor no da nada. Sin sensor y sin precio fijo no se crea el sensor de coste.",
+          "kwh_per_m3": "Cuánto calor contiene un m³ de gas. 9,77 es un valor neerlandés habitual; mira tu factura del gas.",
+          "boiler_efficiency": "Qué parte de ese calor llega a los radiadores. 0,9 es un buen punto de partida para una caldera de condensación.",
+          "cop_curve": "Puntos de temperatura exterior y COP, separados por comas, por ejemplo -5:2.8, 7:3.8, 15:4.5. Entre dos puntos la curva es recta; antes del primero y después del último queda plana. Déjalo vacío si no tienes ninguna, y entonces no se crea el sensor de coste.",
+          "when_done": "Si eliges «Descartar y volver», sales de esta pantalla y se pierde lo que hayas escrito aquí, completo o no. En cualquier caso no se escribe nada en la instalación hasta que elijas Guardar y cerrar en el menú principal."
         }
       }
     },
