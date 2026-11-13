@@ -30,6 +30,7 @@ from homeassistant.core import CALLBACK_TYPE
 from homeassistant.helpers.debounce import Debouncer
 
 from .engine import ModeFamily, Plan
+from .engine.heat_pick import OFF, HeatPick
 from .engine.plan import Reason
 
 
@@ -88,6 +89,12 @@ class RoundState:
     """De ontdubbelaar die een reeks aanleidingen tot één ronde samenvoegt.
 
     The debouncer that folds a series of triggers into one round.
+    """
+
+    heat_pick: HeatPick = field(default_factory=lambda: HeatPick(None, OFF))
+    """De kostenvoorkeur van de laatste ronde; de volgende houdt er rekening mee.
+
+    The cost preference of the last round; the next one takes it into account.
     """
 
     issued: Plan | None = None

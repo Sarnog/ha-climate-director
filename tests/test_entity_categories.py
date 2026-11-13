@@ -46,6 +46,7 @@ EXPECTED: dict[str, dict[str, EntityCategory | None]] = {
         "would_command": EntityCategory.DIAGNOSTIC,
         "mismatch": EntityCategory.DIAGNOSTIC,
         "cheapest_heat": EntityCategory.DIAGNOSTIC,
+        "heat_break_even": EntityCategory.DIAGNOSTIC,
         "zone_source": EntityCategory.DIAGNOSTIC,
         # Een bedieningsentiteit voor het dashboard, net als de
         # overrideschakelaar: bewust zichtbaar en niet achter het

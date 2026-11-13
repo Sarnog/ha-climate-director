@@ -18,6 +18,16 @@ class SourceRole(StrEnum):
     HEAT_COOL = "heat_cool"
 
 
+class SourceEnergy(StrEnum):
+    """What a source burns, for the comparison of what a kWh of heat costs."""
+
+    NONE = "none"
+    """Not part of the cost comparison: the outdoor window alone decides."""
+
+    GAS = "gas"
+    ELECTRIC = "electric"
+
+
 class ConflictPolicy(StrEnum):
     """How a circuit picks a winner when zones want opposing duties."""
 
@@ -137,6 +147,18 @@ class Source:
     """
 
     role: SourceRole = SourceRole.HEAT_COOL
+    energy: SourceEnergy = SourceEnergy.NONE
+    """What this source burns; only matters while cost control is on.
+
+    Staat er gas of elektrisch, dan haalt de kostenvergelijking dit apparaat uit
+    zijn buitenvenster en kiest zij welk van de twee de zone verwarmt. Leeg laat
+    het venster beslissen, zoals altijd.
+
+    With gas or electric set, the cost comparison takes this appliance out of its
+    outdoor window and picks which of the two heats the zone. Empty lets the
+    window decide, as ever.
+    """
+
     priority: int = 0
     """Preference within a zone; the lowest number available wins."""
 

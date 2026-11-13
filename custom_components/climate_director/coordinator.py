@@ -34,6 +34,7 @@ from . import (
     coordinator_reporting,
     coordinator_round,
     coordinator_tracking,
+    cost_steering,
 )
 from .const import (
     CONF_INSTALLATION,
@@ -392,6 +393,9 @@ class ClimateDirectorCoordinator(
 
     def with_family_history(self, *args: Any, **kwargs: Any) -> Any:
         return coordinator_round.with_family_history(self, *args, **kwargs)
+
+    def with_heat_pick(self, *args: Any, **kwargs: Any) -> Any:
+        return cost_steering.with_heat_pick(self, *args, **kwargs)
 
     def schedule_deferral(self, *args: Any, **kwargs: Any) -> Any:
         return coordinator_round.schedule_deferral(self, *args, **kwargs)

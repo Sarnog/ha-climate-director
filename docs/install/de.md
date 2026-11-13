@@ -184,9 +184,9 @@ wählst.
 
 ### Energie und Kosten
 
-Vergleiche, was eine kWh Wärme aus Gas und aus den Klimageräten kostet. Das speist nur den Sensor *Günstigste
-Wärmequelle*; nichts wird danach gesteuert. Gib Strom und Gas je einen festen Preis oder einen Sensor und trage die
-COP-Kurve ein, um den Vergleich einzuschalten.
+Vergleiche, was eine kWh Wärme aus Gas und aus den Klimageräten kostet. Gib Strom und Gas je einen festen Preis oder
+einen Sensor und trage die COP-Kurve ein, um den Vergleich einzuschalten. Mit Nach Kosten schalten wählt die
+günstigste Quelle auch wirklich, welches Gerät heizt; ohne schaut der Sensor *Günstigste Wärmequelle* nur zu.
 
 | Einstellung | Was sie tut |
 |---|---|
@@ -200,6 +200,9 @@ COP-Kurve ein, um den Vergleich einzuschalten.
 | **Brennwert des Gases (kWh pro m³)** | Wärme pro m³ Gas; standardmäßig 9,77 |
 | **Wirkungsgrad des Kessels (0 bis 1,2)** | wie viel dieser Wärme die Heizkörper erreicht; standardmäßig 0,9 |
 | **COP-Kurve der Klimageräte** | Punkte `Außentemperatur:COP`, durch Kommas getrennt, zum Beispiel `-5:2.8, 7:3.8, 15:4.5`; leer = der Sensor wird nicht angelegt |
+| **Nach Kosten schalten** | an = die günstigste Quelle wählt, ob Gas oder das Klimagerät heizt, in jeder Zone mit einer Gas- und einer elektrischen Quelle; aus = nur zusehen |
+| **Kältegrenze** | unterhalb dieser Außentemperatur heizt immer Gas; leer = keine Kältegrenze; standardmäßig 2 °C |
+| **Spielraum vor dem Umschalten (%)** | um wie viel Prozent die andere Quelle günstiger sein muss, bevor umgeschaltet wird; standardmäßig 10 |
 
 ### Niederschlag setzt die Außengrenze außer Kraft
 
@@ -314,6 +317,7 @@ gespeichert hast, wählst du sofort ihre Quellen.
 | **Name** | ein eigener Name für diese Quelle; leer = die Auswahl nennt das Gerät selbst |
 | **Climate-Entität** | das Gerät selbst |
 | **Was dieses Gerät kann** | nur heizen, nur kühlen oder beides. Ein Kessel ist *nur heizen* |
+| **Energiequelle dieses Geräts** | Gas oder elektrisch, für den Kostenvergleich; leer = das Außenfenster entscheidet wie immer |
 | **Dieses Gerät automatisch einschalten** | aus lässt es in Ruhe, siehe unten |
 | **Reihenfolge innerhalb dieser Zone** | welche Quelle bevorzugt wird; **niedriger gewinnt** |
 | **Verwenden ab dieser Außentemperatur** | die Untergrenze; gehört zum Fenster |
@@ -739,6 +743,7 @@ Ein Gerät pro Installation, darunter:
 | `sensor.*_wurde_<entity>_ansteuern` | der Modus, in den der Director dieses Gerät setzen würde — ein Sensor pro Gerät |
 | `sensor.*_abweichungen` | wie viele Geräte gerade anders stehen als der Plan will; 0 = Director und Haus sind einig |
 | `sensor.*_gunstigste_warmequelle` | welche Quelle eine kWh Wärme jetzt am günstigsten liefert (Gas oder Strom), mit beiden Kosten als Attribut; nur vorhanden, wenn Gaspreis, Strompreis und COP-Kurve eingestellt sind. Nur beobachten: nichts wird danach gesteuert |
+| `sensor.*_umschalttemperatur_gas_und_klimagerat` | die Außentemperatur, unter der Gas bei den heutigen Preisen günstiger ist als das Klimagerät (das Attribut `verdict` sagt: Umschaltpunkt, überall elektrisch oder überall Gas); nur vorhanden, wenn Gaspreis, Strompreis und COP-Kurve gesetzt sind. Nur zusehen |
 | `sensor.*_quelle_<zone>` | welche Quelle diese Zone bedient, mit dem, was die Zone wollte, bekam und warum |
 | `binary_sensor.*_<zone>_blockiert` | an, wenn eine Zone weniger bekam als verlangt oder laufen wollte, aber ein Umstand sie zurückhielt; die geschlossenen Tore stehen in den Attributen |
 | `binary_sensor.*_<zone>_auf_ersatzgerat` | an, wenn eine Zone auf einem Ersatzgerät läuft, weil die erste Wahl unerreichbar ist |

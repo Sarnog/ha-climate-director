@@ -1498,19 +1498,25 @@ roostervenster en hergebruikt de bestaande precondition-mechaniek, maar met een 
 trigger in plaats van een handmatige.
 
 **Energieprijs als bronvoorkeur.** `WorldState` krijgt runtime-bronvoorkeuren; de
-coordinator leest een tarief-/overschotsensor en `sources.py` sorteert daarop. Stap 1 staat er:
+coordinator leest de prijzen en `sources.py` sorteert daarop. Stap 1 staat er:
 `engine/cost.py` rekent de kosten van een kWh warmte uit (gas, COP-curve, overschot, venstergemiddelde,
-goedkoopste bron met rem) zonder Home Assistant en zonder toestand. Hij is nog niet aangesloten:
-de bronkeuze kent hem niet en geen enkel besluit hangt ervan af. Stap 2 staat er ook: de installatie
+goedkoopste bron met rem) zonder Home Assistant en zonder toestand. Stap 2 staat er ook: de installatie
 kent `energy`-instellingen (stroom-, terugleverprijs en overschot als entiteit, gasprijs,
 calorische waarde, rendement en een COP-curve als tekst) op een eigen scherm *Energie en kosten* in het
 hoofdmenu, en
 `engine/energy.py` rekent daarmee de kosten van gas en van de airco's uit. De sensor *Goedkoopste
 warmtebron* (`HeatCostSensor`) toont het antwoord, met beide kosten als attribuut; hij bestaat
 alleen als gasprijs, stroomprijs en curve zijn ingesteld en volgt de prijsentiteiten zelf, dus
-een nieuwe prijs kost geen beslisronde. Ook dit stuurt niets: het is de maat waarmee je in de
-geschiedenis ziet wanneer kosten een andere bron hadden gekozen dan de buitentemperatuur. Het
-schakelen komt daarna, in een eigen release.
+een nieuwe prijs kost geen beslisronde. Stap 3 staat er ook: elke prijs is een vast getal of een
+entiteit (de entiteit wint zolang die een getal geeft), een bron kan `energy` (gas of elektrisch)
+krijgen, en met de schakelaar *Schakel op kosten* zet `engine/heat_pick.py` de uitkomst om in één
+voorkeur voor het huis, `WorldState.heat_pick`. `sources.select()` haalt dan het buitenvenster
+van bronnen met een energiesoort weg en zet de goedkoopste soort voorop; de andere blijft
+terugval. De koudegrens laat onder een instelbare temperatuur altijd gas verwarmen (terug naar
+elektrisch pas een dode band erboven), een marge in procenten remt het heen en weer schakelen, en
+elke twijfel (onbekende buitentemperatuur of kosten) geeft geen voorkeur, zodat de vensters
+beslissen zoals altijd. Koelen verandert nooit. De sensor *Omslagtemperatuur gas en airco*
+(`BreakEvenSensor`) toont bij de prijzen van nu onder welke buitentemperatuur gas goedkoper is.
 
 **Weersvoorspelling in het buitentemperatuurvenster.** De coordinator leest de verwachte
 temperatuur uit een `weather`-entiteit; `WorldState.outdoor_forecast` laat de vensters op de
@@ -1550,8 +1556,9 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `engine/models.py` | de installatie als geheel | `DirectorConfig`; de kleine bouwstenen staan in de modules hieronder |
 | `engine/seasons.py` | seizoen en neerslag | `Season`, `SeasonSource`, `SeasonSettings`, `PrecipitationSettings` |
 | `engine/windows.py` | het tijdvenster | `TimeWindow` |
-| `engine/cost.py` | wat een kWh warmte kost: gas tegenover een elektrische bron (rekenwerk, nog niet aangesloten op de bronkeuze) | `PricePoint`, `CopCurve`, `gas_cost`, `electric_cost`, `surplus_price`, `window_average`, `cheapest` |
-| `engine/energy.py` | de energie-instellingen en wat een kWh warmte nu kost (voedt alleen de kostensensor) | `EnergySettings`, `parse_cop_curve`, `HeatCosts`, `heat_costs` |
+| `engine/cost.py` | wat een kWh warmte kost: gas tegenover een elektrische bron (rekenwerk; de bronkeuze leest het via `WorldState.heat_pick`) | `PricePoint`, `CopCurve`, `gas_cost`, `electric_cost`, `surplus_price`, `window_average`, `cheapest` |
+| `engine/energy.py` | de energie-instellingen en wat een kWh warmte nu kost (voedt alleen de kostensensor) | `EnergySettings`, `parse_cop_curve`, `HeatCosts`, `heat_costs`, `break_even` |
+| `engine/heat_pick.py` | welke soort bron nu verwarmt, op kosten, met koudegrens en marge | `HeatPick`, `pick_heat_source` |
 | `engine/residents.py` | de bewoner | `Resident`, `SleepIn`, `WakeDeadline` en `RiseBrake` |
 | `engine/equipment.py` | apparaten en hun samenhang | `SourceRole`, `OutdoorWindow`, `ModeSettings`, `Source`, `Circuit`, `ConflictPolicy`, `Generator`, `Opening`, `HeatingLayout` |
 | `engine/rooms.py` | de ruimte en haar poortkeuze | `ZoneGate`, `Zone`, `GateSettings` |
@@ -3608,19 +3615,25 @@ schedule window and reuses the existing pre-conditioning machinery, but with an 
 trigger instead of a manual one.
 
 **Energy price as source preference.** `WorldState` gains runtime source preferences; the
-coordinator reads a tariff/surplus sensor and `sources.py` sorts on it. Step 1 is in:
+coordinator reads the prices and `sources.py` sorts on it. Step 1 is in:
 `engine/cost.py` works out the cost of a kWh of heat (gas, COP curve, surplus, window average,
-cheapest source with a brake) without Home Assistant and without state. It is not yet wired:
-the source selection does not know it and no decision depends on it. Step 2 is in as well: the
+cheapest source with a brake) without Home Assistant and without state. Step 2 is in as well: the
 installation has `energy` settings (power price, feed-in price and surplus as entities, gas price,
 calorific value, efficiency and a COP curve as text) on a screen of its own, *Energy and costs*, in the
 main menu, and
 `engine/energy.py` works the cost of gas and of the air conditioners out from them. The sensor
 *Cheapest heat source* (`HeatCostSensor`) shows the answer, with both costs as attributes; it
 only exists when gas price, power price and curve are set and follows the price entities
-itself, so a new price costs no decision round. This steers nothing either: it is the measure
-that shows in the history when cost would have chosen another source than the outdoor
-temperature. Switching comes after that, in a release of its own.
+itself, so a new price costs no decision round. Step 3 is in as well: every price is a fixed
+number or an entity (the entity wins while it reads a number), a source can get an `energy` kind
+(gas or electric), and with the *Switch on cost* switch `engine/heat_pick.py` turns the outcome
+into one preference for the house, `WorldState.heat_pick`. `sources.select()` then drops the
+outdoor window of sources with an energy kind and puts the cheapest kind first; the other stays
+a fallback. The cold limit makes gas heat below an adjustable temperature (back to electric only
+one dead band above it), a margin in percent brakes the flipping back and forth, and any doubt
+(unknown outdoor temperature or costs) gives no preference, so the windows decide as ever.
+Cooling never changes. The sensor *Gas and air conditioner changeover temperature*
+(`BreakEvenSensor`) shows, at today's prices, below which outdoor temperature gas is cheaper.
 
 **Weather forecast in the outdoor window.** The coordinator reads the expected temperature
 from a `weather` entity; `WorldState.outdoor_forecast` lets the windows check the forecast
@@ -3659,8 +3672,9 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `engine/models.py` | the installation as a whole | `DirectorConfig`; the small building blocks stand in the modules below |
 | `engine/seasons.py` | season and precipitation | `Season`, `SeasonSource`, `SeasonSettings`, `PrecipitationSettings` |
 | `engine/windows.py` | the time window | `TimeWindow` |
-| `engine/cost.py` | what a kWh of heat costs: gas against an electric source (arithmetic, not yet wired to the source selection) | `PricePoint`, `CopCurve`, `gas_cost`, `electric_cost`, `surplus_price`, `window_average`, `cheapest` |
-| `engine/energy.py` | the energy settings and what a kWh of heat costs now (only feeds the cost sensor) | `EnergySettings`, `parse_cop_curve`, `HeatCosts`, `heat_costs` |
+| `engine/cost.py` | what a kWh of heat costs: gas against an electric source (arithmetic; the source selection reads it through `WorldState.heat_pick`) | `PricePoint`, `CopCurve`, `gas_cost`, `electric_cost`, `surplus_price`, `window_average`, `cheapest` |
+| `engine/energy.py` | the energy settings and what a kWh of heat costs now (only feeds the cost sensor) | `EnergySettings`, `parse_cop_curve`, `HeatCosts`, `heat_costs`, `break_even` |
+| `engine/heat_pick.py` | which kind of source heats now, on cost, with cold limit and margin | `HeatPick`, `pick_heat_source` |
 | `engine/residents.py` | the resident | `Resident`, `SleepIn`, `WakeDeadline` and `RiseBrake` |
 | `engine/equipment.py` | appliances and how they hang together | `SourceRole`, `OutdoorWindow`, `ModeSettings`, `Source`, `Circuit`, `ConflictPolicy`, `Generator`, `Opening`, `HeatingLayout` |
 | `engine/rooms.py` | the room and its gate choice | `ZoneGate`, `Zone`, `GateSettings` |

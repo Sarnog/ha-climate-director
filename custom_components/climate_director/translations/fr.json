@@ -165,6 +165,7 @@
           "name": "Nom",
           "entity_id": "Entité climate",
           "role": "Ce que cet appareil sait faire",
+          "energy": "Source d'énergie de cet appareil",
           "priority": "Ordre au sein de cette zone",
           "outdoor_min": "Utiliser à partir de cette température extérieure",
           "outdoor_max": "Utiliser jusqu'à cette température extérieure",
@@ -182,6 +183,7 @@
           "outdoor_max": "Jusqu'à cette température la source compte ; cette valeur elle-même n'en fait plus partie, de sorte qu'elle rejoint exactement une source qui commence là.",
           "entity_id": "L'entité climate que cette source pilote.",
           "role": "Si cet appareil peut chauffer, refroidir, ou les deux. Une chaudière ne fait que chauffer.",
+          "energy": "Gaz ou électrique, pour la comparaison des coûts. Seulement avec Basculer selon le coût activé, la plage extérieure de cet appareil ne compte plus et le type le moins cher est choisi. Vide laisse la plage extérieure décider.",
           "delete": "Retire la source de cette zone. L'appareil lui-même reste intact.",
           "autostart": "Désactivé le laisse tranquille : le directeur ne l'allume jamais et ne l'éteint que s'il exécute une tâche que l'unité extérieure partagée n'autorise pas. Pour un appareil que vous allumez vous-même et voulez laisser tel quel.",
           "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
@@ -475,7 +477,7 @@
       },
       "energy": {
         "title": "Énergie et coûts",
-        "description": "Comparez ce que coûte un kWh de chaleur issu du gaz et des climatiseurs. Cela alimente seulement le capteur *Source de chauffage la moins chère* ; rien n'est piloté dessus. Donnez à l'électricité et au gaz chacun un prix fixe ou un capteur, et renseignez la courbe de COP pour activer la comparaison.",
+        "description": "Comparez ce que coûte un kWh de chaleur issu du gaz et des climatiseurs. Donnez à l'électricité et au gaz chacun un prix fixe ou un capteur, et renseignez la courbe de COP pour activer la comparaison. Avec Basculer selon le coût, la source la moins chère choisit vraiment quel appareil chauffe ; sans cela, le capteur *Source de chauffage la moins chère* ne fait qu'observer.",
         "data": {
           "grid_price_sensor": "Capteur du prix de l'électricité",
           "grid_price": "Prix fixe de l'électricité (par kWh)",
@@ -487,6 +489,9 @@
           "kwh_per_m3": "Pouvoir calorifique du gaz (kWh par m³)",
           "boiler_efficiency": "Rendement de la chaudière (0 à 1,2)",
           "cop_curve": "Courbe de COP des climatiseurs",
+          "cost_control": "Basculer selon le coût",
+          "cold_limit": "Limite de froid",
+          "switch_margin": "Marge avant de basculer (%)",
           "when_done": "Quand vous avez terminé ici"
         },
         "data_description": {
@@ -500,6 +505,9 @@
           "kwh_per_m3": "La chaleur que contient un m³ de gaz. 9,77 est une valeur néerlandaise courante ; regardez votre facture de gaz.",
           "boiler_efficiency": "La part de cette chaleur qui atteint les radiateurs. 0,9 est un bon départ pour une chaudière à condensation.",
           "cop_curve": "Des points de température extérieure et de COP, séparés par des virgules, par exemple -5:2.8, 7:3.8, 15:4.5. Entre deux points la courbe est droite ; avant le premier et après le dernier elle reste plate. Laissez vide si vous n'en avez pas, et le capteur de coût n'est alors pas créé.",
+          "cost_control": "Activé : la source la moins chère choisit si le gaz ou le climatiseur chauffe, dans chaque zone qui a une source au gaz et une source électrique (réglez la source d'énergie de chaque source). La plage extérieure de ces sources ne compte alors plus. Désactivé : simple observation, les plages extérieures décident comme toujours. Le refroidissement ne change jamais.",
+          "cold_limit": "Sous cette température extérieure, le gaz chauffe toujours, quel que soit le prix : on ne peut pas se fier au COP du climatiseur à ce niveau. Réglez-la sur le point le plus bas de votre courbe de COP. Vide signifie aucune limite de froid. Le retour à l'électrique n'a lieu qu'une bande morte au-dessus de cette limite.",
+          "switch_margin": "L'autre source doit être moins chère de ce pourcentage avant que le chauffage ne bascule, pour qu'il ne fasse pas des allers-retours à chaque variation de prix.",
           "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
         }
       }
@@ -649,6 +657,13 @@
       "options": {
         "every_day": "tous les jours"
       }
+    },
+    "source_energy": {
+      "options": {
+        "none": "Hors comparaison des coûts",
+        "gas": "Gaz",
+        "electric": "Électrique"
+      }
     }
   },
   "entity": {
@@ -756,6 +771,31 @@
           },
           "electricity_price": {
             "name": "Prix de l'électricité utilisé"
+          },
+          "cost_control": {
+            "name": "Basculement selon le coût activé"
+          },
+          "preferred_source": {
+            "name": "Préférence pour chauffer"
+          },
+          "preferred_reason": {
+            "name": "Raison de la préférence"
+          },
+          "steered_zones": {
+            "name": "Zones qui basculent selon le coût"
+          }
+        }
+      },
+      "heat_break_even": {
+        "name": "Température de basculement gaz et climatiseur",
+        "state_attributes": {
+          "verdict": {
+            "name": "Résultat",
+            "state": {
+              "crossover": "Basculement à cette température",
+              "electric_always": "L'électrique est moins cher partout",
+              "gas_always": "Le gaz est moins cher partout"
+            }
           }
         }
       }

@@ -56,6 +56,9 @@
       "cheapest_heat": {
         "default": "mdi:cash-multiple"
       },
+      "heat_break_even": {
+        "default": "mdi:swap-horizontal"
+      },
       "zone_source": {
         "default": "mdi:radiator"
       },

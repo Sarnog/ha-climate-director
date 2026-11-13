@@ -25,4 +25,5 @@ DECIMALS: dict[str, selector.NumberSelector] = {
     "price": decimal(0, 100, "any"),
     "kwh_per_m3": decimal(1, 20, 0.01),
     "efficiency": decimal(0.1, 1.2, 0.01),
+    "percent": decimal(0, 50, 1),
 }

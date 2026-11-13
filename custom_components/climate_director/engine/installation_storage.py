@@ -26,6 +26,7 @@ from .storage_values import (
     float_or,
     int_or,
     is_number,
+    optional_float,
     seconds_or,
     sequence,
     strings,
@@ -193,6 +194,11 @@ def energy(raw: Any) -> EnergySettings:
         gas_price=float_or(raw.get("gas_price"), defaults.gas_price),
         kwh_per_m3=float_or(raw.get("kwh_per_m3"), defaults.kwh_per_m3),
         boiler_efficiency=float_or(raw.get("boiler_efficiency"), defaults.boiler_efficiency),
+        cost_control=bool_or(raw.get("cost_control"), defaults.cost_control),
+        cold_limit=(
+            optional_float(raw["cold_limit"]) if "cold_limit" in raw else defaults.cold_limit
+        ),
+        switch_margin=float_or(raw.get("switch_margin"), defaults.switch_margin),
         cop_curve=text(raw.get("cop_curve")),
     )
 
@@ -209,6 +215,9 @@ def energy_to_dict(settings: EnergySettings) -> dict[str, Any]:
         "gas_price": settings.gas_price,
         "kwh_per_m3": settings.kwh_per_m3,
         "boiler_efficiency": settings.boiler_efficiency,
+        "cost_control": settings.cost_control,
+        "cold_limit": settings.cold_limit,
+        "switch_margin": settings.switch_margin,
         "cop_curve": settings.cop_curve,
     }
 

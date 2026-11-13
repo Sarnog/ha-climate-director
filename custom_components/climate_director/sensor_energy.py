@@ -1,6 +1,7 @@
-"""De kostensensor: welke bron een kWh warmte nu het goedkoopst levert.
+"""De kostensensoren: welke bron een kWh warmte nu het goedkoopst levert, en waar het omslaat.
 
-The cost sensor: which source delivers a kWh of heat cheapest right now.
+The cost sensors: which source delivers a kWh of heat cheapest right now, and
+where it swaps over.
 """
 
 from __future__ import annotations
@@ -8,12 +9,14 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import Event, EventStateChangedData, callback
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .coordinator import ClimateDirectorCoordinator
-from .engine.energy import ELECTRIC, GAS, HeatCosts, heat_costs
+from .cost_steering import costs_now, read_number
+from .engine import ModeFamily, SourceEnergy
+from .engine.energy import ELECTRIC, GAS, BreakEven, HeatCosts, break_even
 from .entity import ClimateDirectorEntity
 
 
@@ -54,29 +57,13 @@ class HeatCostSensor(ClimateDirectorEntity, SensorEntity):
 
         self.async_on_remove(async_track_state_change_event(self.hass, entities, _price_changed))
 
-    def _number(self, entity_id: str) -> float | None:
-        """Return the number an entity reports, or `None` when it reports none."""
-        if not entity_id:
-            return None
-        state = self.hass.states.get(entity_id)
-        if state is None:
-            return None
-        try:
-            return float(state.state)
-        except ValueError:
-            return None
-
     def _costs(self) -> HeatCosts:
         """Return the costs at this moment's readings."""
-        energy = self.coordinator.config.energy
         world = self.coordinator.world
-        return heat_costs(
-            energy,
-            self._number(energy.grid_price_sensor),
-            self._number(energy.feed_in_sensor),
-            self._number(energy.surplus_sensor),
+        return costs_now(
+            self.hass,
+            self.coordinator.config.energy,
             None if world is None else world.outdoor_temperature,
-            self._number(energy.gas_price_sensor),
         )
 
     @property
@@ -93,4 +80,82 @@ class HeatCostSensor(ClimateDirectorEntity, SensorEntity):
             "electric_cost": None if costs.electric is None else round(costs.electric, 4),
             "cop": None if costs.cop is None else round(costs.cop, 2),
             "electricity_price": costs.electricity_price,
+            "cost_control": self.coordinator.config.energy.cost_control,
+            "preferred_source": self.coordinator.round.heat_pick.preferred,
+            "preferred_reason": self.coordinator.round.heat_pick.reason,
+            "steered_zones": self._steered_zones(),
         }
+
+    def _steered_zones(self) -> list[str]:
+        """Return the zones that have both a gas and an electric source able to heat.
+
+        Alleen in die zones kan de kostenvoorkeur iets kiezen; staat hier niets
+        terwijl kostenbesturing aanstaat, dan heeft nog geen bron een energiebron.
+
+        Only in those zones can the cost preference pick anything; if this is empty
+        while cost control is on, no source has an energy kind yet.
+        """
+        if not self.coordinator.config.energy.cost_control:
+            return []
+        return [
+            zone.zone_id
+            for zone in self.coordinator.config.zones
+            if {source.energy for source in zone.sources if source.supports(ModeFamily.HEAT)}
+            >= {SourceEnergy.GAS, SourceEnergy.ELECTRIC}
+        ]
+
+
+class BreakEvenSensor(ClimateDirectorEntity, SensorEntity):
+    """The outdoor temperature below which gas is cheaper than the air conditioners.
+
+    Voor vaste prijzen is dit één getal dat je zo kunt lezen; bij een dynamisch
+    contract beweegt het mee met de prijs. Alleen kijken: de bronkeuze leest hem
+    niet. Is elektrisch overal goedkoper of gas overal, dan is er geen
+    omslagtemperatuur en staat dat in het kenmerk `verdict`.
+
+    For fixed prices this is one number you can read at once; with a dynamic
+    contract it moves with the price. Watching only: the source selection does not
+    read it. If electric is cheaper everywhere or gas is, there is no changeover
+    temperature and the `verdict` attribute says so.
+    """
+
+    _attr_translation_key = "heat_break_even"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_suggested_display_precision = 1
+
+    def __init__(self, coordinator: ClimateDirectorCoordinator) -> None:
+        """Set up the changeover sensor."""
+        super().__init__(coordinator, "heat_break_even")
+
+    async def async_added_to_hass(self) -> None:
+        """Follow the price entities: a new price moves the changeover."""
+        await super().async_added_to_hass()
+        entities = list(self.coordinator.config.energy.entities())
+
+        @callback
+        def _price_changed(_event: Event[EventStateChangedData]) -> None:
+            self.async_write_ha_state()
+
+        self.async_on_remove(async_track_state_change_event(self.hass, entities, _price_changed))
+
+    def _answer(self) -> BreakEven:
+        energy = self.coordinator.config.energy
+        price = read_number(self.hass, energy.grid_price_sensor)
+        if price is None and energy.grid_price > 0:
+            price = energy.grid_price
+        if price is None:
+            return BreakEven(None, None)
+        return break_even(energy, price, read_number(self.hass, energy.gas_price_sensor))
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the changeover temperature, or `None` when there is none."""
+        temperature = self._answer().temperature
+        return None if temperature is None else round(temperature, 1)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return whether there is a changeover at all, and the price it assumed."""
+        return {"verdict": self._answer().verdict}

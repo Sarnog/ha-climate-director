@@ -181,9 +181,9 @@ je in het hoofdmenu **Opslaan en sluiten** kiest.
 
 ### Energie en kosten
 
-Vergelijk wat een kWh warmte kost uit gas en uit de airco's. Dit voedt alleen de sensor *Goedkoopste warmtebron*; er
-wordt niets op gestuurd. Geef stroom en gas elk een vaste prijs of een sensor en vul de COP-curve in om de
-vergelijking aan te zetten.
+Vergelijk wat een kWh warmte kost uit gas en uit de airco's. Geef stroom en gas elk een vaste prijs of een sensor en
+vul de COP-curve in om de vergelijking aan te zetten. Met Schakel op kosten kiest de goedkoopste bron ook echt welk
+apparaat verwarmt; zonder kijkt de sensor *Goedkoopste warmtebron* alleen mee.
 
 | Instelling | Wat het doet |
 |---|---|
@@ -197,6 +197,9 @@ vergelijking aan te zetten.
 | **Calorische waarde van gas (kWh per m³)** | warmte per m³ gas; standaard 9,77 |
 | **Rendement van de ketel (0 tot 1,2)** | hoeveel van die warmte de radiatoren bereikt; standaard 0,9 |
 | **COP-curve van de airco's** | punten `buitentemperatuur:COP` met komma's gescheiden, bijvoorbeeld `-5:2.8, 7:3.8, 15:4.5`; leeg = de sensor wordt niet aangemaakt |
+| **Schakel op kosten** | aan = de goedkoopste bron kiest of gas of de airco verwarmt, in elke zone met een gas- én een elektrische bron; uit = alleen kijken |
+| **Koudegrens** | onder deze buitentemperatuur verwarmt altijd gas; leeg = geen koudegrens; standaard 2 °C |
+| **Marge voor omschakelen (%)** | hoeveel procent goedkoper de andere bron moet zijn voor het omschakelt; standaard 10 |
 
 ### Neerslag zet de buitengrens opzij
 
@@ -309,6 +312,7 @@ opgeslagen, kies je meteen de bronnen ervan.
 | **Naam** | een eigen naam voor deze bron; leeg = de kiezer noemt het apparaat zelf |
 | **Climate-entiteit** | het apparaat zelf |
 | **Wat dit apparaat kan** | alleen verwarmen, alleen koelen, of allebei. Een ketel is *alleen verwarmen* |
+| **Energiebron van dit apparaat** | gas of elektrisch, voor de kostenvergelijking; leeg = het buitenvenster beslist, zoals altijd |
 | **Dit apparaat automatisch aanzetten** | uit laat hem met rust, zie hieronder |
 | **Volgorde binnen deze zone** | welke bron de voorkeur heeft; **lager wint** |
 | **Gebruiken vanaf deze buitentemperatuur** | de ondergrens; hoort bij het venster |
@@ -731,6 +735,7 @@ Eén device per installatie, met daaronder:
 | `sensor.*_zou_<entity>_aansturen` | de stand waarin de director dit apparaat zou zetten — één sensor per apparaat |
 | `sensor.*_afwijkingen` | hoeveel apparaten er nú anders staan dan het plan wil; 0 = director en huis zijn het eens |
 | `sensor.*_goedkoopste_warmtebron` | welke bron een kWh warmte nu het goedkoopst levert (gas of elektriciteit), met beide kosten als attribuut; alleen aanwezig als gasprijs, stroomprijs en COP-curve zijn ingesteld. Alleen kijken: er wordt niets op gestuurd |
+| `sensor.*_omslagtemperatuur_gas_en_airco` | de buitentemperatuur waaronder gas goedkoper is dan de airco, bij de prijzen van nu (met `verdict` als kenmerk: omslag, overal elektrisch of overal gas); alleen aanwezig als gasprijs, stroomprijs en COP-curve zijn ingesteld. Alleen kijken |
 | `sensor.*_bron_<zone>` | welke bron deze zone bedient, met wat de zone wilde, kreeg en waarom |
 | `binary_sensor.*_<zone>_geblokkeerd` | aan als een zone minder kreeg dan hij vroeg, of wilde draaien maar een omstandigheid haar tegenhield; de dichte poorten staan in de attributen |
 | `binary_sensor.*_<zone>_op_reserve` | aan als een zone op een reserve-apparaat draait omdat de eerste keus onbereikbaar is |

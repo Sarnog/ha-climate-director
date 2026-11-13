@@ -165,6 +165,20 @@ class TestStorage:
         assert stored["energy"] == asdict(FULL)
         assert config_from_dict(stored).energy == FULL
 
+    def test_an_empty_cold_limit_stays_empty_and_a_missing_one_gets_the_default(self) -> None:
+        emptied = config_from_dict({"energy": {"cold_limit": None}}).energy
+        assert emptied.cold_limit is None
+        assert config_from_dict({"energy": {}}).energy.cold_limit == 2.0
+        assert (
+            config_to_dict(config_from_dict({"energy": {"cold_limit": None}}))["energy"][
+                "cold_limit"
+            ]
+            is None
+        )
+
+    def test_cost_control_is_off_by_default(self) -> None:
+        assert config_from_dict({}).energy.cost_control is False
+
     def test_missing_or_broken_storage_gives_the_defaults(self) -> None:
         assert config_from_dict({}).energy == EnergySettings()
         assert config_from_dict({"energy": "kapot"}).energy == EnergySettings()

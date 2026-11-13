@@ -18,6 +18,7 @@ from .equipment import (
     Opening,
     OutdoorWindow,
     Source,
+    SourceEnergy,
     SourceRole,
 )
 from .families import ModeFamily
@@ -54,6 +55,7 @@ __all__ = [
     "SeasonSource",
     "SleepIn",
     "Source",
+    "SourceEnergy",
     "SourceRole",
     "TimeWindow",
     "WakeDeadline",

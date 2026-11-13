@@ -165,6 +165,7 @@
           "name": "Naam",
           "entity_id": "Climate-entiteit",
           "role": "Wat dit apparaat kan",
+          "energy": "Energiebron van dit apparaat",
           "priority": "Volgorde binnen deze zone",
           "outdoor_min": "Gebruiken vanaf deze buitentemperatuur",
           "outdoor_max": "Gebruiken tot deze buitentemperatuur",
@@ -182,6 +183,7 @@
           "outdoor_max": "Tot deze temperatuur telt de bron mee; deze waarde zelf niet meer, zodat hij precies aansluit op een bron die daar begint.",
           "entity_id": "De climate-entiteit die deze bron aanstuurt.",
           "role": "Of dit apparaat kan verwarmen, koelen, of allebei. Een cv-ketel kan alleen verwarmen.",
+          "energy": "Gas of elektrisch, voor de kostenvergelijking. Alleen met Schakel op kosten aan telt het buitenvenster van dit apparaat niet meer en kiest de goedkoopste soort. Leeg laat het buitenvenster beslissen.",
           "delete": "Haalt de bron uit deze zone. Het apparaat zelf blijft ongemoeid.",
           "autostart": "Uit laat hem met rust: de director zet hem nooit aan, en zet hem alleen uit als hij een taak draait die de gedeelde buitenunit niet toestaat. Voor een apparaat dat je zelf aanzet en zo wilt laten staan.",
           "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
@@ -475,7 +477,7 @@
       },
       "energy": {
         "title": "Energie en kosten",
-        "description": "Vergelijk wat een kWh warmte kost uit gas en uit de airco's. Dit voedt alleen de sensor *Goedkoopste warmtebron*; er wordt niets op gestuurd. Geef stroom en gas elk een vaste prijs of een sensor en vul de COP-curve in om de vergelijking aan te zetten.",
+        "description": "Vergelijk wat een kWh warmte kost uit gas en uit de airco's. Geef stroom en gas elk een vaste prijs of een sensor en vul de COP-curve in om de vergelijking aan te zetten. Met Schakel op kosten kiest de goedkoopste bron ook echt welk apparaat verwarmt; zonder kijkt de sensor *Goedkoopste warmtebron* alleen mee.",
         "data": {
           "grid_price_sensor": "Sensor stroomprijs",
           "grid_price": "Vaste stroomprijs (per kWh)",
@@ -487,6 +489,9 @@
           "kwh_per_m3": "Calorische waarde van gas (kWh per m³)",
           "boiler_efficiency": "Rendement van de ketel (0 tot 1,2)",
           "cop_curve": "COP-curve van de airco's",
+          "cost_control": "Schakel op kosten",
+          "cold_limit": "Koudegrens",
+          "switch_margin": "Marge voor omschakelen (%)",
           "when_done": "Als je hier klaar bent"
         },
         "data_description": {
@@ -500,6 +505,9 @@
           "kwh_per_m3": "Hoeveel warmte een m³ gas bevat. 9,77 is een gebruikelijke Nederlandse waarde; kijk op je gasrekening.",
           "boiler_efficiency": "Hoeveel van die warmte de radiatoren bereikt. 0,9 is een verstandig begin voor een HR-ketel.",
           "cop_curve": "Punten van buitentemperatuur en COP, met komma's gescheiden, bijvoorbeeld -5:2.8, 7:3.8, 15:4.5. Tussen twee punten loopt de curve recht; voorbij het eerste en laatste punt blijft hij vlak. Laat leeg als je er geen hebt, en dan wordt de kostensensor niet aangemaakt.",
+          "cost_control": "Aan: de goedkoopste bron kiest of gas of de airco verwarmt, in elke zone met een gas- én een elektrische bron (stel de energiebron per bron in). Het buitenvenster van die bronnen telt dan niet meer. Uit: alleen kijken, de buitenvensters beslissen zoals altijd. Koelen verandert nooit.",
+          "cold_limit": "Onder deze buitentemperatuur verwarmt altijd gas, wat de prijs ook is: daar is de COP van de airco niet te vertrouwen. Zet hem op het laagste punt van je COP-curve. Leeg betekent geen koudegrens. Terug naar elektrisch gaat pas één dode band boven deze grens.",
+          "switch_margin": "De andere bron moet zoveel procent goedkoper zijn voordat het verwarmen overschakelt, zodat het niet bij elke prijsschommeling heen en weer gaat.",
           "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
         }
       }
@@ -649,6 +657,13 @@
       "options": {
         "every_day": "elke dag"
       }
+    },
+    "source_energy": {
+      "options": {
+        "none": "Niet in de kostenvergelijking",
+        "gas": "Gas",
+        "electric": "Elektrisch"
+      }
     }
   },
   "entity": {
@@ -756,6 +771,31 @@
           },
           "electricity_price": {
             "name": "Gebruikte stroomprijs"
+          },
+          "cost_control": {
+            "name": "Schakelen op kosten aan"
+          },
+          "preferred_source": {
+            "name": "Voorkeur voor verwarmen"
+          },
+          "preferred_reason": {
+            "name": "Reden van de voorkeur"
+          },
+          "steered_zones": {
+            "name": "Zones die op kosten schakelen"
+          }
+        }
+      },
+      "heat_break_even": {
+        "name": "Omslagtemperatuur gas en airco",
+        "state_attributes": {
+          "verdict": {
+            "name": "Uitkomst",
+            "state": {
+              "crossover": "Omslag bij deze temperatuur",
+              "electric_always": "Elektrisch is overal goedkoper",
+              "gas_always": "Gas is overal goedkoper"
+            }
           }
         }
       }

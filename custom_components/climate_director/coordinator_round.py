@@ -153,7 +153,7 @@ async def async_evaluate(coordinator: CoordinatorSurface) -> None:
         coordinator.drop_lapsed_override_timers()
         world = coordinator.note_house_asleep(coordinator.build_world())
         coordinator.remember_families(world)
-        world = coordinator.with_family_history(world)
+        world = coordinator.with_heat_pick(coordinator.with_family_history(world))
         world = coordinator.settle_hand_starts(world)
 
         plan = decide(coordinator.config, world, coordinator.data)
