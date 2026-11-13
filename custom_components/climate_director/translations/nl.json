@@ -30,6 +30,7 @@
           "circuits": "Airco-circuits",
           "residents": "Bewoners",
           "openings": "Deuren en ramen",
+          "energy": "Energie en kosten",
           "save": "✅ Opslaan en sluiten",
           "generators": "Gedeelde warmtebronnen",
           "exclusives": "Exclusieve groepen",
@@ -471,10 +472,41 @@
           "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest.",
           "holiday": "Een vakantievenster geldt alleen als het vakantieschema aan staat, en vervangt dan de gewone vensters. De dagen van de week tellen er niet in mee. Zonder vakantievenster telt een vakantiedag als zaterdag."
         }
+      },
+      "energy": {
+        "title": "Energie en kosten",
+        "description": "Vergelijk wat een kWh warmte kost uit gas en uit de airco's. Dit voedt alleen de sensor *Goedkoopste warmtebron*; er wordt niets op gestuurd. Geef stroom en gas elk een vaste prijs of een sensor en vul de COP-curve in om de vergelijking aan te zetten.",
+        "data": {
+          "grid_price_sensor": "Sensor stroomprijs",
+          "grid_price": "Vaste stroomprijs (per kWh)",
+          "feed_in_sensor": "Sensor terugleverprijs",
+          "feed_in_price": "Vaste terugleverprijs (per kWh)",
+          "surplus_sensor": "Sensor zonne-overschot",
+          "gas_price_sensor": "Sensor gasprijs",
+          "gas_price": "Vaste gasprijs (per m³)",
+          "kwh_per_m3": "Calorische waarde van gas (kWh per m³)",
+          "boiler_efficiency": "Rendement van de ketel (0 tot 1,2)",
+          "cop_curve": "COP-curve van de airco's",
+          "when_done": "Als je hier klaar bent"
+        },
+        "data_description": {
+          "grid_price_sensor": "De huidige prijs van een kWh stroom, bijvoorbeeld uit een dynamisch contract. Heeft voorrang op de vaste stroomprijs hieronder zolang de sensor een getal geeft.",
+          "grid_price": "Een vaste prijs per kWh stroom, voor een vast contract. Staat er ook een sensor boven, dan geldt deze alleen als de sensor niets geeft. Nul betekent niet ingesteld.",
+          "feed_in_sensor": "De huidige prijs die je krijgt voor een teruggeleverde kWh. Telt als stroomprijs zolang er een zonne-overschot is. Laat deze en de vaste terugleverprijs leeg om altijd de stroomprijs te gebruiken.",
+          "feed_in_price": "Een vaste vergoeding per teruggeleverde kWh. Telt als stroomprijs zolang er een zonne-overschot is. Nul betekent niet ingesteld.",
+          "surplus_sensor": "Het zonne-overschot in kW; een positieve waarde telt als overschot. Laat leeg om nooit een overschot te tellen.",
+          "gas_price_sensor": "De huidige prijs van een m³ gas, bijvoorbeeld uit een dynamisch contract. Heeft voorrang op de vaste gasprijs hieronder zolang de sensor een getal geeft.",
+          "gas_price": "Een vaste prijs per m³ gas, alles inbegrepen, in jouw munteenheid. Staat er ook een sensor boven, dan geldt deze alleen als de sensor niets geeft. Zonder sensor én zonder vaste prijs wordt de kostensensor niet aangemaakt.",
+          "kwh_per_m3": "Hoeveel warmte een m³ gas bevat. 9,77 is een gebruikelijke Nederlandse waarde; kijk op je gasrekening.",
+          "boiler_efficiency": "Hoeveel van die warmte de radiatoren bereikt. 0,9 is een verstandig begin voor een HR-ketel.",
+          "cop_curve": "Punten van buitentemperatuur en COP, met komma's gescheiden, bijvoorbeeld -5:2.8, 7:3.8, 15:4.5. Tussen twee punten loopt de curve recht; voorbij het eerste en laatste punt blijft hij vlak. Laat leeg als je er geen hebt, en dan wordt de kostensensor niet aangemaakt.",
+          "when_done": "Kies je “Verwerpen en teruggaan”, dan verlaat je dit scherm en gaat wat je hier intikte verloren, ingevuld of niet. Hoe dan ook wordt er niets naar de installatie geschreven tot je in het hoofdmenu Opslaan en sluiten kiest."
+        }
       }
     },
     "error": {
       "bands_overlap": "De banden van verwarmen en koelen raken elkaar of overlappen: het uitschakelpunt van verwarmen ligt op of boven het aanpunt van koelen, of het uitschakelpunt van koelen ligt op of onder het aanpunt van verwarmen. Dan zou de kamer om de beurt verwarmen en koelen. Zet het aanpunt van koelen hoger of maak een dode band smaller, zodat er ruimte tussen de twee banden blijft.",
+      "cop_curve_invalid": "De COP-curve is niet te lezen. Schrijf punten als temperatuur:COP, gescheiden door komma's, bijvoorbeeld -5:2.8, 7:3.8, 15:4.5. Elke COP moet boven nul liggen en een temperatuur mag niet twee keer voorkomen.",
       "duplicate_priority": "Een andere kamer op dezelfde buitenunit heeft deze prioriteit al. Twee kamers met hetzelfde nummer laten de uitkomst van hun naam afhangen, dus kies een vrij nummer.",
       "presence_gate_without_sensor": "Deze zone staat op aanwezigheid in de ruimte, maar er is geen aanwezigheidssensor gekozen. De kamer telt dan voorgoed als leeg en de zone doet nooit meer iets. Kies een sensor, of laat het huishouden beslissen.",
       "required": "Dit veld is nodig om te bewaren. Vul het in, of kies onderaan “Verwerpen en teruggaan” om weg te gaan zonder op te slaan.",
@@ -705,6 +737,27 @@
       },
       "mismatch": {
         "name": "Afwijkingen"
+      },
+      "cheapest_heat": {
+        "name": "Goedkoopste warmtebron",
+        "state": {
+          "gas": "Gas",
+          "electric": "Elektriciteit"
+        },
+        "state_attributes": {
+          "gas_cost": {
+            "name": "Gas, per kWh warmte"
+          },
+          "electric_cost": {
+            "name": "Elektriciteit, per kWh warmte"
+          },
+          "cop": {
+            "name": "COP nu"
+          },
+          "electricity_price": {
+            "name": "Gebruikte stroomprijs"
+          }
+        }
       }
     },
     "binary_sensor": {
@@ -969,6 +1022,12 @@
     },
     "exclusive_group_unknown_source": {
       "message": "Een exclusieve groep noemt onbekende bron {source}."
+    },
+    "area_source_without_group": {
+      "message": "Bron {source} wordt niet automatisch aangezet en staat in het gebied van {boiler}, maar in geen exclusieve groep met {boiler}. Niets houdt deze bron tegen terwijl {boiler} draait, dus de twee kunnen naast elkaar draaien. Zet ze in één exclusieve groep."
+    },
+    "boiler_in_several_zones_without_area": {
+      "message": "{boiler} kan alleen verwarmen en staat als bron onder {count} zones, maar geen enkele rij noemt de zones die dit apparaat mee bedient. Zonder dat gebied houdt niets een ander apparaat tegen om naast {boiler} te draaien. Vul de zones in die dit apparaat mee bedient."
     },
     "unknown_installation": {
       "message": "Onbekende installatie: {installation}"

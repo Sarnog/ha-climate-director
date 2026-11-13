@@ -59,8 +59,8 @@ class StoreHost(StateStoreMixin):
         # The note of what the user did before the restore: the restore
         # reads it. This stand-in runs no startup, so the set stays empty and skips
         # nothing.
-        self._override_before_restore: set[str] = set()
-        self._request_before_restore: set[str] = set()
+        self.override_before_restore: set[str] = set()
+        self.request_before_restore: set[str] = set()
         self.wakes = 0
 
     def _override_wake_at_first_expiry(self) -> None:
@@ -109,13 +109,13 @@ def test_a_live_handover_in_memory_survives_an_older_stored_duration() -> None:
 
     Het herstel wist geen overdracht die in het geheugen al loopt: de opgeslagen
     looptijd komt er niet overheen. Een zone waar de gebruiker zelf een override
-    zette wordt al overgeslagen op `_override_before_restore`; deze wacht dekt elke
+    zette wordt al overgeslagen op `override_before_restore`; deze wacht dekt elke
     andere schrijver van `zone_override_until`, en daarom staat de eigenschap hier
     op verzonnen invoer vast.
 
     The restore does not wipe a handover that is already running in memory: the stored
     duration does not come over it. A zone the user set an override on is already
-    skipped on `_override_before_restore`; this guard covers every other writer of
+    skipped on `override_before_restore`; this guard covers every other writer of
     `zone_override_until`, and that is why the property is pinned down here on
     invented input.
     """

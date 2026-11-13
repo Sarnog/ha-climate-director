@@ -26,31 +26,16 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import replace
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.core import Event, EventStateChangedData, callback
 from homeassistant.util import dt as dt_util
 
-from .engine import ModeFamily, Plan, WorldState, family_of, hand_start
+from .engine import ModeFamily, WorldState, family_of, hand_start
 from .engine.gates import brakes_remaining
 from .hand import HandMixin
 from .readability import unreadable
 from .stored_state import stored_time
-
-if TYPE_CHECKING:
-    from .coordinator_surface import CoordinatorSurface
-
-    # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
-    # van hém. Voor mypy is dit de gastheer, zodat `self.config` en de rest
-    # kloppen; buiten de typecontrole is de basis gewoon `object`.
-    #
-    # The mixin sits on the coordinator but does not inherit from it: the
-    # coordinator inherits from the mixin. For mypy this is the host, so
-    # `self.config` and the rest resolve; outside the type check the base is
-    # simply `object`.
-    _CoordinatorBase = CoordinatorSurface
-else:
-    _CoordinatorBase = object
 
 
 class HandStartMixin(HandMixin):
@@ -59,26 +44,13 @@ class HandStartMixin(HandMixin):
     Recognition, storage and expiry of a hand start.
     """
 
-    _handed_back: dict[str, date]
-
-    def _published_plan(self) -> Plan | None:
-        """Return the last published plan, which the protocol does not declare.
-
-        `DataUpdateCoordinator` draagt `data` als eigenschap; het protocol van de
-        mixins hoeft die eigenschap niet te herhalen. Deze ene lezer houdt de
-        uitzondering bij één plek in plaats van in elke methode.
-
-        `DataUpdateCoordinator` carries `data` as a property; the mixins'
-        protocol need not repeat that property. This one reader keeps the
-        exception in one place instead of in every method.
-        """
-        return getattr(self, "data", None)
+    handed_back: dict[str, date]
 
     @callback
-    def _notice_hand_start(self, event: Event[EventStateChangedData]) -> None:
+    def notice_hand_start(self, event: Event[EventStateChangedData]) -> None:
         """Record an appliance somebody switched on while a zone was waiting.
 
-        Alleen een actieve stand die niet van ons komt telt. `_we_wanted_it_on`
+        Alleen een actieve stand die niet van ons komt telt. `we_wanted_it_on`
         verklaart onze eigen aanzet, ook wanneer het apparaat die pas een poll
         later meldt; die late melding mag geen handstart worden. Een bron met
         *Dit apparaat automatisch aanzetten* uit telt niet, en een gedeeld
@@ -86,7 +58,7 @@ class HandStartMixin(HandMixin):
         `covers_zones`. Staat er geen enkele zone op een wachtreden, dan doet
         de gebeurtenis niets.
 
-        Only an active mode that does not come from us counts. `_we_wanted_it_on`
+        Only an active mode that does not come from us counts. `we_wanted_it_on`
         explains our own switch-on, also when the appliance reports it one poll
         later; that late report must not become a hand start. A source with
         *Start this appliance automatically* off does not count, and a shared
@@ -108,7 +80,7 @@ class HandStartMixin(HandMixin):
             return
 
         entity_id = event.data["entity_id"]
-        if self._we_wanted_it_on(entity_id, duty):
+        if self.we_wanted_it_on(entity_id, duty):
             return
 
         zones = self._hand_start_zones(entity_id)
@@ -133,7 +105,7 @@ class HandStartMixin(HandMixin):
         zone = self.config.zone(zone_id)
         if zone is None or zone_id in self._hand_starts:
             return
-        if not brakes_remaining(self.config, self.build_world(), zone, self._published_plan()):
+        if not brakes_remaining(self.config, self.build_world(), zone, self.data):
             return
         self._remember_hand_starts((zone_id,))
 
@@ -149,7 +121,7 @@ class HandStartMixin(HandMixin):
             self._hand_starts[zone_id] = now
             changed = True
         if changed:
-            self._async_save_state()
+            self.async_save_state()
             self.async_request_evaluation()
 
     def _waiting_on_a_brake(self, zone_id: str) -> bool:
@@ -164,7 +136,7 @@ class HandStartMixin(HandMixin):
         world would already see the hand as 'running' and could make a brake
         disappear; recognition therefore reads the published `closed_gates`.
         """
-        plan = self._published_plan()
+        plan = self.data
         decision = plan.decision_for(zone_id) if plan is not None else None
         return decision is not None and bool(
             hand_start.HAND_START_BRAKES.intersection(decision.closed_gates)
@@ -224,7 +196,7 @@ class HandStartMixin(HandMixin):
             if moment is not None and moment.date() == today:
                 self._hand_starts[zone_id] = moment
 
-    def _settle_hand_starts(self, world: WorldState) -> WorldState:
+    def settle_hand_starts(self, world: WorldState) -> WorldState:
         """Drop the hand starts that no longer do anything, and hand the world theirs.
 
         Slapen, een leeg huis en de volgende dag zijn de drie uitwegen die niets
@@ -245,7 +217,7 @@ class HandStartMixin(HandMixin):
         an unknown zone always lapse. The rest of the world does not change.
         """
         residents = world.residents
-        previous = self._published_plan()
+        previous = self.data
         expired: list[str] = []
         readable = hand_start.brakes_readable(self.config, world)
         if readable and (
@@ -264,5 +236,5 @@ class HandStartMixin(HandMixin):
         if expired:
             for zone_id in expired:
                 self._hand_starts.pop(zone_id, None)
-            self._async_save_state()
+            self.async_save_state()
         return replace(world, zone_hand_starts=frozenset(self._hand_starts))

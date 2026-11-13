@@ -2,13 +2,13 @@
 
 Following one resident: home, asleep, homecoming and readability.
 
-`_resident` en `_notice_home` stonden in `world_builder.py` en `coordinator.py`,
+`_resident` en `notice_home` stonden in `world_builder.py` en `coordinator.py`,
 maar die modules zijn boven de vijfhonderd regels en dit onderwerp hoort op
 zichzelf. Het herstel van het thuiskomstmoment na een herstart (`restore_home_since`)
 hoort er ook bij. De leesbaarheid van de aanwezigheids- en slaapsensor gaat mee: de
 engine beslist wat een onleesbare invoer voor de drie wachtrema's betekent.
 
-`_resident` and `_notice_home` lived in `world_builder.py` and `coordinator.py`,
+`_resident` and `notice_home` lived in `world_builder.py` and `coordinator.py`,
 but those modules are over five hundred lines and this subject belongs on its
 own. Restoring the homecoming moment after a restart (`restore_home_since`) belongs
 here too. The readability of the presence and sleep sensor travels with it: the
@@ -19,28 +19,13 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from homeassistant.core import Event, EventStateChangedData, callback
 
+from .coordinator_surface import CoordinatorSurface
 from .engine import ResidentState
 from .readability import unreadable
 from .world_builder import reads_as_home
-
-if TYPE_CHECKING:
-    from .coordinator_surface import CoordinatorSurface
-
-    # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
-    # van hém. Voor mypy is dit de gastheer, zodat `self.hass` en de rest
-    # kloppen; buiten de typecontrole is de basis gewoon `object`.
-    #
-    # The mixin sits on the coordinator but does not inherit from it: the
-    # coordinator inherits from the mixin. For mypy this is the host, so
-    # `self.hass` and the rest resolve; outside the type check the base is
-    # simply `object`.
-    _CoordinatorBase = CoordinatorSurface
-else:
-    _CoordinatorBase = object
 
 
 def restore_home_since(
@@ -78,7 +63,7 @@ def restore_home_since(
     return restored
 
 
-class ResidentReaderMixin(_CoordinatorBase):
+class ResidentReaderMixin(CoordinatorSurface):
     """De lezer van één bewoner: thuis, slapend en het thuiskomstmoment.
 
     De leesbaarheid van de sensoren woont in `readability.py`, bij de wereld:
@@ -106,7 +91,7 @@ class ResidentReaderMixin(_CoordinatorBase):
         herstart krijgt alles hetzelfde moment - telt de melding wél, want
         opschorten is de onschadelijke kant om fout te zitten.
 
-        Het moment komt uit de boekhouding van de coördinator (`_home_since`),
+        Het moment komt uit de boekhouding van de coördinator (`home_since`),
         die een herstart overleeft en bij een terugval op
         `last_changed` van de aanwezigheidsentiteit begint. Deze lezer schrijft
         daar nooit in: de wereld lezen en de wereld veranderen zijn twee dingen.
@@ -132,7 +117,7 @@ class ResidentReaderMixin(_CoordinatorBase):
         same moment - the reading does count, since suspending is the harmless
         direction to be wrong in.
 
-        The moment comes from the coordinator's bookkeeping (`_home_since`),
+        The moment comes from the coordinator's bookkeeping (`home_since`),
         which survives a restart and starts as a fallback on the presence
         entity's `last_changed`. This reader never writes there: reading the
         world and changing the world are two different things. One
@@ -148,7 +133,7 @@ class ResidentReaderMixin(_CoordinatorBase):
         """
         state = self.hass.states.get(presence) if presence else None
         home = reads_as_home(state)
-        home_since = self._home_since.get(resident_id) if home else None
+        home_since = self.home_since.get(resident_id) if home else None
 
         asleep = False
         sleeper = self.hass.states.get(sleep) if sleep else None
@@ -158,7 +143,7 @@ class ResidentReaderMixin(_CoordinatorBase):
         return ResidentState(home=home, asleep=asleep, home_since=home_since)
 
     @callback
-    def _notice_home(self, event: Event[EventStateChangedData]) -> None:
+    def notice_home(self, event: Event[EventStateChangedData]) -> None:
         """Record when a resident comes home, and forget it when they leave.
 
         Anker 13: het moment waarop iemand thuiskwam is wat het stiltevenster
@@ -213,14 +198,14 @@ class ResidentReaderMixin(_CoordinatorBase):
             # only narrows a `TypeGuard` there, and in a variable it stays
             # `State | None` - measured on the build server (one `union-attr`).
             if reads_as_home(new_state):
-                if resident.resident_id not in self._home_since and not reads_as_home(old_state):
-                    self._home_since[resident.resident_id] = new_state.last_changed
+                if resident.resident_id not in self.home_since and not reads_as_home(old_state):
+                    self.home_since[resident.resident_id] = new_state.last_changed
                     changed = True
             elif (
                 new_state is not None
                 and not unreadable(new_state.state)
-                and self._home_since.pop(resident.resident_id, None) is not None
+                and self.home_since.pop(resident.resident_id, None) is not None
             ):
                 changed = True
         if changed:
-            self._async_save_state()
+            self.async_save_state()

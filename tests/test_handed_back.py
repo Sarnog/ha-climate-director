@@ -24,6 +24,11 @@ import pytest
 from homeassistant.util import dt as dt_util
 
 from custom_components.climate_director.coordinator import ClimateDirectorCoordinator
+from custom_components.climate_director.coordinator_state import (
+    LifecycleState,
+    RoundState,
+    TrackingState,
+)
 from custom_components.climate_director.engine import (
     DirectorConfig,
     ModeFamily,
@@ -171,8 +176,8 @@ def coordinator(
         def __init__(self) -> None:
             self.config = cfg or config(with_residents=bool(states))
             self.zone_overrides: dict[str, bool] = {}
-            self._handed_back: dict[str, date] = {}
-            self._home_since: dict[str, datetime] = {}
+            self.handed_back: dict[str, date] = {}
+            self.home_since: dict[str, datetime] = {}
             """Leeg: deze stand-in meet de overdracht, niet het stiltevenster.
 
             `_resident` leest het thuiskomstmoment uit de boekhouding van de
@@ -184,27 +189,29 @@ def coordinator(
             bookkeeping. Without a moment a resident who is home reads as asleep
             whenever their sleep sensor says so.
             """
-            self._commanded_off: dict[str, datetime] = {}
-            self._commanded_on: dict[str, tuple[datetime, object]] = {}
-            self._override_before_restore: set[str] = set()
-            self._request_before_restore: set[str] = set()
+            self.tracking = TrackingState()
+            self.tracking.commanded_off: dict[str, datetime] = {}
+            self.tracking.commanded_on: dict[str, tuple[datetime, object]] = {}
+            self.override_before_restore: set[str] = set()
+            self.request_before_restore: set[str] = set()
             self.last_changes: tuple[Change, ...] = ()
             """Leeg: deze stand-in meet de hand, niet wat een ronde net stuurde.
 
             Empty: this stand-in measures the hand, not what a round just sent.
-            `_we_wanted_it_on` reads this round's changes here; without a round
+            `we_wanted_it_on` reads this round's changes here; without a round
             there is nothing to read.
             """
-            self._sent_setpoints: dict[str, tuple[str, float]] = {}
-            # `data` is het gepubliceerde besluit, `_issued` het besluit dat op
+            self.round = RoundState(debouncer=None)
+            self.round.sent_setpoints: dict[str, tuple[str, float]] = {}
+            # `data` is het gepubliceerde besluit, `issued` het besluit dat op
             # tafel ligt. Tijdens het uitvoeren zijn dat er twee; hier gaat het
             # om het plan dat de director net gaf, dus staan ze gelijk.
             #
-            # `data` is the published decision, `_issued` the decision on the
+            # `data` is the published decision, `issued` the decision on the
             # table. While carrying one out those are two; here it is about the
             # plan the director just gave, so they are the same.
             self.data = plan
-            self._issued = plan
+            self.round.issued = plan
             self.shadow = False
             self.hass = Hass()
             self.saved = 0
@@ -218,14 +225,14 @@ def coordinator(
         def _calendar_says_holiday(self) -> bool:
             return False
 
-        def _async_save_state(self) -> None:
+        def async_save_state(self) -> None:
             self.saved += 1
 
-        _notice_hand = ClimateDirectorCoordinator._notice_hand
-        _note_commanded_off = ClimateDirectorCoordinator._note_commanded_off
+        notice_hand = ClimateDirectorCoordinator.notice_hand
+        note_commanded_off = ClimateDirectorCoordinator.note_commanded_off
         zones_of = ClimateDirectorCoordinator.zones_of
-        _we_wanted_it_off = ClimateDirectorCoordinator._we_wanted_it_off
-        _we_wanted_it_on = ClimateDirectorCoordinator._we_wanted_it_on
+        we_wanted_it_off = ClimateDirectorCoordinator.we_wanted_it_off
+        we_wanted_it_on = ClimateDirectorCoordinator.we_wanted_it_on
         _resident = ClimateDirectorCoordinator._resident
 
         def _now(self) -> datetime:
@@ -287,25 +294,25 @@ def idle_plan(entity_id: str = BEDROOM) -> Plan:
 class TestAHandSwitchingItOff:
     def test_the_zone_is_handed_back(self) -> None:
         item = coordinator(running_plan())
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.zones_handed_back() == {"slaapkamer"}
 
     def test_the_other_zones_carry_on(self) -> None:
         item = coordinator(running_plan())
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert "woonkamer" not in item.zones_handed_back()
 
     @pytest.mark.parametrize("was", ["heat", "cool", "dry", "auto", "heat_cool"])
     def test_from_any_running_mode(self, was: str) -> None:
         item = coordinator(running_plan())
-        item._notice_hand(_Event(BEDROOM, was, "off"))
+        item.notice_hand(_Event(BEDROOM, was, "off"))
         assert item.zones_handed_back() == {"slaapkamer"}
 
     @pytest.mark.parametrize("now", ["off", "fan_only"])
     def test_to_any_idle_mode(self, now: str) -> None:
         """Fan only is not climate control either, whatever the appliance calls it."""
         item = coordinator(running_plan())
-        item._notice_hand(_Event(BEDROOM, "heat", now))
+        item.notice_hand(_Event(BEDROOM, "heat", now))
         assert item.zones_handed_back() == {"slaapkamer"}
 
 
@@ -317,7 +324,7 @@ class TestASharedAppliance:
 
     def test_every_zone_it_serves_is_handed_back(self) -> None:
         item = coordinator(running_plan("climate.ketel"), cfg=shared_config())
-        item._notice_hand(_Event("climate.ketel", "heat", "off"))
+        item.notice_hand(_Event("climate.ketel", "heat", "off"))
         assert item.zones_handed_back() == {"woonkamer", "zolder"}
 
     def test_every_zone_is_overridden_so_no_command_follows(self) -> None:
@@ -327,7 +334,7 @@ class TestASharedAppliance:
         from custom_components.climate_director.engine import decide
 
         item = coordinator(running_plan("climate.ketel"), cfg=shared_config())
-        item._notice_hand(_Event("climate.ketel", "heat", "off"))
+        item.notice_hand(_Event("climate.ketel", "heat", "off"))
         assert item._overridden_zones() == {"woonkamer": True, "zolder": True}
 
         world = make_world(
@@ -341,15 +348,15 @@ class TestASharedAppliance:
 
     def test_switching_it_back_on_clears_every_zone(self) -> None:
         item = coordinator(running_plan("climate.ketel"), cfg=shared_config())
-        item._notice_hand(_Event("climate.ketel", "heat", "off"))
-        item._notice_hand(_Event("climate.ketel", "off", "heat"))
+        item.notice_hand(_Event("climate.ketel", "heat", "off"))
+        item.notice_hand(_Event("climate.ketel", "off", "heat"))
         assert item.zones_handed_back() == set()
-        assert item._handed_back == {}
+        assert item.handed_back == {}
 
     def test_the_next_day_forgets_every_zone(self) -> None:
         yesterday = dt_util.now().date() - timedelta(days=1)
         item = coordinator(running_plan("climate.ketel"), cfg=shared_config())
-        item._handed_back = {"woonkamer": yesterday, "zolder": yesterday}
+        item.handed_back = {"woonkamer": yesterday, "zolder": yesterday}
         assert item.zones_handed_back() == set()
 
 
@@ -357,7 +364,7 @@ class TestWhatDoesNotCount:
     def test_our_own_command_is_not_a_hand(self) -> None:
         """Otherwise the director would silence every zone it ever switches off."""
         item = coordinator(idle_plan())
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.zones_handed_back() == set()
 
     def test_a_late_report_of_our_own_off_is_not_a_hand(self) -> None:
@@ -377,46 +384,46 @@ class TestWhatDoesNotCount:
         what was really sent should prevent that.
         """
         item = coordinator(running_plan())
-        item._commanded_off[BEDROOM] = dt_util.now()
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.tracking.commanded_off[BEDROOM] = dt_util.now()
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.zones_handed_back() == set()
 
     def test_an_old_off_command_no_longer_explains_a_hand(self) -> None:
         """Na het venster telt een hand weer gewoon als een hand."""
         stale = dt_util.now() - timedelta(hours=1)
         item = coordinator(running_plan())
-        item._commanded_off[BEDROOM] = stale
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.tracking.commanded_off[BEDROOM] = stale
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.zones_handed_back() == {"slaapkamer"}
 
     def test_an_appliance_the_director_does_not_drive(self) -> None:
         item = coordinator(running_plan())
-        item._notice_hand(_Event("climate.iets_anders", "heat", "off"))
+        item.notice_hand(_Event("climate.iets_anders", "heat", "off"))
         assert item.zones_handed_back() == set()
 
     def test_a_change_within_the_same_family(self) -> None:
         """Turning the setpoint up is not switching the thing off."""
         item = coordinator(running_plan())
-        item._notice_hand(_Event(BEDROOM, "heat", "heat"))
+        item.notice_hand(_Event(BEDROOM, "heat", "heat"))
         assert item.zones_handed_back() == set()
 
     @pytest.mark.parametrize("old", ["off", "fan_only"])
     def test_it_was_already_idle(self, old: str) -> None:
         item = coordinator(running_plan())
-        item._notice_hand(_Event(BEDROOM, old, "off"))
+        item.notice_hand(_Event(BEDROOM, old, "off"))
         assert item.zones_handed_back() == set()
 
     def test_a_missing_state_is_survivable(self) -> None:
         """Entities come and go on a restart; none of that is a hand."""
         item = coordinator(running_plan())
-        item._notice_hand(_Event(BEDROOM, None, "off"))
-        item._notice_hand(_Event(BEDROOM, "heat", None))
+        item.notice_hand(_Event(BEDROOM, None, "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", None))
         assert item.zones_handed_back() == set()
 
     def test_without_a_plan_yet(self) -> None:
         """Before the first decision there is nothing to compare against."""
         item = coordinator(None)
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.zones_handed_back() == {"slaapkamer"}
 
 
@@ -451,18 +458,18 @@ class TestAnArrivedOffCommandExplainsOnlyItself:
 
         # Ons eigen uit-commando is uitgezonden en komt nu aan.
         # Our own off command was sent and now arrives.
-        item._commanded_off[BEDROOM] = now
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.tracking.commanded_off[BEDROOM] = now
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.zones_handed_back() == set()
 
         # De director zet hem daarna zelf weer aan.
         # The director then switches it back on itself.
-        item._notice_hand(_Event(BEDROOM, "off", "heat"))
+        item.notice_hand(_Event(BEDROOM, "off", "heat"))
 
         # Minuten later drukt iemand bij het apparaat op uit. Dat is een hand.
         # Minutes later somebody presses off at the appliance. That is a hand.
         self._freeze(monkeypatch, now + timedelta(minutes=minutes))
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.zones_handed_back() == {"slaapkamer"}
 
     def test_a_late_report_of_our_own_off_consumes_the_note(self, monkeypatch) -> None:
@@ -473,20 +480,20 @@ class TestAnArrivedOffCommandExplainsOnlyItself:
         now = dt_util.now()
         self._freeze(monkeypatch, now)
         item = coordinator(running_plan())
-        item._commanded_off[BEDROOM] = now
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.tracking.commanded_off[BEDROOM] = now
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.zones_handed_back() == set()
-        assert item._commanded_off == {}
+        assert item.tracking.commanded_off == {}
 
 
 class TestTheOffBookkeepingCoversBothOrders:
     """De uit-boekhouding wordt ná `apply()` geschreven; de handmelder liep al.
 
-    `_note_commanded_off` schrijft na `apply()`, terwijl `_notice_hand` tijdens
+    `note_commanded_off` schrijft na `apply()`, terwijl `notice_hand` tijdens
     de `await`s ertussen al gedraaid kan hebben. Beide volgordes moeten goed
     uitkomen, en dat is de eigenschap, niet het losse scenario.
 
-    `_note_commanded_off` writes after `apply()`, while `_notice_hand` may
+    `note_commanded_off` writes after `apply()`, while `notice_hand` may
     already have run during the awaits in between. Either order must come out
     right - the property, not the individual scenario.
     """
@@ -498,26 +505,26 @@ class TestTheOffBookkeepingCoversBothOrders:
         Reported before or after the booking: the bookkeeping is right either way.
         """
         item = coordinator(running_plan(), states={BEDROOM: reported})
-        item._sent_setpoints[BEDROOM] = ("heat", 21.0)
-        item._commanded_off[BEDROOM] = dt_util.now()
+        item.round.sent_setpoints[BEDROOM] = ("heat", 21.0)
+        item.tracking.commanded_off[BEDROOM] = dt_util.now()
 
-        item._note_commanded_off(
+        item.note_commanded_off(
             (Change(UnitCommand(entity_id=BEDROOM, hvac_mode="off"), True, False),)
         )
 
         # Het setpoint mag nooit blijven hangen: bij de volgende start moet het
         # opnieuw mee. / The setpoint must never stick: it has to be sent again
         # at the next start.
-        assert BEDROOM not in item._sent_setpoints
+        assert BEDROOM not in item.round.sent_setpoints
         if reported == "off":
             # De melding is er al: er valt niets meer te verklaren, dus de
             # oude notitie is verbruikt. / The report already arrived: nothing
             # left to explain, so the old note is spent.
-            assert item._commanded_off == {}
+            assert item.tracking.commanded_off == {}
         else:
             # De melding komt nog: de notitie dekt het late rapport.
             # The report is still coming: the note covers the late report.
-            assert BEDROOM in item._commanded_off
+            assert BEDROOM in item.tracking.commanded_off
 
 
 class TestAnOwnStartConsumesTheOffNote:
@@ -535,23 +542,23 @@ class TestAnOwnStartConsumesTheOffNote:
         now = dt_util.now()
         self._freeze(monkeypatch, now)
         item = coordinator(idle_plan() if route == "direct" else running_plan())
-        item._commanded_off[BEDROOM] = now
+        item.tracking.commanded_off[BEDROOM] = now
 
         if route == "unavailable":
-            item._notice_hand(_Event(BEDROOM, "heat", "unavailable"))
-            item._notice_hand(_Event(BEDROOM, "unavailable", "off"))
+            item.notice_hand(_Event(BEDROOM, "heat", "unavailable"))
+            item.notice_hand(_Event(BEDROOM, "unavailable", "off"))
         else:
-            item._notice_hand(_Event(BEDROOM, "heat", "off"))
+            item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.zones_handed_back() == set()
 
         self._freeze(monkeypatch, now + timedelta(minutes=5))
-        item._notice_hand(_Event(BEDROOM, "off", "heat"))
-        assert item._commanded_off == {}, "een eigen start verbruikt de uit-notitie niet"
+        item.notice_hand(_Event(BEDROOM, "off", "heat"))
+        assert item.tracking.commanded_off == {}, "een eigen start verbruikt de uit-notitie niet"
 
         if route == "direct":
-            item.data = item._issued = running_plan()
+            item.data = item.round.issued = running_plan()
         self._freeze(monkeypatch, now + timedelta(minutes=6))
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.zones_handed_back() == {"slaapkamer"}
 
 
@@ -598,16 +605,16 @@ class TestOurOwnSwitchOnIsNotAHand:
         hand stands at all - so none of the tests below can stay green because
         there was nothing to measure.
         """
-        item._notice_hand(_Event(TestOurOwnSwitchOnIsNotAHand.BOILER, "heat", "off"))
-        assert set(item._handed_back) == {"woonkamer", "zolder"}, "de hand staat er niet"
+        item.notice_hand(_Event(TestOurOwnSwitchOnIsNotAHand.BOILER, "heat", "off"))
+        assert set(item.handed_back) == {"woonkamer", "zolder"}, "de hand staat er niet"
 
     def test_the_appliance_we_switched_on_keeps_the_hand(self) -> None:
         item = coordinator(running_plan(self.BOILER), cfg=shared_config())
         self._a_hand_at_the_boiler(item)
 
         self._our_own_switch_on(item, self.BOILER)
-        item._notice_hand(_Event(self.BOILER, "off", "heat"))
-        assert set(item._handed_back) == {"woonkamer", "zolder"}, (
+        item.notice_hand(_Event(self.BOILER, "off", "heat"))
+        assert set(item.handed_back) == {"woonkamer", "zolder"}, (
             "onze eigen aanzet van de ketel hief de hand op"
         )
 
@@ -629,18 +636,18 @@ class TestOurOwnSwitchOnIsNotAHand:
         item = coordinator(running_plan(self.BOILER), cfg=shared_config())
         self._a_hand_at_the_boiler(item)
 
-        item._notice_hand(_Event(self.BOILER, "off", "heat"))
-        assert item._handed_back == {}
+        item.notice_hand(_Event(self.BOILER, "off", "heat"))
+        assert item.handed_back == {}
 
     def test_a_late_report_of_our_own_switch_on_keeps_the_hand(self) -> None:
         """Het plan is alweer omgeslagen; onze eigen aanzet meldt zich pas nu."""
         item = coordinator(running_plan(self.BOILER), cfg=shared_config())
         self._a_hand_at_the_boiler(item)
 
-        item._commanded_on[self.BOILER] = (dt_util.now(), ModeFamily.HEAT)
-        item._notice_hand(_Event(self.BOILER, "off", "heat"))
-        assert set(item._handed_back) == {"woonkamer", "zolder"}
-        assert item._commanded_on == {}, "de notitie hoort met de melding verbruikt te zijn"
+        item.tracking.commanded_on[self.BOILER] = (dt_util.now(), ModeFamily.HEAT)
+        item.notice_hand(_Event(self.BOILER, "off", "heat"))
+        assert set(item.handed_back) == {"woonkamer", "zolder"}
+        assert item.tracking.commanded_on == {}, "de notitie hoort met de melding verbruikt te zijn"
 
     def test_an_old_switch_on_note_no_longer_explains_a_hand(self, monkeypatch) -> None:
         now = dt_util.now()
@@ -648,27 +655,27 @@ class TestOurOwnSwitchOnIsNotAHand:
         self._a_hand_at_the_boiler(item)
 
         monkeypatch.setattr(dt_util, "now", lambda: now + timedelta(minutes=20))
-        item._commanded_on[self.BOILER] = (now, ModeFamily.HEAT)
-        item._notice_hand(_Event(self.BOILER, "off", "heat"))
-        assert item._handed_back == {}
+        item.tracking.commanded_on[self.BOILER] = (now, ModeFamily.HEAT)
+        item.notice_hand(_Event(self.BOILER, "off", "heat"))
+        assert item.handed_back == {}
 
     def test_another_duty_family_is_not_our_switch_on(self) -> None:
         item = coordinator(running_plan(self.BOILER), cfg=shared_config())
         self._a_hand_at_the_boiler(item)
 
         self._our_own_switch_on(item, self.BOILER, "heat")
-        item._notice_hand(_Event(self.BOILER, "off", "cool"))
-        assert item._handed_back == {}, "een andere taakfamilie is een hand, geen eigen aanzet"
+        item.notice_hand(_Event(self.BOILER, "off", "cool"))
+        assert item.handed_back == {}, "een andere taakfamilie is een hand, geen eigen aanzet"
 
     def test_an_off_in_between_spends_the_switch_on_note(self) -> None:
         item = coordinator(running_plan(self.BOILER), cfg=shared_config())
-        item._commanded_on[self.BOILER] = (dt_util.now(), ModeFamily.HEAT)
+        item.tracking.commanded_on[self.BOILER] = (dt_util.now(), ModeFamily.HEAT)
 
         self._a_hand_at_the_boiler(item)
-        assert item._commanded_on == {}, "het `off` ertussenin verbruikt de aan-notitie"
+        assert item.tracking.commanded_on == {}, "het `off` ertussenin verbruikt de aan-notitie"
 
-        item._notice_hand(_Event(self.BOILER, "off", "heat"))
-        assert item._handed_back == {}
+        item.notice_hand(_Event(self.BOILER, "off", "heat"))
+        assert item.handed_back == {}
 
 
 class TestAGeneratorCountsForItsZones:
@@ -716,38 +723,38 @@ class TestAGeneratorCountsForItsZones:
             generators=(Generator("ketel", "Ketel", "climate.ketel", zone_ids=("woonkamer",)),),
         )
         item = coordinator(running_plan("climate.ketel"), cfg=cfg)
-        item._notice_hand(_Event("climate.ketel", "heat", "off"))
+        item.notice_hand(_Event("climate.ketel", "heat", "off"))
         assert item.zones_handed_back() == {"woonkamer"}
 
 
 class TestGettingItBack:
     def test_switching_it_on_again_by_hand(self) -> None:
         item = coordinator(running_plan())
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
-        item._notice_hand(_Event(BEDROOM, "off", "heat"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "off", "heat"))
         assert item.zones_handed_back() == set()
 
     @pytest.mark.parametrize("mode", ["heat", "cool", "dry", "heat_cool"])
     def test_in_any_running_mode(self, mode: str) -> None:
         item = coordinator(running_plan())
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
-        item._notice_hand(_Event(BEDROOM, "off", mode))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "off", mode))
         assert item.zones_handed_back() == set()
 
     def test_the_next_day(self) -> None:
         """Yesterday's decision should not still be holding this morning."""
         item = coordinator(running_plan())
-        item._handed_back = {"slaapkamer": dt_util.now().date() - timedelta(days=1)}
+        item.handed_back = {"slaapkamer": dt_util.now().date() - timedelta(days=1)}
         assert item.zones_handed_back() == set()
 
     def test_today_it_still_holds(self) -> None:
         item = coordinator(running_plan())
-        item._handed_back = {"slaapkamer": dt_util.now().date()}
+        item.handed_back = {"slaapkamer": dt_util.now().date()}
         assert item.zones_handed_back() == {"slaapkamer"}
 
     def test_a_day_older_still_counts_as_over(self) -> None:
         item = coordinator(running_plan())
-        item._handed_back = {"slaapkamer": dt_util.now().date() - timedelta(days=30)}
+        item.handed_back = {"slaapkamer": dt_util.now().date() - timedelta(days=30)}
         assert item.zones_handed_back() == set()
 
 
@@ -760,7 +767,7 @@ class TestItReachesTheGates:
         from custom_components.climate_director.engine import Reason as GateReason
 
         item = coordinator(running_plan())
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
 
         overrides = {
             **dict.fromkeys(item.zones_handed_back(), True),
@@ -812,27 +819,27 @@ class TestGoingToBedGivesItBack:
             **{"sensor.danny_charger_type": "wireless", "sensor.nancy_charger_type": "wireless"}
         )
         item = coordinator(running_plan(), states)
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.zones_handed_back() == set()
 
     def test_one_still_up_keeps_it(self) -> None:
         states = self._with(**{"sensor.danny_charger_type": "wireless"})
         item = coordinator(running_plan(), states)
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.zones_handed_back() == {"slaapkamer"}
 
     def test_the_one_who_is_away_does_not_have_to_sleep(self) -> None:
         """Somebody out is not somebody awake; the house is still turning in."""
         states = self._with(**{"person.nancy": "not_home", "sensor.danny_charger_type": "wireless"})
         item = coordinator(running_plan(), states)
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.zones_handed_back() == set()
 
     def test_an_empty_house_hands_it_back_as_well(self) -> None:
         """Nobody left means the case it was silenced for is over."""
         states = self._with(**{"person.danny": "not_home", "person.nancy": "not_home"})
         item = coordinator(running_plan(), states)
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.zones_handed_back() == set()
 
     def test_the_master_key_survives_an_empty_house(self) -> None:
@@ -892,7 +899,7 @@ class TestGoingToBedGivesItBack:
         )
         item = coordinator(running_plan(), states)
         item.zone_overrides["woonkamer"] = True
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item._overridden_zones() == {"woonkamer": True}
 
     def test_waking_up_does_not_hand_it_back_again(self) -> None:
@@ -901,14 +908,14 @@ class TestGoingToBedGivesItBack:
             **{"sensor.danny_charger_type": "wireless", "sensor.nancy_charger_type": "wireless"}
         )
         item = coordinator(running_plan(), asleep_states)
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.zones_handed_back() == set()
-        assert item._handed_back == {}
+        assert item.handed_back == {}
 
     def test_without_residents_the_day_boundary_still_rules(self) -> None:
         """An installation nobody is tracked in falls back on the date."""
         item = coordinator(running_plan())
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.zones_handed_back() == {"slaapkamer"}
 
 
@@ -948,9 +955,9 @@ class TestAPresenceSensorIsHome:
 
     def test_a_hand_back_survives_the_round(self) -> None:
         item = self._item()
-        item._handed_back = {"woonkamer": dt_util.now().date()}
+        item.handed_back = {"woonkamer": dt_util.now().date()}
         assert item.zones_handed_back() == {"woonkamer"}
-        assert item._handed_back == {"woonkamer": dt_util.now().date()}
+        assert item.handed_back == {"woonkamer": dt_util.now().date()}
 
 
 class TestASleepWindowRestrainsTheCharger:
@@ -1041,21 +1048,29 @@ class TestItSurvivesARestart:
 
         class StandIn:
             def __init__(self) -> None:
-                self._precondition: dict = {}
-                self._precondition_bypass: set[str] = set()
+                self.precondition_until: dict = {}
+                self.precondition_bypass: set[str] = set()
                 self._hand_starts: dict[str, datetime] = {}
-                self._handed_back: dict[str, date] = {}
+                self.handed_back: dict[str, date] = {}
                 # Een override in deze stand-in is er niet; het herstel leest de
                 # lege stand en laat een hand dus staan.
                 #
                 # This stand-in has no override; the restore reads the empty
                 # state and therefore leaves a hand standing.
                 self.zone_overrides: dict[str, bool] = {}
-                self._store = FakeStore()
-                # Vóór het herstel onthoudt `_async_save_state` alleen dát er iets
+                self.zone_override_until: dict[str, datetime] = {}
+                self.zone_override_started: dict[str, datetime] = {}
+                self.zone_override_when_done: dict[str, str] = {}
+                self.zone_override_entity: dict[str, str] = {}
+                self.lifecycle = LifecycleState()
+                self.lifecycle = LifecycleState()
+                self.lifecycle.closing = False
+                self.lifecycle.restored = True
+                self.store = FakeStore()
+                # Vóór het herstel onthoudt `async_save_state` alleen dát er iets
                 # te bewaren viel; deze stand-in zet de vlag op zijn beginwaarde.
                 #
-                # Before the restore `_async_save_state` only remembers *that*
+                # Before the restore `async_save_state` only remembers *that*
                 # something needed saving; this stand-in sets the flag to its
                 # starting value.
                 self._save_pending = False
@@ -1066,8 +1081,8 @@ class TestItSurvivesARestart:
                 # What restoring the homecoming moment and the error logs touch: an
                 # installation without residents, no states and a name. Without
                 # residents no moment comes back.
-                self._home_since: dict[str, datetime] = {}
-                self._asleep_since: datetime | None = None
+                self.home_since: dict[str, datetime] = {}
+                self.asleep_since: datetime | None = None
                 # Het leeg-moment van een kamer en welke kamers bezet waren:
                 # deze stand-in leest geen `empty_since`, maar het herstel raakt
                 # de boekhouding aan. Zonder sleutel in het bestand blijft hij leeg.
@@ -1077,14 +1092,16 @@ class TestItSurvivesARestart:
                 # bookkeeping. Without the key in the file it stays empty.
                 self._empty_since: dict[str, datetime] = {}
                 self._occupied_rooms: set[str] = set()
-                self._commanded_off: dict[str, datetime] = {}
+                self.tracking = TrackingState()
+                self.tracking = TrackingState()
+                self.tracking.commanded_off: dict[str, datetime] = {}
                 # Geen handeling van de gebruiker vóór het herstel in deze
                 # stand-in; het herstel leest de notitie dus leeg.
                 #
                 # No action by the user before the restore in this stand-in; the
                 # restore therefore reads the note empty.
-                self._override_before_restore: set[str] = set()
-                self._request_before_restore: set[str] = set()
+                self.override_before_restore: set[str] = set()
+                self.request_before_restore: set[str] = set()
                 self.config = director_config or config()
                 self.hass = SimpleNamespace(states={})
                 self.name = "Climate Director"
@@ -1094,77 +1111,79 @@ class TestItSurvivesARestart:
 
             _live_preconditions = ClimateDirectorCoordinator._live_preconditions
             _wake_at_the_first_expiry = ClimateDirectorCoordinator._wake_at_the_first_expiry
-            _store_payload = ClimateDirectorCoordinator._store_payload
+            store_payload = ClimateDirectorCoordinator.store_payload
+            _hand_starts_payload = ClimateDirectorCoordinator._hand_starts_payload
+            _hand_starts: dict[str, datetime] = {}
             _room_presence_payload = ClimateDirectorCoordinator._room_presence_payload
             _restore_room_presence = ClimateDirectorCoordinator._restore_room_presence
             _restore_hand_starts = ClimateDirectorCoordinator._restore_hand_starts
-            _async_save_state = ClimateDirectorCoordinator._async_save_state
-            _async_restore_state = ClimateDirectorCoordinator._async_restore_state
+            async_save_state = ClimateDirectorCoordinator.async_save_state
+            async_restore_state = ClimateDirectorCoordinator.async_restore_state
 
         return StandIn()
 
     def test_the_day_is_written_away(self) -> None:
         item = self._coordinator()
-        item._handed_back = {"slaapkamer": date(2026, 8, 18)}
-        item._async_save_state()
-        assert item._store.written["handed_back"] == {"slaapkamer": "2026-08-18"}
+        item.handed_back = {"slaapkamer": date(2026, 8, 18)}
+        item.async_save_state()
+        assert item.store.written["handed_back"] == {"slaapkamer": "2026-08-18"}
 
     def test_a_closing_coordinator_does_not_schedule_a_new_save(self) -> None:
         """P1: ná de flush mag een nog lopende ronde geen opslag meer plannen.
 
         De goedkoopste dekking voor het opslagvenster: zodra
-        `_closing` waar is, is de uitgestelde schrijfactie van `_async_save_state`
+        `closing` waar is, is de uitgestelde schrijfactie van `async_save_state`
         verboden. Anders zou een ronde die de vijf-seconden-time-out van
         `async_shutdown` overleeft het bestand ná `async_remove_entry`
         terugschrijven.
 
         P1: after the flush a still-running round must not schedule another save.
-        The cheapest cover for the storage window: once `_closing`
-        is true, the delayed write of `_async_save_state` is forbidden.
+        The cheapest cover for the storage window: once `closing`
+        is true, the delayed write of `async_save_state` is forbidden.
         Otherwise a round that outlives the five-second `async_shutdown` timeout
         would resurrect the file after `async_remove_entry`.
         """
         item = self._coordinator()
-        item._closing = True
-        item._handed_back = {"slaapkamer": date(2026, 8, 18)}
-        item._async_save_state()
-        assert item._store.written is None
+        item.lifecycle.closing = True
+        item.handed_back = {"slaapkamer": date(2026, 8, 18)}
+        item.async_save_state()
+        assert item.store.written is None
 
     async def test_today_comes_back(self) -> None:
         today = dt_util.now().date()
         item = self._coordinator({"handed_back": {"slaapkamer": today.isoformat()}})
-        await item._async_restore_state()
-        assert item._handed_back == {"slaapkamer": today}
+        await item.async_restore_state()
+        assert item.handed_back == {"slaapkamer": today}
 
     async def test_yesterday_does_not(self) -> None:
         """The date is the whole expiry, restart or no restart."""
         yesterday = dt_util.now().date() - timedelta(days=1)
         item = self._coordinator({"handed_back": {"slaapkamer": yesterday.isoformat()}})
-        await item._async_restore_state()
-        assert item._handed_back == {}
+        await item.async_restore_state()
+        assert item.handed_back == {}
 
     async def test_an_older_file_without_the_key_reads_as_nothing(self) -> None:
         """No migration needed for a key that was never there."""
         item = self._coordinator({"until": {}, "bypass": []})
-        await item._async_restore_state()
-        assert item._handed_back == {}
+        await item.async_restore_state()
+        assert item.handed_back == {}
         assert item._empty_since == {}
 
     def test_the_empty_moment_is_written_away(self) -> None:
         """Het leeg-moment hoort in het bestand, anders begint de nalooptijd opnieuw."""
         item = self._coordinator()
         item._empty_since = {"slaapkamer": datetime(2026, 8, 18, 12, 0, tzinfo=UTC)}
-        item._async_save_state()
-        assert item._store.written is not None
-        assert item._store.written["empty_since"] == {"slaapkamer": "2026-08-18T12:00:00+00:00"}
+        item.async_save_state()
+        assert item.store.written is not None
+        assert item.store.written["empty_since"] == {"slaapkamer": "2026-08-18T12:00:00+00:00"}
 
     def test_the_occupied_rooms_are_written_away(self) -> None:
         """Welke kamers bezet waren hoort in het bestand, voor de herstart."""
         item = self._coordinator()
         item._occupied_rooms = {"slaapkamer"}
-        item._async_save_state()
-        assert item._store.written is not None
-        assert item._store.written["occupied_rooms"] == ["slaapkamer"]
+        item.async_save_state()
+        assert item.store.written is not None
+        assert item.store.written["occupied_rooms"] == ["slaapkamer"]
 
     async def test_only_a_known_empty_room_gets_its_moment_back(self) -> None:
         """Onbekend, onleesbaar of nu bezet: geen moment; een lege kamer wel."""
@@ -1202,7 +1221,7 @@ class TestItSurvivesARestart:
                 "binary_sensor.zolder": _State("off"),
             }
         )
-        await item._async_restore_state()
+        await item.async_restore_state()
         assert item._empty_since == {"zolder": datetime(2026, 8, 18, 12, 0, tzinfo=UTC)}
         assert item._occupied_rooms == {"keuken"}
 
@@ -1231,7 +1250,7 @@ class TestItSurvivesARestart:
             states={"binary_sensor.zolder": _State("unavailable")},
         )
         before = dt_util.now()
-        await item._async_restore_state()
+        await item.async_restore_state()
         after = dt_util.now()
         moment = item._empty_since.get("zolder")
         assert moment is not None, "de nalooptijd begon niet op het herstelmoment"
@@ -1260,44 +1279,44 @@ class TestItSurvivesARestart:
         item.hass = SimpleNamespace(
             states={"binary_sensor.zolder": _State("unavailable")},
         )
-        await item._async_restore_state()
+        await item.async_restore_state()
         assert item._empty_since == {}
         assert item._occupied_rooms == set()
 
     async def test_rubbish_in_the_file_does_not_stop_the_load(self) -> None:
         item = self._coordinator({"handed_back": {"slaapkamer": "not a date"}})
-        await item._async_restore_state()
-        assert item._handed_back == {}
+        await item.async_restore_state()
+        assert item.handed_back == {}
 
     def test_our_own_switch_off_is_written_away(self) -> None:
         """Een eigen `off` moet een herstart overleven om een late melding te verklaren."""
         item = self._coordinator()
         now = dt_util.now()
-        item._commanded_off = {"slaapkamer": now}
-        item._async_save_state()
-        assert item._store.written is not None
-        assert item._store.written["commanded_off"] == {"slaapkamer": now.isoformat()}
+        item.tracking.commanded_off = {"slaapkamer": now}
+        item.async_save_state()
+        assert item.store.written is not None
+        assert item.store.written["commanded_off"] == {"slaapkamer": now.isoformat()}
 
     async def test_a_recent_own_switch_off_comes_back(self) -> None:
         """Binnen het venster blijft ons eigen `off` de verklaring."""
         now = dt_util.now()
         item = self._coordinator({"commanded_off": {"slaapkamer": now.isoformat()}})
-        await item._async_restore_state()
-        assert item._commanded_off == {"slaapkamer": now}
+        await item.async_restore_state()
+        assert item.tracking.commanded_off == {"slaapkamer": now}
 
     async def test_an_own_switch_off_at_the_edge_of_the_window_still_comes_back(self) -> None:
         """Veertien minuten geleden telt nog, zodat een trage poll gedekt blijft."""
         edge = dt_util.now() - timedelta(minutes=14)
         item = self._coordinator({"commanded_off": {"slaapkamer": edge.isoformat()}})
-        await item._async_restore_state()
-        assert item._commanded_off == {"slaapkamer": edge}
+        await item.async_restore_state()
+        assert item.tracking.commanded_off == {"slaapkamer": edge}
 
     async def test_an_old_own_switch_off_does_not_come_back(self) -> None:
         """Na het venster is een oude uitzetting geen verklaring meer."""
         stale = dt_util.now() - timedelta(minutes=16)
         item = self._coordinator({"commanded_off": {"slaapkamer": stale.isoformat()}})
-        await item._async_restore_state()
-        assert item._commanded_off == {}
+        await item.async_restore_state()
+        assert item.tracking.commanded_off == {}
 
 
 class TestItIsWrittenAwayWhenItChanges:
@@ -1308,47 +1327,47 @@ class TestItIsWrittenAwayWhenItChanges:
 
     def test_switching_it_off_by_hand_is_saved(self) -> None:
         item = coordinator(running_plan())
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.saved == 1
 
     def test_switching_it_back_on_is_saved_too(self) -> None:
         item = coordinator(running_plan())
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
-        item._notice_hand(_Event(BEDROOM, "off", "heat"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "off", "heat"))
         assert item.saved == 2
-        assert item._handed_back == {}
+        assert item.handed_back == {}
 
     def test_our_own_command_writes_nothing(self) -> None:
         """The director standing an appliance down is not a hand at the appliance."""
         item = coordinator(idle_plan())
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.saved == 0
 
     def test_a_day_that_already_stood_there_writes_nothing(self) -> None:
         """After a restore the same day is already known; nothing changed."""
         item = coordinator(running_plan())
-        item._handed_back = {"slaapkamer": dt_util.now().date()}
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.handed_back = {"slaapkamer": dt_util.now().date()}
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
         assert item.saved == 0
 
     def test_on_and_off_again_are_both_written(self) -> None:
         """Two real changes, two writes: the second may not lean on the first."""
         item = coordinator(running_plan())
-        item._notice_hand(_Event(BEDROOM, "heat", "off"))
-        item._notice_hand(_Event(BEDROOM, "off", "cool"))
-        item._notice_hand(_Event(BEDROOM, "cool", "off"))
+        item.notice_hand(_Event(BEDROOM, "heat", "off"))
+        item.notice_hand(_Event(BEDROOM, "off", "cool"))
+        item.notice_hand(_Event(BEDROOM, "cool", "off"))
         assert item.saved == 3
-        assert set(item._handed_back) == {"slaapkamer"}
+        assert set(item.handed_back) == {"slaapkamer"}
 
     def test_a_stale_day_falling_away_is_saved(self) -> None:
         item = coordinator(running_plan())
-        item._handed_back = {"slaapkamer": dt_util.now().date() - timedelta(days=1)}
+        item.handed_back = {"slaapkamer": dt_util.now().date() - timedelta(days=1)}
         assert item.zones_handed_back() == set()
         assert item.saved == 1
 
     def test_reading_it_again_writes_nothing(self) -> None:
         item = coordinator(running_plan())
-        item._handed_back = {"slaapkamer": dt_util.now().date()}
+        item.handed_back = {"slaapkamer": dt_util.now().date()}
         item.zones_handed_back()
         item.zones_handed_back()
         assert item.saved == 0
@@ -1384,9 +1403,9 @@ def test_a_fresh_presence_at_startup_is_bounded_by_the_sleep_moment() -> None:
 
     item = coordinator(running_plan(), cfg=shared_config(with_residents=True))
     item.hass = Hass()
-    item._asleep_since = earlier
-    item._home_since = {}
+    item.asleep_since = earlier
+    item.home_since = {}
 
-    ClimateDirectorCoordinator._note_home_now(item)
+    ClimateDirectorCoordinator.note_home_now(item)
 
-    assert item._home_since == {"danny": earlier}
+    assert item.home_since == {"danny": earlier}

@@ -18,7 +18,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from .models import DirectorConfig, Resident, Zone
-from .night import asleep, slept_tonight
+from .night import asleep, rise_braked, slept_tonight
 from .plan import Plan, Reason
 from .quiet import quiet_hours, zone_running
 from .world import ReadableInput, UnreadableInput, WorldState
@@ -33,6 +33,21 @@ HAND_START_BRAKES = frozenset(
         Reason.QUIET_HOURS,
     }
 )
+
+
+def holiday_feeds_brakes(config: DirectorConfig) -> bool:
+    """Return whether the holiday calendars feed the three brakes at all.
+
+    De feestdagenagenda voedt de remmen alleen met een trefwoord en minstens één
+    ingestelde agenda; zonder die twee bestaat er geen invoer om te lezen. De
+    koppelingslaag en `brakes_readable` vragen het hier, zodat ze het altijd eens
+    zijn.
+
+    The holiday calendars feed the brakes only with a keyword and at least one
+    configured calendar; without those two there is no input to read. The binding
+    layer and `brakes_readable` ask here, so they always agree.
+    """
+    return bool(config.holiday_keyword.strip() and any(config.holiday_calendars))
 
 
 def brakes_readable(config: DirectorConfig, world: WorldState) -> bool:
@@ -62,7 +77,7 @@ def brakes_readable(config: DirectorConfig, world: WorldState) -> bool:
         sleep_missing = UnreadableInput(ReadableInput.SLEEP, resident.resident_id)
         if resident.sleep_entity and (state is None or sleep_missing in world.unreadable):
             return False
-    if config.holiday_keyword.strip() and any(config.holiday_calendars):
+    if holiday_feeds_brakes(config):
         return UnreadableInput(ReadableInput.HOLIDAY) not in world.unreadable
     return True
 
@@ -106,8 +121,6 @@ def early_riser_holds(
     world: WorldState, zone_id: str, running: bool, up: Iterable[Resident]
 ) -> bool:
     """Return whether the rise brake holds these residents, hand start aside."""
-    from .night import rise_braked
-
     return (
         not passes(world, zone_id, Reason.EARLY_RISER)
         and not running

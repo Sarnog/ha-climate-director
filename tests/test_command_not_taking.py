@@ -182,7 +182,7 @@ class TestAnApplianceThatNeverTakesItsCommand:
         home.set(LIVING, "heat", hvac_modes=["heat", "off"], temperature=21.0)
         await rounds(home, 1)
         assert issue_for(home) is None
-        assert home.coordinator._unapplied == {}
+        assert home.coordinator.reporting.unapplied == {}
 
     async def test_a_burst_of_rounds_within_a_minute_is_not_enough(self, home: LiveHome) -> None:
         # De ontdubbelaar wacht maar een seconde, dus twintig toestandswijzigingen

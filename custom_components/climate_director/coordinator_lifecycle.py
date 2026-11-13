@@ -4,23 +4,19 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from .coordinator_surface import CoordinatorSurface
 from .engine.models import SeasonSource
-
-if TYPE_CHECKING:
-    from .coordinator import ClimateDirectorCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 _COMMAND_NOT_TAKING_ROUNDS = 10
 
 
-def tracked_entities(coordinator: ClimateDirectorCoordinator) -> set[str]:
+def tracked_entities(coordinator: CoordinatorSurface) -> set[str]:
     """Return every entity whose change could alter a decision.
 
     Circuit units are included even when the director does not manage them:
@@ -66,7 +62,7 @@ def tracked_entities(coordinator: ClimateDirectorCoordinator) -> set[str]:
     return entities
 
 
-def _calendar_says_holiday(coordinator: ClimateDirectorCoordinator) -> bool:
+def calendar_says_holiday(coordinator: CoordinatorSurface) -> bool:
     """Return whether a configured calendar has a holiday running right now.
 
     Een agenda-item telt zodra het loopt en het trefwoord erin voorkomt.
@@ -95,7 +91,7 @@ def _calendar_says_holiday(coordinator: ClimateDirectorCoordinator) -> bool:
     return False
 
 
-async def async_shutdown(coordinator: ClimateDirectorCoordinator) -> None:
+async def async_shutdown(coordinator: CoordinatorSurface) -> None:
     """Stop deciding and drop every pending timer.
 
     Eerst de lopende ronde laten uitlopen: die kan service calls hebben
@@ -112,22 +108,22 @@ async def async_shutdown(coordinator: ClimateDirectorCoordinator) -> None:
     no longer held up - behaviour is then the same as before this wait, and
     that is the safe side.
     """
-    coordinator._closing = True
+    coordinator.lifecycle.closing = True
     try:
         # Vijf seconden is genoeg voor een lopende ronde; langer wachten
         # bevriest de configuratiepagina tijdens een herlaadbeurt.
         #
         # Five seconds is enough for a running round; waiting longer freezes
         # the configuration page during a reload.
-        async with asyncio.timeout(5), coordinator._lock:
+        async with asyncio.timeout(5), coordinator.round.lock:
             pass
     except TimeoutError:
         _LOGGER.warning("Een beslisronde liep nog bij het afsluiten van %s", coordinator.name)
-    coordinator._cancel_pending_deferral()
-    coordinator._cancel_clock_reeval()
-    coordinator._cancel_pending_precondition_wake()
-    coordinator._cancel_pending_override_wake()
-    coordinator._debouncer.async_shutdown()
+    coordinator.cancel_pending_deferral()
+    coordinator.cancel_clock_reeval()
+    coordinator.cancel_pending_precondition_wake()
+    coordinator.cancel_pending_override_wake()
+    coordinator.round.debouncer.async_shutdown()
     # Een uitgestelde opslag kan nog uitstaan: de store schrijft één seconde
     # na de laatste wijziging. Bij een herlaadbeurt is dat geen bezwaar, maar
     # bij een verwijdering zou die schrijfactie het bestand terugschrijven ná
@@ -138,11 +134,10 @@ async def async_shutdown(coordinator: ClimateDirectorCoordinator) -> None:
     # after the last change. On a reload that is fine, but on a removal that
     # write would resurrect the file after `async_remove_entry`. So write it
     # away here; `async_save` clears the delayed write itself.
-    await coordinator._store.async_save(coordinator._store_payload())
-    await DataUpdateCoordinator.async_shutdown(coordinator)
+    await coordinator.store.async_save(coordinator.store_payload())
 
 
-async def async_start(coordinator: ClimateDirectorCoordinator) -> None:
+async def async_start(coordinator: CoordinatorSurface) -> None:
     """Begin tracking entities; the first decision waits for Home Assistant.
 
     De eerste beslissing hoort niet thuis in het opzetten van de entry. Op
@@ -160,19 +155,17 @@ async def async_start(coordinator: ClimateDirectorCoordinator) -> None:
     if entities:
         coordinator.entry.async_on_unload(
             async_track_state_change_event(
-                coordinator.hass, sorted(entities), coordinator._handle_change
+                coordinator.hass, sorted(entities), coordinator.handle_change
             )
         )
-    coordinator.entry.async_on_unload(coordinator._cancel_pending_deferral)
-    coordinator.entry.async_on_unload(coordinator._cancel_clock_reeval)
+    coordinator.entry.async_on_unload(coordinator.cancel_pending_deferral)
+    coordinator.entry.async_on_unload(coordinator.cancel_clock_reeval)
     coordinator.entry.async_on_unload(
-        async_at_started(coordinator.hass, coordinator._async_on_hass_started)
+        async_at_started(coordinator.hass, coordinator.async_on_hass_started)
     )
 
 
-async def _async_on_hass_started(
-    coordinator: ClimateDirectorCoordinator, _hass: HomeAssistant
-) -> None:
+async def async_on_hass_started(coordinator: CoordinatorSurface, _hass: HomeAssistant) -> None:
     """Restore what a restart left behind, decide once, and arm the clock.
 
     Herstellen, neerslag noteren en beslissen zijn drie stappen op één pad.
@@ -187,35 +180,35 @@ async def _async_on_hass_started(
     never comes. The clock is therefore armed no matter what, and the
     exception is logged rather than silencing the integration.
 
-    De vlag `_restored` gaat hier omhoog en niet eerder: pas als de opslag
-    gelezen is, mag `_async_evaluate` iets doen. Wat de listeners intussen
+    De vlag `restored` gaat hier omhoog en niet eerder: pas als de opslag
+    gelezen is, mag `async_evaluate` iets doen. Wat de listeners intussen
     genoteerd hebben blijft staan - het herstel voegt samen en vervangt niet.
 
-    The `_restored` flag goes up here and not earlier: only once the store
-    has been read may `_async_evaluate` do anything. What the listeners noted
+    The `restored` flag goes up here and not earlier: only once the store
+    has been read may `async_evaluate` do anything. What the listeners noted
     in the meantime stays put - the restore merges rather than replaces. It
     goes up in the `finally` as well: after one broken reading the director
     must not fall silent for good, which is worse than a world without the
     stored hand.
 
     Hier gaat ook één keer naar buiten wat tijdens het opstarten bleef liggen:
-    `_async_save_state` schreef niet, want HA's `Store.async_load` leest een
+    `async_save_state` schreef niet, want HA's `Store.async_load` leest een
     wachtende schrijfactie in plaats van het bestand. Dat schrijven staat
     daarom ná het herstel, en ook in de `finally`.
 
     One write also goes out here for what stayed behind during the startup:
-    `_async_save_state` did not write, since HA's `Store.async_load` reads a
+    `async_save_state` did not write, since HA's `Store.async_load` reads a
     pending write instead of the file. That write therefore stands after the
     restore, and in the `finally` as well.
     """
     try:
-        await coordinator._async_restore_state()
-        coordinator._note_precipitation_now()
-        coordinator._note_home_now()
-        coordinator._restored = True
-        coordinator._note_room_presence_now()
-        coordinator._async_save_pending_state()
-        await coordinator._async_evaluate()
+        await coordinator.async_restore_state()
+        coordinator.note_precipitation_now()
+        coordinator.note_home_now()
+        coordinator.lifecycle.restored = True
+        coordinator.note_room_presence_now()
+        coordinator.async_save_pending_state()
+        await coordinator.async_evaluate()
     except Exception:
         _LOGGER.exception("The first decision of %s failed", coordinator.name)
     finally:
@@ -226,13 +219,13 @@ async def _async_on_hass_started(
         # Even when the restore fell over the gate opens: otherwise the
         # director would never decide again after one broken reading, and
         # that is worse than a world without the stored hand.
-        coordinator._restored = True
+        coordinator.lifecycle.restored = True
         # Wat de gebruiker vóór het herstel zelf deed is nu verwerkt: de
         # notities gaan weg, zodat een handeling daarna gewoon een handeling is.
         #
         # What the user did before the restore has been handled now:
         # the notes go, so an action afterwards is simply an action.
-        coordinator._override_before_restore.clear()
-        coordinator._request_before_restore.clear()
-        coordinator._async_save_pending_state()
-        coordinator._schedule_clock_reeval()
+        coordinator.override_before_restore.clear()
+        coordinator.request_before_restore.clear()
+        coordinator.async_save_pending_state()
+        coordinator.schedule_clock_reeval()

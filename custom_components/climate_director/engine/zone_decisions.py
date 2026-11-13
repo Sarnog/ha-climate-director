@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from . import constraints, hysteresis, sources, takeover
+from . import circuit_requests, hysteresis, sources, takeover
 from .candidates import handed_over, serving
 from .families import (
     MODE_FAN_ONLY,
@@ -41,8 +41,8 @@ def command_order(config: DirectorConfig, command: UnitCommand) -> tuple[int, st
 
 def lost_to_another_zone(
     commands: tuple[UnitCommand, ...],
-    request: constraints.Request,
-    grant: constraints.Grant | None,
+    request: circuit_requests.Request,
+    grant: circuit_requests.Grant | None,
 ) -> Reason | None:
     """Return why this zone does not get its duty, or `None` when it does.
 
@@ -82,9 +82,9 @@ def lost_to_another_zone(
 def build_zone_decisions(
     config: DirectorConfig,
     world: WorldState,
-    wishes: dict[str, constraints.Request],
-    dropped: dict[str, constraints.Request],
-    grants: dict[str, constraints.Grant],
+    wishes: dict[str, circuit_requests.Request],
+    dropped: dict[str, circuit_requests.Request],
+    grants: dict[str, circuit_requests.Grant],
     refusals: dict[str, Reason],
     shut: dict[str, tuple[Reason, ...]],
     demands: dict[str, hysteresis.Demand],

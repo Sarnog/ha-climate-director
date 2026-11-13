@@ -14,13 +14,8 @@ engine to Home Assistant.
 from __future__ import annotations
 
 import logging
-import re
-from typing import Any
 
-import voluptuous as vol
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
@@ -37,6 +32,7 @@ from . import (
 )
 from . import (
     problems,
+    repair_notices,
     texts,
 )
 from . import (
@@ -49,86 +45,18 @@ from . import (
     switch as switch_platform,
 )
 from .const import (
-    ATTR_ENTRY_ID,
-    ATTR_HVAC_MODE,
-    ATTR_IGNORE_OPENINGS,
-    ATTR_MINUTES,
-    ATTR_TEMPERATURE,
-    ATTR_WHEN_DONE,
-    ATTR_ZONE_ID,
-    ATTR_ZONE_IDS,
     DOMAIN,
     EVENT_AUTOMATION_RELOADED,
     PLATFORMS,
     STORAGE_VERSION,
-    WHEN_DONE_LEAVE,
-    WHEN_DONE_TURN_OFF,
 )
 from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry, storage_key
 from .engine import DirectorConfig
+from .services import async_register_services
 
 _LOGGER = logging.getLogger(__name__)
 
 __all__ = ["DOMAIN", "async_remove_entry", "async_setup", "async_setup_entry", "async_unload_entry"]
-
-_EVALUATE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTRY_ID): vol.All(cv.ensure_list, [cv.string])})
-
-_ENTRIES = {vol.Optional(ATTR_ENTRY_ID): vol.All(cv.ensure_list, [cv.string])}
-_ZONES = {vol.Optional(ATTR_ZONE_IDS): vol.All(cv.ensure_list, [cv.string])}
-
-_PRECONDITION_SCHEMA = vol.Schema(
-    {
-        **_ENTRIES,
-        **_ZONES,
-        # Ondergrens 1, gelijk aan `min: 1` in services.yaml. Nul stond het
-        # schema wel toe en werd daarna in stilte weggegooid: je drukt op de
-        # knop, er gebeurt niets, en nergens staat waarom.
-        #
-        # Lower bound 1, matching `min: 1` in services.yaml. Zero passed the
-        # schema and was then quietly thrown away: you press the button, nothing
-        # happens, and nowhere does it say why.
-        vol.Optional(ATTR_MINUTES): vol.All(vol.Coerce(float), vol.Range(min=1)),
-        vol.Optional(ATTR_IGNORE_OPENINGS, default=False): cv.boolean,
-    }
-)
-
-_CANCEL_SCHEMA = vol.Schema({**_ENTRIES, **_ZONES})
-
-_OVERRIDE_WHEN_DONE = vol.In([WHEN_DONE_TURN_OFF, WHEN_DONE_LEAVE])
-
-#: De twee unique-id-vormen die als override-doel tellen: de schakelaar van een
-#: zone en de eindtijdsensor van diezelfde zone. Al het andere is geen doel.
-#:
-#: The two unique-id shapes that count as an override target: a zone's switch
-#: and that same zone's end-time sensor. Anything else is not a target.
-_OVERRIDE_TARGET = re.compile(r"^zone_(?P<zone>.+)_override(?P<sensor>_ends)?$")
-
-#: De twee entiteitsdomeinen waarin deze integratie een override-entiteit maakt.
-#: Een entiteit van een ander domein met een look-alike `unique_id` is geen doel,
-#: hoe toevallig de id ook op het patroon past.
-#:
-#: The two entity domains in which this integration creates an override entity.
-#: An entity from another domain with a look-alike `unique_id` is not a target,
-#: however coincidentally the id fits the pattern.
-_OVERRIDE_DOMAINS = ("sensor", "switch")
-
-_SET_OVERRIDE_FIELDS: dict[Any, Any] = {
-    **_ENTRIES,
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_ZONE_ID): cv.string,
-    vol.Required(ATTR_HVAC_MODE): cv.string,
-    vol.Optional(ATTR_TEMPERATURE): vol.All(vol.Coerce(float)),
-    vol.Optional(ATTR_MINUTES): vol.All(vol.Coerce(float), vol.Range(min=1)),
-    vol.Optional(ATTR_WHEN_DONE, default=WHEN_DONE_TURN_OFF): _OVERRIDE_WHEN_DONE,
-}
-_SET_OVERRIDE_SCHEMA = vol.Schema(_SET_OVERRIDE_FIELDS)
-
-_CLEAR_OVERRIDE_FIELDS: dict[Any, Any] = {
-    **_ENTRIES,
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_ZONE_ID): cv.string,
-}
-_CLEAR_OVERRIDE_SCHEMA = vol.Schema(_CLEAR_OVERRIDE_FIELDS)
 
 
 async def async_setup(hass: HomeAssistant, _config: dict[str, object]) -> bool:
@@ -142,7 +70,7 @@ async def async_setup(hass: HomeAssistant, _config: dict[str, object]) -> bool:
     as Home Assistant sets the domain up, so a call without a loaded installation
     hits the installation error instead of "service not found".
     """
-    _async_register_services(hass)
+    async_register_services(hass)
     return True
 
 
@@ -162,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) ->
         hass, entry.entry_id, entry.title, entry.options, coordinator.config
     )
 
-    _async_register_services(hass)
+    async_register_services(hass)
     _async_remove_stale_entities(hass, entry)
 
     # De platforms gaan eerst omhoog, zodat de schakelaars hun bewaarde stand
@@ -199,7 +127,7 @@ def _async_watch_for_listeners(hass: HomeAssistant, entry: ClimateDirectorEntry)
 
     @callback
     def _recheck(_event: Event | HomeAssistant | None = None) -> None:
-        problems.async_check_watchers(hass)
+        repair_notices.async_check_watchers(hass)
 
     entry.async_on_unload(async_at_started(hass, _recheck))
     entry.async_on_unload(hass.bus.async_listen(EVENT_AUTOMATION_RELOADED, _recheck))
@@ -277,19 +205,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -
     if unloaded:
         problems.async_clear(hass, entry.entry_id)
         problems.async_clear_manual_sources(hass, entry.entry_id)
-        problems.async_clear_unreadable(hass, entry.entry_id)
-        problems.async_clear_unsupported_modes(hass, entry.entry_id)
-        problems.async_clear_command_not_taking(hass, entry.entry_id)
-        problems.async_clear_bypassed_openings(hass, entry.entry_id)
-        problems.async_clear_season_override(hass, entry.entry_id)
-        problems.async_clear_corrupt_storage(hass, entry.entry_id)
+        repair_notices.async_clear_unreadable(hass, entry.entry_id)
+        repair_notices.async_clear_unsupported_modes(hass, entry.entry_id)
+        repair_notices.async_clear_command_not_taking(hass, entry.entry_id)
+        repair_notices.async_clear_bypassed_openings(hass, entry.entry_id)
+        repair_notices.async_clear_season_override(hass, entry.entry_id)
+        repair_notices.async_clear_corrupt_storage(hass, entry.entry_id)
         # De luistermelding is er één voor de hele integratie, dus hij gaat pas
         # weg als de laatste installatie weg is.
         #
         # The listener notice is one for the whole integration, so it only goes
         # when the last installation does.
         if not hass.config_entries.async_loaded_entries(DOMAIN):
-            problems.async_clear_watchers(hass)
+            repair_notices.async_clear_watchers(hass)
     return unloaded
 
 
@@ -312,13 +240,3 @@ async def async_remove_entry(hass: HomeAssistant, entry: ClimateDirectorEntry) -
 async def _async_reload(hass: HomeAssistant, entry: ClimateDirectorEntry) -> None:
     """Reload after the options changed, since the whole layout may have."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-from .services import (  # noqa: E402, I001
-    _chosen_entries as _chosen_entries,
-    _override_setpoint as _override_setpoint,
-    _refuse_unknown_zones as _refuse_unknown_zones,
-    _override_entity_target as _override_entity_target,
-    _override_targets as _override_targets,
-    _async_register_services as _async_register_services,
-)

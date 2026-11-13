@@ -40,6 +40,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
+from .circuit_requests import Request
 from .families import MODE_FAN_ONLY, MODE_OFF, ModeFamily
 from .models import DirectorConfig
 from .plan import Reason, UnitCommand, UntouchedSource
@@ -100,6 +101,55 @@ def areas(config: DirectorConfig) -> dict[str, frozenset[str]]:
         if source.entity_id in merged:
             merged[source.entity_id].add(zone.zone_id)
     return {entity_id: frozenset(zones) for entity_id, zones in merged.items()}
+
+
+def area_clash(
+    config: DirectorConfig, wishes: dict[str, Request], takeovers: tuple[Takeover, ...] = ()
+) -> tuple[dict[str, Request], dict[str, Request]]:
+    """Return the requests that keep their place and those that lose it in a shared area.
+
+    Een apparaat met `covers_zones` (de gasketel van een centrale cv) verwarmt
+    zijn hele gebied, ook de kamers die er zelf niet om vroegen. Vraagt een zone
+    de ketel terwijl een andere zone in dat gebied een ánder apparaat draait -
+    bijvoorbeeld een airco die de dode band nog vasthoudt - dan draaien gas en
+    airco tegelijk, en een uitsluitende groep dekt dat alleen als elk paar apart
+    is aangevinkt.
+
+    Het verzoek met de meeste voorrang wint. Wint de ketel, dan vervallen de
+    verzoeken van andere apparaten in het gebied; wint een ander apparaat, dan
+    vervalt elk verzoek om de ketel. Verliezers komen terug in plaats van weg te
+    zijn, zodat het plan kan melden wat ze wilden. Een apparaat dat het gebied
+    al overneemt (`in_force`) blijft buiten schot: `stop_others` regelt dat.
+
+    An appliance with `covers_zones` (the boiler of a central heating system)
+    heats its whole area, rooms that did not ask for it included. If one zone
+    asks for the boiler while another zone in that area runs a different
+    appliance - an air conditioner the dead band still holds, say - boiler and
+    air conditioner run together, and an exclusive group only covers that when
+    every pair is ticked separately.
+
+    The request with the most claim wins. If the boiler wins, the requests of
+    other appliances in the area lapse; if another appliance wins, every request
+    for the boiler lapses. Losers are returned rather than dropped, so the plan
+    can still report what they wanted. An appliance already taking the area over
+    (`in_force`) is left out: `stop_others` handles that.
+    """
+    kept = dict(wishes)
+    dropped: dict[str, Request] = {}
+    taking = {item.entity_id for item in takeovers}
+    for entity_id, area in sorted(areas(config).items()):
+        if len(area) < 2 or entity_id in taking:
+            continue
+        owners = [r for r in kept.values() if r.source.entity_id == entity_id]
+        rivals = [
+            r for r in kept.values() if r.source.entity_id != entity_id and r.zone.zone_id in area
+        ]
+        if not owners or not rivals:
+            continue
+        best = min(owners, key=lambda r: r.rank).rank <= min(rivals, key=lambda r: r.rank).rank
+        for loser in rivals if best else owners:
+            dropped[loser.zone.zone_id] = kept.pop(loser.zone.zone_id)
+    return kept, dropped
 
 
 def in_force(config: DirectorConfig, world: WorldState) -> tuple[Takeover, ...]:

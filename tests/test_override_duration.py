@@ -648,7 +648,7 @@ async def test_an_old_store_without_a_start_time_still_loads() -> None:
     try:
         await call_set_override(home, minutes=60)
         until = home.coordinator.zone_override_until["woonkamer"]
-        store = Path(home.coordinator._store.path)
+        store = Path(home.coordinator.store.path)
     finally:
         await stop_house(home)
 
@@ -682,7 +682,7 @@ async def test_a_leftover_start_time_without_an_ending_is_dropped() -> None:
     )
     try:
         await call_set_override(home, minutes=60)
-        store = Path(home.coordinator._store.path)
+        store = Path(home.coordinator.store.path)
     finally:
         await stop_house(home)
 

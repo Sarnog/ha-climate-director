@@ -4,15 +4,15 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
 
 from homeassistant.util import dt as dt_util
 
-from . import problems
+from . import repair_notices
 from .const import (
     UNUSABLE_GRACE_SECONDS,
 )
-from .coordinator_events import _wanted
+from .coordinator_events import wanted
+from .coordinator_surface import CoordinatorSurface
 from .engine import (
     WAITING_REASONS,
     ModeFamily,
@@ -37,14 +37,11 @@ from .world_builder import (
     temperature_from_state,
 )
 
-if TYPE_CHECKING:
-    from .coordinator import ClimateDirectorCoordinator
-
 _LOGGER = logging.getLogger(__name__)
 _COMMAND_NOT_TAKING_ROUNDS = 10
 
 
-def unusable_entities(coordinator: ClimateDirectorCoordinator) -> dict[str, str]:
+def unusable_entities(coordinator: CoordinatorSurface) -> dict[str, str]:
     """Return the configured entities that cannot be read right now.
 
     Een verkeerd getikte entiteit bestaat gewoon niet, en een sensor die
@@ -125,17 +122,17 @@ def unusable_entities(coordinator: ClimateDirectorCoordinator) -> dict[str, str]
     return found
 
 
-def _report_unreadable(coordinator: ClimateDirectorCoordinator) -> None:
+def report_unreadable(coordinator: CoordinatorSurface) -> None:
     """Put the entities that stay unreadable under Repairs, or take them away."""
-    problems.async_report_unreadable(
+    repair_notices.async_report_unreadable(
         coordinator.hass,
         coordinator.entry.entry_id,
         coordinator.entry.title,
-        coordinator._note_unusable(),
+        coordinator.note_unusable(),
     )
 
 
-def _note_unusable(coordinator: ClimateDirectorCoordinator) -> dict[str, str]:
+def note_unusable(coordinator: CoordinatorSurface) -> dict[str, str]:
     """Record since when each entity has been unreadable, and return the lasting ones.
 
     Geschreven op het beslispad en niet in de lezer: `unusable_entities()`
@@ -156,19 +153,19 @@ def _note_unusable(coordinator: ClimateDirectorCoordinator) -> dict[str, str]:
     """
     now = dt_util.now()
     found = coordinator.unusable_entities()
-    coordinator._unusable_latest = found
-    coordinator._unusable_since = {
-        entity_id: coordinator._unusable_since.get(entity_id, now) for entity_id in found
+    coordinator.reporting.unusable_latest = found
+    coordinator.reporting.unusable_since = {
+        entity_id: coordinator.reporting.unusable_since.get(entity_id, now) for entity_id in found
     }
     grace = timedelta(seconds=UNUSABLE_GRACE_SECONDS)
     return {
         entity_id: state
         for entity_id, state in found.items()
-        if now - coordinator._unusable_since[entity_id] >= grace
+        if now - coordinator.reporting.unusable_since[entity_id] >= grace
     }
 
 
-def unsupported_modes(coordinator: ClimateDirectorCoordinator) -> dict[str, str]:
+def unsupported_modes(coordinator: CoordinatorSurface) -> dict[str, str]:
     """Return the sources whose role asks what the appliance cannot deliver.
 
     De rol zegt wat de installatie wil, het apparaat wat het kan. Een bron
@@ -250,32 +247,33 @@ def unsupported_modes(coordinator: ClimateDirectorCoordinator) -> dict[str, str]
     return {entity_id: ", ".join(sorted(parts)) for entity_id, parts in found.items()}
 
 
-def _note_unsupported(coordinator: ClimateDirectorCoordinator) -> dict[str, str]:
+def note_unsupported(coordinator: CoordinatorSurface) -> dict[str, str]:
     """Record since when each source has asked an unsupported mode, with grace."""
     now = dt_util.now()
     found = coordinator.unsupported_modes()
-    coordinator._unsupported_since = {
-        entity_id: coordinator._unsupported_since.get(entity_id, now) for entity_id in found
+    coordinator.reporting.unsupported_since = {
+        entity_id: coordinator.reporting.unsupported_since.get(entity_id, now)
+        for entity_id in found
     }
     grace = timedelta(seconds=UNUSABLE_GRACE_SECONDS)
     return {
         entity_id: modes
         for entity_id, modes in found.items()
-        if now - coordinator._unsupported_since[entity_id] >= grace
+        if now - coordinator.reporting.unsupported_since[entity_id] >= grace
     }
 
 
-def _report_unsupported_modes(coordinator: ClimateDirectorCoordinator) -> None:
+def report_unsupported_modes(coordinator: CoordinatorSurface) -> None:
     """Put the roles asking impossible modes under Repairs, or take them away."""
-    problems.async_report_unsupported_modes(
+    repair_notices.async_report_unsupported_modes(
         coordinator.hass,
         coordinator.entry.entry_id,
         coordinator.entry.title,
-        coordinator._note_unsupported(),
+        coordinator.note_unsupported(),
     )
 
 
-def _note_unapplied(coordinator: ClimateDirectorCoordinator) -> dict[str, str]:
+def note_unapplied(coordinator: CoordinatorSurface) -> dict[str, str]:
     """Count how often each difference was offered without taking effect.
 
     Een apparaat dat de aanroep aanneemt maar niet uitvoert, of zichzelf
@@ -291,14 +289,14 @@ def _note_unapplied(coordinator: ClimateDirectorCoordinator) -> dict[str, str]:
     by definition permanently filled then.
     """
     if coordinator.shadow:
-        coordinator._unapplied = {}
+        coordinator.reporting.unapplied = {}
         return {}
 
     now = dt_util.now()
     offered = {change.entity_id for change in coordinator.last_changes}
-    for entity_id in list(coordinator._unapplied):
+    for entity_id in list(coordinator.reporting.unapplied):
         if entity_id not in offered:
-            del coordinator._unapplied[entity_id]
+            del coordinator.reporting.unapplied[entity_id]
 
     grace = timedelta(seconds=UNUSABLE_GRACE_SECONDS)
     found: dict[str, str] = {}
@@ -309,35 +307,37 @@ def _note_unapplied(coordinator: ClimateDirectorCoordinator) -> dict[str, str]:
             change.set_mode,
             change.set_temperature,
         )
-        previous, count, since = coordinator._unapplied.get(change.entity_id, (None, 0, now))
+        previous, count, since = coordinator.reporting.unapplied.get(
+            change.entity_id, (None, 0, now)
+        )
         if previous == fingerprint:
             count += 1
         else:
             count, since = 1, now
-        coordinator._unapplied[change.entity_id] = (fingerprint, count, since)
+        coordinator.reporting.unapplied[change.entity_id] = (fingerprint, count, since)
         if count >= _COMMAND_NOT_TAKING_ROUNDS and now - since >= grace:
-            found[change.entity_id] = _wanted(change, unit_of_coordinator(coordinator))
+            found[change.entity_id] = wanted(change, unit_of_coordinator(coordinator))
     return found
 
 
-def _report_command_not_taking(coordinator: ClimateDirectorCoordinator) -> None:
+def report_command_not_taking(coordinator: CoordinatorSurface) -> None:
     """Put appliances that never take their command under Repairs, or take them away."""
-    problems.async_report_command_not_taking(
+    repair_notices.async_report_command_not_taking(
         coordinator.hass,
         coordinator.entry.entry_id,
         coordinator.entry.title,
-        coordinator._note_unapplied(),
+        coordinator.note_unapplied(),
     )
 
 
-def _report_bypassed_openings(coordinator: ClimateDirectorCoordinator) -> None:
+def report_bypassed_openings(coordinator: CoordinatorSurface) -> None:
     """Put openings bypassed while really open under Repairs, or take them away."""
     found: dict[str, str] = {}
     if coordinator.world is not None:
         for opening in coordinator.config.openings:
             if opening_bypassed_and_open(opening, coordinator.world):
                 found[opening.entity_id] = opening.name or opening.entity_id
-    problems.async_report_bypassed_openings(
+    repair_notices.async_report_bypassed_openings(
         coordinator.hass,
         coordinator.entry.entry_id,
         coordinator.entry.title,
@@ -345,7 +345,7 @@ def _report_bypassed_openings(coordinator: ClimateDirectorCoordinator) -> None:
     )
 
 
-def _season_override_problems(coordinator: ClimateDirectorCoordinator) -> dict[str, str]:
+def season_override_problems(coordinator: CoordinatorSurface) -> dict[str, str]:
     """Return the duties the season select locks out, keyed by zone and duty.
 
     De engine meldt de vaste seizoensbron in `validate()`; de select is
@@ -373,17 +373,17 @@ def _season_override_problems(coordinator: ClimateDirectorCoordinator) -> dict[s
     return found
 
 
-def _report_season_override(coordinator: ClimateDirectorCoordinator) -> None:
+def report_season_override(coordinator: CoordinatorSurface) -> None:
     """Put a season select that locks a duty out under Repairs, or take it away."""
-    problems.async_report_season_override(
+    repair_notices.async_report_season_override(
         coordinator.hass,
         coordinator.entry.entry_id,
         coordinator.entry.title,
-        coordinator._season_override_problems(),
+        coordinator.season_override_problems(),
     )
 
 
-def _note_waiting(coordinator: ClimateDirectorCoordinator, plan: Plan) -> None:
+def note_waiting(coordinator: CoordinatorSurface, plan: Plan) -> None:
     """Remember since when each zone has been on its current waiting reason.
 
     De tijdstempel verspringt zodra de reden verandert, want dan is er wel
@@ -397,37 +397,37 @@ def _note_waiting(coordinator: ClimateDirectorCoordinator, plan: Plan) -> None:
     for decision in plan.zones:
         if decision.reason not in WAITING_REASONS:
             continue
-        since = coordinator._waiting.get(decision.zone_id)
+        since = coordinator.reporting.waiting.get(decision.zone_id)
         fresh[decision.zone_id] = (
             since if since and since[0] is decision.reason else (decision.reason, now)
         )
-    coordinator._waiting = fresh
+    coordinator.reporting.waiting = fresh
 
 
-def waiting_seconds(coordinator: ClimateDirectorCoordinator) -> dict[str, float]:
+def waiting_seconds(coordinator: CoordinatorSurface) -> dict[str, float]:
     """Return how long each waiting zone has been on its reason."""
     now = dt_util.now()
     return {
         zone_id: (now - since).total_seconds()
-        for zone_id, (_reason, since) in coordinator._waiting.items()
+        for zone_id, (_reason, since) in coordinator.reporting.waiting.items()
     }
 
 
-def unusable_latest(coordinator: ClimateDirectorCoordinator) -> dict[str, str]:
+def unusable_latest(coordinator: CoordinatorSurface) -> dict[str, str]:
     """Return the unreadable entities of the latest decision round.
 
-    De entiteitenlaag hoort niet aan `_unusable_latest` te zitten: dat is
+    De entiteitenlaag hoort niet aan `unusable_latest` te zitten: dat is
     een privéveld van de coordinator en de grens van wat hij naar buiten
     brengt verandert mee met hem. Dit is de publieke lezer.
 
-    The entity layer should not touch `_unusable_latest`: that is a private
+    The entity layer should not touch `unusable_latest`: that is a private
     coordinator field, and the boundary of what it exposes moves with it.
     This is the public reader.
     """
-    return coordinator._unusable_latest
+    return coordinator.reporting.unusable_latest
 
 
-def stuck_zones(coordinator: ClimateDirectorCoordinator) -> dict[str, Reason]:
+def stuck_zones(coordinator: CoordinatorSurface) -> dict[str, Reason]:
     """Return the zones that have waited longer than the installation allows.
 
     Een pauze bij het wisselen van taak hoort seconden te duren. Staat een
@@ -444,12 +444,12 @@ def stuck_zones(coordinator: ClimateDirectorCoordinator) -> dict[str, Reason]:
     now = dt_util.now()
     return {
         zone_id: reason
-        for zone_id, (reason, since) in coordinator._waiting.items()
+        for zone_id, (reason, since) in coordinator.reporting.waiting.items()
         if (now - since).total_seconds() >= limit
     }
 
 
-def _note_precipitation_now(coordinator: ClimateDirectorCoordinator) -> None:
+def note_precipitation_now(coordinator: CoordinatorSurface) -> None:
     """Remember rain that was already falling before this process started.
 
     De listener ziet alleen overgangen. Wie herstart terwijl het regent,
@@ -467,4 +467,4 @@ def _note_precipitation_now(coordinator: ClimateDirectorCoordinator) -> None:
         return
     state = coordinator.hass.states.get(settings.source)
     if state is not None and state.state in settings.states:
-        coordinator._precipitation_seen_at = dt_util.now()
+        coordinator.tracking.precipitation_seen_at = dt_util.now()

@@ -179,6 +179,25 @@ je in het hoofdmenu **Opslaan en sluiten** kiest.
 | **Hoe lang neerslag blijft tellen (minuten)** | nalooptijd na het stoppen van de neerslag; standaard 15 minuten |
 | **Schaduwmodus** | aan = alles doorrekenen, niets aansturen |
 
+### Energie en kosten
+
+Vergelijk wat een kWh warmte kost uit gas en uit de airco's. Dit voedt alleen de sensor *Goedkoopste warmtebron*; er
+wordt niets op gestuurd. Geef stroom en gas elk een vaste prijs of een sensor en vul de COP-curve in om de
+vergelijking aan te zetten.
+
+| Instelling | Wat het doet |
+|---|---|
+| **Sensor stroomprijs** | de huidige prijs van een kWh stroom, bijvoorbeeld uit een dynamisch contract; heeft voorrang op de vaste prijs zolang de sensor een getal geeft |
+| **Vaste stroomprijs (per kWh)** | vaste prijs per kWh stroom; geldt als er geen sensor is of de sensor niets geeft; 0 = niet ingesteld |
+| **Sensor terugleverprijs** | de prijs die je krijgt voor een teruggeleverde kWh; telt als stroomprijs bij zonne-overschot; met de vaste terugleverprijs leeg = altijd de stroomprijs |
+| **Vaste terugleverprijs (per kWh)** | vaste vergoeding per teruggeleverde kWh; geldt als er geen sensor is of de sensor niets geeft; 0 = niet ingesteld |
+| **Sensor zonne-overschot** | zonne-overschot in kW (positief = overschot); leeg = nooit een overschot |
+| **Sensor gasprijs** | de huidige prijs van een m³ gas, bijvoorbeeld uit een dynamisch contract; heeft voorrang op de vaste gasprijs zolang de sensor een getal geeft |
+| **Vaste gasprijs (per m³)** | vaste prijs per m³ gas, alles inbegrepen; geldt als er geen sensor is of de sensor niets geeft; zonder beide wordt de sensor niet aangemaakt |
+| **Calorische waarde van gas (kWh per m³)** | warmte per m³ gas; standaard 9,77 |
+| **Rendement van de ketel (0 tot 1,2)** | hoeveel van die warmte de radiatoren bereikt; standaard 0,9 |
+| **COP-curve van de airco's** | punten `buitentemperatuur:COP` met komma's gescheiden, bijvoorbeeld `-5:2.8, 7:3.8, 15:4.5`; leeg = de sensor wordt niet aangemaakt |
+
 ### Neerslag zet de buitengrens opzij
 
 De buitengrens per zone is een zuinigheidsregel met een aanname eronder: is
@@ -711,6 +730,7 @@ Eén device per installatie, met daaronder:
 | `sensor.*_laatste_beslissing` | hoeveel zones bediend worden, met het volledige plan als attributen |
 | `sensor.*_zou_<entity>_aansturen` | de stand waarin de director dit apparaat zou zetten — één sensor per apparaat |
 | `sensor.*_afwijkingen` | hoeveel apparaten er nú anders staan dan het plan wil; 0 = director en huis zijn het eens |
+| `sensor.*_goedkoopste_warmtebron` | welke bron een kWh warmte nu het goedkoopst levert (gas of elektriciteit), met beide kosten als attribuut; alleen aanwezig als gasprijs, stroomprijs en COP-curve zijn ingesteld. Alleen kijken: er wordt niets op gestuurd |
 | `sensor.*_bron_<zone>` | welke bron deze zone bedient, met wat de zone wilde, kreeg en waarom |
 | `binary_sensor.*_<zone>_geblokkeerd` | aan als een zone minder kreeg dan hij vroeg, of wilde draaien maar een omstandigheid haar tegenhield; de dichte poorten staan in de attributen |
 | `binary_sensor.*_<zone>_op_reserve` | aan als een zone op een reserve-apparaat draait omdat de eerste keus onbereikbaar is |
@@ -1097,6 +1117,13 @@ blijft. Laat je dat veld leeg, dan krijg je elke actie.
   rust neemt. Zet de vastlooptijd hoger dan de rust of verlaag de rust.
 - **De roosterpoort zonder rooster op een weekdag** — op die dag kan niets starten; de melding noemt de
   weekdagen. Vul een gewoon rooster in of zet de roosterpoort uit.
+- **Een bron zonder automatisch aanzetten in het gebied van een ketel** — staat *Dit apparaat automatisch aanzetten*
+  uit en valt de bron onder de *Zones die dit apparaat mee bedient* van een ketel, zonder dat de twee in één
+  exclusieve groep staan, dan houdt niets de bron tegen terwijl de ketel draait; de melding noemt de bron en de
+  ketel. Zet ze in één exclusieve groep.
+- **Een ketel onder meer dan één zone zonder gebied** — een bron met *Alleen verwarmen* die onder twee of meer zones
+  staat, terwijl nergens *Zones die dit apparaat mee bedient* is ingevuld: zonder gebied houdt niets een ander
+  apparaat tegen om naast de ketel te draaien. De melding noemt het apparaat. Vul de zones in die de ketel mee bedient.
 - **De diagnose** (downloaden bij de integratie) bevat de configuratie, de
   laatst gelezen momentopname en het laatste plan. Met die drie is elke
   beslissing exact na te spelen.

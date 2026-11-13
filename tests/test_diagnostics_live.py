@@ -55,18 +55,18 @@ async def test_reading_the_diagnostics_changes_nothing() -> None:
     )
     try:
         stale = dt_util.now() - timedelta(minutes=5)
-        home.coordinator._precondition = {"woonkamer": stale}
-        home.coordinator._precondition_bypass = {"woonkamer"}
+        home.coordinator.precondition_until = {"woonkamer": stale}
+        home.coordinator.precondition_bypass = {"woonkamer"}
 
         found = await async_get_config_entry_diagnostics(home.hass, home.entry)
 
         assert found["control_state"]["precondition_requests"] == {}, (
             "een verlopen verzoek hoort niet in de diagnose te staan"
         )
-        assert home.coordinator._precondition == {"woonkamer": stale}, (
+        assert home.coordinator.precondition_until == {"woonkamer": stale}, (
             "de diagnose hoort de toestand niet op te ruimen"
         )
-        assert home.coordinator._precondition_bypass == {"woonkamer"}
+        assert home.coordinator.precondition_bypass == {"woonkamer"}
     finally:
         await stop_house(home)
 

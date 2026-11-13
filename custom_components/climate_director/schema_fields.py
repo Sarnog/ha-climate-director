@@ -26,6 +26,7 @@ from . import texts
 from .const import CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE
 from .engine.fields import FieldSpec
 from .engine.models import PrecipitationSettings, SeasonSettings
+from .schema_numbers import DECIMALS
 from .units import (
     delta_to_celsius,
     rounded_delta_from_celsius,
@@ -140,6 +141,8 @@ _MINUTES = selector.NumberSelector(
 SECONDS = selector.NumberSelector(
     selector.NumberSelectorConfig(min=0, max=3600, step=1, mode=selector.NumberSelectorMode.BOX)
 )
+
+
 RANK = selector.NumberSelector(
     selector.NumberSelectorConfig(min=0, max=99, step=1, mode=selector.NumberSelectorMode.BOX)
 )
@@ -266,6 +269,8 @@ def _selector_for(field: FieldSpec, flow: Any) -> Any:
             return SECONDS
         if field.unit == "rank":
             return RANK
+        if field.unit in DECIMALS:
+            return DECIMALS[field.unit or ""]
     raise AssertionError(f"onbekend veldtype {field.kind!r} voor {field.key}")
 
 
@@ -399,6 +404,8 @@ def _stored_number(field: FieldSpec, form_value: Any, unit: str) -> Any:
         return None if _blank(form_value) else form_value
     if field.unit == "rank":
         return int(form_value)
+    if field.unit in DECIMALS:
+        return float(form_value)
     raise AssertionError(f"onbekende maat {field.unit!r} voor {field.key}")
 
 

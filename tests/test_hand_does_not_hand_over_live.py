@@ -126,7 +126,7 @@ class TestAHandAtTheAtticAirConditioner:
             home.clear_calls()
             home.hass.states.async_set(AIRCO, "off", dict(MODES))
             await settle(home)
-            assert home.coordinator._handed_back.get("zolder") is not None, (
+            assert home.coordinator.handed_back.get("zolder") is not None, (
                 "de hand aan de airco is niet opgemerkt"
             )
             assert home.climate_calls() == [], "de director zette de airco zelf weer aan"
@@ -154,7 +154,7 @@ class TestAHandAtTheAtticAirConditioner:
             )
             assert reason_of(home, "woonkamer") == "regulating"
 
-            assert home.coordinator._handed_back.get("zolder") is not None, (
+            assert home.coordinator.handed_back.get("zolder") is not None, (
                 "onze eigen aanzet van de ketel hief de hand aan de zolder op"
             )
             assert reason_of(home, "zolder") == "manual_override"
@@ -198,7 +198,7 @@ class TestTheSameHandSwitchingItBackOn:
             home.clear_calls()
             home.hass.states.async_set(AIRCO, "off", dict(MODES))
             await settle(home)
-            assert home.coordinator._handed_back.get("zolder") is not None, (
+            assert home.coordinator.handed_back.get("zolder") is not None, (
                 "de hand aan de airco is niet opgemerkt"
             )
 
@@ -206,7 +206,7 @@ class TestTheSameHandSwitchingItBackOn:
             home.hass.states.async_set(AIRCO, "heat", dict(MODES))
             await settle(home)
 
-            assert home.coordinator._handed_back == {}, (
+            assert home.coordinator.handed_back == {}, (
                 "dezelfde hand die de airco weer aanzette hief de hand niet op"
             )
             assert reason_of(home, "zolder") == "regulating", "de zolder hoort weer mee te doen"
@@ -235,7 +235,7 @@ class TestAHandAtTheSharedBoiler:
             )
             await settle(home)
 
-            assert set(home.coordinator._handed_back) == {"woonkamer", "zolder"}, (
+            assert set(home.coordinator.handed_back) == {"woonkamer", "zolder"}, (
                 "een hand aan de gedeelde ketel hoort elke kamer erop stil te leggen"
             )
             assert home.climate_calls() == [], "een van de kamers zette de ketel weer aan"
@@ -271,7 +271,7 @@ class TestTheSwitchBesideAHand:
             await settle(home)
             home.hass.states.async_set(AIRCO, "off", dict(MODES))
             await settle(home)
-            assert home.coordinator._handed_back.get("zolder") is not None, (
+            assert home.coordinator.handed_back.get("zolder") is not None, (
                 "de hand aan de airco is niet opgemerkt"
             )
 
@@ -329,7 +329,7 @@ class TestALateReportOfOurOwnBoiler:
 
             home.hass.states.async_set(AIRCO, "off", dict(MODES))
             await settle(home)
-            assert home.coordinator._handed_back.get("zolder") is not None, (
+            assert home.coordinator.handed_back.get("zolder") is not None, (
                 "de hand aan de airco is niet opgemerkt"
             )
 
@@ -350,7 +350,7 @@ class TestALateReportOfOurOwnBoiler:
 
             await home.settle()
             assert home.state(BOILER) == "heat", "de late melding van de ketel kwam niet binnen"
-            assert home.coordinator._handed_back.get("zolder") is not None, (
+            assert home.coordinator.handed_back.get("zolder") is not None, (
                 "de late melding van onze eigen ketel-aanzet hief de hand aan de zolder op"
             )
 

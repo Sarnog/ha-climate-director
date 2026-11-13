@@ -849,6 +849,38 @@ werkelijk een taak kreeg: pas dan kan dezelfde ruimte tegelijk verwarmd en
 gekoeld worden, en pas dan stookt een airco mee in een kamer die de ketel al warm
 maakt. Wat daardoor stilvalt draagt `SHARED_SOURCE_TOOK_OVER`.
 
+Een tweede functie, `area_clash()`, hoort bij hetzelfde gebied maar gaat over een ander
+moment: de keuze tussen de ketel en een ander apparaat dat in zijn gebied wil draaien,
+terwijl er niets is weggevallen. Een bron met `covers_zones` verwarmt zijn hele gebied, ook
+de kamers die er zelf niet om vroegen. Houdt de ene kamer een airco vast op de dode band en
+kiest een andere kamer in datzelfde gebied de ketel, dan draaien ketel en airco naast
+elkaar. `area_clash()` laat daarom per gebied één kant over: het verzoek met de meeste
+voorrang (bij een gelijke prioriteit beslist de zone-id, zoals overal in de
+constraints). Wint de ketel, dan vervallen de verzoeken van andere
+apparaten in het gebied; wint een ander apparaat, dan vervalt elk verzoek om de ketel. De
+verliezers worden teruggegeven in plaats van weggegooid, zodat het plan kan melden wat ze
+wilden (`EXCLUSIVE_GROUP_LOST`). De functie draait binnen `apply_exclusive_groups()`, vóór
+de groepen, en slaat een apparaat over dat het gebied al overneemt: dat regelt
+`stop_others()`. Dit is een bewuste keuze voor een koude kamer boven twee systemen
+tegelijk. Wat er niet onder valt staat onder "Nog te bouwen".
+
+Een bron met `autostart` uit vraagt nooit iets, dus `area_clash()` ziet hem niet: hij wordt
+alleen door een exclusieve groep of door `manual_conflict()` in bedwang gehouden. Staat zo'n
+bron in het gebied van een ketel en in geen enkele groep met die ketel, dan kan hij naast de
+ketel blijven draaien (gemeten: de ketel krijgt `heat`, de airco blijft als `MANUAL_SOURCE`
+ongemoeid). Het gedrag van de engine verandert niet; `validate()` meldt zo'n bron met de code
+`area_source_without_group`, zodat de gebruiker de twee in één groep zet. De groep telt per
+apparaat (`group_entities`), dus een ketel onder meer dan één zone is met één bron-id in de
+groep gedekt.
+
+Zonder `covers_zones` is er helemaal geen gebied: `areas()` levert dan niets voor dat
+apparaat, `area_clash()` en de overname hebben niets om op te werken, en niets houdt een
+ander apparaat tegen om in een andere kamer naast de ketel te draaien. Een apparaat dat alleen
+verwarmt (rol *Alleen verwarmen*) en onder meer dan één zone staat is bijna zeker zo'n ketel.
+`validate()` meldt het met de code `boiler_in_several_zones_without_area`; de rijen van één
+apparaat tellen samen (één ingevulde rij is genoeg), een gedeelde warmtepomp die ook koelt
+valt er niet onder, en het gedrag van de engine verandert niet.
+
 ### sources.py — waarmee
 
 Kiest per zone en taak het apparaat: geschiktheid (rol), dan beschikbaarheid, dan
@@ -877,6 +909,11 @@ het scherm. Wat er naast ligt blijft staan: een onbereikbare bron die voorrang h
 gekozen bron staat nog gewoon in die lijst, ook als er een overgedragen apparaat tussen zit.
 
 ### constraints.py — wat mag tegelijk
+
+`constraints.py` lost de verzoeken van één circuit op. De taakkeuze (`active_family`, de
+afgedwongen taken en de keuze tussen twee taken) staat in `circuit_policy.py`, de capaciteit
+en de kortcyclus in `capacity.py`, en het verzoek, de toekenning en de uitkomst in
+`circuit_requests.py`.
 
 De circuitregel:
 
@@ -946,7 +983,7 @@ via het bron-ID van een andere kamer. Twee kamers die om hetzelfde apparaat vrag
 daarbij geen tegenstanders — dat is één apparaat dat draait.
 
 Staan een handbediend apparaat én zijn groepstegenstander op hetzelfde circuit, dan
-bezet het handbediende apparaat zelf de plek (`_keeps_claiming` telt hem mee) en krijgt
+bezet het handbediende apparaat zelf de plek (`keeps_claiming` telt hem mee) en krijgt
 de tegenstander blijvend `CIRCUIT_AT_CAPACITY`; dat blijft bewust
 zo. Een exclusieve groep waarvan de leden dezelfde buitenunit delen kan zichzelf dus
 klemzetten — gebruik groepen alleen voor apparaten die geen buitenunit delen.
@@ -1070,7 +1107,7 @@ Zes dingen zijn er subtiel aan:
   aanroep, zodat de twee niet uit elkaar lopen. Wie alleen wil horen dat iets uitgaat,
   filtert daarop in plaats van op een vertaalde zin.
 - **Het moment waarop het huis ging slapen komt uit de rondes zelf.** `build_world` leest
-  het alleen; `world_builder._note_house_asleep` vraagt elke ronde
+  het alleen; `world_builder.note_house_asleep` vraagt elke ronde
   `night.house_asleep_since` en schrijft het weg zodra het verandert, zodat een herstart
   midden in de nacht het niet kwijtraakt. In de diagnose gelakt.
 
@@ -1080,8 +1117,8 @@ heeft: `_async_evaluate` doet niets zolang de vlag `_restored` niet staat, en di
 aan in `_async_on_hass_started`, ná het herstel van de opslag en vóór de eerste beslissing.
 Zonder die poort besliste de director op een half huis: de sensoren die tijdens het laden
 binnenkomen wekken de debouncer, en een apparaat dat iemand eerder die dag met de hand uitzette
-stond dan al weer aan voordat `_handed_back` gelezen was — de rest van de dag. Noteren
-(`_notice_home`, `_notice_hand`, de neerslag) mag intussen wel, en het herstel **voegt
+stond dan al weer aan voordat `handed_back` gelezen was — de rest van de dag. Noteren
+(`notice_home`, `_notice_hand`, de neerslag) mag intussen wel, en het herstel **voegt
 samen** in plaats van te vervangen, zodat een hand van tijdens het opstarten niet stil
 verdwijnt onder een ouder opgeslagen oordeel.
 
@@ -1108,7 +1145,7 @@ Er wordt vóór het herstel ook niets weggeschreven. Noteren mag, maar de opslag
 blijft onaangeroerd tot hij gelezen is: `Store.async_load` leest een wachtende schrijfactie
 in plaats van het bestand, dus staat er één klaar, dan komt het herstel uit op de half
 opgebouwde staat van dit moment en is het opgeslagen oordeel van de gebruiker verdwenen.
-`_async_save_state` onthoudt daarom alleen dát er iets te bewaren viel, en
+`async_save_state` onthoudt daarom alleen dát er iets te bewaren viel, en
 `_async_on_hass_started` schrijft één keer direct ná het herstel — ook als het herstel zelf
 omviel. Een installatie die tijdens het opstarten weer weggehaald wordt schrijft niets
 terug: de afbraakpoort (`_closing`) staat daar vóór.
@@ -1306,7 +1343,7 @@ dat alle wachtende zones tijdens de uitval starten.
 - De gebruiker beslist tussen (a) en (b) voordat er gebouwd wordt.
 
 **Meldingen noemen de instelling in de taal van de gebruiker (N16).** De regels in
-`engine/validation.py` vullen `settings`, `window` en `label` met Engelse woorden
+`engine/validation_*.py` vullen `settings`, `window` en `label` met Engelse woorden
 ("sleep window", "quiet window", "minimum cycle time"); `problems.readable` zet ze
 ongewijzigd in de vertaalde zin. Ontwerp: de engine levert vaste sleutels in plaats van
 woorden (`wake_by`, `sleep_in_until`, `quiet_window`, ...), en de koppelingslaag zoekt per
@@ -1404,6 +1441,21 @@ als de ruimtesensor het uitschakelpunt haalt.
 - Risico: een gangbare instelling valt hier zelf onder; de melding legt uit en weigert
   niets.
 
+**Een geweigerde winnaar van een gebied geeft de verliezer een tweede kans.** `area_clash()`
+haalt het verliezende verzoek uit de wensen vóórdat de circuits oordelen. Weigert het circuit
+daarna de winnaar (`CIRCUIT_AT_CAPACITY`, `SHORT_CYCLE_PROTECTION` of `CIRCUIT_CONFLICT_LOST`),
+dan draait de winnaar niet en blijft de verliezende zone die ronde onbediend: de
+terugvallus in `resolve_with_fallbacks()` probeert alleen verzoeken die nog in de wensen
+staan. De uitkomst valt aan de veilige kant (kort koud, nooit twee systemen tegelijk).
+- Optie (a), laten zoals het is: de weigering van een circuit is tijdelijk en de volgende
+  ronde beslist opnieuw.
+- Optie (b), het verliezende verzoek terugzetten zodra de winnaar geweigerd is. De kamer
+  wordt dan sneller bediend, maar de twee apparaten kunnen elkaar afwisselen als het circuit
+  en het gebied elkaar steeds tegenspreken, en dat vraagt een eindigheidsbewijs zoals de lus
+  van anker 7 dat heeft.
+- Gekozen is (a): laten zoals het is. Optie (b) blijft een idee dat pas aan de orde komt als
+  een meting laat zien dat de kamer van de verliezer in de praktijk te lang koud blijft.
+
 #### Could have
 
 **Huisbreed vermogensplafond.** `Source.wattage` + `DirectorConfig.watt_limit`; na de
@@ -1437,13 +1489,25 @@ roostervenster en hergebruikt de bestaande precondition-mechaniek, maar met een 
 trigger in plaats van een handmatige.
 
 **Energieprijs als bronvoorkeur.** `WorldState` krijgt runtime-bronvoorkeuren; de
-coordinator leest een tarief-/overschotsensor en `sources.py` sorteert daarop.
+coordinator leest een tarief-/overschotsensor en `sources.py` sorteert daarop. Stap 1 staat er:
+`engine/cost.py` rekent de kosten van een kWh warmte uit (gas, COP-curve, overschot, venstergemiddelde,
+goedkoopste bron met rem) zonder Home Assistant en zonder toestand. Hij is nog niet aangesloten:
+de bronkeuze kent hem niet en geen enkel besluit hangt ervan af. Stap 2 staat er ook: de installatie
+kent `energy`-instellingen (stroom-, terugleverprijs en overschot als entiteit, gasprijs,
+calorische waarde, rendement en een COP-curve als tekst) op een eigen scherm *Energie en kosten* in het
+hoofdmenu, en
+`engine/energy.py` rekent daarmee de kosten van gas en van de airco's uit. De sensor *Goedkoopste
+warmtebron* (`HeatCostSensor`) toont het antwoord, met beide kosten als attribuut; hij bestaat
+alleen als gasprijs, stroomprijs en curve zijn ingesteld en volgt de prijsentiteiten zelf, dus
+een nieuwe prijs kost geen beslisronde. Ook dit stuurt niets: het is de maat waarmee je in de
+geschiedenis ziet wanneer kosten een andere bron hadden gekozen dan de buitentemperatuur. Het
+schakelen komt daarna, in een eigen release.
 
 **Weersvoorspelling in het buitentemperatuurvenster.** De coordinator leest de verwachte
 temperatuur uit een `weather`-entiteit; `WorldState.outdoor_forecast` laat de vensters op de
 verwachting in plaats van op het nu toetsen.
 
-**Meer conflictbeleiden.** `ConflictPolicy.ROUND_ROBIN` en `DAY_PART` in `constraints.py`,
+**Meer conflictbeleiden.** `ConflictPolicy.ROUND_ROBIN` en `DAY_PART` in `circuit_policy.py`,
 met de circuitgeschiedenis als invoer.
 
 **`number`-entiteiten voor de drempels.** Per zone `number`-entiteiten voor streef-, aanpunt
@@ -1477,10 +1541,12 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `engine/models.py` | de installatie als geheel | `DirectorConfig`; de kleine bouwstenen staan in de modules hieronder |
 | `engine/seasons.py` | seizoen en neerslag | `Season`, `SeasonSource`, `SeasonSettings`, `PrecipitationSettings` |
 | `engine/windows.py` | het tijdvenster | `TimeWindow` |
+| `engine/cost.py` | wat een kWh warmte kost: gas tegenover een elektrische bron (rekenwerk, nog niet aangesloten op de bronkeuze) | `PricePoint`, `CopCurve`, `gas_cost`, `electric_cost`, `surplus_price`, `window_average`, `cheapest` |
+| `engine/energy.py` | de energie-instellingen en wat een kWh warmte nu kost (voedt alleen de kostensensor) | `EnergySettings`, `parse_cop_curve`, `HeatCosts`, `heat_costs` |
 | `engine/residents.py` | de bewoner | `Resident`, `SleepIn`, `WakeDeadline` en `RiseBrake` |
 | `engine/equipment.py` | apparaten en hun samenhang | `SourceRole`, `OutdoorWindow`, `ModeSettings`, `Source`, `Circuit`, `ConflictPolicy`, `Generator`, `Opening`, `HeatingLayout` |
 | `engine/rooms.py` | de ruimte en haar poortkeuze | `ZoneGate`, `Zone`, `GateSettings` |
-| `engine/validation.py` | alle configuratiecontroles | `Problem`, `validate()` en één `RULES`-lijst in de bestaande volgorde. Dit is de enige benoemde module-uitzondering boven de maat: één onderwerp, één ingang, één volgorde. |
+| `engine/validation.py` | alle configuratiecontroles | `validate()` en één `RULES`-lijst in de bestaande volgorde: één ingang, één volgorde. De regelfuncties staan per onderwerp in `engine/validation_zones.py`, `validation_sources.py`, `validation_circuits.py`, `validation_openings.py`, `validation_residents.py`, `validation_windows.py` en `validation_shared.py`; `Problem` staat in `engine/problem.py`. |
 | `engine/manual_sources.py` | de eenmalige melding over handbediende bronnen | `manual_only_problems` |
 | `engine/candidates.py` | wie mag meedoen | `handed_over`, `collect_wishes`, `serving`, de exclusieve groepen, `standing_firm` |
 | `engine/grants.py` | wie krijgt de taak | `resolve_with_fallbacks`, `resolve_circuits`, `zone_reasons`, `manual_conflict`, `exclusive_rival`, `stand_down` |
@@ -1488,8 +1554,6 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `engine/command_stops.py` | de stopboekhouding en het samenvouwen | `opening_rest_bookkeeping`, `stop_blocked`, `ignores_openings`, `collapse_shared`, `claim` |
 | `engine/command_reasons.py` | waarom een apparaat niets krijgt | `was_running`, `received_heat`, `unreadable_reason`, `untouched_reason`, `opening_stop_reason`, `opening_rest_hold`, `idle_mode` |
 | `engine/zone_decisions.py` | wat een zone uiteindelijk te horen krijgt | `build_zone_decisions`, `lost_to_another_zone`, `command_order`, `clamped_target` |
-| `engine/circuit_policy.py` | de taakkeuze op een circuit | `forced_families`, `choose_family`, `any_managed_running`, `finish` |
-| `engine/capacity.py` | capaciteit en kortcyclus | `standing_claims`, `keeps_claiming`, `apply_capacity`, `apply_short_cycle` |
 | `engine/quiet.py` | het stiltevenster en de draaiende zone | `guests_carry_the_house`, `quiet_hours`, `open_quiet_windows`, `was_home_before`, `zone_running`; dit sluit de kring met `hand_start` |
 | `engine/schedule.py` | het rooster als poort | `schedule_open`, `counts_towards_schedule` |
 | `engine/gates.py` | de poort als geheel | `closed`, de huishoudpoort, de openingen, `house_wide_blocked`, `opening_rest_until`, en `brakes_remaining` (de poort leest de handstart, niet andersom) |
@@ -1500,7 +1564,9 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `engine/resident_storage.py` | de bewoner in de opslag | de bewoner plus zijn drie ochtendinstellingen |
 | `engine/storage_values.py` | opgeslagen waarden veilig lezen | de naam van `storage_helpers.py`; alle lezers krijgen een publieke naam (`as_dict`, `items`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
 | `coordinator_surface.py` | het oppervlak van de koppeling | `CoordinatorSurface`; alle mixins lezen hier hun gastheer |
-| `coordinator.py` | de coordinator zelf | `__init__`, de eigenschappen, `async_request_evaluation`, de klok en de levensduur; hij erft de publieke mixins |
+| `flow_surface.py` | het oppervlak van de configuratiestroom | `FlowSurface`; de stappen en formulieren lezen hier hun stroom |
+| `coordinator_state.py` | de eigen staat van de onderdelen | `TrackingState`, `RoundState`, `ReportingState`, `EventsState`, `LifecycleState`; de coordinator houdt één exemplaar van elk |
+| `coordinator.py` | de coordinator zelf | `__init__`, de eigenschappen, `async_request_evaluation`, de klok en de levensduur; hij erft de publieke mixins en houdt per onderdeel een dunne methode die de functie in de `coordinator_*`-module aanroept |
 | `coordinator_lifecycle.py` | opstarten en stoppen | `async_start`, `_async_on_hass_started`, `tracked_entities`, `_calendar_says_holiday`, `async_shutdown` |
 | `coordinator_tracking.py` | wat een apparaat zelf doet | `_handle_change`, `_notice_precipitation`, `_notice_hand`, `_note_commanded_off`, `_note_commanded_on`, `_we_wanted_it_off`, `_we_wanted_it_on` |
 | `coordinator_round.py` | één beslisronde en haar klok | `_async_evaluate`, `_remember_families`, `_with_family_history`, `_schedule_deferral`, `_cancel_pending_deferral`, de klokherhaling |
@@ -1536,11 +1602,17 @@ wil indelen, wijzigt eerst dit hoofdstuk.
 | `entity_texts.py` | de leesbare beslissing | `reason_sentence`, `action_sentence`, `decision_message`, `decision_fields` en de sleutels daaromheen |
 | `services.py` | de service-API | de schema's, doelkeuze en registratie van `evaluate`, `precondition`, `cancel_precondition`, `set_override` en `clear_override` |
 
+De taakkeuze op een circuit staat in `engine/circuit_policy.py`, de capaciteit en de
+kortcyclus in `engine/capacity.py` en het verzoek, de toekenning en de uitkomst in
+`engine/circuit_requests.py`; `engine/constraints.py` houdt het oplossen van één
+circuit.
+
 `engine/decide.py` blijft de enige ingang van de beslissing; het bevat alleen nog
 `decide()` en de volgorde van de stappen. `config_flow.py` blijft het enige
 bestand dat Home Assistant als configuratiestroom laadt; het bevat de basisklasse,
-de menu-navigatie, het opslaan en de gedeelde lezers. De stappen zelf staan in de
-`flow_*`-mengsels. `problems.py` en `texts.py` blijven de algemene ingangen;
+de menu-navigatie, het opslaan en de gedeelde lezers. De stappen zelf staan als
+functies in de `flow_*`-modules; `config_flow.py` houdt per stap een dunne methode
+die ze aanroept. `problems.py` en `texts.py` blijven de algemene ingangen;
 `repair_notices.py` en `entity_texts.py` dragen de bijzondere onderwerpen.
 `__init__.py` blijft de levensduur van de entry; `services.py` draagt de
 service-API.
@@ -1558,6 +1630,11 @@ service-API.
 - Over een modulegrens staat geen naam met een leidende onderstreping. De
   mixins, hun helpers en de schemabouwers krijgen een publieke naam in het
   bestand waar ze wonen.
+- `tests/test_module_boundaries.py` bewaakt zes van deze grenzen met `ast` en
+  `tokenize`: geen privé naam over een modulegrens (ook niet als `module._naam` na
+  `from . import module`), geen `getattr(self, "<naam>", terugval)` op een eigen lid,
+  geen import binnen een functie, geen `# noqa: E402` (een import staat bovenaan,
+  zonder uitzondering) en buiten `coordinator.py` geen `coordinator._naam`.
 - Een tegel van de veldtabel blijft in `engine/fields.py`; de selectors en de
   vertaling naar `vol.Schema` blijven in de Home Assistant-helft.
 - Een nieuw bestand is een onderwerp, geen restbak: geen `utils`, `helpers`,
@@ -1577,7 +1654,7 @@ commit, elke commit is groen en wordt pas gepusht als de voorganger groen is.
    `engine/schedule.py` en `engine/gates.py`;
 6. de configuratiestroom en de formulieren;
 7. `engine/decide.py` met `candidates`, `grants`, `commands`,
-   `command_reasons`, `zone_decisions`, `circuit_policy` en `capacity`;
+   `command_reasons` en `zone_decisions`;
 8. `engine/models.py` met `seasons`, `windows`, `residents`, `equipment` en
    `rooms`;
 9. `coordinator.py` met `coordinator_surface`, `coordinator_lifecycle`,
@@ -1605,9 +1682,15 @@ voortgangsbestand in de repo-root:
 De impactkaart hangt aan de selectie: `script/select_tests.py` laat een
 toegevoegd pakketbestand of toetsbestand de hele suite draaien. Een rename is in
 `git diff --no-renames` een verwijdering plus een toevoeging en valt dus onder
-dezelfde regel. `script/test` werkt de kaart bij; de volledige run levert de
-kaart die bij de nieuwe bestanden hoort, zonder dat iemand een CI-artifact met de
-hand overneemt. Een gewijzigd bestaand bestand houdt de gewone selectie.
+dezelfde regel. `script/test` werkt de kaart bij en de CI levert hem als artefact `impact-map`.
+De kaart is een samenvoeging: een run voegt toe wat hij zelf zag en laat niets weg
+wat hij niet zag. Alleen een toetsbestand dat er niet meer is, of een invoer onder
+`custom_components/`, `tests/`, `script/`, `docs/` of `blueprints/` die er niet meer is,
+valt eruit; een pad op het hoogste niveau (`tox.ini`) blijft staan. Een lokale volledige run op Windows ziet voor
+`tests/test_controls_live.py` de map `script/` niet, de CI wel; die regel blijft
+dus staan en de kaart uit een lokale run kan gewoon mee in de commit. De CI keurt
+een kaart af waarop een regel ontbreekt die de run zag, niet een kaart met een regel
+extra. Een gewijzigd bestaand bestand houdt de gewone selectie.
 
 #### Toetsen per onderwerp
 
@@ -1633,6 +1716,193 @@ hulpbestanden `tests/flow_helpers.py`, `tests/live_helpers.py`,
 `tests/guard_helpers.py`, `tests/override_helpers.py` en
 `tests/coverage_helpers.py`. Geen enkel `test_*.py` importeert nog uit een
 ander `test_*.py`.
+
+#### Verdere indeling
+
+Deze indeling maakt af wat de opruimronde openliet: elke module bij één onderwerp,
+geen module boven de 500 regels buiten de benoemde lijsten, en een modulegrens
+die een grens is. Ook hier verhuist alleen code: dezelfde regels, dezelfde
+`Reason`-waarden en `Problem`-codes, dezelfde opslagvorm en dezelfde entiteiten,
+en een verhuizing die een regel inhoudelijk verandert, krijgt een eigen commit
+erna. Alleen de twee gedragsbesluiten aan het eind veranderen wat de integratie
+doet. Wie een van de bestanden hieronder anders wil indelen, wijzigt eerst dit
+hoofdstuk.
+
+De volgorde is van de minst naar de meest verweven stap; elke stap is één commit
+en wordt pas gepusht als de voorganger groen is.
+
+| Stap | Wat | Waarom hier |
+|---|---|---|
+| 1 | de `getattr`-terugvallen op attributen, en de dubbele sleutelwoordcontrole | raakt alleen de stand-ins in de toetsen en één regel |
+| 2 | de kringen tussen `texts.py` en `entity_texts.py`, en tussen `problems.py` en `repair_notices.py` | alleen importregels |
+| 3 | de impactkaart onafhankelijk van de omgeving | raakt alleen `script/` |
+| 4 | de taakkeuze en de capaciteit uit `engine/constraints.py` | één bestand, één aanroeper |
+| 5 | `engine/validation.py` per onderwerp | zuivere verhuizing van regelfuncties |
+| 6 | een oppervlak per laag voor de mixins en de configuratiestroom | haalt de terugimports onder `TYPE_CHECKING` weg |
+| 7 | de `coordinator_*`-onderdelen zonder privé attributen van de coordinator | raakt de meeste bestanden |
+| 8 | de mutatiebaan met `area_clash` en de lijst in de repo | meet de stappen hierboven |
+| 9 | de twee gedragsbesluiten | pas als de verhuizingen gemeten zijn |
+
+##### Stap 1 — geen terugval op eigen attributen
+
+Een mixin leest een attribuut van de coordinator als `self.<naam>`. De dertien
+regels `getattr(self, "<naam>", standaard)` in `state_store.py`,
+`world_builder.py` en `hand_start.py` bestonden omdat een stand-in in de toetsen
+het attribuut niet droeg; de stand-in krijgt het attribuut, en de mixin leest het
+gewoon. `tests/test_coordinator_surface.py` eist al dat een stand-in elk lid
+draagt dat zijn geleende methodes aanraken; zonder terugval geldt dat voor alle
+leden. De controle op het trefwoord en de agenda's die de remmen voeden (nu
+dubbel in `readability.unreadable_inputs` en `engine/hand_start.brakes_readable`)
+staat op één plek in `engine/hand_start.py` en `readability.py` roept haar aan.
+
+##### Stap 2 — geen kring tussen de algemene en de bijzondere module
+
+| Bestand | Wat verdwijnt | Wat ervoor in de plaats komt |
+|---|---|---|
+| `texts.py` | de her-export van `entity_texts` onderaan, met `# noqa: E402` | de aanroepers importeren uit `entity_texts` |
+| `problems.py` | de her-export van `repair_notices` onderaan, met `# noqa: E402` | de aanroepers importeren uit `repair_notices` |
+
+De bewaking: geen `# noqa: E402` in het pakket.
+
+##### Stap 3 — de impactkaart is niet van de machine
+
+Een volledige run verving de kaart door wat hij zelf zag, en een lokale run
+op Windows ziet de map `script/` voor `tests/test_controls_live.py` niet, de CI
+wel. De kaart is daarom een samenvoeging: een volledige run voegt bestaande regels
+samen met wat hij ziet, en laat een regel alleen vallen als het toetsbestand of
+het invoerbestand niet meer bestaat. Bewaking: een toets die een kaart met een
+extra regel laat staan en een kaart met een ontbrekende regel afkeurt.
+
+##### Stap 4 — de taakkeuze en de capaciteit
+
+| Nieuw bestand | Onderwerp | Wat verhuist |
+|---|---|---|
+| `engine/circuit_requests.py` | wat een zone aan een circuit vraagt en krijgt | `Request`, `Grant`, `Outcome` |
+| `engine/circuit_policy.py` | de taakkeuze op een circuit | `active_family`, `forced_families`, `choose_family`, `any_managed_running` |
+| `engine/capacity.py` | de capaciteit en de kortcyclus | `standing_claims`, `keeps_claiming`, `apply_capacity`, `apply_short_cycle` |
+
+`engine/constraints.py` houdt `resolve` en `finish`. De drie typen staan in een
+eigen bestand omdat zowel `circuit_policy` als `capacity` ze nodig hebben en
+`constraints` beide aanroept; zo blijft de richting naar beneden. De
+aanroepers van `constraints.Request`, `constraints.Grant` en `constraints.Outcome`
+importeren uit `circuit_requests`. `constraints.py` valt daarmee van
+`FROZEN_MODULES`.
+
+##### Stap 5 — de validatie per onderwerp
+
+`engine/validation.py` houdt `validate()` en de ene `RULES`-lijst in de bestaande
+volgorde; de regelfuncties staan per onderwerp, met een publieke naam (zonder
+leidende onderstreping, want `validation.py` importeert ze).
+
+| Nieuw bestand | Onderwerp | Wat verhuist |
+|---|---|---|
+| `engine/problem.py` | de klacht zelf | `Problem` |
+| `engine/validation_shared.py` | gedeelde controles en hulpjes | `pinned_season`, `season_names`, `duplicates`, `windows`, `outdoor_is_known` en de seizoensregel |
+| `engine/validation_zones.py` | zones | de dubbele zone-id's, een entiteit twee keer in een zone, een eenheid in geen zone, de zoneregels, het rooster, de vastlooptijd, de buitenbanden en het maximum van een vooruit-verzoek |
+| `engine/validation_sources.py` | bronnen en generatoren | de dubbele bron-id's, het buitenvenster en de gebieden van een bron, de families, de generatoren, de exclusieve groepen, een bron zonder automatische start in het gebied van een ketel en een ketel onder meerdere zones zonder gebied |
+| `engine/validation_circuits.py` | circuits | de dubbele circuit-id's, een eenheid op twee circuits, de circuitregels, de indeling en de wisseltijden |
+| `engine/validation_residents.py` | bewoners | de bewoner zonder aanwezigheid, de slaapinstellingen en het stiltevenster |
+| `engine/validation_windows.py` | vensters | de vensters zonder lengte, het halve gastenvenster en de feestdagenagenda's |
+| `engine/validation_openings.py` | openingen | de dubbele opening-id's, de openingen, de huisbrede stops, de open stand van een afdekking en de vastzittijd onder de ingestelde rust |
+
+Een regel die twee onderwerpen raakt, staat bij het onderwerp waarvan hij een veld
+controleert. `MODULE_EXCEPTIONS` verliest de ingang `engine/validation.py`. De
+importeurs van `Problem` (`engine/__init__.py`, `engine/manual_sources.py` en de
+toetsen) importeren uit `engine/problem.py`.
+
+##### Stap 6 — een oppervlak per laag
+
+Een basisklasse die alleen leden noemt (waarden en `Callable`-typen, zonder
+methodelichaam) kan gewoon geërfd worden: er ontstaat bij het draaien niets dat een
+echte methode kan overschaduwen. Het mag geen `Protocol` zijn, want een protocol als
+basis doorbreekt de `__init__`-keten van `DataUpdateCoordinator`. Daarom:
+
+- `coordinator_surface.py` (`CoordinatorSurface`) is zo geschreven en de acht mixins
+  erven het gewoon. De `TYPE_CHECKING`-blokken met `_CoordinatorBase` in die mixins en de
+  stubs `def naam(self) -> X: ...` verdwijnen; `entry` is een attribuut dat de
+  coordinator in `__init__` zet in plaats van een eigenschap.
+- `flow_surface.py` (`FlowSurface`, een `OptionsFlow` met alleen leden) is hetzelfde voor
+  de configuratiestroom: de cursors en lijsten die de `flow_*`- en `form_*`-functies
+  lezen en de stappen die ze aanroepen. `ClimateDirectorOptionsFlow` erft het, en de
+  `TYPE_CHECKING`-terugimport van `config_flow` verdwijnt uit negen bestanden.
+
+De `coordinator_*`-onderdelen krijgen hun oppervlak in stap 7, samen met de leden die
+daar verhuizen. `NAMED_EXCLUSIONS_BUDGET` in `tests/test_coverage_exclusions.py` zakt
+mee en blijft een ratel die alleen kan dalen; na stap 7 is hij nul.
+
+##### Stap 7 — de onderdelen van de coordinator zonder privé attributen
+
+De zes `coordinator_*`-onderdelen krijgen de coordinator als eerste argument. Ze lazen en
+zetten ruim tachtig privé attributen ervan; elk onderdeel houdt nu zijn eigen staat bij:
+
+| Onderdeel | Eigen staat (klasse in `coordinator_state.py`) | Wat erin staat |
+|---|---|---|
+| `coordinator_tracking.py` | `TrackingState` (`coordinator.tracking`) | `commanded_off`, `commanded_on`, `precipitation_seen_at` |
+| `coordinator_round.py` | `RoundState` (`coordinator.round`) | `debouncer`, `issued`, `sent_setpoints`, `family_since`, `family_seen`, `cancel_deferral`, `clock_reeval_unsub`, `lock` |
+| `coordinator_reporting.py` | `ReportingState` (`coordinator.reporting`) | `unusable_since`, `unusable_latest`, `unsupported_since`, `unapplied`, `waiting` |
+| `coordinator_events.py` | `EventsState` (`coordinator.events`) | `refused` |
+| `coordinator_lifecycle.py` | `LifecycleState` (`coordinator.lifecycle`) | `restored`, `closing` |
+
+Wat een mixin bezit en een onderdeel moet lezen (de verzoeken en de overbrugging
+van de vooruit-verzoeken, de teruggegeven handen, het thuiskomst- en
+slaapmoment, de opslag) krijgt een publieke naam op de coordinator, zoals
+`zone_override_until` die al heeft: `precondition_until`, `precondition_bypass`,
+`handed_back`, `home_since`, `asleep_since`, `store`, `request_before_restore` en
+`override_before_restore`. De methodes van een mixin die een onderdeel aanroept
+krijgen ook een publieke naam: `notice_hand_start`, `settle_hand_starts`,
+`cancel_pending_override_wake`, `consume_expired_overrides`,
+`consume_pending_override_changes`, `drop_lapsed_override_timers`,
+`cancel_pending_precondition_wake`, `notice_home`, `note_room_presence_now`,
+`notice_room_empty`, `async_restore_state`, `async_save_pending_state`,
+`async_save_state`, `store_payload` en `note_house_asleep`.
+
+De bewerkingen van de onderdelen zelf (`handle_change`, `note_waiting`, `fire_events`,
+`schedule_deferral`, `report_unreadable`, ...) staan als publieke dunne methodes op de
+coordinator, en `CoordinatorSurface` noemt ze met hun handtekening. Een onderdeel roept
+een ander onderdeel dus aan via de coordinator (`coordinator.note_unusable()`) en nooit
+via een privé naam; de functies in de onderdelen hebben zelf ook een publieke naam
+(`coordinator_tracking.handle_change`). De onderdelen typen hun coordinator met
+`CoordinatorSurface` en importeren die gewoon, zonder `TYPE_CHECKING`.
+`coordinator.py` is daarmee onder de 500 regels.
+
+Bewaking: `tests/test_module_boundaries.py` eist dat geen enkel bestand van het
+pakket behalve `coordinator.py` een attribuut met een leidende onderstreping
+leest of zet op een naam `coordinator`, en dat geen onderdeel een privé functie
+van een ander onderdeel aanroept.
+
+##### Stap 8 — de mutatiebaan
+
+`script/mutation_probe.py` (de baan die bij elke push draait) krijgt zes mutaties op
+`area_clash`: de aanroep weg, de overnemer niet overslaan, verliezers en eigenaars
+verwisseld, het verliezende verzoek blijft in de wensen (`kept.pop` weg), de beste
+eigenaar vervangen door de slechtste, en een rivaal buiten het gebied. Ze worden gevangen
+door `tests/test_area_clash.py`, die elke grens van `area_clash` in een eigen toets heeft.
+
+De uitgebreide lijst waarmee een controle de eigenschappen na een verhuizing meet staat in
+`script/mutation_review.py`: 79 mutaties met per mutatie het patroon, de vervanging en de
+toetsen die het moeten vangen, plus de twee gelijkwaardige mutaties op `area_clash`, die
+groen horen te blijven (met de reden erbij). `tests/test_select_tests.py` eist dat elk
+patroon precies één keer in zijn bestand staat, dat elke genoemde toets bestaat en dat de
+mutaties van de baan ook in de lijst staan.
+
+##### Stap 9 — twee gedragsbesluiten en een gemeten vervolg
+
+| Punt | Besluit | Wat er gebeurt |
+|---|---|---|
+| Een geweigerde winnaar van een gebied | laten zoals het is | de verliezer blijft die ronde onbediend en de volgende ronde beslist opnieuw; de uitkomst valt aan de veilige kant (kort koud, nooit twee systemen tegelijk). Het ontwerp onder "Nog te bouwen" noemt het terugzetten van het verzoek als alternatief en blijft staan als idee. |
+| Een bron zonder `autostart` buiten een groep met de ketel | `validate()` waarschuwt | een nieuwe `Problem`-code meldt een bron zonder `autostart` die in het gebied van een ketel staat en in geen enkele exclusieve groep; het gedrag van de engine verandert niet |
+| Een ketel in meer dan één zone zonder `covers_zones` | `validate()` meldt het | een nieuwe `Problem`-code meldt een ketel die in meer dan één zone staat terwijl `covers_zones` ontbreekt, want zonder dat veld is er geen gebied en dus geen bescherming |
+
+Beide meldingen krijgen een vertaling in alle zeven tekstbestanden en een regel
+in de zes gidsen. Wat een probe meet en wat niet, staat in de release notes.
+
+##### Bewijs per stap
+
+Hetzelfde bewijs als bij de eerste indeling: de engine- en v1-probe byte-gelijk,
+de E-, N- en Q-probes identiek, een gebiedsprobe gelijk (behalve voor stap 9),
+`pytest --collect-only` zonder verdwenen toets, een ast-vergelijking van de
+functielichamen, dekking 100 %, de poort op nul, de kaart schoon
+en de mutatielijst volledig gevangen.
 
 ### Uitbreidbaarheid — de vorm die dat mogelijk maakt
 
@@ -2694,6 +2964,38 @@ taker-over really got a duty: only then can the same room be heated and cooled a
 once, and only then does an air conditioner add to a room the boiler is already
 warming. Whatever stands down carries `SHARED_SOURCE_TOOK_OVER`.
 
+A second function, `area_clash()`, belongs to the same area but concerns a different
+moment: the choice between the boiler and another appliance that wants to run in its area,
+while nothing has dropped out. A source with `covers_zones` heats its whole area, rooms that
+did not ask for it included. If one room holds an air conditioner on the dead band and
+another room in that same area picks the boiler, boiler and air conditioner run side by
+side. `area_clash()` therefore leaves one side per area: the request with the most claim
+(on an equal priority the zone id decides, as everywhere in the
+constraints). If the boiler wins, the requests of other appliances in the area
+lapse; if another appliance wins, every request for the boiler lapses. The losers are
+returned rather than discarded, so the plan can still report what they wanted
+(`EXCLUSIVE_GROUP_LOST`). The function runs inside `apply_exclusive_groups()`, before the
+groups, and skips an appliance that already takes the area over: `stop_others()` handles
+that. This is a deliberate choice for a cold room over two systems at once. What it does not
+cover is listed under "Still to build".
+
+A source with `autostart` off never asks for anything, so `area_clash()` does not see it: it
+is held in check only by an exclusive group or by `manual_conflict()`. If such a source
+stands in a boiler's area and in no group with that boiler, it can keep running beside the
+boiler (measured: the boiler gets `heat`, the air conditioner is left alone as
+`MANUAL_SOURCE`). The engine's behaviour does not change; `validate()` reports such a source
+with the code `area_source_without_group`, so the user puts the two in one group. The group
+counts per appliance (`group_entities`), so a boiler under more than one zone is covered by
+one source id in the group.
+
+Without `covers_zones` there is no area at all: `areas()` then returns nothing for that
+appliance, `area_clash()` and the takeover have nothing to work on, and nothing stops another
+appliance from running beside the boiler in another room. An appliance that only heats (role
+*Heating only*) and stands under more than one zone is almost certainly such a boiler.
+`validate()` reports it with the code `boiler_in_several_zones_without_area`; the rows of one
+appliance count together (one filled-in row is enough), a shared heat pump that also cools is
+not covered, and the engine's behaviour does not change.
+
 ### sources.py — with what
 
 Picks the appliance per zone and duty: suitability (role), then availability, then
@@ -2720,6 +3022,11 @@ it stays: an unreachable source that outranked the chosen one still stands in th
 even when a handed-over appliance sits in between.
 
 ### constraints.py — what may run together
+
+`constraints.py` resolves the requests of one circuit. The duty choice (`active_family`,
+the forced duties and the choice between two duties) stands in `circuit_policy.py`, the
+capacity and the short cycle in `capacity.py`, and the request, the grant and the outcome
+in `circuit_requests.py`.
 
 The circuit rule:
 
@@ -2788,7 +3095,7 @@ another room's source id. Two rooms asking for the same appliance are no rivals 
 - that is one appliance running.
 
 When a hand-operated appliance and its group rival sit on the same circuit, the
-hand-operated appliance occupies the slot itself (`_keeps_claiming` counts it), the rival
+hand-operated appliance occupies the slot itself (`keeps_claiming` counts it), the rival
 gets `CIRCUIT_AT_CAPACITY` for good, and that deliberately stays so. An
 exclusive group whose members share an outdoor unit can therefore clamp itself shut —
 use groups only for appliances that do not share an outdoor unit.
@@ -2909,7 +3216,7 @@ Six things about it are subtle:
   so the two cannot drift apart. Whoever only wants to hear that something goes off filters
   on it instead of on a translated sentence.
 - **The moment the house went to sleep comes from the rounds themselves.** `build_world`
-  only reads it; `world_builder._note_house_asleep` asks `night.house_asleep_since` every
+  only reads it; `world_builder.note_house_asleep` asks `night.house_asleep_since` every
   round and writes it away as soon as it changes, so a restart in the middle of the night
   does not lose it. Redacted in the diagnostics.
 
@@ -2919,7 +3226,7 @@ nothing while the `_restored` flag is unset, and that flag goes up in
 `_async_on_hass_started`, after the restore of the store and before the first decision.
 Without that gate the director decided on half a house: the sensors arriving during loading
 wake the debouncer, and an appliance somebody switched off by hand earlier that day was switched on
-again before `_handed_back` had been read — for the rest of the day. Noting (`_notice_home`,
+again before `handed_back` had been read — for the rest of the day. Noting (`notice_home`,
 `_notice_hand`, the precipitation) is allowed in the meantime, and the restore **merges**
 rather than replaces, so a hand from during the startup does not quietly disappear under an
 older stored verdict.
@@ -2946,7 +3253,7 @@ Nothing is written before the
 restore either. Noting is allowed, but the store stays untouched until it has been read:
 `Store.async_load` reads a pending write instead of the file, so if one is standing ready
 the restore comes out on this moment's half-built state and the user's stored verdict is
-gone. `_async_save_state` therefore only remembers *that* something needed saving, and
+gone. `async_save_state` therefore only remembers *that* something needed saving, and
 `_async_on_hass_started` writes once directly after the restore — also when the restore
 itself fell over. An installation removed again during the startup writes nothing back: the
 teardown gate (`_closing`) stands before that.
@@ -3141,7 +3448,7 @@ during the outage.
 - The user decides between (a) and (b) before anything is built.
 
 **Notices name the setting in the user's language (N16).** The rules in
-`engine/validation.py` fill `settings`, `window` and `label` with English words
+`engine/validation_*.py` fill `settings`, `window` and `label` with English words
 ("sleep window", "quiet window", "minimum cycle time"); `problems.readable` puts them
 unchanged into the translated sentence. Design: the engine supplies fixed keys instead of
 words (`wake_by`, `sleep_in_until`, `quiet_window`, ...), and the binding layer looks up the
@@ -3238,6 +3545,19 @@ once the room sensor reaches the switch-off point.
 - Risk: a common setting falls under this itself; the notice explains and refuses
   nothing.
 
+**A refused area winner gives the loser a second chance.** `area_clash()` takes the losing
+request out of the wishes before the circuits judge. If the circuit then refuses the winner
+(`CIRCUIT_AT_CAPACITY`, `SHORT_CYCLE_PROTECTION` or `CIRCUIT_CONFLICT_LOST`), the winner does
+not run and the losing zone is left unserved for that round: the fallback loop in
+`resolve_with_fallbacks()` only retries requests that are still in the wishes. The outcome is
+on the safe side (briefly cold, never two systems at once).
+- Option (a), leave it: a circuit refusal is temporary and the next round decides again.
+- Option (b), put the losing request back as soon as the winner is refused. The room is
+  served sooner, but the two appliances can alternate if the circuit and the area keep
+  contradicting each other, and that needs a termination argument like the anchor 7 loop has.
+- (a) is chosen: leave it as it is. Option (b) stays an idea that only comes up when a
+  measurement shows that the loser's room is left cold too long in practice.
+
 #### Could have
 
 **A house-wide power ceiling.** `Source.wattage` + `DirectorConfig.watt_limit`; after the
@@ -3270,13 +3590,25 @@ schedule window and reuses the existing pre-conditioning machinery, but with an 
 trigger instead of a manual one.
 
 **Energy price as source preference.** `WorldState` gains runtime source preferences; the
-coordinator reads a tariff/surplus sensor and `sources.py` sorts on it.
+coordinator reads a tariff/surplus sensor and `sources.py` sorts on it. Step 1 is in:
+`engine/cost.py` works out the cost of a kWh of heat (gas, COP curve, surplus, window average,
+cheapest source with a brake) without Home Assistant and without state. It is not yet wired:
+the source selection does not know it and no decision depends on it. Step 2 is in as well: the
+installation has `energy` settings (power price, feed-in price and surplus as entities, gas price,
+calorific value, efficiency and a COP curve as text) on a screen of its own, *Energy and costs*, in the
+main menu, and
+`engine/energy.py` works the cost of gas and of the air conditioners out from them. The sensor
+*Cheapest heat source* (`HeatCostSensor`) shows the answer, with both costs as attributes; it
+only exists when gas price, power price and curve are set and follows the price entities
+itself, so a new price costs no decision round. This steers nothing either: it is the measure
+that shows in the history when cost would have chosen another source than the outdoor
+temperature. Switching comes after that, in a release of its own.
 
 **Weather forecast in the outdoor window.** The coordinator reads the expected temperature
 from a `weather` entity; `WorldState.outdoor_forecast` lets the windows check the forecast
 rather than the now.
 
-**More conflict policies.** `ConflictPolicy.ROUND_ROBIN` and `DAY_PART` in `constraints.py`,
+**More conflict policies.** `ConflictPolicy.ROUND_ROBIN` and `DAY_PART` in `circuit_policy.py`,
 with the circuit history as input.
 
 **Per-zone `number` entities for the thresholds.** Per-zone `number` entities for the
@@ -3309,10 +3641,12 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `engine/models.py` | the installation as a whole | `DirectorConfig`; the small building blocks stand in the modules below |
 | `engine/seasons.py` | season and precipitation | `Season`, `SeasonSource`, `SeasonSettings`, `PrecipitationSettings` |
 | `engine/windows.py` | the time window | `TimeWindow` |
+| `engine/cost.py` | what a kWh of heat costs: gas against an electric source (arithmetic, not yet wired to the source selection) | `PricePoint`, `CopCurve`, `gas_cost`, `electric_cost`, `surplus_price`, `window_average`, `cheapest` |
+| `engine/energy.py` | the energy settings and what a kWh of heat costs now (only feeds the cost sensor) | `EnergySettings`, `parse_cop_curve`, `HeatCosts`, `heat_costs` |
 | `engine/residents.py` | the resident | `Resident`, `SleepIn`, `WakeDeadline` and `RiseBrake` |
 | `engine/equipment.py` | appliances and how they hang together | `SourceRole`, `OutdoorWindow`, `ModeSettings`, `Source`, `Circuit`, `ConflictPolicy`, `Generator`, `Opening`, `HeatingLayout` |
 | `engine/rooms.py` | the room and its gate choice | `ZoneGate`, `Zone`, `GateSettings` |
-| `engine/validation.py` | every configuration check | `Problem`, `validate()` and one `RULES` list in the existing order. This is the only named module exception above the measure: one subject, one entrance, one order. |
+| `engine/validation.py` | every configuration check | `validate()` and one `RULES` list in the existing order: one entrance, one order. The rule functions stand per subject in `engine/validation_zones.py`, `validation_sources.py`, `validation_circuits.py`, `validation_openings.py`, `validation_residents.py`, `validation_windows.py` and `validation_shared.py`; `Problem` stands in `engine/problem.py`. |
 | `engine/manual_sources.py` | the one-time notice about hand-operated sources | `manual_only_problems` |
 | `engine/candidates.py` | who may take part | `handed_over`, `collect_wishes`, `serving`, the exclusive groups, `standing_firm` |
 | `engine/grants.py` | who gets the duty | `resolve_with_fallbacks`, `resolve_circuits`, `zone_reasons`, `manual_conflict`, `exclusive_rival`, `stand_down` |
@@ -3320,8 +3654,6 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `engine/command_stops.py` | the stop bookkeeping and collapsing | `opening_rest_bookkeeping`, `stop_blocked`, `ignores_openings`, `collapse_shared`, `claim` |
 | `engine/command_reasons.py` | why an appliance gets nothing | `was_running`, `received_heat`, `unreadable_reason`, `untouched_reason`, `opening_stop_reason`, `opening_rest_hold`, `idle_mode` |
 | `engine/zone_decisions.py` | what a zone finally hears | `build_zone_decisions`, `lost_to_another_zone`, `command_order`, `clamped_target` |
-| `engine/circuit_policy.py` | choosing the duty on a circuit | `forced_families`, `choose_family`, `any_managed_running`, `finish` |
-| `engine/capacity.py` | capacity and short cycle | `standing_claims`, `keeps_claiming`, `apply_capacity`, `apply_short_cycle` |
 | `engine/quiet.py` | the quiet window and the running zone | `guests_carry_the_house`, `quiet_hours`, `open_quiet_windows`, `was_home_before`, `zone_running`; this closes the cycle with `hand_start` |
 | `engine/schedule.py` | the schedule as a gate | `schedule_open`, `counts_towards_schedule` |
 | `engine/gates.py` | the gate as a whole | `closed`, the household gate, the openings, `house_wide_blocked`, `opening_rest_until`, and `brakes_remaining` (the gate reads the hand start, never the other way round) |
@@ -3332,7 +3664,9 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `engine/resident_storage.py` | the resident in storage | the resident plus its three morning settings |
 | `engine/storage_values.py` | reading stored values safely | the new name of `storage_helpers.py`; every reader gets a public name (`as_dict`, `items`, `weekdays`, `sequence`, `strings`, `text`, `float_or`, `optional_float`, `int_or`, `optional_int`, `bool_or`, `seconds_or`, `time_or`, `choice`) |
 | `coordinator_surface.py` | the binding layer's surface | `CoordinatorSurface`; every mixin reads its host here |
-| `coordinator.py` | the coordinator itself | `__init__`, the properties, `async_request_evaluation`, the clock and the lifetime; it inherits the public mixins |
+| `flow_surface.py` | the configuration flow's surface | `FlowSurface`; the steps and forms read their flow here |
+| `coordinator_state.py` | the parts' own state | `TrackingState`, `RoundState`, `ReportingState`, `EventsState`, `LifecycleState`; the coordinator keeps one instance of each |
+| `coordinator.py` | the coordinator itself | `__init__`, the properties, `async_request_evaluation`, the clock and the lifetime; it inherits the public mixins and keeps a thin method per part that calls the function in the `coordinator_*` module |
 | `coordinator_lifecycle.py` | starting and stopping | `async_start`, `_async_on_hass_started`, `tracked_entities`, `_calendar_says_holiday`, `async_shutdown` |
 | `coordinator_tracking.py` | what an appliance does by itself | `_handle_change`, `_notice_precipitation`, `_notice_hand`, `_note_commanded_off`, `_note_commanded_on`, `_we_wanted_it_off`, `_we_wanted_it_on` |
 | `coordinator_round.py` | one decision round and its clock | `_async_evaluate`, `_remember_families`, `_with_family_history`, `_schedule_deferral`, `_cancel_pending_deferral`, the clock repetition |
@@ -3368,11 +3702,17 @@ agreement; whoever wants to rearrange a file changes this chapter first.
 | `entity_texts.py` | the readable decision | `reason_sentence`, `action_sentence`, `decision_message`, `decision_fields` and the keys around them |
 | `services.py` | the service API | the schemas, target choice and registration of `evaluate`, `precondition`, `cancel_precondition`, `set_override` and `clear_override` |
 
+The duty choice on a circuit stands in `engine/circuit_policy.py`, the capacity and
+the short cycle in `engine/capacity.py` and the request, the grant and the outcome in
+`engine/circuit_requests.py`; `engine/constraints.py` keeps the resolving of one
+circuit.
+
 `engine/decide.py` stays the only entrance of the decision; it holds only
 `decide()` and the order of the steps. `config_flow.py` stays the only file Home
 Assistant loads as the configuration flow; it holds the base class, the menu
-navigation, the save and the shared readers. The steps themselves stand in the
-`flow_*` mixins. `problems.py` and `texts.py` stay the general entrances;
+navigation, the save and the shared readers. The steps themselves stand as
+functions in the `flow_*` modules; `config_flow.py` keeps a thin method per step
+that calls them. `problems.py` and `texts.py` stay the general entrances;
 `repair_notices.py` and `entity_texts.py` carry the specialised subjects.
 `__init__.py` stays the lifetime of the entry; `services.py` carries the service
 API.
@@ -3390,6 +3730,11 @@ API.
 - Across a module boundary no name carries a leading underscore. The mixins,
   their helpers and the schema builders get a public name in the file where they
   live.
+- `tests/test_module_boundaries.py` guards six of these borders with `ast` and
+  `tokenize`: no private name across a module border (not as `module._name` after
+  `from . import module` either), no `getattr(self, "<name>", fallback)` on an own
+  member, no import inside a function, no `# noqa: E402` (an import stands at the top,
+  without exemption) and, outside `coordinator.py`, no `coordinator._name`.
 - A field-table cell stays in `engine/fields.py`; the selectors and the
   translation to `vol.Schema` stay in the Home Assistant half.
 - A new file is a subject, not a catch-all: no `utils`, `helpers`, `extra` or
@@ -3410,7 +3755,7 @@ is green.
    `engine/schedule.py` and `engine/gates.py`;
 6. the configuration flow and the forms;
 7. `engine/decide.py` with `candidates`, `grants`, `commands`,
-   `command_reasons`, `zone_decisions`, `circuit_policy` and `capacity`;
+   `command_reasons` and `zone_decisions`;
 8. `engine/models.py` with `seasons`, `windows`, `residents`, `equipment` and
    `rooms`;
 9. `coordinator.py` with `coordinator_surface`, `coordinator_lifecycle`,
@@ -3438,9 +3783,16 @@ in the repository root:
 The impact map hangs off the selection: `script/select_tests.py` lets an added
 package file or test file run the whole suite. A rename is a deletion plus an
 addition in `git diff --no-renames` and therefore falls under the same rule.
-`script/test` updates the map; the full run delivers the map that belongs with
-the new files, without anyone copying a CI artifact by hand. A changed existing
-file keeps the ordinary selection.
+`script/test` updates the map and the CI delivers it as the artifact `impact-map`.
+The map is a merge: a run adds what it saw itself and drops nothing it did not see.
+Only a test file that no longer exists, or an input under
+`custom_components/`, `tests/`, `script/`, `docs/` or `blueprints/` that no longer exists,
+drops out; a top-level path (`tox.ini`) stays. A local
+full run on Windows does not see the directory `script/` for
+`tests/test_controls_live.py`, the CI does; that line therefore stays, and the map
+from a local run can simply go into the commit. The CI rejects a map that lacks a
+line the run saw, not a map with an extra line. A changed existing file keeps the
+ordinary selection.
 
 #### Tests per subject
 
@@ -3465,6 +3817,189 @@ The shared helpers live in `tests/conftest.py` or in one of the helper files
 `tests/guide_helpers.py`, `tests/repair_helpers.py`, `tests/guard_helpers.py`,
 `tests/override_helpers.py` and `tests/coverage_helpers.py`. No `test_*.py` imports from another `test_*.py`
 any more.
+
+#### Further layout
+
+This layout finishes what the clean-up left open: every module with one subject,
+no module over 500 lines outside the named lists, and a module border that is a
+border. Here too only code moves: the same lines, the same `Reason` values and
+`Problem` codes, the same storage shape and the same entities, and a move that
+changes a line's meaning gets a commit of its own afterwards. Only the two
+behaviour decisions at the end change what the integration does. Whoever wants to
+arrange one of the files below differently changes this chapter first.
+
+The order runs from the least to the most entangled step; every step is one
+commit and is pushed only when its predecessor is green.
+
+| Step | What | Why here |
+|---|---|---|
+| 1 | the `getattr` fallbacks on attributes, and the doubled keyword check | touches only the stand-ins in the tests and one line |
+| 2 | the cycles between `texts.py` and `entity_texts.py`, and between `problems.py` and `repair_notices.py` | import lines only |
+| 3 | the impact map independent of the environment | touches only `script/` |
+| 4 | the duty choice and the capacity out of `engine/constraints.py` | one file, one caller |
+| 5 | `engine/validation.py` per subject | pure move of rule functions |
+| 6 | a surface per layer for the mixins and the configuration flow | removes the back-imports under `TYPE_CHECKING` |
+| 7 | the `coordinator_*` parts without private attributes of the coordinator | touches the most files |
+| 8 | the mutation lane with `area_clash` and the list in the repository | measures the steps above |
+| 9 | the two behaviour decisions | only once the moves have been measured |
+
+##### Step 1 — no fallback on own attributes
+
+A mixin reads an attribute of the coordinator as `self.<name>`. The thirteen
+`getattr(self, "<name>", default)` lines in `state_store.py`, `world_builder.py`
+and `hand_start.py` existed because a stand-in in the tests did not carry the
+attribute; the stand-in gets the attribute, and the mixin simply reads it.
+`tests/test_coordinator_surface.py` already demands that a stand-in carry every
+member its borrowed methods touch; without the fallback that holds for every
+member. The check on the keyword and the calendars that feed the brakes (now
+doubled in `readability.unreadable_inputs` and `engine/hand_start.brakes_readable`)
+stands in one place in `engine/hand_start.py`, and `readability.py` calls it.
+
+##### Step 2 — no cycle between the general and the specialised module
+
+| File | What goes | What takes its place |
+|---|---|---|
+| `texts.py` | the re-export of `entity_texts` at the bottom, with `# noqa: E402` | the callers import from `entity_texts` |
+| `problems.py` | the re-export of `repair_notices` at the bottom, with `# noqa: E402` | the callers import from `repair_notices` |
+
+The guard: no `# noqa: E402` in the package.
+
+##### Step 3 — the impact map is not the machine's
+
+A full run used to replace the map with what it saw itself, and a local run on
+Windows does not see the directory `script/` for `tests/test_controls_live.py`
+while the CI does. The map is therefore a merge: a full run merges existing lines with
+what it sees, and drops a line only when the test file or the input file no
+longer exists. The guard: a test that leaves a map with an extra line standing and
+rejects a map with a missing line.
+
+##### Step 4 — the duty choice and the capacity
+
+| New file | Subject | What moves |
+|---|---|---|
+| `engine/circuit_requests.py` | what a zone asks of a circuit and gets | `Request`, `Grant`, `Outcome` |
+| `engine/circuit_policy.py` | the duty choice on a circuit | `active_family`, `forced_families`, `choose_family`, `any_managed_running` |
+| `engine/capacity.py` | the capacity and the short cycle | `standing_claims`, `keeps_claiming`, `apply_capacity`, `apply_short_cycle` |
+
+`engine/constraints.py` keeps `resolve` and `finish`. The three types stand in a
+file of their own because both `circuit_policy` and `capacity` need them and
+`constraints` calls both; that way the direction stays downward. The callers of
+`constraints.Request`, `constraints.Grant` and `constraints.Outcome` import from
+`circuit_requests`. `constraints.py` thereby leaves `FROZEN_MODULES`.
+
+##### Step 5 — the validation per subject
+
+`engine/validation.py` keeps `validate()` and the one `RULES` list in the existing
+order; the rule functions stand per subject, with a public name (without a
+leading underscore, since `validation.py` imports them).
+
+| New file | Subject | What moves |
+|---|---|---|
+| `engine/problem.py` | the complaint itself | `Problem` |
+| `engine/validation_shared.py` | shared checks and helpers | `pinned_season`, `season_names`, `duplicates`, `windows`, `outdoor_is_known` and the season rule |
+| `engine/validation_zones.py` | zones | the doubled zone ids, an entity twice in a zone, a unit in no zone, the zone rules, the schedule, the stuck time, the outdoor bands and the maximum of a pre-conditioning request |
+| `engine/validation_sources.py` | sources and generators | the doubled source ids, the outdoor window and the areas of a source, the families, the generators, the exclusive groups, a source without automatic start in a boiler's area and a boiler under several zones without an area |
+| `engine/validation_circuits.py` | circuits | the doubled circuit ids, a unit on two circuits, the circuit rules, the layout and the switch times |
+| `engine/validation_residents.py` | residents | the resident without presence, the sleep settings and the quiet window |
+| `engine/validation_windows.py` | windows | the windows without length, the half-filled guest window and the holiday calendars |
+| `engine/validation_openings.py` | openings | the doubled opening ids, the openings, the house-wide stops, the open state of a cover and the stuck time below the configured rest |
+
+A rule that touches two subjects stands with the subject whose field it checks.
+`MODULE_EXCEPTIONS` loses the entry `engine/validation.py`. The importers of
+`Problem` (`engine/__init__.py`, `engine/manual_sources.py` and the tests) import
+from `engine/problem.py`.
+
+##### Step 6 — a surface per layer
+
+A base class that names only members (values and `Callable` types, without a method
+body) can simply be inherited: at run time nothing comes about that could shadow a real
+method. It may not be a `Protocol`, because a protocol as a base breaks the `__init__`
+chain of `DataUpdateCoordinator`. Therefore:
+
+- `coordinator_surface.py` (`CoordinatorSurface`) is written that way and the eight
+  mixins simply inherit it. The `TYPE_CHECKING` blocks with `_CoordinatorBase` in those
+  mixins and the stubs `def name(self) -> X: ...` disappear; `entry` is an attribute the
+  coordinator sets in `__init__` instead of a property.
+- `flow_surface.py` (`FlowSurface`, an `OptionsFlow` with members only) is the same for
+  the configuration flow: the cursors and lists the `flow_*` and `form_*` functions read
+  and the steps they call. `ClimateDirectorOptionsFlow` inherits it, and the
+  `TYPE_CHECKING` back-import of `config_flow` disappears from nine files.
+
+The `coordinator_*` parts get their surface in step 7, together with the members that
+move there. `NAMED_EXCLUSIONS_BUDGET` in `tests/test_coverage_exclusions.py` drops along
+and stays a ratchet that can only go down; after step 7 it is zero.
+
+##### Step 7 — the coordinator parts without private attributes
+
+The six `coordinator_*` parts receive the coordinator as their first argument. They used
+to read and set well over eighty private attributes of it; each part now keeps its own state:
+
+| Part | Own state (class in `coordinator_state.py`) | What it holds |
+|---|---|---|
+| `coordinator_tracking.py` | `TrackingState` (`coordinator.tracking`) | `commanded_off`, `commanded_on`, `precipitation_seen_at` |
+| `coordinator_round.py` | `RoundState` (`coordinator.round`) | `debouncer`, `issued`, `sent_setpoints`, `family_since`, `family_seen`, `cancel_deferral`, `clock_reeval_unsub`, `lock` |
+| `coordinator_reporting.py` | `ReportingState` (`coordinator.reporting`) | `unusable_since`, `unusable_latest`, `unsupported_since`, `unapplied`, `waiting` |
+| `coordinator_events.py` | `EventsState` (`coordinator.events`) | `refused` |
+| `coordinator_lifecycle.py` | `LifecycleState` (`coordinator.lifecycle`) | `restored`, `closing` |
+
+What a mixin owns and a part must read (the pre-conditioning requests and their
+bypass, the handed-back hands, the homecoming and sleep moment, the storage) gets
+a public name on the coordinator, as `zone_override_until` already has:
+`precondition_until`, `precondition_bypass`, `handed_back`, `home_since`,
+`asleep_since`, `store`, `request_before_restore` and `override_before_restore`. The
+methods of a mixin that a part calls get a public name too: `notice_hand_start`,
+`settle_hand_starts`, `cancel_pending_override_wake`, `consume_expired_overrides`,
+`consume_pending_override_changes`, `drop_lapsed_override_timers`,
+`cancel_pending_precondition_wake`, `notice_home`, `note_room_presence_now`,
+`notice_room_empty`, `async_restore_state`, `async_save_pending_state`,
+`async_save_state`, `store_payload` and `note_house_asleep`.
+
+The operations of the parts themselves (`handle_change`, `note_waiting`, `fire_events`,
+`schedule_deferral`, `report_unreadable`, ...) stand as public thin methods on the
+coordinator, and `CoordinatorSurface` names them with their signature. A part therefore
+calls another part through the coordinator (`coordinator.note_unusable()`) and never
+through a private name; the functions in the parts have a public name themselves too
+(`coordinator_tracking.handle_change`). The parts type their coordinator with
+`CoordinatorSurface` and simply import it, without `TYPE_CHECKING`. `coordinator.py` is
+thereby under 500 lines.
+
+The guard: `tests/test_module_boundaries.py` demands that no file of the package
+except `coordinator.py` reads or sets an attribute with a leading underscore on a
+name `coordinator`, and that no part calls a private function of another part.
+
+##### Step 8 — the mutation lane
+
+`script/mutation_probe.py` (the lane that runs on every push) gains six mutations on
+`area_clash`: the call gone, the taking-over source not skipped, losers and owners swapped,
+the losing request stays in the wishes (`kept.pop` gone), the best owner replaced by the
+worst, and a rival outside the area. They are caught by `tests/test_area_clash.py`, which
+has every border of `area_clash` in a test of its own.
+
+The extended list with which a review measures the properties after a move stands in
+`script/mutation_review.py`: 79 mutations with, per mutation, the pattern, the replacement
+and the tests that must catch it, which includes the two equivalent mutations on
+`area_clash` that are supposed to stay green (with the reason beside them).
+`tests/test_select_tests.py` demands that every pattern stands exactly once in its file,
+that every test it names exists and that the lane's mutations also stand in the list.
+
+##### Step 9 — two behaviour decisions and a measured follow-up
+
+| Point | Decision | What happens |
+|---|---|---|
+| A refused winner of an area | leave it as it is | the loser stays unserved that round and the next round decides again; the outcome falls on the safe side (briefly cold, never two systems at once). The design under "Still to build" names putting the request back as an alternative and stays as an idea. |
+| A source without `autostart` outside a group with the boiler | `validate()` warns | a new `Problem` code reports a source without `autostart` that stands in a boiler's area and in no exclusive group; the engine's behaviour does not change |
+| A boiler in more than one zone without `covers_zones` | `validate()` reports it | a new `Problem` code reports a boiler standing in more than one zone while `covers_zones` is missing, because without that field there is no area and so no protection |
+
+Both notices get a translation in all seven text files and a line in the six
+guides. What a probe measures and what not stands in the release notes.
+
+##### Proof per step
+
+The same proof as with the first layout: the engine and v1 probes byte-identical,
+the E, N and Q probes identical, an area probe equal (except for step 9),
+`pytest --collect-only` without a vanished test, an ast comparison of the function
+bodies, coverage 100 %, the gate at zero, the map clean and the
+mutation list fully caught.
 
 ### Extensibility — the shape that makes it possible
 

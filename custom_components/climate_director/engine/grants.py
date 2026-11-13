@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from . import constraints, sources, takeover
+from . import circuit_requests, constraints, sources, takeover
 from .candidates import apply_exclusive_groups, group_entities, handed_over, serving
 from .command_reasons import idle_mode
 from .families import (
@@ -24,18 +24,18 @@ from .world import WorldState
 def resolve_with_fallbacks(
     config: DirectorConfig,
     world: WorldState,
-    wishes: dict[str, constraints.Request],
+    wishes: dict[str, circuit_requests.Request],
     standing: frozenset[str],
     blocked: frozenset[str],
     previous: Plan | None,
     takeovers: tuple[takeover.Takeover, ...] = (),
 ) -> tuple[
-    dict[str, constraints.Grant],
+    dict[str, circuit_requests.Grant],
     tuple[CircuitDecision, ...],
     tuple[Deferral, ...],
     dict[str, frozenset[str]],
-    dict[str, constraints.Request],
-    dict[str, constraints.Request],
+    dict[str, circuit_requests.Request],
+    dict[str, circuit_requests.Request],
 ]:
     """Resolve every circuit, letting a refused zone fall back to its next source.
 
@@ -57,12 +57,12 @@ def resolve_with_fallbacks(
     The loop runs on until nothing moves; every move adds a source to the refusals, so
     it ends.
     """
-    grants: dict[str, constraints.Grant] = {}
+    grants: dict[str, circuit_requests.Grant] = {}
     circuit_decisions: tuple[CircuitDecision, ...] = ()
     deferrals: tuple[Deferral, ...] = ()
     refused_by_circuit: dict[str, frozenset[str]] = {}
     all_deferrals: list[Deferral] = []
-    dropped: dict[str, constraints.Request] = {}
+    dropped: dict[str, circuit_requests.Request] = {}
 
     margin = config.outdoor_hysteresis
     # Een overgedragen apparaat valt ook hier af als kandidaat: de zone schuift
@@ -71,7 +71,7 @@ def resolve_with_fallbacks(
     # not slide on to an appliance the administrator already has (anchor 11).
     handed_over_ids = handed_over(config, world)
     while True:
-        wishes, dropped_now = apply_exclusive_groups(config, world, wishes)
+        wishes, dropped_now = apply_exclusive_groups(config, world, wishes, takeovers)
         dropped.update(dropped_now)
         grants, circuit_decisions, deferrals = resolve_circuits(config, world, wishes, standing)
         all_deferrals += [deferral for deferral in deferrals if deferral not in all_deferrals]
@@ -99,7 +99,7 @@ def resolve_with_fallbacks(
             )
             if alternative is None or alternative.entity_id in refused:
                 continue
-            wishes[zone.zone_id] = constraints.Request(
+            wishes[zone.zone_id] = circuit_requests.Request(
                 zone=zone,
                 source=alternative,
                 family=request.family,
@@ -117,12 +117,12 @@ def resolve_with_fallbacks(
 def resolve_circuits(
     config: DirectorConfig,
     world: WorldState,
-    wishes: dict[str, constraints.Request],
+    wishes: dict[str, circuit_requests.Request],
     standing: frozenset[str] = frozenset(),
-) -> tuple[dict[str, constraints.Grant], tuple[CircuitDecision, ...], tuple[Deferral, ...]]:
+) -> tuple[dict[str, circuit_requests.Grant], tuple[CircuitDecision, ...], tuple[Deferral, ...]]:
     """Run every circuit's constraints and collect the grants they produce."""
-    by_circuit: dict[str, list[constraints.Request]] = {}
-    solo: list[constraints.Request] = []
+    by_circuit: dict[str, list[circuit_requests.Request]] = {}
+    solo: list[circuit_requests.Request] = []
 
     for request in wishes.values():
         circuit = config.circuit_for_entity(request.source.entity_id)
@@ -131,7 +131,7 @@ def resolve_circuits(
         else:
             by_circuit.setdefault(circuit.circuit_id, []).append(request)
 
-    grants: dict[str, constraints.Grant] = {}
+    grants: dict[str, circuit_requests.Grant] = {}
     decisions: list[CircuitDecision] = []
     deferrals: list[Deferral] = []
 
@@ -157,8 +157,8 @@ def resolve_circuits(
 
 def zone_reasons(
     config: DirectorConfig,
-    grants: dict[str, constraints.Grant],
-    dropped: dict[str, constraints.Request],
+    grants: dict[str, circuit_requests.Grant],
+    dropped: dict[str, circuit_requests.Request],
     refusals: dict[str, Reason],
 ) -> dict[str, Reason]:
     """Return the single reason that explains each zone's outcome.
@@ -183,9 +183,9 @@ def manual_conflict(
     world: WorldState,
     zone: Zone,
     source: Source,
-    wishes: dict[str, constraints.Request],
+    wishes: dict[str, circuit_requests.Request],
     families: dict[str, ModeFamily],
-    grants: dict[str, constraints.Grant],
+    grants: dict[str, circuit_requests.Grant],
 ) -> UnitCommand | None:
     """Return the command standing a manual source down, or `None` to leave it.
 
@@ -287,8 +287,8 @@ def exclusive_rival(
     config: DirectorConfig,
     zone: Zone,
     source: Source,
-    wishes: dict[str, constraints.Request],
-    grants: dict[str, constraints.Grant],
+    wishes: dict[str, circuit_requests.Request],
+    grants: dict[str, circuit_requests.Grant],
 ) -> bool:
     """Return whether another appliance in this source's exclusive group wants to run.
 

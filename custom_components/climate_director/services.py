@@ -6,20 +6,16 @@ Climate Director's service API.
 from __future__ import annotations
 
 import re
+from typing import Any
 
+import voluptuous as vol
 from homeassistant.components.climate.const import ATTR_HVAC_MODE
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
 
-from . import (
-    _CANCEL_SCHEMA,
-    _CLEAR_OVERRIDE_SCHEMA,
-    _EVALUATE_SCHEMA,
-    _PRECONDITION_SCHEMA,
-    _SET_OVERRIDE_SCHEMA,
-)
 from .const import (
     ATTR_ENTRY_ID,
     ATTR_IGNORE_OPENINGS,
@@ -33,10 +29,54 @@ from .const import (
     SERVICE_EVALUATE,
     SERVICE_PRECONDITION,
     SERVICE_SET_OVERRIDE,
+    WHEN_DONE_LEAVE,
     WHEN_DONE_TURN_OFF,
 )
 from .coordinator import ClimateDirectorEntry
 from .units import temperature_unit_of, to_celsius
+
+_EVALUATE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTRY_ID): vol.All(cv.ensure_list, [cv.string])})
+
+_ENTRIES = {vol.Optional(ATTR_ENTRY_ID): vol.All(cv.ensure_list, [cv.string])}
+_ZONES = {vol.Optional(ATTR_ZONE_IDS): vol.All(cv.ensure_list, [cv.string])}
+
+_PRECONDITION_SCHEMA = vol.Schema(
+    {
+        **_ENTRIES,
+        **_ZONES,
+        # Ondergrens 1, gelijk aan `min: 1` in services.yaml. Nul stond het
+        # schema wel toe en werd daarna in stilte weggegooid: je drukt op de
+        # knop, er gebeurt niets, en nergens staat waarom.
+        #
+        # Lower bound 1, matching `min: 1` in services.yaml. Zero passed the
+        # schema and was then quietly thrown away: you press the button, nothing
+        # happens, and nowhere does it say why.
+        vol.Optional(ATTR_MINUTES): vol.All(vol.Coerce(float), vol.Range(min=1)),
+        vol.Optional(ATTR_IGNORE_OPENINGS, default=False): cv.boolean,
+    }
+)
+
+_CANCEL_SCHEMA = vol.Schema({**_ENTRIES, **_ZONES})
+
+_OVERRIDE_WHEN_DONE = vol.In([WHEN_DONE_TURN_OFF, WHEN_DONE_LEAVE])
+
+_SET_OVERRIDE_FIELDS: dict[Any, Any] = {
+    **_ENTRIES,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ZONE_ID): cv.string,
+    vol.Required(ATTR_HVAC_MODE): cv.string,
+    vol.Optional(ATTR_TEMPERATURE): vol.All(vol.Coerce(float)),
+    vol.Optional(ATTR_MINUTES): vol.All(vol.Coerce(float), vol.Range(min=1)),
+    vol.Optional(ATTR_WHEN_DONE, default=WHEN_DONE_TURN_OFF): _OVERRIDE_WHEN_DONE,
+}
+_SET_OVERRIDE_SCHEMA = vol.Schema(_SET_OVERRIDE_FIELDS)
+
+_CLEAR_OVERRIDE_FIELDS: dict[Any, Any] = {
+    **_ENTRIES,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ZONE_ID): cv.string,
+}
+_CLEAR_OVERRIDE_SCHEMA = vol.Schema(_CLEAR_OVERRIDE_FIELDS)
 
 _OVERRIDE_TARGET = re.compile(r"^zone_(?P<zone>.+)_override(?P<sensor>_ends)?$")
 _OVERRIDE_DOMAINS = ("sensor", "switch")
@@ -250,7 +290,7 @@ def _override_targets(
     return [(entry, zone_id) for entry in entries]
 
 
-def _async_register_services(hass: HomeAssistant) -> None:
+def async_register_services(hass: HomeAssistant) -> None:
     """Register the domain's actions once, however many installations there are.
 
     Actions belong to the domain rather than to an entry, so registering them
@@ -259,7 +299,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
     if hass.services.has_service(DOMAIN, SERVICE_EVALUATE):
         return
 
-    async def _async_evaluate(call: ServiceCall) -> None:
+    async def async_evaluate(call: ServiceCall) -> None:
         """Ask one or every installation to decide again right now."""
         wanted = set(call.data.get(ATTR_ENTRY_ID) or ())
         for entry in hass.config_entries.async_loaded_entries(DOMAIN):
@@ -314,7 +354,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
         for entry, zone_id in _override_targets(hass, call):
             entry.runtime_data.async_clear_override(zone_id)
 
-    hass.services.async_register(DOMAIN, SERVICE_EVALUATE, _async_evaluate, _EVALUATE_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_EVALUATE, async_evaluate, _EVALUATE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_PRECONDITION, _async_precondition, _PRECONDITION_SCHEMA
     )

@@ -21,38 +21,24 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.core import Event, EventStateChangedData, callback
 from homeassistant.util import dt as dt_util
 
+from .coordinator_surface import CoordinatorSurface
 from .readability import unreadable
 from .stored_state import stored_time
 
-if TYPE_CHECKING:
-    from .coordinator_surface import CoordinatorSurface
 
-    # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
-    # van hém. Voor mypy is dit de gastheer, zodat `self.config` en de rest
-    # kloppen; buiten de typecontrole is de basis gewoon `object`.
-    #
-    # The mixin sits on the coordinator but does not inherit from it: the
-    # coordinator inherits from the mixin. For mypy this is the host, so
-    # `self.config` and the rest resolve; outside the type check the base is
-    # simply `object`.
-    _CoordinatorBase = CoordinatorSurface
-else:
-    _CoordinatorBase = object
-
-
-class RoomPresenceMixin(_CoordinatorBase):
+class RoomPresenceMixin(CoordinatorSurface):
     """De bezetting van een kamer en de nalooptijd die eraan hangt.
 
     The occupancy of a room and the grace period hanging off it.
     """
 
     @callback
-    def _notice_room_empty(self, event: Event[EventStateChangedData]) -> None:
+    def notice_room_empty(self, event: Event[EventStateChangedData]) -> None:
         """Record the moment a room really became empty or dropped out.
 
         De nalooptijd van een kamer begint bij een **vertrek**: een overgang van
@@ -65,7 +51,7 @@ class RoomPresenceMixin(_CoordinatorBase):
         verse nalooptijd.
 
         Het moment is `last_changed` van de entiteit zelf, precies zoals bij
-        `_notice_home`: dat is het moment van de overgang, en het is dezelfde
+        `notice_home`: dat is het moment van de overgang, en het is dezelfde
         tijdbasis die de lezer vroeger las. Verdwijnt de entiteit zelf, dan is er
         geen `last_changed` en neemt de coordinator het moment van de melding.
         Komt de kamer weer bezet, dan gaat het moment weg. De verzameling
@@ -82,7 +68,7 @@ class RoomPresenceMixin(_CoordinatorBase):
         standing and therefore gets no fresh grace period.
 
         The moment is the entity's own `last_changed`, exactly as in
-        `_notice_home`: that is the moment of the transition, and it is the same
+        `notice_home`: that is the moment of the transition, and it is the same
         time base the reader used before. When the entity itself disappears
         there is no `last_changed`, and the coordinator takes the moment of the
         report. When the room becomes occupied again the moment goes. The set of
@@ -126,7 +112,7 @@ class RoomPresenceMixin(_CoordinatorBase):
                 changed = True
 
         if changed:
-            self._async_save_state()
+            self.async_save_state()
 
     def _room_presence_payload(self) -> dict[str, Any]:
         """Return what the store needs to know about the room gate.
@@ -217,9 +203,9 @@ class RoomPresenceMixin(_CoordinatorBase):
             self._empty_since.pop(zone_id, None)
 
         if (self._empty_since, self._occupied_rooms) != before:
-            self._async_save_state()
+            self.async_save_state()
 
-    def _note_room_presence_now(self) -> None:
+    def note_room_presence_now(self) -> None:
         """Seed the occupied rooms from the states read at the startup.
 
         Zonder deze stap kent de coordinator na een eerste start alleen kamers
@@ -246,4 +232,4 @@ class RoomPresenceMixin(_CoordinatorBase):
             self._empty_since.pop(zone_id, None)
             changed = True
         if changed:
-            self._async_save_state()
+            self.async_save_state()

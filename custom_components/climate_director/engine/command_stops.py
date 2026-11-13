@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from . import constraints
+from . import circuit_requests
 from .families import MODE_FAN_ONLY, MODE_OFF
 from .models import DirectorConfig
 from .plan import OPENING_MIN_REST, Plan, Reason, UnitCommand
@@ -61,7 +61,7 @@ def opening_rest_bookkeeping(
 def stop_blocked(
     config: DirectorConfig,
     world: WorldState,
-    grants: dict[str, constraints.Grant],
+    grants: dict[str, circuit_requests.Grant],
     blocked: frozenset[str],
     commands: list[UnitCommand],
 ) -> list[UnitCommand]:
@@ -111,7 +111,7 @@ def stop_blocked(
 def ignores_openings(
     config: DirectorConfig,
     world: WorldState,
-    grants: dict[str, constraints.Grant],
+    grants: dict[str, circuit_requests.Grant],
     command: UnitCommand,
 ) -> bool:
     """Return whether this command carries a pre-conditioning "do it anyway".

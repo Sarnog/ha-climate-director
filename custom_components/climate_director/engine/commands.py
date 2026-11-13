@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from . import constraints, takeover
+from . import circuit_requests, takeover
 from .candidates import handed_over
 from .command_reasons import (
     idle_mode,
@@ -36,9 +36,9 @@ from .zone_decisions import clamped_target, command_order
 def build_commands(
     config: DirectorConfig,
     world: WorldState,
-    grants: dict[str, constraints.Grant],
+    grants: dict[str, circuit_requests.Grant],
     reasons: dict[str, Reason],
-    wishes: dict[str, constraints.Request],
+    wishes: dict[str, circuit_requests.Request],
     refusals: dict[str, Reason],
     families: dict[str, ModeFamily],
     blocked: frozenset[str] = frozenset(),
@@ -246,7 +246,7 @@ def build_commands(
 def generator_commands(
     config: DirectorConfig,
     world: WorldState,
-    grants: dict[str, constraints.Grant],
+    grants: dict[str, circuit_requests.Grant],
     refusals: dict[str, Reason],
     blocked: frozenset[str] = frozenset(),
     previous: Plan | None = None,

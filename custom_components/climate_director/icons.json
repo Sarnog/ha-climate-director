@@ -53,6 +53,9 @@
       "mismatch": {
         "default": "mdi:alert-circle-outline"
       },
+      "cheapest_heat": {
+        "default": "mdi:cash-multiple"
+      },
       "zone_source": {
         "default": "mdi:radiator"
       },

@@ -38,6 +38,11 @@ from datetime import UTC, datetime, timedelta
 from conftest import assert_plan_holds
 
 from custom_components.climate_director.coordinator import ClimateDirectorCoordinator
+from custom_components.climate_director.coordinator_state import (
+    LifecycleState,
+    RoundState,
+    TrackingState,
+)
 from custom_components.climate_director.engine import (
     ClimateState,
     DirectorConfig,
@@ -49,7 +54,7 @@ from custom_components.climate_director.engine import (
     WorldState,
     decide,
 )
-from custom_components.climate_director.engine.constraints import active_family
+from custom_components.climate_director.engine.circuit_policy import active_family
 from custom_components.climate_director.engine.diff import changes
 from custom_components.climate_director.engine.families import MODE_OFF, family_of
 from custom_components.climate_director.engine.plan import OPENING_MIN_REST
@@ -280,7 +285,7 @@ class Simulation:
             precondition_until=self.requests.live(),
             precondition_bypass=frozenset(self.requests.bypass),
             zone_overrides={
-                **dict.fromkeys(self.hand.handed_back(), True),
+                **dict.fromkeys(self.hand.handed_back_today(), True),
                 **self.overrides,
             },
             zone_priorities=dict(self.priorities),
@@ -542,7 +547,7 @@ class Simulation:
                 f"{entity_id} ontsteekt {gap} na de vorige start, terwijl {brake} rust moet"
             )
 
-    def _remember_families(self, world: WorldState) -> None:
+    def remember_families(self, world: WorldState) -> None:
         """Track when each circuit took on its duty, as the coordinator does."""
         for circuit in self.config.circuits:
             current = active_family(world, circuit)
@@ -567,7 +572,7 @@ class Simulation:
         self._requests_made()
 
         world = self.world()
-        self._remember_families(world)
+        self.remember_families(world)
         world = replace(world, circuit_family_since=dict(self.family_since))
 
         plan = decide(self.config, world, self.plan)
@@ -669,10 +674,12 @@ class _PreconditionStandIn:
 
     def __init__(self, sim: Simulation) -> None:
         self.config = sim.config
-        self._precondition: dict[str, datetime] = {}
-        self._precondition_bypass: set[str] = set()
-        self._override_before_restore: set[str] = set()
-        self._request_before_restore: set[str] = set()
+        self.precondition_until: dict[str, datetime] = {}
+        self.precondition_bypass: set[str] = set()
+        self.override_before_restore: set[str] = set()
+        self.request_before_restore: set[str] = set()
+        self.lifecycle = LifecycleState()
+        self.lifecycle.restored = True
 
     # De echte methodes, zodat de begrenzing en het opschonen meegetest worden.
     # The real methods, so the capping and the pruning are tested along.
@@ -681,16 +688,16 @@ class _PreconditionStandIn:
     live = ClimateDirectorCoordinator._live_preconditions
     _live_preconditions = ClimateDirectorCoordinator._live_preconditions
     _wake_at_the_first_expiry = ClimateDirectorCoordinator._wake_at_the_first_expiry
-    _note_by_hand_before_restore = ClimateDirectorCoordinator._note_by_hand_before_restore
+    note_by_hand_before_restore = ClimateDirectorCoordinator.note_by_hand_before_restore
 
     @property
     def bypass(self) -> set[str]:
-        return self._precondition_bypass
+        return self.precondition_bypass
 
     def async_request_evaluation(self) -> None:
         pass
 
-    def _async_save_state(self) -> None:
+    def async_save_state(self) -> None:
         pass
 
     def _preconditions_expire_at(self, until: datetime) -> None:
@@ -703,11 +710,12 @@ class _HandStandIn:
     def __init__(self, sim: Simulation) -> None:
         self.config = sim.config
         self.data = None
-        self._issued = None
+        self.round = RoundState(debouncer=None)
+        self.round.issued = None
         self.shadow = False
         self.zone_overrides: dict[str, bool] = {}
-        self._handed_back: dict[str, object] = {}
-        self._home_since: dict[str, datetime] = {}
+        self.handed_back: dict[str, object] = {}
+        self.home_since: dict[str, datetime] = {}
         """Leeg: deze stand-in leest alleen welke zones er zijn overgedragen.
 
         `_resident` leest het thuiskomstmoment uit de boekhouding van de
@@ -723,14 +731,15 @@ class _HandStandIn:
         is meant to measure, since here every entity's `last_changed` sits at the
         beginning of time and on equal timestamps the reading counts.
         """
-        self._commanded_off: dict[str, object] = {}
-        self._commanded_on: dict[str, object] = {}
+        self.tracking = TrackingState()
+        self.tracking.commanded_off: dict[str, object] = {}
+        self.tracking.commanded_on: dict[str, object] = {}
         self.last_changes: tuple[object, ...] = ()
         """Leeg: de simulatie voedt de hand zelf, er is geen eigen ronde.
 
         Empty: the simulation feeds the hand itself; there is no round of ours.
         """
-        self._sent_setpoints: dict[str, tuple[str, float]] = {}
+        self.round.sent_setpoints: dict[str, tuple[str, float]] = {}
         self.saved = 0
         self.hass = _Hass(sim)
         # De simulatie kent geen vakantieagenda. `everyone_asleep` vraagt er
@@ -743,17 +752,17 @@ class _HandStandIn:
     def _calendar_says_holiday(self) -> bool:
         return False
 
-    _notice_hand = ClimateDirectorCoordinator._notice_hand
+    notice_hand = ClimateDirectorCoordinator.notice_hand
     zones_of = ClimateDirectorCoordinator.zones_of
-    _we_wanted_it_off = ClimateDirectorCoordinator._we_wanted_it_off
-    _we_wanted_it_on = ClimateDirectorCoordinator._we_wanted_it_on
+    we_wanted_it_off = ClimateDirectorCoordinator.we_wanted_it_off
+    we_wanted_it_on = ClimateDirectorCoordinator.we_wanted_it_on
     everyone_asleep = ClimateDirectorCoordinator.everyone_asleep
     house_is_empty = ClimateDirectorCoordinator.house_is_empty
 
-    def _async_save_state(self) -> None:
+    def async_save_state(self) -> None:
         self.saved += 1
 
-    def handed_back(self):
+    def handed_back_today(self):
         """Return the zones handed back today, on the simulation's clock."""
         from custom_components.climate_director import coordinator as coordinator_module
 
@@ -772,7 +781,7 @@ class _HandStandIn:
 
     def notice(self, entity_id: str, was: str, now: str) -> None:
         """Feed one hand-operated change into the real bookkeeping."""
-        self._notice_hand(_Event(entity_id, was, now))
+        self.notice_hand(_Event(entity_id, was, now))
 
 
 @dataclass(frozen=True)
@@ -812,7 +821,7 @@ class _Hass:
 
 
 class _Event:
-    """The shape `_notice_hand` reads out of a state-changed event."""
+    """The shape `notice_hand` reads out of a state-changed event."""
 
     def __init__(self, entity_id: str, was: str, now: str) -> None:
         self.data = {

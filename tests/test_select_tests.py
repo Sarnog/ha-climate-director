@@ -60,6 +60,7 @@ def _load(name: str):
 sel = _load("select_tests")
 runner = _load("run_tests")
 probe = _load("mutation_probe")
+review = _load("mutation_review")
 
 IMPACT = {
     "tests/test_guide.py": ["docs/install/", "docs/install/nl.md"],
@@ -335,14 +336,98 @@ class TestTheMapCheck:
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         monkeypatch.delenv("CI", raising=False)
+        root = _fake_root(tmp_path / "repo", {"tests/test_guide.py": []})
+        (root / "docs" / "install").mkdir(parents=True)
+        for name in ("nl", "de"):
+            (root / "docs" / "install" / f"{name}.md").write_text("", encoding="utf-8")
         target = tmp_path / "impact_map.json"
         target.write_text(json.dumps({"tests/test_guide.py": ["docs/install/nl.md"]}))
+        monkeypatch.setattr(runner, "ROOT", root)
         monkeypatch.setattr(runner.sel, "MAP", target)
         recorded = _recorded({"tests/test_guide.py": {"docs/install/de.md"}})
         assert runner.compare_and_keep(recorded, full=False) == 0
         assert json.loads(target.read_text()) == {
             "tests/test_guide.py": ["docs/install/de.md", "docs/install/nl.md"]
         }
+
+    def test_a_full_run_keeps_a_line_it_did_not_see(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Een lokale run ziet `script/` niet en laat de regel toch staan.
+
+        A local run does not see `script/` and still leaves the line standing.
+        """
+        monkeypatch.delenv("CI", raising=False)
+        root = _fake_root(tmp_path / "repo", {"tests/test_controls.py": []})
+        (root / "script").mkdir()
+        (root / "README.md").write_text("", encoding="utf-8")
+        target = tmp_path / "impact_map.json"
+        target.write_text(json.dumps({"tests/test_controls.py": ["script/", "README.md"]}))
+        monkeypatch.setattr(runner, "ROOT", root)
+        monkeypatch.setattr(runner.sel, "MAP", target)
+        recorded = _recorded({"tests/test_controls.py": {"README.md"}})
+        assert runner.compare_and_keep(recorded, full=True) == 0
+        assert json.loads(target.read_text()) == {
+            "tests/test_controls.py": ["README.md", "script/"]
+        }
+
+    def test_a_full_run_drops_only_what_no_longer_exists(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Een bestand, een map en een toetsbestand die weg zijn, vallen van de kaart.
+
+        A file, a directory and a test file that are gone drop off the map.
+        """
+        monkeypatch.delenv("CI", raising=False)
+        root = _fake_root(tmp_path / "repo", {"tests/test_kept.py": []})
+        (root / "README.md").write_text("", encoding="utf-8")
+        (root / "docs").mkdir()
+        (root / "docs" / "kept.md").write_text("", encoding="utf-8")
+        (root / "docs" / "notdir").write_text("", encoding="utf-8")
+        target = tmp_path / "impact_map.json"
+        target.write_text(
+            json.dumps(
+                {
+                    "tests/test_kept.py": [
+                        "README.md",
+                        "tox.ini",
+                        "docs/kept.md",
+                        "docs/gone.md",
+                        "docs/gone/",
+                        "docs/notdir/",
+                    ],
+                    "tests/test_gone.py": ["README.md"],
+                }
+            )
+        )
+        monkeypatch.setattr(runner, "ROOT", root)
+        monkeypatch.setattr(runner.sel, "MAP", target)
+        recorded = _recorded({"tests/test_kept.py": {"README.md"}})
+        assert runner.compare_and_keep(recorded, full=True) == 0
+        assert json.loads(target.read_text()) == {
+            "tests/test_kept.py": ["README.md", "docs/kept.md", "tox.ini"]
+        }
+
+    def test_ci_accepts_a_map_with_an_extra_line_and_rejects_a_missing_one(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """De CI keurt een kaart met een ontbrekende regel af, niet een met een extra regel.
+
+        CI rejects a map with a missing line, not one with an extra line.
+        """
+        monkeypatch.setenv("CI", "true")
+        root = _fake_root(tmp_path / "repo", {"tests/test_one.py": []})
+        for name in ("a.md", "b.md", "extra.md"):
+            (root / name).write_text("", encoding="utf-8")
+        target = tmp_path / "impact_map.json"
+        monkeypatch.setattr(runner, "ROOT", root)
+        monkeypatch.setattr(runner.sel, "MAP", target)
+        monkeypatch.setenv("CD_IMPACT_ARTIFACT", str(tmp_path / "artifact.json"))
+        recorded = _recorded({"tests/test_one.py": {"a.md", "b.md"}})
+        target.write_text(json.dumps({"tests/test_one.py": ["a.md", "b.md", "extra.md"]}))
+        assert runner.compare_and_keep(recorded, full=True) == 0
+        target.write_text(json.dumps({"tests/test_one.py": ["a.md", "extra.md"]}))
+        assert runner.compare_and_keep(recorded, full=True) == 1
 
     def test_a_changed_recording_reports_instead_of_failing(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
@@ -506,6 +591,46 @@ class TestTheMutationsStillApply:
     def test_the_pattern_stands_in_its_file(self, mutation: dict) -> None:
         text = (ROOT / mutation["file"]).read_text(encoding="utf-8")
         assert mutation["old"] in text, f"{mutation['name']}: patroon niet gevonden"
+
+
+class TestTheReviewListStillApplies:
+    """De mutatielijst van de controle veroudert niet stilletjes.
+
+    The review's mutation list does not go stale silently.
+
+    Elk patroon staat nog precies één keer in zijn bestand en elke toets die een
+    mutatie noemt bestaat. Een verhuizing laat anders een mutatie "geen patroon
+    gevonden" melden in plaats van een eigenschap te meten, en een gat blijft dan
+    onzichtbaar. De zes mutaties op `area_clash` die de CI-baan draait staan ook in
+    deze lijst, zodat de twee niet uit elkaar lopen.
+
+    Every pattern still stands exactly once in its file and every test a mutation names
+    exists. Otherwise a move makes a mutation report "no pattern found" instead of
+    measuring a property, and a hole stays invisible. The six mutations on `area_clash`
+    that the CI lane runs also stand in this list, so the two cannot drift apart.
+    """
+
+    @pytest.mark.parametrize("mutation", review.REVIEW_MUTATIONS, ids=lambda item: item["name"])
+    def test_the_pattern_stands_exactly_once(self, mutation: dict) -> None:
+        text = (ROOT / mutation["file"]).read_text(encoding="utf-8")
+        assert text.count(mutation["old"]) == 1, f"{mutation['name']}: patroon niet precies 1x"
+
+    @pytest.mark.parametrize("mutation", review.REVIEW_MUTATIONS, ids=lambda item: item["name"])
+    def test_every_test_it_names_exists(self, mutation: dict) -> None:
+        missing = [name for name in mutation["tests"] if not (ROOT / name).is_file()]
+        assert not missing, f"{mutation['name']}: toetsbestand ontbreekt: {missing}"
+
+    def test_the_area_mutations_of_the_lane_stand_in_the_list(self) -> None:
+        listed = {(m["file"], m["old"], m["new"]) for m in review.REVIEW_MUTATIONS}
+        in_the_lane = [m for m in probe.MUTATIONS if m["name"].startswith("gebiedsconflict-")]
+        assert len(in_the_lane) >= 6
+        for mutation in in_the_lane:
+            key = (mutation["file"], mutation["old"], mutation["new"])
+            assert key in listed, f"{mutation['name']} staat niet in de controlelijst"
+
+    def test_the_names_are_unique(self) -> None:
+        names = [m["name"] for m in review.REVIEW_MUTATIONS]
+        assert len(names) == len(set(names))
 
 
 def _recorded(inputs: dict[str, set[str]]):

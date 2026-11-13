@@ -5,17 +5,18 @@ pas gepusht als de voorganger groen is, en houdt zijn eigen bewijs bij.
 
 ## Stand
 
-- **Basis:** `main` op `d332505` (ontwerp, publieke namen, toetssplitsing,
-validatie, opslag, hand, handstart, configuratiestroom, formulieren, beslissing,
-modelbouwstenen en coordinator), schone boom, `main == origin/main`.
+- **Basis:** `main` op `1caa2f4`, de tag `v8.0.0`; daarna de controle van de
+  opruimronde met vier herstelcommits (de eigen handstartmethode zonder
+  `getattr`, twee herstelde toetsnamen, geen privé naam over een modulegrens en
+  de twee laatste luie imports weg) en de correcties in ARCHITECTURE en
+  ROADMAP.
 - **Gebruikersbesluiten:** N14/N15 blijven **later**; N16 wordt **geen**
-  7.7.10. Beide blijven in `ROADMAP.md` en `ARCHITECTURE.md` staan; 8.0.0
-  verandert geen gedrag en geen tekst.
-- **Productie:** draait 7.7.7. Alleen gelezen; niets geïnstalleerd, herstart of
-  gewijzigd.
-- **Nu:** stap 10 staat in de werkboom: `repair_notices.py`, `entity_texts.py`
-  en `services.py` dragen de bijzondere reparatiemeldingen, de leesbare
-  beslissing en de service-API. Nog niet gecommit.
+  7.7.10. Beide blijven in `ROADMAP.md` en `ARCHITECTURE.md` staan; de
+  opruimronde verandert geen gedrag en geen tekst.
+- **Productie:** draait 7.7.9. Alleen gelezen; niets
+  geïnstalleerd, herstart of gewijzigd.
+- **Open:** de zes punten en de impactkaart-omgeving staan in `ROADMAP.md` en
+  `ARCHITECTURE.md` ("Nog te bouwen").
 
 ## Stappen
 
@@ -31,8 +32,8 @@ modelbouwstenen en coordinator), schone boom, `main == origin/main`.
 | 7. `engine/decide.py` | `cdfc453` | klaar: `decide.py` 82 regels en zes onderwerpsmodules |
 | 8. `engine/models.py` | `6cd53be` | klaar: `models.py` 186 regels en vijf modelbouwstenen, plus `manual_sources.py` |
 | 9. `coordinator.py` | `d332505` | klaar: `coordinator.py` 611 regels en zes onderdelen |
-| 10. `problems.py`, `texts.py`, `__init__.py` | deze commit | klaar: `repair_notices.py`, `entity_texts.py`, `services.py` |
-| Release 8.0.0 | nog te maken | wacht |
+| 10. `problems.py`, `texts.py`, `__init__.py` | `f24bb1b` | klaar: `repair_notices.py`, `entity_texts.py`, `services.py` |
+| Release 8.0.0 | `1caa2f4` | klaar: tag `v8.0.0`, release gepubliceerd |
 
 ## Bewijs
 
@@ -184,17 +185,18 @@ only after its predecessor is green, and keeps its own proof.
 
 ## State
 
-- **Base:** `main` at `d332505` (design, public names, test split, validation,
-storage, hand, hand start, configuration flow, forms, decision, model building
-blocks and coordinator), clean tree, `main == origin/main`.
-- **User decisions:** N14/N15 stay **later**; N16 becomes **no** 7.7.10.
-  Both stay in `ROADMAP.md` and `ARCHITECTURE.md`; 8.0.0 changes no behaviour
-  and no text.
-- **Production:** runs 7.7.7. Read only; nothing installed, restarted or
-  changed.
-- **Now:** step 10 stands in the working tree: `repair_notices.py`,
-  `entity_texts.py` and `services.py` carry the specialised repair notices, the
-  readable decision and the service API. Not committed yet.
+- **Base:** `main` at `1caa2f4`, the tag `v8.0.0`; after it the review of the
+  clean-up round with four repair commits (the own hand-start method without
+  `getattr`, two repaired test names, no private name across a module border
+  and the last two lazy imports gone) and the corrections in ARCHITECTURE and
+  ROADMAP.
+- **User decisions:** N14/N15 stay **later**; N16 becomes **no** 7.7.10. Both
+  stay in `ROADMAP.md` and `ARCHITECTURE.md`; the clean-up round changes no
+  behaviour and no text.
+- **Production:** runs 7.7.9. Read only; nothing
+  installed, restarted or changed.
+- **Open:** the six points and the impact-map environment stand in
+  `ROADMAP.md` and `ARCHITECTURE.md` ("Still to build").
 
 ## Steps
 
@@ -210,8 +212,8 @@ blocks and coordinator), clean tree, `main == origin/main`.
 | 7. `engine/decide.py` | `cdfc453` | done: `decide.py` 82 lines and six subject modules |
 | 8. `engine/models.py` | `6cd53be` | done: `models.py` 186 lines and five model building blocks, plus `manual_sources.py` |
 | 9. `coordinator.py` | `d332505` | done: `coordinator.py` 611 lines and six parts |
-| 10. `problems.py`, `texts.py`, `__init__.py` | this commit | done: `repair_notices.py`, `entity_texts.py`, `services.py` |
-| Release 8.0.0 | to be made | waits |
+| 10. `problems.py`, `texts.py`, `__init__.py` | `f24bb1b` | done: `repair_notices.py`, `entity_texts.py`, `services.py` |
+| Release 8.0.0 | `1caa2f4` | done: tag `v8.0.0`, release published |
 
 ## Proof
 

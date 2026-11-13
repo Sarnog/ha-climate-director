@@ -72,7 +72,7 @@ class TestUnloadingDuringARunningRound:
             # De woonkamer wordt te warm; de director wil de airco uitzetten.
             # The living room turns too warm; the director wants the unit off.
             live.set("sensor.woonkamer", "23.0")
-            round_task = asyncio.create_task(live.coordinator._async_evaluate())
+            round_task = asyncio.create_task(live.coordinator.async_evaluate())
             await asyncio.wait_for(started.wait(), timeout=5)
 
             unload_task = asyncio.create_task(
@@ -108,13 +108,33 @@ class TestUnloadingDuringARunningRound:
         live = await start_house(two_zone_installation(), states=self._warm_house())
         try:
             store = Store(live.hass, STORAGE_VERSION, storage_key(live.entry.entry_id))
-            live.coordinator._async_save_state()
+            live.coordinator.async_save_state()
             await live.coordinator.async_shutdown()
 
             await store.async_remove()
             await asyncio.sleep(1.1)
             await live.hass.async_block_till_done()
             assert await store.async_load() is None
+        finally:
+            await stop_house(live)
+
+    async def test_shutdown_cancels_the_pending_override_wake(self) -> None:
+        """Afsluiten annuleert de wekker van een override die nog loopt.
+
+        Bleef die wekker staan, dan wekte hij na het uitladen een coordinator die
+        er niet meer is.
+
+        Shutdown cancels the timer of an override that is still running. Left in
+        place, it would wake a coordinator after the unload that no longer exists.
+        """
+
+        live = await start_house(two_zone_installation(), states=self._warm_house())
+        cancelled: list[str] = []
+        try:
+            live.coordinator._cancel_override_wake = lambda: cancelled.append("cancelled")
+            await live.coordinator.async_shutdown()
+            assert cancelled == ["cancelled"]
+            assert live.coordinator._cancel_override_wake is None
         finally:
             await stop_house(live)
 
@@ -135,7 +155,7 @@ class TestUnloadingDuringARunningRound:
         """
         live = await start_house(two_zone_installation(), states=self._warm_house())
         try:
-            store = live.coordinator._store
+            store = live.coordinator.store
             saved: list[object] = []
 
             async def fake_save(payload: object) -> None:
@@ -148,7 +168,7 @@ class TestUnloadingDuringARunningRound:
             monkeypatch.setattr(store, "_async_cleanup_delay_listener", boom)
 
             await live.coordinator.async_shutdown()
-            assert saved == [live.coordinator._store_payload()]
+            assert saved == [live.coordinator.store_payload()]
         finally:
             await stop_house(live)
 
@@ -170,7 +190,7 @@ class TestUnloadingDuringARunningRound:
             assert live.climate_calls() == [], "de eerste ronde hoort niets te sturen"
 
             live.set("sensor.woonkamer", "23.0")
-            round_task = asyncio.create_task(live.coordinator._async_evaluate())
+            round_task = asyncio.create_task(live.coordinator.async_evaluate())
             await asyncio.wait_for(started.wait(), timeout=5)
 
             reload_task = asyncio.create_task(

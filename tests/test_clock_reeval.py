@@ -25,6 +25,7 @@ from homeassistant.util import dt as dt_util
 from custom_components.climate_director import coordinator_round as module
 from custom_components.climate_director import preconditions as preconditions_module
 from custom_components.climate_director.coordinator import ClimateDirectorCoordinator
+from custom_components.climate_director.coordinator_state import RoundState
 from custom_components.climate_director.engine import Reason
 from custom_components.climate_director.engine.plan import Deferral, Plan
 
@@ -48,23 +49,24 @@ class _Cancel:
 class StandIn:
     def __init__(self) -> None:
         self.hass = object()
-        self._clock_reeval_unsub: _Cancel | None = None
-        self._cancel_deferral: _Cancel | None = None
+        self.round = RoundState(debouncer=None)
+        self.round.clock_reeval_unsub: _Cancel | None = None
+        self.round.cancel_deferral: _Cancel | None = None
         self._cancel_precondition_wake: _Cancel | None = None
-        self._precondition: dict[str, datetime] = {}
-        self._precondition_bypass: set[str] = set()
-        self._debouncer = _Debouncer()
+        self.precondition_until: dict[str, datetime] = {}
+        self.precondition_bypass: set[str] = set()
+        self.round.debouncer = _Debouncer()
 
-    _cancel_clock_reeval = ClimateDirectorCoordinator._cancel_clock_reeval
-    _schedule_clock_reeval = ClimateDirectorCoordinator._schedule_clock_reeval
-    _on_clock_reeval = ClimateDirectorCoordinator._on_clock_reeval
-    _schedule_deferral = ClimateDirectorCoordinator._schedule_deferral
-    _cancel_pending_deferral = ClimateDirectorCoordinator._cancel_pending_deferral
+    cancel_clock_reeval = ClimateDirectorCoordinator.cancel_clock_reeval
+    schedule_clock_reeval = ClimateDirectorCoordinator.schedule_clock_reeval
+    on_clock_reeval = ClimateDirectorCoordinator.on_clock_reeval
+    schedule_deferral = ClimateDirectorCoordinator.schedule_deferral
+    cancel_pending_deferral = ClimateDirectorCoordinator.cancel_pending_deferral
     _live_preconditions = ClimateDirectorCoordinator._live_preconditions
     _wake_at_the_first_expiry = ClimateDirectorCoordinator._wake_at_the_first_expiry
     _preconditions_expire_at = ClimateDirectorCoordinator._preconditions_expire_at
     _on_precondition_expiry = ClimateDirectorCoordinator._on_precondition_expiry
-    _cancel_pending_precondition_wake = ClimateDirectorCoordinator._cancel_pending_precondition_wake
+    cancel_pending_precondition_wake = ClimateDirectorCoordinator.cancel_pending_precondition_wake
     async_request_evaluation = ClimateDirectorCoordinator.async_request_evaluation
 
 
@@ -102,44 +104,44 @@ class TestTheClockTick:
     def test_a_tick_is_armed(self, scheduled) -> None:
         calls, _ = scheduled
         item = StandIn()
-        item._schedule_clock_reeval()
+        item.schedule_clock_reeval()
         assert len(calls) == 1
         assert calls[0][0] == module.CLOCK_REEVAL_SECONDS
 
     def test_the_tick_requests_an_evaluation_and_rearms(self, scheduled) -> None:
         calls, _ = scheduled
         item = StandIn()
-        item._schedule_clock_reeval()
+        item.schedule_clock_reeval()
         _delay, action = calls[0]
 
         action(datetime(2026, 8, 11, 12, 1))
 
-        assert item._debouncer.scheduled == 1
+        assert item.round.debouncer.scheduled == 1
         assert len(calls) == 2
         assert calls[1][0] == module.CLOCK_REEVAL_SECONDS
 
     def test_arming_again_replaces_the_previous_tick(self, scheduled) -> None:
         calls, cancels = scheduled
         item = StandIn()
-        item._schedule_clock_reeval()
-        item._schedule_clock_reeval()
+        item.schedule_clock_reeval()
+        item.schedule_clock_reeval()
 
         assert cancels[0].called == 1
         assert len(calls) == 2
-        assert item._clock_reeval_unsub is cancels[1]
+        assert item.round.clock_reeval_unsub is cancels[1]
 
     def test_cancelling_drops_the_tick(self, scheduled) -> None:
         _calls, cancels = scheduled
         item = StandIn()
-        item._schedule_clock_reeval()
-        item._cancel_clock_reeval()
+        item.schedule_clock_reeval()
+        item.cancel_clock_reeval()
 
         assert cancels[0].called == 1
-        assert item._clock_reeval_unsub is None
+        assert item.round.clock_reeval_unsub is None
 
         # Nog een keer annuleren is onschadelijk.
         # Cancelling once more is harmless.
-        item._cancel_clock_reeval()
+        item.cancel_clock_reeval()
         assert cancels[0].called == 1
 
 
@@ -157,23 +159,23 @@ class TestTheDeferral:
     def test_a_plan_without_a_timer_arms_nothing(self, scheduled) -> None:
         calls, _ = scheduled
         item = StandIn()
-        item._schedule_deferral(Plan())
+        item.schedule_deferral(Plan())
         assert calls == []
-        assert item._cancel_deferral is None
+        assert item.round.cancel_deferral is None
 
     def test_a_waiting_plan_arms_an_appointment(self, scheduled) -> None:
         calls, cancels = scheduled
         item = StandIn()
-        item._schedule_deferral(waiting(10))
+        item.schedule_deferral(waiting(10))
         assert len(calls) == 1
         assert 0 < calls[0][0] <= 600
-        assert item._cancel_deferral is cancels[0]
+        assert item.round.cancel_deferral is cancels[0]
 
     def test_a_timer_already_past_still_waits_a_moment(self, scheduled) -> None:
         """Nooit nul: een afspraak in het verleden hoort niet meteen te vuren."""
         calls, _ = scheduled
         item = StandIn()
-        item._schedule_deferral(waiting(-5))
+        item.schedule_deferral(waiting(-5))
         assert calls[0][0] == module.MIN_DEFERRAL_SECONDS
 
     def test_the_appointment_asks_for_a_fresh_decision_and_clears_itself(self, scheduled) -> None:
@@ -184,33 +186,33 @@ class TestTheDeferral:
         """
         calls, _ = scheduled
         item = StandIn()
-        item._schedule_deferral(waiting(10))
+        item.schedule_deferral(waiting(10))
         _delay, resume = calls[0]
 
         resume(datetime(2026, 8, 11, 12, 1))
 
-        assert item._debouncer.scheduled == 1
-        assert item._cancel_deferral is None
+        assert item.round.debouncer.scheduled == 1
+        assert item.round.cancel_deferral is None
 
     def test_a_new_plan_replaces_the_standing_appointment(self, scheduled) -> None:
         calls, cancels = scheduled
         item = StandIn()
-        item._schedule_deferral(waiting(10))
-        item._schedule_deferral(waiting(20))
+        item.schedule_deferral(waiting(10))
+        item.schedule_deferral(waiting(20))
 
         assert cancels[0].called == 1
         assert len(calls) == 2
-        assert item._cancel_deferral is cancels[1]
+        assert item.round.cancel_deferral is cancels[1]
 
     def test_a_plan_without_a_timer_drops_the_standing_appointment(self, scheduled) -> None:
         """Anders vuurt er nog een afspraak voor een wachtrij die niet meer bestaat."""
         _calls, cancels = scheduled
         item = StandIn()
-        item._schedule_deferral(waiting(10))
-        item._schedule_deferral(Plan())
+        item.schedule_deferral(waiting(10))
+        item.schedule_deferral(Plan())
 
         assert cancels[0].called == 1
-        assert item._cancel_deferral is None
+        assert item.round.cancel_deferral is None
 
 
 class TestThePreconditionWakeUp:
@@ -258,20 +260,20 @@ class TestThePreconditionWakeUp:
         calls, _ = scheduled
         item = StandIn()
         now = dt_util.now()
-        item._precondition = {
+        item.precondition_until = {
             "woonkamer": now - timedelta(minutes=1),
             "zolder": now + timedelta(minutes=20),
         }
         item._preconditions_expire_at(now)
-        item._preconditions_expire_at(min(item._precondition.values()))
+        item._preconditions_expire_at(min(item.precondition_until.values()))
         calls.clear()
 
         item._on_precondition_expiry(now)
 
-        assert item._debouncer.scheduled == 1
+        assert item.round.debouncer.scheduled == 1
         # Het verlopen verzoek is opgeruimd, en de zolder krijgt zijn eigen wekker.
         # The expired request is cleared, and the attic gets its own alarm.
-        assert list(item._precondition) == ["zolder"]
+        assert list(item.precondition_until) == ["zolder"]
         assert len(calls) == 1
 
     def test_the_last_request_leaves_no_alarm_behind(self, scheduled) -> None:
@@ -290,12 +292,12 @@ class TestThePreconditionWakeUp:
         _calls, cancels = scheduled
         item = StandIn()
         item._preconditions_expire_at(dt_util.now() + timedelta(minutes=5))
-        item._cancel_pending_precondition_wake()
+        item.cancel_pending_precondition_wake()
 
         assert cancels[0].called == 1
         assert item._cancel_precondition_wake is None
 
         # Nog een keer is onschadelijk.
         # Once more is harmless.
-        item._cancel_pending_precondition_wake()
+        item.cancel_pending_precondition_wake()
         assert cancels[0].called == 1

@@ -297,38 +297,3 @@ def async_report_manual_sources(
 def async_clear_manual_sources(hass: HomeAssistant, entry_id: str) -> None:
     """Drop the one-time notice for one installation."""
     ir.async_delete_issue(hass, DOMAIN, _manual_issue_id(entry_id))
-
-
-#: De melding dat er niemand naar een geweigerd vooruit-verzoek luistert. Eén
-#: melding voor de hele integratie, niet per installatie: de gebeurtenis is
-#: domeinbreed, dus twee identieke meldingen zouden alleen maar herhalen.
-#:
-#: The notice that nobody is listening for a refused pre-conditioning request.
-#: One notice for the whole integration rather than one per installation: the
-#: event is domain-wide, so two identical notices would merely repeat.
-
-
-from .repair_notices import (  # noqa: E402, I001
-    BLUEPRINTS_URL as BLUEPRINTS_URL,
-    UNWATCHED_ISSUE as UNWATCHED_ISSUE,
-    _unreadable_issue_id as _unreadable_issue_id,
-    async_report_unreadable as async_report_unreadable,
-    async_clear_unreadable as async_clear_unreadable,
-    _unsupported_modes_issue_id as _unsupported_modes_issue_id,
-    async_report_unsupported_modes as async_report_unsupported_modes,
-    async_clear_unsupported_modes as async_clear_unsupported_modes,
-    _season_excludes_mode_issue_id as _season_excludes_mode_issue_id,
-    async_report_season_override as async_report_season_override,
-    async_clear_season_override as async_clear_season_override,
-    _command_not_taking_issue_id as _command_not_taking_issue_id,
-    async_report_command_not_taking as async_report_command_not_taking,
-    async_clear_command_not_taking as async_clear_command_not_taking,
-    _bypassed_opening_issue_id as _bypassed_opening_issue_id,
-    async_report_bypassed_openings as async_report_bypassed_openings,
-    async_clear_bypassed_openings as async_clear_bypassed_openings,
-    _corrupt_storage_issue_id as _corrupt_storage_issue_id,
-    async_report_corrupt_storage as async_report_corrupt_storage,
-    async_clear_corrupt_storage as async_clear_corrupt_storage,
-    async_check_watchers as async_check_watchers,
-    async_clear_watchers as async_clear_watchers,
-)

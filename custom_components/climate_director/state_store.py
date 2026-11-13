@@ -20,29 +20,15 @@ import os
 from collections.abc import Mapping
 from datetime import date, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
-from . import problems
+from . import repair_notices
+from .coordinator_surface import CoordinatorSurface
 from .resident_reader import restore_home_since
 from .stored_state import restore_commanded_off, stored_time
-
-if TYPE_CHECKING:
-    from .coordinator_surface import CoordinatorSurface
-
-    # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
-    # van hém. Voor mypy is dit de gastheer, zodat `self.config` en de rest
-    # kloppen; buiten de typecontrole is de basis gewoon `object`.
-    #
-    # The mixin sits on the coordinator but does not inherit from it: the
-    # coordinator inherits from the mixin. For mypy this is the host, so
-    # `self.config` and the rest resolve; outside the type check the base is
-    # simply `object`.
-    _CoordinatorBase = CoordinatorSurface
-else:
-    _CoordinatorBase = object
 
 # De logger heet coordinator, zodat het verplaatsen van deze methodes geen
 # enkele logregel verandert.
@@ -72,7 +58,7 @@ def _stored_date(raw: object) -> date | None:
     return dt_util.parse_date(str(raw))
 
 
-class StateStoreMixin(_CoordinatorBase):
+class StateStoreMixin(CoordinatorSurface):
     """Opslag, herstel en quarantaine van wat een mens met de hand heeft gezegd.
 
     Storage, restore and quarantine of what a person said by hand.
@@ -80,7 +66,7 @@ class StateStoreMixin(_CoordinatorBase):
 
     # -- met de hand gegeven, dus bewaren / given by hand, so kept ----------
 
-    def _store_payload(self) -> dict[str, Any]:
+    def store_payload(self) -> dict[str, Any]:
         """Return the hand-given state worth keeping across a restart.
 
         Het thuiskomstmoment, de kamerbezetting, de handstarts en een eigen
@@ -89,34 +75,34 @@ class StateStoreMixin(_CoordinatorBase):
         are in here too; somebody away has no moment (decision 3).
         """
         return {
-            "until": {zone_id: until.isoformat() for zone_id, until in self._precondition.items()},
-            "bypass": sorted(self._precondition_bypass),
-            "handed_back": {zone_id: day.isoformat() for zone_id, day in self._handed_back.items()},
-            **self._room_presence_payload(),
-            "hand_starts": getattr(self, "_hand_starts_payload", dict)(),
-            "home_since": {
-                resident_id: since.isoformat()
-                for resident_id, since in getattr(self, "_home_since", {}).items()
+            "until": {
+                zone_id: until.isoformat() for zone_id, until in self.precondition_until.items()
             },
-            "asleep_since": _isoformat(getattr(self, "_asleep_since", None)),
+            "bypass": sorted(self.precondition_bypass),
+            "handed_back": {zone_id: day.isoformat() for zone_id, day in self.handed_back.items()},
+            **self._room_presence_payload(),
+            "hand_starts": self._hand_starts_payload(),
+            "home_since": {
+                resident_id: since.isoformat() for resident_id, since in self.home_since.items()
+            },
+            "asleep_since": _isoformat(self.asleep_since),
             "commanded_off": {
                 entity_id: when.isoformat()
-                for entity_id, when in getattr(self, "_commanded_off", {}).items()
+                for entity_id, when in self.tracking.commanded_off.items()
             },
             "override_until": {
-                zone_id: until.isoformat()
-                for zone_id, until in getattr(self, "zone_override_until", {}).items()
+                zone_id: until.isoformat() for zone_id, until in self.zone_override_until.items()
             },
             "override_started": {
                 zone_id: started.isoformat()
-                for zone_id, started in getattr(self, "zone_override_started", {}).items()
+                for zone_id, started in self.zone_override_started.items()
             },
-            "override_when_done": dict(getattr(self, "zone_override_when_done", {})),
-            "override_entity": dict(getattr(self, "zone_override_entity", {})),
+            "override_when_done": dict(self.zone_override_when_done),
+            "override_entity": dict(self.zone_override_entity),
         }
 
     @callback
-    def _async_save_state(self) -> None:
+    def async_save_state(self) -> None:
         """Write away wat een mens met de hand heeft gezegd.
 
         Een verzoek is het enige dat een leeg huis mag laten draaien, en het is
@@ -160,37 +146,37 @@ class StateStoreMixin(_CoordinatorBase):
         # P1: a round still running during shutdown - `apply` waits on cloud
         # integrations - must not schedule a new delayed write after the flush;
         # that would resurrect the file after `async_remove_entry`.
-        if getattr(self, "_closing", False):
+        if self.lifecycle.closing:
             return
         # Vóór het herstel wordt er niets geschreven. HA's `Store.async_load`
         # leest een wachtende schrijfactie in plaats van het bestand, dus een
         # schrijfactie tijdens het opstarten laat het herstel op de half
         # opgebouwde staat van dit moment uitkomen - en dan is het oordeel van de
         # gebruiker weg. Alleen dát er iets te bewaren viel wordt onthouden;
-        # `_async_save_pending_state` schrijft het één keer weg ná het herstel.
+        # `async_save_pending_state` schrijft het één keer weg ná het herstel.
         #
         # Nothing is written before the restore. HA's `Store.async_load` reads a
         # pending write instead of the file, so a write during the startup makes
         # the restore come out on this moment's half-built state - and then the
         # user's verdict is gone. Only the fact *that* something needed saving is
-        # remembered; `_async_save_pending_state` writes it away once after the
+        # remembered; `async_save_pending_state` writes it away once after the
         # restore.
-        if not getattr(self, "_restored", True):
+        if not self.lifecycle.restored:
             self._save_pending = True
             return
-        self._store.async_delay_save(self._store_payload, 1)
+        self.store.async_delay_save(self.store_payload, 1)
 
     @callback
-    def _async_save_pending_state(self) -> None:
+    def async_save_pending_state(self) -> None:
         """Write away once what was noted before the restore finished.
 
-        Wat `_async_save_state` tijdens het opstarten liet liggen gaat hier in één
+        Wat `async_save_state` tijdens het opstarten liet liggen gaat hier in één
         keer de deur uit, ná het herstel: dan is het samengevoegd met wat de
         listeners intussen noteerden, en overschrijft het de opslag niet met een
         half opgebouwde staat. Zonder iets te bewaren gebeurt er niets - een
         herstart met alleen een sensorwijziging hoort geen schrijfactie te kosten.
 
-        What `_async_save_state` left standing during the startup goes out here in
+        What `async_save_state` left standing during the startup goes out here in
         one go, after the restore: by then it is merged with what the listeners
         noted in the meantime, and it does not overwrite the store with a
         half-built state. Without anything to save nothing happens - a restart with
@@ -199,10 +185,10 @@ class StateStoreMixin(_CoordinatorBase):
         if not self._save_pending:
             return
         self._save_pending = False
-        self._async_save_state()
+        self.async_save_state()
 
     @callback
-    def _note_by_hand_before_restore(
+    def note_by_hand_before_restore(
         self, zone_id: str, kind: Literal["override", "request"]
     ) -> None:
         """Note that the user touched this zone by hand before the restore.
@@ -235,14 +221,14 @@ class StateStoreMixin(_CoordinatorBase):
         itself (the `RestoreEntity` in `async_added_to_hass`) is no action by the
         user, and a call afterwards needs to know nothing.
         """
-        if getattr(self, "_restored", True):
+        if self.lifecycle.restored:
             return
         if kind == "override":
-            self._override_before_restore.add(zone_id)
+            self.override_before_restore.add(zone_id)
         else:
-            self._request_before_restore.add(zone_id)
+            self.request_before_restore.add(zone_id)
 
-    async def _async_restore_state(self) -> None:
+    async def async_restore_state(self) -> None:
         """Read back what was standing before the restart.
 
         Verlopen verzoeken komen niet terug: de tijd liep door terwijl Home
@@ -298,7 +284,7 @@ class StateStoreMixin(_CoordinatorBase):
         is put aside.
         """
         try:
-            stored = await self._store.async_load()
+            stored = await self.store.async_load()
         except Exception:
             _LOGGER.exception("Reading the stored state of %s failed", self.name)
             await self._quarantine_storage()
@@ -322,11 +308,11 @@ class StateStoreMixin(_CoordinatorBase):
                 #
                 # The user set or cancelled a request during the startup: that
                 # younger verdict wins over the store.
-                if zone_id in self._request_before_restore:
+                if zone_id in self.request_before_restore:
                     continue
                 until = stored_time(raw)
                 if until is not None and now < until:
-                    self._precondition[zone_id] = until
+                    self.precondition_until[zone_id] = until
 
         bypass_raw = stored.get("bypass")
         if isinstance(bypass_raw, (list, tuple, set)):
@@ -335,8 +321,8 @@ class StateStoreMixin(_CoordinatorBase):
             #
             # Merge, do not replace: the `ignore_openings` choice of a fresh
             # request from during the startup stands beside what was already there.
-            self._precondition_bypass |= {
-                zone_id for zone_id in bypass_raw if zone_id in self._precondition
+            self.precondition_bypass |= {
+                zone_id for zone_id in bypass_raw if zone_id in self.precondition_until
             }
 
         handed_raw = stored.get("handed_back")
@@ -345,13 +331,13 @@ class StateStoreMixin(_CoordinatorBase):
             for zone_id, raw in handed_raw.items():
                 day = _stored_date(raw)
                 if day == today:
-                    self._handed_back[zone_id] = day
+                    self.handed_back[zone_id] = day
 
         self._restore_room_presence(stored, now)
         self._restore_hand_starts(stored, now)
-        self._home_since.update(restore_home_since(self, stored.get("home_since"), stored_time))
-        self._asleep_since = stored_time(stored.get("asleep_since"))
-        self._commanded_off.update(restore_commanded_off(stored.get("commanded_off"), now))
+        self.home_since.update(restore_home_since(self, stored.get("home_since"), stored_time))
+        self.asleep_since = stored_time(stored.get("asleep_since"))
+        self.tracking.commanded_off.update(restore_commanded_off(stored.get("commanded_off"), now))
         if hasattr(self, "_restore_overrides"):
             self._restore_overrides(stored, now)
             # Alleen een override die de gebruiker tijdens het opstarten zelf zette
@@ -362,10 +348,10 @@ class StateStoreMixin(_CoordinatorBase):
             # hand; an override from the store leaves it standing (anchor 11).
             for zone_id in [
                 zone
-                for zone in self._handed_back
-                if zone in self._override_before_restore and self.zone_overrides.get(zone, False)
+                for zone in self.handed_back
+                if zone in self.override_before_restore and self.zone_overrides.get(zone, False)
             ]:
-                self._handed_back.pop(zone_id)
+                self.handed_back.pop(zone_id)
 
         self._wake_at_the_first_expiry()
 
@@ -420,7 +406,7 @@ class StateStoreMixin(_CoordinatorBase):
                 #
                 # Unknown zone, or the user set or ended an override before the
                 # restore.
-                if zone_id not in known_zones or zone_id in self._override_before_restore:
+                if zone_id not in known_zones or zone_id in self.override_before_restore:
                     continue
                 live = self.zone_override_until.get(zone_id)
                 if live is not None and now < live:
@@ -467,7 +453,7 @@ class StateStoreMixin(_CoordinatorBase):
         does not trip over it again. The notice says it happened; the file
         itself stays for anyone wanting to put it back from a backup.
         """
-        path = Path(self._store.path)
+        path = Path(self.store.path)
         # Geen `isoformat()`: de dubbele punten daarin mogen niet in een
         # Windows-bestandsnaam. Not `isoformat()`: its colons are not allowed
         # in a Windows file name.
@@ -477,7 +463,7 @@ class StateStoreMixin(_CoordinatorBase):
             await self.hass.async_add_executor_job(os.rename, path, corrupt)
         except OSError:
             _LOGGER.exception("Moving the unreadable state file %s aside failed", path)
-        problems.async_report_corrupt_storage(
+        repair_notices.async_report_corrupt_storage(
             self.hass,
             self.entry.entry_id,
             self.entry.title,

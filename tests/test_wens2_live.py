@@ -187,7 +187,7 @@ class TestTheRiseBrakeInARunningHouse:
             await wakes(home, "danny")
             assert reason(home) == "early_riser"
             assert home.state(LIVING) == "off"
-            assert home.coordinator._asleep_since is not None
+            assert home.coordinator.asleep_since is not None
         finally:
             await stop_house(home)
 
@@ -203,10 +203,10 @@ class TestTheRiseBrakeInARunningHouse:
         bedtime = clock.at(10, 23, 30)
         home = await start_house(installation(), states=world(danny="bed", nancy="away"))
         try:
-            assert near(home.coordinator._asleep_since, bedtime)
+            assert near(home.coordinator.asleep_since, bedtime)
             clock.at(11, 5, 50)
             await wakes(home, "danny")
-            assert near(home.coordinator._asleep_since, bedtime)
+            assert near(home.coordinator.asleep_since, bedtime)
             assert reason(home) == "early_riser"
             assert home.state(LIVING) == "off"
         finally:
@@ -236,7 +236,7 @@ class TestTheRiseBrakeInARunningHouse:
             await wakes(home, "nancy")
             assert reason(home) == "early_riser"
             assert home.state(LIVING) == "off"
-            assert home.coordinator._asleep_since is not None
+            assert home.coordinator.asleep_since is not None
         finally:
             await stop_house(home)
 
@@ -259,7 +259,7 @@ class TestTheRiseBrakeInARunningHouse:
             clock.at(11, 5, 50)
             await wakes(home, "danny")
             assert reason(home) == "early_riser"
-            assert home.coordinator._store_payload()["asleep_since"]
+            assert home.coordinator.store_payload()["asleep_since"]
         finally:
             await stop_house(home)
         clock.at(11, 6, 0)
@@ -267,7 +267,7 @@ class TestTheRiseBrakeInARunningHouse:
             installation(), states=world(danny="up", nancy="away"), config_dir=config_dir
         )
         try:
-            assert near(again.coordinator._asleep_since, bedtime)
+            assert near(again.coordinator.asleep_since, bedtime)
             assert reason(again) == "early_riser"
             assert again.state(LIVING) == "off"
         finally:
@@ -296,10 +296,10 @@ class TestWithoutASleepWindow:
             installation(sleep_window=False), states=world(danny="bed", nancy="away")
         )
         try:
-            assert near(home.coordinator._asleep_since, bedtime)
+            assert near(home.coordinator.asleep_since, bedtime)
             clock.at(11, 5, 50)
             await wakes(home, "danny")
-            assert home.coordinator._asleep_since is None
+            assert home.coordinator.asleep_since is None
             assert reason(home) == "early_riser"
             assert home.state(LIVING) == "off"
         finally:
@@ -343,7 +343,7 @@ class TestWithoutASleepWindow:
             clock.at(11, 5, 50)
             await wakes(home, "danny")
             assert reason(home) == "early_riser"
-            assert home.coordinator._store_payload()["asleep_since"] is None
+            assert home.coordinator.store_payload()["asleep_since"] is None
         finally:
             await stop_house(home)
         clock.at(11, 6, 0)

@@ -30,6 +30,7 @@
           "circuits": "Circuits de climatisation",
           "residents": "Occupants",
           "openings": "Portes et fenêtres",
+          "energy": "Énergie et coûts",
           "save": "✅ Enregistrer et fermer",
           "generators": "Sources de chaleur partagées",
           "exclusives": "Groupes exclusifs",
@@ -471,10 +472,41 @@
           "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
           "holiday": "Une plage de vacances ne s'applique que lorsque le planning de vacances est actif, et remplace alors les plages ordinaires. Ses jours de la semaine sont ignorés. Sans elle, un jour de vacances compte comme un samedi."
         }
+      },
+      "energy": {
+        "title": "Énergie et coûts",
+        "description": "Comparez ce que coûte un kWh de chaleur issu du gaz et des climatiseurs. Cela alimente seulement le capteur *Source de chauffage la moins chère* ; rien n'est piloté dessus. Donnez à l'électricité et au gaz chacun un prix fixe ou un capteur, et renseignez la courbe de COP pour activer la comparaison.",
+        "data": {
+          "grid_price_sensor": "Capteur du prix de l'électricité",
+          "grid_price": "Prix fixe de l'électricité (par kWh)",
+          "feed_in_sensor": "Capteur du prix de rachat",
+          "feed_in_price": "Prix fixe de rachat (par kWh)",
+          "surplus_sensor": "Capteur du surplus solaire",
+          "gas_price_sensor": "Capteur du prix du gaz",
+          "gas_price": "Prix fixe du gaz (par m³)",
+          "kwh_per_m3": "Pouvoir calorifique du gaz (kWh par m³)",
+          "boiler_efficiency": "Rendement de la chaudière (0 à 1,2)",
+          "cop_curve": "Courbe de COP des climatiseurs",
+          "when_done": "Quand vous avez terminé ici"
+        },
+        "data_description": {
+          "grid_price_sensor": "Le prix actuel d'un kWh d'électricité, par exemple d'un contrat dynamique. Il l'emporte sur le prix fixe de l'électricité ci-dessous tant que le capteur donne un nombre.",
+          "grid_price": "Un prix fixe par kWh d'électricité, pour un contrat à prix fixe. Si un capteur est aussi réglé au-dessus, ce prix ne compte que lorsque le capteur ne donne rien. Zéro signifie non réglé.",
+          "feed_in_sensor": "Le prix actuel que vous recevez pour un kWh réinjecté. Compte comme prix de l'électricité tant qu'il y a un surplus solaire. Laissez ce champ et le prix fixe de rachat vides pour toujours utiliser le prix de l'électricité.",
+          "feed_in_price": "Une rémunération fixe par kWh réinjecté. Compte comme prix de l'électricité tant qu'il y a un surplus solaire. Zéro signifie non réglé.",
+          "surplus_sensor": "Le surplus solaire en kW ; une valeur positive compte comme surplus. Laissez vide pour ne jamais compter de surplus.",
+          "gas_price_sensor": "Le prix actuel d'un m³ de gaz, par exemple d'un contrat dynamique. Il l'emporte sur le prix fixe du gaz ci-dessous tant que le capteur donne un nombre.",
+          "gas_price": "Un prix fixe par m³ de gaz, tout compris, dans votre devise. Si un capteur est aussi réglé au-dessus, ce prix ne compte que lorsque le capteur ne donne rien. Sans capteur et sans prix fixe, le capteur de coût n'est pas créé.",
+          "kwh_per_m3": "La chaleur que contient un m³ de gaz. 9,77 est une valeur néerlandaise courante ; regardez votre facture de gaz.",
+          "boiler_efficiency": "La part de cette chaleur qui atteint les radiateurs. 0,9 est un bon départ pour une chaudière à condensation.",
+          "cop_curve": "Des points de température extérieure et de COP, séparés par des virgules, par exemple -5:2.8, 7:3.8, 15:4.5. Entre deux points la courbe est droite ; avant le premier et après le dernier elle reste plate. Laissez vide si vous n'en avez pas, et le capteur de coût n'est alors pas créé.",
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+        }
       }
     },
     "error": {
       "bands_overlap": "Les bandes du chauffage et du refroidissement se touchent ou se chevauchent : le point d'arrêt du chauffage se trouve au niveau ou au-dessus du point de démarrage du refroidissement, ou le point d'arrêt du refroidissement se trouve au niveau ou en dessous du point de démarrage du chauffage. La pièce chaufferait et refroidirait alors tour à tour. Montez le point de démarrage du refroidissement ou réduisez une bande morte, pour garder de la marge entre les deux bandes.",
+      "cop_curve_invalid": "La courbe de COP est illisible. Écris les points sous la forme température:COP, séparés par des virgules, par exemple -5:2.8, 7:3.8, 15:4.5. Chaque COP doit être supérieur à zéro et aucune température ne doit apparaître deux fois.",
       "duplicate_priority": "Une autre pièce sur la même unité extérieure a déjà cette priorité. Deux pièces partageant un nombre font dépendre le résultat de leur nom ; choisissez-en un libre.",
       "presence_gate_without_sensor": "Cette zone fonctionne selon la présence dans la pièce, mais aucun capteur de présence n'est choisi. La pièce compte alors comme vide pour de bon et la zone ne fonctionnera plus jamais. Choisissez un capteur, ou laissez le foyer décider.",
       "required": "Ce champ est nécessaire pour enregistrer. Remplissez-le, ou choisissez « Abandonner et revenir » en bas pour partir sans enregistrer.",
@@ -705,6 +737,27 @@
       },
       "mismatch": {
         "name": "Écarts"
+      },
+      "cheapest_heat": {
+        "name": "Source de chauffage la moins chère",
+        "state": {
+          "gas": "Gaz",
+          "electric": "Électricité"
+        },
+        "state_attributes": {
+          "gas_cost": {
+            "name": "Gaz, par kWh de chaleur"
+          },
+          "electric_cost": {
+            "name": "Électricité, par kWh de chaleur"
+          },
+          "cop": {
+            "name": "COP actuel"
+          },
+          "electricity_price": {
+            "name": "Prix de l'électricité utilisé"
+          }
+        }
       }
     },
     "binary_sensor": {
@@ -969,6 +1022,12 @@
     },
     "exclusive_group_unknown_source": {
       "message": "Un groupe exclusif nomme une source inconnue {source}."
+    },
+    "area_source_without_group": {
+      "message": "La source {source} n'est pas démarrée automatiquement et se trouve dans le périmètre de {boiler}, mais dans aucun groupe exclusif avec {boiler}. Rien ne retient cette source tant que {boiler} tourne : les deux peuvent donc tourner côte à côte. Mettez-les dans un même groupe exclusif."
+    },
+    "boiler_in_several_zones_without_area": {
+      "message": "{boiler} sait seulement chauffer et figure comme source sous {count} zones, mais aucune ligne ne nomme les zones que cet appareil dessert aussi. Sans ce périmètre, rien n'empêche un autre appareil de tourner à côté de {boiler}. Renseignez les zones que cet appareil dessert aussi."
     },
     "unknown_installation": {
       "message": "Installation inconnue : {installation}"

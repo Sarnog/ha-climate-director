@@ -39,6 +39,7 @@ from custom_components.climate_director.engine import (
     WorldState,
     Zone,
     gates,
+    validate,
 )
 from custom_components.climate_director.engine import (
     fields as engine_fields,
@@ -226,6 +227,21 @@ def living_room_cool() -> ModeSettings:
         outdoor=OutdoorWindow(minimum=COOL_OUTDOOR_MIN),
         seasons=frozenset({Season.SUMMER}),
     )
+
+
+#: Meldingen van `validate()` die een werkende installatie onbeschermd laten, geen structurele
+#: fout: de simulaties en de willekeurige huizen bouwen een gedeelde ketel zonder gebied met
+#: opzet, omdat zij de gezoneerde installatie nabootsen.
+#:
+#: Notices from `validate()` that leave a working installation unprotected rather than
+#: structurally wrong: the simulations and the random houses build a shared boiler without an
+#: area on purpose, since they model the zoned installation.
+ADVICE_CODES = frozenset({"area_source_without_group", "boiler_in_several_zones_without_area"})
+
+
+def structural_problems(config: DirectorConfig) -> list[str]:
+    """Return what `validate()` says about `config`, advice left out."""
+    return [item for item in validate(config) if getattr(item, "code", "") not in ADVICE_CODES]
 
 
 def house() -> DirectorConfig:

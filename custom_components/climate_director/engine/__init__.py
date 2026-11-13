@@ -34,6 +34,7 @@ from .models import (
     Circuit,
     ConflictPolicy,
     DirectorConfig,
+    EnergySettings,
     GateSettings,
     Generator,
     HeatingLayout,
@@ -63,7 +64,8 @@ from .plan import (
     UntouchedSource,
     ZoneDecision,
 )
-from .validation import Problem, validate
+from .problem import Problem
+from .validation import validate
 from .world import ClimateState, OpeningState, PresenceState, ResidentState, WorldState
 from .zone_decisions import clamped_target
 
@@ -82,6 +84,7 @@ __all__ = [
     "ConflictPolicy",
     "Deferral",
     "DirectorConfig",
+    "EnergySettings",
     "GateSettings",
     "Generator",
     "ModeFamily",

@@ -9,6 +9,7 @@ from typing import Any
 
 from homeassistant.util import slugify
 
+from .engine.energy import parse_cop_curve
 from .engine.models import Season, SeasonSource, ZoneGate
 from .form_common import CONF_NAME
 from .units import delta_to_celsius, to_celsius
@@ -85,6 +86,21 @@ def settings_errors(user_input: dict[str, Any]) -> dict[str, str]:
     entity = str(user_input.get("season_entity") or "")
     if source == SeasonSource.ENTITY.value and not entity.strip():
         return {"season_entity": "season_entity_missing"}
+    return {}
+
+
+def energy_errors(user_input: dict[str, Any]) -> dict[str, str]:
+    """Return what the energy screen refuses to store.
+
+    Een ingevulde COP-curve die niet te lezen is, zou later stil geen kosten
+    geven. Leeg mag: dan is er gewoon geen vergelijking.
+
+    A filled-in COP curve that does not read would later quietly give no cost.
+    Empty is fine: there is then simply no comparison.
+    """
+    curve = str(user_input.get("cop_curve") or "").strip()
+    if curve and parse_cop_curve(curve) is None:
+        return {"cop_curve": "cop_curve_invalid"}
     return {}
 
 

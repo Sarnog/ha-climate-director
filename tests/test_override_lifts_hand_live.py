@@ -100,7 +100,7 @@ async def test_set_override_lifts_the_hand_and_the_zone_rejoins() -> None:
     )
     try:
         await hand_at_the_air_conditioner(home)
-        assert set(home.coordinator._handed_back) == {"zolder"}
+        assert set(home.coordinator.handed_back) == {"zolder"}
 
         home.clear_calls()
         await home.call(
@@ -111,7 +111,7 @@ async def test_set_override_lifts_the_hand_and_the_zone_rejoins() -> None:
         await settle(home)
         await home.evaluate()
         await settle(home)
-        assert home.coordinator._handed_back == {}, "set_override liet de hand staan"
+        assert home.coordinator.handed_back == {}, "set_override liet de hand staan"
 
         await home.call("climate_director", "clear_override", {"zone_id": "zolder"})
         await settle(home)
@@ -133,12 +133,12 @@ async def test_the_override_switch_lifts_the_hand_and_the_zone_rejoins() -> None
     )
     try:
         await hand_at_the_air_conditioner(home)
-        assert set(home.coordinator._handed_back) == {"zolder"}
+        assert set(home.coordinator.handed_back) == {"zolder"}
 
         switch = home.by_key("zone_zolder_override")
         await home.call("switch", "turn_on", {"entity_id": switch})
         await settle(home)
-        assert home.coordinator._handed_back == {}, "de overrideschakelaar liet de hand staan"
+        assert home.coordinator.handed_back == {}, "de overrideschakelaar liet de hand staan"
 
         await home.call("switch", "turn_off", {"entity_id": switch})
         await settle(home)
@@ -160,7 +160,7 @@ async def test_an_override_on_another_zone_leaves_the_hand_standing() -> None:
     )
     try:
         await hand_at_the_air_conditioner(home)
-        assert set(home.coordinator._handed_back) == {"zolder"}
+        assert set(home.coordinator.handed_back) == {"zolder"}
 
         await home.call(
             "climate_director",
@@ -168,7 +168,7 @@ async def test_an_override_on_another_zone_leaves_the_hand_standing() -> None:
             {"zone_id": "woonkamer", "hvac_mode": "heat", "temperature": 22},
         )
         await settle(home)
-        assert set(home.coordinator._handed_back) == {"zolder"}, (
+        assert set(home.coordinator.handed_back) == {"zolder"}, (
             "een override op de woonkamer hief de hand aan de zolder op"
         )
 
@@ -212,7 +212,7 @@ async def test_a_hand_from_during_an_override_survives_a_restart() -> None:
         await settle(home)
 
         assert home.coordinator.zone_overrides.get("zolder") is True
-        assert "zolder" in home.coordinator._handed_back, "de hand tijdens de override staat niet"
+        assert "zolder" in home.coordinator.handed_back, "de hand tijdens de override staat niet"
         await asyncio.sleep(1.2)
     finally:
         await stop_house(home)
@@ -224,7 +224,7 @@ async def test_a_hand_from_during_an_override_survives_a_restart() -> None:
         await settle(home)
 
         assert home.coordinator.zone_overrides.get("zolder") is True
-        assert "zolder" in home.coordinator._handed_back, (
+        assert "zolder" in home.coordinator.handed_back, (
             "de hand uit de override viel weg bij de herstart"
         )
 

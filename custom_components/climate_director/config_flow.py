@@ -38,6 +38,7 @@ from .const import CONF_INSTALLATION, CONF_SHADOW_MODE, DEFAULT_SHADOW_MODE, DOM
 from .coordinator import ClimateDirectorEntry
 from .engine import validate
 from .engine.serialise import config_from_dict, opening_ids
+from .flow_surface import FlowSurface
 from .flow_validation import (
     deep_copy,
     missing,
@@ -94,7 +95,7 @@ class ClimateDirectorConfigFlow(ConfigFlow, domain=DOMAIN):
         return ClimateDirectorOptionsFlow()
 
 
-class ClimateDirectorOptionsFlow(OptionsFlow):
+class ClimateDirectorOptionsFlow(FlowSurface):
     """Menu-driven editor for zones, sources, circuits, residents and openings."""
 
     def __init__(self) -> None:
@@ -145,6 +146,7 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
                 "quiets",
                 "residents",
                 "openings",
+                "energy",
                 "save",
             ],
         )
@@ -366,6 +368,9 @@ class ClimateDirectorOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         return await flow_installation.settings(self, user_input)
+
+    async def async_step_energy(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        return await flow_installation.energy(self, user_input)
 
     async def async_step_exclusives(
         self, user_input: dict[str, Any] | None = None

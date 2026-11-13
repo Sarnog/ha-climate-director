@@ -19,31 +19,17 @@ import math
 from collections.abc import Mapping
 from dataclasses import replace
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, TypeGuard
+from typing import Any, TypeGuard
 
 from homeassistant.core import State
 from homeassistant.util import dt as dt_util
 
+from .coordinator_surface import CoordinatorSurface
 from .engine import ClimateState, OpeningState, PresenceState, ResidentState, Season, WorldState
 from .engine.models import SeasonSource
 from .engine.night import house_asleep_since
 from .readability import unreadable, unreadable_inputs
 from .units import to_celsius, unit_of_coordinator
-
-if TYPE_CHECKING:
-    from .coordinator_surface import CoordinatorSurface
-
-    # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
-    # van hém. Voor mypy is dit de gastheer, zodat `self.config` en de rest
-    # kloppen; buiten de typecontrole is de basis gewoon `object`.
-    #
-    # The mixin sits on the coordinator but does not inherit from it: the
-    # coordinator inherits from the mixin. For mypy this is the host, so
-    # `self.config` and the rest resolve; outside the type check the base is
-    # simply `object`.
-    _CoordinatorBase = CoordinatorSurface
-else:
-    _CoordinatorBase = object
 
 #: Toestanden die "thuis" betekenen voor een aanwezigheidsentiteit.
 #: States meaning "home" for a presence entity.
@@ -228,7 +214,7 @@ def _override_split(
     return dict.fromkeys(handed_back | thrown, True), frozenset(handed_back - thrown)
 
 
-class WorldBuilderMixin(_CoordinatorBase):
+class WorldBuilderMixin(CoordinatorSurface):
     """De momentopname en de lezers die hem vullen.
 
     The snapshot and the readers that fill it.
@@ -271,7 +257,7 @@ class WorldBuilderMixin(_CoordinatorBase):
             climates={entity_id: self._climate(entity_id) for entity_id in self._climate_ids()},
             residents=residents,
             unreadable=unreadable_inputs(self.hass, self.config),
-            asleep_since=self._asleep_since,
+            asleep_since=self.asleep_since,
             openings={
                 opening.entity_id: self._opening(opening.entity_id, opening.open_state)
                 for opening in self.config.openings
@@ -288,7 +274,7 @@ class WorldBuilderMixin(_CoordinatorBase):
             holiday_mode=self.holiday_mode or self._calendar_says_holiday(),
             guest_mode=self.guest_mode,
             precondition_until=self._live_preconditions(),
-            precondition_bypass=frozenset(self._precondition_bypass),
+            precondition_bypass=frozenset(self.precondition_bypass),
             zone_overrides=self._overridden_zones(now, residents),
             zone_hands=self._zone_hands(now, residents),
             zone_hand_starts=frozenset(self._hand_starts),
@@ -299,7 +285,7 @@ class WorldBuilderMixin(_CoordinatorBase):
             precipitation=self._precipitation(),
         )
 
-    def _note_house_asleep(self, world: WorldState) -> WorldState:
+    def note_house_asleep(self, world: WorldState) -> WorldState:
         """Record when everybody at home went to sleep, and hand the world that moment.
 
         De wereld lezen en de wereld veranderen zijn twee dingen, dus dit staat naast
@@ -315,9 +301,9 @@ class WorldBuilderMixin(_CoordinatorBase):
         it. Without that moment the house waits for nobody in the morning.
         """
         moment = house_asleep_since(self.config, world)
-        if moment != self._asleep_since:
-            self._asleep_since: datetime | None = moment
-            self._async_save_state()
+        if moment != self.asleep_since:
+            self.asleep_since: datetime | None = moment
+            self.async_save_state()
         return replace(world, asleep_since=moment)
 
     def _overridden_zones(
@@ -464,7 +450,7 @@ class WorldBuilderMixin(_CoordinatorBase):
         # start moment therefore counts as open long enough: the safe side,
         # exactly as `min_cycle_time` measures its rest after a restart on the
         # safe side too.
-        started_at = getattr(self, "_started_at", None)
+        started_at = self._started_at
         if started_at is not None and changed_at is not None and changed_at < started_at:
             changed_at = None
         return OpeningState(
@@ -477,7 +463,7 @@ class WorldBuilderMixin(_CoordinatorBase):
 
         This is a reader and writes nothing. Het moment waarop de kamer leeg
         werd of wegviel staat in `_empty_since`: gevuld door
-        `_notice_room_empty` bij een vertrek, een wegvalling van een bezette
+        `notice_room_empty` bij een vertrek, een wegvalling van een bezette
         kamer, en bij het opstarten uit de opslag. `last_changed` van de entiteit
         doet hier bewust niet mee: na een herstart of een verbroken verbinding
         draagt die een vers tijdstip dat niets over het vertrek zegt, en dan zou
@@ -486,7 +472,7 @@ class WorldBuilderMixin(_CoordinatorBase):
         als leeg - de regel in `_room_occupied`.
 
         This is a reader and writes nothing. The moment the room became empty or
-        dropped out stands in `_empty_since`: filled by `_notice_room_empty` at a
+        dropped out stands in `_empty_since`: filled by `notice_room_empty` at a
         departure, at a drop-out of an occupied room, and at startup from the
         store. The entity's `last_changed` deliberately plays no part here: after
         a restart or a broken connection it carries a fresh timestamp that says
@@ -505,14 +491,7 @@ class WorldBuilderMixin(_CoordinatorBase):
         )
 
     def _season(self) -> Season:
-        # `getattr` en niet `self.season_override`: de proefopstellingen in de
-        # tests dragen alleen de lezers en niet dit veld, precies zoals bij
-        # `_started_at` hierboven.
-        #
-        # `getattr` rather than `self.season_override`: the test stand-ins carry
-        # only the readers and not this field, exactly as with `_started_at`
-        # above.
-        override: Season | None = getattr(self, "season_override", None)
+        override: Season | None = self.season_override
         if override is not None:
             return override
         settings = self.config.seasons
@@ -529,16 +508,16 @@ class WorldBuilderMixin(_CoordinatorBase):
         """Return whether the configured source reports precipitation, with grace.
 
         Dit is een lezer en schrijft dus niets. Het moment waarop de bron voor
-        het laatst neerslag meldde wordt vastgelegd in `_notice_precipitation`
+        het laatst neerslag meldde wordt vastgelegd in `notice_precipitation`
         (de toestandswijziging van de bron zelf) en bij het opstarten in
-        `_note_precipitation_now`; hier wordt het alleen uitgelezen. Eerder
+        `note_precipitation_now`; hier wordt het alleen uitgelezen. Eerder
         gebeurde dat wél hier, en daardoor verliep de nalooptijd alleen tijdens
         een beoordelingsronde - een verborgen bijwerking op een pad dat "lezen"
         heet.
 
         This is a reader and therefore writes nothing. The moment the source
-        last reported precipitation is recorded in `_notice_precipitation` (the
-        source's own state change) and at startup in `_note_precipitation_now`;
+        last reported precipitation is recorded in `notice_precipitation` (the
+        source's own state change) and at startup in `note_precipitation_now`;
         here it is only read. It used to be written here, which made the grace
         lapse only during an evaluation round - a hidden side effect on a path
         that calls itself "read".
@@ -549,5 +528,5 @@ class WorldBuilderMixin(_CoordinatorBase):
         state = self.hass.states.get(settings.source)
         if state is not None and state.state in settings.states:
             return True
-        seen = self._precipitation_seen_at
+        seen = self.tracking.precipitation_seen_at
         return seen is not None and dt_util.now() - seen < settings.grace

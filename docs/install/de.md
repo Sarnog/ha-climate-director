@@ -182,6 +182,25 @@ wählst.
 | **Wie lange Niederschlag weiter zählt (Minuten)** | Nachlaufzeit nach dem Aufhören des Niederschlags; Standard 15 Minuten |
 | **Schattenmodus** | an = alles durchrechnen, nichts steuern |
 
+### Energie und Kosten
+
+Vergleiche, was eine kWh Wärme aus Gas und aus den Klimageräten kostet. Das speist nur den Sensor *Günstigste
+Wärmequelle*; nichts wird danach gesteuert. Gib Strom und Gas je einen festen Preis oder einen Sensor und trage die
+COP-Kurve ein, um den Vergleich einzuschalten.
+
+| Einstellung | Was sie tut |
+|---|---|
+| **Sensor Strompreis** | der aktuelle Preis einer kWh Strom, zum Beispiel aus einem dynamischen Tarif; hat Vorrang vor dem festen Preis, solange der Sensor eine Zahl liefert |
+| **Fester Strompreis (pro kWh)** | fester Preis pro kWh Strom; gilt, wenn es keinen Sensor gibt oder er nichts liefert; 0 = nicht eingestellt |
+| **Sensor Einspeisepreis** | der Preis, den du für eine eingespeiste kWh bekommst; gilt bei Solarüberschuss als Strompreis; mit auch leerem festem Einspeisepreis = immer der Strompreis |
+| **Fester Einspeisepreis (pro kWh)** | feste Vergütung pro eingespeister kWh; gilt, wenn es keinen Sensor gibt oder er nichts liefert; 0 = nicht eingestellt |
+| **Sensor Solarüberschuss** | Solarüberschuss in kW (positiv = Überschuss); leer = nie ein Überschuss |
+| **Sensor Gaspreis** | der aktuelle Preis eines m³ Gas, zum Beispiel aus einem dynamischen Tarif; hat Vorrang vor dem festen Gaspreis, solange der Sensor eine Zahl liefert |
+| **Fester Gaspreis (pro m³)** | fester Preis pro m³ Gas, alles inklusive; gilt, wenn es keinen Sensor gibt oder er nichts liefert; ohne beides wird der Sensor nicht angelegt |
+| **Brennwert des Gases (kWh pro m³)** | Wärme pro m³ Gas; standardmäßig 9,77 |
+| **Wirkungsgrad des Kessels (0 bis 1,2)** | wie viel dieser Wärme die Heizkörper erreicht; standardmäßig 0,9 |
+| **COP-Kurve der Klimageräte** | Punkte `Außentemperatur:COP`, durch Kommas getrennt, zum Beispiel `-5:2.8, 7:3.8, 15:4.5`; leer = der Sensor wird nicht angelegt |
+
 ### Niederschlag setzt die Außengrenze außer Kraft
 
 Die Außengrenze pro Zone ist eine Sparregel mit einer Annahme darunter: Ist es
@@ -719,6 +738,7 @@ Ein Gerät pro Installation, darunter:
 | `sensor.*_letzte_entscheidung` | wie viele Zonen bedient werden, mit dem vollständigen Plan als Attributen |
 | `sensor.*_wurde_<entity>_ansteuern` | der Modus, in den der Director dieses Gerät setzen würde — ein Sensor pro Gerät |
 | `sensor.*_abweichungen` | wie viele Geräte gerade anders stehen als der Plan will; 0 = Director und Haus sind einig |
+| `sensor.*_gunstigste_warmequelle` | welche Quelle eine kWh Wärme jetzt am günstigsten liefert (Gas oder Strom), mit beiden Kosten als Attribut; nur vorhanden, wenn Gaspreis, Strompreis und COP-Kurve eingestellt sind. Nur beobachten: nichts wird danach gesteuert |
 | `sensor.*_quelle_<zone>` | welche Quelle diese Zone bedient, mit dem, was die Zone wollte, bekam und warum |
 | `binary_sensor.*_<zone>_blockiert` | an, wenn eine Zone weniger bekam als verlangt oder laufen wollte, aber ein Umstand sie zurückhielt; die geschlossenen Tore stehen in den Attributen |
 | `binary_sensor.*_<zone>_auf_ersatzgerat` | an, wenn eine Zone auf einem Ersatzgerät läuft, weil die erste Wahl unerreichbar ist |
@@ -1111,6 +1131,14 @@ Lässt du das Feld leer, bekommst du jede Aktion.
   eine Quelle ihre Ruhe nimmt. Setze die Festschlagzeit über die Ruhe oder senke die Ruhe.
 - **Die Zeitplan-Sperre ohne Zeitplan an einem Wochentag** — an diesem Tag kann nichts starten; die Meldung
   nennt die Wochentage. Füge einen gewöhnlichen Zeitplan hinzu oder schalte die Zeitplan-Sperre aus.
+- **Eine Quelle ohne automatisches Einschalten im Gebiet eines Kessels** — ist *Dieses Gerät automatisch einschalten*
+  aus und liegt die Quelle in den *Zonen, die dieses Gerät mitversorgt* eines Kessels, ohne dass beide in einer
+  exklusiven Gruppe stehen, hält nichts die Quelle zurück, solange der Kessel läuft; die Meldung nennt die Quelle
+  und den Kessel. Nimm beide in eine exklusive Gruppe auf.
+- **Ein Kessel unter mehr als einer Zone ohne Gebiet** — eine Quelle mit *Nur heizen*, die unter zwei oder mehr
+  Zonen steht, während nirgends *Zonen, die dieses Gerät mitversorgt* ausgefüllt ist: ohne Gebiet hält nichts ein
+  anderes Gerät davon ab, neben dem Kessel zu laufen. Die Meldung nennt das Gerät. Trag die Zonen ein, die der
+  Kessel mitversorgt.
 - **Die Diagnose** (bei der Integration herunterladbar) enthält die
   Konfiguration, den zuletzt gelesenen Schnappschuss und den letzten Plan. Mit
   diesen dreien ist jede Entscheidung exakt nachvollziehbar.

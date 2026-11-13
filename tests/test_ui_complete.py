@@ -148,6 +148,7 @@ class TestEveryFormField:
             "circuit_priorities": 1,
             "circuit_priority": 2,
             "circuits": 1,
+            "energy": 11,
             "exclusive": 3,
             "exclusives": 1,
             "generator": 6,
@@ -168,7 +169,7 @@ class TestEveryFormField:
             "zone": 21,
             "zones": 1,
         }
-        assert sum(counts.values()) == 125
+        assert sum(counts.values()) == 136
 
     def test_the_source_screen_is_its_table_plus_its_own_rows(self) -> None:
         """De veldtabel telt op bij wat het scherm zelf nog letterlijk noemt.
@@ -647,7 +648,10 @@ class TestProblemsAreTranslatable:
     """
 
     def _codes(self) -> set[str]:
-        source = (COMPONENT / "engine" / "validation.py").read_text(encoding="utf-8")
+        source = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in sorted((COMPONENT / "engine").glob("validation*.py"))
+        )
         return set(re.findall(r'Problem\(\s*\n?\s*"(\w+)"', source))
 
     def test_the_engine_emits_codes(self) -> None:
@@ -682,7 +686,7 @@ class TestProblemsAreTranslatable:
 
     def test_a_problem_still_reads_as_its_english_text(self) -> None:
         """Everything already treating these as plain strings must keep working."""
-        from custom_components.climate_director.engine.validation import Problem
+        from custom_components.climate_director.engine.problem import Problem
 
         item = Problem("zone_without_sources", "zone z has no sources", zone="z")
         assert item == "zone z has no sources"

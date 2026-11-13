@@ -357,7 +357,7 @@ class TestTheAlarmUnderAPreConditioningRequest:
         # it is still there.
         later = dt_util.now() + timedelta(hours=1)
         monkeypatch.setattr(module.dt_util, "now", lambda: later)
-        home.coordinator._cancel_pending_precondition_wake()
+        home.coordinator.cancel_pending_precondition_wake()
 
         home.coordinator.async_precondition(["zolder"], 60)
         assert home.coordinator._cancel_precondition_wake is not None, (

@@ -210,7 +210,7 @@ FUNCTION_LIMIT = 80
 # `ResidentState.home_since` too.
 #
 # Anker 13, koppelingslaag: `coordinator.py` 1852 → 1972 door de boekhouding
-# `_home_since` (vullen bij een thuiskomst, wissen bij vertrek, terugval bij het
+# `home_since` (vullen bij een thuiskomst, wissen bij vertrek, terugval bij het
 # opstarten) met de uitleg erbij waarom één moment voor beide lezers, plus
 # `world_builder.reads_as_home` als de enige plek die een aanwezigheidsentiteit als
 # thuis leest - drie aanroepers, één statenlijst. Zeven regels daarvan zijn de
@@ -218,7 +218,7 @@ FUNCTION_LIMIT = 80
 # een variabele versmalt `mypy` hem niet en klaagde de bouwserver over
 # `State | None` (één `union-attr`, lokaal onzichtbaar).
 #
-# Anchor 13, binding layer: `coordinator.py` 1852 → 1972 through the `_home_since`
+# Anchor 13, binding layer: `coordinator.py` 1852 → 1972 through the `home_since`
 # bookkeeping (fill on a homecoming, clear on leaving, fallback at startup) with the
 # explanation of why one moment for both readers, plus `world_builder.reads_as_home`
 # as the only place reading a presence entity as home - three callers, one state
@@ -226,33 +226,33 @@ FUNCTION_LIMIT = 80
 # instead of in a variable: in a variable `mypy` does not narrow it and the build
 # server complained about `State | None` (one `union-attr`, invisible locally).
 #
-# Anchor 13, binding layer: `coordinator.py` 1852 → 1965 through the `_home_since`
+# Anchor 13, binding layer: `coordinator.py` 1852 → 1965 through the `home_since`
 # bookkeeping (fill on a homecoming, clear on leaving, fallback at startup) with the
 # explanation of why one moment for both readers, plus `world_builder.reads_as_home`
 # as the only place reading a presence entity as home - three callers, one state
 # list.
 # T6 (de leesbare beslismelding): `coordinator.py` 1972 → 1990. Het event draagt
 # er vier leesbare velden bij (`reason_text`, `action_text`, `source_name`,
-# `message`), en wat hier groeit is de aanroep naar `texts.decision_fields` plus
-# de vier sleutels in `_event_data`. Het samenstellen zelf - welk apparaat, welke
+# `message`), en wat hier groeit is de aanroep naar `entity_texts.decision_fields` plus
+# de vier sleutels in `event_data`. Het samenstellen zelf - welk apparaat, welke
 # actie, welke zin - woont in `texts.py` (584 regels), want deze module staat al
-# op de lijst en de zin is tekst, geen koppeling. `_event_data` ging van 119 naar
+# op de lijst en de zin is tekst, geen koppeling. `event_data` ging van 119 naar
 # 47 regels en staat daarmee weer onder de tachtig, dus de functielijst blijft
 # ongewijzigd.
 #
 # T6 (the readable decision message): `coordinator.py` 1972 → 1990. The event
 # gains four readable fields (`reason_text`, `action_text`, `source_name`,
-# `message`), and what grows here is the call to `texts.decision_fields` plus the
-# four keys in `_event_data`. The assembly itself - which appliance, which
+# `message`), and what grows here is the call to `entity_texts.decision_fields` plus the
+# four keys in `event_data`. The assembly itself - which appliance, which
 # action, which sentence - lives in `texts.py` (584 lines), because this module
-# already sits on the list and the sentence is text, not binding. `_event_data`
+# already sits on the list and the sentence is text, not binding. `event_data`
 # went from 119 to 47 lines and is therefore back under eighty, so the function
 # list stays unchanged.
 #
 # Het moment waarop het huis ging slapen (*Wacht op deze slaper* pas als iedereen
 # thuis heeft geslapen): `coordinator.py` 1990 → 1993 en zijn `__init__` 218 → 220
-# door het lid `_asleep_since` in het protocol en in `__init__`, plus de aanroep in
-# `_async_evaluate`. `state_store.py::_async_restore_state` 102 → 104: één regel
+# door het lid `asleep_since` in het protocol en in `__init__`, plus de aanroep in
+# `async_evaluate`. `state_store.py::_async_restore_state` 102 → 104: één regel
 # herstel en de uitleg ervan; een dubbele Engelse alinea in die docstring maakte er
 # plaats voor. De regel zelf woont in `engine/night.py`, en het vastleggen in
 # `world_builder.py`, beide onder hun maat; `engine/gates.py` ging daardoor van 670
@@ -260,8 +260,8 @@ FUNCTION_LIMIT = 80
 #
 # The moment the house went to sleep (*Wait for this sleeper* only once everybody at
 # home has slept): `coordinator.py` 1990 → 1993 and its `__init__` 218 → 220 through
-# the `_asleep_since` member in the protocol and in `__init__`, plus the call in
-# `_async_evaluate`. `state_store.py::_async_restore_state` 102 → 104: one line of
+# the `asleep_since` member in the protocol and in `__init__`, plus the call in
+# `async_evaluate`. `state_store.py::_async_restore_state` 102 → 104: one line of
 # restore and its explanation; a doubled English paragraph in that docstring made
 # room for it. The rule itself lives in `engine/night.py`, and the recording in
 # `world_builder.py`, both below their measure; `engine/gates.py` went from 670 to
@@ -286,15 +286,15 @@ FUNCTION_LIMIT = 80
 # and written in `engine/resident_storage.py`.
 #
 # De opstartpoort (H1): `coordinator.py` 1993 → 2030 en zijn `__init__` 220 → 236 door
-# het lid `_restored` met de uitleg waarom er niet beslist mag worden vóór het herstel.
-# `_async_evaluate` blijft onder de tachtig: de poort staat op de regel die er al stond
+# het lid `restored` met de uitleg waarom er niet beslist mag worden vóór het herstel.
+# `async_evaluate` blijft onder de tachtig: de poort staat op de regel die er al stond
 # (`if self._closing or not self._restored`), met de uitleg hier en in `__init__` in
 # plaats van als nieuw commentaarblok in de functie zelf - een commentaarregel telt
 # fysiek mee en zou de functie over de grens tillen.
 #
 # The startup gate (H1): `coordinator.py` 1993 → 2030 and its `__init__` 220 → 236
-# through the `_restored` member with the explanation of why no decision may be taken
-# before the restore. `_async_evaluate` stays below eighty: the gate sits on the line
+# through the `restored` member with the explanation of why no decision may be taken
+# before the restore. `async_evaluate` stays below eighty: the gate sits on the line
 # that was already there (`if self._closing or not self._restored`), with the
 # explanation here and in `__init__` rather than as a new comment block inside the
 # function itself - a comment line counts physically and would push the function over
@@ -381,17 +381,17 @@ FUNCTION_LIMIT = 80
 #
 # Niets wegschrijven vóór het herstel (N2): `coordinator.py` 2042 → 2065 en zijn
 # `__init__` 236 → 246 door het veld `_save_pending` (protocolregel, beginwaarde en
-# korte uitleg) en de stap `_async_save_pending_state` in `_async_on_hass_started`
+# korte uitleg) en de stap `async_save_pending_state` in `async_on_hass_started`
 # met de uitleg erbij waarom er vóór het herstel niets geschreven mag worden. Dat
 # laatste woont in `state_store.py::_async_save_state` en
-# `_async_save_pending_state`; die module blijft onder zijn maat.
+# `async_save_pending_state`; die module blijft onder zijn maat.
 #
 # No write before the restore (N2): `coordinator.py` 2042 → 2065 and its `__init__`
 # 236 → 246 through the `_save_pending` field (protocol line, starting value and a
-# short explanation) and the `_async_save_pending_state` step in
-# `_async_on_hass_started` with the explanation of why nothing may be written before
+# short explanation) and the `async_save_pending_state` step in
+# `async_on_hass_started` with the explanation of why nothing may be written before
 # the restore. That last part lives in `state_store.py::_async_save_state` and
-# `_async_save_pending_state`; that module stays below its measure.
+# `async_save_pending_state`; that module stays below its measure.
 #
 # Een overgedragen apparaat is geen kandidaat en staat niet "op reserve" (N3):
 # `engine/decide.py` 1806 → 1811 en `_build_zone_decisions` 130 → 135. Wat groeit is
@@ -406,27 +406,27 @@ FUNCTION_LIMIT = 80
 # and the exclusion in the list) stays below its measure.
 #
 # Een hand vervalt niet door onze eigen aanzet (N4): `coordinator.py` 2065 → 2201, zijn
-# `__init__` 246 → 258 en `_notice_hand` 117 → 137. De reparatie leest een actieve stand
-# alleen nog als hand als die niet van ons komt: het lid `_commanded_on` (beginwaarde en
-# de uitleg dat het het spiegelbeeld van `_commanded_off` is - net als dat lid buiten het
+# `__init__` 246 → 258 en `notice_hand` 117 → 137. De reparatie leest een actieve stand
+# alleen nog als hand als die niet van ons komt: het lid `commanded_on` (beginwaarde en
+# de uitleg dat het het spiegelbeeld van `commanded_off` is - net als dat lid buiten het
 # protocol, want alleen `coordinator.py` leest het),
-# `_note_commanded_on` naast `_note_commanded_off` in `_async_evaluate`, `_we_wanted_it_on`
+# `note_commanded_on` naast `note_commanded_off` in `async_evaluate`, `we_wanted_it_on`
 # met de uitleg waarom het plan op tafel hier *niet* meedoet (`last_changes`, gezet vóór
-# `apply`, plus het venster `_COMMANDED_WINDOW` op de notitie), en in `_notice_hand` de
+# `apply`, plus het venster `_COMMANDED_WINDOW` op de notitie), en in `notice_hand` de
 # `if` met de uitleg waarom een eigen aanzet geen hand is. Wat groeit is vooral uitleg;
 # de functies zelf blijven lineair. De stand-ins van die reparatie wonen in
 # `tests/simulation.py` en `tests/test_handed_back.py`, die geen maat hebben. Het anker
 # (NL + EN) noemt de nieuwe maatstaf, want daar hangt de uitspraak aan.
 #
 # A hand does not lapse through our own switch-on (N4): `coordinator.py` 2065 → 2201, its
-# `__init__` 246 → 258 and `_notice_hand` 117 → 137. The repair reads an active mode as a
-# hand only when it does not come from us: the `_commanded_on` member (starting value and
-# the explanation that it is the mirror image of `_commanded_off` - outside the protocol
+# `__init__` 246 → 258 and `notice_hand` 117 → 137. The repair reads an active mode as a
+# hand only when it does not come from us: the `commanded_on` member (starting value and
+# the explanation that it is the mirror image of `commanded_off` - outside the protocol
 # like that member, since only `coordinator.py` reads it),
-# `_note_commanded_on` beside `_note_commanded_off` in `_async_evaluate`, `_we_wanted_it_on`
+# `note_commanded_on` beside `note_commanded_off` in `async_evaluate`, `we_wanted_it_on`
 # with the explanation of why the plan on the table plays *no* part here (`last_changes`,
 # set before `apply`, plus the `_COMMANDED_WINDOW` window on the note), and inside
-# `_notice_hand` the `if` with the explanation of why our own switch-on is no hand. What
+# `notice_hand` the `if` with the explanation of why our own switch-on is no hand. What
 # grows is mostly explanation; the functions themselves stay linear. The stand-ins of that
 # repair live in `tests/simulation.py` and `tests/test_handed_back.py`, which have no
 # measure. The anchor (NL + EN) names the new yardstick, since the statement hangs on it.
@@ -439,7 +439,7 @@ FUNCTION_LIMIT = 80
 # vervangen (elk met de uitleg waarom: de handeling van de gebruiker is jonger dan
 # het bestand), en `preconditions.py::async_precondition` 83 → 89 doordat elke
 # toegekende zone genoteerd wordt. De notitie zelf woont in
-# `state_store.py::_note_by_hand_before_restore`, en de vijf aanroepen staan in
+# `state_store.py::note_by_hand_before_restore`, en de vijf aanroepen staan in
 # `preconditions.py` (zetten en annuleren), `overrides.py` (zetten en beëindigen) en
 # `switch.py` (de overrideschakelaar) - alle drie onder hun maat, net als
 # `state_store.py` (493). Wat groeit is vooral uitleg.
@@ -452,7 +452,7 @@ FUNCTION_LIMIT = 80
 # `bypass` instead of replacing it (each with the explanation of why: the user's
 # action is younger than the file), and `preconditions.py::async_precondition`
 # 83 → 89 because every granted zone is noted. The note itself lives in
-# `state_store.py::_note_by_hand_before_restore`, and the five calls stand in
+# `state_store.py::note_by_hand_before_restore`, and the five calls stand in
 # `preconditions.py` (setting and cancelling), `overrides.py` (setting and ending) and
 # `switch.py` (the override switch) - all three below their measure, like
 # `state_store.py` (493). What grows is mostly explanation.
@@ -466,10 +466,7 @@ FUNCTION_LIMIT = 80
 # `coordinator.py` 2250 → 2138 and its `__init__` stays 285 (one starting value
 # more, one blank line less). The new mixin and engine module stay under the
 # measure; the functions in `engine/gates.py` stay under eighty.
-MODULE_EXCEPTIONS: dict[str, int] = {
-    "engine/validation.py": 1288,
-    "coordinator.py": 611,
-}
+MODULE_EXCEPTIONS: dict[str, int] = {}
 
 # De stand van de modules tussen de 500 regels en de maat van 700: de projectafspraak
 # "een module boven de 500 regels groeit niet verder" hangt aan deze lijst. Een module
@@ -486,25 +483,22 @@ MODULE_EXCEPTIONS: dict[str, int] = {
 GROWTH_FREEZE_LIMIT = 500
 
 FROZEN_MODULES: dict[str, int] = {
-    "engine/constraints.py": 618,
-    "state_store.py": 485,
-    "world_builder.py": 553,
+    "world_builder.py": 532,
 }
 
 FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
     ("engine/commands.py", "build_commands"): 208,
     ("engine/commands.py", "generator_commands"): 192,
-    ("coordinator.py", "__init__"): 285,
-    ("engine/validation.py", "_rule_zones"): 164,
+    ("coordinator.py", "__init__"): 184,
+    ("engine/validation_zones.py", "rule_zones"): 164,
     ("engine/constraints.py", "resolve"): 128,
     ("engine/candidates.py", "collect_wishes"): 137,
-    ("coordinator_events.py", "_refusal_data"): 124,
-    ("coordinator_round.py", "_async_evaluate"): 82,
-    ("coordinator_tracking.py", "_notice_hand"): 139,
+    ("coordinator_events.py", "refusal_data"): 124,
+    ("coordinator_tracking.py", "notice_hand"): 137,
     ("engine/zone_decisions.py", "build_zone_decisions"): 135,
-    ("flow_residents.py", "resident"): 95,
+    ("flow_residents.py", "resident"): 93,
     ("engine/grants.py", "manual_conflict"): 103,
-    ("state_store.py", "_async_restore_state"): 126,
+    ("state_store.py", "async_restore_state"): 126,
     ("state_store.py", "_restore_overrides"): 81,
     ("engine/hysteresis.py", "_candidate"): 97,
     ("engine/grants.py", "resolve_with_fallbacks"): 91,
@@ -513,8 +507,8 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 }
 
 # Anker 13 (het thuiskomstmoment): `coordinator.py` 1852 → 1957 en zijn `__init__`
-# 198 → 218 door de boekhouding `_home_since` met de docstring die opschrijft waar
-# het moment vandaan komt en wie het verliest, plus `_notice_home` met dezelfde
+# 198 → 218 door de boekhouding `home_since` met de docstring die opschrijft waar
+# het moment vandaan komt en wie het verliest, plus `notice_home` met dezelfde
 # uitleg. `state_store.py::_async_restore_state` komt er voor het eerst boven de 80
 # (102) doordat het herstel er een blok bij kreeg dat het moment alleen terugzet
 # voor een bewoner die thuis is - met de vergevingsgezindheid van de rest erbij.
@@ -522,8 +516,8 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # leesbaarheidsgrens en deze uitleg hoort bij de code.
 #
 # Anchor 13 (the homecoming moment): `coordinator.py` 1852 → 1957 and its `__init__`
-# 198 → 218 through the `_home_since` bookkeeping with the docstring stating where
-# the moment comes from and who loses it, plus `_notice_home` with the same
+# 198 → 218 through the `home_since` bookkeeping with the docstring stating where
+# the moment comes from and who loses it, plus `notice_home` with the same
 # explanation. `state_store.py::_async_restore_state` crosses 80 for the first time
 # (102) because the restore gained a block that only puts the moment back for a
 # resident who is home - with the rest's forgiveness included. All three are linear
@@ -533,7 +527,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # De nalooptijd begint alleen bij een echte overgang naar leeg:
 # `coordinator.py` 2220 → 2305 en zijn `__init__` 269 → 285 door het lid
 # `_empty_since` (protocolregel, beginwaarde en de uitleg wat het is) en
-# `_notice_room_empty` met de uitleg waarom `unavailable` en `unknown` geen
+# `notice_room_empty` met de uitleg waarom `unavailable` en `unknown` geen
 # vertrek zijn; `state_store.py::_async_restore_state` 116 → 153 doordat het
 # leeg-moment terugkomt, met de vergevingsgezindheid van de rest en de regel dat
 # een nu bezette kamer geen oud moment erft; en
@@ -544,7 +538,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # The grace period starts only at a real transition to empty:
 # `coordinator.py` 2220 → 2305 and its `__init__` 269 → 285 through the
 # `_empty_since` member (protocol line, starting value and the explanation of
-# what it is) and `_notice_room_empty` with the explanation of why `unavailable`
+# what it is) and `notice_room_empty` with the explanation of why `unavailable`
 # and `unknown` are no departure; `state_store.py::_async_restore_state`
 # 116 → 153 because the empty moment comes back, with the rest's forgiveness and
 # the rule that a room that is occupied now inherits no old moment; and
@@ -553,22 +547,22 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # `presence` and is redacted there. What grows is mostly explanation.
 #
 # Een override heft de hand van zijn zone bij het begin op:
-# `coordinator.py` 2305 → 2306 door de protocolregel `_lift_hand`;
+# `coordinator.py` 2305 → 2306 door de protocolregel `lift_hand`;
 # `state_store.py::_async_restore_state` 153 → 166 doordat een opgeslagen hand
 # van een zone met een override na het herstel niet terugkomt - ook niet als de
 # override tijdens het opstarten zelf gezet werd, want dan was de hand nog niet
-# in het geheugen en had `_lift_hand` niets te wissen. `overrides.py` krijgt
-# `_lift_hand` (blijft onder de maat), `async_set_override` blijft op 80 doordat
+# in het geheugen en had `lift_hand` niets te wissen. `overrides.py` krijgt
+# `lift_hand` (blijft onder de maat), `async_set_override` blijft op 80 doordat
 # de aanroep de lege regel vervangt, en `switch.py` blijft onder zijn maat. Wat
 # groeit is vooral uitleg.
 #
 # An override lifts its zone's hand at the beginning:
-# `coordinator.py` 2305 → 2306 through the protocol line `_lift_hand`;
+# `coordinator.py` 2305 → 2306 through the protocol line `lift_hand`;
 # `state_store.py::_async_restore_state` 153 → 166 because a stored hand of a
 # zone with an override does not come back after the restore - also not when the
 # override was set during the startup itself, since then the hand was not in
-# memory yet and `_lift_hand` had nothing to drop. `overrides.py` gains
-# `_lift_hand` (stays below its measure), `async_set_override` stays at 80
+# memory yet and `lift_hand` had nothing to drop. `overrides.py` gains
+# `lift_hand` (stays below its measure), `async_set_override` stays at 80
 # because the call replaces the blank line, and `switch.py` stays below its
 # measure. What grows is mostly explanation.
 #
@@ -576,7 +570,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # 2306 → 2318 en zijn `__init__` 285 → 293 door twee notities in plaats van één
 # (twee protocolregels, twee beginwaarden en de uitleg per soort);
 # `state_store.py::_restore_overrides` 80 → 81 doordat het alleen de
-# overridenotitie leest, met de uitleg erbij. `_async_restore_state` blijft
+# overridenotitie leest, met de uitleg erbij. `async_restore_state` blijft
 # gelijk: het herstel van `until` leest de verzoeknotitie op dezelfde plek. Wat
 # groeit is vooral uitleg.
 #
@@ -584,7 +578,7 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # 2306 → 2318 and its `__init__` 285 → 293 through two notes instead of one (two
 # protocol lines, two starting values and the explanation per kind);
 # `state_store.py::_restore_overrides` 80 → 81 because it reads only the
-# override note, with the explanation beside it. `_async_restore_state` stays
+# override note, with the explanation beside it. `async_restore_state` stays
 # the same: the restore of `until` reads the request note in the same place.
 # What grows is mostly explanation.
 #
@@ -610,13 +604,13 @@ FUNCTION_EXCEPTIONS: dict[tuple[str, str], int] = {
 # because the bounded for loop became a while loop that stops at a round without
 # a move; the function does not grow and the ratchet comes down with it.
 #
-# N12: `coordinator.py` 2138 → 2084 en `state_store.py::_async_restore_state`
-# 137 → 126 doordat `_notice_home` en `_resident` naar `resident_reader.py`
+# De bewonerlezer: `coordinator.py` 2138 → 2084 en `state_store.py::_async_restore_state`
+# 137 → 126 doordat `notice_home` en `_resident` naar `resident_reader.py`
 # verhuisden; de nieuwe module en zijn functies blijven onder de maat. De ratel
 # zakt mee.
 #
-# N12: `coordinator.py` 2138 → 2084 and `state_store.py::_async_restore_state`
-# 137 → 126 because `_notice_home` and `_resident` moved to `resident_reader.py`;
+# The resident reader: `coordinator.py` 2138 → 2084 and `state_store.py::_async_restore_state`
+# 137 → 126 because `notice_home` and `_resident` moved to `resident_reader.py`;
 # the new module and its functions stay below the measure. The ratchet comes
 # down with it.
 

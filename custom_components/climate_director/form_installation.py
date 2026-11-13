@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from .config_flow import ClimateDirectorOptionsFlow
+from typing import Any
 
 import voluptuous as vol
 from homeassistant.helpers import selector
 
-from .engine.fields import SETTINGS_FIELDS
+from .engine.fields import ENERGY_FIELDS, SETTINGS_FIELDS
+from .flow_surface import FlowSurface
 from .form_common import (
     ADD,
     BACK,
@@ -43,6 +41,23 @@ def settings(flow: Any) -> vol.Schema:
     """
     return table_schema(
         SETTINGS_FIELDS,
+        flow,
+        values=flow._installation,
+        footer={vol.Required(EXIT, default=EXIT_KEEP): exit_row()},
+    )
+
+
+def energy(flow: Any) -> vol.Schema:
+    """Return the energy screen schema from the current installation.
+
+    Zelfde vorm als `settings`: de veldenlijst staat in `engine.fields`, hier
+    alleen de vertaling naar `vol.Schema` plus de afsluitregel.
+
+    Same shape as `settings`: the field list lives in `engine.fields`, here only
+    the translation into `vol.Schema` plus the exit row.
+    """
+    return table_schema(
+        ENERGY_FIELDS,
         flow,
         values=flow._installation,
         footer={vol.Required(EXIT, default=EXIT_KEEP): exit_row()},
@@ -146,7 +161,7 @@ def quiet(current: dict[str, Any]) -> vol.Schema:
     )
 
 
-def quiet_windows(flow: ClimateDirectorOptionsFlow) -> list[dict[str, Any]]:
+def quiet_windows(flow: FlowSurface) -> list[dict[str, Any]]:
     """Return the stored quiet windows, creating the list on first use."""
     gates = flow._installation.setdefault("gates", {})
     windows: list[dict[str, Any]] = gates.setdefault("quiet_windows", [])

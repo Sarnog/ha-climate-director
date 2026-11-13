@@ -179,6 +179,25 @@ what you typed is then thrown away. And **nothing** is stored until you pick
 | **How long precipitation keeps counting (minutes)** | grace period after the precipitation stops; 15 minutes by default |
 | **Shadow mode** | on = compute everything, steer nothing |
 
+### Energy and costs
+
+Compare what a kWh of heat costs from gas and from the air conditioners. This only feeds the *Cheapest heat source*
+sensor; nothing is steered on it. Give power and gas each a fixed price or a sensor, and fill in the COP curve to
+switch the comparison on.
+
+| Setting | What it does |
+|---|---|
+| **Power price sensor** | the current price of a kWh of power, for example from a dynamic contract; takes precedence over the fixed price while the sensor reads a number |
+| **Fixed power price (per kWh)** | fixed price per kWh of power; counts when there is no sensor or the sensor reads nothing; 0 = not set |
+| **Feed-in price sensor** | the price you get for a kWh fed back; counts as the power price during a solar surplus; with the fixed feed-in price empty too = always the power price |
+| **Fixed feed-in price (per kWh)** | fixed payment per kWh fed back; counts when there is no sensor or the sensor reads nothing; 0 = not set |
+| **Solar surplus sensor** | solar surplus in kW (positive = surplus); empty = never a surplus |
+| **Gas price sensor** | the current price of a m³ of gas, for example from a dynamic contract; takes precedence over the fixed gas price while the sensor reads a number |
+| **Fixed gas price (per m³)** | fixed price per m³ of gas, all in; counts when there is no sensor or the sensor reads nothing; with neither, the sensor is not created |
+| **Calorific value of gas (kWh per m³)** | heat per m³ of gas; 9.77 by default |
+| **Boiler efficiency (0 to 1.2)** | how much of that heat reaches the radiators; 0.9 by default |
+| **COP curve of the air conditioners** | points `outdoor temperature:COP` separated by commas, for example `-5:2.8, 7:3.8, 15:4.5`; empty = the sensor is not created |
+
 ### Precipitation sets the outdoor bound aside
 
 A zone's outdoor bound is a thrift rule with an assumption under it: if it is
@@ -708,6 +727,7 @@ One device per installation, holding:
 | `sensor.*_last_decision` | how many zones are being served, with the full plan as attributes |
 | `sensor.*_would_command_<entity>` | the mode the director would put this appliance in — one sensor per appliance |
 | `sensor.*_mismatch` | how many appliances currently sit somewhere other than where the plan wants them; 0 = director and house agree |
+| `sensor.*_cheapest_heat_source` | which source delivers a kWh of heat cheapest right now (gas or electricity), with both costs as attributes; only there when gas price, power price and COP curve are set. Watching only: nothing is steered on it |
 | `sensor.*_<zone>_source` | which source serves this zone, with what the zone wanted, got and why |
 | `binary_sensor.*_<zone>_blocked` | on when a zone got less than it asked for, or wanted to run but a circumstance held it back; the shut gates are in the attributes |
 | `binary_sensor.*_<zone>_on_stand_in` | on when a zone runs on a stand-in appliance because its first choice is unreachable |
@@ -1088,6 +1108,13 @@ and you get every action.
   Raise the stuck time above the rest or lower the rest.
 - **The schedule gate without a schedule on a weekday** — nothing can start that day; the notice names the
   weekdays. Add an ordinary schedule or turn the schedule gate off.
+- **A source that is not started automatically, in a boiler's area** — if *Start this appliance automatically* is off
+  and the source falls under a boiler's *Zones this appliance also serves* without the two standing in one exclusive
+  group, nothing holds the source back while the boiler runs; the notice names the source and the boiler. Put them
+  in one exclusive group.
+- **A boiler under more than one zone without an area** — a source with *Heating only* that stands under two or more
+  zones while *Zones this appliance also serves* is filled in nowhere: without an area nothing keeps another appliance
+  from running beside the boiler. The notice names the appliance. Fill in the zones the boiler also serves.
 - **The diagnostics** (downloadable at the integration) hold the configuration,
   the last snapshot read and the last plan. With those three, any decision is
   exactly reproducible.

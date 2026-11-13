@@ -25,6 +25,7 @@ from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry
 from .engine import DirectorConfig, ModeFamily, Reason
 from .engine.families import MODE_FAN_ONLY, MODE_OFF, preferred_mode
 from .entity import ClimateDirectorEntity
+from .sensor_energy import HeatCostSensor
 from .units import rounded_from_celsius, unit_of_coordinator
 
 #: Alles komt uit één coordinator; er valt niets te serialiseren.
@@ -106,6 +107,14 @@ async def async_setup_entry(
     steered = [source.entity_id for _, source in coordinator.config.sources() if source.entity_id]
     steered.extend(item.entity_id for item in coordinator.config.generators if item.entity_id)
     entities.extend(CommandSensor(coordinator, entity_id) for entity_id in dict.fromkeys(steered))
+    # De kostenvergelijking bestaat alleen als er genoeg is ingesteld om te
+    # vergelijken; zonder gasprijs, stroomprijs en COP-curve zou de sensor
+    # niets te melden hebben.
+    #
+    # The cost comparison only exists when enough is set to compare; without a
+    # gas price, a power price and a COP curve the sensor would have nothing to say.
+    if coordinator.config.energy.configured:
+        entities.append(HeatCostSensor(coordinator))
     async_add_entities(entities)
 
 
@@ -116,6 +125,7 @@ def wanted_entity_keys(config: DirectorConfig) -> set[str]:
     return {
         "last_decision",
         "mismatch",
+        *(["cheapest_heat"] if config.energy.configured else []),
         *(f"zone_{zone.zone_id}_source" for zone in config.zones),
         *(f"zone_{zone.zone_id}_override_ends" for zone in config.zones),
         *(f"command_{entity_id}" for entity_id in dict.fromkeys(steered)),

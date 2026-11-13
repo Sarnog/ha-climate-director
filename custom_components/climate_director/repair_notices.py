@@ -13,13 +13,20 @@ from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN, EVENT_PRECONDITION_REFUSED
 
+#: De melding dat er niemand naar een geweigerd vooruit-verzoek luistert. Eén
+#: melding voor de hele integratie, niet per installatie: de gebeurtenis is
+#: domeinbreed, dus twee identieke meldingen zouden alleen maar herhalen.
+#:
+#: The notice that nobody is listening for a refused pre-conditioning request.
+#: One notice for the whole integration rather than one per installation: the
+#: event is domain-wide, so two identical notices would merely repeat.
 UNWATCHED_ISSUE = "precondition_unwatched"
 BLUEPRINTS_URL = "https://github.com/Sarnog/ha-climate-director#blueprints"
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _unreadable_issue_id(entry_id: str) -> str:
+def unreadable_issue_id(entry_id: str) -> str:
     """Return the unreadable-entity notice id for one installation."""
     return f"unreadable_entities_{entry_id}"
 
@@ -50,14 +57,14 @@ def async_report_unreadable(
     exactly the moment this should stand out.
     """
     if not found:
-        ir.async_delete_issue(hass, DOMAIN, _unreadable_issue_id(entry_id))
+        ir.async_delete_issue(hass, DOMAIN, unreadable_issue_id(entry_id))
         return
 
     listed = "\n".join(f"- `{entity_id}` ({state})" for entity_id, state in sorted(found.items()))
     ir.async_create_issue(
         hass,
         DOMAIN,
-        _unreadable_issue_id(entry_id),
+        unreadable_issue_id(entry_id),
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="unreadable_entities",
@@ -71,10 +78,10 @@ def async_report_unreadable(
 
 def async_clear_unreadable(hass: HomeAssistant, entry_id: str) -> None:
     """Drop the unreadable-entity notice for one installation."""
-    ir.async_delete_issue(hass, DOMAIN, _unreadable_issue_id(entry_id))
+    ir.async_delete_issue(hass, DOMAIN, unreadable_issue_id(entry_id))
 
 
-def _unsupported_modes_issue_id(entry_id: str) -> str:
+def unsupported_modes_issue_id(entry_id: str) -> str:
     """Return the unsupported-modes notice id for one installation."""
     return f"unsupported_modes_{entry_id}"
 
@@ -97,14 +104,14 @@ def async_report_unsupported_modes(
     visible.
     """
     if not found:
-        ir.async_delete_issue(hass, DOMAIN, _unsupported_modes_issue_id(entry_id))
+        ir.async_delete_issue(hass, DOMAIN, unsupported_modes_issue_id(entry_id))
         return
 
     listed = "\n".join(f"- `{entity_id}` ({modes})" for entity_id, modes in sorted(found.items()))
     ir.async_create_issue(
         hass,
         DOMAIN,
-        _unsupported_modes_issue_id(entry_id),
+        unsupported_modes_issue_id(entry_id),
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="unsupported_modes",
@@ -118,10 +125,10 @@ def async_report_unsupported_modes(
 
 def async_clear_unsupported_modes(hass: HomeAssistant, entry_id: str) -> None:
     """Drop the unsupported-modes notice for one installation."""
-    ir.async_delete_issue(hass, DOMAIN, _unsupported_modes_issue_id(entry_id))
+    ir.async_delete_issue(hass, DOMAIN, unsupported_modes_issue_id(entry_id))
 
 
-def _season_excludes_mode_issue_id(entry_id: str) -> str:
+def season_excludes_mode_issue_id(entry_id: str) -> str:
     """Return the season-excludes-mode notice id for one installation."""
     return f"season_excludes_mode_{entry_id}"
 
@@ -144,14 +151,14 @@ def async_report_season_override(
     the engine does not know.
     """
     if not found:
-        ir.async_delete_issue(hass, DOMAIN, _season_excludes_mode_issue_id(entry_id))
+        ir.async_delete_issue(hass, DOMAIN, season_excludes_mode_issue_id(entry_id))
         return
 
     listed = "\n".join(f"- `{item}`" for item in sorted(found.values()))
     ir.async_create_issue(
         hass,
         DOMAIN,
-        _season_excludes_mode_issue_id(entry_id),
+        season_excludes_mode_issue_id(entry_id),
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="season_excludes_mode",
@@ -165,10 +172,10 @@ def async_report_season_override(
 
 def async_clear_season_override(hass: HomeAssistant, entry_id: str) -> None:
     """Drop the season-excludes-mode notice for one installation."""
-    ir.async_delete_issue(hass, DOMAIN, _season_excludes_mode_issue_id(entry_id))
+    ir.async_delete_issue(hass, DOMAIN, season_excludes_mode_issue_id(entry_id))
 
 
-def _command_not_taking_issue_id(entry_id: str) -> str:
+def command_not_taking_issue_id(entry_id: str) -> str:
     """Return the command-not-taking notice id for one installation."""
     return f"command_not_taking_{entry_id}"
 
@@ -191,14 +198,14 @@ def async_report_command_not_taking(
     and from the outside it looks exactly like a zone with nothing to do.
     """
     if not found:
-        ir.async_delete_issue(hass, DOMAIN, _command_not_taking_issue_id(entry_id))
+        ir.async_delete_issue(hass, DOMAIN, command_not_taking_issue_id(entry_id))
         return
 
     listed = "\n".join(f"- `{entity_id}` ({wanted})" for entity_id, wanted in sorted(found.items()))
     ir.async_create_issue(
         hass,
         DOMAIN,
-        _command_not_taking_issue_id(entry_id),
+        command_not_taking_issue_id(entry_id),
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="command_not_taking",
@@ -212,10 +219,10 @@ def async_report_command_not_taking(
 
 def async_clear_command_not_taking(hass: HomeAssistant, entry_id: str) -> None:
     """Drop the command-not-taking notice for one installation."""
-    ir.async_delete_issue(hass, DOMAIN, _command_not_taking_issue_id(entry_id))
+    ir.async_delete_issue(hass, DOMAIN, command_not_taking_issue_id(entry_id))
 
 
-def _bypassed_opening_issue_id(entry_id: str) -> str:
+def bypassed_opening_issue_id(entry_id: str) -> str:
     """Return the notice id for openings bypassed while really open."""
     return f"bypassed_openings_{entry_id}"
 
@@ -238,14 +245,14 @@ def async_report_bypassed_openings(
     by without anything saying so.
     """
     if not found:
-        ir.async_delete_issue(hass, DOMAIN, _bypassed_opening_issue_id(entry_id))
+        ir.async_delete_issue(hass, DOMAIN, bypassed_opening_issue_id(entry_id))
         return
 
     listed = "\n".join(f"- `{entity_id}` ({name})" for entity_id, name in sorted(found.items()))
     ir.async_create_issue(
         hass,
         DOMAIN,
-        _bypassed_opening_issue_id(entry_id),
+        bypassed_opening_issue_id(entry_id),
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="bypassed_openings",
@@ -259,10 +266,10 @@ def async_report_bypassed_openings(
 
 def async_clear_bypassed_openings(hass: HomeAssistant, entry_id: str) -> None:
     """Drop the bypassed-openings notice for one installation."""
-    ir.async_delete_issue(hass, DOMAIN, _bypassed_opening_issue_id(entry_id))
+    ir.async_delete_issue(hass, DOMAIN, bypassed_opening_issue_id(entry_id))
 
 
-def _corrupt_storage_issue_id(entry_id: str) -> str:
+def corrupt_storage_issue_id(entry_id: str) -> str:
     """Return the corrupt-storage notice id for one installation."""
     return f"corrupt_storage_{entry_id}"
 
@@ -285,7 +292,7 @@ def async_report_corrupt_storage(hass: HomeAssistant, entry_id: str, title: str,
     ir.async_create_issue(
         hass,
         DOMAIN,
-        _corrupt_storage_issue_id(entry_id),
+        corrupt_storage_issue_id(entry_id),
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="corrupt_storage",
@@ -295,7 +302,7 @@ def async_report_corrupt_storage(hass: HomeAssistant, entry_id: str, title: str,
 
 def async_clear_corrupt_storage(hass: HomeAssistant, entry_id: str) -> None:
     """Drop the corrupt-storage notice for one installation."""
-    ir.async_delete_issue(hass, DOMAIN, _corrupt_storage_issue_id(entry_id))
+    ir.async_delete_issue(hass, DOMAIN, corrupt_storage_issue_id(entry_id))
 
 
 def async_check_watchers(hass: HomeAssistant) -> bool:

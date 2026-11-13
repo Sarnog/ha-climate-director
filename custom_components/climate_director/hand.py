@@ -6,26 +6,19 @@ The hand at the appliance: what somebody does themselves, and when it lapses.
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import TYPE_CHECKING
 
+from .coordinator_surface import CoordinatorSurface
 from .engine import ResidentState
 from .engine.night import asleep_at
 
-if TYPE_CHECKING:
-    from .coordinator_surface import CoordinatorSurface
 
-    _CoordinatorBase = CoordinatorSurface
-else:
-    _CoordinatorBase = object
-
-
-class HandMixin(_CoordinatorBase):
+class HandMixin(CoordinatorSurface):
     """Zones van een apparaat, de hand van vandaag, slapen en een leeg huis.
 
     Zones of an appliance, today's hand, sleep and an empty house.
     """
 
-    _handed_back: dict[str, date]
+    handed_back: dict[str, date]
 
     def zones_of(self, entity_id: str) -> tuple[str, ...]:
         """Return every zone this climate entity serves, if the director drives it.
@@ -81,17 +74,17 @@ class HandMixin(_CoordinatorBase):
         zone deliberately handed over rejoined on the first night.
         """
         if self.everyone_asleep(now, residents) or self.house_is_empty(residents):
-            if self._handed_back:
-                self._handed_back.clear()
-                self._async_save_state()
+            if self.handed_back:
+                self.handed_back.clear()
+                self.async_save_state()
             return set()
 
         today = now.date()
-        kept = {zone: day for zone, day in self._handed_back.items() if day == today}
-        if kept != self._handed_back:
-            self._handed_back = kept
-            self._async_save_state()
-        return set(self._handed_back)
+        kept = {zone: day for zone, day in self.handed_back.items() if day == today}
+        if kept != self.handed_back:
+            self.handed_back = kept
+            self.async_save_state()
+        return set(self.handed_back)
 
     def everyone_asleep(self, now: datetime, residents: dict[str, ResidentState]) -> bool:
         """Return whether everybody who is home has turned in.

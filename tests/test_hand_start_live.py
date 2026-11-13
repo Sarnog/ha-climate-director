@@ -221,11 +221,11 @@ async def a_slept_night(home: LiveHome, clock: Any, *, monday: bool = False) -> 
     day = 10 if monday else 7
     clock.at(day, 23, 30)
     since = dt_util.now() - timedelta(hours=1)
-    home.coordinator._home_since.update(
+    home.coordinator.home_since.update(
         {resident.resident_id: since for resident in home.coordinator.config.residents}
     )
     await decide(home)
-    assert home.coordinator._asleep_since is not None, "het huis ging niet slapen"
+    assert home.coordinator.asleep_since is not None, "het huis ging niet slapen"
     clock.at(day + 1, 7 if monday else 8, 0 if monday else 30)
     home.set(DANNY[1], "none")
     await decide(home)
@@ -356,10 +356,10 @@ class TestHandStartAtTheAppliance:
         )
         try:
             coordinator = home.coordinator
-            coordinator._notice_hand_start(  # type: ignore[arg-type]
+            coordinator.notice_hand_start(  # type: ignore[arg-type]
                 SimpleNamespace(data={"new_state": None, "old_state": None})
             )
-            coordinator._notice_hand_start(  # type: ignore[arg-type]
+            coordinator.notice_hand_start(  # type: ignore[arg-type]
                 SimpleNamespace(
                     data={
                         "new_state": SimpleNamespace(state="heat"),
@@ -378,9 +378,9 @@ class TestHandStartAtTheAppliance:
         )
         try:
             coordinator = home.coordinator
-            coordinator._we_wanted_it_on = lambda *_: True
+            coordinator.we_wanted_it_on = lambda *_: True
             coordinator._waiting_on_a_brake = lambda *_: True
-            coordinator._notice_hand_start(  # type: ignore[arg-type]
+            coordinator.notice_hand_start(  # type: ignore[arg-type]
                 SimpleNamespace(
                     data={
                         "entity_id": LIVING,
@@ -409,9 +409,9 @@ class TestHandStartAtTheAppliance:
         )
         try:
             coordinator = home.coordinator
-            coordinator._we_wanted_it_on = lambda *_: False
+            coordinator.we_wanted_it_on = lambda *_: False
             coordinator._waiting_on_a_brake = lambda *_: True
-            coordinator._notice_hand_start(  # type: ignore[arg-type]
+            coordinator.notice_hand_start(  # type: ignore[arg-type]
                 SimpleNamespace(
                     data={
                         "entity_id": LIVING,
@@ -747,13 +747,13 @@ class TestAnUnreadableBrakeInput:
         home = await start_house(installation(), states=world(danny_asleep=True, nancy_asleep=True))
         try:
             await a_hand_started_living_room(home, clock)
-            before = home.coordinator._home_since.get("nancy")
+            before = home.coordinator.home_since.get("nancy")
             assert before is not None
 
             home.set(NANCY[0], "unknown")
             await decide(home)
 
-            assert home.coordinator._home_since.get("nancy") == before
+            assert home.coordinator.home_since.get("nancy") == before
             assert "woonkamer" in home.coordinator._hand_starts
             assert home.state(LIVING) == "heat"
             assert "off" not in [call[1].get("hvac_mode") for call in home.climate_calls()]
@@ -1068,7 +1068,7 @@ async def a_holiday_monday_morning(home: LiveHome, clock) -> None:
     """Let the house sleep on Sunday night, then wake Danny on holiday Monday."""
     clock.at(9, 23, 30)
     await decide(home)
-    assert home.coordinator._asleep_since is not None, "het huis ging niet slapen"
+    assert home.coordinator.asleep_since is not None, "het huis ging niet slapen"
     clock.at(10, 7, 0)
     home.set(DANNY[1], "none")
     await decide(home)

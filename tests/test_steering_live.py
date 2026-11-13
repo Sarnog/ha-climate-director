@@ -225,6 +225,6 @@ class TestTheHarnessApplianceKinds:
             await live.settle()
             await live.evaluate()
             assert live.state(LIVING) == "off", "de director zet de hand weer aan"
-            assert "woonkamer" in live.coordinator._handed_back
+            assert "woonkamer" in live.coordinator.handed_back
         finally:
             await stop_house(live)

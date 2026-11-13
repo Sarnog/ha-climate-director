@@ -155,8 +155,10 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
     met wat de meting overslaat: geen regel zonder naam, geen naam zonder regel.
 
     De meting heeft daar geen gegevensbestand voor nodig — wat coverage uitsluit
-    hangt aan het bestand en het patroon, niet aan wat er gedraaid is. Zonder
-    enige uitsluiting zou deze test niets meten, en dat is dan ook een fout.
+    hangt aan het bestand en het patroon, niet aan wat er gedraaid is. Het pakket
+    sluit op dit moment niets uit, dus de lijst is leeg en deze test vindt geen
+    probleem; dat de meting een uitgesloten regel werkelijk vindt, staat bewezen op
+    een verzonnen pakket in `tests/test_the_guards_themselves.py`.
 
     Die meting krijgt `data_file=None` mee, en dat is geen
     detail. `Coverage()` zonder dat argument wijst naar het standaardbestand
@@ -176,8 +178,10 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
     without a name, no name without a line.
 
     That measurement needs no data file — what coverage excludes hangs on the file
-    and the pattern, not on what ran. Without any exclusion this test would
-    measure nothing, and that too is an error.
+    and the pattern, not on what ran. The package excludes nothing at this moment, so
+    the list is empty and this test finds no problem; that the measurement really
+    finds an excluded line is proven on an invented package in
+    `tests/test_the_guards_themselves.py`.
 
     That measurement takes `data_file=None`, and that is no
     detail. `Coverage()` without that argument points at the default
@@ -192,7 +196,7 @@ def test_every_line_outside_the_measurement_has_a_name() -> None:
     assert named_exclusion_problems() == []
 
 
-NAMED_EXCLUSIONS_BUDGET = 75
+NAMED_EXCLUSIONS_BUDGET = 0
 
 
 def test_the_named_exclusions_are_a_ratchet() -> None:

@@ -20,28 +20,13 @@ from __future__ import annotations
 import logging
 from dataclasses import replace
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
 
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
-if TYPE_CHECKING:
-    from .coordinator_surface import CoordinatorSurface
-
-    # De mixin ligt op de coördinator maar erft er niet van: de coördinator erft
-    # van hém. Voor mypy is dit de gastheer, zodat `self.config` en de rest
-    # kloppen; buiten de typecontrole is de basis gewoon `object`.
-    #
-    # The mixin sits on the coordinator but does not inherit from it: the
-    # coordinator inherits from the mixin. For mypy this is the host, so
-    # `self.config` and the rest resolve; outside the type check the base is
-    # simply `object`.
-    _CoordinatorBase = CoordinatorSurface
-else:
-    _CoordinatorBase = object
-
 from .const import WHEN_DONE_LEAVE, WHEN_DONE_TURN_OFF
+from .coordinator_surface import CoordinatorSurface
 from .engine import clamped_target
 from .engine.diff import Change
 from .engine.families import MODE_OFF, ModeFamily, family_of
@@ -55,7 +40,7 @@ from .engine.world import WorldState
 _LOGGER = logging.getLogger(f"{__package__}.coordinator")
 
 
-class OverridesMixin(_CoordinatorBase):
+class OverridesMixin(CoordinatorSurface):
     """De looptijd-override: zetten, aflopen en stil vervallen.
 
     The timed override: setting it, letting it run out and letting it lapse
@@ -102,8 +87,8 @@ class OverridesMixin(_CoordinatorBase):
         #
         # This action by the user wins over a stored duration: when it fell before
         # the restore, `state_store` skips that zone.
-        self._note_by_hand_before_restore(zone_id, "override")
-        self._lift_hand(zone_id)
+        self.note_by_hand_before_restore(zone_id, "override")
+        self.lift_hand(zone_id)
         self.zone_overrides[zone_id] = True
         self._pending_override[zone_id] = Change(
             command=UnitCommand(
@@ -139,7 +124,7 @@ class OverridesMixin(_CoordinatorBase):
             self.zone_override_when_done[zone_id] = when_done
             self.zone_override_entity[zone_id] = source.entity_id
 
-        self._async_save_state()
+        self.async_save_state()
         self._override_wake_at_first_expiry()
         self.async_publish_override_state()
         self.async_request_evaluation()
@@ -161,17 +146,17 @@ class OverridesMixin(_CoordinatorBase):
         #
         # A cancellation by the user wins over a stored duration: when it fell
         # before the restore, `state_store` skips that zone.
-        self._note_by_hand_before_restore(zone_id, "override")
+        self.note_by_hand_before_restore(zone_id, "override")
         self.zone_overrides[zone_id] = False
         self._drop_override_timers(zone_id)
         self._pending_override.pop(zone_id, None)
-        self._async_save_state()
+        self.async_save_state()
         self._override_wake_at_first_expiry()
         self.async_publish_override_state()
         self.async_request_evaluation()
 
     @callback
-    def _lift_hand(self, zone_id: str) -> None:
+    def lift_hand(self, zone_id: str) -> None:
         """Lift the zone's hand at the beginning of an override.
 
         Een override en een hand zijn allebei een ingreep van de gebruiker. Zet
@@ -196,8 +181,8 @@ class OverridesMixin(_CoordinatorBase):
         leaves another zone's hand standing. A hand that arises during the
         override stays and survives `clear_override` and a restart.
         """
-        if self._handed_back.pop(zone_id, None) is not None:
-            self._async_save_state()
+        if self.handed_back.pop(zone_id, None) is not None:
+            self.async_save_state()
 
     @callback
     def async_publish_override_state(self) -> None:
@@ -232,7 +217,7 @@ class OverridesMixin(_CoordinatorBase):
         `zone_overrides`, and without this step the start time stays in storage
         and on screen until the next round (anchor 11).
         """
-        self._drop_lapsed_override_timers()
+        self.drop_lapsed_override_timers()
         self.async_update_listeners()
 
     def override_source(self, zone_id: str, hvac_mode: str) -> Source | None:
@@ -270,7 +255,7 @@ class OverridesMixin(_CoordinatorBase):
         return min(candidates, key=lambda source: (source.priority, source.source_id))
 
     @callback
-    def _consume_pending_override_changes(self, world: WorldState) -> tuple[Change, ...]:
+    def consume_pending_override_changes(self, world: WorldState) -> tuple[Change, ...]:
         """Return the same-round override commands, clamped to this round.
 
         De klem hoort hier en niet bij de service-aanroep: tussen die
@@ -324,7 +309,7 @@ class OverridesMixin(_CoordinatorBase):
         self.zone_override_entity.pop(zone_id, None)
 
     @callback
-    def _drop_lapsed_override_timers(self) -> None:
+    def drop_lapsed_override_timers(self) -> None:
         """Drop durations of zones whose override was switched off by hand.
 
         De schakelaar schrijft alleen `zone_overrides[zone] = False`; de
@@ -337,11 +322,11 @@ class OverridesMixin(_CoordinatorBase):
                 self._pending_override.pop(zone_id, None)
                 dropped = True
         if dropped:
-            self._async_save_state()
+            self.async_save_state()
             self._override_wake_at_first_expiry()
 
     @callback
-    def _consume_expired_overrides(self, now: datetime) -> tuple[Change, ...]:
+    def consume_expired_overrides(self, now: datetime) -> tuple[Change, ...]:
         """Carry out every expiry choice due at `now`, and hand the zones back.
 
         De afloopkeuze is één commando op dat moment; daarna beslist de engine
@@ -370,14 +355,14 @@ class OverridesMixin(_CoordinatorBase):
                 )
             self.zone_overrides[zone_id] = False
             self._drop_override_timers(zone_id)
-        self._async_save_state()
+        self.async_save_state()
         self._override_wake_at_first_expiry()
         return tuple(commands)
 
     @callback
     def _override_wake_at_first_expiry(self) -> None:
         """Set the alarm on the first override that is still to run out."""
-        self._cancel_pending_override_wake()
+        self.cancel_pending_override_wake()
         pending = {
             zone_id: until
             for zone_id, until in self.zone_override_until.items()
@@ -401,7 +386,7 @@ class OverridesMixin(_CoordinatorBase):
         self._override_wake_at_first_expiry()
 
     @callback
-    def _cancel_pending_override_wake(self) -> None:
+    def cancel_pending_override_wake(self) -> None:
         """Drop the scheduled override wake-up, if there is one."""
         if self._cancel_override_wake is not None:
             self._cancel_override_wake()

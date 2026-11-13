@@ -52,7 +52,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from custom_components.climate_director import coordinator as coordinator_module
-from custom_components.climate_director import problems
+from custom_components.climate_director import problems, repair_notices
 
 LIVING = "climate.woonkamer"
 SPARE = "climate.woonkamer_reserve"
@@ -285,13 +285,13 @@ class TestEveryNoticeIsRaisedLiveAndClearedAtUnload:
         expected = {
             problems._issue_id("fouten"),
             problems._manual_issue_id("fouten"),
-            problems.UNWATCHED_ISSUE,
-            problems._unreadable_issue_id("onleesbaar"),
-            problems._unsupported_modes_issue_id("onleesbaar"),
-            problems._season_excludes_mode_issue_id("onleesbaar"),
-            problems._bypassed_opening_issue_id("onleesbaar"),
-            problems._command_not_taking_issue_id("doof"),
-            problems._corrupt_storage_issue_id("opslag"),
+            repair_notices.UNWATCHED_ISSUE,
+            repair_notices.unreadable_issue_id("onleesbaar"),
+            repair_notices.unsupported_modes_issue_id("onleesbaar"),
+            repair_notices.season_excludes_mode_issue_id("onleesbaar"),
+            repair_notices.bypassed_opening_issue_id("onleesbaar"),
+            repair_notices.command_not_taking_issue_id("doof"),
+            repair_notices.corrupt_storage_issue_id("opslag"),
         }
 
         known = created_issue_ids()

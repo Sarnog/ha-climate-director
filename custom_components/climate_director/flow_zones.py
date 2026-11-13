@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.config_entries import ConfigFlowResult
 
 from . import schemas
-
-if TYPE_CHECKING:
-    from .config_flow import ClimateDirectorOptionsFlow
-
+from .flow_surface import FlowSurface
 from .flow_validation import (
     heat_cool_from_form,
     missing,
@@ -22,9 +19,7 @@ from .schemas import ADD, BACK, EXIT, EXIT_DROP
 from .units import temperature_unit_of
 
 
-async def zones(
-    flow: ClimateDirectorOptionsFlow, user_input: dict[str, Any] | None = None
-) -> ConfigFlowResult:
+async def zones(flow: FlowSurface, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
     """Pick a zone to edit, or add one."""
     if user_input is not None:
         choice = user_input["zone"]
@@ -39,9 +34,7 @@ async def zones(
     )
 
 
-async def zone(
-    flow: ClimateDirectorOptionsFlow, user_input: dict[str, Any] | None = None
-) -> ConfigFlowResult:
+async def zone(flow: FlowSurface, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
     """Edit one zone's comfort settings."""
     zones = flow._list("zones")
     current = zones[flow._zone_index] if flow._zone_index is not None else {}

@@ -2,20 +2,16 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from .config_flow import ClimateDirectorOptionsFlow
+from typing import Any
 
 from homeassistant.config_entries import ConfigFlowResult
 
 from . import schemas, texts
+from .flow_surface import FlowSurface
 from .schemas import ADD, BACK, EXIT, EXIT_DROP
 
 
-async def windows(
-    flow: ClimateDirectorOptionsFlow, user_input: dict[str, Any] | None = None
-) -> ConfigFlowResult:
+async def windows(flow: FlowSurface, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
     """Pick a schedule window of the current resident, add one, or go back."""
     resident = flow._current_resident()
     if resident is None:
@@ -35,9 +31,7 @@ async def windows(
     )
 
 
-async def window(
-    flow: ClimateDirectorOptionsFlow, user_input: dict[str, Any] | None = None
-) -> ConfigFlowResult:
+async def window(flow: FlowSurface, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
     """Edit one schedule window."""
     resident = flow._current_resident()
     if resident is None:

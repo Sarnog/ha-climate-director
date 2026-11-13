@@ -5,7 +5,7 @@ The candidates: who may join and who holds a group.
 
 from __future__ import annotations
 
-from . import constraints, gates, hysteresis, sources, takeover
+from . import circuit_requests, gates, hysteresis, sources, takeover
 from .command_reasons import opening_rest_hold
 from .families import (
     ModeFamily,
@@ -60,7 +60,7 @@ def collect_wishes(
     blocked: frozenset[str] = frozenset(),
     takeovers: tuple[takeover.Takeover, ...] = (),
 ) -> tuple[
-    dict[str, constraints.Request],
+    dict[str, circuit_requests.Request],
     dict[str, Reason],
     dict[str, tuple[Reason, ...]],
     dict[str, hysteresis.Demand],
@@ -82,7 +82,7 @@ def collect_wishes(
     too: without that wish there is no telling whether a shut gate is holding
     back a room that would otherwise be regulated.
     """
-    wishes: dict[str, constraints.Request] = {}
+    wishes: dict[str, circuit_requests.Request] = {}
     refusals: dict[str, Reason] = {}
     shut: dict[str, tuple[Reason, ...]] = {}
     demands: dict[str, hysteresis.Demand] = {}
@@ -181,7 +181,7 @@ def collect_wishes(
             shut[zone.zone_id] = (*shut[zone.zone_id], Reason.SHORT_CYCLE_PROTECTION)
             continue
 
-        wishes[zone.zone_id] = constraints.Request(
+        wishes[zone.zone_id] = circuit_requests.Request(
             zone=zone,
             source=source,
             family=demand.family,
@@ -212,8 +212,11 @@ def serving(previous: Plan | None, zone_id: str) -> str | None:
 
 
 def apply_exclusive_groups(
-    config: DirectorConfig, world: WorldState, wishes: dict[str, constraints.Request]
-) -> tuple[dict[str, constraints.Request], dict[str, constraints.Request]]:
+    config: DirectorConfig,
+    world: WorldState,
+    wishes: dict[str, circuit_requests.Request],
+    takeovers: tuple[takeover.Takeover, ...] = (),
+) -> tuple[dict[str, circuit_requests.Request], dict[str, circuit_requests.Request]]:
     """Split the requests into those that keep a shared appliance and those that lose it.
 
     Zones keep their own mutual exclusion for free - a zone only ever picks one
@@ -237,11 +240,8 @@ def apply_exclusive_groups(
     member yields and that request goes through. A member in a handed-over zone
     is unbeatable, since the director sends that zone nothing, an off included.
     """
-    if not config.exclusive_groups:
-        return wishes, {}
-
-    kept = dict(wishes)
-    dropped: dict[str, constraints.Request] = {}
+    # Een apparaat met een gebied (`covers_zones`) sluit ook uit / also rules out.
+    kept, dropped = takeover.area_clash(config, wishes, takeovers)
     for group in config.exclusive_groups:
         members = group_entities(config, group)
         contenders = sorted(
@@ -329,7 +329,7 @@ def group_holder(
     return strongest[1], strongest[0]
 
 
-def outranks(request: constraints.Request, holder_rank: tuple[int, str]) -> bool:
+def outranks(request: circuit_requests.Request, holder_rank: tuple[int, str]) -> bool:
     """Return whether a request carries more claim than a running member."""
     return request.rank < holder_rank
 

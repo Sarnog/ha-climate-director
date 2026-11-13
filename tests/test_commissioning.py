@@ -112,6 +112,7 @@ class TestEveryFormInTheSourceIsWalkedTo:
         assert steps == {
             "user",
             "settings",
+            "energy",
             "exclusives",
             "exclusive",
             "quiets",

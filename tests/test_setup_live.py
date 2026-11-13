@@ -93,8 +93,8 @@ class TestSettingUp:
             await live.settle()
             await live.evaluate()
             assert live.state(BOILER) == "off", "de director zet de ketel meteen weer aan"
-            assert "woonkamer" in live.coordinator._handed_back
-            assert "zolder" in live.coordinator._handed_back
+            assert "woonkamer" in live.coordinator.handed_back
+            assert "zolder" in live.coordinator.handed_back
         finally:
             await stop_house(live)
 
@@ -239,7 +239,7 @@ class TestSettingUp:
 
         monkeypatch.setattr(home.hass.config_entries, "async_unload_platforms", _refuse)
         assert await async_unload_entry(home.hass, home.entry) is False
-        assert home.coordinator._closing is True
+        assert home.coordinator.lifecycle.closing is True
 
     async def test_the_stuck_sensor_reads_through_the_public_reader(
         self, home: LiveHome, monkeypatch: pytest.MonkeyPatch
@@ -249,7 +249,7 @@ class TestSettingUp:
         The sensor hangs off the public reader, not the private field.
         """
         monkeypatch.setattr(home.coordinator, "unusable_latest", lambda: {"sensor.via_reader": "x"})
-        home.coordinator._unusable_latest = {"sensor.via_private": "y"}
+        home.coordinator.reporting.unusable_latest = {"sensor.via_private": "y"}
         await home.evaluate()
         assert home.values("stuck")["unusable_entities"] == {"sensor.via_reader": "x"}
 
@@ -264,7 +264,7 @@ class TestSettingUp:
         def _boom(*_args: object, **_kwargs: object) -> None:
             raise RuntimeError("kapot")
 
-        monkeypatch.setattr(home.coordinator, "_fire_events", _boom)
+        monkeypatch.setattr(home.coordinator, "fire_events", _boom)
         before = home.coordinator.data
         with pytest.raises(RuntimeError):
             await home.evaluate()

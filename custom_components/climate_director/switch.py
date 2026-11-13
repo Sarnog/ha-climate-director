@@ -237,9 +237,9 @@ class ZoneOverrideSwitch(_DirectorSwitch):
         not count. Switching it on lifts the zone's hand at this beginning
         (anchor 11), so the zone rejoins after it is switched off.
         """
-        self.coordinator._note_by_hand_before_restore(self._zone_id, "override")
+        self.coordinator.note_by_hand_before_restore(self._zone_id, "override")
         if value:
-            self.coordinator._lift_hand(self._zone_id)
+            self.coordinator.lift_hand(self._zone_id)
         await super()._set(value)
 
     def _publish(self) -> None:

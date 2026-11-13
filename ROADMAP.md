@@ -73,6 +73,15 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   als de ruimtesensor het uitschakelpunt haalt; regelt het apparaat op zijn eigen sensor net
   daaronder, dan blijft de taak (en het circuit) eindeloos doorlopen. Het scherm kan zeggen
   dat een doel gelijk aan het uitschakelpunt geen marge laat.
+- **Een geweigerde winnaar van een gebied geeft de verliezer geen tweede kans** —
+  `area_clash()` laat per gebied (`covers_zones`) één kant over en haalt het verliezende
+  verzoek uit de wensen vóór de circuits oordelen. Weigert het circuit daarna de winnaar,
+  dan draait die niet en blijft de verliezende zone die ronde onbediend. De uitkomst valt aan
+  de veilige kant (kort koud, nooit twee systemen tegelijk). Gekozen is (a), laten zoals het
+  is; (b), het verliezende verzoek terugzetten zodra de winnaar geweigerd is, blijft een idee
+  voor als een meting laat zien dat de kamer te lang koud blijft, tegen het risico dat de twee
+  apparaten elkaar afwisselen (ontwerp in `ARCHITECTURE.md` onder "Nog te bouwen").
+
 ## Could have
 
 - **De impactkaart hangt aan de selectie van de run** — code op moduleniveau draait één keer,
@@ -82,6 +91,27 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   (`test_random_installations.py` kreeg zo `schemas.py`). De kaart zou de moduleniveaucode van
   het bestand dat hem importeert niet als eis moeten tellen, of lokaal de selectie van de CI
   moeten nabootsen (`CD_BASE` op de voorganger).
+- **Een nieuwe import in een bestaande module verandert wat andere toetsen uitvoeren, en de
+  selectie ziet dat niet** — een regel die een bestaande module importeert (hier
+  `validation_sources.py` die `takeover.py` ging gebruiken) laat elke toets die `validate()`
+  aanroept dat bestand ook uitvoeren, maar de selectie kiest alleen de toetsen die de kaart al
+  bij het gewijzigde bestand noemt. De vier ontbrekende toetsen kwamen pas aan het licht in de
+  volledige CI-run (rood op alleen de kaart). De selectie zou de toetsen moeten meenemen die het
+  gewijzigde bestand indirect importeren, of de kaart zou ook per import vastleggen wie wie
+  aanroept.
+- **De `flow_*`-, `form_*`- en `schema_fields`-functies lezen ruim honderd privé cursors en
+  lijsten van de configuratiestroom** (`flow._index`, `flow._installation`, `flow._list`...),
+  dezelfde vorm als de privé attributen van de coordinator die de onderdelen niet meer lezen.
+  `FlowSurface` noemt ze met een leidende onderstreping en de bewaking `coordinator._naam`
+  ziet ze niet. Geef de stroom publieke namen of een eigen staatsklasse per scherm, en breid de
+  bewaking uit tot `flow._naam` buiten `config_flow.py`.
+- **Twee `hasattr(self, ...)` in `state_store.py` bestaan alleen voor stand-ins in de toetsen**
+  (`_restore_overrides` en `zone_override_until`), dezelfde terugval als de weggehaalde
+  `getattr(self, ...)`. De stand-ins in `test_handed_back.py` en `test_override_branches.py`
+  moeten die leden krijgen; de bewaking op `getattr` kan dan `hasattr` meenemen.
+- **De dunne methodes van `coordinator.py` geven `*args, **kwargs` door** (tweeënveertig
+  stuks), zodat hun handtekening en typen aan de buitenkant verdwijnen. Geef ze de handtekening
+  van het onderdeel dat ze aanroepen.
 - **Een nieuwe pakketmodule valt buiten de selectie van de toetsen die hem indirect
   uitvoeren** — `script/select_tests.py` kiest bij een nieuw bestand alleen de toetsen die
   het rechtstreeks importeren of al in de kaart staan. een nieuwe bewonersmodule kwam zo
@@ -108,6 +138,10 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   processen zou de baan van ruim twintig minuten flink inkorten. De dekking per
   toetsbestand en de leeslog van `tests/conftest.py` gaan nu uit van één proces; die
   moeten eerst per proces opgeslagen en samengevoegd worden.
+- **De mutatieprobe draait na een versiecommit alle mutaties** — alleen `manifest.json` en
+  `pyproject.toml` veranderen, maar `pyproject.toml` geldt als gedeeld hulpbestand en laat
+  alle veertien mutaties draaien (ruim anderhalf uur). Een padvoorwaarde die een
+  wijziging van alleen de versieregel negeert, bespaart die run.
 - **De gidsen citeren de handstartknop op twee manieren** — fr, es en ar noemen het
   schermwoord met `{zone}` (*Démarrer {zone} manuellement*), nl, en en de zonder (*Met de
   hand starten*, *Start by hand*, *Von Hand starten*). Eén vorm, met een toets erop.
@@ -127,7 +161,7 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   terugkomen** — draaiend heft een override de hand bij zijn begin op, ook als hij daarna
   weer uitgaat. Tijdens het opstarten telt alleen een override die er na het herstel nog
   staat; wordt hij binnen die tijd ook weer uitgezet, dan komt de opgeslagen hand terug.
-- **De voorwaarde `zone in _occupied_rooms` in `_notice_room_empty` heeft geen toets** —
+- **De voorwaarde `zone in _occupied_rooms` in `notice_room_empty` heeft geen toets** —
   haal hem weg zonder dat een toets rood wordt. Ofwel is hij overbodig (dan kan hij weg),
   ofwel mist er een toets voor het geval waarin hij iets doet.
 - **De veldenkaart van de formulierbewaking valt stil terug op de `Call`-knoop** —
@@ -194,7 +228,9 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   actie en een timer die vanzelf afloopt); dit idee gaat alleen over het automatische deel.
 - **Energieprijs als bronvoorkeur** — een dynamisch tarief of een
   zonnepanelenoverschot laten meewegen in `Source.priority`, zodat de goedkoopste bron
-  wint zolang die het aankan.
+  wint zolang die het aankan. Stap 1, het kostenrekenwerk (`engine/cost.py`), is er, en stap 2: de
+  energie-instellingen en de sensor *Goedkoopste warmtebron* (alleen kijken). Het schakelen op
+  kosten is er nog niet.
 - **Live prioriteiten gelijk trekken op één circuit** — twee zones met dezelfde prioriteit
   op hetzelfde circuit laten nu de bron- en zonevolgorde beslissen. Een zone die lang
   wacht zou tijdelijk één stap voorrang kunnen krijgen, met terugval naar de ingestelde
@@ -410,6 +446,15 @@ The worked-out design proposals for everything below live in
   just below it, the duty (and the circuit) keeps running endlessly. The screen could say
   that a target equal to the switch-off point leaves no margin.
 
+- **A refused area winner gives the loser no second chance** — `area_clash()` leaves one
+  side per area (`covers_zones`) and takes the losing request out of the wishes before the
+  circuits judge. If the circuit then refuses the winner, it does not run and the losing zone
+  is left unserved for that round. The outcome is on the safe side (briefly cold, never two
+  systems at once). (a), leave it, is chosen; (b), putting the losing request back as soon as
+  the winner is refused, stays an idea for when a measurement shows the room stays cold too
+  long, at the risk of the two appliances alternating (design in `ARCHITECTURE.md` under
+  "Still to build").
+
 ## Could have
 
 - **The impact map depends on the selection of the run** — module-level code runs once, for
@@ -419,6 +464,26 @@ The worked-out design proposals for everything below live in
   (`test_random_installations.py` got `schemas.py` that way). The map should not count the
   module-level code of the importing file as a requirement, or the local run should mimic
   the CI selection (`CD_BASE` on the predecessor).
+- **A new import in an existing module changes what other tests execute, and the selection
+  does not see it** — a line that imports an existing module (here `validation_sources.py`
+  starting to use `takeover.py`) makes every test that calls `validate()` execute that file as
+  well, but the selection only picks the tests the map already names for the changed file. The
+  four missing tests only came to light in the full CI run (red on the map alone). The
+  selection should include the tests that import the changed file indirectly, or the map
+  should record per import who calls whom.
+- **The `flow_*`, `form_*` and `schema_fields` functions read well over a hundred private
+  cursors and lists of the configuration flow** (`flow._index`, `flow._installation`,
+  `flow._list`...), the same shape as the private attributes of the coordinator that the parts no
+  longer read. `FlowSurface` names them with a leading underscore and the guard on
+  `coordinator._name` does not see them. Give the flow public names or a state class of its own
+  per screen, and extend the guard to `flow._name` outside `config_flow.py`.
+- **Two `hasattr(self, ...)` in `state_store.py` exist only for stand-ins in the tests**
+  (`_restore_overrides` and `zone_override_until`), the same fallback as the removed
+  `getattr(self, ...)`. The stand-ins in `test_handed_back.py` and `test_override_branches.py`
+  must get those members; the guard on `getattr` can then take `hasattr` along.
+- **The thin methods of `coordinator.py` pass `*args, **kwargs` on** (forty-two of them), so
+  their signature and types disappear on the outside. Give them the signature of the part they
+  call.
 - **A new package module falls outside the selection of the tests that execute it
   indirectly** — `script/select_tests.py` picks, for a new file, only the tests that import
   it directly or already stand in the map. a new resident module only reached the map
@@ -434,12 +499,6 @@ The worked-out design proposals for everything below live in
   and an empty house then do not let the hand start lapse either (measured). The next day
   bounds it; what is missing is a bound per sensor (only the
   sensors of whoever is home, or a maximum of unreadable rounds).
-- **The hand and the hand start are mixed in `hand_start.py`** — `_zones_of`,
-  `_zones_handed_back`, `_everyone_asleep` and `_house_is_empty` belong to the hand
-  (anchor 11) and moved out of the coordinator into the hand-start module, although a hand
-  start is not a hand. Move them to the override module or a module of their own in the
-  clean-up round of the code layout; ARCHITECTURE now describes the module only as the
-  hand start's "recognition, storage and expiry".
 - **The mutation probe runs every mutation after a version commit** — only `manifest.json`
   and `pyproject.toml` change, but `pyproject.toml` counts as a shared helper file and
   makes all fourteen mutations run (well over an hour and a half). A path condition that
@@ -463,7 +522,7 @@ The worked-out design proposals for everything below live in
   off again afterwards. During the startup only an override still standing after the
   restore counts; when it is switched off again within that time, the stored hand comes
   back.
-- **The condition `zone in _occupied_rooms` in `_notice_room_empty` has no test** —
+- **The condition `zone in _occupied_rooms` in `notice_room_empty` has no test** —
   remove it and no test turns red. Either it is redundant (then it can go), or a test is
   missing for the case in which it does something.
 - **The form guard's field map silently falls back to the `Call` node** —
@@ -529,7 +588,10 @@ The worked-out design proposals for everything below live in
   by hand already exist (a button per zone, the `precondition` action and a timer that runs
   out by itself); this idea is only about the automatic part.
 - **Energy price as source preference** — let a dynamic tariff or a solar surplus weigh
-  into `Source.priority`, so the cheapest source wins as long as it can cope.
+  into `Source.priority`, so the cheapest source wins as long as it can cope. Step 1, the cost
+  arithmetic (`engine/cost.py`), is in, and step 2: the
+  energy settings and the *Cheapest heat source* sensor (watching only). Switching on cost is
+  not there yet.
 - **Levelling live priorities on one circuit** — two zones with the same priority on the
   same circuit now let source and zone order decide. A zone that waits long could get one
   temporary step of precedence, falling back to the configured priority. The design stands

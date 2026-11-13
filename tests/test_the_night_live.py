@@ -146,7 +146,7 @@ class TestTheMomentInARunningHouse:
             installation(), states=world(danny=False, nancy=True), config_dir=config_dir
         )
         try:
-            assert home.coordinator._asleep_since is None
+            assert home.coordinator.asleep_since is None
         finally:
             await stop_house(home)
         clock.at(15, 0, 45)
@@ -154,7 +154,7 @@ class TestTheMomentInARunningHouse:
             installation(), states=world(danny=False, nancy=True), config_dir=config_dir
         )
         try:
-            assert again.coordinator._asleep_since is None
+            assert again.coordinator.asleep_since is None
             assert reason(again) != "waiting_for_sleeper"
             assert again.state(LIVING) == "heat"
         finally:
@@ -177,8 +177,8 @@ class TestTheMomentInARunningHouse:
             installation(), states=world(danny=True, nancy=True), config_dir=config_dir
         )
         try:
-            assert near(home.coordinator._asleep_since, first)
-            assert home.coordinator._store_payload()["asleep_since"]
+            assert near(home.coordinator.asleep_since, first)
+            assert home.coordinator.store_payload()["asleep_since"]
         finally:
             await stop_house(home)
 
@@ -187,7 +187,7 @@ class TestTheMomentInARunningHouse:
             installation(), states=world(danny=True, nancy=True), config_dir=config_dir
         )
         try:
-            assert near(again.coordinator._asleep_since, first)
+            assert near(again.coordinator.asleep_since, first)
             clock.at(15, 7, 0)
             await wakes(again, "danny")
             assert reason(again) == "waiting_for_sleeper"
@@ -199,7 +199,7 @@ class TestTheMomentInARunningHouse:
             installation(), states=world(danny=False, nancy=True), config_dir=config_dir
         )
         try:
-            assert near(morning.coordinator._asleep_since, first)
+            assert near(morning.coordinator.asleep_since, first)
             assert reason(morning) == "waiting_for_sleeper"
         finally:
             await stop_house(morning)
@@ -216,15 +216,15 @@ class TestTheMomentInARunningHouse:
         clock.at(14, 22, 0)
         home = await start_house(installation(), states=world(danny=False, nancy=True))
         try:
-            assert home.coordinator._asleep_since is None
+            assert home.coordinator.asleep_since is None
             clock.at(15, 0, 15)
             await home.evaluate()
-            assert home.coordinator._asleep_since is None
+            assert home.coordinator.asleep_since is None
             assert reason(home) != "waiting_for_sleeper"
             bedtime = clock.at(15, 0, 30)
             await wakes(home, "danny", asleep=True)
-            assert near(home.coordinator._asleep_since, bedtime)
-            assert home.coordinator._store_payload()["asleep_since"]
+            assert near(home.coordinator.asleep_since, bedtime)
+            assert home.coordinator.store_payload()["asleep_since"]
             clock.at(15, 7, 0)
             await wakes(home, "danny")
             assert reason(home) == "waiting_for_sleeper"

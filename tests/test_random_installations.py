@@ -32,8 +32,9 @@ from collections import Counter
 from datetime import datetime, timedelta
 
 import pytest
-from conftest import assert_plan_holds
+from conftest import assert_plan_holds, structural_problems
 
+from custom_components.climate_director.coordinator_state import LifecycleState
 from custom_components.climate_director.engine import (
     ClimateState,
     ConflictPolicy,
@@ -659,7 +660,7 @@ def sweep():
         #
         # The wizard only writes sound installations, so a complaint here means
         # the generator itself builds something the user could not have entered.
-        found = validate(config)
+        found = structural_problems(config)
         problems += len(found)
         assert not found, found
 
@@ -824,7 +825,7 @@ class TestTheFormBuildsSoundZones:
                 continue
 
             config = config_from_dict(self._single_zone(zone))
-            assert not validate(config), validate(config)
+            assert not structural_problems(config), structural_problems(config)
             assert config_from_dict(config_to_dict(config)) == config
 
         assert refused > 0, "geen enkel formulier werd geweigerd; de controle doet niets"
@@ -948,15 +949,18 @@ class TestTheActionAcceptsAnything:
         class StandIn:
             def __init__(self) -> None:
                 self.config = config
-                self._precondition: dict[str, datetime] = {}
-                self._precondition_bypass: set[str] = set()
-                self._override_before_restore: set[str] = set()
-                self._request_before_restore: set[str] = set()
+                self.precondition_until: dict[str, datetime] = {}
+                self.precondition_bypass: set[str] = set()
+                self.override_before_restore: set[str] = set()
+                self.request_before_restore: set[str] = set()
+                self.lifecycle = LifecycleState()
+                self.lifecycle = LifecycleState()
+                self.lifecycle.restored = True
 
             def async_request_evaluation(self) -> None:
                 pass
 
-            def _async_save_state(self) -> None:
+            def async_save_state(self) -> None:
                 pass
 
             def _preconditions_expire_at(self, until: datetime) -> None:
@@ -966,7 +970,7 @@ class TestTheActionAcceptsAnything:
             async_cancel_precondition = ClimateDirectorCoordinator.async_cancel_precondition
             _live_preconditions = ClimateDirectorCoordinator._live_preconditions
             _wake_at_the_first_expiry = ClimateDirectorCoordinator._wake_at_the_first_expiry
-            _note_by_hand_before_restore = ClimateDirectorCoordinator._note_by_hand_before_restore
+            note_by_hand_before_restore = ClimateDirectorCoordinator.note_by_hand_before_restore
 
         return StandIn()
 

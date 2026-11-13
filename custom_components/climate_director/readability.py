@@ -21,6 +21,7 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .engine import DirectorConfig
+from .engine.hand_start import holiday_feeds_brakes
 from .engine.world import ReadableInput, UnreadableInput
 
 
@@ -57,7 +58,7 @@ def unreadable_inputs(hass: HomeAssistant, config: DirectorConfig) -> frozenset[
             found.add(UnreadableInput(ReadableInput.PRESENCE, resident.resident_id))
         if resident.sleep_entity and _no_reading(hass, resident.sleep_entity):
             found.add(UnreadableInput(ReadableInput.SLEEP, resident.resident_id))
-    if config.holiday_keyword.strip():
+    if holiday_feeds_brakes(config):
         for calendar in config.holiday_calendars:
             if calendar and _no_reading(hass, calendar):
                 found.add(UnreadableInput(ReadableInput.HOLIDAY))

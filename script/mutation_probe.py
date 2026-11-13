@@ -92,7 +92,7 @@ MUTATIONS = [
         "name": "opgeslagen-hand-toch-weg",
         "file": "custom_components/climate_director/state_store.py",
         "old": (
-            "                if zone in self._override_before_restore "
+            "                if zone in self.override_before_restore "
             "and self.zone_overrides.get(zone, False)"
         ),
         "new": "                if self.zone_overrides.get(zone, False)",
@@ -116,8 +116,7 @@ MUTATIONS = [
         "name": "handstart-knop-zonder-rem",
         "file": "custom_components/climate_director/hand_start.py",
         "old": (
-            "        if not brakes_remaining(self.config, self.build_world(), zone, "
-            "self._published_plan()):\n"
+            "        if not brakes_remaining(self.config, self.build_world(), zone, self.data):\n"
             "            return"
         ),
         "new": "        if False:\n            return",
@@ -137,14 +136,52 @@ MUTATIONS = [
     {
         "name": "handstart-eigen-aanzet-telt",
         "file": "custom_components/climate_director/hand_start.py",
-        "old": ("        if self._we_wanted_it_on(entity_id, duty):\n            return"),
+        "old": ("        if self.we_wanted_it_on(entity_id, duty):\n            return"),
         "new": "        if False:\n            return",
     },
     {
         "name": "handstart-niet-bewaard",
         "file": "custom_components/climate_director/state_store.py",
-        "old": '            "hand_starts": getattr(self, "_hand_starts_payload", dict)(),',
+        "old": '            "hand_starts": self._hand_starts_payload(),',
         "new": '            "hand_starts": {},',
+    },
+    {
+        "name": "gebiedsconflict-aanroep-weg",
+        "file": "custom_components/climate_director/engine/candidates.py",
+        "old": "kept, dropped = takeover.area_clash(config, wishes, takeovers)",
+        "new": "kept, dropped = dict(wishes), {}",
+    },
+    {
+        "name": "gebiedsconflict-overnemer-niet-overgeslagen",
+        "file": "custom_components/climate_director/engine/takeover.py",
+        "old": "if len(area) < 2 or entity_id in taking:",
+        "new": "if len(area) < 2:",
+    },
+    {
+        "name": "gebiedsconflict-verliezers-en-eigenaars-verwisseld",
+        "file": "custom_components/climate_director/engine/takeover.py",
+        "old": "for loser in rivals if best else owners:",
+        "new": "for loser in owners if best else rivals:",
+    },
+    {
+        "name": "gebiedsconflict-verliezer-blijft-in-de-wensen",
+        "file": "custom_components/climate_director/engine/takeover.py",
+        "old": "dropped[loser.zone.zone_id] = kept.pop(loser.zone.zone_id)",
+        "new": "dropped[loser.zone.zone_id] = kept.get(loser.zone.zone_id)",
+    },
+    {
+        "name": "gebiedsconflict-beste-eigenaar-wordt-slechtste",
+        "file": "custom_components/climate_director/engine/takeover.py",
+        "old": "best = min(owners, key=lambda r: r.rank).rank",
+        "new": "best = max(owners, key=lambda r: r.rank).rank",
+    },
+    {
+        "name": "gebiedsconflict-rivaal-buiten-het-gebied",
+        "file": "custom_components/climate_director/engine/takeover.py",
+        "old": (
+            "r for r in kept.values() if r.source.entity_id != entity_id and r.zone.zone_id in area"
+        ),
+        "new": "r for r in kept.values() if r.source.entity_id != entity_id",
     },
 ]
 

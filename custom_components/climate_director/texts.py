@@ -29,7 +29,6 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
-from homeassistant.helpers.entity_registry import DATA_REGISTRY as DATA_REGISTRY
 
 from .const import DOMAIN
 
@@ -283,7 +282,7 @@ ACTION_KEY = f"component.{DOMAIN}.entity.sensor.would_command.state_attributes.a
 MESSAGE_KEY = f"component.{DOMAIN}.entity.sensor.zone_source.state_attributes.message.state."
 
 
-def _entity_cache(hass: HomeAssistant) -> dict[str, str]:
+def entity_cache(hass: HomeAssistant) -> dict[str, str]:
     """Return this integration's entity translations in the user's language.
 
     Alleen-lezen, net als `lookup`: `async_get_cached_translations` leest de
@@ -293,19 +292,3 @@ def _entity_cache(hass: HomeAssistant) -> dict[str, str]:
     `async_prepare` filled and never touches the disk.
     """
     return translation.async_get_cached_translations(hass, hass.config.language, "entity", DOMAIN)
-
-
-# -- de leesbare kant van één beslissing / the readable side of one decision ---
-
-
-from .entity_texts import (  # noqa: E402, I001
-    reason_sentence as reason_sentence,
-    action_sentence as action_sentence,
-    _connector as _connector,
-    decision_message as decision_message,
-    _command_for as _command_for,
-    _source_display_name as _source_display_name,
-    _was_running as _was_running,
-    _action_key as _action_key,
-    decision_fields as decision_fields,
-)

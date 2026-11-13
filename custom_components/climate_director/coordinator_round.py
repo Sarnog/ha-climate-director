@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from dataclasses import replace
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
@@ -16,24 +15,22 @@ from .const import (
     CLOCK_REEVAL_SECONDS,
     MIN_DEFERRAL_SECONDS,
 )
+from .coordinator_surface import CoordinatorSurface
 from .engine import (
     ModeFamily,
     Plan,
     WorldState,
     decide,
 )
-from .engine.constraints import active_family
+from .engine.circuit_policy import active_family
 from .engine.diff import changes
 from .preconditions import still_running
-
-if TYPE_CHECKING:
-    from .coordinator import ClimateDirectorCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 _COMMAND_NOT_TAKING_ROUNDS = 10
 
 
-def _remember_families(coordinator: ClimateDirectorCoordinator, world: WorldState) -> None:
+def remember_families(coordinator: CoordinatorSurface, world: WorldState) -> None:
     """Record when each circuit last took on the duty it is running.
 
     Read from the observed states rather than from the previous plan: a
@@ -42,14 +39,14 @@ def _remember_families(coordinator: ClimateDirectorCoordinator, world: WorldStat
     """
     for circuit in coordinator.config.circuits:
         current = active_family(world, circuit)
-        if coordinator._family_seen.get(circuit.circuit_id) != current:
-            coordinator._family_seen[circuit.circuit_id] = current
-            coordinator._family_since[circuit.circuit_id] = (
+        if coordinator.round.family_seen.get(circuit.circuit_id) != current:
+            coordinator.round.family_seen[circuit.circuit_id] = current
+            coordinator.round.family_since[circuit.circuit_id] = (
                 world.now if current in (ModeFamily.HEAT, ModeFamily.COOL) else None
             )
 
 
-def _with_family_history(coordinator: ClimateDirectorCoordinator, world: WorldState) -> WorldState:
+def with_family_history(coordinator: CoordinatorSurface, world: WorldState) -> WorldState:
     """Return the snapshot with the recorded duty-change times filled in.
 
     Eén veld vervangen, de rest overnemen zoals hij is. Dat gebeurde ooit
@@ -66,17 +63,17 @@ def _with_family_history(coordinator: ClimateDirectorCoordinator, world: WorldSt
     did pass it along. A field added later can no longer be forgotten this
     way.
     """
-    return replace(world, circuit_family_since=dict(coordinator._family_since))
+    return replace(world, circuit_family_since=dict(coordinator.round.family_since))
 
 
-def _schedule_deferral(coordinator: ClimateDirectorCoordinator, plan: Plan) -> None:
+def schedule_deferral(coordinator: CoordinatorSurface, plan: Plan) -> None:
     """Re-evaluate when a timer in the plan expires.
 
     Without this, a plan held back by short-cycle protection would wait for
     an unrelated state change to resume - which on a quiet night may never
     come.
     """
-    coordinator._cancel_pending_deferral()
+    coordinator.cancel_pending_deferral()
 
     deferral = plan.next_deferral
     if deferral is None:
@@ -86,27 +83,27 @@ def _schedule_deferral(coordinator: ClimateDirectorCoordinator, plan: Plan) -> N
 
     @callback
     def _resume(_now: datetime) -> None:
-        coordinator._cancel_deferral = None
+        coordinator.round.cancel_deferral = None
         coordinator.async_request_evaluation()
 
-    coordinator._cancel_deferral = async_call_later(coordinator.hass, delay, _resume)
+    coordinator.round.cancel_deferral = async_call_later(coordinator.hass, delay, _resume)
 
 
-def _cancel_pending_deferral(coordinator: ClimateDirectorCoordinator) -> None:
+def cancel_pending_deferral(coordinator: CoordinatorSurface) -> None:
     """Drop the scheduled re-evaluation, if there is one."""
-    if coordinator._cancel_deferral is not None:
-        coordinator._cancel_deferral()
-        coordinator._cancel_deferral = None
+    if coordinator.round.cancel_deferral is not None:
+        coordinator.round.cancel_deferral()
+        coordinator.round.cancel_deferral = None
 
 
-def _cancel_clock_reeval(coordinator: ClimateDirectorCoordinator) -> None:
+def cancel_clock_reeval(coordinator: CoordinatorSurface) -> None:
     """Drop the scheduled safety-net tick, if there is one."""
-    if coordinator._clock_reeval_unsub is not None:
-        coordinator._clock_reeval_unsub()
-        coordinator._clock_reeval_unsub = None
+    if coordinator.round.clock_reeval_unsub is not None:
+        coordinator.round.clock_reeval_unsub()
+        coordinator.round.clock_reeval_unsub = None
 
 
-def _schedule_clock_reeval(coordinator: ClimateDirectorCoordinator) -> None:
+def schedule_clock_reeval(coordinator: CoordinatorSurface) -> None:
     """Arm the periodic safety-net evaluation, replacing any earlier one.
 
     Het vangnet voor tijdregels die vanzelf verlopen: een raamvertraging,
@@ -123,45 +120,45 @@ def _schedule_clock_reeval(coordinator: ClimateDirectorCoordinator) -> None:
     A round without a difference costs no service call, so every minute is
     cheap.
     """
-    coordinator._cancel_clock_reeval()
-    coordinator._clock_reeval_unsub = async_call_later(
-        coordinator.hass, CLOCK_REEVAL_SECONDS, coordinator._on_clock_reeval
+    coordinator.cancel_clock_reeval()
+    coordinator.round.clock_reeval_unsub = async_call_later(
+        coordinator.hass, CLOCK_REEVAL_SECONDS, coordinator.on_clock_reeval
     )
 
 
-def _on_clock_reeval(coordinator: ClimateDirectorCoordinator, _now: datetime) -> None:
+def on_clock_reeval(coordinator: CoordinatorSurface, _now: datetime) -> None:
     """Re-evaluate on the clock, and arm the next tick."""
-    coordinator._clock_reeval_unsub = None
+    coordinator.round.clock_reeval_unsub = None
     coordinator.async_request_evaluation()
-    coordinator._schedule_clock_reeval()
+    coordinator.schedule_clock_reeval()
 
 
-def _live_preconditions(coordinator: ClimateDirectorCoordinator) -> dict[str, datetime]:
+def live_preconditions(coordinator: CoordinatorSurface) -> dict[str, datetime]:
     """Return the requests that have not run out, dropping the rest.
 
     Pruned on reading rather than on a timer: an expired request is over
     whether or not anything got round to noticing.
     """
-    coordinator._precondition = still_running(coordinator._precondition, dt_util.now())
-    coordinator._precondition_bypass &= set(coordinator._precondition)
-    return dict(coordinator._precondition)
+    coordinator.precondition_until = still_running(coordinator.precondition_until, dt_util.now())
+    coordinator.precondition_bypass &= set(coordinator.precondition_until)
+    return dict(coordinator.precondition_until)
 
 
-async def _async_evaluate(coordinator: ClimateDirectorCoordinator) -> None:
+async def async_evaluate(coordinator: CoordinatorSurface) -> None:
     """Read the world, decide, apply, and report."""
-    # `_restored` is de opstartpoort en `_closing` de afbraakpoort; zie `__init__`.
-    if coordinator._closing or not coordinator._restored:
+    # `restored` is de opstartpoort en `closing` de afbraakpoort; zie `__init__`.
+    if coordinator.lifecycle.closing or not coordinator.lifecycle.restored:
         return
-    async with coordinator._lock:
-        coordinator._drop_lapsed_override_timers()
-        world = coordinator._note_house_asleep(coordinator.build_world())
-        coordinator._remember_families(world)
-        world = coordinator._with_family_history(world)
-        world = coordinator._settle_hand_starts(world)
+    async with coordinator.round.lock:
+        coordinator.drop_lapsed_override_timers()
+        world = coordinator.note_house_asleep(coordinator.build_world())
+        coordinator.remember_families(world)
+        world = coordinator.with_family_history(world)
+        world = coordinator.settle_hand_starts(world)
 
         plan = decide(coordinator.config, world, coordinator.data)
         coordinator.world = world
-        coordinator._issued = plan
+        coordinator.round.issued = plan
 
         # De verschillenlijst wordt hier bewaard, niet wat de applier
         # ervan uitgevoerd kreeg. In schaduwmodus is dit precies "wat de
@@ -183,11 +180,10 @@ async def _async_evaluate(coordinator: ClimateDirectorCoordinator) -> None:
         # commands that zone nothing, and the expiry choice is thus exactly
         # the one command at that moment. After that the director simply
         # decides again.
-        expiry_changes = coordinator._consume_expired_overrides(world.now)
-        pending_changes = coordinator._consume_pending_override_changes(world)
-        coordinator.last_changes = (
-            changes(plan, world, coordinator._sent_setpoints) + expiry_changes + pending_changes
-        )
+        expiry_changes = coordinator.consume_expired_overrides(world.now)
+        pending_changes = coordinator.consume_pending_override_changes(world)
+        sent = coordinator.round.sent_setpoints
+        coordinator.last_changes = changes(plan, world, sent) + expiry_changes + pending_changes
         coordinator.last_applied = ()
 
         try:
@@ -196,16 +192,13 @@ async def _async_evaluate(coordinator: ClimateDirectorCoordinator) -> None:
             )
         except Exception:  # noqa: BLE001
             _LOGGER.exception("Applying the climate plan failed")
-        coordinator._note_commanded_off(coordinator.last_applied)
-        coordinator._note_commanded_on(coordinator.last_applied)
+        coordinator.note_commanded_off(coordinator.last_applied)
+        coordinator.note_commanded_on(coordinator.last_applied)
         for change in coordinator.last_applied:
             if change.set_temperature and change.command.temperature is not None:
-                coordinator._sent_setpoints[change.entity_id] = (
-                    change.command.hvac_mode,
-                    change.command.temperature,
-                )
+                sent[change.entity_id] = (change.command.hvac_mode, change.command.temperature)
 
-        if coordinator._closing:
+        if coordinator.lifecycle.closing:
             return
         # Het publiceren van het plan hoort altijd te gebeuren, ook als een
         # van de meldingen eromheen een uitzondering gooit. Gebeurde dat
@@ -218,14 +211,14 @@ async def _async_evaluate(coordinator: ClimateDirectorCoordinator) -> None:
         # previous plan round after round while the loop kept running - the
         # quietest way to freeze a house.
         try:
-            coordinator._fire_events(plan)
-            coordinator._fire_refusals(plan)
-            coordinator._note_waiting(plan)
-            coordinator._report_unreadable()
-            coordinator._report_unsupported_modes()
-            coordinator._report_command_not_taking()
-            coordinator._report_season_override()
-            coordinator._report_bypassed_openings()
-            coordinator._schedule_deferral(plan)
+            coordinator.fire_events(plan)
+            coordinator.fire_refusals(plan)
+            coordinator.note_waiting(plan)
+            coordinator.report_unreadable()
+            coordinator.report_unsupported_modes()
+            coordinator.report_command_not_taking()
+            coordinator.report_season_override()
+            coordinator.report_bypassed_openings()
+            coordinator.schedule_deferral(plan)
         finally:
             coordinator.async_set_updated_data(plan)

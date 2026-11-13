@@ -24,6 +24,7 @@ from datetime import datetime, time, timedelta
 import pytest
 from conftest import asleep, awake, away, gate_verdict, make_world
 
+from custom_components.climate_director.coordinator_state import LifecycleState
 from custom_components.climate_director.engine import (
     DirectorConfig,
     GateSettings,
@@ -336,17 +337,20 @@ class TestTheRequestItself:
         class StandIn:
             def __init__(self) -> None:
                 self.config = config
-                self._precondition: dict[str, datetime] = {}
-                self._precondition_bypass: set[str] = set()
-                self._override_before_restore: set[str] = set()
-                self._request_before_restore: set[str] = set()
+                self.precondition_until: dict[str, datetime] = {}
+                self.precondition_bypass: set[str] = set()
+                self.override_before_restore: set[str] = set()
+                self.request_before_restore: set[str] = set()
+                self.lifecycle = LifecycleState()
+                self.lifecycle = LifecycleState()
+                self.lifecycle.restored = True
                 self.asked = 0
                 self.saved = 0
 
             def async_request_evaluation(self) -> None:
                 self.asked += 1
 
-            def _async_save_state(self) -> None:
+            def async_save_state(self) -> None:
                 self.saved += 1
 
             def _preconditions_expire_at(self, until: datetime) -> None:
@@ -357,7 +361,7 @@ class TestTheRequestItself:
             live_preconditions = ClimateDirectorCoordinator.live_preconditions
             _live_preconditions = ClimateDirectorCoordinator._live_preconditions
             _wake_at_the_first_expiry = ClimateDirectorCoordinator._wake_at_the_first_expiry
-            _note_by_hand_before_restore = ClimateDirectorCoordinator._note_by_hand_before_restore
+            note_by_hand_before_restore = ClimateDirectorCoordinator.note_by_hand_before_restore
 
         return StandIn()
 
@@ -452,5 +456,7 @@ class TestTheRequestItself:
 
     def test_expired_requests_are_forgotten_on_reading(self) -> None:
         coordinator = self._coordinator()
-        coordinator._precondition = {"zolder": datetime.now().astimezone() - timedelta(minutes=1)}
+        coordinator.precondition_until = {
+            "zolder": datetime.now().astimezone() - timedelta(minutes=1)
+        }
         assert coordinator._live_preconditions() == {}
