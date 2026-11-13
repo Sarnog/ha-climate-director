@@ -49,7 +49,8 @@ class TestParseCopCurve:
 
     @pytest.mark.parametrize(
         "text",
-        ["", "   ", "7", "7:3.8:1", "a:3.8", "7:b", "7:0", "7:-1", "7:3.8, 7:4.0"],
+        ["", "   ", "7", "7:3.8:1", "a:3.8", "7:b", "7:0", "7:-1", "7:3.8, 7:4.0"]
+        + ["7:inf", "7:nan", "inf:3.8", "nan:3.8", "-inf:3.8"],
     )
     def test_unreadable_text_gives_none(self, text: str) -> None:
         assert parse_cop_curve(text) is None
@@ -90,6 +91,18 @@ class TestHeatCosts:
         costs = heat_costs(FULL, 0.90, 0.05, 2.0, 8.0)
         assert costs.electricity_price == 0.05
         assert costs.cheapest == ELECTRIC
+
+    def test_a_set_but_unreadable_feed_in_price_during_surplus_is_unknown(self) -> None:
+        settings = replace(FULL, feed_in_sensor="sensor.terug")
+        costs = heat_costs(settings, 0.30, None, 2.0, 8.0)
+        assert costs.electricity_price is None
+        assert costs.electric is None
+        assert costs.cheapest == GAS
+
+    def test_an_unreadable_feed_in_price_without_surplus_uses_the_grid_price(self) -> None:
+        settings = replace(FULL, feed_in_sensor="sensor.terug")
+        assert heat_costs(settings, 0.30, None, 0.0, 8.0).electricity_price == 0.30
+        assert heat_costs(settings, 0.30, None, None, 8.0).electricity_price == 0.30
 
     def test_unknown_outdoor_temperature_leaves_gas_alone(self) -> None:
         costs = heat_costs(FULL, 0.30, None, None, None)

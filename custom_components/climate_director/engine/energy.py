@@ -19,6 +19,7 @@ the cheapest source would be right now.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 from .cost import CopCurve, cheapest, electric_cost, gas_cost, surplus_price
@@ -93,14 +94,15 @@ def parse_cop_curve(text: str) -> CopCurve | None:
     """Return the curve a text such as `-5:2.8, 7:3.8, 15:4.5` describes.
 
     Elk punt is `buitentemperatuur:COP`; komma's of puntkomma's scheiden de
-    punten. Een tekst met een punt dat niet leest, met een COP van nul of lager,
-    met twee keer dezelfde temperatuur of zonder punten geeft `None`: een curve
-    waar je half op kunt rekenen is er geen.
+    punten. Een tekst geeft `None` bij een punt dat niet leest, een COP van nul
+    of lager, een getal dat niet eindig is (`inf`, `nan`), tweemaal dezelfde
+    temperatuur, of geen punten: een curve waar je half op kunt rekenen is er
+    geen.
 
     Each point is `outdoor temperature:COP`; commas or semicolons separate the
-    points. A text with a point that does not read, with a COP of zero or less,
-    with the same temperature twice or without points gives `None`: a curve you
-    can only half count on is none.
+    points. A text gives `None` for a point that does not read, a COP of zero or
+    less, a number that is not finite (`inf`, `nan`), the same temperature
+    twice, or no points: a curve you can only half count on is none.
     """
     points: list[tuple[float, float]] = []
     for part in text.replace(";", ",").split(","):
@@ -114,7 +116,7 @@ def parse_cop_curve(text: str) -> CopCurve | None:
             cop = float(pieces[1].strip())
         except ValueError:
             return None
-        if cop <= 0:
+        if not (math.isfinite(outdoor) and math.isfinite(cop)) or cop <= 0:
             return None
         points.append((outdoor, cop))
     if not points or len({outdoor for outdoor, _ in points}) != len(points):
@@ -150,7 +152,18 @@ def heat_costs(
     surplus. What cannot be read gives `None` for that source, and with no
     source that has a cost there is no cheapest either.
     """
-    price = surplus_price(grid_price, feed_in_price, surplus_kw)
+    # Staat er een terugleversensor ingesteld maar geeft die niets terwijl er
+    # overschot is, dan is de prijs van die stroom onbekend: de netprijs is dan
+    # niet wat je misloopt. Alleen een lege instelling gebruikt altijd de netprijs.
+    #
+    # With a feed-in sensor set that gives nothing while there is a surplus, the
+    # price of that power is unknown: the grid price is then not what you give up.
+    # Only an empty setting always uses the grid price.
+    surplus = surplus_kw is not None and surplus_kw > 0
+    if surplus and settings.feed_in_sensor and feed_in_price is None:
+        price = None
+    else:
+        price = surplus_price(grid_price, feed_in_price, surplus_kw)
     curve = parse_cop_curve(settings.cop_curve)
     cop = curve.cop_at(outdoor) if curve is not None else None
     gas = gas_cost(settings.gas_price or None, settings.kwh_per_m3, settings.boiler_efficiency)
