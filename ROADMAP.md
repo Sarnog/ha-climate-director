@@ -22,9 +22,9 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   plaats van één waarde per zone die alleen door de poorten aan- en uitgezet wordt.
   Voorbeeld: de woonkamer overdag op 21 °C en 's avonds op 23 °C, terwijl de zolder het
   hele etmaal op 21 °C blijft. Een vast dagritme hoort in de config te staan: een
-  override is bedoeld om tijdelijk met de hand in te grijpen (met een maximale duur) en
-  is daarvoor niet de bedoelde route, ook niet vanuit een automatisering. Per venster
-  hoort ook het aanpunt mee te bewegen, anders start de zone pas bij een waarde die hoger
+  override is bedoeld om tijdelijk met de hand in te grijpen (met een optionele duur;
+  zonder duur verloopt hij nooit vanzelf) en is daarvoor niet de bedoelde route, ook niet
+  vanuit een automatisering. Per venster hoort ook het aanpunt mee te bewegen, anders start de zone pas bij een waarde die hoger
   ligt dan het doel van dat venster.
 
 ## Should have
@@ -328,8 +328,8 @@ The worked-out design proposals for everything below live in
   value per zone that the gates merely switch on and off. Example: the living room at
   21 °C during the day and 23 °C in the evening, while the attic stays at 21 °C around the
   clock. A fixed daily rhythm belongs in the config: an override is meant for stepping in
-  by hand for a while (with a maximum duration) and is not the intended route for this,
-  not even from an automation. Each window should also move the switch-on point along,
+  by hand for a while (with an optional duration; without one it never lapses by itself)
+  and is not the intended route for this, not even from an automation. Each window should also move the switch-on point along,
   otherwise the zone only starts at a value above that window's target.
 
 ## Should have
