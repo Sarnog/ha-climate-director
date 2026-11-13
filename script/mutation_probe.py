@@ -26,6 +26,18 @@ Two things keep the probe short. Pytest stops at the first test that fails (`-x`
 one red test is enough to call a mutation caught, the rest of the suite says nothing
 more about it. And the mutations run side by side, one per processor
 (`CD_MUTATION_WORKERS` sets the number); every mutation has its own copy anyway.
+
+Een mutatie kan pytest laten hangen (een lus die niet meer eindigt, een toets die
+wacht op een klok die niet loopt). Daarom heeft elke mutatie een tijdslimiet
+(`CD_MUTATION_TIMEOUT`, seconden): daarna wordt de hele procesgroep gestopt en telt de
+mutatie als gevangen, want een mutant die de suite laat hangen is net zo merkbaar als
+een rode toets. De uitvoer zegt dan `gevangen (timeout)`.
+
+A mutation can make pytest hang (a loop that never ends, a test waiting on a clock
+that does not run). So every mutation has a time limit (`CD_MUTATION_TIMEOUT`,
+seconds): after it the whole process group is stopped and the mutation counts as
+caught, since a mutant that hangs the suite is as noticeable as a red test. The
+output then says `gevangen (timeout)`.
 """
 
 from __future__ import annotations
@@ -33,6 +45,7 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -40,6 +53,8 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+# Standaardlimiet per mutatie in seconden / default limit per mutation in seconds.
+DEFAULT_TIMEOUT = 480
 sys.path.insert(0, str(REPO / "script"))
 import select_tests as sel  # noqa: E402
 
@@ -209,8 +224,41 @@ def relevant(mutation: dict, tests: list[str], changed: dict[str, str] | None) -
     )
 
 
-def caught(mutation: dict, tests: list[str]) -> bool:
-    """Run the tests against a mutated copy; `True` when at least one test fails."""
+def mutation_timeout() -> float:
+    """Seconds one mutation may take: `CD_MUTATION_TIMEOUT`, else `DEFAULT_TIMEOUT`."""
+    try:
+        wanted = float(os.environ.get("CD_MUTATION_TIMEOUT", ""))
+    except ValueError:
+        return DEFAULT_TIMEOUT
+    return wanted if wanted > 0 else DEFAULT_TIMEOUT
+
+
+def run_limited(command: list[str], cwd: Path, timeout: float) -> int | None:
+    """Run a command in its own process group; `None` when it overran `timeout`.
+
+    The whole group is killed on overrun, so a hanging pytest and the processes it
+    started do not keep running (or keep the job open).
+    """
+    with subprocess.Popen(
+        command,
+        cwd=cwd,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    ) as process:
+        try:
+            return process.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            os.killpg(process.pid, signal.SIGKILL)
+            process.wait()
+            return None
+
+
+def caught(mutation: dict, tests: list[str]) -> str:
+    """Run the tests against a mutated copy: `caught`, `timeout` or `uncaught`.
+
+    A test that fails catches the mutation; so does a run that hangs past the limit.
+    """
     with tempfile.TemporaryDirectory() as tmp:
         target = Path(tmp) / "repo"
         shutil.copytree(
@@ -219,13 +267,14 @@ def caught(mutation: dict, tests: list[str]) -> bool:
             ignore=shutil.ignore_patterns(".git", ".venv", "__pycache__", ".pytest_cache"),
         )
         _apply(target, mutation)
-        result = subprocess.run(
+        code = run_limited(
             [sys.executable, "-m", "pytest", "-q", "-x", "-p", "no:cacheprovider", *tests],
-            cwd=target,
-            capture_output=True,
-            text=True,
+            target,
+            mutation_timeout(),
         )
-        return result.returncode != 0
+        if code is None:
+            return "timeout"
+        return "caught" if code != 0 else "uncaught"
 
 
 def workers() -> int:
@@ -279,8 +328,10 @@ def main() -> int:
         # De uitslagen komen in de volgorde van de lijst, hoe snel elke mutatie ook is.
         # The outcomes come in the order of the list, however fast each mutation is.
         outcomes = pool.map(lambda item: caught(*item), planned)
-        for (mutation, _tests), was_caught in zip(planned, outcomes, strict=True):
-            if was_caught:
+        for (mutation, _tests), outcome in zip(planned, outcomes, strict=True):
+            if outcome == "timeout":
+                print(f"{mutation['name']}: gevangen (timeout)", flush=True)
+            elif outcome == "caught":
                 print(f"{mutation['name']}: gevangen", flush=True)
             else:
                 uncaught.append(mutation["name"])

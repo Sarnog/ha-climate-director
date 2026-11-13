@@ -39,6 +39,11 @@ jobs:
     name: Mutation probe
     runs-on: ubuntu-latest
     continue-on-error: true
+    # Een normale run duurt ruim onder het kwartier; hangt er toch iets, dan stopt de
+    # baan zelf. Het script stopt daarnaast elke mutatie na CD_MUTATION_TIMEOUT.
+    # A normal run takes well under fifteen minutes; if something hangs anyway the
+    # job stops itself. The script also stops every mutation after CD_MUTATION_TIMEOUT.
+    timeout-minutes: 30
     env:
       CD_BASE: ${{ github.event_name == 'push' && github.event.before || github.event.pull_request.base.sha || '' }}
     steps:
