@@ -187,17 +187,18 @@ picks which appliance heats; without it the *Cheapest heat source* sensor only w
 
 | Setting | What it does |
 |---|---|
-| **Power price sensor** | the current price of a kWh of power, for example from a dynamic contract; takes precedence over the fixed price while the sensor reads a number |
+| **Power price entity** | the current price of a kWh of power, for example from a dynamic contract; takes precedence over the fixed price while the sensor reads a number |
 | **Fixed power price (per kWh)** | fixed price per kWh of power; counts when there is no sensor or the sensor reads nothing; 0 = not set |
-| **Feed-in price sensor** | the price you get for a kWh fed back; counts as the power price during a solar surplus; with the fixed feed-in price empty too = always the power price |
+| **Feed-in price entity** | the price you get for a kWh fed back; counts as the power price during a solar surplus; with the fixed feed-in price empty too = always the power price |
 | **Fixed feed-in price (per kWh)** | fixed payment per kWh fed back; counts when there is no sensor or the sensor reads nothing; 0 = not set |
 | **Solar surplus sensor** | solar surplus in kW (positive = surplus); empty = never a surplus |
-| **Gas price sensor** | the current price of a m³ of gas, for example from a dynamic contract; takes precedence over the fixed gas price while the sensor reads a number |
+| **Gas price entity** | the current price of a m³ of gas, for example from a dynamic contract; takes precedence over the fixed gas price while the sensor reads a number |
 | **Fixed gas price (per m³)** | fixed price per m³ of gas, all in; counts when there is no sensor or the sensor reads nothing; with neither, the sensor is not created |
 | **Calorific value of gas (kWh per m³)** | heat per m³ of gas; 9.77 by default |
 | **Boiler efficiency (0 to 1.2)** | how much of that heat reaches the radiators; 0.9 by default |
 | **COP curve of the air conditioners** | points `outdoor temperature:COP` separated by commas, for example `-5:2.8, 7:3.8, 15:4.5`; empty = the sensor is not created |
 | **Switch on cost** | on = the cheapest source picks whether gas or the air conditioner heats, in every zone with both a gas and an electric source; off = watching only |
+| **Season lock** | on = in summer the director always picks the air conditioner for heating, gas stays the fallback; off = cost and cold limit decide all year |
 | **Cold limit** | below this outdoor temperature gas always heats; empty = no cold limit; 2 °C by default |
 | **Margin before switching (%)** | how many percent cheaper the other source must be before it switches; 10 by default |
 
@@ -248,6 +249,8 @@ A zone is a room. Per zone you set:
 | **State meaning occupied** | the state that sensor reports as occupied |
 | **Keep counting as occupied for (seconds)** | the margin that absorbs flickering detectors |
 | **Precipitation does not lift the open-a-window rule** | on for a room without windows; there the outdoor bound keeps applying even while precipitation falls |
+| **Follows the cost control** | off = this zone does nothing with cost and the outdoor windows of its sources decide; on by default |
+| **Own cold limit** | below this outdoor temperature gas always heats in this zone; empty = the cold limit of the energy settings |
 | **This zone may heat** | off = this room is never heated |
 | **Target temperature for heating** | the setpoint handed to the appliance once heating runs — not the start point |
 | **Start heating at** | heating starts at this indoor temperature or below |

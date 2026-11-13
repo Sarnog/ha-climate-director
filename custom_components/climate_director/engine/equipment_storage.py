@@ -50,6 +50,8 @@ def zone(raw: Mapping[str, Any]) -> Zone:
         presence_state=text(raw.get("presence_state")) or "on",
         presence_timeout=seconds_or(raw.get("presence_timeout")),
         ignore_precipitation=bool_or(raw.get("ignore_precipitation"), False),
+        cost_control=bool_or(raw.get("cost_control"), True),
+        cold_limit=optional_float(raw.get("cold_limit")),
     )
 
 
@@ -142,6 +144,8 @@ def zone_to_dict(zone: Zone) -> dict[str, Any]:
         "presence_state": zone.presence_state,
         "presence_timeout": zone.presence_timeout.total_seconds(),
         "ignore_precipitation": zone.ignore_precipitation,
+        "cost_control": zone.cost_control,
+        "cold_limit": zone.cold_limit,
     }
 
 

@@ -195,6 +195,7 @@ def energy(raw: Any) -> EnergySettings:
         kwh_per_m3=float_or(raw.get("kwh_per_m3"), defaults.kwh_per_m3),
         boiler_efficiency=float_or(raw.get("boiler_efficiency"), defaults.boiler_efficiency),
         cost_control=bool_or(raw.get("cost_control"), defaults.cost_control),
+        season_lock=bool_or(raw.get("season_lock"), defaults.season_lock),
         cold_limit=(
             optional_float(raw["cold_limit"]) if "cold_limit" in raw else defaults.cold_limit
         ),
@@ -216,6 +217,7 @@ def energy_to_dict(settings: EnergySettings) -> dict[str, Any]:
         "kwh_per_m3": settings.kwh_per_m3,
         "boiler_efficiency": settings.boiler_efficiency,
         "cost_control": settings.cost_control,
+        "season_lock": settings.season_lock,
         "cold_limit": settings.cold_limit,
         "switch_margin": settings.switch_margin,
         "cop_curve": settings.cop_curve,

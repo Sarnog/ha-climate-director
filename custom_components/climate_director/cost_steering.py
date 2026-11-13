@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from .coordinator_surface import CoordinatorSurface
 from .engine import WorldState
 from .engine.energy import EnergySettings, HeatCosts, heat_costs
-from .engine.heat_pick import pick_heat_source
+from .engine.heat_pick import OFF, HeatPick, pick_heat_source
 
 
 def read_number(hass: HomeAssistant, entity_id: str) -> float | None:
@@ -59,15 +59,32 @@ def costs_now(hass: HomeAssistant, settings: EnergySettings, outdoor: float | No
 def with_heat_pick(coordinator: CoordinatorSurface, world: WorldState) -> WorldState:
     """Return the snapshot with the cost preference filled in."""
     settings = coordinator.config.energy
-    pick = pick_heat_source(
-        settings,
-        costs_now(coordinator.hass, settings, world.outdoor_temperature),
-        world.outdoor_temperature,
-        coordinator.round.heat_pick,
-        coordinator.config.outdoor_hysteresis,
-    )
+    costs = costs_now(coordinator.hass, settings, world.outdoor_temperature)
+    hysteresis = coordinator.config.outdoor_hysteresis
+
+    def pick_for(limit_settings: EnergySettings, holding: HeatPick | None) -> HeatPick:
+        return pick_heat_source(
+            limit_settings, costs, world.outdoor_temperature, holding, hysteresis, world.season
+        )
+
+    pick = pick_for(settings, coordinator.round.heat_pick)
     coordinator.round.heat_pick = pick
-    return replace(world, heat_pick=pick.preferred)
+    # Per zone alleen waar het afwijkt: een zone die de kostenregeling niet
+    # volgt, of een eigen koudegrens heeft. / Per zone only where it differs: a
+    # zone that does not follow the cost control, or has a cold limit of its own.
+    own: dict[str, HeatPick] = {}
+    for zone in coordinator.config.zones:
+        if not zone.cost_control:
+            own[zone.zone_id] = HeatPick(None, OFF)
+        elif zone.cold_limit is not None:
+            holding = coordinator.round.zone_heat_picks.get(zone.zone_id)
+            own[zone.zone_id] = pick_for(replace(settings, cold_limit=zone.cold_limit), holding)
+    coordinator.round.zone_heat_picks = own
+    return replace(
+        world,
+        heat_pick=pick.preferred,
+        heat_picks={zone_id: item.preferred for zone_id, item in own.items()},
+    )
 
 
 def tracked_prices(coordinator: CoordinatorSurface) -> set[str]:

@@ -34,6 +34,7 @@ FILLED: dict[str, Any] = {
     "boiler_efficiency": 0.9,
     "cop_curve": "2:2.0, 5:2.8, 8:3.0",
     "cost_control": True,
+    "season_lock": False,
     "cold_limit": 2.0,
     "switch_margin": 10.0,
     "when_done": "keep",
@@ -57,6 +58,7 @@ async def test_the_screen_opens_with_the_fields_in_reading_order() -> None:
             "boiler_efficiency",
             "cop_curve",
             "cost_control",
+            "season_lock",
             "cold_limit",
             "switch_margin",
             "when_done",
@@ -84,6 +86,7 @@ async def test_a_filled_screen_is_stored_under_energy() -> None:
             "boiler_efficiency": 0.9,
             "cop_curve": "2:2.0, 5:2.8, 8:3.0",
             "cost_control": True,
+            "season_lock": False,
             "cold_limit": 2.0,
             "switch_margin": 10.0,
         }

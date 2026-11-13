@@ -187,17 +187,18 @@ apparaat verwarmt; zonder kijkt de sensor *Goedkoopste warmtebron* alleen mee.
 
 | Instelling | Wat het doet |
 |---|---|
-| **Sensor stroomprijs** | de huidige prijs van een kWh stroom, bijvoorbeeld uit een dynamisch contract; heeft voorrang op de vaste prijs zolang de sensor een getal geeft |
+| **Entiteit stroomprijs** | de huidige prijs van een kWh stroom, bijvoorbeeld uit een dynamisch contract; heeft voorrang op de vaste prijs zolang de sensor een getal geeft |
 | **Vaste stroomprijs (per kWh)** | vaste prijs per kWh stroom; geldt als er geen sensor is of de sensor niets geeft; 0 = niet ingesteld |
-| **Sensor terugleverprijs** | de prijs die je krijgt voor een teruggeleverde kWh; telt als stroomprijs bij zonne-overschot; met de vaste terugleverprijs leeg = altijd de stroomprijs |
+| **Entiteit terugleverprijs** | de prijs die je krijgt voor een teruggeleverde kWh; telt als stroomprijs bij zonne-overschot; met de vaste terugleverprijs leeg = altijd de stroomprijs |
 | **Vaste terugleverprijs (per kWh)** | vaste vergoeding per teruggeleverde kWh; geldt als er geen sensor is of de sensor niets geeft; 0 = niet ingesteld |
 | **Sensor zonne-overschot** | zonne-overschot in kW (positief = overschot); leeg = nooit een overschot |
-| **Sensor gasprijs** | de huidige prijs van een m³ gas, bijvoorbeeld uit een dynamisch contract; heeft voorrang op de vaste gasprijs zolang de sensor een getal geeft |
+| **Entiteit gasprijs** | de huidige prijs van een m³ gas, bijvoorbeeld uit een dynamisch contract; heeft voorrang op de vaste gasprijs zolang de sensor een getal geeft |
 | **Vaste gasprijs (per m³)** | vaste prijs per m³ gas, alles inbegrepen; geldt als er geen sensor is of de sensor niets geeft; zonder beide wordt de sensor niet aangemaakt |
 | **Calorische waarde van gas (kWh per m³)** | warmte per m³ gas; standaard 9,77 |
 | **Rendement van de ketel (0 tot 1,2)** | hoeveel van die warmte de radiatoren bereikt; standaard 0,9 |
 | **COP-curve van de airco's** | punten `buitentemperatuur:COP` met komma's gescheiden, bijvoorbeeld `-5:2.8, 7:3.8, 15:4.5`; leeg = de sensor wordt niet aangemaakt |
 | **Schakel op kosten** | aan = de goedkoopste bron kiest of gas of de airco verwarmt, in elke zone met een gas- én een elektrische bron; uit = alleen kijken |
+| **Seizoenslot** | aan = in de zomer kiest de director altijd de airco om te verwarmen, gas blijft terugval; uit = kosten en koudegrens beslissen het hele jaar |
 | **Koudegrens** | onder deze buitentemperatuur verwarmt altijd gas; leeg = geen koudegrens; standaard 2 °C |
 | **Marge voor omschakelen (%)** | hoeveel procent goedkoper de andere bron moet zijn voor het omschakelt; standaard 10 |
 
@@ -248,6 +249,8 @@ Een zone is een ruimte. Per zone stel je in:
 | **Toestand die bezet betekent** | de toestand die die sensor als bezet teruggeeft |
 | **Nog zo lang als bezet tellen (seconden)** | de marge die knipperende melders opvangt |
 | **Neerslag heft de 'zet een raam open'-regel niet op** | aan voor een ruimte zonder ramen; daar blijft de buitengrens ook bij neerslag gelden |
+| **Volgt de kostenregeling** | uit = deze zone doet niets met de kosten en de buitenvensters van haar bronnen beslissen; standaard aan |
+| **Eigen koudegrens** | onder deze buitentemperatuur verwarmt in deze zone altijd gas; leeg = de koudegrens van de energie-instellingen |
 | **Deze zone mag verwarmen** | uit = deze kamer wordt nooit verwarmd |
 | **Doeltemperatuur verwarmen** | het setpoint dat het apparaat krijgt als verwarmen draait — niet het startpunt |
 | **Begin met verwarmen bij** | verwarmen start bij deze binnentemperatuur of lager |

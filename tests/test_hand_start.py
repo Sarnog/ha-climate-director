@@ -487,6 +487,7 @@ class TestTheReadabilityModel:
         "zone_priorities",
         "opening_bypasses",
         "heat_pick",
+        "heat_picks",
     }
 
     #: Velden die de engine zelf uit de klok of uit de andere velden afleidt.

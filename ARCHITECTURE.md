@@ -1517,6 +1517,11 @@ elektrisch pas een dode band erboven), een marge in procenten remt het heen en w
 elke twijfel (onbekende buitentemperatuur of kosten) geeft geen voorkeur, zodat de vensters
 beslissen zoals altijd. Koelen verandert nooit. De sensor *Omslagtemperatuur gas en airco*
 (`BreakEvenSensor`) toont bij de prijzen van nu onder welke buitentemperatuur gas goedkoper is.
+Per zone kan het afwijken: een zone die de kostenregeling niet volgt (`Zone.cost_control`) of een
+eigen koudegrens heeft (`Zone.cold_limit`) staat in `WorldState.heat_picks`, en `sources.select()`
+leest voor die zone die voorkeur in plaats van de huisbrede. Het seizoenslot
+(`EnergySettings.season_lock`) laat in de zomer altijd elektrisch voorgaan, ook onder de koudegrens;
+gas blijft terugval.
 
 **Weersvoorspelling in het buitentemperatuurvenster.** De coordinator leest de verwachte
 temperatuur uit een `weather`-entiteit; `WorldState.outdoor_forecast` laat de vensters op de
@@ -3634,6 +3639,11 @@ one dead band above it), a margin in percent brakes the flipping back and forth,
 (unknown outdoor temperature or costs) gives no preference, so the windows decide as ever.
 Cooling never changes. The sensor *Gas and air conditioner changeover temperature*
 (`BreakEvenSensor`) shows, at today's prices, below which outdoor temperature gas is cheaper.
+Per zone it can differ: a zone that does not follow the cost control (`Zone.cost_control`) or has a
+cold limit of its own (`Zone.cold_limit`) is in `WorldState.heat_picks`, and `sources.select()` reads
+that preference for such a zone instead of the house-wide one. The season lock
+(`EnergySettings.season_lock`) always lets electric go first in summer, even below the cold limit;
+gas stays the fallback.
 
 **Weather forecast in the outdoor window.** The coordinator reads the expected temperature
 from a `weather` entity; `WorldState.outdoor_forecast` lets the windows check the forecast

@@ -120,7 +120,9 @@
           "presence_timeout": "Noch so lange als belegt zählen (Sekunden)",
           "ignore_precipitation": "Niederschlag hebt die 'Fenster-öffnen'-Regel nicht auf",
           "gate": "Was entscheidet, ob diese Zone läuft",
-          "when_done": "Wenn du hier fertig bist"
+          "when_done": "Wenn du hier fertig bist",
+          "cost_control": "Folgt der Kostenregelung",
+          "cold_limit": "Eigene Kältegrenze"
         },
         "data_description": {
           "indoor_sensor": "Ein Temperatursensor, oder eine Climate-Entität, die den Raum bereits misst.",
@@ -143,7 +145,9 @@
           "cool_outdoor_min": "Unter dieser Außentemperatur bleibt Kühlen aus. Leer lassen für keine Grenze.",
           "cool_summer_only": "Bindet das Kühlen an die Jahreszeit aus den Allgemeinen Einstellungen.",
           "gate": "'household' folgt dem Zeitplan, dem Schlaf und ob jemand zu Hause ist; ein Anwesenheitssensor engt das danach weiter ein. 'presence' lässt den Raum allein entscheiden, sodass ein belegter Raum den Zeitplan übergeht - was ein gelegentlich genutzter Raum braucht. Dafür ist ein Anwesenheitssensor nötig.",
-          "when_done": "Wählst du „Verwerfen und zurück“, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du „Verwerfen und zurück“, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst.",
+          "cost_control": "Aus: Diese Zone macht nichts mit den Kosten; die Außenfenster ihrer Quellen entscheiden wie immer. An: Die Zone folgt Nach Kosten schalten aus den Energie-Einstellungen (nur wenn das an ist).",
+          "cold_limit": "Unter dieser Außentemperatur heizt in dieser Zone immer Gas. Leer: Es gilt die Kältegrenze aus den Energie-Einstellungen."
         }
       },
       "sources": {
@@ -479,12 +483,12 @@
         "title": "Energie und Kosten",
         "description": "Vergleiche, was eine kWh Wärme aus Gas und aus den Klimageräten kostet. Gib Strom und Gas je einen festen Preis oder einen Sensor und trage die COP-Kurve ein, um den Vergleich einzuschalten. Mit Nach Kosten schalten wählt die günstigste Quelle auch wirklich, welches Gerät heizt; ohne schaut der Sensor *Günstigste Wärmequelle* nur zu.",
         "data": {
-          "grid_price_sensor": "Sensor Strompreis",
+          "grid_price_sensor": "Entität Strompreis",
           "grid_price": "Fester Strompreis (pro kWh)",
-          "feed_in_sensor": "Sensor Einspeisepreis",
+          "feed_in_sensor": "Entität Einspeisepreis",
           "feed_in_price": "Fester Einspeisepreis (pro kWh)",
           "surplus_sensor": "Sensor Solarüberschuss",
-          "gas_price_sensor": "Sensor Gaspreis",
+          "gas_price_sensor": "Entität Gaspreis",
           "gas_price": "Fester Gaspreis (pro m³)",
           "kwh_per_m3": "Brennwert des Gases (kWh pro m³)",
           "boiler_efficiency": "Wirkungsgrad des Kessels (0 bis 1,2)",
@@ -492,15 +496,16 @@
           "cost_control": "Nach Kosten schalten",
           "cold_limit": "Kältegrenze",
           "switch_margin": "Spielraum vor dem Umschalten (%)",
-          "when_done": "Wenn du hier fertig bist"
+          "when_done": "Wenn du hier fertig bist",
+          "season_lock": "Saisonsperre"
         },
         "data_description": {
-          "grid_price_sensor": "Der aktuelle Preis einer kWh Strom, zum Beispiel aus einem dynamischen Tarif. Hat Vorrang vor dem festen Strompreis unten, solange der Sensor eine Zahl liefert.",
+          "grid_price_sensor": "Der aktuelle Preis einer kWh Strom, zum Beispiel aus einem dynamischen Tarif. Hat Vorrang vor dem festen Strompreis unten, solange die Entität eine Zahl liefert. Wähle einen Sensor oder einen input_number-Helfer.",
           "grid_price": "Ein fester Preis pro kWh Strom, für einen Festpreisvertrag. Ist oben auch ein Sensor gesetzt, gilt dieser Preis nur, wenn der Sensor nichts liefert. Null bedeutet nicht eingestellt.",
-          "feed_in_sensor": "Der aktuelle Preis, den du für eine eingespeiste kWh bekommst. Gilt als Strompreis, solange es einen Solarüberschuss gibt. Lass diesen und den festen Einspeisepreis leer, um immer den Strompreis zu nehmen.",
+          "feed_in_sensor": "Der aktuelle Preis, den du für eine eingespeiste kWh bekommst. Gilt als Strompreis, solange es einen Solarüberschuss gibt. Lass diesen und den festen Einspeisepreis leer, um immer den Strompreis zu nehmen. Wähle einen Sensor oder einen input_number-Helfer.",
           "feed_in_price": "Eine feste Vergütung pro eingespeister kWh. Gilt als Strompreis, solange es einen Solarüberschuss gibt. Null bedeutet nicht eingestellt.",
           "surplus_sensor": "Der Solarüberschuss in kW; ein positiver Wert zählt als Überschuss. Leer lassen, um nie einen Überschuss zu zählen.",
-          "gas_price_sensor": "Der aktuelle Preis eines m³ Gas, zum Beispiel aus einem dynamischen Tarif. Hat Vorrang vor dem festen Gaspreis unten, solange der Sensor eine Zahl liefert.",
+          "gas_price_sensor": "Der aktuelle Preis eines m³ Gas, zum Beispiel aus einem dynamischen Tarif. Hat Vorrang vor dem festen Gaspreis unten, solange die Entität eine Zahl liefert. Wähle einen Sensor oder einen input_number-Helfer.",
           "gas_price": "Ein fester Preis pro m³ Gas, alles inklusive, in deiner Währung. Ist oben auch ein Sensor gesetzt, gilt dieser Preis nur, wenn der Sensor nichts liefert. Ohne Sensor und ohne festen Preis wird der Kostensensor nicht angelegt.",
           "kwh_per_m3": "Wie viel Wärme ein m³ Gas enthält. 9,77 ist ein üblicher niederländischer Wert; schau auf deine Gasrechnung.",
           "boiler_efficiency": "Wie viel dieser Wärme die Heizkörper erreicht. 0,9 ist ein vernünftiger Anfang für einen Brennwertkessel.",
@@ -508,7 +513,8 @@
           "cost_control": "An: die günstigste Quelle wählt, ob Gas oder das Klimagerät heizt, in jeder Zone mit einer Gas- und einer elektrischen Quelle (die Energiequelle je Quelle einstellen). Das Außenfenster dieser Quellen zählt dann nicht mehr. Aus: nur zusehen, die Außenfenster entscheiden wie immer. Kühlen ändert sich nie.",
           "cold_limit": "Unterhalb dieser Außentemperatur heizt immer Gas, egal zu welchem Preis: dort ist dem COP des Klimageräts nicht zu trauen. Setze sie auf den tiefsten Punkt deiner COP-Kurve. Leer bedeutet keine Kältegrenze. Zurück zu elektrisch geht erst ein Totzone oberhalb dieser Grenze.",
           "switch_margin": "Die andere Quelle muss so viel Prozent günstiger sein, bevor das Heizen umschaltet, damit es nicht bei jedem Preisschwenk hin- und herspringt.",
-          "when_done": "Wählst du „Verwerfen und zurück“, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst."
+          "when_done": "Wählst du „Verwerfen und zurück“, verlässt du diesen Bildschirm und das hier Eingetippte geht verloren, ausgefüllt oder nicht. So oder so wird nichts in die Anlage geschrieben, bis du im Hauptmenü Speichern und schließen wählst.",
+          "season_lock": "An: im Sommer wählt der Director zum Heizen immer die Klimaanlage (elektrisch), auch unter der Kältegrenze; Gas bleibt nur Rückfall. Aus: Kosten und Kältegrenze entscheiden das ganze Jahr."
         }
       }
     },
@@ -783,6 +789,9 @@
           },
           "steered_zones": {
             "name": "Zonen, die nach Kosten schalten"
+          },
+          "zone_preferences": {
+            "name": "Bevorzugung je Zone"
           }
         }
       },

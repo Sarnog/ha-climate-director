@@ -104,6 +104,7 @@
  "tests/test_clock_reeval.py": [
   "custom_components/climate_director/coordinator.py",
   "custom_components/climate_director/coordinator_round.py",
+  "custom_components/climate_director/coordinator_state.py",
   "custom_components/climate_director/engine/plan.py",
   "custom_components/climate_director/preconditions.py"
  ],
@@ -170,6 +171,13 @@
  ],
  "tests/test_cost.py": [
   "custom_components/climate_director/engine/cost.py"
+ ],
+ "tests/test_cost_control_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
  ],
  "tests/test_coverage_exclusions.py": [
   "custom_components/",
@@ -341,6 +349,13 @@
   "custom_components/climate_director/form_common.py",
   "custom_components/climate_director/schema_fields.py",
   "custom_components/climate_director/schema_numbers.py"
+ ],
+ "tests/test_energy_screen_live.py": [
+  "custom_components/",
+  "custom_components/climate_director/",
+  "custom_components/climate_director/brand/",
+  "custom_components/climate_director/engine/",
+  "custom_components/climate_director/translations/"
  ],
  "tests/test_entity_categories.py": [
   "custom_components/climate_director/binary_sensor.py",
@@ -741,7 +756,9 @@
   "custom_components/climate_director/coordinator_lifecycle.py",
   "custom_components/climate_director/coordinator_reporting.py",
   "custom_components/climate_director/coordinator_round.py",
+  "custom_components/climate_director/coordinator_state.py",
   "custom_components/climate_director/coordinator_tracking.py",
+  "custom_components/climate_director/cost_steering.py",
   "custom_components/climate_director/engine/candidates.py",
   "custom_components/climate_director/engine/capacity.py",
   "custom_components/climate_director/engine/circuit_policy.py",
@@ -784,6 +801,7 @@
  "tests/test_half_year_simulation.py": [
   "custom_components/climate_director/coordinator.py",
   "custom_components/climate_director/coordinator_round.py",
+  "custom_components/climate_director/coordinator_state.py",
   "custom_components/climate_director/coordinator_tracking.py",
   "custom_components/climate_director/engine/candidates.py",
   "custom_components/climate_director/engine/capacity.py",
@@ -899,6 +917,7 @@
  "tests/test_handed_back.py": [
   "custom_components/climate_director/coordinator.py",
   "custom_components/climate_director/coordinator_round.py",
+  "custom_components/climate_director/coordinator_state.py",
   "custom_components/climate_director/coordinator_tracking.py",
   "custom_components/climate_director/engine/candidates.py",
   "custom_components/climate_director/engine/command_reasons.py",
@@ -946,6 +965,15 @@
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
+ ],
+ "tests/test_heat_pick.py": [
+  "custom_components/climate_director/engine/cost.py",
+  "custom_components/climate_director/engine/energy.py",
+  "custom_components/climate_director/engine/equipment.py",
+  "custom_components/climate_director/engine/families.py",
+  "custom_components/climate_director/engine/heat_pick.py",
+  "custom_components/climate_director/engine/sources.py",
+  "custom_components/climate_director/engine/world.py"
  ],
  "tests/test_heating_layout.py": [
   "custom_components/climate_director/engine/candidates.py",
@@ -1066,6 +1094,7 @@
  "tests/test_ignition_gaps.py": [
   "custom_components/climate_director/coordinator.py",
   "custom_components/climate_director/coordinator_round.py",
+  "custom_components/climate_director/coordinator_state.py",
   "custom_components/climate_director/engine/candidates.py",
   "custom_components/climate_director/engine/capacity.py",
   "custom_components/climate_director/engine/circuit_policy.py",
@@ -1227,6 +1256,7 @@
  "tests/test_month_simulation.py": [
   "custom_components/climate_director/coordinator.py",
   "custom_components/climate_director/coordinator_round.py",
+  "custom_components/climate_director/coordinator_state.py",
   "custom_components/climate_director/coordinator_tracking.py",
   "custom_components/climate_director/engine/candidates.py",
   "custom_components/climate_director/engine/capacity.py",
@@ -1706,6 +1736,7 @@
  "tests/test_seasons_simulation.py": [
   "custom_components/climate_director/coordinator.py",
   "custom_components/climate_director/coordinator_round.py",
+  "custom_components/climate_director/coordinator_state.py",
   "custom_components/climate_director/coordinator_tracking.py",
   "custom_components/climate_director/engine/candidates.py",
   "custom_components/climate_director/engine/capacity.py",
@@ -1965,6 +1996,7 @@
   "custom_components/climate_director/coordinator.py",
   "custom_components/climate_director/coordinator_lifecycle.py",
   "custom_components/climate_director/coordinator_reporting.py",
+  "custom_components/climate_director/cost_steering.py",
   "custom_components/climate_director/engine/equipment.py",
   "custom_components/climate_director/engine/equipment_storage.py",
   "custom_components/climate_director/engine/fields.py",
@@ -2222,6 +2254,7 @@
  "tests/test_weather_boundaries.py": [
   "custom_components/climate_director/coordinator.py",
   "custom_components/climate_director/coordinator_round.py",
+  "custom_components/climate_director/coordinator_state.py",
   "custom_components/climate_director/coordinator_tracking.py",
   "custom_components/climate_director/engine/candidates.py",
   "custom_components/climate_director/engine/capacity.py",
@@ -2279,6 +2312,7 @@
  "tests/test_year_simulation.py": [
   "custom_components/climate_director/coordinator.py",
   "custom_components/climate_director/coordinator_round.py",
+  "custom_components/climate_director/coordinator_state.py",
   "custom_components/climate_director/coordinator_tracking.py",
   "custom_components/climate_director/engine/candidates.py",
   "custom_components/climate_director/engine/capacity.py",

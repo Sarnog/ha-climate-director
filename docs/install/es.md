@@ -188,17 +188,18 @@ barata elige de verdad qué aparato calienta; sin ello, el sensor *Fuente de cal
 
 | Ajuste | Qué hace |
 |---|---|
-| **Sensor del precio de la electricidad** | el precio actual de un kWh de electricidad, por ejemplo de un contrato dinámico; tiene prioridad sobre el precio fijo mientras el sensor dé un número |
+| **Entidad del precio de la electricidad** | el precio actual de un kWh de electricidad, por ejemplo de un contrato dinámico; tiene prioridad sobre el precio fijo mientras el sensor dé un número |
 | **Precio fijo de la electricidad (por kWh)** | precio fijo por kWh de electricidad; cuenta sin sensor o cuando el sensor no da nada; 0 = sin configurar |
-| **Sensor del precio de excedentes** | el precio que recibes por un kWh vertido a la red; cuenta como precio de la electricidad con excedente solar; con el precio fijo de excedentes también vacío = siempre el precio de la electricidad |
+| **Entidad del precio de excedentes** | el precio que recibes por un kWh vertido a la red; cuenta como precio de la electricidad con excedente solar; con el precio fijo de excedentes también vacío = siempre el precio de la electricidad |
 | **Precio fijo de excedentes (por kWh)** | compensación fija por kWh vertido a la red; cuenta sin sensor o cuando el sensor no da nada; 0 = sin configurar |
 | **Sensor del excedente solar** | excedente solar en kW (positivo = excedente); vacío = nunca excedente |
-| **Sensor del precio del gas** | el precio actual de un m³ de gas, por ejemplo de un contrato dinámico; tiene prioridad sobre el precio fijo del gas mientras el sensor dé un número |
+| **Entidad del precio del gas** | el precio actual de un m³ de gas, por ejemplo de un contrato dinámico; tiene prioridad sobre el precio fijo del gas mientras el sensor dé un número |
 | **Precio fijo del gas (por m³)** | precio fijo por m³ de gas, todo incluido; cuenta sin sensor o cuando el sensor no da nada; sin ninguno de los dos no se crea el sensor |
 | **Poder calorífico del gas (kWh por m³)** | calor por m³ de gas; 9,77 por defecto |
 | **Rendimiento de la caldera (0 a 1,2)** | qué parte de ese calor llega a los radiadores; 0,9 por defecto |
 | **Curva de COP de los aires acondicionados** | puntos `temperatura exterior:COP` separados por comas, por ejemplo `-5:2.8, 7:3.8, 15:4.5`; vacío = no se crea el sensor |
 | **Cambiar según el coste** | activado = la fuente más barata elige si calienta el gas o el aire acondicionado, en cada zona con una fuente de gas y una eléctrica; desactivado = solo observar |
+| **Bloqueo de temporada** | activado = en verano el director elige siempre el aire acondicionado para calentar, el gas queda de respaldo; desactivado = coste y límite de frío deciden todo el año |
 | **Límite de frío** | por debajo de esta temperatura exterior calienta siempre el gas; vacío = sin límite de frío; 2 °C por defecto |
 | **Margen antes de cambiar (%)** | cuántos por ciento más barata debe ser la otra fuente antes de cambiar; 10 por defecto |
 
@@ -252,6 +253,8 @@ Una zona es una habitación. Por zona configuras:
 | **Estado que significa ocupada** | el estado que ese sensor devuelve como ocupada |
 | **Seguir contando como ocupada durante (segundos)** | el margen que absorbe detectores parpadeantes |
 | **Las precipitaciones no levantan la regla de «abrir una ventana»** | actívalo en una habitación sin ventanas; ahí el límite exterior sigue aplicándose incluso con precipitaciones |
+| **Sigue la regulación por coste** | desactivado = esta estancia no hace nada con el coste y las franjas exteriores de sus fuentes deciden; activado por defecto |
+| **Límite de frío propio** | por debajo de esta temperatura exterior, el gas siempre calienta en esta estancia; vacío = el límite de frío de los ajustes de energía |
 | **Esta zona puede calentar** | desactivado = esta habitación nunca se calienta |
 | **Temperatura objetivo al calentar** | la consigna que recibe el aparato cuando calienta — no el punto de arranque |
 | **Empezar a calentar en** | la calefacción arranca a esta temperatura interior o por debajo |

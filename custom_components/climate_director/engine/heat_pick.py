@@ -22,8 +22,10 @@ from dataclasses import dataclass
 
 from .cost import cheapest
 from .energy import ELECTRIC, GAS, EnergySettings, HeatCosts
+from .models import Season
 
 OFF = "off"
+SEASON_LOCK = "season_lock"
 NO_OUTDOOR = "no_outdoor"
 COLD_LIMIT = "cold_limit"
 COST = "cost"
@@ -44,6 +46,7 @@ def pick_heat_source(
     outdoor: float | None,
     holding: HeatPick | None = None,
     hysteresis: float = 0.0,
+    season: Season = Season.UNKNOWN,
 ) -> HeatPick:
     """Return which source should heat now.
 
@@ -61,10 +64,16 @@ def pick_heat_source(
     choice rattles with every tremor of the thermometer. Above the cold limit
     the cheapest source wins, and the source that runs now keeps the zone until
     the other is `switch_margin` percent cheaper. An unknown outdoor temperature
-    or unknown costs give no preference.
+    or unknown costs give no preference. With the season lock on, summer always picks
+    electric, and the cold limit does not apply then.
     """
     if not settings.cost_control:
         return HeatPick(None, OFF)
+    # Het seizoenslot gaat boven de koudegrens: in de zomer wint elektrisch, hoe
+    # koud een ochtend ook is. / The season lock outranks the cold limit: in
+    # summer electric wins, however cold a morning is.
+    if settings.season_lock and season is Season.SUMMER:
+        return HeatPick(ELECTRIC, SEASON_LOCK)
     if outdoor is None:
         return HeatPick(None, NO_OUTDOOR)
     limit = settings.cold_limit

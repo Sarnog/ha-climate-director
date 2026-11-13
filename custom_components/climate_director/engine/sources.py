@@ -15,6 +15,8 @@ scale with neither a gap nor an overlap.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from .equipment import SourceEnergy
 from .families import ModeFamily, preferred_mode
 from .models import Source, Zone
@@ -85,6 +87,7 @@ def select(
     window does not count this round (`unbounded`), because the split on outdoor
     temperature is no reason to leave a house standing cold.
     """
+    world = _zone_world(world, zone)
     pick = world.heat_pick if family is ModeFamily.HEAT else None
     unbounded = unbounded | _windowless(zone, pick)
     eligible = [
@@ -102,11 +105,23 @@ def select(
     return _best(eligible, pick)
 
 
+def _zone_world(world: WorldState, zone: Zone) -> WorldState:
+    """Return the snapshot with this zone's own cost preference, when it has one.
+
+    Een zone die de kostenregeling niet volgt of een eigen koudegrens heeft staat
+    in `heat_picks`; voor elke andere zone verandert er niets.
+
+    A zone that does not follow the cost control or has a cold limit of its own is
+    in `heat_picks`; for every other zone nothing changes.
+    """
+    if zone.zone_id not in world.heat_picks:
+        return world
+    return replace(world, heat_pick=world.heat_picks[zone.zone_id])
+
+
 def _best(eligible: list[Source], pick: str | None) -> Source:
     """Return the preferred source: the picked kind first, then priority, then id."""
-    return min(
-        eligible, key=lambda source: (_behind(source, pick), source.priority, source.source_id)
-    )
+    return min(eligible, key=lambda source: _rank(source, pick))
 
 
 def _windowless(zone: Zone, pick: str | None) -> frozenset[str]:
@@ -127,6 +142,11 @@ def _windowless(zone: Zone, pick: str | None) -> frozenset[str]:
     return frozenset(
         source.entity_id for source in zone.sources if source.energy is not SourceEnergy.NONE
     )
+
+
+def _rank(source: Source, pick: str | None) -> tuple[int, int, str]:
+    """Return where a source stands in the order: cost preference, priority, id."""
+    return (_behind(source, pick), source.priority, source.source_id)
 
 
 def _behind(source: Source, pick: str | None) -> int:
@@ -245,14 +265,13 @@ def passed_over(
     )
     if chosen is None:
         return ()
+    world = _zone_world(world, zone)
     pick = world.heat_pick if family is ModeFamily.HEAT else None
-    rank = (_behind(chosen, pick), chosen.priority, chosen.source_id)
+
     return tuple(
         source.source_id
-        for source in sorted(
-            zone.sources, key=lambda item: (_behind(item, pick), item.priority, item.source_id)
-        )
-        if (_behind(source, pick), source.priority, source.source_id) < rank
+        for source in sorted(zone.sources, key=lambda item: _rank(item, pick))
+        if _rank(source, pick) < _rank(chosen, pick)
         and source.entity_id not in handed_over
         and _suitable(source, family, world)
         and (

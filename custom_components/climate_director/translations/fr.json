@@ -120,7 +120,9 @@
           "presence_timeout": "Continuer à compter comme occupée pendant (secondes)",
           "ignore_precipitation": "Les précipitations ne lèvent pas la règle « ouvrir une fenêtre »",
           "gate": "Ce qui décide si cette zone fonctionne",
-          "when_done": "Quand vous avez terminé ici"
+          "when_done": "Quand vous avez terminé ici",
+          "cost_control": "Suit la régulation au coût",
+          "cold_limit": "Limite de froid propre"
         },
         "data_description": {
           "indoor_sensor": "Un capteur de température, ou une entité climate qui mesure déjà la pièce.",
@@ -143,7 +145,9 @@
           "cool_outdoor_min": "Sous cette température extérieure, le refroidissement reste éteint. Laissez vide pour aucune limite.",
           "cool_summer_only": "Lie le refroidissement à la saison définie dans les Réglages généraux.",
           "gate": "'household' suit le planning, le sommeil et la présence de quelqu'un à la maison ; un capteur de présence resserre ensuite. 'presence' laisse la pièce décider seule, si bien qu'une pièce occupée passe outre le planning - ce dont a besoin une pièce utilisée de temps en temps. Ce choix exige un capteur de présence.",
-          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
+          "cost_control": "Désactivé : cette zone ne fait rien du coût ; les plages extérieures de ses sources décident comme toujours. Activé : la zone suit Basculer selon le coût des réglages d'énergie (seulement si c'est activé).",
+          "cold_limit": "Sous cette température extérieure, le gaz chauffe toujours dans cette zone. Vide : la limite de froid des réglages d'énergie s'applique."
         }
       },
       "sources": {
@@ -479,12 +483,12 @@
         "title": "Énergie et coûts",
         "description": "Comparez ce que coûte un kWh de chaleur issu du gaz et des climatiseurs. Donnez à l'électricité et au gaz chacun un prix fixe ou un capteur, et renseignez la courbe de COP pour activer la comparaison. Avec Basculer selon le coût, la source la moins chère choisit vraiment quel appareil chauffe ; sans cela, le capteur *Source de chauffage la moins chère* ne fait qu'observer.",
         "data": {
-          "grid_price_sensor": "Capteur du prix de l'électricité",
+          "grid_price_sensor": "Entité du prix de l'électricité",
           "grid_price": "Prix fixe de l'électricité (par kWh)",
-          "feed_in_sensor": "Capteur du prix de rachat",
+          "feed_in_sensor": "Entité du prix de rachat",
           "feed_in_price": "Prix fixe de rachat (par kWh)",
           "surplus_sensor": "Capteur du surplus solaire",
-          "gas_price_sensor": "Capteur du prix du gaz",
+          "gas_price_sensor": "Entité du prix du gaz",
           "gas_price": "Prix fixe du gaz (par m³)",
           "kwh_per_m3": "Pouvoir calorifique du gaz (kWh par m³)",
           "boiler_efficiency": "Rendement de la chaudière (0 à 1,2)",
@@ -492,15 +496,16 @@
           "cost_control": "Basculer selon le coût",
           "cold_limit": "Limite de froid",
           "switch_margin": "Marge avant de basculer (%)",
-          "when_done": "Quand vous avez terminé ici"
+          "when_done": "Quand vous avez terminé ici",
+          "season_lock": "Verrou de saison"
         },
         "data_description": {
-          "grid_price_sensor": "Le prix actuel d'un kWh d'électricité, par exemple d'un contrat dynamique. Il l'emporte sur le prix fixe de l'électricité ci-dessous tant que le capteur donne un nombre.",
+          "grid_price_sensor": "Le prix actuel d'un kWh d'électricité, par exemple d'un contrat dynamique. Il l'emporte sur le prix fixe de l'électricité ci-dessous tant que l'entité donne un nombre. Choisissez un capteur ou un assistant input_number.",
           "grid_price": "Un prix fixe par kWh d'électricité, pour un contrat à prix fixe. Si un capteur est aussi réglé au-dessus, ce prix ne compte que lorsque le capteur ne donne rien. Zéro signifie non réglé.",
-          "feed_in_sensor": "Le prix actuel que vous recevez pour un kWh réinjecté. Compte comme prix de l'électricité tant qu'il y a un surplus solaire. Laissez ce champ et le prix fixe de rachat vides pour toujours utiliser le prix de l'électricité.",
+          "feed_in_sensor": "Le prix actuel que vous recevez pour un kWh réinjecté. Compte comme prix de l'électricité tant qu'il y a un surplus solaire. Laissez ce champ et le prix fixe de rachat vides pour toujours utiliser le prix de l'électricité. Choisissez un capteur ou un assistant input_number.",
           "feed_in_price": "Une rémunération fixe par kWh réinjecté. Compte comme prix de l'électricité tant qu'il y a un surplus solaire. Zéro signifie non réglé.",
           "surplus_sensor": "Le surplus solaire en kW ; une valeur positive compte comme surplus. Laissez vide pour ne jamais compter de surplus.",
-          "gas_price_sensor": "Le prix actuel d'un m³ de gaz, par exemple d'un contrat dynamique. Il l'emporte sur le prix fixe du gaz ci-dessous tant que le capteur donne un nombre.",
+          "gas_price_sensor": "Le prix actuel d'un m³ de gaz, par exemple d'un contrat dynamique. Il l'emporte sur le prix fixe du gaz ci-dessous tant que l'entité donne un nombre. Choisissez un capteur ou un assistant input_number.",
           "gas_price": "Un prix fixe par m³ de gaz, tout compris, dans votre devise. Si un capteur est aussi réglé au-dessus, ce prix ne compte que lorsque le capteur ne donne rien. Sans capteur et sans prix fixe, le capteur de coût n'est pas créé.",
           "kwh_per_m3": "La chaleur que contient un m³ de gaz. 9,77 est une valeur néerlandaise courante ; regardez votre facture de gaz.",
           "boiler_efficiency": "La part de cette chaleur qui atteint les radiateurs. 0,9 est un bon départ pour une chaudière à condensation.",
@@ -508,7 +513,8 @@
           "cost_control": "Activé : la source la moins chère choisit si le gaz ou le climatiseur chauffe, dans chaque zone qui a une source au gaz et une source électrique (réglez la source d'énergie de chaque source). La plage extérieure de ces sources ne compte alors plus. Désactivé : simple observation, les plages extérieures décident comme toujours. Le refroidissement ne change jamais.",
           "cold_limit": "Sous cette température extérieure, le gaz chauffe toujours, quel que soit le prix : on ne peut pas se fier au COP du climatiseur à ce niveau. Réglez-la sur le point le plus bas de votre courbe de COP. Vide signifie aucune limite de froid. Le retour à l'électrique n'a lieu qu'une bande morte au-dessus de cette limite.",
           "switch_margin": "L'autre source doit être moins chère de ce pourcentage avant que le chauffage ne bascule, pour qu'il ne fasse pas des allers-retours à chaque variation de prix.",
-          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer."
+          "when_done": "En choisissant « Abandonner et revenir », vous quittez cet écran et ce que vous avez saisi ici est perdu, complet ou non. Dans les deux cas, rien n'est écrit dans l'installation avant que vous choisissiez Enregistrer et fermer.",
+          "season_lock": "Activé : en été, le directeur choisit toujours le climatiseur (électrique) pour chauffer, même sous la limite de froid ; le gaz ne reste qu'en secours. Désactivé : le coût et la limite de froid décident toute l'année."
         }
       }
     },
@@ -783,6 +789,9 @@
           },
           "steered_zones": {
             "name": "Zones qui basculent selon le coût"
+          },
+          "zone_preferences": {
+            "name": "Préférence par zone"
           }
         }
       },

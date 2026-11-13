@@ -190,17 +190,18 @@ günstigste Quelle auch wirklich, welches Gerät heizt; ohne schaut der Sensor *
 
 | Einstellung | Was sie tut |
 |---|---|
-| **Sensor Strompreis** | der aktuelle Preis einer kWh Strom, zum Beispiel aus einem dynamischen Tarif; hat Vorrang vor dem festen Preis, solange der Sensor eine Zahl liefert |
+| **Entität Strompreis** | der aktuelle Preis einer kWh Strom, zum Beispiel aus einem dynamischen Tarif; hat Vorrang vor dem festen Preis, solange der Sensor eine Zahl liefert |
 | **Fester Strompreis (pro kWh)** | fester Preis pro kWh Strom; gilt, wenn es keinen Sensor gibt oder er nichts liefert; 0 = nicht eingestellt |
-| **Sensor Einspeisepreis** | der Preis, den du für eine eingespeiste kWh bekommst; gilt bei Solarüberschuss als Strompreis; mit auch leerem festem Einspeisepreis = immer der Strompreis |
+| **Entität Einspeisepreis** | der Preis, den du für eine eingespeiste kWh bekommst; gilt bei Solarüberschuss als Strompreis; mit auch leerem festem Einspeisepreis = immer der Strompreis |
 | **Fester Einspeisepreis (pro kWh)** | feste Vergütung pro eingespeister kWh; gilt, wenn es keinen Sensor gibt oder er nichts liefert; 0 = nicht eingestellt |
 | **Sensor Solarüberschuss** | Solarüberschuss in kW (positiv = Überschuss); leer = nie ein Überschuss |
-| **Sensor Gaspreis** | der aktuelle Preis eines m³ Gas, zum Beispiel aus einem dynamischen Tarif; hat Vorrang vor dem festen Gaspreis, solange der Sensor eine Zahl liefert |
+| **Entität Gaspreis** | der aktuelle Preis eines m³ Gas, zum Beispiel aus einem dynamischen Tarif; hat Vorrang vor dem festen Gaspreis, solange der Sensor eine Zahl liefert |
 | **Fester Gaspreis (pro m³)** | fester Preis pro m³ Gas, alles inklusive; gilt, wenn es keinen Sensor gibt oder er nichts liefert; ohne beides wird der Sensor nicht angelegt |
 | **Brennwert des Gases (kWh pro m³)** | Wärme pro m³ Gas; standardmäßig 9,77 |
 | **Wirkungsgrad des Kessels (0 bis 1,2)** | wie viel dieser Wärme die Heizkörper erreicht; standardmäßig 0,9 |
 | **COP-Kurve der Klimageräte** | Punkte `Außentemperatur:COP`, durch Kommas getrennt, zum Beispiel `-5:2.8, 7:3.8, 15:4.5`; leer = der Sensor wird nicht angelegt |
 | **Nach Kosten schalten** | an = die günstigste Quelle wählt, ob Gas oder das Klimagerät heizt, in jeder Zone mit einer Gas- und einer elektrischen Quelle; aus = nur zusehen |
+| **Saisonsperre** | an = im Sommer wählt der Director zum Heizen immer die Klimaanlage, Gas bleibt Rückfall; aus = Kosten und Kältegrenze entscheiden das ganze Jahr |
 | **Kältegrenze** | unterhalb dieser Außentemperatur heizt immer Gas; leer = keine Kältegrenze; standardmäßig 2 °C |
 | **Spielraum vor dem Umschalten (%)** | um wie viel Prozent die andere Quelle günstiger sein muss, bevor umgeschaltet wird; standardmäßig 10 |
 
@@ -252,6 +253,8 @@ Eine Zone ist ein Raum. Pro Zone stellst du ein:
 | **Zustand, der belegt bedeutet** | der Zustand, den dieser Sensor als belegt meldet |
 | **Noch so lange als belegt zählen (Sekunden)** | wie lange der Raum nach der letzten Meldung noch als belegt zählt; das fängt flackernde Melder auf |
 | **Niederschlag hebt die 'Fenster-öffnen'-Regel nicht auf** | an für einen Raum ohne Fenster; dort gilt die Außengrenze auch bei Niederschlag weiter |
+| **Folgt der Kostenregelung** | aus = diese Zone macht nichts mit den Kosten, die Außenfenster ihrer Quellen entscheiden; standardmäßig an |
+| **Eigene Kältegrenze** | unter dieser Außentemperatur heizt in dieser Zone immer Gas; leer = die Kältegrenze der Energie-Einstellungen |
 | **Diese Zone darf heizen** | aus = dieser Raum wird nie geheizt |
 | **Zieltemperatur Heizen** | der Sollwert, den das Gerät beim Heizen bekommt — nicht der Startpunkt |
 | **Heizen beginnen bei** | Heizen beginnt bei dieser Innentemperatur oder darunter |

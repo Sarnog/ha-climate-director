@@ -200,3 +200,70 @@ class TestChangeoverSensor:
             assert home.values("heat_break_even")["verdict"] == "crossover"
         finally:
             await stop_house(home)
+
+
+def living_with(own: dict[str, Any]) -> dict[str, Any]:
+    """Return the house of `installation` with settings added to its living room."""
+    base = installation(ENERGY)
+    living = {**base["zones"][0], **own.get("living", {})}
+    return {**base, "zones": [living]}
+
+
+class TestPerZone:
+    async def test_a_zone_that_does_not_follow_the_cost_control_keeps_its_windows(self) -> None:
+        # Dure stroom stuurt een volgende zone naar gas; deze zone niet.
+        home = await start_house(
+            living_with({"living": {"cost_control": False}}), states=world(power="0.90")
+        )
+        try:
+            assert await serving(home) == "airco"
+            assert home.values("cheapest_heat")["steered_zones"] == []
+        finally:
+            await stop_house(home)
+
+    async def test_a_zone_with_its_own_cold_limit_goes_to_gas_above_the_house_limit(self) -> None:
+        home = await start_house(
+            living_with({"living": {"cold_limit": 10.0}}), states=world(outdoor="8.0", power="0.01")
+        )
+        try:
+            assert await serving(home) == "ketel"
+            attributes = home.values("cheapest_heat")
+            assert attributes["zone_preferences"] == {"woonkamer": "gas"}
+            # het huis zelf kiest nog steeds op kosten
+            assert attributes["preferred_source"] == "electric"
+        finally:
+            await stop_house(home)
+
+    async def test_a_zone_cold_limit_lets_electric_return_one_band_above_it(self) -> None:
+        home = await start_house(
+            living_with({"living": {"cold_limit": 10.0}}), states=world(outdoor="8.0", power="0.01")
+        )
+        try:
+            assert await serving(home) == "ketel"
+            home.set("sensor.buiten", "10.2")
+            assert await serving(home) == "ketel"  # nog binnen de dode band
+            home.set("sensor.buiten", "14.0")
+            assert await serving(home) == "airco"
+        finally:
+            await stop_house(home)
+
+
+class TestSeasonLock:
+    async def test_summer_picks_the_airco_even_when_gas_is_cheaper(self) -> None:
+        installed = installation({**ENERGY, "season_lock": True})
+        installed["seasons"] = {"source": "summer"}
+        home = await start_house(installed, states=world(power="0.90"))
+        try:
+            assert await serving(home) == "airco"
+            assert home.values("cheapest_heat")["preferred_reason"] == "season_lock"
+        finally:
+            await stop_house(home)
+
+    async def test_winter_decides_on_cost_with_the_lock_on(self) -> None:
+        installed = installation({**ENERGY, "season_lock": True})
+        installed["seasons"] = {"source": "winter"}
+        home = await start_house(installed, states=world(power="0.90"))
+        try:
+            assert await serving(home) == "ketel"
+        finally:
+            await stop_house(home)
