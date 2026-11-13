@@ -186,6 +186,7 @@
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/",
   "pyproject.toml",
+  "script/",
   "setup.cfg",
   "tox.ini"
  ],
