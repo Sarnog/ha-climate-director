@@ -217,7 +217,7 @@ ENERGY_FIELDS: tuple[FieldSpec, ...] = (
         "entity",
         required=False,
         target="energy.grid_price_sensor",
-        domain="sensor",
+        domain=("sensor", "input_number"),
     ),
     FieldSpec("grid_price", "number", default=0.0, target="energy.grid_price", unit="price"),
     FieldSpec(
@@ -225,7 +225,7 @@ ENERGY_FIELDS: tuple[FieldSpec, ...] = (
         "entity",
         required=False,
         target="energy.feed_in_sensor",
-        domain="sensor",
+        domain=("sensor", "input_number"),
     ),
     FieldSpec("feed_in_price", "number", default=0.0, target="energy.feed_in_price", unit="price"),
     FieldSpec(
@@ -240,7 +240,7 @@ ENERGY_FIELDS: tuple[FieldSpec, ...] = (
         "entity",
         required=False,
         target="energy.gas_price_sensor",
-        domain="sensor",
+        domain=("sensor", "input_number"),
     ),
     FieldSpec("gas_price", "number", default=0.0, target="energy.gas_price", unit="price"),
     FieldSpec("kwh_per_m3", "number", default=9.77, target="energy.kwh_per_m3", unit="kwh_per_m3"),
