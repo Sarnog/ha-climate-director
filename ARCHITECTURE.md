@@ -864,6 +864,12 @@ de groepen, en slaat een apparaat over dat het gebied al overneemt: dat regelt
 `stop_others()`. Dit is een bewuste keuze voor een koude kamer boven twee systemen
 tegelijk. Wat er niet onder valt staat onder "Nog te bouwen".
 
+Een bron met `autostart` uit wordt ook in een leeg huis niet gestart, maar een draaiende gaat
+dan wél uit (`empty_house_stop()` in `engine/grants.py`, reden `NOBODY_HOME`): hij draait voor
+niemand, en dat deden de oude "uitzetten bij vertrek"-automatiseringen ook. Alleen een
+draaiende bron krijgt het commando. Gastenmodus, een lopend vooruit-verzoek en een override of
+hand laten hem staan.
+
 Een bron met `autostart` uit vraagt nooit iets, dus `area_clash()` ziet hem niet: hij wordt
 alleen door een exclusieve groep of door `manual_conflict()` in bedwang gehouden. Staat zo'n
 bron in het gebied van een ketel en in geen enkele groep met die ketel, dan kan hij naast de
@@ -2999,6 +3005,11 @@ returned rather than discarded, so the plan can still report what they wanted
 groups, and skips an appliance that already takes the area over: `stop_others()` handles
 that. This is a deliberate choice for a cold room over two systems at once. What it does not
 cover is listed under "Still to build".
+
+A source with `autostart` off is not started in an empty house either, but a running one
+does go off then (`empty_house_stop()` in `engine/grants.py`, reason `NOBODY_HOME`): it runs for
+nobody, and the old "switch off on leaving" automations did the same. Only a running source gets
+the command. Guest mode, a live pre-conditioning request and an override or hand leave it as it is.
 
 A source with `autostart` off never asks for anything, so `area_clash()` does not see it: it
 is held in check only by an exclusive group or by `manual_conflict()`. If such a source

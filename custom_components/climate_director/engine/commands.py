@@ -19,7 +19,7 @@ from .families import (
     ModeFamily,
     preferred_mode,
 )
-from .grants import manual_conflict
+from .grants import manual_stop
 from .models import DirectorConfig
 from .plan import (
     Deferral,
@@ -137,9 +137,9 @@ def build_commands(
         # off "to be safe" would turn off exactly the appliance somebody just
         # switched on by hand.
         if not source.autostart:
-            standing_down = manual_conflict(config, world, zone, source, wishes, families, grants)
-            if standing_down is not None:
-                commands.append(standing_down)
+            stop = manual_stop(config, world, zone, source, wishes, families, grants, previous)
+            if stop is not None:
+                commands.append(stop)
             else:
                 untouched.append(
                     UntouchedSource(source.entity_id, zone.zone_id, Reason.MANUAL_SOURCE)

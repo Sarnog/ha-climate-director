@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from . import circuit_requests, constraints, sources, takeover
+from . import circuit_requests, constraints, gates, sources, takeover
 from .candidates import apply_exclusive_groups, group_entities, handed_over, serving
 from .command_reasons import idle_mode
 from .families import (
@@ -345,6 +345,61 @@ def stand_down(
         zone_id=zone.zone_id,
         source_id=source.source_id,
         reason=reason,
+    )
+
+
+def empty_house_stop(
+    config: DirectorConfig,
+    world: WorldState,
+    zone: Zone,
+    source: Source,
+    previous: Plan | None,
+) -> UnitCommand | None:
+    """Return the command switching a running manual source off in an empty house.
+
+    Een handbediende bron start de director nooit en stuurt hij ook niet bij,
+    maar iedereen is weg: dan draait hij voor niemand. Dat is het gat dat de
+    oude "uitzetten bij vertrek"-automatiseringen dichtten. Alleen een draaiende
+    bron krijgt een commando, anders stuurde de director elke ronde een
+    overbodige stop. Wat er niet onder valt blijft met rust: een gastenmodus
+    (iemand die niet gevolgd wordt logeert) en een lopend vooruit-verzoek laten
+    `NOBODY_HOME` niet sluiten, en een zone van de gebruiker (override of hand)
+    komt hier nooit, die slaat `build_commands` eerder over.
+
+    A manual source is never started or steered by the director, but with
+    everybody gone it runs for nobody. That is the gap the old "switch off on
+    leaving" automations closed. Only a running source gets a command, otherwise
+    the director would send a pointless stop every round. What does not count
+    stays alone: guest mode (somebody untracked is staying) and a live
+    pre-conditioning request keep `NOBODY_HOME` from closing, and a zone that is
+    the user's (override or hand) never gets here, `build_commands` skips it
+    earlier.
+    """
+    if not world.climate(source.entity_id).running:
+        return None
+    if Reason.NOBODY_HOME not in gates.closed(config, world, zone, previous):
+        return None
+    return stand_down(config, world, zone, source, Reason.NOBODY_HOME)
+
+
+def manual_stop(
+    config: DirectorConfig,
+    world: WorldState,
+    zone: Zone,
+    source: Source,
+    wishes: dict[str, circuit_requests.Request],
+    families: dict[str, ModeFamily],
+    grants: dict[str, circuit_requests.Grant],
+    previous: Plan | None,
+) -> UnitCommand | None:
+    """Return the command standing a manual source down, for any reason, or `None`.
+
+    Eerst het circuit (`manual_conflict`), dan het lege huis (`empty_house_stop`).
+
+    First the circuit (`manual_conflict`), then the empty house (`empty_house_stop`).
+    """
+    return manual_conflict(config, world, zone, source, wishes, families, grants) or (
+        empty_house_stop(config, world, zone, source, previous)
     )
 
 
