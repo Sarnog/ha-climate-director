@@ -18,7 +18,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 import pytest
-from conftest import awake, make_world
+from conftest import awake, away, make_world
 
 from custom_components.climate_director.engine import (
     MODE_OFF,
@@ -158,6 +158,73 @@ class TestItGivesWay:
         result = plan(house(), living=30.0, bedroom=21.5, running={LIVING: "off", BEDROOM: "heat"})
         served = {item.zone_id for item in result.zones if item.granted is not ModeFamily.NEUTRAL}
         assert "woonkamer" in served
+
+
+class TestEmptyHouse:
+    """Nobody home: a manual source that still runs is switched off.
+
+    Niemand thuis: een handbediende bron die nog draait gaat uit. Dat deden de
+    oude "uitzetten bij vertrek"-automatiseringen, en het hoort er nu weer bij.
+    """
+
+    @staticmethod
+    def plan_for(config: DirectorConfig, *, resident, running: dict[str, str], **extra):
+        world = make_world(
+            now=NOON,
+            outdoor=10.0,
+            indoor={"woonkamer": 21.5, "slaapkamer": 21.5},
+            climates=dict(running),
+            residents={"danny": resident},
+            presence={zone.zone_id: PresenceState(occupied=True) for zone in config.zones},
+            **extra,
+        )
+        return decide(config, world)
+
+    def test_a_running_one_goes_off_when_everybody_left(self) -> None:
+        result = self.plan_for(house(), resident=away(), running={LIVING: "off", BEDROOM: "heat"})
+        command = command_for(result, BEDROOM)
+        assert command is not None
+        assert command.hvac_mode == MODE_OFF
+        assert command.reason is Reason.NOBODY_HOME
+
+    def test_an_idle_one_gets_no_command(self) -> None:
+        """Nothing runs, so nothing is stopped - no pointless command every round."""
+        result = self.plan_for(house(), resident=away(), running={LIVING: "off", BEDROOM: "off"})
+        assert command_for(result, BEDROOM) is None
+
+    def test_it_keeps_running_while_somebody_is_home(self) -> None:
+        result = self.plan_for(house(), resident=awake(), running={LIVING: "off", BEDROOM: "heat"})
+        assert command_for(result, BEDROOM) is None
+
+    def test_guest_mode_keeps_it_running(self) -> None:
+        """Somebody untracked is staying: an empty-looking house says nothing."""
+        result = self.plan_for(
+            house(),
+            resident=away(),
+            running={LIVING: "off", BEDROOM: "heat"},
+            guest_mode=True,
+        )
+        assert command_for(result, BEDROOM) is None
+
+    def test_a_live_precondition_keeps_it_running(self) -> None:
+        """Somebody asked for it by hand while away: that is the one exception."""
+        result = self.plan_for(
+            house(),
+            resident=away(),
+            running={LIVING: "off", BEDROOM: "heat"},
+            precondition_until={"slaapkamer": NOON + timedelta(hours=1)},
+        )
+        assert command_for(result, BEDROOM) is None
+
+    def test_a_zone_of_the_user_is_left_alone(self) -> None:
+        """An override means: hands off, whoever is home."""
+        result = self.plan_for(
+            house(),
+            resident=away(),
+            running={LIVING: "off", BEDROOM: "heat"},
+            zone_overrides={"slaapkamer": True},
+        )
+        assert command_for(result, BEDROOM) is None
 
 
 class TestTheZoneItself:
