@@ -15,10 +15,12 @@ the appliance does with the command afterwards.
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
 import pytest
 from harness_live import LiveHome, source, start_house, stop_house
+from homeassistant.util import dt as dt_util
 from live_helpers import BOILER, LIVING, cold_two_rooms, settings
 
 pytest_plugins = ["live_fixtures"]
@@ -267,3 +269,114 @@ class TestSeasonLock:
             assert await serving(home) == "ketel"
         finally:
             await stop_house(home)
+
+
+def counter(home: Any, key: str) -> Any:
+    """Return the counter entity of `key`, to step it by hand."""
+    return home.hass.data["sensor"].get_entity(home.by_key(key))
+
+
+class TestHeatHours:
+    async def test_both_counters_exist_and_start_at_zero(self) -> None:
+        home = await start_house(installation(ENERGY), states=world())
+        try:
+            assert float(home.value("heat_hours_gas")) == 0.0
+            assert float(home.value("heat_hours_electric")) == 0.0
+        finally:
+            await stop_house(home)
+
+    async def test_a_kind_counts_only_while_its_appliance_is_heating(self) -> None:
+        home = await start_house(installation(ENERGY), states=world())
+        try:
+            gas = counter(home, "heat_hours_gas")
+            electric = counter(home, "heat_hours_electric")
+            start = gas._last
+            home.set(BOILER, "heat", hvac_action="heating")
+            home.set(LIVING, "heat", hvac_action="idle")
+            gas._count(start + timedelta(minutes=1))
+            electric._count(start + timedelta(minutes=1))
+            assert gas.native_value == pytest.approx(1 / 60, abs=0.001)
+            assert electric.native_value == 0.0
+        finally:
+            await stop_house(home)
+
+    async def test_the_mode_counts_when_the_appliance_reports_no_action(self) -> None:
+        home = await start_house(installation(ENERGY), states=world())
+        try:
+            electric = counter(home, "heat_hours_electric")
+            home.set(LIVING, "heat")
+            electric._count(electric._last + timedelta(minutes=1))
+            assert electric.native_value == pytest.approx(1 / 60, abs=0.001)
+            home.set(LIVING, "off")
+            electric._count(electric._last + timedelta(minutes=1))
+            assert electric.native_value == pytest.approx(1 / 60, abs=0.001)
+        finally:
+            await stop_house(home)
+
+    async def test_a_long_gap_counts_for_five_minutes_at_most(self) -> None:
+        home = await start_house(installation(ENERGY), states=world())
+        try:
+            gas = counter(home, "heat_hours_gas")
+            home.set(BOILER, "heat", hvac_action="heating")
+            gas._count(gas._last + timedelta(hours=3))
+            assert gas.native_value == pytest.approx(5 / 60, abs=0.001)
+        finally:
+            await stop_house(home)
+
+    async def test_an_appliance_that_is_gone_counts_for_nothing(self) -> None:
+        home = await start_house(installation(ENERGY), states=world())
+        try:
+            gas = counter(home, "heat_hours_gas")
+            home.hass.states.async_remove(BOILER)
+            gas._count(gas._last + timedelta(minutes=1))
+            assert gas.native_value == 0.0
+        finally:
+            await stop_house(home)
+
+    async def test_a_source_without_energy_kind_is_not_counted(self) -> None:
+        plain = installation(ENERGY)
+        for item in plain["zones"][0]["sources"]:
+            item["energy"] = "none"
+        home = await start_house(plain, states=world())
+        try:
+            gas = counter(home, "heat_hours_gas")
+            home.set(BOILER, "heat", hvac_action="heating")
+            gas._count(gas._last + timedelta(minutes=1))
+            assert gas.native_value == 0.0
+        finally:
+            await stop_house(home)
+
+    async def test_the_first_step_without_a_start_counts_one_minute(self) -> None:
+        home = await start_house(installation(ENERGY), states=world())
+        try:
+            gas = counter(home, "heat_hours_gas")
+            gas._last = None
+            home.set(BOILER, "heat", hvac_action="heating")
+            gas._count(dt_util.utcnow())
+            assert gas.native_value == pytest.approx(1 / 60, abs=0.001)
+        finally:
+            await stop_house(home)
+
+
+class TestHeatHoursAcrossARestart:
+    async def test_the_count_is_picked_up_where_it_was_left(self) -> None:
+        home = await start_house(installation(ENERGY), states=world(), entry_id="hours_restart")
+        config_dir = home.config_dir
+        try:
+            gas = counter(home, "heat_hours_gas")
+            home.set(BOILER, "heat", hvac_action="heating")
+            gas._count(gas._last + timedelta(minutes=3))
+            assert gas.native_value == pytest.approx(0.05, abs=0.001)
+        finally:
+            await stop_house(home)
+
+        again = await start_house(
+            installation(ENERGY),
+            states=world(),
+            entry_id="hours_restart",
+            config_dir=config_dir,
+        )
+        try:
+            assert counter(again, "heat_hours_gas").native_value == pytest.approx(0.05, abs=0.001)
+        finally:
+            await stop_house(again)

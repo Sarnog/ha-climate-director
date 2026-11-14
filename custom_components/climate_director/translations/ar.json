@@ -807,6 +807,12 @@
             }
           }
         }
+      },
+      "heat_hours_gas": {
+        "name": "ساعات التدفئة بالغاز"
+      },
+      "heat_hours_electric": {
+        "name": "ساعات التدفئة الكهربائية"
       }
     },
     "binary_sensor": {
