@@ -807,6 +807,12 @@
             }
           }
         }
+      },
+      "heat_hours_gas": {
+        "name": "Gas heating hours"
+      },
+      "heat_hours_electric": {
+        "name": "Electric heating hours"
       }
     },
     "binary_sensor": {

@@ -1522,6 +1522,11 @@ eigen koudegrens heeft (`Zone.cold_limit`) staat in `WorldState.heat_picks`, en 
 leest voor die zone die voorkeur in plaats van de huisbrede. Het seizoenslot
 (`EnergySettings.season_lock`) laat in de zomer altijd elektrisch voorgaan, ook onder de koudegrens;
 gas blijft terugval.
+Twee tellers, *Verwarmingsuren gas* en *Verwarmingsuren elektrisch* (`HeatHoursSensor`), tellen elke
+minuut de tijd dat een bron van die soort echt verwarmt (`hvac_action` is `heating`, of de stand is
+`heat` als het apparaat geen `hvac_action` meldt). Ze lopen alleen op, dus Home Assistant bewaart ze
+per uur als statistiek; naast de gasmeter en het airco-verbruik zijn dat de gegevens voor de
+COP-curve, en een uur zonder ketelverwarming is een uur waarin de gasmeter alleen warm water meet.
 
 **Weersvoorspelling in het buitentemperatuurvenster.** De coordinator leest de verwachte
 temperatuur uit een `weather`-entiteit; `WorldState.outdoor_forecast` laat de vensters op de
@@ -3644,6 +3649,11 @@ cold limit of its own (`Zone.cold_limit`) is in `WorldState.heat_picks`, and `so
 that preference for such a zone instead of the house-wide one. The season lock
 (`EnergySettings.season_lock`) always lets electric go first in summer, even below the cold limit;
 gas stays the fallback.
+Two counters, *Gas heating hours* and *Electric heating hours* (`HeatHoursSensor`), count every
+minute the time a source of that kind really heats (`hvac_action` is `heating`, or the mode is `heat`
+when the appliance reports no `hvac_action`). They only rise, so Home Assistant keeps them as an
+hourly statistic; next to the gas meter and the air conditioner power that is the data for the COP
+curve, and an hour without boiler heating is an hour in which the gas meter reads hot water alone.
 
 **Weather forecast in the outdoor window.** The coordinator reads the expected temperature
 from a `weather` entity; `WorldState.outdoor_forecast` lets the windows check the forecast

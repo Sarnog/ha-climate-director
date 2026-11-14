@@ -59,6 +59,12 @@
       "heat_break_even": {
         "default": "mdi:swap-horizontal"
       },
+      "heat_hours_gas": {
+        "default": "mdi:fire"
+      },
+      "heat_hours_electric": {
+        "default": "mdi:heat-pump"
+      },
       "zone_source": {
         "default": "mdi:radiator"
       },

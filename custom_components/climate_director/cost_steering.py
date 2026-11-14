@@ -23,7 +23,7 @@ from dataclasses import replace
 from homeassistant.core import HomeAssistant
 
 from .coordinator_surface import CoordinatorSurface
-from .engine import WorldState
+from .engine import DirectorConfig, ModeFamily, SourceEnergy, WorldState
 from .engine.energy import EnergySettings, HeatCosts, heat_costs
 from .engine.heat_pick import OFF, HeatPick, pick_heat_source
 
@@ -85,6 +85,32 @@ def with_heat_pick(coordinator: CoordinatorSurface, world: WorldState) -> WorldS
         heat_pick=pick.preferred,
         heat_picks={zone_id: item.preferred for zone_id, item in own.items()},
     )
+
+
+def heating_kinds(hass: HomeAssistant, config: DirectorConfig) -> frozenset[str]:
+    """Return the energy kinds that are really heating at this moment.
+
+    Een bron telt als verwarmend als het apparaat `hvac_action` `heating` meldt;
+    meldt het apparaat geen `hvac_action`, dan telt de stand `heat`. Een airco die
+    op `heat` staat maar stilstaat telt dus niet mee. Zo komen de uren overeen met
+    het verbruik van gas en stroom, en niet met wat er alleen ingesteld staat.
+
+    A source counts as heating when the appliance reports `hvac_action` `heating`;
+    when it reports no `hvac_action`, the mode `heat` counts. An air conditioner
+    that is in `heat` but idle therefore does not count. That way the hours match
+    the use of gas and power, not just what is set.
+    """
+    kinds: set[str] = set()
+    for _, source in config.sources():
+        if source.energy is SourceEnergy.NONE or not source.supports(ModeFamily.HEAT):
+            continue
+        state = hass.states.get(source.entity_id)
+        if state is None:
+            continue
+        action = state.attributes.get("hvac_action")
+        if (action == "heating") if action is not None else (state.state == "heat"):
+            kinds.add(source.energy.value)
+    return frozenset(kinds)
 
 
 def tracked_prices(coordinator: CoordinatorSurface) -> set[str]:

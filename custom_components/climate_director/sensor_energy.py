@@ -6,15 +6,22 @@ where it swaps over.
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from typing import Any
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import EntityCategory, UnitOfTemperature
+from homeassistant.components.sensor import (
+    RestoreSensor,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
+from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import Event, EventStateChangedData, callback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import async_track_state_change_event, async_track_time_interval
+from homeassistant.util import dt as dt_util
 
 from .coordinator import ClimateDirectorCoordinator
-from .cost_steering import costs_now, read_number
+from .cost_steering import costs_now, heating_kinds, read_number
 from .engine import ModeFamily, SourceEnergy
 from .engine.energy import ELECTRIC, GAS, BreakEven, HeatCosts, break_even
 from .entity import ClimateDirectorEntity
@@ -164,3 +171,85 @@ class BreakEvenSensor(ClimateDirectorEntity, SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return whether there is a changeover at all, and the price it assumed."""
         return {"verdict": self._answer().verdict}
+
+
+#: Hoe vaak de verwarmingsuren bijgewerkt worden, en hoeveel tijd één stap
+#: hoogstens telt: na een onderbreking (slaapstand, herstart) telt de gemiste tijd
+#: niet mee. / How often the heating hours are updated, and the most time one step
+#: counts: after an interruption (suspend, restart) the missed time does not count.
+HEAT_HOURS_STEP = timedelta(minutes=1)
+HEAT_HOURS_MAX_GAP = timedelta(minutes=5)
+
+
+class HeatHoursSensor(ClimateDirectorEntity, RestoreSensor):
+    """How many hours a kind of source (gas or electric) has been heating.
+
+    Een teller die alleen oploopt, dus Home Assistant bewaart hem als lange-
+    termijnstatistiek, per uur en onbeperkt. Zet je hem naast de gasmeter en de
+    airco-stroom, dan zie je per uur of er alleen gas, alleen de airco of allebei
+    verwarmden. Dat zijn precies de gegevens om de COP-curve uit te rekenen, en
+    het uur waarin de ketel niet verwarmde is het uur waarin de gasmeter alleen
+    warm water (douchen) meet.
+
+    A counter that only rises, so Home Assistant keeps it as a long-term
+    statistic, hourly and without limit. Put next to the gas meter and the air
+    conditioner power, it shows per hour whether only gas, only the air conditioner
+    or both were heating. That is exactly the data for working out the COP curve,
+    and the hour in which the boiler was not heating is the hour in which the gas
+    meter reads hot water (showers) alone.
+    """
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_native_unit_of_measurement = UnitOfTime.HOURS
+    _attr_suggested_display_precision = 1
+
+    _kind = ""
+
+    def __init__(self, coordinator: ClimateDirectorCoordinator) -> None:
+        """Set up the counter for its kind of source."""
+        super().__init__(coordinator, f"heat_hours_{self._kind}")
+        self._hours = 0.0
+        self._last: datetime | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Pick the count up where it was left, and start counting."""
+        await super().async_added_to_hass()
+        last = await self.async_get_last_sensor_data()
+        if last is not None and isinstance(last.native_value, int | float):
+            self._hours = float(last.native_value)
+        self.async_on_remove(async_track_time_interval(self.hass, self._count, HEAT_HOURS_STEP))
+        self._last = dt_util.utcnow()
+
+    @callback
+    def _count(self, now: datetime) -> None:
+        """Add the time since the last step when this kind was heating."""
+        gap = now - self._last if self._last is not None else HEAT_HOURS_STEP
+        self._last = now
+        if self._kind in heating_kinds(self.hass, self.coordinator.config):
+            self._hours += min(gap, HEAT_HOURS_MAX_GAP).total_seconds() / 3600
+        self.async_write_ha_state()
+
+    @property
+    def native_value(self) -> float:
+        """Return the hours counted so far."""
+        return round(self._hours, 3)
+
+
+class GasHeatHoursSensor(HeatHoursSensor):
+    """The hours gas (the boiler) has been heating."""
+
+    _attr_translation_key = "heat_hours_gas"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:fire"
+    _kind = GAS
+
+
+class ElectricHeatHoursSensor(HeatHoursSensor):
+    """The hours the air conditioners have been heating."""
+
+    _attr_translation_key = "heat_hours_electric"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:heat-pump"
+    _kind = ELECTRIC

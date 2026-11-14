@@ -239,7 +239,7 @@ De uitgewerkte ontwerpvoorstellen voor alles hieronder staan in
   wint zolang die het aankan. Klaar: het kostenrekenwerk (`engine/cost.py`), de energie-instellingen
   met de sensor *Goedkoopste warmtebron*, en het schakelen op kosten (schakelaar *Schakel op kosten*,
   met koudegrens, marge en de sensor *Omslagtemperatuur gas en airco*), per zone meedoen of een eigen
-  koudegrens, en het seizoenslot (zomer = elektrisch). Nog niet: een eigen COP-curve of prijs per zone.
+  koudegrens, en het seizoenslot (zomer = elektrisch). Ook klaar: twee tellers met de verwarmingsuren per energiesoort, voor het uitrekenen van de COP-curve. Nog niet: een eigen COP-curve of prijs per zone.
 - **Live prioriteiten gelijk trekken op één circuit** — twee zones met dezelfde prioriteit
   op hetzelfde circuit laten nu de bron- en zonevolgorde beslissen. Een zone die lang
   wacht zou tijdelijk één stap voorrang kunnen krijgen, met terugval naar de ingestelde
@@ -608,7 +608,7 @@ The worked-out design proposals for everything below live in
   arithmetic (`engine/cost.py`), the energy settings with the *Cheapest heat source* sensor, and
   switching on cost (the *Switch on cost* switch, with cold limit, margin and the *Gas and air
   conditioner changeover temperature* sensor), taking part per zone or a cold limit of its own, and
-  the season lock (summer = electric). Not yet: a COP curve or price of its own per zone.
+  the season lock (summer = electric). Also done: two counters with the heating hours per energy kind, for working out the COP curve. Not yet: a COP curve or price of its own per zone.
 - **Levelling live priorities on one circuit** — two zones with the same priority on the
   same circuit now let source and zone order decide. A zone that waits long could get one
   temporary step of precedence, falling back to the configured priority. The design stands
