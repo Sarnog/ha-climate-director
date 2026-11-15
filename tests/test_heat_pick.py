@@ -261,3 +261,43 @@ class TestSelectWithAPreference:
         )
         passed = sources.passed_over(zone(), ModeFamily.HEAT, replace(down, heat_pick="gas"))
         assert passed == ("ketel",)
+
+
+class TestAHandOperatedPreferredSource:
+    """Een handbediende voorkeursbron is geen weggevallen bron.
+
+    A hand-operated preferred source is not a source that dropped out.
+    """
+
+    def test_gas_keeps_its_window_next_to_a_manual_airco(self) -> None:
+        """De slaapkamer: handbediende airco, gas alleen onder 3 graden. Op 8 graden geen gas."""
+        bedroom = zone(airco={"autostart": False})
+        assert sources.select(bedroom, ModeFamily.HEAT, world(8.0, "electric")) is None
+
+    def test_gas_still_runs_inside_its_own_window(self) -> None:
+        """Onder 3 graden mag de ketel gewoon, ook met een handbediende airco ernaast."""
+        bedroom = zone(airco={"autostart": False})
+        chosen = sources.select(bedroom, ModeFamily.HEAT, world(1.0, "electric"))
+        assert chosen is not None and chosen.entity_id == BOILER
+
+    def test_an_automatic_airco_keeps_the_fallback(self) -> None:
+        """Valt de automatische airco weg, dan neemt de ketel het nog steeds over."""
+        down = make_world(
+            outdoor=8.0, climates={BOILER: climate("off"), AIRCO: climate("off", available=False)}
+        )
+        chosen = sources.select(zone(), ModeFamily.HEAT, replace(down, heat_pick="electric"))
+        assert chosen is not None and chosen.entity_id == BOILER
+
+    def test_the_same_holds_the_other_way_round(self) -> None:
+        """Handbediend gas met voorkeur gas: de airco houdt zijn eigen venster."""
+        manual_gas = zone(boiler={"autostart": False})
+        # op 8 graden valt dat in het venster van de airco, dus die levert
+        chosen = sources.select(manual_gas, ModeFamily.HEAT, world(8.0, "gas"))
+        assert chosen is not None and chosen.entity_id == AIRCO
+        # op 1 graad ligt de airco buiten zijn venster en komt er niets in de plaats
+        assert sources.select(manual_gas, ModeFamily.HEAT, world(1.0, "gas")) is None
+
+    def test_passed_over_stays_quiet_for_a_hand_operated_source(self) -> None:
+        """Geen 'op reserve' voor een bron die nooit zou starten."""
+        bedroom = zone(airco={"autostart": False})
+        assert sources.passed_over(bedroom, ModeFamily.HEAT, world(8.0, "electric")) == ()
