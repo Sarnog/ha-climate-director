@@ -23,6 +23,25 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
+MIN_SURPLUS_KW = 0.1
+"""Onder deze waarde (kW) is er geen overschot: een P1-meter toont ook 4 W aan ruis.
+
+Below this value (kW) there is no surplus: a P1 meter also shows 4 W of noise.
+"""
+
+SURPLUS_HOLD = timedelta(minutes=15)
+"""Hoe lang een overschot blijft gelden nadat het voor het laatst gezien is.
+
+De airco die het overschot benut, haalt het zelf weer weg: de teruglevering is
+netto na zijn eigen verbruik. Zonder deze houdtijd springt de prijs bij elke
+ronde heen en weer en pendelt de bronkeuze mee.
+
+How long a surplus keeps counting after it was last seen. The air conditioner
+that uses the surplus removes it again itself: the feed-in is net of its own
+draw. Without this hold the price jumps back and forth every round and the
+source choice swings with it.
+"""
+
 
 @dataclass(frozen=True, slots=True)
 class PricePoint:
@@ -114,24 +133,52 @@ def electric_cost(price_per_kwh: float | None, cop: float | None) -> float | Non
     return price_per_kwh / cop
 
 
+def has_surplus(surplus_kw: float | None) -> bool:
+    """Return whether this reading counts as a solar surplus (above `MIN_SURPLUS_KW`)."""
+    return surplus_kw is not None and surplus_kw > MIN_SURPLUS_KW
+
+
+def track_surplus(
+    surplus_kw: float | None, until: datetime | None, now: datetime
+) -> tuple[bool, datetime | None]:
+    """Return whether a surplus counts now, and until when it holds.
+
+    Een lezing boven `MIN_SURPLUS_KW` telt en verlengt de houdtijd tot `now +
+    SURPLUS_HOLD`. Daarna blijft het overschot gelden tot `until`, ook als de
+    lezing wegvalt of onleesbaar is; daarna niet meer.
+
+    A reading above `MIN_SURPLUS_KW` counts and extends the hold to `now +
+    SURPLUS_HOLD`. After that the surplus keeps counting until `until`, even if
+    the reading drops or is unreadable; after that it does not.
+    """
+    if has_surplus(surplus_kw):
+        return True, now + SURPLUS_HOLD
+    if until is not None and now < until:
+        return True, until
+    return False, None
+
+
 def surplus_price(
     grid_price: float | None,
     feed_in_price: float | None,
     surplus_kw: float | None,
+    held: bool = False,
 ) -> float | None:
     """Return the price of the electricity one more kWh of heat would use.
 
     Bij een overschot aan zonnestroom kost een extra kWh wat het teruglevert
     zou opbrengen (`feed_in_price`): zelf opgewekte stroom is niet gratis, de
     waarde is wat je misloopt. Zonder overschot kost hij de netprijs. Een
-    onbekend overschot telt als geen overschot.
+    onbekend overschot telt als geen overschot, en een overschot onder
+    `MIN_SURPLUS_KW` ook. `held` laat een vastgehouden overschot meetellen.
 
     With a surplus of solar power one more kWh costs what feeding it back would
     earn (`feed_in_price`): self-generated power is not free, its value is what
     you give up. Without a surplus it costs the grid price. An unknown surplus
-    counts as none.
+    counts as none, and so does one below `MIN_SURPLUS_KW`. `held` lets a held
+    surplus count.
     """
-    if surplus_kw is not None and surplus_kw > 0 and feed_in_price is not None:
+    if (has_surplus(surplus_kw) or held) and feed_in_price is not None:
         return feed_in_price
     return grid_price
 

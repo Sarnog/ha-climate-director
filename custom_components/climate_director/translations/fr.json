@@ -504,7 +504,7 @@
           "grid_price": "Un prix fixe par kWh d'électricité, pour un contrat à prix fixe. Si un capteur est aussi réglé au-dessus, ce prix ne compte que lorsque le capteur ne donne rien. Zéro signifie non réglé.",
           "feed_in_sensor": "Le prix actuel que vous recevez pour un kWh réinjecté. Compte comme prix de l'électricité tant qu'il y a un surplus solaire. Laissez ce champ et le prix fixe de rachat vides pour toujours utiliser le prix de l'électricité. Choisissez un capteur ou un assistant input_number.",
           "feed_in_price": "Une rémunération fixe par kWh réinjecté. Compte comme prix de l'électricité tant qu'il y a un surplus solaire. Zéro signifie non réglé.",
-          "surplus_sensor": "Le surplus solaire en kW ; une valeur positive compte comme surplus. Laissez vide pour ne jamais compter de surplus.",
+          "surplus_sensor": "Le surplus solaire en kW ; une valeur supérieure à 0,1 kW compte comme surplus et continue de compter 15 minutes après la dernière lecture au-dessus. Laissez vide pour ne jamais compter de surplus.",
           "gas_price_sensor": "Le prix actuel d'un m³ de gaz, par exemple d'un contrat dynamique. Il l'emporte sur le prix fixe du gaz ci-dessous tant que l'entité donne un nombre. Choisissez un capteur ou un assistant input_number.",
           "gas_price": "Un prix fixe par m³ de gaz, tout compris, dans votre devise. Si un capteur est aussi réglé au-dessus, ce prix ne compte que lorsque le capteur ne donne rien. Sans capteur et sans prix fixe, le capteur de coût n'est pas créé.",
           "kwh_per_m3": "La chaleur que contient un m³ de gaz. 9,77 est une valeur néerlandaise courante ; regardez votre facture de gaz.",

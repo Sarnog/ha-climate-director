@@ -504,7 +504,7 @@
           "grid_price": "Ein fester Preis pro kWh Strom, für einen Festpreisvertrag. Ist oben auch ein Sensor gesetzt, gilt dieser Preis nur, wenn der Sensor nichts liefert. Null bedeutet nicht eingestellt.",
           "feed_in_sensor": "Der aktuelle Preis, den du für eine eingespeiste kWh bekommst. Gilt als Strompreis, solange es einen Solarüberschuss gibt. Lass diesen und den festen Einspeisepreis leer, um immer den Strompreis zu nehmen. Wähle einen Sensor oder einen input_number-Helfer.",
           "feed_in_price": "Eine feste Vergütung pro eingespeister kWh. Gilt als Strompreis, solange es einen Solarüberschuss gibt. Null bedeutet nicht eingestellt.",
-          "surplus_sensor": "Der Solarüberschuss in kW; ein positiver Wert zählt als Überschuss. Leer lassen, um nie einen Überschuss zu zählen.",
+          "surplus_sensor": "Der Solarüberschuss in kW; ein Wert über 0,1 kW zählt als Überschuss und gilt nach der letzten Messung darüber noch 15 Minuten. Leer lassen, um nie einen Überschuss zu zählen.",
           "gas_price_sensor": "Der aktuelle Preis eines m³ Gas, zum Beispiel aus einem dynamischen Tarif. Hat Vorrang vor dem festen Gaspreis unten, solange die Entität eine Zahl liefert. Wähle einen Sensor oder einen input_number-Helfer.",
           "gas_price": "Ein fester Preis pro m³ Gas, alles inklusive, in deiner Währung. Ist oben auch ein Sensor gesetzt, gilt dieser Preis nur, wenn der Sensor nichts liefert. Ohne Sensor und ohne festen Preis wird der Kostensensor nicht angelegt.",
           "kwh_per_m3": "Wie viel Wärme ein m³ Gas enthält. 9,77 ist ein üblicher niederländischer Wert; schau auf deine Gasrechnung.",

@@ -130,6 +130,21 @@ class TestHeatCosts:
         assert heat_costs(settings, 0.30, None, 2.0, 8.0).electricity_price == 0.07
         assert heat_costs(settings, 0.30, None, 0.0, 8.0).electricity_price == 0.30
 
+    def test_meter_noise_is_no_surplus(self) -> None:
+        costs = heat_costs(FULL, 0.90, 0.05, 0.004, 8.0)
+        assert costs.electricity_price == 0.90
+        assert costs.cheapest == GAS
+
+    def test_a_held_surplus_keeps_the_feed_in_price(self) -> None:
+        costs = heat_costs(FULL, 0.90, 0.05, 0.0, 8.0, surplus_held=True)
+        assert costs.electricity_price == 0.05
+        assert costs.cheapest == ELECTRIC
+
+    def test_a_held_surplus_with_an_unreadable_feed_in_price_is_unknown(self) -> None:
+        settings = replace(FULL, feed_in_sensor="sensor.terug")
+        costs = heat_costs(settings, 0.30, None, 0.0, 8.0, surplus_held=True)
+        assert costs.electricity_price is None
+
     def test_a_gas_sensor_without_a_reading_and_without_a_fixed_price_leaves_electricity(
         self,
     ) -> None:

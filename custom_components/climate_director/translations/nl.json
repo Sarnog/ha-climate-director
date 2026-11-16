@@ -504,7 +504,7 @@
           "grid_price": "Een vaste prijs per kWh stroom, voor een vast contract. Staat er ook een sensor boven, dan geldt deze alleen als de sensor niets geeft. Nul betekent niet ingesteld.",
           "feed_in_sensor": "De huidige prijs die je krijgt voor een teruggeleverde kWh. Telt als stroomprijs zolang er een zonne-overschot is. Laat deze en de vaste terugleverprijs leeg om altijd de stroomprijs te gebruiken. Kies een sensor of een input_number-helper.",
           "feed_in_price": "Een vaste vergoeding per teruggeleverde kWh. Telt als stroomprijs zolang er een zonne-overschot is. Nul betekent niet ingesteld.",
-          "surplus_sensor": "Het zonne-overschot in kW; een positieve waarde telt als overschot. Laat leeg om nooit een overschot te tellen.",
+          "surplus_sensor": "Het zonne-overschot in kW; een waarde boven 0,1 kW telt als overschot en blijft nog 15 minuten gelden na de laatste lezing erboven. Laat leeg om nooit een overschot te tellen.",
           "gas_price_sensor": "De huidige prijs van een m³ gas, bijvoorbeeld uit een dynamisch contract. Heeft voorrang op de vaste gasprijs hieronder zolang de entiteit een getal geeft. Kies een sensor of een input_number-helper.",
           "gas_price": "Een vaste prijs per m³ gas, alles inbegrepen, in jouw munteenheid. Staat er ook een sensor boven, dan geldt deze alleen als de sensor niets geeft. Zonder sensor én zonder vaste prijs wordt de kostensensor niet aangemaakt.",
           "kwh_per_m3": "Hoeveel warmte een m³ gas bevat. 9,77 is een gebruikelijke Nederlandse waarde; kijk op je gasrekening.",

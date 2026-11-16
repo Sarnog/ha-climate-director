@@ -191,7 +191,7 @@ apparaat verwarmt; zonder kijkt de sensor *Goedkoopste warmtebron* alleen mee.
 | **Vaste stroomprijs (per kWh)** | vaste prijs per kWh stroom; geldt als er geen sensor is of de sensor niets geeft; 0 = niet ingesteld |
 | **Entiteit terugleverprijs** | de prijs die je krijgt voor een teruggeleverde kWh; telt als stroomprijs bij zonne-overschot; met de vaste terugleverprijs leeg = altijd de stroomprijs |
 | **Vaste terugleverprijs (per kWh)** | vaste vergoeding per teruggeleverde kWh; geldt als er geen sensor is of de sensor niets geeft; 0 = niet ingesteld |
-| **Sensor zonne-overschot** | zonne-overschot in kW (positief = overschot); leeg = nooit een overschot |
+| **Sensor zonne-overschot** | zonne-overschot in kW (boven 0,1 = overschot, en het blijft nog 15 minuten gelden); leeg = nooit een overschot |
 | **Entiteit gasprijs** | de huidige prijs van een m³ gas, bijvoorbeeld uit een dynamisch contract; heeft voorrang op de vaste gasprijs zolang de sensor een getal geeft |
 | **Vaste gasprijs (per m³)** | vaste prijs per m³ gas, alles inbegrepen; geldt als er geen sensor is of de sensor niets geeft; zonder beide wordt de sensor niet aangemaakt |
 | **Calorische waarde van gas (kWh per m³)** | warmte per m³ gas; standaard 9,77 |
