@@ -60,10 +60,12 @@ class HeatCostSensor(ClimateDirectorEntity, SensorEntity):
     def _costs(self) -> HeatCosts:
         """Return the costs at this moment's readings."""
         world = self.coordinator.world
+        until = self.coordinator.round.surplus_until
         return costs_now(
             self.hass,
             self.coordinator.config.energy,
             None if world is None else world.outdoor_temperature,
+            world is not None and until is not None and world.now < until,
         )
 
     @property

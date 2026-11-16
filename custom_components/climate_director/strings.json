@@ -504,7 +504,7 @@
           "grid_price": "A fixed price per kWh of power, for a fixed contract. If a sensor is set above, this only counts when the sensor reads nothing. Zero means not set.",
           "feed_in_sensor": "The current price you get for a kWh fed back. Used as the price of power while there is a solar surplus. Leave this and the fixed feed-in price empty to always use the power price. Pick a sensor or an input_number helper.",
           "feed_in_price": "A fixed payment per kWh fed back. Used as the price of power while there is a solar surplus. Zero means not set.",
-          "surplus_sensor": "The solar surplus in kW; a positive value counts as surplus. Leave empty to never count a surplus.",
+          "surplus_sensor": "The solar surplus in kW; a value above 0.1 kW counts as surplus, and it keeps counting for 15 minutes after the last reading above that. Leave empty to never count a surplus.",
           "gas_price_sensor": "The current price of a m³ of gas, for example from a dynamic contract. It takes precedence over the fixed gas price below as long as the entity reads a number. Pick a sensor or an input_number helper.",
           "gas_price": "A fixed price per m³ of gas, all in, in your currency. If a sensor is set above, this only counts when the sensor reads nothing. With neither a sensor nor a fixed price the cost sensor is not created.",
           "kwh_per_m3": "How much heat a m³ of gas holds. 9.77 is a usual Dutch value; check your gas bill.",

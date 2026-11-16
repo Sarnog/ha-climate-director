@@ -504,7 +504,7 @@
           "grid_price": "Un precio fijo por kWh de electricidad, para un contrato fijo. Si arriba también hay un sensor, este precio solo cuenta cuando el sensor no da nada. Cero significa sin configurar.",
           "feed_in_sensor": "El precio actual que recibes por un kWh vertido a la red. Cuenta como precio de la electricidad mientras haya excedente solar. Deja este campo y el precio fijo de excedentes vacíos para usar siempre el precio de la electricidad. Elige un sensor o un ayudante input_number.",
           "feed_in_price": "Una compensación fija por kWh vertido a la red. Cuenta como precio de la electricidad mientras haya excedente solar. Cero significa sin configurar.",
-          "surplus_sensor": "El excedente solar en kW; un valor positivo cuenta como excedente. Déjalo vacío para no contar nunca un excedente.",
+          "surplus_sensor": "El excedente solar en kW; un valor superior a 0,1 kW cuenta como excedente y sigue contando 15 minutos tras la última lectura por encima. Déjalo vacío para no contar nunca un excedente.",
           "gas_price_sensor": "El precio actual de un m³ de gas, por ejemplo de un contrato dinámico. Tiene prioridad sobre el precio fijo del gas de abajo mientras la entidad dé un número. Elige un sensor o un ayudante input_number.",
           "gas_price": "Un precio fijo por m³ de gas, todo incluido, en tu moneda. Si arriba también hay un sensor, este precio solo cuenta cuando el sensor no da nada. Sin sensor y sin precio fijo no se crea el sensor de coste.",
           "kwh_per_m3": "Cuánto calor contiene un m³ de gas. 9,77 es un valor neerlandés habitual; mira tu factura del gas.",

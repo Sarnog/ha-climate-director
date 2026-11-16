@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator_surface import CoordinatorSurface
 from .engine import WorldState
+from .engine.cost import track_surplus
 from .engine.energy import EnergySettings, HeatCosts, heat_costs
 from .engine.heat_pick import OFF, HeatPick, pick_heat_source
 
@@ -44,7 +45,12 @@ def read_number(hass: HomeAssistant, entity_id: str) -> float | None:
     return value if value == value and abs(value) != float("inf") else None
 
 
-def costs_now(hass: HomeAssistant, settings: EnergySettings, outdoor: float | None) -> HeatCosts:
+def costs_now(
+    hass: HomeAssistant,
+    settings: EnergySettings,
+    outdoor: float | None,
+    surplus_held: bool = False,
+) -> HeatCosts:
     """Return the cost of a kWh of heat at this moment's readings."""
     return heat_costs(
         settings,
@@ -53,13 +59,22 @@ def costs_now(hass: HomeAssistant, settings: EnergySettings, outdoor: float | No
         read_number(hass, settings.surplus_sensor),
         outdoor,
         read_number(hass, settings.gas_price_sensor),
+        surplus_held,
     )
 
 
 def with_heat_pick(coordinator: CoordinatorSurface, world: WorldState) -> WorldState:
     """Return the snapshot with the cost preference filled in."""
     settings = coordinator.config.energy
-    costs = costs_now(coordinator.hass, settings, world.outdoor_temperature)
+    # Het overschot blijft even gelden nadat het weg is: de airco die het benut
+    # haalt het zelf weg. / The surplus keeps counting a while after it is gone:
+    # the air conditioner that uses it removes it itself.
+    held, coordinator.round.surplus_until = track_surplus(
+        read_number(coordinator.hass, settings.surplus_sensor),
+        coordinator.round.surplus_until,
+        world.now,
+    )
+    costs = costs_now(coordinator.hass, settings, world.outdoor_temperature, held)
     hysteresis = coordinator.config.outdoor_hysteresis
 
     def pick_for(limit_settings: EnergySettings, holding: HeatPick | None) -> HeatPick:

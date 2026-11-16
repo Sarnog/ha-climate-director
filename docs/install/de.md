@@ -194,7 +194,7 @@ günstigste Quelle auch wirklich, welches Gerät heizt; ohne schaut der Sensor *
 | **Fester Strompreis (pro kWh)** | fester Preis pro kWh Strom; gilt, wenn es keinen Sensor gibt oder er nichts liefert; 0 = nicht eingestellt |
 | **Entität Einspeisepreis** | der Preis, den du für eine eingespeiste kWh bekommst; gilt bei Solarüberschuss als Strompreis; mit auch leerem festem Einspeisepreis = immer der Strompreis |
 | **Fester Einspeisepreis (pro kWh)** | feste Vergütung pro eingespeister kWh; gilt, wenn es keinen Sensor gibt oder er nichts liefert; 0 = nicht eingestellt |
-| **Sensor Solarüberschuss** | Solarüberschuss in kW (positiv = Überschuss); leer = nie ein Überschuss |
+| **Sensor Solarüberschuss** | Solarüberschuss in kW (über 0,1 = Überschuss, und er gilt noch 15 Minuten); leer = nie ein Überschuss |
 | **Entität Gaspreis** | der aktuelle Preis eines m³ Gas, zum Beispiel aus einem dynamischen Tarif; hat Vorrang vor dem festen Gaspreis, solange der Sensor eine Zahl liefert |
 | **Fester Gaspreis (pro m³)** | fester Preis pro m³ Gas, alles inklusive; gilt, wenn es keinen Sensor gibt oder er nichts liefert; ohne beides wird der Sensor nicht angelegt |
 | **Brennwert des Gases (kWh pro m³)** | Wärme pro m³ Gas; standardmäßig 9,77 |

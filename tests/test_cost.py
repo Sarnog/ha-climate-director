@@ -10,12 +10,16 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from custom_components.climate_director.engine.cost import (
+    MIN_SURPLUS_KW,
+    SURPLUS_HOLD,
     CopCurve,
     PricePoint,
     cheapest,
     electric_cost,
     gas_cost,
+    has_surplus,
     surplus_price,
+    track_surplus,
     window_average,
 )
 
@@ -123,6 +127,40 @@ class TestSurplusPrice:
 
     def test_nothing_known(self) -> None:
         assert surplus_price(None, None, None) is None
+
+    def test_meter_noise_is_no_surplus(self) -> None:
+        # Een P1-meter toont 4 W terwijl de zon niet schijnt. / A P1 meter shows 4 W at night.
+        assert surplus_price(0.80, 0.05, 0.004) == 0.80
+        assert surplus_price(0.80, 0.05, MIN_SURPLUS_KW) == 0.80
+        assert surplus_price(0.80, 0.05, MIN_SURPLUS_KW + 0.01) == 0.05
+
+    def test_a_held_surplus_counts_without_a_reading(self) -> None:
+        assert surplus_price(0.80, 0.05, 0.0, held=True) == 0.05
+        assert surplus_price(0.80, None, 0.0, held=True) == 0.80
+
+
+class TestTrackSurplus:
+    def test_a_reading_above_the_minimum_counts_and_starts_the_hold(self) -> None:
+        assert has_surplus(1.2)
+        assert track_surplus(1.2, None, START) == (True, START + SURPLUS_HOLD)
+
+    def test_noise_does_not_count(self) -> None:
+        assert not has_surplus(0.004)
+        assert not has_surplus(None)
+        assert track_surplus(0.004, None, START) == (False, None)
+
+    def test_the_surplus_holds_after_the_reading_drops(self) -> None:
+        until = START + SURPLUS_HOLD
+        assert track_surplus(0.0, until, START + timedelta(minutes=14)) == (True, until)
+        assert track_surplus(None, until, START + timedelta(minutes=14)) == (True, until)
+
+    def test_the_hold_ends(self) -> None:
+        until = START + SURPLUS_HOLD
+        assert track_surplus(0.0, until, until) == (False, None)
+
+    def test_a_new_reading_extends_the_hold(self) -> None:
+        later = START + timedelta(minutes=10)
+        assert track_surplus(0.5, START + SURPLUS_HOLD, later) == (True, later + SURPLUS_HOLD)
 
 
 class TestWindowAverage:

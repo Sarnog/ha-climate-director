@@ -191,7 +191,7 @@ picks which appliance heats; without it the *Cheapest heat source* sensor only w
 | **Fixed power price (per kWh)** | fixed price per kWh of power; counts when there is no sensor or the sensor reads nothing; 0 = not set |
 | **Feed-in price entity** | the price you get for a kWh fed back; counts as the power price during a solar surplus; with the fixed feed-in price empty too = always the power price |
 | **Fixed feed-in price (per kWh)** | fixed payment per kWh fed back; counts when there is no sensor or the sensor reads nothing; 0 = not set |
-| **Solar surplus sensor** | solar surplus in kW (positive = surplus); empty = never a surplus |
+| **Solar surplus sensor** | solar surplus in kW (above 0.1 = surplus, and it keeps counting for 15 minutes); empty = never a surplus |
 | **Gas price entity** | the current price of a m³ of gas, for example from a dynamic contract; takes precedence over the fixed gas price while the sensor reads a number |
 | **Fixed gas price (per m³)** | fixed price per m³ of gas, all in; counts when there is no sensor or the sensor reads nothing; with neither, the sensor is not created |
 | **Calorific value of gas (kWh per m³)** | heat per m³ of gas; 9.77 by default |
