@@ -132,15 +132,37 @@ def _windowless(zone: Zone, pick: str | None) -> frozenset[str]:
     voorkeur neemt die scheiding over. De voorkeur plaatst de bron die nu goedkoper is
     vóór de andere; de andere blijft als terugval beschikbaar (zie `_behind`).
 
+    Die terugval is er voor een automatische voorkeursbron die wegvalt. Wordt de
+    voorkeurssoort in de zone alleen door handbediende bronnen geleverd (`autostart`
+    uit), dan is er niets weggevallen: die bronnen starten nooit uit zichzelf, dat is
+    de bedoeling. De andere soort houdt dan haar eigen buitenvenster, anders trekt
+    een handbediende slaapkamerairco de gasketel aan op een dag dat het venster van
+    de ketel dat nooit toestaat.
+
     The cost preference only applies to heating, and only to sources with an energy
     kind: their outdoor window then does not count, the preference's cold limit
     takes that split over. The preference ranks the source that is cheaper now
     ahead of the other; the other stays available as a fallback (see `_behind`).
+
+    That fallback exists for an automatic preferred source that drops out. If the
+    preferred kind is only delivered by hand-operated sources in the zone
+    (`autostart` off), nothing dropped out: those sources never start of their own
+    accord, which is the point. The other kind then keeps its own outdoor window,
+    otherwise a hand-operated bedroom air conditioner pulls in the gas boiler on a
+    day its window never allows it.
     """
     if pick is None:
         return frozenset()
+    preferred = [
+        source
+        for source in zone.sources
+        if source.energy.value == pick and source.supports(ModeFamily.HEAT)
+    ]
+    by_hand = bool(preferred) and not any(source.autostart for source in preferred)
     return frozenset(
-        source.entity_id for source in zone.sources if source.energy is not SourceEnergy.NONE
+        source.entity_id
+        for source in zone.sources
+        if source.energy is not SourceEnergy.NONE and not (by_hand and source.energy.value != pick)
     )
 
 
@@ -267,13 +289,14 @@ def passed_over(
         return ()
     world = _zone_world(world, zone)
     pick = world.heat_pick if family is ModeFamily.HEAT else None
+    windowless = _windowless(zone, pick)
 
     return tuple(
         source.source_id
         for source in sorted(zone.sources, key=lambda item: _rank(item, pick))
         if _rank(source, pick) < _rank(chosen, pick)
         and source.entity_id not in handed_over
-        and _suitable(source, family, world)
+        and _suitable(source, family, world, windowless)
         and (
             not world.climate(source.entity_id).available
             or source.entity_id in refused
@@ -282,19 +305,17 @@ def passed_over(
     )
 
 
-def _suitable(source: Source, family: ModeFamily, world: WorldState) -> bool:
+def _suitable(
+    source: Source, family: ModeFamily, world: WorldState, windowless: frozenset[str]
+) -> bool:
     """Return whether a source fits this duty, leaving reachability aside."""
     # Met een kostenvoorkeur telt het buitenvenster van een bron met een
-    # energiesoort niet; zie `select`. / With a cost preference the outdoor window
-    # of a source with an energy kind does not count; see `select`.
-    if family is ModeFamily.HEAT and world.heat_pick is not None:
-        windowless = source.energy is not SourceEnergy.NONE
-    else:
-        windowless = False
+    # energiesoort niet; zie `_windowless`. / With a cost preference the outdoor
+    # window of a source with an energy kind does not count; see `_windowless`.
     return (
         source.autostart
         and source.supports(family)
-        and (windowless or source.outdoor.contains(world.outdoor_temperature))
+        and (source.entity_id in windowless or source.outdoor.contains(world.outdoor_temperature))
     )
 
 
