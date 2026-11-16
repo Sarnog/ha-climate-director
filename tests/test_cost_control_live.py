@@ -122,6 +122,36 @@ class TestCostControl:
         finally:
             await stop_house(home)
 
+    async def test_a_surplus_makes_power_cheap_and_holds_a_while_after_it_is_gone(self) -> None:
+        energy = {**ENERGY, "feed_in_sensor": "sensor.terug", "surplus_sensor": "sensor.overschot"}
+        states = {
+            **world(power="0.90"),
+            "sensor.terug": ("0.05", {}),
+            "sensor.overschot": ("1.5", {}),
+        }
+        home = await start_house(installation(energy), states=states)
+        try:
+            assert await serving(home) == "airco"
+            # De airco haalt het overschot zelf weg; de keuze pendelt niet mee.
+            # The air conditioner removes the surplus itself; the choice does not swing.
+            home.set("sensor.overschot", "0.0")
+            assert await serving(home) == "airco"
+        finally:
+            await stop_house(home)
+
+    async def test_meter_noise_is_no_surplus(self) -> None:
+        energy = {**ENERGY, "feed_in_sensor": "sensor.terug", "surplus_sensor": "sensor.overschot"}
+        states = {
+            **world(power="0.90"),
+            "sensor.terug": ("0.05", {}),
+            "sensor.overschot": ("0.004", {}),
+        }
+        home = await start_house(installation(energy), states=states)
+        try:
+            assert await serving(home) == "ketel"
+        finally:
+            await stop_house(home)
+
     async def test_below_the_cold_limit_gas_wins_whatever_the_price(self) -> None:
         home = await start_house(installation(ENERGY), states=world(outdoor="1.0", power="0.01"))
         try:

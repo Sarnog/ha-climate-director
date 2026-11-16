@@ -2,19 +2,19 @@
 
 The energy settings and what a kWh of heat costs right now.
 
-Dit is de schaduwkant van het kostenrekenwerk in `cost.py`: de instellingen van
-de installatie en één functie die er, met de lezingen van dit moment, de kosten
-van gas en van een elektrische bron uit haalt. Er hangt geen besluit aan: de
-bronkeuze kent deze module niet, dus hij verandert niets aan wat de ketel en de
-airco's doen. Hij voedt alleen een sensor waarop je kunt zien wat de goedkoopste
-bron nu zou zijn.
+Dit is de kant van het kostenrekenwerk in `cost.py` die de installatie kent: de
+instellingen en één functie die er, met de lezingen van dit moment, de kosten van
+gas en van een elektrische bron uit haalt. De bronkeuze leest deze module zelf
+niet. Met `cost_control` uit voedt hij alleen een sensor waarop je kunt zien wat
+de goedkoopste bron nu zou zijn; met `cost_control` aan maakt `heat_pick.py`
+er een voorkeur van die `sources.select()` volgt.
 
-This is the shadow side of the cost arithmetic in `cost.py`: the installation's
-settings and one function that, with this moment's readings, works the cost of
-gas and of an electric source out of them. No decision hangs on it: the source
-selection does not know this module, so it changes nothing about what the boiler
-and the air conditioners do. It only feeds a sensor on which you can see what
-the cheapest source would be right now.
+This is the side of the cost arithmetic in `cost.py` that knows the installation:
+the settings and one function that, with this moment's readings, works the cost
+of gas and of an electric source out of them. The source selection does not read
+this module itself. With `cost_control` off it only feeds a sensor on which you
+can see what the cheapest source would be right now; with `cost_control` on,
+`heat_pick.py` turns it into a preference that `sources.select()` follows.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from .cost import CopCurve, cheapest, electric_cost, gas_cost, surplus_price
+from .cost import CopCurve, cheapest, electric_cost, gas_cost, has_surplus, surplus_price
 
 GAS = "gas"
 """Sleutel van de gasketel in de vergelijking. / Key of the boiler in the comparison."""
@@ -73,9 +73,9 @@ class EnergySettings:
     """
 
     surplus_sensor: str = ""
-    """Entiteit met het zonne-overschot in kW (positief is overschot); leeg is geen.
+    """Entiteit met het zonne-overschot in kW (boven 0,1 is overschot); leeg is geen.
 
-    Entity with the solar surplus in kW (positive is surplus); empty is none.
+    Entity with the solar surplus in kW (above 0.1 is surplus); empty is none.
     """
 
     gas_price_sensor: str = ""
@@ -203,6 +203,7 @@ def heat_costs(
     surplus_kw: float | None,
     outdoor: float | None,
     gas_reading: float | None = None,
+    surplus_held: bool = False,
 ) -> HeatCosts:
     """Return the cost of a kWh of heat from gas and from electricity now.
 
@@ -223,11 +224,11 @@ def heat_costs(
     # Only an empty setting always uses the grid price.
     grid_price = _entity_or_fixed(grid_price, settings.grid_price)
     feed_in_price = _entity_or_fixed(feed_in_price, settings.feed_in_price)
-    surplus = surplus_kw is not None and surplus_kw > 0
+    surplus = has_surplus(surplus_kw) or surplus_held
     if surplus and (settings.feed_in_sensor or settings.feed_in_price) and feed_in_price is None:
         price = None
     else:
-        price = surplus_price(grid_price, feed_in_price, surplus_kw)
+        price = surplus_price(grid_price, feed_in_price, surplus_kw, surplus_held)
     curve = parse_cop_curve(settings.cop_curve)
     cop = curve.cop_at(outdoor) if curve is not None else None
     gas = gas_cost(

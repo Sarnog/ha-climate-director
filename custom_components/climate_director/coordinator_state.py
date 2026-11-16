@@ -98,6 +98,12 @@ class RoundState:
     The cost preference of the last round; the next one takes it into account.
     """
 
+    surplus_until: datetime | None = None
+    """Tot wanneer het zonne-overschot nog meetelt (`cost.track_surplus`).
+
+    Until when the solar surplus still counts (`cost.track_surplus`).
+    """
+
     issued: Plan | None = None
     """Het plan dat nu uitgevoerd wordt, nog voordat het gepubliceerd is.
 
