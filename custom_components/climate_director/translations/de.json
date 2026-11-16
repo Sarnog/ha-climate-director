@@ -807,6 +807,12 @@
             }
           }
         }
+      },
+      "heat_hours_gas": {
+        "name": "Heizstunden Gas"
+      },
+      "heat_hours_electric": {
+        "name": "Heizstunden elektrisch"
       }
     },
     "binary_sensor": {

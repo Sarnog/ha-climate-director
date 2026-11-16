@@ -16,6 +16,8 @@
  "tests/test_bypassed_openings_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/",
@@ -97,6 +99,8 @@
  "tests/test_circuits_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -141,6 +145,8 @@
  "tests/test_command_not_taking.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -148,6 +154,8 @@
  "tests/test_commissioning.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -155,6 +163,8 @@
  "tests/test_controls_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/",
@@ -164,6 +174,8 @@
  "tests/test_coordinator_surface.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/",
@@ -175,6 +187,8 @@
  "tests/test_cost_control_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -182,6 +196,8 @@
  "tests/test_coverage_exclusions.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/",
@@ -193,6 +209,8 @@
  "tests/test_coverage_exclusions_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -200,6 +218,8 @@
  "tests/test_crossings.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -245,6 +265,8 @@
   "blueprints/automation/climate_director/decisions.yaml",
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/",
@@ -258,6 +280,8 @@
  "tests/test_delays_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -287,6 +311,8 @@
  "tests/test_diagnostics_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -354,6 +380,8 @@
  "tests/test_energy_screen_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -369,6 +397,8 @@
  "tests/test_entity_reading_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -376,6 +406,8 @@
  "tests/test_entity_texts.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -496,6 +528,8 @@
  "tests/test_fallback_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -515,6 +549,8 @@
  "tests/test_flow_branches.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -877,6 +913,8 @@
  "tests/test_hand_does_not_hand_over_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -884,6 +922,8 @@
  "tests/test_hand_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -891,6 +931,8 @@
  "tests/test_hand_on_appliance_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -911,6 +953,8 @@
  "tests/test_hand_start_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -956,6 +1000,8 @@
  "tests/test_harness_appliances.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -963,6 +1009,8 @@
  "tests/test_heat_cost_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1023,6 +1071,8 @@
  "tests/test_holiday_calendar_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1071,6 +1121,8 @@
  "tests/test_house_wide_openings_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1078,6 +1130,8 @@
  "tests/test_household_gates_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1127,6 +1181,8 @@
  "tests/test_imperial_units.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1175,6 +1231,8 @@
  "tests/test_lifecycle_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1226,6 +1284,8 @@
  "tests/test_manual_sources_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1250,6 +1310,8 @@
  ],
  "tests/test_module_boundaries.py": [
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1306,6 +1368,8 @@
  "tests/test_multiple_installations.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1330,6 +1394,8 @@
  "tests/test_opening_ids_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1337,6 +1403,8 @@
  "tests/test_options_flow_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1371,6 +1439,8 @@
  "tests/test_outages_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1428,6 +1498,8 @@
  "tests/test_override_duration.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1461,6 +1533,8 @@
  "tests/test_override_handover_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1468,6 +1542,8 @@
  "tests/test_override_lifts_hand_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1475,6 +1551,8 @@
  "tests/test_override_range.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1575,6 +1653,8 @@
  "tests/test_quiet_windows_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1652,12 +1732,16 @@
  "tests/test_repair_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
  ],
  "tests/test_repair_notices.py": [
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1665,6 +1749,8 @@
  "tests/test_repair_notices_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1675,6 +1761,8 @@
  "tests/test_reporting_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1682,6 +1770,8 @@
  "tests/test_restart_flow_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1689,6 +1779,8 @@
  "tests/test_restart_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1696,6 +1788,8 @@
  "tests/test_room_grace_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1723,6 +1817,8 @@
  "tests/test_screen_state.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1730,6 +1826,8 @@
  "tests/test_season_settings.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1839,6 +1937,8 @@
  "tests/test_services_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1846,6 +1946,8 @@
  "tests/test_setup_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1853,6 +1955,8 @@
  "tests/test_shared_boiler_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1961,6 +2065,8 @@
  "tests/test_startup_half_loaded.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1968,6 +2074,8 @@
  "tests/test_startup_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1975,6 +2083,8 @@
  "tests/test_steering_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -1989,6 +2099,8 @@
  "tests/test_storage_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -2056,6 +2168,8 @@
  ],
  "tests/test_text_producers.py": [
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -2065,6 +2179,8 @@
  ],
  "tests/test_the_guards_themselves.py": [
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/",
@@ -2074,6 +2190,8 @@
  ],
  "tests/test_the_measure.py": [
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -2110,6 +2228,8 @@
  "tests/test_the_night_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/",
@@ -2135,6 +2255,8 @@
   "ARCHITECTURE.md",
   "ROADMAP.md",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/",
@@ -2160,12 +2282,16 @@
  "tests/test_translations_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
  ],
  "tests/test_ui_complete.py": [
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -2173,6 +2299,8 @@
  "tests/test_unreadable_entities.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -2180,6 +2308,8 @@
  "tests/test_unsupported_modes.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -2215,6 +2345,8 @@
  "tests/test_user_texts_use_the_users_unit.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -2248,6 +2380,8 @@
  "tests/test_watchdog.py": [
   "README.md",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"
@@ -2303,6 +2437,8 @@
  "tests/test_wens2_live.py": [
   "custom_components/",
   "custom_components/climate_director/",
+  "custom_components/climate_director/.mypy_cache/",
+  "custom_components/climate_director/.mypy_cache/3.13/",
   "custom_components/climate_director/brand/",
   "custom_components/climate_director/engine/",
   "custom_components/climate_director/translations/"

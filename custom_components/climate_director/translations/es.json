@@ -807,6 +807,12 @@
             }
           }
         }
+      },
+      "heat_hours_gas": {
+        "name": "Horas de calefacción con gas"
+      },
+      "heat_hours_electric": {
+        "name": "Horas de calefacción eléctrica"
       }
     },
     "binary_sensor": {

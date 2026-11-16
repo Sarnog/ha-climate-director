@@ -25,7 +25,12 @@ from .coordinator import ClimateDirectorCoordinator, ClimateDirectorEntry
 from .engine import DirectorConfig, ModeFamily, Reason
 from .engine.families import MODE_FAN_ONLY, MODE_OFF, preferred_mode
 from .entity import ClimateDirectorEntity
-from .sensor_energy import BreakEvenSensor, HeatCostSensor
+from .sensor_energy import (
+    BreakEvenSensor,
+    ElectricHeatHoursSensor,
+    GasHeatHoursSensor,
+    HeatCostSensor,
+)
 from .units import rounded_from_celsius, unit_of_coordinator
 
 #: Alles komt uit één coordinator; er valt niets te serialiseren.
@@ -116,6 +121,8 @@ async def async_setup_entry(
     if coordinator.config.energy.configured:
         entities.append(HeatCostSensor(coordinator))
         entities.append(BreakEvenSensor(coordinator))
+        entities.append(GasHeatHoursSensor(coordinator))
+        entities.append(ElectricHeatHoursSensor(coordinator))
     async_add_entities(entities)
 
 
@@ -126,7 +133,11 @@ def wanted_entity_keys(config: DirectorConfig) -> set[str]:
     return {
         "last_decision",
         "mismatch",
-        *(["cheapest_heat", "heat_break_even"] if config.energy.configured else []),
+        *(
+            ["cheapest_heat", "heat_break_even", "heat_hours_gas", "heat_hours_electric"]
+            if config.energy.configured
+            else []
+        ),
         *(f"zone_{zone.zone_id}_source" for zone in config.zones),
         *(f"zone_{zone.zone_id}_override_ends" for zone in config.zones),
         *(f"command_{entity_id}" for entity_id in dict.fromkeys(steered)),

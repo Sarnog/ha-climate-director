@@ -807,6 +807,12 @@
             }
           }
         }
+      },
+      "heat_hours_gas": {
+        "name": "Verwarmingsuren gas"
+      },
+      "heat_hours_electric": {
+        "name": "Verwarmingsuren elektrisch"
       }
     },
     "binary_sensor": {
