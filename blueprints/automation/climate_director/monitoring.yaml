@@ -109,6 +109,9 @@ blueprint:
 mode: queued
 max: 10
 
+variables:
+  settle_time: !input settle
+
 triggers:
   - trigger: state
     id: problem
@@ -138,6 +141,16 @@ actions:
       - conditions:
           - condition: trigger
             id: recovered
+          # Herstel melden we alleen van wat als probleem gemeld is: het probleem
+          # moet minstens `settle` aan hebben gestaan. Een korte blip (bijvoorbeeld
+          # een buitensensor die even 0 meldt) gaf anders alleen een herstelmelding.
+          # Recovery is only reported for what was reported as a problem: the
+          # problem must have lasted at least `settle`. A short blip (a outdoor
+          # sensor reporting 0 for a moment, say) otherwise gave only a recovery.
+          - condition: template
+            value_template: >-
+              {{ (trigger.to_state.last_changed - trigger.from_state.last_changed)
+              >= timedelta(**settle_time) }}
         sequence:
           - action: !input notify_action
             data:

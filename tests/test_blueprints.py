@@ -32,8 +32,10 @@ blueprints (`tests/test_guide_blueprints.py`) and the YAML outside this folder.
 
 from __future__ import annotations
 
+import datetime
 import pathlib
 import re
+from types import SimpleNamespace
 
 import jinja2
 import pytest
@@ -325,6 +327,59 @@ class TestTheyMatchTheIntegration:
         )
         assert recovered["from"] == "on"
         assert recovered["to"] == "off"
+
+    def test_a_recovery_is_only_reported_after_a_problem_that_lasted_the_settling_time(
+        self,
+    ) -> None:
+        """Een korte blip geeft geen herstelmelding, want er was ook geen probleemmelding.
+
+        De probleemtrigger wacht `settle`; de herstelmelding moest dezelfde drempel
+        kennen. Anders meldde een melder die korter dan `settle` aan stond (een
+        buitensensor die tien seconden 0 geeft) alleen "weer in orde", zonder dat er
+        ooit een probleem gemeld was. De voorwaarde vergelijkt hoe lang de melder aan
+        stond met `settle` en wordt hier met de echte sjabloonmachine gerenderd.
+
+        A short blip gives no recovery message, because there was no problem message
+        either. The problem trigger waits `settle`; the recovery had to know the same
+        threshold. Otherwise a sensor that was on for less than `settle` (an outdoor
+        sensor reporting 0 for ten seconds) only said "in order again", without a
+        problem ever having been reported. The condition compares how long the sensor
+        was on with `settle` and is rendered here with the real template engine.
+        """
+        data = load(FOLDER / "monitoring.yaml")
+        assert "settle_time" in data["variables"]
+        branch = next(
+            item
+            for item in data["actions"][0]["choose"]
+            if any(c.get("id") == "recovered" for c in item["conditions"])
+        )
+        templates = [
+            c["value_template"] for c in branch["conditions"] if c["condition"] == "template"
+        ]
+        assert len(templates) == 1, branch["conditions"]
+        condition = jinja2.Environment(undefined=jinja2.StrictUndefined).from_string(templates[0])
+
+        def reported(seconds_on: int, settle: dict[str, int]) -> bool:
+            start = datetime.datetime(2026, 11, 17, 6, 58, 27)
+            rendered = condition.render(
+                trigger={
+                    "from_state": SimpleNamespace(last_changed=start),
+                    "to_state": SimpleNamespace(
+                        last_changed=start + datetime.timedelta(seconds=seconds_on)
+                    ),
+                },
+                settle_time=settle,
+                timedelta=datetime.timedelta,
+            )
+            return "True" in rendered
+
+        five = {"hours": 0, "minutes": 5, "seconds": 0}
+        assert not reported(181, five)
+        assert not reported(299, five)
+        assert reported(300, five)
+        assert reported(3600, five)
+        assert reported(30, {"seconds": 30})
+        assert not reported(29, {"seconds": 30})
 
     def test_the_filter_stays_on_the_identifier(self) -> None:
         """Het filter van de blueprint blijft op `reason` staan.
