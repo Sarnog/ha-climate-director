@@ -12,12 +12,11 @@ on:
       - "tests/**"
       - "script/mutation_probe.py"
       - ".github/workflows/mutation.yaml"
+  # Geen paths-filter op pull_request: `Mutation probe` is een verplichte check, en een
+  # PR die alleen een blueprint of workflow raakt bleef anders eeuwig op "Expected".
+  # No paths filter on pull_request: `Mutation probe` is a required check, and a PR
+  # touching only a blueprint or workflow would otherwise sit on "Expected" forever.
   pull_request:
-    paths:
-      - "custom_components/**"
-      - "tests/**"
-      - "script/mutation_probe.py"
-      - ".github/workflows/mutation.yaml"
   workflow_dispatch:
 
 permissions: {}
