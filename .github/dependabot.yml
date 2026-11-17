@@ -1,0 +1,17 @@
+# Houdt de GitHub Actions in .github/workflows/ vanzelf actueel, zodat een
+# verouderde runtime (zoals Node 20) geen waarschuwing meer wordt die pas
+# opvalt als hij bijna breekt. Dependabot zet wekelijks één pull request klaar;
+# de verplichte checks beslissen of die erdoor mag.
+# Keeps the GitHub Actions in .github/workflows/ up to date by itself, so an
+# outdated runtime (such as Node 20) does not turn into a warning that is only
+# noticed when it is about to break. Dependabot opens one pull request a week;
+# the required checks decide whether it may pass.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      github-actions:
+        patterns: ["*"]
