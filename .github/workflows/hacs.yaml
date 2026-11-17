@@ -8,12 +8,13 @@ on:
       - "hacs.json"
       - "README.md"
       - ".github/workflows/hacs.yaml"
+  # Geen paths-filter op pull_request: `validate` en `validate-hacs` zijn verplichte
+  # checks, en een PR die alleen een blueprint of test raakt bleef anders eeuwig
+  # op "Expected" staan.
+  # No paths filter on pull_request: `validate` and `validate-hacs` are required
+  # checks, and a PR touching only a blueprint or test would otherwise sit on
+  # "Expected" forever.
   pull_request:
-    paths:
-      - "custom_components/**"
-      - "hacs.json"
-      - "README.md"
-      - ".github/workflows/hacs.yaml"
   workflow_dispatch:
 
 permissions: {}

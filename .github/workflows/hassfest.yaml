@@ -6,10 +6,13 @@ on:
     paths:
       - "custom_components/**"
       - ".github/workflows/hassfest.yaml"
+  # Geen paths-filter op pull_request: `validate` en `validate-hacs` zijn verplichte
+  # checks, en een PR die alleen een blueprint of test raakt bleef anders eeuwig
+  # op "Expected" staan.
+  # No paths filter on pull_request: `validate` and `validate-hacs` are required
+  # checks, and a PR touching only a blueprint or test would otherwise sit on
+  # "Expected" forever.
   pull_request:
-    paths:
-      - "custom_components/**"
-      - ".github/workflows/hassfest.yaml"
   workflow_dispatch:
 
 # Een nieuwe push op dezelfde pull request maakt de lopende run overbodig: die
